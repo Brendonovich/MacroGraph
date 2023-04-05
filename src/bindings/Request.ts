@@ -1,0 +1,4 @@
+import type { Position } from "./Position";
+import type { Primitive } from "./Primitive";
+
+export type Request = { type: "CreateNode", data: { graph: number, package: string, schema: string, position: Position, } } | { type: "SetDefaultValue", data: { graph: number, node: number, input: string, value: Primitive, } } | { type: "SetNodePosition", data: { graph: number, node: number, position: Position, } } | { type: "ConnectIO", data: { graph: number, output_node: number, output: string, input_node: number, input: string, } } | { type: "DisconnectIO", data: { graph: number, node: number, io: string, is_input: boolean, } } | { type: "DeleteNode", data: { graph: number, node: number, } } | { type: "CreateGraph" } | { type: "RenameGraph", data: { id: number, name: string, } } | { type: "GetPackages" } | { type: "GetProject" } | { type: "Reset", data: { graph: number, } };

@@ -11,14 +11,21 @@
   },
   "license": "MIT",
   "dependencies": {
-    "solid-js": "^1.7.0",
-    "@tauri-apps/api": "^1.2.0"
+    "@solid-primitives/map": "^0.4.3",
+    "@tauri-apps/api": "^1.2.0",
+    "clsx": "^1.2.1",
+    "solid-js": "^1.7.0"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.3",
+    "@tauri-apps/cli": "^1.2.2",
     "@types/node": "^18.7.10",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.1",
     "typescript": "^4.9.5",
     "vite": "^4.2.1",
     "vite-plugin-solid": "^2.5.0",
-    "@tauri-apps/cli": "^1.2.2"
+    "vite-tsconfig-paths": "^4.0.8"
   }
 }

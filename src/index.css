@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind utilities;
+@tailwind components;
+
+html {
+    overflow: hidden;
+    height: 100%;
+    overscroll-behavior: none;
+}
+
+body {
+    height: 100%;
+    overflow: auto;
+}

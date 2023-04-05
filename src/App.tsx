@@ -1,50 +1,94 @@
-import { createSignal } from "solid-js";
-import logo from "./assets/logo.svg";
-import { invoke } from "@tauri-apps/api/tauri";
-import "./App.css";
+import { Show } from "solid-js";
+import { CoreProvider } from "./contexts";
+import { Graph } from "~/components/Graph";
+import { GraphList } from "~/components/ProjectSidebar";
+import { core } from "./models";
+import { createUIStore, UIStoreProvider } from "./stores";
+
+const testPackage = core.createPackage({
+  name: "Test Package",
+});
+
+testPackage.createSchema({
+  name: "A Pressed",
+  variant: "Event",
+  generate(builder) {
+    builder.addExecOutput({
+      id: "pressed",
+      name: "Pressed",
+    });
+    builder.addExecOutput({
+      id: "released",
+      name: "Released",
+    });
+    builder.addDataOutput({
+      id: "shift-pressed",
+      name: "Shift Pressed",
+      type: {
+        variant: "primitive",
+        value: "bool",
+      },
+    });
+  },
+});
+
+testPackage.createSchema({
+  name: "Print",
+  variant: "Exec",
+  generate(builder) {
+    builder.addDataInput({
+      id: "input",
+      name: "Input",
+      type: {
+        variant: "primitive",
+        value: "string",
+      },
+    });
+  },
+});
+
+testPackage.createSchema({
+  name: "Branch",
+  variant: "Base",
+  generate(builder) {
+    builder.addExecInput({
+      id: "exec",
+      name: "",
+    });
+    builder.addDataInput({
+      id: "condition",
+      name: "Condition",
+      type: {
+        variant: "primitive",
+        value: "bool",
+      },
+    });
+
+    builder.addExecOutput({
+      id: "true",
+      name: "True",
+    });
+    builder.addExecOutput({
+      id: "false",
+      name: "False",
+    });
+  },
+});
 
 function App() {
-  const [greetMsg, setGreetMsg] = createSignal("");
-  const [name, setName] = createSignal("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name: name() }));
-  }
+  const ui = createUIStore();
 
   return (
-    <div class="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div class="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://solidjs.com" target="_blank">
-          <img src={logo} class="logo solid" alt="Solid logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and Solid logos to learn more.</p>
-
-      <div class="row">
-        <div>
-          <input
-            id="greet-input"
-            onChange={(e) => setName(e.currentTarget.value)}
-            placeholder="Enter a name..."
-          />
-          <button type="button" onClick={() => greet()}>
-            Greet
-          </button>
+    <UIStoreProvider store={ui}>
+      <CoreProvider core={core}>
+        <div class="w-screen h-screen flex flex-row overflow-hidden select-none">
+          <GraphList onChange={(g) => ui.setCurrentGraph(g)} />
+          <Show when={ui.state.currentGraph} fallback="No Graph">
+            {(graph) => <Graph graph={graph()} />}
+          </Show>
         </div>
-      </div>
-
-      <p>{greetMsg}</p>
-    </div>
+      </CoreProvider>
+    </UIStoreProvider>
   );
 }
 
