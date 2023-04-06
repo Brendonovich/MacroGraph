@@ -2,6 +2,7 @@ import { Graph, Node, Pin } from "~/models";
 import { Position, XY } from "~/bindings";
 import { createMutable } from "solid-js/store";
 import { createContext, ParentProps, useContext } from "solid-js";
+import { ReactiveWeakMap } from "@solid-primitives/map";
 
 export function createUIStore() {
   const state = createMutable({
@@ -25,7 +26,7 @@ export function createUIStore() {
     } as XY,
     scale: 1,
 
-    pinPositions: new WeakMap<Pin, XY>(),
+    pinPositions: new ReactiveWeakMap<Pin, XY>(),
   });
 
   return {

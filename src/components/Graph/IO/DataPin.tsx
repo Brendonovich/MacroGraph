@@ -34,11 +34,15 @@ export const DataPin = (props: Props) => {
 
   const { ref, active } = usePin(pin);
 
-  const isArray = () => pin.type.variant !== "primitive";
-  const type = () =>
-    pin.type.variant === "primitive" ? pin.type.value : pin.type.value.value;
+  const colourClass = () =>
+    DataPinTypeColours[
+      pin.type.variant === "primitive" ? pin.type.value : pin.type.value.value
+    ];
 
-  const colourClass = () => DataPinTypeColours[type()];
+  const connected = () =>
+    pin instanceof DataInput
+      ? pin.connection !== null
+      : pin.connections.length > 0;
 
   return (
     <div
@@ -48,8 +52,8 @@ export const DataPin = (props: Props) => {
       }}
       class={clsx(
         `w-3.5 h-3.5 border-2`,
-        isArray() ? "rounded-sm" : "rounded-full",
-        pin.connected || active() ? colourClass().active : colourClass().base
+        pin.type.variant !== "primitive" ? "rounded-sm" : "rounded-full",
+        connected() || active() ? colourClass().active : colourClass().base
       )}
     />
   );

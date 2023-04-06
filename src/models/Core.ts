@@ -6,7 +6,7 @@ import { Package, PackageArgs } from "./Package";
 
 export class Core {
   graphs = new ReactiveMap<number, Graph>();
-  packages = [] as Package[];
+  packages = [] as Package<string>[];
 
   private graphIdCounter = 0;
 
@@ -24,8 +24,8 @@ export class Core {
     return graph;
   }
 
-  createPackage(args: Omit<PackageArgs, "core">) {
-    const pkg = new Package({ ...args, core: this });
+  createPackage<TEvents extends string>(args: Omit<PackageArgs, "core">) {
+    const pkg = new Package<TEvents>({ ...args, core: this });
 
     this.packages.push(pkg);
 

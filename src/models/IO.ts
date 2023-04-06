@@ -61,6 +61,8 @@ export class DataOutput {
     this.node = args.node;
     this.name = args.name;
     this.type = args.type;
+
+    return createMutable(this);
   }
 
   async disconnect() {

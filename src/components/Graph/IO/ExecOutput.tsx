@@ -18,7 +18,11 @@ export const ExecOutput = (props: Props) => {
           }}
           viewBox="0 0 14 17.5"
           class="w-3.5 text-transparent hover:text-white pointer-events-[all]"
-          fill={props.output.connected || active() ? "white" : "currentColor"}
+          fill={
+            props.output.connection !== null || active()
+              ? "white"
+              : "currentColor"
+          }
           xmlns="http://www.w3.org/2000/svg"
         >
           <path

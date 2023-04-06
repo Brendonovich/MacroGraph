@@ -55,8 +55,19 @@ export class IOBuilder {
   }
 }
 
-export interface NodeSchema<TState extends object = {}> {
+export type NodeSchema<
+  TEvents extends string = string,
+  TState extends object = {}
+> = {
   name: string;
-  variant: NodeSchemaVariant;
   generate: (builder: IOBuilder, state: TState) => void;
-}
+} & (
+  | {
+      variant: "Event";
+      event: TEvents;
+    }
+  | {
+      variant: Exclude<NodeSchemaVariant, "Event">;
+      run: (_: any) => void;
+    }
+);

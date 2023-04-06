@@ -6,7 +6,13 @@ export * from "./DataOutput";
 
 import { Pin } from "~/models";
 import { pinIsInput, pinIsOutput, pinsCanConnect } from "~/utils";
-import { batch, createMemo, createSignal, onMount } from "solid-js";
+import {
+  batch,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { useUIStore } from "~/stores";
 import { useGraph } from "../Graph";
 
@@ -64,6 +70,7 @@ export const usePin = (pin: Pin) => {
         // Necessary since safari fires 'mouseleave' just after mouseup. i hate this.
         justMouseUpped = true;
         setTimeout(() => (justMouseUpped = false), 1);
+
         UI.setHoveringPin(pin);
 
         const draggingPin = UI.state.draggingPin;
@@ -87,7 +94,14 @@ export const usePin = (pin: Pin) => {
     });
   });
 
-  onMount(() => {
+  createEffect(() => {
+    UI.state.translate.x;
+    UI.state.translate.y;
+    UI.state.scale;
+
+    pin.node.position.x;
+    pin.node.position.y;
+
     let rect = getRef().getBoundingClientRect();
 
     if (rect)

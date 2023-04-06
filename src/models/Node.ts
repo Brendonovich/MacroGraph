@@ -102,6 +102,18 @@ export class Node {
     });
   }
 
+  // Getters
+
+  input(name: string) {
+    return this.inputs.find((i) => i.name === name);
+  }
+
+  output(name: string) {
+    return this.outputs.find((o) => o.name === name);
+  }
+
+  // Setters
+
   setSelected(selected: boolean) {
     this.selected = selected;
   }
@@ -109,6 +121,8 @@ export class Node {
   setPosition(position: XY) {
     this.position = position;
   }
+
+  // IO Creators
 
   addExecInput(args: Omit<ExecInputArgs, "node"> & { index?: number }) {
     const input = new ExecInput({ ...args, node: this });
@@ -127,13 +141,5 @@ export class Node {
 
   addDataOutput(args: Omit<DataOutputArgs, "node"> & { index?: number }) {
     this.outputs.push(new DataOutput({ ...args, node: this }));
-  }
-
-  input(name: string) {
-    return this.inputs.find((i) => i.name === name);
-  }
-
-  output(name: string) {
-    return this.outputs.find((o) => o.name === name);
   }
 }

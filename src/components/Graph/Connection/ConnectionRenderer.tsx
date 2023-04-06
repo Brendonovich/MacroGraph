@@ -34,73 +34,75 @@ export const ConnectionRender = () => {
         <For each={[...graph.nodes.values()]}>
           {(n) => (
             <For each={n.inputs}>
-              {(i) => (
-                <Show when={i.connected && UI.state.pinPositions.get(i)}>
-                  {(inputPos) => (
-                    <Switch>
-                      <Match when={i instanceof DataInput && i}>
-                        {(i) => {
-                          const outputPos = () =>
-                            UI.state.pinPositions.get(i().connection!);
+              {(i) => {
+                const connectionData = () => {
+                  const inputPosition = UI.state.pinPositions.get(i);
 
-                          const colourClass = () => {
-                            const input = i();
+                  if (!i.connection) return null;
 
-                            return input.type.variant === "primitive"
-                              ? DataColourClasses[input.type.value]
-                              : DataColourClasses[input.type.value.value];
-                          };
+                  const outputPosition = UI.state.pinPositions.get(
+                    i.connection!
+                  );
 
-                          return (
-                            <Show when={outputPos()}>
-                              {(outputPos) => (
-                                <line
-                                  class={colourClass()}
-                                  x1={inputPos().x - graphOffset().x}
-                                  y1={inputPos().y - graphOffset().y}
-                                  x2={outputPos().x - graphOffset().x}
-                                  y2={outputPos().y - graphOffset().y}
-                                  stroke="currentColor"
-                                  stroke-opacity={0.75}
-                                  stroke-width={2 * UI.state.scale}
-                                />
-                              )}
-                            </Show>
-                          );
-                        }}
-                      </Match>
-                      <Match when={i instanceof ExecInput && i}>
-                        {(i) => {
-                          const outputPos = () =>
-                            UI.state.pinPositions.get(i().connection!);
+                  if (!inputPosition || !outputPosition) return null;
 
-                          return (
-                            <Show when={outputPos()}>
-                              {(outputPos) => (
-                                <line
-                                  x1={inputPos().x - graphOffset().x}
-                                  y1={inputPos().y - graphOffset().y}
-                                  x2={outputPos().x - graphOffset().x}
-                                  y2={outputPos().y - graphOffset().y}
-                                  stroke={"white"}
-                                  stroke-opacity={0.75}
-                                  stroke-width={2 * UI.state.scale}
-                                />
-                              )}
-                            </Show>
-                          );
-                        }}
-                      </Match>
-                    </Switch>
-                  )}
-                </Show>
-              )}
+                  return {
+                    input: inputPosition,
+                    output: outputPosition,
+                  };
+                };
+
+                return (
+                  <Show when={connectionData()}>
+                    {(positions) => (
+                      <Switch>
+                        <Match when={i instanceof DataInput && i}>
+                          {(i) => {
+                            const colourClass = () => {
+                              const input = i();
+
+                              return input.type.variant === "primitive"
+                                ? DataColourClasses[input.type.value]
+                                : DataColourClasses[input.type.value.value];
+                            };
+
+                            return (
+                              <line
+                                class={colourClass()}
+                                x1={positions().input.x - graphOffset().x}
+                                y1={positions().input.y - graphOffset().y}
+                                x2={positions().output.x - graphOffset().x}
+                                y2={positions().output.y - graphOffset().y}
+                                stroke="currentColor"
+                                stroke-opacity={0.75}
+                                stroke-width={2 * scale()}
+                              />
+                            );
+                          }}
+                        </Match>
+                        <Match when={i instanceof ExecInput && i}>
+                          <line
+                            x1={positions().input.x - graphOffset().x}
+                            y1={positions().input.y - graphOffset().y}
+                            x2={positions().output.x - graphOffset().x}
+                            y2={positions().output.y - graphOffset().y}
+                            stroke={"white"}
+                            stroke-opacity={0.75}
+                            stroke-width={2 * scale()}
+                          />
+                        </Match>
+                      </Switch>
+                    )}
+                  </Show>
+                );
+              }}
             </For>
           )}
         </For>
         <Show when={dragState()}>
           {(state) => {
             const pinPos = () => UI.state.pinPositions.get(state().draggingPin);
+
             const diffs = () => ({
               x: state().mouseDragLocation.x - graphOffset().x,
               y: state().mouseDragLocation.y - graphOffset().y,

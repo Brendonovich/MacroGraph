@@ -7,9 +7,9 @@ export interface PackageArgs {
   core: Core;
 }
 
-export class Package {
+export class Package<TEvents extends string> {
   name: string;
-  schemas: NodeSchema[] = [];
+  schemas: NodeSchema<TEvents>[] = [];
   core: Core;
 
   constructor(args: PackageArgs) {
@@ -19,7 +19,7 @@ export class Package {
     return createMutable(this);
   }
 
-  createSchema(schema: NodeSchema) {
+  createSchema(schema: NodeSchema<TEvents>) {
     this.schemas.push({
       ...schema,
       generate(builder, state) {

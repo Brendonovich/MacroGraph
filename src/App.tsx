@@ -5,13 +5,16 @@ import { GraphList } from "~/components/ProjectSidebar";
 import { core } from "./models";
 import { createUIStore, UIStoreProvider } from "./stores";
 
-const testPackage = core.createPackage({
+type TestEvents = "a-pressed";
+
+const testPackage = core.createPackage<TestEvents>({
   name: "Test Package",
 });
 
 testPackage.createSchema({
   name: "A Pressed",
   variant: "Event",
+  event: "a-pressed",
   generate(builder) {
     builder.addExecOutput({
       id: "pressed",
@@ -35,6 +38,9 @@ testPackage.createSchema({
 testPackage.createSchema({
   name: "Print",
   variant: "Exec",
+  run() {
+    console.log("TODO Print");
+  },
   generate(builder) {
     builder.addDataInput({
       id: "input",
@@ -50,6 +56,13 @@ testPackage.createSchema({
 testPackage.createSchema({
   name: "Branch",
   variant: "Base",
+  run({ ctx, io }) {
+    const execPin = io.dataInput("condition").value
+      ? io.execOutput("true")
+      : io.execOutput("false");
+
+    ctx.exec(execPin);
+  },
   generate(builder) {
     builder.addExecInput({
       id: "exec",
@@ -77,6 +90,10 @@ testPackage.createSchema({
 
 function App() {
   const ui = createUIStore();
+
+  const graph = core.createGraph();
+
+  ui.setCurrentGraph(graph);
 
   return (
     <UIStoreProvider store={ui}>
