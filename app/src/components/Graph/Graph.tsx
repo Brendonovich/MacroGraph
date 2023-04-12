@@ -170,8 +170,8 @@ export const Graph = (props: Props) => {
             });
           }}
           onContextMenu={(e) => {
-            e.stopPropagation();
             e.preventDefault();
+            e.stopPropagation();
           }}
         >
           <For each={[...graph.nodes.values()]}>
