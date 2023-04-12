@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "declarationDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "include": ["src"]
+}

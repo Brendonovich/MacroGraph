@@ -1,0 +1,26 @@
+{
+  "name": "@macrograph/core",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint src",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "typecheck": "tsc -b",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@solid-primitives/map": "^0.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4",
+    "solid-js": "^1.7.0"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.7.0"
+  }
+}
