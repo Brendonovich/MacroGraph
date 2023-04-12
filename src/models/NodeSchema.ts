@@ -1,4 +1,6 @@
 import { ValueType } from "~/bindings";
+import { ExecOutput } from "./IO";
+import { Package } from "./Package";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 
@@ -38,36 +40,42 @@ export class IOBuilder {
   inputs: InputBuilder[] = [];
   outputs: OutputBuilder[] = [];
 
-  addDataInput(args: DataInputBuilder) {
+  dataInput<T extends DataInputBuilder>(args: T) {
     this.inputs.push({ ...args, variant: "Data" });
   }
 
-  addDataOutput(args: DataOutputBuilder) {
+  dataOutput<T extends DataOutputBuilder>(args: T) {
     this.outputs.push({ ...args, variant: "Data" });
   }
 
-  addExecInput(args: ExecInputBuilder) {
+  execInput<T extends ExecInputBuilder>(args: T) {
     this.inputs.push({ ...args, variant: "Exec" });
   }
 
-  addExecOutput(args: ExecOutputBuilder) {
+  execOutput<T extends ExecOutputBuilder>(args: T) {
     this.outputs.push({ ...args, variant: "Exec" });
   }
 }
 
+export interface IOSchema {
+  inputs?: Record<string, InputBuilder>;
+  outputs?: Record<string, OutputBuilder>;
+}
+
+export type RunCtx = {
+  exec(t: string): void;
+  setOutput(name: string, data: any): void;
+  getInput<T>(name: string): T;
+};
+
 export type NodeSchema<
   TEvents extends string = string,
-  TState extends object = {}
+  TState extends object = object
 > = {
   name: string;
-  generate: (builder: IOBuilder, state: TState) => void;
-} & (
-  | {
-      variant: "Event";
-      event: TEvents;
-    }
-  | {
-      variant: Exclude<NodeSchemaVariant, "Event">;
-      run: (_: any) => void;
-    }
-);
+  generateIO: (builder: IOBuilder, state: TState) => void;
+  package: Package<TEvents>;
+  variant: NodeSchemaVariant;
+  event?: TEvents;
+  run: (a: { ctx: RunCtx; data?: any }) => void;
+};

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 
 import { useCore } from "~/contexts";
 import { NodeSchema, NodeSchemaVariant } from "~/models";
@@ -21,7 +21,9 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 export const SchemaMenu = (props: Props) => {
   const core = useCore();
 
-  const [openPackages, setOpenPacakges] = createSignal(new Set<Package>());
+  const [openPackages, setOpenPacakges] = createSignal(
+    new Set<Package<string>>()
+  );
   const [search, setSearch] = createSignal("");
 
   const lowercaseSearchTokens = createMemo(() =>
@@ -41,7 +43,8 @@ export const SchemaMenu = (props: Props) => {
     >
       <div class="p-2">
         <input
-          onChange={(e) => setSearch(e.target.value)}
+          onInput={(e) => setSearch(e.target.value)}
+          value={search()}
           class="text-black w-full px-2 py-0.5 rounded"
           autofocus
           placeholder="Search Nodes..."
@@ -49,19 +52,20 @@ export const SchemaMenu = (props: Props) => {
           autoCapitalize="off"
           autocorrect="off"
           spellcheck={false}
+          tabindex={0}
         />
       </div>
       <div class="p-2 pt-0 flex-1 overflow-auto">
         <div class="">
           <For each={core.packages}>
             {(p) => {
-              let open = () => openPackages().has(p) || search() !== "";
+              const open = () => openPackages().has(p) || search() !== "";
 
               const filteredSchemas = createMemo(() => {
                 const lowercasePackageName = p.name.toLowerCase();
 
                 const leftoverSearchTokens = lowercaseSearchTokens().filter(
-                  (s) => !lowercasePackageName.includes(s)
+                  (s) => !lowercasePackageName.startsWith(s)
                 );
 
                 return p.schemas.filter((s) => {
@@ -74,7 +78,7 @@ export const SchemaMenu = (props: Props) => {
               });
 
               return (
-                <Show when={filteredSchemas.length === 0}>
+                <Show when={search() === "" || filteredSchemas().length !== 0}>
                   <div>
                     <button
                       class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"

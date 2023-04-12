@@ -19,30 +19,37 @@ export class Package<TEvents extends string> {
     return createMutable(this);
   }
 
-  createSchema(schema: NodeSchema<TEvents>) {
+  createSchema(schema: Omit<NodeSchema<TEvents>, "package">) {
     this.schemas.push({
       ...schema,
-      generate(builder, state) {
+      generateIO: (t, state) => {
+        const generated = schema.generateIO(t, state);
+
         if (schema.variant === "Exec") {
-          builder.addExecInput({
+          t.execInput({
             id: "exec",
             name: "",
           });
 
-          builder.addExecOutput({
+          t.execOutput({
             id: "exec",
             name: "",
           });
         }
 
-        schema.generate(builder, state);
+        return generated;
       },
+      package: this,
     });
 
     return this;
   }
 
-  schema(name: string) {
+  schema(name: string): NodeSchema<TEvents> | undefined {
     return this.schemas.find((s) => s.name === name);
+  }
+
+  emitEvent<T extends TEvents>(event: { name: T; data: any }) {
+    this.core.emitEvent(this, event);
   }
 }

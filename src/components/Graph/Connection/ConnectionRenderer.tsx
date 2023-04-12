@@ -80,7 +80,7 @@ export const ConnectionRender = () => {
                             );
                           }}
                         </Match>
-                        <Match when={i instanceof ExecInput && i}>
+                        <Match when={i instanceof ExecInput}>
                           <line
                             x1={positions().input.x - graphOffset().x}
                             y1={positions().input.y - graphOffset().y}

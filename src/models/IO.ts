@@ -80,14 +80,14 @@ export class DataOutput {
 }
 
 export interface ExecInputArgs extends Extract<Input, { variant: "Exec" }> {
-  node: Node;
+  node: Node<"Exec" | "Base">;
 }
 
 export class ExecInput {
   id: string;
   connection: ExecOutput | null = null;
-  node: Node;
-  name: string;
+  public node: Node<"Exec" | "Base">;
+  public name: string;
 
   constructor(args: ExecInputArgs) {
     this.id = args.id;
@@ -112,13 +112,13 @@ export class ExecInput {
 }
 
 export interface ExecOutputArgs extends Extract<Output, { variant: "Exec" }> {
-  node: Node;
+  node: Node<"Event" | "Exec" | "Base">;
 }
 
 export class ExecOutput {
   id: string;
   connection: ExecInput | null = null;
-  public node: Node;
+  public node: Node<"Event" | "Exec" | "Base">;
   public name: string;
 
   constructor(args: ExecOutputArgs) {

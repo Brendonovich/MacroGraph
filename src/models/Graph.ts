@@ -37,7 +37,26 @@ export class Graph {
   createNode(args: Omit<NodeArgs, "graph" | "id">) {
     const id = this.nodeIdCounter++;
 
-    this.nodes.set(id, new Node({ ...args, id, graph: this }));
+    const node = new Node({ ...args, id, graph: this });
+
+    this.nodes.set(id, node);
+
+    const event = args.schema.event;
+
+    if (event !== undefined) {
+      const pkg = args.schema.package;
+      const mappings = this.core.eventNodeMappings;
+
+      if (!mappings.has(pkg)) mappings.set(pkg, new Map());
+
+      const pkgMappings = mappings.get(pkg)!;
+
+      if (!pkgMappings.has(event)) pkgMappings.set(event, new Set());
+
+      pkgMappings.get(event)?.add(node);
+    }
+
+    return node;
   }
 
   connectPins(output: DataOutput | ExecOutput, input: DataInput | ExecInput) {

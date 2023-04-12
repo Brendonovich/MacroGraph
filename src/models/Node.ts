@@ -1,4 +1,4 @@
-import { IOBuilder, NodeSchema } from "./NodeSchema";
+import { IOBuilder, NodeSchema, NodeSchemaVariant } from "./NodeSchema";
 import {
   DataInput,
   DataInputArgs,
@@ -14,15 +14,17 @@ import { Position, XY } from "~/bindings";
 import { createMutable } from "solid-js/store";
 import { batch } from "solid-js";
 
-export interface NodeArgs {
+export interface NodeArgs<
+  TVariant extends NodeSchemaVariant = NodeSchemaVariant
+> {
   id: number;
   name?: string;
   graph: Graph;
-  schema: NodeSchema;
+  schema: Extract<NodeSchema, { variant: TVariant }>;
   position: Position;
 }
 
-export class Node {
+export class Node<TVariant extends NodeSchemaVariant = NodeSchemaVariant> {
   id: number;
   name: string;
   graph: Graph;
@@ -33,7 +35,7 @@ export class Node {
 
   selected = false;
 
-  constructor(args: NodeArgs) {
+  constructor(args: NodeArgs<TVariant>) {
     this.id = args.id;
     this.name = args.schema.name;
     this.graph = args.graph;
@@ -48,7 +50,7 @@ export class Node {
   regenerateIO() {
     const builder = new IOBuilder();
 
-    this.schema.generate(builder, {});
+    this.schema.generateIO(builder, {});
 
     batch(() => {
       this.inputs = this.inputs.filter((oldInput) =>
@@ -104,12 +106,12 @@ export class Node {
 
   // Getters
 
-  input(name: string) {
-    return this.inputs.find((i) => i.name === name);
+  input(id: string) {
+    return this.inputs.find((i) => i.id === id);
   }
 
-  output(name: string) {
-    return this.outputs.find((o) => o.name === name);
+  output(id: string) {
+    return this.outputs.find((o) => o.id === id);
   }
 
   // Setters
@@ -125,21 +127,21 @@ export class Node {
   // IO Creators
 
   addExecInput(args: Omit<ExecInputArgs, "node"> & { index?: number }) {
-    const input = new ExecInput({ ...args, node: this });
+    const input = new ExecInput({ ...args, node: this as any });
 
     if (args.index === undefined) this.inputs.push(input);
     else this.inputs.splice(args.index, 0, input);
   }
 
   addDataInput(args: Omit<DataInputArgs, "node"> & { index?: number }) {
-    this.inputs.push(new DataInput({ ...args, node: this }));
+    this.inputs.push(new DataInput({ ...args, node: this as any }));
   }
 
   addExecOutput(args: Omit<ExecOutputArgs, "node"> & { index?: number }) {
-    this.outputs.push(new ExecOutput({ ...args, node: this }));
+    this.outputs.push(new ExecOutput({ ...args, node: this as any }));
   }
 
   addDataOutput(args: Omit<DataOutputArgs, "node"> & { index?: number }) {
-    this.outputs.push(new DataOutput({ ...args, node: this }));
+    this.outputs.push(new DataOutput({ ...args, node: this as any }));
   }
 }
