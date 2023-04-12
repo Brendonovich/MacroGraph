@@ -31,9 +31,13 @@ jobs:
           run_install: false
       - name: install frontend dependencies
         run: pnpm install # change this to npm or pnpm depending on which one you use
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - uses: JonasKruckenberg/tauri-build@v1
+        id: tauri_build
         with:
           projectPath: app
-          tauriScript: pnpm tauri
+
+      # The `artifacts` output can now be used by a different action to upload the artifacts
+      - uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: "${{ join(fromJSON(steps.tauri_build.outputs.artifacts), '\n') }}"
