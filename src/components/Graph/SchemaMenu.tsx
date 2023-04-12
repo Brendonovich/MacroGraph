@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
+import { createMemo, createSignal, For, Show } from "solid-js";
 
 import { useCore } from "~/contexts";
 import { NodeSchema, NodeSchemaVariant } from "~/models";

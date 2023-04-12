@@ -133,6 +133,7 @@ export const Graph = (props: Props) => {
             }
           }}
           onMouseDown={(e) => {
+            e.preventDefault();
             switch (e.button) {
               case 0:
                 UI.setSchemaMenuPosition();
