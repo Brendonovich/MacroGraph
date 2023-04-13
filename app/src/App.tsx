@@ -16,7 +16,13 @@ function App() {
   return (
     <UIStoreProvider store={ui}>
       <CoreProvider core={core}>
-        <div class="w-screen h-screen flex flex-row overflow-hidden select-none">
+        <div
+          class="w-screen h-screen flex flex-row overflow-hidden select-none"
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
           <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
             <GraphList onChange={(g) => ui.setCurrentGraph(g)} />
             <PrintOutput />

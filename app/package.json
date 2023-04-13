@@ -11,11 +11,11 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@macrograph/core": "workspace:*",
     "@solid-primitives/map": "^0.4.3",
     "@tauri-apps/api": "^1.2.0",
     "clsx": "^1.2.1",
-    "solid-js": "^1.7.0",
-    "@macrograph/core": "workspace:*"
+    "solid-js": "^1.7.0"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",
