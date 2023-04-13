@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { DataInput as DataInputModel } from "@macrograph/core";
+import { DataInput as DataInputModel, PrimitiveType } from "@macrograph/core";
 import { Show, Switch, Match } from "solid-js";
 
 import { CheckBox, FloatInput, IntInput, TextInput } from "~/components/ui";
@@ -12,45 +12,45 @@ const UnconnectedInput = (props: Props) => {
     clsx(input.connection !== null && "opacity-0 pointer-events-none");
 
   return (
-    <Show when={!Array.isArray(input.defaultValue) && input.defaultValue}>
-      {(dv) => (
+    <Show when={input.type instanceof PrimitiveType && input.type}>
+      {(type) => (
         <Switch>
-          <Match when={dv().type === "bool"}>
+          <Match when={type().primitiveVariant() === "bool"}>
             <CheckBox
               class={className()}
-              value={dv().value as any}
+              value={input.defaultValue}
               onChange={(value) =>
                 input.setDefaultValue({ type: "bool", value })
               }
             />
           </Match>
-          <Match when={dv().type === "string"}>
+          <Match when={type().primitiveVariant() === "string"}>
             <div class="w-16">
               <TextInput
                 class={className()}
-                value={dv().value as any}
+                value={input.defaultValue}
                 onChange={(value) =>
                   input.setDefaultValue({ type: "string", value })
                 }
               />
             </div>
           </Match>
-          <Match when={dv().type === "int"}>
+          <Match when={type().primitiveVariant() === "int"}>
             <div class="w-16">
               <IntInput
                 class={className()}
-                value={dv().value as any}
+                value={input.defaultValue}
                 onChange={(value) =>
                   input.setDefaultValue({ type: "int", value })
                 }
               />
             </div>
           </Match>
-          <Match when={dv().type === "float"}>
+          <Match when={type().primitiveVariant() === "float"}>
             <div class="w-16">
               <FloatInput
                 class={className()}
-                value={dv().value as any}
+                value={input.defaultValue}
                 onChange={(value) =>
                   input.setDefaultValue({ type: "float", value })
                 }
