@@ -1,33 +1,30 @@
 import { Node } from "./Node";
-import {
-  defaultPrimitiveType,
-  Input,
-  Output,
-  Primitive,
-  ValueType,
-} from "../bindings";
 import { createMutable } from "solid-js/store";
+import { AnyType } from "../types";
+import { Connection } from "../bindings/Connection";
 
-export interface DataInputArgs extends Extract<Input, { variant: "Data" }> {
+export type DataInputArgs = {
+  variant: "Data";
+  id: string;
+  name: string;
+  type: AnyType;
+  defaultValue?: any;
+  connection?: Connection | null;
   node: Node;
-}
+};
 
 export class DataInput {
   id: string;
   name: string;
-  defaultValue: Primitive | [];
-  type: ValueType;
+  defaultValue: any;
+  type: AnyType;
   node: Node;
   connection: DataOutput | null = null;
 
   constructor(args: DataInputArgs) {
     this.id = args.id;
     this.name = args.name;
-    this.defaultValue =
-      args.defaultValue ||
-      (args.type.variant === "primitive"
-        ? defaultPrimitiveType(args.type.value)
-        : []);
+    this.defaultValue = args.defaultValue || args.type.default();
     this.node = args.node;
     this.type = args.type;
 
@@ -42,7 +39,7 @@ export class DataInput {
     this.connection = null;
   }
 
-  async setDefaultValue(value: Primitive) {
+  async setDefaultValue(value: any) {
     this.defaultValue = value;
   }
 
@@ -55,8 +52,11 @@ export class DataInput {
   }
 }
 
-export interface DataOutputArgs extends Extract<Output, { variant: "Data" }> {
+export interface DataOutputArgs {
   node: Node;
+  id: string;
+  name: string;
+  type: AnyType;
 }
 
 export class DataOutput {
@@ -64,7 +64,7 @@ export class DataOutput {
   connections: DataInput[] = [];
   node: Node;
   name: string;
-  type: ValueType;
+  type: AnyType;
 
   constructor(args: DataOutputArgs) {
     this.id = args.id;
@@ -89,8 +89,12 @@ export class DataOutput {
   }
 }
 
-export interface ExecInputArgs extends Extract<Input, { variant: "Exec" }> {
+export interface ExecInputArgs {
   node: Node<"Exec" | "Base">;
+  variant: "Exec";
+  id: string;
+  name: string;
+  connection?: Connection | null;
 }
 
 export class ExecInput {
@@ -121,8 +125,10 @@ export class ExecInput {
   }
 }
 
-export interface ExecOutputArgs extends Extract<Output, { variant: "Exec" }> {
+export interface ExecOutputArgs {
   node: Node<"Event" | "Exec" | "Base">;
+  id: string;
+  name: string;
 }
 
 export class ExecOutput {

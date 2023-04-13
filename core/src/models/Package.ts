@@ -23,8 +23,6 @@ export class Package<TEvents extends string> {
     this.schemas.push({
       ...schema,
       generateIO: (t, state) => {
-        const generated = schema.generateIO(t, state);
-
         if (schema.variant === "Exec") {
           t.execInput({
             id: "exec",
@@ -37,7 +35,7 @@ export class Package<TEvents extends string> {
           });
         }
 
-        return generated;
+        schema.generateIO(t, state);
       },
       package: this,
     });

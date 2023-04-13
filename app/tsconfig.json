@@ -13,14 +13,10 @@
     "noEmit": true,
     "isolatedModules": true,
     "baseUrl": "./src",
+    "skipLibCheck": true,
     "paths": {
       "~/*": ["*"],
       "~/ui": ["components/ui"]
     }
-  },
-  "references": [
-    {
-      "path": "../core"
-    }
-  ]
+  }
 }

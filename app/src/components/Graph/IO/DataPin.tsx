@@ -1,9 +1,15 @@
 import clsx from "clsx";
-import { DataInput, DataOutput, PrimitiveType } from "@macrograph/core";
+import {
+  DataInput,
+  DataOutput,
+  ListType,
+  PrimitiveType,
+  PrimitiveVariant,
+} from "@macrograph/core";
 import { usePin } from ".";
 
 const DataPinTypeColours: Record<
-  PrimitiveType,
+  PrimitiveVariant,
   { active: string; base: string }
 > = {
   bool: {
@@ -35,7 +41,9 @@ export const DataPin = (props: Props) => {
 
   const colourClass = () =>
     DataPinTypeColours[
-      pin.type.variant === "primitive" ? pin.type.value : pin.type.value.value
+      pin.type instanceof PrimitiveType
+        ? pin.type.primitiveVariant()
+        : ((pin.type as ListType).inner as PrimitiveType).primitiveVariant()
     ];
 
   const connected = () =>
@@ -51,7 +59,7 @@ export const DataPin = (props: Props) => {
       }}
       class={clsx(
         `w-3.5 h-3.5 border-2`,
-        pin.type.variant !== "primitive" ? "rounded-sm" : "rounded-full",
+        pin.type.variant() !== "primitive" ? "rounded-sm" : "rounded-full",
         connected() || active() ? colourClass().active : colourClass().base
       )}
     />

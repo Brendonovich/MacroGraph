@@ -1,4 +1,5 @@
 import { core } from "../models";
+import { types } from "../types";
 
 const alphabet = [
   "A",
@@ -68,10 +69,7 @@ alphabet.forEach((a) => {
       t.dataOutput({
         id: "value",
         name: "",
-        type: {
-          variant: "primitive",
-          value: "bool",
-        },
+        type: types.bool(),
       });
     },
     run({ ctx }) {

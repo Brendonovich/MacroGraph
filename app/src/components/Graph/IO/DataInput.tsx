@@ -72,7 +72,7 @@ export const DataInput = (props: Props) => {
     <div class="flex flex-row items-center space-x-1.5 h-5">
       <DataPin pin={props.input} />
       <span>{props.input.name}</span>
-      <Show when={props.input.type.variant === "primitive"}>
+      <Show when={props.input.type.variant() === "primitive"}>
         <UnconnectedInput input={props.input} />
       </Show>
     </div>

@@ -1,23 +1,14 @@
-import { ListType } from "../bindings";
 import { DataOutput, ExecOutput, DataInput, ExecInput, Pin } from "../models";
 
 export function pinsCanConnect(
   output: DataOutput | ExecOutput,
   input: DataInput | ExecInput
 ) {
-  if (output instanceof DataOutput && input instanceof DataInput) {
-    if (output.type.variant === input.type.variant) {
-      if (output.type.variant === "primitive") {
-        return output.type.value === input.type.value;
-      } else {
-        return output.type.value.value === (input.type.value as ListType).value;
-      }
-    }
-  }
-  if (output instanceof ExecOutput && input instanceof ExecInput) {
+  if (output instanceof DataOutput && input instanceof DataInput)
+    return output.type.compare(input.type);
+  else if (output instanceof ExecOutput && input instanceof ExecInput)
     return true;
-  }
-  return false;
+  else return false;
 }
 
 export function pinIsOutput(pin: Pin): pin is DataOutput | ExecOutput {

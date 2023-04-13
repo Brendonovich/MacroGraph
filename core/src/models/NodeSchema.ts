@@ -1,4 +1,4 @@
-import { ValueType } from "../bindings";
+import { AnyType } from "../types";
 import { Package } from "./Package";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
@@ -6,7 +6,7 @@ export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 export type DataInputBuilder = {
   id: string;
   name: string;
-  type: ValueType;
+  type: AnyType;
 };
 export type ExecInputBuilder = {
   id: string;
@@ -20,7 +20,7 @@ export type InputBuilder =
 export type DataOutputBuilder = {
   id: string;
   name: string;
-  type: ValueType;
+  type: AnyType;
 };
 export type ExecOutputBuilder = {
   id: string;
