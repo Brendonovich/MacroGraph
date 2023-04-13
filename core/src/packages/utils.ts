@@ -1,4 +1,5 @@
 import { core } from "../models";
+import { types } from "../types";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -34,10 +35,7 @@ pkg.createSchema({
     builder.dataInput({
       id: "input",
       name: "Input",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
 });

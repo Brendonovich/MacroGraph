@@ -1,15 +1,17 @@
 import {
-  PrimitiveType,
   DataInput,
   ExecInput,
   ExecOutput,
+  ListType,
+  PrimitiveType,
+  PrimitiveVariant,
 } from "@macrograph/core";
 import { For, Match, Show, Switch } from "solid-js";
 
 import { useUIStore } from "~/UIStore";
 import { useGraph } from "../Graph";
 
-const DataColourClasses: Record<PrimitiveType, string> = {
+const DataColourClasses: Record<PrimitiveVariant, string> = {
   bool: "text-red-bool",
   string: "text-pink-string",
   float: "text-green-float",
@@ -66,9 +68,16 @@ export const ConnectionRender = () => {
                             const colourClass = () => {
                               const input = i();
 
-                              return input.type.variant === "primitive"
-                                ? DataColourClasses[input.type.value]
-                                : DataColourClasses[input.type.value.value];
+                              return input.type instanceof PrimitiveType
+                                ? DataColourClasses[
+                                    input.type.primitiveVariant()
+                                  ]
+                                : DataColourClasses[
+                                    (
+                                      (input.type as ListType)
+                                        .inner as PrimitiveType
+                                    ).primitiveVariant()
+                                  ];
                             };
 
                             return (
@@ -122,9 +131,14 @@ export const ConnectionRender = () => {
               )
                 return "text-white";
 
-              if (draggingPin.type.variant === "primitive")
-                return DataColourClasses[draggingPin.type.value];
-              else return DataColourClasses[draggingPin.type.value.value];
+              if (draggingPin.type instanceof PrimitiveType)
+                return DataColourClasses[draggingPin.type.primitiveVariant()];
+              else
+                return DataColourClasses[
+                  (
+                    (draggingPin.type as ListType).inner as PrimitiveType
+                  ).primitiveVariant()
+                ];
             };
 
             return (

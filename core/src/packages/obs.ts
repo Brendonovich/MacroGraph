@@ -1,6 +1,7 @@
 import OBS, { EventTypes } from "obs-websocket-js";
 
 import { core } from "../models";
+import { types } from "../types";
 
 const pkg = core.createPackage<keyof EventTypes>({
   name: "OBS Websocket",
@@ -17,10 +18,7 @@ pkg.createSchema({
     t.dataInput({
       id: "scene",
       name: "Scene",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -35,10 +33,7 @@ pkg.createSchema({
     t.dataInput({
       id: "scene",
       name: "Scene",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {

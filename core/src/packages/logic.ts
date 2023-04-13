@@ -1,4 +1,5 @@
 import { core } from "../models";
+import { types } from "../types";
 
 const pkg = core.createPackage({
   name: "Logic",
@@ -18,10 +19,7 @@ pkg.createSchema({
     builder.dataInput({
       id: "condition",
       name: "Condition",
-      type: {
-        variant: "primitive",
-        value: "bool",
-      },
+      type: types.bool(),
     });
 
     builder.execOutput({

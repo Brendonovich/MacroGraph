@@ -86,13 +86,13 @@ export class Node<TVariant extends NodeSchemaVariant = NodeSchemaVariant> {
       );
 
       builder.outputs.forEach((newOutput, newIndex) => {
-        const oldOutputIndex = this.inputs.findIndex(
+        const oldOutputIndex = this.outputs.findIndex(
           (oldInput) => oldInput.id === newOutput.id
         );
 
         if (oldOutputIndex >= 0) {
-          const oldInput = this.inputs.splice(oldOutputIndex, 1);
-          this.inputs.splice(newIndex, 0, ...oldInput);
+          const oldInput = this.outputs.splice(oldOutputIndex, 1);
+          this.outputs.splice(newIndex, 0, ...oldInput);
         } else {
           if (newOutput.variant === "Data") {
             this.addDataOutput({ ...newOutput, index: newIndex });

@@ -6,7 +6,6 @@ import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ExecOutput } from "./IO";
 import { NodeSchemaVariant, RunCtx } from "./NodeSchema";
-import { defaultPrimitiveType } from "../bindings";
 
 export class Core {
   graphs = new ReactiveMap<number, Graph>();
