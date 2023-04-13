@@ -96,10 +96,10 @@ pkg.createNonEventSchema({
 // Missing CallVendorRequest requires Object request and response
 
 pkg.createNonEventSchema({
-  name: "Get Profile Parameter",
+  name: "Get Hotkey list",
   variant: "Exec",
   generateIO(t) {
-    t.dataInput({
+    t.dataOutput({
       id: "hotkeys",
       name: "Hotkeys",
       type: types.list(types.string()),
