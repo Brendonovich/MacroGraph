@@ -104,9 +104,7 @@ class ExecutionContext {
 
           return data;
         } else {
-          return Array.isArray(input.defaultValue)
-            ? input.defaultValue
-            : input.defaultValue.value;
+          return input.defaultValue;
         }
       },
     };
