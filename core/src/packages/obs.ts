@@ -42,6 +42,7 @@ pkg.createSchema({
 });
 
 //missing availableRequests & supportedImageForamts Array<string>
+
 pkg.createSchema({
   name: "Get OBS Version",
   variant: "Exec",
@@ -49,42 +50,37 @@ pkg.createSchema({
     t.dataOutput({
       id: "obsVersion",
       name: "OBS Version",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataOutput({
       id: "obsWebSocketVersion",
       name: "OBS WS Version",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataOutput({
       id: "rpcVersion",
       name: "RPC Version",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "platform",
       name: "Platform",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
+    }),
+    t.dataOutput({
+      id: "supportedImageFormats",
+      name: "Supported Image Formats",
+      type: types.list(types.string()),
+    }),
+    t.dataOutput({
+      id: "availableRequests",
+      name: "Available Requests",
+      type: types.list(types.string()),
     }),
     t.dataOutput({
       id: "platformDescription",
       name: "Platform Description",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   async run({ ctx }) {
@@ -94,6 +90,8 @@ pkg.createSchema({
     ctx.setOutput("rpcVersion", data.rpcVersion);
     ctx.setOutput("platform", data.platform);
     ctx.setOutput("platformDescription", data.platformDescription);
+    ctx.setOutput("availableRequests", data.availableRequests);
+    ctx.setOutput("supportedImageFormats", data.supportedImageFormats);
   },
 });
 
@@ -104,90 +102,57 @@ pkg.createSchema({
     t.dataOutput({
       id: "cpuUsage",
       name: "CPU Usage",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "memoryUsage",
       name: "Memory Usage",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "availableDiskSpace",
       name: "Available Disk Space",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "activeFps",
       name: "Active FPS",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "averageFrameRenderTime",
       name: "Avg Frame Render Time",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "renderSkippedFrames",
       name: "Render Skipped Frames",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "renderTotalFrames",
       name: "Render Total Frames",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "outputSkippedFrames",
       name: "Output Skipped Frames",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "outputTotalFrames",
       name: "Output Total Frames",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "webSocketSessionIncomingMessages",
       name: "WS Session Incoming Messages",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "webSocketSessionOutgoingMessages",
       name: "WS Session Outgoing Messaes",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     });
   },
   async run({ ctx }) {
@@ -210,9 +175,22 @@ pkg.createSchema({
 
 // Missing CallVendorRequest requires Object request and response
 
-// Missing GetHotkeyList requires Array on response
+pkg.createSchema({
+  name: "Get Profile Parameter",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "hotkeys",
+      name: "Hotkeys",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call( "GetHotkeyList");
+    ctx.setOutput("hotkeys", data.hotkeys);
+  }
+});
 
-//missing availableRequests & supportedImageForamts Array<string>
 pkg.createSchema({
   name: "Trigger Hotkey By Name",
   variant: "Exec",
@@ -220,10 +198,7 @@ pkg.createSchema({
     t.dataInput({
       id: "hotkeyName",
       name: "Hotkey Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -239,7 +214,27 @@ pkg.createSchema({
 
 // Missing SetPersistentData as it has any type in request
 
-//Missing GetSceneCollectionList as it has array in response
+pkg.createSchema({
+  name: "Get Scene Collection List",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "currentSceneCollectionName",
+      name: "Scene Collection Name",
+      type: types.string(),
+    }),
+    t.dataOutput({
+      id: "sceneCollections",
+      name: "Scene Collections",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call( "GetSceneCollectionList" );
+    ctx.setOutput("currentSceneCollectionName", data.currentSceneCollectionName);
+    ctx.setOutput("sceneCollections", data.sceneCollections);
+  }
+});
 
 pkg.createSchema({
   name: "Set Current Scene Collection",
@@ -248,10 +243,7 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneCollectionName",
       name: "Scene Collection Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -266,10 +258,7 @@ pkg.createSchema({
     t.dataInput({
       id: "SceneCollectionName",
       name: "Scene Collection Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -277,8 +266,27 @@ pkg.createSchema({
   }
 });
 
-// Missing GetProfileList as it has array in response
-
+pkg.createSchema({
+  name: "Get Profile list",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "currentProfileName",
+      name: "Profile Name",
+      type: types.string(),
+    }),
+    t.dataOutput({
+      id: "profiles",
+      name: "Profiles",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call( "GetProfileList" );
+    ctx.setOutput("currentProfileName", data.currentProfileName);
+    ctx.setOutput("profiles", data.profiles);
+  }
+});
 pkg.createSchema({
   name: "Set Current Profile",
   variant: "Exec",
@@ -286,10 +294,7 @@ pkg.createSchema({
     t.dataInput({
       id: "profileName",
       name: "Profile Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -304,10 +309,7 @@ pkg.createSchema({
     t.dataInput({
       id: "profileName",
       name: "Profile Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -322,10 +324,7 @@ pkg.createSchema({
     t.dataInput({
       id: "profileName",
       name: "Profile Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -340,37 +339,25 @@ pkg.createSchema({
     t.dataInput({
       id: "parameterCategory",
       name: "Parameter catagory",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataInput({
       id: "parameterName",
       name: "Parameter Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataOutput({
       id: "parameterValue",
       name: "Parameter Value",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataOutput({
       id: "defaultParameterValue",
       name: "default Parameter Value",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const data = await ws.call( "GetProfileParameter", { parameterCategory: ctx.getInput("parameterCategory"), parameterName: ctx.getInput("parameterName")} );
     ctx.setOutput("parameterValue", data.parameterValue);
     ctx.setOutput("defaultParameterValue", data.defaultParameterValue);
@@ -384,26 +371,17 @@ pkg.createSchema({
     t.dataInput({
       id: "parameterCategory",
       name: "Parameter Catagory",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataInput({
       id: "parameterName",
       name: "Parameter Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataInput({
       id: "parameterValue",
       name: "Parameter Value",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -418,50 +396,32 @@ pkg.createSchema({
     t.dataOutput({
       id: "fpsNumerator",
       name: "FPS Numerator",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "fpsDenominator",
       name: "FPS Denominator",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "baseWidth",
       name: "Base Width",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "baseHeight",
       name: "Base Height",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "outputWidth",
       name: "Output Width",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataOutput({
       id: "outputHeight",
       name: "Output Height",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
   });
   },
   async run({ ctx }) {
@@ -482,50 +442,32 @@ pkg.createSchema({
     t.dataInput({
       id: "fpsNumerator",
       name: "FPS Numberator",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataInput({
       id: "fpsDenominator",
       name: "FPS Denominator",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataInput({
       id: "baseWidth",
       name: "Base Width",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataInput({
       id: "baseHeight",
       name: "Base Height",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataInput({
       id: "outputWidth",
       name: "Output Width",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     }),
     t.dataInput({
       id: "outputHeight",
       name: "Output Height",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     });
   },
   run({ ctx }) {
@@ -544,13 +486,10 @@ pkg.createSchema({
     t.dataOutput({
       id: "recordDirectory",
       name: "Record Directory",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const data = await ws.call( "GetRecordDirectory" );
     ctx.setOutput("recordDirectory", data.recordDirectory);
   }
@@ -563,29 +502,20 @@ pkg.createSchema({
     t.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataOutput({
       id: "videoActive",
       name: "Video Active",
-      type: {
-        variant: "primitive",
-        value: "bool",
-      },
+      type: types.bool(),
     }),
     t.dataOutput({
       id: "videoShowing",
       name: "Video Showing",
-      type: {
-        variant: "primitive",
-        value: "bool",
-      },
+      type: types.bool(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const data = await ws.call( "GetSourceActive", { sourceName: ctx.getInput("sourceName")} );
     ctx.setOutput("videoActive", data.videoActive);
     ctx.setOutput("videoShowing", data.videoShowing);
@@ -596,9 +526,23 @@ pkg.createSchema({
 
 //Missing SaveSourceScreenshot as it has Base64-Encoded Screenshot data
 
-//Missing GetSceneList as it contains array
+//Missing GetSceneList as it contains array of object
 
-//Missing GetGroupList as it contains array
+pkg.createSchema({
+  name: "Get Group List",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "groups",
+      name: "Record Directory",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call( "GetGroupList" );
+    ctx.setOutput("groups", data.groups);
+  }
+});
 
 pkg.createSchema({
   name: "Get Currenct Program Scene",
@@ -607,13 +551,10 @@ pkg.createSchema({
     t.dataOutput({
       id: "currentProgramSceneName",
       name: "Current Program Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const data = await ws.call( "GetCurrentProgramScene" );
     ctx.setOutput("currentProgramSceneName", data.currentProgramSceneName);
   }
@@ -626,10 +567,7 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -644,13 +582,10 @@ pkg.createSchema({
     t.dataOutput({
       id: "currentPreviewSceneName",
       name: "Current Program Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const data = await ws.call( "GetCurrentPreviewScene" );
     ctx.setOutput("currentPreviewSceneName", data.currentPreviewSceneName);
   }
@@ -663,10 +598,7 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -681,10 +613,7 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -699,10 +628,7 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -717,18 +643,12 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataInput({
       id: "newSceneName",
       name: "New Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     });
   },
   run({ ctx }) {
@@ -743,29 +663,20 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataOutput({
       id: "transitionName",
       name: "Transition Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataOutput({
       id: "transitionDuration",
       name: "Transition Duration",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const data = await ws.call( "GetSceneSceneTransitionOverride", { sceneName: ctx.getInput("sceneName")} );
     ctx.setOutput("transitionName", data.transitionName);
     ctx.setOutput("transitionDuration", data.transitionDuration);
@@ -779,29 +690,21 @@ pkg.createSchema({
     t.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataInput({
       id: "transitionName",
       name: "Transition Name",
-      type: {
-        variant: "primitive",
-        value: "string",
-      },
+      type: types.string(),
     }),
     t.dataInput({
       id: "transitionDuration",
       name: "Transition Duration",
-      type: {
-        variant: "primitive",
-        value: "int",
-      },
+      type: types.int(),
     });
   },
   run({ ctx }) {
     ws.call( "SetSceneSceneTransitionOverride", { sceneName: ctx.getInput("sceneName"), transitionName: ctx.getInput("transitionName"), transitionDuration: ctx.getInput("transitionDuration")} );
   }
 });
+
