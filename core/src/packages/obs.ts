@@ -637,3 +637,41 @@ pkg.createNonEventSchema({
     });
   },
 });
+
+pkg.createEventSchema({
+  event: "ConnectionOpened",
+  name: "Connection Opened",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+  },
+  run({ ctx, data }) {
+    ctx.exec("exec");
+  }
+});
+
+pkg.createEventSchema({
+  event: "CurrentProgramSceneChanged",
+  name: "Current Program Scene Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "" ,
+    });
+    t.dataOutput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("sceneName", data.sceneName);
+    ctx.exec("exec");
+  }
+});
+
+ws.on("CurrentProgramSceneChanged", data => {
+  pkg.emitEvent({ name: "CurrentProgramSceneChanged", data});
+})
