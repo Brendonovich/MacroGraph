@@ -32,7 +32,11 @@ const alphabet = [
 
 type Alphabet = (typeof alphabet)[number];
 
-const pkg = core.createPackage<`${Lowercase<Alphabet>}-key`>({
+const pkg = core.createPackage<{
+  [K in `${Lowercase<Alphabet>}-key`]: {
+    state: "pressed" | "released";
+  };
+}>({
   name: "Keyboard Inputs",
 });
 
@@ -41,9 +45,8 @@ function toLowercase<T extends string>(c: T): Lowercase<T> {
 }
 
 alphabet.forEach((a) => {
-  pkg.createSchema({
+  pkg.createEventSchema({
     name: `${a} Key`,
-    variant: "Event",
     event: `${toLowercase(a)}-key`,
     generateIO: (t) => {
       t.execOutput({
@@ -62,7 +65,7 @@ alphabet.forEach((a) => {
 });
 
 alphabet.forEach((a) => {
-  pkg.createSchema({
+  pkg.createNonEventSchema({
     name: `${a} Key Pressed`,
     variant: "Pure",
     generateIO: (t) => {

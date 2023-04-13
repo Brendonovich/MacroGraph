@@ -67,14 +67,28 @@ export type RunCtx = {
   getInput<T>(name: string): T;
 };
 
-export type NodeSchema<
-  TEvents extends string = string,
+export type EventsMap = Record<string, any>;
+
+export type NodeSchema<TEvents extends EventsMap = EventsMap> =
+  | NonEventNodeSchema
+  | EventNodeSchema<TEvents>;
+
+export type NonEventNodeSchema<TState extends object = object> = {
+  name: string;
+  generateIO: (builder: IOBuilder, state: TState) => void;
+  package: Package<EventsMap>;
+  variant: Exclude<NodeSchemaVariant, "Event">;
+  run: (a: { ctx: RunCtx }) => void;
+};
+
+export type EventNodeSchema<
+  TEvents extends EventsMap = EventsMap,
+  TEvent extends keyof TEvents = string,
   TState extends object = object
 > = {
   name: string;
   generateIO: (builder: IOBuilder, state: TState) => void;
-  package: Package<TEvents>;
-  variant: NodeSchemaVariant;
-  event?: TEvents;
-  run: (a: { ctx: RunCtx; data?: any }) => void;
+  package: Package<EventsMap>;
+  event: TEvent;
+  run: (a: { ctx: RunCtx; data: TEvents[TEvent] }) => void;
 };

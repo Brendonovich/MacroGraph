@@ -90,7 +90,7 @@ export class DataOutput {
 }
 
 export interface ExecInputArgs {
-  node: Node<"Exec" | "Base">;
+  node: Node;
   variant: "Exec";
   id: string;
   name: string;
@@ -100,7 +100,7 @@ export interface ExecInputArgs {
 export class ExecInput {
   id: string;
   connection: ExecOutput | null = null;
-  public node: Node<"Exec" | "Base">;
+  public node: Node;
   public name: string;
 
   constructor(args: ExecInputArgs) {
@@ -126,7 +126,7 @@ export class ExecInput {
 }
 
 export interface ExecOutputArgs {
-  node: Node<"Event" | "Exec" | "Base">;
+  node: Node;
   id: string;
   name: string;
 }
@@ -134,7 +134,7 @@ export interface ExecOutputArgs {
 export class ExecOutput {
   id: string;
   connection: ExecInput | null = null;
-  public node: Node<"Event" | "Exec" | "Base">;
+  public node: Node;
   public name: string;
 
   constructor(args: ExecOutputArgs) {

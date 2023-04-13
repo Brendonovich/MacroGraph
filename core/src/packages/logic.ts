@@ -5,7 +5,7 @@ const pkg = core.createPackage({
   name: "Logic",
 });
 
-pkg.createSchema({
+pkg.createNonEventSchema({
   name: "Branch",
   variant: "Base",
   run({ ctx }) {

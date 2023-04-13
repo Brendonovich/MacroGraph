@@ -19,9 +19,7 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 export const SchemaMenu = (props: Props) => {
   const core = useCore();
 
-  const [openPackages, setOpenPacakges] = createSignal(
-    new Set<Package<string>>()
-  );
+  const [openPackages, setOpenPacakges] = createSignal(new Set<Package>());
   const [search, setSearch] = createSignal("");
 
   const lowercaseSearchTokens = createMemo(() =>
@@ -108,7 +106,9 @@ export const SchemaMenu = (props: Props) => {
                                 <div
                                   class={clsx(
                                     "h-3 w-3 rounded-full",
-                                    TypeIndicatorColours[s.variant]
+                                    TypeIndicatorColours[
+                                      "variant" in s ? s.variant : "Event"
+                                    ]
                                   )}
                                 />
                                 <span>{s.name}</span>

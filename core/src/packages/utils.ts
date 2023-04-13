@@ -25,7 +25,7 @@ class PrintChannel {
 
 export const PRINT_CHANNEL = new PrintChannel();
 
-pkg.createSchema({
+pkg.createNonEventSchema({
   name: "Print",
   variant: "Exec",
   run({ ctx }) {

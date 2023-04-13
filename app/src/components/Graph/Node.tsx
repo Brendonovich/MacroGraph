@@ -56,7 +56,9 @@ export const Node = (props: Props) => {
         <div
           class={clsx(
             "h-6 px-2 pt-1 text-md font-medium cursor-pointer outline-none",
-            SchemaVariantColours[node.schema.variant]
+            SchemaVariantColours[
+              "variant" in node.schema ? node.schema.variant : "Event"
+            ]
           )}
           onKeyDown={(e) => {
             switch (e.key) {

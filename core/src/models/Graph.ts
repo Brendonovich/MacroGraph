@@ -41,9 +41,8 @@ export class Graph {
 
     this.nodes.set(id, node);
 
-    const event = args.schema.event;
-
-    if (event !== undefined) {
+    if ("event" in node.schema) {
+      const event = node.schema.event;
       const pkg = args.schema.package;
       const mappings = this.core.eventNodeMappings;
 

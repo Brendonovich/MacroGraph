@@ -1,4 +1,4 @@
-import { IOBuilder, NodeSchema, NodeSchemaVariant } from "./NodeSchema";
+import { IOBuilder, NodeSchema } from "./NodeSchema";
 import {
   DataInput,
   DataInputArgs,
@@ -14,17 +14,15 @@ import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
 import { batch } from "solid-js";
 
-export interface NodeArgs<
-  TVariant extends NodeSchemaVariant = NodeSchemaVariant
-> {
+export interface NodeArgs {
   id: number;
   name?: string;
   graph: Graph;
-  schema: Extract<NodeSchema, { variant: TVariant }>;
+  schema: NodeSchema;
   position: XY;
 }
 
-export class Node<TVariant extends NodeSchemaVariant = NodeSchemaVariant> {
+export class Node {
   id: number;
   name: string;
   graph: Graph;
@@ -35,7 +33,7 @@ export class Node<TVariant extends NodeSchemaVariant = NodeSchemaVariant> {
 
   selected = false;
 
-  constructor(args: NodeArgs<TVariant>) {
+  constructor(args: NodeArgs) {
     this.id = args.id;
     this.name = args.schema.name;
     this.graph = args.graph;

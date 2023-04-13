@@ -5,16 +5,13 @@ import { Graph } from "./Graph";
 import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ExecOutput } from "./IO";
-import { NodeSchemaVariant, RunCtx } from "./NodeSchema";
+import { EventsMap, RunCtx } from "./NodeSchema";
 
 export class Core {
   graphs = new ReactiveMap<number, Graph>();
-  packages = [] as Package<string>[];
+  packages = [] as Package[];
 
-  eventNodeMappings = new Map<
-    Package<string>,
-    Map<string, Set<Node<"Event">>>
-  >();
+  eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
   private graphIdCounter = 0;
 
@@ -32,10 +29,10 @@ export class Core {
     return graph;
   }
 
-  createPackage<TEvents extends string>(args: Omit<PackageArgs, "core">) {
+  createPackage<TEvents extends EventsMap>(args: Omit<PackageArgs, "core">) {
     const pkg = new Package<TEvents>({ ...args, core: this });
 
-    this.packages.push(pkg);
+    this.packages.push(pkg as any);
 
     return pkg;
   }
@@ -44,8 +41,13 @@ export class Core {
     return this.packages.find((p) => p.name === pkg)?.schema(name);
   }
 
-  emitEvent<T extends string>(pkg: Package<T>, event: { name: T; data: any }) {
-    const mappings = this.eventNodeMappings.get(pkg)?.get(event.name);
+  emitEvent<TEvents extends EventsMap, TEvent extends keyof EventsMap>(
+    pkg: Package<TEvents>,
+    event: { name: TEvent; data: TEvents[TEvent] }
+  ) {
+    const mappings = this.eventNodeMappings
+      .get(pkg as any)
+      ?.get(event.name as string);
 
     mappings?.forEach((n) => new ExecutionContext(n).run(event.data));
   }
@@ -54,7 +56,7 @@ export class Core {
 class ExecutionContext {
   data = new Map<DataOutput, any>();
 
-  constructor(public root: Node<"Event">) {}
+  constructor(public root: Node) {}
 
   run(data: any) {
     this.root.schema.run({
@@ -110,7 +112,9 @@ class ExecutionContext {
     };
   }
 
-  execNode(node: Node<Exclude<NodeSchemaVariant, "Event">>) {
+  execNode(node: Node) {
+    if ("event" in node.schema) throw new Error("Cannot exec an Event node!");
+
     // calculate previous outputs
     node.inputs.forEach((i) => {
       if (!(i instanceof DataInput)) return;
@@ -121,7 +125,7 @@ class ExecutionContext {
         const connectedNode = connectedOutput.node;
         const schema = connectedNode.schema;
 
-        if (schema.variant === "Pure") {
+        if ("variant" in schema && schema.variant === "Pure") {
           // Pure nodes recalculate each time
 
           this.execNode(connectedNode as any);

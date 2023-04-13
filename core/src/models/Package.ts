@@ -1,15 +1,20 @@
 import { createMutable } from "solid-js/store";
 import { Core } from "./Core";
-import { NodeSchema } from "./NodeSchema";
+import {
+  EventNodeSchema,
+  EventsMap,
+  NodeSchema,
+  NonEventNodeSchema,
+} from "./NodeSchema";
 
 export interface PackageArgs {
   name: string;
   core: Core;
 }
 
-export class Package<TEvents extends string> {
+export class Package<TEvents extends EventsMap = EventsMap> {
   name: string;
-  schemas: NodeSchema<TEvents>[] = [];
+  schemas: NodeSchema[] = [];
   core: Core;
 
   constructor(args: PackageArgs) {
@@ -19,7 +24,7 @@ export class Package<TEvents extends string> {
     return createMutable(this);
   }
 
-  createSchema(schema: Omit<NodeSchema<TEvents>, "package">) {
+  createNonEventSchema(schema: Omit<NonEventNodeSchema, "package">) {
     this.schemas.push({
       ...schema,
       generateIO: (t, state) => {
@@ -37,8 +42,19 @@ export class Package<TEvents extends string> {
 
         schema.generateIO(t, state);
       },
-      package: this,
+      package: this as any,
     });
+
+    return this;
+  }
+
+  createEventSchema<TEvent extends keyof TEvents>(
+    schema: Omit<EventNodeSchema<TEvents, TEvent>, "package">
+  ) {
+    this.schemas.push({
+      ...schema,
+      package: this,
+    } as any);
 
     return this;
   }
@@ -47,7 +63,10 @@ export class Package<TEvents extends string> {
     return this.schemas.find((s) => s.name === name);
   }
 
-  emitEvent<T extends TEvents>(event: { name: T; data: any }) {
-    this.core.emitEvent(this, event);
+  emitEvent<TEvent extends keyof TEvents>(event: {
+    name: TEvent;
+    data: TEvents[TEvent];
+  }) {
+    this.core.emitEvent(this, event as any);
   }
 }
