@@ -9,8 +9,23 @@ const pkg = core.createPackage<EventTypes>({
 
 const ws = new OBS();
 
-ws.connect();
+pkg.createNonEventSchema({
+  name: "Connect OBS Websocket",
+  variant: "Exec",
+  generateIO() {},
+  run() {
+    return ws.connect();
+  },
+});
 
+pkg.createNonEventSchema({
+  name: "Disconnect OBS Websocket",
+  variant: "Exec",
+  generateIO() {},
+  run() {
+    return ws.disconnect();
+  },
+});
 //missing availableRequests & supportedImageForamts Array<string>
 
 const versionOutputs = [
@@ -1602,10 +1617,14 @@ pkg.createEventSchema({
       name: "",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
-  }
+  },
 });
+
+ws.on("ConnectionOpened", () =>
+  pkg.emitEvent({ name: "ConnectionOpened", data: undefined })
+);
 
 pkg.createEventSchema({
   event: "CurrentProgramSceneChanged",
@@ -1613,7 +1632,7 @@ pkg.createEventSchema({
   generateIO(t) {
     t.execOutput({
       id: "exec",
-      name: "" ,
+      name: "",
     });
     t.dataOutput({
       id: "sceneName",
@@ -1624,9 +1643,9 @@ pkg.createEventSchema({
   run({ ctx, data }) {
     ctx.setOutput("sceneName", data.sceneName);
     ctx.exec("exec");
-  }
+  },
 });
 
-ws.on("CurrentProgramSceneChanged", data => {
-  pkg.emitEvent({ name: "CurrentProgramSceneChanged", data});
-})
+ws.on("CurrentProgramSceneChanged", (data) => {
+  pkg.emitEvent({ name: "CurrentProgramSceneChanged", data });
+});
