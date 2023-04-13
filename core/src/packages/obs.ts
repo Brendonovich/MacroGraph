@@ -638,6 +638,961 @@ pkg.createNonEventSchema({
   },
 });
 
+//GetInputList has array of objects
+
+pkg.createNonEventSchema({
+  name: "Get Input Kind List",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "unversioned",
+      name: "Unversioned",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "inputKinds",
+      name: "Input Kinds",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetInputKindList", {
+      unversioned: ctx.getInput("unversioned"),
+    });
+    ctx.setOutput("inputKinds", data.inputKinds);
+  },
+});
+
+const SpecialInputsOutputs = [
+  ["desktop1", "Desktop 1"],
+  ["desktop2", "Desktop 2"],
+  ["mic1", "Mic1"],
+  ["mic2", "Mic2"],
+  ["mic3", "Mic3"],
+  ["mic4", "Mic4"],
+] as const;
+
+pkg.createNonEventSchema({
+  name: "Get Special Inputs",
+  variant: "Exec",
+  generateIO(t) {
+    SpecialInputsOutputs.map(([id, name]) =>
+      t.dataOutput({ id, name, type: types.string() })
+    );
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetSpecialInputs");
+    SpecialInputsOutputs.forEach(([id]) => ctx.setOutput(id, data[id]));
+  },
+});
+
+//Create Input doesnt allow custom init settings as its an objecy
+
+pkg.createNonEventSchema({
+  name: "Create Input",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "inputKind",
+      name: "Input kind",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemEnabled",
+      name: "Scene Item Enabled",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("CreateInput", {
+      inputKind: ctx.getInput("inputKind"),
+      sceneName: ctx.getInput("sceneName"),
+      inputName: ctx.getInput("inputName"),
+      sceneItemEnabled: ctx.getInput("sceneItemEnabled")
+     });
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Remove Input",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    ws.call("RemoveInput", {
+      inputName: ctx.getInput("inputName"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Name",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "newInputName",
+      name: "New Input Name",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    ws.call("SetInputName", {
+      inputName: ctx.getInput("inputName"),
+      newInputName: ctx.getInput("newInputName"),
+    });
+  },
+});
+
+//GetInputDefaultSettings has object
+
+//GetINputSettings has object
+
+//SetInputSettings has object
+
+pkg.createNonEventSchema({
+  name: "Get Input Mute",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "inputMuted",
+      name: "Input Muted",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetInputMute", {
+      inputName: ctx.getInput("inputName"),
+    });
+    ctx.setOutput("inputMuted", data.inputMuted);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Mute",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "inputMuted",
+      name: "Input Muted",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    ws.call("SetInputMute", {
+      inputName: ctx.getInput("inputName"),
+      inputMuted: ctx.getInput("inputMuted")
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Toggle Input Mute",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "inputMuted",
+      name: "Input Muted",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("ToggleInputMute", {
+      inputName: ctx.getInput("inputName"),
+    });
+    ctx.setOutput("inputMuted", data.inputMuted);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Input Volume",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "inputVolumeMul",
+      name: "Input Volume Mul",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "inputVolumeDb",
+      name: "Input Volume Db",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetInputVolume", {
+      inputName: ctx.getInput("inputName"),
+    });
+    ctx.setOutput("inputVolumeMul", data.inputVolumeMul);
+    ctx.setOutput("inputVolumeDb", data.inputVolumeDb);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Volume",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "inputVolumeMul",
+      name: "Input Volume Mul",
+      type: types.bool(),
+    });
+    t.dataInput({
+      id: "inputVolumeDb",
+      name: "Input Volume Db",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    ws.call("SetInputVolume", {
+      inputName: ctx.getInput("inputName"),
+      inputVolumeMul: ctx.getInput("inputVolumeMul"),
+      inputVolumeDb: ctx.getInput("inputVolumeDb"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Input Audio Balance",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "inputAudioBalance",
+      name: "Input Audio Balance",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetInputAudioBalance", {
+      inputName: ctx.getInput("inputName"),
+    });
+    ctx.setOutput("inputAudioBalance", data.inputAudioBalance);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Audio Balance",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "inputAudioBalance",
+      name: "Input Audio Balance",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetInputAudioBalance", {
+      inputName: ctx.getInput("inputName"),
+      inputAudioBalance: ctx.getInput("inputAudioBalance"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Input Audio Sync Offset",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "inputAudioSyncOffset",
+      name: "Input Audio Sync Offset",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetInputAudioSyncOffset", {
+      inputName: ctx.getInput("inputName"),
+    });
+    ctx.setOutput("inputAudioSyncOffset", data.inputAudioSyncOffset);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Audio Sync Offset",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "inputAudioSyncOffset",
+      name: "Input Audio Sync Offset",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetInputAudioSyncOffset", {
+      inputName: ctx.getInput("inputName"),
+      inputAudioSyncOffset: ctx.getInput("inputAudioSyncOffset"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Input Audio Monitor Type",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "monitorType",
+      name: "Monitor Type",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetInputAudioMonitorType", {
+      inputName: ctx.getInput("inputName"),
+    });
+    ctx.setOutput("monitorType", data.monitorType);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Audio Monitor Type",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "monitorType",
+      name: "Monitor Type",
+      type: types.string(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetInputAudioMonitorType", {
+      inputName: ctx.getInput("inputName"),
+      monitorType: ctx.getInput("monitorType"),
+    });
+  },
+});
+
+//GetInputAudioTracks contains object
+
+//SetInputAudioTracks contains object
+
+//GetInputPropertiesListPropertyItems contains array of objects
+
+pkg.createNonEventSchema({
+  name: "Press Input Properties Button",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "propertyName",
+      name: "Property Name",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("PressInputPropertiesButton", {
+      inputName: ctx.getInput("inputName"),
+      propertyName: ctx.getInput("propertyName"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Transition Kind List",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "transitionKinds",
+      name: "Transition Kinds",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetTransitionKindList");
+    ctx.setOutput("transitionKinds", data.transitionKinds);
+  },
+});
+
+//GetSceneTransitionList contains array of objects
+
+//GetCurrentSceneTransition contains object
+
+pkg.createNonEventSchema({
+  name: "Set Current Scene Transition",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "transitionName",
+      name: "Transition Name",
+      type: types.string(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetCurrentSceneTransition", {
+      transitionName: ctx.getInput("transitionName"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Current Scene Transition Duration",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "transitionDuration",
+      name: "Transition Duration",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetCurrentSceneTransitionDuration", {
+      transitionDuration: ctx.getInput("transitionDuration"),
+    });
+  },
+});
+
+//SetCurrentSceneTransitionSettings contains object
+
+pkg.createNonEventSchema({
+  name: "Get Current Scene Transition Cursor",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "transitionCursor",
+      name: "Transition Cursor",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetCurrentSceneTransitionCursor");
+    ctx.setOutput("transitionCursor", data.transitionCursor);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Trigger Studio Mode Transition",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("TriggerStudioModeTransition");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set T Bar Position",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "position",
+      name: "Position",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "release",
+      name: "Release",
+      type: types.bool(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetTBarPosition", {
+      position: ctx.getInput("position"),
+      release: ctx.getInput("release"),
+    });
+  },
+});
+
+//GetSourceFilterList contains array of object
+
+//GetSourceFilterDefaultSettings contains object
+
+//CreateSourceFilter contains object
+
+pkg.createNonEventSchema({
+  name: "Remove Source Filter",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "filterName",
+      name: "Filter Name",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("RemoveSourceFilter", {
+      sourceName: ctx.getInput("sourceName"),
+      filterName: ctx.getInput("filterName"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Source Filter Name",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "filterName",
+      name: "Filter Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "newFilterName",
+      name: "New Filter Name",
+      type: types.string(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetSourceFilterName", {
+      sourceName: ctx.getInput("sourceName"),
+      filterName: ctx.getInput("filterName"),
+      newFilterName: ctx.getInput("newFilterName"),
+    });
+  },
+});
+
+//GetSourceFilter contains object
+
+pkg.createNonEventSchema({
+  name: "Set Source Filter Name",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "filterName",
+      name: "Filter Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "filterIndex",
+      name: "Filter Index",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetSourceFilterIndex", {
+      sourceName: ctx.getInput("sourceName"),
+      filterName: ctx.getInput("filterName"),
+      filterIndex: ctx.getInput("filterIndex"),
+    });
+  },
+});
+
+//SetSourceFilterSettings contains object
+
+pkg.createNonEventSchema({
+  name: "Set Source Filter Enabled",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "filterName",
+      name: "Filter Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "filterEnabled",
+      name: "Filter Enabled",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetSourceFilterEnabled", {
+      sourceName: ctx.getInput("sourceName"),
+      filterName: ctx.getInput("filterName"),
+      filterEnabled: ctx.getInput("filterEnabled"),
+    });
+  },
+});
+
+//GetSceneItemList contains array of object
+
+//GetGroupSceneItemList contains array of object
+
+pkg.createNonEventSchema({
+  name: "Get Scene Item Id",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "searchOffset",
+      name: "Search Offset",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetSceneItemId", {
+      sceneName: ctx.getInput("sceneName"),
+      sourceName: ctx.getInput("sourceName"),
+      searchOffset: ctx.getInput("searchOffset"),
+    });
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Scene Item Id",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemEnabled",
+      name: "Search Offset",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("CreateSceneItem", {
+      sceneName: ctx.getInput("sceneName"),
+      sourceName: ctx.getInput("sourceName"),
+      sceneItemEnabled: ctx.getInput("sceneItemEnabled"),
+    });
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Volume",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    ws.call("RemoveSceneItem", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Duplicate Scene Item",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "destinationSceneName",
+      name: "Destination Scene Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    })
+  },
+  async run({ ctx }) {
+    const data = await ws.call("DuplicateSceneItem", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+      destinationSceneName: ctx.getInput("destinationSceneName"),
+    });
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+  },
+});
+
+//GetSceneItemTransform contains object
+
+//SetSceneItemTransform contains object
+
+pkg.createNonEventSchema({
+  name: "Get Scene Item Enabled",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemEnabled",
+      name: "Scene Item Enabled",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetSceneItemEnabled", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+    });
+    ctx.setOutput("sceneItemEnabled", data.sceneItemEnabled);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Scene Item Enabled",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "sceneItemEnabled",
+      name: "Scene Item Enabled",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+    ws.call("SetSceneItemEnabled", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+      sceneItemEnabled: ctx.getInput("sceneItemEnabled"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Scene Item Id",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemLocked",
+      name: "Scene Item Locked",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetSceneItemLocked", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+    });
+    ctx.setOutput("sceneItemLocked", data.sceneItemLocked);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Scene Item Locked",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "sceneItemLocked",
+      name: "Scene Item Locked",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+    ws.call("SetSceneItemLocked", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+      sceneItemLocked: ctx.getInput("sceneItemLocked"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Scene Item Index",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemIndex",
+      name: "Scene Item Index",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetSceneItemIndex", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+    });
+    ctx.setOutput("sceneItemIndex", data.sceneItemIndex);
+  },
+});
+
+
+//set scene item index is next
+
+
+
+
+//EVENTS BELOW ______________________________________________
+
 pkg.createEventSchema({
   event: "ConnectionOpened",
   name: "Connection Opened",
