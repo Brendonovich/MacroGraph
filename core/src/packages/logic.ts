@@ -11,22 +11,22 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.exec(ctx.getInput<boolean>("condition") ? "true" : "false");
   },
-  generateIO(builder) {
-    builder.execInput({
+  generateIO(t) {
+    t.execInput({
       id: "exec",
       name: "",
     });
-    builder.dataInput({
+    t.dataInput({
       id: "condition",
       name: "Condition",
       type: types.bool(),
     });
 
-    builder.execOutput({
+    t.execOutput({
       id: "true",
       name: "True",
     });
-    builder.execOutput({
+    t.execOutput({
       id: "false",
       name: "False",
     });
