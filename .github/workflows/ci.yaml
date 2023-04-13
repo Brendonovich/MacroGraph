@@ -46,5 +46,5 @@ jobs:
       # The `artifacts` output can now be used by a different action to upload the artifacts
       - uses: actions/upload-artifact@v3
         with:
-          name: artifacts
+          name: artifacts-${{ matrix.platform }}
           path: "${{ join(fromJSON(steps.tauri_build.outputs.artifacts), '\n') }}"
