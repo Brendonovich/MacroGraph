@@ -11,36 +11,6 @@ const ws = new OBS();
 
 ws.connect();
 
-pkg.createNonEventSchema({
-  name: "Set Current Scene",
-  variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
-      id: "scene",
-      name: "Scene",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    ws.call("SetCurrentProgramScene", { sceneName: ctx.getInput("scene") });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Set Preview Scene",
-  variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
-      id: "scene",
-      name: "Scene",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    ws.call("SetCurrentPreviewScene", { sceneName: ctx.getInput("scene") });
-  },
-});
-
 //missing availableRequests & supportedImageForamts Array<string>
 
 const versionOutputs = [
@@ -260,7 +230,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Create profile",
+  name: "Create Profile",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({
@@ -295,24 +265,25 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "parameterCategory",
-      name: "Parameter catagory",
+      name: "Catagory",
       type: types.string(),
-    }),
-      t.dataInput({
-        id: "parameterName",
-        name: "Parameter Name",
-        type: types.string(),
-      }),
-      t.dataOutput({
-        id: "parameterValue",
-        name: "Parameter Value",
-        type: types.string(),
-      }),
-      t.dataOutput({
-        id: "defaultParameterValue",
-        name: "default Parameter Value",
-        type: types.string(),
-      });
+    });
+    t.dataInput({
+      id: "parameterName",
+      name: "Name",
+      type: types.string(),
+    });
+
+    t.dataOutput({
+      id: "parameterValue",
+      name: "Value",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "defaultParameterValue",
+      name: "Default Value",
+      type: types.string(),
+    });
   },
   async run({ ctx }) {
     const data = await ws.call("GetProfileParameter", {
@@ -330,17 +301,17 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "parameterCategory",
-      name: "Parameter Catagory",
+      name: "Catagory",
       type: types.string(),
     });
     t.dataInput({
       id: "parameterName",
-      name: "Parameter Name",
+      name: "Name",
       type: types.string(),
     });
     t.dataInput({
       id: "parameterValue",
-      name: "Parameter Value",
+      name: "Value",
       type: types.string(),
     });
   },
@@ -484,7 +455,7 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataOutput({
       id: "groups",
-      name: "Record Directory",
+      name: "Groups",
       type: types.list(types.string()),
     });
   },
