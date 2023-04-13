@@ -495,7 +495,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Get Currenct Program Scene",
+  name: "Get Current Program Scene",
   variant: "Exec",
   generateIO(t) {
     t.dataOutput({
@@ -511,7 +511,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Set Currenct Program Scene",
+  name: "Set Current Program Scene",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({
@@ -526,7 +526,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Get Currenct Preview Scene",
+  name: "Get Current Preview Scene",
   variant: "Exec",
   generateIO(t) {
     t.dataOutput({
@@ -542,7 +542,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Set Currenct Preview Scene",
+  name: "Set Current Preview Scene",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({
