@@ -19,7 +19,7 @@ const UnconnectedInput = (props: Props) => {
             <CheckBox
               class={className()}
               value={input.defaultValue}
-              onChange={input.setDefaultValue}
+              onChange={value => input.setDefaultValue(value)}
             />
           </Match>
           <Match when={type().primitiveVariant() === "string"}>
@@ -27,7 +27,7 @@ const UnconnectedInput = (props: Props) => {
               <TextInput
                 class={className()}
                 value={input.defaultValue}
-                onChange={input.setDefaultValue}
+                onChange={value => input.setDefaultValue(value)}
               />
             </div>
           </Match>
@@ -36,7 +36,7 @@ const UnconnectedInput = (props: Props) => {
               <IntInput
                 class={className()}
                 value={input.defaultValue}
-                onChange={input.setDefaultValue}
+                onChange={value => input.setDefaultValue(value)}
               />
             </div>
           </Match>
@@ -45,7 +45,7 @@ const UnconnectedInput = (props: Props) => {
               <FloatInput
                 class={className()}
                 value={input.defaultValue}
-                onChange={input.setDefaultValue}
+                onChange={value => input.setDefaultValue(value)}
               />
             </div>
           </Match>
