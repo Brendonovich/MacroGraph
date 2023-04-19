@@ -46,6 +46,9 @@ jobs:
         id: tauri_build
         with:
           projectPath: app
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
       # The `artifacts` output can now be used by a different action to upload the artifacts
       - uses: actions/upload-artifact@v3
