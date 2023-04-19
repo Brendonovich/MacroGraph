@@ -28,6 +28,12 @@ jobs:
         with:
           shared-key: rust-deps
 
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+      
       - name: Compile (debug)
         run: cargo test --workspace --all-features --no-run
       
