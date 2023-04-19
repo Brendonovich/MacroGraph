@@ -26,7 +26,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - uses: Swatinem/rust-cache@v2 
+      - name: Cache Rust Dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust-deps
+          save-if: false
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
