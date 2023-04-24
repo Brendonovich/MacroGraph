@@ -1485,7 +1485,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Get Scene Item Enabled",
+  name: "Set Scene Item Enabled",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({
@@ -1600,9 +1600,781 @@ pkg.createNonEventSchema({
   },
 });
 
+pkg.createNonEventSchema({
+  name: "Set Scene Item Index",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "sceneItemIndex",
+      name: "Scene Item Index",
+      type: types.int(),
+    })
+  },
+  async run({ ctx }) {
+    ws.call("SetSceneItemIndex", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+      sceneItemIndex: ctx.getInput("sceneItemIndex"),
+    });
+  },
+});
 
-//set scene item index is next
+pkg.createNonEventSchema({
+  name: "Get Scene Item Blend Mode",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemBlendMode",
+      name: "Scene Item Blend Mode",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetSceneItemBlendMode", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+    });
+    ctx.setOutput("sceneItemBlendMode", data.sceneItemBlendMode);
+  },
+});
 
+pkg.createNonEventSchema({
+  name: "Set Scene Item Blend Mode",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "sceneItemEnabled",
+      name: "Scene Item Enabled",
+      type: types.string(),
+    })
+  },
+  async run({ ctx }) {
+    ws.call("SetSceneItemBlendMode", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+      sceneItemBlendMode: ctx.getInput("sceneItemBlendMode"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Virtual Cam Status",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "outputActive",
+      name: "Ouput Active",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetVirtualCamStatus");
+    ctx.setOutput("outputActive", data.outputActive);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Toggle Virtual Cam",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "outputActive",
+      name: "Ouput Active",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("ToggleVirtualCam");
+    ctx.setOutput("outputActive", data.outputActive);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Start Virtual Cam",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("StartVirtualCam");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Stop Virtual Cam",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("StopVirtualCam");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Replay Buffer Status",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "outputActive",
+      name: "Ouput Active",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetReplayBufferStatus");
+    ctx.setOutput("outputActive", data.outputActive);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Toggle Replay Buffer",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "outputActive",
+      name: "Ouput Active",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("ToggleReplayBuffer");
+    ctx.setOutput("outputActive", data.outputActive);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Start Replay Buffer",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("StartReplayBuffer");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Stop Replay Buffer",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("StopReplayBuffer");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Save Replay Buffer",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("SaveReplayBuffer");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Last Replay Buffer Replay",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "savedReplayPath",
+      name: "Save Replay Path",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetLastReplayBufferReplay");
+    ctx.setOutput("savedReplayPath", data.savedReplayPath);
+  },
+});
+
+//GetOUtputList has array of objects
+
+// const OutputStatus = [
+//   {
+//     id: "outputActive",
+//     name: "Output Active",
+//     type: types.bool(),
+//   },
+//   {
+//     id: "outputReconnecting",
+//     name: "Output Reconnecting",
+//     type: types.bool(),
+//   },
+//   {
+//     id: "outputTimecode",
+//     name: "Output Timecode",
+//     type: types.string(),
+//   },
+//   {
+//     id: "outputDuration",
+//     name: "Output Duration",
+//     type: types.int(),
+//   },
+//   {
+//     id: "outputCongestion",
+//     name: "Output Congestion",
+//     type: types.int(),
+//   },
+//   {
+//     id: "outputBytes",
+//     name: "Output Bytes",
+//     type: types.int(),
+//   },
+//   {
+//     id: "outputSkippedFrames",
+//     name: "Output Skipped Frames",
+//     type: types.int(),
+//   },
+//   {
+//     id: "outputTotalFrames",
+//     name: "Output Total Frames",
+//     type: types.int(),
+//   },
+// ] as const;
+
+// pkg.createNonEventSchema({
+//   name: "Toggle Output",
+//   variant: "Exec",
+//   generateIO(t) {
+//     t.dataInput({
+//       id: "outputName",
+//       name: "Output Name",
+//       type: types.string(),
+//     });
+//     OutputStatus.forEach((data) => t.dataOutput(data));
+//   },
+//   async run({ ctx }) {
+//     const data = await ws.call("GetOutputStatus", {
+//       outputName: ctx.getInput("outputName")
+//     });
+//     OutputStatus.forEach(({ id }) => ctx.setOutput(id, data[id]));
+//   },
+// });
+
+// pkg.createNonEventSchema({
+//   name: "Start Output",
+//   variant: "Exec",
+//   generateIO(t) {
+//     t.dataInput({
+//       id: "outputName",
+//       name: "Output Name",
+//       type: types.string(),
+//     });
+//   },
+//   async run({ ctx }) {
+//     ws.call("StartOutput", {
+//       outputName: ctx.getInput("outputName"),
+//     });
+//   },
+// });
+
+// pkg.createNonEventSchema({
+//   name: "Stop Output",
+//   variant: "Exec",
+//   generateIO(t) {
+//     t.dataInput({
+//       id: "outputName",
+//       name: "Output Name",
+//       type: types.string(),
+//     });
+//   },
+//   async run({ ctx }) {
+//     ws.call("StopOutput", {
+//       outputName: ctx.getInput("outputName"),
+//     });
+//   },
+// });
+
+//GetOutputSettings has object
+
+//SetOutputSettings has object
+
+const StreamStatus = [
+  {
+    id: "outputActive",
+    name: "Output Active",
+    type: types.bool(),
+  },
+  {
+    id: "outputReconnecting",
+    name: "Output Reconnecting",
+    type: types.bool(),
+  },
+  {
+    id: "outputTimecode",
+    name: "Output Timecode",
+    type: types.string(),
+  },
+  {
+    id: "outputDuration",
+    name: "Output Duration",
+    type: types.int(),
+  },
+  {
+    id: "outputCongestion",
+    name: "Output Congestion",
+    type: types.int(),
+  },
+  {
+    id: "outputBytes",
+    name: "Output Bytes",
+    type: types.int(),
+  },
+  {
+    id: "outputSkippedFrames",
+    name: "Output Skipped Frames",
+    type: types.int(),
+  },
+  {
+    id: "outputTotalFrames",
+    name: "Output Total Frames",
+    type: types.int(),
+  },
+] as const;
+
+pkg.createNonEventSchema({
+  name: "Toggle Output",
+  variant: "Exec",
+  generateIO(t) {
+    StreamStatus.forEach((data) => t.dataOutput(data));
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetStreamStatus");
+    StreamStatus.forEach(({ id }) => ctx.setOutput(id, data[id]));
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Toggle Stream",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "outputActive",
+      name: "Ouput Active",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("ToggleStream");
+    ctx.setOutput("outputActive", data.outputActive);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Start Stream",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("StartStream");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Stop Stream",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("StopStream");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Send Stream Caption",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "captionText",
+      name: "Caption Text",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    ws.call("SendStreamCaption", {
+      captionText: ctx.getInput("captionText"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Record Status",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "outputActive",
+      name: "Output Active",
+      type: types.list(types.bool()),
+    });
+    t.dataOutput({
+      id: "outputPaused",
+      name: "Output Paused",
+      type: types.list(types.bool()),
+    });
+    t.dataOutput({
+      id: "outputTimecode",
+      name: "Output Timecode",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "outputDuration",
+      name: "Output Duration",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "outputBytes",
+      name: "Output Bytes",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetRecordStatus");
+    ctx.setOutput("outputActive", data.outputActive);
+    ctx.setOutput("outputPaused", data.ouputPaused);
+    ctx.setOutput("outputTimecode", data.outputTimecode);
+    ctx.setOutput("outputDuration", data.outputDuration);
+    ctx.setOutput("outputBytes", data.outputBytes);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Toggle Record",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("ToggleRecord");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Start Record",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("StartRecord");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Stop Record",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "outputPath",
+      name: "Output Path",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("StopRecord");
+    ctx.setOutput("outputPath", data.outputPath);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Toggle Record Paused",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("ToggleRecordPause");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Pause Record",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("PauseRecord");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Resume Record",
+  variant: "Exec",
+  generateIO(t) {},
+  async run({ ctx }) {
+    ws.call("ResumeRecord");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Media Input Status",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "mediaState	",
+      name: "Media State",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "mediaDuration",
+      name: "Media Duration",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "mediaCursor",
+      name: "Media Cursor",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetMediaInputStatus", {
+      inputName: ctx.getInput("inputName"),
+    });
+    ctx.setOutput("mediaState", data.mediaState);
+    ctx.setOutput("mediaDuration", data.mediaDuration);
+    ctx.setOutput("mediaCursor", data.mediaCursor);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Media Input Cursor",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "mediaCursor",
+      name: "Media Cursor",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetMediaInputCursor", {
+      inputName: ctx.getInput("inputName"),
+      mediaCursor: ctx.getInput("mediaCursor"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Offset Media Input Cursor",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "mediaCursorOffset",
+      name: "Media Cursor Offset",
+      type: types.int(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("OffsetMediaInputCursor", {
+      inputName: ctx.getInput("inputName"),
+      mediaCursorOffset: ctx.getInput("mediaCursorOffset"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Trigger Media Input Action",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "mediaAction",
+      name: "Media Action",
+      type: types.string(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("TriggerMediaInputAction", {
+      inputName: ctx.getInput("inputName"),
+      mediaAction: ctx.getInput("mediaAction"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Studio Mode Enabled",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataOutput({
+      id: "studioModeEnabled",
+      name: "Studio Mode Enabled",
+      type: types.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await ws.call("GetStudioModeEnabled");
+    ctx.setOutput("studioModeEnabled", data.studioModeEnabled);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Studio Mode Enabled",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "studioModeEnabled",
+      name: "Studio Mode Enabled",
+      type: types.bool(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("SetStudioModeEnabled", {
+      studioModeEnabled: ctx.getInput("studioModeEnabled"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Open Input Properties Dialogue",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("OpenInputPropertiesDialog", {
+      inputName: ctx.getInput("inputName"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Open Input Filters Dialogue",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("OpenInputFiltersDialog", {
+      inputName: ctx.getInput("inputName"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Open Input Interact Dialogue",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+
+  },
+  async run({ ctx }) {
+    ws.call("OpenInputInteractDialog", {
+      inputName: ctx.getInput("inputName"),
+    });
+  },
+});
+
+//GetMonitorList has array of objects
+
+pkg.createNonEventSchema({
+  name: "Open Video Mix Projector",
+  variant: "Exec",
+  generateIO(t) {
+    t.dataInput({
+      id: "videoMixType",
+      name: "Video Mix Type",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "monitorIndex",
+      name: "Monitor Index",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "projectorGeometry",
+      name: "Projector Geometry",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    ws.call("OpenVideoMixProjector", {
+      videoMixType: ctx.getInput("videoMixType"),
+      monitorIndex: ctx.getInput("monitorIndex"),
+      projectorGeometry: ctx.getInput("projectorGeometry"),
+    });
+  },
+});
+
+// pkg.createNonEventSchema({
+//   name: "Open Source Projector",
+//   variant: "Exec",
+//   generateIO(t) {
+//     t.dataInput({
+//       id: "sourceName",
+//       name: "Source Name",
+//       type: types.string(),
+//     });
+//     t.dataInput({
+//       id: "monitorIndex",
+//       name: "Monitor Index",
+//       type: types.int(),
+//     });
+//     t.dataInput({
+//       id: "projectorGeometry",
+//       name: "Projector Geometry",
+//       type: types.string(),
+//     });
+//   },
+//   async run({ ctx }) {
+//     ws.call("OpenSourceProjector", {
+//       sourceName: ctx.getInput("sourceName"),
+//       monitorIndex: ctx.getInput("monitorIndex"),
+//       projectorGeometry: ctx.getInput("projectorGeometry"),
+//     });
+//   },
+// });
 
 
 
