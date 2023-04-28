@@ -16,9 +16,11 @@
   },
   "dependencies": {
     "@solid-primitives/map": "^0.4.3",
-    "obs-websocket-js": "^5.0.2"
+    "obs-websocket-js": "^5.0.2",
+    "tmi.js": "^1.8.5"
   },
   "devDependencies": {
+    "@types/tmi.js": "^1.8.3",
     "solid-js": "^1.7.0",
     "typescript": "^4.8.4"
   },
