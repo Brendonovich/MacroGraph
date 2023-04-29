@@ -12,3 +12,4 @@ An application for node-based programming.
 2. Run `pnpm i`
 4. Run `pnpm app tauri dev`
 
+[Figma Designs](https://www.figma.com/file/VO7zmohUtZSqC1eIyGUuN3/MacroGraph-Designs?node-id=0%3A1&t=FfCvKUpKsLp5b0ST-1)
