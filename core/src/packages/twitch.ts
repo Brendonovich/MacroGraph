@@ -1,4 +1,3 @@
-import { API_KEY } from "./APIKEY";
 import { core } from "../models";
 import { types } from "../types";
 import  tmi  from "tmi.js";
@@ -129,7 +128,7 @@ pkg.createEventSchema({
     },
     run({ ctx, data}) {
         console.log(data);
-        ctx.setOutput("username", data.username);
+        ctx.setOutput("username", data.tags.username);
         ctx.setOutput("message", data.message);
         ctx.setOutput("mod", data.tags.mod);
         ctx.setOutput("sub", data.tags.subscriber);
@@ -780,81 +779,6 @@ pkg.createEventSchema({
         ctx.setOutput("globalCooldown", data.event.global_cooldown.is_enabled);
         ctx.setOutput("globalCooldownValue", data.event.global_cooldown.seconds);
         ctx.setOutput("backgroundColor", data.event.background_color);
-        ctx.exec("exec");
-    }
-});
-
-pkg.createEventSchema({
-    name: "Channel Point Reward Redeemed",
-    event: "channel.channel_points_custom_reward_redemption.add",
-    generateIO: (t) => {
-        t.execOutput({
-            id: "exec",
-            name: "",
-        });
-        t.dataOutput({
-            id: "id",
-            name: "ID",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "userId",
-            name: "User ID",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "userLogin",
-            name: "User Login",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "userName",
-            name: "User Name",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "userInput",
-            name: "User Input",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "status",
-            name: "Status",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "rewardId",
-            name: "Rewards Id",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "rewardTitle",
-            name: "Reward Title",
-            type: types.string()
-        });
-        t.dataOutput({
-            id: "rewardCost",
-            name: "Reward Cost",
-            type: types.int()
-        });
-        t.dataOutput({
-            id: "rewardPrompt",
-            name: "Reward Prompt",
-            type: types.string()
-        });
-    },
-    run({ ctx, data}) {
-        console.log(data);
-        ctx.setOutput("id", data.event.id);
-        ctx.setOutput("userId", data.event.user_id);
-        ctx.setOutput("userLogin", data.event.user_login);
-        ctx.setOutput("userName", data.event.user_name);
-        ctx.setOutput("userInput", data.event.user_input);
-        ctx.setOutput("status", data.event.status);
-        ctx.setOutput("rewardId", data.event.reward.id);
-        ctx.setOutput("rewardTitle", data.event.reward.title);
-        ctx.setOutput("rewardCost", data.event.reward.cost);
-        ctx.setOutput("rewardPrompt", data.event.reward.prompt);
         ctx.exec("exec");
     }
 });
