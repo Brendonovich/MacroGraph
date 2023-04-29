@@ -2452,7 +2452,7 @@ ws.on("CurrentSceneCollectionChanged", (data) => {
 
 pkg.createEventSchema({
   event: "SceneCollectionListChanged",
-  name: "Current Scene Collection Changed",
+  name: "Current Scene List Changed",
   generateIO(t) {
     t.execOutput({
       id: "exec",
@@ -3213,7 +3213,535 @@ ws.on("SourceFilterEnableStateChanged", (data) => {
   pkg.emitEvent({ name: "SourceFilterEnableStateChanged", data });
 });
 
-//NEXT ITEM IS SceneItemCreated
+pkg.createEventSchema({
+  event: "SceneItemCreated",
+  name: "Scene Item Created",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "sceneName",
+      name: "Scene name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sourceName",
+      name: "Source name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemIndex",
+      name: "Scene Item Index",
+      type: types.int(),
+    });
+
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("sceneName", data.sceneName);
+    ctx.setOutput("sourceName", data.sourceName);
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+    ctx.setOutput("sceneItemIndex", data.sceneItemIndex);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("SceneItemCreated", (data) => {
+  pkg.emitEvent({ name: "SceneItemCreated", data });
+});
+
+pkg.createEventSchema({
+  event: "SceneItemRemoved",
+  name: "Scene Item Removed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "sceneName",
+      name: "Scene name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sourceName",
+      name: "Source name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("sceneName", data.sceneName);
+    ctx.setOutput("sourceName", data.sourceName);
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("SceneItemRemoved", (data) => {
+  pkg.emitEvent({ name: "SceneItemRemoved", data });
+});
+
+//Has Object array
+
+// pkg.createEventSchema({
+//   event: "SceneItemListReindexed",
+//   name: "Scene Item List Reindexed",
+//   generateIO(t) {
+//     t.execOutput({
+//       id: "exec",
+//       name: "",
+//     });
+//     t.dataOutput({
+//       id: "sceneName",
+//       name: "Scene name",
+//       type: types.string(),
+//     });
+//     t.dataOutput({
+//       id: "sceneItems",
+//       name: "Source Items",
+//       type: types.list(types.object()),
+//     });
+//   },
+//   run({ ctx, data }) {
+//     ctx.setOutput("sceneName", data.sceneName);
+//     ctx.setOutput("sceneItems", data.sceneItems);
+//     ctx.exec("exec");
+//   },
+// });
+
+// ws.on("SceneItemListReindexed", (data) => {
+//   pkg.emitEvent({ name: "SceneItemListReindexed", data });
+// });
+
+pkg.createEventSchema({
+  event: "SceneItemEnableStateChanged",
+  name: "Scene Item Enable State Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "sceneName",
+      name: "Scene name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemEnabled",
+      name: "Scene Item Enabled",
+      type: types.bool(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("sceneName", data.sceneName);
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+    ctx.setOutput("sceneItemEnabled", data.sceneItemEnabled);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("SceneItemEnableStateChanged", (data) => {
+  pkg.emitEvent({ name: "SceneItemEnableStateChanged", data });
+});
+
+pkg.createEventSchema({
+  event: "SceneItemLockStateChanged",
+  name: "Scene Item Lock State Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "sceneName",
+      name: "Scene name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "sceneItemLocked",
+      name: "Scene Item Locked",
+      type: types.bool(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("sceneName", data.sceneName);
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+    ctx.setOutput("sceneItemLocked", data.sceneItemLocked);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("SceneItemLockStateChanged", (data) => {
+  pkg.emitEvent({ name: "SceneItemLockStateChanged", data });
+});
+
+pkg.createEventSchema({
+  event: "SceneItemSelected",
+  name: "Scene Item Selected",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "sceneName",
+      name: "Scene name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: types.int(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("sceneName", data.sceneName);
+    ctx.setOutput("sceneItemId", data.sceneItemId);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("SceneItemSelected", (data) => {
+  pkg.emitEvent({ name: "SceneItemSelected", data });
+});
+
+//SceneItemTransformChanged has object
+
+// pkg.createEventSchema({
+//   event: "SceneItemTransformChanged",
+//   name: "Scene Item Transform Changed",
+//   generateIO(t) {
+//     t.execOutput({
+//       id: "exec",
+//       name: "",
+//     });
+//     t.dataOutput({
+//       id: "sceneName",
+//       name: "Scene name",
+//       type: types.string(),
+//     });
+//     t.dataOutput({
+//       id: "sceneItemId",
+//       name: "Scene Item Id",
+//       type: types.int(),
+//     });
+//     t.dataOutput({
+//       id: "sceneItemTransform",
+//       name: "Scene Item Transform",
+//       type: types.object(),
+//     });
+//   },
+//   run({ ctx, data }) {
+//     ctx.setOutput("sceneName", data.sceneName);
+//     ctx.setOutput("sceneItemId", data.sceneItemId);
+//     ctx.setOutput("sceneItemTransform", data.sceneItemTransform);
+//     ctx.exec("exec");
+//   },
+// });
+
+// ws.on("SceneItemTransformChanged", (data) => {
+//   pkg.emitEvent({ name: "SceneItemTransformChanged", data });
+// });
+
+pkg.createEventSchema({
+  event: "StreamStateChanged",
+  name: "Stream State Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "outputActive",
+      name: "Output Active",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "outputState",
+      name: "Output State",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("outputActive", data.outputActive);
+    ctx.setOutput("outputState", data.outputState);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("StreamStateChanged", (data) => {
+  pkg.emitEvent({ name: "StreamStateChanged", data });
+});
+
+pkg.createEventSchema({
+  event: "RecordStateChanged",
+  name: "Record State Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "outputActive",
+      name: "Output Active",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "outputState",
+      name: "Output State",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "outputPath",
+      name: "Output Path",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("outputActive", data.outputActive);
+    ctx.setOutput("outputState", data.outputState);
+    ctx.setOutput("outputPath", data.outputPath);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("RecordStateChanged", (data) => {
+  pkg.emitEvent({ name: "RecordStateChanged", data });
+});
+
+pkg.createEventSchema({
+  event: "ReplayBufferStateChanged",
+  name: "Replay Buffer State Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "outputActive",
+      name: "Output Active",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "outputState",
+      name: "Output State",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("outputActive", data.outputActive);
+    ctx.setOutput("outputState", data.outputState);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("ReplayBufferStateChanged", (data) => {
+  pkg.emitEvent({ name: "ReplayBufferStateChanged", data });
+});
+
+pkg.createEventSchema({
+  event: "VirtualcamStateChanged",
+  name: "Virtual Cam State Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "outputActive",
+      name: "Output Active",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "outputState",
+      name: "Output State",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("outputActive", data.outputActive);
+    ctx.setOutput("outputState", data.outputState);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("VirtualcamStateChanged", (data) => {
+  pkg.emitEvent({ name: "VirtualcamStateChanged", data });
+});
+
+pkg.createEventSchema({
+  event: "ReplayBufferSaved",
+  name: "Replay Buffer Saved",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "savedReplayPath",
+      name: "Saved Replay Path",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("savedReplayPath", data.savedReplayPath);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("ReplayBufferSaved", (data) => {
+  pkg.emitEvent({ name: "ReplayBufferSaved", data });
+});
+
+pkg.createEventSchema({
+  event: "MediaInputPlaybackStarted",
+  name: "Media Input Playback Started",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("inputName", data.inputName);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("MediaInputPlaybackStarted", (data) => {
+  pkg.emitEvent({ name: "MediaInputPlaybackStarted", data });
+});
+
+pkg.createEventSchema({
+  event: "MediaInputPlaybackEnded",
+  name: "Media Input Playback Ended",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("inputName", data.inputName);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("MediaInputPlaybackEnded", (data) => {
+  pkg.emitEvent({ name: "MediaInputPlaybackEnded", data });
+});
+
+pkg.createEventSchema({
+  event: "MediaInputActionTriggered",
+  name: "Media Input Action Triggered",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "inputName",
+      name: "Input Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "mediaAction",
+      name: "Media Action",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("inputName", data.inputName);
+    ctx.setOutput("mediaAction", data.mediaAction);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("MediaInputActionTriggered", (data) => {
+  pkg.emitEvent({ name: "MediaInputActionTriggered", data });
+});
+
+pkg.createEventSchema({
+  event: "StudioModeStateChanged",
+  name: "Studio Mode State Changed",
+  generateIO(t) {
+    t.execOutput({
+      id: "exec",
+      name: "",
+    });
+    t.dataOutput({
+      id: "studioModeEnabled",
+      name: "Studio Mode Enabled",
+      type: types.bool(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("studioModeEnabled", data.studioModeEnabled);
+    ctx.exec("exec");
+  },
+});
+
+ws.on("StudioModeStateChanged", (data) => {
+  pkg.emitEvent({ name: "StudioModeStateChanged", data });
+});
+
+//Doesnt Exist Yet
+
+// pkg.createEventSchema({
+//   event: "ScreenshotSaved",
+//   name: "Screenshot Saved",
+//   generateIO(t) {
+//     t.execOutput({
+//       id: "exec",
+//       name: "",
+//     });
+//     t.dataOutput({
+//       id: "savedScreenshotPath",
+//       name: "Saved Screenshot Path",
+//       type: types.bool(),
+//     });
+//   },
+//   run({ ctx, data }) {
+//     ctx.setOutput("savedScreenshotPath", data.savedScreenshotPath);
+//     ctx.exec("exec");
+//   },
+// });
+
+// ws.on("ScreenshotSaved", (data) => {
+//   pkg.emitEvent({ name: "ScreenshotSaved", data });
+// });
+
 
 pkg.createEventSchema({
   event: "ConnectionOpened",
@@ -3232,27 +3760,3 @@ pkg.createEventSchema({
 ws.on("ConnectionOpened", () =>
   pkg.emitEvent({ name: "ConnectionOpened", data: undefined })
 );
-
-pkg.createEventSchema({
-  event: "CurrentProgramSceneChanged",
-  name: "Current Program Scene Changed",
-  generateIO(t) {
-    t.execOutput({
-      id: "exec",
-      name: "",
-    });
-    t.dataOutput({
-      id: "sceneName",
-      name: "Scene Name",
-      type: types.string(),
-    });
-  },
-  run({ ctx, data }) {
-    ctx.setOutput("sceneName", data.sceneName);
-    ctx.exec("exec");
-  },
-});
-
-ws.on("CurrentProgramSceneChanged", (data) => {
-  pkg.emitEvent({ name: "CurrentProgramSceneChanged", data });
-});
