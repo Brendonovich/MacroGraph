@@ -228,3 +228,133 @@ pkg.createNonEventSchema({
     });
   },
 })
+
+pkg.createNonEventSchema({
+  name: "Multiply",
+  variant: "Pure",
+  run({ ctx }) {
+    const numb = ctx.getInput<number>("num1") * ctx.getInput<number>("num2");
+    ctx.setOutput("outnum", numb);
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "num1",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataInput({
+      id: "num2",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataOutput({
+      id: "outnum",
+      name: "",
+      type: types.int(),
+    });
+  },
+})
+
+pkg.createNonEventSchema({
+  name: "Divide",
+  variant: "Pure",
+  run({ ctx }) {
+    const numb = ctx.getInput<number>("num1") / ctx.getInput<number>("num2");
+    ctx.setOutput("outnum", numb);
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "num1",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataInput({
+      id: "num2",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataOutput({
+      id: "outnum",
+      name: "",
+      type: types.int(),
+    });
+  },
+})
+
+pkg.createNonEventSchema({
+  name: "Add",
+  variant: "Pure",
+  run({ ctx }) {
+    const numb = ctx.getInput<number>("num1") + ctx.getInput<number>("num2");
+    ctx.setOutput("outnum", numb);
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "num1",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataInput({
+      id: "num2",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataOutput({
+      id: "outnum",
+      name: "",
+      type: types.int(),
+    });
+  },
+})
+
+pkg.createNonEventSchema({
+  name: "Subtract",
+  variant: "Pure",
+  run({ ctx }) {
+    const numb = ctx.getInput<number>("num1") - ctx.getInput<number>("num2");
+    ctx.setOutput("outnum", numb);
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "num1",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataInput({
+      id: "num2",
+      name: "",
+      type: types.int(),
+    });
+    builder.dataOutput({
+      id: "outnum",
+      name: "",
+      type: types.int(),
+    });
+  },
+})
+
+pkg.createNonEventSchema({
+  name: "Combine String",
+  variant: "Pure",
+  run({ ctx }) {
+    const string = ctx.getInput<string>("string1") + ctx.getInput<string>("string2");
+    ctx.setOutput("outString", string);
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "string1",
+      name: "start",
+      type: types.string(),
+    });
+    builder.dataInput({
+      id: "string2",
+      name: "end",
+      type: types.string(),
+    });
+    builder.dataOutput({
+      id: "outString",
+      name: "",
+      type: types.string(),
+    });
+  },
+})
