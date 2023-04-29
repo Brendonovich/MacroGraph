@@ -12,8 +12,8 @@ const authProvider = new StaticAuthProvider(clientId, accessToken);
 
 const apiClient = new ApiClient({authProvider});
 
-let userID = "";
-let username = "";
+let userID = localStorage.getItem("AuthedUserId");
+let username = localStorage.getItem("AuthedUserName");;
 
 const SubTypes = [
     "channel.update",
@@ -66,31 +66,9 @@ ws.addEventListener("message", data => {
     switch(info.metadata.message_type){
         case "session_welcome":
             sessionID = info.payload.session.id;
-            fetch("https://api.twitch.tv/helix/users", {
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + accessToken,
-            "Client-Id": clientId,
-
-        }
-        }).then(res => res.json())
-            .then(res => {
-            console.log(res);
-            username = res.data[0].login;
-            userID = res.data[0].id;
-            Client = tmi.Client({
-                channels: [ username ],
-                identity: {
-                    username: username,
-                    password: localStorage.getItem("TwitchAccessToken")
-                }
-            });
-            console.log(Client);
-            Client.connect();
             SubTypes.forEach( data => {
                 Subscriptions(data);
             })
-        });
         break;
         case "notification":
             console.log(info);
@@ -370,10 +348,15 @@ pkg.createNonEventSchema({
     }
 });
 
-let Client = tmi.Client({
-    channels: [ username ]
+const Client = tmi.Client({
+    channels: [ username ],
+    identity: {
+        username: username,
+        password: localStorage.getItem("TwitchAccessToken")
+    }
 });
 
+Client.connect();
 
 Client.on("connected", (data) => {
     console.log("connected");

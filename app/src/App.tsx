@@ -18,8 +18,21 @@ function App() {
      hash = new URLSearchParams(window.location.hash.substring(1));
      console.log("test");
     if(hash.get("access_token") !== null){
-      localStorage.setItem("TwitchAccessToken", hash.get("access_token"));
-    }
+      fetch("https://api.twitch.tv/helix/users", {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + hash.get("access_token"),
+            "Client-Id": "wg8e35ddq28vfzw2jmu6c661nqsjg2",
+
+        }
+        }).then(res => res.json())
+            .then(res => {
+              console.log(res);
+              localStorage.setItem("TwitchAccessToken", hash.get("access_token"));
+              localStorage.setItem("AuthedUserName", res.data[0].login);
+              localStorage.setItem("AuthedUserId", res.data[0].id);
+    })
+  }
   }
 
   return (
