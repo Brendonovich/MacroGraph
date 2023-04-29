@@ -1420,6 +1420,251 @@ pkg.createEventSchema({
     }
 });
 
+pkg.createEventSchema({
+    name: "Channel Shoutout Received",
+    event: "channel.shoutout.receive",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "viewerCount",
+            name: "Type",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "startedAt",
+            name: "Started At",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("viewerCount", data.event.viewer_count);
+        ctx.setOutput("startedAt", data.event.started_at);
+
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Goal Begin",
+    event: "channel.goal.begin",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "Id",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "type",
+            name: "Type",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "description",
+            name: "Description",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "currentAmount",
+            name: "Current Amount",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "targetAmount",
+            name: "Target Amount",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "startedAt",
+            name: "Started At",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("type", data.event.type);
+        ctx.setOutput("description", data.event.description);
+        ctx.setOutput("currentAmount", data.event.current_amount);
+        ctx.setOutput("targetAmount", data.event.target_amount);
+        ctx.setOutput("startedAt", data.event.started_at);
+
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Goal Progress",
+    event: "channel.goal.progress",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "Id",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "type",
+            name: "Type",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "description",
+            name: "Description",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "currentAmount",
+            name: "Current Amount",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "targetAmount",
+            name: "Target Amount",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "startedAt",
+            name: "Started At",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("type", data.event.type);
+        ctx.setOutput("description", data.event.description);
+        ctx.setOutput("currentAmount", data.event.current_amount);
+        ctx.setOutput("targetAmount", data.event.target_amount);
+        ctx.setOutput("startedAt", data.event.started_at);
+
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Goal End",
+    event: "channel.goal.end",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "Id",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "type",
+            name: "Type",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "description",
+            name: "Description",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "isAchieved",
+            name: "Is Achieved",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "currentAmount",
+            name: "Current Amount",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "targetAmount",
+            name: "Target Amount",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "startedAt",
+            name: "Started At",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "endedAt",
+            name: "Ended At",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("type", data.event.type);
+        ctx.setOutput("description", data.event.description);
+        ctx.setOutput("isAchieved", data.event.is_achieved);
+        ctx.setOutput("currentAmount", data.event.current_amount);
+        ctx.setOutput("targetAmount", data.event.target_amount);
+        ctx.setOutput("startedAt", data.event.started_at);
+        ctx.setOutput("endedAt", data.event.ended_at);
+
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Stream Online",
+    event: "stream.online",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "Id",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "type",
+            name: "Type",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "startedAt",
+            name: "Started At",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("type", data.event.type);
+        ctx.setOutput("startedAt", data.event.started_at);
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Stream Offline",
+    event: "stream.offline",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.exec("exec");
+    }
+});
+
 const Client = tmi.Client({
     channels: [ username ],
     identity: {
