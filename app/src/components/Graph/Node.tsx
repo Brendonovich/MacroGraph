@@ -62,6 +62,7 @@ export const Node = (props: Props) => {
           )}
           onKeyDown={(e) => {
             switch (e.key) {
+              case "Backspace":
               case "Delete": {
                 graph.deleteNode(node.id);
                 break;
