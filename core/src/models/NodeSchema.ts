@@ -78,7 +78,7 @@ export type NonEventNodeSchema<TState extends object = object> = {
   generateIO: (builder: IOBuilder, state: TState) => void;
   package: Package<EventsMap>;
   variant: Exclude<NodeSchemaVariant, "Event">;
-  run: (a: { ctx: RunCtx }) => void;
+  run: (a: { ctx: RunCtx }) => void | Promise<void>;
 };
 
 export type EventNodeSchema<

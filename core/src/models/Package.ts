@@ -43,8 +43,8 @@ export class Package<TEvents extends EventsMap = EventsMap> {
 
         schema.generateIO(t, state);
       },
-      run: (args: { ctx: RunCtx }) => {
-        schema.run(args);
+      run: async (args: { ctx: RunCtx }) => {
+        await schema.run(args);
 
         args.ctx.exec("exec");
       },
