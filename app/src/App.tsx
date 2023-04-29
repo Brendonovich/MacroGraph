@@ -34,7 +34,10 @@ function App() {
         >
           <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
           <Show when={!AT}>
-          <a href={URL}>TEST</a>
+          <a href={URL}>LOGIN</a>
+            </Show>
+            <Show when={AT}>
+          <div onclick={(e) => localStorage.removeItem("TwitchAccessToken")}>LOGOUT</div>
             </Show>
             <GraphList onChange={(g) => ui.setCurrentGraph(g)} />
             <PrintOutput />
