@@ -1,6 +1,6 @@
 # MacroGraph
 
-<a href="https://discord.gg/5M6fpszrry">
+<a href="1101415635449286729">
       <img alt="MacroGraph uses Discord as a place to chat and ask questions" src="https://img.shields.io/discord/1101415635449286729?color=blue&style=flat-square&logo=discord">
   </a>
 
