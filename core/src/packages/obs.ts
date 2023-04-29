@@ -596,7 +596,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Set Scene Transition Override",
+  name: "Get Scene Transition Override",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({

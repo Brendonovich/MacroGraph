@@ -93,6 +93,66 @@ const pkg = core.createPackage<any>({name: "Twitch Events"});
 //     }
 // })
 
+pkg.createEventSchema({
+    name: "Chat Message",
+    event: "chatMessage",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "username",
+            name: "Username",
+            type: types.string(),
+        });
+        t.dataOutput({
+            id: "message",
+            name: "Message",
+            type: types.string(),
+        });
+        t.dataOutput({
+            id: "mod",
+            name: "Moderator",
+            type: types.bool(),
+        });
+        t.dataOutput({
+            id: "sub",
+            name: "Subscriber",
+            type: types.bool(),
+        });
+        t.dataOutput({
+            id: "vip",
+            name: "VIP",
+            type: types.bool(),
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("username", data.username);
+        ctx.setOutput("message", data.message);
+        ctx.setOutput("mod", data.tags.mod);
+        ctx.setOutput("sub", data.tags.subscriber);
+        ctx.setOutput("sub", data.tags.vip);
+        ctx.exec("exec");
+    }
+});
+
+pkg.createNonEventSchema({
+    name: "Send Chat Message",
+    variant: "Exec",
+    generateIO: (t) => {
+        t.dataInput({
+            id: "message",
+            name: "Message",
+            type: types.string(),
+        });
+    },
+    run({ ctx }) {
+        Client.say( username , ctx.getInput("message"));
+    }
+});
+
 pkg.createNonEventSchema({
     name: "Emote Only Mode",
     variant: "Exec",
@@ -263,7 +323,7 @@ pkg.createEventSchema({
 });
 
 pkg.createEventSchema({
-    name: "Unban",
+    name: "User Unbanned",
     event: "channel.unban",
     generateIO: (t) => {
         t.execOutput({
@@ -477,6 +537,544 @@ pkg.createEventSchema({
         ctx.exec("exec");
     }
 });
+
+pkg.createEventSchema({
+    name: "Channel Point Reward Updated",
+    event: "channel.channel_points_custom_reward.update",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "ID",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "enabled",
+            name: "Enabled",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "paused",
+            name: "Paused",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "inStock",
+            name: "In Stock",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "title",
+            name: "Title",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "cost",
+            name: "Cost",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "prompt",
+            name: "Prompt",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "inputRequired",
+            name: "Input Required",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "skipQueue",
+            name: "Skip Request Queue",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "cooldownExpire",
+            name: "Cooldown Expire Timestamp",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "redemptTotalStream",
+            name: "Current Stream Total Redemptions",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "maxPerStreamEnabled",
+            name: "Max per Stream",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "maxPerStreamValue",
+            name: "Max Per Stream Value",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "maxUserPerStream",
+            name: "Max User Per Stream Enabled",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "maxUserPerStreamValue",
+            name: "Max User Per Stream Value",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "globalCooldown",
+            name: "Global Cooldown",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "globalCooldownValue",
+            name: "Global Cooldown Value",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "backgroundColor",
+            name: "Background Color",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("enabled", data.event.is_enabled);
+        ctx.setOutput("paused", data.event.is_paused);
+        ctx.setOutput("inStock", data.event.is_in_stock);
+        ctx.setOutput("title", data.event.title);
+        ctx.setOutput("cost", data.event.cost);
+        ctx.setOutput("prompt", data.event.prompt);
+        ctx.setOutput("inputRequired", data.event.is_user_input_required);
+        ctx.setOutput("skipQueue", data.event.should_redemptions_skip_request_queue);
+        ctx.setOutput("cooldownExpire", data.event.cooldown_expires_at);
+        ctx.setOutput("redemptTotalStream", data.event.redemptions_redeemed_current_stream);
+        ctx.setOutput("maxPerStreamEnabled", data.event.max_per_stream.is_enabled);
+        ctx.setOutput("maxPerStreamValue", data.event.max_per_stream.value);
+        ctx.setOutput("maxUserPerStream", data.event.max_per_user_per_stream.is_enabled);
+        ctx.setOutput("maxUserPerStreamValue", data.event.max_per_user_per_stream.value);
+        ctx.setOutput("globalCooldown", data.event.global_cooldown.is_enabled);
+        ctx.setOutput("globalCooldownValue", data.event.global_cooldown.seconds);
+        ctx.setOutput("backgroundColor", data.event.background_color);
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Point Reward Remove",
+    event: "channel.channel_points_custom_reward.remove",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "ID",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "enabled",
+            name: "Enabled",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "paused",
+            name: "Paused",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "inStock",
+            name: "In Stock",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "title",
+            name: "Title",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "cost",
+            name: "Cost",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "prompt",
+            name: "Prompt",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "inputRequired",
+            name: "Input Required",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "skipQueue",
+            name: "Skip Request Queue",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "cooldownExpire",
+            name: "Cooldown Expire Timestamp",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "redemptTotalStream",
+            name: "Current Stream Total Redemptions",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "maxPerStreamEnabled",
+            name: "Max per Stream",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "maxPerStreamValue",
+            name: "Max Per Stream Value",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "maxUserPerStream",
+            name: "Max User Per Stream Enabled",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "maxUserPerStreamValue",
+            name: "Max User Per Stream Value",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "globalCooldown",
+            name: "Global Cooldown",
+            type: types.bool()
+        });
+        t.dataOutput({
+            id: "globalCooldownValue",
+            name: "Global Cooldown Value",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "backgroundColor",
+            name: "Background Color",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("enabled", data.event.is_enabled);
+        ctx.setOutput("paused", data.event.is_paused);
+        ctx.setOutput("inStock", data.event.is_in_stock);
+        ctx.setOutput("title", data.event.title);
+        ctx.setOutput("cost", data.event.cost);
+        ctx.setOutput("prompt", data.event.prompt);
+        ctx.setOutput("inputRequired", data.event.is_user_input_required);
+        ctx.setOutput("skipQueue", data.event.should_redemptions_skip_request_queue);
+        ctx.setOutput("cooldownExpire", data.event.cooldown_expires_at);
+        ctx.setOutput("redemptTotalStream", data.event.redemptions_redeemed_current_stream);
+        ctx.setOutput("maxPerStreamEnabled", data.event.max_per_stream.is_enabled);
+        ctx.setOutput("maxPerStreamValue", data.event.max_per_stream.value);
+        ctx.setOutput("maxUserPerStream", data.event.max_per_user_per_stream.is_enabled);
+        ctx.setOutput("maxUserPerStreamValue", data.event.max_per_user_per_stream.value);
+        ctx.setOutput("globalCooldown", data.event.global_cooldown.is_enabled);
+        ctx.setOutput("globalCooldownValue", data.event.global_cooldown.seconds);
+        ctx.setOutput("backgroundColor", data.event.background_color);
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Point Reward Redeemed",
+    event: "channel.channel_points_custom_reward_redemption.add",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "ID",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userId",
+            name: "User ID",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userLogin",
+            name: "User Login",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userName",
+            name: "User Name",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userInput",
+            name: "User Input",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "status",
+            name: "Status",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "rewardId",
+            name: "Rewards Id",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "rewardTitle",
+            name: "Reward Title",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "rewardCost",
+            name: "Reward Cost",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "rewardPrompt",
+            name: "Reward Prompt",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("userId", data.event.user_id);
+        ctx.setOutput("userLogin", data.event.user_login);
+        ctx.setOutput("userName", data.event.user_name);
+        ctx.setOutput("userInput", data.event.user_input);
+        ctx.setOutput("status", data.event.status);
+        ctx.setOutput("rewardId", data.event.reward.id);
+        ctx.setOutput("rewardTitle", data.event.reward.title);
+        ctx.setOutput("rewardCost", data.event.reward.cost);
+        ctx.setOutput("rewardPrompt", data.event.reward.prompt);
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Point Reward Redeemed",
+    event: "channel.channel_points_custom_reward_redemption.add",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+        t.dataOutput({
+            id: "id",
+            name: "ID",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userId",
+            name: "User ID",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userLogin",
+            name: "User Login",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userName",
+            name: "User Name",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "userInput",
+            name: "User Input",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "status",
+            name: "Status",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "rewardId",
+            name: "Rewards Id",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "rewardTitle",
+            name: "Reward Title",
+            type: types.string()
+        });
+        t.dataOutput({
+            id: "rewardCost",
+            name: "Reward Cost",
+            type: types.int()
+        });
+        t.dataOutput({
+            id: "rewardPrompt",
+            name: "Reward Prompt",
+            type: types.string()
+        });
+    },
+    run({ ctx, data}) {
+        console.log(data);
+        ctx.setOutput("id", data.event.id);
+        ctx.setOutput("userId", data.event.user_id);
+        ctx.setOutput("userLogin", data.event.user_login);
+        ctx.setOutput("userName", data.event.user_name);
+        ctx.setOutput("userInput", data.event.user_input);
+        ctx.setOutput("status", data.event.status);
+        ctx.setOutput("rewardId", data.event.reward.id);
+        ctx.setOutput("rewardTitle", data.event.reward.title);
+        ctx.setOutput("rewardCost", data.event.reward.cost);
+        ctx.setOutput("rewardPrompt", data.event.reward.prompt);
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Poll Begin",
+    event: "channel.poll.begin",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Poll Progress",
+    event: "channel.poll.progress",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Poll End",
+    event: "channel.poll.end",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Prediction Begin",
+    event: "channel.prediction.begin",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Prediction Progress",
+    event: "channel.prediction.progress",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Prediction Lock",
+    event: "channel.prediction.lock",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Prediction End",
+    event: "channel.prediction.end",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Hype Train Begin",
+    event: "channel.hype_train.begin",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Hype Train Progress",
+    event: "channel.hype_train.progress",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
+pkg.createEventSchema({
+    name: "Channel Hype Train End",
+    event: "channel.hype_train.end",
+    generateIO: (t) => {
+        t.execOutput({
+            id: "exec",
+            name: "",
+        });
+    },
+    run({ ctx, data}) {
+        ctx.exec("exec");
+    }
+});
+
 
 pkg.createEventSchema({
     name: "Channel Updated",
@@ -819,66 +1417,6 @@ pkg.createEventSchema({
         ctx.setOutput("userID", data.event.user_id);
         ctx.setOutput("userName", data.event.user_login);
         ctx.exec("exec");
-    }
-});
-
-pkg.createEventSchema({
-    name: "Chat Message",
-    event: "chatMessage",
-    generateIO: (t) => {
-        t.execOutput({
-            id: "exec",
-            name: "",
-        });
-        t.dataOutput({
-            id: "username",
-            name: "Username",
-            type: types.string(),
-        });
-        t.dataOutput({
-            id: "message",
-            name: "Message",
-            type: types.string(),
-        });
-        t.dataOutput({
-            id: "mod",
-            name: "Moderator",
-            type: types.bool(),
-        });
-        t.dataOutput({
-            id: "sub",
-            name: "Subscriber",
-            type: types.bool(),
-        });
-        t.dataOutput({
-            id: "vip",
-            name: "VIP",
-            type: types.bool(),
-        });
-    },
-    run({ ctx, data}) {
-        console.log(data);
-        ctx.setOutput("username", data.username);
-        ctx.setOutput("message", data.message);
-        ctx.setOutput("mod", data.tags.mod);
-        ctx.setOutput("sub", data.tags.subscriber);
-        ctx.setOutput("sub", data.tags.vip);
-        ctx.exec("exec");
-    }
-});
-
-pkg.createNonEventSchema({
-    name: "Send Chat Message",
-    variant: "Exec",
-    generateIO: (t) => {
-        t.dataInput({
-            id: "message",
-            name: "Message",
-            type: types.string(),
-        });
-    },
-    run({ ctx }) {
-        Client.say( username , ctx.getInput("message"));
     }
 });
 
