@@ -12,9 +12,8 @@ const authProvider = new StaticAuthProvider(clientId, accessToken);
 
 const apiClient = new ApiClient({authProvider});
 
-const USER = apiClient.entitlements
-
 let userID = "";
+let username = "";
 
 const SubTypes = [
     "channel.update",
@@ -76,8 +75,18 @@ ws.addEventListener("message", data => {
         }
         }).then(res => res.json())
             .then(res => {
-                
+            console.log(res);
+            username = res.data[0].login;
             userID = res.data[0].id;
+            Client = tmi.Client({
+                channels: [ username ],
+                identity: {
+                    username: username,
+                    password: localStorage.getItem("TwitchAccessToken")
+                }
+            });
+            console.log(Client);
+            Client.connect();
             SubTypes.forEach( data => {
                 Subscriptions(data);
             })
@@ -361,16 +370,14 @@ pkg.createNonEventSchema({
     }
 });
 
-const Client = tmi.Client({
-    channels: [ "jdudetv"],
-    identity: {
-        username: "jdudetv",
-        password: localStorage.getItem("TwitchAccessToken")
-    }
+let Client = tmi.Client({
+    channels: [ username ]
+});
+
+
+Client.on("connected", (data) => {
+    console.log("connected");
 })
-
-Client.connect();
-
 
 Client.on("message", (channel, tags, message, self) => {
     console.log(tags.username);
