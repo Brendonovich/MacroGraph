@@ -44,7 +44,10 @@ pkg.createNonEventSchema({
   name: "String Includes",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("bool", (ctx.getInput<string>("haystack").includes(ctx.getInput<string>("needle"))));
+    ctx.setOutput(
+      "bool",
+      ctx.getInput<string>("haystack").includes(ctx.getInput<string>("needle"))
+    );
   },
   generateIO(builder) {
     builder.dataInput({
@@ -63,13 +66,18 @@ pkg.createNonEventSchema({
       type: types.bool(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "String Starts With",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("bool", (ctx.getInput<string>("haystack").startsWith(ctx.getInput<string>("needle"))));
+    ctx.setOutput(
+      "bool",
+      ctx
+        .getInput<string>("haystack")
+        .startsWith(ctx.getInput<string>("needle"))
+    );
   },
   generateIO(builder) {
     builder.dataInput({
@@ -88,15 +96,23 @@ pkg.createNonEventSchema({
       type: types.bool(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Substring",
   variant: "Pure",
   run({ ctx }) {
-    const start = ctx.getInput<number>("start") ? ctx.getInput<number>("start") : 0;
-    const end = ctx.getInput<number>("end") !== 0 ? ctx.getInput<number>("end") : ctx.getInput<string>("string").length;
-    ctx.setOutput("stringOut", (ctx.getInput<string>("string")).substring(start, end));
+    const start = ctx.getInput<number>("start")
+      ? ctx.getInput<number>("start")
+      : 0;
+    const end =
+      ctx.getInput<number>("end") !== 0
+        ? ctx.getInput<number>("end")
+        : ctx.getInput<string>("string").length;
+    ctx.setOutput(
+      "stringOut",
+      ctx.getInput<string>("string").substring(start, end)
+    );
   },
   generateIO(builder) {
     builder.dataInput({
@@ -120,13 +136,13 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "String To Uppercase",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("upper", (ctx.getInput<string>("string").toUpperCase()));
+    ctx.setOutput("upper", ctx.getInput<string>("string").toUpperCase());
   },
   generateIO(builder) {
     builder.dataInput({
@@ -140,13 +156,13 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "String To Lowercase",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("lower", (ctx.getInput<string>("string").toLowerCase()));
+    ctx.setOutput("lower", ctx.getInput<string>("string").toLowerCase());
   },
   generateIO(builder) {
     builder.dataInput({
@@ -160,13 +176,13 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Int to String",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("string", (ctx.getInput<number>("int").toString()));
+    ctx.setOutput("string", ctx.getInput<number>("int").toString());
   },
   generateIO(builder) {
     builder.dataInput({
@@ -180,13 +196,13 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Bool to String",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("string", (ctx.getInput<boolean>("bool").toString()));
+    ctx.setOutput("string", ctx.getInput<boolean>("bool").toString());
   },
   generateIO(builder) {
     builder.dataInput({
@@ -200,13 +216,13 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "String to Int",
   variant: "Pure",
   run({ ctx }) {
-    let number = Number(ctx.getInput<string>("string"))
+    let number = Number(ctx.getInput<string>("string"));
     ctx.setOutput("int", number);
     ctx.setOutput("pass", !Number.isNaN(number));
   },
@@ -227,7 +243,7 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Multiply",
@@ -253,7 +269,7 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Divide",
@@ -279,7 +295,7 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Add",
@@ -305,7 +321,7 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Subtract",
@@ -331,13 +347,14 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
   },
-})
+});
 
 pkg.createNonEventSchema({
   name: "Combine String",
   variant: "Pure",
   run({ ctx }) {
-    const string = ctx.getInput<string>("string1") + ctx.getInput<string>("string2");
+    const string =
+      ctx.getInput<string>("string1") + ctx.getInput<string>("string2");
     ctx.setOutput("outString", string);
   },
   generateIO(builder) {
@@ -357,4 +374,4 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
   },
-})
+});
