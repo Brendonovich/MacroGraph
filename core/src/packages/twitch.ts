@@ -1,4 +1,3 @@
-import { API_KEY } from "./APIKEY";
 import { core } from "../models";
 import { types } from "../types";
 import  tmi  from "tmi.js";
