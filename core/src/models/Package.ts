@@ -46,7 +46,7 @@ export class Package<TEvents extends EventsMap = EventsMap> {
       run: async (args: { ctx: RunCtx }) => {
         await schema.run(args);
 
-        args.ctx.exec("exec");
+        if (schema.variant === "Exec") args.ctx.exec("exec");
       },
       package: this as any,
     });
