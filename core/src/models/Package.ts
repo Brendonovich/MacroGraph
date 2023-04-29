@@ -5,6 +5,7 @@ import {
   EventsMap,
   NodeSchema,
   NonEventNodeSchema,
+  RunCtx,
 } from "./NodeSchema";
 
 export interface PackageArgs {
@@ -41,6 +42,11 @@ export class Package<TEvents extends EventsMap = EventsMap> {
         }
 
         schema.generateIO(t, state);
+      },
+      run: async (args: { ctx: RunCtx }) => {
+        await schema.run(args);
+
+        if (schema.variant === "Exec") args.ctx.exec("exec");
       },
       package: this as any,
     });
