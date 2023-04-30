@@ -350,96 +350,148 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Combine String",
+  name: "Append",
   variant: "Pure",
   run({ ctx }) {
-    const string =
-      ctx.getInput<string>("string1") + ctx.getInput<string>("string2");
-    ctx.setOutput("outString", string);
+    ctx.setOutput(
+      "out",
+      ctx.getInput<string>("one") + ctx.getInput<string>("two")
+    );
   },
   generateIO(builder) {
     builder.dataInput({
-      id: "string1",
-      name: "start",
+      id: "one",
+      name: "",
       type: types.string(),
     });
     builder.dataInput({
-      id: "string2",
-      name: "end",
+      id: "two",
+      name: "",
       type: types.string(),
     });
     builder.dataOutput({
-      id: "outString",
+      id: "out",
       name: "",
       type: types.string(),
     });
   },
 });
 
-//? Creates a schema that outputs a rounded number based on how many decimal places the user wants
 pkg.createNonEventSchema({
-    name: "Round Number",
-    variant: "Pure",
-    run({ ctx }) {
-        ctx.setOutput("output", Math.round(ctx.getInput<number>("input") * Math.pow(10, ctx.getInput<number>("decimal"))) / Math.pow(10, ctx.getInput<number>("decimal")));
-    },
-    generateIO(t) {
-        t.dataInput({
-            id: "input",
-            name: "",
-            type: types.int(),
-        });
-        t.dataInput({
-            id: "decimal",
-            name: "Decimal Places",
-            type: types.int(),
-        });
-        t.dataOutput({
-            id: "output",
-            name: "",
-            type: types.int(),
-        });
-    },
+  name: "Round",
+  variant: "Pure",
+  run({ ctx }) {
+    const input = ctx.getInput<number>("input");
+    const decimal = ctx.getInput<number>("decimal");
+
+    ctx.setOutput(
+      "output",
+      Math.round(input * Math.pow(10, decimal)) / Math.pow(10, decimal)
+    );
+  },
+  generateIO(t) {
+    t.dataInput({
+      id: "input",
+      name: "",
+      type: types.float(),
+    });
+    t.dataInput({
+      id: "decimal",
+      name: "Decimal Places",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "output",
+      name: "",
+      type: types.int(),
+    });
+  },
 });
 
-//? Creates a schema that outputs a random number between 0 and 1
 pkg.createNonEventSchema({
-    name: "Random Number",
-    variant: "Pure",
-    run({ ctx }) {
-        ctx.setOutput("output", Math.random());
-    },
-    generateIO(t) {
-        t.dataOutput({
-            id: "output",
-            name: "",
-            type: types.int(),
-        });
-    },
+  name: "Random Float",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("output", Math.random());
+  },
+  generateIO(t) {
+    t.dataOutput({
+      id: "output",
+      name: "",
+      type: types.float(),
+    });
+  },
 });
 
-//? Creates a schema that outputs a random number between a min and max
 pkg.createNonEventSchema({
-    name: "Random Number Between",
-    variant: "Pure",
-    run({ ctx }) {
-        ctx.setOutput("output", Math.floor(Math.random() * (ctx.getInput<number>("max") - ctx.getInput<number>("min")) + ctx.getInput<number>("min")));
-    },
-    generateIO(t) {
-        t.dataInput({
-            id: "min",
-            name: "Min",
-            type: types.int(),
-        });
-        t.dataInput({
-            id: "max",
-            name: "Max",
-            type: types.int(),
-        });
-        t.dataOutput({
-            id: "output",
-            name: "",
-            type: types.int(),
-        });
-    }
+  name: "Random Float In Range",
+  variant: "Pure",
+  run({ ctx }) {
+    const min = ctx.getInput<number>("min");
+    const max = ctx.getInput<number>("max");
+
+    ctx.setOutput("output", Math.random() * (max - min) + min);
+  },
+  generateIO(t) {
+    t.dataInput({
+      id: "min",
+      name: "Min",
+      type: types.float(),
+    });
+    t.dataInput({
+      id: "max",
+      name: "Max",
+      type: types.float(),
+    });
+    t.dataOutput({
+      id: "output",
+      name: "",
+      type: types.float(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Random Integer",
+  variant: "Pure",
+  run({ ctx }) {
+    // 0.5 triggers round up so distribution is even
+    ctx.setOutput("output", Math.round(Math.random()));
+  },
+  generateIO(t) {
+    t.dataOutput({
+      id: "output",
+      name: "",
+      type: types.int(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Random Integer In Range",
+  variant: "Pure",
+  run({ ctx }) {
+    const min = ctx.getInput<number>("min");
+    const max = ctx.getInput<number>("max");
+
+    // Use Math.floor to ensure even distribution
+    ctx.setOutput("output", Math.floor(Math.random() * (max + 1 - min) + min));
+  },
+  generateIO(t) {
+    t.dataInput({
+      id: "min",
+      name: "Min",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "max",
+      name: "Max",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "output",
+      name: "",
+      type: types.float(),
+    });
+  },
 });

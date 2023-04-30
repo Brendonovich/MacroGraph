@@ -1,4 +1,5 @@
 import { DataOutput as DataOutputModel } from "@macrograph/core";
+import { Show } from "solid-js";
 import { DataPin } from "./DataPin";
 
 interface Props {
@@ -6,12 +7,10 @@ interface Props {
 }
 
 export const DataOutput = (props: Props) => {
-  const output = props.output;
-
   return (
     <div class="flex flex-row items-center space-x-1.5 h-5">
-      <span>{output.name}</span>
-      <DataPin pin={output} />
+      <Show when={props.output.name}>{(name) => <span>{name()}</span>}</Show>
+      <DataPin pin={props.output} />
     </div>
   );
 };

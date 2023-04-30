@@ -19,7 +19,7 @@ const UnconnectedInput = (props: Props) => {
             <CheckBox
               class={className()}
               value={input.defaultValue}
-              onChange={value => input.setDefaultValue(value)}
+              onChange={(value) => input.setDefaultValue(value)}
             />
           </Match>
           <Match when={type().primitiveVariant() === "string"}>
@@ -27,7 +27,7 @@ const UnconnectedInput = (props: Props) => {
               <TextInput
                 class={className()}
                 value={input.defaultValue}
-                onChange={value => input.setDefaultValue(value)}
+                onChange={(value) => input.setDefaultValue(value)}
               />
             </div>
           </Match>
@@ -36,7 +36,7 @@ const UnconnectedInput = (props: Props) => {
               <IntInput
                 class={className()}
                 value={input.defaultValue}
-                onChange={value => input.setDefaultValue(value)}
+                onChange={(value) => input.setDefaultValue(value)}
               />
             </div>
           </Match>
@@ -45,7 +45,7 @@ const UnconnectedInput = (props: Props) => {
               <FloatInput
                 class={className()}
                 value={input.defaultValue}
-                onChange={value => input.setDefaultValue(value)}
+                onChange={(value) => input.setDefaultValue(value)}
               />
             </div>
           </Match>
@@ -63,7 +63,7 @@ export const DataInput = (props: Props) => {
   return (
     <div class="flex flex-row items-center space-x-1.5 h-5">
       <DataPin pin={props.input} />
-      <span>{props.input.name}</span>
+      <Show when={props.input.name}>{(name) => <span>{name()}</span>}</Show>
       <Show when={props.input.type.variant() === "primitive"}>
         <UnconnectedInput input={props.input} />
       </Show>

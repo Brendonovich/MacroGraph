@@ -1,18 +1,18 @@
 import { core } from "../models";
 import { types } from "../types";
 
-const pkg = core.createPackage<any>({name: "HTTP Requests"});
+const pkg = core.createPackage<any>({ name: "HTTP Requests" });
 
 pkg.createNonEventSchema({
   name: "GET",
   variant: "Exec",
   async run({ ctx }) {
-    const response = await fetch(ctx.getInput<string>("url"))
-    
+    const response = await fetch(ctx.getInput<string>("url"));
+
     // TODO: Change when Objects implemented
     const text = await response.text();
     ctx.setOutput("response", text);
-    ctx.setOutput("status", response.status)
+    ctx.setOutput("status", response.status);
   },
   generateIO(builder) {
     builder.dataInput({
@@ -30,7 +30,7 @@ pkg.createNonEventSchema({
       name: "Status",
       type: types.int(),
     });
-  }
+  },
 });
 
 pkg.createNonEventSchema({
@@ -38,17 +38,17 @@ pkg.createNonEventSchema({
   variant: "Exec",
   async run({ ctx }) {
     const response = await fetch(ctx.getInput<string>("url"), {
-      method: "POST", 
+      method: "POST",
       body: ctx.getInput<string>("body"),
       headers: {
-        'content-type': 'application/json; charset=UTF-8',
-      }
-    })
-    
+        "content-type": "application/json; charset=UTF-8",
+      },
+    });
+
     // TODO: Change when Objects implemented
     const text = await response.text();
     ctx.setOutput("response", text);
-    ctx.setOutput("status", response.status)
+    ctx.setOutput("status", response.status);
   },
   generateIO(builder) {
     builder.dataInput({
@@ -71,25 +71,25 @@ pkg.createNonEventSchema({
       name: "Status",
       type: types.string(),
     });
-  }
-})
+  },
+});
 
 pkg.createNonEventSchema({
   name: "PUT",
   variant: "Exec",
   async run({ ctx }) {
     const response = await fetch(ctx.getInput<string>("url"), {
-      method: "PUT", 
+      method: "PUT",
       body: ctx.getInput<string>("body"),
       headers: {
-        'content-type': 'application/json; charset=UTF-8',
-      }
-    })
-    
+        "content-type": "application/json; charset=UTF-8",
+      },
+    });
+
     // TODO: Change when Objects implemented
     const text = await response.text();
     ctx.setOutput("response", text);
-    ctx.setOutput("status", response.status)
+    ctx.setOutput("status", response.status);
   },
   generateIO(builder) {
     builder.dataInput({
@@ -112,21 +112,21 @@ pkg.createNonEventSchema({
       name: "Status",
       type: types.int(),
     });
-  }
-})
+  },
+});
 
 pkg.createNonEventSchema({
   name: "DELETE",
   variant: "Exec",
   async run({ ctx }) {
     const response = await fetch(ctx.getInput<string>("url"), {
-      method: "DELETE", 
-    })
-    
+      method: "DELETE",
+    });
+
     // TODO: Change when Objects implemented
     const text = await response.text();
     ctx.setOutput("response", text);
-    ctx.setOutput("status", response.status)
+    ctx.setOutput("status", response.status);
   },
   generateIO(builder) {
     builder.dataInput({
@@ -139,5 +139,5 @@ pkg.createNonEventSchema({
       name: "Status",
       type: types.int(),
     });
-  }
-})
+  },
+});

@@ -1,4 +1,5 @@
 import { ExecOutput as ExecOutputModel } from "@macrograph/core";
+import { Show } from "solid-js";
 import { usePin } from ".";
 
 interface Props {
@@ -10,7 +11,7 @@ export const ExecOutput = (props: Props) => {
 
   return (
     <div class="flex flex-row items-center space-x-1.5 h-5">
-      <span>{props.output.name}</span>
+      <Show when={props.output.name}>{(name) => <span>{name()}</span>}</Show>
       <div ref={ref}>
         <svg
           style={{

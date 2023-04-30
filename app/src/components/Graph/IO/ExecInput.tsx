@@ -1,4 +1,5 @@
 import { ExecInput as ExecInputModel } from "@macrograph/core";
+import { Show } from "solid-js";
 import { usePin } from ".";
 
 interface Props {
@@ -31,7 +32,7 @@ export const ExecInput = (props: Props) => {
           />
         </svg>
       </div>
-      <span>{props.input.name}</span>
+      <Show when={props.input.name}>{(name) => <span>{name()}</span>}</Show>
     </div>
   );
 };

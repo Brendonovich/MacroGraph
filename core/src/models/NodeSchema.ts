@@ -5,12 +5,12 @@ export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 
 export type DataInputBuilder = {
   id: string;
-  name: string;
+  name?: string;
   type: AnyType;
 };
 export type ExecInputBuilder = {
   id: string;
-  name: string;
+  name?: string;
 };
 
 export type InputBuilder =
@@ -19,12 +19,12 @@ export type InputBuilder =
 
 export type DataOutputBuilder = {
   id: string;
-  name: string;
+  name?: string;
   type: AnyType;
 };
 export type ExecOutputBuilder = {
   id: string;
-  name: string;
+  name?: string;
 };
 
 export type OutputBuilder =
