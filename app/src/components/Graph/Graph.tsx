@@ -18,7 +18,7 @@ interface Props {
 }
 
 export const Graph = (props: Props) => {
-  const graph = props.graph;
+  const graph = () => props.graph;
 
   const UI = useUIStore();
 
@@ -67,14 +67,14 @@ export const Graph = (props: Props) => {
   const [pan, setPan] = createSignal(PanState.None);
 
   return (
-    <GraphContext.Provider value={graph}>
+    <GraphContext.Provider value={graph()}>
       <div class="flex-1 relative overflow-hidden bg-gray-graph">
         <Show when={UI.state.schemaMenuPosition}>
           {(pos) => (
             <SchemaMenu
               position={pos()}
               onSchemaClicked={(s) => {
-                graph.createNode({
+                graph().createNode({
                   schema: s,
                   position: UI.toGraphSpace(pos()),
                 });
@@ -174,7 +174,7 @@ export const Graph = (props: Props) => {
             e.stopPropagation();
           }}
         >
-          <For each={[...graph.nodes.values()]}>
+          <For each={[...graph().nodes.values()]}>
             {(node) => <Node node={node} />}
           </For>
         </div>
