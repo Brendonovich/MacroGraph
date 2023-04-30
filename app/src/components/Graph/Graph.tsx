@@ -105,9 +105,9 @@ export const Graph = (props: Props) => {
             }
 
             if (e.ctrlKey) {
-              const delta = ((isTouchpad ? 1 : -1) * deltaY) / 50;
+              const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
               UI.updateScale(delta, {
-                x: e.clientX,
+                x: e.clientX-257,
                 y: e.clientY,
               });
             } else {
