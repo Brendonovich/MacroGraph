@@ -14,7 +14,6 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.execInput({
       id: "exec",
-      name: "",
     });
     t.dataInput({
       id: "condition",
@@ -45,17 +44,14 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "one",
-      name: "",
       type: types.bool(),
     });
     t.dataInput({
       id: "two",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "value",
-      name: "",
       type: types.bool(),
     });
   },
@@ -73,17 +69,14 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "one",
-      name: "",
       type: types.bool(),
     });
     t.dataInput({
       id: "two",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "value",
-      name: "",
       type: types.bool(),
     });
   },
@@ -101,17 +94,14 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "one",
-      name: "",
       type: types.bool(),
     });
     t.dataInput({
       id: "two",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "value",
-      name: "",
       type: types.bool(),
     });
   },
@@ -129,17 +119,14 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "one",
-      name: "",
       type: types.bool(),
     });
     t.dataInput({
       id: "two",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "value",
-      name: "",
       type: types.bool(),
     });
   },
@@ -157,17 +144,14 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "one",
-      name: "",
       type: types.bool(),
     });
     t.dataInput({
       id: "two",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "value",
-      name: "",
       type: types.bool(),
     });
   },
@@ -185,17 +169,14 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "one",
-      name: "",
       type: types.bool(),
     });
     t.dataInput({
       id: "two",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "value",
-      name: "",
       type: types.bool(),
     });
   },
@@ -213,17 +194,14 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "one",
-      name: "",
       type: types.bool(),
     });
     t.dataInput({
       id: "two",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "value",
-      name: "",
       type: types.bool(),
     });
   },
@@ -238,12 +216,10 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "input",
-      name: "",
       type: types.bool(),
     });
     t.dataOutput({
       id: "output",
-      name: "",
       type: types.bool(),
     });
   },

@@ -100,7 +100,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "username",
@@ -160,7 +159,6 @@ pkg.createNonEventSchema({
   generateIO: (t) => {
     t.dataInput({
       id: "switch",
-      name: "",
       type: types.bool(),
     });
   },
@@ -182,7 +180,6 @@ pkg.createNonEventSchema({
     });
     t.dataInput({
       id: "switch",
-      name: "",
       type: types.bool(),
     });
   },
@@ -205,7 +202,6 @@ pkg.createNonEventSchema({
     });
     t.dataInput({
       id: "switch",
-      name: "",
       type: types.bool(),
     });
   },
@@ -223,7 +219,6 @@ pkg.createNonEventSchema({
   generateIO: (t) => {
     t.dataInput({
       id: "switch",
-      name: "",
       type: types.bool(),
     });
   },
@@ -240,7 +235,6 @@ pkg.createNonEventSchema({
   generateIO: (t) => {
     t.dataInput({
       id: "switch",
-      name: "",
       type: types.bool(),
     });
   },
@@ -257,7 +251,6 @@ pkg.createNonEventSchema({
   generateIO: (t) => {
     t.dataInput({
       id: "switch",
-      name: "",
       type: types.bool(),
     });
   },
@@ -274,7 +267,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "channelId",
@@ -343,7 +335,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -382,7 +373,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -409,7 +399,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -436,7 +425,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -571,7 +559,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -706,7 +693,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -841,7 +827,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -916,7 +901,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -930,7 +914,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -944,7 +927,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -958,7 +940,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -972,7 +953,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -986,7 +966,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -1000,7 +979,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -1014,7 +992,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -1028,7 +1005,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -1042,7 +1018,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {
@@ -1056,7 +1031,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "channelId",
@@ -1107,7 +1081,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -1146,7 +1119,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -1185,7 +1157,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -1236,7 +1207,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -1293,7 +1263,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -1338,7 +1307,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userId",
@@ -1371,7 +1339,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "userID",
@@ -1398,7 +1365,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "viewerCount",
@@ -1427,7 +1393,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -1479,7 +1444,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -1531,7 +1495,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -1595,7 +1558,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
     t.dataOutput({
       id: "id",
@@ -1628,7 +1590,6 @@ pkg.createEventSchema({
   generateIO: (t) => {
     t.execOutput({
       id: "exec",
-      name: "",
     });
   },
   run({ ctx, data }) {

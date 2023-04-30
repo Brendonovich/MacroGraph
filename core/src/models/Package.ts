@@ -32,12 +32,10 @@ export class Package<TEvents extends EventsMap = EventsMap> {
         if (schema.variant === "Exec") {
           t.execInput({
             id: "exec",
-            name: "",
           });
 
           t.execOutput({
             id: "exec",
-            name: "",
           });
         }
 

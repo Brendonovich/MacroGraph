@@ -62,7 +62,6 @@ pkg.createNonEventSchema({
     });
     builder.dataOutput({
       id: "bool",
-      name: "",
       type: types.bool(),
     });
   },
@@ -92,7 +91,6 @@ pkg.createNonEventSchema({
     });
     builder.dataOutput({
       id: "bool",
-      name: "",
       type: types.bool(),
     });
   },
@@ -117,7 +115,6 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "string",
-      name: "",
       type: types.string(),
     });
     builder.dataInput({
@@ -132,7 +129,6 @@ pkg.createNonEventSchema({
     });
     builder.dataOutput({
       id: "stringOut",
-      name: "",
       type: types.string(),
     });
   },
@@ -147,12 +143,10 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "string",
-      name: "",
       type: types.string(),
     });
     builder.dataOutput({
       id: "upper",
-      name: "",
       type: types.string(),
     });
   },
@@ -167,12 +161,10 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "string",
-      name: "",
       type: types.string(),
     });
     builder.dataOutput({
       id: "lower",
-      name: "",
       type: types.string(),
     });
   },
@@ -187,12 +179,10 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "int",
-      name: "",
       type: types.int(),
     });
     builder.dataOutput({
       id: "string",
-      name: "",
       type: types.string(),
     });
   },
@@ -207,12 +197,10 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "bool",
-      name: "",
       type: types.bool(),
     });
     builder.dataOutput({
       id: "string",
-      name: "",
       type: types.string(),
     });
   },
@@ -229,7 +217,6 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataOutput({
       id: "int",
-      name: "",
       type: types.int(),
     });
     builder.dataOutput({
@@ -239,7 +226,6 @@ pkg.createNonEventSchema({
     });
     builder.dataInput({
       id: "string",
-      name: "",
       type: types.string(),
     });
   },
@@ -255,17 +241,14 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "num1",
-      name: "",
       type: types.int(),
     });
     builder.dataInput({
       id: "num2",
-      name: "",
       type: types.int(),
     });
     builder.dataOutput({
       id: "outnum",
-      name: "",
       type: types.int(),
     });
   },
@@ -281,17 +264,14 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "num1",
-      name: "",
       type: types.int(),
     });
     builder.dataInput({
       id: "num2",
-      name: "",
       type: types.int(),
     });
     builder.dataOutput({
       id: "outnum",
-      name: "",
       type: types.int(),
     });
   },
@@ -307,17 +287,14 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "num1",
-      name: "",
       type: types.int(),
     });
     builder.dataInput({
       id: "num2",
-      name: "",
       type: types.int(),
     });
     builder.dataOutput({
       id: "outnum",
-      name: "",
       type: types.int(),
     });
   },
@@ -333,17 +310,14 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "num1",
-      name: "",
       type: types.int(),
     });
     builder.dataInput({
       id: "num2",
-      name: "",
       type: types.int(),
     });
     builder.dataOutput({
       id: "outnum",
-      name: "",
       type: types.int(),
     });
   },
@@ -361,17 +335,14 @@ pkg.createNonEventSchema({
   generateIO(builder) {
     builder.dataInput({
       id: "one",
-      name: "",
       type: types.string(),
     });
     builder.dataInput({
       id: "two",
-      name: "",
       type: types.string(),
     });
     builder.dataOutput({
       id: "out",
-      name: "",
       type: types.string(),
     });
   },
@@ -392,7 +363,6 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataInput({
       id: "input",
-      name: "",
       type: types.float(),
     });
     t.dataInput({
@@ -402,7 +372,6 @@ pkg.createNonEventSchema({
     });
     t.dataOutput({
       id: "output",
-      name: "",
       type: types.int(),
     });
   },
@@ -417,7 +386,6 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataOutput({
       id: "output",
-      name: "",
       type: types.float(),
     });
   },
@@ -445,7 +413,6 @@ pkg.createNonEventSchema({
     });
     t.dataOutput({
       id: "output",
-      name: "",
       type: types.float(),
     });
   },
@@ -461,7 +428,6 @@ pkg.createNonEventSchema({
   generateIO(t) {
     t.dataOutput({
       id: "output",
-      name: "",
       type: types.int(),
     });
   },
@@ -490,7 +456,6 @@ pkg.createNonEventSchema({
     });
     t.dataOutput({
       id: "output",
-      name: "",
       type: types.float(),
     });
   },
