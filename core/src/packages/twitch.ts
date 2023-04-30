@@ -126,6 +126,11 @@ pkg.createEventSchema({
       name: "VIP",
       type: types.bool(),
     });
+    t.dataOutput({
+      id: "self",
+      name: "Self",
+      type: types.bool(),
+    });
   },
   run({ ctx, data }) {
     console.log(data);
@@ -134,6 +139,7 @@ pkg.createEventSchema({
     ctx.setOutput("mod", data.tags.mod);
     ctx.setOutput("sub", data.tags.subscriber);
     ctx.setOutput("sub", data.tags.vip);
+    ctx.setOutput("self", data.self);
     ctx.exec("exec");
   },
 });
@@ -1613,9 +1619,8 @@ Client.on("connected", (data) => {
 });
 
 Client.on("message", (channel, tags, message, self) => {
-  console.log(tags.username);
-  console.log(tags);
-  const data = { message, tags };
+  console.log(self);
+  const data = { message, tags, self};
   pkg.emitEvent({ name: "chatMessage", data });
 });
 
