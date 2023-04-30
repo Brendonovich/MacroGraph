@@ -375,3 +375,71 @@ pkg.createNonEventSchema({
     });
   },
 });
+
+//? Creates a schema that outputs a rounded number based on how many decimal places the user wants
+pkg.createNonEventSchema({
+    name: "Round Number",
+    variant: "Pure",
+    run({ ctx }) {
+        ctx.setOutput("output", Math.round(ctx.getInput<number>("input") * Math.pow(10, ctx.getInput<number>("decimal"))) / Math.pow(10, ctx.getInput<number>("decimal")));
+    },
+    generateIO(t) {
+        t.dataInput({
+            id: "input",
+            name: "",
+            type: types.int(),
+        });
+        t.dataInput({
+            id: "decimal",
+            name: "Decimal Places",
+            type: types.int(),
+        });
+        t.dataOutput({
+            id: "output",
+            name: "",
+            type: types.int(),
+        });
+    },
+});
+
+//? Creates a schema that outputs a random number between 0 and 1
+pkg.createNonEventSchema({
+    name: "Random Number",
+    variant: "Pure",
+    run({ ctx }) {
+        ctx.setOutput("output", Math.random());
+    },
+    generateIO(t) {
+        t.dataOutput({
+            id: "output",
+            name: "",
+            type: types.int(),
+        });
+    },
+});
+
+//? Creates a schema that outputs a random number between a min and max
+pkg.createNonEventSchema({
+    name: "Random Number Between",
+    variant: "Pure",
+    run({ ctx }) {
+        ctx.setOutput("output", Math.floor(Math.random() * (ctx.getInput<number>("max") - ctx.getInput<number>("min")) + ctx.getInput<number>("min")));
+    },
+    generateIO(t) {
+        t.dataInput({
+            id: "min",
+            name: "Min",
+            type: types.int(),
+        });
+        t.dataInput({
+            id: "max",
+            name: "Max",
+            type: types.int(),
+        });
+        t.dataOutput({
+            id: "output",
+            name: "",
+            type: types.int(),
+        });
+    }
+});
