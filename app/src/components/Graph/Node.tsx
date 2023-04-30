@@ -48,9 +48,7 @@ export const Node = (props: Props) => {
           node.selected && "ring-2 ring-yellow-500"
         )}
         style={{
-          transform: `translate(${node.position.x - UI.state.translate.x}px, ${
-            node.position.y - UI.state.translate.y
-          }px)`,
+          transform: `translate(${node.position.x}px, ${node.position.y}px)`,
         }}
       >
         <div

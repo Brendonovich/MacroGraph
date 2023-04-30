@@ -14,4 +14,18 @@ export function addDevGraph(core: Core) {
       });
     });
   });
+
+  const graph = core.createGraph({ name: "All Schemas" });
+
+  core.packages
+    .flatMap((p) => p.schemas)
+    .forEach((schema, xi) => {
+      graph.createNode({
+        schema,
+        position: {
+          x: 200 * (xi % 5),
+          y: 200 * Math.floor(xi / 5),
+        },
+      });
+    });
 }

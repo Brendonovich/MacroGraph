@@ -87,7 +87,7 @@ export const Graph = (props: Props) => {
         <div
           ref={graphRef!}
           class={clsx(
-            "absolute inset-0 text-white origin-top-left",
+            "absolute inset-0 text-white origin-top-left overflow-hidden",
             pan() === PanState.Active && "cursor-grabbing"
           )}
           style={{
@@ -106,16 +106,16 @@ export const Graph = (props: Props) => {
 
             if (e.ctrlKey) {
               const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
+
               UI.updateScale(delta, {
-                x: e.clientX-graphRef.getBoundingClientRect().x,
-                y: e.clientY,
+                x: e.clientX - graphRef.getBoundingClientRect().x,
+                y: e.clientY - graphRef.getBoundingClientRect().y,
               });
-            } else {
+            } else
               UI.updateTranslate({
-                x: deltaX / UI.state.scale,
-                y: deltaY / UI.state.scale,
+                x: deltaX,
+                y: deltaY,
               });
-            }
           }}
           onMouseUp={(e) => {
             switch (e.button) {
@@ -174,9 +174,18 @@ export const Graph = (props: Props) => {
             e.stopPropagation();
           }}
         >
-          <For each={[...graph().nodes.values()]}>
-            {(node) => <Node node={node} />}
-          </For>
+          <div
+            class="origin-[0,0]"
+            style={{
+              transform: `translate(${UI.state.translate.x * -1}px, ${
+                UI.state.translate.y * -1
+              }px)`,
+            }}
+          >
+            <For each={[...graph().nodes.values()]}>
+              {(node) => <Node node={node} />}
+            </For>
+          </div>
         </div>
       </div>
     </GraphContext.Provider>
