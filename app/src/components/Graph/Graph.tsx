@@ -94,6 +94,8 @@ export const Graph = (props: Props) => {
             transform: `scale(${UI.state.scale})`,
           }}
           onWheel={(e) => {
+            e.preventDefault();
+
             let deltaX = e.deltaX,
               deltaY = e.deltaY,
               isTouchpad = false;
