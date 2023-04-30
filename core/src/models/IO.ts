@@ -6,7 +6,7 @@ import { Connection } from "../bindings/Connection";
 export type DataInputArgs = {
   variant: "Data";
   id: string;
-  name: string;
+  name?: string;
   type: AnyType;
   defaultValue?: any;
   connection?: Connection | null;
@@ -15,7 +15,7 @@ export type DataInputArgs = {
 
 export class DataInput {
   id: string;
-  name: string;
+  name?: string;
   defaultValue: any;
   type: AnyType;
   node: Node;
@@ -55,7 +55,7 @@ export class DataInput {
 export interface DataOutputArgs {
   node: Node;
   id: string;
-  name: string;
+  name?: string;
   type: AnyType;
 }
 
@@ -63,7 +63,7 @@ export class DataOutput {
   id: string;
   connections: DataInput[] = [];
   node: Node;
-  name: string;
+  name?: string;
   type: AnyType;
 
   constructor(args: DataOutputArgs) {
@@ -93,7 +93,7 @@ export interface ExecInputArgs {
   node: Node;
   variant: "Exec";
   id: string;
-  name: string;
+  name?: string;
   connection?: Connection | null;
 }
 
@@ -101,7 +101,7 @@ export class ExecInput {
   id: string;
   connection: ExecOutput | null = null;
   public node: Node;
-  public name: string;
+  public name?: string;
 
   constructor(args: ExecInputArgs) {
     this.id = args.id;
@@ -128,14 +128,14 @@ export class ExecInput {
 export interface ExecOutputArgs {
   node: Node;
   id: string;
-  name: string;
+  name?: string;
 }
 
 export class ExecOutput {
   id: string;
   connection: ExecInput | null = null;
   public node: Node;
-  public name: string;
+  public name?: string;
 
   constructor(args: ExecOutputArgs) {
     this.id = args.id;

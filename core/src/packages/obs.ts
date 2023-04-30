@@ -738,8 +738,8 @@ pkg.createNonEventSchema({
       inputKind: ctx.getInput("inputKind"),
       sceneName: ctx.getInput("sceneName"),
       inputName: ctx.getInput("inputName"),
-      sceneItemEnabled: ctx.getInput("sceneItemEnabled")
-     });
+      sceneItemEnabled: ctx.getInput("sceneItemEnabled"),
+    });
     ctx.setOutput("sceneItemId", data.sceneItemId);
   },
 });
@@ -831,7 +831,7 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     ws.call("SetInputMute", {
       inputName: ctx.getInput("inputName"),
-      inputMuted: ctx.getInput("inputMuted")
+      inputMuted: ctx.getInput("inputMuted"),
     });
   },
 });
@@ -954,7 +954,6 @@ pkg.createNonEventSchema({
       name: "Input Audio Balance",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetInputAudioBalance", {
@@ -1001,7 +1000,6 @@ pkg.createNonEventSchema({
       name: "Input Audio Sync Offset",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetInputAudioSyncOffset", {
@@ -1048,7 +1046,6 @@ pkg.createNonEventSchema({
       name: "Monitor Type",
       type: types.string(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetInputAudioMonitorType", {
@@ -1078,7 +1075,6 @@ pkg.createNonEventSchema({
       name: "Property Name",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("PressInputPropertiesButton", {
@@ -1117,7 +1113,6 @@ pkg.createNonEventSchema({
       name: "Transition Name",
       type: types.string(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetCurrentSceneTransition", {
@@ -1135,7 +1130,6 @@ pkg.createNonEventSchema({
       name: "Transition Duration",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetCurrentSceneTransitionDuration", {
@@ -1185,7 +1179,6 @@ pkg.createNonEventSchema({
       name: "Release",
       type: types.bool(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetTBarPosition", {
@@ -1215,7 +1208,6 @@ pkg.createNonEventSchema({
       name: "Filter Name",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("RemoveSourceFilter", {
@@ -1244,7 +1236,6 @@ pkg.createNonEventSchema({
       name: "New Filter Name",
       type: types.string(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetSourceFilterName", {
@@ -1276,7 +1267,6 @@ pkg.createNonEventSchema({
       name: "Filter Index",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetSourceFilterIndex", {
@@ -1308,7 +1298,6 @@ pkg.createNonEventSchema({
       name: "Filter Enabled",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetSourceFilterEnabled", {
@@ -1439,7 +1428,7 @@ pkg.createNonEventSchema({
       id: "sceneItemId",
       name: "Scene Item Id",
       type: types.int(),
-    })
+    });
   },
   async run({ ctx }) {
     const data = await ws.call("DuplicateSceneItem", {
@@ -1473,7 +1462,7 @@ pkg.createNonEventSchema({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
       type: types.bool(),
-    })
+    });
   },
   async run({ ctx }) {
     const data = await ws.call("GetSceneItemEnabled", {
@@ -1502,7 +1491,7 @@ pkg.createNonEventSchema({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
       type: types.bool(),
-    })
+    });
   },
   async run({ ctx }) {
     ws.call("SetSceneItemEnabled", {
@@ -1560,7 +1549,7 @@ pkg.createNonEventSchema({
       id: "sceneItemLocked",
       name: "Scene Item Locked",
       type: types.bool(),
-    })
+    });
   },
   async run({ ctx }) {
     ws.call("SetSceneItemLocked", {
@@ -1618,7 +1607,7 @@ pkg.createNonEventSchema({
       id: "sceneItemIndex",
       name: "Scene Item Index",
       type: types.int(),
-    })
+    });
   },
   async run({ ctx }) {
     ws.call("SetSceneItemIndex", {
@@ -1676,7 +1665,7 @@ pkg.createNonEventSchema({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
       type: types.string(),
-    })
+    });
   },
   async run({ ctx }) {
     ws.call("SetSceneItemBlendMode", {
@@ -2170,7 +2159,6 @@ pkg.createNonEventSchema({
       name: "Media Cursor",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetMediaInputCursor", {
@@ -2194,7 +2182,6 @@ pkg.createNonEventSchema({
       name: "Media Cursor Offset",
       type: types.int(),
     });
-
   },
   async run({ ctx }) {
     ws.call("OffsetMediaInputCursor", {
@@ -2218,7 +2205,6 @@ pkg.createNonEventSchema({
       name: "Media Action",
       type: types.string(),
     });
-
   },
   async run({ ctx }) {
     ws.call("TriggerMediaInputAction", {
@@ -2253,7 +2239,6 @@ pkg.createNonEventSchema({
       name: "Studio Mode Enabled",
       type: types.bool(),
     });
-
   },
   async run({ ctx }) {
     ws.call("SetStudioModeEnabled", {
@@ -2271,7 +2256,6 @@ pkg.createNonEventSchema({
       name: "Input Name",
       type: types.string(),
     });
-
   },
   async run({ ctx }) {
     ws.call("OpenInputPropertiesDialog", {
@@ -2289,7 +2273,6 @@ pkg.createNonEventSchema({
       name: "Input Name",
       type: types.string(),
     });
-
   },
   async run({ ctx }) {
     ws.call("OpenInputFiltersDialog", {
@@ -2307,7 +2290,6 @@ pkg.createNonEventSchema({
       name: "Input Name",
       type: types.string(),
     });
-
   },
   async run({ ctx }) {
     ws.call("OpenInputInteractDialog", {
@@ -2375,8 +2357,6 @@ pkg.createNonEventSchema({
 //     });
 //   },
 // });
-
-
 
 //EVENTS BELOW ______________________________________________|
 
@@ -3199,7 +3179,6 @@ pkg.createEventSchema({
       name: "Filter Enabled",
       type: types.bool(),
     });
-
   },
   run({ ctx, data }) {
     ctx.setOutput("sourceName", data.sourceName);
@@ -3241,7 +3220,6 @@ pkg.createEventSchema({
       name: "Scene Item Index",
       type: types.int(),
     });
-
   },
   run({ ctx, data }) {
     ctx.setOutput("sceneName", data.sceneName);
@@ -3741,7 +3719,6 @@ ws.on("StudioModeStateChanged", (data) => {
 // ws.on("ScreenshotSaved", (data) => {
 //   pkg.emitEvent({ name: "ScreenshotSaved", data });
 // });
-
 
 pkg.createEventSchema({
   event: "ConnectionOpened",

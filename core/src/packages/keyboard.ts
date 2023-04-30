@@ -71,7 +71,6 @@ alphabet.forEach((a) => {
     generateIO: (t) => {
       t.dataOutput({
         id: "value",
-        name: "",
         type: types.bool(),
       });
     },
