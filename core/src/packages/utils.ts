@@ -216,16 +216,16 @@ pkg.createNonEventSchema({
   },
   generateIO(builder) {
     builder.dataOutput({
-      id: "int",
+      id: "out",
       type: types.int(),
     });
     builder.dataOutput({
-      id: "pass",
-      name: "Passed",
+      id: "success",
+      name: "Success",
       type: types.bool(),
     });
     builder.dataInput({
-      id: "string",
+      id: "in",
       type: types.string(),
     });
   },
