@@ -189,21 +189,21 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-    name: "Float to String",
-    variant: "Pure",
-    run({ ctx }) {
-        ctx.setOutput("string", ctx.getInput<number>("float").toString());
-    },
-    generateIO(builder) {
-        builder.dataInput({
-        id: "float",
-        type: types.float(),
-        });
-        builder.dataOutput({
-        id: "string",
-        type: types.string(),
-        });
-    },
+  name: "Float to String",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("string", ctx.getInput<number>("float").toString());
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "float",
+      type: types.float(),
+    });
+    builder.dataOutput({
+      id: "string",
+      type: types.string(),
+    });
+  },
 });
 
 pkg.createNonEventSchema({
