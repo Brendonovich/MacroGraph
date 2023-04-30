@@ -19,10 +19,15 @@ export class Core {
     return createMutable(this);
   }
 
-  createGraph() {
+  createGraph(args?: { name?: string }) {
     const id = this.graphIdCounter++;
 
-    const graph = new Graph({ name: `Graph ${id}`, id, core: this });
+    const graph = new Graph({
+      name: `Graph ${id}`,
+      id,
+      core: this,
+      ...args,
+    });
 
     this.graphs.set(id, graph);
 

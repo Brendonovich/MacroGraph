@@ -60,12 +60,12 @@ export function createUIStore() {
     },
     updateScale(delta: number, screenOrigin: XY) {
       const startGraphOrigin = this.toGraphSpace(screenOrigin);
-      state.scale = Math.min(Math.max(1, state.scale + delta/10), 2.5);
+      state.scale = Math.min(Math.max(1, state.scale + delta / 10), 2.5);
       const endGraphOrigin = this.toScreenSpace(startGraphOrigin);
 
       state.translate = {
         x:
-          state.translate.x + ((endGraphOrigin.x - screenOrigin.x) / state.scale),
+          state.translate.x + (endGraphOrigin.x - screenOrigin.x) / state.scale,
         y:
           state.translate.y + (endGraphOrigin.y - screenOrigin.y) / state.scale,
       };
@@ -93,6 +93,7 @@ export function createUIStore() {
     },
     setCurrentGraph(graph: Graph) {
       this.setSchemaMenuPosition();
+      this.setTranslate({ x: 0, y: 0 });
       state.currentGraph = graph;
     },
   };

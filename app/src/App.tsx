@@ -6,6 +6,7 @@ import { core } from "@macrograph/core";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
 import { URL } from "./URL";
+import { addDevGraph } from "./dev";
 
 const TWITCH_ACCESS_TOKEN = "TwitchAccessToken";
 
@@ -51,6 +52,8 @@ function App() {
 
   const graph = core.createGraph();
   ui.setCurrentGraph(graph);
+
+  if (import.meta.env.DEV) addDevGraph(core);
 
   const [twitchData, twitchActions] = setupTwitch();
 
