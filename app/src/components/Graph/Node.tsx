@@ -30,13 +30,16 @@ export const Node = (props: Props) => {
   const node = props.node;
   const graph = useGraph();
   const UI = useUIStore();
+  let Toggle = 0;
 
-  const ACTIVE = NODE_EMIT.subscribe((data) => {
+  const ACTIVE = NODE_EMIT.subscribe(node, (data) => {
     if(node.id === data.id && data.schema === node.schema){
-      updateActive(1);
+      Toggle++;
+      Toggle == 1 && updateActive(1);
       setTimeout(() => {
-        updateActive(0);
-      }, 500);
+        Toggle--;
+        Toggle == 0 && updateActive(0);
+      }, 200);
     }
 
   })
@@ -68,7 +71,7 @@ export const Node = (props: Props) => {
         <div
           class={clsx(
             "h-6 px-2 pt-1 duration-100 text-md font-medium cursor-pointer outline-none",
-            active() === 1 ? "active-fade-out" :
+            active() === 1 ? "active-fade-in" : "fade-Duration",
             SchemaVariantColours[
               "variant" in node.schema ? node.schema.variant : "Event"
             ]

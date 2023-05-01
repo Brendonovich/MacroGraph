@@ -8,20 +8,22 @@ import { DataInput, DataOutput, ExecOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 
 class NodeEmit {
-  listeners =  [] as ((d:Node) => any)[];
+  listeners =  new Map<Node,Set<((d:Node) => any)>>();
 
   emit(data: Node) {
-    this.listeners.forEach((l) => l(data));
+    this.listeners.get(data)?.forEach((l) => l(data));
   }
 
-  subscribe(cb: (d: Node) => any) {
-    this.listeners.push(cb);
+  subscribe(SubType: Node, cb: (d: Node) => any) {
+    let listeners = this.listeners.get(SubType);
+    if(!listeners) this.listeners.set(SubType,new Set());
+    listeners = this.listeners.get(SubType);
+    listeners?.add(cb);
 
-    return () =>
-      this.listeners.splice(
-        this.listeners.findIndex((l) => l === cb),
-        1
-      );
+    return () => {
+      listeners?.delete(cb);
+    if(listeners?.size === 0) this.listeners.delete(SubType);
+    }
   }
 }
 
