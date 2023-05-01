@@ -77,9 +77,9 @@ export const usePin = (pin: Pin) => {
         if (!draggingPin || draggingPin === pin) return;
 
         if (pinIsOutput(pin) && pinIsInput(draggingPin))
-          graph.connectPins(pin, draggingPin);
+          graph().connectPins(pin, draggingPin);
         else if (pinIsInput(pin) && pinIsOutput(draggingPin))
-          graph.connectPins(draggingPin, pin);
+          graph().connectPins(draggingPin, pin);
 
         UI.setDraggingPin();
       });

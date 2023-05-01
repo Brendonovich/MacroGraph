@@ -38,7 +38,7 @@ export const ConnectionRender = () => {
   return (
     <svg class="w-full h-full transform">
       <g>
-        <For each={[...graph.nodes.values()]}>
+        <For each={[...graph().nodes.values()]}>
           {(n) => (
             <For each={n.inputs}>
               {(i) => {
