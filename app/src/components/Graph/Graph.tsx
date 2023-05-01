@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { createContext, useContext } from "solid-js";
+import { Accessor, createContext, useContext } from "solid-js";
 import { Graph as GraphModel } from "@macrograph/core";
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 
@@ -67,7 +67,7 @@ export const Graph = (props: Props) => {
   const [pan, setPan] = createSignal(PanState.None);
 
   return (
-    <GraphContext.Provider value={graph()}>
+    <GraphContext.Provider value={graph}>
       <div class="flex-1 relative overflow-hidden bg-gray-graph">
         <Show when={UI.state.schemaMenuPosition}>
           {(pos) => (
@@ -194,7 +194,7 @@ export const Graph = (props: Props) => {
   );
 };
 
-const GraphContext = createContext<GraphModel | null>(null);
+const GraphContext = createContext<Accessor<GraphModel> | null>(null);
 
 export const useGraph = () => {
   const ctx = useContext(GraphContext);
