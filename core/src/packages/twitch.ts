@@ -89,6 +89,11 @@ pkg.createEventSchema({
       type: types.string(),
     });
     t.dataOutput({
+      id: "displayName",
+      name: "Display Name",
+      type: types.string(),
+    });
+    t.dataOutput({
       id: "userId",
       name: "User ID",
       type: types.string(),
@@ -117,6 +122,7 @@ pkg.createEventSchema({
   run({ ctx, data }) {
     if(data.self) return;
     ctx.setOutput("username", data.tags.username);
+    ctx.setOutput("displayName", data.tags["display-name"]);
     ctx.setOutput("userId", data.tags["user-id"]);
     ctx.setOutput("message", data.message);
     ctx.setOutput("mod", data.tags.mod);
@@ -239,38 +245,251 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Remove Moderator",
+  name: "Delete Chat message",
   variant: "Exec",
   generateIO: (t) => {
     t.dataInput({
-      name: "userID",
-      id: "userId",
+      name: "Message ID",
+      id: "messageId",
       type: types.string(),
     });
   },
   run({ ctx }) {
-    apiClient.moderation.deleteChatMessages(userID, {
-      user: ctx.getInput("userId"),
+    apiClient.moderation.deleteChatMessages(userID, userID, {
+      messageId: ctx.getInput("messageId"),
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "",
+  name: "Create Clip",
   variant: "Exec",
   generateIO: (t) => {
-    t.dataInput({
-      name: "userID",
-      id: "userId",
+    t.dataOutput({
+      name: "Clip ID",
+      id: "clipId",
       type: types.string(),
     });
   },
-  run({ ctx }) {
-    apiClient.moderation.removeModerator(userID, {
-      user: ctx.getInput("userId"),
+  async run({ ctx }) {
+    let data = await apiClient.clips.createClip({
+      channel: userID,
     });
+    ctx.setOutput("clipId", data);
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Check User Subscription",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "User ID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Subbed",
+      id: "subbed",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Tier",
+      id: "tier",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Gifted",
+      id: "gifted",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Gifter Name",
+      id: "gifterName",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Gifter Display Name",
+      id: "gifterDisplayName",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Gifter ID",
+      id: "gifterId",
+      type: types.int(),
+    });
+  },
+  async run({ ctx }) {
+    let data = await apiClient.subscriptions.getSubscriptionForUser(userID, ctx.getInput("userId"));
+    ctx.setOutput("subbed", data !== null);
+    if(data === null) return;
+    ctx.setOutput("tier", data.tier);
+    ctx.setOutput("gifted", data.isGift);
+    ctx.setOutput("gifterName", data.gifterName);
+    ctx.setOutput("gifterDisplayName", data.gifterDisplayName);
+    ctx.setOutput("gifterId", data.gifterId);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Check User Follow",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "User ID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Following",
+      id: "following",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+    let data = await apiClient.channels.getChannelFollowers(userID, userID, ctx.getInput("userId"));
+    ctx.setOutput("following", data.data.length === 1);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Check User VIP",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "User ID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Vip",
+      id: "vip",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+    let data = await apiClient.channels.checkVipForUser(userID, ctx.getInput("userId"));
+    ctx.setOutput("vip", data);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Check User Mod",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "User ID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Moderator",
+      id: "moderator",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+    let data = await apiClient.moderation.checkUserMod(userID, ctx.getInput("userId"));
+    ctx.setOutput("moderator", data);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Create Custom Redemption",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "Title",
+      id: "title",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Cost",
+      id: "cost",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Prompt",
+      id: "prompt",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Enabled",
+      id: "isEnabled",
+      type: types.bool(),
+    });
+    t.dataInput({
+      name: "Background Color",
+      id: "backgroundColor",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "User Input Required",
+      id: "userInputRequired",
+      type: types.bool(),
+    });
+    t.dataInput({
+      name: "Max Redemptions Per Stream",
+      id: "maxRedemptionsPerStream",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Max Redemptions Per User Per Stream",
+      id: "maxRedemptionsPerUserPerStream",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Global Cooldown",
+      id: "globalCooldown",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Skip Redemption Queue",
+      id: "autoFulfill",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Success",
+      id: "success",
+      type: types.bool()
+    });
+    t.dataOutput({
+      name: "Error Message",
+      id: "errorMessage",
+      type: types.string()
+    });
+    t.dataOutput({
+      name: "Redemption ID",
+      id: "redempId",
+      type: types.string()
+    });
+  },
+  async run({ ctx }) {
+    let data;
+    let RewardData = {
+      title: ctx.getInput("title"),
+      cost: ctx.getInput("cost"),
+      prompt: ctx.getInput("prompt"),
+      isEnabled: ctx.getInput("isEnabled"),
+      backgroundColor: ctx.getInput("backgroundColor"),
+      userInputRequired: ctx.getInput("userInputRequired"),
+      maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+      maxRedemptionsPerUserPerStream: ctx.getInput("maxRedemptionsPerUserPerStream"),
+      globalCooldown: ctx.getInput("globalCooldown"), autoFulfill: ctx.getInput("autoFulfill")
+    };
+      try{
+        data = await apiClient.channelPoints.createCustomReward(userID, RewardData);
+      } catch(error) {
+        ctx.setOutput("success", false);
+        ctx.setOutput("errorMessage", JSON.parse(error.body).message);
+        return;
+      }
+      ctx.setOutput("success", true);
+      ctx.setOutput("redempId", data.id);
+
+  },
+});
+
 
 
 pkg.createNonEventSchema({
