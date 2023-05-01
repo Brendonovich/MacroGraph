@@ -89,6 +89,11 @@ pkg.createEventSchema({
       type: types.string(),
     });
     t.dataOutput({
+      id: "userId",
+      name: "User ID",
+      type: types.string(),
+    });
+    t.dataOutput({
       id: "message",
       name: "Message",
       type: types.string(),
@@ -108,19 +113,15 @@ pkg.createEventSchema({
       name: "VIP",
       type: types.bool(),
     });
-    t.dataOutput({
-      id: "self",
-      name: "Self",
-      type: types.bool(),
-    });
   },
   run({ ctx, data }) {
+    if(data.self) return;
     ctx.setOutput("username", data.tags.username);
+    ctx.setOutput("userId", data.tags["user-id"]);
     ctx.setOutput("message", data.message);
     ctx.setOutput("mod", data.tags.mod);
     ctx.setOutput("sub", data.tags.subscriber);
-    ctx.setOutput("sub", data.tags.vip);
-    ctx.setOutput("self", data.self);
+    ctx.setOutput("vip", data.tags.vip);
     ctx.exec("exec");
   },
 });
@@ -155,6 +156,122 @@ pkg.createNonEventSchema({
     });
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Ban User",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Duration",
+      id: "duration",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Reason",
+      id: "reason",
+      type: types.string(),
+    });
+
+  },
+  run({ ctx }) {
+    apiClient.moderation.banUser(userID, userID, {
+      user: ctx.getInput("userId"),
+      duration: ctx.getInput("duration"),
+      reason: ctx.getInput("reason"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Unban User",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.unbanUser(userID, userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Add Moderator",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.addModerator(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Remove Moderator",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.removeModerator(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Remove Moderator",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.deleteChatMessages(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.removeModerator(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
 
 pkg.createNonEventSchema({
   name: "Follower Only Mode",
