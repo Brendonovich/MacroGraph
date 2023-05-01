@@ -62,7 +62,7 @@ export const Node = (props: Props) => {
             switch (e.key) {
               case "Backspace":
               case "Delete": {
-                graph.deleteNode(node.id);
+                graph().deleteNode(node.id);
                 break;
               }
             }
