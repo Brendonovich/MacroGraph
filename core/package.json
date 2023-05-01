@@ -20,6 +20,7 @@
     "@twurple/auth": "^6.2.0",
     "@twurple/chat": "^6.2.0",
     "@twurple/eventsub-ws": "^6.2.0",
+    "discord.js": "^14.9.0",
     "obs-websocket-js": "^5.0.2",
     "tmi.js": "^1.8.5"
   },

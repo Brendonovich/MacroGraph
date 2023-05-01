@@ -1,16 +1,19 @@
-import { createResource, Show } from "solid-js";
+import { createResource, createSignal, Show } from "solid-js";
 import { CoreProvider } from "./contexts";
 import { Graph } from "~/components/Graph";
 import { GraphList } from "~/components/ProjectSidebar";
-import { core } from "@macrograph/core";
+import { core, LSTokenName } from "@macrograph/core";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
-import { URL } from "./URL";
+import { URL } from "./twitch";
 import { addDevGraph } from "./dev";
+import { z } from 'zod';
+import { createForm, SubmitHandler, reset } from "@modular-forms/solid";
 
 const TWITCH_ACCESS_TOKEN = "TwitchAccessToken";
 
 function setupTwitch() {
+  //@ts-expect-error
   return createResource(
     async () => {
       const hash = new URLSearchParams(window.location.hash.substring(1));
@@ -55,7 +58,8 @@ function App() {
 
   if (import.meta.env.DEV) addDevGraph(core);
 
-  const [twitchData, twitchActions] = setupTwitch();
+
+
 
   return (
     <UIStoreProvider store={ui}>
@@ -68,24 +72,7 @@ function App() {
           }}
         >
           <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
-            <div class="text-neutral-100">
-              <Show when={twitchData()} fallback={<a href={URL}>LOGIN</a>}>
-                {(data) => (
-                  <>
-                    <p>Logged in as {data().userName}</p>
-                    <button
-                      type="button"
-                      onclick={() => {
-                        localStorage.removeItem(TWITCH_ACCESS_TOKEN);
-                        twitchActions.refetch();
-                      }}
-                    >
-                      Logout
-                    </button>
-                  </>
-                )}
-              </Show>
-            </div>
+            <SettingsMenu />
             <GraphList onChange={(g) => ui.setCurrentGraph(g)} />
             <PrintOutput />
           </div>
@@ -94,8 +81,72 @@ function App() {
           </Show>
         </div>
       </CoreProvider>
-    </UIStoreProvider>
+    </UIStoreProvider >
   );
 }
 
+
 export default App;
+
+
+const DiscordSchema = z.object({
+  botToken: z.string(),
+  serverID: z.string()
+})
+
+type DiscordForm = z.input<typeof DiscordSchema>;
+
+
+
+function SettingsMenu() {
+  const [menuOpen, setMenuOpen] = createSignal(false);
+  const [twitchData, twitchActions] = setupTwitch();
+
+  const [discordForm, { Form, Field }] = createForm<DiscordForm>({
+    initialValues: {
+      botToken: localStorage.getItem(LSTokenName) ?? undefined,
+      serverID: localStorage.getItem("discordServerId") ?? undefined,
+    }
+  });
+
+  const handleSubmit: SubmitHandler<DiscordForm> = (values, event) => {
+    localStorage.setItem(LSTokenName, values.botToken);
+    localStorage.setItem("discordServerId", values.serverID);
+  }
+
+  return (
+    <div class="flex flex-col text-center">
+      <button type="button" onClick={() => setMenuOpen(!menuOpen())} class="text-neutral-100">
+        CLICK HERE
+      </button>
+      <Show when={menuOpen()}>
+        <Show when={twitchData()} fallback={<a class="ring-4 ring-black bg-purple-700 my-2 text-white" href={URL}>TWITCH LOGIN</a>}>
+          {(data) => (
+            <>
+              <p class="ring-4 ring-black bg-purple-700 my-2 text-white">Logged in as {data().userName}</p>
+              <button
+                type="button"
+                onclick={() => {
+                  localStorage.removeItem(TWITCH_ACCESS_TOKEN);
+                  twitchActions.refetch();
+                }}
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </Show>
+        <label class="text-white">Discord Bot:</label>
+        <Form onSubmit={handleSubmit}>
+          <Field name="botToken">
+            {(field, props) => <input {...props} type="password" placeholder="Bot Token" value={field.value} />}
+          </Field>
+          <Field name="serverID">
+            {(field, props) => <input {...props} placeholder="Server ID" value={field.value} />}
+          </Field>
+          <input type="submit" />
+        </Form>
+      </Show>
+    </div>
+  )
+}

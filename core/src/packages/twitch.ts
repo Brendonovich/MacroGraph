@@ -707,7 +707,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.exec("exec");
