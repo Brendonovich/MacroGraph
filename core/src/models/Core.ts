@@ -7,6 +7,28 @@ import { Node } from "./Node";
 import { DataInput, DataOutput, ExecOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 
+class NodeEmit {
+  listeners =  new Map<Node,Set<((d:Node) => any)>>();
+
+  emit(data: Node) {
+    this.listeners.get(data)?.forEach((l) => l(data));
+  }
+
+  subscribe(SubType: Node, cb: (d: Node) => any) {
+    let listeners = this.listeners.get(SubType);
+    if(!listeners) this.listeners.set(SubType,new Set());
+    listeners = this.listeners.get(SubType);
+    listeners?.add(cb);
+
+    return () => {
+      listeners?.delete(cb);
+    if(listeners?.size === 0) this.listeners.delete(SubType);
+    }
+  }
+}
+
+export const NODE_EMIT = new NodeEmit();
+
 export class Core {
   graphs = new ReactiveMap<number, Graph>();
   packages = [] as Package[];
@@ -73,6 +95,7 @@ class ExecutionContext {
   createCtx(node: Node): RunCtx {
     return {
       exec: (execOutput) => {
+        NODE_EMIT.emit(node);
         const output = node.output(execOutput);
 
         if (!output) throw new Error(`Output ${execOutput} not found!`);

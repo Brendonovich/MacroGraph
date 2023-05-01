@@ -55,13 +55,10 @@ let sessionID = "";
 const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
 ws.addEventListener("open", (data) => {
-  console.log(data);
 });
 
 ws.addEventListener("message", (data) => {
   let info = JSON.parse(data.data);
-  console.log(info.metadata.message_type);
-  console.log(info.payload);
   switch (info.metadata.message_type) {
     case "session_welcome":
       sessionID = info.payload.session.id;
@@ -70,7 +67,6 @@ ws.addEventListener("message", (data) => {
       });
       break;
     case "notification":
-      console.log(info);
       pkg.emitEvent({
         name: info.payload.subscription.type,
         data: info.payload,
@@ -79,20 +75,6 @@ ws.addEventListener("message", (data) => {
 });
 
 const pkg = core.createPackage<any>({ name: "Twitch Events" });
-
-// pkg.createEventSchema({
-//     name: " Follow",
-//     event: "channel.follow",
-//     generateIO: (t) => {
-//         t.execOutput({
-//             id: "user_name",
-//             name: "User Name",
-//         });
-//     },
-//     run({ctx, data}) {
-//         console.log(data);
-//     }
-// })
 
 pkg.createEventSchema({
   name: "Chat Message",
@@ -104,6 +86,11 @@ pkg.createEventSchema({
     t.dataOutput({
       id: "username",
       name: "Username",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "userId",
+      name: "User ID",
       type: types.string(),
     });
     t.dataOutput({
@@ -126,20 +113,15 @@ pkg.createEventSchema({
       name: "VIP",
       type: types.bool(),
     });
-    t.dataOutput({
-      id: "self",
-      name: "Self",
-      type: types.bool(),
-    });
   },
   run({ ctx, data }) {
-    console.log(data);
+    if(data.self) return;
     ctx.setOutput("username", data.tags.username);
+    ctx.setOutput("userId", data.tags["user-id"]);
     ctx.setOutput("message", data.message);
     ctx.setOutput("mod", data.tags.mod);
     ctx.setOutput("sub", data.tags.subscriber);
-    ctx.setOutput("sub", data.tags.vip);
-    ctx.setOutput("self", data.self);
+    ctx.setOutput("vip", data.tags.vip);
     ctx.exec("exec");
   },
 });
@@ -174,6 +156,122 @@ pkg.createNonEventSchema({
     });
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Ban User",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Duration",
+      id: "duration",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Reason",
+      id: "reason",
+      type: types.string(),
+    });
+
+  },
+  run({ ctx }) {
+    apiClient.moderation.banUser(userID, userID, {
+      user: ctx.getInput("userId"),
+      duration: ctx.getInput("duration"),
+      reason: ctx.getInput("reason"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Unban User",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.unbanUser(userID, userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Add Moderator",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.addModerator(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Remove Moderator",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.removeModerator(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Remove Moderator",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.deleteChatMessages(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "userID",
+      id: "userId",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    apiClient.moderation.removeModerator(userID, {
+      user: ctx.getInput("userId"),
+    });
+  },
+});
+
 
 pkg.createNonEventSchema({
   name: "Follower Only Mode",
@@ -321,7 +419,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("channelId", data.event.broadcaster_user_id);
     ctx.setOutput("channelName", data.event.broadcaster_user_login);
     ctx.setOutput("modId", data.event.moderator_user_id);
@@ -364,7 +462,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.from_broadcaster_user_id);
     ctx.setOutput("userLogin", data.event.from_broadcaster_user_login);
     ctx.setOutput("modName", data.event.moderator_user_login);
@@ -392,7 +490,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.exec("exec");
@@ -418,7 +516,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.exec("exec");
@@ -524,7 +622,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("enabled", data.event.is_enabled);
     ctx.setOutput("paused", data.event.is_paused);
@@ -658,7 +756,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("enabled", data.event.is_enabled);
     ctx.setOutput("paused", data.event.is_paused);
@@ -792,7 +890,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("enabled", data.event.is_enabled);
     ctx.setOutput("paused", data.event.is_paused);
@@ -886,7 +984,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
@@ -1070,7 +1168,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("channelId", data.event.broadcaster_user_id);
     ctx.setOutput("channelName", data.event.broadcaster_user_login);
     ctx.setOutput("title", data.event.title);
@@ -1110,7 +1208,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1148,7 +1246,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1196,7 +1294,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1251,7 +1349,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1297,7 +1395,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("anonymous", data.event.is_anonymous);
@@ -1331,7 +1429,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userId", data.event.from_broadcaster_user_id);
     ctx.setOutput("userLogin", data.event.from_broadcaster_user_login);
     ctx.setOutput("viewers", data.event.viewers);
@@ -1358,7 +1456,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("userID", data.event.user_id);
     ctx.setOutput("userName", data.event.user_login);
     ctx.exec("exec");
@@ -1384,7 +1482,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("viewerCount", data.event.viewer_count);
     ctx.setOutput("startedAt", data.event.started_at);
@@ -1432,7 +1530,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("description", data.event.description);
@@ -1483,7 +1581,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("description", data.event.description);
@@ -1544,7 +1642,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("description", data.event.description);
@@ -1582,7 +1680,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
+    
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("startedAt", data.event.started_at);
@@ -1599,7 +1697,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.exec("exec");
   },
 });
@@ -1619,7 +1716,6 @@ Client.on("connected", (data) => {
 });
 
 Client.on("message", (channel, tags, message, self) => {
-  console.log(self);
   const data = { message, tags, self};
   pkg.emitEvent({ name: "chatMessage", data });
 });
@@ -1652,6 +1748,5 @@ function Subscriptions(subscription: string) {
   })
     .then((res) => res.json())
     .then((res) => {
-      console.log(res);
     });
 }

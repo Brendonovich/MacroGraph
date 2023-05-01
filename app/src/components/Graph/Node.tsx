@@ -1,6 +1,6 @@
 import clsx from "clsx";
-import { For, Match, Switch } from "solid-js";
-
+import { For, Match, Switch, createSignal, onCleanup } from "solid-js";
+import "./Node.css";
 import { NodeProvider } from "~/contexts";
 import {
   Node as NodeModel,
@@ -9,6 +9,7 @@ import {
   ExecInput as ExecInputModel,
   ExecOutput as ExecOutputModel,
   NodeSchemaVariant,
+  NODE_EMIT,
 } from "@macrograph/core";
 import { useUIStore } from "~/UIStore";
 import { useGraph } from "./Graph";
@@ -27,9 +28,25 @@ const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
 
 export const Node = (props: Props) => {
   const node = props.node;
-
   const graph = useGraph();
   const UI = useUIStore();
+  let Toggle = 0;
+
+  const ACTIVE = NODE_EMIT.subscribe(node, (data) => {
+    if(node.id === data.id && data.schema === node.schema){
+      Toggle++;
+      Toggle == 1 && updateActive(1);
+      setTimeout(() => {
+        Toggle--;
+        Toggle == 0 && updateActive(0);
+      }, 200);
+    }
+
+  })
+
+  const [active, updateActive] = createSignal(0);
+
+  onCleanup(ACTIVE);
 
   const handleMouseMove = (e: MouseEvent) => {
     const scale = UI.state.scale;
@@ -53,7 +70,8 @@ export const Node = (props: Props) => {
       >
         <div
           class={clsx(
-            "h-6 px-2 pt-1 text-md font-medium cursor-pointer outline-none",
+            "h-6 px-2 pt-1 duration-100 text-md font-medium cursor-pointer outline-none",
+            active() === 1 ? "active-fade-in" : "fade-Duration",
             SchemaVariantColours[
               "variant" in node.schema ? node.schema.variant : "Event"
             ]
