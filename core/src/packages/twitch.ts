@@ -258,6 +258,7 @@ pkg.createNonEventSchema({
     apiClient.moderation.deleteChatMessages(userID, userID, {
       messageId: ctx.getInput("messageId"),
     });
+    ctx.setOutput("clipId", data);
   },
 });
 
