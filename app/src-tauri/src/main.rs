@@ -13,6 +13,7 @@ fn main() {
     tauri::async_runtime::spawn(websocket::start_server());
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![greet])
+        .plugin(tauri_plugin_http::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

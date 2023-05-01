@@ -12,10 +12,12 @@
   "license": "MIT",
   "dependencies": {
     "@macrograph/core": "workspace:*",
+    "@modular-forms/solid": "^0.12.2",
     "@solid-primitives/map": "^0.4.3",
     "@tauri-apps/api": "^1.2.0",
     "clsx": "^1.2.1",
-    "solid-js": "^1.7.0"
+    "solid-js": "^1.7.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",

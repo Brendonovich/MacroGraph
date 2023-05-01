@@ -47,7 +47,8 @@
         "resizable": true,
         "title": "macrograph",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "userAgent": "Macrograph/0.0"
       }
     ]
   }
