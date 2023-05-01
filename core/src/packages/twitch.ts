@@ -466,7 +466,6 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let data;
     let RewardData = {
       title: ctx.getInput("title"),
       cost: ctx.getInput("cost"),
@@ -479,14 +478,14 @@ pkg.createNonEventSchema({
       globalCooldown: ctx.getInput("globalCooldown"), autoFulfill: ctx.getInput("autoFulfill")
     };
     try {
-      data = await apiClient.channelPoints.createCustomReward(userID, RewardData);
+      let data = await apiClient.channelPoints.createCustomReward(userID, RewardData);
+      ctx.setOutput("success", true);
+      ctx.setOutput("redempId", data.id);
     } catch (error) {
       ctx.setOutput("success", false);
       ctx.setOutput("errorMessage", JSON.parse(error.body).message);
-      return;
     }
-    ctx.setOutput("success", true);
-    ctx.setOutput("redempId", data.id);
+
 
   },
 });
