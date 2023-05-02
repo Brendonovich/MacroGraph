@@ -21,7 +21,7 @@ export const FloatInput = (props: Props) => {
         const value = e.target.value;
         setValue(value);
 
-        if (FLOAT_REGEX.test(value)) props.onChange(parseInt(value));
+        if (FLOAT_REGEX.test(value)) props.onChange(parseFloat(value));
       }}
       onBlur={(e) => {
         if (e.target.value.length === 0) {
