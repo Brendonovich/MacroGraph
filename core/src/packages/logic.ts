@@ -224,3 +224,46 @@ pkg.createNonEventSchema({
     });
   },
 });
+
+const typeArray = [
+  ["Bool", types.bool()],
+  ["String", types.string()],
+  ["Int", types.int()],
+  ["Float", types.float()],
+] as const;
+
+typeArray.forEach(([key, type]) => {
+  pkg.createNonEventSchema({
+    name: `Conditional ${key}`,
+    variant: "Pure",
+    run({ ctx }) {
+      ctx.setOutput(
+        "output",
+        ctx.getInput("condition")
+          ? ctx.getInput("trueValue")
+          : ctx.getInput("falseValue")
+      );
+    },
+    generateIO(t) {
+      t.dataInput({
+        id: "condition",
+        name: "Condition",
+        type: types.bool(),
+      });
+      t.dataInput({
+        id: "trueValue",
+        name: "True",
+        type: type,
+      });
+      t.dataInput({
+        id: "falseValue",
+        name: "False",
+        type: type,
+      });
+      t.dataOutput({
+        id: "output",
+        type: type,
+      });
+    },
+  });
+});
