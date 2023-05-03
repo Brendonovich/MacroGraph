@@ -39,7 +39,7 @@ export class DataInput {
     this.connection = null;
   }
 
-  async setDefaultValue(value: any) {
+  setDefaultValue(value: any) {
     this.defaultValue = value;
   }
 

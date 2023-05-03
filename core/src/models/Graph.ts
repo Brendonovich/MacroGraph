@@ -6,16 +6,37 @@ import {
   ExecOutput,
   Node,
   NodeArgs,
+  SerializedNode,
 } from ".";
 import { createMutable } from "solid-js/store";
 import { pinsCanConnect } from "../utils";
 import { ReactiveMap } from "@solid-primitives/map";
+import { z } from "zod";
 
 export interface GraphArgs {
   id: number;
   name: string;
   core: Core;
 }
+
+export const SerializedGraph = z.object({
+  id: z.number(),
+  name: z.string(),
+  nodes: z.record(z.coerce.number().int(), SerializedNode),
+  nodeIdCounter: z.number(),
+  connections: z.array(
+    z.object({
+      from: z.object({
+        node: z.coerce.number().int(),
+        output: z.string(),
+      }),
+      to: z.object({
+        node: z.coerce.number().int(),
+        input: z.string(),
+      }),
+    })
+  ),
+});
 
 export class Graph {
   id: number;
@@ -55,6 +76,8 @@ export class Graph {
       pkgMappings.get(event)?.add(node);
     }
 
+    this.save();
+
     return node;
   }
 
@@ -81,6 +104,8 @@ export class Graph {
       execOutput.connection = execInput;
       execInput.connection = execOutput;
     }
+
+    this.save();
   }
 
   deleteNode(id: number) {
@@ -92,9 +117,97 @@ export class Graph {
     node.outputs.forEach((o) => o.disconnect(false));
 
     this.nodes.delete(id);
+
+    this.save();
   }
 
   async rename(name: string) {
     this.name = name;
+
+    this.save();
+  }
+
+  serialize(): z.infer<typeof SerializedGraph> {
+    return {
+      id: this.id,
+      name: this.name,
+      nodeIdCounter: this.nodeIdCounter,
+      nodes: Object.fromEntries(
+        [...this.nodes.entries()].map(([id, node]) => [id, node.serialize()])
+      ),
+      connections: [...this.nodes.entries()].reduce((acc, [_, node]) => {
+        node.inputs.forEach((i) => {
+          if (i.connection === null) return acc;
+
+          acc.push({
+            from: {
+              node: i.connection.node.id,
+              output: i.connection.id,
+            },
+            to: {
+              node: i.node.id,
+              input: i.id,
+            },
+          });
+        });
+
+        return acc;
+      }, [] as any),
+    };
+  }
+
+  static deserialize(
+    core: Core,
+    data: z.infer<typeof SerializedGraph>
+  ): Graph | null {
+    const graph = new Graph({
+      core,
+      id: data.id,
+      name: data.name,
+    });
+
+    graph.nodeIdCounter = data.nodeIdCounter;
+
+    graph.nodes = new ReactiveMap(
+      Object.entries(data.nodes).map(([idStr, serializedNode]) => {
+        const id = z.coerce.number().parse(idStr);
+        const node = Node.deserialize(graph, serializedNode);
+
+        if (node === null) throw new Error("Node is null!");
+
+        return [id, node];
+      })
+    );
+
+    data.connections.forEach(({ from, to }) => {
+      const output = graph.nodes.get(from.node)?.output(from.output);
+      const input = graph.nodes.get(to.node)?.input(to.input);
+
+      if (!output || !input) return;
+
+      if (output instanceof ExecOutput && input instanceof ExecInput) {
+        input.connection = output;
+        output.connection = input;
+      } else if (output instanceof DataOutput && input instanceof DataInput) {
+        input.connection = output;
+        output.connections.push(input);
+      }
+    });
+
+    return graph;
+  }
+
+  save() {
+    localStorage.setItem(`graph-${this.id}`, JSON.stringify(this.serialize()));
+
+    localStorage.setItem(
+      "graphs",
+      JSON.stringify([
+        ...new Set([
+          ...(JSON.parse(localStorage.getItem("graphs") || "[]") ?? []),
+          this.id,
+        ]),
+      ])
+    );
   }
 }

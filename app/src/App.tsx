@@ -7,7 +7,7 @@ import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
 import { URL } from "./twitch";
 import { addDevGraph } from "./dev";
-import { z } from 'zod';
+import { z } from "zod";
 import { createForm, SubmitHandler, reset } from "@modular-forms/solid";
 
 const TWITCH_ACCESS_TOKEN = "TwitchAccessToken";
@@ -53,13 +53,8 @@ function setupTwitch() {
 function App() {
   const ui = createUIStore();
 
-  const graph = core.createGraph();
-  ui.setCurrentGraph(graph);
-
-  if (import.meta.env.DEV) addDevGraph(core);
-
-
-
+  core.load();
+  ui.setCurrentGraph(core.graphs.get(core.graphs.keys().next().value)!);
 
   return (
     <UIStoreProvider store={ui}>
@@ -81,22 +76,18 @@ function App() {
           </Show>
         </div>
       </CoreProvider>
-    </UIStoreProvider >
+    </UIStoreProvider>
   );
 }
 
-
 export default App;
-
 
 const DiscordSchema = z.object({
   botToken: z.string(),
-  serverID: z.string()
-})
+  serverID: z.string(),
+});
 
 type DiscordForm = z.input<typeof DiscordSchema>;
-
-
 
 function SettingsMenu() {
   const [menuOpen, setMenuOpen] = createSignal(false);
@@ -106,24 +97,40 @@ function SettingsMenu() {
     initialValues: {
       botToken: localStorage.getItem(LSTokenName) ?? undefined,
       serverID: localStorage.getItem("discordServerId") ?? undefined,
-    }
+    },
   });
 
   const handleSubmit: SubmitHandler<DiscordForm> = (values, event) => {
     localStorage.setItem(LSTokenName, values.botToken);
     localStorage.setItem("discordServerId", values.serverID);
-  }
+  };
 
   return (
     <div class="flex flex-col text-center">
-      <button type="button" onClick={() => setMenuOpen(!menuOpen())} class="text-neutral-100">
+      <button
+        type="button"
+        onClick={() => setMenuOpen(!menuOpen())}
+        class="text-neutral-100"
+      >
         CLICK HERE
       </button>
       <Show when={menuOpen()}>
-        <Show when={twitchData()} fallback={<a class="ring-4 ring-black bg-purple-700 my-2 text-white" href={URL}>TWITCH LOGIN</a>}>
+        <Show
+          when={twitchData()}
+          fallback={
+            <a
+              class="ring-4 ring-black bg-purple-700 my-2 text-white"
+              href={URL}
+            >
+              TWITCH LOGIN
+            </a>
+          }
+        >
           {(data) => (
             <>
-              <p class="ring-4 ring-black bg-purple-700 my-2 text-white">Logged in as {data().userName}</p>
+              <p class="ring-4 ring-black bg-purple-700 my-2 text-white">
+                Logged in as {data().userName}
+              </p>
               <button
                 type="button"
                 onclick={() => {
@@ -139,14 +146,23 @@ function SettingsMenu() {
         <label class="text-white">Discord Bot:</label>
         <Form onSubmit={handleSubmit}>
           <Field name="botToken">
-            {(field, props) => <input {...props} type="password" placeholder="Bot Token" value={field.value} />}
+            {(field, props) => (
+              <input
+                {...props}
+                type="password"
+                placeholder="Bot Token"
+                value={field.value}
+              />
+            )}
           </Field>
           <Field name="serverID">
-            {(field, props) => <input {...props} placeholder="Server ID" value={field.value} />}
+            {(field, props) => (
+              <input {...props} placeholder="Server ID" value={field.value} />
+            )}
           </Field>
           <input type="submit" />
         </Form>
       </Show>
     </div>
-  )
+  );
 }

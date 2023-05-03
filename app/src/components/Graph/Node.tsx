@@ -33,7 +33,7 @@ export const Node = (props: Props) => {
   let Toggle = 0;
 
   const ACTIVE = NODE_EMIT.subscribe(node, (data) => {
-    if(node.id === data.id && data.schema === node.schema){
+    if (node.id === data.id && data.schema === node.schema) {
       Toggle++;
       Toggle == 1 && updateActive(1);
       setTimeout(() => {
@@ -41,8 +41,7 @@ export const Node = (props: Props) => {
         Toggle == 0 && updateActive(0);
       }, 200);
     }
-
-  })
+  });
 
   const [active, updateActive] = createSignal(0);
 
@@ -107,6 +106,7 @@ export const Node = (props: Props) => {
                 break;
             }
           }}
+          onMouseUp={() => node.setPosition(node.position, true)}
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();

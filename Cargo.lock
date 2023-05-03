@@ -2436,7 +2436,6 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
- "tauri-plugin-http",
  "websocket",
 ]
 
@@ -2703,23 +2702,6 @@ dependencies = [
  "syn 1.0.109",
  "tauri-codegen",
  "tauri-utils",
-]
-
-[[package]]
-name = "tauri-plugin-http"
-version = "0.0.0"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=next#04278f1ba6346927c4aefdae86ec5a35cd46c94e"
-dependencies = [
- "bytes",
- "glob",
- "http",
- "rand 0.8.5",
- "reqwest",
- "serde",
- "serde_json",
- "serde_repr",
- "tauri",
- "thiserror",
 ]
 
 [[package]]
