@@ -12,6 +12,7 @@ import {
 import { Graph } from ".";
 import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
+import { z } from "zod";
 import { batch } from "solid-js";
 
 export interface NodeArgs {
@@ -21,6 +22,20 @@ export interface NodeArgs {
   schema: NodeSchema;
   position: XY;
 }
+
+export const SerializedNode = z.object({
+  id: z.number(),
+  name: z.string(),
+  position: z.object({
+    x: z.number(),
+    y: z.number(),
+  }),
+  schema: z.object({
+    package: z.string(),
+    id: z.string(),
+  }),
+  defaultValues: z.record(z.string(), z.any()),
+});
 
 export class Node {
   id: number;
@@ -118,8 +133,10 @@ export class Node {
     this.selected = selected;
   }
 
-  setPosition(position: XY) {
+  setPosition(position: XY, save = false) {
     this.position = position;
+
+    if (save) this.graph.save();
   }
 
   // IO Creators
@@ -141,5 +158,47 @@ export class Node {
 
   addDataOutput(args: Omit<DataOutputArgs, "node"> & { index?: number }) {
     this.outputs.push(new DataOutput({ ...args, node: this as any }));
+  }
+
+  serialize(): z.infer<typeof SerializedNode> {
+    return {
+      id: this.id,
+      name: this.name,
+      position: this.position,
+      schema: {
+        package: this.schema.package.name,
+        id: this.schema.name,
+      },
+      defaultValues: this.inputs.reduce((acc, i) => {
+        if (i instanceof ExecInput) return acc;
+
+        return {
+          ...acc,
+          [i.id]: i.defaultValue,
+        };
+      }, {}),
+    };
+  }
+
+  static deserialize(
+    graph: Graph,
+    data: z.infer<typeof SerializedNode>
+  ): Node | null {
+    const node = new Node({
+      id: data.id,
+      position: data.position,
+      schema: graph.core.schema(data.schema.package, data.schema.id)!,
+      graph,
+    });
+
+    node.inputs.forEach((i) => {
+      const defaultValue = data.defaultValues[i.id];
+
+      if (defaultValue === undefined || i instanceof ExecInput) return;
+
+      i.setDefaultValue(defaultValue);
+    });
+
+    return node;
   }
 }

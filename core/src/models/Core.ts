@@ -1,14 +1,14 @@
 import { createMutable } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
 
-import { Graph } from "./Graph";
+import { Graph, SerializedGraph } from "./Graph";
 import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ExecOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 
 class NodeEmit {
-  listeners =  new Map<Node,Set<((d:Node) => any)>>();
+  listeners = new Map<Node, Set<(d: Node) => any>>();
 
   emit(data: Node) {
     this.listeners.get(data)?.forEach((l) => l(data));
@@ -16,14 +16,14 @@ class NodeEmit {
 
   subscribe(SubType: Node, cb: (d: Node) => any) {
     let listeners = this.listeners.get(SubType);
-    if(!listeners) this.listeners.set(SubType,new Set());
+    if (!listeners) this.listeners.set(SubType, new Set());
     listeners = this.listeners.get(SubType);
     listeners?.add(cb);
 
     return () => {
       listeners?.delete(cb);
-    if(listeners?.size === 0) this.listeners.delete(SubType);
-    }
+      if (listeners?.size === 0) this.listeners.delete(SubType);
+    };
   }
 }
 
@@ -41,6 +41,29 @@ export class Core {
     return createMutable(this);
   }
 
+  load() {
+    const graphsStr = localStorage.getItem("graphs");
+
+    if (graphsStr) {
+      const graphs: number[] = JSON.parse(graphsStr);
+
+      for (const id of graphs) {
+        try {
+          this.graphs.set(
+            id,
+            Graph.deserialize(
+              this,
+              SerializedGraph.parse(
+                JSON.parse(localStorage.getItem(`graph-${id}`)!)
+              )
+            )!
+          );
+        } catch (e) {
+          console.log(e);
+        }
+      }
+    }
+  }
   createGraph(args?: { name?: string }) {
     const id = this.graphIdCounter++;
 

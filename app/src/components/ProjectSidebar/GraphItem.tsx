@@ -20,6 +20,9 @@ export const GraphItem = (props: Props) => {
         "cursor-pointer text-white",
         props.isCurrentGraph ? "bg-neutral-700" : "hover:bg-neutral-500"
       )}
+      ondblclick={() =>
+        console.log(JSON.stringify(props.graph.serialize(), null, 4))
+      }
     >
       <Show
         when={editing()}
