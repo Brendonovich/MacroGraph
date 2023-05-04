@@ -12,7 +12,7 @@ const ws = new OBS();
 pkg.createNonEventSchema({
   name: "Connect OBS Websocket",
   variant: "Exec",
-  generateIO() {},
+  generateIO() { },
   run() {
     return ws.connect();
   },
@@ -21,7 +21,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Disconnect OBS Websocket",
   variant: "Exec",
-  generateIO() {},
+  generateIO() { },
   run() {
     return ws.disconnect();
   },
@@ -1159,7 +1159,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Trigger Studio Mode Transition",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("TriggerStudioModeTransition");
   },
@@ -1348,7 +1348,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Get Scene Item Id",
+  name: "Create Scene Item",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({
@@ -1383,7 +1383,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Set Input Volume",
+  name: "Remove Scene Item",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({
@@ -1503,7 +1503,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Get Scene Item Id",
+  name: "Get Scene Item Locked",
   variant: "Exec",
   generateIO(t) {
     t.dataInput({
@@ -1711,7 +1711,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Virtual Cam",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("StartVirtualCam");
   },
@@ -1720,7 +1720,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Stop Virtual Cam",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("StopVirtualCam");
   },
@@ -1761,7 +1761,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Replay Buffer",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("StartReplayBuffer");
   },
@@ -1770,7 +1770,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Stop Replay Buffer",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("StopReplayBuffer");
   },
@@ -1779,7 +1779,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Save Replay Buffer",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("SaveReplayBuffer");
   },
@@ -1977,7 +1977,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Stream",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("StartStream");
   },
@@ -1986,7 +1986,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Stop Stream",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("StopStream");
   },
@@ -2052,7 +2052,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Toggle Record",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("ToggleRecord");
   },
@@ -2061,7 +2061,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Record",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("StartRecord");
   },
@@ -2086,7 +2086,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Toggle Record Paused",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("ToggleRecordPause");
   },
@@ -2095,7 +2095,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Pause Record",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("PauseRecord");
   },
@@ -2104,7 +2104,7 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Resume Record",
   variant: "Exec",
-  generateIO(t) {},
+  generateIO(t) { },
   async run({ ctx }) {
     ws.call("ResumeRecord");
   },
