@@ -62,19 +62,7 @@ export class Graph {
 
     this.nodes.set(id, node);
 
-    if ("event" in node.schema) {
-      const event = node.schema.event;
-      const pkg = args.schema.package;
-      const mappings = this.core.eventNodeMappings;
-
-      if (!mappings.has(pkg)) mappings.set(pkg, new Map());
-
-      const pkgMappings = mappings.get(pkg)!;
-
-      if (!pkgMappings.has(event)) pkgMappings.set(event, new Set());
-
-      pkgMappings.get(event)?.add(node);
-    }
+    this.core.addEventNodeMapping(node);
 
     this.save();
 
@@ -174,6 +162,8 @@ export class Graph {
         const node = Node.deserialize(graph, serializedNode);
 
         if (node === null) throw new Error("Node is null!");
+
+        core.addEventNodeMapping(node);
 
         return [id, node];
       })
