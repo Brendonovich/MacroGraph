@@ -41,6 +41,8 @@ export class DataInput {
 
   setDefaultValue(value: any) {
     this.defaultValue = value;
+
+    this.node.graph.save();
   }
 
   get connected() {

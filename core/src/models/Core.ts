@@ -102,6 +102,22 @@ export class Core {
 
     mappings?.forEach((n) => new ExecutionContext(n).run(event.data));
   }
+
+  addEventNodeMapping(node: Node) {
+    if ("event" in node.schema) {
+      const event = node.schema.event;
+      const pkg = node.schema.package;
+      const mappings = this.eventNodeMappings;
+
+      if (!mappings.has(pkg)) mappings.set(pkg, new Map());
+
+      const pkgMappings = mappings.get(pkg)!;
+
+      if (!pkgMappings.has(event)) pkgMappings.set(event, new Set());
+
+      pkgMappings.get(event)?.add(node);
+    }
+  }
 }
 
 class ExecutionContext {
