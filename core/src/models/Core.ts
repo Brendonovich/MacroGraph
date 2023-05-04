@@ -46,6 +46,7 @@ export class Core {
 
     if (graphsStr) {
       const graphs: number[] = JSON.parse(graphsStr);
+      this.graphIdCounter = graphs.at(-1);
 
       for (const id of graphs) {
         try {
@@ -106,7 +107,7 @@ export class Core {
 class ExecutionContext {
   data = new Map<DataOutput, any>();
 
-  constructor(public root: Node) {}
+  constructor(public root: Node) { }
 
   run(data: any) {
     this.root.schema.run({
