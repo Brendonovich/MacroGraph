@@ -153,6 +153,24 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "String is null",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.getInput("string") ? ctx.setOutput("output", true) : ctx.setOutput("output", false);
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "string",
+      type: types.string(),
+    });
+    builder.dataOutput({
+      id: "output",
+      type: types.bool(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "String To Lowercase",
   variant: "Pure",
   run({ ctx }) {
