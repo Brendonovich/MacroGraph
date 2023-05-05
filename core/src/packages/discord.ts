@@ -1,5 +1,6 @@
 import { core } from "../models";
 import { types } from "../types";
+import { createEndpoint } from "../utils/httpEndpoint";
 
 const pkg = core.createPackage<any>({ name: "Discord" });
 
@@ -62,38 +63,18 @@ if (Token) {
   });
 }
 
-type Endpoint = ReturnType<typeof createEndpoint>;
-type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-
-interface EndpointArgs {
-  path: string;
-  extend?: Endpoint;
-}
-
-function createEndpoint({ path, extend }: EndpointArgs) {
-  if (extend) path = `${extend.path}{path}`;
-
-  const createFetcher = (method: HTTPMethod) => (args?: { body?: string }) =>
-    fetch(path, {
-      method,
+const apiEndpoint = createEndpoint({
+  path: "https://discordapp.com/api/v10",
+  fetchFn: (url, args) =>
+    fetch(url, {
+      ...args,
       headers: {
+        ...args?.headers,
         "Content-Type": "application/json",
         Authorization: `Bot ${Token}`,
       },
-      ...args,
-    });
-
-  return {
-    path,
-    get: createFetcher("GET"),
-    post: createFetcher("POST"),
-    put: createFetcher("PUT"),
-    patch: createFetcher("PATCH"),
-    delete: createFetcher("DELETE"),
-  };
-}
-
-const apiEndpoint = createEndpoint({ path: "https://discordapp.com/api/v10" });
+    }),
+});
 
 const discordApi = {
   channels(id: string) {
