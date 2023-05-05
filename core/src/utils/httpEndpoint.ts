@@ -10,18 +10,19 @@ interface EndpointArgs {
 export function createEndpoint({
   path,
   extend,
-  fetchFn: customFetch = fetch,
+  fetchFn: customFetch,
 }: EndpointArgs) {
-  if (extend) path = `${extend.path}{path}`;
+  if (extend) path = `${extend.path}${path}`;
 
   const createFetcher = (method: HTTPMethod) => (args?: { body?: string }) =>
-    customFetch(path, {
+    (extend?.customFetch ?? fetch)(path, {
       method,
       ...args,
     });
 
   return {
     path,
+    customFetch,
     get: createFetcher("GET"),
     post: createFetcher("POST"),
     put: createFetcher("PUT"),
