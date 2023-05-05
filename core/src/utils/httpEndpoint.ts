@@ -7,22 +7,21 @@ interface EndpointArgs {
   fetchFn?: typeof fetch;
 }
 
-export function createEndpoint({
-  path,
-  extend,
-  fetchFn: customFetch,
-}: EndpointArgs) {
+export function createEndpoint({ path, extend, fetchFn }: EndpointArgs) {
   if (extend) path = `${extend.path}${path}`;
 
-  const createFetcher = (method: HTTPMethod) => (args?: { body?: string }) =>
-    (extend?.customFetch ?? fetch)(path, {
+  const resolvedFetchFn: typeof fetch = fetchFn ?? extend?.fetchFn ?? fetch;
+
+  const createFetcher = (method: HTTPMethod) => (args?: { body?: string }) => {
+    resolvedFetchFn(path, {
       method,
       ...args,
     });
+  };
 
   return {
     path,
-    customFetch,
+    fetchFn: resolvedFetchFn,
     get: createFetcher("GET"),
     post: createFetcher("POST"),
     put: createFetcher("PUT"),
