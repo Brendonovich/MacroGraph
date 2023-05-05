@@ -13,7 +13,7 @@ export function createEndpoint({ path, extend, fetchFn }: EndpointArgs) {
   const resolvedFetchFn: typeof fetch = fetchFn ?? extend?.fetchFn ?? fetch;
 
   const createFetcher = (method: HTTPMethod) => (args?: { body?: string }) => {
-    resolvedFetchFn(path, {
+    return resolvedFetchFn(path, {
       method,
       ...args,
     });

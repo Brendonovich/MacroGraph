@@ -62,9 +62,11 @@ ws.addEventListener("message", (data) => {
   switch (info.metadata.message_type) {
     case "session_welcome":
       sessionID = info.payload.session.id;
-      SubTypes.forEach((data) => {
-        Subscriptions(data);
-      });
+      if (accessToken) {
+        SubTypes.forEach((data) => {
+          Subscriptions(data);
+        });
+      }
       break;
     case "notification":
       pkg.emitEvent({
