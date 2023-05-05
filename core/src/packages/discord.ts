@@ -11,6 +11,12 @@ console.log(Token);
 
 const ws = new WebSocket("wss://gateway.discord.gg/?v=6&encoding=json");
 
+const fetchTypes = {
+    POST: 'POST',
+    GET: 'GET',
+    PATCH: 'PATCH'
+}
+
 if (Token) {
 
     var interval = 0;
@@ -67,16 +73,17 @@ if (Token) {
 
 }
 
-async function SendMessage(urlEnd: string, body: any) {
-    const URL = `https://discord.com/api/v10/channels/${urlEnd}`
+async function SendMessage(urlEnd: string, body: any, type: string) {
+    const URL = `https://discordapp.com/api/v10/channels/${urlEnd}`
     const response = await fetch(URL, {
-        method: "POST",
-        body: JSON.stringify(body),
+        method: type,
+        body: type == fetchTypes.POST || type == fetchTypes.PATCH ? JSON.stringify(body) : null,
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bot ${Token}`,
         },
     });
+    return response;
 }
 
 pkg.createNonEventSchema({
@@ -99,8 +106,28 @@ pkg.createNonEventSchema({
     },
     async run({ ctx }) {
         const urlEnd = `${ctx.getInput("channel")}/messages`;
-        await SendMessage(urlEnd, { content: ctx.getInput("message") })
+        await SendMessage(urlEnd, { content: ctx.getInput("message") }, fetchTypes.POST);
         ctx.exec("exec");
+    }
+})
+
+pkg.createNonEventSchema({
+    name: "Get Discord User",
+    variant: "Exec",
+    generateIO: (t) => {
+        t.execInput({
+            id: "exec",
+        });
+        t.dataInput({
+            id: "userId",
+            name: "User ID",
+            type: types.int()
+        });
+    },
+    async run({ ctx }) {
+        const urlEnd = `users/${ctx.getInput("userId")}`;
+        const response = await SendMessage(urlEnd, {}, fetchTypes.GET);
+        console.log(response);
     }
 })
 
@@ -121,11 +148,35 @@ pkg.createEventSchema({
             name: "Channel ID",
             type: types.string(),
         });
+        t.dataOutput({
+            id: "username",
+            name: "Username",
+            type: types.string(),
+        });
+        t.dataOutput({
+            id: "userId",
+            name: "User ID",
+            type: types.string(),
+        });
+        t.dataOutput({
+            id: "nickname",
+            name: "Nickname",
+            type: types.string(),
+        });
+        t.dataOutput({
+            id: "roles",
+            name: "Roles",
+            type: types.list(types.string()),
+        });
     },
     run({ ctx, data }) {
         console.log(data);
         ctx.setOutput("message", data.content);
         ctx.setOutput("channelId", data.channel_id);
+        ctx.setOutput("username", data.author.username);
+        ctx.setOutput("userId", data.author.id);
+        ctx.setOutput("nickname", data.member.nick);
+        ctx.setOutput("roles", data.member.roles);
         ctx.exec("exec");
     }
 });

@@ -33,6 +33,122 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "String Array Iterator",
+  variant: "Base",
+  run({ ctx }) {
+    const ARRAY = ctx.getInput("array") as Array<string>;
+    ARRAY.forEach(data => {
+      ctx.setOutput("output", data);
+      ctx.exec("execOut");
+    });
+
+  },
+  generateIO(builder) {
+    builder.execInput({
+      id: "exec",
+    });
+    builder.execOutput({
+      id: "execOut",
+    });
+    builder.dataInput({
+      id: "array",
+      type: types.list(types.string()),
+    });
+    builder.dataOutput({
+      id: "output",
+      type: types.string(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Int Array Iterator",
+  variant: "Base",
+  run({ ctx }) {
+    const ARRAY = ctx.getInput("array") as Array<string>;
+    ARRAY.forEach(data => {
+      ctx.setOutput("output", data);
+      ctx.exec("execOut");
+    });
+
+  },
+  generateIO(builder) {
+    builder.execInput({
+      id: "exec",
+    });
+    builder.execOutput({
+      id: "execOut",
+    });
+    builder.dataInput({
+      id: "array",
+      type: types.list(types.int()),
+    });
+    builder.dataOutput({
+      id: "output",
+      type: types.int(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Float Array Iterator",
+  variant: "Base",
+  run({ ctx }) {
+    const ARRAY = ctx.getInput("array") as Array<string>;
+    ARRAY.forEach(data => {
+      ctx.setOutput("output", data);
+      ctx.exec("execOut");
+    });
+
+  },
+  generateIO(builder) {
+    builder.execInput({
+      id: "exec",
+    });
+    builder.execOutput({
+      id: "execOut",
+    });
+    builder.dataInput({
+      id: "array",
+      type: types.list(types.float()),
+    });
+    builder.dataOutput({
+      id: "output",
+      type: types.float(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Bool Array Iterator",
+  variant: "Base",
+  run({ ctx }) {
+    const ARRAY = ctx.getInput("array") as Array<string>;
+    ARRAY.forEach(data => {
+      ctx.setOutput("output", data);
+      ctx.exec("execOut");
+    });
+
+  },
+  generateIO(builder) {
+    builder.execInput({
+      id: "exec",
+    });
+    builder.execOutput({
+      id: "execOut",
+    });
+    builder.dataInput({
+      id: "array",
+      type: types.list(types.bool()),
+    });
+    builder.dataOutput({
+      id: "output",
+      type: types.bool(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "AND",
   variant: "Pure",
   run({ ctx }) {
