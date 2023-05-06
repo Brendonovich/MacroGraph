@@ -21,7 +21,7 @@ export function createEndpoint({ path, extend, fetchFn }: EndpointArgs) {
       schema: TSchema,
       args?: { body?: string }
     ): Promise<z.infer<TSchema>> => {
-      const res = resolvedFetchFn(path, {
+      const res = await resolvedFetchFn(path, {
         method,
         ...args,
       });
