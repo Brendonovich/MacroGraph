@@ -133,7 +133,7 @@ class ExecutionContext {
 
   createCtx(node: Node): RunCtx {
     return {
-      exec: (execOutput) => {
+      exec: async (execOutput) => {
         NODE_EMIT.emit(node);
         const output = node.output(execOutput);
 
@@ -143,7 +143,7 @@ class ExecutionContext {
 
         if (!output.connection) return;
 
-        this.execNode(output.connection.node as any);
+        await this.execNode(output.connection.node as any);
       },
       setOutput: (name, value) => {
         const output = node.output(name);
@@ -177,7 +177,7 @@ class ExecutionContext {
     };
   }
 
-  execNode(node: Node) {
+  async execNode(node: Node) {
     if ("event" in node.schema) throw new Error("Cannot exec an Event node!");
 
     // calculate previous outputs
@@ -207,7 +207,7 @@ class ExecutionContext {
       }
     });
 
-    node.schema.run({
+    await node.schema.run({
       ctx: this.createCtx(node),
     });
   }

@@ -32,121 +32,14 @@ pkg.createNonEventSchema({
   },
 });
 
-pkg.createNonEventSchema({
-  name: "String Array Iterator",
-  variant: "Base",
-  run({ ctx }) {
-    const ARRAY = ctx.getInput("array") as Array<string>;
-    ARRAY.forEach(data => {
-      ctx.setOutput("output", data);
-      ctx.exec("execOut");
-    });
-
-  },
-  generateIO(builder) {
-    builder.execInput({
-      id: "exec",
-    });
-    builder.execOutput({
-      id: "execOut",
-    });
-    builder.dataInput({
-      id: "array",
-      type: types.list(types.string()),
-    });
-    builder.dataOutput({
-      id: "output",
-      type: types.string(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Int Array Iterator",
-  variant: "Base",
-  run({ ctx }) {
-    const ARRAY = ctx.getInput("array") as Array<string>;
-    ARRAY.forEach(data => {
-      ctx.setOutput("output", data);
-      ctx.exec("execOut");
-    });
-
-  },
-  generateIO(builder) {
-    builder.execInput({
-      id: "exec",
-    });
-    builder.execOutput({
-      id: "execOut",
-    });
-    builder.dataInput({
-      id: "array",
-      type: types.list(types.int()),
-    });
-    builder.dataOutput({
-      id: "output",
-      type: types.int(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Float Array Iterator",
-  variant: "Base",
-  run({ ctx }) {
-    const ARRAY = ctx.getInput("array") as Array<string>;
-    ARRAY.forEach(data => {
-      ctx.setOutput("output", data);
-      ctx.exec("execOut");
-    });
-
-  },
-  generateIO(builder) {
-    builder.execInput({
-      id: "exec",
-    });
-    builder.execOutput({
-      id: "execOut",
-    });
-    builder.dataInput({
-      id: "array",
-      type: types.list(types.float()),
-    });
-    builder.dataOutput({
-      id: "output",
-      type: types.float(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Bool Array Iterator",
-  variant: "Base",
-  run({ ctx }) {
-    const ARRAY = ctx.getInput("array") as Array<string>;
-    ARRAY.forEach(data => {
-      ctx.setOutput("output", data);
-      ctx.exec("execOut");
-    });
-
-  },
-  generateIO(builder) {
-    builder.execInput({
-      id: "exec",
-    });
-    builder.execOutput({
-      id: "execOut",
-    });
-    builder.dataInput({
-      id: "array",
-      type: types.list(types.bool()),
-    });
-    builder.dataOutput({
-      id: "output",
-      type: types.bool(),
-    });
-  },
-});
+(
+  [
+    ["String", types.string()],
+    ["Int", types.int()],
+    ["Float", types.float()],
+    ["Bool", types.bool()],
+  ] as const
+).forEach(([name, type]) => {});
 
 pkg.createNonEventSchema({
   name: "AND",
@@ -341,14 +234,14 @@ pkg.createNonEventSchema({
   },
 });
 
-const typeArray = [
-  ["Bool", types.bool()],
-  ["String", types.string()],
-  ["Int", types.int()],
-  ["Float", types.float()],
-] as const;
-
-typeArray.forEach(([key, type]) => {
+(
+  [
+    ["Bool", types.bool()],
+    ["String", types.string()],
+    ["Int", types.int()],
+    ["Float", types.float()],
+  ] as const
+).forEach(([key, type]) => {
   pkg.createNonEventSchema({
     name: `Conditional ${key}`,
     variant: "Pure",
@@ -379,6 +272,48 @@ typeArray.forEach(([key, type]) => {
       t.dataOutput({
         id: "output",
         type: type,
+      });
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: `For Each (${key})`,
+    variant: "Base",
+    async run({ ctx }) {
+      for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
+        ctx.setOutput("output", data);
+        ctx.setOutput("index", index);
+        await ctx.exec("body");
+      }
+
+      ctx.exec("completed");
+    },
+    generateIO(builder) {
+      builder.execInput({
+        id: "exec",
+      });
+      builder.dataInput({
+        id: "array",
+        name: "Array",
+        type: types.list(type),
+      });
+      builder.execOutput({
+        id: "body",
+        name: "Loop Body",
+      });
+      builder.dataOutput({
+        id: "element",
+        name: "Array Element",
+        type: type,
+      });
+      builder.dataOutput({
+        id: "index",
+        name: "Array Index",
+        type: types.int(),
+      });
+      builder.execOutput({
+        id: "completed",
+        name: "Completed",
       });
     },
   });
