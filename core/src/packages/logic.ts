@@ -32,15 +32,6 @@ pkg.createNonEventSchema({
   },
 });
 
-(
-  [
-    ["String", types.string()],
-    ["Int", types.int()],
-    ["Float", types.float()],
-    ["Bool", types.bool()],
-  ] as const
-).forEach(([name, type]) => {});
-
 pkg.createNonEventSchema({
   name: "AND",
   variant: "Pure",
