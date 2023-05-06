@@ -1,4 +1,4 @@
-import { object } from "zod";
+import { z } from "zod";
 import { core } from "../models";
 import { types } from "../types";
 import { createEndpoint } from "../utils/httpEndpoint";
@@ -7,18 +7,6 @@ const pkg = core.createPackage<any>({ name: "Discord" });
 
 export const LSTokenName = "discordBotToken";
 const Token = localStorage.getItem(LSTokenName);
-
-type DiscordRoleItem = {
-  color: number,
-  flags: number,
-  hoise: boolean,
-  id: string,
-  managed: boolean,
-  mentionable: boolean,
-  permissions: string,
-  position: number,
-  name: string,
-}
 
 const ws = new WebSocket("wss://gateway.discord.gg/?v=6&encoding=json");
 
@@ -77,15 +65,18 @@ if (Token) {
 
 const apiEndpoint = createEndpoint({
   path: "https://discordapp.com/api/v9",
-  fetchFn: (url, args) =>
-    fetch(url, {
+  fetchFn: async (url, args) => {
+    const res = await fetch(url, {
       ...args,
       headers: {
         ...args?.headers,
         "Content-Type": "application/json",
         Authorization: `Bot ${Token}`,
       },
-    }),
+    });
+
+    return await res.json();
+  },
 });
 
 // async function FUCK() {
@@ -107,7 +98,7 @@ const apiEndpoint = createEndpoint({
 // })
 
 const discordApi = {
-  channels(id: string) {
+  channels: (id: string) => {
     const channelsEndpoint = createEndpoint({
       path: `/channels/${id}`,
       extend: apiEndpoint,
@@ -120,18 +111,22 @@ const discordApi = {
       }),
     };
   },
-  users(id: string) {
-    return createEndpoint({ path: `/users/${id}`, extend: apiEndpoint });
-  },
-  guilds(guildId: string, userId?: string) {
+  users: (id: string) =>
+    createEndpoint({ path: `/users/${id}`, extend: apiEndpoint }),
+  guilds: (guildId: string) => {
     const guildsEndpoint = createEndpoint({
       path: `/guilds/${guildId}`,
       extend: apiEndpoint,
     });
+
     return {
       members: createEndpoint({ path: `/members`, extend: guildsEndpoint }),
-      member: createEndpoint({ path: `/members/${userId}`, extend: guildsEndpoint }),
-      roles: createEndpoint({ path: `/roles`, extend: guildsEndpoint })
+      member: (userId: string) =>
+        createEndpoint({
+          path: `/members/${userId}`,
+          extend: guildsEndpoint,
+        }),
+      roles: createEndpoint({ path: `/roles`, extend: guildsEndpoint }),
     };
   },
 };
@@ -155,9 +150,11 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    await discordApi.channels(ctx.getInput("channel")).messages.post({
-      body: JSON.stringify({ content: ctx.getInput("message") }),
-    });
+    await discordApi
+      .channels(ctx.getInput("channel"))
+      .messages.post(z.undefined(), {
+        body: JSON.stringify({ content: ctx.getInput("message") }),
+      });
 
     ctx.exec("exec");
   },
@@ -198,7 +195,7 @@ pkg.createEventSchema({
     t.dataOutput({
       id: "guildId",
       name: "Guild ID",
-      type: types.string()
+      type: types.string(),
     });
     t.dataOutput({
       id: "roles",
@@ -217,6 +214,13 @@ pkg.createEventSchema({
     ctx.setOutput("roles", data.member.roles);
     ctx.exec("exec");
   },
+});
+
+const USER_SCHEMA = z.object({
+  username: z.string(),
+  display_name: z.string(),
+  avatar: z.string(),
+  banner: z.string(),
 });
 
 pkg.createNonEventSchema({
@@ -250,12 +254,21 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const response = await (await discordApi.users(ctx.getInput("userId")).get()).json();
+    const response = await discordApi
+      .users(ctx.getInput("userId"))
+      .get(USER_SCHEMA);
+
     ctx.setOutput("username", response.username);
     ctx.setOutput("display_name", response.display_name);
     ctx.setOutput("avatar", response.avatar);
     ctx.setOutput("banner", response.banner);
   },
+});
+
+const GUILD_MEMBER_SCHEMA = z.object({
+  user: USER_SCHEMA,
+  nick: z.string(),
+  roles: z.array(z.string()),
 });
 
 pkg.createNonEventSchema({
@@ -266,7 +279,7 @@ pkg.createNonEventSchema({
       id: "guildId",
       name: "Guild ID",
       type: types.string(),
-    })
+    });
     t.dataInput({
       id: "userId",
       name: "User ID",
@@ -304,7 +317,11 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const response = await (await discordApi.guilds(ctx.getInput("guildId"), ctx.getInput("userId")).member.get()).json();
+    const response = await discordApi
+      .guilds(ctx.getInput("guildId"))
+      .member(ctx.getInput("userId"))
+      .get(GUILD_MEMBER_SCHEMA);
+
     ctx.setOutput("username", response.user.username);
     ctx.setOutput("display_name", response.user.display_name);
     ctx.setOutput("avatar", response.user.avatar);
@@ -312,6 +329,18 @@ pkg.createNonEventSchema({
     ctx.setOutput("nick", response.nick);
     ctx.setOutput("roles", response.roles);
   },
+});
+
+const ROLE_SCHEMA = z.object({
+  color: z.number(),
+  flags: z.number(),
+  hoise: z.boolean(),
+  id: z.string(),
+  managed: z.boolean(),
+  mentionable: z.boolean(),
+  permissions: z.string(),
+  position: z.number(),
+  name: z.string(),
 });
 
 pkg.createNonEventSchema({
@@ -360,16 +389,20 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let role = ctx.getInput("roleId");
-    const response = await (await discordApi.guilds(ctx.getInput("guildId")).roles.get()).json();
-    response.forEach((data: DiscordRoleItem) => {
-      if (data.id == role) {
-        ctx.setOutput("name", data.name);
-        ctx.setOutput("roleId", data.id);
-        ctx.setOutput("position", data.position);
-        ctx.setOutput("mentionable", data.mentionable);
-        ctx.setOutput("permissions", data.permissions);
-      }
-    });
+    let roleId = ctx.getInput("roleId");
+
+    const roles = await discordApi
+      .guilds(ctx.getInput("guildId"))
+      .roles.get(z.array(ROLE_SCHEMA));
+
+    const role = roles.find((role) => role.id === roleId);
+
+    if (!role) return;
+
+    ctx.setOutput("name", role.name);
+    ctx.setOutput("roleId", role.id);
+    ctx.setOutput("position", role.position);
+    ctx.setOutput("mentionable", role.mentionable);
+    ctx.setOutput("permissions", role.permissions);
   },
 });
