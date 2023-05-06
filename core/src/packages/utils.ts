@@ -68,6 +68,82 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "String Length",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput(
+      "int",
+      ctx.getInput<string>("haystack").length
+    );
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "haystack",
+      name: "String",
+      type: types.string(),
+    });
+    builder.dataOutput({
+      id: "int",
+      type: types.int(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "String",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("stringOut", ctx.getInput("haystack"));
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "haystack",
+      type: types.string(),
+    });
+    builder.dataOutput({
+      id: "stringOut",
+      type: types.string(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Int",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("stringOut", ctx.getInput("haystack"));
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "haystack",
+      type: types.int(),
+    });
+    builder.dataOutput({
+      id: "stringOut",
+      type: types.int(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Bool",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("stringOut", ctx.getInput("haystack"));
+  },
+  generateIO(builder) {
+    builder.dataInput({
+      id: "haystack",
+      type: types.bool(),
+    });
+    builder.dataOutput({
+      id: "stringOut",
+      type: types.bool(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "String Starts With",
   variant: "Pure",
   run({ ctx }) {
