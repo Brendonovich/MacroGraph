@@ -62,7 +62,7 @@ export interface IOSchema {
 }
 
 export type RunCtx = {
-  exec(t: string): void;
+  exec(t: string): Promise<void>;
   setOutput(name: string, data: any): void;
   getInput<T>(name: string): T;
 };

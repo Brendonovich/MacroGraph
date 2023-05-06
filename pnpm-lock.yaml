@@ -71,9 +71,6 @@ importers:
 
   core:
     dependencies:
-      '@solid-primitives/deep':
-        specifier: ^0.0.102
-        version: 0.0.102(solid-js@1.7.3)
       '@solid-primitives/map':
         specifier: ^0.4.3
         version: 0.4.3(solid-js@1.7.3)
@@ -889,14 +886,6 @@ packages:
   /@sapphire/snowflake@3.4.2:
     resolution: {integrity: sha512-KJwlv5gkGjs1uFV7/xx81n3tqgBwBJvH94n1xDyH3q+JSmtsMeSleJffarEBfG2yAFeJiFA4BnGOK6FFPHc19g==}
     engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
-    dev: false
-
-  /@solid-primitives/deep@0.0.102(solid-js@1.7.3):
-    resolution: {integrity: sha512-qD4J69VUDnnjwe4zlU3yEyZoa04wF8atytU88i80+CZ4pi7qNKEjTiU1DQg6lMTtx9znZrhChz349sRfHViVPQ==}
-    peerDependencies:
-      solid-js: ^1.6.12
-    dependencies:
-      solid-js: 1.7.3
     dev: false
 
   /@solid-primitives/map@0.4.3(solid-js@1.7.3):
