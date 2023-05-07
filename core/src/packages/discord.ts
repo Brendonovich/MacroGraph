@@ -64,7 +64,7 @@ if (Token) {
 }
 
 const apiEndpoint = createEndpoint({
-  path: "https://discordapp.com/api/v9",
+  path: "https://discordapp.com/api",
   fetchFn: async (url, args) => {
     const res = await fetch(url, {
       ...args,
@@ -78,24 +78,6 @@ const apiEndpoint = createEndpoint({
     return await res.json();
   },
 });
-
-// async function FUCK() {
-//   const v = await fetch("https://discordapp.com/api/v9/users/103733084150591488",
-//     {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bot ${Token}`,
-//       }
-//     }
-//   );
-
-//   return v.json()
-// }
-
-// FUCK().then(data => {
-//   console.log(data);
-// })
 
 const discordApi = {
   channels: (id: string) => {
@@ -218,7 +200,7 @@ pkg.createEventSchema({
 
 const USER_SCHEMA = z.object({
   username: z.string(),
-  display_name: z.string(),
+  display_name: z.string().nullable(),
   avatar: z.string(),
   banner: z.string(),
 });
