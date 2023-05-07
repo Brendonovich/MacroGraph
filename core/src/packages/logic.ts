@@ -279,30 +279,30 @@ pkg.createNonEventSchema({
 
       ctx.exec("completed");
     },
-    generateIO(builder) {
-      builder.execInput({
+    generateIO(t) {
+      t.execInput({
         id: "exec",
       });
-      builder.dataInput({
+      t.dataInput({
         id: "array",
         name: "Array",
         type: types.list(type),
       });
-      builder.execOutput({
+      t.execOutput({
         id: "body",
         name: "Loop Body",
       });
-      builder.dataOutput({
+      t.dataOutput({
         id: "element",
         name: "Array Element",
         type: type,
       });
-      builder.dataOutput({
+      t.dataOutput({
         id: "index",
         name: "Array Index",
         type: types.int(),
       });
-      builder.execOutput({
+      t.execOutput({
         id: "completed",
         name: "Completed",
       });

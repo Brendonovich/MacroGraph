@@ -31,8 +31,8 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     PRINT_CHANNEL.emit(ctx.getInput<string>("input"));
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "input",
       name: "Input",
       type: types.string(),
@@ -49,18 +49,18 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("haystack").includes(ctx.getInput<string>("needle"))
     );
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "haystack",
       name: "String",
       type: types.string(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "needle",
       name: "Includes",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "bool",
       type: types.bool(),
     });
@@ -76,13 +76,13 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("haystack").length
     );
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "haystack",
       name: "String",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "int",
       type: types.int(),
     });
@@ -95,12 +95,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("stringOut", ctx.getInput("haystack"));
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "haystack",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "stringOut",
       type: types.string(),
     });
@@ -113,12 +113,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("stringOut", ctx.getInput("haystack"));
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "haystack",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "stringOut",
       type: types.int(),
     });
@@ -131,12 +131,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("stringOut", ctx.getInput("haystack"));
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "haystack",
       type: types.bool(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "stringOut",
       type: types.bool(),
     });
@@ -154,18 +154,18 @@ pkg.createNonEventSchema({
         .startsWith(ctx.getInput<string>("needle"))
     );
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "haystack",
       name: "String",
       type: types.string(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "needle",
       name: "Starts With",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "bool",
       type: types.bool(),
     });
@@ -188,22 +188,22 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("string").substring(start, end)
     );
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "string",
       type: types.string(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "start",
       name: "Start",
       type: types.int(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "end",
       name: "End",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "stringOut",
       type: types.string(),
     });
@@ -216,12 +216,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("upper", ctx.getInput<string>("string").toUpperCase());
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "string",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "upper",
       type: types.string(),
     });
@@ -234,12 +234,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.getInput("string") ? ctx.setOutput("output", true) : ctx.setOutput("output", false);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "string",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "output",
       type: types.bool(),
     });
@@ -252,12 +252,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("lower", ctx.getInput<string>("string").toLowerCase());
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "string",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "lower",
       type: types.string(),
     });
@@ -270,12 +270,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("string", ctx.getInput<number>("int").toString());
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "int",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "string",
       type: types.string(),
     });
@@ -288,12 +288,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("string", ctx.getInput<number>("float").toString());
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "float",
       type: types.float(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "string",
       type: types.string(),
     });
@@ -306,12 +306,12 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("string", ctx.getInput<boolean>("bool").toString());
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "bool",
       type: types.bool(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "string",
       type: types.string(),
     });
@@ -326,17 +326,17 @@ pkg.createNonEventSchema({
     ctx.setOutput("int", number);
     ctx.setOutput("pass", !Number.isNaN(number));
   },
-  generateIO(builder) {
-    builder.dataOutput({
+  generateIO(t) {
+    t.dataOutput({
       id: "out",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "success",
       name: "Success",
       type: types.bool(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "in",
       type: types.string(),
     });
@@ -350,16 +350,16 @@ pkg.createNonEventSchema({
     const numb = ctx.getInput<number>("num1") * ctx.getInput<number>("num2");
     ctx.setOutput("outnum", numb);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "num1",
       type: types.int(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "num2",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "outnum",
       type: types.int(),
     });
@@ -373,16 +373,16 @@ pkg.createNonEventSchema({
     const numb = ctx.getInput<number>("num1") / ctx.getInput<number>("num2");
     ctx.setOutput("outnum", numb);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "num1",
       type: types.int(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "num2",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "outnum",
       type: types.int(),
     });
@@ -396,16 +396,16 @@ pkg.createNonEventSchema({
     const numb = ctx.getInput<number>("num1") + ctx.getInput<number>("num2");
     ctx.setOutput("outnum", numb);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "num1",
       type: types.int(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "num2",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "outnum",
       type: types.int(),
     });
@@ -419,16 +419,16 @@ pkg.createNonEventSchema({
     const numb = ctx.getInput<number>("num1") - ctx.getInput<number>("num2");
     ctx.setOutput("outnum", numb);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "num1",
       type: types.int(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "num2",
       type: types.int(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "outnum",
       type: types.int(),
     });
@@ -444,16 +444,16 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("one") + ctx.getInput<string>("two")
     );
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "one",
       type: types.string(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "two",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "out",
       type: types.string(),
     });

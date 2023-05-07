@@ -14,18 +14,18 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", text);
     ctx.setOutput("status", response.status);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "url",
       name: "URL",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "response",
       name: "Response",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "status",
       name: "Status",
       type: types.int(),
@@ -51,23 +51,23 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", text);
     ctx.setOutput("status", response.status);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "url",
       name: "URL",
       type: types.string(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "body",
       name: "Body",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "response",
       name: "Response",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "status",
       name: "Status",
       type: types.string(),
@@ -92,23 +92,23 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", text);
     ctx.setOutput("status", response.status);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "url",
       name: "URL",
       type: types.string(),
     });
-    builder.dataInput({
+    t.dataInput({
       id: "body",
       name: "Body",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "response",
       name: "Response",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "status",
       name: "Status",
       type: types.int(),
@@ -129,13 +129,13 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", text);
     ctx.setOutput("status", response.status);
   },
-  generateIO(builder) {
-    builder.dataInput({
+  generateIO(t) {
+    t.dataInput({
       id: "url",
       name: "URL",
       type: types.string(),
     });
-    builder.dataOutput({
+    t.dataOutput({
       id: "status",
       name: "Status",
       type: types.int(),
