@@ -22,8 +22,7 @@ pkg.createNonEventSchema({
         });
     },
     run({ ctx }) {
-        let key = "value-" + ctx.getInput("key");
-        localStorage.setItem(key, ctx.getInput("value"));
+        localStorage.setItem(`value-${ctx.getInput("key")}`, ctx.getInput("value"));
     }
 })
 
@@ -48,9 +47,8 @@ pkg.createNonEventSchema({
         });
     },
     run({ ctx }) {
-        let key = "value-" + ctx.getInput("key");
-        let data = localStorage.getItem(key);
-        ctx.setOutput("exist", data === null);
+        let data = localStorage.getItem(`value-${ctx.getInput("key")}`);
+        ctx.setOutput("exist", data !== null);
         if (data !== null) ctx.setOutput("output", data);
     }
 })
