@@ -36,11 +36,6 @@ pkg.createNonEventSchema({
             name: "Key",
             type: types.string(),
         });
-        t.dataInput({
-            id: "value",
-            name: "Value",
-            type: types.string(),
-        });
         t.dataOutput({
             id: "exist",
             name: "Exist",
