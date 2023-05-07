@@ -41,12 +41,12 @@ pkg.createNonEventSchema({
             name: "Value",
             type: types.string(),
         });
-        t.dataInput({
+        t.dataOutput({
             id: "exist",
             name: "Exist",
             type: types.bool(),
         });
-        t.dataInput({
+        t.dataOutput({
             id: "output",
             name: "Data",
             type: types.string(),
