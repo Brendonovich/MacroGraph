@@ -51,4 +51,4 @@ pkg.createNonEventSchema({
         ctx.setOutput("exist", data !== null);
         if (data !== null) ctx.setOutput("output", data);
     }
-})
+});

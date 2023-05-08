@@ -76,7 +76,7 @@ ws.addEventListener("message", (data) => {
   }
 });
 
-const pkg = core.createPackage<any>({ name: "Twitch Events" });
+const pkg = core.createPackage<any>({ name: "Twitch" });
 
 pkg.createEventSchema({
   name: "Chat Message",
@@ -123,6 +123,7 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     if (data.self) return;
+    console.log(data);
     ctx.setOutput("username", data.tags.username);
     ctx.setOutput("displayName", data.tags["display-name"]);
     ctx.setOutput("userId", data.tags["user-id"]);
@@ -394,6 +395,51 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     let data = await apiClient.moderation.checkUserMod(userID, ctx.getInput("userId"));
     ctx.setOutput("moderator", data);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get User By ID",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "User ID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Display Name",
+      id: "displayName",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "User Name",
+      id: "userName",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "User ID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Description",
+      id: "description",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Profile Pic Url",
+      id: "profilePicUrl",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    let data = await apiClient.users.getUserById(ctx.getInput("userId"));
+    ctx.setOutput("displayName", data?.displayName);
+    ctx.setOutput("userName", data?.name);
+    ctx.setOutput("userId", data?.id);
+    ctx.setOutput("description", data?.description);
+    ctx.setOutput("profilePicUrl", data?.profilePictureUrl);
   },
 });
 

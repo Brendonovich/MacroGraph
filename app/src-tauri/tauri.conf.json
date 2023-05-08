@@ -16,6 +16,18 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "fs": {
+        "all": true,
+        "scope": [
+          "**"
+        ]
+      },
+      "http": {
+        "all": true,
+        "scope": [
+          "https://discord.com/*"
+        ]
       }
     },
     "bundle": {

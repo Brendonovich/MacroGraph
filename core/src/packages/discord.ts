@@ -2,6 +2,9 @@ import { z } from "zod";
 import { core } from "../models";
 import { types } from "../types";
 import { createEndpoint } from "../utils/httpEndpoint";
+import { fs } from "@tauri-apps/api";
+import { Body, Part, Part } from "@tauri-apps/api/http"
+import { http } from "@tauri-apps/api"
 
 const pkg = core.createPackage<any>({ name: "Discord" });
 
@@ -9,6 +12,18 @@ export const LSTokenName = "discordBotToken";
 const Token = localStorage.getItem(LSTokenName);
 
 const ws = new WebSocket("wss://gateway.discord.gg/?v=6&encoding=json");
+
+// let test = http.fetch("https://discord.com/api/webhooks/1104900564304789665/ABrjwBFnHY0VCO0maAENNiPcvvXgqC753ImJ38e1i8ZEZgUEvD9wDC5U_aG424H-PBEh", {
+//   method: "POST",
+//   headers: { "Content-Type": "multipart/form-data" },
+//   body: Body.form({
+//     content: "test test",
+//     "file[0]": {
+//       file: await fs.readBinaryFile("C:/Users/Josh/Downloads/test.png"),
+//       fileName: "test.png"
+//     }
+//   })
+// })
 
 if (Token) {
   var interval = 0;
@@ -311,6 +326,81 @@ pkg.createNonEventSchema({
     ctx.setOutput("nick", response.nick);
     ctx.setOutput("roles", response.roles);
   },
+});
+
+pkg.createNonEventSchema({
+  name: "Send Discord Webhook",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      id: "webhookUrl",
+      name: "Webhook URL",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "content",
+      name: "Message",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "username",
+      name: "Username",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "avatarUrl",
+      name: "Avatar URL",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "tts",
+      name: "TTS",
+      type: types.bool(),
+    });
+    t.dataInput({
+      id: "fileLocation",
+      name: "File Location",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "success",
+      name: "Success",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+    // const bodyForm = new FormData();
+
+    //   content: "test butt",
+    //   "file[0]": {
+    //     file: await fs.readBinaryFile(ctx.getInput("fileLocation")),
+    //     fileName: ctx.getInput<string>("fileLocation").split(/[\/\\]/).at(-1)
+    //   }
+    // }
+    console.log(ctx.getInput("tts"));
+
+    const body: Record<string, Part> = {}
+    if (ctx.getInput("content")) body.content = ctx.getInput("content");
+    if (ctx.getInput("avatarUrl")) body.avatar_url = ctx.getInput("avatarUrl");
+    if (ctx.getInput("username")) body.username = ctx.getInput("username");
+    if (ctx.getInput("tts")) body.tts = ctx.getInput<Boolean>("tts").toString();
+    if (ctx.getInput("fileLocation")) {
+      body["file[0]"] = {
+        file: await fs.readBinaryFile(ctx.getInput("fileLocation")),
+        fileName: ctx.getInput<string>("fileLocation").split(/[\/\\]/).at(-1)
+      }
+    }
+
+    console.log(ctx.getInput<string>("fileLocation").split(/[\/\\]/).at(-1));
+    const headers = new Headers();
+    headers.append("Content-Type", "multipart/form-data");
+    let response = await http.fetch(ctx.getInput("webhookUrl"), {
+      method: "POST",
+      headers: { "Content-Type": "multipart/form-data" },
+      body: Body.form(body)
+    });
+    ctx.setOutput("success", response.status === 200);
+  }
 });
 
 const ROLE_SCHEMA = z.object({
