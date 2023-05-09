@@ -1,3 +1,4 @@
+import { rspcClient } from "../client";
 import { core } from "../models";
 import { types } from "../types";
 
@@ -7,12 +8,17 @@ pkg.createNonEventSchema({
   name: "GET",
   variant: "Exec",
   async run({ ctx }) {
-    const response = await fetch(ctx.getInput<string>("url"));
+    const response = await rspcClient.query([
+      "http.text",
+      {
+        url: ctx.getInput<string>("url"),
+        method: "GET",
+      },
+    ]);
 
     // TODO: Change when Objects implemented
-    const text = await response.text();
-    ctx.setOutput("response", text);
-    ctx.setOutput("status", response.status);
+    ctx.setOutput("response", response);
+    // ctx.setOutput("status", response);
   },
   generateIO(builder) {
     builder.dataInput({
@@ -33,22 +39,24 @@ pkg.createNonEventSchema({
   },
 });
 
-
 pkg.createNonEventSchema({
   name: "POST",
   variant: "Exec",
   async run({ ctx }) {
-    const response = await fetch(ctx.getInput<string>("url"), {
-      method: "POST",
-      body: ctx.getInput<string>("body"),
-      headers: {
-        "content-type": "application/json; charset=UTF-8",
+    const response = await rspcClient.query([
+      "http.text",
+      {
+        url: ctx.getInput<string>("url"),
+        method: "POST",
+        body: ctx.getInput<string>("body"),
+        headers: {
+          "content-type": "application/json; charset=UTF-8",
+        },
       },
-    });
+    ]);
 
     // TODO: Change when Objects implemented
-    const text = await response.text();
-    ctx.setOutput("response", text);
+    ctx.setOutput("response", response.data);
     ctx.setOutput("status", response.status);
   },
   generateIO(builder) {
@@ -79,17 +87,20 @@ pkg.createNonEventSchema({
   name: "PUT",
   variant: "Exec",
   async run({ ctx }) {
-    const response = await fetch(ctx.getInput<string>("url"), {
-      method: "PUT",
-      body: ctx.getInput<string>("body"),
-      headers: {
-        "content-type": "application/json; charset=UTF-8",
+    const response = await rspcClient.query([
+      "http.text",
+      {
+        url: ctx.getInput<string>("url"),
+        method: "PUT",
+        body: ctx.getInput<string>("body"),
+        headers: {
+          "content-type": "application/json; charset=UTF-8",
+        },
       },
-    });
+    ]);
 
     // TODO: Change when Objects implemented
-    const text = await response.text();
-    ctx.setOutput("response", text);
+    ctx.setOutput("response", response.data);
     ctx.setOutput("status", response.status);
   },
   generateIO(builder) {
@@ -120,13 +131,16 @@ pkg.createNonEventSchema({
   name: "DELETE",
   variant: "Exec",
   async run({ ctx }) {
-    const response = await fetch(ctx.getInput<string>("url"), {
-      method: "DELETE",
-    });
+    const response = await rspcClient.query([
+      "http.text",
+      {
+        url: ctx.getInput<string>("url"),
+        method: "DELETE",
+      },
+    ]);
 
     // TODO: Change when Objects implemented
-    const text = await response.text();
-    ctx.setOutput("response", text);
+    ctx.setOutput("response", response.data);
     ctx.setOutput("status", response.status);
   },
   generateIO(builder) {

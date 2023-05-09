@@ -71,6 +71,12 @@ importers:
 
   core:
     dependencies:
+      '@rspc/client':
+        specifier: ^0.1.3
+        version: 0.1.3
+      '@rspc/tauri':
+        specifier: ^0.1.3
+        version: 0.1.3(@tauri-apps/api@1.2.0)
       '@solid-primitives/map':
         specifier: ^0.4.3
         version: 0.4.3(solid-js@1.7.3)
@@ -869,6 +875,19 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
     dev: true
+
+  /@rspc/client@0.1.3:
+    resolution: {integrity: sha512-3rsnmqm5G9fwtfV0HNPj4a70YTHUiw+hhC8RpyMPwOxn6pubCCVVbt58EN+eNaUICqs6DUAT/06SBNwVTRkkLg==}
+    dev: false
+
+  /@rspc/tauri@0.1.3(@tauri-apps/api@1.2.0):
+    resolution: {integrity: sha512-4IFpZEU0LSZhmazUmxqvPSFvs3lJ4JuY/L9ClCBP4OUyzfQG36IuiYqQSBHZNABAi6XPTRv9+7SVqxj2+zOF0Q==}
+    peerDependencies:
+      '@tauri-apps/api': ^1.2.0
+    dependencies:
+      '@rspc/client': 0.1.3
+      '@tauri-apps/api': 1.2.0
+    dev: false
 
   /@sapphire/async-queue@1.5.0:
     resolution: {integrity: sha512-JkLdIsP8fPAdh9ZZjrbHWR/+mZj0wvKS5ICibcLrRI1j84UmLMshx5n9QmL8b95d4onJ2xxiyugTgSAX7AalmA==}

@@ -1,19 +1,24 @@
 import { z } from "zod";
+import { rspcClient } from "../client";
+import { HTTPRequest } from "../core";
 
 type Endpoint = ReturnType<typeof createEndpoint>;
 type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+export const nativeFetch = (req: HTTPRequest) =>
+  rspcClient.query(["http.json", req]);
+
 interface EndpointArgs {
   path: string;
   extend?: Endpoint;
-  fetchFn?: (url: string, args?: RequestInit) => any;
+  fetchFn?: (req: HTTPRequest) => any;
 }
 
 export function createEndpoint({ path, extend, fetchFn }: EndpointArgs) {
   if (extend) path = `${extend.path}${path}`;
 
-  const resolvedFetchFn: (url: string, args?: RequestInit) => Promise<any> =
-    fetchFn ?? extend?.fetchFn ?? fetch;
+  const resolvedFetchFn: (req: HTTPRequest) => Promise<any> =
+    fetchFn ?? extend?.fetchFn ?? nativeFetch;
 
   const createFetcher =
     (method: HTTPMethod) =>
@@ -21,7 +26,8 @@ export function createEndpoint({ path, extend, fetchFn }: EndpointArgs) {
       schema: TSchema,
       args?: { body?: string }
     ): Promise<z.infer<TSchema>> => {
-      const res = await resolvedFetchFn(path, {
+      const res = await resolvedFetchFn({
+        url: path,
         method,
         ...args,
       });
