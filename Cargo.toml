@@ -1,5 +1,6 @@
 [workspace]
 members = [
 	"app/src-tauri",
-	"crates/*"
+	"crates/*",
+	"core-rust"
 ]

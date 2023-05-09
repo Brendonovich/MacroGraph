@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { rspcClient } from "../client";
 import { core } from "../models";
 import { types } from "../types";
 import { createEndpoint } from "../utils/httpEndpoint";
@@ -64,38 +65,20 @@ if (Token) {
 }
 
 const apiEndpoint = createEndpoint({
-  path: "https://discordapp.com/api/v9",
-  fetchFn: async (url, args) => {
-    const res = await fetch(url, {
-      ...args,
-      headers: {
-        ...args?.headers,
-        "Content-Type": "application/json",
-        Authorization: `Bot ${Token}`,
+  path: "https://discordapp.com/api/v10",
+  fetchFn: (args) =>
+    rspcClient.query([
+      "http.json",
+      {
+        ...args,
+        headers: {
+          ...args?.headers,
+          "Content-Type": "application/json",
+          Authorization: `Bot ${Token}`,
+        },
       },
-    });
-
-    return await res.json();
-  },
+    ]),
 });
-
-// async function FUCK() {
-//   const v = await fetch("https://discordapp.com/api/v9/users/103733084150591488",
-//     {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bot ${Token}`,
-//       }
-//     }
-//   );
-
-//   return v.json()
-// }
-
-// FUCK().then(data => {
-//   console.log(data);
-// })
 
 const discordApi = {
   channels: (id: string) => {

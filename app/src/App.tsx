@@ -160,7 +160,7 @@ function SettingsMenu() {
               <input {...props} placeholder="Server ID" value={field.value} />
             )}
           </Field>
-          <input type="submit" />
+          <button type="submit">Submit</button>
         </Form>
       </Show>
     </div>
