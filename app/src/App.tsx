@@ -1,54 +1,12 @@
-import { createResource, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { CoreProvider } from "./contexts";
 import { Graph } from "~/components/Graph";
 import { GraphList } from "~/components/ProjectSidebar";
-import { core, LSTokenName } from "@macrograph/core";
+import { Message, core, LSTokenName, rspcClient } from "@macrograph/core";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
-import { URL } from "./twitch";
-import { addDevGraph } from "./dev";
 import { z } from "zod";
-import { createForm, SubmitHandler, reset } from "@modular-forms/solid";
-
-const TWITCH_ACCESS_TOKEN = "TwitchAccessToken";
-
-function setupTwitch() {
-  //@ts-expect-error
-  return createResource(
-    async () => {
-      const hash = new URLSearchParams(window.location.hash.substring(1));
-
-      const accessToken = hash.get("access_token");
-
-      if (accessToken === null) return null;
-
-      location.hash = "";
-
-      localStorage.setItem(TWITCH_ACCESS_TOKEN, accessToken);
-
-      const data = await fetch("https://api.twitch.tv/helix/users", {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + hash.get("access_token"),
-          "Client-Id": "wg8e35ddq28vfzw2jmu6c661nqsjg2",
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => ({
-          userName: data.data[0].login as string,
-          id: data.data[0].id as string,
-        }));
-
-      localStorage.setItem("AuthedUserName", data.userName);
-      localStorage.setItem("AuthedUserId", data.id);
-
-      return data;
-    },
-    {
-      initialValue: localStorage.getItem(TWITCH_ACCESS_TOKEN),
-    }
-  );
-}
+import { createForm, SubmitHandler } from "@modular-forms/solid";
 
 function App() {
   const ui = createUIStore();
@@ -91,16 +49,15 @@ type DiscordForm = z.input<typeof DiscordSchema>;
 
 function SettingsMenu() {
   const [menuOpen, setMenuOpen] = createSignal(false);
-  const [twitchData, twitchActions] = setupTwitch();
 
-  const [discordForm, { Form, Field }] = createForm<DiscordForm>({
+  const [, { Form, Field }] = createForm<DiscordForm>({
     initialValues: {
       botToken: localStorage.getItem(LSTokenName) ?? undefined,
       serverID: localStorage.getItem("discordServerId") ?? undefined,
     },
   });
 
-  const handleSubmit: SubmitHandler<DiscordForm> = (values, event) => {
+  const handleSubmit: SubmitHandler<DiscordForm> = (values) => {
     localStorage.setItem(LSTokenName, values.botToken);
     localStorage.setItem("discordServerId", values.serverID);
   };
@@ -115,34 +72,7 @@ function SettingsMenu() {
         CLICK HERE
       </button>
       <Show when={menuOpen()}>
-        <Show
-          when={twitchData()}
-          fallback={
-            <a
-              class="ring-4 ring-black bg-purple-700 my-2 text-white"
-              href={URL}
-            >
-              TWITCH LOGIN
-            </a>
-          }
-        >
-          {(data) => (
-            <>
-              <p class="ring-4 ring-black bg-purple-700 my-2 text-white">
-                Logged in as {data().userName}
-              </p>
-              <button
-                type="button"
-                onclick={() => {
-                  localStorage.removeItem(TWITCH_ACCESS_TOKEN);
-                  twitchActions.refetch();
-                }}
-              >
-                Logout
-              </button>
-            </>
-          )}
-        </Show>
+        <TwitchAuth />
         <label class="text-white">Discord Bot:</label>
         <Form onSubmit={handleSubmit}>
           <Field name="botToken">
@@ -166,3 +96,63 @@ function SettingsMenu() {
     </div>
   );
 }
+
+const TWITCH_ACCESS_TOKEN = "TwitchAccessToken";
+
+const TwitchAuth = () => {
+  const [token, setToken] = createSignal(
+    localStorage.getItem(TWITCH_ACCESS_TOKEN)
+  );
+
+  const [authState, setAuthState] = createSignal<Message | null>(null);
+
+  const doAuth = () => {
+    rspcClient.addSubscription(["auth.twitch", null as any], {
+      onData: (m) => {
+        if (typeof m === "object" && "Received" in m) {
+          setToken(m.Received);
+          localStorage.setItem(TWITCH_ACCESS_TOKEN, m.Received);
+
+          setAuthState(null);
+        }
+      },
+      onStarted: () => setAuthState("Listening"),
+      onError: () => setAuthState(null),
+    });
+  };
+
+  return (
+    <Show
+      when={token()}
+      fallback={
+        <Show
+          when={authState() !== null}
+          fallback={
+            <button
+              class="ring-4 ring-black bg-purple-700 my-2 text-white"
+              onClick={doAuth}
+            >
+              TWITCH LOGIN
+            </button>
+          }
+        >
+          <p>Logging in...</p>
+        </Show>
+      }
+    >
+      <p>Logged Into Twitch</p>
+      {/* <p class="ring-4 ring-black bg-purple-700 my-2 text-white"> */}
+      {/*   Logged in as {data().userName} */}
+      {/* </p> */}
+      <button
+        type="button"
+        onclick={() => {
+          localStorage.removeItem(TWITCH_ACCESS_TOKEN);
+          setToken(null);
+        }}
+      >
+        Logout
+      </button>
+    </Show>
+  );
+};
