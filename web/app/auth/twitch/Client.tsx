@@ -19,7 +19,7 @@ export default function ({
     fetch(`http://localhost:${state.port}?access_token=${token.access_token}`, {
       method: "POST",
       cache: "no-store",
-      mode: "no-cors",
+      mode: "cors",
     }).then(() => setMutating(false));
   }, []);
 

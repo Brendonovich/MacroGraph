@@ -37,7 +37,14 @@ export default () => {
               setState({ state: "notLoggedIn", error: e.message }),
           });
 
-          return <p>Logging in...</p>;
+          return (
+            <>
+              <p>Logging in...</p>
+              <button onClick={() => setState({ state: "notLoggedIn" })}>
+                Cancel
+              </button>
+            </>
+          );
         }}
       </Match>
       <Match when={state().state === "loggedIn"}>
