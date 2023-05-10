@@ -75,14 +75,15 @@ fn auth() -> AlphaRouter<()> {
             }
 
             // build our application with a route
-            let app = <Router>::new().route(
-                "/",
-                routing::post(|Query(params): Query<Params>| async move {
-                    println!("post received!");
-                    tx.send(params.access_token).await.expect("no send?!");
-                    "done"
-                }),
-            );
+            let app = <Router>::new()
+                .layer(tower_http::cors::CorsLayer::very_permissive())
+                .route(
+                    "/",
+                    routing::get(|Query(params): Query<Params>| async move {
+                        tx.send(params.access_token).await.expect("no send?!");
+                        "You can return to macrograph!"
+                    }),
+                );
 
             let addr = format!(
                 "127.0.0.1:{}",
@@ -101,6 +102,7 @@ fn auth() -> AlphaRouter<()> {
                 server
                     .with_graceful_shutdown(async {
                         shutdown_rx.await.ok();
+                        println!("shutting down!")
                     })
                     .await
                     .unwrap();
@@ -109,9 +111,10 @@ fn auth() -> AlphaRouter<()> {
             let redirect_uri = format!(
                 "{}/auth/twitch",
                 if cfg!(debug_assertions) {
-                    "http://localhost:3000"
+                    "http://localhost:3000".to_string()
                 } else {
-                    "https://macrograph.brendonovich.dev"
+                    std::env::var("ORIGIN")
+                        .unwrap_or_else(|_| "https://macrograph.vercel.app".to_string())
                 }
             );
 

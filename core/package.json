@@ -15,8 +15,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@rspc/client": "0.0.0-main-9c15d2d4",
-    "@rspc/tauri": "0.0.0-main-9c15d2d4",
+    "@rspc/client": "0.0.0-main-6ed8cc98",
+    "@rspc/tauri": "0.0.0-main-6ed8cc98",
     "@solid-primitives/map": "^0.4.3",
     "@twurple/api": "^6.2.0",
     "@twurple/auth": "^6.2.0",
