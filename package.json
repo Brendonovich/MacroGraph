@@ -4,7 +4,6 @@
     "app": "pnpm --filter @macrograph/app --",
     "core": "pnpm --filter @macrograph/core --",
     "web": "pnpm --filter @macrograph/web --",
-    "app:dev": "turbo --filter app... dev",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix"
