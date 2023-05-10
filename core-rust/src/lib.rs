@@ -21,6 +21,8 @@ pub fn router() -> Router {
         ))
 }
 
+const MACROGRAPH_DOT_APP: &str = "https://macrograph.vercel.app";
+
 fn http() -> AlphaRouter<()> {
     #[derive(Type, Serialize)]
     #[specta(inline)]
@@ -112,9 +114,7 @@ fn auth() -> AlphaRouter<()> {
                 "{}/auth/twitch",
                 match std::env::var("API_ORIGIN") {
                     Ok(o) => o,
-                    Err(_) => {
-                        "https://macrograph.vercel.app".to_string()
-                    }
+                    Err(_) => MACROGRAPH_DOT_APP.to_string(),
                 }
             );
 
