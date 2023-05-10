@@ -5,8 +5,11 @@ export type Procedures = {
         { key: "http.json", input: HTTPRequest, result: { data: any; status: number } } | 
         { key: "http.text", input: HTTPRequest, result: { data: string; status: number } },
     mutations: never,
-    subscriptions: never
+    subscriptions: 
+        { key: "auth.twitch", input: never, result: Message }
 };
+
+export type Message = "Listening" | { Received: string }
 
 export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: any | null }
 

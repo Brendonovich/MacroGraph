@@ -7,12 +7,18 @@ import { ApiClient } from "@twurple/api";
 const clientId = "wg8e35ddq28vfzw2jmu6c661nqsjg2";
 const accessToken = localStorage.getItem("TwitchAccessToken");
 
-const authProvider = new StaticAuthProvider(clientId, accessToken);
+const authProvider = new StaticAuthProvider(clientId, accessToken!);
 
 const apiClient = new ApiClient({ authProvider });
 
-let userID = localStorage.getItem("AuthedUserId");
-let username = localStorage.getItem("AuthedUserName");
+let userID: string;
+let username: string;
+
+apiClient.getTokenInfo().then((t) => {
+  userID = t.userId!;
+  username = t.userName!;
+  console.log("token: ", t);
+});
 
 const SubTypes = [
   "channel.update",
@@ -54,8 +60,7 @@ let sessionID = "";
 
 const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-ws.addEventListener("open", (data) => {
-});
+ws.addEventListener("open", () => {});
 
 ws.addEventListener("message", (data) => {
   let info = JSON.parse(data.data);
@@ -159,6 +164,10 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
+    console.log({
+      userID,
+      switch: ctx.getInput("switch"),
+    });
     apiClient.chat.updateSettings(userID, userID, {
       emoteOnlyModeEnabled: ctx.getInput("switch"),
     });
@@ -184,7 +193,6 @@ pkg.createNonEventSchema({
       id: "reason",
       type: types.string(),
     });
-
   },
   run({ ctx }) {
     apiClient.moderation.banUser(userID, userID, {
@@ -206,9 +214,7 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    apiClient.moderation.unbanUser(userID, userID, {
-      user: ctx.getInput("userId"),
-    });
+    apiClient.moderation.unbanUser(userID, userID, ctx.getInput("userId"));
   },
 });
 
@@ -223,9 +229,7 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    apiClient.moderation.addModerator(userID, {
-      user: ctx.getInput("userId"),
-    });
+    apiClient.moderation.addModerator(userID, ctx.getInput("userId"));
   },
 });
 
@@ -240,9 +244,7 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    apiClient.moderation.removeModerator(userID, {
-      user: ctx.getInput("userId"),
-    });
+    apiClient.moderation.removeModerator(userID, ctx.getInput("userId"));
   },
 });
 
@@ -257,10 +259,11 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    apiClient.moderation.deleteChatMessages(userID, userID, {
-      messageId: ctx.getInput("messageId"),
-    });
-    ctx.setOutput("clipId", data);
+    apiClient.moderation.deleteChatMessages(
+      userID,
+      userID,
+      ctx.getInput("messageId")
+    );
   },
 });
 
@@ -323,7 +326,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let data = await apiClient.subscriptions.getSubscriptionForUser(userID, ctx.getInput("userId"));
+    let data = await apiClient.subscriptions.getSubscriptionForUser(
+      userID,
+      ctx.getInput("userId")
+    );
     ctx.setOutput("subbed", data !== null);
     if (data === null) return;
     ctx.setOutput("tier", data.tier);
@@ -347,10 +353,14 @@ pkg.createNonEventSchema({
       name: "Following",
       id: "following",
       type: types.bool(),
-    })
+    });
   },
   async run({ ctx }) {
-    let data = await apiClient.channels.getChannelFollowers(userID, userID, ctx.getInput("userId"));
+    let data = await apiClient.channels.getChannelFollowers(
+      userID,
+      userID,
+      ctx.getInput("userId")
+    );
     ctx.setOutput("following", data.data.length === 1);
   },
 });
@@ -368,10 +378,13 @@ pkg.createNonEventSchema({
       name: "Vip",
       id: "vip",
       type: types.bool(),
-    })
+    });
   },
   async run({ ctx }) {
-    let data = await apiClient.channels.checkVipForUser(userID, ctx.getInput("userId"));
+    let data = await apiClient.channels.checkVipForUser(
+      userID,
+      ctx.getInput("userId")
+    );
     ctx.setOutput("vip", data);
   },
 });
@@ -389,10 +402,13 @@ pkg.createNonEventSchema({
       name: "Moderator",
       id: "moderator",
       type: types.bool(),
-    })
+    });
   },
   async run({ ctx }) {
-    let data = await apiClient.moderation.checkUserMod(userID, ctx.getInput("userId"));
+    let data = await apiClient.moderation.checkUserMod(
+      userID,
+      ctx.getInput("userId")
+    );
     ctx.setOutput("moderator", data);
   },
 });
@@ -454,41 +470,41 @@ pkg.createNonEventSchema({
     t.dataOutput({
       name: "Success",
       id: "success",
-      type: types.bool()
+      type: types.bool(),
     });
     t.dataOutput({
       name: "Error Message",
       id: "errorMessage",
-      type: types.string()
+      type: types.string(),
     });
     t.dataOutput({
       name: "Redemption ID",
       id: "redempId",
-      type: types.string()
+      type: types.string(),
     });
   },
   async run({ ctx }) {
-    let RewardData = {
-      title: ctx.getInput("title"),
-      cost: ctx.getInput("cost"),
-      prompt: ctx.getInput("prompt"),
-      isEnabled: ctx.getInput("isEnabled"),
-      backgroundColor: ctx.getInput("backgroundColor"),
-      userInputRequired: ctx.getInput("userInputRequired"),
-      maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
-      maxRedemptionsPerUserPerStream: ctx.getInput("maxRedemptionsPerUserPerStream"),
-      globalCooldown: ctx.getInput("globalCooldown"), autoFulfill: ctx.getInput("autoFulfill")
-    };
     try {
-      let data = await apiClient.channelPoints.createCustomReward(userID, RewardData);
+      let data = await apiClient.channelPoints.createCustomReward(userID, {
+        title: ctx.getInput("title"),
+        cost: ctx.getInput("cost"),
+        prompt: ctx.getInput("prompt"),
+        isEnabled: ctx.getInput("isEnabled"),
+        backgroundColor: ctx.getInput("backgroundColor"),
+        userInputRequired: ctx.getInput("userInputRequired"),
+        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+        maxRedemptionsPerUserPerStream: ctx.getInput(
+          "maxRedemptionsPerUserPerStream"
+        ),
+        globalCooldown: ctx.getInput("globalCooldown"),
+        autoFulfill: ctx.getInput("autoFulfill"),
+      });
       ctx.setOutput("success", true);
       ctx.setOutput("redempId", data.id);
     } catch (error) {
       ctx.setOutput("success", false);
       ctx.setOutput("errorMessage", JSON.parse(error.body).message);
     }
-
-
   },
 });
 
@@ -638,7 +654,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("channelId", data.event.broadcaster_user_id);
     ctx.setOutput("channelName", data.event.broadcaster_user_login);
     ctx.setOutput("modId", data.event.moderator_user_id);
@@ -681,7 +696,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.from_broadcaster_user_id);
     ctx.setOutput("userLogin", data.event.from_broadcaster_user_login);
     ctx.setOutput("modName", data.event.moderator_user_login);
@@ -734,7 +748,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.exec("exec");
@@ -840,7 +853,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("enabled", data.event.is_enabled);
     ctx.setOutput("paused", data.event.is_paused);
@@ -974,7 +986,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("enabled", data.event.is_enabled);
     ctx.setOutput("paused", data.event.is_paused);
@@ -1108,7 +1119,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("enabled", data.event.is_enabled);
     ctx.setOutput("paused", data.event.is_paused);
@@ -1202,7 +1212,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
@@ -1225,7 +1234,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1238,7 +1247,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1251,7 +1260,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1386,7 +1395,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("channelId", data.event.broadcaster_user_id);
     ctx.setOutput("channelName", data.event.broadcaster_user_login);
     ctx.setOutput("title", data.event.title);
@@ -1426,7 +1434,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1464,7 +1471,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1512,7 +1518,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1567,7 +1572,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1613,7 +1617,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("anonymous", data.event.is_anonymous);
@@ -1647,7 +1650,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userId", data.event.from_broadcaster_user_id);
     ctx.setOutput("userLogin", data.event.from_broadcaster_user_login);
     ctx.setOutput("viewers", data.event.viewers);
@@ -1674,7 +1676,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("userID", data.event.user_id);
     ctx.setOutput("userName", data.event.user_login);
     ctx.exec("exec");
@@ -1700,7 +1701,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("viewerCount", data.event.viewer_count);
     ctx.setOutput("startedAt", data.event.started_at);
@@ -1748,7 +1748,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("description", data.event.description);
@@ -1799,7 +1798,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("description", data.event.description);
@@ -1860,7 +1858,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("description", data.event.description);
@@ -1898,7 +1895,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-
     ctx.setOutput("id", data.event.id);
     ctx.setOutput("type", data.event.type);
     ctx.setOutput("startedAt", data.event.started_at);
@@ -1965,6 +1961,5 @@ function Subscriptions(subscription: string) {
     body: JSON.stringify(WSdata),
   })
     .then((res) => res.json())
-    .then((res) => {
-    });
+    .then((res) => {});
 }

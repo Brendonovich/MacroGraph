@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "start": "vite",
-    "dev": "vite",
+    "dev": "tauri dev",
     "build": "vite build",
     "serve": "vite preview",
     "tauri": "tauri"
@@ -13,7 +13,9 @@
   "dependencies": {
     "@macrograph/core": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
+    "@rspc/solid": "0.0.0-main-9c15d2d4",
     "@solid-primitives/map": "^0.4.3",
+    "@tanstack/solid-query": "^4.29.5",
     "@tauri-apps/api": "^1.2.0",
     "clsx": "^1.2.1",
     "solid-js": "^1.7.0",
@@ -29,6 +31,7 @@
     "typescript": "^4.9.5",
     "vite": "^4.2.1",
     "vite-plugin-solid": "^2.5.0",
-    "vite-tsconfig-paths": "^4.0.8"
+    "vite-tsconfig-paths": "^4.0.8",
+    "@macrograph/web": "workspace:*"
   }
 }

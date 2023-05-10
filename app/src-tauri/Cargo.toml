@@ -1,5 +1,5 @@
 [package]
-name = "stream-control"
+name = "macrograph"
 version = "0.0.0"
 description = "A Tauri App"
 authors = ["you"]
