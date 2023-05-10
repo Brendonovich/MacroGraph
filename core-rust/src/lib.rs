@@ -79,56 +79,48 @@ fn auth() -> AlphaRouter<()> {
                 )
                 .route(
                     "/",
-                    routing::get(|| async move {
-                        response::Html(
-                            r#"
-                            <!DOCTYPE html>
-                            <html>
-                                <head>
-                                    <script>
-                                        const params = new URL(document.location).searchParams;
-
-                                        fetch("http://localhost:1820", {
-                                            method: "POST",
-                                            body: JSON.stringify(params.get("code")),
-                                            headers: {
-                                                "content-type": "application/json"
-                                            }
-                                        })
-                                    </script>
-                                </head>
-                                <body>
-                                    <h1>You can return to Macrograph!</h1>
-                                </body>
-                            </html>
-                            "#,
-                        )
-                    }),
+                    routing::get(|| async move { response::Html(include_str!("./twitch.html")) }),
                 );
 
-            let addr = "0.0.0.0:1820".parse().unwrap();
+            let addr = format!(
+                "127.0.0.1:{}",
+                cfg!(debug_assertions).then_some(1820).unwrap_or(0)
+            )
+            .parse()
+            .unwrap();
+
+            let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
+
+            let server = axum::Server::bind(&addr).serve(app.into_make_service());
+
+            let port = server.local_addr().port();
 
             tokio::spawn(async move {
-                axum::Server::bind(&addr)
-                    .serve(app.into_make_service())
+                server
+                    .with_graceful_shutdown(async {
+                        shutdown_rx.await.ok();
+                    })
                     .await
                     .unwrap();
             });
 
             opener::open(twitch::oauth2_url(
                 "ldbp0fkq9yalf2lzsi146i0cip8y59",
-                "http://localhost:1820",
+                &format!("http://localhost:{port}"),
                 vec![],
+                true,
+                serde_json::json!({ "port": port }),
             ))
-            .unwrap();
+            .expect("Failed to open twitch URL!");
 
             async_stream::stream! {
                 yield Message::Listening;
 
                 if let Some(token) = rx.recv().await {
-                    println!("received");
-                    yield Message::Received(token)
+                    yield Message::Received(token);
                 }
+
+                shutdown_tx.send(()).ok();
             }
         }),
     )

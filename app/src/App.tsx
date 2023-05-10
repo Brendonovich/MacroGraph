@@ -48,7 +48,7 @@ const DiscordSchema = z.object({
 type DiscordForm = z.input<typeof DiscordSchema>;
 
 function SettingsMenu() {
-  const [menuOpen, setMenuOpen] = createSignal(false);
+  const [open, setOpen] = createSignal(false);
 
   const [, { Form, Field }] = createForm<DiscordForm>({
     initialValues: {
@@ -66,12 +66,12 @@ function SettingsMenu() {
     <div class="flex flex-col text-center">
       <button
         type="button"
-        onClick={() => setMenuOpen(!menuOpen())}
+        onClick={() => setOpen(!open())}
         class="text-neutral-100"
       >
-        CLICK HERE
+        Open Settings
       </button>
-      <Show when={menuOpen()}>
+      <Show when={open()}>
         <TwitchAuth />
         <label class="text-white">Discord Bot:</label>
         <Form onSubmit={handleSubmit}>
