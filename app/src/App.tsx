@@ -43,8 +43,7 @@ export default App;
 
 const DiscordSchema = z.object({
   botToken: z.string(),
-  serverID: z.string(),
-  webhookUrl: z.string(),
+  serverID: z.string()
 });
 
 type DiscordForm = z.input<typeof DiscordSchema>;
@@ -56,14 +55,12 @@ function SettingsMenu() {
     initialValues: {
       botToken: localStorage.getItem(LSTokenName) ?? undefined,
       serverID: localStorage.getItem("discordServerId") ?? undefined,
-      webhookUrl: localStorage.getItem("webhookURL") ?? undefined,
     },
   });
 
   const handleSubmit: SubmitHandler<DiscordForm> = (values) => {
     localStorage.setItem(LSTokenName, values.botToken);
     localStorage.setItem("discordServerId", values.serverID);
-    localStorage.setItem("webhookURL", values.webhookUrl);
   };
 
   return (
@@ -92,16 +89,6 @@ function SettingsMenu() {
           <Field name="serverID">
             {(field, props) => (
               <input {...props} placeholder="Server ID" value={field.value} />
-            )}
-          </Field>
-          <Field name="webhookUrl">
-            {(field, props) => (
-              <input
-                {...props}
-                type="password"
-                placeholder="Webhook URL"
-                value={field.value}
-              />
             )}
           </Field>
           <button type="submit">Submit</button>
