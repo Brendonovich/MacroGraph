@@ -31,6 +31,7 @@ export default () => {
             onData: (m) => {
               if (typeof m === "object" && "Received" in m) {
                 setState({ state: "loggedIn", token: m.Received });
+                localStorage.setItem(TWITCH_ACCESS_TOKEN, m.Received);
               }
             },
             onError: (e) =>

@@ -36,7 +36,7 @@ pub fn oauth2_url(
     let params = vec![
         format!("client_id={client_id}"),
         format!("redirect_uri={redirect_uri}"),
-        format!("scopes={}", urlencoding::encode(&scopes.join(" "))),
+        format!("scope={}", urlencoding::encode(&scopes.join(" "))),
         format!("response_type=code"),
         format!("force_verify={force_verify}"),
         format!("state={}", urlencoding::encode(state)),

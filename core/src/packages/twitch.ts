@@ -4,7 +4,7 @@ import tmi from "tmi.js";
 import { StaticAuthProvider } from "@twurple/auth";
 import { ApiClient } from "@twurple/api";
 
-const clientId = "wg8e35ddq28vfzw2jmu6c661nqsjg2";
+const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 const accessToken = localStorage.getItem("TwitchAccessToken");
 
 const authProvider = new StaticAuthProvider(clientId, accessToken!);
@@ -14,10 +14,9 @@ const apiClient = new ApiClient({ authProvider });
 let userID: string;
 let username: string;
 
-apiClient.getTokenInfo().then((t) => {
+await apiClient.getTokenInfo().then((t) => {
   userID = t.userId!;
   username = t.userName!;
-  console.log("token: ", t);
 });
 
 const SubTypes = [
@@ -60,7 +59,7 @@ let sessionID = "";
 
 const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-ws.addEventListener("open", () => {});
+ws.addEventListener("open", () => { });
 
 ws.addEventListener("message", (data) => {
   let info = JSON.parse(data.data);
@@ -1961,5 +1960,5 @@ function Subscriptions(subscription: string) {
     body: JSON.stringify(WSdata),
   })
     .then((res) => res.json())
-    .then((res) => {});
+    .then((res) => { });
 }
