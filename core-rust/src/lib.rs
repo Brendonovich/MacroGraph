@@ -109,9 +109,10 @@ fn auth() -> AlphaRouter<()> {
             let redirect_uri = format!(
                 "{}/auth/twitch",
                 if cfg!(debug_assertions) {
-                    "http://localhost:3000"
+                    "http://localhost:3000".to_string()
                 } else {
-                    "https://macrograph.brendonovich.dev"
+                    std::env::var("ORIGIN")
+                        .unwrap_or_else(|_| "https://macrograph.vercel.app".to_string())
                 }
             );
 

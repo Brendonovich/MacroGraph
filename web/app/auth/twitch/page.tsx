@@ -33,7 +33,11 @@ const TokenGetter: any = async ({
     cache: "no-store",
   });
 
-  const token = TOKEN.parse(await res.json());
+  const json = await res.json();
+
+  console.log(json);
+
+  const token = TOKEN.parse(json);
 
   return <Client token={token} state={params.state} />;
 };
