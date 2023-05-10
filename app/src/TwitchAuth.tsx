@@ -1,4 +1,4 @@
-import { createSignal, Match, Switch } from "solid-js";
+import { createEffect, createSignal, Match, onCleanup, Switch } from "solid-js";
 import { rspc } from "./rspc";
 
 const TWITCH_ACCESS_TOKEN = "TwitchAccessToken";

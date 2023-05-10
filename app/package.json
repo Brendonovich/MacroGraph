@@ -13,7 +13,7 @@
   "dependencies": {
     "@macrograph/core": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
-    "@rspc/solid": "0.0.0-main-9c15d2d4",
+    "@rspc/solid": "0.0.0-main-6ed8cc98",
     "@solid-primitives/map": "^0.4.3",
     "@tanstack/solid-query": "^4.29.5",
     "@tauri-apps/api": "^1.2.0",
@@ -22,6 +22,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
+    "@macrograph/web": "workspace:*",
     "@tailwindcss/forms": "^0.5.3",
     "@tauri-apps/cli": "^1.2.2",
     "@types/node": "^18.7.10",
@@ -31,7 +32,6 @@
     "typescript": "^4.9.5",
     "vite": "^4.2.1",
     "vite-plugin-solid": "^2.5.0",
-    "vite-tsconfig-paths": "^4.0.8",
-    "@macrograph/web": "workspace:*"
+    "vite-tsconfig-paths": "^4.0.8"
   }
 }
