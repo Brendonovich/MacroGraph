@@ -29,11 +29,12 @@ const TokenGetter: any = async ({
     redirect_uri: params.state.redirect_uri,
   });
 
-  console.log(body.toString());
-
   const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
     method: "POST",
-    body,
+    headers: {
+      "content-type": "x-www-form-urlencoded",
+    },
+    body: body.toString(),
     cache: "no-store",
   });
 
