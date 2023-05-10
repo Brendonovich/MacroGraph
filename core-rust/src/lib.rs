@@ -75,14 +75,16 @@ fn auth() -> AlphaRouter<()> {
             }
 
             // build our application with a route
-            let app = <Router>::new().route(
-                "/",
-                routing::post(|Query(params): Query<Params>| async move {
-                    println!("post received!");
-                    tx.send(params.access_token).await.expect("no send?!");
-                    "done"
-                }),
-            );
+            let app = <Router>::new()
+                .layer(tower_http::cors::CorsLayer::very_permissive())
+                .route(
+                    "/",
+                    routing::post(|Query(params): Query<Params>| async move {
+                        println!("post received!");
+                        tx.send(params.access_token).await.expect("no send?!");
+                        "done"
+                    }),
+                );
 
             let addr = format!(
                 "127.0.0.1:{}",
