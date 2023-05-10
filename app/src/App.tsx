@@ -70,7 +70,7 @@ function SettingsMenu() {
         onClick={() => setOpen(!open())}
         class="text-neutral-100"
       >
-        Open Settings
+        {open() ? "Close Settings" : "Open Settings"}
       </button>
       <Show when={open()}>
         <TwitchAuth />
