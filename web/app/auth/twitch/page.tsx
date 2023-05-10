@@ -21,15 +21,19 @@ const TokenGetter: any = async ({
 }: {
   params: z.infer<typeof PARAMS>;
 }) => {
+  const body = new URLSearchParams({
+    client_id: env.TWITCH_CLIENT_ID,
+    client_secret: env.TWITCH_CLIENT_SECRET,
+    code: params.code,
+    grant_type: "authorization_code",
+    redirect_uri: params.state.redirect_uri,
+  });
+
+  console.log(body);
+
   const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
     method: "POST",
-    body: new URLSearchParams({
-      client_id: env.TWITCH_CLIENT_ID,
-      client_secret: env.TWITCH_CLIENT_SECRET,
-      code: params.code,
-      grant_type: "authorization_code",
-      redirect_uri: params.state.redirect_uri,
-    }),
+    body,
     cache: "no-store",
   });
 

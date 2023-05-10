@@ -2,7 +2,10 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
 export const env = createEnv({
-  server: {},
+  server: {
+    TWITCH_CLIENT_ID: z.string(),
+    TWITCH_CLIENT_SECRET: z.string(),
+  },
   client: {
     TWITCH_CLIENT_ID: z.string(),
     TWITCH_CLIENT_SECRET: z.string(),
