@@ -164,6 +164,10 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
+    console.log({
+      userID,
+      switch: ctx.getInput("switch"),
+    });
     apiClient.chat.updateSettings(userID, userID, {
       emoteOnlyModeEnabled: ctx.getInput("switch"),
     });

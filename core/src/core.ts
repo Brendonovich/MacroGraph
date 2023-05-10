@@ -9,8 +9,8 @@ export type Procedures = {
         { key: "auth.twitch", input: never, result: Message }
 };
 
-export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: any | null }
-
 export type Message = "Listening" | { Received: string }
+
+export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: any | null }
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"

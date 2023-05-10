@@ -1754,6 +1754,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58093314a45e00c77d5c508f76e77c3396afbbc0d01506e7fae47b018bac2b1d"
 
 [[package]]
+name = "macrograph"
+version = "0.0.0"
+dependencies = [
+ "macrograph-core",
+ "rspc",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tokio",
+ "websocket",
+]
+
+[[package]]
 name = "macrograph-core"
 version = "0.1.0"
 dependencies = [
@@ -3089,20 +3103,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbe866e1e51e8260c9eed836a042a5e7f6726bb2b411dffeaa712e19c388f23b"
 dependencies = [
  "loom",
-]
-
-[[package]]
-name = "stream-control"
-version = "0.0.0"
-dependencies = [
- "macrograph-core",
- "rspc",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tokio",
- "websocket",
 ]
 
 [[package]]

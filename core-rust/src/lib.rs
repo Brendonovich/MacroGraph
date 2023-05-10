@@ -1,11 +1,12 @@
 mod http;
 pub mod twitch;
 
+use axum::extract::Query;
 use rspc::{
     alpha::{AlphaRouter, Rspc},
     Config, Router,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
 
 #[allow(non_upper_case_globals)]
@@ -68,19 +69,20 @@ fn auth() -> AlphaRouter<()> {
 
             let (tx, mut rx) = tokio::sync::mpsc::channel(4);
 
+            #[derive(Deserialize)]
+            struct Params {
+                access_token: String,
+            }
+
             // build our application with a route
-            let app = <Router>::new()
-                .route(
-                    "/",
-                    routing::post(|Json(payload): Json<String>| async move {
-                        tx.send(payload).await.expect("no send?!");
-                        "bruh"
-                    }),
-                )
-                .route(
-                    "/",
-                    routing::get(|| async move { response::Html(include_str!("./twitch.html")) }),
-                );
+            let app = <Router>::new().route(
+                "/",
+                routing::post(|Query(params): Query<Params>| async move {
+                    println!("post received!");
+                    tx.send(params.access_token).await.expect("no send?!");
+                    "done"
+                }),
+            );
 
             let addr = format!(
                 "127.0.0.1:{}",
@@ -104,12 +106,25 @@ fn auth() -> AlphaRouter<()> {
                     .unwrap();
             });
 
+            let redirect_uri = format!(
+                "{}/auth/twitch",
+                if cfg!(debug_assertions) {
+                    "http://localhost:3000"
+                } else {
+                    "https://macrograph.brendonovich.dev"
+                }
+            );
+
             opener::open(twitch::oauth2_url(
                 "ldbp0fkq9yalf2lzsi146i0cip8y59",
-                &format!("http://localhost:{port}"),
+                &redirect_uri,
                 twitch::SCOPES.into_iter().collect(),
                 true,
-                serde_json::json!({ "port": port }),
+                &serde_json::to_string(&serde_json::json!({
+                    "port": port,
+                    "redirect_uri": redirect_uri
+                }))
+                .unwrap(),
             ))
             .expect("Failed to open twitch URL!");
 

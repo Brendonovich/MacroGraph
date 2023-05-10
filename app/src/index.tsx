@@ -3,5 +3,14 @@ import { render } from "solid-js/web";
 
 import "./index.css";
 import App from "./App";
+import { queryClient, rspc } from "./rspc";
+import { rspcClient } from "@macrograph/core";
 
-render(() => <App />, document.getElementById("root") as HTMLElement);
+render(
+  () => (
+    <rspc.Provider client={rspcClient} queryClient={queryClient}>
+      <App />
+    </rspc.Provider>
+  ),
+  document.getElementById("root") as HTMLElement
+);

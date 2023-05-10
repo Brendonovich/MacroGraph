@@ -2,11 +2,12 @@ import { createSignal, Show } from "solid-js";
 import { CoreProvider } from "./contexts";
 import { Graph } from "~/components/Graph";
 import { GraphList } from "~/components/ProjectSidebar";
-import { Message, core, LSTokenName, rspcClient } from "@macrograph/core";
+import { core, LSTokenName } from "@macrograph/core";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
 import { z } from "zod";
 import { createForm, SubmitHandler } from "@modular-forms/solid";
+import TwitchAuth from "./TwitchAuth";
 
 function App() {
   const ui = createUIStore();
@@ -96,63 +97,3 @@ function SettingsMenu() {
     </div>
   );
 }
-
-const TWITCH_ACCESS_TOKEN = "TwitchAccessToken";
-
-const TwitchAuth = () => {
-  const [token, setToken] = createSignal(
-    localStorage.getItem(TWITCH_ACCESS_TOKEN)
-  );
-
-  const [authState, setAuthState] = createSignal<Message | null>(null);
-
-  const doAuth = () => {
-    rspcClient.addSubscription(["auth.twitch", null as any], {
-      onData: (m) => {
-        if (typeof m === "object" && "Received" in m) {
-          setToken(m.Received);
-          localStorage.setItem(TWITCH_ACCESS_TOKEN, m.Received);
-
-          setAuthState(null);
-        }
-      },
-      onStarted: () => setAuthState("Listening"),
-      onError: () => setAuthState(null),
-    });
-  };
-
-  return (
-    <Show
-      when={token()}
-      fallback={
-        <Show
-          when={authState() !== null}
-          fallback={
-            <button
-              class="ring-4 ring-black bg-purple-700 my-2 text-white"
-              onClick={doAuth}
-            >
-              TWITCH LOGIN
-            </button>
-          }
-        >
-          <p>Logging in...</p>
-        </Show>
-      }
-    >
-      <p>Logged Into Twitch</p>
-      {/* <p class="ring-4 ring-black bg-purple-700 my-2 text-white"> */}
-      {/*   Logged in as {data().userName} */}
-      {/* </p> */}
-      <button
-        type="button"
-        onclick={() => {
-          localStorage.removeItem(TWITCH_ACCESS_TOKEN);
-          setToken(null);
-        }}
-      >
-        Logout
-      </button>
-    </Show>
-  );
-};

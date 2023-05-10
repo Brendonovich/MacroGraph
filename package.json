@@ -3,12 +3,14 @@
   "scripts": {
     "app": "pnpm --filter @macrograph/app --",
     "core": "pnpm --filter @macrograph/core --",
+    "web": "pnpm --filter @macrograph/web --",
+    "app:dev": "turbo --filter app... dev",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix"
   },
   "devDependencies": {
-    "turbo": "^1.5.5",
+    "turbo": "^1.9.3",
     "turbo-ignore": "^0.3.0",
     "typescript": "^4.9.4"
   }

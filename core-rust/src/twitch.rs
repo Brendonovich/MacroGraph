@@ -1,39 +1,29 @@
 const AUTH_URL: &str = "https://id.twitch.tv/oauth2/authorize";
 
-pub const SCOPES: [&str; 33] = [
-    "channel.update",
-    "channel.follow",
-    "channel.subscribe",
-    "channel.subscription.end",
-    "channel.subscription.gift",
-    "channel.subscription.message",
-    "channel.cheer",
-    "channel.raid",
-    "channel.ban",
-    "channel.unban",
-    "channel.moderator.add",
-    "channel.moderator.remove",
-    "channel.channel_points_custom_reward.add",
-    "channel.channel_points_custom_reward.update",
-    "channel.channel_points_custom_reward.remove",
-    "channel.channel_points_custom_reward_redemption.add",
-    "channel.channel_points_custom_reward_redemption.update",
-    "channel.poll.begin",
-    "channel.poll.progress",
-    "channel.poll.end",
-    "channel.prediction.begin",
-    "channel.prediction.progress",
-    "channel.prediction.lock",
-    "channel.prediction.end",
-    "channel.hype_train.begin",
-    "channel.hype_train.progress",
-    "channel.hype_train.end",
-    "channel.shield_mode.begin",
-    "channel.shield_mode.end",
-    "channel.shoutout.create",
-    "channel.shoutout.receive",
-    "stream.online",
-    "stream.offline",
+pub const SCOPES: [&str; 23] = [
+    "bits:read",
+    "channel:read:vips",
+    "channel:manage:vips",
+    "clips:edit",
+    "channel:manage:broadcast",
+    "channel:read:subscriptions",
+    "moderator:manage:shoutouts",
+    "channel:manage:predictions",
+    "moderation:read",
+    "moderator:manage:shield_mode",
+    "channel:manage:polls",
+    "moderator:manage:banned_users",
+    "chat:edit",
+    "chat:read",
+    "channel:moderate",
+    "moderator:read:followers",
+    "user:read:follows",
+    "user:read:subscriptions",
+    "channel:read:hype_train",
+    "channel:manage:redemptions",
+    "moderator:manage:chat_messages",
+    "moderator:read:followers",
+    "moderator:manage:chat_settings",
 ];
 
 pub fn oauth2_url(
@@ -41,14 +31,17 @@ pub fn oauth2_url(
     redirect_uri: &str,
     scopes: Vec<&str>,
     force_verify: bool,
-    state: serde_json::Value,
+    state: &str,
 ) -> String {
-    format!(
-        "{AUTH_URL}?client_id={}&redirect_uri={}&scopes={}&response_type=code&force_verify={}&state={}",
-        client_id,
-        redirect_uri,
-        scopes.join(","),
-        force_verify,
-        urlencoding::encode(&serde_json::to_string(&state).unwrap())
-    )
+    let params = vec![
+        format!("client_id={client_id}"),
+        format!("redirect_uri={redirect_uri}"),
+        format!("scopes={}", urlencoding::encode(&scopes.join(" "))),
+        format!("response_type=code"),
+        format!("force_verify={force_verify}"),
+        format!("state={}", urlencoding::encode(state)),
+    ]
+    .join("&");
+
+    format!("{AUTH_URL}?{}", params)
 }
