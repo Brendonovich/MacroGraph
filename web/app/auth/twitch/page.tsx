@@ -4,8 +4,6 @@ import Client from "./Client";
 import { PARAMS, TOKEN } from "./types";
 import { z } from "zod";
 
-export const runtime = "edge";
-
 export default async function ({ searchParams }: any) {
   const params = PARAMS.parse(searchParams);
 
