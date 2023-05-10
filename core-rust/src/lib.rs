@@ -107,7 +107,7 @@ fn auth() -> AlphaRouter<()> {
             opener::open(twitch::oauth2_url(
                 "ldbp0fkq9yalf2lzsi146i0cip8y59",
                 &format!("http://localhost:{port}"),
-                vec![],
+                twitch::SCOPES.into_iter().collect(),
                 true,
                 serde_json::json!({ "port": port }),
             ))
