@@ -43,7 +43,7 @@ export default App;
 
 const DiscordSchema = z.object({
   botToken: z.string(),
-  serverID: z.string(),
+  serverID: z.string()
 });
 
 type DiscordForm = z.input<typeof DiscordSchema>;

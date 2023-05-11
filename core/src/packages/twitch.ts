@@ -4,7 +4,7 @@ import tmi from "tmi.js";
 import { StaticAuthProvider } from "@twurple/auth";
 import { ApiClient } from "@twurple/api";
 
-const clientId = "wg8e35ddq28vfzw2jmu6c661nqsjg2";
+const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 const accessToken = localStorage.getItem("TwitchAccessToken");
 
 const authProvider = new StaticAuthProvider(clientId, accessToken!);
@@ -17,7 +17,6 @@ let username: string;
 apiClient.getTokenInfo().then((t) => {
   userID = t.userId!;
   username = t.userName!;
-  console.log("token: ", t);
 });
 
 const SubTypes = [
