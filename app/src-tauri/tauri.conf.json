@@ -18,7 +18,10 @@
         "open": true
       },
       "fs": {
-        "all": true
+        "all": true,
+        "scope": [
+          "**"
+        ]
       },
       "http": {
         "all": true,
