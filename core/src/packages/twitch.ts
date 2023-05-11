@@ -14,7 +14,7 @@ const apiClient = new ApiClient({ authProvider });
 let userID: string;
 let username: string;
 
-await apiClient.getTokenInfo().then((t) => {
+apiClient.getTokenInfo().then((t) => {
   userID = t.userId!;
   username = t.userName!;
 });
@@ -59,7 +59,7 @@ let sessionID = "";
 
 const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-ws.addEventListener("open", () => { });
+ws.addEventListener("open", () => {});
 
 ws.addEventListener("message", (data) => {
   let info = JSON.parse(data.data);
@@ -1960,5 +1960,5 @@ function Subscriptions(subscription: string) {
     body: JSON.stringify(WSdata),
   })
     .then((res) => res.json())
-    .then((res) => { });
+    .then((res) => {});
 }
