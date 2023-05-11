@@ -13,10 +13,51 @@ const apiClient = new ApiClient({ authProvider });
 
 let userID: string;
 let username: string;
+let Client: tmi.Client;
 
 apiClient.getTokenInfo().then((t) => {
   userID = t.userId!;
   username = t.userName!;
+  Client = tmi.Client({
+    channels: [username],
+    identity: {
+      username: username,
+      password: localStorage.getItem("TwitchAccessToken")
+    }
+  })
+  Client.connect();
+
+  Client.on("connected", (data) => {
+    console.log("connected");
+  });
+
+  Client.on("message", (channel, tags, message, self) => {
+    const data = { message, tags, self };
+    pkg.emitEvent({ name: "chatMessage", data });
+  });
+
+  const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
+
+  ws.addEventListener("open", () => { });
+
+  ws.addEventListener("message", (data) => {
+    let info = JSON.parse(data.data);
+    switch (info.metadata.message_type) {
+      case "session_welcome":
+        sessionID = info.payload.session.id;
+        if (accessToken) {
+          SubTypes.forEach((data) => {
+            Subscriptions(data);
+          });
+        }
+        break;
+      case "notification":
+        pkg.emitEvent({
+          name: info.payload.subscription.type,
+          data: info.payload,
+        });
+    }
+  });
 });
 
 const SubTypes = [
@@ -56,29 +97,6 @@ const SubTypes = [
 ];
 
 let sessionID = "";
-
-const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
-
-ws.addEventListener("open", () => {});
-
-ws.addEventListener("message", (data) => {
-  let info = JSON.parse(data.data);
-  switch (info.metadata.message_type) {
-    case "session_welcome":
-      sessionID = info.payload.session.id;
-      if (accessToken) {
-        SubTypes.forEach((data) => {
-          Subscriptions(data);
-        });
-      }
-      break;
-    case "notification":
-      pkg.emitEvent({
-        name: info.payload.subscription.type,
-        data: info.payload,
-      });
-  }
-});
 
 const pkg = core.createPackage<any>({ name: "Twitch Events" });
 
@@ -1914,25 +1932,6 @@ pkg.createEventSchema({
   },
 });
 
-const Client = tmi.Client({
-  channels: [username],
-  identity: {
-    username: username,
-    password: localStorage.getItem("TwitchAccessToken"),
-  },
-});
-
-Client.connect();
-
-Client.on("connected", (data) => {
-  console.log("connected");
-});
-
-Client.on("message", (channel, tags, message, self) => {
-  const data = { message, tags, self };
-  pkg.emitEvent({ name: "chatMessage", data });
-});
-
 function Subscriptions(subscription: string) {
   let WSdata = {
     type: subscription,
@@ -1960,5 +1959,5 @@ function Subscriptions(subscription: string) {
     body: JSON.stringify(WSdata),
   })
     .then((res) => res.json())
-    .then((res) => {});
+    .then((res) => { });
 }
