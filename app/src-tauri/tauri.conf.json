@@ -16,6 +16,15 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "fs": {
+        "all": true
+      },
+      "http": {
+        "all": true,
+        "scope": [
+          "https://**"
+        ]
       }
     },
     "bundle": {

@@ -3,6 +3,9 @@ import { rspcClient } from "../client";
 import { core } from "../models";
 import { types } from "../types";
 import { createEndpoint } from "../utils/httpEndpoint";
+import { fs } from "@tauri-apps/api";
+import { Body, Part } from "@tauri-apps/api/http"
+import { http } from "@tauri-apps/api"
 
 const pkg = core.createPackage<any>({ name: "Discord" });
 
@@ -388,4 +391,71 @@ pkg.createNonEventSchema({
     ctx.setOutput("mentionable", role.mentionable);
     ctx.setOutput("permissions", role.permissions);
   },
+});
+
+pkg.createNonEventSchema({
+  name: "Send Discord Webhook",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      id: "webhookUrl",
+      name: "Webhook URL",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "content",
+      name: "Message",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "username",
+      name: "Username",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "avatarUrl",
+      name: "Avatar URL",
+      type: types.string(),
+    });
+    t.dataInput({
+      id: "tts",
+      name: "TTS",
+      type: types.bool(),
+    });
+    t.dataInput({
+      id: "fileLocation",
+      name: "File Location",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "success",
+      name: "Success",
+      type: types.bool(),
+    })
+  },
+  async run({ ctx }) {
+
+    const body: Record<string, Part> = {}
+    if (ctx.getInput("content")) body.content = ctx.getInput("content");
+    if (ctx.getInput("avatarUrl")) body.avatar_url = ctx.getInput("avatarUrl");
+    if (ctx.getInput("username")) body.username = ctx.getInput("username");
+    if (ctx.getInput("tts")) body.tts = ctx.getInput<Boolean>("tts").toString();
+    if (ctx.getInput("fileLocation")) {
+      body["file[0]"] = {
+        file: await fs.readBinaryFile(ctx.getInput("fileLocation")),
+        fileName: ctx.getInput<string>("fileLocation").split(/[\/\\]/).at(-1)
+      }
+    }
+    console.log(Body.form(body));
+    // console.log(ctx.getInput<string>("fileLocation").split(/[\/\\]/).at(-1));
+    const headers = new Headers();
+    headers.append("Content-Type", "multipart/form-data");
+    let response = await http.fetch(ctx.getInput("webhookUrl"), {
+      method: "POST",
+      headers: { "Content-Type": "multipart/form-data" },
+      body: Body.form(body)
+    });
+    console.log(response);
+    ctx.setOutput("success", response.status === 200);
+  }
 });
