@@ -111,7 +111,7 @@ pkg.createNonEventSchema({
   name: "Int",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("stringOut", ctx.getInput("haystack"));
+    ctx.setOutput("intOut", ctx.getInput("haystack"));
   },
   generateIO(t) {
     t.dataInput({
@@ -119,7 +119,7 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
     t.dataOutput({
-      id: "stringOut",
+      id: "intOut",
       type: types.int(),
     });
   },
@@ -129,7 +129,7 @@ pkg.createNonEventSchema({
   name: "Bool",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("stringOut", ctx.getInput("haystack"));
+    ctx.setOutput("boolOut", ctx.getInput("haystack"));
   },
   generateIO(t) {
     t.dataInput({
@@ -137,7 +137,7 @@ pkg.createNonEventSchema({
       type: types.bool(),
     });
     t.dataOutput({
-      id: "stringOut",
+      id: "boolOut",
       type: types.bool(),
     });
   },
