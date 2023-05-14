@@ -1,13 +1,11 @@
-import { createSignal, Show } from "solid-js";
+import { Show } from "solid-js";
 import { CoreProvider } from "./contexts";
 import { Graph } from "~/components/Graph";
 import { GraphList } from "~/components/ProjectSidebar";
-import { core, LSTokenName } from "@macrograph/core";
+import { core } from "@macrograph/core";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
-import { z } from "zod";
-import { createForm, SubmitHandler } from "@modular-forms/solid";
-import TwitchAuth from "./TwitchAuth";
+import Settings from "./settings";
 
 function App() {
   const ui = createUIStore();
@@ -26,7 +24,7 @@ function App() {
           }}
         >
           <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
-            <SettingsMenu />
+            <Settings />
             <GraphList onChange={(g) => ui.setCurrentGraph(g)} />
             <PrintOutput />
           </div>
@@ -40,60 +38,3 @@ function App() {
 }
 
 export default App;
-
-const DiscordSchema = z.object({
-  botToken: z.string(),
-  serverID: z.string(),
-});
-
-type DiscordForm = z.input<typeof DiscordSchema>;
-
-function SettingsMenu() {
-  const [open, setOpen] = createSignal(false);
-
-  const [, { Form, Field }] = createForm<DiscordForm>({
-    initialValues: {
-      botToken: localStorage.getItem(LSTokenName) ?? undefined,
-      serverID: localStorage.getItem("discordServerId") ?? undefined,
-    },
-  });
-
-  const handleSubmit: SubmitHandler<DiscordForm> = (values) => {
-    localStorage.setItem(LSTokenName, values.botToken);
-    localStorage.setItem("discordServerId", values.serverID);
-  };
-
-  return (
-    <div class="flex flex-col text-center">
-      <button
-        type="button"
-        onClick={() => setOpen(!open())}
-        class="text-neutral-100"
-      >
-        {open() ? "Close Settings" : "Open Settings"}
-      </button>
-      <Show when={open()}>
-        <TwitchAuth />
-        <label class="text-white">Discord Bot:</label>
-        <Form onSubmit={handleSubmit}>
-          <Field name="botToken">
-            {(field, props) => (
-              <input
-                {...props}
-                type="password"
-                placeholder="Bot Token"
-                value={field.value}
-              />
-            )}
-          </Field>
-          <Field name="serverID">
-            {(field, props) => (
-              <input {...props} placeholder="Server ID" value={field.value} />
-            )}
-          </Field>
-          <button type="submit">Submit</button>
-        </Form>
-      </Show>
-    </div>
-  );
-}
