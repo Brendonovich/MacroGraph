@@ -3,11 +3,14 @@ import { ParentProps } from "solid-js";
 import Discord from "./Discord";
 import OBS from "./OBS";
 import Twitch from "./Twitch";
+import { Button } from "./ui";
 
 export default () => {
   return (
     <Dialog.Root>
-      <Dialog.Trigger>Open Settings</Dialog.Trigger>
+      <Dialog.Trigger as="div">
+        <Button>Open Settings</Button>
+      </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay class="absolute inset-0 bg-black/40" />
         <Dialog.Content class="absolute inset-0 flex flex-col justify-center items-center py-10">
