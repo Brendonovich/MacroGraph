@@ -1,8 +1,8 @@
 export * from "./utils";
 export * from "./keyboard";
 export * from "./logic";
-export * from "./obs";
-export * from "./twitch";
+export * as obs from "./obs";
+export * as twitch from "./twitch";
 // export * from "./devices/streamdeck";s
 export * from "./httpRequests";
-export * from "./discord";
+export * as discord from "./discord";

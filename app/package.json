@@ -11,6 +11,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@kobalte/core": "^0.9.6",
+    "@kobalte/tailwindcss": "^0.6.5",
     "@macrograph/core": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
     "@rspc/solid": "0.0.0-main-6ed8cc98",

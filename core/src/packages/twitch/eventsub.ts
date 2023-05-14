@@ -1,64 +1,8 @@
-import { core } from "../models";
-import { types } from "../types";
-import tmi from "tmi.js";
-import { StaticAuthProvider } from "@twurple/auth";
-import { ApiClient } from "@twurple/api";
-
-const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
-const accessToken = localStorage.getItem("TwitchAccessToken");
-
-const authProvider = new StaticAuthProvider(clientId, accessToken!);
-
-const apiClient = new ApiClient({ authProvider });
-
-let userID: string;
-let username: string;
-let Client: tmi.Client;
-
-apiClient.getTokenInfo().then((t) => {
-  userID = t.userId!;
-  username = t.userName!;
-  Client = tmi.Client({
-    channels: [username],
-    identity: {
-      username: username,
-      password: localStorage.getItem("TwitchAccessToken")
-    }
-  })
-  Client.connect();
-
-  Client.on("connected", (data) => {
-    console.log("connected");
-  });
-
-  Client.on("message", (channel, tags, message, self) => {
-    const data = { message, tags, self };
-    pkg.emitEvent({ name: "chatMessage", data });
-  });
-
-  const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
-
-  ws.addEventListener("open", () => { });
-
-  ws.addEventListener("message", (data) => {
-    let info = JSON.parse(data.data);
-    switch (info.metadata.message_type) {
-      case "session_welcome":
-        sessionID = info.payload.session.id;
-        if (accessToken) {
-          SubTypes.forEach((data) => {
-            Subscriptions(data);
-          });
-        }
-        break;
-      case "notification":
-        pkg.emitEvent({
-          name: info.payload.subscription.type,
-          data: info.payload,
-        });
-    }
-  });
-});
+import { apiClient, user } from "./helix";
+import pkg from "./pkg";
+import { createEffect, createSignal } from "solid-js";
+import { types } from "../../types";
+import { map } from "../../utils";
 
 const SubTypes = [
   "channel.update",
@@ -96,525 +40,55 @@ const SubTypes = [
   "stream.offline",
 ];
 
-let sessionID = "";
+const [eventSubWs, setWs] = createSignal<null | WebSocket>(null);
 
-const pkg = core.createPackage<any>({ name: "Twitch Events" });
+export { eventSubWs };
 
-pkg.createEventSchema({
-  name: "Chat Message",
-  event: "chatMessage",
-  generateIO: (t) => {
-    t.execOutput({
-      id: "exec",
-    });
-    t.dataOutput({
-      id: "username",
-      name: "Username",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "displayName",
-      name: "Display Name",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "userId",
-      name: "User ID",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "message",
-      name: "Message",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "mod",
-      name: "Moderator",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      id: "sub",
-      name: "Subscriber",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      id: "vip",
-      name: "VIP",
-      type: types.bool(),
-    });
-  },
-  run({ ctx, data }) {
-    if (data.self) return;
-    ctx.setOutput("username", data.tags.username);
-    ctx.setOutput("displayName", data.tags["display-name"]);
-    ctx.setOutput("userId", data.tags["user-id"]);
-    ctx.setOutput("message", data.message);
-    ctx.setOutput("mod", data.tags.mod);
-    ctx.setOutput("sub", data.tags.subscriber);
-    ctx.setOutput("vip", data.tags.vip);
-    ctx.exec("exec");
-  },
-});
+createEffect(() => {
+  const ws = setWs(
+    map(user(), (u) => {
+      const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-pkg.createNonEventSchema({
-  name: "Send Chat Message",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      id: "message",
-      name: "Message",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    Client.say(username, ctx.getInput("message"));
-  },
-});
+      ws.addEventListener("open", () => {});
 
-pkg.createNonEventSchema({
-  name: "Emote Only Mode",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      id: "switch",
-      type: types.bool(),
-    });
-  },
-  run({ ctx }) {
-    console.log({
-      userID,
-      switch: ctx.getInput("switch"),
-    });
-    apiClient.chat.updateSettings(userID, userID, {
-      emoteOnlyModeEnabled: ctx.getInput("switch"),
-    });
-  },
-});
+      ws.addEventListener("message", async (data) => {
+        let info = JSON.parse(data.data);
 
-pkg.createNonEventSchema({
-  name: "Ban User",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "userID",
-      id: "userId",
-      type: types.string(),
-    });
-    t.dataInput({
-      name: "Duration",
-      id: "duration",
-      type: types.int(),
-    });
-    t.dataInput({
-      name: "Reason",
-      id: "reason",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.moderation.banUser(userID, userID, {
-      user: ctx.getInput("userId"),
-      duration: ctx.getInput("duration"),
-      reason: ctx.getInput("reason"),
-    });
-  },
-});
+        switch (info.metadata.message_type) {
+          case "session_welcome":
+            await Promise.all(
+              SubTypes.map((type) =>
+                apiClient()?.eventSub.createSubscription(
+                  type,
+                  type == "channel.follow" ? "2" : "1",
+                  {
+                    from_broadcaster_user_id: u.id,
+                    broadcaster_user_id: u.id,
+                    moderator_user_id: u.id,
+                  },
+                  {
+                    method: "websocket",
+                    session_id: info.payload.session.id,
+                  },
+                  { id: u.id }
+                )
+              )
+            );
 
-pkg.createNonEventSchema({
-  name: "Unban User",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "userID",
-      id: "userId",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.moderation.unbanUser(userID, userID, ctx.getInput("userId"));
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Add Moderator",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "userID",
-      id: "userId",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.moderation.addModerator(userID, ctx.getInput("userId"));
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Remove Moderator",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "userID",
-      id: "userId",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.moderation.removeModerator(userID, ctx.getInput("userId"));
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Delete Chat message",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "Message ID",
-      id: "messageId",
-      type: types.string(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.moderation.deleteChatMessages(
-      userID,
-      userID,
-      ctx.getInput("messageId")
-    );
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Create Clip",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataOutput({
-      name: "Clip ID",
-      id: "clipId",
-      type: types.string(),
-    });
-  },
-  async run({ ctx }) {
-    let data = await apiClient.clips.createClip({
-      channel: userID,
-    });
-    ctx.setOutput("clipId", data);
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Check User Subscription",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Subbed",
-      id: "subbed",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      name: "Tier",
-      id: "tier",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Gifted",
-      id: "gifted",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      name: "Gifter Name",
-      id: "gifterName",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Gifter Display Name",
-      id: "gifterDisplayName",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Gifter ID",
-      id: "gifterId",
-      type: types.int(),
-    });
-  },
-  async run({ ctx }) {
-    let data = await apiClient.subscriptions.getSubscriptionForUser(
-      userID,
-      ctx.getInput("userId")
-    );
-    ctx.setOutput("subbed", data !== null);
-    if (data === null) return;
-    ctx.setOutput("tier", data.tier);
-    ctx.setOutput("gifted", data.isGift);
-    ctx.setOutput("gifterName", data.gifterName);
-    ctx.setOutput("gifterDisplayName", data.gifterDisplayName);
-    ctx.setOutput("gifterId", data.gifterId);
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Check User Follow",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Following",
-      id: "following",
-      type: types.bool(),
-    });
-  },
-  async run({ ctx }) {
-    let data = await apiClient.channels.getChannelFollowers(
-      userID,
-      userID,
-      ctx.getInput("userId")
-    );
-    ctx.setOutput("following", data.data.length === 1);
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Check User VIP",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Vip",
-      id: "vip",
-      type: types.bool(),
-    });
-  },
-  async run({ ctx }) {
-    let data = await apiClient.channels.checkVipForUser(
-      userID,
-      ctx.getInput("userId")
-    );
-    ctx.setOutput("vip", data);
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Check User Mod",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Moderator",
-      id: "moderator",
-      type: types.bool(),
-    });
-  },
-  async run({ ctx }) {
-    let data = await apiClient.moderation.checkUserMod(
-      userID,
-      ctx.getInput("userId")
-    );
-    ctx.setOutput("moderator", data);
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Create Custom Redemption",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      name: "Title",
-      id: "title",
-      type: types.string(),
-    });
-    t.dataInput({
-      name: "Cost",
-      id: "cost",
-      type: types.int(),
-    });
-    t.dataInput({
-      name: "Prompt",
-      id: "prompt",
-      type: types.string(),
-    });
-    t.dataInput({
-      name: "Enabled",
-      id: "isEnabled",
-      type: types.bool(),
-    });
-    t.dataInput({
-      name: "Background Color",
-      id: "backgroundColor",
-      type: types.string(),
-    });
-    t.dataInput({
-      name: "User Input Required",
-      id: "userInputRequired",
-      type: types.bool(),
-    });
-    t.dataInput({
-      name: "Max Redemptions Per Stream",
-      id: "maxRedemptionsPerStream",
-      type: types.int(),
-    });
-    t.dataInput({
-      name: "Max Redemptions Per User Per Stream",
-      id: "maxRedemptionsPerUserPerStream",
-      type: types.int(),
-    });
-    t.dataInput({
-      name: "Global Cooldown",
-      id: "globalCooldown",
-      type: types.int(),
-    });
-    t.dataInput({
-      name: "Skip Redemption Queue",
-      id: "autoFulfill",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      name: "Success",
-      id: "success",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      name: "Error Message",
-      id: "errorMessage",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Redemption ID",
-      id: "redempId",
-      type: types.string(),
-    });
-  },
-  async run({ ctx }) {
-    try {
-      let data = await apiClient.channelPoints.createCustomReward(userID, {
-        title: ctx.getInput("title"),
-        cost: ctx.getInput("cost"),
-        prompt: ctx.getInput("prompt"),
-        isEnabled: ctx.getInput("isEnabled"),
-        backgroundColor: ctx.getInput("backgroundColor"),
-        userInputRequired: ctx.getInput("userInputRequired"),
-        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
-        maxRedemptionsPerUserPerStream: ctx.getInput(
-          "maxRedemptionsPerUserPerStream"
-        ),
-        globalCooldown: ctx.getInput("globalCooldown"),
-        autoFulfill: ctx.getInput("autoFulfill"),
+            break;
+          case "notification":
+            pkg.emitEvent({
+              name: info.payload.subscription.type,
+              data: info.payload,
+            });
+            break;
+        }
       });
-      ctx.setOutput("success", true);
-      ctx.setOutput("redempId", data.id);
-    } catch (error) {
-      ctx.setOutput("success", false);
-      ctx.setOutput("errorMessage", JSON.parse(error.body).message);
-    }
-  },
-});
+      return ws;
+    })
+  );
 
-pkg.createNonEventSchema({
-  name: "Follower Only Mode",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      id: "delay",
-      name: "Delay (minutes)",
-      type: types.int(),
-    });
-    t.dataInput({
-      id: "switch",
-      type: types.bool(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.chat.updateSettings(userID, userID, {
-      followerOnlyModeEnabled: ctx.getInput("switch"),
-      followerOnlyModeDelay: ctx.getInput("delay"),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Slow Mode",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      id: "delay",
-      name: "Delay (seconds)",
-      type: types.int(),
-    });
-    t.dataInput({
-      id: "switch",
-      type: types.bool(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.chat.updateSettings(userID, userID, {
-      slowModeEnabled: ctx.getInput("switch"),
-      slowModeDelay: ctx.getInput("delay"),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Sub Only Mode",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      id: "switch",
-      type: types.bool(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.chat.updateSettings(userID, userID, {
-      subscriberOnlyModeEnabled: ctx.getInput("switch"),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "R9K Mode",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      id: "switch",
-      type: types.bool(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.chat.updateSettings(userID, userID, {
-      uniqueChatModeEnabled: ctx.getInput("switch"),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Shoutout User",
-  variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
-      id: "switch",
-      type: types.bool(),
-    });
-  },
-  run({ ctx }) {
-    apiClient.chat.updateSettings(userID, userID, {
-      subscriberOnlyModeEnabled: ctx.getInput("switch"),
-    });
-  },
+  return () => ws?.close();
 });
 
 pkg.createEventSchema({
@@ -1290,7 +764,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1303,7 +777,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1316,7 +790,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1329,7 +803,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1342,7 +816,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1355,7 +829,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1368,7 +842,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
@@ -1927,37 +1401,7 @@ pkg.createEventSchema({
       id: "exec",
     });
   },
-  run({ ctx, data }) {
+  run({ ctx }) {
     ctx.exec("exec");
   },
 });
-
-function Subscriptions(subscription: string) {
-  let WSdata = {
-    type: subscription,
-    version: "1",
-    condition: {
-      from_broadcaster_user_id: userID,
-      broadcaster_user_id: userID,
-      moderator_user_id: userID,
-    },
-    transport: {
-      method: "websocket",
-      session_id: sessionID,
-    },
-  };
-  if (subscription == "channel.follow") {
-    WSdata.version = "2";
-  }
-  fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + accessToken,
-      "Client-Id": clientId,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(WSdata),
-  })
-    .then((res) => res.json())
-    .then((res) => { });
-}

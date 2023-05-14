@@ -30,6 +30,12 @@ impl HTTPMethod {
 }
 
 #[derive(Deserialize, Type, Debug)]
+pub enum HTTPBody {
+    Json(serde_json::Value),
+    Form(HashMap<String, String>),
+}
+
+#[derive(Deserialize, Type, Debug)]
 pub struct HTTPRequest {
     url: String,
     method: HTTPMethod,
@@ -37,7 +43,7 @@ pub struct HTTPRequest {
     #[specta(optional)]
     headers: HashMap<String, String>,
     #[specta(optional)]
-    body: Option<serde_json::Value>,
+    body: Option<HTTPBody>,
 }
 
 impl HTTPRequest {
@@ -49,7 +55,10 @@ impl HTTPRequest {
             .headers(HeaderMap::try_from(&self.headers).unwrap());
 
         if let Some(body) = self.body {
-            req = req.json(&body);
+            match body {
+                HTTPBody::Json(json) => req = req.json(&json),
+                HTTPBody::Form(form) => req = req.form(&form),
+            }
         }
 
         client.execute(req.build().unwrap()).await.unwrap()

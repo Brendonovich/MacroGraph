@@ -10,9 +10,7 @@
     "esModuleInterop": true,
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
-    "declarationDir": "dist",
-    "declaration": true,
-    "emitDeclarationOnly": true,
+    "declaration": false,
     "skipLibCheck": true
   },
   "include": ["src"]
