@@ -484,7 +484,7 @@ pkg.createNonEventSchema({
     });
     t.dataOutput({
       id: "output",
-      type: types.int(),
+      type: types.float(),
     });
   },
 });
@@ -568,7 +568,46 @@ pkg.createNonEventSchema({
     });
     t.dataOutput({
       id: "output",
-      type: types.float(),
+      type: types.int(),
     });
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Compare Int",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("outputE", ctx.getInput<Number>("number") == ctx.getInput<Number>("compare"));
+    ctx.setOutput("outputG", ctx.getInput<Number>("number") > ctx.getInput<Number>("compare"));
+    ctx.setOutput("outputL", ctx.getInput<Number>("number") < ctx.getInput<Number>("compare"));
+  },
+  generateIO(t) {
+    t.dataInput({
+      id: "number",
+      name: "Number",
+      type: types.int(),
+    });
+    t.dataInput({
+      id: "compare",
+      name: "Compare against",
+      type: types.int(),
+    });
+    t.dataOutput({
+      id: "outputE",
+      name: "Equal",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "outputG",
+      name: "Greater",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "outputL",
+      name: "Less",
+      type: types.bool(),
+    });
+  },
+});
+
+
