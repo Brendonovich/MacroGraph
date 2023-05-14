@@ -1,36 +1,42 @@
-import { createEffect, createSignal } from "solid-js";
+import { createRoot, createEffect, createSignal } from "solid-js";
 import tmi, { Client } from "tmi.js";
 import pkg from "./pkg";
 import { types } from "../../types";
 import { apiClient, user } from "./helix";
 import { map } from "../../utils";
 
-const [client, setClient] = createSignal<Client | null>(null);
+const { client } = createRoot(() => {
+  const [client, setClient] = createSignal<Client | null>(null);
 
-createEffect(() =>
-  setClient(
-    map(user(), (u) => {
-      const client = tmi.Client({
-        channels: [u.name],
-        identity: {
-          username: u.name,
-          password: u.token,
-        },
-      });
+  createEffect(() =>
+    setClient(
+      map(user(), (u) => {
+        const client = tmi.Client({
+          channels: [u.name],
+          identity: {
+            username: u.name,
+            password: u.token,
+          },
+        });
 
-      client.connect();
+        client.connect();
 
-      client.on("connected", () => console.log("connected"));
+        client.on("connected", () => console.log("connected"));
 
-      client.on("message", (_, tags, message, self) => {
-        const data = { message, tags, self };
-        pkg.emitEvent({ name: "chatMessage", data });
-      });
+        client.on("message", (_, tags, message, self) => {
+          const data = { message, tags, self };
+          pkg.emitEvent({ name: "chatMessage", data });
+        });
 
-      return client;
-    })
-  )
-);
+        return client;
+      })
+    )
+  );
+
+  return { client };
+});
+
+export { client };
 
 pkg.createNonEventSchema({
   name: "Send Chat Message",

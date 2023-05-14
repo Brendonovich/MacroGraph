@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, createRoot } from "solid-js";
 import OBS from "obs-websocket-js";
 import { z } from "zod";
 import { map } from "../../utils";
@@ -12,32 +12,36 @@ export const SCHEMA = z.object({
   password: z.string().optional(),
 });
 
-const [state, setState] = createSignal<
-  "disconnected" | "connecting" | "connected"
->("disconnected");
+const { connect, disconnect, state } = createRoot(() => {
+  const [state, setState] = createSignal<
+    "disconnected" | "connecting" | "connected"
+  >("disconnected");
 
-const disconnect = async () => {
-  setState("disconnected");
-  await obs.disconnect();
-};
+  const disconnect = async () => {
+    setState("disconnected");
+    await obs.disconnect();
+  };
 
-const connect = async (url: string, password?: string) => {
-  await disconnect();
+  const connect = async (url: string, password?: string) => {
+    await disconnect();
 
-  await obs.connect(url, password);
+    await obs.connect(url, password);
 
-  localStorage.setItem(OBS_WS, JSON.stringify({ url, password }));
+    localStorage.setItem(OBS_WS, JSON.stringify({ url, password }));
 
-  setState("connected");
-};
+    setState("connected");
+  };
 
-obs.on("ConnectionClosed", () => setState("disconnected"));
-obs.on("ConnectionError", () => setState("disconnected"));
+  obs.on("ConnectionClosed", () => setState("disconnected"));
+  obs.on("ConnectionError", () => setState("disconnected"));
+
+  map(localStorage.getItem(OBS_WS), (jstr) => {
+    const { url, password } = SCHEMA.parse(JSON.parse(jstr));
+
+    connect(url, password);
+  });
+
+  return { connect, disconnect, state };
+});
 
 export { connect, disconnect, state };
-
-map(localStorage.getItem(OBS_WS), (jstr) => {
-  const { url, password } = SCHEMA.parse(JSON.parse(jstr));
-
-  connect(url, password);
-});

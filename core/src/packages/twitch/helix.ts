@@ -1,39 +1,43 @@
 import { ApiClient } from "@twurple/api";
-import { createEffect, createMemo, createSignal } from "solid-js";
+import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
 import { accessToken, authProvider } from "./auth";
 import pkg from "./pkg";
 import { map } from "../../utils";
 import { types } from "../../types";
 
-export const apiClient = createMemo(
-  () => map(authProvider(), (p) => new ApiClient({ authProvider: p })),
-  null
-);
+const { apiClient, user } = createRoot(() => {
+  const apiClient = createMemo(
+    () => map(authProvider(), (p) => new ApiClient({ authProvider: p })),
+    null
+  );
 
-const getValue = async () => {
-  const token = accessToken();
-  const client = apiClient();
+  const [user, setUser] = createSignal<Awaited<
+    ReturnType<typeof getUser>
+  > | null>(null);
 
-  if (!client || !token) return null;
+  const getUser = async () => {
+    const token = accessToken();
+    const client = apiClient();
 
-  const { userId, userName } = await client.getTokenInfo();
+    if (!client || !token) return null;
 
-  if (!userId || !userName) return null;
-  else
-    return {
-      id: userId,
-      name: userName,
-      token,
-    };
-};
+    const { userId, userName } = await client.getTokenInfo();
 
-const [user, setUser] = createSignal<Awaited<
-  ReturnType<typeof getValue>
-> | null>(null);
+    if (!userId || !userName) return null;
+    else
+      return {
+        id: userId,
+        name: userName,
+        token,
+      };
+  };
 
-export { user };
+  createEffect(() => getUser().then(setUser));
 
-createEffect(() => getValue().then(setUser));
+  return { apiClient, user };
+});
+
+export { apiClient, user };
 
 pkg.createNonEventSchema({
   name: "Ban User",

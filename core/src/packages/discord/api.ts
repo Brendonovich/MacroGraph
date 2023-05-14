@@ -5,7 +5,7 @@ import { fs } from "@tauri-apps/api";
 import pkg from "./pkg";
 import { botToken, setBotToken } from "./auth";
 import { types } from "../../types";
-import { createResource } from "solid-js";
+import { createResource, createRoot } from "solid-js";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
 
 const root = createEndpoint({
@@ -63,15 +63,17 @@ const api = {
   },
 };
 
-const [bot] = createResource(botToken, async () => {
-  try {
-    const resp = await api.users("@me").get(USER_SCHEMA);
+const [bot] = createRoot(() =>
+  createResource(botToken, async () => {
+    try {
+      const resp = await api.users("@me").get(USER_SCHEMA);
 
-    return resp;
-  } catch {
-    setBotToken(null);
-  }
-});
+      return resp;
+    } catch {
+      setBotToken(null);
+    }
+  })
+);
 
 export { bot };
 
