@@ -6,3 +6,4 @@ export * as twitch from "./twitch";
 // export * from "./devices/streamdeck";s
 export * from "./httpRequests";
 export * as discord from "./discord";
+export * from "./localStorage";
