@@ -155,6 +155,7 @@ export const Node = (props: Props) => {
 
                     setEditingName(false);
                   }}
+                  onMouseDown={(e) => e.stopPropagation()}
                 />
               );
             }}
