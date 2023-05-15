@@ -11,7 +11,9 @@ import {
 import { createMutable } from "solid-js/store";
 import { pinsCanConnect } from "../utils";
 import { ReactiveMap } from "@solid-primitives/map";
+import { ReactiveSet } from "@solid-primitives/set";
 import { z } from "zod";
+import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 
 export interface GraphArgs {
   id: number;
@@ -23,6 +25,7 @@ export const SerializedGraph = z.object({
   id: z.number(),
   name: z.string(),
   nodes: z.record(z.coerce.number().int(), SerializedNode),
+  commentBoxes: z.array(SerializedCommentBox).default([]),
   nodeIdCounter: z.number(),
   connections: z.array(
     z.object({
@@ -44,6 +47,7 @@ export class Graph {
   core: Core;
 
   nodes = new ReactiveMap<number, Node>();
+  commentBoxes = new ReactiveSet<CommentBox>();
 
   private nodeIdCounter = 0;
 
@@ -67,6 +71,16 @@ export class Graph {
     this.save();
 
     return node;
+  }
+
+  createCommentBox(args: CommentBoxArgs) {
+    const box = new CommentBox(args);
+
+    this.commentBoxes.add(box);
+
+    this.save();
+
+    return box;
   }
 
   connectPins(output: DataOutput | ExecOutput, input: DataInput | ExecInput) {
@@ -96,15 +110,16 @@ export class Graph {
     this.save();
   }
 
-  deleteNode(id: number) {
-    const node = this.nodes.get(id);
+  deleteItem(item: Node | CommentBox) {
+    if (item instanceof Node) {
+      item.inputs.forEach((i) => i.disconnect(false));
+      item.outputs.forEach((o) => o.disconnect(false));
 
-    if (!node) return;
-
-    node.inputs.forEach((i) => i.disconnect(false));
-    node.outputs.forEach((o) => o.disconnect(false));
-
-    this.nodes.delete(id);
+      this.nodes.delete(item.id);
+    } else {
+      console.log("HMM");
+      this.commentBoxes.delete(item);
+    }
 
     this.save();
   }
@@ -123,6 +138,9 @@ export class Graph {
       nodes: Object.fromEntries(
         [...this.nodes.entries()].map(([id, node]) => [id, node.serialize()])
       ),
+      commentBoxes: [...this.commentBoxes.values()].map((box) => ({
+        ...box,
+      })),
       connections: [...this.nodes.entries()].reduce((acc, [_, node]) => {
         node.inputs.forEach((i) => {
           if (i.connection === null) return acc;
@@ -183,6 +201,10 @@ export class Graph {
         output.connections.push(input);
       }
     });
+
+    graph.commentBoxes = new ReactiveSet(
+      data.commentBoxes.map((box) => new CommentBox(box))
+    );
 
     return graph;
   }

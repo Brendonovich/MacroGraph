@@ -129,10 +129,6 @@ export class Node {
 
   // Setters
 
-  setSelected(selected: boolean) {
-    this.selected = selected;
-  }
-
   setPosition(position: XY, save = false) {
     this.position = position;
 

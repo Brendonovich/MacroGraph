@@ -1,14 +1,17 @@
-import { Position, XY, Graph, Node, Pin } from "@macrograph/core";
+import { Position, XY, Graph, Node, Pin, CommentBox } from "@macrograph/core";
 import { createMutable } from "solid-js/store";
 import { createContext, ParentProps, useContext } from "solid-js";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 
 export function createUIStore() {
   const state = createMutable({
-    selectedNode: null as Node | null,
+    selectedItem: null as Node | CommentBox | null,
     draggingPin: null as Pin | null,
     hoveringPin: null as Pin | null,
     mouseDragLocation: null as XY | null,
+    /**
+     *	Screen space relative to graph origin
+     */
     schemaMenuPosition: null as Position | null,
     mouseDownLocation: null as XY | null,
     mouseDownTranslate: null as XY | null,
@@ -30,23 +33,23 @@ export function createUIStore() {
 
   return {
     state,
-    toGraphSpace(point: XY) {
+    toGraphSpace(relativeScreenSpace: XY) {
       return {
-        x: point.x / state.scale + state.translate.x,
-        y: point.y / state.scale + state.translate.y,
+        x: relativeScreenSpace.x / state.scale + state.translate.x,
+        y: relativeScreenSpace.y / state.scale + state.translate.y,
       };
     },
-    // Converts a location in the graph (eg the graph's origin (0,0)) to its location on screen
+    // Converts a location in the graph (eg the graph's origin (0,0)) to its location on screen relative to the graph origin
     toScreenSpace(point: XY) {
       return {
         x: (point.x - state.translate.x) * state.scale,
         y: (point.y - state.translate.y) * state.scale,
       };
     },
-    setSelectedNode(node?: Node) {
-      state.selectedNode?.setSelected(false);
-      state.selectedNode = node ?? null;
-      state.selectedNode?.setSelected(true);
+    setSelectedItem(item?: Node | CommentBox) {
+      if (state.selectedItem) state.selectedItem.selected = false;
+      state.selectedItem = item ?? null;
+      if (item) item.selected = true;
     },
     setPinPosition(pin: Pin, position: XY) {
       state.pinPositions.set(pin, position);
@@ -82,8 +85,13 @@ export function createUIStore() {
     setMouseDownLocation(location?: XY) {
       state.mouseDownLocation = location ?? null;
     },
-    setSchemaMenuPosition(position?: XY) {
-      state.schemaMenuPosition = position ?? null;
+    setSchemaMenuPosition(screenSpace?: XY) {
+      if (!screenSpace) state.schemaMenuPosition = null;
+      else
+        state.schemaMenuPosition = {
+          x: screenSpace.x - state.graphOffset.x,
+          y: screenSpace.y - state.graphOffset.y,
+        };
     },
     setMouseDownTranslate(translate?: XY) {
       state.mouseDownTranslate = translate ?? null;

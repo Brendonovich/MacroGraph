@@ -79,7 +79,7 @@ export const Node = (props: Props) => {
             switch (e.key) {
               case "Backspace":
               case "Delete": {
-                graph().deleteNode(node.id);
+                graph().deleteItem(node);
                 break;
               }
             }
@@ -91,7 +91,7 @@ export const Node = (props: Props) => {
             e.preventDefault();
             switch (e.button) {
               case 0: {
-                UI.setSelectedNode(node);
+                UI.setSelectedItem(node);
 
                 window.addEventListener("mousemove", handleMouseMove);
                 const listener = () => {

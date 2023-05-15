@@ -3,6 +3,8 @@ import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 
 import { useCore } from "~/contexts";
 import { XY, Package, NodeSchema, NodeSchemaVariant } from "@macrograph/core";
+import { useGraph } from "./Graph";
+import { useUIStore } from "~/UIStore";
 
 interface Props {
   onSchemaClicked(s: NodeSchema): void | Promise<void>;
@@ -19,7 +21,7 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 export const SchemaMenu = (props: Props) => {
   const core = useCore();
 
-  const [openPackages, setOpenPacakges] = createSignal(new Set<Package>());
+  const [openPackages, setOpenPackages] = createSignal(new Set<Package>());
   const [search, setSearch] = createSignal("");
 
   const lowercaseSearchTokens = createMemo(() =>
@@ -32,6 +34,9 @@ export const SchemaMenu = (props: Props) => {
   let searchRef: HTMLInputElement;
 
   onMount(() => searchRef.focus());
+
+  const graph = useGraph();
+  const UI = useUIStore();
 
   return (
     <div
@@ -56,7 +61,24 @@ export const SchemaMenu = (props: Props) => {
         />
       </div>
       <div class="p-2 pt-0 flex-1 overflow-auto">
-        <div class="">
+        <div>
+          <button
+            class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
+            onClick={() => {
+              graph().createCommentBox({
+                position: UI.toGraphSpace(props.position),
+                size: {
+                  x: 400,
+                  y: 200,
+                },
+                text: "Comment",
+              });
+              UI.setSchemaMenuPosition();
+            }}
+          >
+            Add Comment Box
+          </button>
+
           <For each={core.packages}>
             {(p) => {
               const open = () => openPackages().has(p) || search() !== "";
@@ -83,7 +105,7 @@ export const SchemaMenu = (props: Props) => {
                     <button
                       class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
                       onClick={() =>
-                        setOpenPacakges((s) => {
+                        setOpenPackages((s) => {
                           if (s.has(p)) s.delete(p);
                           else s.add(p);
 

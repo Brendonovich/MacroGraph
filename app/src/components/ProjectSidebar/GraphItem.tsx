@@ -41,7 +41,6 @@ export const GraphItem = (props: Props) => {
             "px-2 py-1 w-full outline-none box-border border-2 border-sky-600",
             props.isCurrentGraph ? "bg-neutral-700" : "hover:bg-neutral-500"
           )}
-          autofocus
           value={props.graph.name}
           onChange={(e) => props.graph.rename(e.target.value)}
           onBlur={() => setEditing(false)}
