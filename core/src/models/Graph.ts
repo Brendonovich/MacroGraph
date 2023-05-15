@@ -25,6 +25,7 @@ export const SerializedGraph = z.object({
   id: z.coerce.number(),
   name: z.string(),
   nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
+  nodes: z.record(z.coerce.number().int(), SerializedNode),
   commentBoxes: z.array(SerializedCommentBox).default([]),
   nodeIdCounter: z.number(),
   connections: z
