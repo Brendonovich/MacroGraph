@@ -25,7 +25,6 @@ export const SerializedGraph = z.object({
   id: z.coerce.number(),
   name: z.string(),
   nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
-  nodes: z.record(z.coerce.number().int(), SerializedNode),
   commentBoxes: z.array(SerializedCommentBox).default([]),
   nodeIdCounter: z.number(),
   connections: z
@@ -120,7 +119,6 @@ export class Graph {
 
       this.nodes.delete(item.id);
     } else {
-      console.log("HMM");
       this.commentBoxes.delete(item);
     }
 
@@ -180,10 +178,7 @@ export class Graph {
           const id = z.coerce.number().parse(idStr);
           const node = Node.deserialize(graph, serializedNode);
 
-          if (node === null) {
-            console.log("NULL NODE!");
-            return null;
-          }
+          if (node === null) return null;
 
           core.addEventNodeMapping(node);
 
@@ -215,7 +210,6 @@ export class Graph {
   }
 
   save() {
-    console.trace();
     localStorage.setItem(`graph-${this.id}`, JSON.stringify(this.serialize()));
 
     localStorage.setItem(
