@@ -33,6 +33,31 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "Wait",
+  variant: "Base",
+  run({ ctx }) {
+    setTimeout(() => {
+      ctx.exec("output")
+    }, ctx.getInput("waitms"));
+  },
+  generateIO(t) {
+    t.execInput({
+      id: "exec",
+    });
+    t.dataInput({
+      id: "waitms",
+      name: "Wait in ms",
+      type: types.int(),
+    });
+
+    t.execOutput({
+      id: "output",
+      name: "",
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "AND",
   variant: "Pure",
   run({ ctx }) {
