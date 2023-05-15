@@ -6,6 +6,7 @@ import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ExecOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
+import { z } from "zod";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -45,25 +46,20 @@ export class Core {
     const graphsStr = localStorage.getItem("graphs");
 
     if (graphsStr) {
-      const graphs: number[] = JSON.parse(graphsStr);
+      const graphs = z.array(z.coerce.number()).parse(JSON.parse(graphsStr));
 
       for (const id of graphs) {
-        try {
-          this.graphs.set(
-            id,
-            Graph.deserialize(
-              this,
-              SerializedGraph.parse(
-                JSON.parse(localStorage.getItem(`graph-${id}`)!)
-              )
-            )!
-          );
-        } catch (e) {
-          console.log(e);
-        }
+        const graph = SerializedGraph.safeParse(
+          JSON.parse(localStorage.getItem(`graph-${id}`)!)
+        );
+
+        if (!graph.success) continue;
+
+        this.graphs.set(id, Graph.deserialize(this, graph.data));
       }
     }
   }
+
   createGraph(args?: { name?: string }) {
     const id = this.graphIdCounter++;
 

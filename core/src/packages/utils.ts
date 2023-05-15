@@ -71,10 +71,7 @@ pkg.createNonEventSchema({
   name: "String Length",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput(
-      "int",
-      ctx.getInput<string>("haystack").length
-    );
+    ctx.setOutput("int", ctx.getInput<string>("haystack").length);
   },
   generateIO(t) {
     t.dataInput({
@@ -232,7 +229,9 @@ pkg.createNonEventSchema({
   name: "String is null",
   variant: "Pure",
   run({ ctx }) {
-    ctx.getInput("string") ? ctx.setOutput("output", true) : ctx.setOutput("output", false);
+    ctx.getInput("string")
+      ? ctx.setOutput("output", true)
+      : ctx.setOutput("output", false);
   },
   generateIO(t) {
     t.dataInput({
@@ -577,9 +576,18 @@ pkg.createNonEventSchema({
   name: "Compare Int",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("outputE", ctx.getInput<Number>("number") == ctx.getInput<Number>("compare"));
-    ctx.setOutput("outputG", ctx.getInput<Number>("number") > ctx.getInput<Number>("compare"));
-    ctx.setOutput("outputL", ctx.getInput<Number>("number") < ctx.getInput<Number>("compare"));
+    ctx.setOutput(
+      "outputE",
+      ctx.getInput<Number>("number") == ctx.getInput<Number>("compare")
+    );
+    ctx.setOutput(
+      "outputG",
+      ctx.getInput<Number>("number") > ctx.getInput<Number>("compare")
+    );
+    ctx.setOutput(
+      "outputL",
+      ctx.getInput<Number>("number") < ctx.getInput<Number>("compare")
+    );
   },
   generateIO(t) {
     t.dataInput({
@@ -609,5 +617,3 @@ pkg.createNonEventSchema({
     });
   },
 });
-
-

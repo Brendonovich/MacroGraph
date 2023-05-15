@@ -180,10 +180,14 @@ export class Node {
     graph: Graph,
     data: z.infer<typeof SerializedNode>
   ): Node | null {
+    const schema = graph.core.schema(data.schema.package, data.schema.id);
+
+    if (!schema) return null;
+
     const node = new Node({
       id: data.id,
       position: data.position,
-      schema: graph.core.schema(data.schema.package, data.schema.id)!,
+      schema,
       graph,
     });
 
@@ -192,7 +196,7 @@ export class Node {
 
       if (defaultValue === undefined || i instanceof ExecInput) return;
 
-      i.setDefaultValue(defaultValue);
+      i.defaultValue = defaultValue;
     });
 
     return node;

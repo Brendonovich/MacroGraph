@@ -126,6 +126,9 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
     devDependencies:
+      '@total-typescript/ts-reset':
+        specifier: ^0.4.2
+        version: 0.4.2
       '@types/tmi.js':
         specifier: ^1.8.3
         version: 1.8.3
@@ -1440,6 +1443,10 @@ packages:
   /@tokenizer/token@0.3.0:
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
     dev: false
+
+  /@total-typescript/ts-reset@0.4.2:
+    resolution: {integrity: sha512-vqd7ZUDSrXFVT1n8b2kc3LnklncDQFPvR58yUS1kEP23/nHPAO9l1lMjUfnPrXYYk4Hj54rrLKMW5ipwk7k09A==}
+    dev: true
 
   /@twurple/api-call@6.2.0:
     resolution: {integrity: sha512-YI3nzGl8qNMQEfU3wdmMBItGT+CB3Ff1SWjVujVgnmw4BDZKFneBsFtZtPP7fTiNgy8aa5zbgK1/uMRiHskGwA==}

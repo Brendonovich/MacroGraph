@@ -22,23 +22,26 @@ export interface GraphArgs {
 }
 
 export const SerializedGraph = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   name: z.string(),
+  nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
   nodes: z.record(z.coerce.number().int(), SerializedNode),
   commentBoxes: z.array(SerializedCommentBox).default([]),
   nodeIdCounter: z.number(),
-  connections: z.array(
-    z.object({
-      from: z.object({
-        node: z.coerce.number().int(),
-        output: z.string(),
-      }),
-      to: z.object({
-        node: z.coerce.number().int(),
-        input: z.string(),
-      }),
-    })
-  ),
+  connections: z
+    .array(
+      z.object({
+        from: z.object({
+          node: z.coerce.number().int(),
+          output: z.string(),
+        }),
+        to: z.object({
+          node: z.coerce.number().int(),
+          input: z.string(),
+        }),
+      })
+    )
+    .default([]),
 });
 
 export class Graph {
@@ -162,10 +165,7 @@ export class Graph {
     };
   }
 
-  static deserialize(
-    core: Core,
-    data: z.infer<typeof SerializedGraph>
-  ): Graph | null {
+  static deserialize(core: Core, data: z.infer<typeof SerializedGraph>): Graph {
     const graph = new Graph({
       core,
       id: data.id,
@@ -175,16 +175,21 @@ export class Graph {
     graph.nodeIdCounter = data.nodeIdCounter;
 
     graph.nodes = new ReactiveMap(
-      Object.entries(data.nodes).map(([idStr, serializedNode]) => {
-        const id = z.coerce.number().parse(idStr);
-        const node = Node.deserialize(graph, serializedNode);
+      Object.entries(data.nodes)
+        .map(([idStr, serializedNode]) => {
+          const id = z.coerce.number().parse(idStr);
+          const node = Node.deserialize(graph, serializedNode);
 
-        if (node === null) throw new Error("Node is null!");
+          if (node === null) {
+            console.log("NULL NODE!");
+            return null;
+          }
 
-        core.addEventNodeMapping(node);
+          core.addEventNodeMapping(node);
 
-        return [id, node];
-      })
+          return [id, node] as [number, Node];
+        })
+        .filter(Boolean)
     );
 
     data.connections.forEach(({ from, to }) => {
@@ -210,13 +215,17 @@ export class Graph {
   }
 
   save() {
+    console.trace();
     localStorage.setItem(`graph-${this.id}`, JSON.stringify(this.serialize()));
 
     localStorage.setItem(
       "graphs",
       JSON.stringify([
         ...new Set([
-          ...(JSON.parse(localStorage.getItem("graphs") || "[]") ?? []),
+          ...z
+            .array(z.number())
+            .default([])
+            .parse(JSON.parse(localStorage.getItem("graphs") || "[]")),
           this.id,
         ]),
       ])
