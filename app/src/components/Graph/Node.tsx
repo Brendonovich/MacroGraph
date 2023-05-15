@@ -85,47 +85,53 @@ export const Node = (props: Props) => {
               "variant" in node.schema ? node.schema.variant : "Event"
             ]
           )}
-          onKeyDown={(e) => {
-            switch (e.key) {
-              case "Backspace":
-              case "Delete": {
-                graph().deleteItem(node);
-                break;
-              }
-            }
-          }}
-          tabIndex={-1}
-          onMouseDown={(e) => {
-            e.currentTarget.focus();
-            e.stopPropagation();
-            e.preventDefault();
-            switch (e.button) {
-              case 0: {
-                UI.setSelectedItem(node);
-
-                window.addEventListener("mousemove", handleMouseMove);
-                const listener = () => {
-                  window.removeEventListener("mouseup", listener);
-                  window.removeEventListener("mousemove", handleMouseMove);
-                };
-                window.addEventListener("mouseup", listener);
-
-                break;
-              }
-              default:
-                break;
-            }
-          }}
-          onMouseUp={() => node.setPosition(node.position, true)}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
         >
           <Show
             when={editingName()}
             fallback={
-              <span onDblClick={() => setEditingName(true)}>{node.name}</span>
+              <div
+                onDblClick={() => setEditingName(true)}
+                onKeyDown={(e) => {
+                  switch (e.key) {
+                    case "Backspace":
+                    case "Delete": {
+                      graph().deleteItem(node);
+                      break;
+                    }
+                  }
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.focus();
+                  e.stopPropagation();
+                  e.preventDefault();
+                  switch (e.button) {
+                    case 0: {
+                      UI.setSelectedItem(node);
+
+                      window.addEventListener("mousemove", handleMouseMove);
+                      const listener = () => {
+                        window.removeEventListener("mouseup", listener);
+                        window.removeEventListener(
+                          "mousemove",
+                          handleMouseMove
+                        );
+                      };
+                      window.addEventListener("mouseup", listener);
+
+                      break;
+                    }
+                    default:
+                      break;
+                  }
+                }}
+                onMouseUp={() => node.setPosition(node.position, true)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                {node.name}
+              </div>
             }
           >
             {(_) => {
@@ -148,7 +154,6 @@ export const Node = (props: Props) => {
 
                     setEditingName(false);
                   }}
-                  onMouseDown={(e) => e.stopPropagation()}
                 />
               );
             }}
