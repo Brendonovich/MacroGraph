@@ -125,14 +125,7 @@ export const Node = (props: Props) => {
           <Show
             when={editingName()}
             fallback={
-              <span
-                onDblClick={() => {
-                  console.log("bruh");
-                  setEditingName(true);
-                }}
-              >
-                {node.name}
-              </span>
+              <span onDblClick={() => setEditingName(true)}>{node.name}</span>
             }
           >
             {(_) => {
