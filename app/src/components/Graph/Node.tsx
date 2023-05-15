@@ -1,5 +1,13 @@
 import clsx from "clsx";
-import { For, Match, Switch, createSignal, onCleanup } from "solid-js";
+import {
+  For,
+  Match,
+  Switch,
+  createSignal,
+  onCleanup,
+  Show,
+  onMount,
+} from "solid-js";
 import "./Node.css";
 import { NodeProvider } from "~/contexts";
 import {
@@ -55,6 +63,8 @@ export const Node = (props: Props) => {
       y: node.position.y + e.movementY / scale,
     });
   };
+
+  const [editingName, setEditingName] = createSignal(false);
 
   return (
     <NodeProvider node={node}>
@@ -112,7 +122,43 @@ export const Node = (props: Props) => {
             e.stopPropagation();
           }}
         >
-          {node.schema.name}
+          <Show
+            when={editingName()}
+            fallback={
+              <span
+                onDblClick={() => {
+                  console.log("bruh");
+                  setEditingName(true);
+                }}
+              >
+                {node.name}
+              </span>
+            }
+          >
+            {(_) => {
+              const [value, setValue] = createSignal(node.name);
+
+              let ref: HTMLInputElement | undefined;
+
+              onMount(() => ref?.focus());
+
+              return (
+                <input
+                  class="h-full w-full text-black p-0 -mt-0.5 -ml-0.5 text-xs select-all"
+                  type="text"
+                  ref={ref}
+                  value={value()}
+                  onInput={(e) => setValue(e.target.value)}
+                  onBlur={() => {
+                    if (value() !== "") node.name = value();
+                    node.graph.save();
+
+                    setEditingName(false);
+                  }}
+                />
+              );
+            }}
+          </Show>
         </div>
         <div class="flex flex-row gap-2">
           <div class="p-2 flex flex-col space-y-2.5">
