@@ -62,23 +62,24 @@ export const SchemaMenu = (props: Props) => {
       </div>
       <div class="p-2 pt-0 flex-1 overflow-auto">
         <div>
-          <button
-            class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
-            onClick={() => {
-              graph().createCommentBox({
-                position: UI.toGraphSpace(props.position),
-                size: {
-                  x: 400,
-                  y: 200,
-                },
-                text: "Comment",
-              });
-              UI.setSchemaMenuPosition();
-            }}
-          >
-            Add Comment Box
-          </button>
-
+          <Show when={search() === ""}>
+            <button
+              class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
+              onClick={() => {
+                graph().createCommentBox({
+                  position: UI.toGraphSpace(props.position),
+                  size: {
+                    x: 400,
+                    y: 200,
+                  },
+                  text: "Comment",
+                });
+                UI.setSchemaMenuPosition();
+              }}
+            >
+              Add Comment Box
+            </button>
+          </Show>
           <For each={core.packages}>
             {(p) => {
               const open = () => openPackages().has(p) || search() !== "";
