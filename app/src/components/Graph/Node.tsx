@@ -79,7 +79,7 @@ export const Node = (props: Props) => {
       >
         <div
           class={clsx(
-            "h-6 px-2 pt-1 duration-100 text-md font-medium cursor-pointer outline-none",
+            "h-6 duration-100 text-md font-medium",
             active() === 1 ? "active-fade-in" : "fade-Duration",
             SchemaVariantColours[
               "variant" in node.schema ? node.schema.variant : "Event"
@@ -90,6 +90,8 @@ export const Node = (props: Props) => {
             when={editingName()}
             fallback={
               <div
+                class="px-2 pt-1 cursor-pointer outline-none"
+                tabIndex={-1}
                 onDblClick={() => setEditingName(true)}
                 onKeyDown={(e) => {
                   switch (e.key) {
@@ -130,7 +132,7 @@ export const Node = (props: Props) => {
                   e.stopPropagation();
                 }}
               >
-                {node.name}
+                <div>{node.name}</div>
               </div>
             }
           >
@@ -142,19 +144,21 @@ export const Node = (props: Props) => {
               onMount(() => ref?.focus());
 
               return (
-                <input
-                  class="h-full w-full text-black p-0 -mt-0.5 -ml-0.5 text-xs select-all"
-                  type="text"
-                  ref={ref}
-                  value={value()}
-                  onInput={(e) => setValue(e.target.value)}
-                  onBlur={() => {
-                    if (value() !== "") node.name = value();
-                    node.graph.save();
+                <div class="px-2 pt-1">
+                  <input
+                    class="text-black p-0 pl-0.5 -mt-0.5 -ml-0.5 text-xs select-all outline-none"
+                    type="text"
+                    ref={ref}
+                    value={value()}
+                    onInput={(e) => setValue(e.target.value)}
+                    onBlur={() => {
+                      if (value() !== "") node.name = value();
+                      node.graph.save();
 
-                    setEditingName(false);
-                  }}
-                />
+                      setEditingName(false);
+                    }}
+                  />
+                </div>
               );
             }}
           </Show>
