@@ -6,6 +6,7 @@ import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { Node } from "./Node";
 import { ConnectionRender, SchemaMenu } from "~/components/Graph";
 import { useUIStore } from "~/UIStore";
+import CommentBox from "./CommentBox";
 
 enum PanState {
   None,
@@ -126,8 +127,8 @@ export const Graph = (props: Props) => {
                   if (UI.state.mouseDragLocation) UI.setMouseDragLocation();
                   else
                     UI.setSchemaMenuPosition({
-                      x: e.clientX - UI.state.graphOffset.x,
-                      y: e.clientY - UI.state.graphOffset.y,
+                      x: e.clientX,
+                      y: e.clientY,
                     });
                 }
                 setPan(PanState.None);
@@ -138,7 +139,7 @@ export const Graph = (props: Props) => {
             switch (e.button) {
               case 0:
                 UI.setSchemaMenuPosition();
-                UI.setSelectedNode();
+                UI.setSelectedItem();
                 break;
               case 2:
                 setPan(PanState.Waiting);
@@ -184,6 +185,9 @@ export const Graph = (props: Props) => {
               }px)`,
             }}
           >
+            <For each={[...graph().commentBoxes.values()]}>
+              {(box) => <CommentBox box={box} />}
+            </For>
             <For each={[...graph().nodes.values()]}>
               {(node) => <Node node={node} />}
             </For>

@@ -95,6 +95,9 @@ importers:
       '@solid-primitives/map':
         specifier: ^0.4.3
         version: 0.4.3(solid-js@1.7.3)
+      '@solid-primitives/set':
+        specifier: ^0.4.4
+        version: 0.4.4(solid-js@1.7.3)
       '@tauri-apps/api':
         specifier: ^1.3.0
         version: 1.3.0
@@ -1220,6 +1223,15 @@ packages:
       solid-js: 1.7.3
     dev: false
 
+  /@solid-primitives/set@0.4.4(solid-js@1.7.3):
+    resolution: {integrity: sha512-2eCJr3gz7S0PxII1smrw+0kwjyjeUB8HQ8QRzOmLX8sfy/QRiD87R44aNtmfGrmbS+JQ24epcT5gDnJmE45PVg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/trigger': 1.0.6(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
   /@solid-primitives/static-store@0.0.3(solid-js@1.7.3):
     resolution: {integrity: sha512-OHwr9w8gb+IZGGEdmPL5Oet62p4c8Py3AaxxOopxv++SmGoed2niO8nORNbUk/riScvqzeDpOrAuQ//fYPm2tw==}
     peerDependencies:
@@ -1235,6 +1247,15 @@ packages:
       solid-js: ^1.6.12
     dependencies:
       '@solid-primitives/utils': 6.1.0(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
+  /@solid-primitives/trigger@1.0.6(solid-js@1.7.3):
+    resolution: {integrity: sha512-ycVamItLTRBzGbbKdRfw+SGVVKEonS/Tfmaef0aBJ/Bc/YKyQ+sSiERqZy6DDAzwlGMefGSDLG+JHxS46/mnyQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.1.1(solid-js@1.7.3)
       solid-js: 1.7.3
     dev: false
 

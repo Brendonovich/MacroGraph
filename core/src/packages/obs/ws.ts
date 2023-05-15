@@ -35,10 +35,14 @@ const { connect, disconnect, state } = createRoot(() => {
   obs.on("ConnectionClosed", () => setState("disconnected"));
   obs.on("ConnectionError", () => setState("disconnected"));
 
-  map(localStorage.getItem(OBS_WS), (jstr) => {
+  map(localStorage.getItem(OBS_WS), async (jstr) => {
     const { url, password } = SCHEMA.parse(JSON.parse(jstr));
 
-    connect(url, password);
+    try {
+      await connect(url, password);
+    } catch {
+      localStorage.removeItem(OBS_WS);
+    }
   });
 
   return { connect, disconnect, state };
