@@ -42,6 +42,25 @@ export default (props: Props) => {
             case 0: {
               UI.setSelectedItem(props.box);
 
+              const innerNodes = [...graph().nodes.values()].filter((node) => {
+                if (
+                  node.position.x < position().x ||
+                  node.position.y < position().y
+                )
+                  return false;
+
+                const nodeSize = UI.state.nodeBounds.get(node);
+                if (!nodeSize) return false;
+
+                if (
+                  node.position.x + nodeSize.width > position().x + size().x ||
+                  node.position.y + nodeSize.height > position().y + size().y
+                )
+                  return false;
+
+                return true;
+              });
+
               const handleMouseMove = (e: MouseEvent) => {
                 const scale = UI.state.scale;
 
@@ -49,6 +68,13 @@ export default (props: Props) => {
                   x: box().position.x + e.movementX / scale,
                   y: box().position.y + e.movementY / scale,
                 };
+
+                innerNodes.forEach((node) => {
+                  node.position = {
+                    x: node.position.x + e.movementX / scale,
+                    y: node.position.y + e.movementY / scale,
+                  };
+                });
               };
 
               window.addEventListener("mousemove", handleMouseMove);
