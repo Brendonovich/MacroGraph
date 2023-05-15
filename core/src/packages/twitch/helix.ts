@@ -378,7 +378,7 @@ pkg.createNonEventSchema({
     });
     t.dataOutput({
       name: "Redemption ID",
-      id: "redempId",
+      id: "redemptionId",
       type: types.string(),
     });
   },
@@ -401,7 +401,7 @@ pkg.createNonEventSchema({
         autoFulfill: ctx.getInput("autoFulfill"),
       });
       ctx.setOutput("success", true);
-      ctx.setOutput("redempId", data?.id);
+      ctx.setOutput("redemptionId", data?.id);
     } catch (error: any) {
       ctx.setOutput("success", false);
       ctx.setOutput("errorMessage", JSON.parse(error.body).message);
@@ -419,7 +419,7 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
     t.dataInput({
-      id: "switch",
+      id: "enabled",
       type: types.bool(),
     });
   },
@@ -428,7 +428,7 @@ pkg.createNonEventSchema({
     if (!u) return;
 
     apiClient()?.chat.updateSettings(u.id, u.id, {
-      followerOnlyModeEnabled: ctx.getInput("switch"),
+      followerOnlyModeEnabled: ctx.getInput("enabled"),
       followerOnlyModeDelay: ctx.getInput("delay"),
     });
   },
@@ -444,7 +444,7 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
     t.dataInput({
-      id: "switch",
+      id: "enabled",
       type: types.bool(),
     });
   },
@@ -453,7 +453,7 @@ pkg.createNonEventSchema({
     if (!u) return;
 
     apiClient()?.chat.updateSettings(u.id, u.id, {
-      slowModeEnabled: ctx.getInput("switch"),
+      slowModeEnabled: ctx.getInput("enabled"),
       slowModeDelay: ctx.getInput("delay"),
     });
   },
@@ -464,7 +464,7 @@ pkg.createNonEventSchema({
   variant: "Exec",
   generateIO: (t) => {
     t.dataInput({
-      id: "switch",
+      id: "enabled",
       type: types.bool(),
     });
   },
@@ -473,7 +473,7 @@ pkg.createNonEventSchema({
     if (!u) return;
 
     apiClient()?.chat.updateSettings(u.id, u.id, {
-      subscriberOnlyModeEnabled: ctx.getInput("switch"),
+      subscriberOnlyModeEnabled: ctx.getInput("enabled"),
     });
   },
 });
@@ -483,7 +483,7 @@ pkg.createNonEventSchema({
   variant: "Exec",
   generateIO: (t) => {
     t.dataInput({
-      id: "switch",
+      id: "enabled",
       type: types.bool(),
     });
   },
@@ -492,7 +492,7 @@ pkg.createNonEventSchema({
     if (!u) return;
 
     apiClient()?.chat.updateSettings(u.id, u.id, {
-      uniqueChatModeEnabled: ctx.getInput("switch"),
+      uniqueChatModeEnabled: ctx.getInput("enabled"),
     });
   },
 });
@@ -502,16 +502,15 @@ pkg.createNonEventSchema({
   variant: "Exec",
   generateIO: (t) => {
     t.dataInput({
-      id: "switch",
-      type: types.bool(),
+      id: "userId",
+      name: "User ID",
+      type: types.string(),
     });
   },
   run({ ctx }) {
     const u = user();
     if (!u) return;
 
-    apiClient()?.chat.updateSettings(u.id, u.id, {
-      subscriberOnlyModeEnabled: ctx.getInput("switch"),
-    });
+    apiClient()?.chat.shoutoutUser(u.id, ctx.getInput("userId"), u.id);
   },
 });

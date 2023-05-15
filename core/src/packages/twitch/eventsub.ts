@@ -134,7 +134,7 @@ pkg.createEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "bannedUserName",
+      id: "bannedUserLogin",
       name: "Banned Username",
       type: types.string(),
     });
@@ -160,7 +160,7 @@ pkg.createEventSchema({
     ctx.setOutput("modId", data.event.moderator_user_id);
     ctx.setOutput("modName", data.event.moderator_user_login);
     ctx.setOutput("bannedUserID", data.event.user_id);
-    ctx.setOutput("bannedUserName", data.event.user_login);
+    ctx.setOutput("bannedUserLogin", data.event.user_login);
     ctx.setOutput("reason", data.event.reason);
     ctx.setOutput("permanent", data.event.is_permanent);
     ctx.setOutput("ends", data.event.ends_at);
@@ -870,7 +870,7 @@ pkg.createEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "channelName",
+      id: "channelLogin",
       name: "Channel Name",
       type: types.string(),
     });
@@ -897,7 +897,7 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     ctx.setOutput("channelId", data.event.broadcaster_user_id);
-    ctx.setOutput("channelName", data.event.broadcaster_user_login);
+    ctx.setOutput("channelLogin", data.event.broadcaster_user_login);
     ctx.setOutput("title", data.event.title);
     ctx.setOutput("categoryId", data.event.category_id);
     ctx.setOutput("categoryName", data.event.category_name);
@@ -1172,13 +1172,13 @@ pkg.createEventSchema({
     });
     t.dataOutput({
       id: "userName",
-      name: "Username",
+      name: "UserLogin",
       type: types.string(),
     });
   },
   run({ ctx, data }) {
     ctx.setOutput("userID", data.event.user_id);
-    ctx.setOutput("userName", data.event.user_login);
+    ctx.setOutput("userLogin", data.event.user_login);
     ctx.exec("exec");
   },
 });

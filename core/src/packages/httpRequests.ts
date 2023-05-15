@@ -48,7 +48,9 @@ pkg.createNonEventSchema({
       {
         url: ctx.getInput<string>("url"),
         method: "POST",
-        body: ctx.getInput<string>("body"),
+        body: {
+          Json: ctx.getInput<string>("body"),
+        },
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },
@@ -92,7 +94,9 @@ pkg.createNonEventSchema({
       {
         url: ctx.getInput<string>("url"),
         method: "PUT",
-        body: ctx.getInput<string>("body"),
+        body: {
+          Json: ctx.getInput<string>("body"),
+        },
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },

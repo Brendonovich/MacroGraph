@@ -71,11 +71,11 @@ pkg.createNonEventSchema({
   name: "String Length",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("int", ctx.getInput<string>("haystack").length);
+    ctx.setOutput("int", ctx.getInput<string>("input").length);
   },
   generateIO(t) {
     t.dataInput({
-      id: "haystack",
+      id: "input",
       name: "String",
       type: types.string(),
     });
@@ -90,15 +90,15 @@ pkg.createNonEventSchema({
   name: "String",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("stringOut", ctx.getInput("haystack"));
+    ctx.setOutput("output", ctx.getInput("input"));
   },
   generateIO(t) {
     t.dataInput({
-      id: "haystack",
+      id: "input",
       type: types.string(),
     });
     t.dataOutput({
-      id: "stringOut",
+      id: "output",
       type: types.string(),
     });
   },
@@ -108,15 +108,15 @@ pkg.createNonEventSchema({
   name: "Int",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("intOut", ctx.getInput("haystack"));
+    ctx.setOutput("output", ctx.getInput("input"));
   },
   generateIO(t) {
     t.dataInput({
-      id: "haystack",
+      id: "input",
       type: types.int(),
     });
     t.dataOutput({
-      id: "intOut",
+      id: "output",
       type: types.int(),
     });
   },
@@ -126,15 +126,15 @@ pkg.createNonEventSchema({
   name: "Bool",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("boolOut", ctx.getInput("haystack"));
+    ctx.setOutput("output", ctx.getInput("input"));
   },
   generateIO(t) {
     t.dataInput({
-      id: "haystack",
+      id: "input",
       type: types.bool(),
     });
     t.dataOutput({
-      id: "boolOut",
+      id: "output",
       type: types.bool(),
     });
   },
@@ -146,19 +146,17 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput(
       "bool",
-      ctx
-        .getInput<string>("haystack")
-        .startsWith(ctx.getInput<string>("needle"))
+      ctx.getInput<string>("input").startsWith(ctx.getInput<string>("prefix"))
     );
   },
   generateIO(t) {
     t.dataInput({
-      id: "haystack",
+      id: "input",
       name: "String",
       type: types.string(),
     });
     t.dataInput({
-      id: "needle",
+      id: "prefix",
       name: "Starts With",
       type: types.string(),
     });
@@ -179,15 +177,15 @@ pkg.createNonEventSchema({
     const end =
       ctx.getInput<number>("end") !== 0
         ? ctx.getInput<number>("end")
-        : ctx.getInput<string>("string").length;
+        : ctx.getInput<string>("input").length;
     ctx.setOutput(
-      "stringOut",
-      ctx.getInput<string>("string").substring(start, end)
+      "output",
+      ctx.getInput<string>("input").substring(start, end)
     );
   },
   generateIO(t) {
     t.dataInput({
-      id: "string",
+      id: "input",
       type: types.string(),
     });
     t.dataInput({
@@ -201,7 +199,7 @@ pkg.createNonEventSchema({
       type: types.int(),
     });
     t.dataOutput({
-      id: "stringOut",
+      id: "output",
       type: types.string(),
     });
   },
@@ -211,15 +209,15 @@ pkg.createNonEventSchema({
   name: "String To Uppercase",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("upper", ctx.getInput<string>("string").toUpperCase());
+    ctx.setOutput("output", ctx.getInput<string>("input").toUpperCase());
   },
   generateIO(t) {
     t.dataInput({
-      id: "string",
+      id: "input",
       type: types.string(),
     });
     t.dataOutput({
-      id: "upper",
+      id: "output",
       type: types.string(),
     });
   },
@@ -229,13 +227,13 @@ pkg.createNonEventSchema({
   name: "String is null",
   variant: "Pure",
   run({ ctx }) {
-    ctx.getInput("string")
+    ctx.getInput("input")
       ? ctx.setOutput("output", true)
       : ctx.setOutput("output", false);
   },
   generateIO(t) {
     t.dataInput({
-      id: "string",
+      id: "input",
       type: types.string(),
     });
     t.dataOutput({
@@ -249,15 +247,15 @@ pkg.createNonEventSchema({
   name: "String To Lowercase",
   variant: "Pure",
   run({ ctx }) {
-    ctx.setOutput("lower", ctx.getInput<string>("string").toLowerCase());
+    ctx.setOutput("output", ctx.getInput<string>("input").toLowerCase());
   },
   generateIO(t) {
     t.dataInput({
-      id: "string",
+      id: "input",
       type: types.string(),
     });
     t.dataOutput({
-      id: "lower",
+      id: "output",
       type: types.string(),
     });
   },
@@ -322,12 +320,12 @@ pkg.createNonEventSchema({
   variant: "Pure",
   run({ ctx }) {
     let number = Number(ctx.getInput<string>("string"));
-    ctx.setOutput("int", number);
-    ctx.setOutput("pass", !Number.isNaN(number));
+    ctx.setOutput("int", Math.floor(number));
+    ctx.setOutput("success", !Number.isNaN(number));
   },
   generateIO(t) {
     t.dataOutput({
-      id: "out",
+      id: "int",
       type: types.int(),
     });
     t.dataOutput({
@@ -336,110 +334,118 @@ pkg.createNonEventSchema({
       type: types.bool(),
     });
     t.dataInput({
-      id: "in",
+      id: "string",
       type: types.string(),
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "Multiply",
+  name: "Multiply Ints",
   variant: "Pure",
   run({ ctx }) {
-    const numb = ctx.getInput<number>("num1") * ctx.getInput<number>("num2");
-    ctx.setOutput("outnum", numb);
+    const number = Math.floor(
+      ctx.getInput<number>("one") * ctx.getInput<number>("two")
+    );
+    ctx.setOutput("output", number);
   },
   generateIO(t) {
     t.dataInput({
-      id: "num1",
+      id: "one",
       type: types.int(),
     });
     t.dataInput({
-      id: "num2",
+      id: "two",
       type: types.int(),
     });
     t.dataOutput({
-      id: "outnum",
+      id: "output",
       type: types.int(),
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "Divide",
+  name: "Divide Ints",
   variant: "Pure",
   run({ ctx }) {
-    const numb = ctx.getInput<number>("num1") / ctx.getInput<number>("num2");
-    ctx.setOutput("outnum", numb);
+    const number = Math.floor(
+      ctx.getInput<number>("one") / ctx.getInput<number>("two")
+    );
+    ctx.setOutput("output", number);
   },
   generateIO(t) {
     t.dataInput({
-      id: "num1",
+      id: "one",
       type: types.int(),
     });
     t.dataInput({
-      id: "num2",
+      id: "two",
       type: types.int(),
     });
     t.dataOutput({
-      id: "outnum",
+      id: "output",
       type: types.int(),
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "Add",
+  name: "Add Ints",
   variant: "Pure",
   run({ ctx }) {
-    const numb = ctx.getInput<number>("num1") + ctx.getInput<number>("num2");
-    ctx.setOutput("outnum", numb);
+    const number = Math.floor(
+      ctx.getInput<number>("one") + ctx.getInput<number>("two")
+    );
+    ctx.setOutput("output", number);
   },
   generateIO(t) {
     t.dataInput({
-      id: "num1",
+      id: "one",
       type: types.int(),
     });
     t.dataInput({
-      id: "num2",
+      id: "two",
       type: types.int(),
     });
     t.dataOutput({
-      id: "outnum",
+      id: "output",
       type: types.int(),
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "Subtract",
+  name: "Subtract Ints",
   variant: "Pure",
   run({ ctx }) {
-    const numb = ctx.getInput<number>("num1") - ctx.getInput<number>("num2");
-    ctx.setOutput("outnum", numb);
+    const numb = Math.floor(
+      ctx.getInput<number>("one") - ctx.getInput<number>("two")
+    );
+    ctx.setOutput("output", numb);
   },
   generateIO(t) {
     t.dataInput({
-      id: "num1",
+      id: "one",
       type: types.int(),
     });
     t.dataInput({
-      id: "num2",
+      id: "two",
       type: types.int(),
     });
     t.dataOutput({
-      id: "outnum",
+      id: "output",
       type: types.int(),
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "Append",
+  name: "Append String",
   variant: "Pure",
   run({ ctx }) {
     ctx.setOutput(
-      "out",
+      "output",
       ctx.getInput<string>("one") + ctx.getInput<string>("two")
     );
   },
@@ -453,14 +459,14 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "out",
+      id: "output",
       type: types.string(),
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "Round",
+  name: "Round Float",
   variant: "Pure",
   run({ ctx }) {
     const input = ctx.getInput<number>("input");
