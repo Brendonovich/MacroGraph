@@ -66,9 +66,31 @@ export const Node = (props: Props) => {
 
   const [editingName, setEditingName] = createSignal(false);
 
+  let ref: HTMLDivElement | undefined;
+
+  onMount(() => {
+    if (!ref) return;
+
+    const obs = new ResizeObserver((resize) => {
+      const contentRect = resize[resize.length - 1]?.contentRect;
+
+      if (!contentRect) return;
+
+      UI.state.nodeBounds.set(node, {
+        width: contentRect.width,
+        height: contentRect.height,
+      });
+    });
+
+    obs.observe(ref);
+
+    onCleanup(() => obs.disconnect());
+  });
+
   return (
     <NodeProvider node={node}>
       <div
+        ref={ref}
         class={clsx(
           "absolute top-0 left-0 text-[12px] overflow-hidden rounded-lg flex flex-col bg-black/75 border-black/75 border-2",
           node.selected && "ring-2 ring-yellow-500"

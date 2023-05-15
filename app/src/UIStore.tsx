@@ -1,6 +1,6 @@
 import { Position, XY, Graph, Node, Pin, CommentBox } from "@macrograph/core";
 import { createMutable } from "solid-js/store";
-import { createContext, ParentProps, useContext } from "solid-js";
+import { createContext, createEffect, ParentProps, useContext } from "solid-js";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 
 export function createUIStore() {
@@ -17,6 +17,7 @@ export function createUIStore() {
     mouseDownTranslate: null as XY | null,
 
     currentGraph: null as Graph | null,
+    nodeBounds: new Map<Node, { width: number; height: number }>(),
 
     graphOffset: {
       x: 0,
@@ -29,6 +30,12 @@ export function createUIStore() {
     scale: 1,
 
     pinPositions: new ReactiveWeakMap<Pin, XY>(),
+  });
+
+  createEffect(() => {
+    state.currentGraph;
+
+    state.nodeBounds = new Map();
   });
 
   return {
