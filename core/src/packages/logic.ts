@@ -108,56 +108,6 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Bools Equal",
-  variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "value",
-      ctx.getInput<boolean>("one") == ctx.getInput<boolean>("two")
-    );
-  },
-  generateIO(t) {
-    t.dataInput({
-      id: "one",
-      type: types.bool(),
-    });
-    t.dataInput({
-      id: "two",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      id: "value",
-      type: types.bool(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Bools Not Equal",
-  variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "value",
-      ctx.getInput<boolean>("one") != ctx.getInput<boolean>("two")
-    );
-  },
-  generateIO(t) {
-    t.dataInput({
-      id: "one",
-      type: types.bool(),
-    });
-    t.dataInput({
-      id: "two",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      id: "value",
-      type: types.bool(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
   name: "OR",
   variant: "Pure",
   run({ ctx }) {

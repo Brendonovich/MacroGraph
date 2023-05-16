@@ -4,7 +4,7 @@ import { createEndpoint } from "../../utils/httpEndpoint";
 import { fs } from "@tauri-apps/api";
 import pkg from "./pkg";
 import { botToken, setBotToken } from "./auth";
-import { types } from "../../types";
+import { types, Option } from "../../types";
 import { createResource, createRoot } from "solid-js";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
 
@@ -105,40 +105,40 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Discord User",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "userId",
       name: "User ID",
       type: types.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "username",
       name: "UserName",
       type: types.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "displayName",
       name: "Display Name",
-      type: types.string(),
+      type: types.option(types.string()),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "avatarId",
       name: "Avatar ID",
-      type: types.string(),
+      type: types.option(types.string()),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "bannerId",
       name: "Banner ID",
-      type: types.string(),
+      type: types.option(types.string()),
     });
   },
   async run({ ctx }) {
     const response = await api.users(ctx.getInput("userId")).get(USER_SCHEMA);
 
     ctx.setOutput("username", response.username);
-    ctx.setOutput("displayName", response.display_name);
-    ctx.setOutput("avatarId", response.avatar);
-    ctx.setOutput("bannerId", response.banner);
+    ctx.setOutput("displayName", Option.new(response.display_name));
+    ctx.setOutput("avatarId", Option.new(response.avatar));
+    ctx.setOutput("bannerId", Option.new(response.avatar));
   },
 });
 
@@ -194,9 +194,9 @@ pkg.createNonEventSchema({
       .get(GUILD_MEMBER_SCHEMA);
 
     ctx.setOutput("username", response.user.username);
-    ctx.setOutput("displayName", response.user.display_name);
-    ctx.setOutput("avatarId", response.user.avatar);
-    ctx.setOutput("bannerId", response.user.banner);
+    ctx.setOutput("displayName", Option.new(response.user.display_name));
+    ctx.setOutput("avatarId", Option.new(response.user.avatar));
+    ctx.setOutput("bannerId", Option.new(response.user.banner));
     ctx.setOutput("nick", response.nick);
     ctx.setOutput("roles", response.roles);
   },
@@ -273,7 +273,7 @@ pkg.createNonEventSchema({
     t.dataInput({
       id: "content",
       name: "Message",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataInput({
       id: "username",
@@ -283,17 +283,17 @@ pkg.createNonEventSchema({
     t.dataInput({
       id: "avatarUrl",
       name: "Avatar URL",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataInput({
       id: "tts",
       name: "TTS",
-      type: types.bool(),
+      type: types.option(types.bool()),
     });
     t.dataInput({
       id: "fileLocation",
       name: "File Location",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataOutput({
       id: "status",
@@ -304,19 +304,19 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const body: Record<string, string> = {};
 
-    if (ctx.getInput("content")) body.content = ctx.getInput("content");
-    if (ctx.getInput("avatarUrl")) body.avatar_url = ctx.getInput("avatarUrl");
-    if (ctx.getInput("username")) body.username = ctx.getInput("username");
-    if (ctx.getInput("tts")) body.tts = ctx.getInput<boolean>("tts").toString();
-    if (ctx.getInput("fileLocation")) {
+    ctx.getInput<Option<string>>("content").map((v) => (body.content = v));
+    ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
+    ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
+    ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
+    await ctx.getInput<Option<string>>("fileLocation").map(async (v) => {
       body["file[0]"] = JSON.stringify({
-        file: await fs.readBinaryFile(ctx.getInput("fileLocation")),
+        file: await fs.readBinaryFile(v),
         fileName: ctx
           .getInput<string>("fileLocation")
           .split(/[\/\\]/)
           .at(-1),
       });
-    }
+    });
 
     let response = await rspcClient.query([
       "http.json",

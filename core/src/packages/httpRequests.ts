@@ -21,21 +21,27 @@ pkg.createNonEventSchema({
     // ctx.setOutput("status", response);
   },
   generateIO(t) {
-    t.dataInput({
-      id: "url",
-      name: "URL",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "response",
-      name: "Response",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "status",
-      name: "Status",
-      type: types.int(),
-    });
+    return {
+      inputs: {
+        url: t.dataInput({
+          id: "url",
+          name: "URL",
+          type: types.string(),
+        }),
+      },
+      outputs: {
+        response: t.dataOutput({
+          id: "response",
+          name: "Response",
+          type: types.string(),
+        }),
+        status: t.dataOutput({
+          id: "status",
+          name: "Status",
+          type: types.int(),
+        }),
+      },
+    };
   },
 });
 

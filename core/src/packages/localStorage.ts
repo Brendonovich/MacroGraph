@@ -35,14 +35,9 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "exists",
-      name: "Exists",
-      type: types.bool(),
-    });
-    t.dataOutput({
       id: "output",
       name: "Data",
-      type: types.string(),
+      type: types.option(types.string()),
     });
   },
   run({ ctx }) {

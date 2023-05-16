@@ -23,6 +23,7 @@ const { accessToken, setAccessToken, authProvider } = createRoot(() => {
       map(accessToken(), (token) => new StaticAuthProvider(clientId, token)),
     null
   );
+
   return { accessToken, setAccessToken, authProvider };
 });
 
