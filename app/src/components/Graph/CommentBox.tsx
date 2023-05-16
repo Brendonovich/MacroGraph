@@ -30,83 +30,94 @@ export default (props: Props) => {
         height: `${size().y}px`,
       }}
     >
-      <div
-        class="truncate p-2 bg-white/50 text-black font-medium cursor-pointer outline-none"
-        onMouseDown={(e) => {
-          e.currentTarget.focus();
-          e.stopPropagation();
+      <div class="truncate p-2 bg-white/50 text-black font-medium cursor-pointer outline-none">
+        <Show
+          when={editing()}
+          fallback={
+            <div
+              class="pl-1 outline-none"
+              onMouseDown={(e) => {
+                e.currentTarget.focus();
+                e.stopPropagation();
 
-          if (editing()) return;
+                if (editing()) return;
 
-          switch (e.button) {
-            case 0: {
-              UI.setSelectedItem(props.box);
+                switch (e.button) {
+                  case 0: {
+                    UI.setSelectedItem(props.box);
 
-              const innerNodes = [...graph().nodes.values()].filter((node) => {
-                if (
-                  node.position.x < position().x ||
-                  node.position.y < position().y
-                )
-                  return false;
+                    const innerNodes = [...graph().nodes.values()].filter(
+                      (node) => {
+                        if (
+                          node.position.x < position().x ||
+                          node.position.y < position().y
+                        )
+                          return false;
 
-                const nodeSize = UI.state.nodeBounds.get(node);
-                if (!nodeSize) return false;
+                        const nodeSize = UI.state.nodeBounds.get(node);
+                        if (!nodeSize) return false;
 
-                if (
-                  node.position.x + nodeSize.width > position().x + size().x ||
-                  node.position.y + nodeSize.height > position().y + size().y
-                )
-                  return false;
+                        if (
+                          node.position.x + nodeSize.width >
+                            position().x + size().x ||
+                          node.position.y + nodeSize.height >
+                            position().y + size().y
+                        )
+                          return false;
 
-                return true;
-              });
+                        return true;
+                      }
+                    );
 
-              const handleMouseMove = (e: MouseEvent) => {
-                const scale = UI.state.scale;
+                    const handleMouseMove = (e: MouseEvent) => {
+                      const scale = UI.state.scale;
 
-                box().position = {
-                  x: box().position.x + e.movementX / scale,
-                  y: box().position.y + e.movementY / scale,
-                };
+                      box().position = {
+                        x: box().position.x + e.movementX / scale,
+                        y: box().position.y + e.movementY / scale,
+                      };
 
-                innerNodes.forEach((node) => {
-                  node.position = {
-                    x: node.position.x + e.movementX / scale,
-                    y: node.position.y + e.movementY / scale,
-                  };
-                });
-              };
+                      innerNodes.forEach((node) => {
+                        node.position = {
+                          x: node.position.x + e.movementX / scale,
+                          y: node.position.y + e.movementY / scale,
+                        };
+                      });
+                    };
 
-              window.addEventListener("mousemove", handleMouseMove);
-              const listener = () => {
-                graph().save();
+                    window.addEventListener("mousemove", handleMouseMove);
+                    const listener = () => {
+                      graph().save();
 
-                window.removeEventListener("mouseup", listener);
-                window.removeEventListener("mousemove", handleMouseMove);
-              };
-              window.addEventListener("mouseup", listener);
+                      window.removeEventListener("mouseup", listener);
+                      window.removeEventListener("mousemove", handleMouseMove);
+                    };
+                    window.addEventListener("mouseup", listener);
 
-              break;
-            }
-            default:
-              break;
+                    break;
+                  }
+                  default:
+                    break;
+                }
+              }}
+              tabIndex={-1}
+              onKeyDown={(e) => {
+                if (editing()) return;
+
+                switch (e.key) {
+                  case "Backspace":
+                  case "Delete": {
+                    graph().deleteItem(box());
+                    break;
+                  }
+                }
+              }}
+              onDblClick={() => setEditing(true)}
+            >
+              {props.box.text}
+            </div>
           }
-        }}
-        tabIndex={-1}
-        onKeyDown={(e) => {
-          if (editing()) return;
-
-          switch (e.key) {
-            case "Backspace":
-            case "Delete": {
-              graph().deleteItem(box());
-              break;
-            }
-          }
-        }}
-        onDblClick={() => setEditing(true)}
-      >
-        <Show when={editing()} fallback={<p class="pl-1">{props.box.text}</p>}>
+        >
           {(_) => {
             const [value, setValue] = createSignal(props.box.text);
 
@@ -127,6 +138,8 @@ export default (props: Props) => {
                 type="text"
                 value={value()}
                 onInput={(e) => setValue(e.target.value)}
+                onContextMenu={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
               />
             );
           }}
