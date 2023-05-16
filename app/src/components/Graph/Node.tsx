@@ -179,6 +179,8 @@ export const Node = (props: Props) => {
 
                       setEditingName(false);
                     }}
+                    onContextMenu={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
                   />
                 </div>
               );
