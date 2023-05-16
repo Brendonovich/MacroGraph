@@ -62,7 +62,7 @@ pkg.createNonEventSchema({
   variant: "Exec",
   generateIO: (t) => {
     t.dataInput({
-      id: "switch",
+      id: "enabled",
       type: types.bool(),
     });
   },
@@ -72,7 +72,7 @@ pkg.createNonEventSchema({
     if (!c) return;
 
     apiClient()?.chat.updateSettings(c.getUsername(), c.getUsername(), {
-      emoteOnlyModeEnabled: ctx.getInput("switch"),
+      emoteOnlyModeEnabled: ctx.getInput("enabled"),
     });
   },
 });

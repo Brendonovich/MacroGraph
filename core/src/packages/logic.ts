@@ -37,15 +37,15 @@ pkg.createNonEventSchema({
   variant: "Base",
   run({ ctx }) {
     setTimeout(() => {
-      ctx.exec("output")
-    }, ctx.getInput("waitms"));
+      ctx.exec("output");
+    }, ctx.getInput("delay"));
   },
   generateIO(t) {
     t.execInput({
       id: "exec",
     });
     t.dataInput({
-      id: "waitms",
+      id: "delay",
       name: "Wait in ms",
       type: types.int(),
     });

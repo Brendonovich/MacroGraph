@@ -90,13 +90,13 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataInput({
-      id: "channel",
+      id: "channelId",
       name: "Channel ID",
       type: types.string(),
     });
   },
   async run({ ctx }) {
-    await api.channels(ctx.getInput("channel")).messages.post(z.undefined(), {
+    await api.channels(ctx.getInput("channelId")).messages.post(z.undefined(), {
       body: { Json: { content: ctx.getInput("message") } },
     });
   },
@@ -117,17 +117,17 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "display_name",
+      id: "displayName",
       name: "Display Name",
       type: types.string(),
     });
     t.dataOutput({
-      id: "avatar",
+      id: "avatarId",
       name: "Avatar ID",
       type: types.string(),
     });
     t.dataOutput({
-      id: "banner",
+      id: "bannerId",
       name: "Banner ID",
       type: types.string(),
     });
@@ -136,9 +136,9 @@ pkg.createNonEventSchema({
     const response = await api.users(ctx.getInput("userId")).get(USER_SCHEMA);
 
     ctx.setOutput("username", response.username);
-    ctx.setOutput("display_name", response.display_name);
-    ctx.setOutput("avatar", response.avatar);
-    ctx.setOutput("banner", response.banner);
+    ctx.setOutput("displayName", response.display_name);
+    ctx.setOutput("avatarId", response.avatar);
+    ctx.setOutput("bannerId", response.banner);
   },
 });
 
@@ -162,17 +162,17 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "display_name",
+      id: "displayName",
       name: "Display Name",
       type: types.string(),
     });
     t.dataOutput({
-      id: "avatar",
+      id: "avatarId",
       name: "Avatar ID",
       type: types.string(),
     });
     t.dataOutput({
-      id: "banner",
+      id: "bannerId",
       name: "Banner ID",
       type: types.string(),
     });
@@ -194,9 +194,9 @@ pkg.createNonEventSchema({
       .get(GUILD_MEMBER_SCHEMA);
 
     ctx.setOutput("username", response.user.username);
-    ctx.setOutput("display_name", response.user.display_name);
-    ctx.setOutput("avatar", response.user.avatar);
-    ctx.setOutput("banner", response.user.banner);
+    ctx.setOutput("displayName", response.user.display_name);
+    ctx.setOutput("avatarId", response.user.avatar);
+    ctx.setOutput("bannerId", response.user.banner);
     ctx.setOutput("nick", response.nick);
     ctx.setOutput("roles", response.roles);
   },
@@ -212,12 +212,7 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataInput({
-      id: "roleId",
-      name: "Role ID",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "roleId",
+      id: "roleIdIn",
       name: "Role ID",
       type: types.string(),
     });
@@ -227,7 +222,7 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "roleId",
+      id: "roleIdOut",
       name: "Role ID",
       type: types.string(),
     });
@@ -248,7 +243,7 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let roleId = ctx.getInput("roleId");
+    let roleId = ctx.getInput("roleIdIn");
 
     const roles = await api
       .guilds(ctx.getInput("guildId"))
@@ -259,7 +254,7 @@ pkg.createNonEventSchema({
     if (!role) return;
 
     ctx.setOutput("name", role.name);
-    ctx.setOutput("roleId", role.id);
+    ctx.setOutput("roleIdOut", role.id);
     ctx.setOutput("position", role.position);
     ctx.setOutput("mentionable", role.mentionable);
     ctx.setOutput("permissions", role.permissions);
