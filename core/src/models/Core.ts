@@ -36,7 +36,7 @@ export class Core {
 
   eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
-  private graphIdCounter = 0;
+  private graphIdCounter = localStorage.getItem("graphs") ? JSON.parse(localStorage.getItem("graphs")).at(-1) + 1 : 0;
 
   constructor() {
     return createMutable(this);
@@ -118,7 +118,7 @@ export class Core {
 class ExecutionContext {
   data = new Map<DataOutput, any>();
 
-  constructor(public root: Node) {}
+  constructor(public root: Node) { }
 
   run(data: any) {
     this.root.schema.run({
