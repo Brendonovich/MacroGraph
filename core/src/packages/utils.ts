@@ -626,7 +626,7 @@ pkg.createNonEventSchema({
       });
     },
     run({ ctx }) {
-      ctx.setOutput("out", ctx.getInput<Option<any>>("input").isNone());
+      ctx.setOutput("output", ctx.getInput<Option<any>>("input").isNone());
     },
   });
 
