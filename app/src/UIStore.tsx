@@ -70,7 +70,7 @@ export function createUIStore() {
     },
     updateScale(delta: number, screenOrigin: XY) {
       const startGraphOrigin = this.toGraphSpace(screenOrigin);
-      state.scale = Math.min(Math.max(1, state.scale + delta / 10), 2.5);
+      state.scale = Math.min(Math.max(0.5, state.scale + delta / 10), 2.5);
       const endGraphOrigin = this.toScreenSpace(startGraphOrigin);
 
       state.translate = {
