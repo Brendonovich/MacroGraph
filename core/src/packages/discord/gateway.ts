@@ -5,9 +5,11 @@ import {
   onCleanup,
   createRoot,
 } from "solid-js";
+import { z } from "zod";
 import { types, Option } from "../../types";
 import { botToken } from "./auth";
 import pkg from "./pkg";
+import { GUILD_MEMBER_SCHEMA, USER_SCHEMA } from "./schemas";
 
 const { ws, connect, disconnect } = createRoot(() => {
   const [ws, setWs] = createSignal<WebSocket | null>(null);
@@ -138,7 +140,7 @@ pkg.createEventSchema({
     t.dataOutput({
       id: "username",
       name: "Username",
-      type: types.option(types.string()),
+      type: types.string(),
     });
     t.dataOutput({
       id: "userId",
@@ -148,7 +150,7 @@ pkg.createEventSchema({
     t.dataOutput({
       id: "nickname",
       name: "Nickname",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataOutput({
       id: "guildId",
@@ -168,7 +170,9 @@ pkg.createEventSchema({
     ctx.setOutput("userId", data.author.id);
     ctx.setOutput(
       "nickname",
-      Option.new(data.member as any).map((v) => v.nick)
+      Option.new(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen(
+        (v) => Option.new(v.nick)
+      )
     );
     ctx.setOutput("guildId", Option.new(data.guild_id as string | null));
     ctx.setOutput("roles", data.member.roles);

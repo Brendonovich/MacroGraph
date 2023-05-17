@@ -8,8 +8,8 @@ export const USER_SCHEMA = z.object({
 });
 
 export const GUILD_MEMBER_SCHEMA = z.object({
-  user: USER_SCHEMA,
-  nick: z.string(),
+  user: USER_SCHEMA.optional(),
+  nick: z.string().optional(),
   roles: z.array(z.string()),
 });
 

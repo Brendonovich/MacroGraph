@@ -128,8 +128,8 @@ export abstract class Option<T> {
     return this instanceof None;
   }
 
-  static new<T>(value: T | null): Optional<T> {
-    if (value === null) return new None();
+  static new<T>(value: T | null | undefined): Optional<T> {
+    if (value === null || value === undefined) return new None();
     else return new Some(value);
   }
 }

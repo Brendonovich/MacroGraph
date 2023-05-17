@@ -580,7 +580,7 @@ pkg.createNonEventSchema({
     name: `Unwrap Option (${key})`,
     variant: "Pure",
     run({ ctx }) {
-      ctx.getInput<Option<string>>("input").unwrap();
+      ctx.setOutput("output", ctx.getInput<Option<string>>("input").unwrap());
     },
     generateIO(t) {
       t.dataInput({
@@ -608,7 +608,7 @@ pkg.createNonEventSchema({
       });
     },
     run({ ctx }) {
-      ctx.setOutput("out", ctx.getInput<Option<any>>("input").isSome());
+      ctx.setOutput("output", ctx.getInput<Option<any>>("input").isSome());
     },
   });
 
