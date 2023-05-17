@@ -1,9 +1,10 @@
-export type TypeVariant = "primitive" | "list" | "map" | "set";
+export type TypeVariant = "primitive" | "list" | "map" | "set" | "option";
 
 export abstract class AnyType<TOut = any> {
   abstract default(): TOut;
   abstract variant(): TypeVariant;
   abstract compare(a: AnyType): boolean;
+  abstract basePrimitive(): PrimitiveType;
 }
 
 export type PrimitiveVariant = "int" | "float" | "string" | "bool";
@@ -18,6 +19,10 @@ export abstract class PrimitiveType<TOut = any> extends AnyType<TOut> {
       a instanceof PrimitiveType &&
       this.primitiveVariant() === a.primitiveVariant()
     );
+  }
+
+  basePrimitive(): PrimitiveType {
+    return this;
   }
 
   abstract primitiveVariant(): PrimitiveVariant;
@@ -82,6 +87,10 @@ export class ListType<
   compare(a: AnyType): boolean {
     return a instanceof ListType && this.inner.compare(a.inner);
   }
+
+  basePrimitive(): PrimitiveType {
+    return this.inner.basePrimitive();
+  }
 }
 
 export type Optional<T> = Some<T> | None<T>;
@@ -111,6 +120,14 @@ export abstract class Option<T> {
     else throw new Error("Attempted to unwrap a None value");
   }
 
+  isSome() {
+    return this instanceof Some;
+  }
+
+  isNone() {
+    return this instanceof None;
+  }
+
   static new<T>(value: T | null): Optional<T> {
     if (value === null) return new None();
     else return new Some(value);
@@ -136,6 +153,7 @@ export class OptionType<
   default(): Optional<T> {
     return new None();
   }
+
   variant(): TypeVariant {
     return this.inner.variant();
   }
@@ -144,6 +162,16 @@ export class OptionType<
     if (!(a instanceof OptionType)) return false;
 
     return this.inner.compare(a.inner);
+  }
+
+  basePrimitive(): PrimitiveType {
+    return this.inner.basePrimitive();
+  }
+
+  getInner(): AnyType {
+    if (this.inner instanceof OptionType) {
+      return this.inner.getInner();
+    } else return this.inner;
   }
 }
 

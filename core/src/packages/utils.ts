@@ -595,6 +595,42 @@ pkg.createNonEventSchema({
   });
 
   pkg.createNonEventSchema({
+    name: `Is Option Some (${key})`,
+    variant: "Pure",
+    generateIO(io) {
+      io.dataInput({
+        id: "input",
+        type: types.option(type),
+      });
+      io.dataOutput({
+        id: "output",
+        type: types.bool(),
+      });
+    },
+    run({ ctx }) {
+      ctx.setOutput("out", ctx.getInput<Option<any>>("input").isSome());
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: `Is Option None(${key})`,
+    variant: "Pure",
+    generateIO(io) {
+      io.dataInput({
+        id: "input",
+        type: types.option(type),
+      });
+      io.dataOutput({
+        id: "output",
+        type: types.bool(),
+      });
+    },
+    run({ ctx }) {
+      ctx.setOutput("out", ctx.getInput<Option<any>>("input").isNone());
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: key,
     variant: "Pure",
     run({ ctx }) {
