@@ -1143,7 +1143,7 @@ pkg.createEventSchema({
   run({ ctx, data }) {
     ctx.setOutput("outputActive", data.outputActive);
     ctx.setOutput("outputState", data.outputState);
-    ctx.setOutput("outputPath", data.outputPath);
+    ctx.setOutput("outputPath", (data as any).outputPath);
     ctx.exec("exec");
   },
 });

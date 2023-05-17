@@ -1,5 +1,5 @@
 import { core } from "../models";
-import { types } from "../types";
+import { Option, types } from "../types";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -82,60 +82,6 @@ pkg.createNonEventSchema({
     t.dataOutput({
       id: "int",
       type: types.int(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "String",
-  variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput("input"));
-  },
-  generateIO(t) {
-    t.dataInput({
-      id: "input",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "output",
-      type: types.string(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Int",
-  variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput("input"));
-  },
-  generateIO(t) {
-    t.dataInput({
-      id: "input",
-      type: types.int(),
-    });
-    t.dataOutput({
-      id: "output",
-      type: types.int(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Bool",
-  variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput("input"));
-  },
-  generateIO(t) {
-    t.dataInput({
-      id: "input",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      id: "output",
-      type: types.bool(),
     });
   },
 });
@@ -224,26 +170,6 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "String is null",
-  variant: "Pure",
-  run({ ctx }) {
-    ctx.getInput("input")
-      ? ctx.setOutput("output", true)
-      : ctx.setOutput("output", false);
-  },
-  generateIO(t) {
-    t.dataInput({
-      id: "input",
-      type: types.string(),
-    });
-    t.dataOutput({
-      id: "output",
-      type: types.bool(),
-    });
-  },
-});
-
-pkg.createNonEventSchema({
   name: "String To Lowercase",
   variant: "Pure",
   run({ ctx }) {
@@ -319,23 +245,19 @@ pkg.createNonEventSchema({
   name: "String to Int",
   variant: "Pure",
   run({ ctx }) {
-    let number = Number(ctx.getInput<string>("string"));
-    ctx.setOutput("int", Math.floor(number));
-    ctx.setOutput("success", !Number.isNaN(number));
+    const number = Number(ctx.getInput<string>("string"));
+    const opt = Option.new(Number.isNaN(number) ? null : number);
+
+    ctx.setOutput("int", opt.map(Math.floor));
   },
   generateIO(t) {
-    t.dataOutput({
-      id: "int",
-      type: types.int(),
-    });
-    t.dataOutput({
-      id: "success",
-      name: "Success",
-      type: types.bool(),
-    });
     t.dataInput({
       id: "string",
       type: types.string(),
+    });
+    t.dataOutput({
+      id: "int",
+      type: types.option(types.int()),
     });
   },
 });
@@ -622,4 +544,107 @@ pkg.createNonEventSchema({
       type: types.bool(),
     });
   },
+});
+
+(
+  [
+    ["Bool", types.bool()],
+    ["String", types.string()],
+    ["Int", types.int()],
+    ["Float", types.float()],
+  ] as const
+).forEach(([key, type]) => {
+  pkg.createNonEventSchema({
+    name: `Equal (${key})`,
+    variant: "Pure",
+    generateIO(io) {
+      io.dataInput({
+        id: "one",
+        type,
+      });
+      io.dataInput({
+        id: "two",
+        type,
+      });
+      io.dataOutput({
+        id: "equal",
+        type: types.bool(),
+      });
+    },
+    run({ ctx }) {
+      ctx.setOutput("equal", ctx.getInput("one") === ctx.getInput("two"));
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: `Unwrap Option (${key})`,
+    variant: "Pure",
+    run({ ctx }) {
+      ctx.setOutput("output", ctx.getInput<Option<string>>("input").unwrap());
+    },
+    generateIO(t) {
+      t.dataInput({
+        id: "input",
+        type: types.option(type),
+      });
+      t.dataOutput({
+        id: "output",
+        type,
+      });
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: `Is Option Some (${key})`,
+    variant: "Pure",
+    generateIO(io) {
+      io.dataInput({
+        id: "input",
+        type: types.option(type),
+      });
+      io.dataOutput({
+        id: "output",
+        type: types.bool(),
+      });
+    },
+    run({ ctx }) {
+      ctx.setOutput("output", ctx.getInput<Option<any>>("input").isSome());
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: `Is Option None(${key})`,
+    variant: "Pure",
+    generateIO(io) {
+      io.dataInput({
+        id: "input",
+        type: types.option(type),
+      });
+      io.dataOutput({
+        id: "output",
+        type: types.bool(),
+      });
+    },
+    run({ ctx }) {
+      ctx.setOutput("output", ctx.getInput<Option<any>>("input").isNone());
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: key,
+    variant: "Pure",
+    run({ ctx }) {
+      ctx.setOutput("output", ctx.getInput("input"));
+    },
+    generateIO(t) {
+      t.dataInput({
+        id: "input",
+        type,
+      });
+      t.dataOutput({
+        id: "output",
+        type,
+      });
+    },
+  });
 });

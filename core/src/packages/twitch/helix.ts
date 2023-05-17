@@ -3,17 +3,13 @@ import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
 import { accessToken, authProvider } from "./auth";
 import pkg from "./pkg";
 import { map } from "../../utils";
-import { types } from "../../types";
+import { types, Option } from "../../types";
 
 const { apiClient, user } = createRoot(() => {
   const apiClient = createMemo(
     () => map(authProvider(), (p) => new ApiClient({ authProvider: p })),
     null
   );
-
-  const [user, setUser] = createSignal<Awaited<
-    ReturnType<typeof getUser>
-  > | null>(null);
 
   const getUser = async () => {
     const token = accessToken();
@@ -32,12 +28,28 @@ const { apiClient, user } = createRoot(() => {
       };
   };
 
+  const [user, setUser] = createSignal<Awaited<
+    ReturnType<typeof getUser>
+  > | null>(null);
+
   createEffect(() => getUser().then(setUser));
 
   return { apiClient, user };
 });
 
 export { apiClient, user };
+
+const api = () => {
+  const client = Option.new(apiClient());
+  const u = Option.new(user());
+
+  return client.andThen((client) =>
+    u.map((user) => ({
+      client,
+      user,
+    }))
+  );
+};
 
 pkg.createNonEventSchema({
   name: "Ban User",
@@ -60,10 +72,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.moderation.banUser(u.id, u.id, {
+    client.moderation.banUser(user.id, user.id, {
       user: ctx.getInput("userId"),
       duration: ctx.getInput("duration"),
       reason: ctx.getInput("reason"),
@@ -82,10 +93,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.moderation.unbanUser(u.id, u.id, ctx.getInput("userId"));
+    client.moderation.unbanUser(user.id, user.id, ctx.getInput("userId"));
   },
 });
 
@@ -100,10 +110,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.moderation.addModerator(u.id, ctx.getInput("userId"));
+    client.moderation.addModerator(user.id, ctx.getInput("userId"));
   },
 });
 
@@ -118,10 +127,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.moderation.removeModerator(u.id, ctx.getInput("userId"));
+    client.moderation.removeModerator(user.id, ctx.getInput("userId"));
   },
 });
 
@@ -136,12 +144,11 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.moderation.deleteChatMessages(
-      u.id,
-      u.id,
+    client.moderation.deleteChatMessages(
+      user.id,
+      user.id,
       ctx.getInput("messageId")
     );
   },
@@ -158,13 +165,13 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    let data = await apiClient()?.clips.createClip({
-      channel: u.id,
+    let clipId = await client.clips.createClip({
+      channel: user.id,
     });
-    ctx.setOutput("clipId", data);
+
+    ctx.setOutput("clipId", clipId);
   },
 });
 
@@ -178,7 +185,7 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      name: "Subbed",
+      name: "Is Subscribed",
       id: "subbed",
       type: types.bool(),
     });
@@ -209,16 +216,17 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    let data = await apiClient()?.subscriptions.getSubscriptionForUser(
-      u.id,
+    let data = await client.subscriptions.getSubscriptionForUser(
+      user.id,
       ctx.getInput("userId")
     );
+
     ctx.setOutput("subbed", data !== null);
 
     if (!data) return;
+
     ctx.setOutput("tier", data.tier);
     ctx.setOutput("gifted", data.isGift);
     ctx.setOutput("gifterName", data.gifterName);
@@ -243,12 +251,11 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    let data = await apiClient()?.channels.getChannelFollowers(
-      u.id,
-      u.id,
+    let data = await client.channels.getChannelFollowers(
+      user.id,
+      user.id,
       ctx.getInput("userId")
     );
 
@@ -272,11 +279,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    let data = await apiClient()?.channels.checkVipForUser(
-      u.id,
+    let data = await client.channels.checkVipForUser(
+      user.id,
       ctx.getInput("userId")
     );
 
@@ -300,11 +306,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    let data = await apiClient()?.moderation.checkUserMod(
-      u.id,
+    let data = await client.moderation.checkUserMod(
+      user.id,
       ctx.getInput("userId")
     );
 
@@ -383,10 +388,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
+
     try {
-      let data = await apiClient()?.channelPoints.createCustomReward(u.id, {
+      let data = await client.channelPoints.createCustomReward(user.id, {
         title: ctx.getInput("title"),
         cost: ctx.getInput("cost"),
         prompt: ctx.getInput("prompt"),
@@ -404,7 +409,7 @@ pkg.createNonEventSchema({
       ctx.setOutput("redemptionId", data?.id);
     } catch (error: any) {
       ctx.setOutput("success", false);
-      ctx.setOutput("errorMessage", JSON.parse(error.body).message);
+      ctx.setOutput("errorMessage", (JSON.parse(error.body) as any).message);
     }
   },
 });
@@ -424,10 +429,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.chat.updateSettings(u.id, u.id, {
+    client.chat.updateSettings(user.id, user.id, {
       followerOnlyModeEnabled: ctx.getInput("enabled"),
       followerOnlyModeDelay: ctx.getInput("delay"),
     });
@@ -449,10 +453,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.chat.updateSettings(u.id, u.id, {
+    client.chat.updateSettings(user.id, user.id, {
       slowModeEnabled: ctx.getInput("enabled"),
       slowModeDelay: ctx.getInput("delay"),
     });
@@ -469,10 +472,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.chat.updateSettings(u.id, u.id, {
+    client.chat.updateSettings(user.id, user.id, {
       subscriberOnlyModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -488,10 +490,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.chat.updateSettings(u.id, u.id, {
+    client.chat.updateSettings(user.id, user.id, {
       uniqueChatModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -508,9 +509,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, client } = api().unwrap();
 
-    apiClient()?.chat.shoutoutUser(u.id, ctx.getInput("userId"), u.id);
+    client.chat.shoutoutUser(user.id, ctx.getInput("userId"), user.id);
   },
 });

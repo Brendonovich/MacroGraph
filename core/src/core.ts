@@ -9,10 +9,10 @@ export type Procedures = {
         { key: "auth.twitch", input: never, result: Message }
 };
 
-export type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
-
-export type Message = "Listening" | { Received: string }
+export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: HTTPBody | null }
 
 export type HTTPBody = { Json: any } | { Form: { [key: string]: string } }
 
-export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: HTTPBody | null }
+export type Message = "Listening" | { Received: string }
+
+export type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"

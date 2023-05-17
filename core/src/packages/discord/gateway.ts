@@ -5,9 +5,11 @@ import {
   onCleanup,
   createRoot,
 } from "solid-js";
-import { types } from "../../types";
+import { z } from "zod";
+import { types, Option } from "../../types";
 import { botToken } from "./auth";
 import pkg from "./pkg";
+import { GUILD_MEMBER_SCHEMA, USER_SCHEMA } from "./schemas";
 
 const { ws, connect, disconnect } = createRoot(() => {
   const [ws, setWs] = createSignal<WebSocket | null>(null);
@@ -30,7 +32,7 @@ const { ws, connect, disconnect } = createRoot(() => {
     ws.addEventListener("message", ({ data }) => {
       let payload = JSON.parse(data);
 
-      const { t, op, d, s } = payload;
+      const { t, op, d, s } = payload as any;
       seq = s;
 
       switch (op) {
@@ -115,6 +117,7 @@ const { ws, connect, disconnect } = createRoot(() => {
 
   return { ws, connect, disconnect };
 });
+
 export { ws, connect, disconnect };
 
 pkg.createEventSchema({
@@ -147,7 +150,7 @@ pkg.createEventSchema({
     t.dataOutput({
       id: "nickname",
       name: "Nickname",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataOutput({
       id: "guildId",
@@ -161,14 +164,19 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("message", data.content);
     ctx.setOutput("channelId", data.channel_id);
     ctx.setOutput("username", data.author.username);
     ctx.setOutput("userId", data.author.id);
-    ctx.setOutput("nickname", data.member.nick);
-    ctx.setOutput("guildId", data.guild_id);
+    ctx.setOutput(
+      "nickname",
+      Option.new(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen(
+        (v) => Option.new(v.nick)
+      )
+    );
+    ctx.setOutput("guildId", Option.new(data.guild_id as string | null));
     ctx.setOutput("roles", data.member.roles);
+
     ctx.exec("exec");
   },
 });

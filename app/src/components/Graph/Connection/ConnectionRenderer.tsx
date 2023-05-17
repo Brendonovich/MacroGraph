@@ -64,35 +64,24 @@ export const ConnectionRender = () => {
                     {(positions) => (
                       <Switch>
                         <Match when={i instanceof DataInput && i}>
-                          {(i) => {
-                            const colourClass = () => {
-                              const input = i();
-
-                              return input.type instanceof PrimitiveType
-                                ? DataColourClasses[
-                                    input.type.primitiveVariant()
-                                  ]
-                                : DataColourClasses[
-                                    (
-                                      (input.type as ListType)
-                                        .inner as PrimitiveType
-                                    ).primitiveVariant()
-                                  ];
-                            };
-
-                            return (
-                              <line
-                                class={colourClass()}
-                                x1={positions().input.x - graphOffset().x}
-                                y1={positions().input.y - graphOffset().y}
-                                x2={positions().output.x - graphOffset().x}
-                                y2={positions().output.y - graphOffset().y}
-                                stroke="currentColor"
-                                stroke-opacity={0.75}
-                                stroke-width={2 * scale()}
-                              />
-                            );
-                          }}
+                          {(input) => (
+                            <line
+                              class={
+                                DataColourClasses[
+                                  input()
+                                    .type.basePrimitive()
+                                    .primitiveVariant()
+                                ]
+                              }
+                              x1={positions().input.x - graphOffset().x}
+                              y1={positions().input.y - graphOffset().y}
+                              x2={positions().output.x - graphOffset().x}
+                              y2={positions().output.y - graphOffset().y}
+                              stroke="currentColor"
+                              stroke-opacity={0.75}
+                              stroke-width={2 * scale()}
+                            />
+                          )}
                         </Match>
                         <Match when={i instanceof ExecInput}>
                           <line
@@ -131,14 +120,9 @@ export const ConnectionRender = () => {
               )
                 return "text-white";
 
-              if (draggingPin.type instanceof PrimitiveType)
-                return DataColourClasses[draggingPin.type.primitiveVariant()];
-              else
-                return DataColourClasses[
-                  (
-                    (draggingPin.type as ListType).inner as PrimitiveType
-                  ).primitiveVariant()
-                ];
+              return DataColourClasses[
+                draggingPin.type.basePrimitive().primitiveVariant()
+              ];
             };
 
             return (
