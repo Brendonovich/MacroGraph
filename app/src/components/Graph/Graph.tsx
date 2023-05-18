@@ -93,6 +93,8 @@ export const Graph = (props: Props) => {
           )}
           style={{
             transform: `scale(${UI.state.scale})`,
+            height: "200%",
+            width: "200%",
           }}
           onWheel={(e) => {
             e.preventDefault();
@@ -180,9 +182,8 @@ export const Graph = (props: Props) => {
           <div
             class="origin-[0,0]"
             style={{
-              transform: `translate(${UI.state.translate.x * -1}px, ${
-                UI.state.translate.y * -1
-              }px)`,
+              transform: `translate(${UI.state.translate.x * -1}px, ${UI.state.translate.y * -1
+                }px)`,
             }}
           >
             <For each={[...graph().commentBoxes.values()]}>
