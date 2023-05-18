@@ -21,14 +21,14 @@ export const GraphList = (props: Props) => {
         <button
           class="text-xl font-bold"
           onClick={() => {
-            const graph = core.createGraph();
+            const graph = core.project.createGraph();
             UI.setCurrentGraph(graph);
           }}
         >
           +
         </button>
       </div>
-      <For each={[...core.graphs.values()]}>
+      <For each={[...core.project.graphs.values()]}>
         {(graph) => (
           <GraphItem
             graph={graph}

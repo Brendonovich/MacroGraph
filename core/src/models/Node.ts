@@ -132,7 +132,7 @@ export class Node {
   setPosition(position: XY, save = false) {
     this.position = position;
 
-    if (save) this.graph.save();
+    if (save) this.graph.project.save();
   }
 
   // IO Creators
@@ -180,7 +180,10 @@ export class Node {
     graph: Graph,
     data: z.infer<typeof SerializedNode>
   ): Node | null {
-    const schema = graph.core.schema(data.schema.package, data.schema.id);
+    const schema = graph.project.core.schema(
+      data.schema.package,
+      data.schema.id
+    );
 
     if (!schema) return null;
 
