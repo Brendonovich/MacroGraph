@@ -1,4 +1,4 @@
-import { createRoot, createEffect, createSignal } from "solid-js";
+import { createRoot, createEffect, createSignal, enableExternalSource } from "solid-js";
 import tmi, { Client } from "tmi.js";
 import pkg from "./pkg";
 import { types } from "../../types";
@@ -22,6 +22,16 @@ const { client } = createRoot(() => {
         client.connect();
 
         client.on("connected", () => console.log("connected"));
+
+        client.on("emoteonly", (channel, enabled) => pkg.emitEvent({ name: "emoteonly", data: { channel, enabled } }));
+
+        client.on("subscribers", (channel, enabled) => pkg.emitEvent({ name: "subonlymode", data: { channel, enabled } }));
+
+        client.on("slowmode", (channel, enabled, length) => pkg.emitEvent({ name: "slowmode", data: { channel, enabled, length } }));
+
+        client.on("messagedeleted", (channel, username, deletedmessage, userstate) => pkg.emitEvent({ name: "messagedeleted", data: { channel, username, deletedmessage, userstate } }));
+
+        client.on("followersonly", (channel, enabled, length) => pkg.emitEvent({ name: "followersonly", data: { channel, enabled, length } }));
 
         client.on("message", (_, tags, message, self) => {
           const data = { message, tags, self };
@@ -49,31 +59,132 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
+    const u = user();
     const c = client();
 
+    if (!u) return;
     if (!c) return;
 
-    c.say(c.getUsername(), ctx.getInput("message"));
+    c.say(u?.name, ctx.getInput("message"));
   },
 });
 
-pkg.createNonEventSchema({
-  name: "Emote Only Mode",
-  variant: "Exec",
+pkg.createEventSchema({
+  name: "Slow Mode Toggled",
+  event: "slowmode",
   generateIO: (t) => {
-    t.dataInput({
+    t.execOutput({
+      id: "exec",
+    })
+    t.dataOutput({
       id: "enabled",
+      name: "Enabled",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "length",
+      name: "Duration",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("enabled", data.enabled);
+    ctx.setOutput("length", data.length);
+    ctx.exec("exec");
+  },
+});
+
+pkg.createEventSchema({
+  name: "Emote Only Mode Toggled",
+  event: "emoteonly",
+  generateIO: (t) => {
+    t.execOutput({
+      id: "exec",
+    })
+    t.dataOutput({
+      id: "enabled",
+      name: "Enabled",
       type: types.bool(),
     });
   },
-  run({ ctx }) {
-    const c = client();
+  run({ ctx, data }) {
+    ctx.setOutput("enabled", data.enabled);
+    ctx.exec("exec");
+  },
+});
 
-    if (!c) return;
-
-    apiClient()?.chat.updateSettings(c.getUsername(), c.getUsername(), {
-      emoteOnlyModeEnabled: ctx.getInput("enabled"),
+pkg.createEventSchema({
+  name: "Subscriber Only Mode Toggled",
+  event: "subonlymode",
+  generateIO: (t) => {
+    t.execOutput({
+      id: "exec",
+    })
+    t.dataOutput({
+      id: "enabled",
+      name: "Enabled",
+      type: types.bool(),
     });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("enabled", data.enabled);
+    ctx.exec("exec");
+  },
+});
+
+pkg.createEventSchema({
+  name: "Follower Only Mode Toggled",
+  event: "followersonly",
+  generateIO: (t) => {
+    t.execOutput({
+      id: "exec",
+    })
+    t.dataOutput({
+      id: "enabled",
+      name: "Enabled",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      id: "length",
+      name: "Duration",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("enabled", data.enabled);
+    ctx.setOutput("length", data.length);
+    ctx.exec("exec");
+  },
+});
+
+pkg.createEventSchema({
+  name: "Messaged Deleted",
+  event: "messagedeleted",
+  generateIO: (t) => {
+    t.execOutput({
+      id: "exec",
+    })
+    t.dataOutput({
+      id: "username",
+      name: "Username",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "deletedMessage",
+      name: "Deleted Message",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "messageId",
+      name: "Messasge ID",
+      type: types.string(),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("username", data.username);
+    ctx.setOutput("deletedMessage", data.deletedmessage);
+    ctx.setOutput("messageId", data.userstate["target-msg-id"]);
+    ctx.exec("exec");
   },
 });
 
@@ -105,6 +216,16 @@ pkg.createEventSchema({
       type: types.string(),
     });
     t.dataOutput({
+      id: "messageId",
+      name: "Message ID",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "broadcaster",
+      name: "Broadcaster",
+      type: types.bool(),
+    });
+    t.dataOutput({
       id: "mod",
       name: "Moderator",
       type: types.bool(),
@@ -121,11 +242,16 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
+    console.log(data);
+    const u = user();
+    if (!u) return;
     if (data.self) return;
     ctx.setOutput("username", data.tags.username);
     ctx.setOutput("displayName", data.tags["display-name"]);
     ctx.setOutput("userId", data.tags["user-id"]);
     ctx.setOutput("message", data.message);
+    ctx.setOutput("messageId", data.tags.id);
+    ctx.setOutput("broadcaster", data.tags["user-id"] == u.id);
     ctx.setOutput("mod", data.tags.mod);
     ctx.setOutput("sub", data.tags.subscriber);
     ctx.setOutput("vip", data.tags.vip);
