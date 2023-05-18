@@ -1,5 +1,5 @@
 import { core } from "../models";
-import { types } from "../types";
+import { Option, types } from "../types";
 
 const pkg = core.createPackage({
   name: "Localstorage",
@@ -41,8 +41,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    let data = localStorage.getItem(`value-${ctx.getInput("key")}`);
-    ctx.setOutput("exists", data !== null);
-    if (data !== null) ctx.setOutput("output", data);
+    const data = localStorage.getItem(`value-${ctx.getInput("key")}`);
+    const opt = Option.new(data);
+    ctx.setOutput("output", opt);
   },
 });
