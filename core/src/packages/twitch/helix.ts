@@ -4,6 +4,7 @@ import { accessToken, authProvider } from "./auth";
 import pkg from "./pkg";
 import { map } from "../../utils";
 import { types, Option } from "../../types";
+import { PRINT_CHANNEL, twitch } from "..";
 
 const { apiClient, user } = createRoot(() => {
   const apiClient = createMemo(
@@ -16,6 +17,12 @@ const { apiClient, user } = createRoot(() => {
     const client = apiClient();
 
     if (!client || !token) return null;
+
+    try {
+      client.getTokenInfo();
+    } catch (error) {
+      twitch.auth.setAccessToken(null);
+    }
 
     const { userId, userName } = await client.getTokenInfo();
 
@@ -50,6 +57,19 @@ const api = () => {
     }))
   );
 };
+
+setTimeout(async () => {
+  try {
+    let data = await api().unwrap().client.getTokenInfo();
+    const expiry = data[Object.getOwnPropertySymbols(data)[0]].expires_in
+    setTimeout(() => {
+      twitch.auth.setAccessToken(null);
+      PRINT_CHANNEL.emit("TWITCH TOKEN EXPIRED PLEASE LOG BACK IN IN THE TOP LEFT");
+    }, expiry * 1000);
+  } catch (error) {
+    console.log(error);
+  }
+}, 5000);
 
 pkg.createNonEventSchema({
   name: "Ban User",
