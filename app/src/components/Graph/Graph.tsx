@@ -182,8 +182,9 @@ export const Graph = (props: Props) => {
           <div
             class="origin-[0,0]"
             style={{
-              transform: `translate(${UI.state.translate.x * -1}px, ${UI.state.translate.y * -1
-                }px)`,
+              transform: `translate(${UI.state.translate.x * -1}px, ${
+                UI.state.translate.y * -1
+              }px)`,
             }}
           >
             <For each={[...graph().commentBoxes.values()]}>
