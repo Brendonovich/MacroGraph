@@ -13,11 +13,11 @@ const Bot = () => {
     <div class="flex flex-col space-y-2">
       <span class="text-neutral-400 font-medium">Bot</span>
       <Switch fallback="Loading...">
-        <Match when={discord.auth.botToken() === null}>
+        <Match when={discord.auth.botToken().isNone()}>
           {(_) => {
             const [, { Form, Field }] = createForm({
               initialValues: {
-                botToken: discord.auth.botToken() ?? undefined,
+                botToken: discord.auth.botToken().unwrapOr(""),
               },
               validate: zodForm(Schema),
             });

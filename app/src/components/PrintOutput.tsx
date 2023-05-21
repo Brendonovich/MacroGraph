@@ -1,5 +1,5 @@
 import { createSignal, For, onCleanup } from "solid-js";
-import { PRINT_CHANNEL } from "~/../../core/src";
+import { PRINT_CHANNEL } from "@macrograph/packages";
 
 export const PrintOutput = () => {
   const [items, setItems] = createSignal<{ value: string; timestamp: Date }[]>(

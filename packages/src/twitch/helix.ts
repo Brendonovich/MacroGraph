@@ -13,7 +13,7 @@ export const { helix, user } = createRoot(() => {
   const getUser = () =>
     accessToken()
       .zip(helix())
-      .andThen(([token, helix]) =>
+      .andThenAsync(([token, helix]) =>
         helix.getTokenInfo().then(({ userId, userName }) =>
           Maybe(
             userId !== null && userName !== null

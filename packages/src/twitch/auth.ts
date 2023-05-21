@@ -15,8 +15,10 @@ const { accessToken, setAccessToken, authProvider } = createRoot(() => {
     const token = accessToken();
 
     token
-      .map((v) => localStorage.setItem(TWITCH_ACCCESS_TOKEN, v))
-      .unwrapOrElse(() => localStorage.removeItem(TWITCH_ACCCESS_TOKEN));
+      .map((v) => (localStorage.setItem(TWITCH_ACCCESS_TOKEN, v), true))
+      .unwrapOrElse(
+        () => (localStorage.removeItem(TWITCH_ACCCESS_TOKEN), false)
+      );
   });
 
   const authProvider = createMemo(

@@ -121,18 +121,21 @@ class Option<T> {
   /**
    * Maps an {@link Option<T> `Option<T>`} to {@link Option<U> `Option<U>`} by applying a function to a contained value.
    */
-  map<O>(f: (x: T) => Promise<O>): Promise<Option<O>>;
-  map<O>(f: (x: T) => O): Option<O>;
-  map<O>(f: (x: T) => O | Promise<O>): Option<O> | Promise<Option<O>> {
+  map<O>(f: (x: T) => O): Option<O> {
     if (this.isSome()) {
       const value = f(this.value);
 
-      if (value instanceof Promise)
-        return value.then((value) =>
-          value === null || typeof value === "undefined"
-            ? None
-            : Some(value as any)
-        );
+      return value === null || typeof value === "undefined"
+        ? None
+        : Some(value as any);
+    }
+
+    return None;
+  }
+
+  async mapAsync<O>(f: (x: T) => Promise<O>): Promise<Option<O>> {
+    if (this.isSome()) {
+      const value = await f(this.value);
 
       return value === null || typeof value === "undefined"
         ? None
@@ -208,13 +211,17 @@ class Option<T> {
    *
    * Some languages call this operation flatmap.
    */
-  andThen<O>(f: (x: T) => Option<O>): Option<O>;
-  andThen<O>(f: (x: T) => Promise<Option<O>>): Promise<Option<O>>;
-  andThen<O>(
-    f: (x: T) => Option<O> | Promise<Option<O>>
-  ): Option<O> | Promise<Option<O>> {
+  andThen<O>(f: (x: T) => Option<O>): Option<O> {
     if (this.isSome()) {
       return f(this.value);
+    }
+
+    return None;
+  }
+
+  async andThenAsync<O>(f: (x: T) => Promise<Option<O>>): Promise<Option<O>> {
+    if (this.isSome()) {
+      return await f(this.value);
     }
 
     return None;
@@ -426,6 +433,10 @@ class Option<T> {
    */
   toString(): string {
     return String(this.value);
+  }
+
+  toNullable(): T | null {
+    return this.value;
   }
 }
 

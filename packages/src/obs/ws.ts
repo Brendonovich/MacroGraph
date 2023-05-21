@@ -35,7 +35,7 @@ const { connect, disconnect, state } = createRoot(() => {
   obs.on("ConnectionClosed", () => setState("disconnected"));
   obs.on("ConnectionError", () => setState("disconnected"));
 
-  Maybe(localStorage.getItem(OBS_WS)).map(async (jstr) => {
+  Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
     const { url, password } = SCHEMA.parse(JSON.parse(jstr));
 
     try {

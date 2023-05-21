@@ -95,7 +95,7 @@ const { ws, connect, disconnect } = createRoot(() => {
   };
 
   const connect = () =>
-    botToken().map((token) => {
+    botToken().mapAsync((token) => {
       setEnabled(true);
       return createGateway(token);
     });
