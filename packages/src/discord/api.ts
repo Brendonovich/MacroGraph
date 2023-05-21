@@ -65,10 +65,12 @@ const api = {
 const [bot] = createRoot(() =>
   createResource(botToken, async () => {
     try {
+      console.log(botToken());
       const resp = await api.users("@me").get(USER_SCHEMA);
 
       return resp;
-    } catch {
+    } catch (e) {
+      console.log(e);
       setBotToken(null);
     }
   })
@@ -116,11 +118,6 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     io.dataOutput({
-      id: "displayName",
-      name: "Display Name",
-      type: types.option(types.string()),
-    });
-    io.dataOutput({
       id: "avatarId",
       name: "Avatar ID",
       type: types.option(types.string()),
@@ -135,7 +132,6 @@ pkg.createNonEventSchema({
     const response = await api.users(ctx.getInput("userId")).get(USER_SCHEMA);
 
     ctx.setOutput("username", response.username);
-    ctx.setOutput("displayName", Maybe(response.display_name));
     ctx.setOutput("avatarId", Maybe(response.avatar));
     ctx.setOutput("bannerId", Maybe(response.avatar));
   },
@@ -193,7 +189,6 @@ pkg.createNonEventSchema({
       .get(GUILD_MEMBER_SCHEMA);
 
     ctx.setOutput("username", Maybe(response.user?.username));
-    ctx.setOutput("displayName", Maybe(response.user?.display_name));
     ctx.setOutput("avatarId", Maybe(response.user?.avatar));
     ctx.setOutput("bannerId", Maybe(response.user?.banner));
     ctx.setOutput("nick", response.nick);
@@ -307,7 +302,7 @@ pkg.createNonEventSchema({
     ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
     ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
     ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
-    await ctx.getInput<Option<string>>("fileLocation").map(async (v) => {
+    await ctx.getInput<Option<string>>("fileLocation").mapAsync(async (v) => {
       body["file[0]"] = JSON.stringify({
         file: await fs.readBinaryFile(v),
         fileName: ctx

@@ -43,55 +43,53 @@ const Bot = () => {
           }}
         </Match>
         <Match when={discord.bot()}>
-          {(bot) => {
-            return (
-              <>
-                <div class="flex flex-row items-center space-x-4">
-                  <p>{bot().username}</p>
-                  <Button onClick={() => discord.auth.setBotToken(null)}>
-                    Log Out
-                  </Button>
-                </div>
-                <div class="flex flex-row items-center space-x-4">
-                  <p>
-                    {`Gateway 
+          {(bot) => (
+            <>
+              <div class="flex flex-row items-center space-x-4">
+                <p>{bot().username}</p>
+                <Button onClick={() => discord.auth.setBotToken(null)}>
+                  Log Out
+                </Button>
+              </div>
+              <div class="flex flex-row items-center space-x-4">
+                <p>
+                  {`Gateway 
                     ${
                       discord.gateway.ws() !== null
                         ? "Connected"
                         : "Disconnected"
                     }`}
-                  </p>
-                  <Show
-                    when={!discord.gateway.ws()}
-                    fallback={
-                      <Button onClick={discord.gateway.disconnect}>
-                        Disconnect
+                </p>
+                <Show
+                  when={!discord.gateway.ws()}
+                  fallback={
+                    <Button onClick={discord.gateway.disconnect}>
+                      Disconnect
+                    </Button>
+                  }
+                >
+                  {(_) => {
+                    const [loading, setLoading] = createSignal(false);
+
+                    return (
+                      <Button
+                        disabled={loading()}
+                        onClick={async () => {
+                          setLoading(true);
+
+                          discord.gateway
+                            .connect()
+                            .finally(() => setLoading(false));
+                        }}
+                      >
+                        {loading() ? "Connecting..." : "Connect"}
                       </Button>
-                    }
-                  >
-                    {(_) => {
-                      const [loading, setLoading] = createSignal(false);
-
-                      return (
-                        <Button
-                          disabled={loading()}
-                          onClick={async () => {
-                            setLoading(true);
-
-                            discord.gateway
-                              .connect()
-                              .finally(() => setLoading(false));
-                          }}
-                        >
-                          {loading() ? "Connecting..." : "Connect"}
-                        </Button>
-                      );
-                    }}
-                  </Show>
-                </div>
-              </>
-            );
-          }}
+                    );
+                  }}
+                </Show>
+              </div>
+            </>
+          )}
         </Match>
       </Switch>
     </div>
