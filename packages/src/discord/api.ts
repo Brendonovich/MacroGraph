@@ -263,7 +263,7 @@ pkg.createNonEventSchema({
     t.dataInput({
       id: "content",
       name: "Message",
-      type: types.option(types.string()),
+      type: types.string(),
     });
     t.dataInput({
       id: "username",
@@ -273,17 +273,17 @@ pkg.createNonEventSchema({
     t.dataInput({
       id: "avatarUrl",
       name: "Avatar URL",
-      type: types.option(types.string()),
+      type: types.string(),
     });
     t.dataInput({
       id: "tts",
       name: "TTS",
-      type: types.option(types.bool()),
+      type: types.bool(),
     });
     t.dataInput({
       id: "fileLocation",
       name: "File Location",
-      type: types.option(types.string()),
+      type: types.string(),
     });
     t.dataOutput({
       id: "status",
@@ -294,19 +294,18 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const body: Record<string, string> = {};
 
-    ctx.getInput<Option<string>>("content").map((v) => (body.content = v));
-    ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
-    ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
-    ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
-    await ctx.getInput<Option<string>>("fileLocation").mapAsync(async (v) => {
+    if (ctx.getInput("content")) body.content = ctx.getInput("content");
+    if (ctx.getInput("avatarUrl")) body.avatar_url = ctx.getInput("avatarUrl");
+    if (ctx.getInput("username")) body.username = ctx.getInput("username");
+    if (ctx.getInput("tts")) body.tts = ctx.getInput("tts").toString();
+    if (ctx.getInput("fileLocation")) {
       body["file[0]"] = JSON.stringify({
-        file: await fs.readBinaryFile(v),
-        fileName: ctx
-          .getInput<string>("fileLocation")
+        file: await fs.readBinaryFile(ctx.getInput("fileLocation")),
+        fileName: ctx.getInput("fileLocation")
           .split(/[\/\\]/)
           .at(-1),
       });
-    });
+    }
 
     let response = await rspcClient.query([
       "http.json",
