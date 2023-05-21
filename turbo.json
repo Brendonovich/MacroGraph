@@ -7,6 +7,9 @@
     "dev": {
       "cache": false
     },
-    "lint": {}
+    "lint": {},
+    "typecheck": {
+      "outputs": ["dist/**"]
+    }
   }
 }

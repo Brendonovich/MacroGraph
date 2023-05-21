@@ -1,5 +1,5 @@
 import { Match, Switch } from "solid-js";
-import { obs } from "@macrograph/core";
+import { obs } from "@macrograph/packages";
 import { createForm, zodForm } from "@modular-forms/solid";
 import { Button, Input } from "./ui";
 

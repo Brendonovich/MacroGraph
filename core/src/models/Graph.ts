@@ -187,7 +187,7 @@ export class Graph {
 
           return [id, node] as [number, Node];
         })
-        .filter(Boolean)
+        .filter(Boolean) as [number, Node][]
     );
 
     data.connections.forEach(({ from, to }) => {
