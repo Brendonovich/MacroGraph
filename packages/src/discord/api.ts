@@ -65,12 +65,8 @@ const api = {
 const [bot] = createRoot(() =>
   createResource(botToken, async () => {
     try {
-      console.log(botToken());
-      const resp = await api.users("@me").get(USER_SCHEMA);
-
-      return resp;
-    } catch (e) {
-      console.log(e);
+      return await api.users("@me").get(USER_SCHEMA);
+    } catch {
       setBotToken(null);
     }
   })
