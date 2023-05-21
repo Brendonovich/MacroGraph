@@ -263,27 +263,27 @@ pkg.createNonEventSchema({
     t.dataInput({
       id: "content",
       name: "Message",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataInput({
       id: "username",
       name: "Username",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataInput({
       id: "avatarUrl",
       name: "Avatar URL",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataInput({
       id: "tts",
       name: "TTS",
-      type: types.bool(),
+      type: types.option(types.bool()),
     });
     t.dataInput({
       id: "fileLocation",
       name: "File Location",
-      type: types.string(),
+      type: types.option(types.string()),
     });
     t.dataOutput({
       id: "status",
