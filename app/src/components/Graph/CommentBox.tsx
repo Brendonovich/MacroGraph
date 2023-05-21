@@ -87,7 +87,7 @@ export default (props: Props) => {
 
                     window.addEventListener("mousemove", handleMouseMove);
                     const listener = () => {
-                      graph().save();
+                      graph().project.save();
 
                       window.removeEventListener("mouseup", listener);
                       window.removeEventListener("mousemove", handleMouseMove);
@@ -171,7 +171,7 @@ export default (props: Props) => {
                 window.removeEventListener("mouseup", listener);
                 window.removeEventListener("mousemove", handleMouseMove);
 
-                graph().save();
+                graph().project.save();
               };
               window.addEventListener("mouseup", listener);
 

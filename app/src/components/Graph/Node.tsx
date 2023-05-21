@@ -175,7 +175,7 @@ export const Node = (props: Props) => {
                     onInput={(e) => setValue(e.target.value)}
                     onBlur={() => {
                       if (value() !== "") node.name = value();
-                      node.graph.save();
+                      node.graph.project.save();
 
                       setEditingName(false);
                     }}

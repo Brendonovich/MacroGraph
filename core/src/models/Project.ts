@@ -63,7 +63,7 @@ export class Project {
 
           return [graph.id, graph] as [number, Graph];
         })
-        .filter(Boolean)
+        .filter(Boolean) as [number, Graph][]
     );
 
     return project;

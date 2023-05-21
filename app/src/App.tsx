@@ -13,6 +13,9 @@ function App() {
 
   onMount(() => {
     core.load();
+
+    const firstGraph = core.project.graphs.values().next();
+    if (firstGraph) ui.setCurrentGraph(firstGraph.value);
   });
 
   return (
