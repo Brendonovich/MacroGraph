@@ -27,6 +27,7 @@
     "discord.js": "^14.9.0",
     "obs-websocket-js": "^5.0.2",
     "tmi.js": "^1.8.5",
+    "typescript-result-option": "^0.2.5",
     "zod": "^3.21.4"
   },
   "devDependencies": {

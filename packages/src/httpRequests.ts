@@ -1,6 +1,4 @@
-import { rspcClient } from "../client";
-import { core } from "../models";
-import { types } from "../types";
+import { core, rspcClient, types } from "@macrograph/core";
 
 const pkg = core.createPackage<any>({ name: "HTTP Requests" });
 

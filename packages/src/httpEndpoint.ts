@@ -1,6 +1,5 @@
+import { rspcClient, HTTPRequest, HTTPBody } from "@macrograph/core";
 import { z } from "zod";
-import { rspcClient } from "../client";
-import { HTTPBody, HTTPRequest } from "../core";
 
 type Endpoint = ReturnType<typeof createEndpoint>;
 type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

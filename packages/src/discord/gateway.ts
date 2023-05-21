@@ -6,10 +6,10 @@ import {
   createRoot,
 } from "solid-js";
 import { z } from "zod";
-import { types, Option } from "../../types";
+import { types, Maybe } from "@macrograph/core";
 import { botToken } from "./auth";
 import pkg from "./pkg";
-import { GUILD_MEMBER_SCHEMA, USER_SCHEMA } from "./schemas";
+import { GUILD_MEMBER_SCHEMA } from "./schemas";
 
 const { ws, connect, disconnect } = createRoot(() => {
   const [ws, setWs] = createSignal<WebSocket | null>(null);
@@ -94,18 +94,19 @@ const { ws, connect, disconnect } = createRoot(() => {
     setEnabled(false);
   };
 
-  const connect = async () => {
-    const token = botToken();
-    if (token === null) return;
-
-    setEnabled(true);
-    await createGateway(token);
-  };
+  const connect = () =>
+    botToken().map((token) => {
+      setEnabled(true);
+      return createGateway(token);
+    });
 
   createEffect(
     on(botToken, (token) => {
-      if (token === null || !enabled()) setWs(null);
-      else createGateway(token);
+      token
+        .andThen((token) => Maybe(enabled() ? createGateway(token) : null))
+        .unwrapOrElse(async () => {
+          setWs(null);
+        });
     })
   );
 
@@ -170,11 +171,11 @@ pkg.createEventSchema({
     ctx.setOutput("userId", data.author.id);
     ctx.setOutput(
       "nickname",
-      Option.new(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen(
-        (v) => Option.new(v.nick)
+      Maybe(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen((v) =>
+        Maybe(v.nick)
       )
     );
-    ctx.setOutput("guildId", Option.new(data.guild_id as string | null));
+    ctx.setOutput("guildId", Maybe(data.guild_id as string | null));
     ctx.setOutput("roles", data.member.roles);
 
     ctx.exec("exec");

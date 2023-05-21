@@ -1,4 +1,4 @@
-import { types } from "../../types";
+import { types } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
 
@@ -715,7 +715,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const data = await obs.call("CreateInput", {
-      inputKind: ctx.getInput("inputKind"),
+      inputKind: ctx.getInput<string>("inputKind"),
       sceneName: ctx.getInput("sceneName"),
       inputName: ctx.getInput("inputName"),
       sceneItemEnabled: ctx.getInput("sceneItemEnabled"),
@@ -1096,7 +1096,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     obs.call("SetCurrentSceneTransition", {
-      transitionName: ctx.getInput("transitionName"),
+      transitionName: ctx.getInput<string>("transitionName"),
     });
   },
 });
@@ -1113,7 +1113,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     obs.call("SetCurrentSceneTransitionDuration", {
-      transitionDuration: ctx.getInput("transitionDuration"),
+      transitionDuration: ctx.getInput<number>("transitionDuration"),
     });
   },
 });
@@ -1139,9 +1139,9 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Trigger Studio Mode Transition",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
-    obs.call("TriggerStudioModeTransition");
+  generateIO() {},
+  async run() {
+    await obs.call("TriggerStudioModeTransition");
   },
 });
 
@@ -1477,7 +1477,7 @@ pkg.createNonEventSchema({
     await obs.call("SetSceneItemEnabled", {
       sceneName: ctx.getInput("sceneName"),
       sceneItemId: ctx.getInput("sceneItemId"),
-      sceneItemEnabled: ctx.getInput("sceneItemEnabled"),
+      sceneItemEnabled: ctx.getInput<boolean>("sceneItemEnabled"),
     });
   },
 });
@@ -1691,8 +1691,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Virtual Cam",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("StartVirtualCam");
   },
 });
@@ -1700,8 +1700,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Stop Virtual Cam",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("StopVirtualCam");
   },
 });
@@ -1741,8 +1741,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Replay Buffer",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("StartReplayBuffer");
   },
 });
@@ -1750,8 +1750,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Stop Replay Buffer",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("StopReplayBuffer");
   },
 });
@@ -1759,8 +1759,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Save Replay Buffer",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("SaveReplayBuffer");
   },
 });
@@ -1904,11 +1904,11 @@ const StreamStatus = [
     name: "Output Duration",
     type: types.int(),
   },
-  {
-    id: "outputCongestion",
-    name: "Output Congestion",
-    type: types.int(),
-  },
+  // {
+  //   id: "outputCongestion",
+  //   name: "Output Congestion",
+  //   type: types.int(),
+  // },
   {
     id: "outputBytes",
     name: "Output Bytes",
@@ -1957,8 +1957,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Stream",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("StartStream");
   },
 });
@@ -1966,8 +1966,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Stop Stream",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("StopStream");
   },
 });
@@ -2032,8 +2032,8 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Toggle Record",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
+  generateIO() {},
+  async run() {
     obs.call("ToggleRecord");
   },
 });
@@ -2041,52 +2041,52 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Start Record",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
-    obs.call("StartRecord");
+  generateIO() {},
+  async run() {
+    await obs.call("StartRecord");
   },
 });
 
 pkg.createNonEventSchema({
   name: "Stop Record",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
-      id: "outputPath",
-      name: "Output Path",
-      type: types.list(types.string()),
-    });
+  generateIO() {
+    // t.dataOutput({
+    //   id: "outputPath",
+    //   name: "Output Path",
+    //   type: types.list(types.string()),
+    // });
   },
-  async run({ ctx }) {
-    const data = await obs.call("StopRecord");
-    ctx.setOutput("outputPath", data.outputPath);
+  async run() {
+    await obs.call("StopRecord");
+    // ctx.setOutput("outputPath", data.outputPath);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Toggle Record Paused",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
-    obs.call("ToggleRecordPause");
+  generateIO() {},
+  async run() {
+    await obs.call("ToggleRecordPause");
   },
 });
 
 pkg.createNonEventSchema({
   name: "Pause Record",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
-    obs.call("PauseRecord");
+  generateIO() {},
+  async run() {
+    await obs.call("PauseRecord");
   },
 });
 
 pkg.createNonEventSchema({
   name: "Resume Record",
   variant: "Exec",
-  generateIO(t) {},
-  async run({ ctx }) {
-    obs.call("ResumeRecord");
+  generateIO() {},
+  async run() {
+    await obs.call("ResumeRecord");
   },
 });
 
@@ -2280,34 +2280,34 @@ pkg.createNonEventSchema({
 
 //GetMonitorList has array of objects
 
-pkg.createNonEventSchema({
-  name: "Open Video Mix Projector",
-  variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
-      id: "videoMixType",
-      name: "Video Mix Type",
-      type: types.string(),
-    });
-    t.dataInput({
-      id: "monitorIndex",
-      name: "Monitor Index",
-      type: types.int(),
-    });
-    t.dataInput({
-      id: "projectorGeometry",
-      name: "Projector Geometry",
-      type: types.string(),
-    });
-  },
-  async run({ ctx }) {
-    obs.call("OpenVideoMixProjector", {
-      videoMixType: ctx.getInput("videoMixType"),
-      monitorIndex: ctx.getInput("monitorIndex"),
-      projectorGeometry: ctx.getInput("projectorGeometry"),
-    });
-  },
-});
+// pkg.createNonEventSchema({
+//   name: "Open Video Mix Projector",
+//   variant: "Exec",
+//   generateIO(t) {
+//     t.dataInput({
+//       id: "videoMixType",
+//       name: "Video Mix Type",
+//       type: types.string(),
+//     });
+//     t.dataInput({
+//       id: "monitorIndex",
+//       name: "Monitor Index",
+//       type: types.int(),
+//     });
+//     t.dataInput({
+//       id: "projectorGeometry",
+//       name: "Projector Geometry",
+//       type: types.string(),
+//     });
+//   },
+//   async run({ ctx }) {
+//     obs.call("OpenVideoMixProjector", {
+//       videoMixType: ctx.getInput("videoMixType"),
+//       monitorIndex: ctx.getInput("monitorIndex"),
+//       projectorGeometry: ctx.getInput("projectorGeometry"),
+//     });
+//   },
+// });
 
 // pkg.createNonEventSchema({
 //   name: "Open Source Projector",

@@ -2,3 +2,4 @@ packages:
   - 'core'
   - 'app'
   - 'web'
+  - 'packages'

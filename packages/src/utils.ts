@@ -1,5 +1,4 @@
-import { core } from "../models";
-import { Option, types } from "../types";
+import { core, Maybe, Option, types } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -246,7 +245,7 @@ pkg.createNonEventSchema({
   variant: "Pure",
   run({ ctx }) {
     const number = Number(ctx.getInput<string>("string"));
-    const opt = Option.new(Number.isNaN(number) ? null : number);
+    const opt = Maybe(Number.isNaN(number) ? null : number);
 
     ctx.setOutput("int", opt.map(Math.floor));
   },

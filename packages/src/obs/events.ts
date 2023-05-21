@@ -1,6 +1,6 @@
 //EVENTS BELOW ______________________________________________|
 
-import { types } from "../../types";
+import { types } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
 

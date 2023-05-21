@@ -3,6 +3,7 @@ import { CoreProvider } from "./contexts";
 import { Graph } from "~/components/Graph";
 import { GraphList } from "~/components/ProjectSidebar";
 import { core } from "@macrograph/core";
+import "@macrograph/packages";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
 import Settings from "./settings";

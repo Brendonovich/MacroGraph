@@ -1,5 +1,5 @@
 import { createSignal, Match, Switch } from "solid-js";
-import { twitch } from "@macrograph/core";
+import { twitch } from "@macrograph/packages";
 import { Button } from "./ui";
 import { rspc } from "~/rspc";
 

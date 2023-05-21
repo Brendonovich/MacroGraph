@@ -1,7 +1,7 @@
-import { apiClient, user } from "./helix";
+import { helix, user } from "./helix";
 import pkg from "./pkg";
 import { createRoot, createEffect, createSignal, onCleanup } from "solid-js";
-import { types } from "../../types";
+import { types } from "@macrograph/core";
 
 const SubTypes = [
   "channel.update",
@@ -47,53 +47,56 @@ const { state } = createRoot(() => {
   >({ type: "disconnected" });
 
   createEffect(() => {
-    const u = user();
-    if (u === null) {
+    if (user().isNone()) {
       setWs({ type: "disconnected" });
       return;
     }
 
-    const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
+    helix()
+      .zip(user())
+      .map(([helix, user]) => {
+        const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-    ws.addEventListener("message", async (data) => {
-      let info = JSON.parse(data.data);
+        ws.addEventListener("message", async (data) => {
+          let info = JSON.parse(data.data);
 
-      switch (info.metadata.message_type) {
-        case "session_welcome":
-          setWs({ type: "connected", ws });
+          switch (info.metadata.message_type) {
+            case "session_welcome":
+              setWs({ type: "connected", ws });
 
-          await Promise.all(
-            SubTypes.map((type) =>
-              apiClient()?.eventSub.createSubscription(
-                type,
-                type == "channel.follow" ? "2" : "1",
-                {
-                  from_broadcaster_user_id: u.id,
-                  broadcaster_user_id: u.id,
-                  moderator_user_id: u.id,
-                },
-                {
-                  method: "websocket",
-                  session_id: info.payload.session.id,
-                },
-                { id: u.id }
-              )
-            )
-          );
+              await Promise.all(
+                SubTypes.map((type) =>
+                  helix.eventSub.createSubscription(
+                    type,
+                    type == "channel.follow" ? "2" : "1",
+                    {
+                      from_broadcaster_user_id: user.id,
+                      broadcaster_user_id: user.id,
+                      moderator_user_id: user.id,
+                    },
+                    {
+                      method: "websocket",
+                      session_id: info.payload.session.id,
+                    },
+                    { id: user.id }
+                  )
+                )
+              );
 
-          break;
-        case "notification":
-          pkg.emitEvent({
-            name: info.payload.subscription.type,
-            data: info.payload,
-          });
-          break;
-      }
-    });
+              break;
+            case "notification":
+              pkg.emitEvent({
+                name: info.payload.subscription.type,
+                data: info.payload,
+              });
+              break;
+          }
+        });
 
-    setWs({ type: "connecting" });
+        setWs({ type: "connecting" });
 
-    onCleanup(() => ws.close());
+        onCleanup(() => ws.close());
+      });
   });
 
   return { state };

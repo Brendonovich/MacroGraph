@@ -1,12 +1,11 @@
 import { z } from "zod";
-import { rspcClient } from "../../client";
-import { createEndpoint } from "../../utils/httpEndpoint";
 import { fs } from "@tauri-apps/api";
 import pkg from "./pkg";
 import { botToken, setBotToken } from "./auth";
-import { types, Option } from "../../types";
 import { createResource, createRoot } from "solid-js";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
+import { createEndpoint } from "../httpEndpoint";
+import { Maybe, Option, rspcClient, types } from "@macrograph/core";
 
 const root = createEndpoint({
   path: "https://discord.com/api/v10",
@@ -136,9 +135,9 @@ pkg.createNonEventSchema({
     const response = await api.users(ctx.getInput("userId")).get(USER_SCHEMA);
 
     ctx.setOutput("username", response.username);
-    ctx.setOutput("displayName", Option.new(response.display_name));
-    ctx.setOutput("avatarId", Option.new(response.avatar));
-    ctx.setOutput("bannerId", Option.new(response.avatar));
+    ctx.setOutput("displayName", Maybe(response.display_name));
+    ctx.setOutput("avatarId", Maybe(response.avatar));
+    ctx.setOutput("bannerId", Maybe(response.avatar));
   },
 });
 
@@ -193,10 +192,10 @@ pkg.createNonEventSchema({
       .member(ctx.getInput("userId"))
       .get(GUILD_MEMBER_SCHEMA);
 
-    ctx.setOutput("username", response.user.username);
-    ctx.setOutput("displayName", Option.new(response.user.display_name));
-    ctx.setOutput("avatarId", Option.new(response.user.avatar));
-    ctx.setOutput("bannerId", Option.new(response.user.banner));
+    ctx.setOutput("username", Maybe(response.user?.username));
+    ctx.setOutput("displayName", Maybe(response.user?.display_name));
+    ctx.setOutput("avatarId", Maybe(response.user?.avatar));
+    ctx.setOutput("bannerId", Maybe(response.user?.banner));
     ctx.setOutput("nick", response.nick);
     ctx.setOutput("roles", response.roles);
   },

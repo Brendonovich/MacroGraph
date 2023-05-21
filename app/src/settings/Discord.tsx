@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
-import { discord } from "@macrograph/core";
+import { discord } from "@macrograph/packages";
 import { createSignal, Match, Show, Switch } from "solid-js";
 import { Button, Input } from "./ui";
 

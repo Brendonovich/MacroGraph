@@ -1,21 +1,20 @@
 import { createRoot, createEffect, createSignal } from "solid-js";
 import tmi, { Client } from "tmi.js";
 import pkg from "./pkg";
-import { types } from "../../types";
-import { apiClient, user } from "./helix";
-import { map } from "../../utils";
+import { types, Option, None } from "@macrograph/core";
+import { helix, user } from "./helix";
 
 const { client } = createRoot(() => {
-  const [client, setClient] = createSignal<Client | null>(null);
+  const [client, setClient] = createSignal<Option<Client>>(None);
 
   createEffect(() =>
     setClient(
-      map(user(), (u) => {
+      user().map((user) => {
         const client = tmi.Client({
-          channels: [u.name],
+          channels: [user.name],
           identity: {
-            username: u.name,
-            password: u.token,
+            username: user.name,
+            password: user.token,
           },
         });
 
@@ -49,9 +48,7 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const c = client();
-
-    if (!c) return;
+    const c = client().unwrap();
 
     c.say(c.getUsername(), ctx.getInput("message"));
   },
@@ -67,11 +64,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const c = client();
+    const [c, h] = client().zip(helix()).unwrap();
 
-    if (!c) return;
-
-    apiClient()?.chat.updateSettings(c.getUsername(), c.getUsername(), {
+    h.chat.updateSettings(c.getUsername(), c.getUsername(), {
       emoteOnlyModeEnabled: ctx.getInput("enabled"),
     });
   },

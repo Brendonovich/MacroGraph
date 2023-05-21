@@ -1,7 +1,7 @@
 import { createSignal, createRoot } from "solid-js";
 import OBS from "obs-websocket-js";
 import { z } from "zod";
-import { map } from "../../utils";
+import { Maybe } from "@macrograph/core";
 
 export const obs = new OBS();
 
@@ -35,7 +35,7 @@ const { connect, disconnect, state } = createRoot(() => {
   obs.on("ConnectionClosed", () => setState("disconnected"));
   obs.on("ConnectionError", () => setState("disconnected"));
 
-  map(localStorage.getItem(OBS_WS), async (jstr) => {
+  Maybe(localStorage.getItem(OBS_WS)).map(async (jstr) => {
     const { url, password } = SCHEMA.parse(JSON.parse(jstr));
 
     try {

@@ -2,9 +2,11 @@
 // import { types } from "../../types";
 // import { WebSocketServer } from "ws";
 
-// const pkg = core.createPackage({
-//   name: "Streamdeck",
-// });
+import { core } from "@macrograph/core";
+
+const pkg = core.createPackage({
+  name: "Streamdeck",
+});
 
 // const PORT = 1337;
 
@@ -29,7 +31,7 @@
 //       };
 //     };
 //   }
-  
+
 //   server.on("connection", (socket: any) => {
 //     console.log("streamdeck connected");
 //     socket.on("message", async (rawData: any) => {

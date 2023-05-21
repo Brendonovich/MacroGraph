@@ -1,5 +1,4 @@
-import { core } from "../models";
-import { types } from "../types";
+import { core, types } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Logic",
