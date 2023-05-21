@@ -1,5 +1,4 @@
 import {
-  Core,
   DataInput,
   DataOutput,
   ExecInput,
@@ -14,11 +13,12 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { ReactiveSet } from "@solid-primitives/set";
 import { z } from "zod";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
+import { Project } from "./Project";
 
 export interface GraphArgs {
   id: number;
   name: string;
-  core: Core;
+  project: Project;
 }
 
 export const SerializedGraph = z.object({
@@ -46,7 +46,7 @@ export const SerializedGraph = z.object({
 export class Graph {
   id: number;
   name: string;
-  core: Core;
+  project: Project;
 
   nodes = new ReactiveMap<number, Node>();
   commentBoxes = new ReactiveSet<CommentBox>();
@@ -56,7 +56,7 @@ export class Graph {
   constructor(args: GraphArgs) {
     this.id = args.id;
     this.name = args.name;
-    this.core = args.core;
+    this.project = args.project;
 
     return createMutable(this);
   }
@@ -68,9 +68,9 @@ export class Graph {
 
     this.nodes.set(id, node);
 
-    this.core.addEventNodeMapping(node);
+    this.project.core.addEventNodeMapping(node);
 
-    this.save();
+    this.project.save();
 
     return node;
   }
@@ -80,7 +80,7 @@ export class Graph {
 
     this.commentBoxes.add(box);
 
-    this.save();
+    this.project.save();
 
     return box;
   }
@@ -109,7 +109,7 @@ export class Graph {
       execInput.connection = execOutput;
     }
 
-    this.save();
+    this.project.save();
   }
 
   deleteItem(item: Node | CommentBox) {
@@ -122,13 +122,13 @@ export class Graph {
       this.commentBoxes.delete(item);
     }
 
-    this.save();
+    this.project.save();
   }
 
   async rename(name: string) {
     this.name = name;
 
-    this.save();
+    this.project.save();
   }
 
   serialize(): z.infer<typeof SerializedGraph> {
@@ -163,9 +163,12 @@ export class Graph {
     };
   }
 
-  static deserialize(core: Core, data: z.infer<typeof SerializedGraph>): Graph {
+  static deserialize(
+    project: Project,
+    data: z.infer<typeof SerializedGraph>
+  ): Graph {
     const graph = new Graph({
-      core,
+      project,
       id: data.id,
       name: data.name,
     });
@@ -180,7 +183,7 @@ export class Graph {
 
           if (node === null) return null;
 
-          core.addEventNodeMapping(node);
+          project.core.addEventNodeMapping(node);
 
           return [id, node] as [number, Node];
         })
@@ -207,22 +210,5 @@ export class Graph {
     );
 
     return graph;
-  }
-
-  save() {
-    localStorage.setItem(`graph-${this.id}`, JSON.stringify(this.serialize()));
-
-    localStorage.setItem(
-      "graphs",
-      JSON.stringify([
-        ...new Set([
-          ...z
-            .array(z.number())
-            .default([])
-            .parse(JSON.parse(localStorage.getItem("graphs") || "[]")),
-          this.id,
-        ]),
-      ])
-    );
   }
 }

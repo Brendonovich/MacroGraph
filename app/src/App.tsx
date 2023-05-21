@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { onMount, Show } from "solid-js";
 import { CoreProvider } from "./contexts";
 import { Graph } from "~/components/Graph";
 import { GraphList } from "~/components/ProjectSidebar";
@@ -11,8 +11,9 @@ import Settings from "./settings";
 function App() {
   const ui = createUIStore();
 
-  core.load();
-  ui.setCurrentGraph(core.graphs.get(core.graphs.keys().next().value)!);
+  onMount(() => {
+    core.load();
+  });
 
   return (
     <UIStoreProvider store={ui}>

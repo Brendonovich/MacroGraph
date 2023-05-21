@@ -7,6 +7,7 @@ import { Node } from "./Node";
 import { DataInput, DataOutput, ExecOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 import { z } from "zod";
+import { Project, SerializedProject } from "./Project";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -31,50 +32,27 @@ class NodeEmit {
 export const NODE_EMIT = new NodeEmit();
 
 export class Core {
-  graphs = new ReactiveMap<number, Graph>();
+  project: Project = new Project({
+    core: this,
+  });
+
   packages = [] as Package[];
 
   eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
-
-  private graphIdCounter = localStorage.getItem("graphs")
-    ? (JSON.parse(localStorage.getItem("graphs")!) as any).at(-1) + 1
-    : 0;
 
   constructor() {
     return createMutable(this);
   }
 
   load() {
-    const graphsStr = localStorage.getItem("graphs");
+    const graphStr = localStorage.getItem("project");
 
-    if (graphsStr) {
-      const graphs = z.array(z.coerce.number()).parse(JSON.parse(graphsStr));
+    if (graphStr === null) return;
 
-      for (const id of graphs) {
-        const graph = SerializedGraph.safeParse(
-          JSON.parse(localStorage.getItem(`graph-${id}`)!)
-        );
-
-        if (!graph.success) continue;
-
-        this.graphs.set(id, Graph.deserialize(this, graph.data));
-      }
-    }
-  }
-
-  createGraph(args?: { name?: string }) {
-    const id = this.graphIdCounter++;
-
-    const graph = new Graph({
-      name: `Graph ${id}`,
-      id,
-      core: this,
-      ...args,
-    });
-
-    this.graphs.set(id, graph);
-
-    return graph;
+    this.project = Project.deserialize(
+      this,
+      SerializedProject.parse(JSON.parse(graphStr))
+    );
   }
 
   createPackage<TEvents extends EventsMap>(args: Omit<PackageArgs, "core">) {
