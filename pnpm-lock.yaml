@@ -25,6 +25,9 @@ importers:
       '@macrograph/core':
         specifier: workspace:*
         version: link:../core
+      '@macrograph/packages':
+        specifier: workspace:*
+        version: link:../packages
       '@modular-forms/solid':
         specifier: ^0.12.2
         version: 0.12.2(solid-js@1.7.3)
@@ -122,10 +125,79 @@ importers:
       tmi.js:
         specifier: ^1.8.5
         version: 1.8.5
+      typescript-result-option:
+        specifier: ^0.2.5
+        version: 0.2.5
       zod:
         specifier: ^3.21.4
         version: 3.21.4
     devDependencies:
+      '@total-typescript/ts-reset':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@types/tmi.js':
+        specifier: ^1.8.3
+        version: 1.8.3
+      solid-js:
+        specifier: ^1.7.0
+        version: 1.7.3
+      type-fest:
+        specifier: ^2.19.0
+        version: 2.19.0
+      typescript:
+        specifier: ^4.8.4
+        version: 4.9.5
+
+  packages:
+
+    dependencies:
+      '@rspc/client':
+        specifier: 0.0.0-main-6ed8cc98
+        version: 0.0.0-main-6ed8cc98
+      '@rspc/tauri':
+        specifier: 0.0.0-main-6ed8cc98
+        version: 0.0.0-main-6ed8cc98(@tauri-apps/api@1.3.0)
+      '@solid-primitives/map':
+        specifier: ^0.4.3
+        version: 0.4.3(solid-js@1.7.3)
+      '@solid-primitives/set':
+        specifier: ^0.4.4
+        version: 0.4.4(solid-js@1.7.3)
+      '@tauri-apps/api':
+        specifier: ^1.3.0
+        version: 1.3.0
+      '@twurple/api':
+        specifier: ^6.2.0
+        version: 6.2.0(@twurple/auth@6.2.0)
+      '@twurple/auth':
+        specifier: ^6.2.0
+        version: 6.2.0
+      '@twurple/chat':
+        specifier: ^6.2.0
+        version: 6.2.0(@twurple/auth@6.2.0)
+      '@twurple/eventsub-ws':
+        specifier: ^6.2.0
+        version: 6.2.0(@twurple/api@6.2.0)
+      discord.js:
+        specifier: ^14.9.0
+        version: 14.9.0
+      obs-websocket-js:
+        specifier: ^5.0.2
+        version: 5.0.2
+      tmi.js:
+        specifier: ^1.8.5
+        version: 1.8.5
+      typescript-result-option:
+        specifier: ^0.2.5
+        version: 0.2.5
+      zod:
+        specifier: ^3.21.4
+        version: 3.21.4
+
+    devDependencies:
+      '@macrograph/core':
+        specifier: workspace:*
+        version: link:../core
       '@total-typescript/ts-reset':
         specifier: ^0.4.2
         version: 0.4.2
@@ -1183,7 +1255,7 @@ packages:
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
-      '@solid-primitives/trigger': 1.0.5(solid-js@1.7.3)
+      '@solid-primitives/trigger': 1.0.6(solid-js@1.7.3)
       solid-js: 1.7.3
     dev: false
 
@@ -1241,15 +1313,6 @@ packages:
       solid-js: ^1.6.12
     dependencies:
       '@solid-primitives/utils': 6.1.1(solid-js@1.7.3)
-      solid-js: 1.7.3
-    dev: false
-
-  /@solid-primitives/trigger@1.0.5(solid-js@1.7.3):
-    resolution: {integrity: sha512-NAnLYmUFPvJoH05qBf90IEcSTROM+woFdqcGgGmlcYcewewLNLIuJDB69CvPvM+O9yHvRk7UXcpapV25iXcoDQ==}
-    peerDependencies:
-      solid-js: ^1.6.12
-    dependencies:
-      '@solid-primitives/utils': 6.1.0(solid-js@1.7.3)
       solid-js: 1.7.3
     dev: false
 
@@ -3186,6 +3249,10 @@ packages:
       call-bind: 1.0.2
       for-each: 0.3.3
       is-typed-array: 1.1.10
+    dev: false
+
+  /typescript-result-option@0.2.5:
+    resolution: {integrity: sha512-4+hOm93ZPKrkEXH9CF/2oZecRo/JLj0xs+Pl0ThBYc/r1UHc2h97v1PbxFDG853CCRcCEUpIO70wlxQE1l1sNw==}
     dev: false
 
   /typescript@4.9.5:

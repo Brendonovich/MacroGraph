@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
-import { discord } from "@macrograph/core";
+import { discord } from "@macrograph/packages";
 import { createSignal, Match, Show, Switch } from "solid-js";
 import { Button, Input } from "./ui";
 
@@ -13,11 +13,11 @@ const Bot = () => {
     <div class="flex flex-col space-y-2">
       <span class="text-neutral-400 font-medium">Bot</span>
       <Switch fallback="Loading...">
-        <Match when={discord.auth.botToken() === null}>
+        <Match when={discord.auth.botToken().isNone()}>
           {(_) => {
             const [, { Form, Field }] = createForm({
               initialValues: {
-                botToken: discord.auth.botToken() ?? undefined,
+                botToken: discord.auth.botToken().unwrapOr(""),
               },
               validate: zodForm(Schema),
             });
@@ -43,55 +43,53 @@ const Bot = () => {
           }}
         </Match>
         <Match when={discord.bot()}>
-          {(bot) => {
-            return (
-              <>
-                <div class="flex flex-row items-center space-x-4">
-                  <p>{bot().username}</p>
-                  <Button onClick={() => discord.auth.setBotToken(null)}>
-                    Log Out
-                  </Button>
-                </div>
-                <div class="flex flex-row items-center space-x-4">
-                  <p>
-                    {`Gateway 
+          {(bot) => (
+            <>
+              <div class="flex flex-row items-center space-x-4">
+                <p>{bot().username}</p>
+                <Button onClick={() => discord.auth.setBotToken(null)}>
+                  Log Out
+                </Button>
+              </div>
+              <div class="flex flex-row items-center space-x-4">
+                <p>
+                  {`Gateway 
                     ${
                       discord.gateway.ws() !== null
                         ? "Connected"
                         : "Disconnected"
                     }`}
-                  </p>
-                  <Show
-                    when={!discord.gateway.ws()}
-                    fallback={
-                      <Button onClick={discord.gateway.disconnect}>
-                        Disconnect
+                </p>
+                <Show
+                  when={!discord.gateway.ws()}
+                  fallback={
+                    <Button onClick={discord.gateway.disconnect}>
+                      Disconnect
+                    </Button>
+                  }
+                >
+                  {(_) => {
+                    const [loading, setLoading] = createSignal(false);
+
+                    return (
+                      <Button
+                        disabled={loading()}
+                        onClick={async () => {
+                          setLoading(true);
+
+                          discord.gateway
+                            .connect()
+                            .finally(() => setLoading(false));
+                        }}
+                      >
+                        {loading() ? "Connecting..." : "Connect"}
                       </Button>
-                    }
-                  >
-                    {(_) => {
-                      const [loading, setLoading] = createSignal(false);
-
-                      return (
-                        <Button
-                          disabled={loading()}
-                          onClick={async () => {
-                            setLoading(true);
-
-                            discord.gateway
-                              .connect()
-                              .finally(() => setLoading(false));
-                          }}
-                        >
-                          {loading() ? "Connecting..." : "Connect"}
-                        </Button>
-                      );
-                    }}
-                  </Show>
-                </div>
-              </>
-            );
-          }}
+                    );
+                  }}
+                </Show>
+              </div>
+            </>
+          )}
         </Match>
       </Switch>
     </div>
