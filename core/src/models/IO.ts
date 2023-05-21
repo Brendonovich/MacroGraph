@@ -42,7 +42,7 @@ export class DataInput {
   setDefaultValue(value: any) {
     this.defaultValue = value;
 
-    this.node.graph.save();
+    this.node.graph.project.save();
   }
 
   get connected() {

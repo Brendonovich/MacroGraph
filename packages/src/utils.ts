@@ -1,4 +1,4 @@
-import { core, Maybe, Option, types } from "@macrograph/core";
+import { core, Maybe, Option, Some, types } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -626,6 +626,24 @@ pkg.createNonEventSchema({
     },
     run({ ctx }) {
       ctx.setOutput("output", ctx.getInput<Option<any>>("input").isNone());
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: `Make Some (${key})`,
+    variant: "Pure",
+    generateIO(io) {
+      io.dataInput({
+        id: "in",
+        type,
+      });
+      io.dataOutput({
+        id: "out",
+        type: types.option(type),
+      });
+    },
+    run({ ctx }) {
+      ctx.setOutput("out", Some(ctx.getInput<any>("in")));
     },
   });
 
