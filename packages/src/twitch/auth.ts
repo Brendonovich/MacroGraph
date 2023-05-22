@@ -1,7 +1,8 @@
 import {
+  AccessToken,
+  AccessTokenMaybeWithUserId,
   AccessTokenWithUserId,
   AuthProvider,
-  StaticAuthProvider,
 } from "@twurple/auth";
 import { createEffect, createMemo, createSignal, createRoot } from "solid-js";
 import { Maybe, None } from "@macrograph/core";
@@ -12,24 +13,47 @@ const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
 
-class MacroGraphAuthProvider
-  extends StaticAuthProvider
-  implements AuthProvider
-{
-  refreshToken: string;
+class MacroGraphAuthProvider implements AuthProvider {
+  constructor(
+    public clientId: string,
+    public token: Omit<AccessToken, "obtainmentTimestamp">
+  ) {}
 
-  constructor(clientId: string, accessToken: string, refreshToken: string) {
-    super(clientId, accessToken);
-    this.refreshToken = refreshToken;
+  getCurrentScopesForUser(_: UserIdResolvable) {
+    return this.token.scope;
+  }
+
+  async getAccessTokenForUser(
+    user: UserIdResolvable,
+    _?: string[] | undefined
+  ) {
+    return {
+      ...this.token,
+      obtainmentTimestamp: Date.now(),
+      userId: extractUserId(user),
+    };
+  }
+
+  async getAnyAccessToken(
+    user?: UserIdResolvable | undefined
+  ): Promise<AccessTokenMaybeWithUserId> {
+    return {
+      ...this.token,
+      obtainmentTimestamp: Date.now(),
+      userId: user ? extractUserId(user) : undefined,
+    };
   }
 
   async refreshAccessTokenForUser(
     userId: UserIdResolvable
   ): Promise<AccessTokenWithUserId> {
+    const refreshToken = this.token.refreshToken;
+    if (refreshToken === null) throw new Error("Refresh token is null!");
+
     const res = await fetch("https://macrograph.brendonovich.dev/auth/twitch", {
       method: "POST",
       body: new URLSearchParams({
-        refreshToken: this.refreshToken,
+        refreshToken,
       }),
     });
 
@@ -51,6 +75,8 @@ class MacroGraphAuthProvider
 const SCHEMA = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
+  scope: z.array(z.string()),
+  expiresIn: z.number(),
 });
 
 const { accessToken, setAccessToken, authProvider } = createRoot(() => {
@@ -76,14 +102,7 @@ const { accessToken, setAccessToken, authProvider } = createRoot(() => {
 
   const authProvider = createMemo(
     () =>
-      accessToken().map(
-        (token) =>
-          new MacroGraphAuthProvider(
-            clientId,
-            token.accessToken,
-            token.refreshToken
-          )
-      ),
+      accessToken().map((token) => new MacroGraphAuthProvider(clientId, token)),
     None
   );
 
