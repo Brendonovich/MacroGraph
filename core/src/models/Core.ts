@@ -44,15 +44,9 @@ export class Core {
     return createMutable(this);
   }
 
-  load() {
-    const graphStr = localStorage.getItem("project");
-
-    if (graphStr === null) return;
-
-    this.project = Project.deserialize(
-      this,
-      SerializedProject.parse(JSON.parse(graphStr))
-    );
+  load(projectData: z.infer<typeof SerializedProject>) {
+    this.eventNodeMappings.clear();
+    this.project = Project.deserialize(this, projectData);
   }
 
   createPackage<TEvents extends EventsMap>(args: Omit<PackageArgs, "core">) {

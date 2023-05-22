@@ -5,3 +5,4 @@ export * from "./Graph";
 export * from "./Core";
 export * from "./Package";
 export * from "./CommentBox";
+export * from "./Project";
