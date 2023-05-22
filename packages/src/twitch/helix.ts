@@ -151,6 +151,49 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "Edit Stream Info",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "Game ID",
+      id: "gameId",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Language",
+      id: "language",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Title",
+      id: "title",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Delay (s)",
+      id: "delay",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Tags",
+      id: "tags",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const { user, helix } = unwrapApi();
+
+    let data = await helix.channels.updateChannelInfo(user.id, {
+      gameId: ctx.getInput("gameId"),
+      language: ctx.getInput("language"),
+      title: ctx.getInput("title"),
+      delay: ctx.getInput("delay"),
+      tags: ctx.getInput("tags")
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "Create Clip",
   variant: "Exec",
   generateIO: (t) => {
@@ -314,7 +357,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Create Custom Redemption",
+  name: "Create Custom Reward",
   variant: "Exec",
   generateIO: (t) => {
     t.dataInput({
@@ -378,8 +421,78 @@ pkg.createNonEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      name: "Redemption ID",
-      id: "redemptionId",
+      name: "Reward ID",
+      id: "rewardId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Title",
+      id: "rewardTitle",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Prompt",
+      id: "rewardPrompt",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Cost",
+      id: "rewardCost",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Background Color",
+      id: "backgroundColor",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Enabled",
+      id: "enabled",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "User Input Required",
+      id: "userInputRequired",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Max Redemptions Per Stream",
+      id: "maxRedemptionsPerStream",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Max Redemptions Per User Per Stream",
+      id: "maxRedemptionsPerUserPerStream",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Global Cooldown",
+      id: "globalCooldown",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Paused",
+      id: "paused",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "in Stock",
+      id: "stock",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Skip Request Queue",
+      id: "skipRequestQueue",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Redemptions Current Stream",
+      id: "redemptionsCurrentStream",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Cooldown Expires in",
+      id: "cooldownExpire",
       type: types.string(),
     });
   },
@@ -402,11 +515,529 @@ pkg.createNonEventSchema({
         autoFulfill: ctx.getInput("autoFulfill"),
       });
       ctx.setOutput("success", true);
-      ctx.setOutput("redemptionId", data?.id);
+      ctx.setOutput("errorMessage", "");
+      ctx.setOutput("rewardId", data?.id);
+      ctx.setOutput("rewardTitle", data?.title);
+      ctx.setOutput("rewardPrompt", data?.prompt);
+      ctx.setOutput("rewardCost", data?.cost);
+      ctx.setOutput("backgroundColor", data?.backgroundColor);
+      ctx.setOutput("enabled", data?.isEnabled);
+      ctx.setOutput("userInputRequired", data?.userInputRequired);
+      ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
+      ctx.setOutput("maxRedemptionsPerUserPerStream", data?.maxRedemptionsPerUserPerStream);
+      ctx.setOutput("globalCooldown", data?.globalCooldown);
+      ctx.setOutput("paused", data?.isPaused);
+      ctx.setOutput("stock", data?.isInStock);
+      ctx.setOutput("skipRequestQueue", data?.autoFulfill);
+      ctx.setOutput("redemptionsCurrentStream", data?.redemptionsThisStream);
+      ctx.setOutput("cooldownExpire", JSON.stringify(data?.cooldownExpiryDate));
     } catch (error: any) {
       ctx.setOutput("success", false);
       ctx.setOutput("errorMessage", (JSON.parse(error.body) as any).message);
     }
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Edit Custom Reward",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "Reward Id",
+      id: "id",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Title",
+      id: "title",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Cost",
+      id: "cost",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Prompt",
+      id: "prompt",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Enabled",
+      id: "isEnabled",
+      type: types.bool(),
+    });
+    t.dataInput({
+      name: "Background Color",
+      id: "backgroundColor",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "User Input Required",
+      id: "userInputRequired",
+      type: types.bool(),
+    });
+    t.dataInput({
+      name: "Max Redemptions Per Stream",
+      id: "maxRedemptionsPerStream",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Max Redemptions Per User Per Stream",
+      id: "maxRedemptionsPerUserPerStream",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Global Cooldown",
+      id: "globalCooldown",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Skip Redemption Queue",
+      id: "autoFulfill",
+      type: types.bool(),
+    });
+    t.dataInput({
+      name: "Paused",
+      id: "paused",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Success",
+      id: "success",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Error Message",
+      id: "errorMessage",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward ID",
+      id: "rewardId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Title",
+      id: "rewardTitle",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Prompt",
+      id: "rewardPrompt",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Cost",
+      id: "rewardCost",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Background Color",
+      id: "backgroundColor",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Enabled",
+      id: "enabled",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "User Input Required",
+      id: "userInputRequired",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Max Redemptions Per Stream",
+      id: "maxRedemptionsPerStream",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Max Redemptions Per User Per Stream",
+      id: "maxRedemptionsPerUserPerStream",
+      type: types.int(),
+    });
+    t.dataInput({
+      name: "Global Cooldown",
+      id: "globalCooldown",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Paused",
+      id: "paused",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "in Stock",
+      id: "stock",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Skip Request Queue",
+      id: "skipRequestQueue",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Redemptions Current Stream",
+      id: "redemptionsCurrentStream",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Cooldown Expires in",
+      id: "cooldownExpire",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    const { user, helix } = unwrapApi();
+    try {
+      let data = await helix.channelPoints.updateCustomReward(user.id, ctx.getInput("id"), {
+        title: ctx.getInput("title"),
+        cost: ctx.getInput("cost"),
+        prompt: ctx.getInput("prompt"),
+        isEnabled: ctx.getInput("isEnabled"),
+        backgroundColor: ctx.getInput("backgroundColor"),
+        userInputRequired: ctx.getInput("userInputRequired"),
+        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+        maxRedemptionsPerUserPerStream: ctx.getInput(
+          "maxRedemptionsPerUserPerStream"
+        ),
+        isPaused: ctx.getInput("paused"),
+        globalCooldown: ctx.getInput("globalCooldown")
+      });
+      ctx.setOutput("success", true);
+      ctx.setOutput("errorMessage", "");
+      ctx.setOutput("rewardId", data?.id);
+      ctx.setOutput("rewardTitle", data?.title);
+      ctx.setOutput("rewardPrompt", data?.prompt);
+      ctx.setOutput("rewardCost", data?.cost);
+      ctx.setOutput("backgroundColor", data?.backgroundColor);
+      ctx.setOutput("enabled", data?.isEnabled);
+      ctx.setOutput("userInputRequired", data?.userInputRequired);
+      ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
+      ctx.setOutput("maxRedemptionsPerUserPerStream", data?.maxRedemptionsPerUserPerStream);
+      ctx.setOutput("globalCooldown", data?.globalCooldown);
+      ctx.setOutput("paused", data?.isPaused);
+      ctx.setOutput("stock", data?.isInStock);
+      ctx.setOutput("skipRequestQueue", data?.autoFulfill);
+      ctx.setOutput("redemptionsCurrentStream", data?.redemptionsThisStream);
+      ctx.setOutput("cooldownExpire", JSON.stringify(data?.cooldownExpiryDate));
+    } catch (error: any) {
+      ctx.setOutput("success", false);
+      ctx.setOutput("errorMessage", JSON.parse(error.body).message);
+    }
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Update Redemption Status",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "Redemption ID",
+      id: "redemptionId",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Reward ID",
+      id: "rewardId",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Cancel",
+      id: "cancel",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Success",
+      id: "success",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Error Message",
+      id: "errorMessage",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Redemption ID",
+      id: "redemptionId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "User ID",
+      id: "userId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Display Name",
+      id: "displayName",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "User Login Name",
+      id: "userLogin",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward ID",
+      id: "rewardId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Title",
+      id: "rewardTitle",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Prompt",
+      id: "rewardPrompt",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Cost",
+      id: "rewardCost",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "User Input",
+      id: "userInput",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Status",
+      id: "status",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Redeemed At",
+      id: "redeemedAt",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    const { user, helix } = unwrapApi();
+    try {
+      let data = await helix.channelPoints.updateRedemptionStatusByIds(user.id, ctx.getInput("redemptionId"), ctx.getInput("rewardId"), ctx.getInput("cancel") ? "FULFILLED" : "CANCELED");
+      ctx.setOutput("success", true);
+      ctx.setOutput("redemptionId", data[0]?.id);
+      ctx.setOutput("userId", data[0]?.userId);
+      ctx.setOutput("displayName", data[0]?.userDisplayName);
+      ctx.setOutput("userLogin", data[0]?.userName);
+      ctx.setOutput("rewardId", data[0]?.rewardId);
+      ctx.setOutput("rewardTitle", data[0]?.rewardTitle);
+      ctx.setOutput("rewardPrompt", data[0]?.rewardPrompt);
+      ctx.setOutput("rewardCost", data[0]?.rewardCost);
+      ctx.setOutput("userInput", data[0]?.userInput);
+      ctx.setOutput("status", data[0]?.updateStatus);
+      ctx.setOutput("redeemedAt", JSON.stringify(data[0]?.redemptionDate));
+    } catch (error: any) {
+      ctx.setOutput("success", false);
+      ctx.setOutput("errorMessage", JSON.parse(error.body).message);
+    }
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Reward By Title",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      id: "title",
+      name: "Title",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Manageable Only",
+      id: "manageableOnly",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Success",
+      id: "success",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Reward ID",
+      id: "rewardId",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Title",
+      id: "rewardTitle",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Prompt",
+      id: "rewardPrompt",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Reward Cost",
+      id: "rewardCost",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Background Color",
+      id: "backgroundColor",
+      type: types.string(),
+    });
+    t.dataOutput({
+      name: "Enabled",
+      id: "enabled",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "User Input Required",
+      id: "userInputRequired",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Max Redemptions Per Stream",
+      id: "maxRedemptionsPerStream",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Max Redemptions Per User Per Stream",
+      id: "maxRedemptionsPerUserPerStream",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Global Cooldown",
+      id: "globalCooldown",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Paused",
+      id: "paused",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "in Stock",
+      id: "stock",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Skip Request Queue",
+      id: "skipRequestQueue",
+      type: types.bool(),
+    });
+    t.dataOutput({
+      name: "Redemptions Current Stream",
+      id: "redemptionsCurrentStream",
+      type: types.int(),
+    });
+    t.dataOutput({
+      name: "Cooldown Expires in",
+      id: "cooldownExpire",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    const { user, helix } = unwrapApi();
+    let rewards = await helix.channelPoints.getCustomRewards(user.id, ctx.getInput("manageableOnly"));
+    const data = rewards.find((reward) => reward.title === ctx.getInput("title"));
+    ctx.setOutput("success", !!data)
+    ctx.setOutput("rewardId", data?.id);
+    ctx.setOutput("rewardTitle", data?.title);
+    ctx.setOutput("rewardPrompt", data?.prompt);
+    ctx.setOutput("rewardCost", data?.cost);
+    ctx.setOutput("backgroundColor", data?.backgroundColor);
+    ctx.setOutput("enabled", data?.isEnabled);
+    ctx.setOutput("userInputRequired", data?.userInputRequired);
+    ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
+    ctx.setOutput("maxRedemptionsPerUserPerStream", data?.maxRedemptionsPerUserPerStream);
+    ctx.setOutput("globalCooldown", data?.globalCooldown);
+    ctx.setOutput("paused", data?.isPaused);
+    ctx.setOutput("stock", data?.isInStock);
+    ctx.setOutput("skipRequestQueue", data?.autoFulfill);
+    ctx.setOutput("redemptionsCurrentStream", data?.redemptionsThisStream);
+    ctx.setOutput("cooldownExpire", JSON.stringify(data?.cooldownExpiryDate));
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get User By ID",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      id: "userId",
+      name: "User ID",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "userId",
+      name: "User ID",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "userLogin",
+      name: "Login Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "displayName",
+      name: "Display Name",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "type",
+      name: "User Type",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "broadcasterType",
+      name: "Broadcaster Type",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "description",
+      name: "Description",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "profileImageUrl",
+      name: "Profile Image URL",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "offlineImageUrl",
+      name: "Offline Image URL",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "createdAt",
+      name: "Created At",
+      type: types.string(),
+    });
+  },
+  async run({ ctx }) {
+    const { user, helix } = unwrapApi();
+    let data = await helix.users.getUserById(ctx.getInput("userId"));
+    ctx.setOutput("userId", data?.id);
+    ctx.setOutput("userLogin", data?.name);
+    ctx.setOutput("displayName", data?.displayName);
+    ctx.setOutput("type", data?.type);
+    ctx.setOutput("broadcasterType", data?.broadcasterType);
+    ctx.setOutput("description", data?.description);
+    ctx.setOutput("profileImageUrl", data?.profilePictureUrl);
+    ctx.setOutput("offlineImageUrl", data?.offlinePlaceholderUrl);
+    ctx.setOutput("createdAt", JSON.stringify(data?.creationDate));
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Delete Custom Reward",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      id: "id",
+      name: "Reward Id",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    const { user, helix } = unwrapApi();
+    helix.channelPoints.deleteCustomReward(user.id, ctx.getInput("id"));
   },
 });
 
@@ -499,14 +1130,36 @@ pkg.createNonEventSchema({
   variant: "Exec",
   generateIO: (t) => {
     t.dataInput({
-      id: "userId",
-      name: "User ID",
+      id: "toId",
+      name: "Id Of Shoutout User",
       type: types.string(),
     });
   },
   run({ ctx }) {
     const { user, helix } = unwrapApi();
 
-    helix.chat.shoutoutUser(user.id, ctx.getInput("userId"), user.id);
+    apiClient()?.chat.shoutoutUser(u.id, ctx.getInput("toId"), u.id);
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Send Announcement",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      id: "announcement",
+      name: "Announcement",
+      type: types.string(),
+    });
+  },
+  run({ ctx }) {
+    const u = user();
+    if (!u) return;
+
+    apiClient()?.chat.sendAnnouncement(u.id, u.id, ctx.getInput("announcement"));
+  },
+});
+
+
+
+

@@ -1174,14 +1174,20 @@ pkg.createEventSchema({
       type: types.string(),
     });
     t.dataOutput({
-      id: "userName",
-      name: "UserLogin",
+      id: "userLogin",
+      name: "Username",
+      type: types.string(),
+    });
+    t.dataOutput({
+      id: "username",
+      name: "Display Name",
       type: types.string(),
     });
   },
   run({ ctx, data }) {
     ctx.setOutput("userID", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
+    ctx.setOutput("username", data.event.user_name);
     ctx.exec("exec");
   },
 });
