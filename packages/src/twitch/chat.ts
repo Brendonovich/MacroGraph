@@ -238,7 +238,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     const u = user().unwrap();
     if (data.self) return;
     ctx.setOutput("username", data.tags.username);
