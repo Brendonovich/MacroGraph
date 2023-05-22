@@ -199,47 +199,40 @@ pkg.createNonEventSchema({
   },
 });
 
-(
-  [
-    ["Bool", types.bool()],
-    ["String", types.string()],
-    ["Int", types.int()],
-    ["Float", types.float()],
-  ] as const
-).forEach(([key, type]) => {
-  pkg.createNonEventSchema({
-    name: `Conditional ${key}`,
-    variant: "Pure",
-    run({ ctx }) {
-      ctx.setOutput(
-        "output",
-        ctx.getInput("condition")
-          ? ctx.getInput("trueValue")
-          : ctx.getInput("falseValue")
-      );
-    },
-    generateIO(t) {
-      t.dataInput({
-        id: "condition",
-        name: "Condition",
-        type: types.bool(),
-      });
-      t.dataInput({
-        id: "trueValue",
-        name: "True",
-        type: type,
-      });
-      t.dataInput({
-        id: "falseValue",
-        name: "False",
-        type: type,
-      });
-      t.dataOutput({
-        id: "output",
-        type: type,
-      });
-    },
-  });
+pkg.createNonEventSchema({
+  name: `Conditional`,
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput(
+      "output",
+      ctx.getInput("condition")
+        ? ctx.getInput("trueValue")
+        : ctx.getInput("falseValue")
+    );
+  },
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "condition",
+      name: "Condition",
+      type: types.bool(),
+    });
+    io.dataInput({
+      id: "trueValue",
+      name: "True",
+      type: types.wildcard(w),
+    });
+    io.dataInput({
+      id: "falseValue",
+      name: "False",
+      type: types.wildcard(w),
+    });
+    io.dataOutput({
+      id: "output",
+      type: types.wildcard(w),
+    });
+  },
 });
 
 pkg.createNonEventSchema({
@@ -255,7 +248,7 @@ pkg.createNonEventSchema({
     ctx.exec("completed");
   },
   generateIO(t) {
-    const wildcard = t.wildcard();
+    const w = t.wildcard();
 
     t.execInput({
       id: "exec",
@@ -263,7 +256,7 @@ pkg.createNonEventSchema({
     t.dataInput({
       id: "array",
       name: "Array",
-      type: types.list(types.wildcard(wildcard)),
+      type: types.list(types.wildcard(w)),
     });
     t.execOutput({
       id: "body",
@@ -272,7 +265,7 @@ pkg.createNonEventSchema({
     t.dataOutput({
       id: "element",
       name: "Array Element",
-      type: types.wildcard(wildcard),
+      type: types.wildcard(w),
     });
     t.dataOutput({
       id: "index",

@@ -1,6 +1,7 @@
 import { ListType } from "./list";
 import { OptionType } from "./option";
 import {
+  BasePrimitiveType,
   BoolType,
   FloatType,
   IntType,
@@ -34,3 +35,25 @@ export const types = {
 };
 
 export type AnyType = PrimitiveType | ListType | OptionType | WildcardType;
+
+export function typesCanConnect(a: AnyType, b: AnyType): boolean {
+  const aInner = a instanceof WildcardType ? a.wildcard.value.unwrapOr(a) : a;
+  const bInner = b instanceof WildcardType ? b.wildcard.value.unwrapOr(b) : b;
+
+  if (aInner instanceof WildcardType || bInner instanceof WildcardType)
+    return true;
+
+  if (
+    aInner instanceof BasePrimitiveType &&
+    bInner instanceof BasePrimitiveType
+  )
+    return aInner.primitiveVariant() === bInner.primitiveVariant();
+
+  if (aInner instanceof ListType && bInner instanceof ListType)
+    return typesCanConnect(aInner.inner, bInner.inner);
+
+  if (aInner instanceof OptionType && bInner instanceof OptionType)
+    return typesCanConnect(aInner.inner, bInner.inner);
+
+  return false;
+}

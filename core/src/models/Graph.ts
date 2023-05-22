@@ -14,7 +14,7 @@ import { ReactiveSet } from "@solid-primitives/set";
 import { z } from "zod";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
-import { connectWildcardsInTypes } from "../types/wildcard";
+import { connectWildcardsInIO, disconnectWildcardsInIO } from "../types";
 
 export interface GraphArgs {
   id: number;
@@ -93,7 +93,7 @@ export class Graph {
       const dataOutput = output as DataOutput;
       const dataInput = input as DataInput;
 
-      connectWildcardsInTypes(dataOutput.type, dataInput.type);
+      connectWildcardsInIO(dataOutput, dataInput);
 
       dataOutput.connections.add(dataInput);
       dataInput.connection?.connections.delete(dataInput);
@@ -114,10 +114,20 @@ export class Graph {
 
   disconnectPin(pin: DataOutput | ExecOutput | DataInput | ExecInput) {
     if (pin instanceof DataOutput) {
-      pin.connections.forEach((p) => (p.connection = null));
+      pin.connections.forEach((conn) => {
+        disconnectWildcardsInIO(pin, conn);
+
+        conn.connection = null;
+      });
       pin.connections.clear();
     } else if (pin instanceof DataInput) {
-      pin.connection?.connections.delete(pin);
+      const conn = pin.connection;
+      if (conn) {
+        disconnectWildcardsInIO(conn, pin);
+
+        conn.connections.delete(pin);
+      }
+
       pin.connection = null;
     } else {
       if (pin.connection) pin.connection.connection = null;

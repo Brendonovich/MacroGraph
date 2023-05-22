@@ -15,8 +15,4 @@ export class ListType<T extends AnyType = AnyType, TOut = any> extends BaseType<
   variant(): TypeVariant {
     return "list";
   }
-
-  canConnect(a: BaseType): boolean {
-    return a instanceof ListType && this.inner.canConnect(a.inner);
-  }
 }

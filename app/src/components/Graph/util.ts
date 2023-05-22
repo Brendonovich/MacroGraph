@@ -7,10 +7,10 @@ import {
 } from "@macrograph/core";
 
 const DataPinTypeColours: Record<PrimitiveVariant, string> = {
-  bool: "text-red-bool",
-  string: "text-pink-string",
-  int: "text-blue-int",
-  float: "text-green-float",
+  bool: "[--mg-current:#DC2626]",
+  string: "[--mg-current:#DA5697]",
+  int: "[--mg-current:#30F3DB]",
+  float: "[--mg-current:#00AE75]",
 };
 
 export const colour = (type: AnyType): string => {
@@ -20,11 +20,11 @@ export const colour = (type: AnyType): string => {
   if (type instanceof ListType || type instanceof OptionType)
     return colour(type.inner);
 
-  const value = type.wildcard.valueMemo();
+  const value = type.wildcard.value;
 
   if (value.isSome()) {
     return colour(value.unwrap());
   } else {
-    return "text-white";
+    return "[--mg-current:white]";
   }
 };

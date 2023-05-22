@@ -554,82 +554,6 @@ pkg.createNonEventSchema({
   ] as const
 ).forEach(([key, type]) => {
   pkg.createNonEventSchema({
-    name: `Equal (${key})`,
-    variant: "Pure",
-    generateIO(io) {
-      io.dataInput({
-        id: "one",
-        type,
-      });
-      io.dataInput({
-        id: "two",
-        type,
-      });
-      io.dataOutput({
-        id: "equal",
-        type: types.bool(),
-      });
-    },
-    run({ ctx }) {
-      ctx.setOutput("equal", ctx.getInput("one") === ctx.getInput("two"));
-    },
-  });
-
-  pkg.createNonEventSchema({
-    name: `Unwrap Option (${key})`,
-    variant: "Pure",
-    run({ ctx }) {
-      ctx.setOutput("output", ctx.getInput<Option<string>>("input").unwrap());
-    },
-    generateIO(t) {
-      t.dataInput({
-        id: "input",
-        type: types.option(type),
-      });
-      t.dataOutput({
-        id: "output",
-        type,
-      });
-    },
-  });
-
-  pkg.createNonEventSchema({
-    name: `Is Option Some (${key})`,
-    variant: "Pure",
-    generateIO(io) {
-      io.dataInput({
-        id: "input",
-        type: types.option(type),
-      });
-      io.dataOutput({
-        id: "output",
-        type: types.bool(),
-      });
-    },
-    run({ ctx }) {
-      ctx.setOutput("output", ctx.getInput<Option<any>>("input").isSome());
-    },
-  });
-
-  pkg.createNonEventSchema({
-    name: `Is Option None(${key})`,
-    variant: "Pure",
-    generateIO(io) {
-      io.dataInput({
-        id: "input",
-        type: types.option(type),
-      });
-      io.dataOutput({
-        id: "output",
-        type: types.bool(),
-      });
-    },
-    run({ ctx }) {
-      ctx.setOutput("output", ctx.getInput<Option<any>>("input").isNone());
-    },
-  });
-
-  pkg.createNonEventSchema({
     name: key,
     variant: "Pure",
     run({ ctx }) {
@@ -646,6 +570,90 @@ pkg.createNonEventSchema({
       });
     },
   });
+});
+
+pkg.createNonEventSchema({
+  name: `Equal`,
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "one",
+      type: types.wildcard(w),
+    });
+    io.dataInput({
+      id: "two",
+      type: types.wildcard(w),
+    });
+    io.dataOutput({
+      id: "equal",
+      type: types.bool(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput("equal", ctx.getInput("one") === ctx.getInput("two"));
+  },
+});
+
+pkg.createNonEventSchema({
+  name: `Unwrap Option`,
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput<Option<string>>("input").unwrap());
+  },
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "input",
+      type: types.option(types.wildcard(w)),
+    });
+    io.dataOutput({
+      id: "output",
+      type: types.wildcard(w),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: `Is Option Some`,
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "input",
+      type: types.option(types.wildcard(w)),
+    });
+    io.dataOutput({
+      id: "output",
+      type: types.bool(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput<Option<any>>("input").isSome());
+  },
+});
+
+pkg.createNonEventSchema({
+  name: `Is Option None`,
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "input",
+      type: types.option(types.wildcard(w)),
+    });
+    io.dataOutput({
+      id: "output",
+      type: types.bool(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput<Option<any>>("input").isNone());
+  },
 });
 
 pkg.createNonEventSchema({

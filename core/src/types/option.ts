@@ -502,12 +502,6 @@ export class OptionType<T extends AnyType = AnyType> extends BaseType<
     return this.inner.variant();
   }
 
-  canConnect(a: BaseType<any>): boolean {
-    if (!(a instanceof OptionType)) return false;
-
-    return this.inner.canConnect(a.inner);
-  }
-
   getInner(): BaseType {
     if (this.inner instanceof OptionType) {
       return this.inner.getInner();

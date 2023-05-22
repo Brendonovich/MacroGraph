@@ -12,10 +12,10 @@ interface Props {
 }
 
 const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
-  Base: "bg-gray-base",
-  Exec: "bg-blue-exec",
-  Event: "bg-red-event",
-  Pure: "bg-green-pure",
+  Base: "bg-mg-base",
+  Exec: "bg-mg-exec",
+  Event: "bg-mg-event",
+  Pure: "bg-mg-pure",
 };
 
 export const SchemaMenu = (props: Props) => {

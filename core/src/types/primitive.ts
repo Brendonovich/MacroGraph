@@ -9,14 +9,6 @@ export abstract class BasePrimitiveType<TOut = any> extends BaseType<TOut> {
     return "primitive";
   }
 
-  canConnect(a: BaseType) {
-    return (
-      a instanceof WildcardType ||
-      (a instanceof BasePrimitiveType &&
-        this.primitiveVariant() === a.primitiveVariant())
-    );
-  }
-
   connectWildcard(_right: WildcardType) {}
 
   abstract primitiveVariant(): PrimitiveVariant;

@@ -57,7 +57,7 @@ export const DataPin = (props: Props) => {
             <div
               {...containerProps()}
               class={clsx(
-                `w-3.5 h-3.5 flex justify-center items-center border-current`,
+                `w-3.5 h-3.5 flex justify-center items-center border-mg-current`,
                 rounding(type()),
                 colour(type()),
                 connected() || active() ? "border-[2.5px]" : "border-[1.5px]"
@@ -65,8 +65,8 @@ export const DataPin = (props: Props) => {
             >
               <div
                 class={clsx(
-                  "border-[1.5px] border-current",
-                  connected() || active() ? "w-1 h-1 bg-current" : "w-2 h-2",
+                  "border-[1.5px] border-mg-current",
+                  connected() || active() ? "w-1 h-1 bg-mg-current" : "w-2 h-2",
                   !(type().getInner() instanceof ListType)
                     ? "rounded-full"
                     : "rounded-[0.0625rem]"
@@ -86,8 +86,8 @@ export const DataPin = (props: Props) => {
                 rounding(type()),
                 colour(type()),
                 connected() || active()
-                  ? "border-current bg-current"
-                  : "border-current hover:border-current"
+                  ? "border-mg-current bg-mg-current"
+                  : "border-mg-current"
               )}
             />
           );
