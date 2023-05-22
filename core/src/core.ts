@@ -13,6 +13,6 @@ export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: s
 
 export type HTTPBody = { Json: any } | { Form: { [key: string]: string } }
 
-export type Message = "Listening" | { Received: string }
+export type Message = "Listening" | { Received: { accessToken: string; refreshToken: string; scope: string[]; expiresIn: number } }
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"

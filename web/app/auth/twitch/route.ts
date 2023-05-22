@@ -26,6 +26,28 @@ export const GET = async (req: NextRequest) => {
   const token = TOKEN.parse(json);
 
   return NextResponse.redirect(
-    `http://localhost:${params.state.port}?access_token=${token.access_token}`
+    `http://localhost:${params.state.port}?token=${encodeURIComponent(
+      JSON.stringify(token)
+    )}`
   );
+};
+
+export const POST = async (req: NextRequest) => {
+  const body = await req.json();
+
+  const res = await fetch("https://id.twitch.tv/oauth2/token", {
+    method: "POST",
+    body: new URLSearchParams({
+      client_id: env.TWITCH_CLIENT_ID,
+      client_secret: env.TWITCH_CLIENT_SECRET,
+      grant_type: "refresh_token",
+      refresh_token: body.refreshToken,
+    }),
+  });
+
+  const json = await res.json();
+
+  const token = TOKEN.parse(json);
+
+  return NextResponse.json(token);
 };

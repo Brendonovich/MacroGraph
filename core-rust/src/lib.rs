@@ -66,14 +66,28 @@ fn auth() -> AlphaRouter<()> {
             #[specta(inline)]
             enum Message {
                 Listening,
-                Received(String),
+                #[serde(rename_all = "camelCase")]
+                Received {
+                    access_token: String,
+                    refresh_token: String,
+                    scope: Vec<String>,
+                    expires_in: u32,
+                },
             }
 
             let (tx, mut rx) = tokio::sync::mpsc::channel(4);
 
-            #[derive(Deserialize)]
-            struct Params {
+            #[derive(Deserialize, Debug)]
+            struct TokenData {
                 access_token: String,
+                refresh_token: String,
+                scope: Vec<String>,
+                expires_in: u32,
+            }
+
+            #[derive(Deserialize, Debug)]
+            struct Params {
+                token: String,
             }
 
             // build our application with a route
@@ -82,7 +96,9 @@ fn auth() -> AlphaRouter<()> {
                 .route(
                     "/",
                     routing::get(|Query(params): Query<Params>| async move {
-                        tx.send(params.access_token).await.expect("no send?!");
+                        tx.send(serde_json::from_str::<TokenData>(&params.token).unwrap())
+                            .await
+                            .expect("no send?!");
                         "You can return to macrograph!"
                     }),
                 );
@@ -135,7 +151,12 @@ fn auth() -> AlphaRouter<()> {
                 yield Message::Listening;
 
                 if let Some(token) = rx.recv().await {
-                    yield Message::Received(token);
+                    yield Message::Received {
+                        access_token: token.access_token,
+                        refresh_token: token.refresh_token,
+                        expires_in: token.expires_in,
+                        scope: token.scope
+                    };
                 }
 
                 shutdown_tx.send(()).ok();
