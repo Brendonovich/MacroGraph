@@ -194,6 +194,49 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "Edit Stream Info",
+  variant: "Exec",
+  generateIO: (t) => {
+    t.dataInput({
+      name: "Game ID",
+      id: "gameId",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Language",
+      id: "language",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Title",
+      id: "title",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Delay (s)",
+      id: "delay",
+      type: types.string(),
+    });
+    t.dataInput({
+      name: "Tags",
+      id: "tags",
+      type: types.list(types.string()),
+    });
+  },
+  async run({ ctx }) {
+    const { user, helix } = unwrapApi();
+
+    let data = await helix.channels.updateChannelInfo(user.id, {
+      gameId: ctx.getInput("gameId"),
+      language: ctx.getInput("language"),
+      title: ctx.getInput("title"),
+      delay: ctx.getInput("delay"),
+      tags: ctx.getInput("tags")
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "Create Clip",
   variant: "Exec",
   generateIO: (t) => {
