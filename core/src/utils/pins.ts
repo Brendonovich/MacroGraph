@@ -5,7 +5,7 @@ export function pinsCanConnect(
   input: DataInput | ExecInput
 ) {
   if (output instanceof DataOutput && input instanceof DataInput)
-    return output.type.compare(input.type);
+    return output.type.canConnect(input.type);
   else if (output instanceof ExecOutput && input instanceof ExecInput)
     return true;
   else return false;

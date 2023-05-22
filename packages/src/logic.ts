@@ -240,46 +240,48 @@ pkg.createNonEventSchema({
       });
     },
   });
+});
 
-  pkg.createNonEventSchema({
-    name: `For Each (${key})`,
-    variant: "Base",
-    async run({ ctx }) {
-      for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
-        ctx.setOutput("output", data);
-        ctx.setOutput("index", index);
-        await ctx.exec("body");
-      }
+pkg.createNonEventSchema({
+  name: `For Each`,
+  variant: "Base",
+  async run({ ctx }) {
+    for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
+      ctx.setOutput("output", data);
+      ctx.setOutput("index", index);
+      await ctx.exec("body");
+    }
 
-      ctx.exec("completed");
-    },
-    generateIO(t) {
-      t.execInput({
-        id: "exec",
-      });
-      t.dataInput({
-        id: "array",
-        name: "Array",
-        type: types.list(type),
-      });
-      t.execOutput({
-        id: "body",
-        name: "Loop Body",
-      });
-      t.dataOutput({
-        id: "element",
-        name: "Array Element",
-        type: type,
-      });
-      t.dataOutput({
-        id: "index",
-        name: "Array Index",
-        type: types.int(),
-      });
-      t.execOutput({
-        id: "completed",
-        name: "Completed",
-      });
-    },
-  });
+    ctx.exec("completed");
+  },
+  generateIO(t) {
+    const wildcard = t.wildcard();
+
+    t.execInput({
+      id: "exec",
+    });
+    t.dataInput({
+      id: "array",
+      name: "Array",
+      type: types.list(types.wildcard(wildcard)),
+    });
+    t.execOutput({
+      id: "body",
+      name: "Loop Body",
+    });
+    t.dataOutput({
+      id: "element",
+      name: "Array Element",
+      type: types.wildcard(wildcard),
+    });
+    t.dataOutput({
+      id: "index",
+      name: "Array Index",
+      type: types.int(),
+    });
+    t.execOutput({
+      id: "completed",
+      name: "Completed",
+    });
+  },
 });

@@ -630,24 +630,6 @@ pkg.createNonEventSchema({
   });
 
   pkg.createNonEventSchema({
-    name: `Make Some (${key})`,
-    variant: "Pure",
-    generateIO(io) {
-      io.dataInput({
-        id: "in",
-        type,
-      });
-      io.dataOutput({
-        id: "out",
-        type: types.option(type),
-      });
-    },
-    run({ ctx }) {
-      ctx.setOutput("out", Some(ctx.getInput<any>("in")));
-    },
-  });
-
-  pkg.createNonEventSchema({
     name: key,
     variant: "Pure",
     run({ ctx }) {
@@ -664,4 +646,24 @@ pkg.createNonEventSchema({
       });
     },
   });
+});
+
+pkg.createNonEventSchema({
+  name: `Make Some`,
+  variant: "Pure",
+  generateIO(io) {
+    const type = io.wildcard();
+
+    io.dataInput({
+      id: "in",
+      type: types.wildcard(type),
+    });
+    io.dataOutput({
+      id: "out",
+      type: types.option(types.wildcard(type)),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput("out", Some(ctx.getInput<any>("in")));
+  },
 });

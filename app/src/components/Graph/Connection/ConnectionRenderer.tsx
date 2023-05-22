@@ -1,22 +1,9 @@
-import {
-  DataInput,
-  ExecInput,
-  ExecOutput,
-  ListType,
-  PrimitiveType,
-  PrimitiveVariant,
-} from "@macrograph/core";
+import { DataInput, ExecInput, ExecOutput } from "@macrograph/core";
 import { For, Match, Show, Switch } from "solid-js";
 
 import { useUIStore } from "~/UIStore";
 import { useGraph } from "../Graph";
-
-const DataColourClasses: Record<PrimitiveVariant, string> = {
-  bool: "text-red-bool",
-  string: "text-pink-string",
-  float: "text-green-float",
-  int: "text-blue-int",
-};
+import { colour } from "../util";
 
 export const ConnectionRender = () => {
   const graph = useGraph();
@@ -66,13 +53,7 @@ export const ConnectionRender = () => {
                         <Match when={i instanceof DataInput && i}>
                           {(input) => (
                             <line
-                              class={
-                                DataColourClasses[
-                                  input()
-                                    .type.basePrimitive()
-                                    .primitiveVariant()
-                                ]
-                              }
+                              class={colour(input().type)}
                               x1={positions().input.x - graphOffset().x}
                               y1={positions().input.y - graphOffset().y}
                               x2={positions().output.x - graphOffset().x}
@@ -120,9 +101,7 @@ export const ConnectionRender = () => {
               )
                 return "text-white";
 
-              return DataColourClasses[
-                draggingPin.type.basePrimitive().primitiveVariant()
-              ];
+              return colour(draggingPin.type);
             };
 
             return (

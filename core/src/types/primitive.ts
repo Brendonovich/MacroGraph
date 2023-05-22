@@ -1,28 +1,28 @@
 import { TypeVariant } from ".";
-import { AnyType } from "./any";
+import { BaseType } from "./any";
+import { WildcardType } from "./wildcard";
 
 export type PrimitiveVariant = "int" | "float" | "string" | "bool";
 
-export abstract class PrimitiveType<TOut = any> extends AnyType<TOut> {
+export abstract class BasePrimitiveType<TOut = any> extends BaseType<TOut> {
   variant(): TypeVariant {
     return "primitive";
   }
 
-  compare(a: AnyType) {
+  canConnect(a: BaseType) {
     return (
-      a instanceof PrimitiveType &&
-      this.primitiveVariant() === a.primitiveVariant()
+      a instanceof WildcardType ||
+      (a instanceof BasePrimitiveType &&
+        this.primitiveVariant() === a.primitiveVariant())
     );
   }
 
-  basePrimitive(): PrimitiveType {
-    return this;
-  }
+  connectWildcard(_right: WildcardType) {}
 
   abstract primitiveVariant(): PrimitiveVariant;
 }
 
-export class IntType extends PrimitiveType<number> {
+export class IntType extends BasePrimitiveType<number> {
   default() {
     return 0;
   }
@@ -32,7 +32,7 @@ export class IntType extends PrimitiveType<number> {
   }
 }
 
-export class FloatType extends PrimitiveType<number> {
+export class FloatType extends BasePrimitiveType<number> {
   default() {
     return 0;
   }
@@ -42,7 +42,7 @@ export class FloatType extends PrimitiveType<number> {
   }
 }
 
-export class StringType extends PrimitiveType<string> {
+export class StringType extends BasePrimitiveType<string> {
   default() {
     return "";
   }
@@ -52,7 +52,7 @@ export class StringType extends PrimitiveType<string> {
   }
 }
 
-export class BoolType extends PrimitiveType<boolean> {
+export class BoolType extends BasePrimitiveType<boolean> {
   default() {
     return false;
   }
@@ -61,3 +61,5 @@ export class BoolType extends PrimitiveType<boolean> {
     return "bool";
   }
 }
+
+export type PrimitiveType = IntType | FloatType | StringType | BoolType;

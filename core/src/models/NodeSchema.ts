@@ -1,4 +1,5 @@
 import { AnyType } from "../types";
+import { newWildcard, Wildcard } from "../types/wildcard";
 import { Package } from "./Package";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
@@ -38,6 +39,16 @@ export type OutputBuilder =
 export class IOBuilder {
   inputs: InputBuilder[] = [];
   outputs: OutputBuilder[] = [];
+
+  wildcards: Wildcard[] = [];
+
+  wildcard() {
+    const wildcard = newWildcard();
+
+    this.wildcards.push(wildcard);
+
+    return wildcard;
+  }
 
   dataInput<T extends DataInputBuilder>(args: T) {
     this.inputs.push({ ...args, variant: "Data" });

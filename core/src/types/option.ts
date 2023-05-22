@@ -1,5 +1,6 @@
-import { PrimitiveType, TypeVariant } from ".";
-import { AnyType } from "./any";
+import { createMutable } from "solid-js/store";
+import { AnyType, TypeVariant } from ".";
+import { BaseType } from "./any";
 
 /**
  * Implementation of Rust's `Option` type in TypeScript.
@@ -45,7 +46,9 @@ import { AnyType } from "./any";
  * ```
  */
 class Option<T> {
-  constructor(private value: T) {}
+  constructor(public value: T) {
+    return createMutable(this);
+  }
 
   /**
    * Returns `true` if the option is a {@link Some `Some`} value.
@@ -484,10 +487,9 @@ function Maybe<T>(value: T | null | undefined): Option<T> {
 
 export { Option, Some, Maybe, None };
 
-export class OptionType<
-  T extends AnyType<TOut> = AnyType,
-  TOut = any
-> extends AnyType<Option<T>> {
+export class OptionType<T extends AnyType = AnyType> extends BaseType<
+  Option<T>
+> {
   constructor(public inner: T) {
     super();
   }
@@ -500,17 +502,13 @@ export class OptionType<
     return this.inner.variant();
   }
 
-  compare(a: AnyType<any>): boolean {
+  canConnect(a: BaseType<any>): boolean {
     if (!(a instanceof OptionType)) return false;
 
-    return this.inner.compare(a.inner);
+    return this.inner.canConnect(a.inner);
   }
 
-  basePrimitive(): PrimitiveType {
-    return this.inner.basePrimitive();
-  }
-
-  getInner(): AnyType {
+  getInner(): BaseType {
     if (this.inner instanceof OptionType) {
       return this.inner.getInner();
     } else return this.inner;
