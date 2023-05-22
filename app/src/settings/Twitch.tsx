@@ -13,7 +13,7 @@ export default () => {
         <>
           Loading...
           <Button onClick={() => twitch.auth.setAccessToken(None)}>
-            Logout
+            Cancel
           </Button>
         </>
       }
