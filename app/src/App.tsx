@@ -2,7 +2,7 @@ import { onMount, Show } from "solid-js";
 import { CoreProvider } from "./contexts";
 import { Graph } from "~/components/Graph";
 import { GraphList } from "~/components/ProjectSidebar";
-import { core } from "@macrograph/core";
+import { core, SerializedProject } from "@macrograph/core";
 import "@macrograph/packages";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { PrintOutput } from "./components/PrintOutput";
@@ -12,7 +12,9 @@ function App() {
   const ui = createUIStore();
 
   onMount(() => {
-    core.load();
+    const savedProject = localStorage.getItem("project");
+    if (savedProject)
+      core.load(SerializedProject.parse(JSON.parse(savedProject)));
 
     const firstGraph = core.project.graphs.values().next();
     if (firstGraph) ui.setCurrentGraph(firstGraph.value);
