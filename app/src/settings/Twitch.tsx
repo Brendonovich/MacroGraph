@@ -8,7 +8,16 @@ export default () => {
   const [loggingIn, setLoggingIn] = createSignal(false);
 
   return (
-    <Switch fallback="Loading...">
+    <Switch
+      fallback={
+        <>
+          Loading...
+          <Button onClick={() => twitch.auth.setAccessToken(None)}>
+            Cancel
+          </Button>
+        </>
+      }
+    >
       <Match when={twitch.helix.user().toNullable()}>
         {(user) => (
           <div class="flex space-x-4 items-center">

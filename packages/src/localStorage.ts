@@ -1,4 +1,4 @@
-import { core, types } from "@macrograph/core";
+import { core, types, Option, Maybe } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Localstorage",
@@ -40,8 +40,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    let data = localStorage.getItem(`value-${ctx.getInput("key")}`);
-    ctx.setOutput("exists", data !== null);
-    if (data !== null) ctx.setOutput("output", data);
+    const data = localStorage.getItem(`value-${ctx.getInput("key")}`);
+    const opt = Maybe(data);
+    ctx.setOutput("output", opt);
   },
 });

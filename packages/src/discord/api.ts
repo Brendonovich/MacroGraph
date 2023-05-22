@@ -280,11 +280,11 @@ pkg.createNonEventSchema({
       name: "TTS",
       type: types.option(types.bool()),
     });
-    t.dataInput({
-      id: "fileLocation",
-      name: "File Location",
-      type: types.option(types.string()),
-    });
+    // t.dataInput({
+    //   id: "fileLocation",
+    //   name: "File Location",
+    //   type: types.option(types.string()),
+    // });
     t.dataOutput({
       id: "status",
       name: "Status",
@@ -298,15 +298,15 @@ pkg.createNonEventSchema({
     ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
     ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
     ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
-    await ctx.getInput<Option<string>>("fileLocation").mapAsync(async (v) => {
-      body["file[0]"] = JSON.stringify({
-        file: await fs.readBinaryFile(v),
-        fileName: ctx
-          .getInput<string>("fileLocation")
-          .split(/[\/\\]/)
-          .at(-1),
-      });
-    });
+    // await ctx.getInput<Option<string>>("fileLocation").mapAsync(async (v) => {
+    //   body["file[0]"] = JSON.stringify({
+    //     file: await fs.readBinaryFile(v),
+    //     fileName: ctx
+    //       .getInput<string>("fileLocation")
+    //       .split(/[\/\\]/)
+    //       .at(-1),
+    //   });
+    // });
 
     let response = await rspcClient.query([
       "http.json",
