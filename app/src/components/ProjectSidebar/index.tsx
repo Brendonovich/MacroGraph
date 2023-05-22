@@ -29,6 +29,7 @@ export const GraphList = (props: Props) => {
             );
             graph.id = core.project.getNewId();
             core.project.graphs.set(graph.id, graph);
+            core.project.save();
             UI.setCurrentGraph(graph);
           }}
         >
