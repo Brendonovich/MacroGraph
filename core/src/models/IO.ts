@@ -2,6 +2,7 @@ import { Node } from "./Node";
 import { createMutable } from "solid-js/store";
 import { AnyType } from "../types";
 import { Connection } from "../bindings/Connection";
+import { ReactiveSet } from "@solid-primitives/set";
 
 export type DataInputArgs = {
   variant: "Data";
@@ -16,7 +17,7 @@ export type DataInputArgs = {
 export class DataInput {
   id: string;
   name?: string;
-  defaultValue: any;
+  defaultValue: any = null;
   type: AnyType;
   node: Node;
   connection: DataOutput | null = null;
@@ -29,14 +30,6 @@ export class DataInput {
     this.type = args.type;
 
     createMutable(this);
-  }
-
-  async disconnect(_send = true) {
-    this.connection?.connections.splice(
-      this.connection.connections.indexOf(this),
-      1
-    );
-    this.connection = null;
   }
 
   setDefaultValue(value: any) {
@@ -63,7 +56,7 @@ export interface DataOutputArgs {
 
 export class DataOutput {
   id: string;
-  connections: DataInput[] = [];
+  connections = new ReactiveSet<DataInput>();
   node: Node;
   name?: string;
   type: AnyType;
@@ -77,13 +70,8 @@ export class DataOutput {
     return createMutable(this);
   }
 
-  async disconnect() {
-    this.connections.forEach((c) => (c.connection = null));
-    this.connections = [];
-  }
-
   get connected() {
-    return this.connections.length > 0;
+    return this.connections.size > 0;
   }
 
   get variant() {
@@ -113,11 +101,6 @@ export class ExecInput {
     createMutable(this);
   }
 
-  async disconnect(_send = true) {
-    if (this.connection) this.connection.connection = null;
-    this.connection = null;
-  }
-
   get connected() {
     return this.connection !== null;
   }
@@ -145,11 +128,6 @@ export class ExecOutput {
     this.name = args.name;
 
     createMutable(this);
-  }
-
-  async disconnect(_send = true) {
-    if (this.connection) this.connection.connection = null;
-    this.connection = null;
   }
 
   get connected() {

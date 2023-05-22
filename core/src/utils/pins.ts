@@ -1,12 +1,13 @@
 import { DataOutput, ExecOutput, DataInput, ExecInput, Pin } from "../models";
+import { typesCanConnect } from "../types";
 
 export function pinsCanConnect(
   output: DataOutput | ExecOutput,
   input: DataInput | ExecInput
 ) {
-  if (output instanceof DataOutput && input instanceof DataInput)
-    return output.type.compare(input.type);
-  else if (output instanceof ExecOutput && input instanceof ExecInput)
+  if (output instanceof DataOutput && input instanceof DataInput) {
+    return typesCanConnect(output.type, input.type);
+  } else if (output instanceof ExecOutput && input instanceof ExecInput)
     return true;
   else return false;
 }

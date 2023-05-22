@@ -188,7 +188,7 @@ pkg.createNonEventSchema({
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
       delay: ctx.getInput("delay"),
-      tags: ctx.getInput("tags")
+      tags: ctx.getInput("tags"),
     });
   },
 });
@@ -231,7 +231,7 @@ pkg.createNonEventSchema({
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
       delay: ctx.getInput("delay"),
-      tags: ctx.getInput("tags")
+      tags: ctx.getInput("tags"),
     });
   },
 });
@@ -567,7 +567,10 @@ pkg.createNonEventSchema({
       ctx.setOutput("enabled", data?.isEnabled);
       ctx.setOutput("userInputRequired", data?.userInputRequired);
       ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
-      ctx.setOutput("maxRedemptionsPerUserPerStream", data?.maxRedemptionsPerUserPerStream);
+      ctx.setOutput(
+        "maxRedemptionsPerUserPerStream",
+        data?.maxRedemptionsPerUserPerStream
+      );
       ctx.setOutput("globalCooldown", data?.globalCooldown);
       ctx.setOutput("paused", data?.isPaused);
       ctx.setOutput("stock", data?.isInStock);
@@ -734,20 +737,24 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const { user, helix } = unwrapApi();
     try {
-      let data = await helix.channelPoints.updateCustomReward(user.id, ctx.getInput("id"), {
-        title: ctx.getInput("title"),
-        cost: ctx.getInput("cost"),
-        prompt: ctx.getInput("prompt"),
-        isEnabled: ctx.getInput("isEnabled"),
-        backgroundColor: ctx.getInput("backgroundColor"),
-        userInputRequired: ctx.getInput("userInputRequired"),
-        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
-        maxRedemptionsPerUserPerStream: ctx.getInput(
-          "maxRedemptionsPerUserPerStream"
-        ),
-        isPaused: ctx.getInput("paused"),
-        globalCooldown: ctx.getInput("globalCooldown")
-      });
+      let data = await helix.channelPoints.updateCustomReward(
+        user.id,
+        ctx.getInput("id"),
+        {
+          title: ctx.getInput("title"),
+          cost: ctx.getInput("cost"),
+          prompt: ctx.getInput("prompt"),
+          isEnabled: ctx.getInput("isEnabled"),
+          backgroundColor: ctx.getInput("backgroundColor"),
+          userInputRequired: ctx.getInput("userInputRequired"),
+          maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+          maxRedemptionsPerUserPerStream: ctx.getInput(
+            "maxRedemptionsPerUserPerStream"
+          ),
+          isPaused: ctx.getInput("paused"),
+          globalCooldown: ctx.getInput("globalCooldown"),
+        }
+      );
       ctx.setOutput("success", true);
       ctx.setOutput("errorMessage", "");
       ctx.setOutput("rewardId", data?.id);
@@ -758,7 +765,10 @@ pkg.createNonEventSchema({
       ctx.setOutput("enabled", data?.isEnabled);
       ctx.setOutput("userInputRequired", data?.userInputRequired);
       ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
-      ctx.setOutput("maxRedemptionsPerUserPerStream", data?.maxRedemptionsPerUserPerStream);
+      ctx.setOutput(
+        "maxRedemptionsPerUserPerStream",
+        data?.maxRedemptionsPerUserPerStream
+      );
       ctx.setOutput("globalCooldown", data?.globalCooldown);
       ctx.setOutput("paused", data?.isPaused);
       ctx.setOutput("stock", data?.isInStock);
@@ -860,7 +870,12 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const { user, helix } = unwrapApi();
     try {
-      let data = await helix.channelPoints.updateRedemptionStatusByIds(user.id, ctx.getInput("redemptionId"), ctx.getInput("rewardId"), ctx.getInput("cancel") ? "FULFILLED" : "CANCELED");
+      let data = await helix.channelPoints.updateRedemptionStatusByIds(
+        user.id,
+        ctx.getInput("redemptionId"),
+        ctx.getInput("rewardId"),
+        ctx.getInput("cancel") ? "FULFILLED" : "CANCELED"
+      );
       ctx.setOutput("success", true);
       ctx.setOutput("redemptionId", data[0]?.id);
       ctx.setOutput("userId", data[0]?.userId);
@@ -977,9 +992,14 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const { user, helix } = unwrapApi();
-    let rewards = await helix.channelPoints.getCustomRewards(user.id, ctx.getInput("manageableOnly"));
-    const data = rewards.find((reward) => reward.title === ctx.getInput("title"));
-    ctx.setOutput("success", !!data)
+    let rewards = await helix.channelPoints.getCustomRewards(
+      user.id,
+      ctx.getInput("manageableOnly")
+    );
+    const data = rewards.find(
+      (reward) => reward.title === ctx.getInput("title")
+    );
+    ctx.setOutput("success", !!data);
     ctx.setOutput("rewardId", data?.id);
     ctx.setOutput("rewardTitle", data?.title);
     ctx.setOutput("rewardPrompt", data?.prompt);
@@ -988,7 +1008,10 @@ pkg.createNonEventSchema({
     ctx.setOutput("enabled", data?.isEnabled);
     ctx.setOutput("userInputRequired", data?.userInputRequired);
     ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
-    ctx.setOutput("maxRedemptionsPerUserPerStream", data?.maxRedemptionsPerUserPerStream);
+    ctx.setOutput(
+      "maxRedemptionsPerUserPerStream",
+      data?.maxRedemptionsPerUserPerStream
+    );
     ctx.setOutput("globalCooldown", data?.globalCooldown);
     ctx.setOutput("paused", data?.isPaused);
     ctx.setOutput("stock", data?.isInStock);
@@ -1181,7 +1204,7 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     const { user, helix } = unwrapApi();
 
-    apiClient()?.chat.shoutoutUser(u.id, ctx.getInput("toId"), u.id);
+    helix.chat.shoutoutUser(user.id, ctx.getInput("toId"), user.id);
   },
 });
 
@@ -1196,13 +1219,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user();
-    if (!u) return;
+    const { user, helix } = unwrapApi();
 
-    apiClient()?.chat.sendAnnouncement(u.id, u.id, ctx.getInput("announcement"));
+    helix.chat.sendAnnouncement(user.id, user.id, ctx.getInput("announcement"));
   },
 });
-
-
-
-

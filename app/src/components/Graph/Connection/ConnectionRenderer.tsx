@@ -1,22 +1,10 @@
-import {
-  DataInput,
-  ExecInput,
-  ExecOutput,
-  ListType,
-  PrimitiveType,
-  PrimitiveVariant,
-} from "@macrograph/core";
-import { For, Match, Show, Switch } from "solid-js";
+import { DataInput, ExecInput, ExecOutput } from "@macrograph/core";
+import clsx from "clsx";
+import { createMemo, For, Match, Show, Switch } from "solid-js";
 
 import { useUIStore } from "~/UIStore";
 import { useGraph } from "../Graph";
-
-const DataColourClasses: Record<PrimitiveVariant, string> = {
-  bool: "text-red-bool",
-  string: "text-pink-string",
-  float: "text-green-float",
-  int: "text-blue-int",
-};
+import { colour } from "../util";
 
 export const ConnectionRender = () => {
   const graph = useGraph();
@@ -66,18 +54,14 @@ export const ConnectionRender = () => {
                         <Match when={i instanceof DataInput && i}>
                           {(input) => (
                             <line
-                              class={
-                                DataColourClasses[
-                                  input()
-                                    .type.basePrimitive()
-                                    .primitiveVariant()
-                                ]
-                              }
+                              class={clsx(
+                                "stroke-mg-current",
+                                colour(input().type)
+                              )}
                               x1={positions().input.x - graphOffset().x}
                               y1={positions().input.y - graphOffset().y}
                               x2={positions().output.x - graphOffset().x}
                               y2={positions().output.y - graphOffset().y}
-                              stroke="currentColor"
                               stroke-opacity={0.75}
                               stroke-width={2 * scale()}
                             />
@@ -111,30 +95,27 @@ export const ConnectionRender = () => {
               y: state().mouseDragLocation.y - graphOffset().y,
             });
 
-            const colourClass = () => {
+            const colourClass = createMemo(() => {
               const draggingPin = state().draggingPin;
 
               if (
                 draggingPin instanceof ExecInput ||
                 draggingPin instanceof ExecOutput
               )
-                return "text-white";
+                return "[--mg-current:white]";
 
-              return DataColourClasses[
-                draggingPin.type.basePrimitive().primitiveVariant()
-              ];
-            };
+              return colour(draggingPin.type);
+            });
 
             return (
               <Show when={pinPos()}>
                 {(pos) => (
                   <line
-                    class={colourClass()}
+                    class={clsx("stroke-mg-current", colourClass())}
                     x1={pos().x - graphOffset().x}
                     y1={pos().y - graphOffset().y}
                     x2={diffs().x}
                     y2={diffs().y}
-                    stroke="currentColor"
                     stroke-opacity={0.75}
                     stroke-width={2 * scale()}
                   />

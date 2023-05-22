@@ -28,10 +28,10 @@ interface Props {
 }
 
 const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
-  Exec: "bg-blue-exec",
-  Base: "bg-gray-base",
-  Event: "bg-red-event",
-  Pure: "bg-green-pure",
+  Exec: "bg-mg-exec",
+  Base: "bg-mg-base",
+  Event: "bg-mg-event",
+  Pure: "bg-mg-pure",
 };
 
 export const Node = (props: Props) => {

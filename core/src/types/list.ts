@@ -1,10 +1,9 @@
-import { PrimitiveType, TypeVariant } from ".";
-import { AnyType } from "./any";
+import { AnyType, TypeVariant } from ".";
+import { BaseType } from "./any";
 
-export class ListType<
-  T extends AnyType<TOut> = AnyType,
-  TOut = any
-> extends AnyType<TOut[]> {
+export class ListType<T extends AnyType = AnyType, TOut = any> extends BaseType<
+  TOut[]
+> {
   constructor(public inner: T) {
     super();
   }
@@ -15,13 +14,5 @@ export class ListType<
 
   variant(): TypeVariant {
     return "list";
-  }
-
-  compare(a: AnyType): boolean {
-    return a instanceof ListType && this.inner.compare(a.inner);
-  }
-
-  basePrimitive(): PrimitiveType {
-    return this.inner.basePrimitive();
   }
 }

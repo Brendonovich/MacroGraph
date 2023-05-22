@@ -4,7 +4,14 @@ export * from "./ExecInput";
 export * from "./ExecOutput";
 export * from "./DataOutput";
 
-import { Pin, pinIsInput, pinIsOutput, pinsCanConnect } from "@macrograph/core";
+import {
+  DataOutput,
+  Pin,
+  pinIsInput,
+  pinIsOutput,
+  pinsCanConnect,
+  WildcardType,
+} from "@macrograph/core";
 import {
   batch,
   createEffect,
@@ -89,7 +96,7 @@ export const usePin = (pin: Pin) => {
       window.addEventListener("mousemove", handleMouseDrag);
     });
     ref.addEventListener("dblclick", () => {
-      pin.disconnect();
+      graph().disconnectPin(pin);
     });
   });
 

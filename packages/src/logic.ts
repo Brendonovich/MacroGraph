@@ -199,87 +199,82 @@ pkg.createNonEventSchema({
   },
 });
 
-(
-  [
-    ["Bool", types.bool()],
-    ["String", types.string()],
-    ["Int", types.int()],
-    ["Float", types.float()],
-  ] as const
-).forEach(([key, type]) => {
-  pkg.createNonEventSchema({
-    name: `Conditional ${key}`,
-    variant: "Pure",
-    run({ ctx }) {
-      ctx.setOutput(
-        "output",
-        ctx.getInput("condition")
-          ? ctx.getInput("trueValue")
-          : ctx.getInput("falseValue")
-      );
-    },
-    generateIO(t) {
-      t.dataInput({
-        id: "condition",
-        name: "Condition",
-        type: types.bool(),
-      });
-      t.dataInput({
-        id: "trueValue",
-        name: "True",
-        type: type,
-      });
-      t.dataInput({
-        id: "falseValue",
-        name: "False",
-        type: type,
-      });
-      t.dataOutput({
-        id: "output",
-        type: type,
-      });
-    },
-  });
+pkg.createNonEventSchema({
+  name: `Conditional`,
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput(
+      "output",
+      ctx.getInput("condition")
+        ? ctx.getInput("trueValue")
+        : ctx.getInput("falseValue")
+    );
+  },
+  generateIO(io) {
+    const w = io.wildcard();
 
-  pkg.createNonEventSchema({
-    name: `For Each (${key})`,
-    variant: "Base",
-    async run({ ctx }) {
-      for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
-        ctx.setOutput("output", data);
-        ctx.setOutput("index", index);
-        await ctx.exec("body");
-      }
+    io.dataInput({
+      id: "condition",
+      name: "Condition",
+      type: types.bool(),
+    });
+    io.dataInput({
+      id: "trueValue",
+      name: "True",
+      type: types.wildcard(w),
+    });
+    io.dataInput({
+      id: "falseValue",
+      name: "False",
+      type: types.wildcard(w),
+    });
+    io.dataOutput({
+      id: "output",
+      type: types.wildcard(w),
+    });
+  },
+});
 
-      ctx.exec("completed");
-    },
-    generateIO(t) {
-      t.execInput({
-        id: "exec",
-      });
-      t.dataInput({
-        id: "array",
-        name: "Array",
-        type: types.list(type),
-      });
-      t.execOutput({
-        id: "body",
-        name: "Loop Body",
-      });
-      t.dataOutput({
-        id: "element",
-        name: "Array Element",
-        type: type,
-      });
-      t.dataOutput({
-        id: "index",
-        name: "Array Index",
-        type: types.int(),
-      });
-      t.execOutput({
-        id: "completed",
-        name: "Completed",
-      });
-    },
-  });
+pkg.createNonEventSchema({
+  name: `For Each`,
+  variant: "Base",
+  async run({ ctx }) {
+    for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
+      ctx.setOutput("output", data);
+      ctx.setOutput("index", index);
+      await ctx.exec("body");
+    }
+
+    ctx.exec("completed");
+  },
+  generateIO(t) {
+    const w = t.wildcard();
+
+    t.execInput({
+      id: "exec",
+    });
+    t.dataInput({
+      id: "array",
+      name: "Array",
+      type: types.list(types.wildcard(w)),
+    });
+    t.execOutput({
+      id: "body",
+      name: "Loop Body",
+    });
+    t.dataOutput({
+      id: "element",
+      name: "Array Element",
+      type: types.wildcard(w),
+    });
+    t.dataOutput({
+      id: "index",
+      name: "Array Index",
+      type: types.int(),
+    });
+    t.execOutput({
+      id: "completed",
+      name: "Completed",
+    });
+  },
 });

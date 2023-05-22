@@ -17,6 +17,8 @@ export class Project {
   core: Core;
   graphs = new ReactiveMap<number, Graph>();
 
+  private disableSave = false;
+
   private graphIdCounter = 0;
 
   constructor(args: ProjectArgs) {
@@ -56,6 +58,8 @@ export class Project {
       core,
     });
 
+    project.disableSave = true;
+
     project.graphIdCounter = data.graphIdCounter;
 
     project.graphs = new ReactiveMap(
@@ -70,10 +74,13 @@ export class Project {
         .filter(Boolean) as [number, Graph][]
     );
 
+    project.disableSave = false;
+
     return project;
   }
 
   save() {
-    localStorage.setItem("project", JSON.stringify(this.serialize()));
+    if (!this.disableSave)
+      localStorage.setItem("project", JSON.stringify(this.serialize()));
   }
 }

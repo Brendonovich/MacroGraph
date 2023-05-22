@@ -14,6 +14,7 @@ import { ReactiveSet } from "@solid-primitives/set";
 import { z } from "zod";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
+import { connectWildcardsInIO, disconnectWildcardsInIO } from "../types";
 
 export interface GraphArgs {
   id: number;
@@ -92,11 +93,10 @@ export class Graph {
       const dataOutput = output as DataOutput;
       const dataInput = input as DataInput;
 
-      dataOutput.connections.push(dataInput);
-      dataInput.connection?.connections.splice(
-        dataInput.connection.connections.indexOf(dataInput),
-        1
-      );
+      connectWildcardsInIO(dataOutput, dataInput);
+
+      dataOutput.connections.add(dataInput);
+      dataInput.connection?.connections.delete(dataInput);
       dataInput.connection = dataOutput;
     } else {
       const execOutput = output as ExecOutput;
@@ -112,10 +112,35 @@ export class Graph {
     this.project.save();
   }
 
+  disconnectPin(pin: DataOutput | ExecOutput | DataInput | ExecInput) {
+    if (pin instanceof DataOutput) {
+      pin.connections.forEach((conn) => {
+        disconnectWildcardsInIO(pin, conn);
+
+        conn.connection = null;
+      });
+      pin.connections.clear();
+    } else if (pin instanceof DataInput) {
+      const conn = pin.connection;
+      if (conn) {
+        disconnectWildcardsInIO(conn, pin);
+
+        conn.connections.delete(pin);
+      }
+
+      pin.connection = null;
+    } else {
+      if (pin.connection) pin.connection.connection = null;
+      pin.connection = null;
+    }
+
+    this.project.save();
+  }
+
   deleteItem(item: Node | CommentBox) {
     if (item instanceof Node) {
-      item.inputs.forEach((i) => i.disconnect(false));
-      item.outputs.forEach((o) => o.disconnect(false));
+      item.inputs.forEach((i) => this.disconnectPin(i));
+      item.outputs.forEach((o) => this.disconnectPin(o));
 
       this.nodes.delete(item.id);
     } else {
@@ -196,13 +221,7 @@ export class Graph {
 
       if (!output || !input) return;
 
-      if (output instanceof ExecOutput && input instanceof ExecInput) {
-        input.connection = output;
-        output.connection = input;
-      } else if (output instanceof DataOutput && input instanceof DataInput) {
-        input.connection = output;
-        output.connections.push(input);
-      }
+      graph.connectPins(output, input);
     });
 
     graph.commentBoxes = new ReactiveSet(

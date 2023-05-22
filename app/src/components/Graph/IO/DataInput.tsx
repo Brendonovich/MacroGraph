@@ -1,5 +1,8 @@
 import clsx from "clsx";
-import { DataInput as DataInputModel, PrimitiveType } from "@macrograph/core";
+import {
+  BasePrimitiveType,
+  DataInput as DataInputModel,
+} from "@macrograph/core";
 import { Show, Switch, Match } from "solid-js";
 
 import { CheckBox, FloatInput, IntInput, TextInput } from "~/components/ui";
@@ -12,7 +15,7 @@ const UnconnectedInput = (props: Props) => {
     clsx(input.connection !== null && "opacity-0 pointer-events-none");
 
   return (
-    <Show when={input.type instanceof PrimitiveType && input.type}>
+    <Show when={input.type instanceof BasePrimitiveType && input.type}>
       {(type) => (
         <Switch>
           <Match when={type().primitiveVariant() === "bool"}>
