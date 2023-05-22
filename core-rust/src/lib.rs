@@ -66,14 +66,19 @@ fn auth() -> AlphaRouter<()> {
             #[specta(inline)]
             enum Message {
                 Listening,
-                Received(String),
+                #[serde(rename_all = "camelCase")]
+                Received {
+                    access_token: String,
+                    refresh_token: String,
+                },
             }
 
             let (tx, mut rx) = tokio::sync::mpsc::channel(4);
 
-            #[derive(Deserialize)]
+            #[derive(Deserialize, Debug)]
             struct Params {
                 access_token: String,
+                refresh_token: String,
             }
 
             // build our application with a route
@@ -82,7 +87,7 @@ fn auth() -> AlphaRouter<()> {
                 .route(
                     "/",
                     routing::get(|Query(params): Query<Params>| async move {
-                        tx.send(params.access_token).await.expect("no send?!");
+                        tx.send(params).await.expect("no send?!");
                         "You can return to macrograph!"
                     }),
                 );
@@ -135,7 +140,10 @@ fn auth() -> AlphaRouter<()> {
                 yield Message::Listening;
 
                 if let Some(token) = rx.recv().await {
-                    yield Message::Received(token);
+                    yield Message::Received {
+                        access_token: token.access_token,
+                        refresh_token: token.refresh_token,
+                    };
                 }
 
                 shutdown_tx.send(()).ok();

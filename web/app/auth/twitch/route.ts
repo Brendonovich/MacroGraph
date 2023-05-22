@@ -26,7 +26,7 @@ export const GET = async (req: NextRequest) => {
   const token = TOKEN.parse(json);
 
   return NextResponse.redirect(
-    `http://localhost:${params.state.port}?access_token=${token.access_token}`
+    `http://localhost:${params.state.port}?access_token=${token.access_token}&refresh_token=${token.refresh_token}`
   );
 };
 
