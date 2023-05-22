@@ -35,6 +35,8 @@ class MacroGraphAuthProvider
 
     const data = await res.json();
 
+    (this as any)._accessToken = data.access_token;
+
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token || null,

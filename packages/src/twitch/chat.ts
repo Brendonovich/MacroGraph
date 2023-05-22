@@ -14,7 +14,7 @@ const { client } = createRoot(() => {
           channels: [user.name],
           identity: {
             username: user.name,
-            password: user.token,
+            password: user.token.accessToken,
           },
         });
 
