@@ -31,9 +31,7 @@ function App() {
           }}
         >
           <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
-            <div class="flex flex-col items-center p-2">
-              <Settings />
-            </div>
+            <Settings />
             <GraphList onChange={(g) => ui.setCurrentGraph(g)} />
             <PrintOutput />
           </div>

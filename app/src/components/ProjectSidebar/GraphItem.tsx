@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { createSignal, onMount, Show } from "solid-js";
 
 import { Graph } from "@macrograph/core";
+import { TbCopy } from "solid-icons/tb";
 
 interface Props {
   graph: Graph;
@@ -25,11 +26,20 @@ export const GraphItem = (props: Props) => {
         when={editing()}
         fallback={
           <div
-            class="flex flex-row items-center px-2 py-1 w-full border-2 border-transparent"
+            class="flex flex-row items-center px-2 py-1 w-full border-2 border-transparent justify-between"
             onClick={props.onClick}
             onDblClick={() => setEditing(true)}
           >
-            {props.graph.name}
+            <span>{props.graph.name}</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  btoa(JSON.stringify(props.graph.serialize()))
+                );
+              }}
+            >
+              <TbCopy />
+            </button>
           </div>
         }
       >
