@@ -33,6 +33,7 @@ export default () => {
           rspc.createSubscription(() => ["auth.twitch"], {
             onData: (m) => {
               if (typeof m === "object" && "Received" in m) {
+                m.Received.obtainmentTimestamp = Date.now();
                 twitch.auth.setAccessToken(Some(m.Received));
                 setLoggingIn(false);
               }
