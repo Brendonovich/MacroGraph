@@ -1,4 +1,4 @@
-import { core, types, Option, Maybe } from "@macrograph/core";
+import { core, t, Option, Maybe } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Localstorage",
@@ -7,16 +7,16 @@ const pkg = core.createPackage({
 pkg.createNonEventSchema({
   name: "Set Data",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "key",
       name: "Key",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "value",
       name: "Value",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -27,16 +27,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Data",
   variant: "Pure",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "key",
       name: "Key",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
       name: "Data",
-      type: types.option(types.string()),
+      type: t.option(t.string()),
     });
   },
   run({ ctx }) {

@@ -1,11 +1,10 @@
 import { z } from "zod";
-import { fs } from "@tauri-apps/api";
 import pkg from "./pkg";
 import { botToken, setBotToken } from "./auth";
 import { createResource, createRoot } from "solid-js";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
 import { createEndpoint } from "../httpEndpoint";
-import { Maybe, Option, rspcClient, types } from "@macrograph/core";
+import { Maybe, Option, rspcClient, t } from "@macrograph/core";
 
 const root = createEndpoint({
   path: "https://discord.com/api/v10",
@@ -77,19 +76,19 @@ export { bot };
 pkg.createNonEventSchema({
   name: "Send Discord Message",
   variant: "Exec",
-  generateIO: (t) => {
-    t.execInput({
+  generateIO: (io) => {
+    io.execInput({
       id: "exec",
     });
-    t.dataInput({
+    io.dataInput({
       id: "message",
       name: "Message",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "channelId",
       name: "Channel ID",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -106,22 +105,22 @@ pkg.createNonEventSchema({
     io.dataInput({
       id: "userId",
       name: "User ID",
-      type: types.string(),
+      type: t.string(),
     });
     io.dataOutput({
       id: "username",
       name: "UserName",
-      type: types.string(),
+      type: t.string(),
     });
     io.dataOutput({
       id: "avatarId",
       name: "Avatar ID",
-      type: types.option(types.string()),
+      type: t.option(t.string()),
     });
     io.dataOutput({
       id: "bannerId",
       name: "Banner ID",
-      type: types.option(types.string()),
+      type: t.option(t.string()),
     });
   },
   async run({ ctx }) {
@@ -136,46 +135,46 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Discord Guild User",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "guildId",
       name: "Guild ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "userId",
       name: "User ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "username",
       name: "UserName",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "displayName",
       name: "Display Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "avatarId",
       name: "Avatar ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "bannerId",
       name: "Banner ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "nick",
       name: "Nickname",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "roles",
       name: "Roles",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -195,41 +194,41 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Discord Role By Id",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "guildId",
       name: "Guild ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "roleIdIn",
       name: "Role ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "name",
       name: "Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "roleIdOut",
       name: "Role ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "position",
       name: "Position",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "mentionable",
       name: "Mentionable",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "permissions",
       name: "Permissions",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -254,41 +253,41 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Send Discord Webhook",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "webhookUrl",
       name: "Webhook URL",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "content",
       name: "Message",
-      type: types.option(types.string()),
+      type: t.option(t.string()),
     });
-    t.dataInput({
+    io.dataInput({
       id: "username",
       name: "Username",
-      type: types.option(types.string()),
+      type: t.option(t.string()),
     });
-    t.dataInput({
+    io.dataInput({
       id: "avatarUrl",
       name: "Avatar URL",
-      type: types.option(types.string()),
+      type: t.option(t.string()),
     });
-    t.dataInput({
+    io.dataInput({
       id: "tts",
       name: "TTS",
-      type: types.option(types.bool()),
+      type: t.option(t.bool()),
     });
-    // t.dataInput({
+    //io.dataInput({
     //   id: "fileLocation",
     //   name: "File Location",
     //   type: types.option(types.string()),
     // });
-    t.dataOutput({
+    io.dataOutput({
       id: "status",
       name: "Status",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {

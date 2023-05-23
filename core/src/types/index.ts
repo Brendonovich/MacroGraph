@@ -24,7 +24,7 @@ export type TypeVariant =
   | "option"
   | "wildcard";
 
-export const types = {
+export const t = {
   int: () => new IntType(),
   float: () => new FloatType(),
   string: () => new StringType(),

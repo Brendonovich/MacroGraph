@@ -1,4 +1,4 @@
-import { types } from "@macrograph/core";
+import { t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
 
@@ -8,45 +8,45 @@ const versionOutputs = [
   {
     id: "obsVersion",
     name: "OBS Version",
-    type: types.string(),
+    type: t.string(),
   },
   {
     id: "obsWebSocketVersion",
     name: "OBS WS Version",
-    type: types.string(),
+    type: t.string(),
   },
   {
     id: "rpcVersion",
     name: "RPC Version",
-    type: types.int(),
+    type: t.int(),
   },
   {
     id: "platform",
     name: "Platform",
-    type: types.string(),
+    type: t.string(),
   },
   {
     id: "supportedImageFormats",
     name: "Supported Image Formats",
-    type: types.list(types.string()),
+    type: t.list(t.string()),
   },
   {
     id: "availableRequests",
     name: "Available Requests",
-    type: types.list(types.string()),
+    type: t.list(t.string()),
   },
   {
     id: "platformDescription",
     name: "Platform Description",
-    type: types.string(),
+    type: t.string(),
   },
 ] as const;
 
 pkg.createNonEventSchema({
   name: "Get OBS Version",
   variant: "Exec",
-  generateIO(t) {
-    versionOutputs.forEach((data) => t.dataOutput(data));
+  generateIO(io) {
+    versionOutputs.forEach((data) => io.dataOutput(data));
   },
   async run({ ctx }) {
     const data = await obs.call("GetVersion");
@@ -71,9 +71,9 @@ const statsOutputs = [
 pkg.createNonEventSchema({
   name: "Get OBS Stats",
   variant: "Exec",
-  generateIO(t) {
+  generateIO(io) {
     statsOutputs.map(([id, name]) =>
-      t.dataOutput({ id, name, type: types.int() })
+      io.dataOutput({ id, name, type: t.int() })
     );
   },
   async run({ ctx }) {
@@ -89,11 +89,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Hotkey list",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "hotkeys",
       name: "Hotkeys",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -105,11 +105,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Trigger Hotkey By Name",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "hotkeyName",
       name: "Hotkey Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -128,16 +128,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Scene Collection List",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "currentSceneCollectionName",
       name: "Scene Collection Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneCollections",
       name: "Scene Collections",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -153,11 +153,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Current Scene Collection",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneCollectionName",
       name: "Scene Collection Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -170,11 +170,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Create Scene Collection",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "SceneCollectionName",
       name: "Scene Collection Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -187,16 +187,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Profile list",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "currentProfileName",
       name: "Profile Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "profiles",
       name: "Profiles",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -208,11 +208,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Current Profile",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "profileName",
       name: "Profile Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -223,11 +223,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Create Profile",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "profileName",
       name: "Profile Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -238,11 +238,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Remove Profile",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "profileName",
       name: "Profile Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -253,27 +253,27 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Profile Parameter",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "parameterCategory",
       name: "Catagory",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "parameterName",
       name: "Name",
-      type: types.string(),
+      type: t.string(),
     });
 
-    t.dataOutput({
+    io.dataOutput({
       id: "parameterValue",
       name: "Value",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "defaultParameterValue",
       name: "Default Value",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -289,21 +289,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Profile Parameter",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "parameterCategory",
       name: "Catagory",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "parameterName",
       name: "Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "parameterValue",
       name: "Value",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -327,9 +327,9 @@ const videoSettingOutputs = [
 pkg.createNonEventSchema({
   name: "Get Video Settings",
   variant: "Exec",
-  generateIO(t) {
+  generateIO(io) {
     videoSettingOutputs.forEach(([id, name]) =>
-      t.dataOutput({ id, name, type: types.int() })
+      io.dataOutput({ id, name, type: t.int() })
     );
   },
   async run({ ctx }) {
@@ -341,36 +341,36 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Video Settings",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "fpsNumerator",
       name: "FPS Numberator",
-      type: types.int(),
+      type: t.int(),
     }),
-      t.dataInput({
+      io.dataInput({
         id: "fpsDenominator",
         name: "FPS Denominator",
-        type: types.int(),
+        type: t.int(),
       }),
-      t.dataInput({
+      io.dataInput({
         id: "baseWidth",
         name: "Base Width",
-        type: types.int(),
+        type: t.int(),
       }),
-      t.dataInput({
+      io.dataInput({
         id: "baseHeight",
         name: "Base Height",
-        type: types.int(),
+        type: t.int(),
       }),
-      t.dataInput({
+      io.dataInput({
         id: "outputWidth",
         name: "Output Width",
-        type: types.int(),
+        type: t.int(),
       }),
-      t.dataInput({
+      io.dataInput({
         id: "outputHeight",
         name: "Output Height",
-        type: types.int(),
+        type: t.int(),
       });
   },
   run({ ctx }) {
@@ -392,11 +392,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Record Directory",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "recordDirectory",
       name: "Record Directory",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -408,21 +408,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Source Active",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: types.string(),
+      type: t.string(),
     }),
-      t.dataOutput({
+      io.dataOutput({
         id: "videoActive",
         name: "Video Active",
-        type: types.bool(),
+        type: t.bool(),
       }),
-      t.dataOutput({
+      io.dataOutput({
         id: "videoShowing",
         name: "Video Showing",
-        type: types.bool(),
+        type: t.bool(),
       });
   },
   async run({ ctx }) {
@@ -443,11 +443,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Group List",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "groups",
       name: "Groups",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -459,11 +459,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Current Program Scene",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "currentProgramSceneName",
       name: "Current Program Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -475,11 +475,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Current Program Scene",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -492,11 +492,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Current Preview Scene",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "currentPreviewSceneName",
       name: "Current Program Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -508,11 +508,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Current Preview Scene",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -525,11 +525,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Create Scene",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -540,11 +540,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Remove Scene",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -555,16 +555,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Scene Name",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "newSceneName",
       name: "New Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -578,21 +578,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Scene Transition Override",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "transitionName",
       name: "Transition Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "transitionDuration",
       name: "Transition Duration",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -607,21 +607,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Scene Transition Override",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "transitionName",
       name: "Transition Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "transitionDuration",
       name: "Transition Duration",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx }) {
@@ -638,16 +638,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Input Kind List",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "unversioned",
       name: "Unversioned",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputKinds",
       name: "Input Kinds",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -670,9 +670,9 @@ const SpecialInputsOutputs = [
 pkg.createNonEventSchema({
   name: "Get Special Inputs",
   variant: "Exec",
-  generateIO(t) {
+  generateIO(io) {
     SpecialInputsOutputs.map(([id, name]) =>
-      t.dataOutput({ id, name, type: types.string() })
+      io.dataOutput({ id, name, type: t.string() })
     );
   },
   async run({ ctx }) {
@@ -686,31 +686,31 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Create Input",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "inputKind",
       name: "Input kind",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -727,11 +727,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Remove Input",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -744,16 +744,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Input Name",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "newInputName",
       name: "New Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -773,16 +773,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Input Mute",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputMuted",
       name: "Input Muted",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -796,16 +796,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Input Mute",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "inputMuted",
       name: "Input Muted",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -819,16 +819,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Toggle Input Mute",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputMuted",
       name: "Input Muted",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -842,21 +842,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Input Volume",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputVolumeMul",
       name: "Input Volume Mul",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputVolumeDb",
       name: "Input Volume Db",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -871,21 +871,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Input Volume",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "inputVolumeMul",
       name: "Input Volume Mul",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "inputVolumeDb",
       name: "Input Volume Db",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -900,16 +900,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Input Audio Balance",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputAudioBalance",
       name: "Input Audio Balance",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -923,16 +923,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Input Audio Balance",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "inputAudioBalance",
       name: "Input Audio Balance",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -946,16 +946,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Input Audio Sync Offset",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputAudioSyncOffset",
       name: "Input Audio Sync Offset",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -969,16 +969,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Input Audio Sync Offset",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "inputAudioSyncOffset",
       name: "Input Audio Sync Offset",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -992,16 +992,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Input Audio Monitor Type",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "monitorType",
       name: "Monitor Type",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1015,16 +1015,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Input Audio Monitor Type",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "monitorType",
       name: "Monitor Type",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1044,16 +1044,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Press Input Properties Button",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "propertyName",
       name: "Property Name",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1067,11 +1067,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Transition Kind List",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "transitionKinds",
       name: "Transition Kinds",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -1087,11 +1087,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Current Scene Transition",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "transitionName",
       name: "Transition Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1104,11 +1104,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Current Scene Transition Duration",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "transitionDuration",
       name: "Transition Duration",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1123,11 +1123,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Current Scene Transition Cursor",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "transitionCursor",
       name: "Transition Cursor",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1148,16 +1148,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set T Bar Position",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "position",
       name: "Position",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "release",
       name: "Release",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1177,16 +1177,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Remove Source Filter",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "filterName",
       name: "Filter Name",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1200,21 +1200,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Source Filter Name",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "filterName",
       name: "Filter Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "newFilterName",
       name: "New Filter Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1231,21 +1231,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Source Filter Name",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "filterName",
       name: "Filter Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "filterIndex",
       name: "Filter Index",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1262,21 +1262,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Source Filter Enabled",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "filterName",
       name: "Filter Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "filterEnabled",
       name: "Filter Enabled",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1295,26 +1295,26 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Scene Item Id",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "searchOffset",
       name: "Search Offset",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1330,26 +1330,26 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Create Scene Item",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sourceName",
       name: "Source Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemEnabled",
       name: "Search Offset",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1365,16 +1365,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Remove Scene Item",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1388,26 +1388,26 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Duplicate Scene Item",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "destinationSceneName",
       name: "Destination Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1427,21 +1427,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Scene Item Enabled",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1456,21 +1456,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Scene Item Enabled",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1485,21 +1485,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Scene Item Locked",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemLocked",
       name: "Scene Item Locked",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1514,21 +1514,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Scene Item Locked",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemLocked",
       name: "Scene Item Locked",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1543,21 +1543,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Scene Item Index",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemIndex",
       name: "Scene Item Index",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1572,21 +1572,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Scene Item Index",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemIndex",
       name: "Scene Item Index",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -1601,21 +1601,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Scene Item Blend Mode",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemBlendMode",
       name: "Scene Item Blend Mode",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1630,21 +1630,21 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Scene Item Blend Mode",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1659,11 +1659,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Virtual Cam Status",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "outputActive",
       name: "Ouput Active",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1675,11 +1675,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Toggle Virtual Cam",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "outputActive",
       name: "Ouput Active",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1709,11 +1709,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Replay Buffer Status",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "outputActive",
       name: "Ouput Active",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1725,11 +1725,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Toggle Replay Buffer",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "outputActive",
       name: "Ouput Active",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1768,11 +1768,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Last Replay Buffer Replay",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "savedReplayPath",
       name: "Save Replay Path",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1829,13 +1829,13 @@ pkg.createNonEventSchema({
 // pkg.createNonEventSchema({
 //   name: "Toggle Output",
 //   variant: "Exec",
-//   generateIO(t) {
-//     t.dataInput({
+//   generateIO(io) {
+//    io.dataInput({
 //       id: "outputName",
 //       name: "Output Name",
 //       type: types.string(),
 //     });
-//     OutputStatus.forEach((data) => t.dataOutput(data));
+//     OutputStatus.forEach((data) =>io.dataOutput(data));
 //   },
 //   async run({ ctx }) {
 //     const data = await obs.call("GetOutputStatus", {
@@ -1848,8 +1848,8 @@ pkg.createNonEventSchema({
 // pkg.createNonEventSchema({
 //   name: "Start Output",
 //   variant: "Exec",
-//   generateIO(t) {
-//     t.dataInput({
+//   generateIO(io) {
+//    io.dataInput({
 //       id: "outputName",
 //       name: "Output Name",
 //       type: types.string(),
@@ -1865,8 +1865,8 @@ pkg.createNonEventSchema({
 // pkg.createNonEventSchema({
 //   name: "Stop Output",
 //   variant: "Exec",
-//   generateIO(t) {
-//     t.dataInput({
+//   generateIO(io) {
+//    io.dataInput({
 //       id: "outputName",
 //       name: "Output Name",
 //       type: types.string(),
@@ -1887,22 +1887,22 @@ const StreamStatus = [
   {
     id: "outputActive",
     name: "Output Active",
-    type: types.bool(),
+    type: t.bool(),
   },
   {
     id: "outputReconnecting",
     name: "Output Reconnecting",
-    type: types.bool(),
+    type: t.bool(),
   },
   {
     id: "outputTimecode",
     name: "Output Timecode",
-    type: types.string(),
+    type: t.string(),
   },
   {
     id: "outputDuration",
     name: "Output Duration",
-    type: types.int(),
+    type: t.int(),
   },
   // {
   //   id: "outputCongestion",
@@ -1912,25 +1912,25 @@ const StreamStatus = [
   {
     id: "outputBytes",
     name: "Output Bytes",
-    type: types.int(),
+    type: t.int(),
   },
   {
     id: "outputSkippedFrames",
     name: "Output Skipped Frames",
-    type: types.int(),
+    type: t.int(),
   },
   {
     id: "outputTotalFrames",
     name: "Output Total Frames",
-    type: types.int(),
+    type: t.int(),
   },
 ] as const;
 
 pkg.createNonEventSchema({
   name: "Toggle Output",
   variant: "Exec",
-  generateIO(t) {
-    StreamStatus.forEach((data) => t.dataOutput(data));
+  generateIO(io) {
+    StreamStatus.forEach((data) => io.dataOutput(data));
   },
   async run({ ctx }) {
     const data = await obs.call("GetStreamStatus");
@@ -1941,11 +1941,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Toggle Stream",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "outputActive",
       name: "Ouput Active",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -1975,11 +1975,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Send Stream Caption",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "captionText",
       name: "Caption Text",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1992,31 +1992,31 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Record Status",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "outputActive",
       name: "Output Active",
-      type: types.list(types.bool()),
+      type: t.list(t.bool()),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputPaused",
       name: "Output Paused",
-      type: types.list(types.bool()),
+      type: t.list(t.bool()),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputTimecode",
       name: "Output Timecode",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputDuration",
       name: "Output Duration",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputBytes",
       name: "Output Bytes",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -2051,7 +2051,7 @@ pkg.createNonEventSchema({
   name: "Stop Record",
   variant: "Exec",
   generateIO() {
-    // t.dataOutput({
+    //io.dataOutput({
     //   id: "outputPath",
     //   name: "Output Path",
     //   type: types.list(types.string()),
@@ -2093,26 +2093,26 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Media Input Status",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "mediaState	",
       name: "Media State",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "mediaDuration",
       name: "Media Duration",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "mediaCursor",
       name: "Media Cursor",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -2128,16 +2128,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Media Input Cursor",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "mediaCursor",
       name: "Media Cursor",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -2151,16 +2151,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Offset Media Input Cursor",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "mediaCursorOffset",
       name: "Media Cursor Offset",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -2174,16 +2174,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Trigger Media Input Action",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "mediaAction",
       name: "Media Action",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -2197,11 +2197,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Studio Mode Enabled",
   variant: "Exec",
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "studioModeEnabled",
       name: "Studio Mode Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -2213,11 +2213,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set Studio Mode Enabled",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "studioModeEnabled",
       name: "Studio Mode Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -2230,11 +2230,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Open Input Properties Dialogue",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -2247,11 +2247,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Open Input Filters Dialogue",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -2264,11 +2264,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Open Input Interact Dialogue",
   variant: "Exec",
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -2283,18 +2283,18 @@ pkg.createNonEventSchema({
 // pkg.createNonEventSchema({
 //   name: "Open Video Mix Projector",
 //   variant: "Exec",
-//   generateIO(t) {
-//     t.dataInput({
+//   generateIO(io) {
+//    io.dataInput({
 //       id: "videoMixType",
 //       name: "Video Mix Type",
 //       type: types.string(),
 //     });
-//     t.dataInput({
+//    io.dataInput({
 //       id: "monitorIndex",
 //       name: "Monitor Index",
 //       type: types.int(),
 //     });
-//     t.dataInput({
+//    io.dataInput({
 //       id: "projectorGeometry",
 //       name: "Projector Geometry",
 //       type: types.string(),
@@ -2312,18 +2312,18 @@ pkg.createNonEventSchema({
 // pkg.createNonEventSchema({
 //   name: "Open Source Projector",
 //   variant: "Exec",
-//   generateIO(t) {
-//     t.dataInput({
+//   generateIO(io) {
+//    io.dataInput({
 //       id: "sourceName",
 //       name: "Source Name",
 //       type: types.string(),
 //     });
-//     t.dataInput({
+//    io.dataInput({
 //       id: "monitorIndex",
 //       name: "Monitor Index",
 //       type: types.int(),
 //     });
-//     t.dataInput({
+//    io.dataInput({
 //       id: "projectorGeometry",
 //       name: "Projector Geometry",
 //       type: types.string(),
