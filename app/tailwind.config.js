@@ -13,10 +13,11 @@ module.exports = {
           float: "#00AE75",
           graph: "#262626",
           base: "#696969",
+          enum: "#1B4DFF",
           current: "var(--mg-current)",
         },
       },
     },
   },
-  plugins: [require("@tailwindcss/forms")],
+  plugins: [require("@tailwindcss/forms"), require("@kobalte/tailwindcss")],
 };

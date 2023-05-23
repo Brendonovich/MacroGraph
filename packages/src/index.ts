@@ -7,3 +7,4 @@ export * as twitch from "./twitch";
 export * from "./httpRequests";
 export * as discord from "./discord";
 export * from "./localStorage";
+export * from "./json";

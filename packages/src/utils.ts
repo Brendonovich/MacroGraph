@@ -545,31 +545,24 @@ pkg.createNonEventSchema({
   },
 });
 
-(
-  [
-    ["Bool", t.bool()],
-    ["String", t.string()],
-    ["Int", t.int()],
-    ["Float", t.float()],
-  ] as const
-).forEach(([key, type]) => {
-  pkg.createNonEventSchema({
-    name: key,
-    variant: "Pure",
-    run({ ctx }) {
-      ctx.setOutput("output", ctx.getInput("input"));
-    },
-    generateIO(io) {
-      io.dataInput({
-        id: "input",
-        type,
-      });
-      io.dataOutput({
-        id: "output",
-        type,
-      });
-    },
-  });
+pkg.createNonEventSchema({
+  name: "Make Any",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput("input"));
+  },
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "input",
+      type: t.wildcard(w),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.wildcard(w),
+    });
+  },
 });
 
 pkg.createNonEventSchema({
