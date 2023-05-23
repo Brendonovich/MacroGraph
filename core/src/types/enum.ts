@@ -1,10 +1,11 @@
+import { createMutable } from "solid-js/store";
 import { AnyType, TypeVariant } from ".";
 import { BaseType } from "./any";
 
 type BaseData = Record<string, AnyType>;
 export class EnumVariant<
   Name extends string = string,
-  Data extends BaseData | null = null
+  Data extends BaseData | null = any
 > {
   constructor(public name: Name, public data: Data) {}
 }
@@ -18,7 +19,9 @@ export class Enum<
   Name extends string = string,
   Variants extends EnumVariants = [EnumVariant, ...EnumVariant[]]
 > {
-  constructor(public name: Name, public variants: Variants) {}
+  constructor(public name: Name, public variants: Variants) {
+    return createMutable(this);
+  }
 }
 
 export class EnumBuilder {
@@ -35,8 +38,8 @@ export class EnumBuilder {
   }
 }
 
-export class EnumType extends BaseType {
-  constructor(public inner: Enum) {
+export class EnumType<E extends Enum = Enum> extends BaseType {
+  constructor(public inner: E) {
     super();
   }
 
@@ -48,26 +51,23 @@ export class EnumType extends BaseType {
 }
 
 export type InferEnum<E> = E extends Enum<any, infer Variants>
-  ? InferEnumVariantValue<Variants[number]>
+  ? InferEnumVariants<Variants>
   : never;
 
-type Join<T extends object> = { [K in keyof T]: T[K] };
+export type InferEnumVariants<V> = V extends EnumVariants
+  ? InferEnumVariant<V[number]>
+  : never;
 
-export type InferEnumVariantValue<V> = V extends EnumVariant<
-  infer Name,
-  infer Data
->
-  ? Join<
-      {
-        variant: Name;
-      } & (Data extends null
-        ? {}
-        : {
-            data: {
-              [K in keyof Data]: Data[K] extends BaseType<infer TOut>
-                ? TOut
-                : never;
-            };
-          })
-    >
+export type InferEnumVariant<V> = V extends EnumVariant<infer Name, infer Data>
+  ? {
+      variant: Name;
+    } & (Data extends null
+      ? {}
+      : {
+          data: {
+            [K in keyof Data]: Data[K] extends BaseType<infer TOut>
+              ? TOut
+              : never;
+          };
+        })
   : never;

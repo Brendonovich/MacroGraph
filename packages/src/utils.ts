@@ -1,4 +1,16 @@
-import { core, Maybe, Option, Some, t } from "@macrograph/core";
+import {
+  core,
+  Enum,
+  EnumBuilder,
+  EnumType,
+  EnumVariant,
+  EnumVariants,
+  ListType,
+  Maybe,
+  Option,
+  Some,
+  t,
+} from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -675,3 +687,42 @@ pkg.createNonEventSchema({
     ctx.setOutput("out", Some(ctx.getInput<any>("in")));
   },
 });
+
+const JSONLiteralVariants = (e: EnumBuilder) =>
+  [
+    e.variant("Null"),
+    e.variant("Bool", { value: t.bool() }),
+    e.variant("Number", {
+      value: t.float(),
+    }),
+    e.variant("String", {
+      value: t.string(),
+    }),
+  ] satisfies EnumVariants;
+
+type JSONLiteralVariantTypes = ReturnType<typeof JSONLiteralVariants>;
+type JSONVariantTypes = [
+  ...JSONLiteralVariantTypes,
+  EnumVariant<
+    "Array",
+    {
+      value: ListType<EnumType<Enum<"JSON", JSONVariantTypes>>>;
+    }
+  >
+];
+
+const JSON = pkg.createEnum(
+  "JSON",
+  (e): JSONVariantTypes => [
+    ...JSONLiteralVariants(e),
+    e.variant("Array", {
+      value: t.list(t.enum(JSON)),
+    }),
+    // e.variant("Object", {
+    //   value: t.map(
+    //     t.string(),
+    //     t.enum(() => JSON)
+    //   ),
+    // }),
+  ]
+);
