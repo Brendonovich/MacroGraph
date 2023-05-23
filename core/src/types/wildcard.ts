@@ -68,6 +68,10 @@ export class WildcardType extends BaseType {
   variant(): TypeVariant {
     return "wildcard";
   }
+
+  toString(): string {
+    return this.wildcard.value.map((v) => v.toString()).unwrapOr("Wildcard");
+  }
 }
 
 class WildcardResolver {

@@ -12,14 +12,9 @@ export * from "./wildcard";
 export * from "./enum";
 export * as t from "./t";
 
-export type TypeVariant =
-  | "primitive"
-  | "enum"
-  | "list"
-  | "map"
-  | "set"
-  | "option"
-  | "wildcard";
+export type TypeVariant = "primitive" | "list" | "option" | "wildcard" | "enum";
+// | "map"
+// | "set"
 
 export type AnyType =
   | PrimitiveType

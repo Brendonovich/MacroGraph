@@ -15,4 +15,8 @@ export class ListType<T extends AnyType = AnyType, TOut = any> extends BaseType<
   variant(): TypeVariant {
     return "list";
   }
+
+  toString(): string {
+    return `List<${this.inner.toString()}>`;
+  }
 }

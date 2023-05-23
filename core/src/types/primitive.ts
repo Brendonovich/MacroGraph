@@ -22,6 +22,10 @@ export class IntType extends BasePrimitiveType<number> {
   primitiveVariant(): PrimitiveVariant {
     return "int";
   }
+
+  toString() {
+    return "Int";
+  }
 }
 
 export class FloatType extends BasePrimitiveType<number> {
@@ -31,6 +35,10 @@ export class FloatType extends BasePrimitiveType<number> {
 
   primitiveVariant(): PrimitiveVariant {
     return "float";
+  }
+
+  toString() {
+    return "Float";
   }
 }
 
@@ -42,6 +50,10 @@ export class StringType extends BasePrimitiveType<string> {
   primitiveVariant(): PrimitiveVariant {
     return "string";
   }
+
+  toString() {
+    return "String";
+  }
 }
 
 export class BoolType extends BasePrimitiveType<boolean> {
@@ -51,6 +63,10 @@ export class BoolType extends BasePrimitiveType<boolean> {
 
   primitiveVariant(): PrimitiveVariant {
     return "bool";
+  }
+
+  toString() {
+    return "Bool";
   }
 }
 

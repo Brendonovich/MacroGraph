@@ -19,9 +19,6 @@ importers:
       '@kobalte/core':
         specifier: ^0.9.6
         version: 0.9.6(solid-js@1.7.3)
-      '@kobalte/tailwindcss':
-        specifier: ^0.6.5
-        version: 0.6.5(tailwindcss@3.3.2)
       '@macrograph/core':
         specifier: workspace:*
         version: link:../core
@@ -56,6 +53,9 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
     devDependencies:
+      '@kobalte/tailwindcss':
+        specifier: ^0.6.5
+        version: 0.6.5(tailwindcss@3.3.2)
       '@macrograph/web':
         specifier: workspace:*
         version: link:../web
@@ -1064,7 +1064,7 @@ packages:
       tailwindcss: ^3.3.0
     dependencies:
       tailwindcss: 3.3.2
-    dev: false
+    dev: true
 
   /@kobalte/utils@0.7.2(solid-js@1.7.3):
     resolution: {integrity: sha512-ZdINbHemz+jnixJ63VFi9wUEHEMAsP7iDGEADciKdSKrK4bDuccDw5th1O+5/PykfHqFwSI++JhhUpOd+iZ5jg==}

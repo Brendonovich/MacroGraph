@@ -3,16 +3,35 @@ import { AnyType, TypeVariant } from ".";
 import { BaseType } from "./any";
 
 type BaseData = Record<string, AnyType>;
+
 export class EnumVariant<
   Name extends string = string,
   Data extends BaseData | null = any
 > {
-  constructor(public name: Name, public data: Data) {}
+  constructor(public name: Name, public data: Data) {
+    return createMutable(this);
+  }
+
+  defaultValue(): InferEnumVariant<EnumVariant<Name, Data>> {
+    const data = this.data;
+
+    return data === null
+      ? {
+          variant: this.name,
+        }
+      : ({
+          variant: this.name,
+          data: Object.entries(data).reduce(
+            (acc, [name, type]) => ({ ...acc, [name]: type.default() }),
+            {}
+          ),
+        } as any);
+  }
 }
 
 export type EnumVariants = [
-  one: EnumVariant<any, any>,
-  ...rest: EnumVariant<any, any>[]
+  one: EnumVariant<string, any>,
+  ...rest: EnumVariant<string, any>[]
 ];
 
 export class LazyEnumVariants<Variants extends EnumVariants = EnumVariants> {
@@ -36,7 +55,7 @@ export class Enum<Variants extends EnumVariants = EnumVariants> {
       };
     }
 
-    return createMutable(this);
+    // return createMutable(this);
   }
 
   _variants:
@@ -44,16 +63,16 @@ export class Enum<Variants extends EnumVariants = EnumVariants> {
     | { type: "lazy"; variants: LazyEnumVariants<Variants> };
 
   get variants() {
-    const val = this._variants;
+    let val = this._variants;
 
     if (val.type === "lazy") {
-      this._variants = {
+      this._variants = val = {
         type: "resolved",
         variants: val.variants.build(),
       };
     }
 
-    return this._variants;
+    return val.variants;
   }
 }
 
@@ -67,7 +86,7 @@ export class EnumBuilder {
     name: Name,
     data?: Data
   ): EnumVariant<Name, Data> {
-    return { name, data } as any;
+    return new EnumVariant(name, data ?? null) as any;
   }
 
   lazy<T extends EnumVariants>(fn: () => T) {
@@ -80,10 +99,16 @@ export class EnumType<E extends Enum = Enum> extends BaseType {
     super();
   }
 
-  default() {}
+  default() {
+    return this.inner.variants[0].defaultValue();
+  }
 
   variant(): TypeVariant {
     return "enum";
+  }
+
+  toString(): string {
+    return `Enum(${this.inner.name})`;
   }
 }
 
