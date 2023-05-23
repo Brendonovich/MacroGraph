@@ -1,3 +1,4 @@
+import { Enum, EnumType } from "./enum";
 import { ListType } from "./list";
 import { OptionType } from "./option";
 import {
@@ -15,9 +16,11 @@ export * from "./option";
 export * from "./any";
 export * from "./primitive";
 export * from "./wildcard";
+export * from "./enum";
 
 export type TypeVariant =
   | "primitive"
+  | "enum"
   | "list"
   | "map"
   | "set"
@@ -31,10 +34,16 @@ export const t = {
   bool: () => new BoolType(),
   list: <T extends AnyType>(t: T) => new ListType(t),
   option: <T extends AnyType>(t: T) => new OptionType(t),
+  enum: <T extends Enum>(t: T) => new EnumType(t),
   wildcard: (w: Wildcard) => new WildcardType(w),
 };
 
-export type AnyType = PrimitiveType | ListType | OptionType | WildcardType;
+export type AnyType =
+  | PrimitiveType
+  | ListType
+  | OptionType
+  | WildcardType
+  | EnumType;
 
 export function typesCanConnect(a: AnyType, b: AnyType): boolean {
   const aInner = a instanceof WildcardType ? a.wildcard.value.unwrapOr(a) : a;

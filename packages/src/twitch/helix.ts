@@ -2,7 +2,7 @@ import { ApiClient } from "@twurple/api";
 import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
 import { accessToken, authProvider } from "./auth";
 import pkg from "./pkg";
-import { None, t, Maybe } from "@macrograph/core";
+import { None, t, Maybe, InferEnum } from "@macrograph/core";
 
 export const { helix, user } = createRoot(() => {
   const helix = createMemo(
@@ -183,7 +183,7 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const { user, helix } = unwrapApi();
 
-    let data = await helix.channels.updateChannelInfo(user.id, {
+    await helix.channels.updateChannelInfo(user.id, {
       gameId: ctx.getInput("gameId"),
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
@@ -226,7 +226,7 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const { user, helix } = unwrapApi();
 
-    let data = await helix.channels.updateChannelInfo(user.id, {
+    await helix.channels.updateChannelInfo(user.id, {
       gameId: ctx.getInput("gameId"),
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
@@ -782,6 +782,11 @@ pkg.createNonEventSchema({
   },
 });
 
+const RedemptionStatus = pkg.createEnum("Redemption Status", (e) => [
+  e.variant("Fulfilled"),
+  e.variant("Cancelled"),
+]);
+
 pkg.createNonEventSchema({
   name: "Update Redemption Status",
   variant: "Exec",
@@ -797,9 +802,9 @@ pkg.createNonEventSchema({
       type: t.string(),
     });
     io.dataInput({
-      name: "Cancel",
-      id: "cancel",
-      type: t.bool(),
+      name: "Status",
+      id: "status",
+      type: t.enum(RedemptionStatus),
     });
     io.dataOutput({
       name: "Success",
@@ -870,11 +875,12 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const { user, helix } = unwrapApi();
     try {
+      const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
       let data = await helix.channelPoints.updateRedemptionStatusByIds(
         user.id,
         ctx.getInput("redemptionId"),
         ctx.getInput("rewardId"),
-        ctx.getInput("cancel") ? "FULFILLED" : "CANCELED"
+        status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
       );
       ctx.setOutput("success", true);
       ctx.setOutput("redemptionId", data[0]?.id);
@@ -1077,7 +1083,7 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const { helix } = unwrapApi();
     let data = await helix.users.getUserById(ctx.getInput("userId"));
     ctx.setOutput("userId", data?.id);
     ctx.setOutput("userLogin", data?.name);
