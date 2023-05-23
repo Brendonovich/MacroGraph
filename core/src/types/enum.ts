@@ -15,12 +15,45 @@ export type EnumVariants = [
   ...rest: EnumVariant<any, any>[]
 ];
 
-export class Enum<
-  Name extends string = string,
-  Variants extends EnumVariants = [EnumVariant, ...EnumVariant[]]
-> {
-  constructor(public name: Name, public variants: Variants) {
+export class LazyEnumVariants<Variants extends EnumVariants = EnumVariants> {
+  constructor(public build: () => Variants) {}
+}
+
+export class Enum<Variants extends EnumVariants = EnumVariants> {
+  constructor(
+    public name: string,
+    variants: Variants | LazyEnumVariants<Variants>
+  ) {
+    if (variants instanceof LazyEnumVariants) {
+      this._variants = {
+        type: "lazy",
+        variants,
+      };
+    } else {
+      this._variants = {
+        type: "resolved",
+        variants,
+      };
+    }
+
     return createMutable(this);
+  }
+
+  _variants:
+    | { type: "resolved"; variants: Variants }
+    | { type: "lazy"; variants: LazyEnumVariants<Variants> };
+
+  get variants() {
+    const val = this._variants;
+
+    if (val.type === "lazy") {
+      this._variants = {
+        type: "resolved",
+        variants: val.variants.build(),
+      };
+    }
+
+    return this._variants;
   }
 }
 
@@ -36,6 +69,10 @@ export class EnumBuilder {
   ): EnumVariant<Name, Data> {
     return { name, data } as any;
   }
+
+  lazy<T extends EnumVariants>(fn: () => T) {
+    return new LazyEnumVariants(fn);
+  }
 }
 
 export class EnumType<E extends Enum = Enum> extends BaseType {
@@ -50,7 +87,7 @@ export class EnumType<E extends Enum = Enum> extends BaseType {
   }
 }
 
-export type InferEnum<E> = E extends Enum<any, infer Variants>
+export type InferEnum<E> = E extends Enum<infer Variants>
   ? InferEnumVariants<Variants>
   : never;
 
