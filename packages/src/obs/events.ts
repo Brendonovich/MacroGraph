@@ -1,14 +1,14 @@
 //EVENTS BELOW ______________________________________________|
 
-import { types } from "@macrograph/core";
+import { t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
 
 pkg.createEventSchema({
   event: "ExitStarted",
   name: "Exit Started",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
@@ -29,15 +29,15 @@ obs.on("ExitStarted", () => {
 pkg.createEventSchema({
   event: "CurrentSceneCollectionChanging",
   name: "Current Scene Collection Changing",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneCollectionName",
       name: "Scene Collection Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -53,15 +53,15 @@ obs.on("CurrentSceneCollectionChanging", (data) => {
 pkg.createEventSchema({
   event: "CurrentSceneCollectionChanged",
   name: "Current Scene Collection Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneCollectionName",
       name: "Scene Collection Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -77,15 +77,15 @@ obs.on("CurrentSceneCollectionChanged", (data) => {
 pkg.createEventSchema({
   event: "SceneCollectionListChanged",
   name: "Current Scene List Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneCollections",
       name: "Scene Collections",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   run({ ctx, data }) {
@@ -101,15 +101,15 @@ obs.on("SceneCollectionListChanged", (data) => {
 pkg.createEventSchema({
   event: "CurrentProfileChanging",
   name: "Current Profile Changing",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "profileName",
       name: "Profile Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -125,15 +125,15 @@ obs.on("CurrentProfileChanging", (data) => {
 pkg.createEventSchema({
   event: "CurrentProfileChanged",
   name: "Current Profile Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "profileName",
       name: "Profile Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -149,15 +149,15 @@ obs.on("CurrentProfileChanged", (data) => {
 pkg.createEventSchema({
   event: "ProfileListChanged",
   name: "Profile List Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "profiles",
       name: "Profiles",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   run({ ctx, data }) {
@@ -173,20 +173,20 @@ obs.on("ProfileListChanged", (data) => {
 pkg.createEventSchema({
   event: "SceneCreated",
   name: "Scene Created",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "isGroup",
       name: "Is Group",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -203,20 +203,20 @@ obs.on("SceneCreated", (data) => {
 pkg.createEventSchema({
   event: "SceneRemoved",
   name: "Scene Removed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "isGroup",
       name: "Is Group",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -233,20 +233,20 @@ obs.on("SceneRemoved", (data) => {
 pkg.createEventSchema({
   event: "SceneNameChanged",
   name: "Scene Name Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "oldSceneName",
       name: "Old Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -263,15 +263,15 @@ obs.on("SceneNameChanged", (data) => {
 pkg.createEventSchema({
   event: "CurrentProgramSceneChanged",
   name: "Current Program Scene Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -287,15 +287,15 @@ obs.on("CurrentProgramSceneChanged", (data) => {
 pkg.createEventSchema({
   event: "CurrentPreviewSceneChanged",
   name: "Current Preview Scene Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -313,12 +313,12 @@ obs.on("CurrentPreviewSceneChanged", (data) => {
 // pkg.createEventSchema({
 //   event: "SceneListChanged",
 //   name: "Scene List Changed",
-//   generateIO(t) {
-//     t.execOutput({
+//   generateIO(io) {
+//    io.execOutput({
 //       id: "exec",
 //       name: "",
 //     });
-//     t.dataOutput({
+//    io.dataOutput({
 //       id: "sceneName",
 //       name: "Scene Name",
 //       type: types.string(),
@@ -339,15 +339,15 @@ obs.on("CurrentPreviewSceneChanged", (data) => {
 pkg.createEventSchema({
   event: "InputRemoved",
   name: "Input Removed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -363,20 +363,20 @@ obs.on("InputRemoved", (data) => {
 pkg.createEventSchema({
   event: "InputNameChanged",
   name: "Input Name Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "oldInputName",
       name: "Old Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -393,20 +393,20 @@ obs.on("InputNameChanged", (data) => {
 pkg.createEventSchema({
   event: "InputActiveStateChanged",
   name: "Input Active State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "videoActive",
       name: "Video Active",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -423,20 +423,20 @@ obs.on("InputActiveStateChanged", (data) => {
 pkg.createEventSchema({
   event: "InputShowStateChanged",
   name: "Input Show State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "videoShowing",
       name: "Video Showing",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -453,20 +453,20 @@ obs.on("InputShowStateChanged", (data) => {
 pkg.createEventSchema({
   event: "InputMuteStateChanged",
   name: "Input Mute State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputMuted",
       name: "Video Muted",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -483,25 +483,25 @@ obs.on("InputMuteStateChanged", (data) => {
 pkg.createEventSchema({
   event: "InputVolumeChanged",
   name: "Input Volume Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputVolumeMul",
       name: "Video Volume Mul",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputVolumeDb",
       name: "Video Volume Db",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
@@ -519,20 +519,20 @@ obs.on("InputVolumeChanged", (data) => {
 pkg.createEventSchema({
   event: "InputAudioBalanceChanged",
   name: "Input Audio Balance Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputAudioBalance",
       name: "Video Audio Balance",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
@@ -549,20 +549,20 @@ obs.on("InputAudioBalanceChanged", (data) => {
 pkg.createEventSchema({
   event: "InputAudioSyncOffsetChanged",
   name: "Input Audio Sync Offset Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputAudioSyncOffset",
       name: "input Audio Sync Offseet",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
@@ -581,20 +581,20 @@ obs.on("InputAudioSyncOffsetChanged", (data) => {
 pkg.createEventSchema({
   event: "InputAudioMonitorTypeChanged",
   name: "Input Audio Monitor Type Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "monitorType",
       name: "Monitor Type",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -613,15 +613,15 @@ obs.on("InputAudioMonitorTypeChanged", (data) => {
 pkg.createEventSchema({
   event: "CurrentSceneTransitionChanged",
   name: "Current Scene Transition Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "transitionName",
       name: "Transition Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -637,15 +637,15 @@ obs.on("CurrentSceneTransitionChanged", (data) => {
 pkg.createEventSchema({
   event: "CurrentSceneTransitionDurationChanged",
   name: "Current Scene Transition Duration Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "transitionDuration",
       name: "Transition Duration",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
@@ -661,15 +661,15 @@ obs.on("CurrentSceneTransitionDurationChanged", (data) => {
 pkg.createEventSchema({
   event: "SceneTransitionStarted",
   name: "Scene Transition Started",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "transitionName",
       name: "Transition Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -685,15 +685,15 @@ obs.on("SceneTransitionStarted", (data) => {
 pkg.createEventSchema({
   event: "SceneTransitionEnded",
   name: "Scene Transition Ended",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "transitionName",
       name: "Transition Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -709,15 +709,15 @@ obs.on("SceneTransitionEnded", (data) => {
 pkg.createEventSchema({
   event: "SceneTransitionVideoEnded",
   name: "Scene Transition Video Ended",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "transitionName",
       name: "Transition Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -737,20 +737,20 @@ obs.on("SceneTransitionVideoEnded", (data) => {
 pkg.createEventSchema({
   event: "SourceFilterRemoved",
   name: "Source Filter Removed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sourceName",
       name: "Source name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "filterName",
       name: "Filter name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -767,25 +767,25 @@ obs.on("SourceFilterRemoved", (data) => {
 pkg.createEventSchema({
   event: "SourceFilterNameChanged",
   name: "Source Filter Name Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sourceName",
       name: "Source name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "oldFilterName",
       name: "Old Filter name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "filterName",
       name: "Filter name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -803,25 +803,25 @@ obs.on("SourceFilterNameChanged", (data) => {
 pkg.createEventSchema({
   event: "SourceFilterEnableStateChanged",
   name: "Source Filter Enable State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sourceName",
       name: "Source name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "filterName",
       name: "Filter name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "filterEnabled",
       name: "Filter Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -839,30 +839,30 @@ obs.on("SourceFilterEnableStateChanged", (data) => {
 pkg.createEventSchema({
   event: "SceneItemCreated",
   name: "Scene Item Created",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sourceName",
       name: "Source name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemIndex",
       name: "Scene Item Index",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
@@ -881,25 +881,25 @@ obs.on("SceneItemCreated", (data) => {
 pkg.createEventSchema({
   event: "SceneItemRemoved",
   name: "Scene Item Removed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sourceName",
       name: "Source name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
@@ -919,17 +919,17 @@ obs.on("SceneItemRemoved", (data) => {
 // pkg.createEventSchema({
 //   event: "SceneItemListReindexed",
 //   name: "Scene Item List Reindexed",
-//   generateIO(t) {
-//     t.execOutput({
+//   generateIO(io) {
+//    io.execOutput({
 //       id: "exec",
 //       name: "",
 //     });
-//     t.dataOutput({
+//    io.dataOutput({
 //       id: "sceneName",
 //       name: "Scene name",
 //       type: types.string(),
 //     });
-//     t.dataOutput({
+//    io.dataOutput({
 //       id: "sceneItems",
 //       name: "Source Items",
 //       type: types.list(types.object()),
@@ -949,25 +949,25 @@ obs.on("SceneItemRemoved", (data) => {
 pkg.createEventSchema({
   event: "SceneItemEnableStateChanged",
   name: "Scene Item Enable State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -985,25 +985,25 @@ obs.on("SceneItemEnableStateChanged", (data) => {
 pkg.createEventSchema({
   event: "SceneItemLockStateChanged",
   name: "Scene Item Lock State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemLocked",
       name: "Scene Item Locked",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -1021,20 +1021,20 @@ obs.on("SceneItemLockStateChanged", (data) => {
 pkg.createEventSchema({
   event: "SceneItemSelected",
   name: "Scene Item Selected",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneName",
       name: "Scene name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sceneItemId",
       name: "Scene Item Id",
-      type: types.int(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
@@ -1053,22 +1053,22 @@ obs.on("SceneItemSelected", (data) => {
 // pkg.createEventSchema({
 //   event: "SceneItemTransformChanged",
 //   name: "Scene Item Transform Changed",
-//   generateIO(t) {
-//     t.execOutput({
+//   generateIO(io) {
+//    io.execOutput({
 //       id: "exec",
 //       name: "",
 //     });
-//     t.dataOutput({
+//    io.dataOutput({
 //       id: "sceneName",
 //       name: "Scene name",
 //       type: types.string(),
 //     });
-//     t.dataOutput({
+//    io.dataOutput({
 //       id: "sceneItemId",
 //       name: "Scene Item Id",
 //       type: types.int(),
 //     });
-//     t.dataOutput({
+//    io.dataOutput({
 //       id: "sceneItemTransform",
 //       name: "Scene Item Transform",
 //       type: types.object(),
@@ -1089,20 +1089,20 @@ obs.on("SceneItemSelected", (data) => {
 pkg.createEventSchema({
   event: "StreamStateChanged",
   name: "Stream State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputActive",
       name: "Output Active",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputState",
       name: "Output State",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1119,25 +1119,25 @@ obs.on("StreamStateChanged", (data) => {
 pkg.createEventSchema({
   event: "RecordStateChanged",
   name: "Record State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputActive",
       name: "Output Active",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputState",
       name: "Output State",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputPath",
       name: "Output Path",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1155,20 +1155,20 @@ obs.on("RecordStateChanged", (data) => {
 pkg.createEventSchema({
   event: "ReplayBufferStateChanged",
   name: "Replay Buffer State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputActive",
       name: "Output Active",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputState",
       name: "Output State",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1185,20 +1185,20 @@ obs.on("ReplayBufferStateChanged", (data) => {
 pkg.createEventSchema({
   event: "VirtualcamStateChanged",
   name: "Virtual Cam State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputActive",
       name: "Output Active",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputState",
       name: "Output State",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1215,15 +1215,15 @@ obs.on("VirtualcamStateChanged", (data) => {
 pkg.createEventSchema({
   event: "ReplayBufferSaved",
   name: "Replay Buffer Saved",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "savedReplayPath",
       name: "Saved Replay Path",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1239,15 +1239,15 @@ obs.on("ReplayBufferSaved", (data) => {
 pkg.createEventSchema({
   event: "MediaInputPlaybackStarted",
   name: "Media Input Playback Started",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1263,15 +1263,15 @@ obs.on("MediaInputPlaybackStarted", (data) => {
 pkg.createEventSchema({
   event: "MediaInputPlaybackEnded",
   name: "Media Input Playback Ended",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1287,20 +1287,20 @@ obs.on("MediaInputPlaybackEnded", (data) => {
 pkg.createEventSchema({
   event: "MediaInputActionTriggered",
   name: "Media Input Action Triggered",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "inputName",
       name: "Input Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "mediaAction",
       name: "Media Action",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -1317,15 +1317,15 @@ obs.on("MediaInputActionTriggered", (data) => {
 pkg.createEventSchema({
   event: "StudioModeStateChanged",
   name: "Studio Mode State Changed",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "studioModeEnabled",
       name: "Studio Mode Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -1343,12 +1343,12 @@ obs.on("StudioModeStateChanged", (data) => {
 // pkg.createEventSchema({
 //   event: "ScreenshotSaved",
 //   name: "Screenshot Saved",
-//   generateIO(t) {
-//     t.execOutput({
+//   generateIO(io) {
+//    io.execOutput({
 //       id: "exec",
 //       name: "",
 //     });
-//     t.dataOutput({
+//    io.dataOutput({
 //       id: "savedScreenshotPath",
 //       name: "Saved Screenshot Path",
 //       type: types.bool(),
@@ -1367,8 +1367,8 @@ obs.on("StudioModeStateChanged", (data) => {
 pkg.createEventSchema({
   event: "ConnectionOpened",
   name: "Connection Opened",
-  generateIO(t) {
-    t.execOutput({
+  generateIO(io) {
+    io.execOutput({
       id: "exec",
       name: "",
     });

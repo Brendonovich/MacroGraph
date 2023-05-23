@@ -1,8 +1,8 @@
 import { createRoot, createEffect, createSignal } from "solid-js";
 import tmi, { Client } from "tmi.js";
 import pkg from "./pkg";
-import { types, Option, None } from "@macrograph/core";
-import { helix, user } from "./helix";
+import { t, Option, None } from "@macrograph/core";
+import { user } from "./helix";
 
 const { client } = createRoot(() => {
   const [client, setClient] = createSignal<Option<Client>>(None);
@@ -22,20 +22,44 @@ const { client } = createRoot(() => {
 
         client.on("connected", () => console.log("connected"));
 
-        client.on("emoteonly", (channel, enabled) => pkg.emitEvent({ name: "emoteonly", data: { channel, enabled } }));
+        client.on("emoteonly", (channel, enabled) =>
+          pkg.emitEvent({ name: "emoteonly", data: { channel, enabled } })
+        );
 
-        client.on("subscribers", (channel, enabled) => pkg.emitEvent({ name: "subonlymode", data: { channel, enabled } }));
+        client.on("subscribers", (channel, enabled) =>
+          pkg.emitEvent({ name: "subonlymode", data: { channel, enabled } })
+        );
 
-        client.on("slowmode", (channel, enabled, length) => pkg.emitEvent({ name: "slowmode", data: { channel, enabled, length } }));
+        client.on("slowmode", (channel, enabled, length) =>
+          pkg.emitEvent({
+            name: "slowmode",
+            data: { channel, enabled, length },
+          })
+        );
 
-        client.on("messagedeleted", (channel, username, deletedmessage, userstate) => pkg.emitEvent({ name: "messagedeleted", data: { channel, username, deletedmessage, userstate } }));
+        client.on(
+          "messagedeleted",
+          (channel, username, deletedmessage, userstate) =>
+            pkg.emitEvent({
+              name: "messagedeleted",
+              data: { channel, username, deletedmessage, userstate },
+            })
+        );
 
-        client.on("followersonly", (channel, enabled, length) => pkg.emitEvent({ name: "followersonly", data: { channel, enabled, length } }));
+        client.on("followersonly", (channel, enabled, length) =>
+          pkg.emitEvent({
+            name: "followersonly",
+            data: { channel, enabled, length },
+          })
+        );
 
         client.on("message", (_, tags, message, self) => {
           const data = { message, tags, self };
-          if(tags["message-type"] === "action" || tags["message-type"] === "chat")
-          pkg.emitEvent({ name: "chatMessage", data });
+          if (
+            tags["message-type"] === "action" ||
+            tags["message-type"] === "chat"
+          )
+            pkg.emitEvent({ name: "chatMessage", data });
         });
 
         return client;
@@ -51,11 +75,11 @@ export { client };
 pkg.createNonEventSchema({
   name: "Send Chat Message",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "message",
       name: "Message",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -68,19 +92,19 @@ pkg.createNonEventSchema({
 pkg.createEventSchema({
   name: "Slow Mode Toggled",
   event: "slowmode",
-  generateIO: (t) => {
-    t.execOutput({
+  generateIO: (io) => {
+    io.execOutput({
       id: "exec",
-    })
-    t.dataOutput({
+    });
+    io.dataOutput({
       id: "enabled",
       name: "Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "length",
       name: "Duration",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -93,14 +117,14 @@ pkg.createEventSchema({
 pkg.createEventSchema({
   name: "Emote Only Mode Toggled",
   event: "emoteonly",
-  generateIO: (t) => {
-    t.execOutput({
+  generateIO: (io) => {
+    io.execOutput({
       id: "exec",
-    })
-    t.dataOutput({
+    });
+    io.dataOutput({
       id: "enabled",
       name: "Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -112,14 +136,14 @@ pkg.createEventSchema({
 pkg.createEventSchema({
   name: "Subscriber Only Mode Toggled",
   event: "subonlymode",
-  generateIO: (t) => {
-    t.execOutput({
+  generateIO: (io) => {
+    io.execOutput({
       id: "exec",
-    })
-    t.dataOutput({
+    });
+    io.dataOutput({
       id: "enabled",
       name: "Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
@@ -131,19 +155,19 @@ pkg.createEventSchema({
 pkg.createEventSchema({
   name: "Follower Only Mode Toggled",
   event: "followersonly",
-  generateIO: (t) => {
-    t.execOutput({
+  generateIO: (io) => {
+    io.execOutput({
       id: "exec",
-    })
-    t.dataOutput({
+    });
+    io.dataOutput({
       id: "enabled",
       name: "Enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "length",
       name: "Duration",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -156,24 +180,24 @@ pkg.createEventSchema({
 pkg.createEventSchema({
   name: "Messaged Deleted",
   event: "messagedeleted",
-  generateIO: (t) => {
-    t.execOutput({
+  generateIO: (io) => {
+    io.execOutput({
       id: "exec",
-    })
-    t.dataOutput({
+    });
+    io.dataOutput({
       id: "username",
       name: "Username",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "deletedMessage",
       name: "Deleted Message",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "messageId",
       name: "Messasge ID",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx, data }) {
@@ -187,54 +211,54 @@ pkg.createEventSchema({
 pkg.createEventSchema({
   name: "Chat Message",
   event: "chatMessage",
-  generateIO: (t) => {
-    t.execOutput({
+  generateIO: (io) => {
+    io.execOutput({
       id: "exec",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "username",
       name: "Username",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "displayName",
       name: "Display Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "userId",
       name: "User ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "message",
       name: "Message",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "messageId",
       name: "Message ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "broadcaster",
       name: "Broadcaster",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "mod",
       name: "Moderator",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "sub",
       name: "Subscriber",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "vip",
       name: "VIP",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx, data }) {
