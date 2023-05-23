@@ -597,6 +597,106 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "List Includes",
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "input",
+      type: t.wildcard(w),
+    });
+    io.dataInput({
+      id: "list",
+      type: t.list(t.wildcard(w)),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.bool(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput(
+      "output",
+      ctx.getInput<[]>("list").includes(ctx.getInput("input"))
+    );
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "List Length",
+  variant: "Pure",
+  generateIO(io) {
+    io.dataInput({
+      id: "list",
+      type: t.list(t.wildcard(io.wildcard())),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.int(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput<Array<any>>("list").length);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Split String",
+  variant: "Pure",
+  generateIO(io) {
+    io.dataInput({
+      id: "input",
+      name: "String",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "separator",
+      name: "Separator",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.list(t.string()),
+    });
+  },
+  run({ ctx }) {
+    const array = ctx
+      .getInput<string>("input")
+      .split(ctx.getInput("separator"));
+    ctx.setOutput("output", array);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Nth Word",
+  variant: "Pure",
+  generateIO(io) {
+    io.dataInput({
+      id: "input",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "index",
+      name: "N",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.option(t.string()),
+    });
+  },
+  run({ ctx }) {
+    const word = Maybe(
+      ctx.getInput<string>("input").trim().split(/\s+/)[
+        ctx.getInput<number>("index")
+      ]
+    );
+    ctx.setOutput("output", word);
+  },
+});
+
+pkg.createNonEventSchema({
   name: `Unwrap Option`,
   variant: "Pure",
   run({ ctx }) {

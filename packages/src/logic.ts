@@ -240,7 +240,7 @@ pkg.createNonEventSchema({
   variant: "Base",
   async run({ ctx }) {
     for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
-      ctx.setOutput("output", data);
+      ctx.setOutput("element", data);
       ctx.setOutput("index", index);
       await ctx.exec("body");
     }
