@@ -666,7 +666,7 @@ pkg.createEventSchema({
     });
     io.dataOutput({
       id: "id",
-      name: "ID",
+      name: "Redemption ID",
       type: t.string(),
     });
     io.dataOutput({

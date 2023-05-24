@@ -878,8 +878,8 @@ pkg.createNonEventSchema({
       const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
       let data = await helix.channelPoints.updateRedemptionStatusByIds(
         user.id,
-        ctx.getInput("redemptionId"),
         ctx.getInput("rewardId"),
+        ctx.getInput("redemptionId"),
         status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
       );
       ctx.setOutput("success", true);
