@@ -12,7 +12,7 @@ export default () => {
       fallback={
         <>
           Loading...
-          <Button onClick={() => twitch.auth.setAccessToken(None)}>
+          <Button onClick={() => twitch.auth.authProvider.logOut()}>
             Cancel
           </Button>
         </>
@@ -22,7 +22,7 @@ export default () => {
         {(user) => (
           <div class="flex space-x-4 items-center">
             <p>Logged in as {user().name}</p>
-            <Button onClick={() => twitch.auth.setAccessToken(None)}>
+            <Button onClick={() => twitch.auth.authProvider.logOut()}>
               Logout
             </Button>
           </div>
@@ -33,13 +33,16 @@ export default () => {
           rspc.createSubscription(() => ["auth.twitch"], {
             onData: (m) => {
               if (typeof m === "object" && "Received" in m) {
-                m.Received.obtainmentTimestamp = Date.now();
-                twitch.auth.setAccessToken(Some(m.Received));
+                twitch.auth.authProvider.addUser({
+                  ...m.Received,
+                  obtainmentTimestamp: Date.now(),
+                  userId: "",
+                });
                 setLoggingIn(false);
               }
             },
             onError: () => {
-              twitch.auth.setAccessToken(None);
+              twitch.auth.authProvider.logOut();
               setLoggingIn(false);
             },
           });
@@ -52,7 +55,7 @@ export default () => {
           );
         }}
       </Match>
-      <Match when={twitch.auth.accessToken().isNone()}>
+      <Match when={twitch.auth.authProvider.token.isNone()}>
         <Button onClick={() => setLoggingIn(true)}>Login</Button>
       </Match>
     </Switch>

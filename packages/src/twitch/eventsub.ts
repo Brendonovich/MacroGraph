@@ -52,51 +52,49 @@ const { state } = createRoot(() => {
       return;
     }
 
-    helix()
-      .zip(user())
-      .map(([helix, user]) => {
-        const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
+    user().map((user) => {
+      const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-        ws.addEventListener("message", async (data) => {
-          let info = JSON.parse(data.data);
+      ws.addEventListener("message", async (data) => {
+        let info = JSON.parse(data.data);
 
-          switch (info.metadata.message_type) {
-            case "session_welcome":
-              setWs({ type: "connected", ws });
+        switch (info.metadata.message_type) {
+          case "session_welcome":
+            setWs({ type: "connected", ws });
 
-              await Promise.all(
-                SubTypes.map((type) =>
-                  helix.eventSub.createSubscription(
-                    type,
-                    type == "channel.follow" ? "2" : "1",
-                    {
-                      from_broadcaster_user_id: user.id,
-                      broadcaster_user_id: user.id,
-                      moderator_user_id: user.id,
-                    },
-                    {
-                      method: "websocket",
-                      session_id: info.payload.session.id,
-                    },
-                    { id: user.id }
-                  )
+            await Promise.all(
+              SubTypes.map((type) =>
+                helix.eventSub.createSubscription(
+                  type,
+                  type == "channel.follow" ? "2" : "1",
+                  {
+                    from_broadcaster_user_id: user.id,
+                    broadcaster_user_id: user.id,
+                    moderator_user_id: user.id,
+                  },
+                  {
+                    method: "websocket",
+                    session_id: info.payload.session.id,
+                  },
+                  { id: user.id }
                 )
-              );
+              )
+            );
 
-              break;
-            case "notification":
-              pkg.emitEvent({
-                name: info.payload.subscription.type,
-                data: info.payload,
-              });
-              break;
-          }
-        });
-
-        setWs({ type: "connecting" });
-
-        onCleanup(() => ws.close());
+            break;
+          case "notification":
+            pkg.emitEvent({
+              name: info.payload.subscription.type,
+              data: info.payload,
+            });
+            break;
+        }
       });
+
+      setWs({ type: "connecting" });
+
+      onCleanup(() => ws.close());
+    });
   });
 
   return { state };
