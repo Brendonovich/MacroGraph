@@ -507,4 +507,8 @@ export class OptionType<T extends AnyType = AnyType> extends BaseType<
       return this.inner.getInner();
     } else return this.inner;
   }
+
+  toString(): string {
+    return `Option<${this.inner.toString()}>`;
+  }
 }

@@ -1,4 +1,4 @@
-import { core, types } from "@macrograph/core";
+import { core, t } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Logic",
@@ -10,21 +10,21 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.exec(ctx.getInput<boolean>("condition") ? "true" : "false");
   },
-  generateIO(t) {
-    t.execInput({
+  generateIO(io) {
+    io.execInput({
       id: "exec",
     });
-    t.dataInput({
+    io.dataInput({
       id: "condition",
       name: "Condition",
-      type: types.bool(),
+      type: t.bool(),
     });
 
-    t.execOutput({
+    io.execOutput({
       id: "true",
       name: "True",
     });
-    t.execOutput({
+    io.execOutput({
       id: "false",
       name: "False",
     });
@@ -39,17 +39,17 @@ pkg.createNonEventSchema({
       ctx.exec("output");
     }, ctx.getInput("delay"));
   },
-  generateIO(t) {
-    t.execInput({
+  generateIO(io) {
+    io.execInput({
       id: "exec",
     });
-    t.dataInput({
+    io.dataInput({
       id: "delay",
       name: "Wait in ms",
-      type: types.int(),
+      type: t.int(),
     });
 
-    t.execOutput({
+    io.execOutput({
       id: "output",
       name: "",
     });
@@ -65,18 +65,18 @@ pkg.createNonEventSchema({
       ctx.getInput<boolean>("one") && ctx.getInput<boolean>("two")
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "value",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -90,18 +90,18 @@ pkg.createNonEventSchema({
       !(ctx.getInput<boolean>("one") && ctx.getInput<boolean>("two"))
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "value",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -115,18 +115,18 @@ pkg.createNonEventSchema({
       ctx.getInput<boolean>("one") || ctx.getInput<boolean>("two")
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "value",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -140,18 +140,18 @@ pkg.createNonEventSchema({
       !(ctx.getInput<boolean>("one") || ctx.getInput<boolean>("two"))
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "value",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -165,18 +165,18 @@ pkg.createNonEventSchema({
       ctx.getInput<boolean>("one") != ctx.getInput<boolean>("two")
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "value",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -187,14 +187,14 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("output", !ctx.getInput<boolean>("input"));
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -216,21 +216,21 @@ pkg.createNonEventSchema({
     io.dataInput({
       id: "condition",
       name: "Condition",
-      type: types.bool(),
+      type: t.bool(),
     });
     io.dataInput({
       id: "trueValue",
       name: "True",
-      type: types.wildcard(w),
+      type: t.wildcard(w),
     });
     io.dataInput({
       id: "falseValue",
       name: "False",
-      type: types.wildcard(w),
+      type: t.wildcard(w),
     });
     io.dataOutput({
       id: "output",
-      type: types.wildcard(w),
+      type: t.wildcard(w),
     });
   },
 });
@@ -240,39 +240,39 @@ pkg.createNonEventSchema({
   variant: "Base",
   async run({ ctx }) {
     for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
-      ctx.setOutput("output", data);
+      ctx.setOutput("element", data);
       ctx.setOutput("index", index);
       await ctx.exec("body");
     }
 
     ctx.exec("completed");
   },
-  generateIO(t) {
-    const w = t.wildcard();
+  generateIO(io) {
+    const w = io.wildcard();
 
-    t.execInput({
+    io.execInput({
       id: "exec",
     });
-    t.dataInput({
+    io.dataInput({
       id: "array",
       name: "Array",
-      type: types.list(types.wildcard(w)),
+      type: t.list(t.wildcard(w)),
     });
-    t.execOutput({
+    io.execOutput({
       id: "body",
       name: "Loop Body",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "element",
       name: "Array Element",
-      type: types.wildcard(w),
+      type: t.wildcard(w),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "index",
       name: "Array Index",
-      type: types.int(),
+      type: t.int(),
     });
-    t.execOutput({
+    io.execOutput({
       id: "completed",
       name: "Completed",
     });

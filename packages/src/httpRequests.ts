@@ -1,4 +1,4 @@
-import { core, rspcClient, types } from "@macrograph/core";
+import { core, rspcClient, t } from "@macrograph/core";
 
 const pkg = core.createPackage<any>({ name: "HTTP Requests" });
 
@@ -18,25 +18,25 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", response);
     // ctx.setOutput("status", response);
   },
-  generateIO(t) {
+  generateIO(io) {
     return {
       inputs: {
-        url: t.dataInput({
+        url: io.dataInput({
           id: "url",
           name: "URL",
-          type: types.string(),
+          type: t.string(),
         }),
       },
       outputs: {
-        response: t.dataOutput({
+        response: io.dataOutput({
           id: "response",
           name: "Response",
-          type: types.string(),
+          type: t.string(),
         }),
-        status: t.dataOutput({
+        status: io.dataOutput({
           id: "status",
           name: "Status",
-          type: types.int(),
+          type: t.int(),
         }),
       },
     };
@@ -65,26 +65,26 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", response.data);
     ctx.setOutput("status", response.status);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "url",
       name: "URL",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "body",
       name: "Body",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "response",
       name: "Response",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "status",
       name: "Status",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -111,26 +111,26 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", response.data);
     ctx.setOutput("status", response.status);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "url",
       name: "URL",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "body",
       name: "Body",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "response",
       name: "Response",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "status",
       name: "Status",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -151,16 +151,16 @@ pkg.createNonEventSchema({
     ctx.setOutput("response", response.data);
     ctx.setOutput("status", response.status);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "url",
       name: "URL",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "status",
       name: "Status",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });

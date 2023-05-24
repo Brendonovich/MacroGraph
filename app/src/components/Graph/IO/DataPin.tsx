@@ -9,6 +9,7 @@ import {
 } from "@macrograph/core";
 import { usePin } from ".";
 import { Match, Switch } from "solid-js";
+import { Tooltip } from "@kobalte/core";
 import { colour } from "../util";
 
 interface Props {
@@ -50,49 +51,63 @@ export const DataPin = (props: Props) => {
   };
 
   return (
-    <Switch>
-      <Match when={pin.type instanceof OptionType && pin.type}>
-        {(type) => {
-          return (
-            <div
-              {...containerProps()}
-              class={clsx(
-                `w-3.5 h-3.5 flex justify-center items-center border-mg-current`,
-                rounding(type()),
-                colour(type()),
-                connected() || active() ? "border-[2.5px]" : "border-[1.5px]"
-              )}
-            >
-              <div
-                class={clsx(
-                  "border-[1.5px] border-mg-current",
-                  connected() || active() ? "w-1 h-1 bg-mg-current" : "w-2 h-2",
-                  !(type().getInner() instanceof ListType)
-                    ? "rounded-full"
-                    : "rounded-[0.0625rem]"
-                )}
-              />
-            </div>
-          );
-        }}
-      </Match>
-      <Match when={pin.type}>
-        {(type) => {
-          return (
-            <div
-              {...containerProps()}
-              class={clsx(
-                `w-3.5 h-3.5 border-[2.5px]`,
-                rounding(type()),
-                colour(type()),
-                connected() || active()
-                  ? "border-mg-current bg-mg-current"
-                  : "border-mg-current"
-              )}
-            />
-          );
-        }}
-      </Match>
-    </Switch>
+    <Tooltip.Root>
+      <Tooltip.Trigger class="cursor-auto">
+        <Switch>
+          <Match when={pin.type instanceof OptionType && pin.type}>
+            {(type) => {
+              return (
+                <div
+                  {...containerProps()}
+                  class={clsx(
+                    `w-3.5 h-3.5 flex justify-center items-center border-mg-current`,
+                    rounding(type()),
+                    colour(type()),
+                    connected() || active()
+                      ? "border-[2.5px]"
+                      : "border-[1.5px]"
+                  )}
+                >
+                  <div
+                    class={clsx(
+                      "border-[1.5px] border-mg-current",
+                      connected() || active()
+                        ? "w-1 h-1 bg-mg-current"
+                        : "w-2 h-2",
+                      !(type().getInner() instanceof ListType)
+                        ? "rounded-full"
+                        : "rounded-[0.0625rem]"
+                    )}
+                  />
+                </div>
+              );
+            }}
+          </Match>
+          <Match when={pin.type}>
+            {(type) => {
+              return (
+                <div
+                  {...containerProps()}
+                  class={clsx(
+                    `w-3.5 h-3.5 border-[2.5px]`,
+                    rounding(type()),
+                    colour(type()),
+                    connected() || active()
+                      ? "border-mg-current bg-mg-current"
+                      : "border-mg-current"
+                  )}
+                />
+              );
+            }}
+          </Match>
+        </Switch>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content class="bg-black min-w-[2.5rem] text-center text-white text-xs px-1 py-0.5 rounded border border-gray-500">
+          <Tooltip.Arrow />
+          {pin.type.toString()}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 };

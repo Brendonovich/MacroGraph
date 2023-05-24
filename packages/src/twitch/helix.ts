@@ -2,7 +2,7 @@ import { ApiClient } from "@twurple/api";
 import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
 import { authProvider } from "./auth";
 import pkg from "./pkg";
-import { None, types, Maybe } from "@macrograph/core";
+import { None, t, Maybe, InferEnum } from "@macrograph/core";
 
 export const { helix, user } = createRoot(() => {
   const helix = new ApiClient({ authProvider });
@@ -36,21 +36,21 @@ export const { helix, user } = createRoot(() => {
 pkg.createNonEventSchema({
   name: "Ban User",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "userID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Duration",
       id: "duration",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Reason",
       id: "reason",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -67,11 +67,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Unban User",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "userID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -84,11 +84,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Add Moderator",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "userID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -101,11 +101,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Remove Moderator",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "userID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -118,11 +118,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Delete Chat message",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "Message ID",
       id: "messageId",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -135,31 +135,31 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Edit Stream Info",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "Game ID",
       id: "gameId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Language",
       id: "language",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Title",
       id: "title",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Delay (s)",
       id: "delay",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Tags",
       id: "tags",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -178,31 +178,31 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Edit Stream Info",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "Game ID",
       id: "gameId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Language",
       id: "language",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Title",
       id: "title",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Delay (s)",
       id: "delay",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Tags",
       id: "tags",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   async run({ ctx }) {
@@ -221,11 +221,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Create Clip",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataOutput({
+  generateIO: (io) => {
+    io.dataOutput({
       name: "Clip ID",
       id: "clipId",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -242,41 +242,41 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Check User Subscription",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "User ID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Is Subscribed",
       id: "subbed",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Tier",
       id: "tier",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Gifted",
       id: "gifted",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Gifter Name",
       id: "gifterName",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Gifter Display Name",
       id: "gifterDisplayName",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Gifter ID",
       id: "gifterId",
-      type: types.int(),
+      type: t.int(),
     });
   },
   async run({ ctx }) {
@@ -302,16 +302,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Check User Follow",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "User ID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Following",
       id: "following",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -330,16 +330,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Check User VIP",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "User ID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Vip",
       id: "vip",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -357,16 +357,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Check User Mod",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "User ID",
       id: "userId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Moderator",
       id: "moderator",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   async run({ ctx }) {
@@ -384,141 +384,141 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Create Custom Reward",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "Title",
       id: "title",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Cost",
       id: "cost",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Prompt",
       id: "prompt",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Enabled",
       id: "isEnabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Background Color",
       id: "backgroundColor",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "User Input Required",
       id: "userInputRequired",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Max Redemptions Per Stream",
       id: "maxRedemptionsPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Max Redemptions Per User Per Stream",
       id: "maxRedemptionsPerUserPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Global Cooldown",
       id: "globalCooldown",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Skip Redemption Queue",
       id: "autoFulfill",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Success",
       id: "success",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Error Message",
       id: "errorMessage",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward ID",
       id: "rewardId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Title",
       id: "rewardTitle",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Prompt",
       id: "rewardPrompt",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Cost",
       id: "rewardCost",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Background Color",
       id: "backgroundColor",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Enabled",
       id: "enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "User Input Required",
       id: "userInputRequired",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Max Redemptions Per Stream",
       id: "maxRedemptionsPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Max Redemptions Per User Per Stream",
       id: "maxRedemptionsPerUserPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Global Cooldown",
       id: "globalCooldown",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Paused",
       id: "paused",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "in Stock",
       id: "stock",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Skip Request Queue",
       id: "skipRequestQueue",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Redemptions Current Stream",
       id: "redemptionsCurrentStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Cooldown Expires in",
       id: "cooldownExpire",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -569,151 +569,151 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Edit Custom Reward",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "Reward Id",
       id: "id",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Title",
       id: "title",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Cost",
       id: "cost",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Prompt",
       id: "prompt",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Enabled",
       id: "isEnabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Background Color",
       id: "backgroundColor",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "User Input Required",
       id: "userInputRequired",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Max Redemptions Per Stream",
       id: "maxRedemptionsPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Max Redemptions Per User Per Stream",
       id: "maxRedemptionsPerUserPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Global Cooldown",
       id: "globalCooldown",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Skip Redemption Queue",
       id: "autoFulfill",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Paused",
       id: "paused",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Success",
       id: "success",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Error Message",
       id: "errorMessage",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward ID",
       id: "rewardId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Title",
       id: "rewardTitle",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Prompt",
       id: "rewardPrompt",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Cost",
       id: "rewardCost",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Background Color",
       id: "backgroundColor",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Enabled",
       id: "enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "User Input Required",
       id: "userInputRequired",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Max Redemptions Per Stream",
       id: "maxRedemptionsPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Max Redemptions Per User Per Stream",
       id: "maxRedemptionsPerUserPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Global Cooldown",
       id: "globalCooldown",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Paused",
       id: "paused",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "in Stock",
       id: "stock",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Skip Request Queue",
       id: "skipRequestQueue",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Redemptions Current Stream",
       id: "redemptionsCurrentStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Cooldown Expires in",
       id: "cooldownExpire",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -764,99 +764,105 @@ pkg.createNonEventSchema({
   },
 });
 
+const RedemptionStatus = pkg.createEnum("Redemption Status", (e) => [
+  e.variant("Fulfilled"),
+  e.variant("Cancelled"),
+]);
+
 pkg.createNonEventSchema({
   name: "Update Redemption Status",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       name: "Redemption ID",
       id: "redemptionId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Reward ID",
       id: "rewardId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
-      name: "Cancel",
-      id: "cancel",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      name: "Success",
-      id: "success",
-      type: types.bool(),
-    });
-    t.dataOutput({
-      name: "Error Message",
-      id: "errorMessage",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Redemption ID",
-      id: "redemptionId",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "User ID",
-      id: "userId",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Display Name",
-      id: "displayName",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "User Login Name",
-      id: "userLogin",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Reward Title",
-      id: "rewardTitle",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Reward Prompt",
-      id: "rewardPrompt",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "Reward Cost",
-      id: "rewardCost",
-      type: types.string(),
-    });
-    t.dataOutput({
-      name: "User Input",
-      id: "userInput",
-      type: types.string(),
-    });
-    t.dataOutput({
+    io.dataInput({
       name: "Status",
       id: "status",
-      type: types.string(),
+      type: t.enum(RedemptionStatus),
     });
-    t.dataOutput({
+    io.dataOutput({
+      name: "Success",
+      id: "success",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      name: "Error Message",
+      id: "errorMessage",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Redemption ID",
+      id: "redemptionId",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "User ID",
+      id: "userId",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Display Name",
+      id: "displayName",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "User Login Name",
+      id: "userLogin",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Reward ID",
+      id: "rewardId",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Reward Title",
+      id: "rewardTitle",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Reward Prompt",
+      id: "rewardPrompt",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Reward Cost",
+      id: "rewardCost",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "User Input",
+      id: "userInput",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Status",
+      id: "status",
+      type: t.string(),
+    });
+    io.dataOutput({
       name: "Redeemed At",
       id: "redeemedAt",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
     const u = user().unwrap();
     try {
+      const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
       let data = await helix.channelPoints.updateRedemptionStatusByIds(
         u.id,
-        ctx.getInput("redemptionId"),
         ctx.getInput("rewardId"),
-        ctx.getInput("cancel") ? "FULFILLED" : "CANCELED"
+        ctx.getInput("redemptionId"),
+        status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
       );
       ctx.setOutput("success", true);
       ctx.setOutput("redemptionId", data[0]?.id);
@@ -880,96 +886,96 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get Reward By Title",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "title",
       name: "Title",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       name: "Manageable Only",
       id: "manageableOnly",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Success",
       id: "success",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward ID",
       id: "rewardId",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Title",
       id: "rewardTitle",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Prompt",
       id: "rewardPrompt",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Reward Cost",
       id: "rewardCost",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Background Color",
       id: "backgroundColor",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Enabled",
       id: "enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "User Input Required",
       id: "userInputRequired",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Max Redemptions Per Stream",
       id: "maxRedemptionsPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Max Redemptions Per User Per Stream",
       id: "maxRedemptionsPerUserPerStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Global Cooldown",
       id: "globalCooldown",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Paused",
       id: "paused",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "in Stock",
       id: "stock",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Skip Request Queue",
       id: "skipRequestQueue",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Redemptions Current Stream",
       id: "redemptionsCurrentStream",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       name: "Cooldown Expires in",
       id: "cooldownExpire",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1006,56 +1012,56 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Get User By ID",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "userId",
       name: "User ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "userId",
       name: "User ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "userLogin",
       name: "Login Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "displayName",
       name: "Display Name",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "type",
       name: "User Type",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "broadcasterType",
       name: "Broadcaster Type",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "description",
       name: "Description",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "profileImageUrl",
       name: "Profile Image URL",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "offlineImageUrl",
       name: "Offline Image URL",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "createdAt",
       name: "Created At",
-      type: types.string(),
+      type: t.string(),
     });
   },
   async run({ ctx }) {
@@ -1075,11 +1081,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Delete Custom Reward",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "id",
       name: "Reward Id",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -1091,15 +1097,15 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Follower Only Mode",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "delay",
       name: "Delay (minutes)",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx }) {
@@ -1115,15 +1121,15 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Slow Mode",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "delay",
       name: "Delay (seconds)",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx }) {
@@ -1139,10 +1145,10 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Sub Only Mode",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx }) {
@@ -1157,10 +1163,10 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "R9K Mode",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "enabled",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx }) {
@@ -1175,11 +1181,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Shoutout User",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "toId",
       name: "Id Of Shoutout User",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {
@@ -1192,11 +1198,11 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Send Announcement",
   variant: "Exec",
-  generateIO: (t) => {
-    t.dataInput({
+  generateIO: (io) => {
+    io.dataInput({
       id: "announcement",
       name: "Announcement",
-      type: types.string(),
+      type: t.string(),
     });
   },
   run({ ctx }) {

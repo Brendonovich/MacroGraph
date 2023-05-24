@@ -1,6 +1,7 @@
 import {
   AnyType,
   BasePrimitiveType,
+  EnumType,
   ListType,
   OptionType,
   PrimitiveVariant,
@@ -19,6 +20,8 @@ export const colour = (type: AnyType): string => {
 
   if (type instanceof ListType || type instanceof OptionType)
     return colour(type.inner);
+
+  if (type instanceof EnumType) return "[--mg-current:#1B4DFF]";
 
   const value = type.wildcard.value;
 

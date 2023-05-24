@@ -7,6 +7,12 @@ import {
   NonEventNodeSchema,
   RunCtx,
 } from "./NodeSchema";
+import {
+  Enum,
+  EnumBuilder,
+  EnumVariants,
+  LazyEnumVariants,
+} from "../types/enum";
 
 export interface PackageArgs {
   name: string;
@@ -61,6 +67,17 @@ export class Package<TEvents extends EventsMap = EventsMap> {
     } as any);
 
     return this;
+  }
+
+  createEnum<Variants extends EnumVariants>(
+    name: string,
+    builderFn: (t: EnumBuilder) => Variants | LazyEnumVariants<Variants>
+  ) {
+    const builder = new EnumBuilder();
+
+    const e = new Enum(name, builderFn(builder));
+
+    return e;
   }
 
   schema(name: string): NodeSchema<TEvents> | undefined {

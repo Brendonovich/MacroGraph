@@ -17,12 +17,15 @@ export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
 
 class MacroGraphAuthProvider implements AuthProvider {
   token: Option<AccessTokenWithUserId>;
+
   constructor(public clientId: string) {
     this.token = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN)).map((j) =>
       SCHEMA.parse(JSON.parse(j))
     );
     return createMutable(this);
   }
+
+
 
   getCurrentScopesForUser(_: UserIdResolvable) {
     return this.token.map((t) => t.scope).unwrapOr([]);
@@ -68,7 +71,6 @@ class MacroGraphAuthProvider implements AuthProvider {
   async refreshAccessTokenForUser(
     userId: UserIdResolvable
   ): Promise<AccessTokenWithUserId> {
-    console.log("running");
     const { refreshToken } = this.token.expect(
       "refreshAccessTokenForUser missing token"
     );
@@ -96,6 +98,8 @@ class MacroGraphAuthProvider implements AuthProvider {
     return returnData;
   }
 }
+
+
 
 const SCHEMA = z.object({
   accessToken: z.string(),

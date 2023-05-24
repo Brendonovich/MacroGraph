@@ -11,7 +11,7 @@ export type Procedures = {
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
-export type Message = "Listening" | { Received: { accessToken: string; refreshToken: string; scope: string[]; expiresIn: number } }
+export type Message = "Listening" | { Received: { accessToken: string; refreshToken: string; scope: string[]; expiresIn: number, obtainmentTimestamp: number } }
 
 export type HTTPBody = { Json: any } | { Form: { [key: string]: string } }
 

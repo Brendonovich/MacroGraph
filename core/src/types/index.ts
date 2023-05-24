@@ -1,40 +1,27 @@
+import { EnumType } from "./enum";
 import { ListType } from "./list";
 import { OptionType } from "./option";
-import {
-  BasePrimitiveType,
-  BoolType,
-  FloatType,
-  IntType,
-  PrimitiveType,
-  StringType,
-} from "./primitive";
-import { Wildcard, WildcardType } from "./wildcard";
+import { BasePrimitiveType, PrimitiveType } from "./primitive";
+import { WildcardType } from "./wildcard";
 
 export * from "./list";
 export * from "./option";
 export * from "./any";
 export * from "./primitive";
 export * from "./wildcard";
+export * from "./enum";
+export * as t from "./t";
 
-export type TypeVariant =
-  | "primitive"
-  | "list"
-  | "map"
-  | "set"
-  | "option"
-  | "wildcard";
+export type TypeVariant = "primitive" | "list" | "option" | "wildcard" | "enum";
+// | "map"
+// | "set"
 
-export const types = {
-  int: () => new IntType(),
-  float: () => new FloatType(),
-  string: () => new StringType(),
-  bool: () => new BoolType(),
-  list: <T extends AnyType>(t: T) => new ListType(t),
-  option: <T extends AnyType>(t: T) => new OptionType(t),
-  wildcard: (w: Wildcard) => new WildcardType(w),
-};
-
-export type AnyType = PrimitiveType | ListType | OptionType | WildcardType;
+export type AnyType =
+  | PrimitiveType
+  | ListType
+  | OptionType
+  | WildcardType
+  | EnumType;
 
 export function typesCanConnect(a: AnyType, b: AnyType): boolean {
   const aInner = a instanceof WildcardType ? a.wildcard.value.unwrapOr(a) : a;

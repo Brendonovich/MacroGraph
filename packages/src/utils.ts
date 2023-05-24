@@ -1,4 +1,4 @@
-import { core, Maybe, Option, Some, types } from "@macrograph/core";
+import { core, Maybe, Option, Some, t } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -30,11 +30,11 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     PRINT_CHANNEL.emit(ctx.getInput<string>("input"));
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
       name: "Input",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -48,20 +48,20 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("haystack").includes(ctx.getInput<string>("needle"))
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "haystack",
       name: "String",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "needle",
       name: "Includes",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "bool",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -72,15 +72,15 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("int", ctx.getInput<string>("input").length);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
       name: "String",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "int",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -94,20 +94,20 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("input").startsWith(ctx.getInput<string>("prefix"))
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
       name: "String",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "prefix",
       name: "Starts With",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "bool",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
@@ -128,24 +128,24 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("input").substring(start, end)
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "start",
       name: "Start",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "end",
       name: "End",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -156,14 +156,14 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("output", ctx.getInput<string>("input").toUpperCase());
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -174,14 +174,14 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("output", ctx.getInput<string>("input").toLowerCase());
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -192,14 +192,14 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("string", ctx.getInput<number>("int").toString());
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "int",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "string",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -210,14 +210,14 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("string", ctx.getInput<number>("float").toString());
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "float",
-      type: types.float(),
+      type: t.float(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "string",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -228,14 +228,14 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("string", ctx.getInput<boolean>("bool").toString());
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "bool",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "string",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -249,14 +249,14 @@ pkg.createNonEventSchema({
 
     ctx.setOutput("int", opt.map(Math.floor));
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "string",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "int",
-      type: types.option(types.int()),
+      type: t.option(t.int()),
     });
   },
 });
@@ -270,18 +270,18 @@ pkg.createNonEventSchema({
     );
     ctx.setOutput("output", number);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -295,18 +295,18 @@ pkg.createNonEventSchema({
     );
     ctx.setOutput("output", number);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -320,18 +320,18 @@ pkg.createNonEventSchema({
     );
     ctx.setOutput("output", number);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -345,18 +345,18 @@ pkg.createNonEventSchema({
     );
     ctx.setOutput("output", numb);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -370,18 +370,18 @@ pkg.createNonEventSchema({
       ctx.getInput<string>("one") + ctx.getInput<string>("two")
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "one",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "two",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.string(),
+      type: t.string(),
     });
   },
 });
@@ -398,19 +398,19 @@ pkg.createNonEventSchema({
       Math.round(input * Math.pow(10, decimal)) / Math.pow(10, decimal)
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "input",
-      type: types.float(),
+      type: t.float(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "decimal",
       name: "Decimal Places",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.float(),
+      type: t.float(),
     });
   },
 });
@@ -421,10 +421,10 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput("output", Math.random());
   },
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "output",
-      type: types.float(),
+      type: t.float(),
     });
   },
 });
@@ -438,20 +438,20 @@ pkg.createNonEventSchema({
 
     ctx.setOutput("output", Math.random() * (max - min) + min);
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "min",
       name: "Min",
-      type: types.float(),
+      type: t.float(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "max",
       name: "Max",
-      type: types.float(),
+      type: t.float(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.float(),
+      type: t.float(),
     });
   },
 });
@@ -463,10 +463,10 @@ pkg.createNonEventSchema({
     // 0.5 triggers round up so distribution is even
     ctx.setOutput("output", Math.round(Math.random()));
   },
-  generateIO(t) {
-    t.dataOutput({
+  generateIO(io) {
+    io.dataOutput({
       id: "output",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -481,20 +481,20 @@ pkg.createNonEventSchema({
     // Use Math.floor to ensure even distribution
     ctx.setOutput("output", Math.floor(Math.random() * (max + 1 - min) + min));
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "min",
       name: "Min",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "max",
       name: "Max",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "output",
-      type: types.int(),
+      type: t.int(),
     });
   },
 });
@@ -516,60 +516,53 @@ pkg.createNonEventSchema({
       ctx.getInput<Number>("number") < ctx.getInput<Number>("compare")
     );
   },
-  generateIO(t) {
-    t.dataInput({
+  generateIO(io) {
+    io.dataInput({
       id: "number",
       name: "Number",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataInput({
+    io.dataInput({
       id: "compare",
       name: "Compare against",
-      type: types.int(),
+      type: t.int(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputE",
       name: "Equal",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputG",
       name: "Greater",
-      type: types.bool(),
+      type: t.bool(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "outputL",
       name: "Less",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
 });
 
-(
-  [
-    ["Bool", types.bool()],
-    ["String", types.string()],
-    ["Int", types.int()],
-    ["Float", types.float()],
-  ] as const
-).forEach(([key, type]) => {
-  pkg.createNonEventSchema({
-    name: key,
-    variant: "Pure",
-    run({ ctx }) {
-      ctx.setOutput("output", ctx.getInput("input"));
-    },
-    generateIO(t) {
-      t.dataInput({
-        id: "input",
-        type,
-      });
-      t.dataOutput({
-        id: "output",
-        type,
-      });
-    },
-  });
+pkg.createNonEventSchema({
+  name: "Make Any",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput("input"));
+  },
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "input",
+      type: t.wildcard(w),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.wildcard(w),
+    });
+  },
 });
 
 pkg.createNonEventSchema({
@@ -580,19 +573,119 @@ pkg.createNonEventSchema({
 
     io.dataInput({
       id: "one",
-      type: types.wildcard(w),
+      type: t.wildcard(w),
     });
     io.dataInput({
       id: "two",
-      type: types.wildcard(w),
+      type: t.wildcard(w),
     });
     io.dataOutput({
       id: "equal",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx }) {
     ctx.setOutput("equal", ctx.getInput("one") === ctx.getInput("two"));
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "List Includes",
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard();
+
+    io.dataInput({
+      id: "input",
+      type: t.wildcard(w),
+    });
+    io.dataInput({
+      id: "list",
+      type: t.list(t.wildcard(w)),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.bool(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput(
+      "output",
+      ctx.getInput<[]>("list").includes(ctx.getInput("input"))
+    );
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "List Length",
+  variant: "Pure",
+  generateIO(io) {
+    io.dataInput({
+      id: "list",
+      type: t.list(t.wildcard(io.wildcard())),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.int(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput<Array<any>>("list").length);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Split String",
+  variant: "Pure",
+  generateIO(io) {
+    io.dataInput({
+      id: "input",
+      name: "String",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "separator",
+      name: "Separator",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.list(t.string()),
+    });
+  },
+  run({ ctx }) {
+    const array = ctx
+      .getInput<string>("input")
+      .split(ctx.getInput("separator"));
+    ctx.setOutput("output", array);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Nth Word",
+  variant: "Pure",
+  generateIO(io) {
+    io.dataInput({
+      id: "input",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "index",
+      name: "N",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.option(t.string()),
+    });
+  },
+  run({ ctx }) {
+    const word = Maybe(
+      ctx.getInput<string>("input").trim().split(/\s+/)[
+        ctx.getInput<number>("index")
+      ]
+    );
+    ctx.setOutput("output", word);
   },
 });
 
@@ -607,11 +700,11 @@ pkg.createNonEventSchema({
 
     io.dataInput({
       id: "input",
-      type: types.option(types.wildcard(w)),
+      type: t.option(t.wildcard(w)),
     });
     io.dataOutput({
       id: "output",
-      type: types.wildcard(w),
+      type: t.wildcard(w),
     });
   },
 });
@@ -624,11 +717,11 @@ pkg.createNonEventSchema({
 
     io.dataInput({
       id: "input",
-      type: types.option(types.wildcard(w)),
+      type: t.option(t.wildcard(w)),
     });
     io.dataOutput({
       id: "output",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx }) {
@@ -644,11 +737,11 @@ pkg.createNonEventSchema({
 
     io.dataInput({
       id: "input",
-      type: types.option(types.wildcard(w)),
+      type: t.option(t.wildcard(w)),
     });
     io.dataOutput({
       id: "output",
-      type: types.bool(),
+      type: t.bool(),
     });
   },
   run({ ctx }) {
@@ -664,11 +757,11 @@ pkg.createNonEventSchema({
 
     io.dataInput({
       id: "in",
-      type: types.wildcard(type),
+      type: t.wildcard(type),
     });
     io.dataOutput({
       id: "out",
-      type: types.option(types.wildcard(type)),
+      type: t.option(t.wildcard(type)),
     });
   },
   run({ ctx }) {

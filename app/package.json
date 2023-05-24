@@ -13,7 +13,6 @@
   "license": "MIT",
   "dependencies": {
     "@kobalte/core": "^0.9.6",
-    "@kobalte/tailwindcss": "^0.6.5",
     "@macrograph/core": "workspace:*",
     "@macrograph/packages": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
@@ -27,6 +26,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
+    "@kobalte/tailwindcss": "^0.6.5",
     "@macrograph/web": "workspace:*",
     "@tailwindcss/forms": "^0.5.3",
     "@tauri-apps/cli": "^1.2.2",

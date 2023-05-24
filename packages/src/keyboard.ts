@@ -1,4 +1,4 @@
-import { core, types } from "@macrograph/core";
+import { core, t } from "@macrograph/core";
 
 const alphabet = [
   "A",
@@ -47,12 +47,12 @@ alphabet.forEach((a) => {
   pkg.createEventSchema({
     name: `${a} Key`,
     event: `${toLowercase(a)}-key`,
-    generateIO: (t) => {
-      t.execOutput({
+    generateIO: (io) => {
+      io.execOutput({
         id: "pressed",
         name: "Pressed",
       });
-      t.execOutput({
+      io.execOutput({
         id: "released",
         name: "Released",
       });
@@ -67,10 +67,10 @@ alphabet.forEach((a) => {
   pkg.createNonEventSchema({
     name: `${a} Key Pressed`,
     variant: "Pure",
-    generateIO: (t) => {
-      t.dataOutput({
+    generateIO: (io) => {
+      io.dataOutput({
         id: "value",
-        type: types.bool(),
+        type: t.bool(),
       });
     },
     run({ ctx }) {

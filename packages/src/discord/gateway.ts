@@ -6,7 +6,7 @@ import {
   createRoot,
 } from "solid-js";
 import { z } from "zod";
-import { types, Maybe } from "@macrograph/core";
+import { t, Maybe } from "@macrograph/core";
 import { botToken } from "./auth";
 import pkg from "./pkg";
 import { GUILD_MEMBER_SCHEMA } from "./schemas";
@@ -124,44 +124,44 @@ export { ws, connect, disconnect };
 pkg.createEventSchema({
   name: "Discord Message",
   event: "discordMessage",
-  generateIO: (t) => {
-    t.execOutput({
+  generateIO: (io) => {
+    io.execOutput({
       id: "exec",
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "message",
       name: "Message",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "channelId",
       name: "Channel ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "username",
       name: "Username",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "userId",
       name: "User ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "nickname",
       name: "Nickname",
-      type: types.option(types.string()),
+      type: t.option(t.string()),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "guildId",
       name: "Guild ID",
-      type: types.string(),
+      type: t.string(),
     });
-    t.dataOutput({
+    io.dataOutput({
       id: "roles",
       name: "Roles",
-      type: types.list(types.string()),
+      type: t.list(t.string()),
     });
   },
   run({ ctx, data }) {
