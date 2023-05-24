@@ -28,7 +28,14 @@ export const GET = async (req: NextRequest) => {
   return NextResponse.redirect(
     `http://localhost:${params.state.port}?token=${encodeURIComponent(
       JSON.stringify(token)
-    )}`
+    )}`,
+    {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    }
   );
 };
 
@@ -49,5 +56,11 @@ export const POST = async (req: NextRequest) => {
 
   const token = TOKEN.parse(json);
 
-  return NextResponse.json(token);
+  return NextResponse.json(token, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 };
