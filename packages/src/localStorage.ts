@@ -45,3 +45,18 @@ pkg.createNonEventSchema({
     ctx.setOutput("output", opt);
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Remove Data",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      id: "key",
+      name: "Key",
+      type: t.string(),
+    });
+  },
+  run({ ctx }) {
+    localStorage.removeItem(`value-${ctx.getInput("key")}`);
+  },
+});

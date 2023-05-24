@@ -27,7 +27,7 @@ export const GUILD_MEMBER_SCHEMA = z.object({
 export const ROLE_SCHEMA = z.object({
   color: z.number(),
   flags: z.number(),
-  hoise: z.boolean(),
+  hoist: z.boolean(),
   id: z.string(),
   managed: z.boolean(),
   mentionable: z.boolean(),

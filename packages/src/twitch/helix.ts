@@ -2,7 +2,8 @@ import { ApiClient } from "@twurple/api";
 import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
 import { authProvider } from "./auth";
 import pkg from "./pkg";
-import { None, t, Maybe, InferEnum } from "@macrograph/core";
+import { None, t, Maybe, InferEnum, Option } from "@macrograph/core";
+import { TypeOf } from "zod";
 
 export const { helix, user } = createRoot(() => {
   const helix = new ApiClient({ authProvider });
@@ -1009,6 +1010,19 @@ pkg.createNonEventSchema({
   },
 });
 
+const UserType = pkg.createEnum("User Type", (e) => [
+  e.variant("Admin"),
+  e.variant("Global Mod"),
+  e.variant("Staff"),
+  e.variant("Normal User"),
+]);
+
+const BroadcasterType = pkg.createEnum("Broadcaster Type", (e) => [
+  e.variant("Affliate"),
+  e.variant("Partner"),
+  e.variant("Normal User"),
+]);
+
 pkg.createNonEventSchema({
   name: "Get User By ID",
   variant: "Exec",
@@ -1036,12 +1050,12 @@ pkg.createNonEventSchema({
     io.dataOutput({
       id: "type",
       name: "User Type",
-      type: t.string(),
+      type: t.option(t.enum(UserType)),
     });
     io.dataOutput({
       id: "broadcasterType",
       name: "Broadcaster Type",
-      type: t.string(),
+      type: t.option(t.enum(BroadcasterType)),
     });
     io.dataOutput({
       id: "description",
@@ -1065,12 +1079,29 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let data = await helix.users.getUserById(ctx.getInput("userId"));
+    const data = await helix.users.getUserById(ctx.getInput("userId"));
+    const optData = Maybe(data);
     ctx.setOutput("userId", data?.id);
     ctx.setOutput("userLogin", data?.name);
     ctx.setOutput("displayName", data?.displayName);
-    ctx.setOutput("type", data?.type);
-    ctx.setOutput("broadcasterType", data?.broadcasterType);
+    ctx.setOutput<InferEnum<typeof UserType>>(
+      "type",
+      (() => {
+        if (data?.type === "admin") return { variant: "Admin" };
+        else if (data?.type === "global_mod") return { variant: "Global Mod" };
+        else if (data?.type === "staff") return { variant: "Staff" };
+        else return { variant: "Normal User" };
+      })()
+    );
+    ctx.setOutput<InferEnum<typeof BroadcasterType>>(
+      "broadcasterType",
+      (() => {
+        const type = data?.broadcasterType;
+        if (type === "affiliate") return { variant: "Affliate" };
+        else if (type === "partner") return { variant: "Partner" };
+        else return { variant: "Normal User" };
+      })()
+    );
     ctx.setOutput("description", data?.description);
     ctx.setOutput("profileImageUrl", data?.profilePictureUrl);
     ctx.setOutput("offlineImageUrl", data?.offlinePlaceholderUrl);

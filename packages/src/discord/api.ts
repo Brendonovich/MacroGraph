@@ -92,7 +92,7 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    await api.channels(ctx.getInput("channelId")).messages.post(z.undefined(), {
+    await api.channels(ctx.getInput("channelId")).messages.post(z.any(), {
       body: { Json: { content: ctx.getInput("message") } },
     });
   },
