@@ -17,8 +17,10 @@ export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
 class MacroGraphAuthProvider implements AuthProvider {
   constructor(
     public clientId: string,
-    public token: AccessToken
+    public token: AccessTokenWithUserId
   ) {}
+
+
 
   getCurrentScopesForUser(_: UserIdResolvable) {
     return this.token.scope;
@@ -35,49 +37,23 @@ class MacroGraphAuthProvider implements AuthProvider {
     };
   }
 
+  async addUser(
+    user: UserIdResolvable
+  ) {
+    const res = await fetch("https://api.twitch.tv/helix/users", {
+      method: "GET",
+      headers: {'Authorization': `Bearer ${this.token.accessToken}`}
+    })
+
+    const userId = (await res.json()).data[0].id
+    this.token.userId = userId;
+  }
+
   async getAnyAccessToken(
     user?: UserIdResolvable | undefined
-  ): Promise<AccessTokenMaybeWithUserId> {
-    if(!user && this.token.expiresIn){
-      console.log(this.token.refreshToken);
-      if(this.token.obtainmentTimestamp + (this.token.expiresIn * 1000) < Date.now()) {
-        const res = await fetch("https://macrograph.brendonovich.dev/auth/twitch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
-          body: JSON.stringify({"refreshToken": this.token.refreshToken}),
-        });
-        console.log(res);
-    
-        const data = await res.json();
-        console.log(this.token.accessToken);
-        this.token.accessToken = data.access_token;
-        this.token.expiresIn = data.expires_in;
-        this.token.refreshToken = data.refresh_token;
-        this.token.scope = data.scope;
-        console.log(this.token.accessToken);
-      }
-
-      const res = await fetch("https://api.twitch.tv/helix/users", {
-        method: "GET",
-        headers: {'Authorization': `Bearer ${this.token.accessToken}`}
-      })
-      
-      console.log(res);
-      let userID: UserIdResolvable = res[0].id
-      console.log(userID);
-      
-      return {
-        ...this.token,
-        obtainmentTimestamp: Date.now(),
-        userId: extractUserId(userID)
-      };
-    }
-
-
+  ): Promise<AccessTokenWithUserId> {
     return {
-      ...this.token,
-      obtainmentTimestamp: Date.now(),
-      userId: user ? extractUserId(user) : undefined,
+      ...this.token
     };
   }
 
@@ -106,7 +82,7 @@ class MacroGraphAuthProvider implements AuthProvider {
       scope: data.scope ?? [],
       expiresIn: data.expires_in ?? null,
       obtainmentTimestamp: Date.now(),
-      userId: extractUserId(userId),
+      userId: this.token.userId,
     };
   }
 }
@@ -118,7 +94,8 @@ const SCHEMA = z.object({
   refreshToken: z.string(),
   scope: z.array(z.string()),
   expiresIn: z.number(),
-  obtainmentTimestamp: z.optional(z.number()),
+  obtainmentTimestamp: z.number(),
+  userId: z.string(),
 });
 
 const { accessToken, setAccessToken, authProvider } = createRoot(() => {
