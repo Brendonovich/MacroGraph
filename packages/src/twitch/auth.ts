@@ -3,6 +3,7 @@ import {
   AccessTokenMaybeWithUserId,
   AccessTokenWithUserId,
   AuthProvider,
+  RefreshingAuthProvider,
 } from "@twurple/auth";
 import { createEffect, createMemo, createSignal, createRoot } from "solid-js";
 import { Maybe, None } from "@macrograph/core";
@@ -16,8 +17,10 @@ export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
 class MacroGraphAuthProvider implements AuthProvider {
   constructor(
     public clientId: string,
-    public token: Omit<AccessToken, "obtainmentTimestamp">
+    public token: AccessTokenWithUserId
   ) {}
+
+
 
   getCurrentScopesForUser(_: UserIdResolvable) {
     return this.token.scope;
@@ -34,26 +37,38 @@ class MacroGraphAuthProvider implements AuthProvider {
     };
   }
 
+  async addUser(
+    user: UserIdResolvable
+  ) {
+    const res = await fetch("https://api.twitch.tv/helix/users", {
+      method: "GET",
+      headers: {'Authorization': `Bearer ${this.token.accessToken}`}
+    })
+
+    const userId = (await res.json()).data[0].id
+    this.token.userId = userId;
+  }
+
   async getAnyAccessToken(
     user?: UserIdResolvable | undefined
-  ): Promise<AccessTokenMaybeWithUserId> {
+  ): Promise<AccessTokenWithUserId> {
     return {
-      ...this.token,
-      obtainmentTimestamp: Date.now(),
-      userId: user ? extractUserId(user) : undefined,
+      ...this.token
     };
   }
 
   async refreshAccessTokenForUser(
     userId: UserIdResolvable
   ): Promise<AccessTokenWithUserId> {
+    console.log("running");
     const refreshToken = this.token.refreshToken;
     if (refreshToken === null) throw new Error("Refresh token is null!");
 
     const res = await fetch("https://macrograph.brendonovich.dev/auth/twitch", {
       method: "POST",
-      body: new URLSearchParams({
-        refreshToken,
+      headers: { 'content-type': "application/json" },
+      body: JSON.stringify({
+        refreshToken
       }),
     });
 
@@ -65,18 +80,22 @@ class MacroGraphAuthProvider implements AuthProvider {
       accessToken: data.access_token,
       refreshToken: data.refresh_token || null,
       scope: data.scope ?? [],
-      expiresIn: 5 ?? null,
+      expiresIn: data.expires_in ?? null,
       obtainmentTimestamp: Date.now(),
-      userId: extractUserId(userId),
+      userId: this.token.userId,
     };
   }
 }
+
+
 
 const SCHEMA = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
   scope: z.array(z.string()),
   expiresIn: z.number(),
+  obtainmentTimestamp: z.number(),
+  userId: z.string(),
 });
 
 const { accessToken, setAccessToken, authProvider } = createRoot(() => {
