@@ -1,31 +1,26 @@
 import { ApiClient } from "@twurple/api";
 import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
-import { accessToken, authProvider } from "./auth";
+import { authProvider } from "./auth";
 import pkg from "./pkg";
 import { None, types, Maybe } from "@macrograph/core";
 
 export const { helix, user } = createRoot(() => {
-  const helix = createMemo(
-    () => authProvider().map((p) => new ApiClient({ authProvider: p })),
-    None
-  );
+  const helix = new ApiClient({ authProvider });
 
   const getUser = () =>
-    accessToken()
-      .zip(helix())
-      .andThenAsync(([token, helix]) =>
-        helix.getTokenInfo().then(({ userId, userName }) =>
-          Maybe(
-            userId !== null && userName !== null
-              ? {
-                  id: userId,
-                  name: userName,
-                  token,
-                }
-              : null
-          )
+    authProvider.token.andThenAsync((token) =>
+      helix.getTokenInfo().then(({ userId, userName }) =>
+        Maybe(
+          userId !== null && userName !== null
+            ? {
+                id: userId,
+                name: userName,
+                token,
+              }
+            : null
         )
-      );
+      )
+    );
 
   const [user, setUser] =
     createSignal<Awaited<ReturnType<typeof getUser>>>(None);
@@ -37,15 +32,6 @@ export const { helix, user } = createRoot(() => {
     user,
   };
 });
-
-const unwrapApi = () => {
-  const [h, u] = helix().zip(user()).unwrap();
-
-  return {
-    helix: h,
-    user: u,
-  };
-};
 
 pkg.createNonEventSchema({
   name: "Ban User",
@@ -68,9 +54,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { helix, user } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.banUser(user.id, user.id, {
+    helix.moderation.banUser(u.id, u.id, {
       user: ctx.getInput("userId"),
       duration: ctx.getInput("duration"),
       reason: ctx.getInput("reason"),
@@ -89,9 +75,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.unbanUser(user.id, user.id, ctx.getInput("userId"));
+    helix.moderation.unbanUser(u.id, u.id, ctx.getInput("userId"));
   },
 });
 
@@ -106,9 +92,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.addModerator(user.id, ctx.getInput("userId"));
+    helix.moderation.addModerator(u.id, ctx.getInput("userId"));
   },
 });
 
@@ -123,9 +109,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.removeModerator(user.id, ctx.getInput("userId"));
+    helix.moderation.removeModerator(u.id, ctx.getInput("userId"));
   },
 });
 
@@ -140,13 +126,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.deleteChatMessages(
-      user.id,
-      user.id,
-      ctx.getInput("messageId")
-    );
+    helix.moderation.deleteChatMessages(u.id, u.id, ctx.getInput("messageId"));
   },
 });
 
@@ -181,9 +163,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    let data = await helix.channels.updateChannelInfo(user.id, {
+    await helix.channels.updateChannelInfo(u.id, {
       gameId: ctx.getInput("gameId"),
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
@@ -224,9 +206,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    let data = await helix.channels.updateChannelInfo(user.id, {
+    await helix.channels.updateChannelInfo(u.id, {
       gameId: ctx.getInput("gameId"),
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
@@ -247,10 +229,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let clipId = await helix.clips.createClip({
-      channel: user.id,
+      channel: u.id,
     });
 
     ctx.setOutput("clipId", clipId);
@@ -298,10 +280,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.subscriptions.getSubscriptionForUser(
-      user.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -333,11 +315,11 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.channels.getChannelFollowers(
-      user.id,
-      user.id,
+      u.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -361,10 +343,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.channels.checkVipForUser(
-      user.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -388,10 +370,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.moderation.checkUserMod(
-      user.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -540,10 +522,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     try {
-      let data = await helix.channelPoints.createCustomReward(user.id, {
+      let data = await helix.channelPoints.createCustomReward(u.id, {
         title: ctx.getInput("title"),
         cost: ctx.getInput("cost"),
         prompt: ctx.getInput("prompt"),
@@ -735,10 +717,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
     try {
       let data = await helix.channelPoints.updateCustomReward(
-        user.id,
+        u.id,
         ctx.getInput("id"),
         {
           title: ctx.getInput("title"),
@@ -868,10 +850,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
     try {
       let data = await helix.channelPoints.updateRedemptionStatusByIds(
-        user.id,
+        u.id,
         ctx.getInput("redemptionId"),
         ctx.getInput("rewardId"),
         ctx.getInput("cancel") ? "FULFILLED" : "CANCELED"
@@ -991,9 +973,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
     let rewards = await helix.channelPoints.getCustomRewards(
-      user.id,
+      u.id,
       ctx.getInput("manageableOnly")
     );
     const data = rewards.find(
@@ -1077,7 +1059,6 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
     let data = await helix.users.getUserById(ctx.getInput("userId"));
     ctx.setOutput("userId", data?.id);
     ctx.setOutput("userLogin", data?.name);
@@ -1102,8 +1083,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
-    helix.channelPoints.deleteCustomReward(user.id, ctx.getInput("id"));
+    const u = user().unwrap();
+    helix.channelPoints.deleteCustomReward(u.id, ctx.getInput("id"));
   },
 });
 
@@ -1122,9 +1103,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       followerOnlyModeEnabled: ctx.getInput("enabled"),
       followerOnlyModeDelay: ctx.getInput("delay"),
     });
@@ -1146,9 +1127,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       slowModeEnabled: ctx.getInput("enabled"),
       slowModeDelay: ctx.getInput("delay"),
     });
@@ -1165,9 +1146,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       subscriberOnlyModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -1183,9 +1164,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       uniqueChatModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -1202,9 +1183,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.shoutoutUser(user.id, ctx.getInput("toId"), user.id);
+    helix.chat.shoutoutUser(u.id, ctx.getInput("toId"), u.id);
   },
 });
 
@@ -1219,8 +1200,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.sendAnnouncement(user.id, user.id, ctx.getInput("announcement"));
+    helix.chat.sendAnnouncement(u.id, u.id, ctx.getInput("announcement"));
   },
 });
