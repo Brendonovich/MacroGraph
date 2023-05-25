@@ -15,10 +15,8 @@ export const { client, userId, setUserId } = createRoot(() => {
 
   createEffect(() => {
     userId()
-      .map((userId) => {
-        localStorage.setItem(HELIX_USER_ID, userId);
-      })
-      .unwrapOrElse(() => localStorage.removeItem(HELIX_USER_ID));
+      .map((userId) => (localStorage.setItem(HELIX_USER_ID, userId), true))
+      .unwrapOrElse(() => (localStorage.removeItem(HELIX_USER_ID), false));
   });
 
   return {

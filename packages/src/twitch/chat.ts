@@ -22,16 +22,24 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
       const user = readUserId();
 
       user
-        .map((userId) => localStorage.setItem(CHAT_READ_USER_ID, userId))
-        .unwrapOrElse(() => localStorage.removeItem(CHAT_READ_USER_ID));
+        .map(
+          (userId) => (localStorage.setItem(CHAT_READ_USER_ID, userId), true)
+        )
+        .unwrapOrElse(
+          () => (localStorage.removeItem(CHAT_READ_USER_ID), false)
+        );
     });
 
     createEffect(() => {
       const user = writeUserId();
 
       user
-        .map((userId) => localStorage.setItem(CHAT_WRITE_USER_ID, userId))
-        .unwrapOrElse(() => localStorage.removeItem(CHAT_WRITE_USER_ID));
+        .map(
+          (userId) => (localStorage.setItem(CHAT_WRITE_USER_ID, userId), true)
+        )
+        .unwrapOrElse(
+          () => (localStorage.removeItem(CHAT_WRITE_USER_ID), false)
+        );
     });
 
     createEffect(() => {
