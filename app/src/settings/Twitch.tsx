@@ -1,22 +1,13 @@
 import { createSignal, For, Match, Switch } from "solid-js";
 import { twitch } from "@macrograph/packages";
+import { Some } from "@macrograph/core";
 import { Button } from "./ui";
-import { Maybe, None, Some } from "@macrograph/core";
 import { rspc } from "~/rspc";
-import { authProvider } from "~/../../packages/src/twitch/auth";
-import {
-  account,
-  setAccount,
-  chatChannel,
-  setChannel,
-  client,
-} from "@macrograph/packages/src/twitch/chat";
-import { api, setApi } from "~/../../packages/src/twitch/helix";
 
 export default () => {
   const [loggingIn, setLoggingIn] = createSignal(false);
 
-  const tokens = () => authProvider.tokens;
+  const { helix, chat, auth } = twitch;
 
   return (
     <>
@@ -24,57 +15,56 @@ export default () => {
         <thead>
           <tr>
             <th>Account</th>
-            <th>Api</th>
+            <th>Helix Api</th>
             <th>Chat Account</th>
             <th>Chat Channel</th>
           </tr>
         </thead>
         <tbody>
-          <For each={Object.keys(tokens())}>
-            {(userId) => (
+          <For each={Object.values(twitch.auth.tokens)}>
+            {(token) => (
               <tr>
-                <td>{tokens()[userId]?.userName}</td>
+                <td>{token.userName}</td>
                 <td>
                   <input
-                    type="checkbox"
-                    id="api"
-                    checked={api() === userId}
-                    onclick={(r) => {
-                      if (r.target.checked) {
-                        client().map((f) => f.disconnect());
-                        setApi(userId);
-                        localStorage.setItem("api", userId);
-                      }
+                    type="radio"
+                    id="helix"
+                    checked={twitch.helix
+                      .userId()
+                      .map((id) => id === token.userId)
+                      .unwrapOr(false)}
+                    onChange={(r) => {
+                      if (r.target.checked) helix.setUserId(Some(token.userId));
                     }}
-                  ></input>
+                  />
                 </td>
                 <td>
                   <input
-                    type="checkbox"
+                    type="radio"
                     id="Chat Read"
-                    checked={account() === userId}
-                    onclick={(r) => {
-                      if (r.target.checked) {
-                        client().map((f) => f.disconnect());
-                        setAccount(userId);
-                        localStorage.setItem("read", userId);
-                      }
+                    checked={chat
+                      .readUserId()
+                      .map((u) => u === token.userId)
+                      .unwrapOr(false)}
+                    onChange={(r) => {
+                      if (r.target.checked)
+                        chat.setReadUserId(Some(token.userId));
                     }}
-                  ></input>
+                  />
                 </td>
                 <td>
                   <input
-                    type="checkbox"
+                    type="radio"
                     id="Chat Write"
-                    checked={chatChannel() === userId}
-                    onclick={(r) => {
-                      if (r.target.checked) {
-                        client().map((f) => f.disconnect());
-                        setChannel(userId);
-                        localStorage.setItem("write", userId);
-                      }
+                    checked={chat
+                      .writeUserId()
+                      .map((u) => u === token.userId)
+                      .unwrapOr(false)}
+                    onChange={(r) => {
+                      if (r.target.checked)
+                        chat.setWriteUserId(Some(token.userId));
                     }}
-                  ></input>
+                  />
                 </td>
               </tr>
             )}
@@ -96,7 +86,7 @@ export default () => {
             rspc.createSubscription(() => ["auth.twitch"], {
               onData: (m) => {
                 if (typeof m === "object" && "Received" in m) {
-                  twitch.auth.authProvider.addUser({
+                  auth.addUser({
                     ...m.Received,
                     obtainmentTimestamp: Date.now(),
                     userId: "",

@@ -1,48 +1,30 @@
 import { ApiClient, HelixBroadcasterType, HelixUserType } from "@twurple/api";
-import { createRoot, createEffect, createSignal } from "solid-js";
-import { authProvider } from "./auth";
+import { createEffect, createRoot, createSignal } from "solid-js";
+import { auth } from "./auth";
 import pkg from "./pkg";
-import {
-  None,
-  t,
-  Maybe,
-  InferEnum,
-  InferStruct,
-  Option,
-} from "@macrograph/core";
+import { t, Maybe, InferEnum } from "@macrograph/core";
 
-export const { helix, user, api, setApi } = createRoot(() => {
-  const helix = new ApiClient({ authProvider });
+const HELIX_USER_ID = "helixUserId";
 
-  const [api, setApi] = createSignal<string>(localStorage.getItem("api") || "");
+export const { client, userId, setUserId } = createRoot(() => {
+  const client = new ApiClient({ authProvider: auth });
 
-  const getUser = () =>
-    Maybe(authProvider.tokens[api()]).andThenAsync((token) =>
-      helix.getTokenInfo().then(({ userId, userName }) =>
-        Maybe(
-          userId !== null && userName !== null
-            ? {
-                id: userId,
-                name: userName,
-                token,
-              }
-            : null
-        )
-      )
-    );
+  const [userId, setUserId] = createSignal(
+    Maybe(localStorage.getItem(HELIX_USER_ID))
+  );
 
-  const [user, setUser] =
-    createSignal<Awaited<ReturnType<typeof getUser>>>(None);
-
-  createEffect(async () => {
-    getUser().then(setUser);
+  createEffect(() => {
+    userId()
+      .map((userId) => {
+        localStorage.setItem(HELIX_USER_ID, userId);
+      })
+      .unwrapOrElse(() => localStorage.removeItem(HELIX_USER_ID));
   });
 
   return {
-    helix,
-    user,
-    api,
-    setApi,
+    client,
+    userId,
+    setUserId,
   };
 });
 
@@ -67,9 +49,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.moderation.banUser(u.id, u.id, {
+    client.moderation.banUser(user, user, {
       user: ctx.getInput("userId"),
       duration: ctx.getInput("duration"),
       reason: ctx.getInput("reason"),
@@ -88,9 +70,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.moderation.unbanUser(u.id, u.id, ctx.getInput("userId"));
+    return client.moderation.unbanUser(user, user, ctx.getInput("userId"));
   },
 });
 
@@ -105,9 +87,10 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
-
-    helix.moderation.addModerator(u.id, ctx.getInput("userId"));
+    return client.moderation.addModerator(
+      userId().unwrap(),
+      ctx.getInput("userId")
+    );
   },
 });
 
@@ -122,9 +105,10 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
-
-    helix.moderation.removeModerator(u.id, ctx.getInput("userId"));
+    return client.moderation.removeModerator(
+      userId().unwrap(),
+      ctx.getInput("userId")
+    );
   },
 });
 
@@ -139,9 +123,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.moderation.deleteChatMessages(u.id, u.id, ctx.getInput("messageId"));
+    client.moderation.deleteChatMessages(user, user, ctx.getInput("messageId"));
   },
 });
 
@@ -175,27 +159,14 @@ pkg.createNonEventSchema({
       type: t.list(t.string()),
     });
   },
-  async run({ ctx }) {
-    const u = user().unwrap();
-    console.log(u.name);
-
-    await helix.channels.updateChannelInfo(u.id, {
+  run({ ctx }) {
+    return client.channels.updateChannelInfo(userId().unwrap(), {
       gameId: ctx.getInput("gameId"),
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
       delay: ctx.getInput("delay"),
       tags: ctx.getInput("tags"),
     });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "test",
-  variant: "Exec",
-  generateIO: (io) => {},
-  async run({ ctx }) {
-    let data = await helix.getTokenInfo();
-    console.log(data);
   },
 });
 
@@ -210,15 +181,21 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
-
-    let clipId = await helix.clips.createClip({
-      channel: u.id,
+    let clipId = await client.clips.createClip({
+      channel: userId().unwrap(),
     });
 
     ctx.setOutput("clipId", clipId);
   },
 });
+
+const UserSubscription = pkg.createStruct("User Subscription", (s) => ({
+  tier: s.field("Tier", t.string()),
+  gifted: s.field("Gifted", t.bool()),
+  gifterName: s.field("Gifter Name", t.option(t.string())),
+  gifterDisplayName: s.field("Gifter Display Name", t.option(t.string())),
+  gifterId: s.field("Gifter ID", t.option(t.string())),
+}));
 
 pkg.createNonEventSchema({
   name: "Check User Subscription",
@@ -230,53 +207,28 @@ pkg.createNonEventSchema({
       type: t.string(),
     });
     io.dataOutput({
-      name: "Is Subscribed",
-      id: "subbed",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Tier",
-      id: "tier",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Gifted",
-      id: "gifted",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Gifter Name",
-      id: "gifterName",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Gifter Display Name",
-      id: "gifterDisplayName",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Gifter ID",
-      id: "gifterId",
-      type: t.int(),
+      id: "out",
+      type: t.option(t.struct(UserSubscription)),
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
-
-    let data = await helix.subscriptions.getSubscriptionForUser(
-      u.id,
+    let data = await client.subscriptions.getSubscriptionForUser(
+      userId().unwrap(),
       ctx.getInput("userId")
     );
 
-    ctx.setOutput("subbed", data !== null);
-
-    if (!data) return;
-
-    ctx.setOutput("tier", data.tier);
-    ctx.setOutput("gifted", data.isGift);
-    ctx.setOutput("gifterName", data.gifterName);
-    ctx.setOutput("gifterDisplayName", data.gifterDisplayName);
-    ctx.setOutput("gifterId", data.gifterId);
+    ctx.setOutput(
+      "out",
+      Maybe(data).map((data) =>
+        UserSubscription.create({
+          tier: data.tier,
+          gifted: data.isGift,
+          gifterName: Maybe(data.gifterName),
+          gifterDisplayName: Maybe(data.gifterDisplayName),
+          gifterId: Maybe(data.gifterId),
+        })
+      )
+    );
   },
 });
 
@@ -296,11 +248,11 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    let data = await helix.channels.getChannelFollowers(
-      u.id,
-      u.id,
+    let data = await client.channels.getChannelFollowers(
+      user,
+      user,
       ctx.getInput("userId")
     );
 
@@ -324,10 +276,8 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
-
-    let data = await helix.channels.checkVipForUser(
-      u.id,
+    let data = await client.channels.checkVipForUser(
+      userId().unwrap(),
       ctx.getInput("userId")
     );
 
@@ -351,10 +301,8 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
-
-    let data = await helix.moderation.checkUserMod(
-      u.id,
+    let data = await client.moderation.checkUserMod(
+      userId().unwrap(),
       ctx.getInput("userId")
     );
 
@@ -416,134 +364,52 @@ pkg.createNonEventSchema({
       id: "autoFulfill",
       type: t.bool(),
     });
+
     io.dataOutput({
-      name: "Success",
-      id: "success",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Error Message",
-      id: "errorMessage",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Title",
-      id: "rewardTitle",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Prompt",
-      id: "rewardPrompt",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Cost",
-      id: "rewardCost",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Background Color",
-      id: "backgroundColor",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Enabled",
-      id: "enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "User Input Required",
-      id: "userInputRequired",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per Stream",
-      id: "maxRedemptionsPerStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per User Per Stream",
-      id: "maxRedemptionsPerUserPerStream",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Global Cooldown",
-      id: "globalCooldown",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Paused",
-      id: "paused",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "in Stock",
-      id: "stock",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Skip Request Queue",
-      id: "skipRequestQueue",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Redemptions Current Stream",
-      id: "redemptionsCurrentStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Cooldown Expires in",
-      id: "cooldownExpire",
-      type: t.string(),
+      id: "out",
+      type: t.struct(Reward),
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    try {
-      let data = await helix.channelPoints.createCustomReward(u.id, {
-        title: ctx.getInput("title"),
-        cost: ctx.getInput("cost"),
-        prompt: ctx.getInput("prompt"),
-        isEnabled: ctx.getInput("isEnabled"),
-        backgroundColor: ctx.getInput("backgroundColor"),
-        userInputRequired: ctx.getInput("userInputRequired"),
-        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
-        maxRedemptionsPerUserPerStream: ctx.getInput(
-          "maxRedemptionsPerUserPerStream"
+    let data = await client.channelPoints.createCustomReward(user, {
+      title: ctx.getInput("title"),
+      cost: ctx.getInput("cost"),
+      prompt: ctx.getInput("prompt"),
+      isEnabled: ctx.getInput("isEnabled"),
+      backgroundColor: ctx.getInput("backgroundColor"),
+      userInputRequired: ctx.getInput("userInputRequired"),
+      maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+      maxRedemptionsPerUserPerStream: ctx.getInput(
+        "maxRedemptionsPerUserPerStream"
+      ),
+      globalCooldown: ctx.getInput("globalCooldown"),
+      autoFulfill: ctx.getInput("autoFulfill"),
+    });
+
+    ctx.setOutput(
+      "out",
+      Reward.create({
+        id: data.id,
+        title: data.title,
+        prompt: data.prompt,
+        cost: data.cost,
+        bgColor: data.backgroundColor,
+        enabled: data.isEnabled,
+        userInputRequired: data.userInputRequired,
+        maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
+        maxRedemptionsPerUserPerStream: Maybe(
+          data.maxRedemptionsPerUserPerStream
         ),
-        globalCooldown: ctx.getInput("globalCooldown"),
-        autoFulfill: ctx.getInput("autoFulfill"),
-      });
-      ctx.setOutput("success", true);
-      ctx.setOutput("errorMessage", "");
-      ctx.setOutput("rewardId", data?.id);
-      ctx.setOutput("rewardTitle", data?.title);
-      ctx.setOutput("rewardPrompt", data?.prompt);
-      ctx.setOutput("rewardCost", data?.cost);
-      ctx.setOutput("backgroundColor", data?.backgroundColor);
-      ctx.setOutput("enabled", data?.isEnabled);
-      ctx.setOutput("userInputRequired", data?.userInputRequired);
-      ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
-      ctx.setOutput(
-        "maxRedemptionsPerUserPerStream",
-        data?.maxRedemptionsPerUserPerStream
-      );
-      ctx.setOutput("globalCooldown", data?.globalCooldown);
-      ctx.setOutput("paused", data?.isPaused);
-      ctx.setOutput("stock", data?.isInStock);
-      ctx.setOutput("skipRequestQueue", data?.autoFulfill);
-      ctx.setOutput("redemptionsCurrentStream", data?.redemptionsThisStream);
-      ctx.setOutput("cooldownExpire", JSON.stringify(data?.cooldownExpiryDate));
-    } catch (error: any) {
-      ctx.setOutput("success", false);
-      ctx.setOutput("errorMessage", (JSON.parse(error.body) as any).message);
-    }
+        globalCooldown: Maybe(data.globalCooldown),
+        paused: data.isPaused,
+        inStock: data.isInStock,
+        skipRequestQueue: data.autoFulfill,
+        redemptionsThisStream: Maybe(data.redemptionsThisStream),
+        cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
+      })
+    );
   },
 });
 
@@ -611,137 +477,54 @@ pkg.createNonEventSchema({
       id: "paused",
       type: t.bool(),
     });
+
     io.dataOutput({
-      name: "Success",
-      id: "success",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Error Message",
-      id: "errorMessage",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Title",
-      id: "rewardTitle",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Prompt",
-      id: "rewardPrompt",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Cost",
-      id: "rewardCost",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Background Color",
-      id: "backgroundColor",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Enabled",
-      id: "enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "User Input Required",
-      id: "userInputRequired",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per Stream",
-      id: "maxRedemptionsPerStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per User Per Stream",
-      id: "maxRedemptionsPerUserPerStream",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Global Cooldown",
-      id: "globalCooldown",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Paused",
-      id: "paused",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "in Stock",
-      id: "stock",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Skip Request Queue",
-      id: "skipRequestQueue",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Redemptions Current Stream",
-      id: "redemptionsCurrentStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Cooldown Expires in",
-      id: "cooldownExpire",
-      type: t.string(),
+      id: "out",
+      type: t.struct(Reward),
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
-    try {
-      let data = await helix.channelPoints.updateCustomReward(
-        u.id,
-        ctx.getInput("id"),
-        {
-          title: ctx.getInput("title"),
-          cost: ctx.getInput("cost"),
-          prompt: ctx.getInput("prompt"),
-          isEnabled: ctx.getInput("isEnabled"),
-          backgroundColor: ctx.getInput("backgroundColor"),
-          userInputRequired: ctx.getInput("userInputRequired"),
-          maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
-          maxRedemptionsPerUserPerStream: ctx.getInput(
-            "maxRedemptionsPerUserPerStream"
-          ),
-          isPaused: ctx.getInput("paused"),
-          globalCooldown: ctx.getInput("globalCooldown"),
-        }
-      );
-      ctx.setOutput("success", true);
-      ctx.setOutput("errorMessage", "");
-      ctx.setOutput("rewardId", data?.id);
-      ctx.setOutput("rewardTitle", data?.title);
-      ctx.setOutput("rewardPrompt", data?.prompt);
-      ctx.setOutput("rewardCost", data?.cost);
-      ctx.setOutput("backgroundColor", data?.backgroundColor);
-      ctx.setOutput("enabled", data?.isEnabled);
-      ctx.setOutput("userInputRequired", data?.userInputRequired);
-      ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
-      ctx.setOutput(
-        "maxRedemptionsPerUserPerStream",
-        data?.maxRedemptionsPerUserPerStream
-      );
-      ctx.setOutput("globalCooldown", data?.globalCooldown);
-      ctx.setOutput("paused", data?.isPaused);
-      ctx.setOutput("stock", data?.isInStock);
-      ctx.setOutput("skipRequestQueue", data?.autoFulfill);
-      ctx.setOutput("redemptionsCurrentStream", data?.redemptionsThisStream);
-      ctx.setOutput("cooldownExpire", JSON.stringify(data?.cooldownExpiryDate));
-    } catch (error: any) {
-      ctx.setOutput("success", false);
-      ctx.setOutput("errorMessage", JSON.parse(error.body).message);
-    }
+    const data = await client.channelPoints.updateCustomReward(
+      userId().unwrap(),
+      ctx.getInput("id"),
+      {
+        title: ctx.getInput("title"),
+        cost: ctx.getInput("cost"),
+        prompt: ctx.getInput("prompt"),
+        isEnabled: ctx.getInput("isEnabled"),
+        backgroundColor: ctx.getInput("backgroundColor"),
+        userInputRequired: ctx.getInput("userInputRequired"),
+        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+        maxRedemptionsPerUserPerStream: ctx.getInput(
+          "maxRedemptionsPerUserPerStream"
+        ),
+        isPaused: ctx.getInput("paused"),
+        globalCooldown: ctx.getInput("globalCooldown"),
+      }
+    );
+
+    ctx.setOutput(
+      "out",
+      Reward.create({
+        id: data.id,
+        title: data.title,
+        prompt: data.prompt,
+        cost: data.cost,
+        bgColor: data.backgroundColor,
+        enabled: data.isEnabled,
+        userInputRequired: data.userInputRequired,
+        maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
+        maxRedemptionsPerUserPerStream: Maybe(
+          data.maxRedemptionsPerUserPerStream
+        ),
+        globalCooldown: Maybe(data.globalCooldown),
+        paused: data.isPaused,
+        inStock: data.isInStock,
+        skipRequestQueue: data.autoFulfill,
+        redemptionsThisStream: Maybe(data.redemptionsThisStream),
+        cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
+      })
+    );
   },
 });
 
@@ -785,11 +568,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
     const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
 
-    let data = await helix.channelPoints.updateRedemptionStatusByIds(
-      u.id,
+    let data = await client.channelPoints.updateRedemptionStatusByIds(
+      userId().unwrap(),
       ctx.getInput("rewardId"),
       [ctx.getInput("redemptionId")],
       status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
@@ -834,15 +616,15 @@ pkg.createNonEventSchema({
       id: "manageableOnly",
       type: t.bool(),
     });
+
     io.dataOutput({
       id: "out",
       type: t.option(t.struct(Reward)),
     });
   },
   async run({ ctx }) {
-    const u = user().unwrap();
-    let rewards = await helix.channelPoints.getCustomRewards(
-      u.id,
+    let rewards = await client.channelPoints.getCustomRewards(
+      userId().unwrap(),
       ctx.getInput("manageableOnly")
     );
 
@@ -850,27 +632,29 @@ pkg.createNonEventSchema({
       (reward) => reward.title === ctx.getInput("title")
     );
 
-    ctx.setOutput<Option<InferStruct<typeof Reward>>>(
+    ctx.setOutput(
       "out",
-      Maybe(data).map((data) => ({
-        id: data.id,
-        title: data.title,
-        prompt: data.prompt,
-        cost: data.cost,
-        bgColor: data.backgroundColor,
-        enabled: data.isEnabled,
-        userInputRequired: data.userInputRequired,
-        maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
-        maxRedemptionsPerUserPerStream: Maybe(
-          data.maxRedemptionsPerUserPerStream
-        ),
-        globalCooldown: Maybe(data.globalCooldown),
-        paused: data.isPaused,
-        inStock: data.isInStock,
-        skipRequestQueue: data.autoFulfill,
-        redemptionsThisStream: Maybe(data.redemptionsThisStream),
-        cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
-      }))
+      Maybe(data).map((data) =>
+        Reward.create({
+          id: data.id,
+          title: data.title,
+          prompt: data.prompt,
+          cost: data.cost,
+          bgColor: data.backgroundColor,
+          enabled: data.isEnabled,
+          userInputRequired: data.userInputRequired,
+          maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
+          maxRedemptionsPerUserPerStream: Maybe(
+            data.maxRedemptionsPerUserPerStream
+          ),
+          globalCooldown: Maybe(data.globalCooldown),
+          paused: data.isPaused,
+          inStock: data.isInStock,
+          skipRequestQueue: data.autoFulfill,
+          redemptionsThisStream: Maybe(data.redemptionsThisStream),
+          cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
+        })
+      )
     );
   },
 });
@@ -931,7 +715,7 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const data = await helix.users.getUserById(ctx.getInput("userId"));
+    const data = await client.users.getUserById(ctx.getInput("userId"));
 
     ctx.setOutput(
       "out",
@@ -963,8 +747,10 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
-    return helix.channelPoints.deleteCustomReward(u.id, ctx.getInput("id"));
+    return client.channelPoints.deleteCustomReward(
+      userId().unwrap(),
+      ctx.getInput("id")
+    );
   },
 });
 
@@ -982,10 +768,10 @@ pkg.createNonEventSchema({
       type: t.bool(),
     });
   },
-  run({ ctx }) {
-    const u = user().unwrap();
+  async run({ ctx }) {
+    const user = userId().unwrap();
 
-    helix.chat.updateSettings(u.id, u.id, {
+    await client.chat.updateSettings(user, user, {
       followerOnlyModeEnabled: ctx.getInput("enabled"),
       followerOnlyModeDelay: ctx.getInput("delay"),
     });
@@ -1007,9 +793,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.chat.updateSettings(u.id, u.id, {
+    client.chat.updateSettings(user, user, {
       slowModeEnabled: ctx.getInput("enabled"),
       slowModeDelay: ctx.getInput("delay"),
     });
@@ -1026,9 +812,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.chat.updateSettings(u.id, u.id, {
+    client.chat.updateSettings(user, user, {
       subscriberOnlyModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -1044,9 +830,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.chat.updateSettings(u.id, u.id, {
+    client.chat.updateSettings(user, user, {
       uniqueChatModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -1063,9 +849,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.chat.shoutoutUser(u.id, ctx.getInput("toId"), u.id);
+    client.chat.shoutoutUser(user, ctx.getInput("toId"), user);
   },
 });
 
@@ -1080,8 +866,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const u = user().unwrap();
+    const user = userId().unwrap();
 
-    helix.chat.sendAnnouncement(u.id, u.id, ctx.getInput("announcement"));
+    client.chat.sendAnnouncement(user, user, ctx.getInput("announcement"));
   },
 });

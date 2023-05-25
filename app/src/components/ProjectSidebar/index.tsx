@@ -23,7 +23,7 @@ export const GraphList = (props: Props) => {
           class="text-xl font-bold px-1"
           onClick={async () => {
             let importData = await navigator.clipboard.readText();
-            let graph = Graph.deserialize(
+            let graph = await Graph.deserialize(
               core.project,
               JSON.parse(atob(importData))
             );

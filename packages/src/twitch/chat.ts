@@ -1,28 +1,48 @@
 import { createRoot, createEffect, createSignal } from "solid-js";
 import tmi, { Client } from "tmi.js";
 import pkg from "./pkg";
-import { t, Option, None, Some, Maybe } from "@macrograph/core";
-import { user } from "./helix";
-import { authProvider } from "./auth";
-import { UserIdResolvable } from "@twurple/api/lib";
+import { t, Option, None, Maybe } from "@macrograph/core";
+import { auth } from "./auth";
 
-const { client, account, chatChannel, setAccount, setChannel } = createRoot(
-  () => {
+const CHAT_READ_USER_ID = "chatReadUserId";
+const CHAT_WRITE_USER_ID = "chatWriteUserId";
+
+const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
+  createRoot(() => {
     const [client, setClient] = createSignal<Option<Client>>(None);
-    const [account, setAccount] = createSignal<string>(
-      localStorage.getItem("read") || ""
+
+    const [readUserId, setReadUserId] = createSignal(
+      Maybe(localStorage.getItem(CHAT_READ_USER_ID))
     );
-    const [chatChannel, setChannel] = createSignal<string>(
-      localStorage.getItem("write") || ""
+    const [writeUserId, setWriteUserId] = createSignal(
+      Maybe(localStorage.getItem(CHAT_WRITE_USER_ID))
     );
 
     createEffect(() => {
-      const client = user().map((user) => {
+      const user = readUserId();
+
+      user
+        .map((userId) => localStorage.setItem(CHAT_READ_USER_ID, userId))
+        .unwrapOrElse(() => localStorage.removeItem(CHAT_READ_USER_ID));
+    });
+
+    createEffect(() => {
+      const user = writeUserId();
+
+      user
+        .map((userId) => localStorage.setItem(CHAT_WRITE_USER_ID, userId))
+        .unwrapOrElse(() => localStorage.removeItem(CHAT_WRITE_USER_ID));
+    });
+
+    createEffect(() => {
+      const client = readUserId().map((user) => {
+        const token = Maybe(auth.tokens[user]).expect("Token not found!");
+
         const client = tmi.Client({
-          channels: [authProvider.tokens[chatChannel()]?.userName],
+          channels: [token.userName],
           identity: {
-            username: authProvider.tokens[account()]?.userName,
-            password: authProvider.tokens[account()]?.accessToken,
+            username: token.userName,
+            password: token.accessToken,
           },
         });
 
@@ -82,11 +102,16 @@ const { client, account, chatChannel, setAccount, setChannel } = createRoot(
       return () => {};
     });
 
-    return { client, account, chatChannel, setAccount, setChannel };
-  }
-);
+    return {
+      client,
+      readUserId,
+      writeUserId,
+      setReadUserId,
+      setWriteUserId,
+    };
+  });
 
-export { client, account, chatChannel, setAccount, setChannel };
+export { client, readUserId, writeUserId, setReadUserId, setWriteUserId };
 
 pkg.createNonEventSchema({
   name: "Send Chat Message",
@@ -99,12 +124,14 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    client().map((c) =>
-      c.say(
-        authProvider.tokens[chatChannel()]?.userName,
+    client()
+      .expect("No Twitch Chat client available!")
+      .say(
+        Maybe(
+          auth.tokens[writeUserId().expect("Chat write user not chosen!")]
+        ).expect("Write user token not found!").userName,
         ctx.getInput("message")
-      )
-    );
+      );
   },
 });
 
@@ -281,14 +308,13 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    const u = user().unwrap();
     if (data.self) return;
+
     ctx.setOutput("username", data.tags.username);
     ctx.setOutput("displayName", data.tags["display-name"]);
     ctx.setOutput("userId", data.tags["user-id"]);
     ctx.setOutput("message", data.message);
     ctx.setOutput("messageId", data.tags.id);
-    ctx.setOutput("broadcaster", data.tags["user-id"] == u.id);
     ctx.setOutput("mod", data.tags.mod);
     ctx.setOutput("sub", data.tags.subscriber);
     ctx.setOutput("vip", data.tags.vip);

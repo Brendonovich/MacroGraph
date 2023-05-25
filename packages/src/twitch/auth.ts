@@ -1,16 +1,8 @@
-import {
-  AccessToken,
-  AccessTokenMaybeWithUserId,
-  AccessTokenWithUserId,
-  AuthProvider,
-  RefreshingAuthProvider,
-} from "@twurple/auth";
-import { createEffect, createMemo, createSignal, createRoot } from "solid-js";
-import { Maybe, None, Option, Some } from "@macrograph/core";
+import { AccessTokenWithUserId, AuthProvider } from "@twurple/auth";
+import { Maybe, None, Some } from "@macrograph/core";
 import { extractUserId, UserIdResolvable } from "@twurple/api";
 import { z } from "zod";
 import { createMutable } from "solid-js/store";
-import { api } from "./helix";
 
 const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -31,6 +23,7 @@ class MacroGraphAuthProvider implements AuthProvider {
         return None;
       })
       .unwrapOr({});
+
     return createMutable(this);
   }
 
@@ -77,14 +70,10 @@ class MacroGraphAuthProvider implements AuthProvider {
   async getAnyAccessToken(
     userId?: UserIdResolvable
   ): Promise<AccessTokenWithUsernameAndId> {
-    let id = userId;
-    if (!userId) {
-      id = localStorage.getItem("api");
-    }
     return {
       ...Maybe(
         this.tokens[
-          Maybe(id)
+          Maybe(userId)
             .map(extractUserId)
             .expect("User Id not provided on any access token")
         ]
@@ -96,13 +85,12 @@ class MacroGraphAuthProvider implements AuthProvider {
     user: UserIdResolvable
   ): Promise<AccessTokenWithUsernameAndId> {
     const userId = extractUserId(user);
-    const { userName } = Maybe(this.tokens[userId]).expect(
+
+    const { userName, refreshToken } = Maybe(this.tokens[userId]).expect(
       "refreshAccessTokenForUser missing token"
     );
-    const { refreshToken } = Maybe(this.tokens[userId]).expect(
-      "refreshAccessTokenForUser missing token"
-    );
-    if (refreshToken === null) throw new Error("Refresh token is null!");
+
+    Maybe(refreshToken).expect("Refresh token is null!");
 
     const res = await fetch("https://macrograph.brendonovich.dev/auth/twitch", {
       method: "POST",
@@ -141,4 +129,4 @@ const SCHEMA = z.record(
   })
 );
 
-export const authProvider = new MacroGraphAuthProvider(clientId);
+export const auth = new MacroGraphAuthProvider(clientId);
