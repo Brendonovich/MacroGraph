@@ -10,44 +10,55 @@ import { Maybe, None, Option, Some } from "@macrograph/core";
 import { extractUserId, UserIdResolvable } from "@twurple/api";
 import { z } from "zod";
 import { createMutable } from "solid-js/store";
+import { api } from "./helix";
 
 const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
 
+export interface AccessTokenWithUsernameAndId extends AccessTokenWithUserId {
+  userName: string;
+}
+
 class MacroGraphAuthProvider implements AuthProvider {
-  token: Option<AccessTokenWithUserId>;
+  tokens: Record<string, AccessTokenWithUsernameAndId>;
 
   constructor(public clientId: string) {
-    this.token = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN)).map((j) =>
-      SCHEMA.parse(JSON.parse(j))
-    );
+    this.tokens = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN))
+      .andThen((j) => {
+        const data = SCHEMA.safeParse(JSON.parse(j));
+        if (data.success) return Some(data.data);
+        return None;
+      })
+      .unwrapOr({});
     return createMutable(this);
   }
 
-
-
-  getCurrentScopesForUser(_: UserIdResolvable) {
-    return this.token.map((t) => t.scope).unwrapOr([]);
+  getCurrentScopesForUser(userId: UserIdResolvable) {
+    const id = extractUserId(userId);
+    return this.tokens[id]?.scope ?? [];
   }
 
-  logOut() {
-    localStorage.removeItem(TWITCH_ACCCESS_TOKEN);
-    this.token = None;
+  logOut(userId: UserIdResolvable) {
+    const id = extractUserId(userId);
+    delete this.tokens[id];
+    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
   }
 
   async getAccessTokenForUser(
-    user: UserIdResolvable,
+    userId: UserIdResolvable,
     _?: string[] | undefined
   ) {
+    const id = extractUserId(userId);
     return {
-      ...this.token.expect("getAccessTokenForUser missing token"),
+      ...Maybe(this.tokens[id]).expect("getAccessTokenForUser missing token"),
       obtainmentTimestamp: Date.now(),
-      userId: extractUserId(user),
+      userId: id,
+      userName: this.tokens[id]?.userName,
     };
   }
 
-  async addUser(token: AccessTokenWithUserId) {
+  async addUser(token: AccessTokenWithUsernameAndId) {
     const res = await fetch("https://api.twitch.tv/helix/users", {
       method: "GET",
       headers: {
@@ -55,23 +66,40 @@ class MacroGraphAuthProvider implements AuthProvider {
         "Client-Id": clientId,
       },
     });
-
-    const userId = (await res.json()).data[0].id;
-    const preSome = { ...token, userId };
-    this.token = Some(preSome);
-    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(preSome));
+    const resData = await res.json();
+    const userId = resData.data[0].id;
+    const userName = resData.data[0].display_name;
+    const preSome = { ...token, userId, userName };
+    this.tokens[userId] = preSome;
+    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
   }
 
-  async getAnyAccessToken(): Promise<AccessTokenWithUserId> {
+  async getAnyAccessToken(
+    userId?: UserIdResolvable
+  ): Promise<AccessTokenWithUsernameAndId> {
+    let id = userId;
+    if (!userId) {
+      id = localStorage.getItem("api");
+    }
     return {
-      ...this.token.expect("getAnyAccessToken missing token"),
+      ...Maybe(
+        this.tokens[
+          Maybe(id)
+            .map(extractUserId)
+            .expect("User Id not provided on any access token")
+        ]
+      ).expect("getAnyAccessToken missing token"),
     };
   }
 
   async refreshAccessTokenForUser(
-    userId: UserIdResolvable
-  ): Promise<AccessTokenWithUserId> {
-    const { refreshToken } = this.token.expect(
+    user: UserIdResolvable
+  ): Promise<AccessTokenWithUsernameAndId> {
+    const userId = extractUserId(user);
+    const { userName } = Maybe(this.tokens[userId]).expect(
+      "refreshAccessTokenForUser missing token"
+    );
+    const { refreshToken } = Maybe(this.tokens[userId]).expect(
       "refreshAccessTokenForUser missing token"
     );
     if (refreshToken === null) throw new Error("Refresh token is null!");
@@ -85,29 +113,32 @@ class MacroGraphAuthProvider implements AuthProvider {
     });
 
     const data = await res.json();
-
-    let returnData = {
+    const returnData = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token || null,
       scope: data.scope ?? [],
       expiresIn: data.expires_in ?? null,
       obtainmentTimestamp: Date.now(),
-      userId: userId.toString(),
+      userId,
+      userName,
     };
-    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(returnData));
+    this.tokens[userId] = returnData;
+    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
     return returnData;
   }
 }
 
-
-
-const SCHEMA = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  scope: z.array(z.string()),
-  expiresIn: z.number(),
-  obtainmentTimestamp: z.number(),
-  userId: z.string(),
-});
+const SCHEMA = z.record(
+  z.string(),
+  z.object({
+    accessToken: z.string(),
+    refreshToken: z.string(),
+    scope: z.array(z.string()),
+    expiresIn: z.number(),
+    obtainmentTimestamp: z.number(),
+    userId: z.string(),
+    userName: z.string(),
+  })
+);
 
 export const authProvider = new MacroGraphAuthProvider(clientId);

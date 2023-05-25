@@ -1,26 +1,38 @@
 import { createRoot, createEffect, createSignal } from "solid-js";
 import tmi, { Client } from "tmi.js";
 import pkg from "./pkg";
-import { t, Option, None } from "@macrograph/core";
+import { t, Option, None, Some, Maybe } from "@macrograph/core";
 import { user } from "./helix";
+import { authProvider } from "./auth";
+import { UserIdResolvable } from "@twurple/api/lib";
 
-const { client } = createRoot(() => {
-  const [client, setClient] = createSignal<Option<Client>>(None);
+const { client, account, chatChannel, setAccount, setChannel } = createRoot(
+  () => {
+    const [client, setClient] = createSignal<Option<Client>>(None);
+    const [account, setAccount] = createSignal<string>(
+      localStorage.getItem("read") || ""
+    );
+    const [chatChannel, setChannel] = createSignal<string>(
+      localStorage.getItem("write") || ""
+    );
 
-  createEffect(() =>
-    setClient(
-      user().map((user) => {
+    createEffect(() => {
+      const client = user().map((user) => {
         const client = tmi.Client({
-          channels: [user.name],
+          channels: [authProvider.tokens[chatChannel()]?.userName],
           identity: {
-            username: user.name,
-            password: user.token.accessToken,
+            username: authProvider.tokens[account()]?.userName,
+            password: authProvider.tokens[account()]?.accessToken,
           },
         });
 
         client.connect();
 
-        client.on("connected", () => console.log("connected"));
+        client.on("connected", () => {
+          console.log("connected");
+        });
+
+        client.on("disconnected", () => console.log("disconnected"));
 
         client.on("emoteonly", (channel, enabled) =>
           pkg.emitEvent({ name: "emoteonly", data: { channel, enabled } })
@@ -63,14 +75,18 @@ const { client } = createRoot(() => {
         });
 
         return client;
-      })
-    )
-  );
+      });
 
-  return { client };
-});
+      setClient(client);
 
-export { client };
+      return () => {};
+    });
+
+    return { client, account, chatChannel, setAccount, setChannel };
+  }
+);
+
+export { client, account, chatChannel, setAccount, setChannel };
 
 pkg.createNonEventSchema({
   name: "Send Chat Message",
@@ -83,9 +99,12 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const [c, u] = client().zip(user()).unwrap();
-
-    c.say(u.name, ctx.getInput("message"));
+    client().map((c) =>
+      c.say(
+        authProvider.tokens[chatChannel()]?.userName,
+        ctx.getInput("message")
+      )
+    );
   },
 });
 

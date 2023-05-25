@@ -5,11 +5,13 @@ import pkg from "./pkg";
 import { None, t, Maybe, InferEnum, Option } from "@macrograph/core";
 import { TypeOf } from "zod";
 
-export const { helix, user } = createRoot(() => {
+export const { helix, user, api, setApi } = createRoot(() => {
   const helix = new ApiClient({ authProvider });
 
+  const [api, setApi] = createSignal<string>(localStorage.getItem("api") || "");
+
   const getUser = () =>
-    authProvider.token.andThenAsync((token) =>
+    Maybe(authProvider.tokens[api()]).andThenAsync((token) =>
       helix.getTokenInfo().then(({ userId, userName }) =>
         Maybe(
           userId !== null && userName !== null
@@ -26,11 +28,15 @@ export const { helix, user } = createRoot(() => {
   const [user, setUser] =
     createSignal<Awaited<ReturnType<typeof getUser>>>(None);
 
-  createEffect(() => getUser().then(setUser));
+  createEffect(async () => {
+    getUser().then(setUser);
+  });
 
   return {
     helix,
     user,
+    api,
+    setApi,
   };
 });
 
@@ -165,6 +171,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const u = user().unwrap();
+    console.log(u.name);
 
     await helix.channels.updateChannelInfo(u.id, {
       gameId: ctx.getInput("gameId"),
@@ -177,45 +184,12 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Edit Stream Info",
+  name: "test",
   variant: "Exec",
-  generateIO: (io) => {
-    io.dataInput({
-      name: "Game ID",
-      id: "gameId",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Language",
-      id: "language",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Title",
-      id: "title",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Delay (s)",
-      id: "delay",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Tags",
-      id: "tags",
-      type: t.list(t.string()),
-    });
-  },
+  generateIO: (io) => {},
   async run({ ctx }) {
-    const u = user().unwrap();
-
-    await helix.channels.updateChannelInfo(u.id, {
-      gameId: ctx.getInput("gameId"),
-      language: ctx.getInput("language"),
-      title: ctx.getInput("title"),
-      delay: ctx.getInput("delay"),
-      tags: ctx.getInput("tags"),
-    });
+    let data = await helix.getTokenInfo();
+    console.log(data);
   },
 });
 
