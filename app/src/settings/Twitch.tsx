@@ -6,7 +6,12 @@ import { rspc } from "~/rspc";
 
 export default () => {
   const [loggingIn, setLoggingIn] = createSignal(false);
+  const [currentTime, setCurrentTime] = createSignal(Date.now());
   const { helix, chat, auth } = twitch;
+
+  setInterval(() => {
+    setCurrentTime(Date.now());
+  }, 1000);
 
   return (
     <>
@@ -89,6 +94,15 @@ export default () => {
                       >
                         Remove
                       </Button>
+                    </td>
+                    <td>
+                      {Math.floor(
+                        (token.obtainmentTimestamp +
+                          token.expiresIn * 1000 -
+                          currentTime()) /
+                          1000
+                      )}
+                      s till expiry
                     </td>
                   </tr>
                 )}
