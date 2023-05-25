@@ -48,6 +48,10 @@ export class Struct<Fields extends StructFields = StructFields> {
 
     return val.fields;
   }
+
+  create(data: InferStruct<this>): InferStruct<this> {
+    return data;
+  }
 }
 
 export class StructBuilder {
@@ -60,8 +64,8 @@ export class StructBuilder {
   }
 }
 
-export class StructType<S extends Struct = Struct> extends BaseType {
-  constructor(public struct: S) {
+export class StructType<Fields extends StructFields> extends BaseType {
+  constructor(public struct: Struct<Fields>) {
     super();
   }
 

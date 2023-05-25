@@ -1,5 +1,5 @@
 import { core, Maybe, Option, Some, t } from "@macrograph/core";
-import { StructType } from "@macrograph/core/src/types/struct";
+import { StructFields, StructType } from "@macrograph/core/src/types/struct";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -782,11 +782,11 @@ pkg.createNonEventSchema({
     });
 
     w.value.map((t) => {
-      console.log("might be struct");
       if (!(t instanceof StructType)) return;
-      console.log("is struct");
 
-      for (const [id, field] of Object.entries(t.struct.fields)) {
+      for (const [id, field] of Object.entries(
+        t.struct.fields as StructFields
+      )) {
         io.dataOutput({
           id,
           name: field.name,

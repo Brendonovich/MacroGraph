@@ -15,7 +15,7 @@ export abstract class BasePrimitiveType<TOut = any> extends BaseType<TOut> {
 }
 
 export class IntType extends BasePrimitiveType<number> {
-  default(): any {
+  default() {
     return 0;
   }
 
@@ -29,7 +29,7 @@ export class IntType extends BasePrimitiveType<number> {
 }
 
 export class FloatType extends BasePrimitiveType<number> {
-  default(): any {
+  default() {
     return 0;
   }
 
@@ -43,7 +43,7 @@ export class FloatType extends BasePrimitiveType<number> {
 }
 
 export class StringType extends BasePrimitiveType<string> {
-  default(): any {
+  default() {
     return "";
   }
 

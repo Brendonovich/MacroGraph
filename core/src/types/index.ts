@@ -27,10 +27,10 @@ export type TypeVariant =
 export type AnyType =
   | PrimitiveType
   | ListType
-  | OptionType
+  | OptionType<AnyType>
   | WildcardType
-  | EnumType
-  | StructType;
+  | EnumType<any>
+  | StructType<any>;
 
 export function typesCanConnect(a: AnyType, b: AnyType): boolean {
   const aInner = a instanceof WildcardType ? a.wildcard.value.unwrapOr(a) : a;

@@ -1,5 +1,5 @@
 import { createMutable } from "solid-js/store";
-import { AnyType, TypeVariant } from ".";
+import { TypeVariant } from ".";
 import { BaseType } from "./any";
 
 /**
@@ -487,10 +487,9 @@ function Maybe<T>(value: T | null | undefined): Option<T> {
 
 export { Option, Some, Maybe, None };
 
-export class OptionType<
-  T extends BaseType<TOut> = AnyType,
-  TOut = any
-> extends BaseType<Option<TOut>> {
+export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
+  Option<TOut>
+> {
   constructor(public inner: T) {
     super();
   }
