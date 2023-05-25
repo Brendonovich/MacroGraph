@@ -14,6 +14,7 @@ module.exports = {
           graph: "#262626",
           base: "#696969",
           enum: "#1B4DFF",
+          struct: "#FACC15",
           current: "var(--mg-current)",
         },
       },

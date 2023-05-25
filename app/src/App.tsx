@@ -11,10 +11,10 @@ import Settings from "./settings";
 function App() {
   const ui = createUIStore();
 
-  onMount(() => {
+  onMount(async () => {
     const savedProject = localStorage.getItem("project");
     if (savedProject)
-      core.load(SerializedProject.parse(JSON.parse(savedProject)));
+      await core.load(SerializedProject.parse(JSON.parse(savedProject)));
 
     const firstGraph = core.project.graphs.values().next();
     if (firstGraph) ui.setCurrentGraph(firstGraph.value);

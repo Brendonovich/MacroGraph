@@ -1,5 +1,5 @@
 import { AnyType } from "../types";
-import { newWildcard, Wildcard } from "../types/wildcard";
+import { Wildcard } from "../types/wildcard";
 import { Package } from "./Package";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
@@ -40,12 +40,14 @@ export class IOBuilder {
   inputs: InputBuilder[] = [];
   outputs: OutputBuilder[] = [];
 
-  wildcards: Wildcard[] = [];
+  wildcards = new Map<string, Wildcard>();
 
-  wildcard() {
-    const wildcard = newWildcard();
+  constructor(public existingWildcards: Map<string, Wildcard>) {}
 
-    this.wildcards.push(wildcard);
+  wildcard(id: string) {
+    const wildcard = this.existingWildcards.get(id) ?? new Wildcard(id);
+
+    this.wildcards.set(id, wildcard);
 
     return wildcard;
   }
@@ -89,7 +91,7 @@ export type NonEventNodeSchema<TState extends object = object> = {
   generateIO: (builder: IOBuilder, state: TState) => void;
   package: Package<EventsMap>;
   variant: Exclude<NodeSchemaVariant, "Event">;
-  run: (a: { ctx: RunCtx }) => void | Promise<void>;
+  run: (a: { ctx: RunCtx; io: IOBuilder }) => void | Promise<void>;
 };
 
 export type EventNodeSchema<
@@ -101,5 +103,5 @@ export type EventNodeSchema<
   generateIO: (builder: IOBuilder, state: TState) => void;
   package: Package<EventsMap>;
   event: TEvent;
-  run: (a: { ctx: RunCtx; data: TEvents[TEvent] }) => void;
+  run: (a: { ctx: RunCtx; data: TEvents[TEvent]; io: IOBuilder }) => void;
 };

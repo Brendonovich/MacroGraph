@@ -1,4 +1,5 @@
 import { core, Maybe, Option, Some, t } from "@macrograph/core";
+import { StructFields, StructType } from "@macrograph/core/src/types/struct";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -552,7 +553,7 @@ pkg.createNonEventSchema({
     ctx.setOutput("output", ctx.getInput("input"));
   },
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.dataInput({
       id: "input",
@@ -569,7 +570,7 @@ pkg.createNonEventSchema({
   name: `Equal`,
   variant: "Pure",
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.dataInput({
       id: "one",
@@ -593,7 +594,7 @@ pkg.createNonEventSchema({
   name: "List Includes",
   variant: "Pure",
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.dataInput({
       id: "input",
@@ -622,7 +623,7 @@ pkg.createNonEventSchema({
   generateIO(io) {
     io.dataInput({
       id: "list",
-      type: t.list(t.wildcard(io.wildcard())),
+      type: t.list(t.wildcard(io.wildcard(""))),
     });
     io.dataOutput({
       id: "output",
@@ -696,7 +697,7 @@ pkg.createNonEventSchema({
     ctx.setOutput("output", ctx.getInput<Option<string>>("input").unwrap());
   },
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.dataInput({
       id: "input",
@@ -713,7 +714,7 @@ pkg.createNonEventSchema({
   name: `Is Option Some`,
   variant: "Pure",
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.dataInput({
       id: "input",
@@ -733,7 +734,7 @@ pkg.createNonEventSchema({
   name: `Is Option None`,
   variant: "Pure",
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.dataInput({
       id: "input",
@@ -753,7 +754,7 @@ pkg.createNonEventSchema({
   name: `Make Some`,
   variant: "Pure",
   generateIO(io) {
-    const type = io.wildcard();
+    const type = io.wildcard("");
 
     io.dataInput({
       id: "in",
@@ -766,5 +767,43 @@ pkg.createNonEventSchema({
   },
   run({ ctx }) {
     ctx.setOutput("out", Some(ctx.getInput<any>("in")));
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Break Struct",
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard("");
+
+    io.dataInput({
+      id: "",
+      type: t.wildcard(w),
+    });
+
+    w.value.map((t) => {
+      if (!(t instanceof StructType)) return;
+
+      for (const [id, field] of Object.entries(
+        t.struct.fields as StructFields
+      )) {
+        io.dataOutput({
+          id,
+          name: field.name,
+          type: field.type,
+        });
+      }
+    });
+  },
+  run({ ctx, io }) {
+    const w = io.wildcards.get("")!;
+
+    const data = ctx.getInput<Record<string, any>>("");
+
+    Object.keys(
+      (w.value.unwrap() as StructType<StructFields>).struct.fields
+    ).forEach((key) => {
+      ctx.setOutput(key, data[key]);
+    });
   },
 });

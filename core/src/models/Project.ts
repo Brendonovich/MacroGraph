@@ -27,7 +27,7 @@ export class Project {
     return createMutable(this);
   }
 
-  getNewId(){
+  getNewId() {
     return this.graphIdCounter++;
   }
 
@@ -53,7 +53,10 @@ export class Project {
     };
   }
 
-  static deserialize(core: Core, data: z.infer<typeof SerializedProject>) {
+  static async deserialize(
+    core: Core,
+    data: z.infer<typeof SerializedProject>
+  ) {
     const project = new Project({
       core,
     });
@@ -63,15 +66,17 @@ export class Project {
     project.graphIdCounter = data.graphIdCounter;
 
     project.graphs = new ReactiveMap(
-      data.graphs
-        .map((serializedGraph) => {
-          const graph = Graph.deserialize(project, serializedGraph);
+      (
+        await Promise.all(
+          data.graphs.map(async (serializedGraph) => {
+            const graph = await Graph.deserialize(project, serializedGraph);
 
-          if (graph === null) return null;
+            if (graph === null) return null;
 
-          return [graph.id, graph] as [number, Graph];
-        })
-        .filter(Boolean) as [number, Graph][]
+            return [graph.id, graph] as [number, Graph];
+          })
+        )
+      ).filter(Boolean) as [number, Graph][]
     );
 
     project.disableSave = false;

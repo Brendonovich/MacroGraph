@@ -2,6 +2,7 @@ import { EnumType } from "./enum";
 import { ListType } from "./list";
 import { OptionType } from "./option";
 import { BasePrimitiveType, PrimitiveType } from "./primitive";
+import { StructType } from "./struct";
 import { WildcardType } from "./wildcard";
 
 export * from "./list";
@@ -10,18 +11,26 @@ export * from "./any";
 export * from "./primitive";
 export * from "./wildcard";
 export * from "./enum";
+export * from "./struct";
 export * as t from "./t";
 
-export type TypeVariant = "primitive" | "list" | "option" | "wildcard" | "enum";
+export type TypeVariant =
+  | "primitive"
+  | "list"
+  | "option"
+  | "wildcard"
+  | "enum"
+  | "struct";
 // | "map"
 // | "set"
 
 export type AnyType =
   | PrimitiveType
   | ListType
-  | OptionType
+  | OptionType<AnyType>
   | WildcardType
-  | EnumType;
+  | EnumType<any>
+  | StructType<any>;
 
 export function typesCanConnect(a: AnyType, b: AnyType): boolean {
   const aInner = a instanceof WildcardType ? a.wildcard.value.unwrapOr(a) : a;

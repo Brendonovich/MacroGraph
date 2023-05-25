@@ -3,6 +3,7 @@ import { Core } from "./Core";
 import {
   EventNodeSchema,
   EventsMap,
+  IOBuilder,
   NodeSchema,
   NonEventNodeSchema,
   RunCtx,
@@ -13,6 +14,12 @@ import {
   EnumVariants,
   LazyEnumVariants,
 } from "../types/enum";
+import {
+  LazyStructFields,
+  Struct,
+  StructBuilder,
+  StructFields,
+} from "../types/struct";
 
 export interface PackageArgs {
   name: string;
@@ -47,7 +54,7 @@ export class Package<TEvents extends EventsMap = EventsMap> {
 
         schema.generateIO(t, state);
       },
-      run: async (args: { ctx: RunCtx }) => {
+      run: async (args: { ctx: RunCtx; io: IOBuilder }) => {
         await schema.run(args);
 
         if (schema.variant === "Exec") args.ctx.exec("exec");
@@ -76,6 +83,17 @@ export class Package<TEvents extends EventsMap = EventsMap> {
     const builder = new EnumBuilder();
 
     const e = new Enum(name, builderFn(builder));
+
+    return e;
+  }
+
+  createStruct<Fields extends StructFields>(
+    name: string,
+    builderFn: (t: StructBuilder) => Fields | LazyStructFields<Fields>
+  ) {
+    const builder = new StructBuilder();
+
+    const e = new Struct(name, builderFn(builder));
 
     return e;
   }

@@ -13,7 +13,8 @@ import { Graph } from ".";
 import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { batch } from "solid-js";
+import { untrack, createRoot, createRenderEffect } from "solid-js";
+import { Wildcard } from "../types";
 
 export interface NodeArgs {
   id: number;
@@ -45,6 +46,10 @@ export class Node {
   schema: NodeSchema;
   inputs: (DataInput | ExecInput)[] = [];
   outputs: (DataOutput | ExecOutput)[] = [];
+  wildcards = new Map<string, Wildcard>();
+
+  io!: IOBuilder;
+  dispose: () => void;
 
   selected = false;
 
@@ -55,65 +60,75 @@ export class Node {
     this.position = args.position;
     this.schema = args.schema;
 
-    this.regenerateIO();
+    const reactiveThis = createMutable(this);
 
-    return createMutable(this);
+    this.dispose = createRoot((dispose) => {
+      createRenderEffect(() => {
+        const builder = new IOBuilder(this.wildcards);
+
+        reactiveThis.schema.generateIO(builder, {});
+
+        untrack(() => this.updateIO(reactiveThis, builder));
+
+        this.io = builder;
+      });
+
+      return dispose;
+    });
+
+    return reactiveThis;
   }
 
-  regenerateIO() {
-    const builder = new IOBuilder();
+  updateIO(reactiveThis: this, io: IOBuilder) {
+    reactiveThis.wildcards = io.wildcards;
 
-    this.schema.generateIO(builder, {});
+    reactiveThis.inputs = reactiveThis.inputs.filter((oldInput) =>
+      io.inputs.find(
+        (newInput) =>
+          oldInput.id === newInput.id && oldInput.variant === newInput.variant
+      )
+    );
 
-    batch(() => {
-      this.inputs = this.inputs.filter((oldInput) =>
-        builder.inputs.find(
-          (newInput) =>
-            oldInput.id === newInput.id && oldInput.variant === newInput.variant
-        )
+    io.inputs.forEach((newInput, newIndex) => {
+      const oldInputIndex = reactiveThis.inputs.findIndex(
+        (oldInput) => oldInput.id === newInput.id
       );
 
-      builder.inputs.forEach((newInput, newIndex) => {
-        const oldInputIndex = this.inputs.findIndex(
-          (oldInput) => oldInput.id === newInput.id
-        );
-
-        if (oldInputIndex >= 0) {
-          const oldInput = this.inputs.splice(oldInputIndex, 1);
-          this.inputs.splice(newIndex, 0, ...oldInput);
+      if (oldInputIndex >= 0) {
+        const oldInput = reactiveThis.inputs.splice(oldInputIndex, 1);
+        reactiveThis.inputs.splice(newIndex, 0, ...oldInput);
+      } else {
+        if (newInput.variant === "Data") {
+          reactiveThis.addDataInput({ ...newInput, index: newIndex });
         } else {
-          if (newInput.variant === "Data") {
-            this.addDataInput({ ...newInput, index: newIndex });
-          } else {
-            this.addExecInput({ ...newInput, index: newIndex });
-          }
+          reactiveThis.addExecInput({ ...newInput, index: newIndex });
         }
-      });
+      }
+    });
 
-      this.outputs = this.outputs.filter((oldOutput) =>
-        builder.outputs.find(
-          (newOutput) =>
-            oldOutput.id === newOutput.id &&
-            oldOutput.variant === newOutput.variant
-        )
+    reactiveThis.outputs = reactiveThis.outputs.filter((oldOutput) =>
+      io.outputs.find(
+        (newOutput) =>
+          oldOutput.id === newOutput.id &&
+          oldOutput.variant === newOutput.variant
+      )
+    );
+
+    io.outputs.forEach((newOutput, newIndex) => {
+      const oldOutputIndex = reactiveThis.outputs.findIndex(
+        (oldInput) => oldInput.id === newOutput.id
       );
 
-      builder.outputs.forEach((newOutput, newIndex) => {
-        const oldOutputIndex = this.outputs.findIndex(
-          (oldInput) => oldInput.id === newOutput.id
-        );
-
-        if (oldOutputIndex >= 0) {
-          const oldInput = this.outputs.splice(oldOutputIndex, 1);
-          this.outputs.splice(newIndex, 0, ...oldInput);
+      if (oldOutputIndex >= 0) {
+        const oldInput = reactiveThis.outputs.splice(oldOutputIndex, 1);
+        reactiveThis.outputs.splice(newIndex, 0, ...oldInput);
+      } else {
+        if (newOutput.variant === "Data") {
+          reactiveThis.addDataOutput({ ...newOutput, index: newIndex });
         } else {
-          if (newOutput.variant === "Data") {
-            this.addDataOutput({ ...newOutput, index: newIndex });
-          } else {
-            this.addExecOutput({ ...newOutput, index: newIndex });
-          }
+          reactiveThis.addExecOutput({ ...newOutput, index: newIndex });
         }
-      });
+      }
     });
   }
 
