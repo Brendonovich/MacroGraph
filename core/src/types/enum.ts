@@ -2,17 +2,17 @@ import { createMutable } from "solid-js/store";
 import { AnyType, TypeVariant } from ".";
 import { BaseType } from "./any";
 
-type BaseData = Record<string, AnyType>;
+type EnumVariantData = Record<string, AnyType>;
 
 export class EnumVariant<
   Name extends string = string,
-  Data extends BaseData | null = any
+  Data extends EnumVariantData | null = null
 > {
   constructor(public name: Name, public data: Data) {
     return createMutable(this);
   }
 
-  defaultValue(): InferEnumVariant<EnumVariant<Name, Data>> {
+  default(): any {
     const data = this.data;
 
     return data === null
@@ -55,7 +55,7 @@ export class Enum<Variants extends EnumVariants = EnumVariants> {
       };
     }
 
-    // return createMutable(this);
+    return createMutable(this);
   }
 
   _variants:
@@ -74,15 +74,42 @@ export class Enum<Variants extends EnumVariants = EnumVariants> {
 
     return val.variants;
   }
+
+  variant<Name extends EnumVariantOfEnum<this>["name"]>(
+    val: InferEnumVariantData<
+      Extract<EnumVariantOfEnum<this>, { name: Name }>["data"]
+    > extends null
+      ? Name
+      : [
+          Name,
+          InferEnumVariantData<
+            Extract<EnumVariantOfEnum<this>, { name: Name }>["data"]
+          >
+        ]
+  ): InferEnumVariant<Extract<EnumVariantOfEnum<this>, { name: Name }>> {
+    if (Array.isArray(val)) {
+      return {
+        variant: val[0],
+        data: val[1],
+      } as any;
+    } else
+      return {
+        varaint: val,
+      } as any;
+  }
 }
+
+type EnumVariantOfEnum<E> = E extends Enum<infer Variants>
+  ? Variants[number]
+  : never;
 
 export class EnumBuilder {
   variant<Name extends string>(name: Name): EnumVariant<Name>;
-  variant<Name extends string, Data extends BaseData>(
+  variant<Name extends string, Data extends EnumVariantData>(
     name: Name,
     data: Data
   ): EnumVariant<Name, Data>;
-  variant<Name extends string, Data extends BaseData>(
+  variant<Name extends string, Data extends EnumVariantData>(
     name: Name,
     data?: Data
   ): EnumVariant<Name, Data> {
@@ -94,13 +121,15 @@ export class EnumBuilder {
   }
 }
 
-export class EnumType<E extends Enum = Enum> extends BaseType {
-  constructor(public inner: E) {
+export class EnumType<
+  Variants extends EnumVariants = EnumVariants
+> extends BaseType {
+  constructor(public inner: Enum<Variants>) {
     super();
   }
 
   default() {
-    return this.inner.variants[0].defaultValue();
+    return this.inner.variants[0].default();
   }
 
   variant(): TypeVariant {
@@ -126,10 +155,12 @@ export type InferEnumVariant<V> = V extends EnumVariant<infer Name, infer Data>
     } & (Data extends null
       ? {}
       : {
-          data: {
-            [K in keyof Data]: Data[K] extends BaseType<infer TOut>
-              ? TOut
-              : never;
-          };
+          data: InferEnumVariantData<Data>;
         })
+  : never;
+
+export type InferEnumVariantData<D> = D extends EnumVariantData
+  ? {
+      [K in keyof D]: D[K] extends BaseType<infer TOut> ? TOut : never;
+    }
   : never;

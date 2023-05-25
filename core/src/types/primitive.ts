@@ -57,7 +57,7 @@ export class StringType extends BasePrimitiveType<string> {
 }
 
 export class BoolType extends BasePrimitiveType<boolean> {
-  default() {
+  default(): any {
     return false;
   }
 

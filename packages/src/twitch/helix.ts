@@ -1,9 +1,15 @@
-import { ApiClient } from "@twurple/api";
-import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
+import { ApiClient, HelixBroadcasterType, HelixUserType } from "@twurple/api";
+import { createRoot, createEffect, createSignal } from "solid-js";
 import { authProvider } from "./auth";
 import pkg from "./pkg";
-import { None, t, Maybe, InferEnum, Option } from "@macrograph/core";
-import { TypeOf } from "zod";
+import {
+  None,
+  t,
+  Maybe,
+  InferEnum,
+  InferStruct,
+  Option,
+} from "@macrograph/core";
 
 export const { helix, user } = createRoot(() => {
   const helix = new ApiClient({ authProvider });
@@ -770,6 +776,20 @@ const RedemptionStatus = pkg.createEnum("Redemption Status", (e) => [
   e.variant("Cancelled"),
 ]);
 
+const Redemption = pkg.createStruct("Redemption", (s) => ({
+  id: s.field("ID", t.string()),
+  userId: s.field("User ID", t.string()),
+  userDisplayName: s.field("User Display Name", t.string()),
+  userName: s.field("User Name", t.string()),
+  rewardId: s.field("Reward ID", t.string()),
+  rewardTitle: s.field("Reward Title", t.string()),
+  rewardPrompt: s.field("Reward Prompt", t.string()),
+  rewardCost: s.field("Reward Cost", t.string()),
+  userInput: s.field("User Input", t.string()),
+  updateStatus: s.field("Status", t.enum(RedemptionStatus)),
+  redemptionDate: s.field("Redemption Date", t.string()),
+}));
+
 pkg.createNonEventSchema({
   name: "Update Redemption Status",
   variant: "Exec",
@@ -784,105 +804,47 @@ pkg.createNonEventSchema({
       id: "rewardId",
       type: t.string(),
     });
-    io.dataInput({
-      name: "Status",
-      id: "status",
-      type: t.enum(RedemptionStatus),
-    });
     io.dataOutput({
-      name: "Success",
-      id: "success",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Error Message",
-      id: "errorMessage",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Redemption ID",
-      id: "redemptionId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "User ID",
-      id: "userId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Display Name",
-      id: "displayName",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "User Login Name",
-      id: "userLogin",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Title",
-      id: "rewardTitle",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Prompt",
-      id: "rewardPrompt",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Cost",
-      id: "rewardCost",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "User Input",
-      id: "userInput",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Status",
-      id: "status",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Redeemed At",
-      id: "redeemedAt",
-      type: t.string(),
+      name: "Redemption",
+      id: "out",
+      type: t.struct(Redemption),
     });
   },
   async run({ ctx }) {
     const u = user().unwrap();
-    try {
-      const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
-      let data = await helix.channelPoints.updateRedemptionStatusByIds(
-        u.id,
-        ctx.getInput("rewardId"),
-        ctx.getInput("redemptionId"),
-        status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
-      );
-      ctx.setOutput("success", true);
-      ctx.setOutput("redemptionId", data[0]?.id);
-      ctx.setOutput("userId", data[0]?.userId);
-      ctx.setOutput("displayName", data[0]?.userDisplayName);
-      ctx.setOutput("userLogin", data[0]?.userName);
-      ctx.setOutput("rewardId", data[0]?.rewardId);
-      ctx.setOutput("rewardTitle", data[0]?.rewardTitle);
-      ctx.setOutput("rewardPrompt", data[0]?.rewardPrompt);
-      ctx.setOutput("rewardCost", data[0]?.rewardCost);
-      ctx.setOutput("userInput", data[0]?.userInput);
-      ctx.setOutput("status", data[0]?.updateStatus);
-      ctx.setOutput("redeemedAt", JSON.stringify(data[0]?.redemptionDate));
-    } catch (error: any) {
-      ctx.setOutput("success", false);
-      ctx.setOutput("errorMessage", JSON.parse(error.body).message);
-    }
+    const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
+
+    let data = await helix.channelPoints.updateRedemptionStatusByIds(
+      u.id,
+      ctx.getInput("rewardId"),
+      [ctx.getInput("redemptionId")],
+      status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
+    );
+
+    ctx.setOutput("out", data[0]);
   },
 });
+
+const Reward = pkg.createStruct("Reward", (s) => ({
+  id: s.field("ID", t.string()),
+  title: s.field("Title", t.string()),
+  prompt: s.field("Prompt", t.string()),
+  cost: s.field("Cost", t.int()),
+  bgColor: s.field("Background Color", t.string()),
+  enabled: s.field("Enabled", t.bool()),
+  userInputRequired: s.field("User Input Required", t.bool()),
+  maxRedemptionsPerStream: s.field("Max Redemptions/Stream", t.option(t.int())),
+  maxRedemptionsPerUserPerStream: s.field(
+    "Max Redemptions/User/Stream",
+    t.option(t.int())
+  ),
+  globalCooldown: s.field("Global Cooldown", t.option(t.bool())),
+  paused: s.field("Paused", t.bool()),
+  inStock: s.field("In Stock", t.bool()),
+  skipRequestQueue: s.field("Skip Request Queue", t.bool()),
+  redemptionsThisStream: s.field("Redemptions This Stream", t.option(t.int())),
+  cooldownExpire: s.field("Cooldown Expires In", t.option(t.string())),
+}));
 
 pkg.createNonEventSchema({
   name: "Get Reward By Title",
@@ -899,84 +861,8 @@ pkg.createNonEventSchema({
       type: t.bool(),
     });
     io.dataOutput({
-      name: "Success",
-      id: "success",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Title",
-      id: "rewardTitle",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Prompt",
-      id: "rewardPrompt",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Cost",
-      id: "rewardCost",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Background Color",
-      id: "backgroundColor",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Enabled",
-      id: "enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "User Input Required",
-      id: "userInputRequired",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per Stream",
-      id: "maxRedemptionsPerStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per User Per Stream",
-      id: "maxRedemptionsPerUserPerStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Global Cooldown",
-      id: "globalCooldown",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Paused",
-      id: "paused",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "in Stock",
-      id: "stock",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Skip Request Queue",
-      id: "skipRequestQueue",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Redemptions Current Stream",
-      id: "redemptionsCurrentStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Cooldown Expires in",
-      id: "cooldownExpire",
-      type: t.string(),
+      id: "out",
+      type: t.option(t.struct(Reward)),
     });
   },
   async run({ ctx }) {
@@ -985,28 +871,33 @@ pkg.createNonEventSchema({
       u.id,
       ctx.getInput("manageableOnly")
     );
+
     const data = rewards.find(
       (reward) => reward.title === ctx.getInput("title")
     );
-    ctx.setOutput("success", !!data);
-    ctx.setOutput("rewardId", data?.id);
-    ctx.setOutput("rewardTitle", data?.title);
-    ctx.setOutput("rewardPrompt", data?.prompt);
-    ctx.setOutput("rewardCost", data?.cost);
-    ctx.setOutput("backgroundColor", data?.backgroundColor);
-    ctx.setOutput("enabled", data?.isEnabled);
-    ctx.setOutput("userInputRequired", data?.userInputRequired);
-    ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
-    ctx.setOutput(
-      "maxRedemptionsPerUserPerStream",
-      data?.maxRedemptionsPerUserPerStream
+
+    ctx.setOutput<Option<InferStruct<typeof Reward>>>(
+      "out",
+      Maybe(data).map((data) => ({
+        id: data.id,
+        title: data.title,
+        prompt: data.prompt,
+        cost: data.cost,
+        bgColor: data.backgroundColor,
+        enabled: data.isEnabled,
+        userInputRequired: data.userInputRequired,
+        maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
+        maxRedemptionsPerUserPerStream: Maybe(
+          data.maxRedemptionsPerUserPerStream
+        ),
+        globalCooldown: Maybe(data.globalCooldown),
+        paused: data.isPaused,
+        inStock: data.isInStock,
+        skipRequestQueue: data.autoFulfill,
+        redemptionsThisStream: Maybe(data.redemptionsThisStream),
+        cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
+      }))
     );
-    ctx.setOutput("globalCooldown", data?.globalCooldown);
-    ctx.setOutput("paused", data?.isPaused);
-    ctx.setOutput("stock", data?.isInStock);
-    ctx.setOutput("skipRequestQueue", data?.autoFulfill);
-    ctx.setOutput("redemptionsCurrentStream", data?.redemptionsThisStream);
-    ctx.setOutput("cooldownExpire", JSON.stringify(data?.cooldownExpiryDate));
   },
 });
 
@@ -1023,6 +914,34 @@ const BroadcasterType = pkg.createEnum("Broadcaster Type", (e) => [
   e.variant("Normal User"),
 ]);
 
+const User = pkg.createStruct("User", (s) => ({
+  id: s.field("ID", t.string()),
+  login: s.field("Login", t.string()),
+  displayName: s.field("Display Name", t.string()),
+  userType: s.field("User Type", t.enum(UserType)),
+  broadcasterType: s.field("Broadcaster Type", t.enum(BroadcasterType)),
+  description: s.field("Description", t.string()),
+  profileImage: s.field("Profile Image URL", t.string()),
+  offlineImage: s.field("Offline Image URL", t.string()),
+  createdAt: s.field("Created At", t.string()),
+}));
+
+const UserTypeMap: Record<HelixUserType, InferEnum<typeof UserType>> = {
+  admin: UserType.variant("Admin"),
+  global_mod: UserType.variant("Global Mod"),
+  staff: UserType.variant("Staff"),
+  "": UserType.variant("Normal User"),
+};
+
+const BroadcasterTypeMap: Record<
+  HelixBroadcasterType,
+  InferEnum<typeof BroadcasterType>
+> = {
+  affiliate: BroadcasterType.variant("Affliate"),
+  partner: BroadcasterType.variant("Partner"),
+  "": BroadcasterType.variant("Normal User"),
+};
+
 pkg.createNonEventSchema({
   name: "Get User By ID",
   variant: "Exec",
@@ -1033,79 +952,29 @@ pkg.createNonEventSchema({
       type: t.string(),
     });
     io.dataOutput({
-      id: "userId",
-      name: "User ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "userLogin",
-      name: "Login Name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "displayName",
-      name: "Display Name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "type",
-      name: "User Type",
-      type: t.option(t.enum(UserType)),
-    });
-    io.dataOutput({
-      id: "broadcasterType",
-      name: "Broadcaster Type",
-      type: t.option(t.enum(BroadcasterType)),
-    });
-    io.dataOutput({
-      id: "description",
-      name: "Description",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "profileImageUrl",
-      name: "Profile Image URL",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "offlineImageUrl",
-      name: "Offline Image URL",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "createdAt",
-      name: "Created At",
-      type: t.string(),
+      id: "out",
+      type: t.option(t.struct(User)),
     });
   },
   async run({ ctx }) {
     const data = await helix.users.getUserById(ctx.getInput("userId"));
-    const optData = Maybe(data);
-    ctx.setOutput("userId", data?.id);
-    ctx.setOutput("userLogin", data?.name);
-    ctx.setOutput("displayName", data?.displayName);
-    ctx.setOutput<InferEnum<typeof UserType>>(
-      "type",
-      (() => {
-        if (data?.type === "admin") return { variant: "Admin" };
-        else if (data?.type === "global_mod") return { variant: "Global Mod" };
-        else if (data?.type === "staff") return { variant: "Staff" };
-        else return { variant: "Normal User" };
-      })()
+
+    ctx.setOutput(
+      "out",
+      Maybe(data).map((data) =>
+        User.create({
+          id: data.id,
+          login: data.name,
+          displayName: data.displayName,
+          userType: UserTypeMap[data.type],
+          broadcasterType: BroadcasterTypeMap[data.broadcasterType],
+          description: data.description,
+          profileImage: data.profilePictureUrl,
+          offlineImage: data.offlinePlaceholderUrl,
+          createdAt: JSON.stringify(data.creationDate),
+        })
+      )
     );
-    ctx.setOutput<InferEnum<typeof BroadcasterType>>(
-      "broadcasterType",
-      (() => {
-        const type = data?.broadcasterType;
-        if (type === "affiliate") return { variant: "Affliate" };
-        else if (type === "partner") return { variant: "Partner" };
-        else return { variant: "Normal User" };
-      })()
-    );
-    ctx.setOutput("description", data?.description);
-    ctx.setOutput("profileImageUrl", data?.profilePictureUrl);
-    ctx.setOutput("offlineImageUrl", data?.offlinePlaceholderUrl);
-    ctx.setOutput("createdAt", JSON.stringify(data?.creationDate));
   },
 });
 
@@ -1121,7 +990,7 @@ pkg.createNonEventSchema({
   },
   run({ ctx }) {
     const u = user().unwrap();
-    helix.channelPoints.deleteCustomReward(u.id, ctx.getInput("id"));
+    return helix.channelPoints.deleteCustomReward(u.id, ctx.getInput("id"));
   },
 });
 

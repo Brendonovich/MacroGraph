@@ -211,7 +211,7 @@ pkg.createNonEventSchema({
     );
   },
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.dataInput({
       id: "condition",
@@ -248,7 +248,7 @@ pkg.createNonEventSchema({
     ctx.exec("completed");
   },
   generateIO(io) {
-    const w = io.wildcard();
+    const w = io.wildcard("");
 
     io.execInput({
       id: "exec",

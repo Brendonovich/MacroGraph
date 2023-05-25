@@ -24,19 +24,17 @@ const JSONLiteralVariants = (e: EnumBuilder) =>
   ] satisfies EnumVariants;
 
 type JSONLiteralVariantTypes = ReturnType<typeof JSONLiteralVariants>;
-type JSONType = Enum<
-  [
-    ...JSONLiteralVariantTypes,
-    EnumVariant<
-      "Array",
-      {
-        value: t.List<t.Enum<JSONType>>;
-      }
-    >
-  ]
->;
+type JSONVariantTypes = [
+  ...JSONLiteralVariantTypes,
+  EnumVariant<
+    "Array",
+    {
+      value: t.List<t.Enum<JSONVariantTypes>>;
+    }
+  >
+];
 
-const JSON: JSONType = pkg.createEnum("JSON", (e) =>
+const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
   e.lazy(() => [
     ...JSONLiteralVariants(e),
     e.variant("Array", {

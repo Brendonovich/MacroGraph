@@ -7,6 +7,7 @@ import {
   onCleanup,
   Show,
   onMount,
+  createEffect,
 } from "solid-js";
 import "./Node.css";
 import { NodeProvider } from "~/contexts";
@@ -35,13 +36,14 @@ const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
 };
 
 export const Node = (props: Props) => {
-  const node = props.node;
+  const node = () => props.node;
+
   const graph = useGraph();
   const UI = useUIStore();
   let Toggle = 0;
 
-  const ACTIVE = NODE_EMIT.subscribe(node, (data) => {
-    if (node.id === data.id && data.schema === node.schema) {
+  const ACTIVE = NODE_EMIT.subscribe(node(), (data) => {
+    if (node().id === data.id && data.schema === node().schema) {
       Toggle++;
       Toggle == 1 && updateActive(1);
       setTimeout(() => {
@@ -58,9 +60,9 @@ export const Node = (props: Props) => {
   const handleMouseMove = (e: MouseEvent) => {
     const scale = UI.state.scale;
 
-    node.setPosition({
-      x: node.position.x + e.movementX / scale,
-      y: node.position.y + e.movementY / scale,
+    node().setPosition({
+      x: node().position.x + e.movementX / scale,
+      y: node().position.y + e.movementY / scale,
     });
   };
 
@@ -76,7 +78,7 @@ export const Node = (props: Props) => {
 
       if (!contentRect) return;
 
-      UI.state.nodeBounds.set(node, {
+      UI.state.nodeBounds.set(node(), {
         width: contentRect.width,
         height: contentRect.height,
       });
@@ -88,24 +90,29 @@ export const Node = (props: Props) => {
   });
 
   return (
-    <NodeProvider node={node}>
+    <NodeProvider node={node()}>
       <div
         ref={ref}
         class={clsx(
           "absolute top-0 left-0 text-[12px] overflow-hidden rounded-lg flex flex-col bg-black/75 border-black/75 border-2",
-          node.selected && "ring-2 ring-yellow-500"
+          node().selected && "ring-2 ring-yellow-500"
         )}
         style={{
-          transform: `translate(${node.position.x}px, ${node.position.y}px)`,
+          transform: `translate(${node().position.x}px, ${
+            node().position.y
+          }px)`,
         }}
       >
         <div
           class={clsx(
             "h-6 duration-100 text-md font-medium",
             active() === 1 ? "active-fade-in" : "fade-Duration",
-            SchemaVariantColours[
-              "variant" in node.schema ? node.schema.variant : "Event"
-            ]
+            (() => {
+              const schema = node().schema;
+              return SchemaVariantColours[
+                "variant" in schema ? schema.variant : "Event"
+              ];
+            })()
           )}
         >
           <Show
@@ -119,7 +126,7 @@ export const Node = (props: Props) => {
                   switch (e.key) {
                     case "Backspace":
                     case "Delete": {
-                      graph().deleteItem(node);
+                      graph().deleteItem(node());
                       break;
                     }
                   }
@@ -130,7 +137,7 @@ export const Node = (props: Props) => {
                   e.preventDefault();
                   switch (e.button) {
                     case 0: {
-                      UI.setSelectedItem(node);
+                      UI.setSelectedItem(node());
 
                       window.addEventListener("mousemove", handleMouseMove);
                       const listener = () => {
@@ -148,13 +155,13 @@ export const Node = (props: Props) => {
                       break;
                   }
                 }}
-                onMouseUp={() => node.setPosition(node.position, true)}
+                onMouseUp={() => node().setPosition(node().position, true)}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                 }}
               >
-                <div>{node.name}</div>
+                <div>{node().name}</div>
               </div>
             }
           >
@@ -174,8 +181,8 @@ export const Node = (props: Props) => {
                     value={value()}
                     onInput={(e) => setValue(e.target.value)}
                     onBlur={() => {
-                      if (value() !== "") node.name = value();
-                      node.graph.project.save();
+                      if (value() !== "") node().name = value();
+                      node().graph.project.save();
 
                       setEditingName(false);
                     }}
@@ -189,7 +196,7 @@ export const Node = (props: Props) => {
         </div>
         <div class="flex flex-row gap-2">
           <div class="p-2 flex flex-col space-y-2.5">
-            <For each={node.inputs}>
+            <For each={node().inputs}>
               {(i) => (
                 <Switch>
                   <Match when={i instanceof DataInputModel ? i : null}>
@@ -203,7 +210,7 @@ export const Node = (props: Props) => {
             </For>
           </div>
           <div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
-            <For each={node.outputs}>
+            <For each={node().outputs}>
               {(o) => (
                 <Switch>
                   <Match when={o instanceof DataOutputModel ? o : null}>

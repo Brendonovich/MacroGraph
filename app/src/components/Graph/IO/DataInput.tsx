@@ -4,6 +4,7 @@ import {
   BasePrimitiveType,
   DataInput as DataInputModel,
   EnumType,
+  EnumVariants,
   WildcardType,
 } from "@macrograph/core";
 import { Show, Switch, Match } from "solid-js";
@@ -93,13 +94,13 @@ const Input = (props: InputProps) => {
               class={className()}
               enum={type().inner}
               value={
-                type().inner.variants.find(
+                (type().inner.variants as EnumVariants).find(
                   (v) => v.name === props.value?.variant
                 ) ??
-                (props.onChange(type().inner.variants[0].defaultValue()),
+                (props.onChange(type().inner.variants[0].default()),
                 type().inner.variants[0])
               }
-              onChange={(v) => props.onChange(v.defaultValue())}
+              onChange={(v) => props.onChange(v.default())}
             />
           </div>
         )}

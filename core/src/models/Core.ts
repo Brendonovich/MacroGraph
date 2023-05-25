@@ -1,7 +1,4 @@
 import { createMutable } from "solid-js/store";
-import { ReactiveMap } from "@solid-primitives/map";
-
-import { Graph, SerializedGraph } from "./Graph";
 import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ExecOutput } from "./IO";
@@ -44,9 +41,9 @@ export class Core {
     return createMutable(this);
   }
 
-  load(projectData: z.infer<typeof SerializedProject>) {
+  async load(projectData: z.infer<typeof SerializedProject>) {
     this.eventNodeMappings.clear();
-    this.project = Project.deserialize(this, projectData);
+    this.project = await Project.deserialize(this, projectData);
   }
 
   createPackage<TEvents extends EventsMap>(args: Omit<PackageArgs, "core">) {
@@ -97,6 +94,7 @@ class ExecutionContext {
   run(data: any) {
     this.root.schema.run({
       ctx: this.createCtx(this.root),
+      io: this.root.io,
       data,
     });
   }
@@ -179,6 +177,7 @@ class ExecutionContext {
 
     await node.schema.run({
       ctx: this.createCtx(node),
+      io: node.io,
     });
   }
 }
