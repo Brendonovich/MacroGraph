@@ -88,9 +88,9 @@ export class Graph {
   }
 
   connectPins(output: DataOutput | ExecOutput, input: DataInput | ExecInput) {
-    if (!pinsCanConnect(output, input)) return;
+    const status = batch(() => {
+      if (!pinsCanConnect(output, input)) return false;
 
-    batch(() => {
       if (output instanceof DataOutput) {
         const dataOutput = output as DataOutput;
         const dataInput = input as DataInput;
@@ -110,9 +110,13 @@ export class Graph {
         execOutput.connection = execInput;
         execInput.connection = execOutput;
       }
+
+      return true;
     });
 
     this.project.save();
+
+    return status;
   }
 
   disconnectPin(pin: DataOutput | ExecOutput | DataInput | ExecInput) {
@@ -146,6 +150,7 @@ export class Graph {
       item.outputs.forEach((o) => this.disconnectPin(o));
 
       this.nodes.delete(item.id);
+      item.dispose();
     } else {
       this.commentBoxes.delete(item);
     }
@@ -191,10 +196,10 @@ export class Graph {
     };
   }
 
-  static deserialize(
+  static async deserialize(
     project: Project,
     data: z.infer<typeof SerializedGraph>
-  ): Graph {
+  ): Promise<Graph> {
     const graph = new Graph({
       project,
       id: data.id,
@@ -218,14 +223,28 @@ export class Graph {
         .filter(Boolean) as [number, Node][]
     );
 
-    data.connections.forEach(({ from, to }) => {
-      const output = graph.nodes.get(from.node)?.output(from.output);
-      const input = graph.nodes.get(to.node)?.input(to.input);
+    let i = 0;
+    let connections = [...data.connections];
 
-      if (!output || !input) return;
+    while (connections.length > 0) {
+      if (i > 10) {
+        console.warn(`Failed to deserialize all connections after ${i} passes`);
+        break;
+      }
 
-      graph.connectPins(output, input);
-    });
+      i++;
+
+      connections = connections.filter(({ from, to }) => {
+        const output = graph.nodes.get(from.node)?.output(from.output);
+        const input = graph.nodes.get(to.node)?.input(to.input);
+
+        if (!output || !input) return true;
+
+        return !graph.connectPins(output, input);
+      });
+
+      await microtask();
+    }
 
     graph.commentBoxes = new ReactiveSet(
       data.commentBoxes.map((box) => new CommentBox(box))
@@ -234,3 +253,5 @@ export class Graph {
     return graph;
   }
 }
+
+const microtask = () => new Promise<void>((res) => queueMicrotask(res));

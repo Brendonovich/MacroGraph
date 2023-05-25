@@ -41,9 +41,9 @@ export class Core {
     return createMutable(this);
   }
 
-  load(projectData: z.infer<typeof SerializedProject>) {
+  async load(projectData: z.infer<typeof SerializedProject>) {
     this.eventNodeMappings.clear();
-    this.project = Project.deserialize(this, projectData);
+    this.project = await Project.deserialize(this, projectData);
   }
 
   createPackage<TEvents extends EventsMap>(args: Omit<PackageArgs, "core">) {

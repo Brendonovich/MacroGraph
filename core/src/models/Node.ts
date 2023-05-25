@@ -13,7 +13,7 @@ import { Graph } from ".";
 import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { createEffect, untrack, createRoot } from "solid-js";
+import { untrack, createRoot, createRenderEffect } from "solid-js";
 import { Wildcard } from "../types";
 
 export interface NodeArgs {
@@ -63,7 +63,7 @@ export class Node {
     const reactiveThis = createMutable(this);
 
     this.dispose = createRoot((dispose) => {
-      createEffect(() => {
+      createRenderEffect(() => {
         const builder = new IOBuilder(this.wildcards);
 
         reactiveThis.schema.generateIO(builder, {});

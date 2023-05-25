@@ -111,16 +111,14 @@ export function connectWildcardsInIO(output: DataOutput, input: DataInput) {
 }
 
 function connectWildcardsInTypes(t1: AnyType, t2: AnyType) {
-  batch(() => {
-    if (t1 instanceof WildcardType || t2 instanceof WildcardType) {
-      if (t1 instanceof WildcardType) t1.addConnection(t2);
-      if (t2 instanceof WildcardType) t2.addConnection(t1);
-    } else if (t1 instanceof ListType && t2 instanceof ListType) {
-      connectWildcardsInTypes(t1.inner, t2.inner);
-    } else if (t1 instanceof OptionType && t2 instanceof OptionType) {
-      connectWildcardsInTypes(t1.inner, t2.inner);
-    }
-  });
+  if (t1 instanceof WildcardType || t2 instanceof WildcardType) {
+    if (t1 instanceof WildcardType) t1.addConnection(t2);
+    if (t2 instanceof WildcardType) t2.addConnection(t1);
+  } else if (t1 instanceof ListType && t2 instanceof ListType) {
+    connectWildcardsInTypes(t1.inner, t2.inner);
+  } else if (t1 instanceof OptionType && t2 instanceof OptionType) {
+    connectWildcardsInTypes(t1.inner, t2.inner);
+  }
 }
 
 export function disconnectWildcardsInIO(output: DataOutput, input: DataInput) {
