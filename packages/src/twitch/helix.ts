@@ -1,31 +1,33 @@
 import { ApiClient } from "@twurple/api";
-import { createRoot, createEffect, createMemo, createSignal } from "solid-js";
-import { accessToken, authProvider } from "./auth";
+import { createRoot, createEffect, createSignal } from "solid-js";
+import { authProvider } from "./auth";
 import pkg from "./pkg";
-import { None, t, Maybe, InferEnum } from "@macrograph/core";
+import {
+  None,
+  t,
+  Maybe,
+  InferEnum,
+  InferStruct,
+  Option,
+} from "@macrograph/core";
 
 export const { helix, user } = createRoot(() => {
-  const helix = createMemo(
-    () => authProvider().map((p) => new ApiClient({ authProvider: p })),
-    None
-  );
+  const helix = new ApiClient({ authProvider });
 
   const getUser = () =>
-    accessToken()
-      .zip(helix())
-      .andThenAsync(([token, helix]) =>
-        helix.getTokenInfo().then(({ userId, userName }) =>
-          Maybe(
-            userId !== null && userName !== null
-              ? {
-                  id: userId,
-                  name: userName,
-                  token,
-                }
-              : null
-          )
+    authProvider.token.andThenAsync((token) =>
+      helix.getTokenInfo().then(({ userId, userName }) =>
+        Maybe(
+          userId !== null && userName !== null
+            ? {
+                id: userId,
+                name: userName,
+                token,
+              }
+            : null
         )
-      );
+      )
+    );
 
   const [user, setUser] =
     createSignal<Awaited<ReturnType<typeof getUser>>>(None);
@@ -37,15 +39,6 @@ export const { helix, user } = createRoot(() => {
     user,
   };
 });
-
-const unwrapApi = () => {
-  const [h, u] = helix().zip(user()).unwrap();
-
-  return {
-    helix: h,
-    user: u,
-  };
-};
 
 pkg.createNonEventSchema({
   name: "Ban User",
@@ -68,9 +61,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { helix, user } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.banUser(user.id, user.id, {
+    helix.moderation.banUser(u.id, u.id, {
       user: ctx.getInput("userId"),
       duration: ctx.getInput("duration"),
       reason: ctx.getInput("reason"),
@@ -89,9 +82,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.unbanUser(user.id, user.id, ctx.getInput("userId"));
+    helix.moderation.unbanUser(u.id, u.id, ctx.getInput("userId"));
   },
 });
 
@@ -106,9 +99,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.addModerator(user.id, ctx.getInput("userId"));
+    helix.moderation.addModerator(u.id, ctx.getInput("userId"));
   },
 });
 
@@ -123,9 +116,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.removeModerator(user.id, ctx.getInput("userId"));
+    helix.moderation.removeModerator(u.id, ctx.getInput("userId"));
   },
 });
 
@@ -140,13 +133,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.moderation.deleteChatMessages(
-      user.id,
-      user.id,
-      ctx.getInput("messageId")
-    );
+    helix.moderation.deleteChatMessages(u.id, u.id, ctx.getInput("messageId"));
   },
 });
 
@@ -181,9 +170,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    await helix.channels.updateChannelInfo(user.id, {
+    await helix.channels.updateChannelInfo(u.id, {
       gameId: ctx.getInput("gameId"),
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
@@ -224,9 +213,9 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    await helix.channels.updateChannelInfo(user.id, {
+    await helix.channels.updateChannelInfo(u.id, {
       gameId: ctx.getInput("gameId"),
       language: ctx.getInput("language"),
       title: ctx.getInput("title"),
@@ -247,10 +236,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let clipId = await helix.clips.createClip({
-      channel: user.id,
+      channel: u.id,
     });
 
     ctx.setOutput("clipId", clipId);
@@ -298,10 +287,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.subscriptions.getSubscriptionForUser(
-      user.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -333,11 +322,11 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.channels.getChannelFollowers(
-      user.id,
-      user.id,
+      u.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -361,10 +350,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.channels.checkVipForUser(
-      user.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -388,10 +377,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     let data = await helix.moderation.checkUserMod(
-      user.id,
+      u.id,
       ctx.getInput("userId")
     );
 
@@ -540,10 +529,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
     try {
-      let data = await helix.channelPoints.createCustomReward(user.id, {
+      let data = await helix.channelPoints.createCustomReward(u.id, {
         title: ctx.getInput("title"),
         cost: ctx.getInput("cost"),
         prompt: ctx.getInput("prompt"),
@@ -735,10 +724,10 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
     try {
       let data = await helix.channelPoints.updateCustomReward(
-        user.id,
+        u.id,
         ctx.getInput("id"),
         {
           title: ctx.getInput("title"),
@@ -787,7 +776,7 @@ const RedemptionStatus = pkg.createEnum("Redemption Status", (e) => [
   e.variant("Cancelled"),
 ]);
 
-const CustomRedemption = pkg.createStruct("Redemption", (s) => ({
+const Redemption = pkg.createStruct("Redemption", (s) => ({
   id: s.field("ID", t.string()),
   userId: s.field("User ID", t.string()),
   userDisplayName: s.field("User Display Name", t.string()),
@@ -818,15 +807,15 @@ pkg.createNonEventSchema({
     io.dataOutput({
       name: "Redemption",
       id: "out",
-      type: t.struct(CustomRedemption),
+      type: t.struct(Redemption),
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
     const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
 
     let data = await helix.channelPoints.updateRedemptionStatusByIds(
-      user.id,
+      u.id,
       ctx.getInput("rewardId"),
       [ctx.getInput("redemptionId")],
       status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
@@ -835,6 +824,27 @@ pkg.createNonEventSchema({
     ctx.setOutput("out", data[0]);
   },
 });
+
+const Reward = pkg.createStruct("Reward", (s) => ({
+  id: s.field("ID", t.string()),
+  title: s.field("Title", t.string()),
+  prompt: s.field("Prompt", t.string()),
+  cost: s.field("Cost", t.int()),
+  bgColor: s.field("Background Color", t.string()),
+  enabled: s.field("Enabled", t.bool()),
+  userInputRequired: s.field("User Input Required", t.bool()),
+  maxRedemptionsPerStream: s.field("Max Redemptions/Stream", t.option(t.int())),
+  maxRedemptionsPerUserPerStream: s.field(
+    "Max Redemptions/User/Stream",
+    t.option(t.int())
+  ),
+  globalCooldown: s.field("Global Cooldown", t.option(t.bool())),
+  paused: s.field("Paused", t.bool()),
+  inStock: s.field("In Stock", t.bool()),
+  skipRequestQueue: s.field("Skip Request Queue", t.bool()),
+  redemptionsThisStream: s.field("Redemptions This Stream", t.option(t.int())),
+  cooldownExpire: s.field("Cooldown Expires In", t.option(t.string())),
+}));
 
 pkg.createNonEventSchema({
   name: "Get Reward By Title",
@@ -851,116 +861,58 @@ pkg.createNonEventSchema({
       type: t.bool(),
     });
     io.dataOutput({
-      name: "Success",
-      id: "success",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Title",
-      id: "rewardTitle",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Prompt",
-      id: "rewardPrompt",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Cost",
-      id: "rewardCost",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Background Color",
-      id: "backgroundColor",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Enabled",
-      id: "enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "User Input Required",
-      id: "userInputRequired",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per Stream",
-      id: "maxRedemptionsPerStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Max Redemptions Per User Per Stream",
-      id: "maxRedemptionsPerUserPerStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Global Cooldown",
-      id: "globalCooldown",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Paused",
-      id: "paused",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "in Stock",
-      id: "stock",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Skip Request Queue",
-      id: "skipRequestQueue",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Redemptions Current Stream",
-      id: "redemptionsCurrentStream",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Cooldown Expires in",
-      id: "cooldownExpire",
-      type: t.string(),
+      id: "out",
+      type: t.option(t.struct(Reward)),
     });
   },
   async run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
     let rewards = await helix.channelPoints.getCustomRewards(
-      user.id,
+      u.id,
       ctx.getInput("manageableOnly")
     );
+
     const data = rewards.find(
       (reward) => reward.title === ctx.getInput("title")
     );
-    ctx.setOutput("success", !!data);
-    ctx.setOutput("rewardId", data?.id);
-    ctx.setOutput("rewardTitle", data?.title);
-    ctx.setOutput("rewardPrompt", data?.prompt);
-    ctx.setOutput("rewardCost", data?.cost);
-    ctx.setOutput("backgroundColor", data?.backgroundColor);
-    ctx.setOutput("enabled", data?.isEnabled);
-    ctx.setOutput("userInputRequired", data?.userInputRequired);
-    ctx.setOutput("maxRedemptionsPerStream", data?.maxRedemptionsPerStream);
-    ctx.setOutput(
-      "maxRedemptionsPerUserPerStream",
-      data?.maxRedemptionsPerUserPerStream
+
+    ctx.setOutput<Option<InferStruct<typeof Reward>>>(
+      "out",
+      Maybe(data).map((data) => ({
+        id: data.id,
+        title: data.title,
+        prompt: data.prompt,
+        cost: data.cost,
+        bgColor: data.backgroundColor,
+        enabled: data.isEnabled,
+        userInputRequired: data.userInputRequired,
+        maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
+        maxRedemptionsPerUserPerStream: Maybe(
+          data.maxRedemptionsPerUserPerStream
+        ),
+        globalCooldown: Maybe(data.globalCooldown),
+        paused: data.isPaused,
+        inStock: data.isInStock,
+        skipRequestQueue: data.autoFulfill,
+        redemptionsThisStream: Maybe(data.redemptionsThisStream),
+        cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
+      }))
     );
-    ctx.setOutput("globalCooldown", data?.globalCooldown);
-    ctx.setOutput("paused", data?.isPaused);
-    ctx.setOutput("stock", data?.isInStock);
-    ctx.setOutput("skipRequestQueue", data?.autoFulfill);
-    ctx.setOutput("redemptionsCurrentStream", data?.redemptionsThisStream);
-    ctx.setOutput("cooldownExpire", JSON.stringify(data?.cooldownExpiryDate));
   },
 });
+
+const UserType = pkg.createEnum("User Type", (e) => [
+  e.variant("Admin"),
+  e.variant("Global Mod"),
+  e.variant("Staff"),
+  e.variant("Normal User"),
+]);
+
+const BroadcasterType = pkg.createEnum("Broadcaster Type", (e) => [
+  e.variant("Affliate"),
+  e.variant("Partner"),
+  e.variant("Normal User"),
+]);
 
 pkg.createNonEventSchema({
   name: "Get User By ID",
@@ -989,12 +941,12 @@ pkg.createNonEventSchema({
     io.dataOutput({
       id: "type",
       name: "User Type",
-      type: t.string(),
+      type: t.option(t.enum(UserType)),
     });
     io.dataOutput({
       id: "broadcasterType",
       name: "Broadcaster Type",
-      type: t.string(),
+      type: t.option(t.enum(BroadcasterType)),
     });
     io.dataOutput({
       id: "description",
@@ -1018,13 +970,28 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const { helix } = unwrapApi();
-    let data = await helix.users.getUserById(ctx.getInput("userId"));
+    const data = await helix.users.getUserById(ctx.getInput("userId"));
     ctx.setOutput("userId", data?.id);
     ctx.setOutput("userLogin", data?.name);
     ctx.setOutput("displayName", data?.displayName);
-    ctx.setOutput("type", data?.type);
-    ctx.setOutput("broadcasterType", data?.broadcasterType);
+    ctx.setOutput<InferEnum<typeof UserType>>(
+      "type",
+      (() => {
+        if (data?.type === "admin") return { variant: "Admin" };
+        else if (data?.type === "global_mod") return { variant: "Global Mod" };
+        else if (data?.type === "staff") return { variant: "Staff" };
+        else return { variant: "Normal User" };
+      })()
+    );
+    ctx.setOutput<InferEnum<typeof BroadcasterType>>(
+      "broadcasterType",
+      (() => {
+        const type = data?.broadcasterType;
+        if (type === "affiliate") return { variant: "Affliate" };
+        else if (type === "partner") return { variant: "Partner" };
+        else return { variant: "Normal User" };
+      })()
+    );
     ctx.setOutput("description", data?.description);
     ctx.setOutput("profileImageUrl", data?.profilePictureUrl);
     ctx.setOutput("offlineImageUrl", data?.offlinePlaceholderUrl);
@@ -1043,8 +1010,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
-    helix.channelPoints.deleteCustomReward(user.id, ctx.getInput("id"));
+    const u = user().unwrap();
+    return helix.channelPoints.deleteCustomReward(u.id, ctx.getInput("id"));
   },
 });
 
@@ -1063,9 +1030,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       followerOnlyModeEnabled: ctx.getInput("enabled"),
       followerOnlyModeDelay: ctx.getInput("delay"),
     });
@@ -1087,9 +1054,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       slowModeEnabled: ctx.getInput("enabled"),
       slowModeDelay: ctx.getInput("delay"),
     });
@@ -1106,9 +1073,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       subscriberOnlyModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -1124,9 +1091,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.updateSettings(user.id, user.id, {
+    helix.chat.updateSettings(u.id, u.id, {
       uniqueChatModeEnabled: ctx.getInput("enabled"),
     });
   },
@@ -1143,9 +1110,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.shoutoutUser(user.id, ctx.getInput("toId"), user.id);
+    helix.chat.shoutoutUser(u.id, ctx.getInput("toId"), u.id);
   },
 });
 
@@ -1160,8 +1127,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const { user, helix } = unwrapApi();
+    const u = user().unwrap();
 
-    helix.chat.sendAnnouncement(user.id, user.id, ctx.getInput("announcement"));
+    helix.chat.sendAnnouncement(u.id, u.id, ctx.getInput("announcement"));
   },
 });

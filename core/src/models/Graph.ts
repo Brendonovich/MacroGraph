@@ -95,11 +95,11 @@ export class Graph {
         const dataOutput = output as DataOutput;
         const dataInput = input as DataInput;
 
-        connectWildcardsInIO(dataOutput, dataInput);
-
         dataOutput.connections.add(dataInput);
         dataInput.connection?.connections.delete(dataInput);
         dataInput.connection = dataOutput;
+
+        connectWildcardsInIO(dataOutput, dataInput);
       } else {
         const execOutput = output as ExecOutput;
         const execInput = input as ExecInput;

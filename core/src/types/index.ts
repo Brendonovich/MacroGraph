@@ -11,6 +11,7 @@ export * from "./any";
 export * from "./primitive";
 export * from "./wildcard";
 export * from "./enum";
+export * from "./struct";
 export * as t from "./t";
 
 export type TypeVariant =

@@ -75,7 +75,7 @@ export class DataOutput {
   }
 
   get variant() {
-    return "data";
+    return "Data";
   }
 }
 
@@ -135,7 +135,7 @@ export class ExecOutput {
   }
 
   get variant() {
-    return "exec";
+    return "Exec";
   }
 }
 

@@ -98,7 +98,6 @@ export class Node {
             oldInput.id === newInput.id && oldInput.variant === newInput.variant
         )
       );
-      // console.log(self.inputs);
 
       builder.inputs.forEach((newInput, newIndex) => {
         const oldInputIndex = self.inputs.findIndex(
@@ -117,6 +116,9 @@ export class Node {
         }
       });
 
+      console.log(self.name);
+      console.log("outputs before: ", self.outputs.length);
+
       self.outputs = self.outputs.filter((oldOutput) =>
         builder.outputs.find(
           (newOutput) =>
@@ -124,6 +126,8 @@ export class Node {
             oldOutput.variant === newOutput.variant
         )
       );
+
+      console.log("outputs after: ", self.outputs.length);
 
       builder.outputs.forEach((newOutput, newIndex) => {
         const oldOutputIndex = this.outputs.findIndex(

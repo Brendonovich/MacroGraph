@@ -8,7 +8,7 @@ export class ListType<T extends AnyType = AnyType, TOut = any> extends BaseType<
     super();
   }
 
-  default(): TOut[] {
+  default(): any {
     return [];
   }
 

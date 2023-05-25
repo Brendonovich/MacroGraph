@@ -83,3 +83,17 @@ export class StructType<S extends Struct = Struct> extends BaseType {
     return `Struct(${this.struct.name})`;
   }
 }
+
+export type InferStruct<S> = S extends Struct<infer Fields>
+  ? InferStructFields<Fields>
+  : never;
+
+export type InferStructFields<F> = F extends StructFields
+  ? { [K in keyof F]: InferStructField<F[K]> }
+  : never;
+
+export type InferStructField<F> = F extends StructField<infer Type>
+  ? Type extends BaseType<infer TOut>
+    ? TOut
+    : never
+  : never;

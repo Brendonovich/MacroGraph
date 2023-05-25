@@ -487,14 +487,15 @@ function Maybe<T>(value: T | null | undefined): Option<T> {
 
 export { Option, Some, Maybe, None };
 
-export class OptionType<T extends AnyType = AnyType> extends BaseType<
-  Option<T>
-> {
+export class OptionType<
+  T extends BaseType<TOut> = AnyType,
+  TOut = any
+> extends BaseType<Option<TOut>> {
   constructor(public inner: T) {
     super();
   }
 
-  default(): Option<T> {
+  default(): any {
     return None;
   }
 
