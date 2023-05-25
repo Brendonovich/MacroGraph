@@ -494,7 +494,7 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
     super();
   }
 
-  default(): any {
+  default(): Option<TOut> {
     return None;
   }
 
