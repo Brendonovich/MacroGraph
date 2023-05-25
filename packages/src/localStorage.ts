@@ -1,4 +1,4 @@
-import { core, t, Option, Maybe } from "@macrograph/core";
+import { core, t, Maybe } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Localstorage",

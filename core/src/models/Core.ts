@@ -94,6 +94,7 @@ class ExecutionContext {
   run(data: any) {
     this.root.schema.run({
       ctx: this.createCtx(this.root),
+      io: this.root.io,
       data,
     });
   }
@@ -176,6 +177,7 @@ class ExecutionContext {
 
     await node.schema.run({
       ctx: this.createCtx(node),
+      io: node.io,
     });
   }
 }

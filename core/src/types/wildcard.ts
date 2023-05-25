@@ -18,16 +18,6 @@ export class Wildcard {
   constructor(public id: string) {
     return createMutable(this);
   }
-
-  private disposeHooks: (() => void)[] = [];
-
-  addDisposeHook(cb: () => void) {
-    this.disposeHooks.push(cb);
-  }
-
-  dispose() {
-    this.disposeHooks.forEach((h) => h());
-  }
 }
 
 /**

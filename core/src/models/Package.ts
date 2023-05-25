@@ -3,6 +3,7 @@ import { Core } from "./Core";
 import {
   EventNodeSchema,
   EventsMap,
+  IOBuilder,
   NodeSchema,
   NonEventNodeSchema,
   RunCtx,
@@ -53,7 +54,7 @@ export class Package<TEvents extends EventsMap = EventsMap> {
 
         schema.generateIO(t, state);
       },
-      run: async (args: { ctx: RunCtx }) => {
+      run: async (args: { ctx: RunCtx; io: IOBuilder }) => {
         await schema.run(args);
 
         if (schema.variant === "Exec") args.ctx.exec("exec");

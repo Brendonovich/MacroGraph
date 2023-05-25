@@ -777,7 +777,7 @@ pkg.createNonEventSchema({
     const w = io.wildcard("");
 
     io.dataInput({
-      id: "in",
+      id: "",
       type: t.wildcard(w),
     });
 
@@ -795,5 +795,15 @@ pkg.createNonEventSchema({
       }
     });
   },
-  run({ ctx }) {},
+  run({ ctx, io }) {
+    const w = io.wildcards.get("")!;
+
+    const data = ctx.getInput<Record<string, any>>("");
+
+    Object.keys(
+      (w.value.unwrap() as StructType<StructFields>).struct.fields
+    ).forEach((key) => {
+      ctx.setOutput(key, data[key]);
+    });
+  },
 });

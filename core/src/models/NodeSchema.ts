@@ -41,25 +41,13 @@ export class IOBuilder {
   outputs: OutputBuilder[] = [];
 
   wildcards = new Map<string, Wildcard>();
-  usedWildcards = new Set<Wildcard>();
-  newWildcards: Wildcard[] = [];
+
+  constructor(public existingWildcards: Map<string, Wildcard>) {}
 
   wildcard(id: string) {
-    const wildcard = (() => {
-      const existing = this.wildcards.get(id);
-
-      if (existing) return existing;
-      else {
-        const wildcard = new Wildcard(id);
-
-        this.newWildcards.push(wildcard);
-
-        return wildcard;
-      }
-    })();
+    const wildcard = this.existingWildcards.get(id) ?? new Wildcard(id);
 
     this.wildcards.set(id, wildcard);
-    this.usedWildcards.add(wildcard);
 
     return wildcard;
   }
@@ -103,7 +91,7 @@ export type NonEventNodeSchema<TState extends object = object> = {
   generateIO: (builder: IOBuilder, state: TState) => void;
   package: Package<EventsMap>;
   variant: Exclude<NodeSchemaVariant, "Event">;
-  run: (a: { ctx: RunCtx }) => void | Promise<void>;
+  run: (a: { ctx: RunCtx; io: IOBuilder }) => void | Promise<void>;
 };
 
 export type EventNodeSchema<
@@ -115,5 +103,5 @@ export type EventNodeSchema<
   generateIO: (builder: IOBuilder, state: TState) => void;
   package: Package<EventsMap>;
   event: TEvent;
-  run: (a: { ctx: RunCtx; data: TEvents[TEvent] }) => void;
+  run: (a: { ctx: RunCtx; data: TEvents[TEvent]; io: IOBuilder }) => void;
 };
