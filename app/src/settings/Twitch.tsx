@@ -51,9 +51,10 @@ export default () => {
                           .userId()
                           .map((id) => id === token.userId)
                           .unwrapOr(false)}
-                        onChange={(r) => {
-                          if (r.target.checked)
+                        onChange={async (r) => {
+                          if (r.target.checked) {
                             helix.setUserId(Some(token.userId));
+                          }
                         }}
                       />
                     </td>
@@ -65,9 +66,10 @@ export default () => {
                           .readUserId()
                           .map((u) => u === token.userId)
                           .unwrapOr(false)}
-                        onChange={(r) => {
-                          if (r.target.checked)
+                        onChange={async (r) => {
+                          if (r.target.checked) {
                             chat.setReadUserId(Some(token.userId));
+                          }
                         }}
                       />
                     </td>
@@ -79,9 +81,10 @@ export default () => {
                           .writeUserId()
                           .map((u) => u === token.userId)
                           .unwrapOr(false)}
-                        onChange={(r) => {
-                          if (r.target.checked)
+                        onChange={async (r) => {
+                          if (r.target.checked) {
                             chat.setWriteUserId(Some(token.userId));
+                          }
                         }}
                       />
                     </td>
