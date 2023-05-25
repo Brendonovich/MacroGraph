@@ -96,10 +96,10 @@ const Input = (props: InputProps) => {
                 type().inner.variants.find(
                   (v) => v.name === props.value?.variant
                 ) ??
-                (props.onChange(type().inner.variants[0].defaultValue()),
+                (props.onChange(type().inner.variants[0].default()),
                 type().inner.variants[0])
               }
-              onChange={(v) => props.onChange(v.defaultValue())}
+              onChange={(v) => props.onChange(v.default())}
             />
           </div>
         )}

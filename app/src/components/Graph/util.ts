@@ -6,6 +6,7 @@ import {
   OptionType,
   PrimitiveVariant,
 } from "@macrograph/core";
+import { StructType } from "~/../../core/src/types/struct";
 
 const DataPinTypeColours: Record<PrimitiveVariant, string> = {
   bool: "[--mg-current:#DC2626]",
@@ -22,6 +23,8 @@ export const colour = (type: AnyType): string => {
     return colour(type.inner);
 
   if (type instanceof EnumType) return "[--mg-current:#1B4DFF]";
+
+  if (type instanceof StructType) return "[--mg-current:#1B4DFF]";
 
   const value = type.wildcard.value;
 

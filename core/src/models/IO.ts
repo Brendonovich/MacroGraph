@@ -43,7 +43,7 @@ export class DataInput {
   }
 
   get variant() {
-    return "data" as const;
+    return "Data";
   }
 }
 
@@ -106,7 +106,7 @@ export class ExecInput {
   }
 
   get variant() {
-    return "exec";
+    return "Exec";
   }
 }
 

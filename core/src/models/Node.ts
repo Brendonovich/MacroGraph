@@ -13,7 +13,8 @@ import { Graph } from ".";
 import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { batch } from "solid-js";
+import { batch, createEffect, createRoot, on } from "solid-js";
+import { Wildcard } from "../types";
 
 export interface NodeArgs {
   id: number;
@@ -45,6 +46,7 @@ export class Node {
   schema: NodeSchema;
   inputs: (DataInput | ExecInput)[] = [];
   outputs: (DataOutput | ExecOutput)[] = [];
+  wildcards = new Map<string, Wildcard>();
 
   selected = false;
 
@@ -55,42 +57,67 @@ export class Node {
     this.position = args.position;
     this.schema = args.schema;
 
-    this.regenerateIO();
+    const self = createMutable(this);
 
-    return createMutable(this);
+    this.regenerateIO(self);
+
+    return self;
   }
 
-  regenerateIO() {
+  regenerateIO(self: this) {
     const builder = new IOBuilder();
+    builder.wildcards = self.wildcards;
 
-    this.schema.generateIO(builder, {});
+    self.schema.generateIO(builder, {});
 
     batch(() => {
-      this.inputs = this.inputs.filter((oldInput) =>
+      [...self.wildcards].forEach(([oldId, oldWildcard]) => {
+        if (!builder.usedWildcards.has(oldWildcard)) {
+          self.wildcards.delete(oldId);
+          oldWildcard.dispose();
+        }
+      });
+
+      builder.newWildcards.forEach((w) => {
+        w.addDisposeHook(
+          createRoot((dispose) => {
+            createEffect(
+              on(
+                () => w.value,
+                () => self.regenerateIO(self)
+              )
+            );
+            return dispose;
+          })
+        );
+      });
+
+      self.inputs = self.inputs.filter((oldInput) =>
         builder.inputs.find(
           (newInput) =>
             oldInput.id === newInput.id && oldInput.variant === newInput.variant
         )
       );
+      // console.log(self.inputs);
 
       builder.inputs.forEach((newInput, newIndex) => {
-        const oldInputIndex = this.inputs.findIndex(
+        const oldInputIndex = self.inputs.findIndex(
           (oldInput) => oldInput.id === newInput.id
         );
 
         if (oldInputIndex >= 0) {
-          const oldInput = this.inputs.splice(oldInputIndex, 1);
-          this.inputs.splice(newIndex, 0, ...oldInput);
+          const oldInput = self.inputs.splice(oldInputIndex, 1);
+          self.inputs.splice(newIndex, 0, ...oldInput);
         } else {
           if (newInput.variant === "Data") {
-            this.addDataInput({ ...newInput, index: newIndex });
+            self.addDataInput({ ...newInput, index: newIndex });
           } else {
-            this.addExecInput({ ...newInput, index: newIndex });
+            self.addExecInput({ ...newInput, index: newIndex });
           }
         }
       });
 
-      this.outputs = this.outputs.filter((oldOutput) =>
+      self.outputs = self.outputs.filter((oldOutput) =>
         builder.outputs.find(
           (newOutput) =>
             oldOutput.id === newOutput.id &&
@@ -105,12 +132,12 @@ export class Node {
 
         if (oldOutputIndex >= 0) {
           const oldInput = this.outputs.splice(oldOutputIndex, 1);
-          this.outputs.splice(newIndex, 0, ...oldInput);
+          self.outputs.splice(newIndex, 0, ...oldInput);
         } else {
           if (newOutput.variant === "Data") {
-            this.addDataOutput({ ...newOutput, index: newIndex });
+            self.addDataOutput({ ...newOutput, index: newIndex });
           } else {
-            this.addExecOutput({ ...newOutput, index: newIndex });
+            self.addExecOutput({ ...newOutput, index: newIndex });
           }
         }
       });

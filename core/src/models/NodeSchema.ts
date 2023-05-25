@@ -1,5 +1,5 @@
 import { AnyType } from "../types";
-import { newWildcard, Wildcard } from "../types/wildcard";
+import { Wildcard } from "../types/wildcard";
 import { Package } from "./Package";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
@@ -40,12 +40,26 @@ export class IOBuilder {
   inputs: InputBuilder[] = [];
   outputs: OutputBuilder[] = [];
 
-  wildcards: Wildcard[] = [];
+  wildcards = new Map<string, Wildcard>();
+  usedWildcards = new Set<Wildcard>();
+  newWildcards: Wildcard[] = [];
 
-  wildcard() {
-    const wildcard = newWildcard();
+  wildcard(id: string) {
+    const wildcard = (() => {
+      const existing = this.wildcards.get(id);
 
-    this.wildcards.push(wildcard);
+      if (existing) return existing;
+      else {
+        const wildcard = new Wildcard(id);
+
+        this.newWildcards.push(wildcard);
+
+        return wildcard;
+      }
+    })();
+
+    this.wildcards.set(id, wildcard);
+    this.usedWildcards.add(wildcard);
 
     return wildcard;
   }

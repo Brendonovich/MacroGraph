@@ -787,6 +787,20 @@ const RedemptionStatus = pkg.createEnum("Redemption Status", (e) => [
   e.variant("Cancelled"),
 ]);
 
+const CustomRedemption = pkg.createStruct("Redemption", (s) => ({
+  id: s.field("ID", t.string()),
+  userId: s.field("User ID", t.string()),
+  userDisplayName: s.field("User Display Name", t.string()),
+  userName: s.field("User Name", t.string()),
+  rewardId: s.field("Reward ID", t.string()),
+  rewardTitle: s.field("Reward Title", t.string()),
+  rewardPrompt: s.field("Reward Prompt", t.string()),
+  rewardCost: s.field("Reward Cost", t.string()),
+  userInput: s.field("User Input", t.string()),
+  updateStatus: s.field("Status", t.enum(RedemptionStatus)),
+  redemptionDate: s.field("Redemption Date", t.string()),
+}));
+
 pkg.createNonEventSchema({
   name: "Update Redemption Status",
   variant: "Exec",
@@ -801,103 +815,24 @@ pkg.createNonEventSchema({
       id: "rewardId",
       type: t.string(),
     });
-    io.dataInput({
-      name: "Status",
-      id: "status",
-      type: t.enum(RedemptionStatus),
-    });
     io.dataOutput({
-      name: "Success",
-      id: "success",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      name: "Error Message",
-      id: "errorMessage",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Redemption ID",
-      id: "redemptionId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "User ID",
-      id: "userId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Display Name",
-      id: "displayName",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "User Login Name",
-      id: "userLogin",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Title",
-      id: "rewardTitle",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Prompt",
-      id: "rewardPrompt",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Reward Cost",
-      id: "rewardCost",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "User Input",
-      id: "userInput",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Status",
-      id: "status",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Redeemed At",
-      id: "redeemedAt",
-      type: t.string(),
+      name: "Redemption",
+      id: "out",
+      type: t.struct(CustomRedemption),
     });
   },
   async run({ ctx }) {
     const { user, helix } = unwrapApi();
-    try {
-      const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
-      let data = await helix.channelPoints.updateRedemptionStatusByIds(
-        user.id,
-        ctx.getInput("rewardId"),
-        ctx.getInput("redemptionId"),
-        status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
-      );
-      ctx.setOutput("success", true);
-      ctx.setOutput("redemptionId", data[0]?.id);
-      ctx.setOutput("userId", data[0]?.userId);
-      ctx.setOutput("displayName", data[0]?.userDisplayName);
-      ctx.setOutput("userLogin", data[0]?.userName);
-      ctx.setOutput("rewardId", data[0]?.rewardId);
-      ctx.setOutput("rewardTitle", data[0]?.rewardTitle);
-      ctx.setOutput("rewardPrompt", data[0]?.rewardPrompt);
-      ctx.setOutput("rewardCost", data[0]?.rewardCost);
-      ctx.setOutput("userInput", data[0]?.userInput);
-      ctx.setOutput("status", data[0]?.updateStatus);
-      ctx.setOutput("redeemedAt", JSON.stringify(data[0]?.redemptionDate));
-    } catch (error: any) {
-      ctx.setOutput("success", false);
-      ctx.setOutput("errorMessage", JSON.parse(error.body).message);
-    }
+    const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
+
+    let data = await helix.channelPoints.updateRedemptionStatusByIds(
+      user.id,
+      ctx.getInput("rewardId"),
+      [ctx.getInput("redemptionId")],
+      status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
+    );
+
+    ctx.setOutput("out", data[0]);
   },
 });
 

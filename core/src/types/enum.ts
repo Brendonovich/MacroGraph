@@ -12,7 +12,7 @@ export class EnumVariant<
     return createMutable(this);
   }
 
-  defaultValue(): InferEnumVariant<EnumVariant<Name, Data>> {
+  default(): any {
     const data = this.data;
 
     return data === null
@@ -55,7 +55,7 @@ export class Enum<Variants extends EnumVariants = EnumVariants> {
       };
     }
 
-    // return createMutable(this);
+    return createMutable(this);
   }
 
   _variants:
@@ -100,7 +100,7 @@ export class EnumType<E extends Enum = Enum> extends BaseType {
   }
 
   default() {
-    return this.inner.variants[0].defaultValue();
+    return this.inner.variants[0].default();
   }
 
   variant(): TypeVariant {

@@ -15,6 +15,7 @@ import { z } from "zod";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
 import { connectWildcardsInIO, disconnectWildcardsInIO } from "../types";
+import { batch } from "solid-js";
 
 export interface GraphArgs {
   id: number;
@@ -89,25 +90,27 @@ export class Graph {
   connectPins(output: DataOutput | ExecOutput, input: DataInput | ExecInput) {
     if (!pinsCanConnect(output, input)) return;
 
-    if (output instanceof DataOutput) {
-      const dataOutput = output as DataOutput;
-      const dataInput = input as DataInput;
+    batch(() => {
+      if (output instanceof DataOutput) {
+        const dataOutput = output as DataOutput;
+        const dataInput = input as DataInput;
 
-      connectWildcardsInIO(dataOutput, dataInput);
+        connectWildcardsInIO(dataOutput, dataInput);
 
-      dataOutput.connections.add(dataInput);
-      dataInput.connection?.connections.delete(dataInput);
-      dataInput.connection = dataOutput;
-    } else {
-      const execOutput = output as ExecOutput;
-      const execInput = input as ExecInput;
+        dataOutput.connections.add(dataInput);
+        dataInput.connection?.connections.delete(dataInput);
+        dataInput.connection = dataOutput;
+      } else {
+        const execOutput = output as ExecOutput;
+        const execInput = input as ExecInput;
 
-      if (execOutput.connection) execOutput.connection.connection = null;
-      if (execInput.connection) execInput.connection.connection = null;
+        if (execOutput.connection) execOutput.connection.connection = null;
+        if (execInput.connection) execInput.connection.connection = null;
 
-      execOutput.connection = execInput;
-      execInput.connection = execOutput;
-    }
+        execOutput.connection = execInput;
+        execInput.connection = execOutput;
+      }
+    });
 
     this.project.save();
   }

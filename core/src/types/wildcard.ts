@@ -11,16 +11,23 @@ import { createMutable } from "solid-js/store";
 /**
  * A Wildcard that belongs to a Node.
  */
-export type Wildcard = {
-  types: ReactiveSet<WildcardType>;
-  value: Option<AnyType>;
-};
+export class Wildcard {
+  types = new ReactiveSet<WildcardType>();
+  value: Option<AnyType> = None;
 
-export function newWildcard(): Wildcard {
-  return createMutable({
-    types: new ReactiveSet(),
-    value: None,
-  });
+  constructor(public id: string) {
+    return createMutable(this);
+  }
+
+  private disposeHooks: (() => void)[] = [];
+
+  addDisposeHook(cb: () => void) {
+    this.disposeHooks.push(cb);
+  }
+
+  dispose() {
+    this.disposeHooks.forEach((h) => h());
+  }
 }
 
 /**
@@ -70,7 +77,9 @@ export class WildcardType extends BaseType {
   }
 
   toString(): string {
-    return this.wildcard.value.map((v) => v.toString()).unwrapOr("Wildcard");
+    return this.wildcard.value
+      .map((v) => `Wildcard(${v.toString()})`)
+      .unwrapOr("Wildcard");
   }
 }
 
