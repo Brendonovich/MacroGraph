@@ -19,7 +19,6 @@ export const { client, userId, setUserId } = createRoot(() => {
       () => {
         userId()
           .map((userId) => {
-            auth.refreshAccessTokenForUser(userId);
             localStorage.setItem(HELIX_USER_ID, userId);
             return true;
           })

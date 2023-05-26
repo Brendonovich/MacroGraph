@@ -7,8 +7,9 @@ import {
 } from "solid-js";
 import tmi, { Client } from "tmi.js";
 import pkg from "./pkg";
-import { t, Option, None, Maybe } from "@macrograph/core";
+import { t, Option, None, Maybe, Some } from "@macrograph/core";
 import { auth } from "./auth";
+import { userId } from "./helix";
 
 const CHAT_READ_USER_ID = "chatReadUserId";
 const CHAT_WRITE_USER_ID = "chatWriteUserId";
@@ -58,12 +59,18 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
       )
     );
 
-    createEffect(() => {
-      const client = readUserId()
-        .zip(writeUserId())
-        .map(([read, write]) => {
-          const tokenRead = Maybe(auth.tokens[read]).expect("Token not found!");
-          const tokenWrite = Maybe(auth.tokens[write]).expect(
+    createEffect(
+      on(
+        () => {
+          const Account = readUserId().unwrap();
+          const Channel = writeUserId().unwrap();
+          return { Account, Channel };
+        },
+        (data) => {
+          const tokenRead = Maybe(auth.tokens[data.Account]).expect(
+            "Token not found!"
+          );
+          const tokenWrite = Maybe(auth.tokens[data.Channel]).expect(
             "Token not found!"
           );
           const client = tmi.Client({
@@ -129,13 +136,10 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
             client.disconnect();
           });
 
-          return client;
-        });
-
-      setClient(client);
-
-      return () => {};
-    });
+          setClient(Maybe(client));
+        }
+      )
+    );
 
     return {
       client,
