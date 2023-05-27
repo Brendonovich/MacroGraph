@@ -32,10 +32,11 @@ class MacroGraphAuthProvider implements AuthProvider {
     return this.tokens[id]?.scope ?? [];
   }
 
-  logOut(userId: UserIdResolvable) {
-    const id = extractUserId(userId);
+  logOut(userID: UserIdResolvable) {
+    const id = extractUserId(userID);
     delete this.tokens[id];
     localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
+    return this.tokens;
   }
 
   async getAccessTokenForUser(
@@ -65,6 +66,7 @@ class MacroGraphAuthProvider implements AuthProvider {
     const preSome = { ...token, userId, userName };
     this.tokens[userId] = preSome;
     localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
+    return userId;
   }
 
   async getAnyAccessToken(
