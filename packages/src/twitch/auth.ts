@@ -2,7 +2,7 @@ import { AccessTokenWithUserId, AuthProvider } from "@twurple/auth";
 import { Maybe, None, Some } from "@macrograph/core";
 import { extractUserId, UserIdResolvable } from "@twurple/api";
 import { z } from "zod";
-import { createMutable } from "solid-js/store";
+import { ReactiveMap } from "@solid-primitives/map";
 
 const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -13,30 +13,28 @@ export interface AccessTokenWithUsernameAndId extends AccessTokenWithUserId {
 }
 
 class MacroGraphAuthProvider implements AuthProvider {
-  tokens: Record<string, AccessTokenWithUsernameAndId>;
+  tokens: ReactiveMap<string, AccessTokenWithUsernameAndId>;
 
   constructor(public clientId: string) {
     this.tokens = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN))
       .andThen((j) => {
         const data = SCHEMA.safeParse(JSON.parse(j));
-        if (data.success) return Some(data.data);
+        if (data.success)
+          return Some(new ReactiveMap(Object.entries(data.data)));
         return None;
       })
-      .unwrapOr({});
-
-    return createMutable(this);
+      .unwrapOr(new ReactiveMap());
   }
 
   getCurrentScopesForUser(userId: UserIdResolvable) {
     const id = extractUserId(userId);
-    return this.tokens[id]?.scope ?? [];
+    return this.tokens.get(id)?.scope ?? [];
   }
 
   logOut(userID: UserIdResolvable) {
     const id = extractUserId(userID);
-    delete this.tokens[id];
-    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
-    return this.tokens;
+    this.tokens.delete(id);
+    this.saveTokens();
   }
 
   async getAccessTokenForUser(
@@ -45,10 +43,11 @@ class MacroGraphAuthProvider implements AuthProvider {
   ) {
     const id = extractUserId(userId);
     return {
-      ...Maybe(this.tokens[id]).expect("getAccessTokenForUser missing token"),
+      ...Maybe(this.tokens.get(id)).expect(
+        "getAccessTokenForUser missing token"
+      ),
       obtainmentTimestamp: Date.now(),
       userId: id,
-      userName: this.tokens[id]?.userName,
     };
   }
 
@@ -63,9 +62,11 @@ class MacroGraphAuthProvider implements AuthProvider {
     const resData = await res.json();
     const userId = resData.data[0].id;
     const userName = resData.data[0].display_name;
-    const preSome = { ...token, userId, userName };
-    this.tokens[userId] = preSome;
-    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
+
+    this.tokens.set(userId, { ...token, userId, userName });
+
+    this.saveTokens();
+
     return userId;
   }
 
@@ -74,11 +75,11 @@ class MacroGraphAuthProvider implements AuthProvider {
   ): Promise<AccessTokenWithUsernameAndId> {
     return {
       ...Maybe(
-        this.tokens[
+        this.tokens.get(
           Maybe(userId)
             .map(extractUserId)
             .expect("User Id not provided on any access token")
-        ]
+        )
       ).expect("getAnyAccessToken missing token"),
     };
   }
@@ -88,7 +89,7 @@ class MacroGraphAuthProvider implements AuthProvider {
   ): Promise<AccessTokenWithUsernameAndId> {
     const userId = extractUserId(user);
 
-    const { userName, refreshToken } = Maybe(this.tokens[userId]).expect(
+    const { userName, refreshToken } = Maybe(this.tokens.get(userId)).expect(
       "refreshAccessTokenForUser missing token"
     );
 
@@ -112,9 +113,23 @@ class MacroGraphAuthProvider implements AuthProvider {
       userId,
       userName,
     };
-    this.tokens[userId] = returnData;
-    localStorage.setItem(TWITCH_ACCCESS_TOKEN, JSON.stringify(this.tokens));
+
+    this.tokens.set(userId, returnData);
+    this.saveTokens();
+
     return returnData;
+  }
+
+  saveTokens() {
+    localStorage.setItem(
+      TWITCH_ACCCESS_TOKEN,
+      JSON.stringify(
+        [...this.tokens.entries()].reduce(
+          (acc, [key, value]) => ({ ...acc, [key]: value }),
+          {}
+        )
+      )
+    );
   }
 }
 

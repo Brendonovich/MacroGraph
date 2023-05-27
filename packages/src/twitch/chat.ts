@@ -1,7 +1,15 @@
-import { createRoot, createSignal, onCleanup, createResource } from "solid-js";
+import {
+  createRoot,
+  createSignal,
+  onCleanup,
+  createResource,
+  createEffect,
+  on,
+  createComputed,
+} from "solid-js";
 import tmi from "tmi.js";
 import pkg from "./pkg";
-import { t, Option, None, Maybe } from "@macrograph/core";
+import { t, None, Maybe } from "@macrograph/core";
 import { auth } from "./auth";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
@@ -19,12 +27,12 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
     const [client] = createResource(
       () => readUserId().zip(writeUserId()).toNullable(),
       ([readUserId, writeUserId]) =>
-        Maybe(auth.tokens[readUserId])
-          .zip(Maybe(auth.tokens[writeUserId]))
+        Maybe(auth.tokens.get(readUserId))
+          .zip(Maybe(auth.tokens.get(writeUserId)))
           .map(([readToken, writeToken]) => {
             const client = tmi.Client({
               options: {
-                skipUpdatingEmotesets: false,
+                skipUpdatingEmotesets: true,
               },
               channels: [writeToken.userName],
               identity: {
@@ -90,32 +98,42 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
       { initialValue: None }
     );
 
+    createComputed(() => {
+      (
+        [
+          [readUserId, setReadUserId],
+          [writeUserId, setWriteUserId],
+        ] as const
+      ).forEach(([value, setValue]) => {
+        value().inspect((id) => !auth.tokens.has(id) && setValue(None));
+      });
+    });
+
+    createEffect(
+      on(
+        () =>
+          [
+            [CHAT_READ_USER_ID, readUserId()],
+            [CHAT_WRITE_USER_ID, writeUserId()],
+          ] as const,
+        (value) => {
+          value.forEach(([key, id]) => {
+            id.map((userId) => {
+              auth.refreshAccessTokenForUser(userId);
+              localStorage.setItem(key, userId);
+              return true;
+            }).unwrapOrElse(() => (localStorage.removeItem(key), false));
+          });
+        }
+      )
+    );
+
     return {
       client,
       readUserId,
       writeUserId,
-      setReadUserId: (id: Option<string>) => {
-        id.map((userId) => {
-          auth.refreshAccessTokenForUser(userId);
-          localStorage.setItem(CHAT_READ_USER_ID, userId);
-          return true;
-        }).unwrapOrElse(
-          () => (localStorage.removeItem(CHAT_READ_USER_ID), false)
-        );
-
-        setReadUserId(id);
-      },
-      setWriteUserId: (id: Option<string>) => {
-        id.map((userId) => {
-          auth.refreshAccessTokenForUser(userId);
-          localStorage.setItem(CHAT_WRITE_USER_ID, userId);
-          return true;
-        }).unwrapOrElse(
-          () => (localStorage.removeItem(CHAT_WRITE_USER_ID), false)
-        );
-
-        setWriteUserId(id);
-      },
+      setReadUserId,
+      setWriteUserId,
     };
   });
 
@@ -136,7 +154,7 @@ pkg.createNonEventSchema({
       .expect("No Twitch Chat client available!")
       .say(
         Maybe(
-          auth.tokens[writeUserId().expect("Chat write user not chosen!")]
+          auth.tokens.get(writeUserId().expect("Chat write user not chosen!"))
         ).expect("Write user token not found!").userName,
         ctx.getInput("message")
       );
