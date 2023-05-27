@@ -4,7 +4,7 @@ import { auth } from "./auth";
 import pkg from "./pkg";
 import { t, Maybe, InferEnum } from "@macrograph/core";
 
-const HELIX_USER_ID = "helixUserId";
+export const HELIX_USER_ID = "helixUserId";
 
 export const { client, userId, setUserId } = createRoot(() => {
   const client = new ApiClient({ authProvider: auth });
@@ -16,8 +16,8 @@ export const { client, userId, setUserId } = createRoot(() => {
   createEffect(
     on(
       () => userId(),
-      () => {
-        userId()
+      (user) => {
+        user
           .map((userId) => {
             localStorage.setItem(HELIX_USER_ID, userId);
             return true;

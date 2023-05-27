@@ -1,8 +1,13 @@
 import { createSignal, For, Match, Switch } from "solid-js";
 import { twitch } from "@macrograph/packages";
-import { Some } from "@macrograph/core";
+import { Maybe, Some } from "@macrograph/core";
 import { Button } from "./ui";
 import { rspc } from "~/rspc";
+import {
+  setReadUserId,
+  setWriteUserId,
+} from "~/../../packages/src/twitch/chat";
+import { setUserId } from "~/../../packages/src/twitch/helix";
 
 export default () => {
   const [loggingIn, setLoggingIn] = createSignal(false);
@@ -15,13 +20,7 @@ export default () => {
 
   return (
     <>
-      <Switch
-        fallback={
-          <>
-            <Button onClick={() => setLoggingIn(true)}>Login</Button>
-          </>
-        }
-      >
+      <Switch>
         <Match when={Object.keys(auth.tokens).length !== 0}>
           <table class="mb-2 table-auto">
             <thead>
@@ -91,7 +90,24 @@ export default () => {
                     <td>
                       {" "}
                       <Button
-                        onClick={() => {
+                        onClick={async () => {
+                          if (Object.keys(auth.tokens).length === 0) {
+                            localStorage.removeItem(chat.CHAT_READ_USER_ID);
+                            localStorage.removeItem(chat.CHAT_WRITE_USER_ID);
+                            localStorage.removeItem(helix.HELIX_USER_ID);
+                          } else {
+                            let user = Maybe(Object.keys(auth.tokens)[0]);
+                            if (token.userId === user.unwrap()) {
+                              user = Maybe(Object.keys(auth.tokens)[1]);
+                            }
+                            console.log(user);
+                            if (chat.writeUserId().unwrap() === token.userId)
+                              chat.setWriteUserId(user);
+                            if (chat.readUserId().unwrap() === token.userId)
+                              chat.setReadUserId(user);
+                            if (helix.userId().unwrap() === token.userId)
+                              helix.setUserId(user);
+                          }
                           auth.logOut(token.userId);
                         }}
                       >
@@ -118,14 +134,20 @@ export default () => {
         <Match when={loggingIn()}>
           {(_) => {
             rspc.createSubscription(() => ["auth.twitch"], {
-              onData: (m) => {
+              onData: async (m) => {
                 if (typeof m === "object" && "Received" in m) {
-                  auth.addUser({
+                  const data = await auth.addUser({
                     ...m.Received,
                     obtainmentTimestamp: Date.now(),
                     userId: "",
                     userName: "",
                   });
+                  console.log(Object.keys(auth.tokens).length);
+                  if (Object.keys(auth.tokens).length === 1) {
+                    setReadUserId(Maybe(data));
+                    setWriteUserId(Maybe(data));
+                    setUserId(Maybe(data));
+                  }
                   setLoggingIn(false);
                 }
               },

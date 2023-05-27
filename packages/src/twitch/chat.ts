@@ -11,8 +11,8 @@ import { t, Option, None, Maybe, Some } from "@macrograph/core";
 import { auth } from "./auth";
 import { userId } from "./helix";
 
-const CHAT_READ_USER_ID = "chatReadUserId";
-const CHAT_WRITE_USER_ID = "chatWriteUserId";
+export const CHAT_READ_USER_ID = "chatReadUserId";
+export const CHAT_WRITE_USER_ID = "chatWriteUserId";
 
 const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
   createRoot(() => {
@@ -25,11 +25,15 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
       Maybe(localStorage.getItem(CHAT_WRITE_USER_ID))
     );
 
+    writeUserId().map((r) => console.log(r));
+    readUserId().map((r) => console.log(r));
+
     createEffect(
       on(
         () => readUserId(),
-        () => {
-          readUserId()
+        (read) => {
+          console.log("read");
+          read
             .map((userId) => {
               auth.refreshAccessTokenForUser(userId);
               localStorage.setItem(CHAT_READ_USER_ID, userId);
@@ -45,8 +49,9 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
     createEffect(
       on(
         () => writeUserId(),
-        () => {
-          writeUserId()
+        (write) => {
+          console.log("write");
+          write
             .map((userId) => {
               auth.refreshAccessTokenForUser(userId);
               localStorage.setItem(CHAT_WRITE_USER_ID, userId);
@@ -62,15 +67,16 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
     createEffect(
       on(
         () => {
-          const Account = readUserId().unwrap();
-          const Channel = writeUserId().unwrap();
+          const Account = readUserId();
+          const Channel = writeUserId();
           return { Account, Channel };
         },
         (data) => {
-          const tokenRead = Maybe(auth.tokens[data.Account]).expect(
+          if (data.Account.isNone() || data.Channel.isNone()) return;
+          const tokenRead = Maybe(auth.tokens[data.Account.unwrap()]).expect(
             "Token not found!"
           );
-          const tokenWrite = Maybe(auth.tokens[data.Channel]).expect(
+          const tokenWrite = Maybe(auth.tokens[data.Channel.unwrap()]).expect(
             "Token not found!"
           );
           const client = tmi.Client({
