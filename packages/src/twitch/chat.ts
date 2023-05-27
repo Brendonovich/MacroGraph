@@ -25,14 +25,10 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
       Maybe(localStorage.getItem(CHAT_WRITE_USER_ID))
     );
 
-    writeUserId().map((r) => console.log(r));
-    readUserId().map((r) => console.log(r));
-
     createEffect(
       on(
         () => readUserId(),
         (read) => {
-          console.log("read");
           read
             .map((userId) => {
               auth.refreshAccessTokenForUser(userId);
@@ -50,7 +46,6 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
       on(
         () => writeUserId(),
         (write) => {
-          console.log("write");
           write
             .map((userId) => {
               auth.refreshAccessTokenForUser(userId);
