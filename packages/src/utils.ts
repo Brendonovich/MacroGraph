@@ -1,5 +1,12 @@
-import { core, Maybe, Option, Some, t } from "@macrograph/core";
-import { StructFields, StructType } from "@macrograph/core/src/types/struct";
+import {
+  core,
+  Maybe,
+  Option,
+  Some,
+  t,
+  StructFields,
+  StructType,
+} from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",

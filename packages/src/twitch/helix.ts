@@ -1,8 +1,8 @@
 import { ApiClient, HelixBroadcasterType, HelixUserType } from "@twurple/api";
-import { createEffect, createRoot, createSignal, on, untrack } from "solid-js";
+import { createRoot, createSignal } from "solid-js";
 import { auth } from "./auth";
 import pkg from "./pkg";
-import { t, Maybe, InferEnum } from "@macrograph/core";
+import { t, Maybe, InferEnum, Option } from "@macrograph/core";
 
 export const HELIX_USER_ID = "helixUserId";
 
@@ -13,24 +13,17 @@ export const { client, userId, setUserId } = createRoot(() => {
     Maybe(localStorage.getItem(HELIX_USER_ID))
   );
 
-  createEffect(
-    on(
-      () => userId(),
-      (user) => {
-        user
-          .map((userId) => {
-            localStorage.setItem(HELIX_USER_ID, userId);
-            return true;
-          })
-          .unwrapOrElse(() => (localStorage.removeItem(HELIX_USER_ID), false));
-      }
-    )
-  );
-
   return {
     client,
     userId,
-    setUserId,
+    setUserId: (id: Option<string>) => {
+      id.map((id) => {
+        localStorage.setItem(HELIX_USER_ID, id);
+        return true;
+      }).unwrapOrElse(() => (localStorage.removeItem(HELIX_USER_ID), false));
+
+      setUserId(id);
+    },
   };
 });
 

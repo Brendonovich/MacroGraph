@@ -1,23 +1,14 @@
-import {
-  createRoot,
-  createEffect,
-  createSignal,
-  onCleanup,
-  on,
-} from "solid-js";
-import tmi, { Client } from "tmi.js";
+import { createRoot, createSignal, onCleanup, createResource } from "solid-js";
+import tmi from "tmi.js";
 import pkg from "./pkg";
-import { t, Option, None, Maybe, Some } from "@macrograph/core";
+import { t, Option, None, Maybe } from "@macrograph/core";
 import { auth } from "./auth";
-import { userId } from "./helix";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
 
 const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
   createRoot(() => {
-    const [client, setClient] = createSignal<Option<Client>>(None);
-
     const [readUserId, setReadUserId] = createSignal(
       Maybe(localStorage.getItem(CHAT_READ_USER_ID))
     );
@@ -25,129 +16,106 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
       Maybe(localStorage.getItem(CHAT_WRITE_USER_ID))
     );
 
-    createEffect(
-      on(
-        () => readUserId(),
-        (read) => {
-          read
-            .map((userId) => {
-              auth.refreshAccessTokenForUser(userId);
-              localStorage.setItem(CHAT_READ_USER_ID, userId);
-              return true;
-            })
-            .unwrapOrElse(
-              () => (localStorage.removeItem(CHAT_READ_USER_ID), false)
+    const [client] = createResource(
+      () => readUserId().zip(writeUserId()).toNullable(),
+      ([readUserId, writeUserId]) =>
+        Maybe(auth.tokens[readUserId])
+          .zip(Maybe(auth.tokens[writeUserId]))
+          .map(([readToken, writeToken]) => {
+            const client = tmi.Client({
+              options: {
+                skipUpdatingEmotesets: false,
+              },
+              channels: [writeToken.userName],
+              identity: {
+                username: readToken.userName,
+                password: readToken.accessToken,
+              },
+            });
+
+            client.connect();
+
+            client.on("connected", () => {
+              console.log("connected");
+            });
+
+            client.on("disconnected", () => console.log("disconnected"));
+
+            client.on("emoteonly", (channel, enabled) =>
+              pkg.emitEvent({ name: "emoteonly", data: { channel, enabled } })
             );
-        }
-      )
-    );
 
-    createEffect(
-      on(
-        () => writeUserId(),
-        (write) => {
-          write
-            .map((userId) => {
-              auth.refreshAccessTokenForUser(userId);
-              localStorage.setItem(CHAT_WRITE_USER_ID, userId);
-              return true;
-            })
-            .unwrapOrElse(
-              () => (localStorage.removeItem(CHAT_WRITE_USER_ID), false)
+            client.on("subscribers", (channel, enabled) =>
+              pkg.emitEvent({ name: "subonlymode", data: { channel, enabled } })
             );
-        }
-      )
-    );
 
-    createEffect(
-      on(
-        () => {
-          const Account = readUserId();
-          const Channel = writeUserId();
-          return { Account, Channel };
-        },
-        (data) => {
-          if (data.Account.isNone() || data.Channel.isNone()) return;
-          const tokenRead = Maybe(auth.tokens[data.Account.unwrap()]).expect(
-            "Token not found!"
-          );
-          const tokenWrite = Maybe(auth.tokens[data.Channel.unwrap()]).expect(
-            "Token not found!"
-          );
-          const client = tmi.Client({
-            options: {
-              skipUpdatingEmotesets: false,
-            },
-            channels: [tokenWrite.userName],
-            identity: {
-              username: tokenRead.userName,
-              password: tokenRead.accessToken,
-            },
-          });
-
-          client.connect();
-
-          client.on("connected", () => {
-            console.log("connected");
-          });
-
-          client.on("disconnected", () => console.log("disconnected"));
-
-          client.on("emoteonly", (channel, enabled) =>
-            pkg.emitEvent({ name: "emoteonly", data: { channel, enabled } })
-          );
-
-          client.on("subscribers", (channel, enabled) =>
-            pkg.emitEvent({ name: "subonlymode", data: { channel, enabled } })
-          );
-
-          client.on("slowmode", (channel, enabled, length) =>
-            pkg.emitEvent({
-              name: "slowmode",
-              data: { channel, enabled, length },
-            })
-          );
-
-          client.on(
-            "messagedeleted",
-            (channel, username, deletedmessage, userstate) =>
+            client.on("slowmode", (channel, enabled, length) =>
               pkg.emitEvent({
-                name: "messagedeleted",
-                data: { channel, username, deletedmessage, userstate },
+                name: "slowmode",
+                data: { channel, enabled, length },
               })
-          );
+            );
 
-          client.on("followersonly", (channel, enabled, length) =>
-            pkg.emitEvent({
-              name: "followersonly",
-              data: { channel, enabled, length },
-            })
-          );
+            client.on(
+              "messagedeleted",
+              (channel, username, deletedmessage, userstate) =>
+                pkg.emitEvent({
+                  name: "messagedeleted",
+                  data: { channel, username, deletedmessage, userstate },
+                })
+            );
 
-          client.on("message", (_, tags, message, self) => {
-            const data = { message, tags, self };
-            if (
-              tags["message-type"] === "action" ||
-              tags["message-type"] === "chat"
-            )
-              pkg.emitEvent({ name: "chatMessage", data });
-          });
+            client.on("followersonly", (channel, enabled, length) =>
+              pkg.emitEvent({
+                name: "followersonly",
+                data: { channel, enabled, length },
+              })
+            );
 
-          onCleanup(() => {
-            client.disconnect();
-          });
+            client.on("message", (_, tags, message, self) => {
+              const data = { message, tags, self };
+              if (
+                tags["message-type"] === "action" ||
+                tags["message-type"] === "chat"
+              )
+                pkg.emitEvent({ name: "chatMessage", data });
+            });
 
-          setClient(Maybe(client));
-        }
-      )
+            onCleanup(() => {
+              client.disconnect();
+            });
+
+            return client;
+          }),
+      { initialValue: None }
     );
 
     return {
       client,
       readUserId,
       writeUserId,
-      setReadUserId,
-      setWriteUserId,
+      setReadUserId: (id: Option<string>) => {
+        id.map((userId) => {
+          auth.refreshAccessTokenForUser(userId);
+          localStorage.setItem(CHAT_READ_USER_ID, userId);
+          return true;
+        }).unwrapOrElse(
+          () => (localStorage.removeItem(CHAT_READ_USER_ID), false)
+        );
+
+        setReadUserId(id);
+      },
+      setWriteUserId: (id: Option<string>) => {
+        id.map((userId) => {
+          auth.refreshAccessTokenForUser(userId);
+          localStorage.setItem(CHAT_WRITE_USER_ID, userId);
+          return true;
+        }).unwrapOrElse(
+          () => (localStorage.removeItem(CHAT_WRITE_USER_ID), false)
+        );
+
+        setWriteUserId(id);
+      },
     };
   });
 
