@@ -106,13 +106,7 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
         ] as const
       ).forEach(([value, setValue]) => {
         value().inspect((id) => {
-          console.log("running loop");
-          console.log(!auth.tokens.has(id));
-          console.log(auth.tokens.size);
-          if (!auth.tokens.has(id))
-            auth.tokens.size === 0
-              ? setValue(None)
-              : setValue(Maybe(auth.tokens.keys().next().value));
+          !auth.tokens.has(id) && setValue(None);
         });
       });
     });

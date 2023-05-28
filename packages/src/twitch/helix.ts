@@ -30,12 +30,8 @@ export const { client, userId, setUserId } = createRoot(() => {
   );
 
   createComputed(() => {
-    console.log("helix computed");
     userId().map((id) => {
-      if (!auth.tokens.has(id))
-        auth.tokens.size === 0
-          ? setUserId(None)
-          : setUserId(Maybe(auth.tokens.keys().next().value));
+      !auth.tokens.has(id) && setUserId(None);
     });
   });
 
