@@ -1,4 +1,10 @@
-import { DataInput, ExecInput, ExecOutput } from "@macrograph/core";
+import {
+  DataInput,
+  ExecInput,
+  ExecOutput,
+  ScopeInput,
+  ScopeOutput,
+} from "@macrograph/core";
 import clsx from "clsx";
 import { createMemo, For, Match, Show, Switch } from "solid-js";
 
@@ -36,7 +42,7 @@ export const ConnectionRender = () => {
                   if (!i.connection) return null;
 
                   const outputPosition = UI.state.pinPositions.get(
-                    i.connection!
+                    i.connection
                   );
 
                   if (!inputPosition || !outputPosition) return null;
@@ -50,7 +56,19 @@ export const ConnectionRender = () => {
                 return (
                   <Show when={connectionData()}>
                     {(positions) => (
-                      <Switch>
+                      <Switch
+                        fallback={
+                          <line
+                            x1={positions().input.x - graphOffset().x}
+                            y1={positions().input.y - graphOffset().y}
+                            x2={positions().output.x - graphOffset().x}
+                            y2={positions().output.y - graphOffset().y}
+                            stroke={"white"}
+                            stroke-opacity={0.75}
+                            stroke-width={2 * scale()}
+                          />
+                        }
+                      >
                         <Match when={i instanceof DataInput && i}>
                           {(input) => (
                             <line
@@ -66,17 +84,6 @@ export const ConnectionRender = () => {
                               stroke-width={2 * scale()}
                             />
                           )}
-                        </Match>
-                        <Match when={i instanceof ExecInput}>
-                          <line
-                            x1={positions().input.x - graphOffset().x}
-                            y1={positions().input.y - graphOffset().y}
-                            x2={positions().output.x - graphOffset().x}
-                            y2={positions().output.y - graphOffset().y}
-                            stroke={"white"}
-                            stroke-opacity={0.75}
-                            stroke-width={2 * scale()}
-                          />
                         </Match>
                       </Switch>
                     )}
@@ -100,7 +107,9 @@ export const ConnectionRender = () => {
 
               if (
                 draggingPin instanceof ExecInput ||
-                draggingPin instanceof ExecOutput
+                draggingPin instanceof ExecOutput ||
+                draggingPin instanceof ScopeOutput ||
+                draggingPin instanceof ScopeInput
               )
                 return "[--mg-current:white]";
 

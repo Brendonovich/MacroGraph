@@ -1,6 +1,7 @@
 import { createMutable } from "solid-js/store";
+import { z } from "zod";
 import { TypeVariant } from ".";
-import { BaseType } from "./any";
+import { BaseType } from "./base";
 
 /**
  * Implementation of Rust's `Option` type in TypeScript.
@@ -510,5 +511,11 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
 
   toString(): string {
     return `Option<${this.inner.toString()}>`;
+  }
+
+  asZodType(): z.ZodType<Option<TOut>> {
+    // TODO: needs to validate inner
+
+    return z.instanceof(Option) as any;
   }
 }

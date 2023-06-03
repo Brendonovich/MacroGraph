@@ -1,12 +1,13 @@
 import { ReactiveSet } from "@solid-primitives/set";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
-import { BaseType } from "./any";
+import { createMutable } from "solid-js/store";
+import { z } from "zod";
+import { BaseType } from "./base";
 import { None, Option, OptionType, Some } from "./option";
 import { ListType } from "./list";
 import { AnyType, TypeVariant } from ".";
 import { DataInput, DataOutput } from "../models";
-import { createMutable } from "solid-js/store";
 
 /**
  * A Wildcard that belongs to a Node.
@@ -70,6 +71,12 @@ export class WildcardType extends BaseType {
     return this.wildcard.value
       .map((v) => `Wildcard(${v.toString()})`)
       .unwrapOr("Wildcard");
+  }
+
+  asZodType(): z.ZodType {
+    return this.wildcard.value
+      .map((v) => v.asZodType())
+      .unwrapOrElse(() => z.any());
   }
 }
 

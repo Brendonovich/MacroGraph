@@ -1,4 +1,4 @@
-import { IOBuilder, NodeSchema } from "./NodeSchema";
+import { IOBuilder, NodeSchema, ScopeRef } from "./NodeSchema";
 import {
   DataInput,
   DataInputArgs,
@@ -8,6 +8,12 @@ import {
   ExecInputArgs,
   ExecOutput,
   ExecOutputArgs,
+  Scope,
+  ScopeBuilder,
+  ScopeInput,
+  ScopeInputArgs,
+  ScopeOutput,
+  ScopeOutputArgs,
 } from "./IO";
 import { Graph } from ".";
 import { XY } from "../bindings";
@@ -44,9 +50,10 @@ export class Node {
   graph: Graph;
   position: XY;
   schema: NodeSchema;
-  inputs: (DataInput | ExecInput)[] = [];
-  outputs: (DataOutput | ExecOutput)[] = [];
+  inputs: (DataInput | ExecInput | ScopeInput)[] = [];
+  outputs: (DataOutput | ExecOutput | ScopeOutput)[] = [];
   wildcards = new Map<string, Wildcard>();
+  scopes = new Map<string, ScopeRef>();
 
   io!: IOBuilder;
   dispose: () => void;
@@ -64,7 +71,7 @@ export class Node {
 
     this.dispose = createRoot((dispose) => {
       createRenderEffect(() => {
-        const builder = new IOBuilder(this.wildcards);
+        const builder = new IOBuilder(this.wildcards, this.scopes);
 
         reactiveThis.schema.generateIO(builder, {});
 
@@ -81,6 +88,7 @@ export class Node {
 
   updateIO(reactiveThis: this, io: IOBuilder) {
     reactiveThis.wildcards = io.wildcards;
+    reactiveThis.scopes = io.scopes;
 
     reactiveThis.inputs = reactiveThis.inputs.filter((oldInput) =>
       io.inputs.find(
@@ -100,8 +108,10 @@ export class Node {
       } else {
         if (newInput.variant === "Data") {
           reactiveThis.addDataInput({ ...newInput, index: newIndex });
-        } else {
+        } else if (newInput.variant === "Exec") {
           reactiveThis.addExecInput({ ...newInput, index: newIndex });
+        } else {
+          reactiveThis.addScopeInput({ ...newInput, index: newIndex });
         }
       }
     });
@@ -125,8 +135,17 @@ export class Node {
       } else {
         if (newOutput.variant === "Data") {
           reactiveThis.addDataOutput({ ...newOutput, index: newIndex });
-        } else {
+        } else if (newOutput.variant === "Exec") {
           reactiveThis.addExecOutput({ ...newOutput, index: newIndex });
+        } else {
+          const builder = new ScopeBuilder();
+          newOutput.scope(builder);
+
+          reactiveThis.addScopeOutput({
+            ...newOutput,
+            scope: new Scope(builder),
+            index: newIndex,
+          });
         }
       }
     });
@@ -163,12 +182,20 @@ export class Node {
     this.inputs.push(new DataInput({ ...args, node: this as any }));
   }
 
+  addScopeInput(args: Omit<ScopeInputArgs, "node"> & { index?: number }) {
+    this.inputs.push(new ScopeInput({ ...args, node: this as any }));
+  }
+
   addExecOutput(args: Omit<ExecOutputArgs, "node"> & { index?: number }) {
     this.outputs.push(new ExecOutput({ ...args, node: this as any }));
   }
 
   addDataOutput(args: Omit<DataOutputArgs, "node"> & { index?: number }) {
     this.outputs.push(new DataOutput({ ...args, node: this as any }));
+  }
+
+  addScopeOutput(args: Omit<ScopeOutputArgs, "node"> & { index?: number }) {
+    this.outputs.push(new ScopeOutput({ ...args, node: this as any }));
   }
 
   serialize(): z.infer<typeof SerializedNode> {
@@ -181,7 +208,7 @@ export class Node {
         id: this.schema.name,
       },
       defaultValues: this.inputs.reduce((acc, i) => {
-        if (i instanceof ExecInput) return acc;
+        if (!(i instanceof DataInput)) return acc;
 
         return {
           ...acc,
@@ -212,7 +239,7 @@ export class Node {
     node.inputs.forEach((i) => {
       const defaultValue = data.defaultValues[i.id];
 
-      if (defaultValue === undefined || i instanceof ExecInput) return;
+      if (defaultValue === undefined || !(i instanceof DataInput)) return;
 
       i.defaultValue = defaultValue;
     });

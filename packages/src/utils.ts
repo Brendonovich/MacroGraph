@@ -1,4 +1,4 @@
-import { core, Maybe, Option, Some, t } from "@macrograph/core";
+import { core, EnumType, Maybe, Option, Some, t } from "@macrograph/core";
 import { StructFields, StructType } from "@macrograph/core/src/types/struct";
 
 const pkg = core.createPackage({
@@ -792,6 +792,85 @@ pkg.createNonEventSchema({
           name: field.name,
           type: field.type,
         });
+      }
+    });
+  },
+  run({ ctx, io }) {
+    const w = io.wildcards.get("")!;
+
+    const data = ctx.getInput<Record<string, any>>("");
+
+    Object.keys(
+      (w.value.unwrap() as StructType<StructFields>).struct.fields
+    ).forEach((key) => {
+      ctx.setOutput(key, data[key]);
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Match Enum",
+  variant: "Base",
+  generateIO(io) {
+    const w = io.wildcard("");
+
+    io.execInput({
+      id: "exec",
+    });
+
+    io.dataInput({
+      id: "data",
+      type: t.wildcard(w),
+    });
+
+    if (w.value.map((v) => v instanceof EnumType).unwrapOr(false)) {
+      const e = w.value.unwrap() as EnumType;
+
+      e.inner.variants.forEach((v) => {
+        const { name, data } = v;
+        if (data === null) {
+          io.execOutput({
+            id: `out-${name}`,
+            name: name,
+          });
+        } else {
+          io.scopeOutput({
+            id: `out-${name}`,
+            name: v.name,
+            scope: (s) => {
+              Object.entries(data).forEach(([id, type]) => {
+                s.output({
+                  id,
+                  type,
+                });
+              });
+            },
+          });
+        }
+      });
+    }
+  },
+  run() {},
+});
+
+pkg.createNonEventSchema({
+  name: "Break Scope",
+  variant: "Pure",
+  generateIO(io) {
+    const scope = io.scope("");
+
+    io.scopeInput({
+      id: "",
+      scope,
+    });
+
+    scope.value.map((scope) => {
+      io.execOutput({
+        id: "",
+      });
+
+      for (const out of scope.outputs) {
+        io.dataOutput(out);
       }
     });
   },

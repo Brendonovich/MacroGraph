@@ -1,9 +1,11 @@
+import { z } from "zod";
 import { AnyType, TypeVariant } from ".";
-import { BaseType } from "./any";
+import { BaseType } from "./base";
 
-export class ListType<T extends AnyType = AnyType, TOut = any> extends BaseType<
-  TOut[]
-> {
+export class ListType<
+  T extends BaseType = AnyType,
+  TOut = any
+> extends BaseType<TOut[]> {
   constructor(public inner: T) {
     super();
   }
@@ -18,5 +20,9 @@ export class ListType<T extends AnyType = AnyType, TOut = any> extends BaseType<
 
   toString(): string {
     return `List<${this.inner.toString()}>`;
+  }
+
+  asZodType(): z.ZodType<TOut[]> {
+    return z.array(this.inner.asZodType());
   }
 }

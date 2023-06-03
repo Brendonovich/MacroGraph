@@ -1,3 +1,8 @@
+import { batch } from "solid-js";
+import { createMutable } from "solid-js/store";
+import { ReactiveMap } from "@solid-primitives/map";
+import { ReactiveSet } from "@solid-primitives/set";
+import { z } from "zod";
 import {
   DataInput,
   DataOutput,
@@ -5,17 +10,20 @@ import {
   ExecOutput,
   Node,
   NodeArgs,
+  Pin,
+  ScopeInput,
+  ScopeOutput,
   SerializedNode,
 } from ".";
-import { createMutable } from "solid-js/store";
 import { pinsCanConnect } from "../utils";
-import { ReactiveMap } from "@solid-primitives/map";
-import { ReactiveSet } from "@solid-primitives/set";
-import { z } from "zod";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
-import { connectWildcardsInIO, disconnectWildcardsInIO } from "../types";
-import { batch } from "solid-js";
+import {
+  connectWildcardsInIO,
+  disconnectWildcardsInIO,
+  None,
+  Some,
+} from "../types";
 
 export interface GraphArgs {
   id: number;
@@ -87,7 +95,10 @@ export class Graph {
     return box;
   }
 
-  connectPins(output: DataOutput | ExecOutput, input: DataInput | ExecInput) {
+  connectPins(
+    output: DataOutput | ExecOutput | ScopeOutput,
+    input: DataInput | ExecInput | ScopeInput
+  ) {
     const status = batch(() => {
       if (!pinsCanConnect(output, input)) return false;
 
@@ -100,7 +111,7 @@ export class Graph {
         dataInput.connection = dataOutput;
 
         connectWildcardsInIO(dataOutput, dataInput);
-      } else {
+      } else if (output instanceof ExecOutput) {
         const execOutput = output as ExecOutput;
         const execInput = input as ExecInput;
 
@@ -109,6 +120,17 @@ export class Graph {
 
         execOutput.connection = execInput;
         execInput.connection = execOutput;
+      } else {
+        const scopeOutput = output as ScopeOutput;
+        const scopeInput = input as ScopeInput;
+
+        if (scopeOutput.connection) scopeOutput.connection.connection = null;
+        if (scopeInput.connection) scopeInput.connection.connection = null;
+
+        scopeOutput.connection = scopeInput;
+        scopeInput.connection = scopeOutput;
+
+        scopeInput.scope.value = Some(scopeOutput.scope);
       }
 
       return true;
@@ -119,27 +141,45 @@ export class Graph {
     return status;
   }
 
-  disconnectPin(pin: DataOutput | ExecOutput | DataInput | ExecInput) {
-    if (pin instanceof DataOutput) {
-      pin.connections.forEach((conn) => {
-        disconnectWildcardsInIO(pin, conn);
+  disconnectPin(pin: Pin) {
+    batch(() => {
+      if (pin instanceof DataOutput) {
+        pin.connections.forEach((conn) => {
+          disconnectWildcardsInIO(pin, conn);
 
-        conn.connection = null;
-      });
-      pin.connections.clear();
-    } else if (pin instanceof DataInput) {
-      const conn = pin.connection;
-      if (conn) {
-        disconnectWildcardsInIO(conn, pin);
+          conn.connection = null;
+        });
 
-        conn.connections.delete(pin);
+        pin.connections.clear();
+      } else if (pin instanceof DataInput) {
+        const conn = pin.connection;
+        if (conn) {
+          disconnectWildcardsInIO(conn, pin);
+
+          conn.connections.delete(pin);
+        }
+
+        pin.connection = null;
+      } else if (pin instanceof ScopeOutput) {
+        const conn = pin.connection;
+        if (conn) {
+          conn.scope.value = None;
+          conn.connection = null;
+        }
+
+        pin.connection = null;
+      } else if (pin instanceof ScopeInput) {
+        pin.scope.value = None;
+
+        const conn = pin.connection;
+        if (conn) conn.connection = null;
+
+        pin.connection = null;
+      } else {
+        if (pin.connection) pin.connection.connection = null;
+        pin.connection = null;
       }
-
-      pin.connection = null;
-    } else {
-      if (pin.connection) pin.connection.connection = null;
-      pin.connection = null;
-    }
+    });
 
     this.project.save();
   }

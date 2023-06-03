@@ -117,7 +117,7 @@ export default () => {
                     <td>
                       {Math.floor(
                         (token.obtainmentTimestamp +
-                          token.expiresIn * 1000 -
+                          (token.expiresIn ?? 0) * 1000 -
                           currentTime()) /
                           1000
                       )}

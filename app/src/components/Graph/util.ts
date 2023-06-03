@@ -3,6 +3,7 @@ import {
   BasePrimitiveType,
   EnumType,
   ListType,
+  MapType,
   OptionType,
   PrimitiveVariant,
   StructType,
@@ -21,6 +22,8 @@ export const colour = (type: AnyType): string => {
 
   if (type instanceof ListType || type instanceof OptionType)
     return colour(type.inner);
+
+  if (type instanceof MapType) return colour(type.value);
 
   if (type instanceof EnumType) return "[--mg-current:#1B4DFF]";
 

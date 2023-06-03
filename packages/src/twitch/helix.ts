@@ -1,5 +1,5 @@
 import { ApiClient, HelixBroadcasterType, HelixUserType } from "@twurple/api";
-import { createEffect, createRoot, createSignal, on, untrack } from "solid-js";
+import { createEffect, createRoot, createSignal, on } from "solid-js";
 import { auth } from "./auth";
 import pkg from "./pkg";
 import { t, Maybe, InferEnum } from "@macrograph/core";

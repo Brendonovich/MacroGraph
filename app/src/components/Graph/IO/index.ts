@@ -3,15 +3,10 @@ export * from "./DataPin";
 export * from "./ExecInput";
 export * from "./ExecOutput";
 export * from "./DataOutput";
+export * from "./ScopeInput";
+export * from "./ScopeOutput";
 
-import {
-  DataOutput,
-  Pin,
-  pinIsInput,
-  pinIsOutput,
-  pinsCanConnect,
-  WildcardType,
-} from "@macrograph/core";
+import { Pin, pinIsInput, pinIsOutput, pinsCanConnect } from "@macrograph/core";
 import {
   batch,
   createEffect,
