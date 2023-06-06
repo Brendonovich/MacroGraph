@@ -1,5 +1,4 @@
-import { core, EnumType, Maybe, Option, Some, t } from "@macrograph/core";
-import { StructFields, StructType } from "@macrograph/core/src/types/struct";
+import { core, Maybe, Option, Some, t, StructFields } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -781,11 +780,11 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    w.value.map((t) => {
-      if (!(t instanceof StructType)) return;
+    w.value.map((wt) => {
+      if (!(wt instanceof t.Struct)) return;
 
       for (const [id, field] of Object.entries(
-        t.struct.fields as StructFields
+        wt.struct.fields as StructFields
       )) {
         io.dataOutput({
           id,
@@ -801,7 +800,7 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     Object.keys(
-      (w.value.unwrap() as StructType<StructFields>).struct.fields
+      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });
@@ -823,8 +822,8 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    if (w.value.map((v) => v instanceof EnumType).unwrapOr(false)) {
-      const e = w.value.unwrap() as EnumType;
+    if (w.value.map((v) => v instanceof t.Enum).unwrapOr(false)) {
+      const e = w.value.unwrap() as t.Enum;
 
       e.inner.variants.forEach((v) => {
         const { name, data } = v;
@@ -880,7 +879,7 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     Object.keys(
-      (w.value.unwrap() as StructType<StructFields>).struct.fields
+      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });

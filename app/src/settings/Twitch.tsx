@@ -3,11 +3,6 @@ import { twitch } from "@macrograph/packages";
 import { Maybe, Some } from "@macrograph/core";
 import { Button } from "./ui";
 import { rspc } from "~/rspc";
-import {
-  setReadUserId,
-  setWriteUserId,
-} from "~/../../packages/src/twitch/chat";
-import { setUserId } from "~/../../packages/src/twitch/helix";
 
 export default () => {
   const [loggingIn, setLoggingIn] = createSignal(false);
@@ -21,7 +16,7 @@ export default () => {
   return (
     <>
       <Switch>
-        <Match when={Object.keys(auth.tokens).length !== 0}>
+        <Match when={auth.tokens.size !== 0}>
           <table class="mb-2 table-auto">
             <thead>
               <tr>
@@ -38,7 +33,7 @@ export default () => {
               </tr>
             </thead>
             <tbody>
-              <For each={Object.values(twitch.auth.tokens)}>
+              <For each={[...twitch.auth.tokens.values()]}>
                 {(token) => (
                   <tr>
                     <td>{token.userName}</td>
@@ -51,9 +46,8 @@ export default () => {
                           .map((id) => id === token.userId)
                           .unwrapOr(false)}
                         onChange={async (r) => {
-                          if (r.target.checked) {
+                          if (r.target.checked)
                             helix.setUserId(Some(token.userId));
-                          }
                         }}
                       />
                     </td>
@@ -65,10 +59,9 @@ export default () => {
                           .readUserId()
                           .map((u) => u === token.userId)
                           .unwrapOr(false)}
-                        onChange={async (r) => {
-                          if (r.target.checked) {
+                        onChange={(r) => {
+                          if (r.target.checked)
                             chat.setReadUserId(Some(token.userId));
-                          }
                         }}
                       />
                     </td>
@@ -80,37 +73,14 @@ export default () => {
                           .writeUserId()
                           .map((u) => u === token.userId)
                           .unwrapOr(false)}
-                        onChange={async (r) => {
-                          if (r.target.checked) {
+                        onChange={(r) => {
+                          if (r.target.checked)
                             chat.setWriteUserId(Some(token.userId));
-                          }
                         }}
                       />
                     </td>
                     <td>
-                      {" "}
-                      <Button
-                        onClick={async () => {
-                          if (Object.keys(auth.tokens).length === 0) {
-                            localStorage.removeItem(chat.CHAT_READ_USER_ID);
-                            localStorage.removeItem(chat.CHAT_WRITE_USER_ID);
-                            localStorage.removeItem(helix.HELIX_USER_ID);
-                          } else {
-                            let user = Maybe(Object.keys(auth.tokens)[0]);
-                            if (token.userId === user.unwrap()) {
-                              user = Maybe(Object.keys(auth.tokens)[1]);
-                            }
-                            console.log(user);
-                            if (chat.writeUserId().unwrap() === token.userId)
-                              chat.setWriteUserId(user);
-                            if (chat.readUserId().unwrap() === token.userId)
-                              chat.setReadUserId(user);
-                            if (helix.userId().unwrap() === token.userId)
-                              helix.setUserId(user);
-                          }
-                          auth.logOut(token.userId);
-                        }}
-                      >
+                      <Button onClick={() => auth.logOut(token.userId)}>
                         Remove
                       </Button>
                     </td>
@@ -136,18 +106,19 @@ export default () => {
             rspc.createSubscription(() => ["auth.twitch"], {
               onData: async (m) => {
                 if (typeof m === "object" && "Received" in m) {
-                  const data = await auth.addUser({
+                  const userId = await auth.addUser({
                     ...m.Received,
                     obtainmentTimestamp: Date.now(),
                     userId: "",
                     userName: "",
                   });
-                  console.log(Object.keys(auth.tokens).length);
-                  if (Object.keys(auth.tokens).length === 1) {
-                    setReadUserId(Maybe(data));
-                    setWriteUserId(Maybe(data));
-                    setUserId(Maybe(data));
+
+                  if (auth.tokens.size === 1) {
+                    twitch.chat.setReadUserId(Maybe(userId));
+                    twitch.chat.setWriteUserId(Maybe(userId));
+                    twitch.helix.setUserId(Maybe(userId));
                   }
+
                   setLoggingIn(false);
                 }
               },

@@ -20,7 +20,7 @@ import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { untrack, createRoot, createRenderEffect } from "solid-js";
-import { Wildcard } from "../types";
+import { typesCanConnect, Wildcard } from "../types";
 
 export interface NodeArgs {
   id: number;
@@ -120,7 +120,10 @@ export class Node {
       io.outputs.find(
         (newOutput) =>
           oldOutput.id === newOutput.id &&
-          oldOutput.variant === newOutput.variant
+          oldOutput.variant === newOutput.variant &&
+          (oldOutput instanceof DataOutput && newOutput.variant === "Data"
+            ? typesCanConnect(oldOutput.type, newOutput.type)
+            : true)
       )
     );
 

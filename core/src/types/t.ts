@@ -46,6 +46,7 @@ export {
   IntType as Int,
   FloatType as Float,
   BoolType as Bool,
+  StructType as Struct,
 };
 
 export type { AnyType as Any };
