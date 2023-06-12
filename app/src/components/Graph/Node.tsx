@@ -40,15 +40,12 @@ export const Node = (props: Props) => {
 
   const graph = useGraph();
   const UI = useUIStore();
-  let Toggle = 0;
 
   const ACTIVE = NODE_EMIT.subscribe(node(), (data) => {
     if (node().id === data.id && data.schema === node().schema) {
-      Toggle++;
-      Toggle == 1 && updateActive(1);
+      updateActive(1);
       setTimeout(() => {
-        Toggle--;
-        Toggle == 0 && updateActive(0);
+        updateActive(0);
       }, 200);
     }
   });
