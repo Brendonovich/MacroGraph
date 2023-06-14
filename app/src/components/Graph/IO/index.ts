@@ -12,7 +12,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onMount,
+  onCleanup,
 } from "solid-js";
 import { useUIStore } from "~/UIStore";
 import { useGraph } from "../Graph";
@@ -43,55 +43,67 @@ export const usePin = (pin: Pin) => {
     window.removeEventListener("mousemove", handleMouseDrag);
   };
 
-  onMount(() => {
-    let justMouseUpped = false;
+  let justMouseUpped = false;
 
+  createEffect(() => {
     const ref = getRef();
 
-    ref.addEventListener("mouseover", () => {
-      const draggingPin = UI.state.draggingPin;
-
-      if (
-        !draggingPin ||
-        (pinIsOutput(draggingPin) &&
-          pinIsInput(pin) &&
-          pinsCanConnect(draggingPin, pin)) ||
-        (pinIsOutput(pin) &&
-          pinIsInput(draggingPin) &&
-          pinsCanConnect(pin, draggingPin))
-      )
-        UI.setHoveringPin(pin);
-    });
-    ref.addEventListener("mouseleave", () => {
-      if (justMouseUpped) return;
-      UI.setHoveringPin();
-    });
-    ref.addEventListener("mouseup", () => {
-      batch(() => {
-        // Necessary since safari fires 'mouseleave' just after mouseup. i hate this.
-        justMouseUpped = true;
-        setTimeout(() => (justMouseUpped = false), 1);
-
-        UI.setHoveringPin(pin);
-
+    const handlers = {
+      mouseover: () => {
         const draggingPin = UI.state.draggingPin;
 
-        if (!draggingPin || draggingPin === pin) return;
+        if (
+          !draggingPin ||
+          (pinIsOutput(draggingPin) &&
+            pinIsInput(pin) &&
+            pinsCanConnect(draggingPin, pin)) ||
+          (pinIsOutput(pin) &&
+            pinIsInput(draggingPin) &&
+            pinsCanConnect(pin, draggingPin))
+        )
+          UI.setHoveringPin(pin);
+      },
+      mouseleave: () => {
+        if (justMouseUpped) return;
+        UI.setHoveringPin();
+      },
+      mouseup: () => {
+        batch(() => {
+          // Necessary since safari fires 'mouseleave' just after mouseup. i hate this.
+          justMouseUpped = true;
+          setTimeout(() => (justMouseUpped = false), 1);
 
-        if (pinIsOutput(pin) && pinIsInput(draggingPin))
-          graph().connectPins(pin, draggingPin);
-        else if (pinIsInput(pin) && pinIsOutput(draggingPin))
-          graph().connectPins(draggingPin, pin);
+          UI.setHoveringPin(pin);
 
-        UI.setDraggingPin();
-      });
-    });
-    ref.addEventListener("mousedown", () => {
-      window.addEventListener("mouseup", handleMouseUp);
-      window.addEventListener("mousemove", handleMouseDrag);
-    });
-    ref.addEventListener("dblclick", () => {
-      graph().disconnectPin(pin);
+          const draggingPin = UI.state.draggingPin;
+
+          if (!draggingPin || draggingPin === pin) return;
+
+          if (pinIsOutput(pin) && pinIsInput(draggingPin))
+            graph().connectPins(pin, draggingPin);
+          else if (pinIsInput(pin) && pinIsOutput(draggingPin))
+            graph().connectPins(draggingPin, pin);
+
+          UI.setDraggingPin();
+        });
+      },
+      mousedown: () => {
+        window.addEventListener("mouseup", handleMouseUp);
+        window.addEventListener("mousemove", handleMouseDrag);
+      },
+      dblclick: () => {
+        graph().disconnectPin(pin);
+      },
+    };
+
+    for (const [type, handler] of Object.entries(handlers)) {
+      ref.addEventListener(type, handler);
+    }
+
+    onCleanup(() => {
+      for (const [type, handler] of Object.entries(handlers)) {
+        ref.removeEventListener(type, handler);
+      }
     });
   });
 

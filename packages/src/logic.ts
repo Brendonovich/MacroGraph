@@ -33,25 +33,15 @@ pkg.createNonEventSchema({
 
 pkg.createNonEventSchema({
   name: "Wait",
-  variant: "Base",
+  variant: "Exec",
   run({ ctx }) {
-    setTimeout(() => {
-      ctx.exec("output");
-    }, ctx.getInput("delay"));
+    return new Promise((res) => setTimeout(res, ctx.getInput("delay")));
   },
   generateIO(io) {
-    io.execInput({
-      id: "exec",
-    });
     io.dataInput({
       id: "delay",
       name: "Wait in ms",
       type: t.int(),
-    });
-
-    io.execOutput({
-      id: "output",
-      name: "",
     });
   },
 });
