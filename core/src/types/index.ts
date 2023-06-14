@@ -1,9 +1,9 @@
-import { EnumType } from "./enum";
+import { EnumType, EnumVariants } from "./enum";
 import { ListType } from "./list";
 import { MapType } from "./map";
 import { OptionType } from "./option";
 import { BasePrimitiveType, PrimitiveType } from "./primitive";
-import { StructType } from "./struct";
+import { StructFields, StructType } from "./struct";
 import { WildcardType } from "./wildcard";
 
 export * from "./list";
@@ -32,8 +32,8 @@ export type AnyType =
   | MapType
   | OptionType<AnyType>
   | WildcardType
-  | EnumType<any>
-  | StructType<any>;
+  | EnumType<EnumVariants>
+  | StructType<StructFields>;
 
 export function typesCanConnect(a: AnyType, b: AnyType): boolean {
   const aInner = a instanceof WildcardType ? a.wildcard.value.unwrapOr(a) : a;

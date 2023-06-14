@@ -63,7 +63,7 @@ export class Enum<Variants extends EnumVariants = EnumVariants> {
     | { type: "resolved"; variants: Variants }
     | { type: "lazy"; variants: LazyEnumVariants<Variants> };
 
-  get variants() {
+  get variants(): Variants {
     let val = this._variants;
 
     if (val.type === "lazy") {

@@ -1,4 +1,13 @@
-import { core, Maybe, Option, Some, t, StructFields } from "@macrograph/core";
+import {
+  core,
+  Maybe,
+  Option,
+  Some,
+  t,
+  StructFields,
+  Enum,
+  InferEnum,
+} from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -808,7 +817,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Match Enum",
+  name: "Match",
   variant: "Base",
   generateIO(io) {
     const w = io.wildcard("");
@@ -822,34 +831,77 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    if (w.value.map((v) => v instanceof t.Enum).unwrapOr(false)) {
-      const e = w.value.unwrap() as t.Enum;
+    w.value.map((v) => {
+      if (v instanceof t.Enum) {
+        v.inner.variants.forEach((v) => {
+          const { name, data } = v;
 
-      e.inner.variants.forEach((v) => {
-        const { name, data } = v;
-        if (data === null) {
-          io.execOutput({
-            id: `out-${name}`,
-            name: name,
-          });
-        } else {
-          io.scopeOutput({
-            id: `out-${name}`,
-            name: v.name,
-            scope: (s) => {
-              Object.entries(data).forEach(([id, type]) => {
-                s.output({
-                  id,
-                  type,
+          if (data === null) {
+            io.execOutput({
+              id: `out-${name}`,
+              name: name,
+            });
+          } else {
+            io.scopeOutput({
+              id: `out-${name}`,
+              name: v.name,
+              scope: (s) => {
+                Object.entries(data).forEach(([id, type]) => {
+                  s.output({
+                    id,
+                    type,
+                  });
                 });
-              });
-            },
-          });
-        }
-      });
-    }
+              },
+            });
+          }
+        });
+      } else if (v instanceof t.Option) {
+        io.execOutput({
+          id: "none",
+          name: "None",
+        });
+        io.scopeOutput({
+          id: "some",
+          name: "Some",
+          scope: (s) => {
+            s.output({
+              id: "value",
+              type: v,
+            });
+          },
+        });
+      }
+    });
   },
-  run() {},
+  run({ ctx, io }) {
+    const w = io.wildcards.get("")!;
+
+    w.value.map((v) => {
+      if (v instanceof t.Enum) {
+        const data = ctx.getInput<InferEnum<Enum>>("data");
+
+        if ("data" in data) {
+          for (const [key, value] of Object.entries(data)) {
+            ctx.setOutput(key, value);
+          }
+        }
+
+        ctx.exec(data.variant);
+      } else if (v instanceof t.Option) {
+        const data = ctx.getInput<Option<any>>("data");
+
+        data.mapOrElse(
+          () => {
+            ctx.exec("none");
+          },
+          (v) => {
+            ctx.execScope("some", v);
+          }
+        );
+      }
+    });
+  },
 });
 
 pkg.createNonEventSchema({
@@ -883,5 +935,34 @@ pkg.createNonEventSchema({
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Map Get",
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard("");
+
+    io.dataInput({
+      id: "map",
+      type: t.map(t.wildcard(w)),
+    });
+    io.dataInput({
+      id: "key",
+      name: "Key",
+      type: t.string(),
+    });
+
+    io.dataOutput({
+      id: "out",
+      type: t.option(t.wildcard(w)),
+    });
+  },
+  run({ ctx }) {
+    const map = ctx.getInput<Map<string, any>>("map");
+    const key = ctx.getInput<string>("key");
+
+    ctx.setOutput("out", Maybe(map.get(key)));
   },
 });

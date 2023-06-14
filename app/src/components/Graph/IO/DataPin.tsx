@@ -50,11 +50,21 @@ export const DataPin = (props: Props) => {
     return "rounded-full";
   };
 
+  const innerType = {
+    get value() {
+      if (pin.type instanceof WildcardType) {
+        return pin.type.wildcard.value.unwrapOr(pin.type);
+      } else return pin.type;
+    },
+  };
+
   return (
     <Tooltip.Root>
       <Tooltip.Trigger class="cursor-auto">
         <Switch>
-          <Match when={pin.type instanceof OptionType && pin.type}>
+          <Match
+            when={innerType.value instanceof OptionType && innerType.value}
+          >
             {(type) => {
               return (
                 <div
