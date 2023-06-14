@@ -7,7 +7,6 @@ import {
   onCleanup,
   Show,
   onMount,
-  createEffect,
 } from "solid-js";
 import "./Node.css";
 import { NodeProvider } from "~/contexts";
@@ -17,12 +16,21 @@ import {
   DataOutput as DataOutputModel,
   ExecInput as ExecInputModel,
   ExecOutput as ExecOutputModel,
+  ScopeInput as ScopeInputModel,
+  ScopeOutput as ScopeOutputModel,
   NodeSchemaVariant,
   NODE_EMIT,
 } from "@macrograph/core";
 import { useUIStore } from "~/UIStore";
 import { useGraph } from "./Graph";
-import { DataInput, DataOutput, ExecInput, ExecOutput } from "./IO";
+import {
+  DataInput,
+  DataOutput,
+  ExecInput,
+  ExecOutput,
+  ScopeOutput,
+  ScopeInput,
+} from "./IO";
 
 interface Props {
   node: NodeModel;
@@ -202,6 +210,9 @@ export const Node = (props: Props) => {
                   <Match when={i instanceof ExecInputModel ? i : null}>
                     {(i) => <ExecInput input={i()} />}
                   </Match>
+                  <Match when={i instanceof ScopeInputModel ? i : null}>
+                    {(i) => <ScopeInput input={i()} />}
+                  </Match>
                 </Switch>
               )}
             </For>
@@ -215,6 +226,9 @@ export const Node = (props: Props) => {
                   </Match>
                   <Match when={o instanceof ExecOutputModel ? o : null}>
                     {(o) => <ExecOutput output={o()} />}
+                  </Match>
+                  <Match when={o instanceof ScopeOutputModel ? o : null}>
+                    {(o) => <ScopeOutput output={o()} />}
                   </Match>
                 </Switch>
               )}

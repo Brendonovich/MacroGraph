@@ -1,6 +1,7 @@
 import { createMutable } from "solid-js/store";
+import { z } from "zod";
 import { AnyType, TypeVariant } from ".";
-import { BaseType } from "./any";
+import { BaseType } from "./base";
 
 type EnumVariantData = Record<string, AnyType>;
 
@@ -30,8 +31,8 @@ export class EnumVariant<
 }
 
 export type EnumVariants = [
-  one: EnumVariant<string, any>,
-  ...rest: EnumVariant<string, any>[]
+  one: EnumVariant<string, EnumVariantData | null>,
+  ...rest: EnumVariant<string, EnumVariantData | null>[]
 ];
 
 export class LazyEnumVariants<Variants extends EnumVariants = EnumVariants> {
@@ -123,7 +124,7 @@ export class EnumBuilder {
 
 export class EnumType<
   Variants extends EnumVariants = EnumVariants
-> extends BaseType {
+> extends BaseType<InferEnumVariants<Variants>> {
   constructor(public inner: Enum<Variants>) {
     super();
   }
@@ -138,6 +139,29 @@ export class EnumType<
 
   toString(): string {
     return `Enum(${this.inner.name})`;
+  }
+
+  asZodType(): z.ZodType<InferEnumVariants<Variants>> {
+    return z.union(
+      this.inner.variants.map((v) =>
+        z.object({
+          variant: z.literal(v.name),
+          ...(v.data === null
+            ? undefined
+            : {
+                data: z.object(
+                  Object.entries(v.data).reduce(
+                    (acc, [key, value]) => ({
+                      ...acc,
+                      [key]: z.lazy(() => value.asZodType()),
+                    }),
+                    {}
+                  )
+                ),
+              }),
+        })
+      ) as any
+    );
   }
 }
 

@@ -1,14 +1,14 @@
-import { Node } from "./Node";
 import { createMutable } from "solid-js/store";
-import { AnyType } from "../types";
-import { Connection } from "../bindings/Connection";
 import { ReactiveSet } from "@solid-primitives/set";
+import { Node } from "./Node";
+import { t } from "../types";
+import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
 
 export type DataInputArgs = {
   variant: "Data";
   id: string;
   name?: string;
-  type: AnyType;
+  type: t.Any;
   defaultValue?: any;
   connection?: Connection | null;
   node: Node;
@@ -18,7 +18,7 @@ export class DataInput {
   id: string;
   name?: string;
   defaultValue: any = null;
-  type: AnyType;
+  type: t.Any;
   node: Node;
   connection: DataOutput | null = null;
 
@@ -51,7 +51,7 @@ export interface DataOutputArgs {
   node: Node;
   id: string;
   name?: string;
-  type: AnyType;
+  type: t.Any;
 }
 
 export class DataOutput {
@@ -59,7 +59,7 @@ export class DataOutput {
   connections = new ReactiveSet<DataInput>();
   node: Node;
   name?: string;
-  type: AnyType;
+  type: t.Any;
 
   constructor(args: DataOutputArgs) {
     this.id = args.id;
@@ -68,10 +68,6 @@ export class DataOutput {
     this.type = args.type;
 
     return createMutable(this);
-  }
-
-  get connected() {
-    return this.connections.size > 0;
   }
 
   get variant() {
@@ -139,6 +135,84 @@ export class ExecOutput {
   }
 }
 
+export class ScopeBuilder {
+  outputs: DataOutputBuilder[] = [];
+
+  output<T extends DataOutputBuilder>(args: T) {
+    this.outputs.push(args);
+  }
+}
+
+export class Scope {
+  outputs: { id: string; name?: string; type: t.Any }[];
+
+  constructor(builder: ScopeBuilder) {
+    this.outputs = builder.outputs;
+  }
+}
+
+export interface ScopeOutputArgs {
+  node: Node;
+  id: string;
+  name?: string;
+  scope: Scope;
+}
+
+export class ScopeOutput {
+  id: string;
+  connection: ScopeInput | null = null;
+  node: Node;
+  name?: string;
+  scope: Scope;
+
+  constructor(args: ScopeOutputArgs) {
+    this.id = args.id;
+    this.node = args.node;
+    this.name = args.name;
+    this.scope = args.scope;
+
+    return createMutable(this);
+  }
+
+  get variant() {
+    return "Scope";
+  }
+}
+
+export interface ScopeInputArgs {
+  node: Node;
+  id: string;
+  name?: string;
+  scope: ScopeRef;
+}
+
+export class ScopeInput {
+  id: string;
+  connection: ScopeOutput | null = null;
+  node: Node;
+  name?: string;
+  scope: ScopeRef;
+
+  constructor(args: ScopeInputArgs) {
+    this.id = args.id;
+    this.node = args.node;
+    this.name = args.name;
+    this.scope = args.scope;
+
+    return createMutable(this);
+  }
+
+  get variant() {
+    return "Scope";
+  }
+}
+
 export type ExecPin = ExecInput | ExecOutput;
 export type DataPin = DataInput | DataOutput;
-export type Pin = ExecPin | DataPin;
+export type ScopePin = ScopeInput | ScopeOutput;
+export type Pin = ExecPin | DataPin | ScopePin;
+
+export interface Connection {
+  node: number;
+  io: string;
+}

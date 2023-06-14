@@ -1,5 +1,7 @@
-import { AnyType } from "../types";
+import { createMutable } from "solid-js/store";
+import { AnyType, None, Option } from "../types";
 import { Wildcard } from "../types/wildcard";
+import { Scope, ScopeBuilder } from "./IO";
 import { Package } from "./Package";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
@@ -14,18 +16,32 @@ export type ExecInputBuilder = {
   name?: string;
 };
 
+export type ScopeInputBuilder = {
+  id: string;
+  name?: string;
+  scope: ScopeRef;
+};
+
 export type InputBuilder =
   | ({ variant: "Data" } & DataInputBuilder)
-  | ({ variant: "Exec" } & ExecInputBuilder);
+  | ({ variant: "Exec" } & ExecInputBuilder)
+  | ({ variant: "Scope" } & ScopeInputBuilder);
 
 export type DataOutputBuilder = {
   id: string;
   name?: string;
   type: AnyType;
 };
+
 export type ExecOutputBuilder = {
   id: string;
   name?: string;
+};
+
+export type ScopeOutputBuilder = {
+  id: string;
+  name?: string;
+  scope: (s: ScopeBuilder) => void;
 };
 
 export type OutputBuilder =
@@ -34,15 +50,30 @@ export type OutputBuilder =
     } & DataOutputBuilder)
   | ({
       variant: "Exec";
-    } & ExecOutputBuilder);
+    } & ExecOutputBuilder)
+  | ({
+      variant: "Scope";
+    } & ScopeOutputBuilder);
+
+export class ScopeRef {
+  value: Option<Scope> = None;
+
+  constructor() {
+    return createMutable(this);
+  }
+}
 
 export class IOBuilder {
   inputs: InputBuilder[] = [];
   outputs: OutputBuilder[] = [];
 
   wildcards = new Map<string, Wildcard>();
+  scopes = new Map<string, ScopeRef>();
 
-  constructor(public existingWildcards: Map<string, Wildcard>) {}
+  constructor(
+    public existingWildcards: Map<string, Wildcard>,
+    public existingScopes: Map<string, ScopeRef>
+  ) {}
 
   wildcard(id: string) {
     const wildcard = this.existingWildcards.get(id) ?? new Wildcard(id);
@@ -50,6 +81,14 @@ export class IOBuilder {
     this.wildcards.set(id, wildcard);
 
     return wildcard;
+  }
+
+  scope(id: string) {
+    const scope = this.existingScopes.get(id) ?? new ScopeRef();
+
+    this.scopes.set(id, scope);
+
+    return scope;
   }
 
   dataInput<T extends DataInputBuilder>(args: T) {
@@ -66,6 +105,14 @@ export class IOBuilder {
 
   execOutput<T extends ExecOutputBuilder>(args: T) {
     this.outputs.push({ ...args, variant: "Exec" });
+  }
+
+  scopeInput<T extends ScopeInputBuilder>(args: T) {
+    this.inputs.push({ ...args, variant: "Scope" });
+  }
+
+  scopeOutput<T extends ScopeOutputBuilder>(args: T) {
+    this.outputs.push({ ...args, variant: "Scope" });
   }
 }
 

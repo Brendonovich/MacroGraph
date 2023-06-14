@@ -1,5 +1,6 @@
+import { z } from "zod";
 import { TypeVariant } from ".";
-import { BaseType } from "./any";
+import { BaseType } from "./base";
 import { WildcardType } from "./wildcard";
 
 export type PrimitiveVariant = "int" | "float" | "string" | "bool";
@@ -26,6 +27,10 @@ export class IntType extends BasePrimitiveType<number> {
   toString() {
     return "Int";
   }
+
+  asZodType() {
+    return z.number().int();
+  }
 }
 
 export class FloatType extends BasePrimitiveType<number> {
@@ -39,6 +44,10 @@ export class FloatType extends BasePrimitiveType<number> {
 
   toString() {
     return "Float";
+  }
+
+  asZodType(): z.ZodType<number, z.ZodTypeDef, number> {
+    return z.number();
   }
 }
 
@@ -54,6 +63,10 @@ export class StringType extends BasePrimitiveType<string> {
   toString() {
     return "String";
   }
+
+  asZodType() {
+    return z.string();
+  }
 }
 
 export class BoolType extends BasePrimitiveType<boolean> {
@@ -67,6 +80,10 @@ export class BoolType extends BasePrimitiveType<boolean> {
 
   toString() {
     return "Bool";
+  }
+
+  asZodType() {
+    return z.boolean();
   }
 }
 

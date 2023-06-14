@@ -1,4 +1,5 @@
 import { createMutable } from "solid-js/store";
+import { z } from "zod";
 import { AnyType, BaseType, TypeVariant } from ".";
 
 export class StructField<Type extends AnyType = AnyType> {
@@ -64,7 +65,9 @@ export class StructBuilder {
   }
 }
 
-export class StructType<Fields extends StructFields> extends BaseType {
+export class StructType<Fields extends StructFields> extends BaseType<
+  InferStructFields<Fields>
+> {
   constructor(public struct: Struct<Fields>) {
     super();
   }
@@ -85,6 +88,18 @@ export class StructType<Fields extends StructFields> extends BaseType {
 
   toString(): string {
     return `Struct(${this.struct.name})`;
+  }
+
+  asZodType(): z.ZodType<InferStructFields<Fields>> {
+    return z.object(
+      Object.entries(this.struct.fields).reduce(
+        (acc, [key, value]) => ({
+          ...acc,
+          [key]: value.type.asZodType(),
+        }),
+        {}
+      )
+    ) as any;
   }
 }
 

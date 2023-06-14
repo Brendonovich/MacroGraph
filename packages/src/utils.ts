@@ -1,12 +1,4 @@
-import {
-  core,
-  Maybe,
-  Option,
-  Some,
-  t,
-  StructFields,
-  StructType,
-} from "@macrograph/core";
+import { core, Maybe, Option, Some, t, StructFields } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -788,11 +780,11 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    w.value.map((t) => {
-      if (!(t instanceof StructType)) return;
+    w.value.map((wt) => {
+      if (!(wt instanceof t.Struct)) return;
 
       for (const [id, field] of Object.entries(
-        t.struct.fields as StructFields
+        wt.struct.fields as StructFields
       )) {
         io.dataOutput({
           id,
@@ -808,7 +800,86 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     Object.keys(
-      (w.value.unwrap() as StructType<StructFields>).struct.fields
+      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
+    ).forEach((key) => {
+      ctx.setOutput(key, data[key]);
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Match Enum",
+  variant: "Base",
+  generateIO(io) {
+    const w = io.wildcard("");
+
+    io.execInput({
+      id: "exec",
+    });
+
+    io.dataInput({
+      id: "data",
+      type: t.wildcard(w),
+    });
+
+    if (w.value.map((v) => v instanceof t.Enum).unwrapOr(false)) {
+      const e = w.value.unwrap() as t.Enum;
+
+      e.inner.variants.forEach((v) => {
+        const { name, data } = v;
+        if (data === null) {
+          io.execOutput({
+            id: `out-${name}`,
+            name: name,
+          });
+        } else {
+          io.scopeOutput({
+            id: `out-${name}`,
+            name: v.name,
+            scope: (s) => {
+              Object.entries(data).forEach(([id, type]) => {
+                s.output({
+                  id,
+                  type,
+                });
+              });
+            },
+          });
+        }
+      });
+    }
+  },
+  run() {},
+});
+
+pkg.createNonEventSchema({
+  name: "Break Scope",
+  variant: "Pure",
+  generateIO(io) {
+    const scope = io.scope("");
+
+    io.scopeInput({
+      id: "",
+      scope,
+    });
+
+    scope.value.map((scope) => {
+      io.execOutput({
+        id: "",
+      });
+
+      for (const out of scope.outputs) {
+        io.dataOutput(out);
+      }
+    });
+  },
+  run({ ctx, io }) {
+    const w = io.wildcards.get("")!;
+
+    const data = ctx.getInput<Record<string, any>>("");
+
+    Object.keys(
+      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });

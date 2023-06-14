@@ -1,5 +1,6 @@
 import { EnumType } from "./enum";
 import { ListType } from "./list";
+import { MapType } from "./map";
 import { OptionType } from "./option";
 import { BasePrimitiveType, PrimitiveType } from "./primitive";
 import { StructType } from "./struct";
@@ -7,11 +8,12 @@ import { WildcardType } from "./wildcard";
 
 export * from "./list";
 export * from "./option";
-export * from "./any";
+export * from "./base";
 export * from "./primitive";
 export * from "./wildcard";
 export * from "./enum";
 export * from "./struct";
+export * from "./map";
 export * as t from "./t";
 
 export type TypeVariant =
@@ -20,13 +22,14 @@ export type TypeVariant =
   | "option"
   | "wildcard"
   | "enum"
-  | "struct";
-// | "map"
+  | "struct"
+  | "map";
 // | "set"
 
 export type AnyType =
   | PrimitiveType
   | ListType
+  | MapType
   | OptionType<AnyType>
   | WildcardType
   | EnumType<any>
@@ -47,6 +50,9 @@ export function typesCanConnect(a: AnyType, b: AnyType): boolean {
 
   if (aInner instanceof ListType && bInner instanceof ListType)
     return typesCanConnect(aInner.inner, bInner.inner);
+
+  if (aInner instanceof MapType && bInner instanceof MapType)
+    return typesCanConnect(aInner.value, bInner.value);
 
   if (aInner instanceof OptionType && bInner instanceof OptionType)
     return typesCanConnect(aInner.inner, bInner.inner);
