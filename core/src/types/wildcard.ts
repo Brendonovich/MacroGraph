@@ -4,9 +4,8 @@ import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { BaseType } from "./base";
-import { None, Option, OptionType, Some } from "./option";
-import { ListType } from "./list";
-import { AnyType, TypeVariant } from ".";
+import { None, Option, Some } from "./option";
+import { AnyType, t, TypeVariant } from ".";
 import { DataInput, DataOutput } from "../models";
 
 /**
@@ -117,14 +116,16 @@ export function connectWildcardsInIO(output: DataOutput, input: DataInput) {
   connectWildcardsInTypes(output.type, input.type);
 }
 
-function connectWildcardsInTypes(t1: AnyType, t2: AnyType) {
-  if (t1 instanceof WildcardType || t2 instanceof WildcardType) {
-    if (t1 instanceof WildcardType) t1.addConnection(t2);
-    if (t2 instanceof WildcardType) t2.addConnection(t1);
-  } else if (t1 instanceof ListType && t2 instanceof ListType) {
+function connectWildcardsInTypes(t1: t.Any, t2: t.Any) {
+  if (t1 instanceof t.Wildcard || t2 instanceof t.Wildcard) {
+    if (t1 instanceof t.Wildcard) t1.addConnection(t2);
+    if (t2 instanceof t.Wildcard) t2.addConnection(t1);
+  } else if (t1 instanceof t.List && t2 instanceof t.List) {
     connectWildcardsInTypes(t1.inner, t2.inner);
-  } else if (t1 instanceof OptionType && t2 instanceof OptionType) {
+  } else if (t1 instanceof t.Option && t2 instanceof t.Option) {
     connectWildcardsInTypes(t1.inner, t2.inner);
+  } else if (t1 instanceof t.Map && t2 instanceof t.Map) {
+    connectWildcardsInTypes(t1.value, t2.value);
   }
 }
 
@@ -132,15 +133,17 @@ export function disconnectWildcardsInIO(output: DataOutput, input: DataInput) {
   disconnectWildcardsInTypes(output.type, input.type);
 }
 
-function disconnectWildcardsInTypes(t1: AnyType, t2: AnyType) {
+function disconnectWildcardsInTypes(t1: t.Any, t2: t.Any) {
   batch(() => {
-    if (t1 instanceof WildcardType || t2 instanceof WildcardType) {
-      if (t1 instanceof WildcardType) t1.removeConnection(t2);
-      if (t2 instanceof WildcardType) t2.removeConnection(t1);
-    } else if (t1 instanceof ListType && t2 instanceof ListType) {
+    if (t1 instanceof t.Wildcard || t2 instanceof t.Wildcard) {
+      if (t1 instanceof t.Wildcard) t1.removeConnection(t2);
+      if (t2 instanceof t.Wildcard) t2.removeConnection(t1);
+    } else if (t1 instanceof t.List && t2 instanceof t.List) {
       disconnectWildcardsInTypes(t1.inner, t2.inner);
-    } else if (t1 instanceof OptionType && t2 instanceof OptionType) {
+    } else if (t1 instanceof t.Option && t2 instanceof t.Option) {
       disconnectWildcardsInTypes(t1.inner, t2.inner);
+    } else if (t1 instanceof t.Map && t2 instanceof t.Map) {
+      disconnectWildcardsInTypes(t1.value, t2.value);
     }
   });
 }
