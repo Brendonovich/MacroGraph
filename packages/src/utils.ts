@@ -7,6 +7,7 @@ import {
   StructFields,
   Enum,
   InferEnum,
+  EnumVariants,
 } from "@macrograph/core";
 
 const pkg = core.createPackage({
@@ -833,7 +834,7 @@ pkg.createNonEventSchema({
 
     w.value.map((v) => {
       if (v instanceof t.Enum) {
-        v.inner.variants.forEach((v) => {
+        (v as t.Enum<EnumVariants>).inner.variants.forEach((v) => {
           const { name, data } = v;
 
           if (data === null) {
@@ -895,8 +896,12 @@ pkg.createNonEventSchema({
           () => {
             ctx.exec("none");
           },
-          (v) => {
-            ctx.execScope("some", v);
+          (value) => {
+            ctx.execScope("some", {
+              data: {
+                value,
+              },
+            });
           }
         );
       }

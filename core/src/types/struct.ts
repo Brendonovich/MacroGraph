@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { AnyType, BaseType, TypeVariant } from ".";
+import { AnyType, BaseType, TypeVariant, Wildcard } from ".";
 
 export class StructField<Type extends AnyType = AnyType> {
   constructor(public name: string, public type: Type) {
@@ -100,6 +100,12 @@ export class StructType<Fields extends StructFields> extends BaseType<
         {}
       )
     ) as any;
+  }
+
+  getWildcards(): Wildcard[] {
+    return Object.values(this.struct.fields).flatMap((f) =>
+      f.type.getWildcards()
+    );
   }
 }
 

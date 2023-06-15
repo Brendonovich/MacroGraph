@@ -1,4 +1,4 @@
-import { IOBuilder, NodeSchema, ScopeRef } from "./NodeSchema";
+import { IOBuilder, NodeSchema } from "./NodeSchema";
 import {
   DataInput,
   DataInputArgs,
@@ -20,7 +20,7 @@ import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { untrack, createRoot, createRenderEffect } from "solid-js";
-import { typesCanConnect, Wildcard } from "../types";
+import { typesCanConnect } from "../types";
 
 export interface NodeArgs {
   id: number;
@@ -52,17 +52,13 @@ export class Node {
   schema: NodeSchema;
   inputs: (DataInput | ExecInput | ScopeInput)[] = [];
   outputs: (DataOutput | ExecOutput | ScopeOutput)[] = [];
-  wildcards = new Map<string, Wildcard>();
-  scopes = new Map<string, ScopeRef>();
 
   io!: IOBuilder;
   dispose: () => void;
 
-  selected = false;
-
   constructor(args: NodeArgs) {
-    this.id = args.id;
     this.name = args.schema.name;
+    this.id = args.id;
     this.graph = args.graph;
     this.position = args.position;
     this.schema = args.schema;
@@ -71,7 +67,7 @@ export class Node {
 
     this.dispose = createRoot((dispose) => {
       createRenderEffect(() => {
-        const builder = new IOBuilder(this.wildcards, this.scopes);
+        const builder = new IOBuilder(this.io);
 
         reactiveThis.schema.generateIO(builder, {});
 
@@ -87,15 +83,18 @@ export class Node {
   }
 
   updateIO(reactiveThis: this, io: IOBuilder) {
-    reactiveThis.wildcards = io.wildcards;
-    reactiveThis.scopes = io.scopes;
-
-    reactiveThis.inputs = reactiveThis.inputs.filter((oldInput) =>
-      io.inputs.find(
-        (newInput) =>
-          oldInput.id === newInput.id && oldInput.variant === newInput.variant
+    let newInputs = [];
+    for (const oldInput of reactiveThis.inputs) {
+      if (
+        io.inputs.find(
+          (newInput) =>
+            oldInput.id === newInput.id && oldInput.variant === newInput.variant
+        )
       )
-    );
+        newInputs.push(oldInput);
+      else this.graph.disconnectPin(oldInput);
+    }
+    reactiveThis.inputs = newInputs;
 
     io.inputs.forEach((newInput, newIndex) => {
       const oldInputIndex = reactiveThis.inputs.findIndex(
@@ -116,16 +115,22 @@ export class Node {
       }
     });
 
-    reactiveThis.outputs = reactiveThis.outputs.filter((oldOutput) =>
-      io.outputs.find(
-        (newOutput) =>
-          oldOutput.id === newOutput.id &&
-          oldOutput.variant === newOutput.variant &&
-          (oldOutput instanceof DataOutput && newOutput.variant === "Data"
-            ? typesCanConnect(oldOutput.type, newOutput.type)
-            : true)
+    let newOutputs = [];
+    for (const oldOutput of reactiveThis.outputs) {
+      if (
+        io.outputs.find(
+          (newOutput) =>
+            oldOutput.id === newOutput.id &&
+            oldOutput.variant === newOutput.variant &&
+            (oldOutput instanceof DataOutput && newOutput.variant === "Data"
+              ? typesCanConnect(oldOutput.type, newOutput.type)
+              : true)
+        )
       )
-    );
+        newOutputs.push(oldOutput);
+      else this.graph.disconnectPin(oldOutput);
+    }
+    reactiveThis.outputs = newOutputs;
 
     io.outputs.forEach((newOutput, newIndex) => {
       const oldOutputIndex = reactiveThis.outputs.findIndex(

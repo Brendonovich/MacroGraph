@@ -70,13 +70,10 @@ export class IOBuilder {
   wildcards = new Map<string, Wildcard>();
   scopes = new Map<string, ScopeRef>();
 
-  constructor(
-    public existingWildcards: Map<string, Wildcard>,
-    public existingScopes: Map<string, ScopeRef>
-  ) {}
+  constructor(public previous?: IOBuilder) {}
 
   wildcard(id: string) {
-    const wildcard = this.existingWildcards.get(id) ?? new Wildcard(id);
+    const wildcard = this.previous?.wildcards.get(id) ?? new Wildcard(id);
 
     this.wildcards.set(id, wildcard);
 
@@ -84,7 +81,7 @@ export class IOBuilder {
   }
 
   scope(id: string) {
-    const scope = this.existingScopes.get(id) ?? new ScopeRef();
+    const scope = this.previous?.scopes.get(id) ?? new ScopeRef();
 
     this.scopes.set(id, scope);
 

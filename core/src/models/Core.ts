@@ -1,7 +1,7 @@
 import { createMutable } from "solid-js/store";
 import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
-import { DataInput, DataOutput, ExecOutput } from "./IO";
+import { DataInput, DataOutput, ExecOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 import { z } from "zod";
 import { Project, SerializedProject } from "./Project";
@@ -87,7 +87,7 @@ export class Core {
 }
 
 class ExecutionContext {
-  data = new Map<DataOutput, any>();
+  data = new Map<DataOutput | ScopeOutput, any>();
 
   constructor(public root: Node) {}
 
@@ -110,6 +110,21 @@ class ExecutionContext {
           throw new Error(`Output ${execOutput} is not an ExecOutput!`);
 
         if (!output.connection) return;
+
+        await this.execNode(output.connection.node as any);
+      },
+      execScope: async (scopeOutput, data) => {
+        NODE_EMIT.emit(node);
+
+        const output = node.output(scopeOutput);
+
+        if (!output) throw new Error(`Output ${scopeOutput} not found!`);
+        if (!(output instanceof ScopeOutput))
+          throw new Error(`Output ${scopeOutput} is not a ScopeOutput!`);
+
+        if (!output.connection) return;
+
+        this.data.set(output, data);
 
         await this.execNode(output.connection.node as any);
       },

@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { AnyType, TypeVariant } from ".";
+import { AnyType, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
 type EnumVariantData = Record<string, AnyType>;
@@ -161,6 +161,12 @@ export class EnumType<
               }),
         })
       ) as any
+    );
+  }
+
+  getWildcards(): Wildcard[] {
+    return this.inner.variants.flatMap((v) =>
+      v.data ? Object.values(v.data).flatMap((d) => d.getWildcards()) : []
     );
   }
 }

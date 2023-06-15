@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { TypeVariant } from ".";
+import { TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
 /**
@@ -517,5 +517,9 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
     // TODO: needs to validate inner
 
     return z.instanceof(Option) as any;
+  }
+
+  getWildcards(): Wildcard[] {
+    return this.getWildcards();
   }
 }

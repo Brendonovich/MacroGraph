@@ -1,5 +1,5 @@
 import { z, ZodType } from "zod";
-import { t, TypeVariant } from ".";
+import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
 export class MapType<
@@ -24,5 +24,9 @@ export class MapType<
 
   asZodType(): ZodType<Map<string, TValueOut>> {
     return z.map(z.string(), this.value.asZodType());
+  }
+
+  getWildcards(): Wildcard[] {
+    return this.getWildcards();
   }
 }

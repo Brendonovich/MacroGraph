@@ -77,6 +77,10 @@ export class WildcardType extends BaseType {
       .map((v) => v.asZodType())
       .unwrapOrElse(() => z.any());
   }
+
+  getWildcards(): Wildcard[] {
+    return [this.wildcard];
+  }
 }
 
 class WildcardResolver {
