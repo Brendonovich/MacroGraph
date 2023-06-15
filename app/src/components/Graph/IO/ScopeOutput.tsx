@@ -17,8 +17,8 @@ export const ScopeOutput = (props: Props) => {
           style={{
             "pointer-events": "all",
           }}
-          viewBox="0 0 14 17.5"
-          class="w-3.5 text-transparent hover:text-white pointer-events-[all] rotate-45"
+          viewBox="0 0 16 13"
+          class="w-4 text-transparent hover:text-white pointer-events-[all]"
           fill={
             props.output.connection !== null || active()
               ? "white"
@@ -27,7 +27,7 @@ export const ScopeOutput = (props: Props) => {
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            d="M12.6667 8.53812C13.2689 9.03796 13.2689 9.96204 12.6667 10.4619L5.7983 16.1622C4.98369 16.8383 3.75 16.259 3.75 15.2003L3.75 3.79967C3.75 2.74104 4.98369 2.16171 5.79831 2.83779L12.6667 8.53812Z"
+            d="M9.08253 1.375L14.2787 10.375C14.7598 11.2083 14.1584 12.25 13.1962 12.25H2.80385C1.8416 12.25 1.24019 11.2083 1.72132 10.375L6.91747 1.375C7.39859 0.541667 8.60141 0.541668 9.08253 1.375Z"
             stroke="white"
             stroke-width="1.5"
           />

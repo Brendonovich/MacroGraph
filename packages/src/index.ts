@@ -8,3 +8,4 @@ export * from "./httpRequests";
 export * as discord from "./discord";
 export * from "./localStorage";
 export * from "./json";
+export * from "./map";

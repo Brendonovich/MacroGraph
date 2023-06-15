@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { Accessor, createContext, useContext } from "solid-js";
-import { Graph as GraphModel } from "@macrograph/core";
+import { Graph as GraphModel, XY } from "@macrograph/core";
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 
 import { Node } from "./Node";
@@ -66,6 +66,35 @@ export const Graph = (props: Props) => {
   });
 
   const [pan, setPan] = createSignal(PanState.None);
+
+  const [mousePos, setMousePos] = createSignal<null | XY>(null);
+
+  onMount(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+        e.preventDefault();
+
+        const currentPos = UI.state.schemaMenuPosition;
+        const pos = mousePos();
+        if (!pos) return;
+
+        if (currentPos && currentPos.x === pos.x && currentPos.y === pos.y)
+          UI.setSchemaMenuPosition();
+        else {
+          UI.setSchemaMenuPosition({
+            x: pos.x,
+            y: pos.y,
+          });
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+
+    return () => {
+      window.removeEventListener("keydown", handler);
+    };
+  });
 
   return (
     <GraphContext.Provider value={graph}>
@@ -156,6 +185,11 @@ export const Graph = (props: Props) => {
             }
           }}
           onMouseMove={(e) => {
+            setMousePos({
+              x: e.clientX,
+              y: e.clientY,
+            });
+
             if (pan() === PanState.None) return;
             if (pan() === PanState.Waiting) setPan(PanState.Active);
 

@@ -867,7 +867,7 @@ pkg.createNonEventSchema({
           scope: (s) => {
             s.output({
               id: "value",
-              type: v,
+              type: v.inner,
             });
           },
         });
@@ -906,7 +906,7 @@ pkg.createNonEventSchema({
 
 pkg.createNonEventSchema({
   name: "Break Scope",
-  variant: "Pure",
+  variant: "Base",
   generateIO(io) {
     const scope = io.scope("");
 
@@ -935,34 +935,5 @@ pkg.createNonEventSchema({
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Map Get",
-  variant: "Pure",
-  generateIO(io) {
-    const w = io.wildcard("");
-
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "key",
-      name: "Key",
-      type: t.string(),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.option(t.wildcard(w)),
-    });
-  },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
-    const key = ctx.getInput<string>("key");
-
-    ctx.setOutput("out", Maybe(map.get(key)));
   },
 });
