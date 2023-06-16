@@ -22,7 +22,7 @@ export default (props: Props) => {
     <div
       class={clsx(
         "bg-white/30 rounded border-black/75 border-2 absolute top-0 left-0",
-        props.box.selected && "ring-2 ring-yellow-500"
+        UI.state.selectedItem === props.box && "ring-2 ring-yellow-500"
       )}
       style={{
         transform: `translate(${position().x}px, ${position().y}px)`,
@@ -125,7 +125,7 @@ export default (props: Props) => {
 
             onMount(() => ref?.focus());
 
-            createEffect(() => setEditing(props.box.selected));
+            createEffect(() => setEditing(UI.state.selectedItem === props.box));
 
             onCleanup(() => {
               if (value() !== "") props.box.text = value();

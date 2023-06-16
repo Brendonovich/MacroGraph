@@ -1,6 +1,5 @@
 import { ReactiveSet } from "@solid-primitives/set";
-import { ReactiveMap } from "@solid-primitives/map";
-import { batch } from "solid-js";
+import { batch, createMemo, createRoot } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { BaseType } from "./base";
@@ -12,10 +11,31 @@ import { DataInput, DataOutput } from "../models";
  * A Wildcard that belongs to a Node.
  */
 export class Wildcard {
-  types = new ReactiveSet<WildcardType>();
-  value: Option<AnyType> = None;
+  types = new ReactiveSet<t.Wildcard>();
+
+  dispose: () => void;
+
+  private _value?: () => Option<t.Any>;
+
+  value(): Option<t.Any> {
+    return this?._value?.() ?? None;
+  }
 
   constructor(public id: string) {
+    this.dispose = createRoot((dispose) => {
+      this._value = createMemo(() => {
+        for (const type of this.types) {
+          for (const connection of type.newConnections) {
+            return Some(connection);
+          }
+        }
+
+        return None as Option<t.Any>;
+      });
+
+      return dispose;
+    });
+
     return createMutable(this);
   }
 }
@@ -25,7 +45,7 @@ export class Wildcard {
  * May be owned by an AnyType or data IO.
  */
 export class WildcardType extends BaseType {
-  connections = new ReactiveMap<AnyType, number>();
+  newConnections = new ReactiveSet<t.Any>();
 
   constructor(public wildcard: Wildcard) {
     super();
@@ -34,81 +54,40 @@ export class WildcardType extends BaseType {
   }
 
   addConnection(t: AnyType) {
-    const count = this.connections.get(t);
-
-    this.connections.set(t, (count ?? 0) + 1);
-
-    const resolver = new WildcardResolver(this);
-
-    const newValue = resolver.resolveType();
-
-    resolver.allWildcards.forEach((w) => (w.value = newValue));
+    this.newConnections.add(t);
   }
 
   removeConnection(t: AnyType) {
-    const count = this.connections.get(t) ?? 0;
-
-    if (count > 1) this.connections.set(t, count - 1);
-    else this.connections.delete(t);
-
-    const resolver = new WildcardResolver(this);
-
-    const newValue = resolver.resolveType();
-
-    resolver.allWildcards.forEach((w) => (w.value = newValue));
+    this.newConnections.delete(t);
   }
 
   default(): any {
-    return this.wildcard.value.map((v) => v.default());
+    return this.wildcard.value().map((v) => v.default());
   }
 
   variant(): TypeVariant {
-    return this.wildcard.value.map((v) => v.variant()).unwrapOr("wildcard");
+    return this.wildcard
+      .value()
+      .map((v) => v.variant())
+      .unwrapOr("wildcard");
   }
 
   toString(): string {
-    return this.wildcard.value
+    return this.wildcard
+      .value()
       .map((v) => `Wildcard(${v.toString()})`)
       .unwrapOr("Wildcard");
   }
 
   asZodType(): z.ZodType {
-    return this.wildcard.value
+    return this.wildcard
+      .value()
       .map((v) => v.asZodType())
       .unwrapOrElse(() => z.any());
   }
-}
 
-class WildcardResolver {
-  allWildcards = new Set<Wildcard>();
-
-  constructor(public root: WildcardType) {
-    this.resolveWildcard(root.wildcard);
-  }
-
-  resolveWildcard(wildcard: Wildcard) {
-    if (this.allWildcards.has(wildcard)) return;
-    this.allWildcards.add(wildcard);
-
-    for (const type of [...wildcard.types]) {
-      for (const conn of [...type.connections.keys()]) {
-        if (conn instanceof WildcardType) {
-          this.resolveWildcard(conn.wildcard);
-        }
-      }
-    }
-  }
-
-  resolveType(): Option<AnyType> {
-    for (const wildcard of this.allWildcards) {
-      for (const type of wildcard.types) {
-        for (const conn of type.connections.keys()) {
-          if (!(conn instanceof WildcardType)) return Some(conn);
-        }
-      }
-    }
-
-    return None;
+  getWildcards(): Wildcard[] {
+    return [this.wildcard];
   }
 }
 
@@ -118,8 +97,10 @@ export function connectWildcardsInIO(output: DataOutput, input: DataInput) {
 
 function connectWildcardsInTypes(t1: t.Any, t2: t.Any) {
   if (t1 instanceof t.Wildcard || t2 instanceof t.Wildcard) {
-    if (t1 instanceof t.Wildcard) t1.addConnection(t2);
-    if (t2 instanceof t.Wildcard) t2.addConnection(t1);
+    if (t1 instanceof t.Wildcard && !(t2 instanceof t.Wildcard))
+      t1.addConnection(t2);
+    if (t2 instanceof t.Wildcard && !(t1 instanceof t.Wildcard))
+      t2.addConnection(t1);
   } else if (t1 instanceof t.List && t2 instanceof t.List) {
     connectWildcardsInTypes(t1.inner, t2.inner);
   } else if (t1 instanceof t.Option && t2 instanceof t.Option) {

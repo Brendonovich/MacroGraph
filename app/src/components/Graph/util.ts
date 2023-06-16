@@ -1,12 +1,8 @@
 import {
   AnyType,
   BasePrimitiveType,
-  EnumType,
-  ListType,
-  MapType,
-  OptionType,
   PrimitiveVariant,
-  StructType,
+  t,
 } from "@macrograph/core";
 
 const PrimitiveVariantColours: Record<PrimitiveVariant, string> = {
@@ -20,20 +16,24 @@ export const colour = (type: AnyType): string => {
   if (type instanceof BasePrimitiveType)
     return PrimitiveVariantColours[type.primitiveVariant()];
 
-  if (type instanceof ListType || type instanceof OptionType)
+  if (type instanceof t.List || type instanceof t.Option)
     return colour(type.inner);
 
-  if (type instanceof MapType) return colour(type.value);
+  if (type instanceof t.Map) return colour(type.value);
 
-  if (type instanceof EnumType) return "[--mg-current:#1B4DFF]";
+  if (type instanceof t.Enum) return "[--mg-current:#1B4DFF]";
 
-  if (type instanceof StructType) return "[--mg-current:#FACC15]";
+  if (type instanceof t.Struct) return "[--mg-current:#FACC15]";
 
-  const value = type.wildcard.value;
+  if (type instanceof t.Wildcard) {
+    const value = type.wildcard.value();
 
-  if (value.isSome()) {
-    return colour(value.unwrap());
-  } else {
-    return "[--mg-current:white]";
+    if (value.isSome()) {
+      return colour(value.unwrap());
+    } else {
+      return "[--mg-current:white]";
+    }
   }
+
+  throw new Error();
 };

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TypeVariant } from ".";
 import { BaseType } from "./base";
-import { WildcardType } from "./wildcard";
+import { Wildcard, WildcardType } from "./wildcard";
 
 export type PrimitiveVariant = "int" | "float" | "string" | "bool";
 
@@ -11,6 +11,10 @@ export abstract class BasePrimitiveType<TOut = any> extends BaseType<TOut> {
   }
 
   connectWildcard(_right: WildcardType) {}
+
+  getWildcards(): Wildcard[] {
+    return [];
+  }
 
   abstract primitiveVariant(): PrimitiveVariant;
 }

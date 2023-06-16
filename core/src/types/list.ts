@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AnyType, TypeVariant } from ".";
+import { AnyType, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
 export class ListType<
@@ -24,5 +24,9 @@ export class ListType<
 
   asZodType(): z.ZodType<TOut[]> {
     return z.array(this.inner.asZodType());
+  }
+
+  getWildcards(): Wildcard[] {
+    return this.inner.getWildcards();
   }
 }

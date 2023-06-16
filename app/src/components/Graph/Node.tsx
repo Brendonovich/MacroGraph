@@ -100,7 +100,7 @@ export const Node = (props: Props) => {
         ref={ref}
         class={clsx(
           "absolute top-0 left-0 text-[12px] overflow-hidden rounded-lg flex flex-col bg-black/75 border-black/75 border-2",
-          node().selected && "ring-2 ring-yellow-500"
+          UI.state.selectedItem === node() && "ring-2 ring-yellow-500"
         )}
         style={{
           transform: `translate(${node().position.x}px, ${

@@ -7,6 +7,7 @@ import {
   StructFields,
   Enum,
   InferEnum,
+  EnumVariants,
 } from "@macrograph/core";
 
 const pkg = core.createPackage({
@@ -789,7 +790,7 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    w.value.map((wt) => {
+    w.value().map((wt) => {
       if (!(wt instanceof t.Struct)) return;
 
       for (const [id, field] of Object.entries(
@@ -809,7 +810,7 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     Object.keys(
-      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
+      (w.value().unwrap() as t.Struct<StructFields>).struct.fields
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });
@@ -831,9 +832,9 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    w.value.map((v) => {
+    w.value().map((v) => {
       if (v instanceof t.Enum) {
-        v.inner.variants.forEach((v) => {
+        (v as t.Enum<EnumVariants>).inner.variants.forEach((v) => {
           const { name, data } = v;
 
           if (data === null) {
@@ -877,7 +878,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     const w = io.wildcards.get("")!;
 
-    w.value.map((v) => {
+    w.value().map((v) => {
       if (v instanceof t.Enum) {
         const data = ctx.getInput<InferEnum<Enum>>("data");
 
@@ -895,8 +896,12 @@ pkg.createNonEventSchema({
           () => {
             ctx.exec("none");
           },
-          (v) => {
-            ctx.execScope("some", v);
+          (value) => {
+            ctx.execScope("some", {
+              data: {
+                value,
+              },
+            });
           }
         );
       }
@@ -931,7 +936,7 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     Object.keys(
-      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
+      (w.value().unwrap() as t.Struct<StructFields>).struct.fields
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });

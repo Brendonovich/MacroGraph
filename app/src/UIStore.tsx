@@ -54,9 +54,7 @@ export function createUIStore() {
       };
     },
     setSelectedItem(item?: Node | CommentBox) {
-      if (state.selectedItem) state.selectedItem.selected = false;
       state.selectedItem = item ?? null;
-      if (item) item.selected = true;
     },
     setPinPosition(pin: Pin, position: XY) {
       state.pinPositions.set(pin, position);

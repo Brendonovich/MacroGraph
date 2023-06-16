@@ -24,8 +24,6 @@ export class CommentBox {
   size: XY;
   text: string;
 
-  selected = false;
-
   constructor(args: CommentBoxArgs) {
     this.position = args.position;
     this.size = args.size;
