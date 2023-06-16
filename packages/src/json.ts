@@ -29,13 +29,13 @@ type JSONLiteralVariantTypes = ReturnType<typeof JSONLiteralVariants>;
 type JSONVariantTypes = [
   ...JSONLiteralVariantTypes,
   EnumVariant<
-    "Array",
+    "List",
     {
       value: t.List<t.Enum<JSONVariantTypes>>;
     }
   >,
   EnumVariant<
-    "Object",
+    "Map",
     {
       value: t.Map<t.Enum<JSONVariantTypes>>;
     }
@@ -45,10 +45,10 @@ type JSONVariantTypes = [
 const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
   e.lazy(() => [
     ...JSONLiteralVariants(e),
-    e.variant("Array", {
+    e.variant("List", {
       value: t.list(t.enum(JSON)),
     }),
-    e.variant("Object", {
+    e.variant("Map", {
       value: t.map(t.enum(JSON)),
     }),
   ])
@@ -65,8 +65,8 @@ function valueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | null {
     return JSON.variant(["Number", value]);
   else if (type instanceof t.String) return JSON.variant(["String", value]);
   else if (type instanceof t.Bool) return JSON.variant(["Bool", value]);
-  else if (type instanceof t.List) return JSON.variant(["Array", value]);
-  else if (type instanceof t.Map) return JSON.variant(["Object", value]);
+  else if (type instanceof t.List) return JSON.variant(["List", value]);
+  else if (type instanceof t.Map) return JSON.variant(["Map", value]);
   else return null;
 }
 

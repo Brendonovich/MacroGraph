@@ -1,5 +1,4 @@
 import { ReactiveSet } from "@solid-primitives/set";
-import { ReactiveMap } from "@solid-primitives/map";
 import { batch, createMemo, createRoot } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
