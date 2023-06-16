@@ -1,11 +1,6 @@
+import { t } from "..";
 import { BaseType } from "./base";
-import { EnumType, EnumVariants } from "./enum";
-import { ListType } from "./list";
-import { MapType } from "./map";
-import { OptionType } from "./option";
-import { BasePrimitiveType, PrimitiveType } from "./primitive";
-import { StructFields, StructType } from "./struct";
-import { WildcardType } from "./wildcard";
+import { BasePrimitiveType } from "./primitive";
 
 export * from "./list";
 export * from "./option";
@@ -29,12 +24,11 @@ export type TypeVariant =
 
 export type AnyType = BaseType<any>;
 
-export function typesCanConnect(a: AnyType, b: AnyType): boolean {
-  const aInner = a instanceof WildcardType ? a.wildcard.value.unwrapOr(a) : a;
-  const bInner = b instanceof WildcardType ? b.wildcard.value.unwrapOr(b) : b;
+export function typesCanConnect(a: t.Any, b: t.Any): boolean {
+  const aInner = a instanceof t.Wildcard ? a.wildcard.value().unwrapOr(a) : a;
+  const bInner = b instanceof t.Wildcard ? b.wildcard.value().unwrapOr(b) : b;
 
-  if (aInner instanceof WildcardType || bInner instanceof WildcardType)
-    return true;
+  if (aInner instanceof t.Wildcard || bInner instanceof t.Wildcard) return true;
 
   if (
     aInner instanceof BasePrimitiveType &&
@@ -42,13 +36,13 @@ export function typesCanConnect(a: AnyType, b: AnyType): boolean {
   )
     return aInner.primitiveVariant() === bInner.primitiveVariant();
 
-  if (aInner instanceof ListType && bInner instanceof ListType)
+  if (aInner instanceof t.List && bInner instanceof t.List)
     return typesCanConnect(aInner.inner, bInner.inner);
 
-  if (aInner instanceof MapType && bInner instanceof MapType)
+  if (aInner instanceof t.Map && bInner instanceof t.Map)
     return typesCanConnect(aInner.value, bInner.value);
 
-  if (aInner instanceof OptionType && bInner instanceof OptionType)
+  if (aInner instanceof t.Option && bInner instanceof t.Option)
     return typesCanConnect(aInner.inner, bInner.inner);
 
   return false;

@@ -19,7 +19,7 @@ import { Graph } from ".";
 import { XY } from "../bindings";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { untrack, createRoot, createRenderEffect } from "solid-js";
+import { untrack, createRoot, createRenderEffect, batch } from "solid-js";
 import { typesCanConnect } from "../types";
 
 export interface NodeArgs {
@@ -76,13 +76,22 @@ export class Node {
         this.io = builder;
       });
 
-      return dispose;
+      return () => {
+        dispose();
+      };
     });
 
     return reactiveThis;
   }
 
   updateIO(reactiveThis: this, io: IOBuilder) {
+    this.io?.wildcards.forEach((w) => {
+      if (!io.wildcards.has(w.id)) {
+        console.log("bruh");
+        w.dispose();
+      }
+    });
+
     let newInputs = [];
     for (const oldInput of reactiveThis.inputs) {
       if (

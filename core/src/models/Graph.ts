@@ -248,20 +248,22 @@ export class Graph {
 
     graph.nodeIdCounter = data.nodeIdCounter;
 
-    graph.nodes = new ReactiveMap(
-      Object.entries(data.nodes)
-        .map(([idStr, serializedNode]) => {
-          const id = z.coerce.number().parse(idStr);
-          const node = Node.deserialize(graph, serializedNode);
+    batch(() => {
+      graph.nodes = new ReactiveMap(
+        Object.entries(data.nodes)
+          .map(([idStr, serializedNode]) => {
+            const id = z.coerce.number().parse(idStr);
+            const node = Node.deserialize(graph, serializedNode);
 
-          if (node === null) return null;
+            if (node === null) return null;
 
-          project.core.addEventNodeMapping(node);
+            project.core.addEventNodeMapping(node);
 
-          return [id, node] as [number, Node];
-        })
-        .filter(Boolean) as [number, Node][]
-    );
+            return [id, node] as [number, Node];
+          })
+          .filter(Boolean) as [number, Node][]
+      );
+    });
 
     let i = 0;
     let connections = [...data.connections];
