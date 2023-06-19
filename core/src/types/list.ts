@@ -1,11 +1,10 @@
 import { z } from "zod";
-import { AnyType, TypeVariant, Wildcard } from ".";
+import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
-export class ListType<
-  T extends BaseType = AnyType,
-  TOut = any
-> extends BaseType<TOut[]> {
+export class ListType<T extends BaseType = t.Any, TOut = any> extends BaseType<
+  TOut[]
+> {
   constructor(public inner: T) {
     super();
   }
@@ -28,5 +27,9 @@ export class ListType<
 
   getWildcards(): Wildcard[] {
     return this.inner.getWildcards();
+  }
+
+  eq(other: t.Any): boolean {
+    return other instanceof t.List && this.inner.eq(other.inner);
   }
 }

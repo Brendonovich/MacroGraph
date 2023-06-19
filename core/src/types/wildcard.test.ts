@@ -1,95 +1,65 @@
-// import { test, expect, describe } from "vitest";
-// import { types } from ".";
-// import { connectWildcardsInTypes, Wildcard } from "./wildcard";
+import { test, expect, describe } from "vitest";
+import { t } from ".";
+import { connectWildcardsInTypes, Wildcard } from "./wildcard";
 
-// describe("connecting two types", () => {
-//   test("T", () => {
-//     const wildcard = new Wildcard();
+describe("connecting two types", () => {
+  test("T", async () => {
+    const wildcard = new Wildcard("");
 
-//     const type1 = types.wildcard(wildcard);
-//     const type2 = types.bool();
+    const type1 = t.wildcard(wildcard);
+    const type2 = t.bool();
 
-//     connectWildcardsInTypes(type1, type2);
+    connectWildcardsInTypes(type1, type2);
 
-//     // expect(type1.basePrimitive().primitiveVariant()).toBe(
-//     //   type2.primitiveVariant()
-//     // );
-//   });
-//   test("List<T>", () => {
-//     const wildcard = new Wildcard();
+    expect(type1.wildcard.value.unwrap()).toBe(type2);
+  });
+  test("List<T>", () => {
+    const wildcard = new Wildcard("");
 
-//     const type1 = types.list(types.wildcard(wildcard));
-//     const type2 = types.list(types.string());
+    const type1 = t.list(t.wildcard(wildcard));
+    const type2 = t.list(t.string());
 
-//     connectWildcardsInTypes(type1, type2);
+    connectWildcardsInTypes(type1, type2);
 
-//     // expect(type1.basePrimitive().primitiveVariant()).toBe(
-//     //   type2.basePrimitive().primitiveVariant()
-//     // );
-//   });
-//   test("Option<T>", () => {
-//     const wildcard = new Wildcard();
+    expect(type1.inner.wildcard.value.unwrap()).toBe(type2.inner);
+  });
+  test("Option<T>", () => {
+    const wildcard = new Wildcard("");
 
-//     const type1 = types.option(types.wildcard(wildcard));
-//     const type2 = types.option(types.int());
+    const type1 = t.option(t.wildcard(wildcard));
+    const type2 = t.option(t.int());
 
-//     connectWildcardsInTypes(type1, type2);
+    connectWildcardsInTypes(type1, type2);
 
-//     // expect(type1.basePrimitive().primitiveVariant()).toBe(
-//     //   type2.basePrimitive().primitiveVariant()
-//     // );
-//   });
-//   test("Option<List<T>>", () => {
-//     const wildcard = new Wildcard();
+    expect(type1.inner.wildcard.value.unwrap()).toBe(type2.inner);
+  });
+  test("Option<List<T>>", () => {
+    const wildcard = new Wildcard("");
 
-//     const type1 = types.option(types.list(types.wildcard(wildcard)));
-//     const type2 = types.option(types.list(types.float()));
+    const type1 = t.option(t.list(t.wildcard(wildcard)));
+    const type2 = t.option(t.list(t.float()));
 
-//     connectWildcardsInTypes(type1, type2);
+    connectWildcardsInTypes(type1, type2);
 
-//     // expect(type1.basePrimitive().primitiveVariant()).toBe(
-//     //   type2.basePrimitive().primitiveVariant()
-//     // );
-//   });
-// });
+    expect(type1.inner.inner.wildcard.value.unwrap()).toBe(type2.inner.inner);
+  });
+});
 
-// describe("connecting two groups", () => {
-//   test("T", () => {
-//     const node1Wildcard = new Wildcard();
-//     const node1Type = types.wildcard(node1Wildcard);
+describe("connecting two groups", () => {
+  test("T", () => {
+    const wildcard1 = new Wildcard("1");
+    const wildcard1Out = t.wildcard(wildcard1);
 
-//     const node2Wildcard = new Wildcard();
-//     const node2Type = types.wildcard(node2Wildcard);
+    const wildcard2 = new Wildcard("2");
+    const wildcard2In = t.wildcard(wildcard2);
+    const wildcard2Out = t.wildcard(wildcard2);
 
-//     const type = types.bool();
+    const bool = t.bool();
 
-//     connectWildcardsInTypes(node1Type, node2Type);
+    connectWildcardsInTypes(wildcard1Out, wildcard2In);
+    connectWildcardsInTypes(wildcard2Out, bool);
 
-//     connectWildcardsInTypes(node2Type, type);
-
-//     // expect(node1Type.basePrimitive().primitiveVariant()).toBe(
-//     //   type.primitiveVariant()
-//     // );
-//   });
-// });
-
-// describe("disconnecting two groups", () => {
-//   test("T", () => {
-//     const node1Wildcard = new Wildcard();
-//     const node1Type = types.wildcard(node1Wildcard);
-
-//     const node2Wildcard = new Wildcard();
-//     const node2Type = types.wildcard(node2Wildcard);
-
-//     const type = types.bool();
-
-//     connectWildcardsInTypes(node1Type, node2Type);
-
-//     connectWildcardsInTypes(node2Type, type);
-
-//     // expect(node1Type.basePrimitive().primitiveVariant()).toBe(
-//     //   type.primitiveVariant()
-//     // );
-//   });
-// });
-export default {};
+    expect(wildcard2.value.unwrap()).toBe(bool);
+    expect(wildcard1.value.unwrap()).toBe(bool);
+  });
+});

@@ -86,9 +86,7 @@ export class Node {
 
   updateIO(reactiveThis: this, io: IOBuilder) {
     this.io?.wildcards.forEach((w) => {
-      if (!io.wildcards.has(w.id)) {
-        w.dispose();
-      }
+      if (!io.wildcards.has(w.id)) w.dispose();
     });
 
     let newInputs = [];

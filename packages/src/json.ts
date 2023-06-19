@@ -88,7 +88,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     const w = io.wildcard("");
 
-    const val = Maybe(valueToJSON(w.value().expect(""), ctx.getInput("in")));
+    const val = Maybe(valueToJSON(w.value.expect(""), ctx.getInput("in")));
 
     ctx.setOutput(
       "out",

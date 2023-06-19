@@ -1,5 +1,5 @@
 import { ReactiveSet } from "@solid-primitives/set";
-import { batch, createMemo, createRoot } from "solid-js";
+import { batch, createEffect, createRoot, untrack } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { BaseType } from "./base";
@@ -15,28 +15,44 @@ export class Wildcard {
 
   dispose: () => void;
 
-  private _value?: () => Option<t.Any>;
-
-  value(): Option<t.Any> {
-    return this?._value?.() ?? None;
-  }
+  value: Option<t.Any> = None as any;
 
   constructor(public id: string) {
-    this.dispose = createRoot((dispose) => {
-      this._value = createMemo(() => {
-        for (const type of this.types) {
-          for (const connection of type.newConnections) {
-            return Some(connection);
-          }
-        }
+    const reactiveThis = createMutable(this);
 
-        return None as Option<t.Any>;
+    this.dispose = createRoot((dispose) => {
+      createEffect(() => {
+        const conns = [...this.types].flatMap((t) => [...t.connections]);
+
+        untrack(() => {
+          if (conns.length === 0) {
+            reactiveThis.value = None;
+            return;
+          }
+
+          const nonWildcard = conns.find((v) => !(v instanceof t.Wildcard));
+
+          if (nonWildcard) {
+            if (
+              reactiveThis.value.isNone() ||
+              !reactiveThis.value.unwrap().eq(nonWildcard)
+            ) {
+              reactiveThis.value = Some(nonWildcard);
+            }
+          } else {
+            const wildcard = conns[0];
+
+            if (wildcard instanceof t.Wildcard) {
+              reactiveThis.value = wildcard.wildcard.value;
+            }
+          }
+        });
       });
 
       return dispose;
     });
 
-    return createMutable(this);
+    return reactiveThis;
   }
 }
 
@@ -45,7 +61,7 @@ export class Wildcard {
  * May be owned by an AnyType or data IO.
  */
 export class WildcardType extends BaseType {
-  newConnections = new ReactiveSet<t.Any>();
+  connections = new ReactiveSet<t.Any>();
 
   constructor(public wildcard: Wildcard) {
     super();
@@ -54,34 +70,29 @@ export class WildcardType extends BaseType {
   }
 
   addConnection(t: AnyType) {
-    this.newConnections.add(t);
+    this.connections.add(t);
   }
 
   removeConnection(t: AnyType) {
-    this.newConnections.delete(t);
+    this.connections.delete(t);
   }
 
   default(): any {
-    return this.wildcard.value().map((v) => v.default());
+    return this.wildcard.value.map((v) => v.default());
   }
 
   variant(): TypeVariant {
-    return this.wildcard
-      .value()
-      .map((v) => v.variant())
-      .unwrapOr("wildcard");
+    return this.wildcard.value.map((v) => v.variant()).unwrapOr("wildcard");
   }
 
   toString(): string {
-    return this.wildcard
-      .value()
+    return this.wildcard.value
       .map((v) => `Wildcard(${v.toString()})`)
       .unwrapOr("Wildcard");
   }
 
   asZodType(): z.ZodType {
-    return this.wildcard
-      .value()
+    return this.wildcard.value
       .map((v) => v.asZodType())
       .unwrapOrElse(() => z.any());
   }
@@ -89,18 +100,20 @@ export class WildcardType extends BaseType {
   getWildcards(): Wildcard[] {
     return [this.wildcard];
   }
+
+  eq(other: t.Any) {
+    return other instanceof t.Wildcard && other.wildcard === this.wildcard;
+  }
 }
 
 export function connectWildcardsInIO(output: DataOutput, input: DataInput) {
   connectWildcardsInTypes(output.type, input.type);
 }
 
-function connectWildcardsInTypes(t1: t.Any, t2: t.Any) {
+export function connectWildcardsInTypes(t1: t.Any, t2: t.Any) {
   if (t1 instanceof t.Wildcard || t2 instanceof t.Wildcard) {
-    if (t1 instanceof t.Wildcard && !(t2 instanceof t.Wildcard))
-      t1.addConnection(t2);
-    if (t2 instanceof t.Wildcard && !(t1 instanceof t.Wildcard))
-      t2.addConnection(t1);
+    if (t1 instanceof t.Wildcard) t1.addConnection(t2);
+    if (t2 instanceof t.Wildcard) t2.addConnection(t1);
   } else if (t1 instanceof t.List && t2 instanceof t.List) {
     connectWildcardsInTypes(t1.inner, t2.inner);
   } else if (t1 instanceof t.Option && t2 instanceof t.Option) {
@@ -114,7 +127,7 @@ export function disconnectWildcardsInIO(output: DataOutput, input: DataInput) {
   disconnectWildcardsInTypes(output.type, input.type);
 }
 
-function disconnectWildcardsInTypes(t1: t.Any, t2: t.Any) {
+export function disconnectWildcardsInTypes(t1: t.Any, t2: t.Any) {
   batch(() => {
     if (t1 instanceof t.Wildcard || t2 instanceof t.Wildcard) {
       if (t1 instanceof t.Wildcard) t1.removeConnection(t2);

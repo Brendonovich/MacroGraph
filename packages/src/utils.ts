@@ -790,7 +790,7 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    w.value().map((wt) => {
+    w.value.map((wt) => {
       if (!(wt instanceof t.Struct)) return;
 
       for (const [id, field] of Object.entries(
@@ -810,12 +810,14 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     Object.keys(
-      (w.value().unwrap() as t.Struct<StructFields>).struct.fields
+      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });
   },
 });
+
+let prev: any;
 
 pkg.createNonEventSchema({
   name: "Match",
@@ -832,7 +834,9 @@ pkg.createNonEventSchema({
       type: t.wildcard(w),
     });
 
-    w.value().map((v) => {
+    console.log(w.value);
+
+    w.value.map((v) => {
       if (v instanceof t.Enum) {
         (v as t.Enum<EnumVariants>).inner.variants.forEach((v) => {
           const { name, data } = v;
@@ -878,7 +882,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     const w = io.wildcards.get("")!;
 
-    w.value().map((v) => {
+    w.value.map((v) => {
       if (v instanceof t.Enum) {
         const data = ctx.getInput<InferEnum<Enum>>("data");
 
@@ -936,7 +940,7 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     Object.keys(
-      (w.value().unwrap() as t.Struct<StructFields>).struct.fields
+      (w.value.unwrap() as t.Struct<StructFields>).struct.fields
     ).forEach((key) => {
       ctx.setOutput(key, data[key]);
     });

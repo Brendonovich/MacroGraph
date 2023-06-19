@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TypeVariant } from ".";
+import { AnyType, TypeVariant } from ".";
 import { BaseType } from "./base";
 import { Wildcard, WildcardType } from "./wildcard";
 
@@ -17,6 +17,13 @@ export abstract class BasePrimitiveType<TOut = any> extends BaseType<TOut> {
   }
 
   abstract primitiveVariant(): PrimitiveVariant;
+
+  eq(other: AnyType): boolean {
+    return (
+      other instanceof BasePrimitiveType &&
+      other.primitiveVariant() === this.primitiveVariant()
+    );
+  }
 }
 
 export class IntType extends BasePrimitiveType<number> {

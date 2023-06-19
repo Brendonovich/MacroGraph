@@ -8,7 +8,7 @@
     "dist/**"
   ],
   "scripts": {
-    "test": "jest",
+    "test": "vitest",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
     "typecheck": "tsc -b",
     "build": "tsc"
