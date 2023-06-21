@@ -1996,12 +1996,12 @@ pkg.createNonEventSchema({
     io.dataOutput({
       id: "outputActive",
       name: "Output Active",
-      type: t.list(t.bool()),
+      type: t.bool(),
     });
     io.dataOutput({
       id: "outputPaused",
       name: "Output Paused",
-      type: t.list(t.bool()),
+      type: t.bool(),
     });
     io.dataOutput({
       id: "outputTimecode",

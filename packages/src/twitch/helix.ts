@@ -725,29 +725,99 @@ pkg.createNonEventSchema({
       type: t.string(),
     });
     io.dataOutput({
-      id: "out",
-      type: t.option(t.struct(User)),
+      id: "userId",
+      name: "User ID",
+      type: t.string(),
     });
+    io.dataOutput({
+      id: "userLogin",
+      name: "Login Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "displayName",
+      name: "Display Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "type",
+      name: "User Type",
+      type: t.option(t.enum(UserType)),
+    });
+    io.dataOutput({
+      id: "broadcasterType",
+      name: "Broadcaster Type",
+      type: t.option(t.enum(BroadcasterType)),
+    });
+    io.dataOutput({
+      id: "description",
+      name: "Description",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "profileImageUrl",
+      name: "Profile Image URL",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "offlineImageUrl",
+      name: "Offline Image URL",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "createdAt",
+      name: "Created At",
+      type: t.string(),
+    });
+    // io.dataOutput({
+    //   id: "out",
+    //   type: t.option(t.struct(User)),
+    // });
   },
   async run({ ctx }) {
     const data = await client.users.getUserById(ctx.getInput("userId"));
-
-    ctx.setOutput(
-      "out",
-      Maybe(data).map((data) =>
-        User.create({
-          id: data.id,
-          login: data.name,
-          displayName: data.displayName,
-          userType: UserTypeMap[data.type],
-          broadcasterType: BroadcasterTypeMap[data.broadcasterType],
-          description: data.description,
-          profileImage: data.profilePictureUrl,
-          offlineImage: data.offlinePlaceholderUrl,
-          createdAt: JSON.stringify(data.creationDate),
-        })
-      )
+    const optData = Maybe(data);
+    ctx.setOutput("userId", data?.id);
+    ctx.setOutput("userLogin", data?.name);
+    ctx.setOutput("displayName", data?.displayName);
+    ctx.setOutput<InferEnum<typeof UserType>>(
+      "type",
+      (() => {
+        if (data?.type === "admin") return { variant: "Admin" };
+        else if (data?.type === "global_mod") return { variant: "Global Mod" };
+        else if (data?.type === "staff") return { variant: "Staff" };
+        else return { variant: "Normal User" };
+      })()
     );
+    ctx.setOutput<InferEnum<typeof BroadcasterType>>(
+      "broadcasterType",
+      (() => {
+        const type = data?.broadcasterType;
+        if (type === "affiliate") return { variant: "Affliate" };
+        else if (type === "partner") return { variant: "Partner" };
+        else return { variant: "Normal User" };
+      })()
+    );
+    ctx.setOutput("description", data?.description);
+    ctx.setOutput("profileImageUrl", data?.profilePictureUrl);
+    ctx.setOutput("offlineImageUrl", data?.offlinePlaceholderUrl);
+    ctx.setOutput("createdAt", JSON.stringify(data?.creationDate));
+    // ctx.setOutput(
+    //   "out",
+    //   Maybe(data).map((data) =>
+    //     User.create({
+    //       id: data.id,
+    //       login: data.name,
+    //       displayName: data.displayName,
+    //       userType: UserTypeMap[data.type],
+    //       broadcasterType: BroadcasterTypeMap[data.broadcasterType],
+    //       description: data.description,
+    //       profileImage: data.profilePictureUrl,
+    //       offlineImage: data.offlinePlaceholderUrl,
+    //       createdAt: JSON.stringify(data.creationDate),
+    //     })
+    //   )
+    // );
   },
 });
 

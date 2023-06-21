@@ -262,22 +262,22 @@ pkg.createNonEventSchema({
     io.dataInput({
       id: "content",
       name: "Message",
-      type: t.option(t.string()),
+      type: t.string(),
     });
     io.dataInput({
       id: "username",
       name: "Username",
-      type: t.option(t.string()),
+      type: t.string(),
     });
     io.dataInput({
       id: "avatarUrl",
       name: "Avatar URL",
-      type: t.option(t.string()),
+      type: t.string(),
     });
     io.dataInput({
       id: "tts",
       name: "TTS",
-      type: t.option(t.bool()),
+      type: t.bool(),
     });
     //io.dataInput({
     //   id: "fileLocation",
@@ -292,11 +292,14 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const body: Record<string, string> = {};
-
-    ctx.getInput<Option<string>>("content").map((v) => (body.content = v));
-    ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
-    ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
-    ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
+    if (ctx.getInput("content")) body.content = ctx.getInput("content");
+    if (ctx.getInput("avatarUrl")) body.avatar_url = ctx.getInput("avatarUrl");
+    if (ctx.getInput("username")) body.username = ctx.getInput("username");
+    if (ctx.getInput("tts")) body.tts = ctx.getInput<boolean>("tts").toString();
+    // ctx.getInput<Option<string>>("content").map((v) => (body.content = v));
+    // ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
+    // ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
+    // ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
     // await ctx.getInput<Option<string>>("fileLocation").mapAsync(async (v) => {
     //   body["file[0]"] = JSON.stringify({
     //     file: await fs.readBinaryFile(v),
