@@ -69,6 +69,8 @@ export class Node {
       createRenderEffect(() => {
         const builder = new IOBuilder(this.io);
 
+        console.log("why");
+
         reactiveThis.schema.generateIO(builder, {});
 
         untrack(() => this.updateIO(reactiveThis, builder));

@@ -14,10 +14,13 @@ function App() {
   onMount(async () => {
     const savedProject = localStorage.getItem("project");
     if (savedProject)
-      await core.load(SerializedProject.parse(JSON.parse(savedProject)));
+      setTimeout(
+        () => core.load(SerializedProject.parse(JSON.parse(savedProject))),
+        2000
+      );
 
-    const firstGraph = core.project.graphs.values().next();
-    if (firstGraph) ui.setCurrentGraph(firstGraph.value);
+    // const firstGraph = core.project.graphs.values().next();
+    // if (firstGraph) ui.setCurrentGraph(firstGraph.value);
   });
 
   return (

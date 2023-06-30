@@ -75,7 +75,6 @@ export class IOBuilder {
   wildcard(id: string) {
     const wildcard = Maybe(this.previous?.wildcards.get(id)).unwrapOrElse(
       () => {
-        console.log("creating wildcard");
         return new Wildcard(id);
       }
     );
@@ -87,7 +86,6 @@ export class IOBuilder {
 
   scope(id: string) {
     const scope = Maybe(this.previous?.scopes.get(id)).unwrapOrElse(() => {
-      console.log("creating scope");
       return new ScopeRef();
     });
 
@@ -104,7 +102,6 @@ export class IOBuilder {
             i.id === args.id && i.variant === "Data" && args.type.eq(i.type)
         )
       ).unwrapOrElse(() => {
-        console.log("creating new data input");
         return { ...args, variant: "Data" };
       })
     );
@@ -118,7 +115,6 @@ export class IOBuilder {
             i.id === args.id && i.variant === "Data" && args.type.eq(i.type)
         )
       ).unwrapOrElse(() => {
-        console.log("creating new data output");
         return { ...args, variant: "Data" };
       })
     );
@@ -131,7 +127,6 @@ export class IOBuilder {
           (i) => i.id === args.id && i.variant === "Exec"
         )
       ).unwrapOrElse(() => {
-        console.log("creating new exec input");
         return { ...args, variant: "Exec" };
       })
     );
@@ -144,7 +139,6 @@ export class IOBuilder {
           (o) => o.id === args.id && o.variant === "Exec"
         )
       ).unwrapOrElse(() => {
-        console.log("creating new exec output");
         return { ...args, variant: "Exec" };
       })
     );
@@ -157,7 +151,6 @@ export class IOBuilder {
           (i) => i.id === args.id && i.variant === "Scope"
         )
       ).unwrapOrElse(() => {
-        console.log("creating new scope input");
         return { ...args, variant: "Scope" };
       })
     );
@@ -170,7 +163,6 @@ export class IOBuilder {
           (o) => o.id === args.id && o.variant === "Scope"
         )
       ).unwrapOrElse(() => {
-        console.log("creating new scope output");
         return { ...args, variant: "Scope" };
       })
     );

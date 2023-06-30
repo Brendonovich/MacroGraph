@@ -25,8 +25,8 @@ export type TypeVariant =
 export type AnyType = BaseType<any>;
 
 export function typesCanConnect(a: t.Any, b: t.Any): boolean {
-  const aInner = a instanceof t.Wildcard ? a.wildcard.value.unwrapOr(a) : a;
-  const bInner = b instanceof t.Wildcard ? b.wildcard.value.unwrapOr(b) : b;
+  const aInner = a instanceof t.Wildcard ? a.wildcard.value().unwrapOr(a) : a;
+  const bInner = b instanceof t.Wildcard ? b.wildcard.value().unwrapOr(b) : b;
 
   if (aInner instanceof t.Wildcard || bInner instanceof t.Wildcard) return true;
 
