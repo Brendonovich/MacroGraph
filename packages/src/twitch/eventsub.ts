@@ -71,20 +71,19 @@ const { state } = createRoot(() => {
 
                   await Promise.all(
                     SubTypes.map((type) =>
-                      helix.client.eventSub.createSubscription(
+                      helix.client.post("/eventsub/subscriptions", {
                         type,
-                        type == "channel.follow" ? "2" : "1",
-                        {
-                          from_broadcaster_user_id: userId,
+                        version: type == "channel.follow" ? "2" : "1",
+                        condition: {
                           broadcaster_user_id: userId,
                           moderator_user_id: userId,
+                          to_broadcaster_user_id: userId,
                         },
-                        {
+                        transport: {
                           method: "websocket",
                           session_id: info.payload.session.id,
                         },
-                        { id: userId }
-                      )
+                      })
                     )
                   );
 
