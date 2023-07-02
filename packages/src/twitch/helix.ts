@@ -62,10 +62,20 @@ export const { client, userId, setUserId } = createRoot(() => {
           path: `/shield_mode`,
           extend: moderation,
         }),
-        enforcementStatus: createEndpoint({
-          path: `/enforcements/status`,
-          extend: moderation,
-        }),
+        enforcements: (() => {
+          const enforcements = createEndpoint({
+            path: `/enforcements`,
+            extend: moderation,
+          });
+
+          return {
+            status: createEndpoint({
+              path: `/status`,
+              extend: enforcements,
+            }),
+          };
+        })(),
+
         automod: (() => {
           const automod = createEndpoint({
             path: `/automod`,
