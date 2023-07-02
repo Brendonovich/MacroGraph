@@ -7,9 +7,8 @@ import {
 } from "solid-js";
 import { auth } from "./auth";
 import pkg from "./pkg";
-import { t, Maybe, InferEnum, None } from "@macrograph/core";
+import { t, Maybe, None } from "@macrograph/core";
 import { z } from "zod";
-import axios from "axios";
 import { createEndpoint } from "../httpEndpoint";
 
 export const HELIX_USER_ID = "helixUserId";
@@ -21,24 +20,31 @@ export const { client, userId, setUserId } = createRoot(() => {
 
   const root = createEndpoint({
     path: "https://api.twitch.tv/helix",
-    fetchFn: async (args) => {
+    fetchFn: async (url, args) => {
       const user = await auth.getAccessTokenForUser(userId().unwrap());
-      const token = user.accessToken;
-      fetch(args.url, {
+
+      return await fetch(url, {
         method: args.method,
         headers: {
           ...args.headers,
           "content-type": "application/json",
           "Client-Id": auth.clientId,
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${user.accessToken}`,
         },
-        body: JSON.stringify({ ...args.body.Json }),
-      });
+        body: args.body
+          ? !(
+              args.body instanceof FormData ||
+              args.body instanceof URLSearchParams
+            )
+            ? JSON.stringify(args.body)
+            : undefined
+          : undefined,
+      }).then((res) => res.json());
     },
   });
 
   const client = {
-    moderation: () => {
+    moderation: (() => {
       const moderation = createEndpoint({
         path: `/moderation`,
         extend: root,
@@ -60,7 +66,7 @@ export const { client, userId, setUserId } = createRoot(() => {
           path: `/enforcements/status`,
           extend: moderation,
         }),
-        automod: () => {
+        automod: (() => {
           const automod = createEndpoint({
             path: `/automod`,
             extend: moderation,
@@ -70,10 +76,23 @@ export const { client, userId, setUserId } = createRoot(() => {
             message: createEndpoint({ path: `/message`, extend: automod }),
             settings: createEndpoint({ path: `/settings`, extend: automod }),
           };
-        },
+        })(),
       };
-    },
-    eventsub: createEndpoint({ path: `/eventsub/subscriptions`, extend: root }),
+    })(),
+    eventsub: (() => {
+      const eventsub = createEndpoint({
+        path: `/eventsub`,
+        extend: root,
+      });
+
+      return {
+        ...eventsub,
+        subscriptions: createEndpoint({
+          path: `/subscriptions`,
+          extend: eventsub,
+        }),
+      };
+    })(),
   };
 
   createEffect(
@@ -122,16 +141,14 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const user = userId().unwrap();
 
-    client.moderation().bans.post(z.any(), {
+    client.moderation.bans.post(z.any(), {
       body: {
-        Json: {
-          broadcaster_id: user,
-          moderator_id: user,
-          data: {
-            user_id: ctx.getInput("userId"),
-            duration: ctx.getInput("duration"),
-            reason: ctx.getInput("reason"),
-          },
+        broadcaster_id: user,
+        moderator_id: user,
+        data: {
+          user_id: ctx.getInput("userId"),
+          duration: ctx.getInput("duration"),
+          reason: ctx.getInput("reason"),
         },
       },
     });
@@ -149,15 +166,10 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const user = userId().unwrap();
-
-    client.moderation().bans.delete(z.any(), {
+    client.moderation.bans.delete(z.any(), {
       body: {
-        Json: {
-          broadcaster_id: user,
-          moderator_id: user,
-          user_id: ctx.getInput("userId"),
-        },
+        moderator_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
       },
     });
   },
@@ -174,12 +186,10 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    return client.moderation().moderators.post(z.any(), {
+    return client.moderation.moderators.post(z.any(), {
       body: {
-        Json: {
-          broadcaster_id: userId().unwrap(),
-          user_id: ctx.getInput("userId"),
-        },
+        broadcaster_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
       },
     });
   },

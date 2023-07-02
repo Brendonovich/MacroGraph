@@ -74,18 +74,16 @@ const { state } = createRoot(() => {
                     SubTypes.map((type) =>
                       helix.client.eventsub.post(z.any(), {
                         body: {
-                          Json: {
-                            type,
-                            version: type == "channel.follow" ? "2" : "1",
-                            condition: {
-                              broadcaster_user_id: userId,
-                              moderator_user_id: userId,
-                              to_broadcaster_user_id: userId,
-                            },
-                            transport: {
-                              method: "websocket",
-                              session_id: info.payload.session.id,
-                            },
+                          type,
+                          version: type == "channel.follow" ? "2" : "1",
+                          condition: {
+                            broadcaster_user_id: userId,
+                            moderator_user_id: userId,
+                            to_broadcaster_user_id: userId,
+                          },
+                          transport: {
+                            method: "websocket",
+                            session_id: info.payload.session.id,
                           },
                         },
                       })
