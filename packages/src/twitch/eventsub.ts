@@ -72,7 +72,7 @@ const { state } = createRoot(() => {
 
                   await Promise.all(
                     SubTypes.map((type) =>
-                      helix.client.eventsub.post(z.any(), {
+                      helix.client.eventsub.subscriptions.post(z.any(), {
                         body: {
                           type,
                           version: type == "channel.follow" ? "2" : "1",

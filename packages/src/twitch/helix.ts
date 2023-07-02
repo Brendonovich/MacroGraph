@@ -178,6 +178,7 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     client.moderation.bans.delete(z.any(), {
       body: {
+        broadcaster_id: userId().unwrap(),
         moderator_id: userId().unwrap(),
         user_id: ctx.getInput("userId"),
       },
