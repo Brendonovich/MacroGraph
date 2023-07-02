@@ -10,35 +10,71 @@ import pkg from "./pkg";
 import { t, Maybe, InferEnum, None } from "@macrograph/core";
 import { z } from "zod";
 import axios from "axios";
+import { createEndpoint } from "../httpEndpoint";
 
 export const HELIX_USER_ID = "helixUserId";
 
 export const { client, userId, setUserId } = createRoot(() => {
-  const client = axios.create({
-    baseURL: "https://api.twitch.tv/helix",
-    headers: {
-      "Client-ID": auth.clientId,
-    },
-  });
-
-  setTimeout(() => {});
-
   const [userId, setUserId] = createSignal(
     Maybe(localStorage.getItem(HELIX_USER_ID))
   );
 
-  client.interceptors.request.use(async (request) => {
-    const user = await auth.getAccessTokenForUser(userId().unwrap());
-    console.log("test");
-    if (Date.now() > user.obtainmentTimestamp + user.expiresIn * 1000) {
-      await auth.refreshAccessTokenForUser(user.userId);
-    }
-    request.data.broadcaster_id = userId().unwrap();
-    request.headers.Authorization = `Bearer ${
-      auth.tokens.get(userId().unwrap())?.accessToken
-    }`;
-    return request;
+  const root = createEndpoint({
+    path: "https://api.twitch.tv/helix",
+    fetchFn: async (args) => {
+      const user = await auth.getAccessTokenForUser(userId().unwrap());
+      const token = user.accessToken;
+      fetch(args.url, {
+        method: args.method,
+        headers: {
+          ...args.headers,
+          "content-type": "application/json",
+          "Client-Id": auth.clientId,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ...args.body.Json }),
+      });
+    },
   });
+
+  const client = {
+    moderation: () => {
+      const moderation = createEndpoint({
+        path: `/moderation`,
+        extend: root,
+      });
+
+      return {
+        bans: createEndpoint({ path: `/bans`, extend: moderation }),
+        blockedTerms: createEndpoint({
+          path: `/blocked_terms`,
+          extend: moderation,
+        }),
+        chat: createEndpoint({ path: `/chat`, extend: moderation }),
+        moderators: createEndpoint({ path: `/moderators`, extend: moderation }),
+        shieldMode: createEndpoint({
+          path: `/shield_mode`,
+          extend: moderation,
+        }),
+        enforcementStatus: createEndpoint({
+          path: `/enforcements/status`,
+          extend: moderation,
+        }),
+        automod: () => {
+          const automod = createEndpoint({
+            path: `/automod`,
+            extend: moderation,
+          });
+
+          return {
+            message: createEndpoint({ path: `/message`, extend: automod }),
+            settings: createEndpoint({ path: `/settings`, extend: automod }),
+          };
+        },
+      };
+    },
+    eventsub: createEndpoint({ path: `/eventsub/subscriptions`, extend: root }),
+  };
 
   createEffect(
     on(
@@ -86,16 +122,19 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const user = userId().unwrap();
 
-    client.post(
-      `/moderation/bans?broadcaster_id=${user}&moderator_id=${user}`,
-      {
-        data: {
-          user_id: ctx.getInput("userId"),
-          duration: ctx.getInput("duration"),
-          reason: ctx.getInput("reason"),
+    client.moderation().bans.post(z.any(), {
+      body: {
+        Json: {
+          broadcaster_id: user,
+          moderator_id: user,
+          data: {
+            user_id: ctx.getInput("userId"),
+            duration: ctx.getInput("duration"),
+            reason: ctx.getInput("reason"),
+          },
         },
-      }
-    );
+      },
+    });
   },
 });
 
@@ -112,34 +151,39 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     const user = userId().unwrap();
 
-    client.delete(
-      `/moderation/bans?broadcaster_id=${user}&moderator_id=${user}`,
-      {
-        data: {
+    client.moderation().bans.delete(z.any(), {
+      body: {
+        Json: {
+          broadcaster_id: user,
+          moderator_id: user,
           user_id: ctx.getInput("userId"),
         },
-      }
-    );
+      },
+    });
   },
 });
 
-// pkg.createNonEventSchema({
-//   name: "Add Moderator",
-//   variant: "Exec",
-//   generateIO: (io) => {
-//     io.dataInput({
-//       name: "userID",
-//       id: "userId",
-//       type: t.string(),
-//     });
-//   },
-//   run({ ctx }) {
-//     // return client.moderation.addModerator(
-//     //   userId().unwrap(),
-//     //   ctx.getInput("userId")
-//     // );
-//   },
-// });
+pkg.createNonEventSchema({
+  name: "Add Moderator",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      name: "userID",
+      id: "userId",
+      type: t.string(),
+    });
+  },
+  run({ ctx }) {
+    return client.moderation().moderators.post(z.any(), {
+      body: {
+        Json: {
+          broadcaster_id: userId().unwrap(),
+          user_id: ctx.getInput("userId"),
+        },
+      },
+    });
+  },
+});
 
 // pkg.createNonEventSchema({
 //   name: "Remove Moderator",

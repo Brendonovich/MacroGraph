@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 import { t } from "@macrograph/core";
 import { auth } from "./auth";
+import { z } from "zod";
 
 const SubTypes = [
   "channel.update",
@@ -71,17 +72,21 @@ const { state } = createRoot(() => {
 
                   await Promise.all(
                     SubTypes.map((type) =>
-                      helix.client.post("/eventsub/subscriptions", {
-                        type,
-                        version: type == "channel.follow" ? "2" : "1",
-                        condition: {
-                          broadcaster_user_id: userId,
-                          moderator_user_id: userId,
-                          to_broadcaster_user_id: userId,
-                        },
-                        transport: {
-                          method: "websocket",
-                          session_id: info.payload.session.id,
+                      helix.client.eventsub.post(z.any(), {
+                        body: {
+                          Json: {
+                            type,
+                            version: type == "channel.follow" ? "2" : "1",
+                            condition: {
+                              broadcaster_user_id: userId,
+                              moderator_user_id: userId,
+                              to_broadcaster_user_id: userId,
+                            },
+                            transport: {
+                              method: "websocket",
+                              session_id: info.payload.session.id,
+                            },
+                          },
                         },
                       })
                     )
