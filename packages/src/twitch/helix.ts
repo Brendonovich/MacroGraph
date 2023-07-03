@@ -22,7 +22,9 @@ export const { client, userId, setUserId } = createRoot(() => {
     path: "https://api.twitch.tv/helix",
     fetchFn: async (url, args) => {
       const user = await auth.getAccessTokenForUser(userId().unwrap());
-
+      if (args.body instanceof URLSearchParams) {
+        url = `${url}?${args.body.toString()}`;
+      }
       return await fetch(url, {
         method: args.method,
         headers: {
@@ -51,11 +53,7 @@ export const { client, userId, setUserId } = createRoot(() => {
       });
 
       return {
-        channelInfo: (data: string) =>
-          createEndpoint({
-            path: `/channels?broadcaster_id=${data}`,
-            extend: root,
-          }),
+        ...channels,
         followers: createEndpoint({
           path: `/followers`,
           extend: channels,
@@ -369,13 +367,18 @@ pkg.createNonEventSchema({
       type: t.string(),
     });
     io.dataOutput({
-      name: "Game Name",
-      id: "gameName",
+      name: "Title",
+      id: "title",
       type: t.string(),
     });
     io.dataOutput({
-      name: "Game ID",
-      id: "gameId",
+      name: "Stream Catagory",
+      id: "catagory",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Catagory ID",
+      id: "catagoryId",
       type: t.string(),
     });
     io.dataOutput({
@@ -390,22 +393,21 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const data = await client.channels
-      .channelInfo(ctx.getInput("broadcasterId"))
-      .get(z.any());
-
+    const data = await client.channels.get(z.any(), {
+      body: new URLSearchParams({
+        broadcaster_id: ctx.getInput("broadcasterId"),
+      }),
+    });
     const info = data.data[0];
     ctx.setOutput("broadcasterId", info.broadcaster_id);
     ctx.setOutput("broadcasterLogin", info.broadcaster_login);
     ctx.setOutput("broadcasterDisplay", info.broadcaster_name);
     ctx.setOutput("broadcasterLanguage", info.broadcaster_language);
-    ctx.setOutput("gameName", info.game_name);
-    ctx.setOutput("gameId", info.game_id);
+    ctx.setOutput("catagory", info.game_name);
+    ctx.setOutput("catagoryId", info.game_id);
     ctx.setOutput("title", info.title);
     ctx.setOutput("delay", info.delay);
     ctx.setOutput("tags", info.tags);
-
-    console.log(data.data[0]);
   },
 });
 
