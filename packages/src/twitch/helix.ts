@@ -44,6 +44,119 @@ export const { client, userId, setUserId } = createRoot(() => {
   });
 
   const client = {
+    channels: (() => {
+      const channels = createEndpoint({
+        path: `/channels`,
+        extend: root,
+      });
+
+      return {
+        channelInfo: (data: string) =>
+          createEndpoint({
+            path: `/channels?broadcaster_id=${data}`,
+            extend: root,
+          }),
+        followers: createEndpoint({
+          path: `/followers`,
+          extend: channels,
+        }),
+        vips: createEndpoint({
+          path: `/vips`,
+          extend: channels,
+        }),
+        followed: createEndpoint({
+          path: `/followed`,
+          extend: channels,
+        }),
+        editors: createEndpoint({
+          path: `/editors`,
+          extend: channels,
+        }),
+        commercial: createEndpoint({
+          path: `/commercial`,
+          extend: channels,
+        }),
+      };
+    })(),
+    analytics: (() => {
+      const analytics = createEndpoint({
+        path: `/analytics`,
+        extend: root,
+      });
+
+      return {
+        games: createEndpoint({
+          path: `/games`,
+          extend: analytics,
+        }),
+        extensions: createEndpoint({
+          path: `/extensions`,
+          extend: analytics,
+        }),
+      };
+    })(),
+    bits: (() => {
+      const bits = createEndpoint({
+        path: `/bits`,
+        extend: root,
+      });
+
+      return {
+        leaderboard: createEndpoint({
+          path: `/leaderboard`,
+          extend: bits,
+        }),
+        cheermotes: createEndpoint({
+          path: `/cheermotes`,
+          extend: bits,
+        }),
+        extensions: createEndpoint({
+          path: `/extensions`,
+          extend: bits,
+        }),
+      };
+    })(),
+    extensions: (() => {
+      const extensions = createEndpoint({
+        path: `/extensions`,
+        extend: root,
+      });
+
+      return {
+        transactions: createEndpoint({
+          path: `/transactions`,
+          extend: extensions,
+        }),
+        configurations: createEndpoint({
+          path: `/configurations`,
+          extend: extensions,
+        }),
+        required_configuration: createEndpoint({
+          path: `/required_configuration`,
+          extend: extensions,
+        }),
+        pubsub: createEndpoint({
+          path: `/pubsub`,
+          extend: extensions,
+        }),
+        live: createEndpoint({
+          path: `/live`,
+          extend: extensions,
+        }),
+        jwt: createEndpoint({
+          path: `/jwt/secrets`,
+          extend: extensions,
+        }),
+        chat: createEndpoint({
+          path: `/chat`,
+          extend: extensions,
+        }),
+        released: createEndpoint({
+          path: `/released`,
+          extend: extensions,
+        }),
+      };
+    })(),
     moderation: (() => {
       const moderation = createEndpoint({
         path: `/moderation`,
@@ -206,81 +319,95 @@ pkg.createNonEventSchema({
   },
 });
 
-// pkg.createNonEventSchema({
-//   name: "Remove Moderator",
-//   variant: "Exec",
-//   generateIO: (io) => {
-//     io.dataInput({
-//       name: "userID",
-//       id: "userId",
-//       type: t.string(),
-//     });
-//   },
-//   run({ ctx }) {
-//     // return client.moderation.removeModerator(
-//     //   userId().unwrap(),
-//     //   ctx.getInput("userId")
-//     // );
-//   },
-// });
+pkg.createNonEventSchema({
+  name: "Remove Moderator",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      name: "userID",
+      id: "userId",
+      type: t.string(),
+    });
+  },
+  run({ ctx }) {
+    client.moderation.moderators.delete(z.any(), {
+      body: {
+        broadcaster_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
+      },
+    });
+  },
+});
 
-// pkg.createNonEventSchema({
-//   name: "Delete Chat message",
-//   variant: "Exec",
-//   generateIO: (io) => {
-//     io.dataInput({
-//       name: "Message ID",
-//       id: "messageId",
-//       type: t.string(),
-//     });
-//   },
-//   run({ ctx }) {
-//     const user = userId().unwrap();
+pkg.createNonEventSchema({
+  name: "Get Channel Info",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      name: "Broadcaster ID",
+      id: "broadcasterId",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Broadcaster ID",
+      id: "broadcasterId",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Broadcaster Login Name",
+      id: "broadcasterLogin",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Broadcaster Display Name",
+      id: "broadcasterDisplay",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Broadcaster Language",
+      id: "broadcasterLanguage",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Game Name",
+      id: "gameName",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Game ID",
+      id: "gameId",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Tags",
+      id: "tags",
+      type: t.list(t.string()),
+    });
+    io.dataOutput({
+      name: "Delay",
+      id: "delay",
+      type: t.int(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await client.channels
+      .channelInfo(ctx.getInput("broadcasterId"))
+      .get(z.any());
 
-//     // client.moderation.deleteChatMessages(user, user, ctx.getInput("messageId"));
-//   },
-// });
+    const info = data.data[0];
+    ctx.setOutput("broadcasterId", info.broadcaster_id);
+    ctx.setOutput("broadcasterLogin", info.broadcaster_login);
+    ctx.setOutput("broadcasterDisplay", info.broadcaster_name);
+    ctx.setOutput("broadcasterLanguage", info.broadcaster_language);
+    ctx.setOutput("gameName", info.game_name);
+    ctx.setOutput("gameId", info.game_id);
+    ctx.setOutput("title", info.title);
+    ctx.setOutput("delay", info.delay);
+    ctx.setOutput("tags", info.tags);
 
-// pkg.createNonEventSchema({
-//   name: "Edit Stream Info",
-//   variant: "Exec",
-//   generateIO: (io) => {
-//     io.dataInput({
-//       name: "Game ID",
-//       id: "gameId",
-//       type: t.string(),
-//     });
-//     io.dataInput({
-//       name: "Language",
-//       id: "language",
-//       type: t.string(),
-//     });
-//     io.dataInput({
-//       name: "Title",
-//       id: "title",
-//       type: t.string(),
-//     });
-//     io.dataInput({
-//       name: "Delay (s)",
-//       id: "delay",
-//       type: t.string(),
-//     });
-//     io.dataInput({
-//       name: "Tags",
-//       id: "tags",
-//       type: t.list(t.string()),
-//     });
-//   },
-//   run({ ctx }) {
-//     // return client.channels.updateChannelInfo(userId().unwrap(), {
-//     //   gameId: ctx.getInput("gameId"),
-//     //   language: ctx.getInput("language"),
-//     //   title: ctx.getInput("title"),
-//     //   delay: ctx.getInput("delay"),
-//     //   tags: ctx.getInput("tags"),
-//     // });
-//   },
-// });
+    console.log(data.data[0]);
+  },
+});
 
 // pkg.createNonEventSchema({
 //   name: "Create Clip",
