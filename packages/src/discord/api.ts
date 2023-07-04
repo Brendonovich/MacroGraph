@@ -3,28 +3,23 @@ import pkg from "./pkg";
 import { botToken, setBotToken } from "./auth";
 import { createResource, createRoot } from "solid-js";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
-import { createEndpoint } from "../httpEndpoint";
-import { Maybe, Option, rspcClient, t } from "@macrograph/core";
+import { createEndpoint, nativeFetch } from "../httpEndpoint";
+import { Maybe, rspcClient, t } from "@macrograph/core";
 
 const root = createEndpoint({
   path: "https://discord.com/api/v10",
-  fetchFn: async (args) => {
+  fetchFn: async (url, args) => {
     const token = botToken();
     if (token === null) throw new Error("No bot token!");
 
-    const { data } = await rspcClient.query([
-      "http.json",
-      {
-        ...args,
-        headers: {
-          ...args?.headers,
-          "Content-Type": "application/json",
-          Authorization: `Bot ${token}`,
-        },
+    return nativeFetch(url, {
+      ...args,
+      headers: {
+        ...args?.headers,
+        "Content-Type": "application/json",
+        Authorization: `Bot ${token}`,
       },
-    ]);
-
-    return data;
+    });
   },
 });
 
@@ -93,7 +88,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     await api.channels(ctx.getInput("channelId")).messages.post(z.any(), {
-      body: { Json: { content: ctx.getInput("message") } },
+      body: { content: ctx.getInput("message") },
     });
   },
 });

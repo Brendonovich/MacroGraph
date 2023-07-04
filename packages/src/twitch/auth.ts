@@ -1,6 +1,4 @@
-import { AccessTokenWithUserId, AuthProvider } from "@twurple/auth";
 import { Maybe, None, Some } from "@macrograph/core";
-import { extractUserId, UserIdResolvable } from "@twurple/api";
 import { z } from "zod";
 import { ReactiveMap } from "@solid-primitives/map";
 
@@ -8,12 +6,27 @@ const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
 
-export interface AccessTokenWithUsernameAndId extends AccessTokenWithUserId {
+export interface User {
   userName: string;
+  userId: string;
+  accessToken: string;
+  refreshToken: string;
+  scope: string[];
+  expiresIn: number;
+  obtainmentTimestamp: number;
 }
 
-class MacroGraphAuthProvider implements AuthProvider {
-  tokens: ReactiveMap<string, AccessTokenWithUsernameAndId>;
+export interface UserIdResolvableType {
+  /**
+   * The ID of the user.
+   */
+  id: string;
+}
+
+export type UserIdResolvable = string | number | UserIdResolvableType;
+
+class MacroGraphAuthProvider {
+  tokens: ReactiveMap<string, User>;
 
   constructor(public clientId: string) {
     this.tokens = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN))
@@ -24,11 +37,6 @@ class MacroGraphAuthProvider implements AuthProvider {
         return None;
       })
       .unwrapOr(new ReactiveMap());
-  }
-
-  getCurrentScopesForUser(userId: UserIdResolvable) {
-    const id = extractUserId(userId);
-    return this.tokens.get(id)?.scope ?? [];
   }
 
   logOut(userID: UserIdResolvable) {
@@ -51,7 +59,7 @@ class MacroGraphAuthProvider implements AuthProvider {
     };
   }
 
-  async addUser(token: AccessTokenWithUsernameAndId) {
+  async addUser(token: User) {
     const res = await fetch("https://api.twitch.tv/helix/users", {
       method: "GET",
       headers: {
@@ -70,9 +78,7 @@ class MacroGraphAuthProvider implements AuthProvider {
     return userId;
   }
 
-  async getAnyAccessToken(
-    userId?: UserIdResolvable
-  ): Promise<AccessTokenWithUsernameAndId> {
+  async getAnyAccessToken(userId?: UserIdResolvable): Promise<User> {
     return {
       ...Maybe(
         this.tokens.get(
@@ -84,10 +90,8 @@ class MacroGraphAuthProvider implements AuthProvider {
     };
   }
 
-  async refreshAccessTokenForUser(
-    user: UserIdResolvable
-  ): Promise<AccessTokenWithUsernameAndId> {
-    const userId = extractUserId(user);
+  async refreshAccessTokenForUser(user: string): Promise<User> {
+    const userId = user;
 
     const { userName, refreshToken } = Maybe(this.tokens.get(userId)).expect(
       "refreshAccessTokenForUser missing token"
@@ -145,5 +149,15 @@ const SCHEMA = z.record(
     userName: z.string(),
   })
 );
+
+export function extractUserId(user: UserIdResolvable): string {
+  if (typeof user === "string") {
+    return user;
+  } else if (typeof user === "number") {
+    return user.toString(10);
+  } else {
+    return user.id;
+  }
+}
 
 export const auth = new MacroGraphAuthProvider(clientId);

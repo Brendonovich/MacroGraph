@@ -22,7 +22,7 @@
     "@tauri-apps/api": "^1.2.0",
     "clsx": "^1.2.1",
     "solid-icons": "^1.0.4",
-    "solid-js": "^1.7.0",
+    "solid-js": "^1.7.5",
     "zod": "^3.21.4"
   },
   "devDependencies": {

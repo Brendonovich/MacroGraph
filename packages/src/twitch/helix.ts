@@ -1,4 +1,3 @@
-import { ApiClient, HelixBroadcasterType, HelixUserType } from "@twurple/api";
 import {
   createComputed,
   createEffect,
@@ -8,17 +7,305 @@ import {
 } from "solid-js";
 import { auth } from "./auth";
 import pkg from "./pkg";
-import { t, Maybe, InferEnum, None } from "@macrograph/core";
+import { t, Maybe, None, InferEnum } from "@macrograph/core";
 import { z } from "zod";
+import { createEndpoint } from "../httpEndpoint";
 
 export const HELIX_USER_ID = "helixUserId";
 
 export const { client, userId, setUserId } = createRoot(() => {
-  const client = new ApiClient({ authProvider: auth });
-
   const [userId, setUserId] = createSignal(
     Maybe(localStorage.getItem(HELIX_USER_ID))
   );
+
+  const root = createEndpoint({
+    path: "https://api.twitch.tv/helix",
+    fetchFn: async (url, args) => {
+      const user = await auth.getAccessTokenForUser(userId().unwrap());
+      const token = auth.tokens.get(userId().unwrap());
+      if (Date.now() > token?.obtainmentTimestamp + token?.expiresIn * 1000) {
+        await auth.refreshAccessTokenForUser(token?.userId);
+        console.log("refreshing");
+      }
+      if (args.body instanceof URLSearchParams) {
+        url = `${url}?${args.body.toString()}`;
+      }
+
+      return await fetch(url, {
+        method: args.method,
+        headers: {
+          ...args.headers,
+          "content-type": "application/json",
+          "Client-Id": auth.clientId,
+          Authorization: `Bearer ${user.accessToken}`,
+        },
+        body: args.body
+          ? !(
+              args.body instanceof FormData ||
+              args.body instanceof URLSearchParams
+            )
+            ? JSON.stringify(args.body)
+            : undefined
+          : undefined,
+      }).then((res) => {
+        if (res.status === 204) return;
+        res.json();
+      });
+    },
+  });
+
+  const client = {
+    channels: (() => {
+      const channels = root.extend(`/channels`);
+
+      return {
+        ...channels,
+        followers: channels.extend(`/followers`),
+        vips: channels.extend(`/vips`),
+        followed: channels.extend(`/followed`),
+        editors: channels.extend(`/editors`),
+        commercial: channels.extend(`/commercial`),
+      };
+    })(),
+    analytics: (() => {
+      const analytics = root.extend(`/analytics`);
+
+      return {
+        games: analytics.extend(`/games`),
+        extensions: analytics.extend(`/extensions`),
+      };
+    })(),
+    bits: (() => {
+      const bits = root.extend(`/bits`);
+
+      return {
+        leaderboard: bits.extend(`/leaderboard`),
+        cheermotes: bits.extend(`/cheermotes`),
+        extensions: bits.extend(`/extensions`),
+      };
+    })(),
+    extensions: (() => {
+      const extensions = root.extend(`/extensions`);
+
+      return {
+        transactions: extensions.extend(`/transactions`),
+        configurations: extensions.extend(`/configurations`),
+        requiredConfiguration: extensions.extend(`/required_configuration`),
+        pubsub: extensions.extend(`/pubsub`),
+        live: extensions.extend(`/live`),
+        jwt: () => {
+          const jwt = extensions.extend(`/jwt`);
+
+          return {
+            ...jwt,
+            secrets: jwt.extend(`/secrets`),
+          };
+        },
+        chat: extensions.extend(`/chat`),
+        released: extensions.extend(`/released`),
+      };
+    })(),
+    moderation: (() => {
+      const moderation = root.extend(`/moderation`);
+
+      return {
+        bans: moderation.extend(`/bans`),
+        blockedTerms: moderation.extend(`/blocked_terms`),
+        chat: moderation.extend(`/chat`),
+        moderators: moderation.extend(`/moderators`),
+        shieldMode: moderation.extend(`/shield_mode`),
+        enforcements: (() => {
+          const enforcements = moderation.extend(`/enforcements`);
+
+          return {
+            ...enforcements,
+            status: enforcements.extend(`/status`),
+          };
+        })(),
+
+        automod: (() => {
+          const automod = moderation.extend(`/automod`);
+
+          return {
+            ...automod,
+            message: automod.extend(`/message`),
+            settings: automod.extend(`/settings`),
+          };
+        })(),
+      };
+    })(),
+    eventsub: (() => {
+      const eventsub = root.extend(`/eventsub`);
+
+      return {
+        ...eventsub,
+        subscriptions: eventsub.extend(`/subscriptions`),
+      };
+    })(),
+    channelPoints: (() => {
+      const channelPoints = root.extend(`/channel_points`);
+
+      return {
+        ...channelPoints,
+        customRewards: (() => {
+          const customRewards = channelPoints.extend(`/custom_rewards`);
+
+          return {
+            ...customRewards,
+            redemptions: customRewards.extend(`/redemptions`),
+          };
+        })(),
+      };
+    })(),
+    charity: (() => {
+      const charity = root.extend(`/charity`);
+
+      return {
+        ...charity,
+        donations: charity.extend(`/donations`),
+        campaigns: charity.extend(`/campaigns`),
+      };
+    })(),
+    chat: (() => {
+      const chat = root.extend(`/chat`);
+
+      return {
+        chatters: chat.extend(`/chatters`),
+        settings: chat.extend(`/settings`),
+        announcements: chat.extend(`/announcements`),
+        shoutouts: chat.extend(`/shoutouts`),
+        color: chat.extend(`/color`),
+        emotes: (() => {
+          const emotes = chat.extend(`/emotes`);
+
+          return {
+            ...emotes,
+            global: emotes.extend(`/global`),
+            set: emotes.extend(`/set`),
+          };
+        })(),
+        badges: (() => {
+          const badges = chat.extend(`/badges`);
+
+          return {
+            ...badges,
+            global: badges.extend(`/global`),
+          };
+        })(),
+      };
+    })(),
+    clips: root.extend(`/clips`),
+    entitlements: (() => {
+      const entitlements = root.extend(`/entitlements`);
+
+      return {
+        drops: entitlements.extend(`/drops`),
+      };
+    })(),
+    games: (() => {
+      const games = root.extend(`/games`);
+
+      return {
+        ...games,
+        top: root.extend(`/top`),
+      };
+    })(),
+    goals: root.extend(`/goals`),
+    guestStar: (() => {
+      const guestStar = root.extend(`/guest_star`);
+
+      return {
+        channelSettings: guestStar.extend(`/channel_settings`),
+        session: guestStar.extend(`/session`),
+        invites: guestStar.extend(`/invites`),
+        slot: guestStar.extend(`/slot`),
+        slotSettings: guestStar.extend(`/slot_settings`),
+      };
+    })(),
+    hypetrain: (() => {
+      const hypetrain = root.extend(`/hypetrain`);
+
+      return {
+        events: hypetrain.extend(`/events`),
+      };
+    })(),
+    polls: root.extend(`/polls`),
+    predictions: root.extend(`/predictions`),
+    raids: root.extend(`/raids`),
+    schedule: (() => {
+      const schedule = root.extend(`/schedule`);
+
+      return {
+        ...schedule,
+        icalendar: schedule.extend(`/icalendar`),
+        settings: schedule.extend(`/settings`),
+        segment: schedule.extend(`/segment`),
+      };
+    })(),
+    search: (() => {
+      const search = root.extend(`/search`);
+
+      return {
+        catagories: search.extend(`/catagories`),
+        channels: search.extend(`/channels`),
+      };
+    })(),
+    soundtrack: (() => {
+      const soundtrack = root.extend(`/soundtrack`);
+
+      return {
+        playlist: soundtrack.extend(`/playlist`),
+        playlists: soundtrack.extend(`/playlists`),
+        currentTrack: soundtrack.extend(`/current_track`),
+      };
+    })(),
+    streams: (() => {
+      const streams = root.extend(`/streams`);
+
+      return {
+        ...streams,
+        key: streams.extend(`/key`),
+        followed: streams.extend(`/followed`),
+        markers: streams.extend(`/markers`),
+        tags: streams.extend(`/tags`),
+      };
+    })(),
+    subscriptions: (() => {
+      const subscriptions = root.extend(`/subscriptions`);
+
+      return {
+        ...subscriptions,
+        user: subscriptions.extend(`/user`),
+      };
+    })(),
+    teams: (() => {
+      const teams = root.extend(`/teams`);
+
+      return {
+        ...teams,
+        channel: teams.extend(`/channel`),
+      };
+    })(),
+    users: (() => {
+      const users = root.extend(`/users`);
+
+      return {
+        ...users,
+        follows: users.extend(`/follows`),
+        blocks: users.extend(`/blocks`),
+        extensions: (() => {
+          const extensions = users.extend(`/extensions`);
+
+          return {
+            ...extensions,
+            list: extensions.extend(`/list`),
+          };
+        })(),
+      };
+    })(),
+    videos: root.extend(`/videos`),
+    whispers: root.extend(`/whispers`),
+  };
 
   createEffect(
     on(
@@ -66,10 +353,16 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const user = userId().unwrap();
 
-    client.moderation.banUser(user, user, {
-      user: ctx.getInput("userId"),
-      duration: ctx.getInput("duration"),
-      reason: ctx.getInput("reason"),
+    client.moderation.bans.post(z.any(), {
+      body: {
+        broadcaster_id: user,
+        moderator_id: user,
+        data: {
+          user_id: ctx.getInput("userId"),
+          duration: ctx.getInput("duration"),
+          reason: ctx.getInput("reason"),
+        },
+      },
     });
   },
 });
@@ -85,9 +378,13 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    const user = userId().unwrap();
-
-    return client.moderation.unbanUser(user, user, ctx.getInput("userId"));
+    client.moderation.bans.delete(z.any(), {
+      body: {
+        broadcaster_id: userId().unwrap(),
+        moderator_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
+      },
+    });
   },
 });
 
@@ -102,10 +399,12 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    return client.moderation.addModerator(
-      userId().unwrap(),
-      ctx.getInput("userId")
-    );
+    return client.moderation.moderators.post(z.any(), {
+      body: {
+        broadcaster_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
+      },
+    });
   },
 });
 
@@ -120,68 +419,86 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    return client.moderation.removeModerator(
-      userId().unwrap(),
-      ctx.getInput("userId")
-    );
+    client.moderation.moderators.delete(z.any(), {
+      body: {
+        broadcaster_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
+      },
+    });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "Delete Chat message",
+  name: "Get Channel Info",
   variant: "Exec",
   generateIO: (io) => {
     io.dataInput({
-      name: "Message ID",
-      id: "messageId",
+      name: "Broadcaster ID",
+      id: "broadcasterId",
       type: t.string(),
     });
-  },
-  run({ ctx }) {
-    const user = userId().unwrap();
-
-    client.moderation.deleteChatMessages(user, user, ctx.getInput("messageId"));
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Edit Stream Info",
-  variant: "Exec",
-  generateIO: (io) => {
-    io.dataInput({
-      name: "Game ID",
-      id: "gameId",
+    io.dataOutput({
+      name: "Broadcaster ID",
+      id: "broadcasterId",
       type: t.string(),
     });
-    io.dataInput({
-      name: "Language",
-      id: "language",
+    io.dataOutput({
+      name: "Broadcaster Login Name",
+      id: "broadcasterLogin",
       type: t.string(),
     });
-    io.dataInput({
+    io.dataOutput({
+      name: "Broadcaster Display Name",
+      id: "broadcasterDisplay",
+      type: t.string(),
+    });
+    io.dataOutput({
+      name: "Broadcaster Language",
+      id: "broadcasterLanguage",
+      type: t.string(),
+    });
+    io.dataOutput({
       name: "Title",
       id: "title",
       type: t.string(),
     });
-    io.dataInput({
-      name: "Delay (s)",
-      id: "delay",
+    io.dataOutput({
+      name: "Stream Catagory",
+      id: "catagory",
       type: t.string(),
     });
-    io.dataInput({
+    io.dataOutput({
+      name: "Catagory ID",
+      id: "catagoryId",
+      type: t.string(),
+    });
+    io.dataOutput({
       name: "Tags",
       id: "tags",
       type: t.list(t.string()),
     });
-  },
-  run({ ctx }) {
-    return client.channels.updateChannelInfo(userId().unwrap(), {
-      gameId: ctx.getInput("gameId"),
-      language: ctx.getInput("language"),
-      title: ctx.getInput("title"),
-      delay: ctx.getInput("delay"),
-      tags: ctx.getInput("tags"),
+    io.dataOutput({
+      name: "Delay",
+      id: "delay",
+      type: t.int(),
     });
+  },
+  async run({ ctx }) {
+    const data = await client.channels.get(z.any(), {
+      body: new URLSearchParams({
+        broadcaster_id: ctx.getInput("broadcasterId"),
+      }),
+    });
+    const info = data.data[0];
+    ctx.setOutput("broadcasterId", info.broadcaster_id);
+    ctx.setOutput("broadcasterLogin", info.broadcaster_login);
+    ctx.setOutput("broadcasterDisplay", info.broadcaster_name);
+    ctx.setOutput("broadcasterLanguage", info.broadcaster_language);
+    ctx.setOutput("catagory", info.game_name);
+    ctx.setOutput("catagoryId", info.game_id);
+    ctx.setOutput("title", info.title);
+    ctx.setOutput("delay", info.delay);
+    ctx.setOutput("tags", info.tags);
   },
 });
 
@@ -194,13 +511,21 @@ pkg.createNonEventSchema({
       id: "clipId",
       type: t.string(),
     });
+    io.dataOutput({
+      name: "Edit URL",
+      id: "editUrl",
+      type: t.string(),
+    });
   },
   async run({ ctx }) {
-    let clipId = await client.clips.createClip({
-      channel: userId().unwrap(),
+    const clipId = await client.clips.post(z.any(), {
+      body: new URLSearchParams({ broadcaster_id: userId().unwrap() }),
     });
+    const data = clipId.data[0];
+    console.log(clipId);
 
-    ctx.setOutput("clipId", clipId);
+    ctx.setOutput("clipId", data.id);
+    ctx.setOutput("editUrl", data.edit_url);
   },
 });
 
@@ -227,11 +552,15 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let data = await client.subscriptions.getSubscriptionForUser(
-      userId().unwrap(),
-      ctx.getInput("userId")
-    );
+    let response = await client.subscriptions.get(z.any(), {
+      body: new URLSearchParams({
+        user_id: ctx.getInput("userId"),
+        broadcaster_id: userId().unwrap(),
+      }),
+    });
 
+    const data = response.data[0];
+    console.log(data);
     ctx.setOutput(
       "out",
       Maybe(data).map((data) =>
@@ -265,12 +594,13 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const user = userId().unwrap();
 
-    let data = await client.channels.getChannelFollowers(
-      user,
-      user,
-      ctx.getInput("userId")
-    );
-
+    let data = await client.channels.followers.get(z.any(), {
+      body: new URLSearchParams({
+        broadcaster_id: user,
+        user_id: ctx.getInput("userId"),
+      }),
+    });
+    console.log(data);
     ctx.setOutput("following", data?.data.length === 1);
   },
 });
@@ -291,12 +621,14 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let data = await client.channels.checkVipForUser(
-      userId().unwrap(),
-      ctx.getInput("userId")
-    );
+    const data = await client.channels.vips.get(z.any(), {
+      body: new URLSearchParams({
+        broadcaster_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
+      }),
+    });
 
-    ctx.setOutput("vip", data);
+    ctx.setOutput("vip", data.data[0] !== undefined);
   },
 });
 
@@ -316,12 +648,14 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let data = await client.moderation.checkUserMod(
-      userId().unwrap(),
-      ctx.getInput("userId")
-    );
+    const data = await client.moderation.moderators.get(z.any(), {
+      body: new URLSearchParams({
+        broadcaster_id: userId().unwrap(),
+        user_id: ctx.getInput("userId"),
+      }),
+    });
 
-    ctx.setOutput("moderator", data);
+    ctx.setOutput("moderator", data.data[0] !== undefined);
   },
 });
 
@@ -388,20 +722,25 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const user = userId().unwrap();
 
-    let data = await client.channelPoints.createCustomReward(user, {
-      title: ctx.getInput("title"),
-      cost: ctx.getInput("cost"),
-      prompt: ctx.getInput("prompt"),
-      isEnabled: ctx.getInput("isEnabled"),
-      backgroundColor: ctx.getInput("backgroundColor"),
-      userInputRequired: ctx.getInput("userInputRequired"),
-      maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
-      maxRedemptionsPerUserPerStream: ctx.getInput(
-        "maxRedemptionsPerUserPerStream"
-      ),
-      globalCooldown: ctx.getInput("globalCooldown"),
-      autoFulfill: ctx.getInput("autoFulfill"),
+    const response = await client.channelPoints.customRewards.post(z.any(), {
+      body: {
+        broadcaster_id: user,
+        title: ctx.getInput("title"),
+        cost: ctx.getInput("cost"),
+        prompt: ctx.getInput("prompt"),
+        isEnabled: ctx.getInput("isEnabled"),
+        backgroundColor: ctx.getInput("backgroundColor"),
+        userInputRequired: ctx.getInput("userInputRequired"),
+        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+        maxRedemptionsPerUserPerStream: ctx.getInput(
+          "maxRedemptionsPerUserPerStream"
+        ),
+        globalCooldown: ctx.getInput("globalCooldown"),
+        autoFulfill: ctx.getInput("autoFulfill"),
+      },
     });
+
+    const data = response.data[0];
 
     ctx.setOutput(
       "out",
@@ -499,12 +838,12 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const data = await client.channelPoints.updateCustomReward(
-      userId().unwrap(),
-      ctx.getInput("id"),
-      {
+    const response = await client.channelPoints.customRewards.patch(z.any(), {
+      body: {
+        broadcaster_id: userId().unwrap(),
+        id: ctx.getInput("id"),
         title: ctx.getInput("title"),
-        cost: ctx.getInput("cost"),
+        cost: ctx.getInput("cost") === 0 ? undefined : ctx.getInput("cost"),
         prompt: ctx.getInput("prompt"),
         isEnabled: ctx.getInput("isEnabled"),
         backgroundColor: ctx.getInput("backgroundColor"),
@@ -515,8 +854,10 @@ pkg.createNonEventSchema({
         ),
         isPaused: ctx.getInput("paused"),
         globalCooldown: ctx.getInput("globalCooldown"),
-      }
-    );
+      },
+    });
+
+    const data = response.data[0];
 
     ctx.setOutput(
       "out",
@@ -576,6 +917,11 @@ pkg.createNonEventSchema({
       id: "rewardId",
       type: t.string(),
     });
+    io.dataInput({
+      name: "Status",
+      id: "status",
+      type: t.enum(RedemptionStatus),
+    });
     io.dataOutput({
       name: "Redemption",
       id: "out",
@@ -585,14 +931,36 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
 
-    let data = await client.channelPoints.updateRedemptionStatusByIds(
-      userId().unwrap(),
-      ctx.getInput("rewardId"),
-      [ctx.getInput("redemptionId")],
-      status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED"
+    const response = await client.channelPoints.customRewards.redemptions.patch(
+      z.any(),
+      {
+        body: new URLSearchParams({
+          id: ctx.getInput("redemptionId"),
+          broadcaster_id: userId().unwrap(),
+          reward_id: ctx.getInput("rewardId"),
+          status: status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED",
+        }),
+      }
     );
 
-    ctx.setOutput("out", data[0]);
+    const data = response.data[0];
+
+    ctx.setOutput(
+      "out",
+      Redemption.create({
+        id: data.id,
+        userId: data.user_id,
+        userName: data.user_name,
+        userDisplayName: data.user_login,
+        rewardId: data.reward.id,
+        rewardTitle: data.reward.title,
+        rewardCost: data.reward.cost,
+        rewardPrompt: data.reward.prompt,
+        userInput: data.user_input,
+        updateStatus: data.status,
+        redemptionDate: data.redeemed_at,
+      })
+    );
   },
 });
 
@@ -638,14 +1006,18 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    let rewards = await client.channelPoints.getCustomRewards(
-      userId().unwrap(),
-      ctx.getInput("manageableOnly")
+    let rewards = await client.channelPoints.customRewards.get(z.any(), {
+      body: new URLSearchParams({
+        broadcaster_id: userId().unwrap(),
+        only_manageable_rewards: ctx.getInput("manageableOnly"),
+      }),
+    });
+
+    const data = rewards.data.find(
+      (reward: any) => reward.title === ctx.getInput("title")
     );
 
-    const data = rewards.find(
-      (reward) => reward.title === ctx.getInput("title")
-    );
+    console.log(data);
 
     ctx.setOutput(
       "out",
@@ -699,21 +1071,36 @@ const User = pkg.createStruct("User", (s) => ({
   createdAt: s.field("Created At", t.string()),
 }));
 
-const UserTypeMap: Record<HelixUserType, InferEnum<typeof UserType>> = {
+const UserTypeMap: Record<string, InferEnum<typeof UserType>> = {
   admin: UserType.variant("Admin"),
   global_mod: UserType.variant("Global Mod"),
   staff: UserType.variant("Staff"),
   "": UserType.variant("Normal User"),
 };
 
-const BroadcasterTypeMap: Record<
-  HelixBroadcasterType,
-  InferEnum<typeof BroadcasterType>
-> = {
+const BroadcasterTypeMap: Record<string, InferEnum<typeof BroadcasterType>> = {
   affiliate: BroadcasterType.variant("Affliate"),
   partner: BroadcasterType.variant("Partner"),
   "": BroadcasterType.variant("Normal User"),
 };
+
+// pkg.createNonEventSchema({
+//   name: "Delete Custom Reward",
+//   variant: "Exec",
+//   generateIO: (io) => {
+//     io.dataInput({
+//       id: "id",
+//       name: "Reward Id",
+//       type: t.string(),
+//     });
+//   },
+//   run({ ctx }) {
+//     return client.channelPoints.deleteCustomReward(
+//       userId().unwrap(),
+//       ctx.getInput("id")
+//     );
+//   },
+// });
 
 pkg.createNonEventSchema({
   name: "Get User By ID",
@@ -775,11 +1162,19 @@ pkg.createNonEventSchema({
     // });
   },
   async run({ ctx }) {
-    const data = await client.users.getUserById(ctx.getInput("userId"));
-    const optData = Maybe(data);
+    const response = await client.users.get(z.any(), {
+      body: new URLSearchParams({
+        id: ctx.getInput("userId"),
+      }),
+    });
+
+    const data = response.data[0];
+
+    // const optData = Maybe(data);
+    console.log(data);
     ctx.setOutput("userId", data?.id);
-    ctx.setOutput("userLogin", data?.name);
-    ctx.setOutput("displayName", data?.displayName);
+    ctx.setOutput("userLogin", data?.login);
+    ctx.setOutput("displayName", data?.display_name);
     ctx.setOutput<InferEnum<typeof UserType>>(
       "type",
       (() => {
@@ -792,16 +1187,16 @@ pkg.createNonEventSchema({
     ctx.setOutput<InferEnum<typeof BroadcasterType>>(
       "broadcasterType",
       (() => {
-        const type = data?.broadcasterType;
+        const type = data?.broadcaster_type;
         if (type === "affiliate") return { variant: "Affliate" };
         else if (type === "partner") return { variant: "Partner" };
         else return { variant: "Normal User" };
       })()
     );
     ctx.setOutput("description", data?.description);
-    ctx.setOutput("profileImageUrl", data?.profilePictureUrl);
-    ctx.setOutput("offlineImageUrl", data?.offlinePlaceholderUrl);
-    ctx.setOutput("createdAt", JSON.stringify(data?.creationDate));
+    ctx.setOutput("profileImageUrl", data?.profile_image_url);
+    ctx.setOutput("offlineImageUrl", data?.offline_image_url);
+    ctx.setOutput("createdAt", JSON.stringify(data?.created_at));
     // ctx.setOutput(
     //   "out",
     //   Maybe(data).map((data) =>
@@ -822,24 +1217,6 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Delete Custom Reward",
-  variant: "Exec",
-  generateIO: (io) => {
-    io.dataInput({
-      id: "id",
-      name: "Reward Id",
-      type: t.string(),
-    });
-  },
-  run({ ctx }) {
-    return client.channelPoints.deleteCustomReward(
-      userId().unwrap(),
-      ctx.getInput("id")
-    );
-  },
-});
-
-pkg.createNonEventSchema({
   name: "Follower Only Mode",
   variant: "Exec",
   generateIO: (io) => {
@@ -855,10 +1232,13 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const user = userId().unwrap();
-
-    await client.chat.updateSettings(user, user, {
-      followerOnlyModeEnabled: ctx.getInput("enabled"),
-      followerOnlyModeDelay: ctx.getInput("delay"),
+    await client.chat.settings.patch(z.any(), {
+      body: {
+        broadcaster_Id: user,
+        moderator_id: user,
+        follower_mode: ctx.getInput("enabled"),
+        follower_mode_duration: ctx.getInput("delay"),
+      },
     });
   },
 });
@@ -877,12 +1257,54 @@ pkg.createNonEventSchema({
       type: t.bool(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const user = userId().unwrap();
+    await client.chat.settings.patch(z.any(), {
+      body: ctx.getInput("enabled")
+        ? {
+            broadcaster_Id: user,
+            moderator_id: user,
+            slow_mode: ctx.getInput("enabled"),
+            slow_mode_duration: ctx.getInput("delay"),
+          }
+        : {
+            broadcaster_Id: user,
+            moderator_id: user,
+            slow_mode: ctx.getInput("enabled"),
+          },
+    });
+  },
+});
 
-    client.chat.updateSettings(user, user, {
-      slowModeEnabled: ctx.getInput("enabled"),
-      slowModeDelay: ctx.getInput("delay"),
+pkg.createNonEventSchema({
+  name: "Moderation Chat Delay",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      id: "delay",
+      name: "Delay (seconds)",
+      type: t.int(),
+    });
+    io.dataInput({
+      id: "enabled",
+      type: t.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const user = userId().unwrap();
+    await client.chat.settings.patch(z.any(), {
+      body: ctx.getInput("enabled")
+        ? {
+            broadcaster_Id: user,
+            moderator_id: user,
+            non_moderator_chat_delay: ctx.getInput("enabled"),
+            non_moderator_chat_delay_duration: ctx.getInput("delay"),
+          }
+        : {
+            broadcaster_Id: user,
+            moderator_id: user,
+            non_moderator_chat_delay: ctx.getInput("enabled"),
+          },
     });
   },
 });
@@ -896,17 +1318,21 @@ pkg.createNonEventSchema({
       type: t.bool(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const user = userId().unwrap();
 
-    client.chat.updateSettings(user, user, {
-      subscriberOnlyModeEnabled: ctx.getInput("enabled"),
+    await client.chat.settings.patch(z.any(), {
+      body: {
+        broadcaster_Id: user,
+        moderator_id: user,
+        subscriber_mode: ctx.getInput("enabled"),
+      },
     });
   },
 });
 
 pkg.createNonEventSchema({
-  name: "R9K Mode",
+  name: "Unique Chat Mode",
   variant: "Exec",
   generateIO: (io) => {
     io.dataInput({
@@ -914,11 +1340,37 @@ pkg.createNonEventSchema({
       type: t.bool(),
     });
   },
-  run({ ctx }) {
+  async run({ ctx }) {
     const user = userId().unwrap();
 
-    client.chat.updateSettings(user, user, {
-      uniqueChatModeEnabled: ctx.getInput("enabled"),
+    await client.chat.settings.patch(z.any(), {
+      body: {
+        broadcaster_Id: user,
+        moderator_id: user,
+        unique_chat_mode: ctx.getInput("enabled"),
+      },
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Emote Only Mode",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      id: "enabled",
+      type: t.bool(),
+    });
+  },
+  async run({ ctx }) {
+    const user = userId().unwrap();
+
+    await client.chat.settings.patch(z.any(), {
+      body: {
+        broadcaster_Id: user,
+        moderator_id: user,
+        emote_mode: ctx.getInput("enabled"),
+      },
     });
   },
 });
@@ -936,9 +1388,23 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     const user = userId().unwrap();
 
-    client.chat.shoutoutUser(user, ctx.getInput("toId"), user);
+    client.chat.shoutouts.post(z.any(), {
+      body: new URLSearchParams({
+        from_broadcaster_id: user,
+        moderator_id: user,
+        to_broadcaster_id: ctx.getInput("toId"),
+      }),
+    });
   },
 });
+
+const announcementColors = pkg.createEnum("Color", (e) => [
+  e.variant("blue"),
+  e.variant("green"),
+  e.variant("orange"),
+  e.variant("purple"),
+  e.variant("default"),
+]);
 
 pkg.createNonEventSchema({
   name: "Send Announcement",
@@ -949,10 +1415,23 @@ pkg.createNonEventSchema({
       name: "Announcement",
       type: t.string(),
     });
+    io.dataInput({
+      id: "color",
+      name: "Color",
+      type: t.enum(announcementColors),
+    });
   },
   run({ ctx }) {
+    const color = ctx.getInput<InferEnum<typeof announcementColors>>("color");
     const user = userId().unwrap();
 
-    client.chat.sendAnnouncement(user, user, ctx.getInput("announcement"));
+    client.chat.announcements.post(z.any(), {
+      body: {
+        broadcaster_id: user,
+        moderator_id: user,
+        message: ctx.getInput("announcement"),
+        color: color.variant === "default" ? "primary" : color.variant,
+      },
+    });
   },
 });
