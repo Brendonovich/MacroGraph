@@ -34,7 +34,7 @@ export const nativeFetch = async (url: string, data: HTTPData) => {
   const d = await rspcClient.query([
     "http.json",
     {
-      url: new URL(url).toString(),
+      url,
       ...data,
       body,
     },
@@ -72,6 +72,12 @@ export function createEndpoint({ path, extend, fetchFn }: EndpointArgs) {
   return {
     path,
     fetchFn: resolvedFetchFn,
+    extend(path: string) {
+      return createEndpoint({
+        path,
+        extend: this,
+      });
+    },
     get: createFetcher("GET"),
     post: createFetcher("POST"),
     put: createFetcher("PUT"),

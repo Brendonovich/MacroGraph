@@ -56,517 +56,255 @@ export const { client, userId, setUserId } = createRoot(() => {
 
   const client = {
     channels: (() => {
-      const channels = createEndpoint({
-        path: `/channels`,
-        extend: root,
-      });
+      const channels = root.extend(`/channels`);
 
       return {
         ...channels,
-        followers: createEndpoint({
-          path: `/followers`,
-          extend: channels,
-        }),
-        vips: createEndpoint({
-          path: `/vips`,
-          extend: channels,
-        }),
-        followed: createEndpoint({
-          path: `/followed`,
-          extend: channels,
-        }),
-        editors: createEndpoint({
-          path: `/editors`,
-          extend: channels,
-        }),
-        commercial: createEndpoint({
-          path: `/commercial`,
-          extend: channels,
-        }),
+        followers: channels.extend(`/followers`),
+        vips: channels.extend(`/vips`),
+        followed: channels.extend(`/followed`),
+        editors: channels.extend(`/editors`),
+        commercial: channels.extend(`/commercial`),
       };
     })(),
     analytics: (() => {
-      const analytics = createEndpoint({
-        path: `/analytics`,
-        extend: root,
-      });
+      const analytics = root.extend(`/analytics`);
 
       return {
-        games: createEndpoint({
-          path: `/games`,
-          extend: analytics,
-        }),
-        extensions: createEndpoint({
-          path: `/extensions`,
-          extend: analytics,
-        }),
+        games: analytics.extend(`/games`),
+        extensions: analytics.extend(`/extensions`),
       };
     })(),
     bits: (() => {
-      const bits = createEndpoint({
-        path: `/bits`,
-        extend: root,
-      });
+      const bits = root.extend(`/bits`);
 
       return {
-        leaderboard: createEndpoint({
-          path: `/leaderboard`,
-          extend: bits,
-        }),
-        cheermotes: createEndpoint({
-          path: `/cheermotes`,
-          extend: bits,
-        }),
-        extensions: createEndpoint({
-          path: `/extensions`,
-          extend: bits,
-        }),
+        leaderboard: bits.extend(`/leaderboard`),
+        cheermotes: bits.extend(`/cheermotes`),
+        extensions: bits.extend(`/extensions`),
       };
     })(),
     extensions: (() => {
-      const extensions = createEndpoint({
-        path: `/extensions`,
-        extend: root,
-      });
+      const extensions = root.extend(`/extensions`);
 
       return {
-        transactions: createEndpoint({
-          path: `/transactions`,
-          extend: extensions,
-        }),
-        configurations: createEndpoint({
-          path: `/configurations`,
-          extend: extensions,
-        }),
-        required_configuration: createEndpoint({
-          path: `/required_configuration`,
-          extend: extensions,
-        }),
-        pubsub: createEndpoint({
-          path: `/pubsub`,
-          extend: extensions,
-        }),
-        live: createEndpoint({
-          path: `/live`,
-          extend: extensions,
-        }),
-        jwt: createEndpoint({
-          path: `/jwt/secrets`,
-          extend: extensions,
-        }),
-        chat: createEndpoint({
-          path: `/chat`,
-          extend: extensions,
-        }),
-        released: createEndpoint({
-          path: `/released`,
-          extend: extensions,
-        }),
+        transactions: extensions.extend(`/transactions`),
+        configurations: extensions.extend(`/configurations`),
+        requiredConfiguration: extensions.extend(`/required_configuration`),
+        pubsub: extensions.extend(`/pubsub`),
+        live: extensions.extend(`/live`),
+        jwt: () => {
+          const jwt = extensions.extend(`/jwt`);
+
+          return {
+            ...jwt,
+            secrets: jwt.extend(`/secrets`),
+          };
+        },
+        chat: extensions.extend(`/chat`),
+        released: extensions.extend(`/released`),
       };
     })(),
     moderation: (() => {
-      const moderation = createEndpoint({
-        path: `/moderation`,
-        extend: root,
-      });
+      const moderation = root.extend(`/moderation`);
 
       return {
-        bans: createEndpoint({ path: `/bans`, extend: moderation }),
-        blockedTerms: createEndpoint({
-          path: `/blocked_terms`,
-          extend: moderation,
-        }),
-        chat: createEndpoint({ path: `/chat`, extend: moderation }),
-        moderators: createEndpoint({ path: `/moderators`, extend: moderation }),
-        shieldMode: createEndpoint({
-          path: `/shield_mode`,
-          extend: moderation,
-        }),
+        bans: moderation.extend(`/bans`),
+        blockedTerms: moderation.extend(`/blocked_terms`),
+        chat: moderation.extend(`/chat`),
+        moderators: moderation.extend(`/moderators`),
+        shieldMode: moderation.extend(`/shield_mode`),
         enforcements: (() => {
-          const enforcements = createEndpoint({
-            path: `/enforcements`,
-            extend: moderation,
-          });
+          const enforcements = moderation.extend(`/enforcements`);
 
           return {
-            status: createEndpoint({
-              path: `/status`,
-              extend: enforcements,
-            }),
+            ...enforcements,
+            status: enforcements.extend(`/status`),
           };
         })(),
 
         automod: (() => {
-          const automod = createEndpoint({
-            path: `/automod`,
-            extend: moderation,
-          });
+          const automod = moderation.extend(`/automod`);
 
           return {
-            message: createEndpoint({ path: `/message`, extend: automod }),
-            settings: createEndpoint({ path: `/settings`, extend: automod }),
+            ...automod,
+            message: automod.extend(`/message`),
+            settings: automod.extend(`/settings`),
           };
         })(),
       };
     })(),
     eventsub: (() => {
-      const eventsub = createEndpoint({
-        path: `/eventsub`,
-        extend: root,
-      });
+      const eventsub = root.extend(`/eventsub`);
 
       return {
         ...eventsub,
-        subscriptions: createEndpoint({
-          path: `/subscriptions`,
-          extend: eventsub,
-        }),
+        subscriptions: eventsub.extend(`/subscriptions`),
       };
     })(),
     channelPoints: (() => {
-      const channelPoints = createEndpoint({
-        path: `/channel_points`,
-        extend: root,
-      });
+      const channelPoints = root.extend(`/channel_points`);
 
       return {
+        ...channelPoints,
         customRewards: (() => {
-          const customRewards = createEndpoint({
-            path: `/custom_rewards`,
-            extend: channelPoints,
-          });
+          const customRewards = channelPoints.extend(`/custom_rewards`);
 
           return {
             ...customRewards,
-            redemptions: createEndpoint({
-              path: `/redemptions`,
-              extend: customRewards,
-            }),
+            redemptions: customRewards.extend(`/redemptions`),
           };
         })(),
       };
     })(),
     charity: (() => {
-      const charity = createEndpoint({
-        path: `/charity`,
-        extend: root,
-      });
+      const charity = root.extend(`/charity`);
 
       return {
-        donations: createEndpoint({
-          path: `/donations`,
-          extend: charity,
-        }),
-        campaigns: createEndpoint({
-          path: `/campaigns`,
-          extend: charity,
-        }),
+        ...charity,
+        donations: charity.extend(`/donations`),
+        campaigns: charity.extend(`/campaigns`),
       };
     })(),
     chat: (() => {
-      const chat = createEndpoint({
-        path: `/chat`,
-        extend: root,
-      });
+      const chat = root.extend(`/chat`);
 
       return {
-        chatters: createEndpoint({
-          path: `/chatters`,
-          extend: chat,
-        }),
-        settings: createEndpoint({
-          path: `/settings`,
-          extend: chat,
-        }),
-        announcements: createEndpoint({
-          path: `/announcements`,
-          extend: chat,
-        }),
-        shoutouts: createEndpoint({
-          path: `/shoutouts`,
-          extend: chat,
-        }),
-        color: createEndpoint({
-          path: `/color`,
-          extend: chat,
-        }),
+        chatters: chat.extend(`/chatters`),
+        settings: chat.extend(`/settings`),
+        announcements: chat.extend(`/announcements`),
+        shoutouts: chat.extend(`/shoutouts`),
+        color: chat.extend(`/color`),
         emotes: (() => {
-          const emotes = createEndpoint({
-            path: `/emotes`,
-            extend: chat,
-          });
+          const emotes = chat.extend(`/emotes`);
 
           return {
             ...emotes,
-            global: createEndpoint({
-              path: `/global`,
-              extend: emotes,
-            }),
-            set: createEndpoint({
-              path: `/set`,
-              extend: emotes,
-            }),
+            global: emotes.extend(`/global`),
+            set: emotes.extend(`/set`),
           };
         })(),
         badges: (() => {
-          const badges = createEndpoint({
-            path: `/badges`,
-            extend: chat,
-          });
+          const badges = chat.extend(`/badges`);
 
           return {
             ...badges,
-            global: createEndpoint({
-              path: `/global`,
-              extend: badges,
-            }),
+            global: badges.extend(`/global`),
           };
         })(),
       };
     })(),
-    clips: createEndpoint({
-      path: `/clips`,
-      extend: root,
-    }),
+    clips: root.extend(`/clips`),
     entitlements: (() => {
-      const entitlements = createEndpoint({
-        path: `/entitlements`,
-        extend: root,
-      });
+      const entitlements = root.extend(`/entitlements`);
 
       return {
-        drops: createEndpoint({
-          path: `/drops`,
-          extend: entitlements,
-        }),
+        drops: entitlements.extend(`/drops`),
       };
     })(),
     games: (() => {
-      const games = createEndpoint({
-        path: `/games`,
-        extend: root,
-      });
+      const games = root.extend(`/games`);
 
       return {
         ...games,
-        top: createEndpoint({
-          path: `/top`,
-          extend: games,
-        }),
+        top: root.extend(`/top`),
       };
     })(),
-    goals: createEndpoint({
-      path: `/goals`,
-      extend: root,
-    }),
+    goals: root.extend(`/goals`),
     guestStar: (() => {
-      const guestStar = createEndpoint({
-        path: `/guest_star`,
-        extend: root,
-      });
+      const guestStar = root.extend(`/guest_star`);
 
       return {
-        channelSettings: createEndpoint({
-          path: `/channel_settings`,
-          extend: guestStar,
-        }),
-        session: createEndpoint({
-          path: `/session`,
-          extend: guestStar,
-        }),
-        invites: createEndpoint({
-          path: `/invites`,
-          extend: guestStar,
-        }),
-        slot: createEndpoint({
-          path: `/slot`,
-          extend: guestStar,
-        }),
-        slotSettings: createEndpoint({
-          path: `/slot_settings`,
-          extend: guestStar,
-        }),
+        channelSettings: guestStar.extend(`/channel_settings`),
+        session: guestStar.extend(`/session`),
+        invites: guestStar.extend(`/invites`),
+        slot: guestStar.extend(`/slot`),
+        slotSettings: guestStar.extend(`/slot_settings`),
       };
     })(),
     hypetrain: (() => {
-      const hypetrain = createEndpoint({
-        path: `/hypetrain`,
-        extend: root,
-      });
+      const hypetrain = root.extend(`/hypetrain`);
 
       return {
-        events: createEndpoint({
-          path: `/events`,
-          extend: hypetrain,
-        }),
+        events: hypetrain.extend(`/events`),
       };
     })(),
-    polls: createEndpoint({
-      path: `/polls`,
-      extend: root,
-    }),
-    predictions: createEndpoint({
-      path: `/predictions`,
-      extend: root,
-    }),
-    raids: createEndpoint({
-      path: `/raids`,
-      extend: root,
-    }),
+    polls: root.extend(`/polls`),
+    predictions: root.extend(`/predictions`),
+    raids: root.extend(`/raids`),
     schedule: (() => {
-      const schedule = createEndpoint({
-        path: `/schedule`,
-        extend: root,
-      });
+      const schedule = root.extend(`/schedule`);
 
       return {
         ...schedule,
-        icalendar: createEndpoint({
-          path: `/icalendar`,
-          extend: schedule,
-        }),
-        settings: createEndpoint({
-          path: `/segment`,
-          extend: schedule,
-        }),
-        segment: createEndpoint({
-          path: `/segment`,
-          extend: schedule,
-        }),
+        icalendar: schedule.extend(`/icalendar`),
+        settings: schedule.extend(`/settings`),
+        segment: schedule.extend(`/segment`),
       };
     })(),
     search: (() => {
-      const search = createEndpoint({
-        path: `/search`,
-        extend: root,
-      });
+      const search = root.extend(`/search`);
 
       return {
-        catagories: createEndpoint({
-          path: `/catagories`,
-          extend: search,
-        }),
-        channels: createEndpoint({
-          path: `/channels`,
-          extend: search,
-        }),
+        catagories: search.extend(`/catagories`),
+        channels: search.extend(`/channels`),
       };
     })(),
     soundtrack: (() => {
-      const soundtrack = createEndpoint({
-        path: `/soundtrack`,
-        extend: root,
-      });
+      const soundtrack = root.extend(`/soundtrack`);
 
       return {
-        playlist: createEndpoint({
-          path: `/playlist`,
-          extend: soundtrack,
-        }),
-        playlists: createEndpoint({
-          path: `/playlists`,
-          extend: soundtrack,
-        }),
-        currentTrack: createEndpoint({
-          path: `/current_track`,
-          extend: soundtrack,
-        }),
+        playlist: soundtrack.extend(`/playlist`),
+        playlists: soundtrack.extend(`/playlists`),
+        currentTrack: soundtrack.extend(`/current_track`),
       };
     })(),
     streams: (() => {
-      const streams = createEndpoint({
-        path: `/streams`,
-        extend: root,
-      });
+      const streams = root.extend(`/streams`);
 
       return {
         ...streams,
-        key: createEndpoint({
-          path: `/key`,
-          extend: streams,
-        }),
-        followed: createEndpoint({
-          path: `/followed`,
-          extend: streams,
-        }),
-        markers: createEndpoint({
-          path: `/markers`,
-          extend: streams,
-        }),
-        tags: createEndpoint({
-          path: `/tags`,
-          extend: streams,
-        }),
+        key: streams.extend(`/key`),
+        followed: streams.extend(`/followed`),
+        markers: streams.extend(`/markers`),
+        tags: streams.extend(`/tags`),
       };
     })(),
     subscriptions: (() => {
-      const subscriptions = createEndpoint({
-        path: `/subscriptions`,
-        extend: root,
-      });
+      const subscriptions = root.extend(`/subscriptions`);
 
       return {
         ...subscriptions,
-        user: createEndpoint({
-          path: `/user`,
-          extend: subscriptions,
-        }),
+        user: subscriptions.extend(`/user`),
       };
     })(),
     teams: (() => {
-      const teams = createEndpoint({
-        path: `/teams`,
-        extend: root,
-      });
+      const teams = root.extend(`/teams`);
 
       return {
         ...teams,
-        channel: createEndpoint({
-          path: `/channel`,
-          extend: teams,
-        }),
+        channel: teams.extend(`/channel`),
       };
     })(),
     users: (() => {
-      const users = createEndpoint({
-        path: `/users`,
-        extend: root,
-      });
+      const users = root.extend(`/users`);
 
       return {
         ...users,
-        follows: createEndpoint({
-          path: `/follows`,
-          extend: users,
-        }),
-        blocks: createEndpoint({
-          path: `/blocks`,
-          extend: users,
-        }),
+        follows: users.extend(`/follows`),
+        blocks: users.extend(`/blocks`),
         extensions: (() => {
-          const extensions = createEndpoint({
-            path: `/extensions`,
-            extend: users,
-          });
+          const extensions = users.extend(`/extensions`);
 
           return {
             ...extensions,
-            list: createEndpoint({
-              path: `/list`,
-              extend: extensions,
-            }),
+            list: extensions.extend(`/list`),
           };
         })(),
       };
     })(),
-    videos: createEndpoint({
-      path: `/videos`,
-      extend: root,
-    }),
-    whispers: createEndpoint({
-      path: `/whispers`,
-      extend: root,
-    }),
+    videos: root.extend(`/videos`),
+    whispers: root.extend(`/whispers`),
   };
 
   createEffect(
