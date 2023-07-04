@@ -706,7 +706,7 @@ pkg.createEventSchema({
     });
     io.dataOutput({
       id: "rewardId",
-      name: "Rewards Id",
+      name: "Reward Id",
       type: t.string(),
     });
     io.dataOutput({
