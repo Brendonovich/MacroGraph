@@ -1,63 +1,70 @@
-import { Maybe, None, Option, core, t } from "@macrograph/core";
-import { io } from "socket.io-client";
-import { createRoot, createSignal } from "solid-js";
+import { Maybe, Option, core, t } from "@macrograph/core";
+import { io, Socket } from "socket.io-client";
+import {
+  createEffect,
+  createRoot,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
 
 const pkg = core.createPackage({
   name: "Streamlabs",
 });
 
-const { setToken, Token, Connect, Disconnect, State, Socket } = createRoot(
-  () => {
-    const [State, setState] = createSignal<boolean>(false);
-    const [Token, setToken] = createSignal<any>(
-      Maybe(localStorage.getItem("streamlabsToken"))
-    );
-
-    let Socket = io(`https://sockets.streamlabs.com?token=${Token()}`, {
-      transports: ["websocket"],
-      autoConnect: false,
-    });
-
-    if (Token().value !== null) Socket.connect();
-
-    const Connect = async (data: string) => {
-      Socket = io(`https://sockets.streamlabs.com?token=${Token()}`, {
-        transports: ["websocket"],
-        autoConnect: false,
-      });
-      setState(true);
-      Socket.connect();
-      localStorage.setItem("streamlabsToken", data);
-    };
-
-    const Disconnect = async () => {
-      setState(false);
-      Socket.disconnect();
-      localStorage.removeItem("streamlabsToken");
-    };
-
-    if (Socket.active) setState(true);
-
-    Socket.on("event", (eventData: any) => {
-      console.log(eventData);
-      if (!eventData.for && eventData.type === "donation") {
-        console.log(eventData.message[0]);
-        pkg.emitEvent({ name: "SLDonation", data: eventData.message[0] });
+const { setToken, token, state } = createRoot(() => {
+  const [state, setState] = createSignal<
+    | {
+        type: "disconnected";
       }
-    });
+    | { type: "connecting" }
+    | {
+        type: "connected";
+        socket: Socket;
+      }
+  >({ type: "disconnected" });
+  const [token, setToken] = createSignal<Option<string>>(
+    Maybe(localStorage.getItem("streamlabsToken"))
+  );
 
-    return {
-      Token,
-      Connect,
-      Disconnect,
-      State,
-      Socket,
-      setToken,
-    };
-  }
-);
+  createEffect(
+    on(
+      () => token(),
+      (token) => {
+        const socket = io(`https://sockets.streamlabs.com?token=${token}`, {
+          transports: ["websocket"],
+        });
 
-export { setToken, Token, Connect, Disconnect, State, Socket };
+        setState({
+          type: "connecting",
+          socket,
+        });
+
+        socket.connect();
+
+        socket.on("event", (eventData: any) => {
+          if (!eventData.for && eventData.type === "donation") {
+            pkg.emitEvent({ name: "SLDonation", data: eventData.message[0] });
+          }
+        });
+
+        socket.on("connected", () => {
+          setState({ type: "connected", socket });
+        });
+
+        onCleanup(() => socket.close());
+      }
+    )
+  );
+
+  return {
+    token,
+    state,
+    setToken,
+  };
+});
+
+export { setToken, token, state };
 
 pkg.createEventSchema({
   name: "Streamlabs Donation",

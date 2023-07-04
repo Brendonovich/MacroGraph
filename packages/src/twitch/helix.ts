@@ -22,8 +22,10 @@ export const { client, userId, setUserId } = createRoot(() => {
     path: "https://api.twitch.tv/helix",
     fetchFn: async (url, args) => {
       const user = await auth.getAccessTokenForUser(userId().unwrap());
-      const token = auth.tokens.get(userId().unwrap());
-      await auth.refreshAccessTokenForUser(token?.userId);
+      const token = Maybe(auth.tokens.get(userId().unwrap())).unwrap();
+
+      await auth.refreshAccessTokenForUser(token.userId);
+
       if (args.body instanceof URLSearchParams) {
         url = `${url}?${args.body.toString()}`;
       }
