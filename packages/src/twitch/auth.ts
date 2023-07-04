@@ -93,17 +93,21 @@ class MacroGraphAuthProvider {
   async refreshAccessTokenForUser(user: string): Promise<User> {
     const userId = user;
 
-    const { userName, refreshToken } = Maybe(this.tokens.get(userId)).expect(
+    const token = Maybe(this.tokens.get(userId)).expect(
       "refreshAccessTokenForUser missing token"
     );
 
-    Maybe(refreshToken).expect("Refresh token is null!");
+    if (Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000) {
+      return token;
+    }
+
+    Maybe(token.refreshToken).expect("Refresh token is null!");
 
     const res = await fetch("https://macrograph.brendonovich.dev/auth/twitch", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        refreshToken,
+        refreshToken: token.refreshToken,
       }),
     });
 
@@ -115,7 +119,7 @@ class MacroGraphAuthProvider {
       expiresIn: data.expires_in ?? null,
       obtainmentTimestamp: Date.now(),
       userId,
-      userName,
+      userName: token.userName,
     };
 
     this.tokens.set(userId, returnData);

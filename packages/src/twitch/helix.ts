@@ -23,10 +23,7 @@ export const { client, userId, setUserId } = createRoot(() => {
     fetchFn: async (url, args) => {
       const user = await auth.getAccessTokenForUser(userId().unwrap());
       const token = auth.tokens.get(userId().unwrap());
-      if (Date.now() > token?.obtainmentTimestamp + token?.expiresIn * 1000) {
-        await auth.refreshAccessTokenForUser(token?.userId);
-        console.log("refreshing");
-      }
+      await auth.refreshAccessTokenForUser(token?.userId);
       if (args.body instanceof URLSearchParams) {
         url = `${url}?${args.body.toString()}`;
       }
