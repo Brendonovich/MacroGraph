@@ -6,39 +6,39 @@ const pkg = core.createPackage({
   name: "Streamlabs",
 });
 
-const { setSLToken, slToken, slConnect, slDisconnect, slState, slSocket } =
-  createRoot(() => {
-    const [slState, setSLState] = createSignal<boolean>(false);
-    const [slToken, setSLToken] = createSignal<any>(
+const { setToken, Token, Connect, Disconnect, State, Socket } = createRoot(
+  () => {
+    const [State, setState] = createSignal<boolean>(false);
+    const [Token, setToken] = createSignal<any>(
       Maybe(localStorage.getItem("streamlabsToken"))
     );
 
-    let slSocket = io(`https://sockets.streamlabs.com?token=${slToken()}`, {
+    let Socket = io(`https://sockets.streamlabs.com?token=${Token()}`, {
       transports: ["websocket"],
       autoConnect: false,
     });
 
-    if (slToken().value !== null) slSocket.connect();
+    if (Token().value !== null) Socket.connect();
 
-    const slConnect = async (data: string) => {
-      slSocket = io(`https://sockets.streamlabs.com?token=${slToken()}`, {
+    const Connect = async (data: string) => {
+      Socket = io(`https://sockets.streamlabs.com?token=${Token()}`, {
         transports: ["websocket"],
         autoConnect: false,
       });
-      setSLState(true);
-      slSocket.connect();
+      setState(true);
+      Socket.connect();
       localStorage.setItem("streamlabsToken", data);
     };
 
-    const slDisconnect = async () => {
-      setSLState(false);
-      slSocket.disconnect();
+    const Disconnect = async () => {
+      setState(false);
+      Socket.disconnect();
       localStorage.removeItem("streamlabsToken");
     };
 
-    if (slSocket.active) setSLState(true);
+    if (Socket.active) setState(true);
 
-    slSocket.on("event", (eventData: any) => {
+    Socket.on("event", (eventData: any) => {
       console.log(eventData);
       if (!eventData.for && eventData.type === "donation") {
         console.log(eventData.message[0]);
@@ -47,16 +47,17 @@ const { setSLToken, slToken, slConnect, slDisconnect, slState, slSocket } =
     });
 
     return {
-      slToken,
-      slConnect,
-      slDisconnect,
-      slState,
-      slSocket,
-      setSLToken,
+      Token,
+      Connect,
+      Disconnect,
+      State,
+      Socket,
+      setToken,
     };
-  });
+  }
+);
 
-export { setSLToken, slToken, slConnect, slDisconnect, slState, slSocket };
+export { setToken, Token, Connect, Disconnect, State, Socket };
 
 pkg.createEventSchema({
   name: "Streamlabs Donation",

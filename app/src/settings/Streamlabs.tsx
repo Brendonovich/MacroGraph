@@ -13,7 +13,7 @@ const Api = () => {
     <div class="flex flex-col space-y-2">
       <span class="text-neutral-400 font-medium">Socket API</span>
       <Switch fallback="Loading...">
-        <Match when={!streamlabs.slState()}>
+        <Match when={!streamlabs.State()}>
           {(_) => {
             const [, { Form, Field }] = createForm({
               validate: zodForm(Schema),
@@ -22,8 +22,8 @@ const Api = () => {
             return (
               <Form
                 onSubmit={(d) => {
-                  streamlabs.setSLToken(d.socketToken);
-                  streamlabs.slConnect(d.socketToken);
+                  streamlabs.setToken(d.socketToken);
+                  streamlabs.Connect(d.socketToken);
                 }}
                 class="flex flex-row space-x-4"
               >
@@ -42,12 +42,12 @@ const Api = () => {
             );
           }}
         </Match>
-        <Match when={streamlabs.slState()}>
+        <Match when={streamlabs.State()}>
           <>
             <div class="flex flex-row items-center space-x-4">
               <Button
                 onClick={() => {
-                  streamlabs.setSLToken(null), streamlabs.slDisconnect();
+                  streamlabs.setToken(null), streamlabs.Disconnect();
                 }}
               >
                 Disconnect
