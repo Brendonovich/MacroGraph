@@ -31,8 +31,17 @@ const { setToken, token, state } = createRoot(() => {
     on(
       () => token(),
       (token) => {
+        if (token.value === null) {
+          localStorage.removeItem("streamlabsToken");
+          setState({
+            type: "disconnected",
+          });
+          return;
+        }
+        localStorage.setItem("streamlabsToken", token.value);
         const socket = io(`https://sockets.streamlabs.com?token=${token}`, {
           transports: ["websocket"],
+          autoConnect: false,
         });
 
         setState({
@@ -43,12 +52,13 @@ const { setToken, token, state } = createRoot(() => {
         socket.connect();
 
         socket.on("event", (eventData: any) => {
+          console.log(eventData);
           if (!eventData.for && eventData.type === "donation") {
             pkg.emitEvent({ name: "SLDonation", data: eventData.message[0] });
           }
         });
 
-        socket.on("connected", () => {
+        socket.on("connect", () => {
           setState({ type: "connected", socket });
         });
 
