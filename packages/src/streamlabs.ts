@@ -12,6 +12,8 @@ const pkg = core.createPackage({
   name: "Streamlabs",
 });
 
+const STREAMLABS_TOKEN = "streamlabsToken";
+
 const { setToken, token, state } = createRoot(() => {
   const [state, setState] = createSignal<
     | {
@@ -23,46 +25,61 @@ const { setToken, token, state } = createRoot(() => {
         socket: Socket;
       }
   >({ type: "disconnected" });
+
   const [token, setToken] = createSignal<Option<string>>(
-    Maybe(localStorage.getItem("streamlabsToken"))
+    Maybe(localStorage.getItem(STREAMLABS_TOKEN))
+  );
+
+  createEffect(
+    on(
+      () => token(),
+      (userId) =>
+        userId
+          .map((token) => (localStorage.setItem(STREAMLABS_TOKEN, token), true))
+          .unwrapOrElse(
+            () => (localStorage.removeItem(STREAMLABS_TOKEN), false)
+          )
+    )
   );
 
   createEffect(
     on(
       () => token(),
       (token) => {
-        if (token.value === null) {
-          localStorage.removeItem("streamlabsToken");
-          setState({
-            type: "disconnected",
-          });
-          return;
-        }
-        localStorage.setItem("streamlabsToken", token.value);
-        const socket = io(`https://sockets.streamlabs.com?token=${token}`, {
-          transports: ["websocket"],
-          autoConnect: false,
-        });
+        token
+          .map((token) => {
+            const socket = io(`https://sockets.streamlabs.com?token=${token}`, {
+              transports: ["websocket"],
+              autoConnect: false,
+            });
 
-        setState({
-          type: "connecting",
-          socket,
-        });
+            socket.on("event", (eventData: any) => {
+              console.log(eventData);
+              if (!eventData.for && eventData.type === "donation") {
+                pkg.emitEvent({
+                  name: "SLDonation",
+                  data: eventData.message[0],
+                });
+              }
+            });
 
-        socket.connect();
+            socket.on("connect", () => {
+              setState({ type: "connected", socket });
+            });
 
-        socket.on("event", (eventData: any) => {
-          console.log(eventData);
-          if (!eventData.for && eventData.type === "donation") {
-            pkg.emitEvent({ name: "SLDonation", data: eventData.message[0] });
-          }
-        });
+            setState({
+              type: "connecting",
+              socket,
+            });
 
-        socket.on("connect", () => {
-          setState({ type: "connected", socket });
-        });
+            socket.connect();
 
-        onCleanup(() => socket.close());
+            onCleanup(() => {
+              socket.close();
+              setState({ type: "disconnected" });
+            });
+          })
+          .unwrapOrElse(() => setState({ type: "disconnected" }));
       }
     )
   );
