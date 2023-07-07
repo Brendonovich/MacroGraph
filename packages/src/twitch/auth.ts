@@ -1,6 +1,7 @@
 import { Maybe, None, Some } from "@macrograph/core";
 import { z } from "zod";
 import { ReactiveMap } from "@solid-primitives/map";
+import { chat, helix } from ".";
 
 const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -37,6 +38,12 @@ class MacroGraphAuthProvider {
         return None;
       })
       .unwrapOr(new ReactiveMap());
+
+    this.tokens.forEach((token) => {
+      if (Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000) {
+        this.refreshTimer(token);
+      }
+    });
   }
 
   logOut(userID: UserIdResolvable) {
@@ -72,7 +79,6 @@ class MacroGraphAuthProvider {
     const userName = resData.data[0].display_name;
 
     this.tokens.set(userId, { ...token, userId, userName });
-
     this.saveTokens();
 
     return userId;
@@ -90,15 +96,19 @@ class MacroGraphAuthProvider {
     };
   }
 
-  async refreshAccessTokenForUser(user: string): Promise<User> {
+  async refreshAccessTokenForUser(
+    user: string,
+    force?: boolean
+  ): Promise<User> {
     const userId = user;
 
     const token = Maybe(this.tokens.get(userId)).expect(
       "refreshAccessTokenForUser missing token"
     );
-
-    if (Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000) {
-      return token;
+    if (!force) {
+      if (Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000) {
+        return token;
+      }
     }
 
     Maybe(token.refreshToken).expect("Refresh token is null!");
@@ -124,8 +134,19 @@ class MacroGraphAuthProvider {
 
     this.tokens.set(userId, returnData);
     this.saveTokens();
+    this.refreshTimer(token);
 
     return returnData;
+  }
+
+  async refreshTimer(token: User) {
+    setTimeout(() => {
+      this.refreshAccessTokenForUser(token.userId, true);
+      if (chat.writeUserId().unwrap() === token.userId)
+        chat.setWriteUserId(Some(chat.writeUserId().unwrap()));
+      if (helix.userId().unwrap() === token.userId)
+        helix.setUserId(Some(helix.userId().unwrap()));
+    }, token.obtainmentTimestamp + token.expiresIn * 1000 - Date.now() - 60000);
   }
 
   saveTokens() {
