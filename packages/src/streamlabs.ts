@@ -108,7 +108,7 @@ pkg.createEventSchema({
     io.dataOutput({
       name: "Amount",
       id: "amount",
-      type: t.int(),
+      type: t.float(),
     });
     io.dataOutput({
       name: "Message",
