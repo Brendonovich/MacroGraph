@@ -108,7 +108,7 @@ pkg.createEventSchema({
     io.dataOutput({
       name: "Amount",
       id: "amount",
-      type: t.string(),
+      type: t.int(),
     });
     io.dataOutput({
       name: "Message",
@@ -133,7 +133,7 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     ctx.setOutput("name", data.name);
-    ctx.setOutput("amount", data.amount);
+    ctx.setOutput("amount", parseFloat(data.amount));
     ctx.setOutput("message", data.message);
     ctx.setOutput("currency", data.currency);
     ctx.setOutput("from", data.from);
