@@ -9,4 +9,4 @@ export * as discord from "./discord";
 export * from "./localStorage";
 export * from "./json";
 export * from "./map";
-export * from "./goxlr";
+export * as goxlr from "./goxlr";
