@@ -7,8 +7,9 @@ import {
   on,
   onCleanup,
 } from "solid-js";
+import { EVENT, Event } from "./events";
 
-const pkg = core.createPackage({
+const pkg = core.createPackage<Event>({
   name: "Streamlabs",
 });
 
@@ -33,8 +34,8 @@ const { setToken, token, state } = createRoot(() => {
   createEffect(
     on(
       () => token(),
-      (userId) =>
-        userId
+      (token) =>
+        token
           .map((token) => (localStorage.setItem(STREAMLABS_TOKEN, token), true))
           .unwrapOrElse(
             () => (localStorage.removeItem(STREAMLABS_TOKEN), false)
@@ -53,12 +54,13 @@ const { setToken, token, state } = createRoot(() => {
               autoConnect: false,
             });
 
-            socket.on("event", (eventData: any) => {
-              console.log(eventData);
-              if (!eventData.for && eventData.type === "donation") {
+            socket.on("event", (eventData) => {
+              const parsed = EVENT.parse(eventData);
+
+              if (parsed.type === "donation") {
                 pkg.emitEvent({
-                  name: "SLDonation",
-                  data: eventData.message[0],
+                  name: "donation",
+                  data: parsed.message[0]!,
                 });
               }
             });
@@ -95,7 +97,7 @@ export { setToken, token, state };
 
 pkg.createEventSchema({
   name: "Streamlabs Donation",
-  event: "SLDonation",
+  event: "donation",
   generateIO: (io) => {
     io.execOutput({
       id: "exec",
@@ -127,17 +129,18 @@ pkg.createEventSchema({
     });
     io.dataOutput({
       name: "From User Id",
-      id: "fromUserId",
+      id: "fromId",
       type: t.string(),
     });
   },
   run({ ctx, data }) {
     ctx.setOutput("name", data.name);
-    ctx.setOutput("amount", parseFloat(data.amount));
+    ctx.setOutput("amount", data.amount);
     ctx.setOutput("message", data.message);
     ctx.setOutput("currency", data.currency);
     ctx.setOutput("from", data.from);
-    ctx.setOutput("fromUserId", data.from_user_id);
+    ctx.setOutput("fromId", data.fromId);
+
     ctx.exec("exec");
   },
 });
