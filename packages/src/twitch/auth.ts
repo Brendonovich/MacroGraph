@@ -17,6 +17,9 @@ export interface User {
   obtainmentTimestamp: number;
 }
 
+const tokenHasExpired = (token: User) =>
+  Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000;
+
 export interface UserIdResolvableType {
   /**
    * The ID of the user.
@@ -40,9 +43,7 @@ class MacroGraphAuthProvider {
       .unwrapOr(new ReactiveMap());
 
     this.tokens.forEach((token) => {
-      if (Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000) {
-        this.refreshTimer(token);
-      }
+      if (tokenHasExpired(token)) this.refreshTimer(token);
     });
   }
 
@@ -105,11 +106,8 @@ class MacroGraphAuthProvider {
     const token = Maybe(this.tokens.get(userId)).expect(
       "refreshAccessTokenForUser missing token"
     );
-    if (!force) {
-      if (Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000) {
-        return token;
-      }
-    }
+
+    if (!force && tokenHasExpired(token)) return token;
 
     Maybe(token.refreshToken).expect("Refresh token is null!");
 
