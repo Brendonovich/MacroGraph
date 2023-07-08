@@ -24,8 +24,6 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
 
   let mixerID: string | undefined;
 
-  let ws: WebSocket;
-
   createEffect(
     on(
       () => url(),
@@ -43,7 +41,7 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
       () => url(),
       (url) => {
         url.map((url) => {
-          ws = new WebSocket(url);
+          const ws = new WebSocket(url);
 
           ws.addEventListener("open", () => {
             setState({ type: "connected", ws });
