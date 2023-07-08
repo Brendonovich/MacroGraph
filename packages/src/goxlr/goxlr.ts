@@ -96,7 +96,7 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
     )
   );
 
-  return { mixerID, url, setUrl, state, setState };
+  return { mixerID: () => mixerID, url, setUrl, state, setState };
 });
 
 export { mixerID, url, setUrl, state, setState };

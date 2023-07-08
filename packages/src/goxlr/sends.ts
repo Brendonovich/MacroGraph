@@ -39,7 +39,7 @@ pkg.createNonEventSchema({
         id: 0,
         data: {
           Command: [
-            mixerID,
+            mixerID(),
             {
               SetFaderMuteState: [
                 slider.variant,
@@ -77,7 +77,7 @@ pkg.createNonEventSchema({
         id: 0,
         data: {
           Command: [
-            mixerID,
+            mixerID(),
             {
               SetMicrophoneType: type.variant,
             },
@@ -113,7 +113,7 @@ pkg.createNonEventSchema({
         id: 0,
         data: {
           Command: [
-            mixerID,
+            mixerID(),
             {
               SetFXEnabled: ctx.getInput("state"),
             },
@@ -142,7 +142,7 @@ pkg.createNonEventSchema({
         id: 0,
         data: {
           Command: [
-            mixerID,
+            mixerID(),
             {
               SetActiveEffectPreset: preset.variant,
             },
