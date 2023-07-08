@@ -10,3 +10,4 @@ export * from "./localStorage";
 export * from "./json";
 export * from "./map";
 export * as goxlr from "./goxlr";
+export * as streamlabs from "./streamlabs";

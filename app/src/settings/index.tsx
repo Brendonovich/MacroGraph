@@ -7,6 +7,7 @@ import { Button } from "./ui";
 import { SerializedProject, core } from "@macrograph/core";
 import { useUIStore } from "~/UIStore";
 import GoXLR from "./GoXLR";
+import Streamlabs from "./Streamlabs";
 
 export default () => {
   const ui = useUIStore();
@@ -65,6 +66,9 @@ const SettingsDialog = () => {
               </Section>
               <Section title="OBS">
                 <OBS />
+              </Section>
+              <Section title="Streamlabs">
+                <Streamlabs />
               </Section>
               <Section title="GoXLR">
                 <GoXLR />

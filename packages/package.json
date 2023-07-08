@@ -23,6 +23,7 @@
         "@twurple/auth": "^6.2.0",
         "discord.js": "^14.9.0",
         "obs-websocket-js": "^5.0.2",
+        "socket.io-client": "^4.7.1",
         "tmi.js": "^1.8.5",
         "typescript-result-option": "^0.2.5",
         "zod": "^3.21.4"
