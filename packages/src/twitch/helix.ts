@@ -48,7 +48,7 @@ export const { client, userId, setUserId } = createRoot(() => {
           : undefined,
       }).then((res) => {
         if (res.status === 204) return;
-        res.json();
+        return res.json();
       });
     },
   });
@@ -502,6 +502,66 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "Modify Channel Info",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      name: "Broadcaster Language",
+      id: "broadcasterLanguage",
+      type: t.string(),
+    });
+    io.dataInput({
+      name: "Title",
+      id: "title",
+      type: t.string(),
+    });
+    io.dataInput({
+      name: "Catagory Name",
+      id: "catagoryName",
+      type: t.string(),
+    });
+    io.dataInput({
+      name: "Tags",
+      id: "tags",
+      type: t.list(t.string()),
+    });
+    io.dataInput({
+      name: "Delay",
+      id: "delay",
+      type: t.int(),
+    });
+  },
+  async run({ ctx }) {
+    const body = {} as any;
+
+    if (ctx.getInput("broadcasterLanguage"))
+      body.broadcaster_language = ctx.getInput("broadcasterLanguage");
+    if (ctx.getInput("title")) body.title = ctx.getInput("title");
+    if (ctx.getInput("delay")) body.delay = ctx.getInput("delay");
+    if (ctx.getInput("tags")) body.tags = ctx.getInput("tags");
+
+    if (ctx.getInput("catagoryName")) {
+      let data = await client.games.get(z.any(), {
+        body: new URLSearchParams({
+          name: ctx.getInput("catagoryName"),
+        }),
+      });
+
+      console.log(data.data[0].id);
+      body.game_id = data.data[0].id;
+      console.log(body);
+    }
+
+    client.channels.patch(z.any(), {
+      body: {
+        ...body,
+        broadcaster_id: userId().unwrap(),
+      },
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "Create Clip",
   variant: "Exec",
   generateIO: (io) => {
@@ -559,7 +619,6 @@ pkg.createNonEventSchema({
     });
 
     const data = response.data[0];
-    console.log(data);
     ctx.setOutput(
       "out",
       Maybe(data).map((data) =>
@@ -599,7 +658,6 @@ pkg.createNonEventSchema({
         user_id: ctx.getInput("userId"),
       }),
     });
-    console.log(data);
     ctx.setOutput("following", data?.data.length === 1);
   },
 });
@@ -765,6 +823,81 @@ pkg.createNonEventSchema({
     );
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Start Commercial",
+  variant: "Exec",
+  generateIO: (io) => {
+    io.dataInput({
+      name: "Duration (s)",
+      id: "duraton",
+      type: t.int(),
+    });
+    io.dataOutput({
+      name: "Cooldown",
+      id: "retryAfter",
+      type: t.int(),
+    });
+  },
+  async run({ ctx }) {
+    const response = await client.channels.commercial.post(z.any(), {
+      body: {
+        broadcaster_id: userId().unwrap(),
+        length: ctx.getInput("duration"),
+      },
+    });
+
+    ctx.setOutput("retryAfter", response.data[0].retry_after);
+  },
+});
+
+// const periodtext = pkg.createEnum("period", (e) => [
+//   e.variant("day"),
+//   e.variant("week"),
+//   e.variant("month"),
+//   e.variant("year"),
+//   e.variant("all"),
+// ]);
+
+// pkg.createNonEventSchema({
+//   name: "Get Bits Leaderboard",
+//   variant: "Exec",
+//   generateIO: (io) => {
+//     io.dataInput({
+//       name: "Count",
+//       id: "count",
+//       type: t.int(),
+//     });
+//     io.dataInput({
+//       name: "Period",
+//       id: "period",
+//       type: t.enum(periodtext),
+//     });
+//     io.dataInput({
+//       name: "Started At",
+//       id: "startedAt",
+//       type: t.string(),
+//     });
+//     io.dataInput({
+//       name: "User ID",
+//       id: "userId",
+//       type: t.string() ,
+//     });
+//   },
+//   async run({ ctx }) {
+//     const periodtxt = ctx.getInput<InferEnum<typeof periodtext>>("period");
+
+//     const response = await client.bits.leaderboard.get(z.any(), {
+//       body: new URLSearchParams({
+//         count: ctx.getInput("count"),
+//         period: periodtxt.variant,
+//         started_at: ctx.getInput("startedAt"),
+//         user_id: ctx.getInput("user_id"),
+//       }),
+//     });
+
+//   },
+// });
 
 pkg.createNonEventSchema({
   name: "Edit Custom Reward",
@@ -1016,8 +1149,6 @@ pkg.createNonEventSchema({
       (reward: any) => reward.title === ctx.getInput("title")
     );
 
-    console.log(data);
-
     ctx.setOutput(
       "out",
       Maybe(data).map((data) =>
@@ -1170,7 +1301,6 @@ pkg.createNonEventSchema({
     const data = response.data[0];
 
     // const optData = Maybe(data);
-    console.log(data);
     ctx.setOutput("userId", data?.id);
     ctx.setOutput("userLogin", data?.login);
     ctx.setOutput("displayName", data?.display_name);
