@@ -1,6 +1,4 @@
-import { InferEnum, Maybe, Option, core, t } from "@macrograph/core";
-import { List } from "@macrograph/core/src/types/t";
-import pkg from "./pkg";
+import { Maybe, Option } from "@macrograph/core";
 import {
   createEffect,
   createSignal,
@@ -8,16 +6,16 @@ import {
   on,
   onCleanup,
 } from "solid-js";
+import pkg from "./pkg";
 
-const { goxlr, mixerID, url, setUrl, state, setState } = createRoot(() => {
+const URL_LOCALSTORAGE_KEY = "GoXLR_WS";
+
+const { mixerID, url, setUrl, state, setState } = createRoot(() => {
   const [state, setState] = createSignal<
     | {
         type: "disconnected";
       }
-    | { type: "connecting" }
-    | {
-        type: "connected";
-      }
+    | { type: "connecting" | "connected"; ws: WebSocket }
   >({ type: "disconnected" });
 
   const [url, setUrl] = createSignal<Option<string>>(
@@ -26,15 +24,17 @@ const { goxlr, mixerID, url, setUrl, state, setState } = createRoot(() => {
 
   let mixerID: string | undefined;
 
-  let goxlr: WebSocket;
+  let ws: WebSocket;
 
   createEffect(
     on(
       () => url(),
       (url) =>
         url
-          .map((url) => (localStorage.setItem("GoXLR_WS", url), true))
-          .unwrapOrElse(() => (localStorage.removeItem("GoXLR_WS"), false))
+          .map((url) => (localStorage.setItem(URL_LOCALSTORAGE_KEY, url), true))
+          .unwrapOrElse(
+            () => (localStorage.removeItem(URL_LOCALSTORAGE_KEY), false)
+          )
     )
   );
 
@@ -43,11 +43,11 @@ const { goxlr, mixerID, url, setUrl, state, setState } = createRoot(() => {
       () => url(),
       (url) => {
         url.map((url) => {
-          goxlr = new WebSocket(url);
+          ws = new WebSocket(url);
 
-          goxlr.addEventListener("open", () => {
-            setState({ type: "connected" });
-            goxlr.send(
+          ws.addEventListener("open", () => {
+            setState({ type: "connected", ws });
+            ws.send(
               JSON.stringify({
                 id: 0,
                 data: "GetStatus",
@@ -55,7 +55,7 @@ const { goxlr, mixerID, url, setUrl, state, setState } = createRoot(() => {
             );
           });
 
-          goxlr.addEventListener("message", (data: any) => {
+          ws.addEventListener("message", (data: any) => {
             const status = JSON.parse(data.data).data.Status;
             if (status) {
               mixerID = Object.keys(status.mixers)[0];
@@ -87,10 +87,10 @@ const { goxlr, mixerID, url, setUrl, state, setState } = createRoot(() => {
             });
           });
 
-          setState({ type: "connecting" });
+          setState({ type: "connecting", ws });
 
           onCleanup(() => {
-            goxlr.close();
+            ws.close();
             setState({ type: "disconnected" });
           });
         });
@@ -98,7 +98,7 @@ const { goxlr, mixerID, url, setUrl, state, setState } = createRoot(() => {
     )
   );
 
-  return { goxlr, mixerID, url, setUrl, state, setState };
+  return { mixerID, url, setUrl, state, setState };
 });
 
-export { goxlr, mixerID, url, setUrl, state, setState };
+export { mixerID, url, setUrl, state, setState };

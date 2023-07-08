@@ -1,7 +1,13 @@
 import pkg from "./pkg";
-import { goxlr } from "./goxlr";
 import { InferEnum, t } from "@macrograph/core";
-import { mixerID } from "./goxlr";
+import { mixerID, state } from "./goxlr";
+
+function getSocket() {
+  const s = state();
+
+  if (s.type !== "connected") throw new Error("GoXLR is not connected");
+  else return s.ws;
+}
 
 const Sliders = pkg.createEnum("Sliders", (e) => [
   e.variant("A"),
@@ -27,7 +33,8 @@ pkg.createNonEventSchema({
   },
   run({ ctx }) {
     const slider = ctx.getInput<InferEnum<typeof Sliders>>("Slider");
-    goxlr.send(
+
+    getSocket().send(
       JSON.stringify({
         id: 0,
         data: {
@@ -65,7 +72,7 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     const type = ctx.getInput<InferEnum<typeof MicType>>("micType");
 
-    goxlr.send(
+    getSocket().send(
       JSON.stringify({
         id: 0,
         data: {
@@ -101,7 +108,7 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-    goxlr.send(
+    getSocket().send(
       JSON.stringify({
         id: 0,
         data: {
@@ -130,7 +137,7 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     const preset = ctx.getInput<InferEnum<typeof Presets>>("preset");
 
-    goxlr.send(
+    getSocket().send(
       JSON.stringify({
         id: 0,
         data: {

@@ -5,10 +5,10 @@ import {
   createSignal,
   on,
 } from "solid-js";
+import { z } from "zod";
+import { t, Maybe, None, InferEnum } from "@macrograph/core";
 import { auth } from "./auth";
 import pkg from "./pkg";
-import { t, Maybe, None, InferEnum } from "@macrograph/core";
-import { z } from "zod";
 import { createEndpoint } from "../httpEndpoint";
 
 export const HELIX_USER_ID = "helixUserId";
@@ -22,8 +22,8 @@ export const { client, userId, setUserId } = createRoot(() => {
     path: "https://api.twitch.tv/helix",
     fetchFn: async (url, args) => {
       const user = await auth.getAccessTokenForUser(userId().unwrap());
-      const token = auth.tokens.get(userId().unwrap());
-      await auth.refreshAccessTokenForUser(token?.userId);
+      const token = userId().andThen((id) => Maybe(auth.tokens.get(id)));
+      await auth.refreshAccessTokenForUser(token.unwrap().userId);
       if (args.body instanceof URLSearchParams) {
         url = `${url}?${args.body.toString()}`;
       }
