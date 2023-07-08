@@ -55,12 +55,14 @@ const { setToken, token, state } = createRoot(() => {
             });
 
             socket.on("event", (eventData) => {
-              const parsed = EVENT.parse(eventData);
+              const parsed = EVENT.safeParse(eventData);
 
-              if (parsed.type === "donation") {
+              if (!parsed.success) return;
+
+              if (parsed.data.type === "donation") {
                 pkg.emitEvent({
                   name: "donation",
-                  data: parsed.message[0]!,
+                  data: parsed.data.message[0]!,
                 });
               }
             });
