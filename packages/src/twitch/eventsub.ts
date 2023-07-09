@@ -104,7 +104,7 @@ const { state } = createRoot(() => {
 
             onCleanup(() => {
               ws.close();
-              setSTate({ type: "disconnected" });
+              setState({ type: "disconnected" });
             });
           })
           .unwrapOrElse(() => setWs({ type: "disconnected" }));
