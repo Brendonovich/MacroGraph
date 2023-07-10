@@ -9,8 +9,8 @@
     "lint:fix": "turbo run lint -- --fix"
   },
   "devDependencies": {
-    "turbo": "^1.9.3",
-    "turbo-ignore": "^0.3.0",
-    "typescript": "^4.9.4"
+    "turbo": "^1.10.7",
+    "turbo-ignore": "^1.10.7",
+    "typescript": "^5.1.6"
   }
 }
