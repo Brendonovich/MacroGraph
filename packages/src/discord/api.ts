@@ -12,7 +12,7 @@ const root = createEndpoint({
     const token = botToken();
     if (token === null) throw new Error("No bot token!");
 
-    return nativeFetch(url, {
+    return await nativeFetch(url, {
       ...args,
       headers: {
         ...args?.headers,
@@ -25,33 +25,18 @@ const root = createEndpoint({
 
 const api = {
   channels: (id: string) => {
-    const channels = createEndpoint({
-      path: `/channels/${id}`,
-      extend: root,
-    });
+    const channel = root.extend(`/channels/${id}`);
 
-    return {
-      messages: createEndpoint({
-        extend: channels,
-        path: `/messages`,
-      }),
-    };
+    return { messages: channel.extend(`/messages`) };
   },
-  users: (id: string) => createEndpoint({ path: `/users/${id}`, extend: root }),
+  users: (id: string) => root.extend(`/users/${id}`),
   guilds: (guildId: string) => {
-    const guilds = createEndpoint({
-      path: `/guilds/${guildId}`,
-      extend: root,
-    });
+    const guild = root.extend(`/guilds/${guildId}`);
 
     return {
-      members: createEndpoint({ path: `/members`, extend: guilds }),
-      member: (userId: string) =>
-        createEndpoint({
-          path: `/members/${userId}`,
-          extend: guilds,
-        }),
-      roles: createEndpoint({ path: `/roles`, extend: guilds }),
+      members: guild.extend(`/members`),
+      member: (userId: string) => guild.extend(`/members/${userId}`),
+      roles: guild.extend(`/roles`),
     };
   },
 };
@@ -60,7 +45,7 @@ const [bot] = createRoot(() =>
   createResource(botToken, async () => {
     try {
       return await api.users("@me").get(USER_SCHEMA);
-    } catch {
+    } catch (e) {
       setBotToken(null);
     }
   })
