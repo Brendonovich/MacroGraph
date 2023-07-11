@@ -17,8 +17,8 @@ export const nativeFetch = async (url: string, data: HTTPData) => {
   if (data.body instanceof URLSearchParams) {
     url = `${url}?${data.body.toString()}`;
   } else {
-    body =
-      data.body instanceof FormData
+    body = data.body
+      ? data.body instanceof FormData
         ? {
             Form: [...data.body.entries()].reduce(
               (acc, curr) => ({
@@ -28,7 +28,8 @@ export const nativeFetch = async (url: string, data: HTTPData) => {
               {} as Extract<core.HTTPBody, { Form: any }>["Form"]
             ),
           }
-        : { Json: data.body };
+        : { Json: data.body }
+      : undefined;
   }
 
   const d = await rspcClient.query([
