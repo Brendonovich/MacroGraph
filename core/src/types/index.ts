@@ -2,14 +2,14 @@ import { BaseType } from "./base";
 import { BasePrimitiveType } from "./primitive";
 import * as t from "./t";
 
-// export * from "./list";
-// export * from "./option";
-// export * from "./base";
-// export * from "./primitive";
-// export * from "./wildcard";
-// export * from "./enum";
-// export * from "./struct";
-// export * from "./map";
+export * from "./list";
+export * from "./option";
+export * from "./base";
+export * from "./primitive";
+export * from "./wildcard";
+export * from "./enum";
+export * from "./struct";
+export * from "./map";
 export * as t from "./t";
 
 export type TypeVariant =
@@ -37,7 +37,7 @@ export function typesCanConnect(a: t.Any, b: t.Any): boolean {
     return aInner.primitiveVariant() === bInner.primitiveVariant();
 
   if (aInner instanceof t.List && bInner instanceof t.List)
-    return typesCanConnect(aInner.inner, bInner.inner);
+    return typesCanConnect(aInner.item, bInner.item);
 
   if (aInner instanceof t.Map && bInner instanceof t.Map)
     return typesCanConnect(aInner.value, bInner.value);

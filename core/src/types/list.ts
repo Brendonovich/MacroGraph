@@ -5,7 +5,7 @@ import { BaseType } from "./base";
 export class ListType<T extends BaseType = t.Any, TOut = any> extends BaseType<
   TOut[]
 > {
-  constructor(public inner: T) {
+  constructor(public item: T) {
     super();
   }
 
@@ -18,18 +18,18 @@ export class ListType<T extends BaseType = t.Any, TOut = any> extends BaseType<
   }
 
   toString(): string {
-    return `List<${this.inner.toString()}>`;
+    return `List<${this.item.toString()}>`;
   }
 
   asZodType(): z.ZodType<TOut[]> {
-    return z.array(this.inner.asZodType());
+    return z.array(this.item.asZodType());
   }
 
   getWildcards(): Wildcard[] {
-    return this.inner.getWildcards();
+    return this.item.getWildcards();
   }
 
   eq(other: t.Any): boolean {
-    return other instanceof t.List && this.inner.eq(other.inner);
+    return other instanceof t.List && this.item.eq(other.item);
   }
 }

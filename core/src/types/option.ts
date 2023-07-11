@@ -47,9 +47,7 @@ import { BaseType } from "./base";
  * ```
  */
 class Option<T> {
-  constructor(public value: T) {
-    return createMutable(this);
-  }
+  constructor(public value: T) {}
 
   /**
    * Returns `true` if the option is a {@link Some `Some`} value.
