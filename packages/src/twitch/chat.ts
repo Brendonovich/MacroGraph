@@ -337,7 +337,6 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     if (data.self) return;
-
     ctx.setOutput("username", data.tags.username);
     ctx.setOutput("displayName", data.tags["display-name"]);
     ctx.setOutput("userId", data.tags["user-id"]);
@@ -346,6 +345,7 @@ pkg.createEventSchema({
     ctx.setOutput("mod", data.tags.mod);
     ctx.setOutput("sub", data.tags.subscriber);
     ctx.setOutput("vip", data.tags.vip);
+    ctx.setOutput("broadcaster", data.tags["room-id"] === data.tags["user-id"]);
     ctx.exec("exec");
   },
 });

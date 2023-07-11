@@ -3,60 +3,40 @@ import pkg from "./pkg";
 import { botToken, setBotToken } from "./auth";
 import { createResource, createRoot } from "solid-js";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
-import { createEndpoint } from "../httpEndpoint";
-import { Maybe, Option, rspcClient, t } from "@macrograph/core";
+import { createEndpoint, nativeFetch } from "../httpEndpoint";
+import { Maybe, rspcClient, t } from "@macrograph/core";
 
 const root = createEndpoint({
   path: "https://discord.com/api/v10",
-  fetchFn: async (args) => {
+  fetchFn: async (url, args) => {
     const token = botToken();
     if (token === null) throw new Error("No bot token!");
 
-    const { data } = await rspcClient.query([
-      "http.json",
-      {
-        ...args,
-        headers: {
-          ...args?.headers,
-          "Content-Type": "application/json",
-          Authorization: `Bot ${token}`,
-        },
+    return await nativeFetch(url, {
+      ...args,
+      headers: {
+        ...args?.headers,
+        "Content-Type": "application/json",
+        Authorization: `Bot ${token}`,
       },
-    ]);
-
-    return data;
+    });
   },
 });
 
 const api = {
   channels: (id: string) => {
-    const channels = createEndpoint({
-      path: `/channels/${id}`,
-      extend: root,
-    });
+    const channel = root.extend(`/channels/${id}`);
 
-    return {
-      messages: createEndpoint({
-        extend: channels,
-        path: `/messages`,
-      }),
-    };
+    return { messages: channel.extend(`/messages`) };
   },
-  users: (id: string) => createEndpoint({ path: `/users/${id}`, extend: root }),
+  users: (id: string) => root.extend(`/users/${id}`),
   guilds: (guildId: string) => {
-    const guilds = createEndpoint({
-      path: `/guilds/${guildId}`,
-      extend: root,
-    });
+    const guild = root.extend(`/guilds/${guildId}`);
 
     return {
-      members: createEndpoint({ path: `/members`, extend: guilds }),
-      member: (userId: string) =>
-        createEndpoint({
-          path: `/members/${userId}`,
-          extend: guilds,
-        }),
-      roles: createEndpoint({ path: `/roles`, extend: guilds }),
+      members: guild.extend(`/members`),
+      member: (userId: string) => guild.extend(`/members/${userId}`),
+      roles: guild.extend(`/roles`),
     };
   },
 };
@@ -65,7 +45,7 @@ const [bot] = createRoot(() =>
   createResource(botToken, async () => {
     try {
       return await api.users("@me").get(USER_SCHEMA);
-    } catch {
+    } catch (e) {
       setBotToken(null);
     }
   })
@@ -93,7 +73,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     await api.channels(ctx.getInput("channelId")).messages.post(z.any(), {
-      body: { Json: { content: ctx.getInput("message") } },
+      body: { content: ctx.getInput("message") },
     });
   },
 });
@@ -262,22 +242,22 @@ pkg.createNonEventSchema({
     io.dataInput({
       id: "content",
       name: "Message",
-      type: t.option(t.string()),
+      type: t.string(),
     });
     io.dataInput({
       id: "username",
       name: "Username",
-      type: t.option(t.string()),
+      type: t.string(),
     });
     io.dataInput({
       id: "avatarUrl",
       name: "Avatar URL",
-      type: t.option(t.string()),
+      type: t.string(),
     });
     io.dataInput({
       id: "tts",
       name: "TTS",
-      type: t.option(t.bool()),
+      type: t.bool(),
     });
     //io.dataInput({
     //   id: "fileLocation",
@@ -292,11 +272,14 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const body: Record<string, string> = {};
-
-    ctx.getInput<Option<string>>("content").map((v) => (body.content = v));
-    ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
-    ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
-    ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
+    if (ctx.getInput("content")) body.content = ctx.getInput("content");
+    if (ctx.getInput("avatarUrl")) body.avatar_url = ctx.getInput("avatarUrl");
+    if (ctx.getInput("username")) body.username = ctx.getInput("username");
+    if (ctx.getInput("tts")) body.tts = ctx.getInput<boolean>("tts").toString();
+    // ctx.getInput<Option<string>>("content").map((v) => (body.content = v));
+    // ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
+    // ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
+    // ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
     // await ctx.getInput<Option<string>>("fileLocation").mapAsync(async (v) => {
     //   body["file[0]"] = JSON.stringify({
     //     file: await fs.readBinaryFile(v),

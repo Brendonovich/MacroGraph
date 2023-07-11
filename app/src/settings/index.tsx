@@ -6,6 +6,8 @@ import Twitch from "./Twitch";
 import { Button } from "./ui";
 import { SerializedProject, core } from "@macrograph/core";
 import { useUIStore } from "~/UIStore";
+import GoXLR from "./GoXLR";
+import Streamlabs from "./Streamlabs";
 
 export default () => {
   const ui = useUIStore();
@@ -49,22 +51,30 @@ const SettingsDialog = () => {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay class="absolute inset-0 bg-black/40" />
-        <Dialog.Content class="absolute inset-0 flex flex-col justify-center items-center py-10">
-          <div class="flex flex-col w-full max-w-2xl bg-neutral-800 p-4 text-white rounded-lg space-y-4">
-            <div class="flex flex-row justify-between">
+        <Dialog.Content class="absolute inset-0 flex flex-col items-center py-10 overflow-hidden">
+          <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden">
+            <div class="flex flex-row justify-between text-white p-4">
               <Dialog.Title>Settings</Dialog.Title>
               <Dialog.CloseButton>X</Dialog.CloseButton>
             </div>
-            <div class="flex-1 flex flex-col space-y-4">
-              <Section title="Twitch">
-                <Twitch />
-              </Section>
-              <Section title="Discord">
-                <Discord />
-              </Section>
-              <Section title="OBS">
-                <OBS />
-              </Section>
+            <div class="flex-1 flex flex-col p-4 pt-0 w-full text-white rounded-lg max-w-2xl overflow-y-scroll">
+              <div class="space-y-4">
+                <Section title="Twitch">
+                  <Twitch />
+                </Section>
+                <Section title="Discord">
+                  <Discord />
+                </Section>
+                <Section title="OBS">
+                  <OBS />
+                </Section>
+                <Section title="Streamlabs">
+                  <Streamlabs />
+                </Section>
+                <Section title="GoXLR">
+                  <GoXLR />
+                </Section>
+              </div>
             </div>
           </div>
         </Dialog.Content>

@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 import { t } from "@macrograph/core";
 import { auth } from "./auth";
+import { z } from "zod";
 
 const SubTypes = [
   "channel.update",
@@ -47,10 +48,9 @@ const SubTypes = [
 ];
 
 const { state } = createRoot(() => {
-  const [state, setWs] = createSignal<
+  const [state, setState] = createSignal<
     | { type: "disconnected" }
-    | { type: "connecting" }
-    | { type: "connected"; ws: WebSocket }
+    | { type: "connecting" | "connected"; ws: WebSocket }
   >({ type: "disconnected" });
 
   createEffect(
@@ -67,24 +67,25 @@ const { state } = createRoot(() => {
 
               switch (info.metadata.message_type) {
                 case "session_welcome":
-                  setWs({ type: "connected", ws });
+                  setState({ type: "connected", ws });
 
                   await Promise.all(
                     SubTypes.map((type) =>
-                      helix.client.eventSub.createSubscription(
-                        type,
-                        type == "channel.follow" ? "2" : "1",
-                        {
-                          from_broadcaster_user_id: userId,
-                          broadcaster_user_id: userId,
-                          moderator_user_id: userId,
+                      helix.client.eventsub.subscriptions.post(z.any(), {
+                        body: {
+                          type,
+                          version: type == "channel.follow" ? "2" : "1",
+                          condition: {
+                            broadcaster_user_id: userId,
+                            moderator_user_id: userId,
+                            to_broadcaster_user_id: userId,
+                          },
+                          transport: {
+                            method: "websocket",
+                            session_id: info.payload.session.id,
+                          },
                         },
-                        {
-                          method: "websocket",
-                          session_id: info.payload.session.id,
-                        },
-                        { id: userId }
-                      )
+                      })
                     )
                   );
 
@@ -98,11 +99,14 @@ const { state } = createRoot(() => {
               }
             });
 
-            setWs({ type: "connecting" });
+            setState({ type: "connecting", ws });
 
-            onCleanup(() => ws.close());
+            onCleanup(() => {
+              ws.close();
+              setState({ type: "disconnected" });
+            });
           })
-          .unwrapOrElse(() => setWs({ type: "disconnected" }));
+          .unwrapOrElse(() => setState({ type: "disconnected" }));
       }
     )
   );
@@ -704,7 +708,7 @@ pkg.createEventSchema({
     });
     io.dataOutput({
       id: "rewardId",
-      name: "Rewards Id",
+      name: "Reward Id",
       type: t.string(),
     });
     io.dataOutput({
@@ -738,6 +742,13 @@ pkg.createEventSchema({
   },
 });
 
+const Poll = pkg.createStruct("Choices", (s) => ({
+  id: s.field("id", t.string()),
+  title: s.field("title", t.string()),
+  channel_points_votes: s.field("Channel Points Votes", t.option(t.int())),
+  votes: s.field("votes", t.int()),
+}));
+
 pkg.createEventSchema({
   name: "Channel Poll Begin",
   event: "channel.poll.begin",
@@ -745,8 +756,38 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "title",
+      name: "Title",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "choices",
+      name: "Choices",
+      type: t.list(t.struct(Poll)),
+    });
+    io.dataOutput({
+      id: "channelPointVotingEnabled",
+      name: "Channel Point Voting Enabled",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "channelPointVotingCost",
+      name: "Channel Point Voting Cost",
+      type: t.int(),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("choices", data.choices);
+    ctx.setOutput(
+      "channelPointVotingEnabled",
+      data.channel_points_voting.is_enabled
+    );
+    ctx.setOutput(
+      "channelPointVotingCost",
+      data.channel_points_voting.amount_per_vote
+    );
     ctx.exec("exec");
   },
 });
@@ -758,8 +799,38 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "title",
+      name: "Title",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "choices",
+      name: "Choices",
+      type: t.list(t.struct(Poll)),
+    });
+    io.dataOutput({
+      id: "channelPointVotingEnabled",
+      name: "Channel Point Voting Enabled",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "channelPointVotingCost",
+      name: "Channel Point Voting Cost",
+      type: t.int(),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("choices", data.choices);
+    ctx.setOutput(
+      "channelPointVotingEnabled",
+      data.channel_points_voting.is_enabled
+    );
+    ctx.setOutput(
+      "channelPointVotingCost",
+      data.channel_points_voting.amount_per_vote
+    );
     ctx.exec("exec");
   },
 });
@@ -771,11 +842,65 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "title",
+      name: "Title",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "choices",
+      name: "Choices",
+      type: t.list(t.struct(Poll)),
+    });
+    io.dataOutput({
+      id: "channelPointVotingEnabled",
+      name: "Channel Point Voting Enabled",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "channelPointVotingCost",
+      name: "Channel Point Voting Cost",
+      type: t.int(),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("choices", data.choices);
+    ctx.setOutput(
+      "channelPointVotingEnabled",
+      data.channel_points_voting.is_enabled
+    );
+    ctx.setOutput(
+      "channelPointVotingCost",
+      data.channel_points_voting.amount_per_vote
+    );
     ctx.exec("exec");
   },
 });
+
+const outcomesBegin = pkg.createStruct("Outcomes Begin", (s) => ({
+  id: s.field("id", t.string()),
+  title: s.field("title", t.string()),
+  color: s.field("Color", t.string()),
+}));
+
+const topPredictors = pkg.createStruct("Top Predictors", (s) => ({
+  userName: s.field("User Name", t.string()),
+  userLogin: s.field("User Login", t.string()),
+  userId: s.field("User ID", t.string()),
+  channelPointsWon: s.field("Channel Points Won", t.option(t.int())),
+  channelPointsUser: s.field("Channel Points User", t.int()),
+}));
+
+const outcomesProgress = pkg.createStruct("Outcomes Progress", (s) => ({
+  id: s.field("id", t.string()),
+  title: s.field("title", t.string()),
+  color: s.field("Color", t.string()),
+  users: s.field("Users", t.int()),
+  channelPoints: s.field("Channel Points", t.int()),
+  topPredictors: s.field("Top Predictors", t.list(t.struct(topPredictors))),
+  votes: s.field("votes", t.int()),
+}));
 
 pkg.createEventSchema({
   name: "Channel Prediction Begin",
@@ -784,8 +909,38 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "title",
+      name: "Title",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "outcomes",
+      name: "Outcomes",
+      type: t.list(t.struct(outcomesBegin)),
+    });
+    io.dataOutput({
+      id: "users",
+      name: "Users",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "channelPoints",
+      name: "Channel Points",
+      type: t.int(),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("choices", data.choices);
+    ctx.setOutput(
+      "channelPointVotingEnabled",
+      data.channel_points_voting.is_enabled
+    );
+    ctx.setOutput(
+      "channelPointVotingCost",
+      data.channel_points_voting.amount_per_vote
+    );
     ctx.exec("exec");
   },
 });
@@ -797,11 +952,46 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "title",
+      name: "Title",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "outcomes",
+      name: "Outcomes",
+      type: t.list(t.struct(outcomesProgress)),
+    });
+    io.dataOutput({
+      id: "channelPointVotingEnabled",
+      name: "Channel Point Voting Enabled",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "channelPointVotingCost",
+      name: "Channel Point Voting Cost",
+      type: t.int(),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("choices", data.choices);
+    ctx.setOutput(
+      "channelPointVotingEnabled",
+      data.channel_points_voting.is_enabled
+    );
+    ctx.setOutput(
+      "channelPointVotingCost",
+      data.channel_points_voting.amount_per_vote
+    );
     ctx.exec("exec");
   },
 });
+
+const PredictionStatus = pkg.createEnum("Prediction Status", (e) => [
+  e.variant("resolved"),
+  e.variant("canceled"),
+]);
 
 pkg.createEventSchema({
   name: "Channel Prediction Lock",
@@ -810,8 +1000,48 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "title",
+      name: "Title",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "outcomes",
+      name: "Outcomes",
+      type: t.list(t.struct(outcomesProgress)),
+    });
+    io.dataOutput({
+      id: "channelPointVotingEnabled",
+      name: "Channel Point Voting Enabled",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "channelPointVotingCost",
+      name: "Channel Point Voting Cost",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "winningOutcomeId",
+      name: "Winning Outcome ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "status",
+      name: "Status",
+      type: t.enum(PredictionStatus),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("choices", data.choices);
+    ctx.setOutput(
+      "channelPointVotingEnabled",
+      data.channel_points_voting.is_enabled
+    );
+    ctx.setOutput(
+      "channelPointVotingCost",
+      data.channel_points_voting.amount_per_vote
+    );
     ctx.exec("exec");
   },
 });
@@ -823,8 +1053,38 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "title",
+      name: "Title",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "outcomes",
+      name: "Outcomes",
+      type: t.list(t.struct(outcomesProgress)),
+    });
+    io.dataOutput({
+      id: "channelPointVotingEnabled",
+      name: "Channel Point Voting Enabled",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "channelPointVotingCost",
+      name: "Channel Point Voting Cost",
+      type: t.int(),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("choices", data.choices);
+    ctx.setOutput(
+      "channelPointVotingEnabled",
+      data.channel_points_voting.is_enabled
+    );
+    ctx.setOutput(
+      "channelPointVotingCost",
+      data.channel_points_voting.amount_per_vote
+    );
     ctx.exec("exec");
   },
 });
@@ -836,8 +1096,114 @@ pkg.createEventSchema({
     io.execOutput({
       id: "exec",
     });
+    io.dataOutput({
+      id: "total",
+      name: "Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "progress",
+      name: "Progress",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "goal",
+      name: "Goal",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsUserName",
+      name: "Top Contribute Bit Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsUserId",
+      name: "Top Contribute Bit User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsTotal",
+      name: "Top Contribute Bits Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsUserName",
+      name: "Top Contribute Subs Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsUserId",
+      name: "Top Contribute Subs User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsTotal",
+      name: "Top Contribute Subs Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "lastContributeUserName",
+      name: "Last Contribute Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "lastContributeUserId",
+      name: "Last Contribute User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "lastContributeTotal",
+      name: "Last Contribute Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "lastContributeType",
+      name: "Last Contribute Type",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "level",
+      name: "Level",
+      type: t.int(),
+    });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    console.log(data);
+    ctx.setOutput("total", data.event.total);
+    ctx.setOutput("progress", data.event.progress);
+    ctx.setOutput("goal", data.event.goal);
+    ctx.setOutput("level", data.event.level);
+    ctx.setOutput(
+      "topContributeBitsUserName",
+      data.event.top_contributions[0].user_name
+    );
+    ctx.setOutput(
+      "topContributeBitsUserId",
+      data.event.top_contributions[0].user_id
+    );
+    ctx.setOutput(
+      "topContributeBitsTotal",
+      data.event.top_contributions[0].total
+    );
+    ctx.setOutput(
+      "topContributeSubsUserName",
+      data.event.top_contributions[1].user_name
+    );
+    ctx.setOutput(
+      "topContributeSubsUserId",
+      data.event.top_contributions[1].user_id
+    );
+    ctx.setOutput(
+      "topContributeSubsTotal",
+      data.event.top_contributions[1].total
+    );
+    ctx.setOutput(
+      "lastContributeUserName",
+      data.event.last_contribution.user_name
+    );
+    ctx.setOutput("lastContributeUserId", data.event.last_contribution.user_id);
+    ctx.setOutput("lastContributeTotal", data.event.last_contribution.total);
+    ctx.setOutput("lastContributeType", data.event.last_contribution.type);
     ctx.exec("exec");
   },
 });
@@ -846,11 +1212,114 @@ pkg.createEventSchema({
   name: "Channel Hype Train Progress",
   event: "channel.hype_train.progress",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
+    io.dataOutput({
+      id: "total",
+      name: "Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "progress",
+      name: "Progress",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "goal",
+      name: "Goal",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "level",
+      name: "Level",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsUserName",
+      name: "Top Contribute Bit Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsUserId",
+      name: "Top Contribute Bit User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsTotal",
+      name: "Top Contribute Bits Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsUserName",
+      name: "Top Contribute Subs Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsUserId",
+      name: "Top Contribute Subs User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsTotal",
+      name: "Top Contribute Subs Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "lastContributeUserName",
+      name: "Last Contribute Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "lastContributeUserId",
+      name: "Last Contribute User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "lastContributeTotal",
+      name: "Last Contribute Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "lastContributeType",
+      name: "Last Contribute Type",
+      type: t.string(),
     });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    console.log(data);
+    ctx.setOutput("total", data.event.total);
+    ctx.setOutput("progress", data.event.progress);
+    ctx.setOutput("goal", data.event.goal);
+    ctx.setOutput("level", data.event.level);
+    ctx.setOutput(
+      "topContributeBitsUserName",
+      data.event.top_contributions[0].user_name
+    );
+    ctx.setOutput(
+      "topContributeBitsUserId",
+      data.event.top_contributions[0].user_id
+    );
+    ctx.setOutput(
+      "topContributeBitsTotal",
+      data.event.top_contributions[0].total
+    );
+    ctx.setOutput(
+      "topContributeSubsUserName",
+      data.event.top_contributions[1].user_name
+    );
+    ctx.setOutput(
+      "topContributeSubsUserId",
+      data.event.top_contributions[1].user_id
+    );
+    ctx.setOutput(
+      "topContributeSubsTotal",
+      data.event.top_contributions[1].total
+    );
+    ctx.setOutput(
+      "lastContributeUserName",
+      data.event.last_contribution.user_name
+    );
+    ctx.setOutput("lastContributeUserId", data.event.last_contribution.user_id);
+    ctx.setOutput("lastContributeTotal", data.event.last_contribution.total);
+    ctx.setOutput("lastContributeType", data.event.last_contribution.type);
     ctx.exec("exec");
   },
 });
@@ -859,11 +1328,81 @@ pkg.createEventSchema({
   name: "Channel Hype Train End",
   event: "channel.hype_train.end",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
+    io.dataOutput({
+      id: "total",
+      name: "Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "level",
+      name: "Level",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsUserName",
+      name: "Top Contribute Bit Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsUserId",
+      name: "Top Contribute Bit User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeBitsTotal",
+      name: "Top Contribute Bits Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsUserName",
+      name: "Top Contribute Subs Username",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsUserId",
+      name: "Top Contribute Subs User ID",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "topContributeSubsTotal",
+      name: "Top Contribute Subs Total",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "cooldownEndsAt",
+      name: "CooldownEndsAt",
+      type: t.string(),
     });
   },
-  run({ ctx }) {
+  run({ ctx, data }) {
+    console.log(data);
+    ctx.setOutput("total", data.event.total);
+    ctx.setOutput("level", data.event.level);
+    ctx.setOutput(
+      "topContributeBitsUserName",
+      data.event.top_contributions[0].user_name
+    );
+    ctx.setOutput(
+      "topContributeBitsUserId",
+      data.event.top_contributions[0].user_id
+    );
+    ctx.setOutput(
+      "topContributeBitsTotal",
+      data.event.top_contributions[0].total
+    );
+    ctx.setOutput(
+      "topContributeSubsUserName",
+      data.event.top_contributions[1].user_name
+    );
+    ctx.setOutput(
+      "topContributeSubsUserId",
+      data.event.top_contributions[1].user_id
+    );
+    ctx.setOutput(
+      "topContributeSubsTotal",
+      data.event.top_contributions[1].total
+    );
+    ctx.setOutput("cooldownEndsAt", data.event.cooldown_ends_at);
     ctx.exec("exec");
   },
 });
