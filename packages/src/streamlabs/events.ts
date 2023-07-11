@@ -15,7 +15,6 @@ export const STREAMLABS_DONATION = z.object({
   type: z.literal("donation"),
 });
 
-// export const EVENTS = z.union([STREAMLABS_DONATION]);
 export const EVENT = STREAMLABS_DONATION;
 
 export type Event = EventsToObject<z.infer<typeof STREAMLABS_DONATION>>;

@@ -7,6 +7,7 @@ import {
   onCleanup,
 } from "solid-js";
 import pkg from "./pkg";
+import { WebsocketResponse } from "./types";
 
 const URL_LOCALSTORAGE_KEY = "GoXLR_WS";
 
@@ -53,36 +54,49 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
             );
           });
 
-          ws.addEventListener("message", (data: any) => {
-            const status = JSON.parse(data.data).data.Status;
-            if (status) {
-              mixerID = Object.keys(status.mixers)[0];
+          ws.addEventListener("message", (msg) => {
+            const { data }: WebsocketResponse = JSON.parse(msg.data);
+
+            if (data === "Ok") return;
+
+            if ("Status" in data) {
+              mixerID = Object.keys(data.Status.mixers)[0];
               console.log(mixerID);
               return;
+            } else if ("Patch" in data) {
+              for (const op of data.Patch) {
+                const pathParts = op.path.substring(1).split("/");
+
+                if (op.op !== "Add" && op.op !== "Replace") return;
+
+                switch (pathParts[2]) {
+                  case "levels": {
+                    pkg.emitEvent({
+                      name: "levelsChange",
+                      data: {
+                        channel: pathParts[4]!,
+                        value: Math.round(op.value * 0.392),
+                      },
+                    });
+                    break;
+                  }
+                  case "button_down": {
+                    pkg.emitEvent({
+                      name: "buttonDown",
+                      data: { buttonName: pathParts[3]!, state: op.value },
+                    });
+                    break;
+                  }
+                  case "fader_status": {
+                    pkg.emitEvent({
+                      name: "faderStatus",
+                      data: { channel: pathParts[3]!, state: op.value },
+                    });
+                    break;
+                  }
+                }
+              }
             }
-            const patch: Array<any> = JSON.parse(data.data).data.Patch;
-            patch.forEach((expanded) => {
-              const path: string = expanded.path;
-              const pathParts = path.substring(1).split("/");
-              if (pathParts[2] === "levels") {
-                pkg.emitEvent({
-                  name: "levelsChange",
-                  data: { path: pathParts, value: expanded.value },
-                });
-              }
-              if (pathParts[2] === "button_down") {
-                pkg.emitEvent({
-                  name: "buttonDown",
-                  data: { path: pathParts, value: expanded.value },
-                });
-              }
-              if (pathParts[2] === "fader_status") {
-                pkg.emitEvent({
-                  name: "faderStatus",
-                  data: { path: pathParts, value: expanded.value },
-                });
-              }
-            });
           });
 
           setState({ type: "connecting", ws });

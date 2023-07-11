@@ -48,7 +48,7 @@ const SubTypes = [
 ];
 
 const { state } = createRoot(() => {
-  const [state, setWs] = createSignal<
+  const [state, setState] = createSignal<
     | { type: "disconnected" }
     | { type: "connecting" }
     | { type: "connected"; ws: WebSocket }
@@ -68,7 +68,7 @@ const { state } = createRoot(() => {
 
               switch (info.metadata.message_type) {
                 case "session_welcome":
-                  setWs({ type: "connected", ws });
+                  setState({ type: "connected", ws });
 
                   await Promise.all(
                     SubTypes.map((type) =>
@@ -100,14 +100,14 @@ const { state } = createRoot(() => {
               }
             });
 
-            setWs({ type: "connecting" });
+            setState({ type: "connecting" });
 
             onCleanup(() => {
               ws.close();
               setState({ type: "disconnected" });
             });
           })
-          .unwrapOrElse(() => setWs({ type: "disconnected" }));
+          .unwrapOrElse(() => setState({ type: "disconnected" }));
       }
     )
   );
