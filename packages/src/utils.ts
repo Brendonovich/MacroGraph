@@ -817,8 +817,6 @@ pkg.createNonEventSchema({
   },
 });
 
-let prev: any;
-
 pkg.createNonEventSchema({
   name: "Match",
   variant: "Base",

@@ -60,10 +60,7 @@ export const DataPin = (props: Props) => {
 
   return (
     <Tooltip.Root>
-      <Tooltip.Trigger
-        class="cursor-auto"
-        onClick={() => console.log(pin.type)}
-      >
+      <Tooltip.Trigger class="cursor-auto">
         <Switch>
           <Match when={innerType.value instanceof t.Option && innerType.value}>
             {(type) => {
