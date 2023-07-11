@@ -50,8 +50,7 @@ const SubTypes = [
 const { state } = createRoot(() => {
   const [state, setState] = createSignal<
     | { type: "disconnected" }
-    | { type: "connecting" }
-    | { type: "connected"; ws: WebSocket }
+    | { type: "connecting" | "connected"; ws: WebSocket }
   >({ type: "disconnected" });
 
   createEffect(
@@ -100,7 +99,7 @@ const { state } = createRoot(() => {
               }
             });
 
-            setState({ type: "connecting" });
+            setState({ type: "connecting", ws });
 
             onCleanup(() => {
               ws.close();
