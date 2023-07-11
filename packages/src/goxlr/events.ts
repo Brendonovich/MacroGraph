@@ -20,8 +20,8 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("channel", data.path[4]);
-    ctx.setOutput("value", Math.round(data.value * 0.392));
+    ctx.setOutput("channel", data.channel);
+    ctx.setOutput("value", data.value);
     ctx.exec("exec");
   },
 });
@@ -45,8 +45,8 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("buttonName", data.path[3]);
-    ctx.setOutput("state", data.value);
+    ctx.setOutput("buttonName", data.buttonName);
+    ctx.setOutput("state", data.state);
     ctx.exec("exec");
   },
 });
@@ -70,8 +70,8 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("channel", data.path[3]);
-    ctx.setOutput("state", data.value === "MutedToX");
+    ctx.setOutput("channel", data.channel);
+    ctx.setOutput("state", data.state);
     ctx.exec("exec");
   },
 });
