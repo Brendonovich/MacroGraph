@@ -228,15 +228,6 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: `For Each`,
   variant: "Base",
-  async run({ ctx }) {
-    for (const [index, data] of ctx.getInput<Array<any>>("array").entries()) {
-      ctx.setOutput("element", data);
-      ctx.setOutput("index", index);
-      await ctx.exec("body");
-    }
-
-    ctx.exec("completed");
-  },
   generateIO(io) {
     const w = io.wildcard("");
 
@@ -270,5 +261,14 @@ pkg.createNonEventSchema({
       id: "completed",
       name: "Completed",
     });
+  },
+  async run({ ctx }) {
+    for (const [index, element] of ctx
+      .getInput<Array<any>>("array")
+      .entries()) {
+      await ctx.execScope("body", { element, index });
+    }
+
+    await ctx.exec("completed");
   },
 });
