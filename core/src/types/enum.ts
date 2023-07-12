@@ -142,7 +142,8 @@ export class EnumType<
   }
 
   asZodType(): z.ZodType<InferEnumVariants<Variants>> {
-    return z.union(
+    return z.discriminatedUnion(
+      "variant",
       this.inner.variants.map((v) =>
         z.object({
           variant: z.literal(v.name),
