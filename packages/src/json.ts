@@ -110,9 +110,9 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx, io }) {
-    const w = io.wildcard("");
+    const w = io.wildcards.get("")!;
 
-    const val = Maybe(valueToJSON(ctx.getInput("in")));
+    const val = Maybe(assistedValueToJSON(w.value().expect("No wildcard value!"), ctx.getInput("in")));
 
     ctx.setOutput(
       "out",
