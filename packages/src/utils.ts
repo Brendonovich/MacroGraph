@@ -929,7 +929,6 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     await s.value.mapAsync((s) => {
-      console.log(s.outputs);
       s.outputs.forEach(({ id }) => ctx.setOutput(id, data[id]));
 
       return ctx.exec("");
