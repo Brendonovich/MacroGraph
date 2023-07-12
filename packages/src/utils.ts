@@ -928,10 +928,10 @@ pkg.createNonEventSchema({
 
     const data = ctx.getInput<Record<string, any>>("");
 
-    await s.value.mapAsync((s) => {
+    await s.value.mapAsync(async (s) => {
       s.outputs.forEach(({ id }) => ctx.setOutput(id, data[id]));
 
-      return ctx.exec("");
+      await ctx.exec("");
     });
   },
 });

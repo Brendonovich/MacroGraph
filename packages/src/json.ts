@@ -55,10 +55,10 @@ const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
   ])
 );
 
-function assietedValueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | null {
+function assistedValueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | null {
   if (type instanceof t.Option) {
     if (Maybe(value).isNone()) return JSON.variant("Null");
-    else return assietedValueToJSON(type.inner, value);
+    else return assistedValueToJSON(type.inner, value);
   }
   if (type instanceof t.Int || type instanceof t.Float)
     return JSON.variant(["Number", value]);
@@ -76,6 +76,8 @@ function valueToJSON(value: any): InferEnum<typeof JSON> | null {
 		return value.map(valueToJSON).unwrapOrElse(() => JSON.variant("Null"))
 	} else if(value === null) {
 		return JSON.variant("Null")
+	} else if (value instanceof Map) {
+		return JSON.variant(["Map", { value: new Map(Array.from(value.entries()).map(([key, value]) => [key, valueToJSON(value)])) }])
 	}
 
 	switch (typeof value) {
@@ -110,7 +112,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     const w = io.wildcard("");
 
-    const val = Maybe(assietedValueToJSON(w.value().expect(""), ctx.getInput("in")));
+    const val = Maybe(valueToJSON(ctx.getInput("in")));
 
     ctx.setOutput(
       "out",
