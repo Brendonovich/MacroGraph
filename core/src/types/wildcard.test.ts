@@ -43,6 +43,11 @@ test("Connect String + Wildcard + Wildcard", () => {
   connectWildcardsInTypes(output2, input3);
 
   expect(wildcard3.value().unwrap()).toBe(output1);
+
+  disconnectWildcardsInTypes(output1, input2);
+
+  expect(wildcard2.value()).toBe(None);
+  expect(wildcard3.value()).toBe(None);
 });
 
 test("Connect Map<String> + Map<Wildcard>", () => {

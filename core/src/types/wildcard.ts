@@ -51,18 +51,29 @@ export class Wildcard {
   }
 
   calculateValue() {
+    // first, we gather all types that are connected to types that are
+    // connected to this wildcard
     const surroundingValues = (() => {
       let arr: BaseType[] = [];
 
       for (const type of this.types) {
-        for (const connection of type.connections.values()) {
-          arr.push(connection.getOpposite(type));
+        for (const connection of type.connections.keys()) {
+          arr.push(connection);
         }
       }
 
       return arr;
     })();
 
+    // if we're only connected to wildcards, reset to nothing
+    // this deals with circular wildcard connections
+    // it's probs not as efficient as it could be but it works so hell yeah
+    if (this.onlyConnectedToWildcards(new Set())) {
+      this.setValue(None);
+      return;
+    }
+
+    // if the wildcard's value is already one of the surrounding values, don't do anything
     if (
       untrack(() => this.value())
         .map((v) => !!surroundingValues.find((sv) => sv === v))
@@ -89,6 +100,27 @@ export class Wildcard {
     })();
 
     if (newValue) this.setValue(newValue);
+  }
+
+  onlyConnectedToWildcards(checked: Set<t.Wildcard>) {
+    // we need to go through all the connections of all types associated with this wildcard
+    for (const type of this.types) {
+      for (const connection of type.connections.keys()) {
+        if (connection instanceof t.Wildcard) {
+          // don't do work twice!
+          if (checked.has(connection)) continue;
+
+          checked.add(connection);
+
+          // this might do some double-work, but it gets the job done
+          if (!connection.wildcard.onlyConnectedToWildcards(checked))
+            return false;
+        } // if this is reached, everything else becomes irrelevant
+        else return false;
+      }
+    }
+
+    return true;
   }
 }
 
