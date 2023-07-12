@@ -29,4 +29,8 @@ export class MapType<
   getWildcards(): Wildcard[] {
     return this.getWildcards();
   }
+
+  eq(other: t.Any): boolean {
+    return other instanceof t.Map && this.value.eq(other.value);
+  }
 }

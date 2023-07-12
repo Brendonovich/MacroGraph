@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { TypeVariant, Wildcard } from ".";
+import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
 /**
@@ -47,9 +47,7 @@ import { BaseType } from "./base";
  * ```
  */
 class Option<T> {
-  constructor(public value: T) {
-    return createMutable(this);
-  }
+  constructor(public value: T) {}
 
   /**
    * Returns `true` if the option is a {@link Some `Some`} value.
@@ -147,17 +145,6 @@ class Option<T> {
     }
 
     return None;
-  }
-
-  /**
-   * Calls the provided closure with a reference to the contained value (if {@link Some `Some`}).
-   */
-  inspect<F extends (x: T) => void>(f: F): Option<T> {
-    if (this.isSome()) {
-      f(this.value);
-    }
-
-    return this;
   }
 
   /**
@@ -521,5 +508,9 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
 
   getWildcards(): Wildcard[] {
     return this.getWildcards();
+  }
+
+  eq(other: t.Any): boolean {
+    return other instanceof t.Option && this.inner.eq(other.inner);
   }
 }

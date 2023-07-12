@@ -105,7 +105,7 @@ const { client, readUserId, writeUserId, setReadUserId, setWriteUserId } =
           [writeUserId, setWriteUserId],
         ] as const
       ).forEach(([value, setValue]) => {
-        value().inspect((id) => {
+        value().map((id) => {
           !auth.tokens.has(id) && setValue(None);
         });
       });

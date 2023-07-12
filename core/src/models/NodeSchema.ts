@@ -1,5 +1,5 @@
 import { createMutable } from "solid-js/store";
-import { AnyType, None, Option } from "../types";
+import { AnyType, Maybe, None, Option } from "../types";
 import { Wildcard } from "../types/wildcard";
 import { Scope, ScopeBuilder } from "./IO";
 import { Package } from "./Package";
@@ -73,7 +73,11 @@ export class IOBuilder {
   constructor(public previous?: IOBuilder) {}
 
   wildcard(id: string) {
-    const wildcard = this.previous?.wildcards.get(id) ?? new Wildcard(id);
+    const wildcard = Maybe(this.previous?.wildcards.get(id)).unwrapOrElse(
+      () => {
+        return new Wildcard(id);
+      }
+    );
 
     this.wildcards.set(id, wildcard);
 
@@ -81,7 +85,9 @@ export class IOBuilder {
   }
 
   scope(id: string) {
-    const scope = this.previous?.scopes.get(id) ?? new ScopeRef();
+    const scope = Maybe(this.previous?.scopes.get(id)).unwrapOrElse(() => {
+      return new ScopeRef();
+    });
 
     this.scopes.set(id, scope);
 
@@ -89,27 +95,77 @@ export class IOBuilder {
   }
 
   dataInput<T extends DataInputBuilder>(args: T) {
-    this.inputs.push({ ...args, variant: "Data" });
+    this.inputs.push(
+      Maybe(
+        this.previous?.inputs.find(
+          (i) =>
+            i.id === args.id && i.variant === "Data" && args.type.eq(i.type)
+        )
+      ).unwrapOrElse(() => {
+        return { ...args, variant: "Data" };
+      })
+    );
   }
 
   dataOutput<T extends DataOutputBuilder>(args: T) {
-    this.outputs.push({ ...args, variant: "Data" });
+    this.outputs.push(
+      Maybe(
+        this.previous?.outputs.find(
+          (i) =>
+            i.id === args.id && i.variant === "Data" && args.type.eq(i.type)
+        )
+      ).unwrapOrElse(() => {
+        return { ...args, variant: "Data" };
+      })
+    );
   }
 
   execInput<T extends ExecInputBuilder>(args: T) {
-    this.inputs.push({ ...args, variant: "Exec" });
+    this.inputs.push(
+      Maybe(
+        this.previous?.inputs.find(
+          (i) => i.id === args.id && i.variant === "Exec"
+        )
+      ).unwrapOrElse(() => {
+        return { ...args, variant: "Exec" };
+      })
+    );
   }
 
   execOutput<T extends ExecOutputBuilder>(args: T) {
-    this.outputs.push({ ...args, variant: "Exec" });
+    this.outputs.push(
+      Maybe(
+        this.previous?.outputs.find(
+          (o) => o.id === args.id && o.variant === "Exec"
+        )
+      ).unwrapOrElse(() => {
+        return { ...args, variant: "Exec" };
+      })
+    );
   }
 
   scopeInput<T extends ScopeInputBuilder>(args: T) {
-    this.inputs.push({ ...args, variant: "Scope" });
+    this.inputs.push(
+      Maybe(
+        this.previous?.inputs.find(
+          (i) => i.id === args.id && i.variant === "Scope"
+        )
+      ).unwrapOrElse(() => {
+        return { ...args, variant: "Scope" };
+      })
+    );
   }
 
   scopeOutput<T extends ScopeOutputBuilder>(args: T) {
-    this.outputs.push({ ...args, variant: "Scope" });
+    this.outputs.push(
+      Maybe(
+        this.previous?.outputs.find(
+          (o) => o.id === args.id && o.variant === "Scope"
+        )
+      ).unwrapOrElse(() => {
+        return { ...args, variant: "Scope" };
+      })
+    );
   }
 }
 

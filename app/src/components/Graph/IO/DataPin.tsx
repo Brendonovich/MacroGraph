@@ -40,10 +40,10 @@ export const DataPin = (props: Props) => {
     }
 
     if (type instanceof WildcardType) {
-      const value = type.wildcard.value;
+      const value = type.wildcard.value();
 
-      if (value().isSome()) {
-        return rounding(value().unwrap());
+      if (value.isSome()) {
+        return rounding(value.unwrap());
       }
     }
 

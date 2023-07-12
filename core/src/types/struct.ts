@@ -1,8 +1,9 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { AnyType, BaseType, TypeVariant, Wildcard } from ".";
+import { t, TypeVariant, Wildcard } from ".";
+import { BaseType } from "./base";
 
-export class StructField<Type extends AnyType = AnyType> {
+export class StructField<Type extends t.Any = t.Any> {
   constructor(public name: string, public type: Type) {
     return createMutable(this);
   }
@@ -56,7 +57,7 @@ export class Struct<Fields extends StructFields = StructFields> {
 }
 
 export class StructBuilder {
-  field<Type extends AnyType>(name: string, type: Type) {
+  field<Type extends t.Any>(name: string, type: Type) {
     return new StructField(name, type);
   }
 
@@ -106,6 +107,10 @@ export class StructType<Fields extends StructFields> extends BaseType<
     return Object.values(this.struct.fields).flatMap((f) =>
       f.type.getWildcards()
     );
+  }
+
+  eq(other: t.Any): boolean {
+    return other instanceof t.Struct && other.struct === this.struct;
   }
 }
 

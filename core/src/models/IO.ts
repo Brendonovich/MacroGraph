@@ -29,7 +29,7 @@ export class DataInput {
     this.node = args.node;
     this.type = args.type;
 
-    createMutable(this);
+    return createMutable(this);
   }
 
   setDefaultValue(value: any) {

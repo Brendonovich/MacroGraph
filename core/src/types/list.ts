@@ -1,12 +1,11 @@
 import { z } from "zod";
-import { AnyType, TypeVariant, Wildcard } from ".";
+import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
-export class ListType<
-  T extends BaseType = AnyType,
-  TOut = any
-> extends BaseType<TOut[]> {
-  constructor(public inner: T) {
+export class ListType<T extends BaseType = t.Any, TOut = any> extends BaseType<
+  TOut[]
+> {
+  constructor(public item: T) {
     super();
   }
 
@@ -19,14 +18,18 @@ export class ListType<
   }
 
   toString(): string {
-    return `List<${this.inner.toString()}>`;
+    return `List<${this.item.toString()}>`;
   }
 
   asZodType(): z.ZodType<TOut[]> {
-    return z.array(this.inner.asZodType());
+    return z.array(this.item.asZodType());
   }
 
   getWildcards(): Wildcard[] {
-    return this.inner.getWildcards();
+    return this.item.getWildcards();
+  }
+
+  eq(other: t.Any): boolean {
+    return other instanceof t.List && this.item.eq(other.item);
   }
 }
