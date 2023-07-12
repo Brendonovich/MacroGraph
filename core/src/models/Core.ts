@@ -1,7 +1,14 @@
 import { createMutable } from "solid-js/store";
 import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
-import { DataInput, DataOutput, ExecOutput, ScopeOutput } from "./IO";
+import {
+  DataInput,
+  DataOutput,
+  ExecInput,
+  ExecOutput,
+  ScopeInput,
+  ScopeOutput,
+} from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 import { z } from "zod";
 import { Project, SerializedProject } from "./Project";
@@ -106,6 +113,7 @@ class ExecutionContext {
         const output = node.output(execOutput);
 
         if (!output) throw new Error(`Output ${execOutput} not found!`);
+
         if (!(output instanceof ExecOutput))
           throw new Error(`Output ${execOutput} is not an ExecOutput!`);
 
@@ -143,8 +151,8 @@ class ExecutionContext {
 
         if (input === undefined) throw new Error(`Input ${name} not found!`);
 
-        if (!(input instanceof DataInput))
-          throw new Error(`Input ${name} is not a DataInput!`);
+        if (input instanceof ExecInput)
+          throw new Error(`Input ${name} is an ExecInput!`);
 
         if (input.connection) {
           const data = this.data.get(input.connection);
@@ -153,7 +161,7 @@ class ExecutionContext {
             throw new Error(`Data not found for ${name}!`);
 
           return data;
-        } else {
+        } else if (input instanceof DataInput) {
           return input.defaultValue;
         }
       },
