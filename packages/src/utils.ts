@@ -839,12 +839,12 @@ pkg.createNonEventSchema({
 
           if (data === null) {
             io.execOutput({
-              id: `out-${name}`,
+              id: name,
               name: name,
             });
           } else {
             io.scopeOutput({
-              id: `out-${name}`,
+              id: name,
               name: v.name,
               scope: (s) => {
                 Object.entries(data).forEach(([id, type]) => {
@@ -882,20 +882,13 @@ pkg.createNonEventSchema({
       if (v instanceof t.Enum) {
         const data = ctx.getInput<InferEnum<Enum>>("data");
 
-        if ("data" in data) {
-          for (const [key, value] of Object.entries(data)) {
-            ctx.setOutput(key, value);
-          }
-        }
-
-        ctx.exec(data.variant);
+        if ("data" in data) ctx.execScope(data.variant, data.data);
+        else ctx.exec(data.variant);
       } else if (v instanceof t.Option) {
         const data = ctx.getInput<Option<any>>("data");
 
         data.mapOrElse(
-          () => {
-            ctx.exec("none");
-          },
+          () => ctx.exec("none"),
           (value) => {
             ctx.execScope("some", {
               data: {
@@ -930,15 +923,16 @@ pkg.createNonEventSchema({
       }
     });
   },
-  run({ ctx, io }) {
-    const w = io.wildcards.get("")!;
+  async run({ ctx, io }) {
+    const s = io.scopes.get("")!;
 
     const data = ctx.getInput<Record<string, any>>("");
 
-    Object.keys(
-      (w.value().unwrap() as t.Struct<StructFields>).struct.fields
-    ).forEach((key) => {
-      ctx.setOutput(key, data[key]);
+    await s.value.mapAsync((s) => {
+      console.log(s.outputs);
+      s.outputs.forEach(({ id }) => ctx.setOutput(id, data[id]));
+
+      return ctx.exec("");
     });
   },
 });
