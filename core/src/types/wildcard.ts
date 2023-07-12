@@ -64,11 +64,9 @@ export class Wildcard {
     })();
 
     if (
-      untrack(() =>
-        this.value()
-          .map((v) => !!surroundingValues.find((sv) => sv === v))
-          .unwrapOr(false)
-      )
+      untrack(() => this.value())
+        .map((v) => !!surroundingValues.find((sv) => sv === v))
+        .unwrapOr(false)
     )
       return;
 
