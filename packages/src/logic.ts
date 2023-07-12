@@ -248,20 +248,24 @@ pkg.createNonEventSchema({
       name: "Array",
       type: t.list(t.wildcard(w)),
     });
-    io.execOutput({
+
+    io.scopeOutput({
       id: "body",
       name: "Loop Body",
+      scope: (s) => {
+        s.output({
+          id: "element",
+          name: "Array Element",
+          type: t.wildcard(w),
+        });
+        s.output({
+          id: "index",
+          name: "Array Index",
+          type: t.int(),
+        });
+      },
     });
-    io.dataOutput({
-      id: "element",
-      name: "Array Element",
-      type: t.wildcard(w),
-    });
-    io.dataOutput({
-      id: "index",
-      name: "Array Index",
-      type: t.int(),
-    });
+
     io.execOutput({
       id: "completed",
       name: "Completed",
