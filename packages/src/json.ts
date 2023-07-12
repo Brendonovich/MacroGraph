@@ -6,6 +6,7 @@ import {
   EnumVariants,
   InferEnum,
   Maybe,
+  Option,
   t,
 } from "@macrograph/core";
 
@@ -54,12 +55,10 @@ const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
   ])
 );
 
-const JSONParser = t.enum(JSON).asZodType();
-
-function valueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | null {
+function assietedValueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | null {
   if (type instanceof t.Option) {
     if (Maybe(value).isNone()) return JSON.variant("Null");
-    else return valueToJSON(type.inner, value);
+    else return assietedValueToJSON(type.inner, value);
   }
   if (type instanceof t.Int || type instanceof t.Float)
     return JSON.variant(["Number", value]);
@@ -68,6 +67,29 @@ function valueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | null {
   else if (type instanceof t.List) return JSON.variant(["List", value]);
   else if (type instanceof t.Map) return JSON.variant(["Map", value]);
   else return null;
+}
+
+function valueToJSON(value: any): InferEnum<typeof JSON> | null {
+	if (Array.isArray(value)) {
+		return JSON.variant(["List", { value: value.map(valueToJSON) }])
+	} else if(value instanceof Option) {
+		return value.map(valueToJSON).unwrapOrElse(() => JSON.variant("Null"))
+	} else if(value === null) {
+		return JSON.variant("Null")
+	}
+
+	switch (typeof value) {
+		case "number":
+			return JSON.variant(["Number", {  value } ])
+		case "string":
+			return JSON.variant(["String", { value }])
+		case "object":
+			return JSON.variant(["Map", { value: new Map(Object.entries(value).map(([key, value]) => [key, valueToJSON(value)])) }])
+		case "boolean":
+			return JSON.variant(["Bool", { value }])
+	}
+
+	return null;
 }
 
 pkg.createNonEventSchema({
@@ -88,7 +110,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     const w = io.wildcard("");
 
-    const val = Maybe(valueToJSON(w.value().expect(""), ctx.getInput("in")));
+    const val = Maybe(assietedValueToJSON(w.value().expect(""), ctx.getInput("in")));
 
     ctx.setOutput(
       "out",
@@ -111,9 +133,11 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
+   const value = valueToJSON(window.JSON.parse(ctx.getInput("in")));
+
     ctx.setOutput(
       "out",
-      JSONParser.parse(window.JSON.parse(ctx.getInput("in")))
+      value
     );
   },
 });
