@@ -1,7 +1,8 @@
-import { InferEnum, MapValue, t } from "@macrograph/core";
+import { InferEnum, InferStruct, MapValue, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
 import { JSON, jsonToValue } from "../json";
+import { list } from "@macrograph/core/src/types/t";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -439,8 +440,6 @@ pkg.createNonEventSchema({
 
 //Missing SaveSourceScreenshot as it has Base64-Encoded Screenshot data
 
-//Missing GetSceneList as it contains array of object
-
 pkg.createNonEventSchema({
   name: "Get Group List",
   variant: "Exec",
@@ -634,8 +633,6 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetInputList has array of objects
-
 pkg.createNonEventSchema({
   name: "Get Input Kind List",
   variant: "Exec",
@@ -655,6 +652,7 @@ pkg.createNonEventSchema({
     const data = await obs.call("GetInputKindList", {
       unversioned: ctx.getInput("unversioned"),
     });
+    console.log(data.inputKinds);
     ctx.setOutput("inputKinds", data.inputKinds);
   },
 });
@@ -774,6 +772,90 @@ pkg.createNonEventSchema({
       inputName: ctx.getInput("inputName"),
       newInputName: ctx.getInput("newInputName"),
     });
+  },
+});
+
+const InputInfo = pkg.createStruct("Input Info", (s) => ({
+  inputName: s.field("Input name", t.string()),
+  inputKind: s.field("Input Kind", t.string()),
+  unversionedInputKind: s.field("Unversioned Input Kind", t.string()),
+}));
+
+pkg.createNonEventSchema({
+  name: "Get Input List",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "inputKind",
+      name: "Input Kind",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "inputs",
+      name: "Inputs",
+      type: t.list(t.struct(InputInfo)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call(
+      "GetInputList",
+      ctx.getInput("inputKind")
+        ? {
+            inputKind: ctx.getInput("inputKind"),
+          }
+        : {}
+    );
+
+    const inputs = data.inputs.map((input) =>
+      InputInfo.create({
+        inputKind: input.inputKind as string,
+        inputName: input.inputName as string,
+        unversionedInputKind: input.unversionedInputKind as string,
+      })
+    );
+
+    console.log(inputs);
+
+    ctx.setOutput<Array<InferStruct<typeof InputInfo>>>("inputs", inputs);
+  },
+});
+
+const Scenes = pkg.createStruct("Input Info", (s) => ({
+  sceneName: s.field("Scene name", t.string()),
+  sceneIndex: s.field("Scene Index", t.int()),
+}));
+
+pkg.createNonEventSchema({
+  name: "Get Scene List",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataOutput({
+      id: "currentProgramSceneName",
+      name: "Program Scene Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "currentPreviewSceneName",
+      name: "Preview Scene Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "inputs",
+      name: "Inputs",
+      type: t.list(t.struct(Scenes)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetSceneList");
+
+    const scene = data.scenes.map((input) =>
+      Scenes.create({
+        sceneIndex: input.sceneIndex as number,
+        sceneName: input.sceneName as string,
+      })
+    );
+
+    ctx.setOutput<Array<InferStruct<typeof Scenes>>>("inputs", scene);
   },
 });
 
@@ -1435,7 +1517,50 @@ pkg.createNonEventSchema({
 
 //GetSceneItemTransform contains object
 
-//SetSceneItemTransform contains object
+const SceneItemTransform = pkg.createStruct("Scene Item Transform", (s) => ({
+  sourceWidth: s.field("Source Width", t.int()),
+  sourceHeight: s.field("Source Height", t.int()),
+  positionX: s.field("Position X", t.int()),
+  positionY: s.field("Position Y", t.int()),
+  rotation: s.field("Rotation", t.int()),
+}));
+
+pkg.createNonEventSchema({
+  name: "Set Scene Item Transform",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item ID",
+      type: t.int(),
+    });
+    io.dataInput({
+      id: "sceneItemTransform",
+      name: "Scene Item Transform",
+      type: t.map(t.enum(JSON)),
+    });
+  },
+  async run({ ctx }) {
+    obs.call("SetSceneItemTransform", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+      sceneItemTransform: jsonToValue({
+        variant: "Map",
+        data: {
+          value:
+            ctx.getInput<MapValue<InferEnum<typeof JSON>>>(
+              "sceneItemTransform"
+            ),
+        },
+      }),
+    });
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Get Scene Item Enabled",
