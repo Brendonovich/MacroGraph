@@ -43,7 +43,7 @@ type JSONVariantTypes = [
   >
 ];
 
-const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
+export const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
   e.lazy(() => [
     ...JSONLiteralVariants(e),
     e.variant("List", {
@@ -69,7 +69,7 @@ function assistedValueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | 
   else return null;
 }
 
-function valueToJSON(value: any): InferEnum<typeof JSON> | null {
+export function valueToJSON(value: any): InferEnum<typeof JSON> | null {
 	if (Array.isArray(value)) {
 		return JSON.variant(["List", { value: value.map(valueToJSON) }])
 	} else if(value instanceof Option) {
@@ -92,6 +92,21 @@ function valueToJSON(value: any): InferEnum<typeof JSON> | null {
 	}
 
 	return null;
+}
+
+export function jsonToValue(value: InferEnum<typeof JSON>): any {
+	switch (value.variant) {
+		case "Null":
+			return null;
+		case "Number":
+		case "String":
+		case "Bool":
+			return value.data.value;
+		case "List":
+			return value.data.value.map(jsonToValue);
+		case "Map":
+			return Object.fromEntries([...value.data.value.entries()].map(([key, value]) => [key, jsonToValue(value)]))
+	}
 }
 
 pkg.createNonEventSchema({

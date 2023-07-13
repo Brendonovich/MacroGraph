@@ -1,6 +1,7 @@
-import { t } from "@macrograph/core";
+import { InferEnum, MapValue, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
+import { JSON, jsonToValue } from "../json";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -703,6 +704,11 @@ pkg.createNonEventSchema({
       type: t.string(),
     });
     io.dataInput({
+      id: "inputSettings",
+      name: "Input Settings",
+      type: t.map(t.enum(JSON)),
+    });
+    io.dataInput({
       id: "sceneItemEnabled",
       name: "Scene Item Enabled",
       type: t.bool(),
@@ -719,6 +725,13 @@ pkg.createNonEventSchema({
       sceneName: ctx.getInput("sceneName"),
       inputName: ctx.getInput("inputName"),
       sceneItemEnabled: ctx.getInput("sceneItemEnabled"),
+      inputSettings: jsonToValue({
+        variant: "Map",
+        data: {
+          value:
+            ctx.getInput<MapValue<InferEnum<typeof JSON>>>("inputSettings"),
+        },
+      }),
     });
     ctx.setOutput("sceneItemId", data.sceneItemId);
   },
