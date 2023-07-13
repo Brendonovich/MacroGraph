@@ -2,10 +2,12 @@ import { z, ZodType } from "zod";
 import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
+export type MapValue<T> = Map<string, T>;
+
 export class MapType<
   TValue extends t.Any = t.Any,
   TValueOut = any
-> extends BaseType<Map<string, TValueOut>> {
+> extends BaseType<MapValue<TValueOut>> {
   constructor(public value: TValue) {
     super();
   }
