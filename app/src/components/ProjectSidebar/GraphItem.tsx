@@ -3,8 +3,11 @@
 import clsx from "clsx";
 import { createSignal, onMount, Show } from "solid-js";
 
-import { Graph } from "@macrograph/core";
+import { core, Graph } from "@macrograph/core";
 import { TbCopy } from "solid-icons/tb";
+import { AiOutlineDelete } from "solid-icons/ai";
+import { Dialog } from "@kobalte/core";
+import { Button } from "~/settings/ui";
 
 interface Props {
   graph: Graph;
@@ -31,15 +34,18 @@ export const GraphItem = (props: Props) => {
             onDblClick={() => setEditing(true)}
           >
             <span>{props.graph.name}</span>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(
-                  btoa(JSON.stringify(props.graph.serialize()))
-                );
-              }}
-            >
-              <TbCopy />
-            </button>
+            <div class="flex-row flex space-x-3">
+              <DeleteButton graph={props.graph} />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    btoa(JSON.stringify(props.graph.serialize()))
+                  );
+                }}
+              >
+                <TbCopy />
+              </button>
+            </div>
           </div>
         }
       >
@@ -68,5 +74,38 @@ export const GraphItem = (props: Props) => {
         }}
       </Show>
     </div>
+  );
+};
+
+const DeleteButton = (props: { graph: Graph }) => {
+  return (
+    <Dialog.Root>
+      <Dialog.Trigger as="div">
+        <AiOutlineDelete />
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay class="absolute inset-0 bg-black/40" />
+        <Dialog.Content class="absolute inset-0 flex flex-col items-center py-10 overflow-hidden mt-96">
+          <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden">
+            <div class="flex flex-row justify-between text-white p-4">
+              <Dialog.Title>Confirm Deleting Graph?</Dialog.Title>
+            </div>
+            <div class="flex flex-row space-x-4 justify-center mb-4">
+              <Button
+                onclick={async () => {
+                  core.project.graphs.delete(props.graph.id);
+                  core.project.save();
+                }}
+              >
+                Delete
+              </Button>
+              <Dialog.CloseButton>
+                <Button>Cancel</Button>
+              </Dialog.CloseButton>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 };
