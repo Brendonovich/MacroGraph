@@ -24,7 +24,7 @@ export const PrintOutput = () => {
               <p class="text-neutral-400 text-xs">
                 {e.timestamp.toLocaleTimeString()}
               </p>
-              <p class="text-neutral-100 text-sm">{e.value}</p>
+              <p class="text-neutral-100 text-sm break-words">{e.value}</p>
             </li>
           )}
         </For>

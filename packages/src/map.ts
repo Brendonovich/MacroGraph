@@ -58,6 +58,7 @@ pkg.createNonEventSchema({
   },
   run({ ctx }) {
     const map = ctx.getInput<Map<string, any>>("map");
+    console.log(map);
     const key = ctx.getInput<string>("key");
     const value = ctx.getInput("value");
 
@@ -155,7 +156,7 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     const map = ctx.getInput<Map<string, any>>("map");
 
-    ctx.setOutput("out", [...map.values()]);
+    ctx.setOutput("values", [...map.values()]);
   },
 });
 

@@ -1,8 +1,9 @@
 //EVENTS BELOW ______________________________________________|
 
-import { t } from "@macrograph/core";
+import { InferStruct, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
+import { JSON, valueToJSON } from "../json";
 
 pkg.createEventSchema({
   event: "ExitStarted",
@@ -22,7 +23,37 @@ obs.on("ExitStarted", () => {
   pkg.emitEvent({ name: "ExitStarted", data: undefined });
 });
 
-//VendorEvent has object
+pkg.createEventSchema({
+  event: "VendorEvent",
+  name: "Vendor Event",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "vendorName",
+      name: "Vendor Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "eventType",
+      name: "Event Type",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "eventData",
+      name: "Event Data",
+      type: t.enum(JSON),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("vendorName", data.vendorName);
+    ctx.setOutput("eventType", data.eventType);
+    ctx.setOutput("eventData", valueToJSON(data.eventData));
+    ctx.exec("exec");
+  },
+});
 
 //CustomEvent has object
 
@@ -76,7 +107,7 @@ obs.on("CurrentSceneCollectionChanged", (data) => {
 
 pkg.createEventSchema({
   event: "SceneCollectionListChanged",
-  name: "Current Scene List Changed",
+  name: "Scene Collection List Changed",
   generateIO(io) {
     io.execOutput({
       id: "exec",
@@ -308,33 +339,91 @@ obs.on("CurrentPreviewSceneChanged", (data) => {
   pkg.emitEvent({ name: "CurrentPreviewSceneChanged", data });
 });
 
-//has Array of Object v
+const Scenes = pkg.createStruct("Scenes", (s) => ({
+  sceneName: s.field("Scene name", t.string()),
+  sceneIndex: s.field("Scene Index", t.int()),
+}));
 
-// pkg.createEventSchema({
-//   event: "SceneListChanged",
-//   name: "Scene List Changed",
-//   generateIO(io) {
-//    io.execOutput({
-//       id: "exec",
-//       name: "",
-//     });
-//    io.dataOutput({
-//       id: "sceneName",
-//       name: "Scene Name",
-//       type: types.string(),
-//     });
-//   },
-//   run({ ctx, data }) {
-//     ctx.setOutput("sceneName", data.sceneName);
-//     ctx.exec("exec");
-//   },
-// });
+pkg.createEventSchema({
+  event: "SceneListChanged",
+  name: "Scene List Changed",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "scenes",
+      name: "Scenes",
+      type: t.list(t.struct(Scenes)),
+    });
+  },
+  run({ ctx, data }) {
+    const scenes = data.scenes.map((data) =>
+      Scenes.create({
+        sceneName: data.sceneName as string,
+        sceneIndex: data.sceneIndex as number,
+      })
+    );
+    ctx.setOutput<Array<InferStruct<typeof Scenes>>>("scenes", scenes);
+    ctx.exec("exec");
+  },
+});
 
-// obs.on("SceneListChanged", (data) => {
-//   pkg.emitEvent({ name: "SceneListChanged", data });
-// });
+obs.on("SceneListChanged", (data) => {
+  pkg.emitEvent({ name: "SceneListChanged", data });
+});
 
-//InputCreated has object
+pkg.createEventSchema({
+  event: "InputCreated",
+  name: "Input Created",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "inputName",
+      name: "Input Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "inputKind",
+      name: "Input Kind",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "unversionedInputKind",
+      name: "Unversioned Input Kind",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "inputSettings",
+      name: "inputSettings",
+      type: t.enum(JSON),
+    });
+    io.dataOutput({
+      id: "defaultInputSettings",
+      name: "Default Input Settings",
+      type: t.enum(JSON),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("inputName", data.inputName);
+    ctx.setOutput("inputKind", data.inputKind);
+    ctx.setOutput("unversionedInputKind", data.unversionedInputKind);
+    ctx.setOutput("inputSettings", valueToJSON(data.inputSettings));
+    ctx.setOutput(
+      "defaultInputSettings",
+      valueToJSON(data.defaultInputSettings)
+    );
+    ctx.exec("exec");
+  },
+});
+
+obs.on("InputCreated", (data) => {
+  pkg.emitEvent({ name: "InputCreated", data });
+});
 
 pkg.createEventSchema({
   event: "InputRemoved",
@@ -576,7 +665,53 @@ obs.on("InputAudioSyncOffsetChanged", (data) => {
   pkg.emitEvent({ name: "InputAudioSyncOffsetChanged", data });
 });
 
-//InputAudioTracksChanged has object
+const AudioTracks = pkg.createStruct("Audio Tracks", (s) => ({
+  "1": s.field("1", t.bool()),
+  "2": s.field("2", t.bool()),
+  "3": s.field("3", t.bool()),
+  "4": s.field("4", t.bool()),
+  "5": s.field("5", t.bool()),
+  "6": s.field("6", t.bool()),
+}));
+
+pkg.createEventSchema({
+  event: "InputAudioTracksChanged",
+  name: "Input Audio Tracks Changed",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "inputName",
+      name: "Input Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "inputAudioTracks",
+      name: "Input Audio Tracks",
+      type: t.struct(AudioTracks),
+    });
+  },
+  run({ ctx, data }) {
+    console.log(data);
+    ctx.setOutput("inputName", data.inputName);
+    const audioTracks = AudioTracks.create({
+      "1": data.inputAudioTracks["1"] as boolean,
+      "2": data.inputAudioTracks["2"] as boolean,
+      "3": data.inputAudioTracks["3"] as boolean,
+      "4": data.inputAudioTracks["4"] as boolean,
+      "5": data.inputAudioTracks["5"] as boolean,
+      "6": data.inputAudioTracks["6"] as boolean,
+    });
+    ctx.setOutput("inputAudioTracks", audioTracks);
+    ctx.exec("exec");
+  },
+});
+
+obs.on("InputAudioTracksChanged", (data) => {
+  pkg.emitEvent({ name: "InputAudioTracksChanged", data });
+});
 
 pkg.createEventSchema({
   event: "InputAudioMonitorTypeChanged",
@@ -608,7 +743,40 @@ obs.on("InputAudioMonitorTypeChanged", (data) => {
   pkg.emitEvent({ name: "InputAudioMonitorTypeChanged", data });
 });
 
-//inputVolumeMeters has array of objects
+const InputVolumeMeter = pkg.createStruct("Input Volume Meter", (s) => ({
+  inputName: s.field("Input Name", t.string()),
+  inputLevelsMul: s.field("Input Levels (mul)", t.list(t.list(t.float()))),
+}));
+
+pkg.createEventSchema({
+  event: "InputVolumeMeters",
+  name: "Input Volume Meters",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "inputs",
+      name: "Inputs",
+      type: t.list(t.struct(InputVolumeMeter)),
+    });
+  },
+  run({ ctx, data }) {
+    const volumeMeters = data.inputs.map((data) =>
+      InputVolumeMeter.create({
+        inputName: data.inputName as string,
+        inputLevelsMul: data.inputLevelsMul,
+      })
+    );
+    ctx.setOutput("inputs", volumeMeters);
+    ctx.exec("exec");
+  },
+});
+
+obs.on("InputVolumeMeters", (data) => {
+  pkg.emitEvent({ name: "InputVolumeMeters", data });
+});
 
 pkg.createEventSchema({
   event: "CurrentSceneTransitionChanged",
@@ -1048,43 +1216,83 @@ obs.on("SceneItemSelected", (data) => {
   pkg.emitEvent({ name: "SceneItemSelected", data });
 });
 
-//SceneItemTransformChanged has object
+const SceneItemTransform = pkg.createStruct("Scene Item Transform", (s) => ({
+  alignment: s.field("Alignment", t.int()),
+  boundsAlignment: s.field("Bounds Alignment", t.int()),
+  boundsHeight: s.field("Bounds Height", t.int()),
+  boundsType: s.field("Bounds Type", t.string()),
+  boundsWidth: s.field("Bounds Width", t.int()),
+  cropBottom: s.field("Crop Bottom", t.int()),
+  cropLeft: s.field("Crop Left", t.int()),
+  cropRight: s.field("Crop Right", t.int()),
+  cropTop: s.field("Crop Top", t.int()),
+  positionX: s.field("Position X", t.int()),
+  positionY: s.field("Position Y", t.int()),
+  rotation: s.field("Rotation", t.int()),
+  scaleX: s.field("Scale X", t.int()),
+  scaleY: s.field("Scale Y", t.int()),
+  sourceWidth: s.field("Source Width", t.int()),
+  sourceHeight: s.field("Source Height", t.int()),
+  width: s.field("Width", t.int()),
+  height: s.field("Height", t.int()),
+}));
 
-// pkg.createEventSchema({
-//   event: "SceneItemTransformChanged",
-//   name: "Scene Item Transform Changed",
-//   generateIO(io) {
-//    io.execOutput({
-//       id: "exec",
-//       name: "",
-//     });
-//    io.dataOutput({
-//       id: "sceneName",
-//       name: "Scene name",
-//       type: types.string(),
-//     });
-//    io.dataOutput({
-//       id: "sceneItemId",
-//       name: "Scene Item Id",
-//       type: types.int(),
-//     });
-//    io.dataOutput({
-//       id: "sceneItemTransform",
-//       name: "Scene Item Transform",
-//       type: types.object(),
-//     });
-//   },
-//   run({ ctx, data }) {
-//     ctx.setOutput("sceneName", data.sceneName);
-//     ctx.setOutput("sceneItemId", data.sceneItemId);
-//     ctx.setOutput("sceneItemTransform", data.sceneItemTransform);
-//     ctx.exec("exec");
-//   },
-// });
+pkg.createEventSchema({
+  event: "SceneItemTransformChanged",
+  name: "Scene Item Transform Changed",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "sceneName",
+      name: "Scene name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "sceneItemId",
+      name: "Scene Item Id",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "sceneItemTransform",
+      name: "Scene Item Transform",
+      type: t.struct(SceneItemTransform),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("sceneName", data.sceneName);
+    ctx.setOutput("sceneItemId", data.sceneItemId);
 
-// obs.on("SceneItemTransformChanged", (data) => {
-//   pkg.emitEvent({ name: "SceneItemTransformChanged", data });
-// });
+    const transform = SceneItemTransform.create({
+      alignment: data.sceneItemTransform.alignment as number,
+      boundsAlignment: data.sceneItemTransform.boundsAlignment as number,
+      boundsHeight: data.sceneItemTransform.boundsHeight as number,
+      boundsType: data.sceneItemTransform.boundsType as string,
+      boundsWidth: data.sceneItemTransform.boundsWidth as number,
+      cropBottom: data.sceneItemTransform.cropBottom as number,
+      cropLeft: data.sceneItemTransform.cropLeft as number,
+      cropRight: data.sceneItemTransform.cropRight as number,
+      cropTop: data.sceneItemTransform.cropTop as number,
+      positionX: data.sceneItemTransform.positionX as number,
+      positionY: data.sceneItemTransform.positionY as number,
+      rotation: data.sceneItemTransform.rotation as number,
+      scaleX: data.sceneItemTransform.scaleX as number,
+      scaleY: data.sceneItemTransform.scaleY as number,
+      sourceWidth: data.sceneItemTransform.sourceWidth as number,
+      sourceHeight: data.sceneItemTransform.sourceHeight as number,
+      width: data.sceneItemTransform.width as number,
+      height: data.sceneItemTransform.height as number,
+    });
+    ctx.setOutput("sceneItemTransform", transform);
+    ctx.exec("exec");
+  },
+});
+
+obs.on("SceneItemTransformChanged", (data) => {
+  pkg.emitEvent({ name: "SceneItemTransformChanged", data });
+});
 
 pkg.createEventSchema({
   event: "StreamStateChanged",

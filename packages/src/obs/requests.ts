@@ -1,10 +1,52 @@
-import { InferEnum, InferStruct, MapValue, t } from "@macrograph/core";
+import { InferEnum, InferStruct, MapValue, Maybe, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
-import { JSON, jsonToValue } from "../json";
-import { list } from "@macrograph/core/src/types/t";
+import { JSON, jsonToValue, valueToJSON } from "../json";
+import { Enum, list } from "@macrograph/core/src/types/t";
 
 //missing availableRequests & supportedImageForamts Array<string>
+
+const SceneItemTransform = pkg.createStruct("Scene Item Transform", (s) => ({
+  alignment: s.field("Alignment", t.int()),
+  boundsAlignment: s.field("Bounds Alignment", t.int()),
+  boundsHeight: s.field("Bounds Height", t.int()),
+  boundsType: s.field("Bounds Type", t.string()),
+  boundsWidth: s.field("Bounds Width", t.int()),
+  cropBottom: s.field("Crop Bottom", t.int()),
+  cropLeft: s.field("Crop Left", t.int()),
+  cropRight: s.field("Crop Right", t.int()),
+  cropTop: s.field("Crop Top", t.int()),
+  positionX: s.field("Position X", t.int()),
+  positionY: s.field("Position Y", t.int()),
+  rotation: s.field("Rotation", t.int()),
+  scaleX: s.field("Scale X", t.int()),
+  scaleY: s.field("Scale Y", t.int()),
+  sourceWidth: s.field("Source Width", t.int()),
+  sourceHeight: s.field("Source Height", t.int()),
+  width: s.field("Width", t.int()),
+  height: s.field("Height", t.int()),
+}));
+
+interface SceneItemTransformInterface {
+  alignment: number;
+  boundsAlignment: number;
+  boundsHeight: number;
+  boundsType: string;
+  boundsWidth: number;
+  cropBottom: number;
+  cropLeft: number;
+  cropRight: number;
+  cropTop: number;
+  positionX: number;
+  positionY: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+  sourceWidth: number;
+  sourceHeight: number;
+  width: number;
+  height: number;
+}
 
 const versionOutputs = [
   {
@@ -119,7 +161,33 @@ pkg.createNonEventSchema({
   },
 });
 
-// Missing TriggerHotkeyByKeySequence requires object in requests
+pkg.createNonEventSchema({
+  name: "Trigger Hotkey By Key Sequence",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "keyId",
+      name: "Key ID",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "keyModifiers",
+      name: "Key Modifiers",
+      type: t.map(t.enum(JSON)),
+    });
+  },
+  run({ ctx }) {
+    obs.call("TriggerHotkeyByKeySequence", {
+      keyId: ctx.getInput("keyId"),
+      keyModifiers: jsonToValue({
+        variant: "Map",
+        data: {
+          value: ctx.getInput<MapValue<InferEnum<typeof JSON>>>("keyModifiers"),
+        },
+      }),
+    });
+  },
+});
 
 // Missing Sleep as it is batch specific
 
@@ -387,9 +455,60 @@ pkg.createNonEventSchema({
   },
 });
 
-//Missing GetStreamServiceSettings as it contains Object
+pkg.createNonEventSchema({
+  name: "Get Stream Service Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataOutput({
+      id: "streamServiceType",
+      name: "Stream Service Type",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "StreamServiceSettings",
+      name: "Stream Service Settings",
+      type: t.enum(JSON),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetStreamServiceSettings");
+    ctx.setOutput("streamServiceType", data.streamServiceType);
+    ctx.setOutput(
+      "StreamServiceSettings",
+      valueToJSON(data.streamServiceSettings)
+    );
+  },
+});
 
-//Missing SetStreamingServiceSettings as it contains object
+pkg.createNonEventSchema({
+  name: "Set Stream Service Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "streamServiceType",
+      name: "Stream Service Type",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "StreamServiceSettings",
+      name: "Stream Service Settings",
+      type: t.map(t.enum(JSON)),
+    });
+  },
+  run({ ctx }) {
+    obs.call("SetStreamServiceSettings", {
+      streamServiceType: ctx.getInput("streamServiceType"),
+      streamServiceSettings: jsonToValue({
+        variant: "Map",
+        data: {
+          value: ctx.getInput<MapValue<InferEnum<typeof JSON>>>(
+            "StreamServiceSettings"
+          ),
+        },
+      }),
+    });
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Get Record Directory",
@@ -680,8 +799,6 @@ pkg.createNonEventSchema({
   },
 });
 
-//Create Input doesnt allow custom init settings as its an objecy
-
 pkg.createNonEventSchema({
   name: "Create Input",
   variant: "Exec",
@@ -820,7 +937,7 @@ pkg.createNonEventSchema({
   },
 });
 
-const Scenes = pkg.createStruct("Input Info", (s) => ({
+const Scenes = pkg.createStruct("Scenes", (s) => ({
   sceneName: s.field("Scene name", t.string()),
   sceneIndex: s.field("Scene Index", t.int()),
 }));
@@ -859,11 +976,96 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetInputDefaultSettings has object
+pkg.createNonEventSchema({
+  name: "Get Input Default Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "inputKind",
+      name: "Input Kind",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "defaultInputSettings",
+      name: "Default Input Settings",
+      type: t.enum(JSON),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetInputDefaultSettings", {
+      inputKind: ctx.getInput<string>("inputKind"),
+    });
 
-//GetINputSettings has object
+    ctx.setOutput(
+      "defaultInputSettings",
+      valueToJSON(data.defaultInputSettings)
+    );
+  },
+});
 
-//SetInputSettings has object
+pkg.createNonEventSchema({
+  name: "Get Input Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "inputSettings",
+      name: "Input Settings",
+      type: t.enum(JSON),
+    });
+    io.dataOutput({
+      id: "inputKind",
+      name: "Input Kind",
+      type: t.string(),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetInputSettings", {
+      inputName: ctx.getInput<string>("inputName"),
+    });
+    ctx.setOutput("inputSettings", valueToJSON(data.inputSettings));
+    ctx.setOutput("inputKind", data.inputKind);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Set Input Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "inputSettings",
+      name: "Input Settings",
+      type: t.map(t.enum(JSON)),
+    });
+    io.dataInput({
+      id: "overlay",
+      name: "Overlay",
+      type: t.bool(),
+    });
+  },
+  run({ ctx }) {
+    obs.call("SetInputSettings", {
+      inputName: ctx.getInput<string>("inputName"),
+      inputSettings: jsonToValue({
+        variant: "Map",
+        data: {
+          value:
+            ctx.getInput<MapValue<InferEnum<typeof JSON>>>("inputSettings"),
+        },
+      }),
+      overlay: ctx.getInput<boolean>("overlay"),
+    });
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Get Input Mute",
@@ -1130,11 +1332,105 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetInputAudioTracks contains object
+pkg.createNonEventSchema({
+  name: "Get Input Audio Tracks",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "inputAudioTracks",
+      name: "Input Audio Tracks",
+      type: t.enum(JSON),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetInputAudioTracks", {
+      inputName: ctx.getInput("inputName"),
+    });
 
-//SetInputAudioTracks contains object
+    ctx.setOutput("inputAudioTracks", valueToJSON(data.inputAudioTracks));
+  },
+});
 
-//GetInputPropertiesListPropertyItems contains array of objects
+pkg.createNonEventSchema({
+  name: "Set Input Audio Tracks",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "inputAudioTracks",
+      name: "Input Audio Tracks",
+      type: t.map(t.enum(JSON)),
+    });
+  },
+  run({ ctx }) {
+    obs.call("SetInputAudioTracks", {
+      inputName: ctx.getInput("inputName"),
+      inputAudioTracks: jsonToValue({
+        variant: "Map",
+        data: {
+          value:
+            ctx.getInput<MapValue<InferEnum<typeof JSON>>>("inputAudioTracks"),
+        },
+      }),
+    });
+  },
+});
+
+const PropertyItems = pkg.createStruct("Property Items", (s) => ({
+  itemEnabled: s.field("Item Enabled", t.bool()),
+  itemName: s.field("Item Name", t.string()),
+  itemValue: s.field("Item Value", t.string()),
+}));
+
+pkg.createNonEventSchema({
+  name: "Get input Properties List Property Items",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "inputName",
+      name: "Input Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "propertyName",
+      name: "Property Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "propertyItems",
+      name: "Property Items",
+      type: t.list(t.struct(PropertyItems)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetInputPropertiesListPropertyItems", {
+      inputName: ctx.getInput("inputName"),
+      propertyName: ctx.getInput("propertyName"),
+    });
+
+    const propertyItems = data.propertyItems.map((data) =>
+      PropertyItems.create({
+        itemEnabled: data.itemEnabled as boolean,
+        itemName: data.itemName as string,
+        itemValue: data.itemValue as string,
+      })
+    );
+
+    ctx.setOutput<Array<InferStruct<typeof PropertyItems>>>(
+      "propertyItems",
+      propertyItems
+    );
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Press Input Properties Button",
@@ -1175,9 +1471,103 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetSceneTransitionList contains array of objects
+const Transitions = pkg.createStruct("Transitions", (s) => ({
+  transitionConfigurable: s.field("Transition Configurable", t.bool()),
+  transitionFixed: s.field("Transition Fixed", t.bool()),
+  transitionKind: s.field("Transition Kind", t.string()),
+  transitionName: s.field("Transition Name", t.string()),
+}));
 
-//GetCurrentSceneTransition contains object
+pkg.createNonEventSchema({
+  name: "Get Scene Transition List",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataOutput({
+      id: "currentSceneTransitionName",
+      name: "Current Scene Transition Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "currentSceneTransitionKind",
+      name: "Current Scene Transition Kind",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "transitions",
+      name: "Transitions",
+      type: t.list(t.struct(Transitions)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetSceneTransitionList");
+
+    console.log(data);
+    const Transition = data.transitions.map((data) =>
+      Transitions.create({
+        transitionConfigurable: data.transitionConfigurable as boolean,
+        transitionFixed: data.transitionFixed as boolean,
+        transitionKind: data.transitionKind as string,
+        transitionName: data.transitionName as string,
+      })
+    );
+
+    ctx.setOutput<Array<InferStruct<typeof Transitions>>>(
+      "transitions",
+      Transition
+    );
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Current Scene Transition",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataOutput({
+      id: "transitionName",
+      name: "Transition Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "transitionKind",
+      name: "Transition Kind",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "transitionFixed",
+      name: "Transition Fixed",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "transitionDuration",
+      name: "Transition Duration",
+      type: t.option(t.int()),
+    });
+    io.dataOutput({
+      id: "transitionConfigurable",
+      name: "Transition Configurable",
+      type: t.bool(),
+    });
+    io.dataOutput({
+      id: "transitionSettings",
+      name: "Transition Settings",
+      type: t.option(t.enum(JSON)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetCurrentSceneTransition");
+    console.log(data.transitionSettings);
+
+    ctx.setOutput("transitionName", data.transitionName);
+    ctx.setOutput("transitionKind", data.transitionKind);
+    ctx.setOutput("transitionFixed", data.transitionFixed);
+    ctx.setOutput("transitionDuration", Maybe(data.transitionDuration));
+    ctx.setOutput("transitionConfigurable", data.transitionConfigurable);
+    ctx.setOutput(
+      "transitionSettings",
+      Maybe(valueToJSON(data.transitionSettings))
+    );
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Set Current Scene Transition",
@@ -1213,7 +1603,36 @@ pkg.createNonEventSchema({
   },
 });
 
-//SetCurrentSceneTransitionSettings contains object
+pkg.createNonEventSchema({
+  name: "Set Current Scene Transition Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "transitionSettings",
+      name: "Transition Settings",
+      type: t.map(t.enum(JSON)),
+    });
+    io.dataInput({
+      id: "overlay",
+      name: "Overlay",
+      type: t.bool(),
+    });
+  },
+  async run({ ctx }) {
+    obs.call("SetCurrentSceneTransitionSettings", {
+      transitionSettings: jsonToValue({
+        variant: "Map",
+        data: {
+          value:
+            ctx.getInput<MapValue<InferEnum<typeof JSON>>>(
+              "transitionSettings"
+            ),
+        },
+      }),
+      overlay: ctx.getInput("overlay"),
+    });
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Get Current Scene Transition Cursor",
@@ -1263,11 +1682,119 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetSourceFilterList contains array of object
+const Filters = pkg.createStruct("Filters", (s) => ({
+  filterEnabled: s.field("Filter Enabled", t.bool()),
+  filterIndex: s.field("Filter Index", t.int()),
+  filterKind: s.field("Filter Kind", t.string()),
+  filterName: s.field("Filter Name", t.string()),
+  filterSettings: s.field("Filter Settings", t.enum(JSON)),
+}));
 
-//GetSourceFilterDefaultSettings contains object
+pkg.createNonEventSchema({
+  name: "Get Source Filter List",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "filters",
+      name: "Filters",
+      type: t.list(t.struct(Filters)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetSourceFilterList", {
+      sourceName: ctx.getInput("sourceName"),
+    });
 
-//CreateSourceFilter contains object
+    const filter = data.filters.map((data) =>
+      Filters.create({
+        filterEnabled: data.filterEnabled as boolean,
+        filterIndex: data.filterIndex as number,
+        filterKind: data.filterKind as string,
+        filterName: data.filterName as string,
+        filterSettings: valueToJSON(data.filterSettings),
+      })
+    );
+
+    ctx.setOutput<Array<InferStruct<typeof Filters>>>("filters", filter);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get Source Filter Default Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "filterKind",
+      name: "Filter Kind",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "defaultFilterSettings",
+      name: "Default Filter Settings",
+      type: t.enum(JSON),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetSourceFilterDefaultSettings", {
+      filterKind: ctx.getInput("filterKind"),
+    });
+
+    ctx.setOutput(
+      "defaultFilterSettings",
+      valueToJSON(data.defaultFilterSettings)
+    );
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Create Source Filter",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "filterName",
+      name: "Filter Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "filterKind",
+      name: "Filter Kind",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "filterSettings",
+      name: "Filter Settings",
+      type: t.map(t.enum(JSON)),
+    });
+  },
+  async run({ ctx }) {
+    obs.call("CreateSourceFilter", {
+      sourceName: ctx.getInput("sourceName"),
+      filterName: ctx.getInput("filterName"),
+      filterKind: ctx.getInput("filterKind"),
+      filterSettings: ctx.getInput("filterSettings")
+        ? jsonToValue({
+            variant: "Map",
+            data: {
+              value:
+                ctx.getInput<MapValue<InferEnum<typeof JSON>>>(
+                  "filterSettings"
+                ),
+            },
+          })
+        : {},
+    });
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Remove Source Filter",
@@ -1321,7 +1848,43 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetSourceFilter contains object
+pkg.createNonEventSchema({
+  name: "Get Source Filter",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "filterName",
+      name: "Filter Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "filter",
+      name: "Filter",
+      type: t.struct(Filters),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetSourceFilter", {
+      sourceName: ctx.getInput("sourceName"),
+      filterName: ctx.getInput("filterName"),
+    });
+
+    const filterObj = Filters.create({
+      filterEnabled: data.filterEnabled as boolean,
+      filterIndex: data.filterIndex as number,
+      filterKind: data.filterKind as string,
+      filterName: ctx.getInput("filterName"),
+      filterSettings: valueToJSON(data.filterSettings),
+    });
+
+    ctx.setOutput<InferStruct<typeof Filters>>("filter", filterObj);
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Set Source Filter Name",
@@ -1352,7 +1915,46 @@ pkg.createNonEventSchema({
   },
 });
 
-//SetSourceFilterSettings contains object
+pkg.createNonEventSchema({
+  name: "Set Source Filter Settings",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "sourceName",
+      name: "Source Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "filterName",
+      name: "Filter Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "filterSettings",
+      name: "Filter Settings",
+      type: t.map(t.enum(JSON)),
+    });
+    io.dataInput({
+      id: "overlay",
+      name: "Overlay",
+      type: t.bool(),
+    });
+  },
+  run({ ctx }) {
+    obs.call("SetSourceFilterSettings", {
+      sourceName: ctx.getInput<string>("sourceName"),
+      filterName: ctx.getInput<string>("filterName"),
+      filterSettings: jsonToValue({
+        variant: "Map",
+        data: {
+          value:
+            ctx.getInput<MapValue<InferEnum<typeof JSON>>>("filterSettings"),
+        },
+      }),
+      overlay: ctx.getInput<boolean>("overlay"),
+    });
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Set Source Filter Enabled",
@@ -1383,9 +1985,86 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetSceneItemList contains array of object
+const SceneItem = pkg.createStruct("Scene Item", (s) => ({
+  inputKind: s.field("Input Kind", t.option(t.string())),
+  isGroup: s.field("Is Group", t.bool()),
+  sceneItemBlendMode: s.field("Scene Item Blend Mode", t.string()),
+  sceneItemEnabled: s.field("Scene Item Enabled", t.bool()),
+  sceneItemId: s.field("Scene Item ID", t.int()),
+  sceneItemIndex: s.field("Scene Item Index", t.int()),
+  sceneItemLocked: s.field("Scene Item Locked", t.bool()),
+  sceneItemTransform: s.field(
+    "Scene Item Transform",
+    t.struct(SceneItemTransform)
+  ),
+  sourceName: s.field("Source Name", t.string()),
+  sourceType: s.field("Source Type", t.string()),
+}));
 
-//GetGroupSceneItemList contains array of object
+pkg.createNonEventSchema({
+  name: "Get Scene Item List",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "sceneItems",
+      name: "Scene Items",
+      type: t.list(t.struct(SceneItem)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetSceneItemList", {
+      sceneName: ctx.getInput("sceneName"),
+    });
+    const sceneItems = data.sceneItems.map((data) => {
+      const sceneItemTransformObj: SceneItemTransformInterface =
+        data.sceneItemTransform as any;
+
+      return SceneItem.create({
+        inputKind: Maybe(data.inputKind as string),
+        isGroup: data.isGroup as boolean,
+        sceneItemBlendMode: data.sceneItemBlendMode as string,
+        sceneItemEnabled: data.sceneItemEnabled as boolean,
+        sceneItemId: data.sceneItemId as number,
+        sceneItemIndex: data.sceneItemIndex as number,
+        sceneItemLocked: data.sceneItemLocked as boolean,
+        sceneItemTransform: SceneItemTransform.create({
+          alignment: sceneItemTransformObj.alignment,
+          boundsAlignment: sceneItemTransformObj.boundsAlignment,
+          boundsHeight: sceneItemTransformObj.boundsHeight,
+          boundsType: sceneItemTransformObj.boundsType,
+          boundsWidth: sceneItemTransformObj.boundsWidth,
+          cropBottom: sceneItemTransformObj.cropBottom,
+          cropLeft: sceneItemTransformObj.cropLeft,
+          cropRight: sceneItemTransformObj.cropRight,
+          cropTop: sceneItemTransformObj.cropTop,
+          positionX: sceneItemTransformObj.positionX,
+          positionY: sceneItemTransformObj.positionY,
+          rotation: sceneItemTransformObj.rotation,
+          scaleX: sceneItemTransformObj.scaleX,
+          scaleY: sceneItemTransformObj.scaleY,
+          sourceWidth: sceneItemTransformObj.sourceWidth,
+          sourceHeight: sceneItemTransformObj.sourceHeight,
+          width: sceneItemTransformObj.width,
+          height: sceneItemTransformObj.height,
+        }),
+        sourceName: data.sourceName as string,
+        sourceType: data.sourceType as string,
+      });
+    });
+
+    ctx.setOutput<Array<InferStruct<typeof SceneItem>>>(
+      "sceneItems",
+      sceneItems
+    );
+  },
+});
+
+//GetGroupSceneItemList - groups are dumb dont use
 
 pkg.createNonEventSchema({
   name: "Get Scene Item Id",
@@ -1515,15 +2194,62 @@ pkg.createNonEventSchema({
   },
 });
 
-//GetSceneItemTransform contains object
+pkg.createNonEventSchema({
+  name: "Get Scene Item Transform",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "sceneName",
+      name: "Scene Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "sceneItemId",
+      name: "Scene Item ID",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "sceneItemTransform",
+      name: "Scene Item Transform",
+      type: t.struct(SceneItemTransform),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetSceneItemTransform", {
+      sceneName: ctx.getInput("sceneName"),
+      sceneItemId: ctx.getInput("sceneItemId"),
+    });
 
-const SceneItemTransform = pkg.createStruct("Scene Item Transform", (s) => ({
-  sourceWidth: s.field("Source Width", t.int()),
-  sourceHeight: s.field("Source Height", t.int()),
-  positionX: s.field("Position X", t.int()),
-  positionY: s.field("Position Y", t.int()),
-  rotation: s.field("Rotation", t.int()),
-}));
+    const sceneItemTransformObj: SceneItemTransformInterface =
+      data.sceneItemTransform as any;
+
+    const transform = SceneItemTransform.create({
+      alignment: sceneItemTransformObj.alignment,
+      boundsAlignment: sceneItemTransformObj.boundsAlignment,
+      boundsHeight: sceneItemTransformObj.boundsHeight,
+      boundsType: sceneItemTransformObj.boundsType,
+      boundsWidth: sceneItemTransformObj.boundsWidth,
+      cropBottom: sceneItemTransformObj.cropBottom,
+      cropLeft: sceneItemTransformObj.cropLeft,
+      cropRight: sceneItemTransformObj.cropRight,
+      cropTop: sceneItemTransformObj.cropTop,
+      positionX: sceneItemTransformObj.positionX,
+      positionY: sceneItemTransformObj.positionY,
+      rotation: sceneItemTransformObj.rotation,
+      scaleX: sceneItemTransformObj.scaleX,
+      scaleY: sceneItemTransformObj.scaleY,
+      sourceWidth: sceneItemTransformObj.sourceWidth,
+      sourceHeight: sceneItemTransformObj.sourceHeight,
+      width: sceneItemTransformObj.width,
+      height: sceneItemTransformObj.height,
+    });
+
+    ctx.setOutput<InferStruct<typeof SceneItemTransform>>(
+      "sceneItemTransform",
+      transform
+    );
+  },
+});
 
 pkg.createNonEventSchema({
   name: "Set Scene Item Transform",
@@ -1919,48 +2645,63 @@ pkg.createNonEventSchema({
   },
 });
 
+pkg.createNonEventSchema({
+  name: "Get Output List",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataOutput({
+      id: "outputs",
+      name: "Outputs",
+      type: t.list(t.enum(JSON)),
+    });
+  },
+  async run({ ctx }) {
+    const data = await obs.call("GetOutputList");
+  },
+});
+
 //GetOUtputList has array of objects
 
 // const OutputStatus = [
 //   {
 //     id: "outputActive",
 //     name: "Output Active",
-//     type: types.bool(),
+//     type: t.bool(),
 //   },
 //   {
 //     id: "outputReconnecting",
 //     name: "Output Reconnecting",
-//     type: types.bool(),
+//     type: t.bool(),
 //   },
 //   {
 //     id: "outputTimecode",
 //     name: "Output Timecode",
-//     type: types.string(),
+//     type: t.string(),
 //   },
 //   {
 //     id: "outputDuration",
 //     name: "Output Duration",
-//     type: types.int(),
+//     type: t.int(),
 //   },
 //   {
 //     id: "outputCongestion",
 //     name: "Output Congestion",
-//     type: types.int(),
+//     type: t.int(),
 //   },
 //   {
 //     id: "outputBytes",
 //     name: "Output Bytes",
-//     type: types.int(),
+//     type: t.int(),
 //   },
 //   {
 //     id: "outputSkippedFrames",
 //     name: "Output Skipped Frames",
-//     type: types.int(),
+//     type: t.int(),
 //   },
 //   {
 //     id: "outputTotalFrames",
 //     name: "Output Total Frames",
-//     type: types.int(),
+//     type: t.int(),
 //   },
 // ] as const;
 
@@ -2160,7 +2901,7 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const data = await obs.call("GetRecordStatus");
     ctx.setOutput("outputActive", data.outputActive);
-    ctx.setOutput("outputPaused", data.ouputPaused);
+    ctx.setOutput("outputPaused", data.outputPaused);
     ctx.setOutput("outputTimecode", data.outputTimecode);
     ctx.setOutput("outputDuration", data.outputDuration);
     ctx.setOutput("outputBytes", data.outputBytes);
@@ -2188,16 +2929,16 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Stop Record",
   variant: "Exec",
-  generateIO() {
-    //io.dataOutput({
-    //   id: "outputPath",
-    //   name: "Output Path",
-    //   type: types.list(types.string()),
-    // });
+  generateIO(io) {
+    io.dataOutput({
+      id: "outputPath",
+      name: "Output Path",
+      type: t.string(),
+    });
   },
-  async run() {
-    await obs.call("StopRecord");
-    // ctx.setOutput("outputPath", data.outputPath);
+  async run({ ctx }) {
+    const data = await obs.call("StopRecord");
+    ctx.setOutput("outputPath", data.outputPath);
   },
 });
 

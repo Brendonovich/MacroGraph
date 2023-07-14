@@ -1,5 +1,5 @@
 import { createSignal, createRoot } from "solid-js";
-import OBS from "obs-websocket-js";
+import OBS, { EventSubscription } from "obs-websocket-js";
 import { z } from "zod";
 import { Maybe } from "@macrograph/core";
 
@@ -25,7 +25,13 @@ const { connect, disconnect, state } = createRoot(() => {
   const connect = async (url: string, password?: string) => {
     await disconnect();
 
-    await obs.connect(url, password);
+    await obs.connect(url, password, {
+      eventSubscriptions:
+        EventSubscription.All |
+        EventSubscription.SceneItemTransformChanged |
+        EventSubscription.InputActiveStateChanged |
+        EventSubscription.InputShowStateChanged,
+    });
 
     localStorage.setItem(OBS_WS, JSON.stringify({ url, password }));
 
