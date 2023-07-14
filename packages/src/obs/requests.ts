@@ -1015,7 +1015,7 @@ pkg.createNonEventSchema({
     io.dataOutput({
       id: "inputSettings",
       name: "Input Settings",
-      type: t.enum(JSON),
+      type: t.map(t.enum(JSON)),
     });
     io.dataOutput({
       id: "inputKind",
@@ -1027,7 +1027,15 @@ pkg.createNonEventSchema({
     const data = await obs.call("GetInputSettings", {
       inputName: ctx.getInput<string>("inputName"),
     });
-    ctx.setOutput("inputSettings", valueToJSON(data.inputSettings));
+    ctx.setOutput<MapValue<InferEnum<typeof JSON>>>(
+      "inputSettings",
+      new Map(
+        Object.entries(data.inputSettings).map(([key, value]) => [
+          key,
+          valueToJSON(value)!,
+        ])
+      )
+    );
     ctx.setOutput("inputKind", data.inputKind);
   },
 });
