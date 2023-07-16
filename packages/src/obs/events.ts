@@ -1,9 +1,10 @@
 //EVENTS BELOW ______________________________________________|
 
-import { InferStruct, t } from "@macrograph/core";
+import { InferEnum, InferStruct, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
 import { JSON, valueToJSON } from "../json";
+import { Enum } from "@macrograph/core/src/types/t";
 
 pkg.createEventSchema({
   event: "ExitStarted",
@@ -1216,26 +1217,92 @@ obs.on("SceneItemSelected", (data) => {
   pkg.emitEvent({ name: "SceneItemSelected", data });
 });
 
-const SceneItemTransform = pkg.createStruct("Scene Item Transform", (s) => ({
-  alignment: s.field("Alignment", t.int()),
-  boundsAlignment: s.field("Bounds Alignment", t.int()),
-  boundsHeight: s.field("Bounds Height", t.int()),
-  boundsType: s.field("Bounds Type", t.string()),
-  boundsWidth: s.field("Bounds Width", t.int()),
-  cropBottom: s.field("Crop Bottom", t.int()),
-  cropLeft: s.field("Crop Left", t.int()),
-  cropRight: s.field("Crop Right", t.int()),
-  cropTop: s.field("Crop Top", t.int()),
-  positionX: s.field("Position X", t.int()),
-  positionY: s.field("Position Y", t.int()),
-  rotation: s.field("Rotation", t.int()),
-  scaleX: s.field("Scale X", t.int()),
-  scaleY: s.field("Scale Y", t.int()),
-  sourceWidth: s.field("Source Width", t.int()),
-  sourceHeight: s.field("Source Height", t.int()),
-  width: s.field("Width", t.int()),
-  height: s.field("Height", t.int()),
-}));
+export const BoundsType = pkg.createEnum("Bounds Type", (e) => [
+  e.variant("OBS_BOUNDS_MAX_ONLY"),
+  e.variant("OBS_BOUNDS_NONE"),
+  e.variant("OBS_BOUNDS_SCALE_INNER"),
+  e.variant("OBS_BOUNDS_SCALE_OUTER"),
+  e.variant("OBS_BOUNDS_SCALE_TO_HEIGHT"),
+  e.variant("OBS_BOUNDS_SCALE_TO_WIDTH"),
+  e.variant("OBS_BOUNDS_STRETCH"),
+]);
+
+export const Alignment = pkg.createEnum("Alignment", (e) => [
+  e.variant("Center"),
+  e.variant("Bottom Center"),
+  e.variant("Bottom Left"),
+  e.variant("Bottom Right"),
+  e.variant("Center Left"),
+  e.variant("Center Right"),
+  e.variant("Top Center"),
+  e.variant("Top Left"),
+  e.variant("Top Right"),
+]);
+
+export function alignmentConversion(alignment: string | number) {
+  switch (alignment) {
+    case "Center":
+      return 0;
+    case "Bottom Center":
+      return 8;
+    case "Bottom Left":
+      return 9;
+    case "Bottom Right":
+      return 10;
+    case "Center Left":
+      return 1;
+    case "Center Right":
+      return 2;
+    case "Top Center":
+      return 4;
+    case "Top Left":
+      return 5;
+    case "Top Right":
+      return 6;
+    case 0:
+      return Alignment.variant("Center");
+    case 8:
+      return Alignment.variant("Bottom Center");
+    case 9:
+      return Alignment.variant("Bottom Left");
+    case 10:
+      return Alignment.variant("Bottom Right");
+    case 2:
+      return Alignment.variant("Center Right");
+    case 1:
+      return Alignment.variant("Center Left");
+    case 4:
+      return Alignment.variant("Top Center");
+    case 5:
+      return Alignment.variant("Top Left");
+    case 6:
+      return Alignment.variant("Top Right");
+  }
+}
+
+export const SceneItemTransform = pkg.createStruct(
+  "Scene Item Transform",
+  (s) => ({
+    alignment: s.field("Alignment", t.enum(Alignment)),
+    boundsAlignment: s.field("Bounds Alignment", t.enum(Alignment)),
+    boundsHeight: s.field("Bounds Height", t.int()),
+    boundsType: s.field("Bounds Type", t.enum(BoundsType)),
+    boundsWidth: s.field("Bounds Width", t.int()),
+    cropBottom: s.field("Crop Bottom", t.int()),
+    cropLeft: s.field("Crop Left", t.int()),
+    cropRight: s.field("Crop Right", t.int()),
+    cropTop: s.field("Crop Top", t.int()),
+    positionX: s.field("Position X", t.int()),
+    positionY: s.field("Position Y", t.int()),
+    rotation: s.field("Rotation", t.int()),
+    scaleX: s.field("Scale X", t.int()),
+    scaleY: s.field("Scale Y", t.int()),
+    sourceWidth: s.field("Source Width", t.int()),
+    sourceHeight: s.field("Source Height", t.int()),
+    width: s.field("Width", t.int()),
+    height: s.field("Height", t.int()),
+  })
+);
 
 pkg.createEventSchema({
   event: "SceneItemTransformChanged",
@@ -1266,10 +1333,18 @@ pkg.createEventSchema({
     ctx.setOutput("sceneItemId", data.sceneItemId);
 
     const transform = SceneItemTransform.create({
-      alignment: data.sceneItemTransform.alignment as number,
-      boundsAlignment: data.sceneItemTransform.boundsAlignment as number,
+      alignment: alignmentConversion(
+        data.sceneItemTransform.alignment as number
+      ),
+      boundsAlignment: alignmentConversion(
+        data.sceneItemTransform.boundsAlignment as number
+      ),
       boundsHeight: data.sceneItemTransform.boundsHeight as number,
-      boundsType: data.sceneItemTransform.boundsType as string,
+      boundsType: BoundsType.variant(
+        data.sceneItemTransform.boundsType as InferEnum<
+          typeof BoundsType.variant
+        >
+      ),
       boundsWidth: data.sceneItemTransform.boundsWidth as number,
       cropBottom: data.sceneItemTransform.cropBottom as number,
       cropLeft: data.sceneItemTransform.cropLeft as number,

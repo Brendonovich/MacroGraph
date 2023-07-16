@@ -3,29 +3,14 @@ import pkg from "./pkg";
 import { obs } from "./ws";
 import { JSON, jsonToValue, valueToJSON } from "../json";
 import { Enum, list } from "@macrograph/core/src/types/t";
+import {
+  Alignment,
+  BoundsType,
+  SceneItemTransform,
+  alignmentConversion,
+} from "./events";
 
 //missing availableRequests & supportedImageForamts Array<string>
-
-const SceneItemTransform = pkg.createStruct("Scene Item Transform", (s) => ({
-  alignment: s.field("Alignment", t.int()),
-  boundsAlignment: s.field("Bounds Alignment", t.int()),
-  boundsHeight: s.field("Bounds Height", t.int()),
-  boundsType: s.field("Bounds Type", t.string()),
-  boundsWidth: s.field("Bounds Width", t.int()),
-  cropBottom: s.field("Crop Bottom", t.int()),
-  cropLeft: s.field("Crop Left", t.int()),
-  cropRight: s.field("Crop Right", t.int()),
-  cropTop: s.field("Crop Top", t.int()),
-  positionX: s.field("Position X", t.int()),
-  positionY: s.field("Position Y", t.int()),
-  rotation: s.field("Rotation", t.int()),
-  scaleX: s.field("Scale X", t.int()),
-  scaleY: s.field("Scale Y", t.int()),
-  sourceWidth: s.field("Source Width", t.int()),
-  sourceHeight: s.field("Source Height", t.int()),
-  width: s.field("Width", t.int()),
-  height: s.field("Height", t.int()),
-}));
 
 interface SceneItemTransformInterface {
   alignment: number;
@@ -2041,10 +2026,18 @@ pkg.createNonEventSchema({
         sceneItemIndex: data.sceneItemIndex as number,
         sceneItemLocked: data.sceneItemLocked as boolean,
         sceneItemTransform: SceneItemTransform.create({
-          alignment: sceneItemTransformObj.alignment,
-          boundsAlignment: sceneItemTransformObj.boundsAlignment,
-          boundsHeight: sceneItemTransformObj.boundsHeight,
-          boundsType: sceneItemTransformObj.boundsType,
+          alignment: alignmentConversion(
+            sceneItemTransformObj.alignment as number
+          ),
+          boundsAlignment: alignmentConversion(
+            sceneItemTransformObj.boundsAlignment as number
+          ),
+          boundsHeight: sceneItemTransformObj.boundsHeight as number,
+          boundsType: BoundsType.variant(
+            sceneItemTransformObj.boundsType as InferEnum<
+              typeof BoundsType.variant
+            >
+          ),
           boundsWidth: sceneItemTransformObj.boundsWidth,
           cropBottom: sceneItemTransformObj.cropBottom,
           cropLeft: sceneItemTransformObj.cropLeft,
@@ -2232,10 +2225,14 @@ pkg.createNonEventSchema({
       data.sceneItemTransform as any;
 
     const transform = SceneItemTransform.create({
-      alignment: sceneItemTransformObj.alignment,
-      boundsAlignment: sceneItemTransformObj.boundsAlignment,
-      boundsHeight: sceneItemTransformObj.boundsHeight,
-      boundsType: sceneItemTransformObj.boundsType,
+      alignment: alignmentConversion(sceneItemTransformObj.alignment as number),
+      boundsAlignment: alignmentConversion(
+        sceneItemTransformObj.boundsAlignment as number
+      ),
+      boundsHeight: sceneItemTransformObj.boundsHeight as number,
+      boundsType: BoundsType.variant(
+        sceneItemTransformObj.boundsType as InferEnum<typeof BoundsType.variant>
+      ),
       boundsWidth: sceneItemTransformObj.boundsWidth,
       cropBottom: sceneItemTransformObj.cropBottom,
       cropLeft: sceneItemTransformObj.cropLeft,
