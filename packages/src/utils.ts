@@ -577,6 +577,60 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "Make String",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput("input"));
+  },
+  generateIO(io) {
+    io.dataInput({
+      id: "input",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.string(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Make Int",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput("input"));
+  },
+  generateIO(io) {
+    io.dataInput({
+      id: "input",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.int(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Make Float",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("output", ctx.getInput("input"));
+  },
+  generateIO(io) {
+    io.dataInput({
+      id: "input",
+      type: t.float(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.float(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: `Equal`,
   variant: "Pure",
   generateIO(io) {

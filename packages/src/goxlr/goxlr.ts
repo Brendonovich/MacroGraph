@@ -56,7 +56,6 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
 
           ws.addEventListener("message", (msg) => {
             const { data }: WebsocketResponse = JSON.parse(msg.data);
-
             if (data === "Ok") return;
 
             if ("Status" in data) {
@@ -67,7 +66,7 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
               for (const op of data.Patch) {
                 const pathParts = op.path.substring(1).split("/");
 
-                if (op.op !== "Add" && op.op !== "Replace") return;
+                if (op.op !== "add" && op.op !== "replace") return;
 
                 switch (pathParts[2]) {
                   case "levels": {
@@ -75,7 +74,7 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
                       name: "levelsChange",
                       data: {
                         channel: pathParts[4]!,
-                        value: Math.round(op.value * 0.392),
+                        value: Math.round(op.value),
                       },
                     });
                     break;

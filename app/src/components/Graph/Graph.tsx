@@ -8,11 +8,10 @@ import { ConnectionRender, SchemaMenu } from "~/components/Graph";
 import { useUIStore } from "~/UIStore";
 import CommentBox from "./CommentBox";
 
-enum PanState {
-  None,
-  Waiting,
-  Active,
-}
+type PanState =
+  | { state: "none" }
+  | { state: "waiting"; downposx: number; downposy: number }
+  | { state: "active" };
 
 interface Props {
   graph: GraphModel;
@@ -65,13 +64,13 @@ export const Graph = (props: Props) => {
     });
   });
 
-  const [pan, setPan] = createSignal(PanState.None);
+  const [pan, setPan] = createSignal<PanState>({ state: "none" });
 
   const [mousePos, setMousePos] = createSignal<null | XY>(null);
 
   onMount(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+      if (e.code === "KeyK" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
 
         const currentPos = UI.state.schemaMenuPosition;
@@ -118,7 +117,7 @@ export const Graph = (props: Props) => {
           ref={graphRef!}
           class={clsx(
             "absolute inset-0 text-white origin-top-left overflow-hidden",
-            pan() === PanState.Active && "cursor-grabbing"
+            pan().state === "active" && "cursor-grabbing"
           )}
           style={{
             transform: `scale(${UI.state.scale})`,
@@ -154,7 +153,7 @@ export const Graph = (props: Props) => {
           onMouseUp={(e) => {
             switch (e.button) {
               case 2:
-                if (pan() === PanState.Waiting) {
+                if (pan().state === "waiting") {
                   if (UI.state.mouseDragLocation) UI.setMouseDragLocation();
                   else
                     UI.setSchemaMenuPosition({
@@ -162,7 +161,7 @@ export const Graph = (props: Props) => {
                       y: e.clientY,
                     });
                 }
-                setPan(PanState.None);
+                setPan({ state: "none" });
                 break;
             }
           }}
@@ -173,7 +172,11 @@ export const Graph = (props: Props) => {
                 UI.setSelectedItem();
                 break;
               case 2:
-                setPan(PanState.Waiting);
+                setPan({
+                  state: "waiting",
+                  downposx: e.clientX,
+                  downposy: e.clientY,
+                });
                 UI.setMouseDownLocation({
                   x: e.clientX,
                   y: e.clientY,
@@ -189,9 +192,18 @@ export const Graph = (props: Props) => {
               x: e.clientX,
               y: e.clientY,
             });
+            const MOVE_BUFFER = 3;
+            const panData = pan();
 
-            if (pan() === PanState.None) return;
-            if (pan() === PanState.Waiting) setPan(PanState.Active);
+            if (panData.state === "none") return;
+            if (
+              panData.state === "waiting" &&
+              Math.abs(panData.downposx - e.clientX) < MOVE_BUFFER &&
+              Math.abs(panData.downposy - e.clientY) < MOVE_BUFFER
+            )
+              return;
+
+            setPan({ state: "active" });
 
             UI.setSchemaMenuPosition();
 

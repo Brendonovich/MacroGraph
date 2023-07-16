@@ -27,11 +27,11 @@ type Op<K extends string, T extends object = {}> = {
 } & T;
 
 type PatchOperation =
-  | Op<"Add", { value: any }>
-  | Op<"Remove">
-  | Op<"Replace", { value: any }>
-  | Op<"Move", { from: string }>
-  | Op<"Copy", { from: string }>
-  | Op<"Test", { value: any }>;
+  | Op<"add", { value: any }>
+  | Op<"remove">
+  | Op<"replace", { value: any }>
+  | Op<"move", { from: string }>
+  | Op<"copy", { from: string }>
+  | Op<"test", { value: any }>;
 
 export type Patch = Array<PatchOperation>;

@@ -155,7 +155,7 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     const map = ctx.getInput<Map<string, any>>("map");
 
-    ctx.setOutput("out", [...map.values()]);
+    ctx.setOutput("values", [...map.values()]);
   },
 });
 
