@@ -55,58 +55,86 @@ export const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
   ])
 );
 
-function assistedValueToJSON(type: t.Any, value: any): InferEnum<typeof JSON> | null {
+function assistedValueToJSON(
+  type: t.Any,
+  value: any
+): InferEnum<typeof JSON> | null {
   if (type instanceof t.Option) {
     if (Maybe(value).isNone()) return JSON.variant("Null");
     else return assistedValueToJSON(type.inner, value);
   }
   if (type instanceof t.Int || type instanceof t.Float)
-    return JSON.variant(["Number", value]);
-  else if (type instanceof t.String) return JSON.variant(["String", value]);
-  else if (type instanceof t.Bool) return JSON.variant(["Bool", value]);
+    return JSON.variant(["Number", { value }]);
+  else if (type instanceof t.String) return JSON.variant(["String", { value }]);
+  else if (type instanceof t.Bool) return JSON.variant(["Bool", { value }]);
   else if (type instanceof t.List) return JSON.variant(["List", value]);
   else if (type instanceof t.Map) return JSON.variant(["Map", value]);
   else return null;
 }
 
 export function valueToJSON(value: any): InferEnum<typeof JSON> | null {
-	if (Array.isArray(value)) {
-		return JSON.variant(["List", { value: value.map(valueToJSON) }])
-	} else if(value instanceof Option) {
-		return value.map(valueToJSON).unwrapOrElse(() => JSON.variant("Null"))
-	} else if(value === null) {
-		return JSON.variant("Null")
-	} else if (value instanceof Map) {
-		return JSON.variant(["Map", { value: new Map(Array.from(value.entries()).map(([key, value]) => [key, valueToJSON(value)])) }])
-	}
+  if (Array.isArray(value)) {
+    return JSON.variant(["List", { value: value.map(valueToJSON) }]);
+  } else if (value instanceof Option) {
+    return value.map(valueToJSON).unwrapOrElse(() => JSON.variant("Null"));
+  } else if (value === null) {
+    return JSON.variant("Null");
+  } else if (value instanceof Map) {
+    return JSON.variant([
+      "Map",
+      {
+        value: new Map(
+          Array.from(value.entries()).map(([key, value]) => [
+            key,
+            valueToJSON(value),
+          ])
+        ),
+      },
+    ]);
+  }
 
-	switch (typeof value) {
-		case "number":
-			return JSON.variant(["Number", {  value } ])
-		case "string":
-			return JSON.variant(["String", { value }])
-		case "object":
-			return JSON.variant(["Map", { value: new Map(Object.entries(value).map(([key, value]) => [key, valueToJSON(value)])) }])
-		case "boolean":
-			return JSON.variant(["Bool", { value }])
-	}
+  switch (typeof value) {
+    case "number":
+      return JSON.variant(["Number", { value }]);
+    case "string":
+      return JSON.variant(["String", { value }]);
+    case "object":
+      return JSON.variant([
+        "Map",
+        {
+          value: new Map(
+            Object.entries(value).map(([key, value]) => [
+              key,
+              valueToJSON(value),
+            ])
+          ),
+        },
+      ]);
+    case "boolean":
+      return JSON.variant(["Bool", { value }]);
+  }
 
-	return null;
+  return null;
 }
 
 export function jsonToValue(value: InferEnum<typeof JSON>): any {
-	switch (value.variant) {
-		case "Null":
-			return null;
-		case "Number":
-		case "String":
-		case "Bool":
-			return value.data.value;
-		case "List":
-			return value.data.value.map(jsonToValue);
-		case "Map":
-			return Object.fromEntries([...value.data.value.entries()].map(([key, value]) => [key, jsonToValue(value)]))
-	}
+  switch (value.variant) {
+    case "Null":
+      return null;
+    case "Number":
+    case "String":
+    case "Bool":
+      return value.data.value;
+    case "List":
+      return value.data.value.map(jsonToValue);
+    case "Map":
+      return Object.fromEntries(
+        [...value.data.value.entries()].map(([key, value]) => [
+          key,
+          jsonToValue(value),
+        ])
+      );
+  }
 }
 
 pkg.createNonEventSchema({
@@ -127,7 +155,12 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     const w = io.wildcards.get("")!;
 
-    const val = Maybe(assistedValueToJSON(w.value().expect("No wildcard value!"), ctx.getInput("in")));
+    const val = Maybe(
+      assistedValueToJSON(
+        w.value().expect("No wildcard value!"),
+        ctx.getInput("in")
+      )
+    );
 
     ctx.setOutput(
       "out",
@@ -150,11 +183,8 @@ pkg.createNonEventSchema({
     });
   },
   run({ ctx }) {
-   const value = valueToJSON(window.JSON.parse(ctx.getInput("in")));
-
-    ctx.setOutput(
-      "out",
-      value
-    );
+    const value = valueToJSON(window.JSON.parse(ctx.getInput("in")));
+    console.log(value);
+    ctx.setOutput("out", value);
   },
 });
