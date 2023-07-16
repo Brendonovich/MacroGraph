@@ -9,6 +9,7 @@ import {
   InferEnum,
   EnumVariants,
 } from "@macrograph/core";
+import { JSON, jsonToValue } from "./json";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -929,7 +930,9 @@ pkg.createNonEventSchema({
     const data = ctx.getInput<Record<string, any>>("");
 
     await s.value.mapAsync(async (s) => {
-      s.outputs.forEach(({ id }) => ctx.setOutput(id, data[id]));
+      s.outputs.forEach(({ id }) => {
+        ctx.setOutput(id, data[id]);
+      });
 
       await ctx.exec("");
     });

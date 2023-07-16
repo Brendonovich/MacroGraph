@@ -95,7 +95,7 @@ export class Enum<Variants extends EnumVariants = EnumVariants> {
       } as any;
     } else
       return {
-        varaint: val,
+        variant: val,
       } as any;
   }
 }
