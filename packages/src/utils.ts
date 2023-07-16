@@ -935,3 +935,154 @@ pkg.createNonEventSchema({
     });
   },
 });
+
+pkg.createEventSchema({
+  event: "custom",
+  name: "Custom Event",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "event",
+      name: "Event Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "eventKey",
+      name: "Event Key",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "eventData",
+      name: "Event Data",
+      type: t.enum(JSON),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("event", data.name);
+    ctx.setOutput("eventKey", data.key);
+    ctx.setOutput("eventData", data.data);
+    ctx.exec("exec");
+  },
+});
+
+pkg.createEventSchema({
+  event: "customReturn",
+  name: "Custom Event Return",
+  generateIO(io) {
+    io.execOutput({
+      id: "exec",
+      name: "",
+    });
+    io.dataOutput({
+      id: "event",
+      name: "Event Name",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "eventKey",
+      name: "Event Key",
+      type: t.string(),
+    });
+    io.dataOutput({
+      id: "eventData",
+      name: "Event Data",
+      type: t.enum(JSON),
+    });
+  },
+  run({ ctx, data }) {
+    ctx.setOutput("event", data.name);
+    ctx.setOutput("eventKey", data.key);
+    ctx.setOutput("eventData", data.data);
+    ctx.exec("exec");
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Emit Custom Event",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "event",
+      name: "Event Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "eventKey",
+      name: "Event Key",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "eventData",
+      name: "Event Data",
+      type: t.enum(JSON),
+    });
+  },
+  run({ ctx }) {
+    pkg.emitEvent({
+      name: "custom",
+      data: {
+        name: ctx.getInput("event"),
+        data: ctx.getInput("eventData"),
+        key: ctx.getInput("eventKey"),
+      },
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Emit Custom Return Event",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "event",
+      name: "Event Name",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "eventKey",
+      name: "Event Key",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "eventData",
+      name: "Event Data",
+      type: t.enum(JSON),
+    });
+  },
+  run({ ctx }) {
+    pkg.emitEvent({
+      name: "customReturn",
+      data: {
+        name: ctx.getInput("event"),
+        data: ctx.getInput("eventData"),
+        key: ctx.getInput("eventKey"),
+      },
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Stringify JSON",
+  variant: "Exec",
+  generateIO(io) {
+    io.dataInput({
+      id: "in",
+      name: "Json",
+      type: t.enum(JSON),
+    });
+    io.dataOutput({
+      id: "string",
+      name: "String",
+      type: t.string(),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput(
+      "string",
+      window.JSON.stringify(jsonToValue(ctx.getInput("in")))
+    );
+  },
+});
