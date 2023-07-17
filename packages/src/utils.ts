@@ -1001,11 +1001,16 @@ pkg.createEventSchema({
       id: "exec",
       name: "",
     });
-    io.dataOutput({
-      id: "event",
+    io.dataInput({
+      id: "name",
       name: "Event Name",
       type: t.string(),
-    });
+    }),
+      io.dataOutput({
+        id: "event",
+        name: "Event Name",
+        type: t.string(),
+      });
     io.dataOutput({
       id: "eventKey",
       name: "Event Key",
@@ -1018,6 +1023,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
+    if (ctx.getInput("name") !== data.name) return;
     ctx.setOutput("event", data.name);
     ctx.setOutput("eventKey", data.key);
     ctx.setOutput("eventData", data.data);
@@ -1033,11 +1039,16 @@ pkg.createEventSchema({
       id: "exec",
       name: "",
     });
-    io.dataOutput({
-      id: "event",
+    io.dataInput({
+      id: "name",
       name: "Event Name",
       type: t.string(),
-    });
+    }),
+      io.dataOutput({
+        id: "event",
+        name: "Event Name",
+        type: t.string(),
+      });
     io.dataOutput({
       id: "eventKey",
       name: "Event Key",
@@ -1050,6 +1061,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
+    if (ctx.getInput("name") !== data.name) return;
     ctx.setOutput("event", data.name);
     ctx.setOutput("eventKey", data.key);
     ctx.setOutput("eventData", data.data);

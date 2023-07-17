@@ -67,8 +67,8 @@ function assistedValueToJSON(
     return JSON.variant(["Number", { value }]);
   else if (type instanceof t.String) return JSON.variant(["String", { value }]);
   else if (type instanceof t.Bool) return JSON.variant(["Bool", { value }]);
-  else if (type instanceof t.List) return JSON.variant(["List", value]);
-  else if (type instanceof t.Map) return JSON.variant(["Map", value]);
+  else if (type instanceof t.List) return JSON.variant(["List", { value }]);
+  else if (type instanceof t.Map) return JSON.variant(["Map", { value }]);
   else return null;
 }
 
@@ -184,7 +184,6 @@ pkg.createNonEventSchema({
   },
   run({ ctx }) {
     const value = valueToJSON(window.JSON.parse(ctx.getInput("in")));
-    console.log(value);
     ctx.setOutput("out", value);
   },
 });
