@@ -23,6 +23,7 @@ import {
   disconnectWildcardsInIO,
   None,
   Some,
+  Option,
 } from "../types";
 
 export interface GraphArgs {
@@ -107,28 +108,28 @@ export class Graph {
         const dataInput = input as DataInput;
 
         dataOutput.connections.add(dataInput);
-        dataInput.connection?.connections.delete(dataInput);
-        dataInput.connection = dataOutput;
+        dataInput.connection.peek((c) => c.connections.delete(dataInput));
+        dataInput.connection = Some(dataOutput);
 
         connectWildcardsInIO(dataOutput, dataInput);
       } else if (output instanceof ExecOutput) {
         const execOutput = output as ExecOutput;
         const execInput = input as ExecInput;
 
-        if (execOutput.connection) execOutput.connection.connection = null;
-        if (execInput.connection) execInput.connection.connection = null;
+        execOutput.connection.peek((c) => (c.connection = None));
+        execInput.connection.peek((c) => (c.connection = None));
 
-        execOutput.connection = execInput;
-        execInput.connection = execOutput;
+        execOutput.connection = Some(execInput);
+        execInput.connection = Some(execOutput);
       } else {
         const scopeOutput = output as ScopeOutput;
         const scopeInput = input as ScopeInput;
 
-        if (scopeOutput.connection) scopeOutput.connection.connection = null;
-        if (scopeInput.connection) scopeInput.connection.connection = null;
+        scopeOutput.connection.peek((c) => (c.connection = None));
+        scopeInput.connection.peek((c) => (c.connection = None));
 
-        scopeOutput.connection = scopeInput;
-        scopeInput.connection = scopeOutput;
+        scopeOutput.connection = Some(scopeInput);
+        scopeInput.connection = Some(scopeOutput);
 
         scopeInput.scope.value = Some(scopeOutput.scope);
       }
@@ -147,37 +148,34 @@ export class Graph {
         pin.connections.forEach((conn) => {
           disconnectWildcardsInIO(pin, conn);
 
-          conn.connection = null;
+          conn.connection = None;
         });
 
         pin.connections.clear();
       } else if (pin instanceof DataInput) {
-        const conn = pin.connection;
-        if (conn) {
+        pin.connection.peek((conn) => {
           disconnectWildcardsInIO(conn, pin);
 
           conn.connections.delete(pin);
-        }
+        });
 
-        pin.connection = null;
+        pin.connection = None;
       } else if (pin instanceof ScopeOutput) {
-        const conn = pin.connection;
-        if (conn) {
+        pin.connection.peek((conn) => {
           conn.scope.value = None;
-          conn.connection = null;
-        }
+          conn.connection = None;
+        });
 
-        pin.connection = null;
+        pin.connection = None;
       } else if (pin instanceof ScopeInput) {
         pin.scope.value = None;
 
-        const conn = pin.connection;
-        if (conn) conn.connection = null;
+        pin.connection.peek((conn) => (conn.connection = None));
 
-        pin.connection = null;
+        pin.connection = None;
       } else {
-        if (pin.connection) pin.connection.connection = null;
-        pin.connection = null;
+        pin.connection.peek((conn) => (conn.connection = None));
+        pin.connection = None;
       }
     });
 
@@ -217,17 +215,17 @@ export class Graph {
       })),
       connections: [...this.nodes.entries()].reduce((acc, [_, node]) => {
         node.inputs.forEach((i) => {
-          if (i.connection === null) return acc;
-
-          acc.push({
-            from: {
-              node: i.connection.node.id,
-              output: i.connection.id,
-            },
-            to: {
-              node: i.node.id,
-              input: i.id,
-            },
+          (i.connection as Option<typeof i>).peek((conn) => {
+            acc.push({
+              from: {
+                node: conn.node.id,
+                output: conn.id,
+              },
+              to: {
+                node: i.node.id,
+                input: i.id,
+              },
+            });
           });
         });
 

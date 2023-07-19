@@ -1,8 +1,18 @@
 import { createMutable } from "solid-js/store";
 import { AnyType, Maybe, None, Option } from "../types";
 import { Wildcard } from "../types/wildcard";
-import { Scope, ScopeBuilder } from "./IO";
+import {
+  DataInput,
+  DataOutput,
+  ExecInput,
+  ExecOutput,
+  Scope,
+  ScopeBuilder,
+  ScopeInput,
+  ScopeOutput,
+} from "./IO";
 import { Package } from "./Package";
+import { Node } from "./Node";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 
@@ -64,19 +74,17 @@ export class ScopeRef {
 }
 
 export class IOBuilder {
-  inputs: InputBuilder[] = [];
-  outputs: OutputBuilder[] = [];
+  inputs: (DataInput | ExecInput | ScopeInput)[] = [];
+  outputs: (DataOutput | ExecOutput | ScopeOutput)[] = [];
 
   wildcards = new Map<string, Wildcard>();
   scopes = new Map<string, ScopeRef>();
 
-  constructor(public previous?: IOBuilder) {}
+  constructor(public node: Node, public previous?: IOBuilder) {}
 
   wildcard(id: string) {
     const wildcard = Maybe(this.previous?.wildcards.get(id)).unwrapOrElse(
-      () => {
-        return new Wildcard(id);
-      }
+      () => new Wildcard(id)
     );
 
     this.wildcards.set(id, wildcard);
@@ -85,9 +93,9 @@ export class IOBuilder {
   }
 
   scope(id: string) {
-    const scope = Maybe(this.previous?.scopes.get(id)).unwrapOrElse(() => {
-      return new ScopeRef();
-    });
+    const scope = Maybe(this.previous?.scopes.get(id)).unwrapOrElse(
+      () => new ScopeRef()
+    );
 
     this.scopes.set(id, scope);
 
@@ -95,77 +103,86 @@ export class IOBuilder {
   }
 
   dataInput<T extends DataInputBuilder>(args: T) {
-    this.inputs.push(
-      Maybe(
-        this.previous?.inputs.find(
-          (i) =>
-            i.id === args.id && i.variant === "Data" && args.type.eq(i.type)
-        )
-      ).unwrapOrElse(() => {
-        return { ...args, variant: "Data" };
-      })
-    );
+    const newInput = Maybe(
+      this.previous?.inputs.find(
+        (i): i is DataInput =>
+          i.id === args.id && i instanceof DataInput && args.type.eq(i.type)
+      )
+    ).unwrapOrElse(() => new DataInput({ ...args, node: this.node }));
+
+    this.inputs.push(newInput);
+
+    return newInput;
   }
 
   dataOutput<T extends DataOutputBuilder>(args: T) {
-    this.outputs.push(
-      Maybe(
-        this.previous?.outputs.find(
-          (i) =>
-            i.id === args.id && i.variant === "Data" && args.type.eq(i.type)
-        )
-      ).unwrapOrElse(() => {
-        return { ...args, variant: "Data" };
-      })
-    );
+    const newOutput = Maybe(
+      this.previous?.outputs.find(
+        (o): o is DataOutput =>
+          o.id === args.id && o instanceof DataOutput && args.type.eq(o.type)
+      )
+    ).unwrapOrElse(() => new DataOutput({ ...args, node: this.node }));
+
+    this.outputs.push(newOutput);
+
+    return newOutput;
   }
 
   execInput<T extends ExecInputBuilder>(args: T) {
-    this.inputs.push(
-      Maybe(
-        this.previous?.inputs.find(
-          (i) => i.id === args.id && i.variant === "Exec"
-        )
-      ).unwrapOrElse(() => {
-        return { ...args, variant: "Exec" };
-      })
-    );
+    const newInput = Maybe(
+      this.previous?.inputs.find(
+        (i): i is ExecInput => i.id === args.id && i instanceof ExecInput
+      )
+    ).unwrapOrElse(() => new ExecInput({ ...args, node: this.node }));
+
+    this.inputs.push(newInput);
+
+    return newInput;
   }
 
   execOutput<T extends ExecOutputBuilder>(args: T) {
-    this.outputs.push(
-      Maybe(
-        this.previous?.outputs.find(
-          (o) => o.id === args.id && o.variant === "Exec"
-        )
-      ).unwrapOrElse(() => {
-        return { ...args, variant: "Exec" };
-      })
-    );
+    const newOutput = Maybe(
+      this.previous?.outputs.find(
+        (o): o is ExecOutput => o.id === args.id && o instanceof ExecOutput
+      )
+    ).unwrapOrElse(() => new ExecOutput({ ...args, node: this.node }));
+
+    this.outputs.push(newOutput);
+
+    return newOutput;
   }
 
   scopeInput<T extends ScopeInputBuilder>(args: T) {
-    this.inputs.push(
-      Maybe(
-        this.previous?.inputs.find(
-          (i) => i.id === args.id && i.variant === "Scope"
-        )
-      ).unwrapOrElse(() => {
-        return { ...args, variant: "Scope" };
-      })
-    );
+    const newInput = Maybe(
+      this.previous?.inputs.find(
+        (i): i is ScopeInput => i.id === args.id && i instanceof ScopeInput
+      )
+    ).unwrapOrElse(() => new ScopeInput({ ...args, node: this.node }));
+
+    this.inputs.push(newInput);
+
+    return newInput;
   }
 
   scopeOutput<T extends ScopeOutputBuilder>(args: T) {
-    this.outputs.push(
-      Maybe(
-        this.previous?.outputs.find(
-          (o) => o.id === args.id && o.variant === "Scope"
-        )
-      ).unwrapOrElse(() => {
-        return { ...args, variant: "Scope" };
-      })
-    );
+    const newOutput = Maybe(
+      this.previous?.outputs.find(
+        (o): o is ScopeOutput => o.id === args.id && o instanceof ScopeOutput
+      )
+    ).unwrapOrElse(() => {
+      const builder = new ScopeBuilder();
+      args.scope(builder);
+
+      return new ScopeOutput({
+        ...args,
+        scope: new Scope(builder),
+        node: this.node,
+      });
+    });
+
+    this.outputs.push(newOutput);
+
+    return newOutput;
   }
 }
 

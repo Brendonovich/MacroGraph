@@ -12,6 +12,7 @@ import {
 import { EventsMap, RunCtx } from "./NodeSchema";
 import { z } from "zod";
 import { Project, SerializedProject } from "./Project";
+import { Option } from "../types";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -117,9 +118,7 @@ class ExecutionContext {
         if (!(output instanceof ExecOutput))
           throw new Error(`Output ${execOutput} is not an ExecOutput!`);
 
-        if (!output.connection) return;
-
-        await this.execNode(output.connection.node as any);
+        await output.connection.peekAsync((conn) => this.execNode(conn.node));
       },
       execScope: async (scopeOutput, data) => {
         NODE_EMIT.emit(node);
@@ -130,11 +129,11 @@ class ExecutionContext {
         if (!(output instanceof ScopeOutput))
           throw new Error(`Output ${scopeOutput} is not a ScopeOutput!`);
 
-        if (!output.connection) return;
+        await output.connection.peekAsync(async (conn) => {
+          this.data.set(output, data);
 
-        this.data.set(output, data);
-
-        await this.execNode(output.connection.node as any);
+          await this.execNode(conn.node);
+        });
       },
       setOutput: (name, value) => {
         const output = node.output(name);
@@ -154,16 +153,19 @@ class ExecutionContext {
         if (input instanceof ExecInput)
           throw new Error(`Input ${name} is an ExecInput!`);
 
-        if (input.connection) {
-          const data = this.data.get(input.connection);
+        return (input.connection as Option<DataOutput | ScopeOutput>).mapOrElse(
+          () => {
+            if (input instanceof DataInput) return input.defaultValue;
+          },
+          (conn) => {
+            const data = this.data.get(conn);
 
-          if (data === undefined)
-            throw new Error(`Data not found for ${name}!`);
+            if (data === undefined)
+              throw new Error(`Data not found for ${name}!`);
 
-          return data;
-        } else if (input instanceof DataInput) {
-          return input.defaultValue;
-        }
+            return data;
+          }
+        );
       },
     };
   }
@@ -175,10 +177,8 @@ class ExecutionContext {
     node.inputs.forEach((i) => {
       if (!(i instanceof DataInput)) return;
 
-      const connectedOutput = i.connection;
-
-      if (connectedOutput !== null) {
-        const connectedNode = connectedOutput.node;
+      i.connection.peek((conn) => {
+        const connectedNode = conn.node;
         const schema = connectedNode.schema;
 
         if ("variant" in schema && schema.variant === "Pure") {
@@ -188,14 +188,14 @@ class ExecutionContext {
         } else {
           // Value should already be present for non-pure nodes
 
-          let value = this.data.get(connectedOutput);
+          let value = this.data.get(conn);
 
           if (value === undefined)
             throw new Error(
-              `Data for Pin ${connectedOutput.name}, Node ${connectedOutput.node.name} not found!`
+              `Data for Pin ${conn.name}, Node ${conn.node.name} not found!`
             );
         }
-      }
+      });
     });
 
     await node.schema.run({

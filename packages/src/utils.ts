@@ -8,6 +8,7 @@ import {
   Enum,
   InferEnum,
   EnumVariants,
+  DataInput,
 } from "@macrograph/core";
 import { JSON, jsonToValue } from "./json";
 
@@ -390,6 +391,78 @@ pkg.createNonEventSchema({
       id: "two",
       type: t.string(),
     });
+    io.dataOutput({
+      id: "output",
+      type: t.string(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Create String",
+  variant: "Pure",
+  run({ ctx, io }) {
+    ctx.setOutput(
+      "output",
+      io.inputs.reduce((acc, input) => {
+        acc += ctx.getInput<string>(input.id);
+        return acc;
+      }, "")
+    );
+  },
+  generateIO(io) {
+    if (!io.previous) {
+      const last = io.dataInput({
+        id: "1",
+        type: t.string(),
+      });
+
+      last.connection;
+    } else {
+      const endState: "twoUnconnected" | "fine" | "addOne" = (() => {
+        const inputCount = io.previous.inputs.length;
+        const last = io.previous.inputs[inputCount - 1] as DataInput;
+        const secondLast = io.previous.inputs[inputCount - 2] as
+          | DataInput
+          | undefined;
+
+        if (last.connection.isSome()) return "addOne";
+        else if (
+          !secondLast ||
+          (last.connection.isNone() && secondLast.connection.isSome())
+        )
+          return "fine";
+        else return "twoUnconnected";
+      })();
+
+      const lastConnectedIndex = io.previous.inputs.findLastIndex((i) =>
+        i.connection.isSome()
+      );
+
+      for (const input of io.previous.inputs.slice(
+        0,
+        endState === "twoUnconnected"
+          ? lastConnectedIndex > -1
+            ? lastConnectedIndex + 2
+            : 1
+          : undefined
+      )) {
+        io.dataInput({
+          id: input.id,
+          type: t.string(),
+        });
+      }
+
+      if (endState === "addOne")
+        io.dataInput({
+          id: (io.previous.inputs.length + 1).toString(),
+          type: t.string(),
+        });
+
+      io.inputs[io.inputs.length - 1]?.connection;
+      io.inputs[io.inputs.length - 2]?.connection;
+    }
+
     io.dataOutput({
       id: "output",
       type: t.string(),
