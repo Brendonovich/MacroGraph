@@ -9,7 +9,6 @@ export type DataInputArgs = {
   name?: string;
   type: t.Any;
   defaultValue?: any;
-  connection?: Connection | null;
   node: Node;
 };
 
@@ -35,10 +34,6 @@ export class DataInput {
     this.defaultValue = value;
 
     this.node.graph.project.save();
-  }
-
-  get connected() {
-    return this.connection !== null;
   }
 
   get variant() {
@@ -95,10 +90,6 @@ export class ExecInput {
     createMutable(this);
   }
 
-  get connected() {
-    return this.connection !== null;
-  }
-
   get variant() {
     return "Exec";
   }
@@ -122,10 +113,6 @@ export class ExecOutput {
     this.name = args.name;
 
     createMutable(this);
-  }
-
-  get connected() {
-    return this.connection !== null;
   }
 
   get variant() {

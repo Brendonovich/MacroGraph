@@ -3,6 +3,7 @@ import { createForm, zodForm } from "@modular-forms/solid";
 import { discord } from "@macrograph/packages";
 import { createSignal, Match, Show, Switch } from "solid-js";
 import { Button, Input } from "./ui";
+import { None, Some } from "@macrograph/core";
 
 const Schema = z.object({
   botToken: z.string(),
@@ -24,7 +25,7 @@ const Bot = () => {
 
             return (
               <Form
-                onSubmit={(d) => discord.auth.setBotToken(d.botToken)}
+                onSubmit={(d) => discord.auth.setBotToken(Some(d.botToken))}
                 class="flex flex-row space-x-4"
               >
                 <Field name="botToken">
@@ -47,18 +48,17 @@ const Bot = () => {
             <>
               <div class="flex flex-row items-center space-x-4">
                 <p>{bot().username}</p>
-                <Button onClick={() => discord.auth.setBotToken(null)}>
+                <Button onClick={() => discord.auth.setBotToken(None)}>
                   Log Out
                 </Button>
               </div>
               <div class="flex flex-row items-center space-x-4">
                 <p>
-                  {`Gateway 
-                    ${
-                      discord.gateway.ws() !== null
-                        ? "Connected"
-                        : "Disconnected"
-                    }`}
+                  {`Gateway
+                    ${discord.gateway
+                      .ws()
+                      .and(Some("Connected"))
+                      .unwrapOr("Disconnected")}`}
                 </p>
                 <Show
                   when={!discord.gateway.ws()}
