@@ -420,10 +420,12 @@ pkg.createNonEventSchema({
 
       last.connection;
     } else {
+      const previousInputs = io.previous.inputs;
+
       const endState: "twoUnconnected" | "fine" | "addOne" = (() => {
-        const inputCount = io.previous.inputs.length;
-        const last = io.previous.inputs[inputCount - 1] as DataInput;
-        const secondLast = io.previous.inputs[inputCount - 2] as
+        const inputCount = previousInputs.length;
+        const last = previousInputs[inputCount - 1] as DataInput;
+        const secondLast = previousInputs[inputCount - 2] as
           | DataInput
           | undefined;
 
@@ -438,15 +440,15 @@ pkg.createNonEventSchema({
 
       let lastConnectedIndex: Option<number> = None;
 
-      for (let i = io.previous.inputs.length - 1; i >= 0; i--) {
-        const input = io.previous.inputs[i]!;
+      for (let i = previousInputs.length - 1; i >= 0; i--) {
+        const input = previousInputs[i]!;
         if (input.connection.isSome()) {
           lastConnectedIndex = Some(i);
           break;
         }
       }
 
-      for (const input of io.previous.inputs.slice(
+      for (const input of previousInputs.slice(
         0,
         endState === "twoUnconnected"
           ? lastConnectedIndex.map((i) => i + 2).unwrapOr(1)
@@ -460,7 +462,7 @@ pkg.createNonEventSchema({
 
       if (endState === "addOne")
         io.dataInput({
-          id: (io.previous.inputs.length + 1).toString(),
+          id: (previousInputs.length + 1).toString(),
           type: t.string(),
         });
 
