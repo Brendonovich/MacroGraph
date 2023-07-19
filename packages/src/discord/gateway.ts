@@ -6,13 +6,13 @@ import {
   createRoot,
 } from "solid-js";
 import { z } from "zod";
-import { t, Maybe } from "@macrograph/core";
+import { t, Maybe, None, Option, Some } from "@macrograph/core";
 import { botToken } from "./auth";
 import pkg from "./pkg";
 import { GUILD_MEMBER_SCHEMA } from "./schemas";
 
 const { ws, connect, disconnect } = createRoot(() => {
-  const [ws, setWs] = createSignal<WebSocket | null>(null);
+  const [ws, setWs] = createSignal<Option<WebSocket>>(None);
   const [enabled, setEnabled] = createSignal(true);
 
   const createGateway = (token: string) => {
@@ -69,7 +69,7 @@ const { ws, connect, disconnect } = createRoot(() => {
           );
 
           state = "Connected";
-          setWs(ws);
+          setWs(Some(ws));
           res();
           break;
       }
@@ -90,7 +90,7 @@ const { ws, connect, disconnect } = createRoot(() => {
   };
 
   const disconnect = () => {
-    setWs(null);
+    setWs(None);
     setEnabled(false);
   };
 
@@ -105,7 +105,7 @@ const { ws, connect, disconnect } = createRoot(() => {
       token
         .andThen((token) => Maybe(enabled() ? createGateway(token) : null))
         .unwrapOrElse(async () => {
-          setWs(null);
+          setWs(None);
         });
     })
   );
@@ -113,7 +113,7 @@ const { ws, connect, disconnect } = createRoot(() => {
   createEffect(() => {
     const w = ws();
 
-    onCleanup(() => w?.close());
+    onCleanup(() => w.peek((w) => w.close()));
   });
 
   return { ws, connect, disconnect };

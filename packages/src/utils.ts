@@ -9,6 +9,7 @@ import {
   InferEnum,
   EnumVariants,
   DataInput,
+  None,
 } from "@macrograph/core";
 import { JSON, jsonToValue } from "./json";
 
@@ -257,7 +258,7 @@ pkg.createNonEventSchema({
   variant: "Pure",
   run({ ctx }) {
     const number = Number(ctx.getInput<string>("string"));
-    const opt = Maybe(Number.isNaN(number) ? null : number);
+    const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
     ctx.setOutput("int", opt.map(Math.floor));
   },
@@ -435,16 +436,20 @@ pkg.createNonEventSchema({
         else return "twoUnconnected";
       })();
 
-      const lastConnectedIndex = io.previous.inputs.findLastIndex((i) =>
-        i.connection.isSome()
-      );
+      let lastConnectedIndex: Option<number> = None;
+
+      for (let i = io.previous.inputs.length - 1; i >= 0; i--) {
+        const input = io.previous.inputs[i]!;
+        if (input.connection.isSome()) {
+          lastConnectedIndex = Some(i);
+          break;
+        }
+      }
 
       for (const input of io.previous.inputs.slice(
         0,
         endState === "twoUnconnected"
-          ? lastConnectedIndex > -1
-            ? lastConnectedIndex + 2
-            : 1
+          ? lastConnectedIndex.map((i) => i + 2).unwrapOr(1)
           : undefined
       )) {
         io.dataInput({

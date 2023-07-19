@@ -10,11 +10,12 @@ const { botToken, setBotToken } = createRoot(() => {
 
   return {
     botToken,
-    setBotToken: (token: string | null) => {
-      setBotToken(Maybe(token));
+    setBotToken: (token: Option<string>) => {
+      setBotToken(token);
 
-      if (token === null) localStorage.removeItem(DISCORD_BOT_TOKEN);
-      else localStorage.setItem(DISCORD_BOT_TOKEN, token);
+      if (token.isNone()) localStorage.removeItem(DISCORD_BOT_TOKEN);
+      else
+        token.peek((token) => localStorage.setItem(DISCORD_BOT_TOKEN, token));
     },
   };
 });
