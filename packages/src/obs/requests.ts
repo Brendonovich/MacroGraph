@@ -2661,7 +2661,7 @@ pkg.createNonEventSchema({
     });
   },
   async run({ ctx }) {
-    const data = await obs.call("GetOutputList");
+    const data = await obs.call("GetOutputList" as any);
   },
 });
 
@@ -2906,7 +2906,7 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const data = await obs.call("GetRecordStatus");
     ctx.setOutput("outputActive", data.outputActive);
-    ctx.setOutput("outputPaused", data.outputPaused);
+    ctx.setOutput("outputPaused", (data as any).outputPaused);
     ctx.setOutput("outputTimecode", data.outputTimecode);
     ctx.setOutput("outputDuration", data.outputDuration);
     ctx.setOutput("outputBytes", data.outputBytes);
@@ -2943,7 +2943,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const data = await obs.call("StopRecord");
-    ctx.setOutput("outputPath", data.outputPath);
+    ctx.setOutput("outputPath", (data as any).outputPath);
   },
 });
 
