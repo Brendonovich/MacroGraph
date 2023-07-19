@@ -99,7 +99,7 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput(
       "return",
-      ctx.getInput<Array<any>>("list").splice(ctx.getInput("index"), 1)
+      ctx.getInput<Array<any>>("list").splice(ctx.getInput("index"), 1)[0]
     );
   },
 });

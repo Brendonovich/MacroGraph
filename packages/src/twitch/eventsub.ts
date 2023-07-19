@@ -1619,10 +1619,11 @@ pkg.createEventSchema({
     io.dataOutput({
       id: "duration",
       name: "Duration Months",
-      type: t.bool(),
+      type: t.int(),
     });
   },
   run({ ctx, data }) {
+    console.log(data);
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("tier", data.event.tier);
@@ -1668,10 +1669,11 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
+    console.log(data);
     ctx.setOutput("userId", data.event.user_id);
     ctx.setOutput("userLogin", data.event.user_login);
     ctx.setOutput("anonymous", data.event.is_anonymous);
-    ctx.setOutput("message", data.event.message.text);
+    ctx.setOutput("message", data.event.message);
     ctx.setOutput("bits", data.event.bits);
     ctx.exec("exec");
   },
