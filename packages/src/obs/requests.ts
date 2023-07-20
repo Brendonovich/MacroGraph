@@ -1302,6 +1302,12 @@ pkg.createNonEventSchema({
   },
 });
 
+const monitorType = pkg.createEnum("Monitor Type", (e) => [
+  e.variant("MonitorOnly"),
+  e.variant("MonitorAndOutput"),
+  e.variant("None"),
+]);
+
 pkg.createNonEventSchema({
   name: "Set Input Audio Monitor Type",
   variant: "Exec",
@@ -1314,13 +1320,20 @@ pkg.createNonEventSchema({
     io.dataInput({
       id: "monitorType",
       name: "Monitor Type",
-      type: t.string(),
+      type: t.enum(monitorType),
     });
   },
   async run({ ctx }) {
+    const data = ctx.getInput<InferEnum<typeof monitorType>>("monitorType");
+
     obs.call("SetInputAudioMonitorType", {
       inputName: ctx.getInput("inputName"),
-      monitorType: ctx.getInput("monitorType"),
+      monitorType:
+        data.variant === "MonitorOnly"
+          ? "OBS_MONITORING_TYPE_MONITOR_ONLY"
+          : data.variant === "MonitorAndOutput"
+          ? "OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT"
+          : "OBS_MONITORING_TYPE_NONE",
     });
   },
 });
