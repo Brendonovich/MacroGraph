@@ -93,7 +93,7 @@ const { state } = createRoot(() => {
                 case "notification":
                   pkg.emitEvent({
                     name: info.payload.subscription.type,
-                    data: info.payload,
+                    data: info.payload.event,
                   });
                   break;
               }
@@ -170,15 +170,15 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("channelId", data.event.broadcaster_user_id);
-    ctx.setOutput("channelName", data.event.broadcaster_user_login);
-    ctx.setOutput("modId", data.event.moderator_user_id);
-    ctx.setOutput("modName", data.event.moderator_user_login);
-    ctx.setOutput("bannedUserID", data.event.user_id);
-    ctx.setOutput("bannedUserLogin", data.event.user_login);
-    ctx.setOutput("reason", data.event.reason);
-    ctx.setOutput("permanent", data.event.is_permanent);
-    ctx.setOutput("ends", data.event.ends_at);
+    ctx.setOutput("channelId", data.broadcaster_user_id);
+    ctx.setOutput("channelName", data.broadcaster_user_login);
+    ctx.setOutput("modId", data.moderator_user_id);
+    ctx.setOutput("modName", data.moderator_user_login);
+    ctx.setOutput("bannedUserID", data.user_id);
+    ctx.setOutput("bannedUserLogin", data.user_login);
+    ctx.setOutput("reason", data.reason);
+    ctx.setOutput("permanent", data.is_permanent);
+    ctx.setOutput("ends", data.ends_at);
     ctx.exec("exec");
   },
 });
@@ -212,10 +212,10 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userId", data.event.from_broadcaster_user_id);
-    ctx.setOutput("userLogin", data.event.from_broadcaster_user_login);
-    ctx.setOutput("modName", data.event.moderator_user_login);
-    ctx.setOutput("modId", data.event.moderator_user_id);
+    ctx.setOutput("userId", data.from_broadcaster_user_id);
+    ctx.setOutput("userLogin", data.from_broadcaster_user_login);
+    ctx.setOutput("modName", data.moderator_user_login);
+    ctx.setOutput("modId", data.moderator_user_id);
     ctx.exec("exec");
   },
 });
@@ -239,8 +239,8 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
     ctx.exec("exec");
   },
 });
@@ -264,8 +264,8 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
     ctx.exec("exec");
   },
 });
@@ -369,36 +369,27 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("enabled", data.event.is_enabled);
-    ctx.setOutput("paused", data.event.is_paused);
-    ctx.setOutput("inStock", data.event.is_in_stock);
-    ctx.setOutput("title", data.event.title);
-    ctx.setOutput("cost", data.event.cost);
-    ctx.setOutput("prompt", data.event.prompt);
-    ctx.setOutput("inputRequired", data.event.is_user_input_required);
-    ctx.setOutput(
-      "skipQueue",
-      data.event.should_redemptions_skip_request_queue
-    );
-    ctx.setOutput("cooldownExpire", data.event.cooldown_expires_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("enabled", data.is_enabled);
+    ctx.setOutput("paused", data.is_paused);
+    ctx.setOutput("inStock", data.is_in_stock);
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("cost", data.cost);
+    ctx.setOutput("prompt", data.prompt);
+    ctx.setOutput("inputRequired", data.is_user_input_required);
+    ctx.setOutput("skipQueue", data.should_redemptions_skip_request_queue);
+    ctx.setOutput("cooldownExpire", data.cooldown_expires_at);
     ctx.setOutput(
       "redemptTotalStream",
-      data.event.redemptions_redeemed_current_stream
+      data.redemptions_redeemed_current_stream
     );
-    ctx.setOutput("maxPerStreamEnabled", data.event.max_per_stream.is_enabled);
-    ctx.setOutput("maxPerStreamValue", data.event.max_per_stream.value);
-    ctx.setOutput(
-      "maxUserPerStream",
-      data.event.max_per_user_per_stream.is_enabled
-    );
-    ctx.setOutput(
-      "maxUserPerStreamValue",
-      data.event.max_per_user_per_stream.value
-    );
-    ctx.setOutput("globalCooldown", data.event.global_cooldown.is_enabled);
-    ctx.setOutput("globalCooldownValue", data.event.global_cooldown.seconds);
-    ctx.setOutput("backgroundColor", data.event.background_color);
+    ctx.setOutput("maxPerStreamEnabled", data.max_per_stream.is_enabled);
+    ctx.setOutput("maxPerStreamValue", data.max_per_stream.value);
+    ctx.setOutput("maxUserPerStream", data.max_per_user_per_stream.is_enabled);
+    ctx.setOutput("maxUserPerStreamValue", data.max_per_user_per_stream.value);
+    ctx.setOutput("globalCooldown", data.global_cooldown.is_enabled);
+    ctx.setOutput("globalCooldownValue", data.global_cooldown.seconds);
+    ctx.setOutput("backgroundColor", data.background_color);
     ctx.exec("exec");
   },
 });
@@ -502,36 +493,27 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("enabled", data.event.is_enabled);
-    ctx.setOutput("paused", data.event.is_paused);
-    ctx.setOutput("inStock", data.event.is_in_stock);
-    ctx.setOutput("title", data.event.title);
-    ctx.setOutput("cost", data.event.cost);
-    ctx.setOutput("prompt", data.event.prompt);
-    ctx.setOutput("inputRequired", data.event.is_user_input_required);
-    ctx.setOutput(
-      "skipQueue",
-      data.event.should_redemptions_skip_request_queue
-    );
-    ctx.setOutput("cooldownExpire", data.event.cooldown_expires_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("enabled", data.is_enabled);
+    ctx.setOutput("paused", data.is_paused);
+    ctx.setOutput("inStock", data.is_in_stock);
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("cost", data.cost);
+    ctx.setOutput("prompt", data.prompt);
+    ctx.setOutput("inputRequired", data.is_user_input_required);
+    ctx.setOutput("skipQueue", data.should_redemptions_skip_request_queue);
+    ctx.setOutput("cooldownExpire", data.cooldown_expires_at);
     ctx.setOutput(
       "redemptTotalStream",
-      data.event.redemptions_redeemed_current_stream
+      data.redemptions_redeemed_current_stream
     );
-    ctx.setOutput("maxPerStreamEnabled", data.event.max_per_stream.is_enabled);
-    ctx.setOutput("maxPerStreamValue", data.event.max_per_stream.value);
-    ctx.setOutput(
-      "maxUserPerStream",
-      data.event.max_per_user_per_stream.is_enabled
-    );
-    ctx.setOutput(
-      "maxUserPerStreamValue",
-      data.event.max_per_user_per_stream.value
-    );
-    ctx.setOutput("globalCooldown", data.event.global_cooldown.is_enabled);
-    ctx.setOutput("globalCooldownValue", data.event.global_cooldown.seconds);
-    ctx.setOutput("backgroundColor", data.event.background_color);
+    ctx.setOutput("maxPerStreamEnabled", data.max_per_stream.is_enabled);
+    ctx.setOutput("maxPerStreamValue", data.max_per_stream.value);
+    ctx.setOutput("maxUserPerStream", data.max_per_user_per_stream.is_enabled);
+    ctx.setOutput("maxUserPerStreamValue", data.max_per_user_per_stream.value);
+    ctx.setOutput("globalCooldown", data.global_cooldown.is_enabled);
+    ctx.setOutput("globalCooldownValue", data.global_cooldown.seconds);
+    ctx.setOutput("backgroundColor", data.background_color);
     ctx.exec("exec");
   },
 });
@@ -635,36 +617,27 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("enabled", data.event.is_enabled);
-    ctx.setOutput("paused", data.event.is_paused);
-    ctx.setOutput("inStock", data.event.is_in_stock);
-    ctx.setOutput("title", data.event.title);
-    ctx.setOutput("cost", data.event.cost);
-    ctx.setOutput("prompt", data.event.prompt);
-    ctx.setOutput("inputRequired", data.event.is_user_input_required);
-    ctx.setOutput(
-      "skipQueue",
-      data.event.should_redemptions_skip_request_queue
-    );
-    ctx.setOutput("cooldownExpire", data.event.cooldown_expires_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("enabled", data.is_enabled);
+    ctx.setOutput("paused", data.is_paused);
+    ctx.setOutput("inStock", data.is_in_stock);
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("cost", data.cost);
+    ctx.setOutput("prompt", data.prompt);
+    ctx.setOutput("inputRequired", data.is_user_input_required);
+    ctx.setOutput("skipQueue", data.should_redemptions_skip_request_queue);
+    ctx.setOutput("cooldownExpire", data.cooldown_expires_at);
     ctx.setOutput(
       "redemptTotalStream",
-      data.event.redemptions_redeemed_current_stream
+      data.redemptions_redeemed_current_stream
     );
-    ctx.setOutput("maxPerStreamEnabled", data.event.max_per_stream.is_enabled);
-    ctx.setOutput("maxPerStreamValue", data.event.max_per_stream.value);
-    ctx.setOutput(
-      "maxUserPerStream",
-      data.event.max_per_user_per_stream.is_enabled
-    );
-    ctx.setOutput(
-      "maxUserPerStreamValue",
-      data.event.max_per_user_per_stream.value
-    );
-    ctx.setOutput("globalCooldown", data.event.global_cooldown.is_enabled);
-    ctx.setOutput("globalCooldownValue", data.event.global_cooldown.seconds);
-    ctx.setOutput("backgroundColor", data.event.background_color);
+    ctx.setOutput("maxPerStreamEnabled", data.max_per_stream.is_enabled);
+    ctx.setOutput("maxPerStreamValue", data.max_per_stream.value);
+    ctx.setOutput("maxUserPerStream", data.max_per_user_per_stream.is_enabled);
+    ctx.setOutput("maxUserPerStreamValue", data.max_per_user_per_stream.value);
+    ctx.setOutput("globalCooldown", data.global_cooldown.is_enabled);
+    ctx.setOutput("globalCooldownValue", data.global_cooldown.seconds);
+    ctx.setOutput("backgroundColor", data.background_color);
     ctx.exec("exec");
   },
 });
@@ -728,16 +701,16 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
-    ctx.setOutput("userName", data.event.user_name);
-    ctx.setOutput("userInput", data.event.user_input);
-    ctx.setOutput("status", data.event.status);
-    ctx.setOutput("rewardId", data.event.reward.id);
-    ctx.setOutput("rewardTitle", data.event.reward.title);
-    ctx.setOutput("rewardCost", data.event.reward.cost);
-    ctx.setOutput("rewardPrompt", data.event.reward.prompt);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
+    ctx.setOutput("userName", data.user_name);
+    ctx.setOutput("userInput", data.user_input);
+    ctx.setOutput("status", data.status);
+    ctx.setOutput("rewardId", data.reward.id);
+    ctx.setOutput("rewardTitle", data.reward.title);
+    ctx.setOutput("rewardCost", data.reward.cost);
+    ctx.setOutput("rewardPrompt", data.reward.prompt);
     ctx.exec("exec");
   },
 });
@@ -919,28 +892,11 @@ pkg.createEventSchema({
       name: "Outcomes",
       type: t.list(t.struct(outcomesBegin)),
     });
-    io.dataOutput({
-      id: "users",
-      name: "Users",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "channelPoints",
-      name: "Channel Points",
-      type: t.int(),
-    });
   },
   run({ ctx, data }) {
+    console.log(data);
     ctx.setOutput("title", data.title);
-    ctx.setOutput("choices", data.choices);
-    ctx.setOutput(
-      "channelPointVotingEnabled",
-      data.channel_points_voting.is_enabled
-    );
-    ctx.setOutput(
-      "channelPointVotingCost",
-      data.channel_points_voting.amount_per_vote
-    );
+    ctx.setOutput("outcomes", data.outcomes);
     ctx.exec("exec");
   },
 });
@@ -962,28 +918,11 @@ pkg.createEventSchema({
       name: "Outcomes",
       type: t.list(t.struct(outcomesProgress)),
     });
-    io.dataOutput({
-      id: "channelPointVotingEnabled",
-      name: "Channel Point Voting Enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "channelPointVotingCost",
-      name: "Channel Point Voting Cost",
-      type: t.int(),
-    });
   },
   run({ ctx, data }) {
+    console.log(data);
     ctx.setOutput("title", data.title);
-    ctx.setOutput("choices", data.choices);
-    ctx.setOutput(
-      "channelPointVotingEnabled",
-      data.channel_points_voting.is_enabled
-    );
-    ctx.setOutput(
-      "channelPointVotingCost",
-      data.channel_points_voting.amount_per_vote
-    );
+    ctx.setOutput("outcomes", data.outcomes);
     ctx.exec("exec");
   },
 });
@@ -1010,38 +949,10 @@ pkg.createEventSchema({
       name: "Outcomes",
       type: t.list(t.struct(outcomesProgress)),
     });
-    io.dataOutput({
-      id: "channelPointVotingEnabled",
-      name: "Channel Point Voting Enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "channelPointVotingCost",
-      name: "Channel Point Voting Cost",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "winningOutcomeId",
-      name: "Winning Outcome ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "status",
-      name: "Status",
-      type: t.enum(PredictionStatus),
-    });
   },
   run({ ctx, data }) {
     ctx.setOutput("title", data.title);
-    ctx.setOutput("choices", data.choices);
-    ctx.setOutput(
-      "channelPointVotingEnabled",
-      data.channel_points_voting.is_enabled
-    );
-    ctx.setOutput(
-      "channelPointVotingCost",
-      data.channel_points_voting.amount_per_vote
-    );
+    ctx.setOutput("outcomes", data.outcomes);
     ctx.exec("exec");
   },
 });
@@ -1064,27 +975,21 @@ pkg.createEventSchema({
       type: t.list(t.struct(outcomesProgress)),
     });
     io.dataOutput({
-      id: "channelPointVotingEnabled",
-      name: "Channel Point Voting Enabled",
-      type: t.bool(),
+      id: "winningOutcomeId",
+      name: "Winning Outcome ID",
+      type: t.string(),
     });
     io.dataOutput({
-      id: "channelPointVotingCost",
-      name: "Channel Point Voting Cost",
-      type: t.int(),
+      id: "status",
+      name: "Status",
+      type: t.enum(PredictionStatus),
     });
   },
   run({ ctx, data }) {
     ctx.setOutput("title", data.title);
-    ctx.setOutput("choices", data.choices);
-    ctx.setOutput(
-      "channelPointVotingEnabled",
-      data.channel_points_voting.is_enabled
-    );
-    ctx.setOutput(
-      "channelPointVotingCost",
-      data.channel_points_voting.amount_per_vote
-    );
+    ctx.setOutput("outcomes", data.outcomes);
+    ctx.setOutput("winningOutcomeId", data.winning_outcome_id);
+    ctx.setOutput("status", data.status);
     ctx.exec("exec");
   },
 });
@@ -1169,41 +1074,26 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     console.log(data);
-    ctx.setOutput("total", data.event.total);
-    ctx.setOutput("progress", data.event.progress);
-    ctx.setOutput("goal", data.event.goal);
-    ctx.setOutput("level", data.event.level);
+    ctx.setOutput("total", data.total);
+    ctx.setOutput("progress", data.progress);
+    ctx.setOutput("goal", data.goal);
+    ctx.setOutput("level", data.level);
     ctx.setOutput(
       "topContributeBitsUserName",
-      data.event.top_contributions[0].user_name
+      data.top_contributions[0].user_name
     );
-    ctx.setOutput(
-      "topContributeBitsUserId",
-      data.event.top_contributions[0].user_id
-    );
-    ctx.setOutput(
-      "topContributeBitsTotal",
-      data.event.top_contributions[0].total
-    );
+    ctx.setOutput("topContributeBitsUserId", data.top_contributions[0].user_id);
+    ctx.setOutput("topContributeBitsTotal", data.top_contributions[0].total);
     ctx.setOutput(
       "topContributeSubsUserName",
-      data.event.top_contributions[1].user_name
+      data.top_contributions[1].user_name
     );
-    ctx.setOutput(
-      "topContributeSubsUserId",
-      data.event.top_contributions[1].user_id
-    );
-    ctx.setOutput(
-      "topContributeSubsTotal",
-      data.event.top_contributions[1].total
-    );
-    ctx.setOutput(
-      "lastContributeUserName",
-      data.event.last_contribution.user_name
-    );
-    ctx.setOutput("lastContributeUserId", data.event.last_contribution.user_id);
-    ctx.setOutput("lastContributeTotal", data.event.last_contribution.total);
-    ctx.setOutput("lastContributeType", data.event.last_contribution.type);
+    ctx.setOutput("topContributeSubsUserId", data.top_contributions[1].user_id);
+    ctx.setOutput("topContributeSubsTotal", data.top_contributions[1].total);
+    ctx.setOutput("lastContributeUserName", data.last_contribution.user_name);
+    ctx.setOutput("lastContributeUserId", data.last_contribution.user_id);
+    ctx.setOutput("lastContributeTotal", data.last_contribution.total);
+    ctx.setOutput("lastContributeType", data.last_contribution.type);
     ctx.exec("exec");
   },
 });
@@ -1285,41 +1175,26 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     console.log(data);
-    ctx.setOutput("total", data.event.total);
-    ctx.setOutput("progress", data.event.progress);
-    ctx.setOutput("goal", data.event.goal);
-    ctx.setOutput("level", data.event.level);
+    ctx.setOutput("total", data.total);
+    ctx.setOutput("progress", data.progress);
+    ctx.setOutput("goal", data.goal);
+    ctx.setOutput("level", data.level);
     ctx.setOutput(
       "topContributeBitsUserName",
-      data.event.top_contributions[0].user_name
+      data.top_contributions[0].user_name
     );
-    ctx.setOutput(
-      "topContributeBitsUserId",
-      data.event.top_contributions[0].user_id
-    );
-    ctx.setOutput(
-      "topContributeBitsTotal",
-      data.event.top_contributions[0].total
-    );
+    ctx.setOutput("topContributeBitsUserId", data.top_contributions[0].user_id);
+    ctx.setOutput("topContributeBitsTotal", data.top_contributions[0].total);
     ctx.setOutput(
       "topContributeSubsUserName",
-      data.event.top_contributions[1].user_name
+      data.top_contributions[1].user_name
     );
-    ctx.setOutput(
-      "topContributeSubsUserId",
-      data.event.top_contributions[1].user_id
-    );
-    ctx.setOutput(
-      "topContributeSubsTotal",
-      data.event.top_contributions[1].total
-    );
-    ctx.setOutput(
-      "lastContributeUserName",
-      data.event.last_contribution.user_name
-    );
-    ctx.setOutput("lastContributeUserId", data.event.last_contribution.user_id);
-    ctx.setOutput("lastContributeTotal", data.event.last_contribution.total);
-    ctx.setOutput("lastContributeType", data.event.last_contribution.type);
+    ctx.setOutput("topContributeSubsUserId", data.top_contributions[1].user_id);
+    ctx.setOutput("topContributeSubsTotal", data.top_contributions[1].total);
+    ctx.setOutput("lastContributeUserName", data.last_contribution.user_name);
+    ctx.setOutput("lastContributeUserId", data.last_contribution.user_id);
+    ctx.setOutput("lastContributeTotal", data.last_contribution.total);
+    ctx.setOutput("lastContributeType", data.last_contribution.type);
     ctx.exec("exec");
   },
 });
@@ -1376,33 +1251,21 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     console.log(data);
-    ctx.setOutput("total", data.event.total);
-    ctx.setOutput("level", data.event.level);
+    ctx.setOutput("total", data.total);
+    ctx.setOutput("level", data.level);
     ctx.setOutput(
       "topContributeBitsUserName",
-      data.event.top_contributions[0].user_name
+      data.top_contributions[0].user_name
     );
-    ctx.setOutput(
-      "topContributeBitsUserId",
-      data.event.top_contributions[0].user_id
-    );
-    ctx.setOutput(
-      "topContributeBitsTotal",
-      data.event.top_contributions[0].total
-    );
+    ctx.setOutput("topContributeBitsUserId", data.top_contributions[0].user_id);
+    ctx.setOutput("topContributeBitsTotal", data.top_contributions[0].total);
     ctx.setOutput(
       "topContributeSubsUserName",
-      data.event.top_contributions[1].user_name
+      data.top_contributions[1].user_name
     );
-    ctx.setOutput(
-      "topContributeSubsUserId",
-      data.event.top_contributions[1].user_id
-    );
-    ctx.setOutput(
-      "topContributeSubsTotal",
-      data.event.top_contributions[1].total
-    );
-    ctx.setOutput("cooldownEndsAt", data.event.cooldown_ends_at);
+    ctx.setOutput("topContributeSubsUserId", data.top_contributions[1].user_id);
+    ctx.setOutput("topContributeSubsTotal", data.top_contributions[1].total);
+    ctx.setOutput("cooldownEndsAt", data.cooldown_ends_at);
     ctx.exec("exec");
   },
 });
@@ -1446,12 +1309,12 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("channelId", data.event.broadcaster_user_id);
-    ctx.setOutput("channelLogin", data.event.broadcaster_user_login);
-    ctx.setOutput("title", data.event.title);
-    ctx.setOutput("categoryId", data.event.category_id);
-    ctx.setOutput("categoryName", data.event.category_name);
-    ctx.setOutput("mature", data.event.is_mature);
+    ctx.setOutput("channelId", data.broadcaster_user_id);
+    ctx.setOutput("channelLogin", data.broadcaster_user_login);
+    ctx.setOutput("title", data.title);
+    ctx.setOutput("categoryId", data.category_id);
+    ctx.setOutput("categoryName", data.category_name);
+    ctx.setOutput("mature", data.is_mature);
     ctx.exec("exec");
   },
 });
@@ -1485,10 +1348,10 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
-    ctx.setOutput("tier", data.event.tier);
-    ctx.setOutput("isGift", data.event.is_gift);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
+    ctx.setOutput("tier", data.tier);
+    ctx.setOutput("isGift", data.is_gift);
     ctx.exec("exec");
   },
 });
@@ -1522,10 +1385,10 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
-    ctx.setOutput("tier", data.event.tier);
-    ctx.setOutput("isGift", data.event.is_gift);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
+    ctx.setOutput("tier", data.tier);
+    ctx.setOutput("isGift", data.is_gift);
     ctx.exec("exec");
   },
 });
@@ -1569,12 +1432,12 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
-    ctx.setOutput("tier", data.event.tier);
-    ctx.setOutput("total", data.event.total);
-    ctx.setOutput("cumulative", data.event.cumulative_total);
-    ctx.setOutput("anonymous", data.event.is_anonymous);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
+    ctx.setOutput("tier", data.tier);
+    ctx.setOutput("total", data.total);
+    ctx.setOutput("cumulative", data.cumulative_total);
+    ctx.setOutput("anonymous", data.is_anonymous);
     ctx.exec("exec");
   },
 });
@@ -1624,13 +1487,13 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     console.log(data);
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
-    ctx.setOutput("tier", data.event.tier);
-    ctx.setOutput("message", data.event.message.text);
-    ctx.setOutput("cumulative", data.event.cumulative_months);
-    ctx.setOutput("streak", data.event.streak_months);
-    ctx.setOutput("duration", data.event.duration_months);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
+    ctx.setOutput("tier", data.tier);
+    ctx.setOutput("message", data.message.text);
+    ctx.setOutput("cumulative", data.cumulative_months);
+    ctx.setOutput("streak", data.streak_months);
+    ctx.setOutput("duration", data.duration_months);
     ctx.exec("exec");
   },
 });
@@ -1670,11 +1533,11 @@ pkg.createEventSchema({
   },
   run({ ctx, data }) {
     console.log(data);
-    ctx.setOutput("userId", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
-    ctx.setOutput("anonymous", data.event.is_anonymous);
-    ctx.setOutput("message", data.event.message);
-    ctx.setOutput("bits", data.event.bits);
+    ctx.setOutput("userId", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
+    ctx.setOutput("anonymous", data.is_anonymous);
+    ctx.setOutput("message", data.message);
+    ctx.setOutput("bits", data.bits);
     ctx.exec("exec");
   },
 });
@@ -1703,9 +1566,9 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userId", data.event.from_broadcaster_user_id);
-    ctx.setOutput("userLogin", data.event.from_broadcaster_user_login);
-    ctx.setOutput("viewers", data.event.viewers);
+    ctx.setOutput("userId", data.from_broadcaster_user_id);
+    ctx.setOutput("userLogin", data.from_broadcaster_user_login);
+    ctx.setOutput("viewers", data.viewers);
     ctx.exec("exec");
   },
 });
@@ -1734,9 +1597,9 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("userID", data.event.user_id);
-    ctx.setOutput("userLogin", data.event.user_login);
-    ctx.setOutput("username", data.event.user_name);
+    ctx.setOutput("userID", data.user_id);
+    ctx.setOutput("userLogin", data.user_login);
+    ctx.setOutput("username", data.user_name);
     ctx.exec("exec");
   },
 });
@@ -1760,9 +1623,9 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("viewerCount", data.event.viewer_count);
-    ctx.setOutput("startedAt", data.event.started_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("viewerCount", data.viewer_count);
+    ctx.setOutput("startedAt", data.started_at);
 
     ctx.exec("exec");
   },
@@ -1807,12 +1670,12 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("type", data.event.type);
-    ctx.setOutput("description", data.event.description);
-    ctx.setOutput("currentAmount", data.event.current_amount);
-    ctx.setOutput("targetAmount", data.event.target_amount);
-    ctx.setOutput("startedAt", data.event.started_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("type", data.type);
+    ctx.setOutput("description", data.description);
+    ctx.setOutput("currentAmount", data.current_amount);
+    ctx.setOutput("targetAmount", data.target_amount);
+    ctx.setOutput("startedAt", data.started_at);
 
     ctx.exec("exec");
   },
@@ -1857,12 +1720,12 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("type", data.event.type);
-    ctx.setOutput("description", data.event.description);
-    ctx.setOutput("currentAmount", data.event.current_amount);
-    ctx.setOutput("targetAmount", data.event.target_amount);
-    ctx.setOutput("startedAt", data.event.started_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("type", data.type);
+    ctx.setOutput("description", data.description);
+    ctx.setOutput("currentAmount", data.current_amount);
+    ctx.setOutput("targetAmount", data.target_amount);
+    ctx.setOutput("startedAt", data.started_at);
 
     ctx.exec("exec");
   },
@@ -1917,14 +1780,14 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("type", data.event.type);
-    ctx.setOutput("description", data.event.description);
-    ctx.setOutput("isAchieved", data.event.is_achieved);
-    ctx.setOutput("currentAmount", data.event.current_amount);
-    ctx.setOutput("targetAmount", data.event.target_amount);
-    ctx.setOutput("startedAt", data.event.started_at);
-    ctx.setOutput("endedAt", data.event.ended_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("type", data.type);
+    ctx.setOutput("description", data.description);
+    ctx.setOutput("isAchieved", data.is_achieved);
+    ctx.setOutput("currentAmount", data.current_amount);
+    ctx.setOutput("targetAmount", data.target_amount);
+    ctx.setOutput("startedAt", data.started_at);
+    ctx.setOutput("endedAt", data.ended_at);
 
     ctx.exec("exec");
   },
@@ -1954,9 +1817,9 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    ctx.setOutput("id", data.event.id);
-    ctx.setOutput("type", data.event.type);
-    ctx.setOutput("startedAt", data.event.started_at);
+    ctx.setOutput("id", data.id);
+    ctx.setOutput("type", data.type);
+    ctx.setOutput("startedAt", data.started_at);
     ctx.exec("exec");
   },
 });
