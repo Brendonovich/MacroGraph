@@ -70,10 +70,20 @@ pkg.createNonEventSchema({
       name: "Channel ID",
       type: t.string(),
     });
+    io.dataInput({
+      id: "everyone",
+      name: "Allow @Everyone",
+      type: t.bool(),
+    });
   },
   async run({ ctx }) {
     await api.channels(ctx.getInput("channelId")).messages.post(z.any(), {
-      body: { content: ctx.getInput("message") },
+      body: {
+        content: ctx.getInput("message"),
+        allowed_mentions: {
+          parse: ctx.getInput("everyone") ? ["everyone"] : [],
+        },
+      },
     });
   },
 });
