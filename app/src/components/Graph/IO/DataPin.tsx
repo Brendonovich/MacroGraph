@@ -23,7 +23,7 @@ export const DataPin = (props: Props) => {
 
   const connected = () =>
     pin instanceof DataInput
-      ? pin.connection !== null
+      ? pin.connection.isSome()
       : pin.connections.size > 0;
 
   const containerProps = () =>

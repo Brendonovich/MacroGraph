@@ -8,6 +8,8 @@ import {
   Enum,
   InferEnum,
   EnumVariants,
+  DataInput,
+  None,
 } from "@macrograph/core";
 import { JSON, jsonToValue } from "./json";
 
@@ -256,7 +258,7 @@ pkg.createNonEventSchema({
   variant: "Pure",
   run({ ctx }) {
     const number = Number(ctx.getInput<string>("string"));
-    const opt = Maybe(Number.isNaN(number) ? null : number);
+    const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
     ctx.setOutput("int", opt.map(Math.floor));
   },
@@ -449,6 +451,84 @@ pkg.createNonEventSchema({
       id: "five",
       type: t.string(),
     });
+    io.dataOutput({
+      id: "output",
+      type: t.string(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Create String",
+  variant: "Pure",
+  run({ ctx, io }) {
+    ctx.setOutput(
+      "output",
+      io.inputs.reduce((acc, input) => {
+        acc += ctx.getInput<string>(input.id);
+        return acc;
+      }, "")
+    );
+  },
+  generateIO(io) {
+    if (!io.previous) {
+      const last = io.dataInput({
+        id: "1",
+        type: t.string(),
+      });
+
+      last.connection;
+    } else {
+      const previousInputs = io.previous.inputs;
+
+      const endState: "twoUnconnected" | "fine" | "addOne" = (() => {
+        const inputCount = previousInputs.length;
+        const last = previousInputs[inputCount - 1] as DataInput;
+        const secondLast = previousInputs[inputCount - 2] as
+          | DataInput
+          | undefined;
+
+        if (last.connection.isSome()) return "addOne";
+        else if (
+          !secondLast ||
+          (last.connection.isNone() && secondLast.connection.isSome())
+        )
+          return "fine";
+        else return "twoUnconnected";
+      })();
+
+      let lastConnectedIndex: Option<number> = None;
+
+      for (let i = previousInputs.length - 1; i >= 0; i--) {
+        const input = previousInputs[i]!;
+        if (input.connection.isSome()) {
+          lastConnectedIndex = Some(i);
+          break;
+        }
+      }
+
+      for (const input of previousInputs.slice(
+        0,
+        endState === "twoUnconnected"
+          ? lastConnectedIndex.map((i) => i + 2).unwrapOr(1)
+          : undefined
+      )) {
+        io.dataInput({
+          id: input.id,
+          type: t.string(),
+        });
+      }
+
+      if (endState === "addOne")
+        io.dataInput({
+          id: (previousInputs.length + 1).toString(),
+          type: t.string(),
+        });
+
+      io.inputs[io.inputs.length - 1]?.connection;
+      io.inputs[io.inputs.length - 2]?.connection;
+    }
+
     io.dataOutput({
       id: "output",
       type: t.string(),

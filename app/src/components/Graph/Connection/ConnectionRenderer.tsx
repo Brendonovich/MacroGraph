@@ -2,6 +2,7 @@ import {
   DataInput,
   ExecInput,
   ExecOutput,
+  Maybe,
   ScopeInput,
   ScopeOutput,
 } from "@macrograph/core";
@@ -36,25 +37,23 @@ export const ConnectionRender = () => {
           {(n) => (
             <For each={n.inputs}>
               {(i) => {
-                const connectionData = () => {
-                  const inputPosition = UI.state.pinPositions.get(i);
+                const connectionData = () =>
+                  i.connection.andThen((conn) => {
+                    const inputPosition = Maybe(UI.state.pinPositions.get(i));
+                    const outputPosition = Maybe(
+                      UI.state.pinPositions.get(conn)
+                    );
 
-                  if (!i.connection) return null;
-
-                  const outputPosition = UI.state.pinPositions.get(
-                    i.connection
-                  );
-
-                  if (!inputPosition || !outputPosition) return null;
-
-                  return {
-                    input: inputPosition,
-                    output: outputPosition,
-                  };
-                };
+                    return inputPosition
+                      .zip(outputPosition)
+                      .map(([input, output]) => ({
+                        input,
+                        output,
+                      }));
+                  });
 
                 return (
-                  <Show when={connectionData()}>
+                  <Show when={connectionData().toNullable()}>
                     {(positions) => (
                       <Switch
                         fallback={

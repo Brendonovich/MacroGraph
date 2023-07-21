@@ -1,16 +1,14 @@
 import { createMutable } from "solid-js/store";
 import { ReactiveSet } from "@solid-primitives/set";
 import { Node } from "./Node";
-import { t } from "../types";
+import { t, Option, None } from "../types";
 import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
 
 export type DataInputArgs = {
-  variant: "Data";
   id: string;
   name?: string;
   type: t.Any;
   defaultValue?: any;
-  connection?: Connection | null;
   node: Node;
 };
 
@@ -20,7 +18,7 @@ export class DataInput {
   defaultValue: any = null;
   type: t.Any;
   node: Node;
-  connection: DataOutput | null = null;
+  connection: Option<DataOutput> = None;
 
   constructor(args: DataInputArgs) {
     this.id = args.id;
@@ -36,10 +34,6 @@ export class DataInput {
     this.defaultValue = value;
 
     this.node.graph.project.save();
-  }
-
-  get connected() {
-    return this.connection !== null;
   }
 
   get variant() {
@@ -77,7 +71,6 @@ export class DataOutput {
 
 export interface ExecInputArgs {
   node: Node;
-  variant: "Exec";
   id: string;
   name?: string;
   connection?: Connection | null;
@@ -85,7 +78,7 @@ export interface ExecInputArgs {
 
 export class ExecInput {
   id: string;
-  connection: ExecOutput | null = null;
+  connection: Option<ExecOutput> = None;
   public node: Node;
   public name?: string;
 
@@ -95,10 +88,6 @@ export class ExecInput {
     this.name = args.name;
 
     createMutable(this);
-  }
-
-  get connected() {
-    return this.connection !== null;
   }
 
   get variant() {
@@ -114,7 +103,7 @@ export interface ExecOutputArgs {
 
 export class ExecOutput {
   id: string;
-  connection: ExecInput | null = null;
+  connection: Option<ExecInput> = None;
   public node: Node;
   public name?: string;
 
@@ -124,10 +113,6 @@ export class ExecOutput {
     this.name = args.name;
 
     createMutable(this);
-  }
-
-  get connected() {
-    return this.connection !== null;
   }
 
   get variant() {
@@ -160,7 +145,7 @@ export interface ScopeOutputArgs {
 
 export class ScopeOutput {
   id: string;
-  connection: ScopeInput | null = null;
+  connection: Option<ScopeInput> = None;
   node: Node;
   name?: string;
   scope: Scope;
@@ -188,7 +173,7 @@ export interface ScopeInputArgs {
 
 export class ScopeInput {
   id: string;
-  connection: ScopeOutput | null = null;
+  connection: Option<ScopeOutput> = None;
   node: Node;
   name?: string;
   scope: ScopeRef;

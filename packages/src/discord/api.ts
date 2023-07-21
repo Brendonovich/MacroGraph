@@ -4,13 +4,13 @@ import { botToken, setBotToken } from "./auth";
 import { createResource, createRoot } from "solid-js";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
 import { createEndpoint, nativeFetch } from "../httpEndpoint";
-import { Maybe, rspcClient, t } from "@macrograph/core";
+import { Maybe, None, rspcClient, t } from "@macrograph/core";
 
 const root = createEndpoint({
   path: "https://discord.com/api/v10",
   fetchFn: async (url, args) => {
     const token = botToken();
-    if (token === null) throw new Error("No bot token!");
+    if (token.isNone()) throw new Error("No bot token!");
 
     return await nativeFetch(url, {
       ...args,
@@ -46,7 +46,7 @@ const [bot] = createRoot(() =>
     try {
       return await api.users("@me").get(USER_SCHEMA);
     } catch (e) {
-      setBotToken(null);
+      setBotToken(None);
     }
   })
 );
