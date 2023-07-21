@@ -894,7 +894,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("title", data.title);
     ctx.setOutput("outcomes", data.outcomes);
     ctx.exec("exec");
@@ -920,7 +919,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("title", data.title);
     ctx.setOutput("outcomes", data.outcomes);
     ctx.exec("exec");
@@ -1073,7 +1071,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("total", data.total);
     ctx.setOutput("progress", data.progress);
     ctx.setOutput("goal", data.goal);
@@ -1174,7 +1171,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("total", data.total);
     ctx.setOutput("progress", data.progress);
     ctx.setOutput("goal", data.goal);
@@ -1250,7 +1246,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("total", data.total);
     ctx.setOutput("level", data.level);
     ctx.setOutput(
@@ -1486,7 +1481,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("userId", data.user_id);
     ctx.setOutput("userLogin", data.user_login);
     ctx.setOutput("tier", data.tier);
@@ -1532,7 +1526,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("userId", data.user_id);
     ctx.setOutput("userLogin", data.user_login);
     ctx.setOutput("anonymous", data.is_anonymous);

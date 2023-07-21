@@ -695,7 +695,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("inputName", data.inputName);
     const audioTracks = AudioTracks.create({
       "1": data.inputAudioTracks["1"] as boolean,

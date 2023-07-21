@@ -756,7 +756,6 @@ pkg.createNonEventSchema({
     const data = await obs.call("GetInputKindList", {
       unversioned: ctx.getInput("unversioned"),
     });
-    console.log(data.inputKinds);
     ctx.setOutput("inputKinds", data.inputKinds);
   },
 });
@@ -915,8 +914,6 @@ pkg.createNonEventSchema({
         unversionedInputKind: input.unversionedInputKind as string,
       })
     );
-
-    console.log(inputs);
 
     ctx.setOutput<Array<InferStruct<typeof InputInfo>>>("inputs", inputs);
   },
@@ -1507,7 +1504,6 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const data = await obs.call("GetSceneTransitionList");
 
-    console.log(data);
     const Transition = data.transitions.map((data) =>
       Transitions.create({
         transitionConfigurable: data.transitionConfigurable as boolean,
@@ -1561,7 +1557,6 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const data = await obs.call("GetCurrentSceneTransition");
-    console.log(data.transitionSettings);
 
     ctx.setOutput("transitionName", data.transitionName);
     ctx.setOutput("transitionKind", data.transitionKind);
