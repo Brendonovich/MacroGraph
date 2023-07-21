@@ -16,9 +16,37 @@ pub fn router() -> Router {
     R.router()
         .merge("http.", http())
         .merge("auth.", auth())
+        .merge("fs.", fs())
         .build(Config::new().export_ts_bindings(
             std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../core/src/core.ts"),
         ))
+}
+
+pub fn fs() -> AlphaRouter<()> {
+    #[derive(Type, Serialize)]
+    enum Entry {
+        Dir(String),
+        File(String),
+    }
+
+    R.router().procedure(
+        "list",
+        R.query(|_, path: String| async move {
+            std::fs::read_dir(path)
+                .unwrap()
+                .map(|e| {
+                    let e = e.unwrap();
+                    let path = e.path();
+                    let path = path.to_str().unwrap().to_string();
+                    if e.file_type().unwrap().is_dir() {
+                        Entry::Dir(path)
+                    } else {
+                        Entry::File(path)
+                    }
+                })
+                .collect::<Vec<_>>()
+        }),
+    )
 }
 
 const MACROGRAPH_DOT_APP: &str = "https://macrograph.vercel.app";
