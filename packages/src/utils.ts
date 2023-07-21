@@ -1082,6 +1082,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
+    if (!ctx.getInput("name")) return;
     if (ctx.getInput("name") !== data.name) return;
     ctx.setOutput("event", data.name);
     ctx.setOutput("eventKey", data.key);

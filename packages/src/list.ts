@@ -103,3 +103,31 @@ pkg.createNonEventSchema({
     );
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Get List Value",
+  variant: "Exec",
+  generateIO(io) {
+    const w = io.wildcard("");
+
+    io.dataInput({
+      id: "list",
+      type: t.list(t.wildcard(w)),
+    });
+    io.dataInput({
+      id: "index",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "return",
+      name: "Value",
+      type: t.wildcard(w),
+    });
+  },
+  run({ ctx }) {
+    ctx.setOutput(
+      "return",
+      ctx.getInput<Array<any>>("list").slice(ctx.getInput<number>("index"))[0]
+    );
+  },
+});
