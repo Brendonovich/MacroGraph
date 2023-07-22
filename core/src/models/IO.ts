@@ -1,26 +1,26 @@
 import { createMutable } from "solid-js/store";
 import { ReactiveSet } from "@solid-primitives/set";
 import { Node } from "./Node";
-import { t, Option, None } from "../types";
+import { t, Option, None, BaseType } from "../types";
 import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
 
-export type DataInputArgs = {
+export type DataInputArgs<T extends BaseType<any>> = {
   id: string;
   name?: string;
-  type: t.Any;
+  type: T;
   defaultValue?: any;
   node: Node;
 };
 
-export class DataInput {
+export class DataInput<T extends BaseType<any>> {
   id: string;
   name?: string;
   defaultValue: any = null;
-  type: t.Any;
+  type: T;
   node: Node;
-  connection: Option<DataOutput> = None;
+  connection: Option<DataOutput<T>> = None;
 
-  constructor(args: DataInputArgs) {
+  constructor(args: DataInputArgs<T>) {
     this.id = args.id;
     this.name = args.name;
     this.defaultValue = args.defaultValue || args.type.default();
@@ -41,21 +41,21 @@ export class DataInput {
   }
 }
 
-export interface DataOutputArgs {
+export interface DataOutputArgs<T extends BaseType<any>> {
   node: Node;
   id: string;
   name?: string;
-  type: t.Any;
+  type: T;
 }
 
-export class DataOutput {
+export class DataOutput<T extends BaseType<any>> {
   id: string;
-  connections = new ReactiveSet<DataInput>();
+  connections = new ReactiveSet<DataInput<any>>();
   node: Node;
   name?: string;
-  type: t.Any;
+  type: T;
 
-  constructor(args: DataOutputArgs) {
+  constructor(args: DataOutputArgs<T>) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
@@ -193,7 +193,7 @@ export class ScopeInput {
 }
 
 export type ExecPin = ExecInput | ExecOutput;
-export type DataPin = DataInput | DataOutput;
+export type DataPin = DataInput<any> | DataOutput<any>;
 export type ScopePin = ScopeInput | ScopeOutput;
 export type Pin = ExecPin | DataPin | ScopePin;
 

@@ -491,14 +491,14 @@ function Maybe<T>(value: T | null | undefined): Option<T> {
 
 export { Option, Some, Maybe, None };
 
-export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
-  Option<TOut>
+export class OptionType<T extends BaseType<any>> extends BaseType<
+  Option<t.infer<T>>
 > {
   constructor(public inner: T) {
     super();
   }
 
-  default(): Option<TOut> {
+  default(): Option<t.infer<T>> {
     return None;
   }
 
@@ -506,7 +506,7 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
     return this.inner.variant();
   }
 
-  getInner(): BaseType {
+  getInner(): T {
     if (this.inner instanceof OptionType) {
       return this.inner.getInner();
     } else return this.inner;
@@ -516,7 +516,7 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
     return `Option<${this.inner.toString()}>`;
   }
 
-  asZodType(): z.ZodType<Option<TOut>> {
+  asZodType(): z.ZodType<Option<t.infer<T>>> {
     // TODO: needs to validate inner
 
     return z.instanceof(Option) as any;

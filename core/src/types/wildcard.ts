@@ -29,7 +29,7 @@ export class Wildcard {
   private setRawValue: Setter<Option<t.Any>>;
 
   constructor(public id: string) {
-    const [value, setValue] = createSignal<Option<BaseType>>(None);
+    const [value, setValue] = createSignal<Option<BaseType<any>>>(None);
 
     const { dispose, owner } = createRoot((dispose) => ({
       dispose,
@@ -54,7 +54,7 @@ export class Wildcard {
     // first, we gather all types that are connected to types that are
     // connected to this wildcard
     const surroundingValues = (() => {
-      let arr: BaseType[] = [];
+      let arr: BaseType<any>[] = [];
 
       for (const type of this.types) {
         for (const connection of type.connections.keys()) {
@@ -158,7 +158,7 @@ class WildcardTypeConnector {
     this._dispose = dispose;
   }
 
-  getOpposite(a: BaseType) {
+  getOpposite(a: BaseType<any>) {
     return a === this.a ? this.b : this.a;
   }
 
@@ -174,7 +174,7 @@ class WildcardTypeConnector {
  * A type that is linked to a Wildcard.
  * May be owned by an AnyType or data IO.
  */
-export class WildcardType extends BaseType {
+export class WildcardType extends BaseType<unknown> {
   connections = new ReactiveMap<t.Any, WildcardTypeConnector>();
 
   dispose: () => void;
@@ -247,13 +247,16 @@ export class WildcardType extends BaseType {
   }
 }
 
-export function connectWildcardsInIO(output: DataOutput, input: DataInput) {
+export function connectWildcardsInIO(
+  output: DataOutput<t.Any>,
+  input: DataInput<t.Any>
+) {
   connectWildcardsInTypes(output.type, input.type);
 }
 
 export function connectWildcardsInTypes(
-  a: BaseType,
-  b: BaseType
+  a: BaseType<unknown>,
+  b: BaseType<unknown>
 ): WildcardTypeConnector | undefined {
   if (a === b) return;
 
@@ -272,7 +275,10 @@ export function connectWildcardsInTypes(
     return connectWildcardsInTypes(a.inner, b.inner);
 }
 
-export function disconnectWildcardsInIO(output: DataOutput, input: DataInput) {
+export function disconnectWildcardsInIO(
+  output: DataOutput<t.Any>,
+  input: DataInput<t.Any>
+) {
   disconnectWildcardsInTypes(output.type, input.type);
 }
 

@@ -40,180 +40,190 @@ export const PRINT_CHANNEL = new PrintChannel();
 pkg.createNonEventSchema({
   name: "Print",
   variant: "Exec",
-  run({ ctx }) {
-    PRINT_CHANNEL.emit(ctx.getInput<string>("input"));
-  },
   generateIO(io) {
-    io.dataInput({
+    return io.dataInput({
       id: "input",
       name: "Input",
       type: t.string(),
     });
+  },
+  run({ ctx }) {
+    PRINT_CHANNEL.emit(ctx.getInput(io));
   },
 });
 
 pkg.createNonEventSchema({
   name: "String Includes",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "bool",
-      ctx.getInput<string>("haystack").includes(ctx.getInput<string>("needle"))
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "haystack",
-      name: "String",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "needle",
-      name: "Includes",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "bool",
-      type: t.bool(),
-    });
+    return {
+      haystack: io.dataInput({
+        id: "haystack",
+        name: "String",
+        type: t.string(),
+      }),
+      needle: io.dataInput({
+        id: "needle",
+        name: "Includes",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "bool",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(
+      io.out,
+      ctx.getInput(io.haystack).includes(ctx.getInput(io.needle))
+    );
   },
 });
 
 pkg.createNonEventSchema({
   name: "String Length",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("int", ctx.getInput<string>("input").length);
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      name: "String",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "int",
-      type: t.int(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        name: "String",
+        type: t.string(),
+      }),
+      output: io.dataOutput({
+        id: "int",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input).length);
   },
 });
 
 pkg.createNonEventSchema({
   name: "String Starts With",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "bool",
-      ctx.getInput<string>("input").startsWith(ctx.getInput<string>("prefix"))
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      name: "String",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "prefix",
-      name: "Starts With",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "bool",
-      type: t.bool(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        name: "String",
+        type: t.string(),
+      }),
+      prefix: io.dataInput({
+        id: "prefix",
+        name: "Starts With",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "bool",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(
+      io.out,
+      ctx.getInput(io.input).startsWith(ctx.getInput(io.prefix))
+    );
   },
 });
 
 pkg.createNonEventSchema({
   name: "Substring",
   variant: "Pure",
-  run({ ctx }) {
-    const start = ctx.getInput<number>("start")
-      ? ctx.getInput<number>("start")
-      : 0;
-    const end =
-      ctx.getInput<number>("end") !== 0
-        ? ctx.getInput<number>("end")
-        : ctx.getInput<string>("input").length;
-    ctx.setOutput(
-      "output",
-      ctx.getInput<string>("input").substring(start, end)
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "start",
-      name: "Start",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "end",
-      name: "End",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.string(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.string(),
+      }),
+      start: io.dataInput({
+        id: "start",
+        name: "Start",
+        type: t.int(),
+      }),
+      end: io.dataInput({
+        id: "end",
+        name: "End",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const start = ctx.getInput(io.start);
+    const end =
+      ctx.getInput(io.end) !== 0
+        ? ctx.getInput(io.end)
+        : ctx.getInput(io.input).length;
+
+    ctx.setOutput(io.output, ctx.getInput(io.input).substring(start, end));
   },
 });
 
 pkg.createNonEventSchema({
   name: "String To Uppercase",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput<string>("input").toUpperCase());
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.string(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.string(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input).toUpperCase());
   },
 });
 
 pkg.createNonEventSchema({
   name: "String To Lowercase",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput<string>("input").toLowerCase());
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.string(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.string(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input).toLowerCase());
   },
 });
 
 pkg.createNonEventSchema({
   name: "Int to String",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("string", ctx.getInput<number>("int").toString());
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "int",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "string",
-      type: t.string(),
-    });
+    return {
+      input: io.dataInput({
+        id: "int",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "string",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input).toString());
   },
 });
 
@@ -420,57 +430,52 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Append String",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "output",
-      ctx.getInput<string>("one") +
-        ctx.getInput<string>("two") +
-        ctx.getInput<string>("three") +
-        ctx.getInput<string>("four") +
-        ctx.getInput<string>("five")
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "three",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "four",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "five",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.string(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.string(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.string(),
+      }),
+      three: io.dataInput({
+        id: "three",
+        type: t.string(),
+      }),
+      four: io.dataInput({
+        id: "four",
+        type: t.string(),
+      }),
+      five: io.dataInput({
+        id: "five",
+        type: t.string(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(
+      io.output,
+      ctx.getInput(io.one) +
+        ctx.getInput(io.two) +
+        ctx.getInput(io.three) +
+        ctx.getInput(io.four) +
+        ctx.getInput(io.five)
+    );
   },
 });
 
 pkg.createNonEventSchema({
   name: "Create String",
   variant: "Pure",
-  run({ ctx, io }) {
-    ctx.setOutput(
-      "output",
-      io.inputs.reduce((acc, input) => {
-        acc += ctx.getInput<string>(input.id);
-        return acc;
-      }, "")
-    );
-  },
   generateIO(io) {
+    let inputs: DataInput<t.String>[];
+
     if (!io.previous) {
       const last = io.dataInput({
         id: "1",
@@ -478,14 +483,18 @@ pkg.createNonEventSchema({
       });
 
       last.connection;
+
+      inputs = [last];
     } else {
+      inputs = [];
+
       const previousInputs = io.previous.inputs;
 
       const endState: "twoUnconnected" | "fine" | "addOne" = (() => {
         const inputCount = previousInputs.length;
-        const last = previousInputs[inputCount - 1] as DataInput;
+        const last = previousInputs[inputCount - 1] as DataInput<t.String>;
         const secondLast = previousInputs[inputCount - 2] as
-          | DataInput
+          | DataInput<t.String>
           | undefined;
 
         if (last.connection.isSome()) return "addOne";
@@ -513,41 +522,48 @@ pkg.createNonEventSchema({
           ? lastConnectedIndex.map((i) => i + 2).unwrapOr(1)
           : undefined
       )) {
-        io.dataInput({
-          id: input.id,
-          type: t.string(),
-        });
+        inputs.push(
+          io.dataInput({
+            id: input.id,
+            type: t.string(),
+          })
+        );
       }
 
       if (endState === "addOne")
-        io.dataInput({
-          id: (previousInputs.length + 1).toString(),
-          type: t.string(),
-        });
+        inputs.push(
+          io.dataInput({
+            id: (previousInputs.length + 1).toString(),
+            type: t.string(),
+          })
+        );
 
       io.inputs[io.inputs.length - 1]?.connection;
       io.inputs[io.inputs.length - 2]?.connection;
     }
 
-    io.dataOutput({
-      id: "output",
-      type: t.string(),
-    });
+    return {
+      inputs,
+      output: io.dataOutput({
+        id: "output",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(
+      io.output,
+      io.inputs.reduce((acc, input) => {
+        acc += ctx.getInput(input);
+        return acc;
+      }, "")
+    );
   },
 });
 
 pkg.createNonEventSchema({
   name: "Round Float",
   variant: "Pure",
-  run({ ctx }) {
-    const input = ctx.getInput<number>("input");
-    const decimal = ctx.getInput<number>("decimal");
-
-    ctx.setOutput(
-      "output",
-      Math.round(input * Math.pow(10, decimal)) / Math.pow(10, decimal)
-    );
-  },
   generateIO(io) {
     io.dataInput({
       id: "input",
@@ -562,6 +578,15 @@ pkg.createNonEventSchema({
       id: "output",
       type: t.float(),
     });
+  },
+  run({ ctx }) {
+    const input = ctx.getInput<number>("input");
+    const decimal = ctx.getInput<number>("decimal");
+
+    ctx.setOutput(
+      "output",
+      Math.round(input * Math.pow(10, decimal)) / Math.pow(10, decimal)
+    );
   },
 });
 

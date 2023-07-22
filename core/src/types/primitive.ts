@@ -5,7 +5,7 @@ import { Wildcard, WildcardType } from "./wildcard";
 
 export type PrimitiveVariant = "int" | "float" | "string" | "bool";
 
-export abstract class BasePrimitiveType<TOut = any> extends BaseType<TOut> {
+export abstract class BasePrimitiveType<TOut> extends BaseType<TOut> {
   variant(): TypeVariant {
     return "primitive";
   }

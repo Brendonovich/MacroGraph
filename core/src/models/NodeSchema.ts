@@ -1,5 +1,5 @@
 import { createMutable } from "solid-js/store";
-import { AnyType, Maybe, None, Option } from "../types";
+import { AnyType, BaseType, Maybe, None, Option, t } from "../types";
 import { Wildcard } from "../types/wildcard";
 import {
   DataInput,
@@ -74,8 +74,8 @@ export class ScopeRef {
 }
 
 export class IOBuilder {
-  inputs: (DataInput | ExecInput | ScopeInput)[] = [];
-  outputs: (DataOutput | ExecOutput | ScopeOutput)[] = [];
+  inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];
+  outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[] = [];
 
   wildcards = new Map<string, Wildcard>();
   scopes = new Map<string, ScopeRef>();
@@ -105,7 +105,7 @@ export class IOBuilder {
   dataInput<T extends DataInputBuilder>(args: T) {
     const newInput = Maybe(
       this.previous?.inputs.find(
-        (i): i is DataInput =>
+        (i): i is DataInput<T["type"]> =>
           i.id === args.id && i instanceof DataInput && args.type.eq(i.type)
       )
     ).unwrapOrElse(() => new DataInput({ ...args, node: this.node }));
@@ -118,7 +118,7 @@ export class IOBuilder {
   dataOutput<T extends DataOutputBuilder>(args: T) {
     const newOutput = Maybe(
       this.previous?.outputs.find(
-        (o): o is DataOutput =>
+        (o): o is DataOutput<T["type"]> =>
           o.id === args.id && o instanceof DataOutput && args.type.eq(o.type)
       )
     ).unwrapOrElse(() => new DataOutput({ ...args, node: this.node }));
@@ -194,32 +194,38 @@ export interface IOSchema {
 export type RunCtx = {
   exec(t: string): Promise<void>;
   execScope(t: string, data: Record<string, any>): Promise<void>;
-  setOutput<T>(name: string, data: T): void;
-  getInput<T>(name: string): T;
+  setOutput<TOutput extends DataOutput<any>>(
+    output: TOutput,
+    data: t.infer<TOutput["type"]>
+  ): void;
+  getInput<TInput extends DataInput<any>>(
+    input: TInput
+  ): TInput extends DataInput<infer T> ? t.infer<T> : never;
 };
 
 export type EventsMap = Record<string, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
-  | NonEventNodeSchema
+  | NonEventNodeSchema<any, any>
   | EventNodeSchema<TEvents>;
 
-export type NonEventNodeSchema<TState extends object = object> = {
+export type NonEventNodeSchema<TState extends object = object, TIO = void> = {
   name: string;
-  generateIO: (builder: IOBuilder, state: TState) => void;
+  generateIO: (builder: IOBuilder, state: TState) => TIO;
   package: Package<EventsMap>;
   variant: Exclude<NodeSchemaVariant, "Event">;
-  run: (a: { ctx: RunCtx; io: IOBuilder }) => void | Promise<void>;
+  run: (a: { ctx: RunCtx; io: TIO }) => void | Promise<void>;
 };
 
 export type EventNodeSchema<
   TEvents extends EventsMap = EventsMap,
   TEvent extends keyof TEvents = string,
-  TState extends object = object
+  TState extends object = object,
+  TIO = void
 > = {
   name: string;
-  generateIO: (builder: IOBuilder, state: TState) => void;
+  generateIO: (builder: IOBuilder, state: TState) => TIO;
   package: Package<EventsMap>;
   event: TEvent;
-  run: (a: { ctx: RunCtx; data: TEvents[TEvent]; io: IOBuilder }) => void;
+  run: (a: { ctx: RunCtx; data: TEvents[TEvent]; io: TIO }) => void;
 };

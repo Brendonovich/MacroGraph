@@ -1,3 +1,4 @@
+import { infer } from "./base";
 import {
   AnyType,
   Enum,
@@ -19,7 +20,7 @@ const bool = () => new BoolType();
 const list = <T extends AnyType>(t: T) => new ListType<T>(t);
 const map = <TValue extends AnyType>(v: TValue) => new MapType(v);
 const option = <T extends AnyType>(t: T) => new OptionType<T>(t);
-const enm = <V extends EnumVariants>(t: Enum<V>) => new EnumType<V>(t);
+const enm = <T extends Enum<any>>(t: T) => new EnumType<T>(t);
 const wildcard = (w: Wildcard) => new WildcardType(w);
 const struct = <F extends StructFields>(s: Struct<F>) => new StructType<F>(s);
 
@@ -49,4 +50,4 @@ export {
   StructType as Struct,
 };
 
-export type { AnyType as Any };
+export type { AnyType as Any, infer };

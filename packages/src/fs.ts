@@ -1,4 +1,4 @@
-import { Package, core, t } from "@macrograph/core";
+import { core, t } from "@macrograph/core";
 import { rspcClient } from "@macrograph/core";
 
 const pkg = core.createPackage<any>({ name: "FS" });
@@ -7,19 +7,21 @@ pkg.createNonEventSchema({
   name: "List Files",
   variant: "Exec",
   generateIO(io) {
-    io.dataInput({
-      id: "path",
-      name: "Folder Path",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "files",
-      name: "Files",
-      type: t.list(t.string()),
-    });
+    return {
+      path: io.dataInput({
+        id: "path",
+        name: "Folder Path",
+        type: t.string(),
+      }),
+      files: io.dataOutput({
+        id: "files",
+        name: "Files",
+        type: t.list(t.string()),
+      }),
+    };
   },
-  async run({ ctx }) {
-    const path = ctx.getInput<string>("path");
+  async run({ ctx, io }) {
+    const path = ctx.getInput(io.path);
     const files = await rspcClient.query(["fs.list", path]);
 
     const array = files
@@ -28,6 +30,6 @@ pkg.createNonEventSchema({
       })
       .filter(Boolean) as string[];
 
-    ctx.setOutput<string[]>("files", array);
+    ctx.setOutput(io.files, array);
   },
 });

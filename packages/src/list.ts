@@ -1,4 +1,4 @@
-import { core, Maybe, Option, t } from "@macrograph/core";
+import { core, Maybe, t } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "List",
@@ -10,17 +10,19 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "list",
-      type: t.list(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "value",
-      type: t.wildcard(w),
-    });
+    return {
+      list: io.dataInput({
+        id: "list",
+        type: t.list(t.wildcard(w)),
+      }),
+      value: io.dataInput({
+        id: "value",
+        type: t.wildcard(w),
+      }),
+    };
   },
-  run({ ctx }) {
-    ctx.getInput<Array<any>>("list").push(ctx.getInput("value"));
+  run({ ctx, io }) {
+    ctx.getInput(io.list).push(ctx.getInput(io.value));
   },
 });
 
@@ -30,23 +32,25 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "list",
-      type: t.list(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "index",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "value",
-      type: t.wildcard(w),
-    });
+    return {
+      list: io.dataInput({
+        id: "list",
+        type: t.list(t.wildcard(w)),
+      }),
+      index: io.dataInput({
+        id: "index",
+        type: t.int(),
+      }),
+      value: io.dataInput({
+        id: "value",
+        type: t.wildcard(w),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     ctx
-      .getInput<Array<any>>("list")
-      .splice(ctx.getInput("index"), 0, ctx.getInput("value"));
+      .getInput(io.list)
+      .splice(ctx.getInput(io.index), 0, ctx.getInput(io.value));
   },
 });
 
@@ -56,23 +60,25 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "list",
-      type: t.list(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "index",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "value",
-      type: t.wildcard(w),
-    });
+    return {
+      list: io.dataInput({
+        id: "list",
+        type: t.list(t.wildcard(w)),
+      }),
+      index: io.dataInput({
+        id: "index",
+        type: t.int(),
+      }),
+      value: io.dataInput({
+        id: "value",
+        type: t.wildcard(w),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     ctx
-      .getInput<Array<any>>("list")
-      .splice(ctx.getInput("index"), 1, ctx.getInput("value"));
+      .getInput(io.list)
+      .splice(ctx.getInput(io.index), 1, ctx.getInput(io.value));
   },
 });
 
@@ -82,24 +88,26 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "list",
-      type: t.list(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "index",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "return",
-      name: "Removed Value",
-      type: t.wildcard(w),
-    });
+    return {
+      list: io.dataInput({
+        id: "list",
+        type: t.list(t.wildcard(w)),
+      }),
+      index: io.dataInput({
+        id: "index",
+        type: t.int(),
+      }),
+      return: io.dataOutput({
+        id: "return",
+        name: "Removed Value",
+        type: t.wildcard(w),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     ctx.setOutput(
-      "return",
-      ctx.getInput<Array<any>>("list").splice(ctx.getInput("index"), 1)[0]
+      io.return,
+      ctx.getInput(io.list).splice(ctx.getInput(io.index), 1)[0]
     );
   },
 });
@@ -110,26 +118,28 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "list",
-      type: t.list(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "index",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "return",
-      name: "Value",
-      type: t.option(t.wildcard(w)),
-    });
+    return {
+      list: io.dataInput({
+        id: "list",
+        type: t.list(t.wildcard(w)),
+      }),
+      index: io.dataInput({
+        id: "index",
+        type: t.int(),
+      }),
+      return: io.dataOutput({
+        id: "return",
+        name: "Value",
+        type: t.option(t.wildcard(w)),
+      }),
+    };
   },
-  run({ ctx }) {
-    const array = ctx.getInput<Array<any>>("list");
-    const index = ctx.getInput<number>("index");
+  run({ ctx, io }) {
+    const array = ctx.getInput(io.list);
+    const index = ctx.getInput(io.index);
 
-    ctx.setOutput<Option<any>>(
-      "return",
+    ctx.setOutput(
+      io.return,
       Maybe(array[index < 0 ? array.length + index : index])
     );
   },

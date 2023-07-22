@@ -10,8 +10,8 @@ import {
 import { typesCanConnect } from "../types";
 
 export function pinsCanConnect(
-  output: DataOutput | ExecOutput | ScopeOutput,
-  input: DataInput | ExecInput | ScopeInput
+  output: DataOutput<any> | ExecOutput | ScopeOutput,
+  input: DataInput<any> | ExecInput | ScopeInput
 ) {
   if (output instanceof DataOutput && input instanceof DataInput) {
     return typesCanConnect(output.type, input.type);
@@ -24,7 +24,7 @@ export function pinsCanConnect(
 
 export function pinIsOutput(
   pin: Pin
-): pin is DataOutput | ExecOutput | ScopeOutput {
+): pin is DataOutput<any> | ExecOutput | ScopeOutput {
   return (
     pin instanceof DataOutput ||
     pin instanceof ExecOutput ||
@@ -34,7 +34,7 @@ export function pinIsOutput(
 
 export function pinIsInput(
   pin: Pin
-): pin is DataInput | ExecInput | ScopeInput {
+): pin is DataInput<any> | ExecInput | ScopeInput {
   return (
     pin instanceof DataInput ||
     pin instanceof ExecInput ||

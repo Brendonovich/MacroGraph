@@ -10,25 +10,26 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "key",
-      type: t.string(),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.option(t.wildcard(w)),
-    });
+    return {
+      map: io.dataInput({
+        id: "map",
+        type: t.map(t.wildcard(w)),
+      }),
+      key: io.dataInput({
+        id: "key",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.option(t.wildcard(w)),
+      }),
+    };
   },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
-    const key = ctx.getInput<string>("key");
+  run({ ctx, io }) {
+    const map = ctx.getInput(io.map);
+    const key = ctx.getInput(io.key);
 
-    ctx.setOutput("out", Maybe(map.get(key)));
+    ctx.setOutput(io.out, Maybe(map.get(key)));
   },
 });
 
@@ -38,34 +39,35 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "key",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "value",
-      type: t.wildcard(w),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.option(t.wildcard(w)),
-    });
+    return {
+      map: io.dataInput({
+        id: "map",
+        type: t.map(t.wildcard(w)),
+      }),
+      key: io.dataInput({
+        id: "key",
+        type: t.string(),
+      }),
+      value: io.dataInput({
+        id: "value",
+        type: t.wildcard(w),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.option(t.wildcard(w)),
+      }),
+    };
   },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
-    const key = ctx.getInput<string>("key");
-    const value = ctx.getInput("value");
+  run({ ctx, io }) {
+    const map = ctx.getInput(io.map);
+    const key = ctx.getInput(io.key);
+    const value = ctx.getInput(io.value);
 
     const current = Maybe(map.get(key));
 
     map.set(key, value);
 
-    ctx.setOutput("out", current);
+    ctx.setOutput(io.out, current);
   },
 });
 
@@ -75,13 +77,13 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
+    return io.dataInput({
       id: "map",
       type: t.map(t.wildcard(w)),
     });
   },
-  run({ ctx }) {
-    ctx.getInput<Map<string, any>>("map").clear();
+  run({ ctx, io }) {
+    ctx.getInput(io).clear();
   },
 });
 
@@ -91,25 +93,26 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "key",
-      type: t.string(),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.bool(),
-    });
+    return {
+      map: io.dataInput({
+        id: "map",
+        type: t.map(t.wildcard(w)),
+      }),
+      key: io.dataInput({
+        id: "key",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
-    const key = ctx.getInput<string>("key");
+  run({ ctx, io }) {
+    const map = ctx.getInput(io.map);
+    const key = ctx.getInput(io.key);
 
-    ctx.setOutput("out", map.has(key));
+    ctx.setOutput(io.out, map.has(key));
   },
 });
 
@@ -119,20 +122,21 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-
-    io.dataOutput({
-      id: "keys",
-      type: t.list(t.string()),
-    });
+    return {
+      map: io.dataInput({
+        id: "map",
+        type: t.map(t.wildcard(w)),
+      }),
+      keys: io.dataOutput({
+        id: "keys",
+        type: t.list(t.string()),
+      }),
+    };
   },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
+  run({ ctx, io }) {
+    const map = ctx.getInput(io.map);
 
-    ctx.setOutput("keys", [...map.keys()]);
+    ctx.setOutput(io.keys, [...map.keys()]);
   },
 });
 
@@ -142,20 +146,21 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-
-    io.dataOutput({
-      id: "values",
-      type: t.list(t.wildcard(w)),
-    });
+    return {
+      map: io.dataInput({
+        id: "map",
+        type: t.map(t.wildcard(w)),
+      }),
+      values: io.dataOutput({
+        id: "values",
+        type: t.list(t.wildcard(w)),
+      }),
+    };
   },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
+  run({ ctx, io }) {
+    const map = ctx.getInput(io.map);
 
-    ctx.setOutput("values", [...map.values()]);
+    ctx.setOutput(io.values, [...map.values()]);
   },
 });
 
@@ -165,20 +170,21 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-
-    io.dataOutput({
-      id: "size",
-      type: t.int(),
-    });
+    return {
+      map: io.dataInput({
+        id: "map",
+        type: t.map(t.wildcard(w)),
+      }),
+      size: io.dataOutput({
+        id: "size",
+        type: t.int(),
+      }),
+    };
   },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
+  run({ ctx, io }) {
+    const map = ctx.getInput(io.map);
 
-    ctx.setOutput("out", map.size);
+    ctx.setOutput(io.size, map.size);
   },
 });
 
@@ -188,28 +194,29 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "map",
-      type: t.map(t.wildcard(w)),
-    });
-    io.dataInput({
-      id: "key",
-      type: t.string(),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.option(t.wildcard(w)),
-    });
+    return {
+      map: io.dataInput({
+        id: "map",
+        type: t.map(t.wildcard(w)),
+      }),
+      key: io.dataInput({
+        id: "key",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.option(t.wildcard(w)),
+      }),
+    };
   },
-  run({ ctx }) {
-    const map = ctx.getInput<Map<string, any>>("map");
-    const key = ctx.getInput<string>("key");
+  run({ ctx, io }) {
+    const map = ctx.getInput(io.map);
+    const key = ctx.getInput(io.key);
 
     const current = Maybe(map.get(key));
 
     map.delete(key);
 
-    ctx.setOutput("out", current);
+    ctx.setOutput(io.out, current);
   },
 });

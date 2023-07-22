@@ -97,15 +97,15 @@ export class Graph {
   }
 
   connectPins(
-    output: DataOutput | ExecOutput | ScopeOutput,
-    input: DataInput | ExecInput | ScopeInput
+    output: DataOutput<any> | ExecOutput | ScopeOutput,
+    input: DataInput<any> | ExecInput | ScopeInput
   ) {
     const status = batch(() => {
       if (!pinsCanConnect(output, input)) return false;
 
       if (output instanceof DataOutput) {
-        const dataOutput = output as DataOutput;
-        const dataInput = input as DataInput;
+        const dataOutput = output as DataOutput<any>;
+        const dataInput = input as DataInput<any>;
 
         dataOutput.connections.add(dataInput);
         dataInput.connection.peek((c) => c.connections.delete(dataInput));

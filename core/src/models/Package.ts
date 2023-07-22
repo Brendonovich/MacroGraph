@@ -38,8 +38,10 @@ export class Package<TEvents extends EventsMap = EventsMap> {
     return createMutable(this);
   }
 
-  createNonEventSchema(schema: Omit<NonEventNodeSchema, "package">) {
-    this.schemas.push({
+  createNonEventSchema<TState extends object, TIO>(
+    schema: Omit<NonEventNodeSchema<TState, TIO>, "package">
+  ) {
+    const altered: NonEventNodeSchema<TState, TIO> = {
       ...schema,
       generateIO: (t, state) => {
         if (schema.variant === "Exec") {
@@ -52,15 +54,17 @@ export class Package<TEvents extends EventsMap = EventsMap> {
           });
         }
 
-        schema.generateIO(t, state);
+        return schema.generateIO(t, state);
       },
-      run: async (args: { ctx: RunCtx; io: IOBuilder }) => {
+      run: async (args) => {
         await schema.run(args);
 
         if (schema.variant === "Exec") args.ctx.exec("exec");
       },
       package: this as any,
-    });
+    };
+
+    this.schemas.push(altered);
 
     return this;
   }
