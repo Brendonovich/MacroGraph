@@ -547,9 +547,7 @@ pkg.createNonEventSchema({
         }),
       });
 
-      console.log(data.data[0].id);
       body.game_id = data.data[0].id;
-      console.log(body);
     }
 
     client.channels.patch(z.any(), {
@@ -581,7 +579,6 @@ pkg.createNonEventSchema({
       body: new URLSearchParams({ broadcaster_id: userId().unwrap() }),
     });
     const data = clipId.data[0];
-    console.log(clipId);
 
     ctx.setOutput("clipId", data.id);
     ctx.setOutput("editUrl", data.edit_url);

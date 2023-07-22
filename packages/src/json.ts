@@ -67,8 +67,25 @@ function assistedValueToJSON(
     return JSON.variant(["Number", { value }]);
   else if (type instanceof t.String) return JSON.variant(["String", { value }]);
   else if (type instanceof t.Bool) return JSON.variant(["Bool", { value }]);
-  else if (type instanceof t.List) return JSON.variant(["List", { value }]);
-  else if (type instanceof t.Map) return JSON.variant(["Map", { value }]);
+  else if (type instanceof t.List)
+    return JSON.variant([
+      "List",
+      { value: value.map((v: any) => assistedValueToJSON(type.item, v)) },
+    ]);
+  else if (type instanceof t.Map)
+    return JSON.variant([
+      "Map",
+      {
+        value: new Map(
+          value
+            .entries()
+            .map(([key, value]: any) => [
+              key,
+              assistedValueToJSON(type.value, value),
+            ])
+        ),
+      },
+    ]);
   else return null;
 }
 

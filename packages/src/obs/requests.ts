@@ -756,7 +756,6 @@ pkg.createNonEventSchema({
     const data = await obs.call("GetInputKindList", {
       unversioned: ctx.getInput("unversioned"),
     });
-    console.log(data.inputKinds);
     ctx.setOutput("inputKinds", data.inputKinds);
   },
 });
@@ -915,8 +914,6 @@ pkg.createNonEventSchema({
         unversionedInputKind: input.unversionedInputKind as string,
       })
     );
-
-    console.log(inputs);
 
     ctx.setOutput<Array<InferStruct<typeof InputInfo>>>("inputs", inputs);
   },
@@ -1302,6 +1299,12 @@ pkg.createNonEventSchema({
   },
 });
 
+const monitorType = pkg.createEnum("Monitor Type", (e) => [
+  e.variant("MonitorOnly"),
+  e.variant("MonitorAndOutput"),
+  e.variant("None"),
+]);
+
 pkg.createNonEventSchema({
   name: "Set Input Audio Monitor Type",
   variant: "Exec",
@@ -1314,13 +1317,20 @@ pkg.createNonEventSchema({
     io.dataInput({
       id: "monitorType",
       name: "Monitor Type",
-      type: t.string(),
+      type: t.enum(monitorType),
     });
   },
   async run({ ctx }) {
+    const data = ctx.getInput<InferEnum<typeof monitorType>>("monitorType");
+
     obs.call("SetInputAudioMonitorType", {
       inputName: ctx.getInput("inputName"),
-      monitorType: ctx.getInput("monitorType"),
+      monitorType:
+        data.variant === "MonitorOnly"
+          ? "OBS_MONITORING_TYPE_MONITOR_ONLY"
+          : data.variant === "MonitorAndOutput"
+          ? "OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT"
+          : "OBS_MONITORING_TYPE_NONE",
     });
   },
 });
@@ -1494,7 +1504,6 @@ pkg.createNonEventSchema({
   async run({ ctx }) {
     const data = await obs.call("GetSceneTransitionList");
 
-    console.log(data);
     const Transition = data.transitions.map((data) =>
       Transitions.create({
         transitionConfigurable: data.transitionConfigurable as boolean,
@@ -1548,7 +1557,6 @@ pkg.createNonEventSchema({
   },
   async run({ ctx }) {
     const data = await obs.call("GetCurrentSceneTransition");
-    console.log(data.transitionSettings);
 
     ctx.setOutput("transitionName", data.transitionName);
     ctx.setOutput("transitionKind", data.transitionKind);

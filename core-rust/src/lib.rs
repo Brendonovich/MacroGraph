@@ -37,7 +37,7 @@ pub fn fs() -> AlphaRouter<()> {
                 .map(|e| {
                     let e = e.unwrap();
                     let path = e.path();
-                    let path = path.to_str().unwrap().to_string();
+                    let path = path.file_name().unwrap().to_str().unwrap().to_string();
                     if e.file_type().unwrap().is_dir() {
                         Entry::Dir(path)
                     } else {

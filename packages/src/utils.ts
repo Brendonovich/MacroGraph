@@ -300,6 +300,49 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "Multiply Floats",
+  variant: "Pure",
+  run({ ctx }) {
+    const number = Math.floor(
+      ctx.getInput<number>("one") * ctx.getInput<number>("two")
+    );
+    ctx.setOutput("output", number);
+  },
+  generateIO(io) {
+    io.dataInput({
+      id: "one",
+      type: t.float(),
+    });
+    io.dataInput({
+      id: "two",
+      type: t.float(),
+    });
+    io.dataOutput({
+      id: "output",
+      type: t.float(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Float to Int",
+  variant: "Pure",
+  run({ ctx }) {
+    ctx.setOutput("out", Math.round(ctx.getInput("one")));
+  },
+  generateIO(io) {
+    io.dataInput({
+      id: "in",
+      type: t.float(),
+    });
+    io.dataOutput({
+      id: "out",
+      type: t.int(),
+    });
+  },
+});
+
+pkg.createNonEventSchema({
   name: "Divide Ints",
   variant: "Pure",
   run({ ctx }) {
@@ -380,7 +423,11 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput(
       "output",
-      ctx.getInput<string>("one") + ctx.getInput<string>("two")
+      ctx.getInput<string>("one") +
+        ctx.getInput<string>("two") +
+        ctx.getInput<string>("three") +
+        ctx.getInput<string>("four") +
+        ctx.getInput<string>("five")
     );
   },
   generateIO(io) {
@@ -390,6 +437,18 @@ pkg.createNonEventSchema({
     });
     io.dataInput({
       id: "two",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "three",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "four",
+      type: t.string(),
+    });
+    io.dataInput({
+      id: "five",
       type: t.string(),
     });
     io.dataOutput({
@@ -1103,6 +1162,7 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
+    if (!ctx.getInput("name")) return;
     if (ctx.getInput("name") !== data.name) return;
     ctx.setOutput("event", data.name);
     ctx.setOutput("eventKey", data.key);

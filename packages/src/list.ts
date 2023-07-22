@@ -1,4 +1,4 @@
-import { core, Maybe, t } from "@macrograph/core";
+import { core, Maybe, Option, t } from "@macrograph/core";
 
 const pkg = core.createPackage({
   name: "List",
@@ -99,7 +99,38 @@ pkg.createNonEventSchema({
   run({ ctx }) {
     ctx.setOutput(
       "return",
-      ctx.getInput<Array<any>>("list").splice(ctx.getInput("index"), 1)
+      ctx.getInput<Array<any>>("list").splice(ctx.getInput("index"), 1)[0]
+    );
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Get List Value",
+  variant: "Pure",
+  generateIO(io) {
+    const w = io.wildcard("");
+
+    io.dataInput({
+      id: "list",
+      type: t.list(t.wildcard(w)),
+    });
+    io.dataInput({
+      id: "index",
+      type: t.int(),
+    });
+    io.dataOutput({
+      id: "return",
+      name: "Value",
+      type: t.option(t.wildcard(w)),
+    });
+  },
+  run({ ctx }) {
+    const array = ctx.getInput<Array<any>>("list");
+    const index = ctx.getInput<number>("index");
+
+    ctx.setOutput<Option<any>>(
+      "return",
+      Maybe(array[index < 0 ? array.length + index : index])
     );
   },
 });

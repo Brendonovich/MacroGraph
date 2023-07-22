@@ -695,7 +695,6 @@ pkg.createEventSchema({
     });
   },
   run({ ctx, data }) {
-    console.log(data);
     ctx.setOutput("inputName", data.inputName);
     const audioTracks = AudioTracks.create({
       "1": data.inputAudioTracks["1"] as boolean,
@@ -714,6 +713,12 @@ obs.on("InputAudioTracksChanged", (data) => {
   pkg.emitEvent({ name: "InputAudioTracksChanged", data });
 });
 
+const monitorType = pkg.createEnum("Monitor Type", (e) => [
+  e.variant("None"),
+  e.variant("Monitor Only"),
+  e.variant("Monitor and Output"),
+]);
+
 pkg.createEventSchema({
   event: "InputAudioMonitorTypeChanged",
   name: "Input Audio Monitor Type Changed",
@@ -730,7 +735,7 @@ pkg.createEventSchema({
     io.dataOutput({
       id: "monitorType",
       name: "Monitor Type",
-      type: t.string(),
+      type: t.enum(monitorType),
     });
   },
   run({ ctx, data }) {
