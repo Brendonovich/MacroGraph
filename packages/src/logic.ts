@@ -231,44 +231,42 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.execInput({
-      id: "exec",
-    });
-    io.dataInput({
-      id: "array",
-      name: "Array",
-      type: t.list(t.wildcard(w)),
-    });
-
-    io.scopeOutput({
-      id: "body",
-      name: "Loop Body",
-      scope: (s) => {
-        s.output({
-          id: "element",
-          name: "Array Element",
-          type: t.wildcard(w),
-        });
-        s.output({
-          id: "index",
-          name: "Array Index",
-          type: t.int(),
-        });
-      },
-    });
-
-    io.execOutput({
-      id: "completed",
-      name: "Completed",
-    });
+    return {
+      exec: io.execInput({
+        id: "exec",
+      }),
+      array: io.dataInput({
+        id: "array",
+        name: "Array",
+        type: t.list(t.wildcard(w)),
+      }),
+      body: io.scopeOutput({
+        id: "body",
+        name: "Loop Body",
+        scope: (s) => {
+          s.output({
+            id: "element",
+            name: "Array Element",
+            type: t.wildcard(w),
+          });
+          s.output({
+            id: "index",
+            name: "Array Index",
+            type: t.int(),
+          });
+        },
+      }),
+      completed: io.execOutput({
+        id: "completed",
+        name: "Completed",
+      }),
+    };
   },
-  async run({ ctx }) {
-    for (const [index, element] of ctx
-      .getInput<Array<any>>("array")
-      .entries()) {
-      await ctx.execScope("body", { element, index });
+  async run({ ctx, io }) {
+    for (const [index, element] of ctx.getInput(io.array).entries()) {
+      await ctx.execScope(io.body, { element, index });
     }
 
-    await ctx.exec("completed");
+    await ctx.exec(io.completed);
   },
 });

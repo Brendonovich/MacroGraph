@@ -193,7 +193,7 @@ export interface IOSchema {
 
 export type RunCtx = {
   exec(t: ExecOutput): Promise<void>;
-  execScope(t: string, data: Record<string, any>): Promise<void>;
+  execScope(t: ScopeOutput, data: Record<string, any>): Promise<void>;
   setOutput<TOutput extends DataOutput<any>>(
     output: TOutput,
     data: t.infer<TOutput["type"]>

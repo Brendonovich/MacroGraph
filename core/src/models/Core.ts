@@ -104,26 +104,16 @@ class ExecutionContext {
     return {
       exec: async (execOutput) => {
         NODE_EMIT.emit(node);
-        const output = node.output(execOutput);
 
-        if (!output) throw new Error(`Output ${execOutput} not found!`);
-
-        if (!(output instanceof ExecOutput))
-          throw new Error(`Output ${execOutput} is not an ExecOutput!`);
-
-        await output.connection.peekAsync((conn) => this.execNode(conn.node));
+        await execOutput.connection.peekAsync((conn) =>
+          this.execNode(conn.node)
+        );
       },
       execScope: async (scopeOutput, data) => {
         NODE_EMIT.emit(node);
 
-        const output = node.output(scopeOutput);
-
-        if (!output) throw new Error(`Output ${scopeOutput} not found!`);
-        if (!(output instanceof ScopeOutput))
-          throw new Error(`Output ${scopeOutput} is not a ScopeOutput!`);
-
-        await output.connection.peekAsync(async (conn) => {
-          this.data.set(output, data);
+        await scopeOutput.connection.peekAsync(async (conn) => {
+          this.data.set(scopeOutput, data);
 
           await this.execNode(conn.node);
         });
