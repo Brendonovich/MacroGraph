@@ -6,10 +6,10 @@ import {
   t,
   StructFields,
   Enum,
-  InferEnum,
   EnumVariants,
   DataInput,
   None,
+  ScopeOutput,
 } from "@macrograph/core";
 import { JSON, jsonToValue } from "./json";
 
@@ -47,7 +47,7 @@ pkg.createNonEventSchema({
       type: t.string(),
     });
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     PRINT_CHANNEL.emit(ctx.getInput(io));
   },
 });
@@ -230,200 +230,208 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Float to String",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("string", ctx.getInput<number>("float").toString());
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "float",
-      type: t.float(),
-    });
-    io.dataOutput({
-      id: "string",
-      type: t.string(),
-    });
+    return {
+      float: io.dataInput({
+        id: "float",
+        type: t.float(),
+      }),
+      string: io.dataOutput({
+        id: "string",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.string, ctx.getInput(io.float).toString());
   },
 });
 
 pkg.createNonEventSchema({
   name: "Bool to String",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("string", ctx.getInput<boolean>("bool").toString());
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "bool",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "string",
-      type: t.string(),
-    });
+    return {
+      bool: io.dataInput({
+        id: "bool",
+        type: t.bool(),
+      }),
+      string: io.dataOutput({
+        id: "string",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.string, ctx.getInput(io.bool).toString());
   },
 });
 
 pkg.createNonEventSchema({
   name: "String to Int",
   variant: "Pure",
-  run({ ctx }) {
-    const number = Number(ctx.getInput<string>("string"));
+  generateIO(io) {
+    return {
+      string: io.dataInput({
+        id: "string",
+        type: t.string(),
+      }),
+      int: io.dataOutput({
+        id: "int",
+        type: t.option(t.int()),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const number = Number(ctx.getInput(io.string));
     const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
-    ctx.setOutput("int", opt.map(Math.floor));
-  },
-  generateIO(io) {
-    io.dataInput({
-      id: "string",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "int",
-      type: t.option(t.int()),
-    });
+    ctx.setOutput(io.int, opt.map(Math.floor));
   },
 });
 
 pkg.createNonEventSchema({
   name: "Multiply Ints",
   variant: "Pure",
-  run({ ctx }) {
-    const number = Math.floor(
-      ctx.getInput<number>("one") * ctx.getInput<number>("two")
-    );
-    ctx.setOutput("output", number);
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.int(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.int(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const number = Math.floor(ctx.getInput(io.one) * ctx.getInput(io.two));
+    ctx.setOutput(io.output, number);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Multiply Floats",
   variant: "Pure",
-  run({ ctx }) {
-    const number = Math.floor(
-      ctx.getInput<number>("one") * ctx.getInput<number>("two")
-    );
-    ctx.setOutput("output", number);
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.float(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.float(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.float(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.float(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.float(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.float(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const number = Math.floor(ctx.getInput(io.one) * ctx.getInput(io.two));
+    ctx.setOutput(io.output, number);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Float to Int",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("out", Math.round(ctx.getInput("one")));
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "in",
-      type: t.float(),
-    });
-    io.dataOutput({
-      id: "out",
-      type: t.int(),
-    });
+    return {
+      in: io.dataInput({
+        id: "in",
+        type: t.float(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.out, Math.round(ctx.getInput(io.in)));
   },
 });
 
 pkg.createNonEventSchema({
   name: "Divide Ints",
   variant: "Pure",
-  run({ ctx }) {
-    const number = Math.floor(
-      ctx.getInput<number>("one") / ctx.getInput<number>("two")
-    );
-    ctx.setOutput("output", number);
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.int(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.int(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const number = Math.floor(ctx.getInput(io.one) / ctx.getInput(io.two));
+    ctx.setOutput(io.output, number);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Add Ints",
   variant: "Pure",
-  run({ ctx }) {
-    const number = Math.floor(
-      ctx.getInput<number>("one") + ctx.getInput<number>("two")
-    );
-    ctx.setOutput("output", number);
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.int(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.int(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const number = Math.floor(ctx.getInput(io.one) + ctx.getInput(io.two));
+    ctx.setOutput(io.output, number);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Subtract Ints",
   variant: "Pure",
-  run({ ctx }) {
-    const numb = Math.floor(
-      ctx.getInput<number>("one") - ctx.getInput<number>("two")
-    );
-    ctx.setOutput("output", numb);
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.int(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.int(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const numb = Math.floor(ctx.getInput(io.one) - ctx.getInput(io.two));
+    ctx.setOutput(io.output, numb);
   },
 });
 
@@ -565,26 +573,28 @@ pkg.createNonEventSchema({
   name: "Round Float",
   variant: "Pure",
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.float(),
-    });
-    io.dataInput({
-      id: "decimal",
-      name: "Decimal Places",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.float(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.float(),
+      }),
+      decimal: io.dataInput({
+        id: "decimal",
+        name: "Decimal Places",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.float(),
+      }),
+    };
   },
-  run({ ctx }) {
-    const input = ctx.getInput<number>("input");
-    const decimal = ctx.getInput<number>("decimal");
+  run({ ctx, io }) {
+    const input = ctx.getInput(io.input),
+      decimal = ctx.getInput(io.decimal);
 
     ctx.setOutput(
-      "output",
+      io.output,
       Math.round(input * Math.pow(10, decimal)) / Math.pow(10, decimal)
     );
   },
@@ -593,204 +603,213 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Random Float",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", Math.random());
-  },
   generateIO(io) {
-    io.dataOutput({
+    return io.dataOutput({
       id: "output",
       type: t.float(),
     });
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io, Math.random());
   },
 });
 
 pkg.createNonEventSchema({
   name: "Random Float In Range",
   variant: "Pure",
-  run({ ctx }) {
-    const min = ctx.getInput<number>("min");
-    const max = ctx.getInput<number>("max");
-
-    ctx.setOutput("output", Math.random() * (max - min) + min);
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "min",
-      name: "Min",
-      type: t.float(),
-    });
-    io.dataInput({
-      id: "max",
-      name: "Max",
-      type: t.float(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.float(),
-    });
+    return {
+      min: io.dataInput({
+        id: "min",
+        name: "Min",
+        type: t.float(),
+      }),
+      max: io.dataInput({
+        id: "max",
+        name: "Max",
+        type: t.float(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.float(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const min = ctx.getInput(io.min),
+      max = ctx.getInput(io.max);
+
+    ctx.setOutput(io.output, Math.random() * (max - min) + min);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Random Integer",
   variant: "Pure",
-  run({ ctx }) {
-    // 0.5 triggers round up so distribution is even
-    ctx.setOutput("output", Math.round(Math.random()));
-  },
   generateIO(io) {
-    io.dataOutput({
+    return io.dataOutput({
       id: "output",
       type: t.int(),
     });
+  },
+
+  run({ ctx, io }) {
+    // 0.5 triggers round up so distribution is even
+    ctx.setOutput(io, Math.round(Math.random()));
   },
 });
 
 pkg.createNonEventSchema({
   name: "Random Integer In Range",
   variant: "Pure",
-  run({ ctx }) {
-    const min = ctx.getInput<number>("min");
-    const max = ctx.getInput<number>("max");
+  generateIO(io) {
+    return {
+      min: io.dataInput({
+        id: "min",
+        name: "Min",
+        type: t.int(),
+      }),
+      max: io.dataInput({
+        id: "max",
+        name: "Max",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const min = ctx.getInput(io.min),
+      max = ctx.getInput(io.max);
 
     // Use Math.floor to ensure even distribution
-    ctx.setOutput("output", Math.floor(Math.random() * (max + 1 - min) + min));
-  },
-  generateIO(io) {
-    io.dataInput({
-      id: "min",
-      name: "Min",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "max",
-      name: "Max",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.int(),
-    });
+    ctx.setOutput(io.output, Math.floor(Math.random() * (max + 1 - min) + min));
   },
 });
 
 pkg.createNonEventSchema({
   name: "Compare Int",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "outputE",
-      ctx.getInput<Number>("number") == ctx.getInput<Number>("compare")
-    );
-    ctx.setOutput(
-      "outputG",
-      ctx.getInput<Number>("number") > ctx.getInput<Number>("compare")
-    );
-    ctx.setOutput(
-      "outputL",
-      ctx.getInput<Number>("number") < ctx.getInput<Number>("compare")
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "number",
-      name: "Number",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "compare",
-      name: "Compare against",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "outputE",
-      name: "Equal",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "outputG",
-      name: "Greater",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "outputL",
-      name: "Less",
-      type: t.bool(),
-    });
+    return {
+      input: io.dataInput({
+        id: "number",
+        name: "Number",
+        type: t.int(),
+      }),
+      compare: io.dataInput({
+        id: "compare",
+        name: "Compare against",
+        type: t.int(),
+      }),
+      equal: io.dataOutput({
+        id: "outputE",
+        name: "Equal",
+        type: t.bool(),
+      }),
+      greater: io.dataOutput({
+        id: "outputG",
+        name: "Greater",
+        type: t.bool(),
+      }),
+      less: io.dataOutput({
+        id: "outputL",
+        name: "Less",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const input = ctx.getInput(io.input),
+      compare = ctx.getInput(io.compare);
+
+    ctx.setOutput(io.equal, input === compare);
+    ctx.setOutput(io.greater, input > compare);
+    ctx.setOutput(io.less, input < compare);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Make Any",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput("input"));
-  },
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "input",
-      type: t.wildcard(w),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.wildcard(w),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.wildcard(w),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.wildcard(w),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input));
   },
 });
 
 pkg.createNonEventSchema({
   name: "Make String",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput("input"));
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.string(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.string(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input));
   },
 });
 
 pkg.createNonEventSchema({
   name: "Make Int",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput("input"));
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.int(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.int(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input));
   },
 });
 
 pkg.createNonEventSchema({
   name: "Make Float",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput("input"));
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.float(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.float(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.float(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.float(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input));
   },
 });
 
@@ -800,21 +819,23 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "one",
-      type: t.wildcard(w),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.wildcard(w),
-    });
-    io.dataOutput({
-      id: "equal",
-      type: t.bool(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.wildcard(w),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.wildcard(w),
+      }),
+      equal: io.dataOutput({
+        id: "equal",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx }) {
-    ctx.setOutput("equal", ctx.getInput("one") === ctx.getInput("two"));
+  run({ ctx, io }) {
+    ctx.setOutput(io.equal, ctx.getInput(io.one) === ctx.getInput(io.two));
   },
 });
 
@@ -824,23 +845,25 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "input",
-      type: t.wildcard(w),
-    });
-    io.dataInput({
-      id: "list",
-      type: t.list(t.wildcard(w)),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.bool(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.wildcard(w),
+      }),
+      list: io.dataInput({
+        id: "list",
+        type: t.list(t.wildcard(w)),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     ctx.setOutput(
-      "output",
-      ctx.getInput<[]>("list").includes(ctx.getInput("input"))
+      io.output,
+      ctx.getInput(io.list).includes(ctx.getInput(io.input))
     );
   },
 });
@@ -849,17 +872,19 @@ pkg.createNonEventSchema({
   name: "List Length",
   variant: "Pure",
   generateIO(io) {
-    io.dataInput({
-      id: "list",
-      type: t.list(t.wildcard(io.wildcard(""))),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.int(),
-    });
+    return {
+      list: io.dataInput({
+        id: "list",
+        type: t.list(t.wildcard(io.wildcard(""))),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.int(),
+      }),
+    };
   },
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput<Array<any>>("list").length);
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.list).length);
   },
 });
 
@@ -867,74 +892,78 @@ pkg.createNonEventSchema({
   name: "Split String",
   variant: "Pure",
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      name: "String",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "separator",
-      name: "Separator",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.list(t.string()),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        name: "String",
+        type: t.string(),
+      }),
+      separator: io.dataInput({
+        id: "separator",
+        name: "Separator",
+        type: t.string(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.list(t.string()),
+      }),
+    };
   },
-  run({ ctx }) {
-    const array = ctx
-      .getInput<string>("input")
-      .split(ctx.getInput("separator"));
-    ctx.setOutput("output", array);
+  run({ ctx, io }) {
+    const array = ctx.getInput(io.input).split(ctx.getInput(io.separator));
+    ctx.setOutput(io.output, array);
   },
 });
 
+const WORD_REGEX = /\s+/;
 pkg.createNonEventSchema({
   name: "Nth Word",
   variant: "Pure",
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "index",
-      name: "N",
-      type: t.int(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.option(t.string()),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.string(),
+      }),
+      index: io.dataInput({
+        id: "index",
+        name: "N",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.option(t.string()),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     const word = Maybe(
-      ctx.getInput<string>("input").trim().split(/\s+/)[
-        ctx.getInput<number>("index")
-      ]
+      ctx.getInput(io.input).trim().split(WORD_REGEX)[ctx.getInput(io.index)]
     );
-    ctx.setOutput("output", word);
+
+    ctx.setOutput(io.output, word);
   },
 });
 
 pkg.createNonEventSchema({
   name: `Unwrap Option`,
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput<Option<string>>("input").unwrap());
-  },
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "input",
-      type: t.option(t.wildcard(w)),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.wildcard(w),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.option(t.wildcard(w)),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.wildcard(w),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input).unwrap());
   },
 });
 
@@ -944,17 +973,19 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "input",
-      type: t.option(t.wildcard(w)),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.bool(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.option(t.wildcard(w)),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput<Option<any>>("input").isSome());
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input).isSome());
   },
 });
 
@@ -964,17 +995,19 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "input",
-      type: t.option(t.wildcard(w)),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.bool(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.option(t.wildcard(w)),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx }) {
-    ctx.setOutput("output", ctx.getInput<Option<any>>("input").isNone());
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, ctx.getInput(io.input).isNone());
   },
 });
 
@@ -984,17 +1017,19 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const type = io.wildcard("");
 
-    io.dataInput({
-      id: "in",
-      type: t.wildcard(type),
-    });
-    io.dataOutput({
-      id: "out",
-      type: t.option(t.wildcard(type)),
-    });
+    return {
+      in: io.dataInput({
+        id: "in",
+        type: t.wildcard(type),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.option(t.wildcard(type)),
+      }),
+    };
   },
-  run({ ctx }) {
-    ctx.setOutput("out", Some(ctx.getInput<any>("in")));
+  run({ ctx, io }) {
+    ctx.setOutput(io.out, Some(ctx.getInput(io.in)));
   },
 });
 
@@ -1004,34 +1039,39 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
+    const input = io.dataInput({
       id: "",
       type: t.wildcard(w),
     });
 
-    w.value().map((wt) => {
-      if (!(wt instanceof t.Struct)) return;
+    const outputs = w.value().map((wt) => {
+      if (!(wt instanceof t.Struct)) return null;
 
-      for (const [id, field] of Object.entries(
-        wt.struct.fields as StructFields
-      )) {
-        io.dataOutput({
-          id,
-          name: field.name,
-          type: field.type,
-        });
-      }
+      const dataOutputs = Object.entries(wt.struct.fields as StructFields).map(
+        ([id, field]) =>
+          io.dataOutput({
+            id,
+            name: field.name,
+            type: field.type,
+          })
+      );
+
+      return {
+        wildcard: wt,
+        input: input as unknown as DataInput<t.Struct<StructFields>>,
+        outputs: dataOutputs,
+      };
     });
+
+    return outputs;
   },
   run({ ctx, io }) {
-    const w = io.wildcards.get("")!;
+    io.map((io) => {
+      const data = ctx.getInput(io.input);
 
-    const data = ctx.getInput<Record<string, any>>("");
-
-    Object.keys(
-      (w.value().unwrap() as t.Struct<StructFields>).struct.fields
-    ).forEach((key) => {
-      ctx.setOutput(key, data[key]);
+      io.outputs.forEach((output) => {
+        ctx.setOutput(output, data[output.id]);
+      });
     });
   },
 });
@@ -1046,23 +1086,25 @@ pkg.createNonEventSchema({
       id: "exec",
     });
 
-    io.dataInput({
+    const data = io.dataInput({
       id: "data",
       type: t.wildcard(w),
     });
 
-    w.value().map((v) => {
+    const outputs = w.value().map((v) => {
       if (v instanceof t.Enum) {
-        (v as t.Enum<EnumVariants>).inner.variants.forEach((v) => {
+        const variantOutputs = (
+          v as t.Enum<Enum<EnumVariants>>
+        ).inner.variants.map((v) => {
           const { name, data } = v;
 
           if (data === null) {
-            io.execOutput({
+            return io.execOutput({
               id: name,
               name: name,
             });
           } else {
-            io.scopeOutput({
+            return io.scopeOutput({
               id: name,
               name: v.name,
               scope: (s) => {
@@ -1076,40 +1118,60 @@ pkg.createNonEventSchema({
             });
           }
         });
+
+        return {
+          type: "enum" as const,
+          input: data as unknown as DataInput<t.Enum<Enum<EnumVariants>>>,
+          outputs: variantOutputs,
+        };
       } else if (v instanceof t.Option) {
-        io.execOutput({
-          id: "none",
-          name: "None",
-        });
-        io.scopeOutput({
-          id: "some",
-          name: "Some",
-          scope: (s) => {
-            s.output({
-              id: "value",
-              type: v.inner,
-            });
+        return {
+          type: "option" as const,
+          input: data as unknown as DataInput<t.Option<t.Any>>,
+          outputs: {
+            none: io.execOutput({
+              id: "none",
+              name: "None",
+            }),
+            some: io.scopeOutput({
+              id: "some",
+              name: "Some",
+              scope: (s) => {
+                s.output({
+                  id: "value",
+                  type: v.inner,
+                });
+              },
+            }),
           },
-        });
+        };
       }
     });
+
+    return {
+      data,
+      outputs,
+    };
   },
   run({ ctx, io }) {
-    const w = io.wildcards.get("")!;
+    io.outputs.peek((v) => {
+      if (!v) return;
 
-    w.value().map((v) => {
-      if (v instanceof t.Enum) {
-        const data = ctx.getInput<InferEnum<Enum>>("data");
+      if (v.type === "enum") {
+        const data = ctx.getInput(v.input);
 
-        if ("data" in data) ctx.execScope(data.variant, data.data);
-        else ctx.exec(data.variant);
-      } else if (v instanceof t.Option) {
-        const data = ctx.getInput<Option<any>>("data");
+        const output = v.outputs.find((o) => o.id === data.variant)!;
+
+        if ("data" in data && output instanceof ScopeOutput)
+          ctx.execScope(output, data.data);
+        else ctx.exec(output);
+      } else if (v.type === "option") {
+        const data = ctx.getInput(v.input);
 
         data.mapOrElse(
-          () => ctx.exec("none"),
+          () => ctx.exec(v.outputs.none),
           (value) => {
-            ctx.execScope("some", {
+            ctx.execScope(v.outputs.some, {
               data: {
                 value,
               },
@@ -1127,32 +1189,35 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const scope = io.scope("");
 
-    io.scopeInput({
+    const input = io.scopeInput({
       id: "",
       scope,
     });
 
-    scope.value.map((scope) => {
-      io.execOutput({
+    const outputs = scope.value.map((scope) => {
+      const exec = io.execOutput({
         id: "",
       });
 
-      for (const out of scope.outputs) {
-        io.dataOutput(out);
-      }
+      const outputs = scope.outputs.map((out) => io.dataOutput(out));
+
+      return { exec, outputs };
     });
+
+    return {
+      input,
+      outputs,
+    };
   },
   async run({ ctx, io }) {
-    const s = io.scopes.get("")!;
+    const data = ctx.getInput(io.input);
 
-    const data = ctx.getInput<Record<string, any>>("");
-
-    await s.value.mapAsync(async (s) => {
-      s.outputs.forEach(({ id }) => {
-        ctx.setOutput(id, data[id]);
+    await io.outputs.mapAsync((s) => {
+      s.outputs.forEach((o) => {
+        ctx.setOutput(o, data[o.id]);
       });
 
-      await ctx.exec("");
+      return ctx.exec(s.exec);
     });
   },
 });
@@ -1161,38 +1226,34 @@ pkg.createEventSchema({
   event: "custom",
   name: "Custom Event",
   generateIO(io) {
-    io.execOutput({
-      id: "exec",
-      name: "",
-    });
-    io.dataInput({
-      id: "name",
-      name: "Event Name",
-      type: t.string(),
-    }),
-      io.dataOutput({
-        id: "event",
+    return {
+      exec: io.execOutput({
+        id: "exec",
+        name: "",
+      }),
+      name: io.dataInput({
+        id: "name",
         name: "Event Name",
         type: t.string(),
-      });
-    io.dataOutput({
-      id: "eventKey",
-      name: "Event Key",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "eventData",
-      name: "Event Data",
-      type: t.enum(JSON),
-    });
+      }),
+      key: io.dataOutput({
+        id: "eventKey",
+        name: "Event Key",
+        type: t.string(),
+      }),
+      data: io.dataOutput({
+        id: "eventData",
+        name: "Event Data",
+        type: t.enum(JSON),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    if (!ctx.getInput("name")) return;
-    if (ctx.getInput("name") !== data.name) return;
-    ctx.setOutput("event", data.name);
-    ctx.setOutput("eventKey", data.key);
-    ctx.setOutput("eventData", data.data);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    if (!ctx.getInput(io.name)) return;
+    if (ctx.getInput(io.name) !== data.name) return;
+    ctx.setOutput(io.key, data.key);
+    ctx.setOutput(io.data, data.data);
+    ctx.exec(io.exec);
   },
 });
 
@@ -1200,37 +1261,33 @@ pkg.createEventSchema({
   event: "customReturn",
   name: "Custom Event Return",
   generateIO(io) {
-    io.execOutput({
-      id: "exec",
-      name: "",
-    });
-    io.dataInput({
-      id: "name",
-      name: "Event Name",
-      type: t.string(),
-    }),
-      io.dataOutput({
-        id: "event",
+    return {
+      exec: io.execOutput({
+        id: "exec",
+        name: "",
+      }),
+      name: io.dataInput({
+        id: "name",
         name: "Event Name",
         type: t.string(),
-      });
-    io.dataOutput({
-      id: "eventKey",
-      name: "Event Key",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "eventData",
-      name: "Event Data",
-      type: t.enum(JSON),
-    });
+      }),
+      key: io.dataOutput({
+        id: "eventKey",
+        name: "Event Key",
+        type: t.string(),
+      }),
+      data: io.dataOutput({
+        id: "eventData",
+        name: "Event Data",
+        type: t.enum(JSON),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    if (ctx.getInput("name") !== data.name) return;
-    ctx.setOutput("event", data.name);
-    ctx.setOutput("eventKey", data.key);
-    ctx.setOutput("eventData", data.data);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    if (ctx.getInput(io.name) !== data.name) return;
+    ctx.setOutput(io.key, data.key);
+    ctx.setOutput(io.data, data.data);
+    ctx.exec(io.exec);
   },
 });
 
@@ -1238,29 +1295,31 @@ pkg.createNonEventSchema({
   name: "Emit Custom Event",
   variant: "Exec",
   generateIO(io) {
-    io.dataInput({
-      id: "event",
-      name: "Event Name",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "eventKey",
-      name: "Event Key",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "eventData",
-      name: "Event Data",
-      type: t.enum(JSON),
-    });
+    return {
+      event: io.dataInput({
+        id: "event",
+        name: "Event Name",
+        type: t.string(),
+      }),
+      key: io.dataInput({
+        id: "eventKey",
+        name: "Event Key",
+        type: t.string(),
+      }),
+      data: io.dataInput({
+        id: "eventData",
+        name: "Event Data",
+        type: t.enum(JSON),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     pkg.emitEvent({
       name: "custom",
       data: {
-        name: ctx.getInput("event"),
-        data: ctx.getInput("eventData"),
-        key: ctx.getInput("eventKey"),
+        name: ctx.getInput(io.event),
+        data: ctx.getInput(io.data),
+        key: ctx.getInput(io.key),
       },
     });
   },
@@ -1270,29 +1329,31 @@ pkg.createNonEventSchema({
   name: "Emit Custom Return Event",
   variant: "Exec",
   generateIO(io) {
-    io.dataInput({
-      id: "event",
-      name: "Event Name",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "eventKey",
-      name: "Event Key",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "eventData",
-      name: "Event Data",
-      type: t.enum(JSON),
-    });
+    return {
+      event: io.dataInput({
+        id: "event",
+        name: "Event Name",
+        type: t.string(),
+      }),
+      key: io.dataInput({
+        id: "eventKey",
+        name: "Event Key",
+        type: t.string(),
+      }),
+      data: io.dataInput({
+        id: "eventData",
+        name: "Event Data",
+        type: t.enum(JSON),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     pkg.emitEvent({
       name: "customReturn",
       data: {
-        name: ctx.getInput("event"),
-        data: ctx.getInput("eventData"),
-        key: ctx.getInput("eventKey"),
+        name: ctx.getInput(io.event),
+        data: ctx.getInput(io.data),
+        key: ctx.getInput(io.key),
       },
     });
   },
@@ -1302,21 +1363,23 @@ pkg.createNonEventSchema({
   name: "Stringify JSON",
   variant: "Exec",
   generateIO(io) {
-    io.dataInput({
-      id: "in",
-      name: "Json",
-      type: t.enum(JSON),
-    });
-    io.dataOutput({
-      id: "string",
-      name: "String",
-      type: t.string(),
-    });
+    return {
+      in: io.dataInput({
+        id: "in",
+        name: "Json",
+        type: t.enum(JSON),
+      }),
+      out: io.dataOutput({
+        id: "string",
+        name: "String",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     ctx.setOutput(
-      "string",
-      window.JSON.stringify(jsonToValue(ctx.getInput("in")))
+      io.out,
+      window.JSON.stringify(jsonToValue(ctx.getInput(io.in)))
     );
   },
 });

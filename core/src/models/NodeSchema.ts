@@ -198,9 +198,13 @@ export type RunCtx = {
     output: TOutput,
     data: t.infer<TOutput["type"]>
   ): void;
-  getInput<TInput extends DataInput<any>>(
+  getInput<TInput extends DataInput<any> | ScopeInput>(
     input: TInput
-  ): TInput extends DataInput<infer T> ? t.infer<T> : never;
+  ): TInput extends DataInput<infer T>
+    ? t.infer<T>
+    : TInput extends ScopeInput
+    ? Record<string, unknown>
+    : never;
 };
 
 export type EventsMap = Record<string, any>;

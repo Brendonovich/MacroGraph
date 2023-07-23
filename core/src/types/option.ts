@@ -139,7 +139,7 @@ class Option<T> {
   /**
    * Maps an {@link Option<T> `Option<T>`} to {@link Option<U> `Option<U>`} by applying a function to a contained value.
    */
-  map<O>(f: (x: T) => O): Option<O> {
+  map<O>(f: (x: T) => O): Option<NonNullable<O>> {
     if (this.isSome()) {
       const value = f(this.value);
 
@@ -452,7 +452,7 @@ const None = new Option(null) as None;
 /**
  * Some value of type `T`.
  */
-function Some<T extends {}>(value: SomeValue<T>): Some<T> {
+function Some<T extends {} | unknown>(value: SomeValue<T>): Some<T> {
   if (value === null || typeof value === "undefined") {
     throw new Error("Tried to create Some() with a null or undefined value.");
   }
