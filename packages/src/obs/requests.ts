@@ -101,13 +101,13 @@ pkg.createNonEventSchema({
   name: "Get OBS Stats",
   variant: "Exec",
   generateIO(io) {
-    statsOutputs.map(([id, name]) =>
-      io.dataOutput({ id, name, type: t.int() })
+    return statsOutputs.map(
+      ([id, name]) => [id, io.dataOutput({ id, name, type: t.int() })] as const
     );
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const data = await obs.call("GetStats");
-    statsOutputs.forEach(([id]) => ctx.setOutput(id, data[id]));
+    io.forEach(([id, input]) => ctx.setOutput(input, data[id]));
   },
 });
 
@@ -150,26 +150,30 @@ pkg.createNonEventSchema({
   name: "Trigger Hotkey By Key Sequence",
   variant: "Exec",
   generateIO(io) {
-    io.dataInput({
-      id: "keyId",
-      name: "Key ID",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "keyModifiers",
-      name: "Key Modifiers",
-      type: t.map(t.enum(JSON)),
-    });
-  },
-  run({ ctx }) {
-    obs.call("TriggerHotkeyByKeySequence", {
-      keyId: ctx.getInput("keyId"),
-      keyModifiers: jsonToValue({
-        variant: "Map",
-        data: {
-          value: ctx.getInput<MapValue<InferEnum<typeof JSON>>>("keyModifiers"),
-        },
+    return {
+      id: io.dataInput({
+        id: "keyId",
+        name: "Key ID",
+        type: t.string(),
       }),
+      modifiers: io.dataInput({
+        id: "keyModifiers",
+        name: "Key Modifiers",
+        type: t.map(t.enum(JSON)),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    return obs.call("TriggerHotkeyByKeySequence", {
+      keyId: ctx.getInput(io.id),
+      keyModifiers: jsonToValue(
+        JSON.variant([
+          "Map",
+          {
+            value: ctx.getInput(io.modifiers),
+          },
+        ])
+      ),
     });
   },
 });

@@ -20,19 +20,21 @@ pkg.createNonEventSchema({
   name: "Mute Slider",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Slider",
-      id: "Slider",
-      type: t.enum(Sliders),
-    });
-    io.dataInput({
-      name: "Mute State",
-      id: "muteState",
-      type: t.bool(),
-    });
+    return {
+      slider: io.dataInput({
+        name: "Slider",
+        id: "Slider",
+        type: t.enum(Sliders),
+      }),
+      muteState: io.dataInput({
+        name: "Mute State",
+        id: "muteState",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx }) {
-    const slider = ctx.getInput<InferEnum<typeof Sliders>>("Slider");
+  run({ ctx, io }) {
+    const slider = ctx.getInput(io.slider);
 
     getSocket().send(
       JSON.stringify({
@@ -43,7 +45,7 @@ pkg.createNonEventSchema({
             {
               SetFaderMuteState: [
                 slider.variant,
-                ctx.getInput("muteState") ? "MutedToX" : "Unmuted",
+                ctx.getInput(io.muteState) ? "MutedToX" : "Unmuted",
               ],
             },
           ],

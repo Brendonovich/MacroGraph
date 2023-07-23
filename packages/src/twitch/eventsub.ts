@@ -120,66 +120,68 @@ pkg.createEventSchema({
   name: "User Banned",
   event: "channel.ban",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      id: "channelId",
-      name: "Channel ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "channelName",
-      name: "Channel Name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "modId",
-      name: "Mod Who Banned ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "modName",
-      name: "Mod Who Banned Name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "bannedUserID",
-      name: "Banned User ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "bannedUserLogin",
-      name: "Banned Username",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "reason",
-      name: "Ban Reason",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "permanent",
-      name: "Perma Ban",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "ends",
-      name: "End Time",
-      type: t.string(),
-    });
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      channelId: io.dataOutput({
+        id: "channelId",
+        name: "Channel ID",
+        type: t.string(),
+      }),
+      channelName: io.dataOutput({
+        id: "channelName",
+        name: "Channel Name",
+        type: t.string(),
+      }),
+      modId: io.dataOutput({
+        id: "modId",
+        name: "Mod Who Banned ID",
+        type: t.string(),
+      }),
+      modName: io.dataOutput({
+        id: "modName",
+        name: "Mod Who Banned Name",
+        type: t.string(),
+      }),
+      bannedUserID: io.dataOutput({
+        id: "bannedUserID",
+        name: "Banned User ID",
+        type: t.string(),
+      }),
+      bannedUserLogin: io.dataOutput({
+        id: "bannedUserLogin",
+        name: "Banned Username",
+        type: t.string(),
+      }),
+      reason: io.dataOutput({
+        id: "reason",
+        name: "Ban Reason",
+        type: t.string(),
+      }),
+      permanent: io.dataOutput({
+        id: "permanent",
+        name: "Perma Ban",
+        type: t.bool(),
+      }),
+      ends: io.dataOutput({
+        id: "ends",
+        name: "End Time",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    ctx.setOutput("channelId", data.broadcaster_user_id);
-    ctx.setOutput("channelName", data.broadcaster_user_login);
-    ctx.setOutput("modId", data.moderator_user_id);
-    ctx.setOutput("modName", data.moderator_user_login);
-    ctx.setOutput("bannedUserID", data.user_id);
-    ctx.setOutput("bannedUserLogin", data.user_login);
-    ctx.setOutput("reason", data.reason);
-    ctx.setOutput("permanent", data.is_permanent);
-    ctx.setOutput("ends", data.ends_at);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.channelId, data.broadcaster_user_id);
+    ctx.setOutput(io.channelName, data.broadcaster_user_login);
+    ctx.setOutput(io.modId, data.moderator_user_id);
+    ctx.setOutput(io.modName, data.moderator_user_login);
+    ctx.setOutput(io.bannedUserID, data.user_id);
+    ctx.setOutput(io.bannedUserLogin, data.user_login);
+    ctx.setOutput(io.reason, data.reason);
+    ctx.setOutput(io.permanent, data.is_permanent);
+    ctx.setOutput(io.ends, data.ends_at);
+    ctx.exec(io.exec);
   },
 });
 

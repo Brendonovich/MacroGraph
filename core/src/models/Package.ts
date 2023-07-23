@@ -28,7 +28,7 @@ export interface PackageArgs {
 
 export class Package<TEvents extends EventsMap = EventsMap> {
   name: string;
-  schemas: NodeSchema[] = [];
+  schemas: NodeSchema<TEvents>[] = [];
   core: Core;
 
   constructor(args: PackageArgs) {
@@ -69,13 +69,15 @@ export class Package<TEvents extends EventsMap = EventsMap> {
     return this;
   }
 
-  createEventSchema<TEvent extends keyof TEvents>(
-    schema: Omit<EventNodeSchema<TEvents, TEvent>, "package">
+  createEventSchema<TEvent extends keyof TEvents, TState extends object, TIO>(
+    schema: Omit<EventNodeSchema<TEvents, TEvent, TState, TIO>, "package">
   ) {
-    this.schemas.push({
+    const altered: EventNodeSchema<TEvents, TEvent, TState, TIO> = {
       ...schema,
-      package: this,
-    } as any);
+      package: this as any,
+    };
+
+    this.schemas.push(altered);
 
     return this;
   }

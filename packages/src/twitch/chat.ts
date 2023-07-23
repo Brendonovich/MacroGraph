@@ -145,20 +145,20 @@ pkg.createNonEventSchema({
   name: "Send Chat Message",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
+    return io.dataInput({
       id: "message",
       name: "Message",
       type: t.string(),
     });
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     client()
       .expect("No Twitch Chat client available!")
       .say(
         Maybe(
           auth.tokens.get(writeUserId().expect("Chat write user not chosen!"))
         ).expect("Write user token not found!").userName,
-        ctx.getInput("message")
+        ctx.getInput(io)
       );
   },
 });
@@ -167,24 +167,26 @@ pkg.createEventSchema({
   name: "Slow Mode Toggled",
   event: "slowmode",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      id: "enabled",
-      name: "Enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "length",
-      name: "Duration",
-      type: t.string(),
-    });
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+      length: io.dataOutput({
+        id: "length",
+        name: "Duration",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    ctx.setOutput("enabled", data.enabled);
-    ctx.setOutput("length", data.length);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.enabled, data.enabled);
+    ctx.setOutput(io.length, data.length);
+    ctx.exec(io.exec);
   },
 });
 
@@ -192,18 +194,20 @@ pkg.createEventSchema({
   name: "Emote Only Mode Toggled",
   event: "emoteonly",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      id: "enabled",
-      name: "Enabled",
-      type: t.bool(),
-    });
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    ctx.setOutput("enabled", data.enabled);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.enabled, data.enabled);
+    ctx.exec(io.exec);
   },
 });
 
@@ -211,18 +215,20 @@ pkg.createEventSchema({
   name: "Subscriber Only Mode Toggled",
   event: "subonlymode",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      id: "enabled",
-      name: "Enabled",
-      type: t.bool(),
-    });
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    ctx.setOutput("enabled", data.enabled);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.enabled, data.enabled);
+    ctx.exec(io.exec);
   },
 });
 

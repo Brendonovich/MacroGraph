@@ -192,7 +192,7 @@ export interface IOSchema {
 }
 
 export type RunCtx = {
-  exec(t: string): Promise<void>;
+  exec(t: ExecOutput): Promise<void>;
   execScope(t: string, data: Record<string, any>): Promise<void>;
   setOutput<TOutput extends DataOutput<any>>(
     output: TOutput,
@@ -207,7 +207,7 @@ export type EventsMap = Record<string, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
   | NonEventNodeSchema<any, any>
-  | EventNodeSchema<TEvents>;
+  | EventNodeSchema<TEvents, any, any, any>;
 
 export type NonEventNodeSchema<TState extends object = object, TIO = void> = {
   name: string;

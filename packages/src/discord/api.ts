@@ -92,33 +92,35 @@ pkg.createNonEventSchema({
   name: "Get Discord User",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "userId",
-      name: "User ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "username",
-      name: "UserName",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "avatarId",
-      name: "Avatar ID",
-      type: t.option(t.string()),
-    });
-    io.dataOutput({
-      id: "bannerId",
-      name: "Banner ID",
-      type: t.option(t.string()),
-    });
+    return {
+      userId: io.dataInput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      username: io.dataOutput({
+        id: "username",
+        name: "UserName",
+        type: t.string(),
+      }),
+      avatarId: io.dataOutput({
+        id: "avatarId",
+        name: "Avatar ID",
+        type: t.option(t.string()),
+      }),
+      bannerId: io.dataOutput({
+        id: "bannerId",
+        name: "Banner ID",
+        type: t.option(t.string()),
+      }),
+    };
   },
-  async run({ ctx }) {
-    const response = await api.users(ctx.getInput("userId")).get(USER_SCHEMA);
+  async run({ ctx, io }) {
+    const response = await api.users(ctx.getInput(io.userId)).get(USER_SCHEMA);
 
-    ctx.setOutput("username", response.username);
-    ctx.setOutput("avatarId", Maybe(response.avatar));
-    ctx.setOutput("bannerId", Maybe(response.avatar));
+    ctx.setOutput(io.username, response.username);
+    ctx.setOutput(io.avatarId, Maybe(response.avatar));
+    ctx.setOutput(io.bannerId, Maybe(response.avatar));
   },
 });
 
