@@ -5,55 +5,76 @@ const pkg = core.createPackage<any>({ name: "HTTP Requests" });
 pkg.createNonEventSchema({
   name: "GET",
   variant: "Exec",
-  async run({ ctx }) {
+  generateIO(io) {
+    return {
+      url: io.dataInput({
+        id: "url",
+        name: "URL",
+        type: t.string(),
+      }),
+      response: io.dataOutput({
+        id: "response",
+        name: "Response",
+        type: t.string(),
+      }),
+      status: io.dataOutput({
+        id: "status",
+        name: "Status",
+        type: t.int(),
+      }),
+    };
+  },
+
+  async run({ ctx, io }) {
     const response = await rspcClient.query([
       "http.text",
       {
-        url: ctx.getInput<string>("url"),
+        url: ctx.getInput(io.url),
         method: "GET",
       },
     ]);
 
     // TODO: Change when Objects implemented
-    ctx.setOutput("response", response);
-    // ctx.setOutput("status", response);
-  },
-  generateIO(io) {
-    return {
-      inputs: {
-        url: io.dataInput({
-          id: "url",
-          name: "URL",
-          type: t.string(),
-        }),
-      },
-      outputs: {
-        response: io.dataOutput({
-          id: "response",
-          name: "Response",
-          type: t.string(),
-        }),
-        status: io.dataOutput({
-          id: "status",
-          name: "Status",
-          type: t.int(),
-        }),
-      },
-    };
+    ctx.setOutput(io.response, response.data);
+    ctx.setOutput(io.status, response.status);
   },
 });
 
 pkg.createNonEventSchema({
   name: "POST",
   variant: "Exec",
-  async run({ ctx }) {
+  generateIO(io) {
+    return {
+      url: io.dataInput({
+        id: "url",
+        name: "URL",
+        type: t.string(),
+      }),
+      body: io.dataInput({
+        id: "body",
+        name: "Body",
+        type: t.string(),
+      }),
+      response: io.dataOutput({
+        id: "response",
+        name: "Response",
+        type: t.string(),
+      }),
+      status: io.dataOutput({
+        id: "status",
+        name: "Status",
+        type: t.int(),
+      }),
+    };
+  },
+  async run({ ctx, io }) {
     const response = await rspcClient.query([
       "http.text",
       {
-        url: ctx.getInput<string>("url"),
+        url: ctx.getInput(io.url),
         method: "POST",
         body: {
-          Json: ctx.getInput<string>("body"),
+          Json: ctx.getInput(io.body),
         },
         headers: {
           "content-type": "application/json; charset=UTF-8",
@@ -62,44 +83,46 @@ pkg.createNonEventSchema({
     ]);
 
     // TODO: Change when Objects implemented
-    ctx.setOutput("response", response.data);
-    ctx.setOutput("status", response.status);
-  },
-  generateIO(io) {
-    io.dataInput({
-      id: "url",
-      name: "URL",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "body",
-      name: "Body",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "response",
-      name: "Response",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "status",
-      name: "Status",
-      type: t.string(),
-    });
+    ctx.setOutput(io.response, response.data);
+    ctx.setOutput(io.status, response.status);
   },
 });
 
 pkg.createNonEventSchema({
   name: "PUT",
   variant: "Exec",
-  async run({ ctx }) {
+  generateIO(io) {
+    return {
+      url: io.dataInput({
+        id: "url",
+        name: "URL",
+        type: t.string(),
+      }),
+      body: io.dataInput({
+        id: "body",
+        name: "Body",
+        type: t.string(),
+      }),
+      response: io.dataOutput({
+        id: "response",
+        name: "Response",
+        type: t.string(),
+      }),
+      status: io.dataOutput({
+        id: "status",
+        name: "Status",
+        type: t.int(),
+      }),
+    };
+  },
+  async run({ ctx, io }) {
     const response = await rspcClient.query([
       "http.text",
       {
-        url: ctx.getInput<string>("url"),
+        url: ctx.getInput(io.url),
         method: "PUT",
         body: {
-          Json: ctx.getInput<string>("body"),
+          Json: ctx.getInput(io.body),
         },
         headers: {
           "content-type": "application/json; charset=UTF-8",
@@ -108,59 +131,44 @@ pkg.createNonEventSchema({
     ]);
 
     // TODO: Change when Objects implemented
-    ctx.setOutput("response", response.data);
-    ctx.setOutput("status", response.status);
-  },
-  generateIO(io) {
-    io.dataInput({
-      id: "url",
-      name: "URL",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "body",
-      name: "Body",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "response",
-      name: "Response",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "status",
-      name: "Status",
-      type: t.int(),
-    });
+    ctx.setOutput(io.response, response.data);
+    ctx.setOutput(io.status, response.status);
   },
 });
 
 pkg.createNonEventSchema({
   name: "DELETE",
   variant: "Exec",
-  async run({ ctx }) {
+  generateIO(io) {
+    return {
+      url: io.dataInput({
+        id: "url",
+        name: "URL",
+        type: t.string(),
+      }),
+      response: io.dataOutput({
+        id: "response",
+        name: "Response",
+        type: t.string(),
+      }),
+      status: io.dataOutput({
+        id: "status",
+        name: "Status",
+        type: t.int(),
+      }),
+    };
+  },
+  async run({ ctx, io }) {
     const response = await rspcClient.query([
       "http.text",
       {
-        url: ctx.getInput<string>("url"),
+        url: ctx.getInput(io.url),
         method: "DELETE",
       },
     ]);
 
     // TODO: Change when Objects implemented
-    ctx.setOutput("response", response.data);
-    ctx.setOutput("status", response.status);
-  },
-  generateIO(io) {
-    io.dataInput({
-      id: "url",
-      name: "URL",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "status",
-      name: "Status",
-      type: t.int(),
-    });
+    ctx.setOutput(io.response, response.data);
+    ctx.setOutput(io.status, response.status);
   },
 });
