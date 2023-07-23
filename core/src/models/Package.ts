@@ -20,6 +20,7 @@ import {
   StructBuilder,
   StructFields,
 } from "../types/struct";
+import { ExecInput, ExecOutput } from "./IO";
 
 export interface PackageArgs {
   name: string;
@@ -41,25 +42,36 @@ export class Package<TEvents extends EventsMap = EventsMap> {
   createNonEventSchema<TState extends object, TIO>(
     schema: Omit<NonEventNodeSchema<TState, TIO>, "package">
   ) {
-    const altered: NonEventNodeSchema<TState, TIO> = {
+    const altered: NonEventNodeSchema<
+      TState,
+      { custom: TIO; default?: { in: ExecInput; out: ExecOutput } }
+    > = {
       ...schema,
       generateIO: (t, state) => {
-        if (schema.variant === "Exec") {
-          t.execInput({
-            id: "exec",
-          });
+        let defaultIO;
 
-          t.execOutput({
-            id: "exec",
-          });
+        if (schema.variant === "Exec") {
+          defaultIO = {
+            in: t.execInput({
+              id: "exec",
+            }),
+            out: t.execOutput({
+              id: "exec",
+            }),
+          };
         }
 
-        return schema.generateIO(t, state);
-      },
-      run: async (args) => {
-        await schema.run(args);
+        const custom = schema.generateIO(t, state);
 
-        if (schema.variant === "Exec") args.ctx.exec("exec");
+        return {
+          custom,
+          default: defaultIO,
+        };
+      },
+      run: async ({ ctx, io }) => {
+        await schema.run({ ctx, io: io.custom });
+
+        if (schema.variant === "Exec" && io.default) ctx.exec(io.default.out);
       },
       package: this as any,
     };
