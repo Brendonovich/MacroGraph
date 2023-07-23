@@ -47,8 +47,11 @@ const { setToken, token, state } = createRoot(() => {
     on(
       () => token(),
       (token) => {
-        token
-          .map((token) => {
+        token.mapOrElse(
+          () => {
+            setState({ type: "disconnected" });
+          },
+          (token) => {
             const socket = io(`https://sockets.streamlabs.com?token=${token}`, {
               transports: ["websocket"],
               autoConnect: false,
@@ -82,8 +85,8 @@ const { setToken, token, state } = createRoot(() => {
               socket.close();
               setState({ type: "disconnected" });
             });
-          })
-          .unwrapOrElse(() => setState({ type: "disconnected" }));
+          }
+        );
       }
     )
   );
@@ -100,49 +103,51 @@ export { setToken, token, state };
 pkg.createEventSchema({
   name: "Streamlabs Donation",
   event: "donation",
-  generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      name: "Name",
-      id: "name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Amount",
-      id: "amount",
-      type: t.float(),
-    });
-    io.dataOutput({
-      name: "Message",
-      id: "message",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Currency",
-      id: "currency",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "From",
-      id: "from",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "From User Id",
-      id: "fromId",
-      type: t.string(),
-    });
+  generateIO(io) {
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      name: io.dataOutput({
+        name: "Name",
+        id: "name",
+        type: t.string(),
+      }),
+      amount: io.dataOutput({
+        name: "Amount",
+        id: "amount",
+        type: t.float(),
+      }),
+      message: io.dataOutput({
+        name: "Message",
+        id: "message",
+        type: t.string(),
+      }),
+      currency: io.dataOutput({
+        name: "Currency",
+        id: "currency",
+        type: t.string(),
+      }),
+      from: io.dataOutput({
+        name: "From",
+        id: "from",
+        type: t.string(),
+      }),
+      fromId: io.dataOutput({
+        name: "From User Id",
+        id: "fromId",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    ctx.setOutput("name", data.name);
-    ctx.setOutput("amount", data.amount);
-    ctx.setOutput("message", data.message);
-    ctx.setOutput("currency", data.currency);
-    ctx.setOutput("from", data.from);
-    ctx.setOutput("fromId", data.fromId);
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.name, data.name);
+    ctx.setOutput(io.amount, data.amount);
+    ctx.setOutput(io.message, data.message);
+    ctx.setOutput(io.currency, data.currency);
+    ctx.setOutput(io.from, data.from);
+    ctx.setOutput(io.fromId, data.fromId);
 
-    ctx.exec("exec");
+    ctx.exec(io.exec);
   },
 });
