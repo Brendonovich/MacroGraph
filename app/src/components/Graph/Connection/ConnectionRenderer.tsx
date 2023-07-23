@@ -37,8 +37,13 @@ export const ConnectionRender = () => {
           {(n) => (
             <For each={n.inputs}>
               {(i) => {
-                const connectionData = () =>
-                  i.connection.andThen((conn) => {
+                const connectionData = () => {
+                  const connections =
+                    i instanceof ExecInput
+                      ? [...i.connections]
+                      : i.connection.map((c) => [c]).unwrapOr([]);
+
+                  return connections.map((conn) => {
                     const inputPosition = Maybe(UI.state.pinPositions.get(i));
                     const outputPosition = Maybe(
                       UI.state.pinPositions.get(conn)
@@ -51,42 +56,47 @@ export const ConnectionRender = () => {
                         output,
                       }));
                   });
+                };
 
                 return (
-                  <Show when={connectionData().toNullable()}>
-                    {(positions) => (
-                      <Switch
-                        fallback={
-                          <line
-                            x1={positions().input.x - graphOffset().x}
-                            y1={positions().input.y - graphOffset().y}
-                            x2={positions().output.x - graphOffset().x}
-                            y2={positions().output.y - graphOffset().y}
-                            stroke={"white"}
-                            stroke-opacity={0.75}
-                            stroke-width={2 * scale()}
-                          />
-                        }
-                      >
-                        <Match when={i instanceof DataInput && i}>
-                          {(input) => (
-                            <line
-                              class={clsx(
-                                "stroke-mg-current",
-                                colour(input().type)
+                  <For each={connectionData()}>
+                    {(data) => (
+                      <Show when={data.toNullable()}>
+                        {(positions) => (
+                          <Switch
+                            fallback={
+                              <line
+                                x1={positions().input.x - graphOffset().x}
+                                y1={positions().input.y - graphOffset().y}
+                                x2={positions().output.x - graphOffset().x}
+                                y2={positions().output.y - graphOffset().y}
+                                stroke={"white"}
+                                stroke-opacity={0.75}
+                                stroke-width={2 * scale()}
+                              />
+                            }
+                          >
+                            <Match when={i instanceof DataInput && i}>
+                              {(input) => (
+                                <line
+                                  class={clsx(
+                                    "stroke-mg-current",
+                                    colour(input().type)
+                                  )}
+                                  x1={positions().input.x - graphOffset().x}
+                                  y1={positions().input.y - graphOffset().y}
+                                  x2={positions().output.x - graphOffset().x}
+                                  y2={positions().output.y - graphOffset().y}
+                                  stroke-opacity={0.75}
+                                  stroke-width={2 * scale()}
+                                />
                               )}
-                              x1={positions().input.x - graphOffset().x}
-                              y1={positions().input.y - graphOffset().y}
-                              x2={positions().output.x - graphOffset().x}
-                              y2={positions().output.y - graphOffset().y}
-                              stroke-opacity={0.75}
-                              stroke-width={2 * scale()}
-                            />
-                          )}
-                        </Match>
-                      </Switch>
+                            </Match>
+                          </Switch>
+                        )}
+                      </Show>
                     )}
-                  </Show>
+                  </For>
                 );
               }}
             </For>

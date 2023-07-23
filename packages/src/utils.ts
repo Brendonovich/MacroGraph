@@ -479,7 +479,7 @@ pkg.createNonEventSchema({
 
       last.connection;
     } else {
-      const previousInputs = io.previous.inputs;
+      const previousInputs = io.previous.inputs as DataInput[];
 
       const endState: "twoUnconnected" | "fine" | "addOne" = (() => {
         const inputCount = previousInputs.length;
@@ -525,8 +525,8 @@ pkg.createNonEventSchema({
           type: t.string(),
         });
 
-      io.inputs[io.inputs.length - 1]?.connection;
-      io.inputs[io.inputs.length - 2]?.connection;
+      (io.inputs as DataInput[])[io.inputs.length - 1]?.connection;
+      (io.inputs as DataInput[])[io.inputs.length - 2]?.connection;
     }
 
     io.dataOutput({
