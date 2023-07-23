@@ -17,6 +17,8 @@ import {
   createRenderEffect,
   getOwner,
   runWithOwner,
+  createMemo,
+  Accessor,
 } from "solid-js";
 
 export interface NodeArgs {
@@ -53,6 +55,8 @@ export class Node {
   io!: IOBuilder;
   dispose: () => void;
 
+  dataRoots: Accessor<Set<Node>>;
+
   constructor(args: NodeArgs) {
     this.name = args.schema.name;
     this.id = args.id;
@@ -79,6 +83,20 @@ export class Node {
 
         this.io = builder;
       });
+    });
+
+    this.dataRoots = createMemo(() => {
+      const roots = new Set<Node>();
+
+      for (const input of reactiveThis.inputs) {
+        if (input instanceof DataInput) {
+          input.connection.peek((c) => {
+            c.node.dataRoots().forEach((n) => roots.add(n));
+          });
+        }
+      }
+
+      return roots;
     });
 
     return reactiveThis;

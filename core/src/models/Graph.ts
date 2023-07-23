@@ -116,11 +116,9 @@ export class Graph {
         const execOutput = output as ExecOutput;
         const execInput = input as ExecInput;
 
-        execOutput.connection.peek((c) => (c.connection = None));
-        execInput.connection.peek((c) => (c.connection = None));
-
+        execInput.connections.add(execOutput);
+        execOutput.connection.peek((c) => c.connections.delete(execOutput));
         execOutput.connection = Some(execInput);
-        execInput.connection = Some(execOutput);
       } else {
         const scopeOutput = output as ScopeOutput;
         const scopeInput = input as ScopeInput;
@@ -173,9 +171,13 @@ export class Graph {
         pin.connection.peek((conn) => (conn.connection = None));
 
         pin.connection = None;
-      } else {
-        pin.connection.peek((conn) => (conn.connection = None));
+      } else if (pin instanceof ExecOutput) {
+        pin.connection.peek((conn) => conn.connections.delete(pin));
         pin.connection = None;
+      } else {
+        pin.connections.forEach((conn) => (conn.connection = None));
+
+        pin.connections.clear();
       }
     });
 
@@ -215,18 +217,33 @@ export class Graph {
       })),
       connections: [...this.nodes.entries()].reduce((acc, [_, node]) => {
         node.inputs.forEach((i) => {
-          (i.connection as Option<typeof i>).peek((conn) => {
-            acc.push({
-              from: {
-                node: conn.node.id,
-                output: conn.id,
-              },
-              to: {
-                node: i.node.id,
-                input: i.id,
-              },
+          if (i instanceof ExecInput) {
+            i.connections.forEach((conn) => {
+              acc.push({
+                from: {
+                  node: conn.node.id,
+                  output: conn.id,
+                },
+                to: {
+                  node: i.node.id,
+                  input: i.id,
+                },
+              });
             });
-          });
+          } else {
+            (i.connection as unknown as Option<typeof i>).peek((conn) => {
+              acc.push({
+                from: {
+                  node: conn.node.id,
+                  output: conn.id,
+                },
+                to: {
+                  node: i.node.id,
+                  input: i.id,
+                },
+              });
+            });
+          }
         });
 
         return acc;

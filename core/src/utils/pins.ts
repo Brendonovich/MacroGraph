@@ -15,9 +15,9 @@ export function pinsCanConnect(
 ) {
   if (output instanceof DataOutput && input instanceof DataInput) {
     return typesCanConnect(output.type, input.type);
-  } else if (output instanceof ExecOutput && input instanceof ExecInput)
+  } else if (output instanceof ExecOutput && input instanceof ExecInput) {
     return true;
-  else if (output instanceof ScopeOutput && input instanceof ScopeInput)
+  } else if (output instanceof ScopeOutput && input instanceof ScopeInput)
     return true;
   else return false;
 }
