@@ -29,7 +29,7 @@ const alphabet = [
   "Z",
 ] as const;
 
-type Alphabet = (typeof alphabet)[number];
+type Alphabet = typeof alphabet[number];
 
 const pkg = core.createPackage<{
   [K in `${Lowercase<Alphabet>}-key`]: {
@@ -47,18 +47,20 @@ alphabet.forEach((a) => {
   pkg.createEventSchema({
     name: `${a} Key`,
     event: `${toLowercase(a)}-key`,
-    generateIO: (io) => {
-      io.execOutput({
-        id: "pressed",
-        name: "Pressed",
-      });
-      io.execOutput({
-        id: "released",
-        name: "Released",
-      });
+    generateIO(io) {
+      return {
+        pressed: io.execOutput({
+          id: "pressed",
+          name: "Pressed",
+        }),
+        released: io.execOutput({
+          id: "released",
+          name: "Released",
+        }),
+      };
     },
-    run({ ctx, data }) {
-      ctx.exec(data.state === "pressed" ? "pressed" : "released");
+    run({ ctx, data, io }) {
+      ctx.exec(data.state === "pressed" ? io.pressed : io.released);
     },
   });
 });
@@ -67,14 +69,14 @@ alphabet.forEach((a) => {
   pkg.createNonEventSchema({
     name: `${a} Key Pressed`,
     variant: "Pure",
-    generateIO: (io) => {
-      io.dataOutput({
+    generateIO(io) {
+      return io.dataOutput({
         id: "value",
         type: t.bool(),
       });
     },
-    run({ ctx }) {
-      ctx.setOutput("value", pressedKeys.has(a.toLowerCase() as any));
+    run({ ctx, io }) {
+      ctx.setOutput(io, pressedKeys.has(a.toLowerCase() as any));
     },
   });
 });
