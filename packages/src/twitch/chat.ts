@@ -11,6 +11,7 @@ import tmi from "tmi.js";
 import pkg from "./pkg";
 import { t, None, Maybe } from "@macrograph/core";
 import { auth } from "./auth";
+import { P } from "@tauri-apps/api/event-30ea0228";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
@@ -236,24 +237,26 @@ pkg.createEventSchema({
   name: "Follower Only Mode Toggled",
   event: "followersonly",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      id: "enabled",
-      name: "Enabled",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "length",
-      name: "Duration",
-      type: t.string(),
-    });
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+      length: io.dataOutput({
+        id: "length",
+        name: "Duration",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    ctx.setOutput("enabled", data.enabled);
-    ctx.setOutput("length", data.length);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.enabled, data.enabled);
+    ctx.setOutput(io.length, data.length);
+    ctx.exec(io.exec);
   },
 });
 
@@ -261,30 +264,32 @@ pkg.createEventSchema({
   name: "Messaged Deleted",
   event: "messagedeleted",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      id: "username",
-      name: "Username",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "deletedMessage",
-      name: "Deleted Message",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "messageId",
-      name: "Messasge ID",
-      type: t.string(),
-    });
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      username: io.dataOutput({
+        id: "username",
+        name: "Username",
+        type: t.string(),
+      }),
+      deletedMessage: io.dataOutput({
+        id: "deletedMessage",
+        name: "Deleted Message",
+        type: t.string(),
+      }),
+      messageId: io.dataOutput({
+        id: "messageId",
+        name: "Messasge ID",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx, data }) {
-    ctx.setOutput("username", data.username);
-    ctx.setOutput("deletedMessage", data.deletedmessage);
-    ctx.setOutput("messageId", data.userstate["target-msg-id"]);
-    ctx.exec("exec");
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.username, data.username);
+    ctx.setOutput(io.deletedMessage, data.deletedmessage);
+    ctx.setOutput(io.messageId, data.userstate["target-msg-id"]);
+    ctx.exec(io.exec);
   },
 });
 
@@ -292,66 +297,71 @@ pkg.createEventSchema({
   name: "Chat Message",
   event: "chatMessage",
   generateIO: (io) => {
-    io.execOutput({
-      id: "exec",
-    });
-    io.dataOutput({
-      id: "username",
-      name: "Username",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "displayName",
-      name: "Display Name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "userId",
-      name: "User ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "message",
-      name: "Message",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "messageId",
-      name: "Message ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "broadcaster",
-      name: "Broadcaster",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "mod",
-      name: "Moderator",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "sub",
-      name: "Subscriber",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "vip",
-      name: "VIP",
-      type: t.bool(),
-    });
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      username: io.dataOutput({
+        id: "username",
+        name: "Username",
+        type: t.string(),
+      }),
+      displayName: io.dataOutput({
+        id: "displayName",
+        name: "Display Name",
+        type: t.string(),
+      }),
+      userId: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      message: io.dataOutput({
+        id: "message",
+        name: "Message",
+        type: t.string(),
+      }),
+      messageId: io.dataOutput({
+        id: "messageId",
+        name: "Message ID",
+        type: t.string(),
+      }),
+      broadcaster: io.dataOutput({
+        id: "broadcaster",
+        name: "Broadcaster",
+        type: t.bool(),
+      }),
+      mod: io.dataOutput({
+        id: "mod",
+        name: "Moderator",
+        type: t.bool(),
+      }),
+      sub: io.dataOutput({
+        id: "sub",
+        name: "Subscriber",
+        type: t.bool(),
+      }),
+      vip: io.dataOutput({
+        id: "vip",
+        name: "VIP",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx, data }) {
+  run({ ctx, data, io }) {
     if (data.self) return;
-    ctx.setOutput("username", data.tags.username);
-    ctx.setOutput("displayName", data.tags["display-name"]);
-    ctx.setOutput("userId", data.tags["user-id"]);
-    ctx.setOutput("message", data.message);
-    ctx.setOutput("messageId", data.tags.id);
-    ctx.setOutput("mod", data.tags.mod);
-    ctx.setOutput("sub", data.tags.subscriber);
-    ctx.setOutput("vip", data.tags.vip);
-    ctx.setOutput("broadcaster", data.tags["room-id"] === data.tags["user-id"]);
+    ctx.setOutput(io.username, data.tags.username);
+    ctx.setOutput(io.displayName, data.tags["display-name"]);
+    ctx.setOutput(io.userId, data.tags["user-id"]);
+    ctx.setOutput(io.message, data.message);
+    ctx.setOutput(io.messageId, data.tags.id);
+    ctx.setOutput(io.mod, data.tags.mod);
+    ctx.setOutput(io.sub, data.tags.subscriber);
+    ctx.setOutput(io.vip, data.tags.vip);
+    ctx.setOutput(
+      io.broadcaster,
+      data.tags["room-id"] === data.tags["user-id"]
+    );
     ctx.exec("exec");
   },
 });
