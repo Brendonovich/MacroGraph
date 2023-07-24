@@ -362,6 +362,6 @@ pkg.createEventSchema({
       io.broadcaster,
       data.tags["room-id"] === data.tags["user-id"]
     );
-    ctx.exec("exec");
+    ctx.exec(io.exec);
   },
 });
