@@ -32,18 +32,18 @@ type JSONVariantTypes = [
   EnumVariant<
     "List",
     {
-      value: t.List<t.Enum<JSONVariantTypes>>;
+      value: t.List<t.Enum<typeof JSON>>;
     }
   >,
   EnumVariant<
     "Map",
     {
-      value: t.Map<t.Enum<JSONVariantTypes>>;
+      value: t.Map<t.Enum<typeof JSON>>;
     }
   >
-];
+] ;
 
-export const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
+export const JSON: Enum<JSONVariantTypes> = pkg.createEnum<JSONVariantTypes>("JSON", (e) =>
   e.lazy(() => [
     ...JSONLiteralVariants(e),
     e.variant("List", {
@@ -52,7 +52,7 @@ export const JSON: Enum<JSONVariantTypes> = pkg.createEnum("JSON", (e) =>
     e.variant("Map", {
       value: t.map(t.enum(JSON)),
     }),
-  ])
+  ] as JSONVariantTypes)
 );
 
 function assistedValueToJSON(
@@ -143,12 +143,12 @@ export function jsonToValue(value: InferEnum<typeof JSON>): any {
     case "Bool":
       return value.data.value;
     case "List":
-      return value.data.value.map(jsonToValue);
+      return value.data.value.map((v: any) => jsonToValue(v));
     case "Map":
       return Object.fromEntries(
         [...value.data.value.entries()].map(([key, value]) => [
           key,
-          jsonToValue(value),
+          jsonToValue(value as any),
         ])
       );
   }
@@ -160,28 +160,29 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "in",
-      type: t.wildcard(w),
-    });
-    io.dataOutput({
-      id: "out",
-      type: t.enum(JSON),
-    });
+    return {
+      w,
+      in: io.dataInput({
+        id: "in",
+        type: t.wildcard(w),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.enum(JSON),
+      }),
+    };
   },
   run({ ctx, io }) {
-    const w = io.wildcards.get("")!;
-
     const val = Maybe(
       assistedValueToJSON(
-        w.value().expect("No wildcard value!"),
-        ctx.getInput("in")
+        io.w.value().expect("No wildcard value!"),
+        ctx.getInput(io.in)
       )
     );
 
     ctx.setOutput(
-      "out",
-      val.expect(`Type ${w.toString()} cannot be converted to JSON!`)
+      io.out,
+      val.expect(`Type ${io.w.toString()} cannot be converted to JSON!`)
     );
   },
 });
@@ -190,17 +191,19 @@ pkg.createNonEventSchema({
   name: "Parse JSON",
   variant: "Exec",
   generateIO(io) {
-    io.dataInput({
-      id: "in",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "out",
-      type: t.enum(JSON),
-    });
+    return {
+      in: io.dataInput({
+        id: "in",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.enum(JSON),
+      }),
+    };
   },
-  run({ ctx }) {
-    const value = valueToJSON(window.JSON.parse(ctx.getInput("in")));
-    ctx.setOutput("out", value);
+  run({ ctx, io }) {
+    const value = valueToJSON(window.JSON.parse(ctx.getInput(io.in)));
+    ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
   },
 });

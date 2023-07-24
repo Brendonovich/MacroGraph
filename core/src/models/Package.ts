@@ -20,6 +20,7 @@ import {
   StructBuilder,
   StructFields,
 } from "../types/struct";
+import { ExecInput, ExecOutput } from "./IO";
 
 export interface PackageArgs {
   name: string;
@@ -28,7 +29,7 @@ export interface PackageArgs {
 
 export class Package<TEvents extends EventsMap = EventsMap> {
   name: string;
-  schemas: NodeSchema[] = [];
+  schemas: NodeSchema<TEvents>[] = [];
   core: Core;
 
   constructor(args: PackageArgs) {
@@ -38,40 +39,57 @@ export class Package<TEvents extends EventsMap = EventsMap> {
     return createMutable(this);
   }
 
-  createNonEventSchema(schema: Omit<NonEventNodeSchema, "package">) {
-    this.schemas.push({
+  createNonEventSchema<TState extends object, TIO>(
+    schema: Omit<NonEventNodeSchema<TState, TIO>, "package">
+  ) {
+    const altered: NonEventNodeSchema<
+      TState,
+      { custom: TIO; default?: { in: ExecInput; out: ExecOutput } }
+    > = {
       ...schema,
       generateIO: (t, state) => {
-        if (schema.variant === "Exec") {
-          t.execInput({
-            id: "exec",
-          });
+        let defaultIO;
 
-          t.execOutput({
-            id: "exec",
-          });
+        if (schema.variant === "Exec") {
+          defaultIO = {
+            in: t.execInput({
+              id: "exec",
+            }),
+            out: t.execOutput({
+              id: "exec",
+            }),
+          };
         }
 
-        schema.generateIO(t, state);
-      },
-      run: async (args: { ctx: RunCtx; io: IOBuilder }) => {
-        await schema.run(args);
+        const custom = schema.generateIO(t, state);
 
-        if (schema.variant === "Exec") args.ctx.exec("exec");
+        return {
+          custom,
+          default: defaultIO,
+        };
+      },
+      run: async ({ ctx, io }) => {
+        await schema.run({ ctx, io: io.custom });
+
+        if (schema.variant === "Exec" && io.default) ctx.exec(io.default.out);
       },
       package: this as any,
-    });
+    };
+
+    this.schemas.push(altered);
 
     return this;
   }
 
-  createEventSchema<TEvent extends keyof TEvents>(
-    schema: Omit<EventNodeSchema<TEvents, TEvent>, "package">
+  createEventSchema<TEvent extends keyof TEvents, TState extends object, TIO>(
+    schema: Omit<EventNodeSchema<TEvents, TEvent, TState, TIO>, "package">
   ) {
-    this.schemas.push({
+    const altered: EventNodeSchema<TEvents, TEvent, TState, TIO> = {
       ...schema,
-      package: this,
-    } as any);
+      package: this as any,
+    };
+
+    this.schemas.push(altered);
 
     return this;
   }

@@ -4,10 +4,9 @@ import { BaseType } from "./base";
 
 export type MapValue<T> = Map<string, T>;
 
-export class MapType<
-  TValue extends t.Any = t.Any,
-  TValueOut = any
-> extends BaseType<MapValue<TValueOut>> {
+export class MapType<TValue extends BaseType<any>> extends BaseType<
+  Map<string, t.infer<TValue>>
+> {
   constructor(public value: TValue) {
     super();
   }
@@ -24,7 +23,7 @@ export class MapType<
     return `Map<${this.value.toString()}>`;
   }
 
-  asZodType(): ZodType<Map<string, TValueOut>> {
+  asZodType(): ZodType<Map<string, t.infer<TValue>>> {
     return z.map(z.string(), this.value.asZodType());
   }
 

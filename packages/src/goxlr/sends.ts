@@ -20,19 +20,21 @@ pkg.createNonEventSchema({
   name: "Mute Slider",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Slider",
-      id: "Slider",
-      type: t.enum(Sliders),
-    });
-    io.dataInput({
-      name: "Mute State",
-      id: "muteState",
-      type: t.bool(),
-    });
+    return {
+      slider: io.dataInput({
+        name: "Slider",
+        id: "Slider",
+        type: t.enum(Sliders),
+      }),
+      muteState: io.dataInput({
+        name: "Mute State",
+        id: "muteState",
+        type: t.bool(),
+      }),
+    };
   },
-  run({ ctx }) {
-    const slider = ctx.getInput<InferEnum<typeof Sliders>>("Slider");
+  run({ ctx, io }) {
+    const slider = ctx.getInput(io.slider);
 
     getSocket().send(
       JSON.stringify({
@@ -43,7 +45,7 @@ pkg.createNonEventSchema({
             {
               SetFaderMuteState: [
                 slider.variant,
-                ctx.getInput("muteState") ? "MutedToX" : "Unmuted",
+                ctx.getInput(io.muteState) ? "MutedToX" : "Unmuted",
               ],
             },
           ],
@@ -62,15 +64,14 @@ const MicType = pkg.createEnum("Mic Type", (e) => [
 pkg.createNonEventSchema({
   name: "Set Microphone Type",
   variant: "Exec",
-  generateIO: (io) => {
+  generateIO: (io) =>
     io.dataInput({
       name: "Mic Type",
       id: "micType",
       type: t.enum(MicType),
-    });
-  },
-  run({ ctx }) {
-    const type = ctx.getInput<InferEnum<typeof MicType>>("micType");
+    }),
+  run({ ctx, io }) {
+    const type = ctx.getInput(io);
 
     getSocket().send(
       JSON.stringify({
@@ -100,14 +101,13 @@ const Presets = pkg.createEnum("Presets", (e) => [
 pkg.createNonEventSchema({
   name: "Set FX State",
   variant: "Exec",
-  generateIO: (io) => {
+  generateIO: (io) =>
     io.dataInput({
       name: "State",
       id: "state",
       type: t.bool(),
-    });
-  },
-  run({ ctx }) {
+    }),
+  run({ ctx, io }) {
     getSocket().send(
       JSON.stringify({
         id: 0,
@@ -115,7 +115,7 @@ pkg.createNonEventSchema({
           Command: [
             mixerID(),
             {
-              SetFXEnabled: ctx.getInput("state"),
+              SetFXEnabled: ctx.getInput(io),
             },
           ],
         },
@@ -127,15 +127,14 @@ pkg.createNonEventSchema({
 pkg.createNonEventSchema({
   name: "Set FX Preset",
   variant: "Exec",
-  generateIO: (io) => {
+  generateIO: (io) =>
     io.dataInput({
       name: "Preset",
       id: "preset",
       type: t.enum(Presets),
-    });
-  },
-  run({ ctx }) {
-    const preset = ctx.getInput<InferEnum<typeof Presets>>("preset");
+    }),
+  run({ ctx, io }) {
+    const preset = ctx.getInput(io);
 
     getSocket().send(
       JSON.stringify({

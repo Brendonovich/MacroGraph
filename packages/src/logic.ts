@@ -7,221 +7,222 @@ const pkg = core.createPackage({
 pkg.createNonEventSchema({
   name: "Branch",
   variant: "Base",
-  run({ ctx }) {
-    ctx.exec(ctx.getInput<boolean>("condition") ? "true" : "false");
-  },
   generateIO(io) {
     io.execInput({
       id: "exec",
     });
-    io.dataInput({
-      id: "condition",
-      name: "Condition",
-      type: t.bool(),
-    });
 
-    io.execOutput({
-      id: "true",
-      name: "True",
-    });
-    io.execOutput({
-      id: "false",
-      name: "False",
-    });
+    return {
+      condition: io.dataInput({
+        id: "condition",
+        name: "Condition",
+        type: t.bool(),
+      }),
+      true: io.execOutput({
+        id: "true",
+        name: "True",
+      }),
+      false: io.execOutput({
+        id: "false",
+        name: "False",
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.exec(ctx.getInput(io.condition) ? io.true : io.false);
   },
 });
 
 pkg.createNonEventSchema({
   name: "Wait",
   variant: "Exec",
-  run({ ctx }) {
-    return new Promise((res) => setTimeout(res, ctx.getInput("delay")));
-  },
   generateIO(io) {
-    io.dataInput({
+    return io.dataInput({
       id: "delay",
       name: "Wait in ms",
       type: t.int(),
     });
+  },
+  run({ ctx, io }) {
+    return new Promise((res) => setTimeout(res, ctx.getInput(io)));
   },
 });
 
 pkg.createNonEventSchema({
   name: "AND",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "value",
-      ctx.getInput<boolean>("one") && ctx.getInput<boolean>("two")
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.bool(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "value",
-      type: t.bool(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.bool(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.bool(),
+      }),
+      value: io.dataOutput({
+        id: "value",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.value, ctx.getInput(io.one) && ctx.getInput(io.two));
   },
 });
 
 pkg.createNonEventSchema({
   name: "NAND",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "value",
-      !(ctx.getInput<boolean>("one") && ctx.getInput<boolean>("two"))
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.bool(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "value",
-      type: t.bool(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.bool(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.bool(),
+      }),
+      value: io.dataOutput({
+        id: "value",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.value, !(ctx.getInput(io.one) && ctx.getInput(io.two)));
   },
 });
 
 pkg.createNonEventSchema({
   name: "OR",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "value",
-      ctx.getInput<boolean>("one") || ctx.getInput<boolean>("two")
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.bool(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "value",
-      type: t.bool(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.bool(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.bool(),
+      }),
+      value: io.dataOutput({
+        id: "value",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.value, ctx.getInput(io.one) || ctx.getInput(io.two));
   },
 });
 
 pkg.createNonEventSchema({
   name: "NOR",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "value",
-      !(ctx.getInput<boolean>("one") || ctx.getInput<boolean>("two"))
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.bool(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "value",
-      type: t.bool(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.bool(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.bool(),
+      }),
+      value: io.dataOutput({
+        id: "value",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.value, !(ctx.getInput(io.one) || ctx.getInput(io.two)));
   },
 });
 
 pkg.createNonEventSchema({
   name: "XOR",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "value",
-      ctx.getInput<boolean>("one") != ctx.getInput<boolean>("two")
-    );
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "one",
-      type: t.bool(),
-    });
-    io.dataInput({
-      id: "two",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "value",
-      type: t.bool(),
-    });
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.bool(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.bool(),
+      }),
+      value: io.dataOutput({
+        id: "value",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.value, ctx.getInput(io.one) != ctx.getInput(io.two));
   },
 });
 
 pkg.createNonEventSchema({
   name: "NOT",
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput("output", !ctx.getInput<boolean>("input"));
-  },
   generateIO(io) {
-    io.dataInput({
-      id: "input",
-      type: t.bool(),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.bool(),
-    });
+    return {
+      input: io.dataInput({
+        id: "input",
+        type: t.bool(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.bool(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.output, !ctx.getInput(io.input));
   },
 });
 
 pkg.createNonEventSchema({
   name: `Conditional`,
   variant: "Pure",
-  run({ ctx }) {
-    ctx.setOutput(
-      "output",
-      ctx.getInput("condition")
-        ? ctx.getInput("trueValue")
-        : ctx.getInput("falseValue")
-    );
-  },
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.dataInput({
-      id: "condition",
-      name: "Condition",
-      type: t.bool(),
-    });
-    io.dataInput({
-      id: "trueValue",
-      name: "True",
-      type: t.wildcard(w),
-    });
-    io.dataInput({
-      id: "falseValue",
-      name: "False",
-      type: t.wildcard(w),
-    });
-    io.dataOutput({
-      id: "output",
-      type: t.wildcard(w),
-    });
+    return {
+      condition: io.dataInput({
+        id: "condition",
+        name: "Condition",
+        type: t.bool(),
+      }),
+      true: io.dataInput({
+        id: "trueValue",
+        name: "True",
+        type: t.wildcard(w),
+      }),
+      false: io.dataInput({
+        id: "falseValue",
+        name: "False",
+        type: t.wildcard(w),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.wildcard(w),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(
+      io.output,
+      ctx.getInput(io.condition)
+        ? ctx.getInput(io.true)
+        : ctx.getInput(io.false)
+    );
   },
 });
 
@@ -231,44 +232,42 @@ pkg.createNonEventSchema({
   generateIO(io) {
     const w = io.wildcard("");
 
-    io.execInput({
-      id: "exec",
-    });
-    io.dataInput({
-      id: "array",
-      name: "Array",
-      type: t.list(t.wildcard(w)),
-    });
-
-    io.scopeOutput({
-      id: "body",
-      name: "Loop Body",
-      scope: (s) => {
-        s.output({
-          id: "element",
-          name: "Array Element",
-          type: t.wildcard(w),
-        });
-        s.output({
-          id: "index",
-          name: "Array Index",
-          type: t.int(),
-        });
-      },
-    });
-
-    io.execOutput({
-      id: "completed",
-      name: "Completed",
-    });
+    return {
+      exec: io.execInput({
+        id: "exec",
+      }),
+      array: io.dataInput({
+        id: "array",
+        name: "Array",
+        type: t.list(t.wildcard(w)),
+      }),
+      body: io.scopeOutput({
+        id: "body",
+        name: "Loop Body",
+        scope: (s) => {
+          s.output({
+            id: "element",
+            name: "Array Element",
+            type: t.wildcard(w),
+          });
+          s.output({
+            id: "index",
+            name: "Array Index",
+            type: t.int(),
+          });
+        },
+      }),
+      completed: io.execOutput({
+        id: "completed",
+        name: "Completed",
+      }),
+    };
   },
-  async run({ ctx }) {
-    for (const [index, element] of ctx
-      .getInput<Array<any>>("array")
-      .entries()) {
-      await ctx.execScope("body", { element, index });
+  async run({ ctx, io }) {
+    for (const [index, element] of ctx.getInput(io.array).entries()) {
+      await ctx.execScope(io.body, { element, index });
     }
 
-    await ctx.exec("completed");
+    await ctx.exec(io.completed);
   },
 });

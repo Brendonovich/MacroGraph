@@ -2,9 +2,7 @@ import { z } from "zod";
 import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
-export class ListType<T extends BaseType = t.Any, TOut = any> extends BaseType<
-  TOut[]
-> {
+export class ListType<T extends BaseType> extends BaseType<t.infer<T>[]> {
   constructor(public item: T) {
     super();
   }
@@ -21,7 +19,7 @@ export class ListType<T extends BaseType = t.Any, TOut = any> extends BaseType<
     return `List<${this.item.toString()}>`;
   }
 
-  asZodType(): z.ZodType<TOut[]> {
+  asZodType(): z.ZodType<t.infer<T>[]> {
     return z.array(this.item.asZodType());
   }
 

@@ -139,7 +139,7 @@ class Option<T> {
   /**
    * Maps an {@link Option<T> `Option<T>`} to {@link Option<U> `Option<U>`} by applying a function to a contained value.
    */
-  map<O>(f: (x: T) => O): Option<O> {
+  map<O>(f: (x: T) => O): Option<NonNullable<O>> {
     if (this.isSome()) {
       const value = f(this.value);
 
@@ -452,7 +452,7 @@ const None = new Option(null) as None;
 /**
  * Some value of type `T`.
  */
-function Some<T extends {}>(value: SomeValue<T>): Some<T> {
+function Some<T extends {} | unknown>(value: SomeValue<T>): Some<T> {
   if (value === null || typeof value === "undefined") {
     throw new Error("Tried to create Some() with a null or undefined value.");
   }
@@ -491,14 +491,14 @@ function Maybe<T>(value: T | null | undefined): Option<T> {
 
 export { Option, Some, Maybe, None };
 
-export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
-  Option<TOut>
+export class OptionType<T extends BaseType<any>> extends BaseType<
+  Option<t.infer<T>>
 > {
   constructor(public inner: T) {
     super();
   }
 
-  default(): Option<TOut> {
+  default(): Option<t.infer<T>> {
     return None;
   }
 
@@ -506,7 +506,7 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
     return this.inner.variant();
   }
 
-  getInner(): BaseType {
+  getInner(): T {
     if (this.inner instanceof OptionType) {
       return this.inner.getInner();
     } else return this.inner;
@@ -516,7 +516,7 @@ export class OptionType<T extends BaseType<TOut>, TOut = any> extends BaseType<
     return `Option<${this.inner.toString()}>`;
   }
 
-  asZodType(): z.ZodType<Option<TOut>> {
+  asZodType(): z.ZodType<Option<t.infer<T>>> {
     // TODO: needs to validate inner
 
     return z.instanceof(Option) as any;

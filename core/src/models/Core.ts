@@ -1,14 +1,7 @@
 import { createMutable } from "solid-js/store";
 import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
-import {
-  DataInput,
-  DataOutput,
-  ExecInput,
-  ExecOutput,
-  ScopeInput,
-  ScopeOutput,
-} from "./IO";
+import { DataInput, DataOutput, ExecOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 import { z } from "zod";
 import { Project, SerializedProject } from "./Project";
@@ -95,14 +88,14 @@ export class Core {
 }
 
 class ExecutionContext {
-  data = new Map<DataOutput | ScopeOutput, any>();
+  data = new Map<DataOutput<any> | ScopeOutput, any>();
 
   constructor(public root: Node) {}
 
   run(data: any) {
     this.root.schema.run({
       ctx: this.createCtx(this.root),
-      io: this.root.io,
+      io: this.root.ioReturn,
       data,
     });
   }
@@ -111,49 +104,27 @@ class ExecutionContext {
     return {
       exec: async (execOutput) => {
         NODE_EMIT.emit(node);
-        const output = node.output(execOutput);
 
-        if (!output) throw new Error(`Output ${execOutput} not found!`);
-
-        if (!(output instanceof ExecOutput))
-          throw new Error(`Output ${execOutput} is not an ExecOutput!`);
-
-        await output.connection.peekAsync((conn) => this.execNode(conn.node));
+        await execOutput.connection.peekAsync((conn) =>
+          this.execNode(conn.node)
+        );
       },
       execScope: async (scopeOutput, data) => {
         NODE_EMIT.emit(node);
 
-        const output = node.output(scopeOutput);
-
-        if (!output) throw new Error(`Output ${scopeOutput} not found!`);
-        if (!(output instanceof ScopeOutput))
-          throw new Error(`Output ${scopeOutput} is not a ScopeOutput!`);
-
-        await output.connection.peekAsync(async (conn) => {
-          this.data.set(output, data);
+        await scopeOutput.connection.peekAsync(async (conn) => {
+          this.data.set(scopeOutput, data);
 
           await this.execNode(conn.node);
         });
       },
-      setOutput: (name, value) => {
-        const output = node.output(name);
-
-        if (output === undefined) throw new Error(`Output ${name} not found!`);
-
-        if (!(output instanceof DataOutput))
-          throw new Error(`Output ${name} is not a DataOutput!`);
-
+      setOutput: (output, value) => {
         this.data.set(output, value);
       },
-      getInput: (name) => {
-        const input = node.input(name);
-
-        if (input === undefined) throw new Error(`Input ${name} not found!`);
-
-        if (input instanceof ExecInput)
-          throw new Error(`Input ${name} is an ExecInput!`);
-
-        return (input.connection as Option<DataOutput | ScopeOutput>).mapOrElse(
+      getInput: (input) => {
+        return (
+          input.connection as Option<DataOutput<any> | ScopeOutput>
+        ).mapOrElse(
           () => {
             if (input instanceof DataInput) return input.defaultValue;
           },
@@ -161,7 +132,7 @@ class ExecutionContext {
             const data = this.data.get(conn);
 
             if (data === undefined)
-              throw new Error(`Data not found for ${name}!`);
+              throw new Error(`Data not found for ${input.name}!`);
 
             return data;
           }

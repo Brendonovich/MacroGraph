@@ -49,10 +49,11 @@ export class Node {
   graph: Graph;
   position: XY;
   schema: NodeSchema;
-  inputs: (DataInput | ExecInput | ScopeInput)[] = [];
-  outputs: (DataOutput | ExecOutput | ScopeOutput)[] = [];
+  inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];
+  outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[] = [];
 
   io!: IOBuilder;
+  ioReturn: any;
   dispose: () => void;
 
   dataRoots: Accessor<Set<Node>>;
@@ -77,7 +78,7 @@ export class Node {
       createRenderEffect(() => {
         const builder = new IOBuilder(this, this.io);
 
-        reactiveThis.schema.generateIO(builder, {});
+        this.ioReturn = reactiveThis.schema.generateIO(builder, {});
 
         untrack(() => this.updateIO(reactiveThis, builder));
 
