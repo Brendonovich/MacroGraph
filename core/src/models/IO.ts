@@ -78,7 +78,7 @@ export interface ExecInputArgs {
 
 export class ExecInput {
   id: string;
-  connection: Option<ExecOutput> = None;
+  connections = new ReactiveSet<ExecOutput>();
   public node: Node;
   public name?: string;
 

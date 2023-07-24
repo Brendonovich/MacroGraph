@@ -496,14 +496,12 @@ pkg.createNonEventSchema({
     } else {
       inputs = [];
 
-      const previousInputs = io.previous.inputs;
+      const previousInputs = io.previous.inputs as DataInput<t.String>[];
 
       const endState: "twoUnconnected" | "fine" | "addOne" = (() => {
         const inputCount = previousInputs.length;
-        const last = previousInputs[inputCount - 1] as DataInput<t.String>;
-        const secondLast = previousInputs[inputCount - 2] as
-          | DataInput<t.String>
-          | undefined;
+        const last = previousInputs[inputCount - 1]!;
+        const secondLast = previousInputs[inputCount - 2];
 
         if (last.connection.isSome()) return "addOne";
         else if (
@@ -546,8 +544,8 @@ pkg.createNonEventSchema({
           })
         );
 
-      io.inputs[io.inputs.length - 1]?.connection;
-      io.inputs[io.inputs.length - 2]?.connection;
+      inputs[io.inputs.length - 1]?.connection;
+      inputs[io.inputs.length - 2]?.connection;
     }
 
     return {
@@ -1162,9 +1160,9 @@ pkg.createNonEventSchema({
 
         const output = v.outputs.find((o) => o.id === data.variant)!;
 
-        if ("data" in data && output instanceof ScopeOutput)
-          ctx.execScope(output, data.data);
-        else ctx.exec(output);
+        if (output instanceof ScopeOutput) {
+          if ("data" in data) ctx.execScope(output, data.data);
+        } else ctx.exec(output);
       } else if (v.type === "option") {
         const data = ctx.getInput(v.input);
 
