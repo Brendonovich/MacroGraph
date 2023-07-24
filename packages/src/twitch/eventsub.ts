@@ -57,8 +57,9 @@ const { state } = createRoot(() => {
     on(
       () => helix.userId(),
       (user) => {
-        user
-          .map((userId) => {
+        user.mapOrElse(
+          () => setState({ type: "disconnected" }),
+          (userId) => {
             auth.refreshAccessTokenForUser(userId);
             const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
@@ -105,8 +106,8 @@ const { state } = createRoot(() => {
               ws.close();
               setState({ type: "disconnected" });
             });
-          })
-          .unwrapOrElse(() => setState({ type: "disconnected" }));
+          }
+        );
       }
     )
   );
@@ -1693,7 +1694,6 @@ pkg.createEventSchema({
     };
   },
   run({ ctx, data, io }) {
-    ctx.setOutput(io.id, data.id);
     ctx.setOutput(io.viewerCount, data.viewer_count);
     ctx.setOutput(io.startedAt, data.started_at);
 

@@ -10,7 +10,6 @@ import { t, Maybe, None, InferEnum } from "@macrograph/core";
 import { auth } from "./auth";
 import pkg from "./pkg";
 import { createEndpoint } from "../httpEndpoint";
-import { P } from "@tauri-apps/api/event-30ea0228";
 
 export const HELIX_USER_ID = "helixUserId";
 
@@ -1168,10 +1167,10 @@ pkg.createNonEventSchema({
   },
   async run({ ctx, io }) {
     let rewards = await client.channelPoints.customRewards.get(z.any(), {
-      body: new URLSearchParams({
+      body: {
         broadcaster_id: userId().unwrap(),
         only_manageable_rewards: ctx.getInput(io.manageableOnly),
-      }),
+      },
     });
 
     const data = rewards.data.find(
@@ -1289,12 +1288,12 @@ pkg.createNonEventSchema({
       type: io.dataOutput({
         id: "type",
         name: "User Type",
-        type: t.option(t.enum(UserType)),
+        type: t.enum(UserType),
       }),
       broadcasterType: io.dataOutput({
         id: "broadcasterType",
         name: "Broadcaster Type",
-        type: t.option(t.enum(BroadcasterType)),
+        type: t.enum(BroadcasterType),
       }),
       description: io.dataOutput({
         id: "description",
@@ -1329,34 +1328,35 @@ pkg.createNonEventSchema({
       }),
     });
 
-    const data = response.data[0];
+    const data = Maybe(response.data[0]).expect("No user found");
 
     // const optData = Maybe(data);
-    ctx.setOutput(io.userIdOut, data?.id);
-    ctx.setOutput(io.userLogin, data?.login);
-    ctx.setOutput(io.displayName, data?.display_name);
+    ctx.setOutput(io.userIdOut, data.id);
+    ctx.setOutput(io.userLogin, data.login);
+    ctx.setOutput(io.displayName, data.display_name);
     ctx.setOutput(
       io.type,
       (() => {
-        if (data?.type === "admin") return { variant: "Admin" };
-        else if (data?.type === "global_mod") return { variant: "Global Mod" };
-        else if (data?.type === "staff") return { variant: "Staff" };
-        else return { variant: "Normal User" };
+        if (data.type === "admin") return UserType.variant("Admin");
+        else if (data.type === "global_mod")
+          return UserType.variant("Global Mod");
+        else if (data.type === "staff") return UserType.variant("Staff");
+        else return UserType.variant("Normal User");
       })()
-    ) as unknown as InferEnum<typeof UserType>;
+    );
     ctx.setOutput(
       io.broadcasterType,
       (() => {
-        const type = data?.broadcaster_type;
-        if (type === "affiliate") return { variant: "Affliate" };
-        else if (type === "partner") return { variant: "Partner" };
-        else return { variant: "Normal User" };
+        const type = data.broadcaster_type;
+        if (type === "affiliate") return BroadcasterType.variant("Affliate");
+        else if (type === "partner") return BroadcasterType.variant("Partner");
+        else return BroadcasterType.variant("Normal User");
       })()
-    ) as unknown as InferEnum<typeof BroadcasterType>;
-    ctx.setOutput(io.description, data?.description);
-    ctx.setOutput(io.profileImageUrl, data?.profile_image_url);
-    ctx.setOutput(io.offlineImageUrl, data?.offline_image_url);
-    ctx.setOutput(io.createdAt, JSON.stringify(data?.created_at));
+    );
+    ctx.setOutput(io.description, data.description);
+    ctx.setOutput(io.profileImageUrl, data.profile_image_url);
+    ctx.setOutput(io.offlineImageUrl, data.offline_image_url);
+    ctx.setOutput(io.createdAt, JSON.stringify(data.created_at));
     // ctx.setOutput(
     //   "out",
     //   Maybe(data).map((data) =>
