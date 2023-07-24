@@ -10,6 +10,7 @@ import { t, Maybe, None, InferEnum } from "@macrograph/core";
 import { auth } from "./auth";
 import pkg from "./pkg";
 import { createEndpoint } from "../httpEndpoint";
+import { P } from "@tauri-apps/api/event-30ea0228";
 
 export const HELIX_USER_ID = "helixUserId";
 
@@ -333,23 +334,25 @@ pkg.createNonEventSchema({
   name: "Ban User",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "userID",
-      id: "userId",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Duration",
-      id: "duration",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Reason",
-      id: "reason",
-      type: t.string(),
-    });
+    return {
+      userId: io.dataInput({
+        name: "userID",
+        id: "userId",
+        type: t.string(),
+      }),
+      duration: io.dataInput({
+        name: "Duration",
+        id: "duration",
+        type: t.int(),
+      }),
+      reason: io.dataInput({
+        name: "Reason",
+        id: "reason",
+        type: t.string(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
 
     client.moderation.bans.post(z.any(), {
@@ -357,9 +360,9 @@ pkg.createNonEventSchema({
         broadcaster_id: user,
         moderator_id: user,
         data: {
-          user_id: ctx.getInput("userId"),
-          duration: ctx.getInput("duration"),
-          reason: ctx.getInput("reason"),
+          user_id: ctx.getInput(io.userId),
+          duration: ctx.getInput(io.duration),
+          reason: ctx.getInput(io.reason),
         },
       },
     });
@@ -370,18 +373,20 @@ pkg.createNonEventSchema({
   name: "Unban User",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "userID",
-      id: "userId",
-      type: t.string(),
-    });
+    return {
+      userId: io.dataInput({
+        name: "userID",
+        id: "userId",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     client.moderation.bans.delete(z.any(), {
       body: {
         broadcaster_id: userId().unwrap(),
         moderator_id: userId().unwrap(),
-        user_id: ctx.getInput("userId"),
+        user_id: ctx.getInput(io.userId),
       },
     });
   },
@@ -391,17 +396,19 @@ pkg.createNonEventSchema({
   name: "Add Moderator",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "userID",
-      id: "userId",
-      type: t.string(),
-    });
+    return {
+      userId: io.dataInput({
+        name: "userID",
+        id: "userId",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     return client.moderation.moderators.post(z.any(), {
       body: {
         broadcaster_id: userId().unwrap(),
-        user_id: ctx.getInput("userId"),
+        user_id: ctx.getInput(io.userId),
       },
     });
   },
@@ -411,17 +418,19 @@ pkg.createNonEventSchema({
   name: "Remove Moderator",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "userID",
-      id: "userId",
-      type: t.string(),
-    });
+    return {
+      userId: io.dataInput({
+        name: "userID",
+        id: "userId",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     client.moderation.moderators.delete(z.any(), {
       body: {
         broadcaster_id: userId().unwrap(),
-        user_id: ctx.getInput("userId"),
+        user_id: ctx.getInput(io.userId),
       },
     });
   },
@@ -431,73 +440,75 @@ pkg.createNonEventSchema({
   name: "Get Channel Info",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Broadcaster ID",
-      id: "broadcasterId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Broadcaster ID",
-      id: "broadcasterId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Broadcaster Login Name",
-      id: "broadcasterLogin",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Broadcaster Display Name",
-      id: "broadcasterDisplay",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Broadcaster Language",
-      id: "broadcasterLanguage",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Title",
-      id: "title",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Stream Catagory",
-      id: "catagory",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Catagory ID",
-      id: "catagoryId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Tags",
-      id: "tags",
-      type: t.list(t.string()),
-    });
-    io.dataOutput({
-      name: "Delay",
-      id: "delay",
-      type: t.int(),
-    });
+    return {
+      broadcasterIdIn: io.dataInput({
+        name: "Broadcaster ID",
+        id: "broadcasterId",
+        type: t.string(),
+      }),
+      broadcasterIdOut: io.dataOutput({
+        name: "Broadcaster ID",
+        id: "broadcasterId",
+        type: t.string(),
+      }),
+      broadcasterLogin: io.dataOutput({
+        name: "Broadcaster Login Name",
+        id: "broadcasterLogin",
+        type: t.string(),
+      }),
+      broadcasterDisplay: io.dataOutput({
+        name: "Broadcaster Display Name",
+        id: "broadcasterDisplay",
+        type: t.string(),
+      }),
+      broadcasterLanguage: io.dataOutput({
+        name: "Broadcaster Language",
+        id: "broadcasterLanguage",
+        type: t.string(),
+      }),
+      title: io.dataOutput({
+        name: "Title",
+        id: "title",
+        type: t.string(),
+      }),
+      catagory: io.dataOutput({
+        name: "Stream Catagory",
+        id: "catagory",
+        type: t.string(),
+      }),
+      catagoryId: io.dataOutput({
+        name: "Catagory ID",
+        id: "catagoryId",
+        type: t.string(),
+      }),
+      tags: io.dataOutput({
+        name: "Tags",
+        id: "tags",
+        type: t.list(t.string()),
+      }),
+      delay: io.dataOutput({
+        name: "Delay",
+        id: "delay",
+        type: t.int(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const data = await client.channels.get(z.any(), {
       body: new URLSearchParams({
-        broadcaster_id: ctx.getInput("broadcasterId"),
+        broadcaster_id: ctx.getInput(io.broadcasterIdIn),
       }),
     });
     const info = data.data[0];
-    ctx.setOutput("broadcasterId", info.broadcaster_id);
-    ctx.setOutput("broadcasterLogin", info.broadcaster_login);
-    ctx.setOutput("broadcasterDisplay", info.broadcaster_name);
-    ctx.setOutput("broadcasterLanguage", info.broadcaster_language);
-    ctx.setOutput("catagory", info.game_name);
-    ctx.setOutput("catagoryId", info.game_id);
-    ctx.setOutput("title", info.title);
-    ctx.setOutput("delay", info.delay);
-    ctx.setOutput("tags", info.tags);
+    ctx.setOutput(io.broadcasterIdOut, info.broadcaster_id);
+    ctx.setOutput(io.broadcasterLogin, info.broadcaster_login);
+    ctx.setOutput(io.broadcasterDisplay, info.broadcaster_name);
+    ctx.setOutput(io.broadcasterLanguage, info.broadcaster_language);
+    ctx.setOutput(io.catagory, info.game_name);
+    ctx.setOutput(io.catagoryId, info.game_id);
+    ctx.setOutput(io.title, info.title);
+    ctx.setOutput(io.delay, info.delay);
+    ctx.setOutput(io.tags, info.tags);
   },
 });
 
@@ -505,45 +516,47 @@ pkg.createNonEventSchema({
   name: "Modify Channel Info",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Broadcaster Language",
-      id: "broadcasterLanguage",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Title",
-      id: "title",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Catagory Name",
-      id: "catagoryName",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Tags",
-      id: "tags",
-      type: t.list(t.string()),
-    });
-    io.dataInput({
-      name: "Delay",
-      id: "delay",
-      type: t.int(),
-    });
+    return {
+      broadcasterLanguage: io.dataInput({
+        name: "Broadcaster Language",
+        id: "broadcasterLanguage",
+        type: t.string(),
+      }),
+      title: io.dataInput({
+        name: "Title",
+        id: "title",
+        type: t.string(),
+      }),
+      catagoryName: io.dataInput({
+        name: "Catagory Name",
+        id: "catagoryName",
+        type: t.string(),
+      }),
+      tags: io.dataInput({
+        name: "Tags",
+        id: "tags",
+        type: t.list(t.string()),
+      }),
+      delay: io.dataInput({
+        name: "Delay",
+        id: "delay",
+        type: t.int(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const body = {} as any;
 
-    if (ctx.getInput("broadcasterLanguage"))
-      body.broadcaster_language = ctx.getInput("broadcasterLanguage");
-    if (ctx.getInput("title")) body.title = ctx.getInput("title");
-    if (ctx.getInput("delay")) body.delay = ctx.getInput("delay");
-    if (ctx.getInput("tags")) body.tags = ctx.getInput("tags");
+    if (ctx.getInput(io.broadcasterLanguage))
+      body.broadcaster_language = ctx.getInput(io.broadcasterLanguage);
+    if (ctx.getInput(io.title)) body.title = ctx.getInput(io.title);
+    if (ctx.getInput(io.delay)) body.delay = ctx.getInput(io.delay);
+    if (ctx.getInput(io.tags)) body.tags = ctx.getInput(io.tags);
 
-    if (ctx.getInput("catagoryName")) {
+    if (ctx.getInput(io.catagoryName)) {
       let data = await client.games.get(z.any(), {
         body: new URLSearchParams({
-          name: ctx.getInput("catagoryName"),
+          name: ctx.getInput(io.catagoryName),
         }),
       });
 
@@ -563,25 +576,27 @@ pkg.createNonEventSchema({
   name: "Create Clip",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataOutput({
-      name: "Clip ID",
-      id: "clipId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Edit URL",
-      id: "editUrl",
-      type: t.string(),
-    });
+    return {
+      clipId: io.dataOutput({
+        name: "Clip ID",
+        id: "clipId",
+        type: t.string(),
+      }),
+      editUrl: io.dataOutput({
+        name: "Edit URL",
+        id: "editUrl",
+        type: t.string(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const clipId = await client.clips.post(z.any(), {
       body: new URLSearchParams({ broadcaster_id: userId().unwrap() }),
     });
     const data = clipId.data[0];
 
-    ctx.setOutput("clipId", data.id);
-    ctx.setOutput("editUrl", data.edit_url);
+    ctx.setOutput(io.clipId, data.id);
+    ctx.setOutput(io.editUrl, data.edit_url);
   },
 });
 
@@ -597,27 +612,29 @@ pkg.createNonEventSchema({
   name: "Check User Subscription",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "out",
-      type: t.option(t.struct(UserSubscription)),
-    });
+    return {
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.option(t.struct(UserSubscription)),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     let response = await client.subscriptions.get(z.any(), {
       body: new URLSearchParams({
-        user_id: ctx.getInput("userId"),
+        user_id: ctx.getInput(io.userId),
         broadcaster_id: userId().unwrap(),
       }),
     });
 
     const data = response.data[0];
     ctx.setOutput(
-      "out",
+      io.out,
       Maybe(data).map((data) =>
         UserSubscription.create({
           tier: data.tier,
@@ -635,27 +652,29 @@ pkg.createNonEventSchema({
   name: "Check User Follow",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Following",
-      id: "following",
-      type: t.bool(),
-    });
+    return {
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      following: io.dataOutput({
+        name: "Following",
+        id: "following",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
 
     let data = await client.channels.followers.get(z.any(), {
       body: new URLSearchParams({
         broadcaster_id: user,
-        user_id: ctx.getInput("userId"),
+        user_id: ctx.getInput(io.userId),
       }),
     });
-    ctx.setOutput("following", data?.data.length === 1);
+    ctx.setOutput(io.following, data?.data.length === 1);
   },
 });
 
@@ -663,26 +682,28 @@ pkg.createNonEventSchema({
   name: "Check User VIP",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Vip",
-      id: "vip",
-      type: t.bool(),
-    });
+    return {
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      vip: io.dataOutput({
+        name: "Vip",
+        id: "vip",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const data = await client.channels.vips.get(z.any(), {
       body: new URLSearchParams({
         broadcaster_id: userId().unwrap(),
-        user_id: ctx.getInput("userId"),
+        user_id: ctx.getInput(io.userId),
       }),
     });
 
-    ctx.setOutput("vip", data.data[0] !== undefined);
+    ctx.setOutput(io.vip, data.data[0] !== undefined);
   },
 });
 
@@ -690,26 +711,28 @@ pkg.createNonEventSchema({
   name: "Check User Mod",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "User ID",
-      id: "userId",
-      type: t.string(),
-    });
-    io.dataOutput({
-      name: "Moderator",
-      id: "moderator",
-      type: t.bool(),
-    });
+    return {
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      moderator: io.dataOutput({
+        name: "Moderator",
+        id: "moderator",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const data = await client.moderation.moderators.get(z.any(), {
       body: new URLSearchParams({
         broadcaster_id: userId().unwrap(),
-        user_id: ctx.getInput("userId"),
+        user_id: ctx.getInput(io.userId),
       }),
     });
 
-    ctx.setOutput("moderator", data.data[0] !== undefined);
+    ctx.setOutput(io.moderator, data.data[0] !== undefined);
   },
 });
 
@@ -717,87 +740,88 @@ pkg.createNonEventSchema({
   name: "Create Custom Reward",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Title",
-      id: "title",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Cost",
-      id: "cost",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Prompt",
-      id: "prompt",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Enabled",
-      id: "isEnabled",
-      type: t.bool(),
-    });
-    io.dataInput({
-      name: "Background Color",
-      id: "backgroundColor",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "User Input Required",
-      id: "userInputRequired",
-      type: t.bool(),
-    });
-    io.dataInput({
-      name: "Max Redemptions Per Stream",
-      id: "maxRedemptionsPerStream",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Max Redemptions Per User Per Stream",
-      id: "maxRedemptionsPerUserPerStream",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Global Cooldown",
-      id: "globalCooldown",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Skip Redemption Queue",
-      id: "autoFulfill",
-      type: t.bool(),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.struct(Reward),
-    });
+    return {
+      title: io.dataInput({
+        name: "Title",
+        id: "title",
+        type: t.string(),
+      }),
+      cost: io.dataInput({
+        name: "Cost",
+        id: "cost",
+        type: t.int(),
+      }),
+      prompt: io.dataInput({
+        name: "Prompt",
+        id: "prompt",
+        type: t.string(),
+      }),
+      enabled: io.dataInput({
+        name: "Enabled",
+        id: "isEnabled",
+        type: t.bool(),
+      }),
+      backgroundColor: io.dataInput({
+        name: "Background Color",
+        id: "backgroundColor",
+        type: t.string(),
+      }),
+      userInputRequired: io.dataInput({
+        name: "User Input Required",
+        id: "userInputRequired",
+        type: t.bool(),
+      }),
+      maxRedemptionsPerStream: io.dataInput({
+        name: "Max Redemptions Per Stream",
+        id: "maxRedemptionsPerStream",
+        type: t.int(),
+      }),
+      maxRedemptionsPerUserPerStream: io.dataInput({
+        name: "Max Redemptions Per User Per Stream",
+        id: "maxRedemptionsPerUserPerStream",
+        type: t.int(),
+      }),
+      globalCooldown: io.dataInput({
+        name: "Global Cooldown",
+        id: "globalCooldown",
+        type: t.int(),
+      }),
+      autoFulfill: io.dataInput({
+        name: "Skip Redemption Queue",
+        id: "autoFulfill",
+        type: t.bool(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.struct(Reward),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
 
     const response = await client.channelPoints.customRewards.post(z.any(), {
       body: {
         broadcaster_id: user,
-        title: ctx.getInput("title"),
-        cost: ctx.getInput("cost"),
-        prompt: ctx.getInput("prompt"),
-        isEnabled: ctx.getInput("isEnabled"),
-        backgroundColor: ctx.getInput("backgroundColor"),
-        userInputRequired: ctx.getInput("userInputRequired"),
-        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+        title: ctx.getInput(io.title),
+        cost: ctx.getInput(io.cost),
+        prompt: ctx.getInput(io.prompt),
+        isEnabled: ctx.getInput(io.enabled),
+        backgroundColor: ctx.getInput(io.backgroundColor),
+        userInputRequired: ctx.getInput(io.userInputRequired),
+        maxRedemptionsPerStream: ctx.getInput(io.maxRedemptionsPerStream),
         maxRedemptionsPerUserPerStream: ctx.getInput(
-          "maxRedemptionsPerUserPerStream"
+          io.maxRedemptionsPerUserPerStream
         ),
-        globalCooldown: ctx.getInput("globalCooldown"),
-        autoFulfill: ctx.getInput("autoFulfill"),
+        globalCooldown: ctx.getInput(io.globalCooldown),
+        autoFulfill: ctx.getInput(io.autoFulfill),
       },
     });
 
     const data = response.data[0];
 
     ctx.setOutput(
-      "out",
+      io.out,
       Reward.create({
         id: data.id,
         title: data.title,
@@ -825,26 +849,28 @@ pkg.createNonEventSchema({
   name: "Start Commercial",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Duration (s)",
-      id: "duraton",
-      type: t.int(),
-    });
-    io.dataOutput({
-      name: "Cooldown",
-      id: "retryAfter",
-      type: t.int(),
-    });
+    return {
+      duration: io.dataInput({
+        name: "Duration (s)",
+        id: "duraton",
+        type: t.int(),
+      }),
+      retryAfter: io.dataOutput({
+        name: "Cooldown",
+        id: "retryAfter",
+        type: t.int(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const response = await client.channels.commercial.post(z.any(), {
       body: {
         broadcaster_id: userId().unwrap(),
-        length: ctx.getInput("duration"),
+        length: ctx.getInput(io.duration),
       },
     });
 
-    ctx.setOutput("retryAfter", response.data[0].retry_after);
+    ctx.setOutput(io.retryAfter, response.data[0].retry_after);
   },
 });
 
@@ -881,15 +907,15 @@ pkg.createNonEventSchema({
 //       type: t.string() ,
 //     });
 //   },
-//   async run({ ctx }) {
+//   async run({ ctx, io }) {
 //     const periodtxt = ctx.getInput<InferEnum<typeof periodtext>>("period");
 
 //     const response = await client.bits.leaderboard.get(z.any(), {
 //       body: new URLSearchParams({
-//         count: ctx.getInput("count"),
+//         count: ctx.getInput(io.count"),
 //         period: periodtxt.variant,
-//         started_at: ctx.getInput("startedAt"),
-//         user_id: ctx.getInput("user_id"),
+//         started_at: ctx.getInput(io.startedAt"),
+//         user_id: ctx.getInput(io.user_id"),
 //       }),
 //     });
 
@@ -900,96 +926,97 @@ pkg.createNonEventSchema({
   name: "Edit Custom Reward",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Reward Id",
-      id: "id",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Title",
-      id: "title",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Cost",
-      id: "cost",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Prompt",
-      id: "prompt",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Enabled",
-      id: "isEnabled",
-      type: t.bool(),
-    });
-    io.dataInput({
-      name: "Background Color",
-      id: "backgroundColor",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "User Input Required",
-      id: "userInputRequired",
-      type: t.bool(),
-    });
-    io.dataInput({
-      name: "Max Redemptions Per Stream",
-      id: "maxRedemptionsPerStream",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Max Redemptions Per User Per Stream",
-      id: "maxRedemptionsPerUserPerStream",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Global Cooldown",
-      id: "globalCooldown",
-      type: t.int(),
-    });
-    io.dataInput({
-      name: "Skip Redemption Queue",
-      id: "autoFulfill",
-      type: t.bool(),
-    });
-    io.dataInput({
-      name: "Paused",
-      id: "paused",
-      type: t.bool(),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.struct(Reward),
-    });
+    return {
+      rewardId: io.dataInput({
+        name: "Reward Id",
+        id: "id",
+        type: t.string(),
+      }),
+      title: io.dataInput({
+        name: "Title",
+        id: "title",
+        type: t.string(),
+      }),
+      cost: io.dataInput({
+        name: "Cost",
+        id: "cost",
+        type: t.int(),
+      }),
+      prompt: io.dataInput({
+        name: "Prompt",
+        id: "prompt",
+        type: t.string(),
+      }),
+      enabled: io.dataInput({
+        name: "Enabled",
+        id: "isEnabled",
+        type: t.bool(),
+      }),
+      backgroundColor: io.dataInput({
+        name: "Background Color",
+        id: "backgroundColor",
+        type: t.string(),
+      }),
+      userInputRequired: io.dataInput({
+        name: "User Input Required",
+        id: "userInputRequired",
+        type: t.bool(),
+      }),
+      maxRedemptionsPerStream: io.dataInput({
+        name: "Max Redemptions Per Stream",
+        id: "maxRedemptionsPerStream",
+        type: t.int(),
+      }),
+      maxRedemptionsPerUserPerStream: io.dataInput({
+        name: "Max Redemptions Per User Per Stream",
+        id: "maxRedemptionsPerUserPerStream",
+        type: t.int(),
+      }),
+      globalCooldown: io.dataInput({
+        name: "Global Cooldown",
+        id: "globalCooldown",
+        type: t.int(),
+      }),
+      autoFulfill: io.dataInput({
+        name: "Skip Redemption Queue",
+        id: "autoFulfill",
+        type: t.bool(),
+      }),
+      paused: io.dataInput({
+        name: "Paused",
+        id: "paused",
+        type: t.bool(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.struct(Reward),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const response = await client.channelPoints.customRewards.patch(z.any(), {
       body: {
         broadcaster_id: userId().unwrap(),
-        id: ctx.getInput("id"),
-        title: ctx.getInput("title"),
-        cost: ctx.getInput("cost") === 0 ? undefined : ctx.getInput("cost"),
-        prompt: ctx.getInput("prompt"),
-        isEnabled: ctx.getInput("isEnabled"),
-        backgroundColor: ctx.getInput("backgroundColor"),
-        userInputRequired: ctx.getInput("userInputRequired"),
-        maxRedemptionsPerStream: ctx.getInput("maxRedemptionsPerStream"),
+        id: ctx.getInput(io.rewardId),
+        title: ctx.getInput(io.title),
+        cost: ctx.getInput(io.cost) === 0 ? undefined : ctx.getInput(io.cost),
+        prompt: ctx.getInput(io.prompt),
+        isEnabled: ctx.getInput(io.enabled),
+        backgroundColor: ctx.getInput(io.backgroundColor),
+        userInputRequired: ctx.getInput(io.userInputRequired),
+        maxRedemptionsPerStream: ctx.getInput(io.maxRedemptionsPerStream),
         maxRedemptionsPerUserPerStream: ctx.getInput(
-          "maxRedemptionsPerUserPerStream"
+          io.maxRedemptionsPerUserPerStream
         ),
-        isPaused: ctx.getInput("paused"),
-        globalCooldown: ctx.getInput("globalCooldown"),
+        isPaused: ctx.getInput(io.paused),
+        globalCooldown: ctx.getInput(io.globalCooldown),
       },
     });
 
     const data = response.data[0];
 
     ctx.setOutput(
-      "out",
+      io.out,
       Reward.create({
         id: data.id,
         title: data.title,
@@ -1036,37 +1063,41 @@ pkg.createNonEventSchema({
   name: "Update Redemption Status",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      name: "Redemption ID",
-      id: "redemptionId",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Reward ID",
-      id: "rewardId",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Status",
-      id: "status",
-      type: t.enum(RedemptionStatus),
-    });
-    io.dataOutput({
-      name: "Redemption",
-      id: "out",
-      type: t.struct(Redemption),
-    });
+    return {
+      redemptionId: io.dataInput({
+        name: "Redemption ID",
+        id: "redemptionId",
+        type: t.string(),
+      }),
+      rewardId: io.dataInput({
+        name: "Reward ID",
+        id: "rewardId",
+        type: t.string(),
+      }),
+      status: io.dataInput({
+        name: "Status",
+        id: "status",
+        type: t.enum(RedemptionStatus),
+      }),
+      out: io.dataOutput({
+        name: "Redemption",
+        id: "out",
+        type: t.struct(Redemption),
+      }),
+    };
   },
-  async run({ ctx }) {
-    const status = ctx.getInput<InferEnum<typeof RedemptionStatus>>("status");
+  async run({ ctx, io }) {
+    const status = ctx.getInput(io.status) as InferEnum<
+      typeof RedemptionStatus
+    >;
 
     const response = await client.channelPoints.customRewards.redemptions.patch(
       z.any(),
       {
         body: new URLSearchParams({
-          id: ctx.getInput("redemptionId"),
+          id: ctx.getInput(io.redemptionId),
           broadcaster_id: userId().unwrap(),
-          reward_id: ctx.getInput("rewardId"),
+          reward_id: ctx.getInput(io.rewardId),
           status: status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED",
         }),
       }
@@ -1075,7 +1106,7 @@ pkg.createNonEventSchema({
     const data = response.data[0];
 
     ctx.setOutput(
-      "out",
+      io.out,
       Redemption.create({
         id: data.id,
         userId: data.user_id,
@@ -1118,36 +1149,37 @@ pkg.createNonEventSchema({
   name: "Get Reward By Title",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "title",
-      name: "Title",
-      type: t.string(),
-    });
-    io.dataInput({
-      name: "Manageable Only",
-      id: "manageableOnly",
-      type: t.bool(),
-    });
-
-    io.dataOutput({
-      id: "out",
-      type: t.option(t.struct(Reward)),
-    });
+    return {
+      title: io.dataInput({
+        id: "title",
+        name: "Title",
+        type: t.string(),
+      }),
+      manageableOnly: io.dataInput({
+        name: "Manageable Only",
+        id: "manageableOnly",
+        type: t.bool(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.option(t.struct(Reward)),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     let rewards = await client.channelPoints.customRewards.get(z.any(), {
       body: new URLSearchParams({
         broadcaster_id: userId().unwrap(),
-        only_manageable_rewards: ctx.getInput("manageableOnly"),
+        only_manageable_rewards: ctx.getInput(io.manageableOnly),
       }),
     });
 
     const data = rewards.data.find(
-      (reward: any) => reward.title === ctx.getInput("title")
+      (reward: any) => reward.title === ctx.getInput(io.title)
     );
 
     ctx.setOutput(
-      "out",
+      io.out,
       Maybe(data).map((data) =>
         Reward.create({
           id: data.id,
@@ -1221,10 +1253,10 @@ const BroadcasterTypeMap: Record<string, InferEnum<typeof BroadcasterType>> = {
 //       type: t.string(),
 //     });
 //   },
-//   run({ ctx }) {
+//   run({ ctx, io }) {
 //     return client.channelPoints.deleteCustomReward(
 //       userId().unwrap(),
-//       ctx.getInput("id")
+//       ctx.getInput(io.id")
 //     );
 //   },
 // });
@@ -1233,96 +1265,98 @@ pkg.createNonEventSchema({
   name: "Get User By ID",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "userId",
-      name: "User ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "userId",
-      name: "User ID",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "userLogin",
-      name: "Login Name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "displayName",
-      name: "Display Name",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "type",
-      name: "User Type",
-      type: t.option(t.enum(UserType)),
-    });
-    io.dataOutput({
-      id: "broadcasterType",
-      name: "Broadcaster Type",
-      type: t.option(t.enum(BroadcasterType)),
-    });
-    io.dataOutput({
-      id: "description",
-      name: "Description",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "profileImageUrl",
-      name: "Profile Image URL",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "offlineImageUrl",
-      name: "Offline Image URL",
-      type: t.string(),
-    });
-    io.dataOutput({
-      id: "createdAt",
-      name: "Created At",
-      type: t.string(),
-    });
-    // io.dataOutput({
-    //   id: "out",
-    //   type: t.option(t.struct(User)),
-    // });
+    return {
+      userIdIn: io.dataInput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userIdOut: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userLogin: io.dataOutput({
+        id: "userLogin",
+        name: "Login Name",
+        type: t.string(),
+      }),
+      displayName: io.dataOutput({
+        id: "displayName",
+        name: "Display Name",
+        type: t.string(),
+      }),
+      type: io.dataOutput({
+        id: "type",
+        name: "User Type",
+        type: t.option(t.enum(UserType)),
+      }),
+      broadcasterType: io.dataOutput({
+        id: "broadcasterType",
+        name: "Broadcaster Type",
+        type: t.option(t.enum(BroadcasterType)),
+      }),
+      description: io.dataOutput({
+        id: "description",
+        name: "Description",
+        type: t.string(),
+      }),
+      profileImageUrl: io.dataOutput({
+        id: "profileImageUrl",
+        name: "Profile Image URL",
+        type: t.string(),
+      }),
+      offlineImageUrl: io.dataOutput({
+        id: "offlineImageUrl",
+        name: "Offline Image URL",
+        type: t.string(),
+      }),
+      createdAt: io.dataOutput({
+        id: "createdAt",
+        name: "Created At",
+        type: t.string(),
+      }),
+      //out: io.dataOutput({
+      //   id: "out",
+      //   type: t.option(t.struct(User)),
+      // }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const response = await client.users.get(z.any(), {
       body: new URLSearchParams({
-        id: ctx.getInput("userId"),
+        id: ctx.getInput(io.userIdIn),
       }),
     });
 
     const data = response.data[0];
 
     // const optData = Maybe(data);
-    ctx.setOutput("userId", data?.id);
-    ctx.setOutput("userLogin", data?.login);
-    ctx.setOutput("displayName", data?.display_name);
-    ctx.setOutput<InferEnum<typeof UserType>>(
-      "type",
+    ctx.setOutput(io.userIdOut, data?.id);
+    ctx.setOutput(io.userLogin, data?.login);
+    ctx.setOutput(io.displayName, data?.display_name);
+    ctx.setOutput(
+      io.type,
       (() => {
         if (data?.type === "admin") return { variant: "Admin" };
         else if (data?.type === "global_mod") return { variant: "Global Mod" };
         else if (data?.type === "staff") return { variant: "Staff" };
         else return { variant: "Normal User" };
       })()
-    );
-    ctx.setOutput<InferEnum<typeof BroadcasterType>>(
-      "broadcasterType",
+    ) as unknown as InferEnum<typeof UserType>;
+    ctx.setOutput(
+      io.broadcasterType,
       (() => {
         const type = data?.broadcaster_type;
         if (type === "affiliate") return { variant: "Affliate" };
         else if (type === "partner") return { variant: "Partner" };
         else return { variant: "Normal User" };
       })()
-    );
-    ctx.setOutput("description", data?.description);
-    ctx.setOutput("profileImageUrl", data?.profile_image_url);
-    ctx.setOutput("offlineImageUrl", data?.offline_image_url);
-    ctx.setOutput("createdAt", JSON.stringify(data?.created_at));
+    ) as unknown as InferEnum<typeof BroadcasterType>;
+    ctx.setOutput(io.description, data?.description);
+    ctx.setOutput(io.profileImageUrl, data?.profile_image_url);
+    ctx.setOutput(io.offlineImageUrl, data?.offline_image_url);
+    ctx.setOutput(io.createdAt, JSON.stringify(data?.created_at));
     // ctx.setOutput(
     //   "out",
     //   Maybe(data).map((data) =>
@@ -1346,24 +1380,26 @@ pkg.createNonEventSchema({
   name: "Follower Only Mode",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "delay",
-      name: "Delay (minutes)",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "enabled",
-      type: t.bool(),
-    });
+    return {
+      delay: io.dataInput({
+        id: "delay",
+        name: "Delay (minutes)",
+        type: t.int(),
+      }),
+      enabled: io.dataInput({
+        id: "enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
     await client.chat.settings.patch(z.any(), {
       body: {
         broadcaster_Id: user,
         moderator_id: user,
-        follower_mode: ctx.getInput("enabled"),
-        follower_mode_duration: ctx.getInput("delay"),
+        follower_mode: ctx.getInput(io.enabled),
+        follower_mode_duration: ctx.getInput(io.delay),
       },
     });
   },
@@ -1373,30 +1409,32 @@ pkg.createNonEventSchema({
   name: "Slow Mode",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "delay",
-      name: "Delay (seconds)",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "enabled",
-      type: t.bool(),
-    });
+    return {
+      delay: io.dataInput({
+        id: "delay",
+        name: "Delay (seconds)",
+        type: t.int(),
+      }),
+      enabled: io.dataInput({
+        id: "enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
     await client.chat.settings.patch(z.any(), {
-      body: ctx.getInput("enabled")
+      body: ctx.getInput(io.enabled)
         ? {
             broadcaster_Id: user,
             moderator_id: user,
-            slow_mode: ctx.getInput("enabled"),
-            slow_mode_duration: ctx.getInput("delay"),
+            slow_mode: ctx.getInput(io.enabled),
+            slow_mode_duration: ctx.getInput(io.delay),
           }
         : {
             broadcaster_Id: user,
             moderator_id: user,
-            slow_mode: ctx.getInput("enabled"),
+            slow_mode: ctx.getInput(io.enabled),
           },
     });
   },
@@ -1406,30 +1444,32 @@ pkg.createNonEventSchema({
   name: "Moderation Chat Delay",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "delay",
-      name: "Delay (seconds)",
-      type: t.int(),
-    });
-    io.dataInput({
-      id: "enabled",
-      type: t.bool(),
-    });
+    return {
+      delay: io.dataInput({
+        id: "delay",
+        name: "Delay (seconds)",
+        type: t.int(),
+      }),
+      enabled: io.dataInput({
+        id: "enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
     await client.chat.settings.patch(z.any(), {
-      body: ctx.getInput("enabled")
+      body: ctx.getInput(io.enabled)
         ? {
             broadcaster_Id: user,
             moderator_id: user,
-            non_moderator_chat_delay: ctx.getInput("enabled"),
-            non_moderator_chat_delay_duration: ctx.getInput("delay"),
+            non_moderator_chat_delay: ctx.getInput(io.enabled),
+            non_moderator_chat_delay_duration: ctx.getInput(io.delay),
           }
         : {
             broadcaster_Id: user,
             moderator_id: user,
-            non_moderator_chat_delay: ctx.getInput("enabled"),
+            non_moderator_chat_delay: ctx.getInput(io.enabled),
           },
     });
   },
@@ -1439,19 +1479,21 @@ pkg.createNonEventSchema({
   name: "Sub Only Mode",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "enabled",
-      type: t.bool(),
-    });
+    return {
+      enabled: io.dataInput({
+        id: "enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
 
     await client.chat.settings.patch(z.any(), {
       body: {
         broadcaster_Id: user,
         moderator_id: user,
-        subscriber_mode: ctx.getInput("enabled"),
+        subscriber_mode: ctx.getInput(io.enabled),
       },
     });
   },
@@ -1461,19 +1503,21 @@ pkg.createNonEventSchema({
   name: "Unique Chat Mode",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "enabled",
-      type: t.bool(),
-    });
+    return {
+      enabled: io.dataInput({
+        id: "enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
 
     await client.chat.settings.patch(z.any(), {
       body: {
         broadcaster_Id: user,
         moderator_id: user,
-        unique_chat_mode: ctx.getInput("enabled"),
+        unique_chat_mode: ctx.getInput(io.enabled),
       },
     });
   },
@@ -1483,19 +1527,21 @@ pkg.createNonEventSchema({
   name: "Emote Only Mode",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "enabled",
-      type: t.bool(),
-    });
+    return {
+      enabled: io.dataInput({
+        id: "enabled",
+        type: t.bool(),
+      }),
+    };
   },
-  async run({ ctx }) {
+  async run({ ctx, io }) {
     const user = userId().unwrap();
 
     await client.chat.settings.patch(z.any(), {
       body: {
         broadcaster_Id: user,
         moderator_id: user,
-        emote_mode: ctx.getInput("enabled"),
+        emote_mode: ctx.getInput(io.enabled),
       },
     });
   },
@@ -1505,20 +1551,22 @@ pkg.createNonEventSchema({
   name: "Shoutout User",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "toId",
-      name: "Id Of Shoutout User",
-      type: t.string(),
-    });
+    return {
+      toId: io.dataInput({
+        id: "toId",
+        name: "Id Of Shoutout User",
+        type: t.string(),
+      }),
+    };
   },
-  run({ ctx }) {
+  run({ ctx, io }) {
     const user = userId().unwrap();
 
     client.chat.shoutouts.post(z.any(), {
       body: new URLSearchParams({
         from_broadcaster_id: user,
         moderator_id: user,
-        to_broadcaster_id: ctx.getInput("toId"),
+        to_broadcaster_id: ctx.getInput(io.toId),
       }),
     });
   },
@@ -1536,26 +1584,31 @@ pkg.createNonEventSchema({
   name: "Send Announcement",
   variant: "Exec",
   generateIO: (io) => {
-    io.dataInput({
-      id: "announcement",
-      name: "Announcement",
-      type: t.string(),
-    });
-    io.dataInput({
-      id: "color",
-      name: "Color",
-      type: t.enum(announcementColors),
-    });
+    return {
+      announcement: io.dataInput({
+        id: "announcement",
+        name: "Announcement",
+        type: t.string(),
+      }),
+
+      color: io.dataInput({
+        id: "color",
+        name: "Color",
+        type: t.enum(announcementColors),
+      }),
+    };
   },
-  run({ ctx }) {
-    const color = ctx.getInput<InferEnum<typeof announcementColors>>("color");
+  run({ ctx, io }) {
+    const color = ctx.getInput(io.color) as InferEnum<
+      typeof announcementColors
+    >;
     const user = userId().unwrap();
 
     client.chat.announcements.post(z.any(), {
       body: {
         broadcaster_id: user,
         moderator_id: user,
-        message: ctx.getInput("announcement"),
+        message: ctx.getInput(io.announcement),
         color: color.variant === "default" ? "primary" : color.variant,
       },
     });
