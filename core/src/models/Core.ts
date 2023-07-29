@@ -171,7 +171,7 @@ class ExecutionContext {
 
     await node.schema.run({
       ctx: this.createCtx(node),
-      io: node.io,
+      io: node.ioReturn,
     });
   }
 }
