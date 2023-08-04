@@ -15,7 +15,7 @@ An application for node-based programming.
 
 This graph shows a simple Twitch resubscription checkking if its tier 3 and then sending a Twitch chat message saying "{username} subbed for {x} months" into the same chat.
 
- <img src=".github\assets\readme.png" width="900" alt="Profile Readme Generator" />
+ <img src=".github\assets\readme.png" width="700" alt="Profile Readme Generator" />
 
 ## Running
 
