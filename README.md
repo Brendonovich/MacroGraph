@@ -11,10 +11,16 @@
 
 An application for node-based programming.
 
+## Example
+
+This graph shows a simple Twitch resubscription checkking if its tier 3 and then sending a Twitch chat message saying "{username} subbed for {x} months" into the same chat.
+
+ <img src=".github\assets\readme.png" width="700" alt="Profile Readme Generator" />
+
 ## Running
 
 1. Make sure you have [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites) and [pnpm](https://pnpm.io/) installed.
 2. Run `pnpm i`
-4. Run `pnpm app dev`
+3. Run `pnpm app dev`
 
 [Figma Designs](https://www.figma.com/file/VO7zmohUtZSqC1eIyGUuN3/MacroGraph-Designs?node-id=0%3A1&t=FfCvKUpKsLp5b0ST-1)
