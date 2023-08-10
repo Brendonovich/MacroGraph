@@ -1,7 +1,7 @@
 import { createMutable } from "solid-js/store";
 import { Package, PackageArgs } from "./Package";
 import { Node } from "./Node";
-import { DataInput, DataOutput, ExecOutput, ScopeOutput } from "./IO";
+import { DataInput, DataOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 import { z } from "zod";
 import { Project, SerializedProject } from "./Project";
@@ -10,19 +10,19 @@ import { Option } from "../types";
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
 
-  emit(data: Node) {
-    this.listeners.get(data)?.forEach((l) => l(data));
+  emit(node: Node) {
+    this.listeners.get(node)?.forEach((l) => l(node));
   }
 
-  subscribe(SubType: Node, cb: (d: Node) => any) {
-    let listeners = this.listeners.get(SubType);
-    if (!listeners) this.listeners.set(SubType, new Set());
-    listeners = this.listeners.get(SubType);
+  subscribe(node: Node, cb: (d: Node) => any) {
+    if (!this.listeners.has(node)) this.listeners.set(node, new Set());
+    const listeners = this.listeners.get(node)!;
+
     listeners?.add(cb);
 
     return () => {
       listeners?.delete(cb);
-      if (listeners?.size === 0) this.listeners.delete(SubType);
+      if (listeners?.size === 0) this.listeners.delete(node);
     };
   }
 }
@@ -77,12 +77,26 @@ export class Core {
       const mappings = this.eventNodeMappings;
 
       if (!mappings.has(pkg)) mappings.set(pkg, new Map());
-
       const pkgMappings = mappings.get(pkg)!;
 
       if (!pkgMappings.has(event)) pkgMappings.set(event, new Set());
+      pkgMappings.get(event)!.add(node);
+    }
+  }
 
-      pkgMappings.get(event)?.add(node);
+  removeEventNodeMapping(node: Node) {
+    if ("event" in node.schema) {
+      const event = node.schema.event;
+      const pkg = node.schema.package;
+      const mappings = this.eventNodeMappings;
+
+      const pkgMappings = mappings.get(pkg);
+      if (!pkgMappings) return;
+
+      const eventMappings = pkgMappings.get(event);
+      if (!eventMappings) return;
+
+      eventMappings.delete(node);
     }
   }
 }
@@ -93,25 +107,23 @@ class ExecutionContext {
   constructor(public root: Node) {}
 
   run(data: any) {
+    NODE_EMIT.emit(this.root);
+
     this.root.schema.run({
-      ctx: this.createCtx(this.root),
+      ctx: this.createCtx(),
       io: this.root.ioReturn,
       data,
     });
   }
 
-  createCtx(node: Node): RunCtx {
+  createCtx(): RunCtx {
     return {
       exec: async (execOutput) => {
-        NODE_EMIT.emit(node);
-
         await execOutput.connection.peekAsync((conn) =>
           this.execNode(conn.node)
         );
       },
       execScope: async (scopeOutput, data) => {
-        NODE_EMIT.emit(node);
-
         await scopeOutput.connection.peekAsync(async (conn) => {
           this.data.set(scopeOutput, data);
 
@@ -144,8 +156,10 @@ class ExecutionContext {
   async execNode(node: Node) {
     if ("event" in node.schema) throw new Error("Cannot exec an Event node!");
 
+    NODE_EMIT.emit(node);
+
     // calculate previous outputs
-    node.inputs.forEach((i) => {
+    node.state.inputs.forEach((i) => {
       if (!(i instanceof DataInput)) return;
 
       i.connection.peek((conn) => {
@@ -163,14 +177,14 @@ class ExecutionContext {
 
           if (value === undefined)
             throw new Error(
-              `Data for Pin ${conn.name}, Node ${conn.node.name} not found!`
+              `Data for Pin ${conn.name}, Node ${conn.node.state.name} not found!`
             );
         }
       });
     });
 
     await node.schema.run({
-      ctx: this.createCtx(node),
+      ctx: this.createCtx(),
       io: node.ioReturn,
     });
   }

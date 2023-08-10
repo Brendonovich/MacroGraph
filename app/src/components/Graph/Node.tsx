@@ -66,8 +66,8 @@ export const Node = (props: Props) => {
     const scale = UI.state.scale;
 
     node().setPosition({
-      x: node().position.x + e.movementX / scale,
-      y: node().position.y + e.movementY / scale,
+      x: node().state.position.x + e.movementX / scale,
+      y: node().state.position.y + e.movementY / scale,
     });
   };
 
@@ -103,8 +103,8 @@ export const Node = (props: Props) => {
           UI.state.selectedItem === node() && "ring-2 ring-yellow-500"
         )}
         style={{
-          transform: `translate(${node().position.x}px, ${
-            node().position.y
+          transform: `translate(${node().state.position.x}px, ${
+            node().state.position.y
           }px)`,
         }}
       >
@@ -160,13 +160,15 @@ export const Node = (props: Props) => {
                       break;
                   }
                 }}
-                onMouseUp={() => node().setPosition(node().position, true)}
+                onMouseUp={() =>
+                  node().setPosition(node().state.position, true)
+                }
                 onContextMenu={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                 }}
               >
-                <div>{node().name}</div>
+                <div>{node().state.name}</div>
               </div>
             }
           >
@@ -186,7 +188,7 @@ export const Node = (props: Props) => {
                     value={value()}
                     onInput={(e) => setValue(e.target.value)}
                     onBlur={() => {
-                      if (value() !== "") node().name = value();
+                      if (value() !== "") node().state.name = value();
                       node().graph.project.save();
 
                       setEditingName(false);
@@ -201,7 +203,7 @@ export const Node = (props: Props) => {
         </div>
         <div class="flex flex-row gap-2">
           <div class="p-2 flex flex-col space-y-2.5">
-            <For each={node().inputs}>
+            <For each={node().state.inputs}>
               {(i) => (
                 <Switch>
                   <Match when={i instanceof DataInputModel ? i : null}>
@@ -218,7 +220,7 @@ export const Node = (props: Props) => {
             </For>
           </div>
           <div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
-            <For each={node().outputs}>
+            <For each={node().state.outputs}>
               {(o) => (
                 <Switch>
                   <Match when={o instanceof DataOutputModel ? o : null}>

@@ -21,6 +21,7 @@ import {
   StructFields,
 } from "../types/struct";
 import { ExecInput, ExecOutput } from "./IO";
+import { ReactiveSet } from "@solid-primitives/set";
 
 export interface PackageArgs {
   name: string;
@@ -29,14 +30,12 @@ export interface PackageArgs {
 
 export class Package<TEvents extends EventsMap = EventsMap> {
   name: string;
-  schemas: NodeSchema<TEvents>[] = [];
+  schemas = new ReactiveSet<NodeSchema<TEvents>>();
   core: Core;
 
   constructor(args: PackageArgs) {
     this.name = args.name;
     this.core = args.core;
-
-    return createMutable(this);
   }
 
   createNonEventSchema<TState extends object, TIO>(
@@ -76,7 +75,7 @@ export class Package<TEvents extends EventsMap = EventsMap> {
       package: this as any,
     };
 
-    this.schemas.push(altered);
+    this.schemas.add(altered);
 
     return this;
   }
@@ -89,7 +88,7 @@ export class Package<TEvents extends EventsMap = EventsMap> {
       package: this as any,
     };
 
-    this.schemas.push(altered);
+    this.schemas.add(altered);
 
     return this;
   }
@@ -117,7 +116,9 @@ export class Package<TEvents extends EventsMap = EventsMap> {
   }
 
   schema(name: string): NodeSchema<TEvents> | undefined {
-    return this.schemas.find((s) => s.name === name);
+    for (const schema of this.schemas) {
+      if (schema.name === name) return schema;
+    }
   }
 
   emitEvent<TEvent extends keyof TEvents>(event: {

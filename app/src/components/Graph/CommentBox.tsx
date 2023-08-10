@@ -59,9 +59,9 @@ export default (props: Props) => {
                       );
 
                       nodes.forEach((node) => {
-                        node.position = {
-                          x: node.position.x + e.movementX / scale,
-                          y: node.position.y + e.movementY / scale,
+                        node.state.position = {
+                          x: node.state.position.x + e.movementX / scale,
+                          y: node.state.position.y + e.movementY / scale,
                         };
                       });
                     };

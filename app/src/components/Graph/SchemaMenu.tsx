@@ -2,7 +2,13 @@ import clsx from "clsx";
 import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 
 import { useCore } from "~/contexts";
-import { XY, Package, NodeSchema, NodeSchemaVariant } from "@macrograph/core";
+import {
+  XY,
+  Package,
+  NodeSchema,
+  NodeSchemaVariant,
+  EventsMap,
+} from "@macrograph/core";
 import { useGraph } from "./Graph";
 import { useUIStore } from "~/UIStore";
 
@@ -91,13 +97,20 @@ export const SchemaMenu = (props: Props) => {
                   (s) => !lowercasePackageName.startsWith(s)
                 );
 
-                return p.schemas.filter((s) => {
-                  let lowercaseSchemaName = s.name.toLowerCase();
+                const ret: NodeSchema<EventsMap>[] = [];
 
-                  return leftoverSearchTokens.every((t) =>
-                    lowercaseSchemaName.includes(t)
-                  );
-                });
+                for (const schema of p.schemas) {
+                  let lowercaseSchemaName = schema.name.toLowerCase();
+
+                  if (
+                    leftoverSearchTokens.every((t) =>
+                      lowercaseSchemaName.includes(t)
+                    )
+                  )
+                    ret.push(schema);
+                }
+
+                return ret;
               });
 
               return (

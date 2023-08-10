@@ -112,8 +112,8 @@ export const usePin = (pin: Pin) => {
     UI.state.translate.y;
     UI.state.scale;
 
-    pin.node.position.x;
-    pin.node.position.y;
+    pin.node.state.position.x;
+    pin.node.state.position.y;
 
     let rect = getRef().getBoundingClientRect();
 

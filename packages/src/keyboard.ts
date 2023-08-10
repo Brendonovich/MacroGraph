@@ -29,7 +29,7 @@ const alphabet = [
   "Z",
 ] as const;
 
-type Alphabet = typeof alphabet[number];
+type Alphabet = (typeof alphabet)[number];
 
 const pkg = core.createPackage<{
   [K in `${Lowercase<Alphabet>}-key`]: {

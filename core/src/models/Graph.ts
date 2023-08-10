@@ -25,7 +25,6 @@ import {
   disconnectWildcardsInIO,
   None,
   Some,
-  Option,
 } from "../types";
 
 export interface GraphArgs {
@@ -182,8 +181,8 @@ export class Graph {
 
   deleteItem(item: Node | CommentBox) {
     if (item instanceof Node) {
-      item.inputs.forEach((i) => this.disconnectPin(i));
-      item.outputs.forEach((o) => this.disconnectPin(o));
+      item.state.inputs.forEach((i) => this.disconnectPin(i));
+      item.state.outputs.forEach((o) => this.disconnectPin(o));
 
       this.nodes.delete(item.id);
       item.dispose();
@@ -235,8 +234,6 @@ export class Graph {
             const node = Node.deserialize(graph, serializedNode);
 
             if (node === null) return null;
-
-            project.core.addEventNodeMapping(node);
 
             return [id, node] as [number, Node];
           })
