@@ -35,7 +35,7 @@ export const ConnectionRender = () => {
       <g>
         <For each={[...graph().nodes.values()]}>
           {(n) => (
-            <For each={n.inputs}>
+            <For each={n.state.inputs}>
               {(i) => {
                 const connectionData = () => {
                   const connections =

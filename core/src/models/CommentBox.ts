@@ -47,15 +47,16 @@ export class CommentBox {
     const ret: Node[] = [];
 
     for (const node of nodes) {
-      if (node.position.x < position.x || node.position.y < position.y)
-        continue;
+      const nodePosition = node.state.position;
+
+      if (nodePosition.x < position.x || nodePosition.y < position.y) continue;
 
       const nodeSize = getNodeSize(node);
       if (!nodeSize) continue;
 
       if (
-        node.position.x + nodeSize.width > position.x + size.x ||
-        node.position.y + nodeSize.height > position.y + size.y
+        nodePosition.x + nodeSize.width > position.x + size.x ||
+        nodePosition.y + nodeSize.height > position.y + size.y
       )
         continue;
 

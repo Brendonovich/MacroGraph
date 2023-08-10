@@ -21,6 +21,7 @@ import {
   Accessor,
 } from "solid-js";
 import { Option } from "../types";
+import { onCleanup } from "@solidjs/reactivity";
 
 export interface NodeArgs {
   id: number;
@@ -46,27 +47,32 @@ export const SerializedNode = z.object({
 
 export class Node {
   id: number;
-  name: string;
   graph: Graph;
-  position: XY;
   schema: NodeSchema;
-  inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];
-  outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[] = [];
+  state: {
+    name: string;
+    position: XY;
+    inputs: (DataInput<any> | ExecInput | ScopeInput)[];
+    outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
+  };
 
   io!: IOBuilder;
   ioReturn: any;
   dispose: () => void;
 
-  dataRoots: Accessor<Set<Node>>;
+  dataRoots!: Accessor<Set<Node>>;
 
   constructor(args: NodeArgs) {
-    this.name = args.schema.name;
     this.id = args.id;
     this.graph = args.graph;
-    this.position = args.position;
     this.schema = args.schema;
 
-    const reactiveThis = createMutable(this);
+    this.state = createMutable({
+      name: args.schema.name,
+      position: args.position,
+      inputs: [],
+      outputs: [],
+    });
 
     const { owner, dispose } = createRoot((dispose) => ({
       owner: getOwner(),
@@ -79,32 +85,36 @@ export class Node {
       createRenderEffect(() => {
         const builder = new IOBuilder(this, this.io);
 
-        this.ioReturn = reactiveThis.schema.generateIO(builder, {});
+        this.ioReturn = this.schema.generateIO(builder, {});
 
-        untrack(() => this.updateIO(reactiveThis, builder));
+        untrack(() => this.updateIO(builder));
 
         this.io = builder;
       });
-    });
 
-    this.dataRoots = createMemo(() => {
-      const roots = new Set<Node>();
+      this.dataRoots = createMemo(() => {
+        const roots = new Set<Node>();
 
-      for (const input of reactiveThis.inputs) {
-        if (input instanceof DataInput) {
-          input.connection.peek((c) => {
-            c.node.dataRoots().forEach((n) => roots.add(n));
-          });
+        for (const input of this.state.inputs) {
+          if (input instanceof DataInput) {
+            input.connection.peek((c) => {
+              c.node.dataRoots().forEach((n) => roots.add(n));
+            });
+          }
         }
-      }
 
-      return roots;
+        return roots;
+      });
+
+      this.graph.project.core.addEventNodeMapping(this);
+
+      onCleanup(() => {
+        this.graph.project.core.removeEventNodeMapping(this);
+      });
     });
-
-    return reactiveThis;
   }
 
-  updateIO(reactiveThis: this, io: IOBuilder) {
+  updateIO(io: IOBuilder) {
     this.io?.wildcards.forEach((w) => {
       if (!io.wildcards.has(w.id)) w.dispose();
     });
@@ -113,30 +123,30 @@ export class Node {
     io.inputs.forEach((i) => {
       if (!allInputs.has(i)) this.graph.disconnectPin(i);
     });
-    reactiveThis.inputs.splice(0, this.inputs.length, ...io.inputs);
+    this.state.inputs.splice(0, this.state.inputs.length, ...io.inputs);
 
     const allOutputs = new Set([...io.outputs]);
     io.outputs.forEach((o) => {
       if (!allOutputs.has(o)) this.graph.disconnectPin(o);
     });
 
-    reactiveThis.outputs.splice(0, this.outputs.length, ...io.outputs);
+    this.state.outputs.splice(0, this.state.outputs.length, ...io.outputs);
   }
 
   // Getters
 
   input(id: string) {
-    return this.inputs.find((i) => i.id === id);
+    return this.state.inputs.find((i) => i.id === id);
   }
 
   output(id: string) {
-    return this.outputs.find((o) => o.id === id);
+    return this.state.outputs.find((o) => o.id === id);
   }
 
   // Setters
 
   setPosition(position: XY, save = false) {
-    this.position = position;
+    this.state.position = position;
 
     if (save) this.graph.project.save();
   }
@@ -144,13 +154,13 @@ export class Node {
   serialize(): z.infer<typeof SerializedNode> {
     return {
       id: this.id,
-      name: this.name,
-      position: this.position,
+      name: this.state.name,
+      position: this.state.position,
       schema: {
         package: this.schema.package.name,
         id: this.schema.name,
       },
-      defaultValues: this.inputs.reduce((acc, i) => {
+      defaultValues: this.state.inputs.reduce((acc, i) => {
         if (!(i instanceof DataInput)) return acc;
 
         return {
@@ -179,7 +189,7 @@ export class Node {
       graph,
     });
 
-    node.inputs.forEach((i) => {
+    node.state.inputs.forEach((i) => {
       const defaultValue = data.defaultValues[i.id];
 
       if (defaultValue === undefined || !(i instanceof DataInput)) return;
@@ -206,7 +216,7 @@ export function serializeConnections(nodes: IterableIterator<Node>) {
   const connections: z.infer<typeof SerializedConnection>[] = [];
 
   for (const node of nodes) {
-    node.inputs.forEach((i) => {
+    node.state.inputs.forEach((i) => {
       if (i instanceof ExecInput) {
         i.connections.forEach((conn) => {
           connections.push({
