@@ -2,6 +2,7 @@ import clsx from "clsx";
 import {
   AnyType,
   BasePrimitiveType,
+  BaseType,
   DataInput as DataInputModel,
   EnumType,
   EnumVariants,
@@ -110,7 +111,7 @@ const Input = (props: InputProps) => {
 };
 
 interface Props {
-  input: DataInputModel;
+  input: DataInputModel<BaseType>;
 }
 
 export const DataInput = (props: Props) => {

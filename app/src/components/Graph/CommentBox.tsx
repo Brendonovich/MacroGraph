@@ -2,7 +2,6 @@ import { CommentBox } from "@macrograph/core";
 import clsx from "clsx";
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { useUIStore } from "~/UIStore";
-import { useGraph } from "./Graph";
 
 interface Props {
   box: CommentBox;
@@ -10,11 +9,11 @@ interface Props {
 
 export default (props: Props) => {
   const box = () => props.box;
+  const graph = () => props.box.graph;
   const position = () => props.box.position;
   const size = () => props.box.size;
 
   const UI = useUIStore();
-  const graph = useGraph();
 
   const [editing, setEditing] = createSignal(false);
 
@@ -46,29 +45,6 @@ export default (props: Props) => {
                   case 0: {
                     UI.setSelectedItem(props.box);
 
-                    const innerNodes = [...graph().nodes.values()].filter(
-                      (node) => {
-                        if (
-                          node.position.x < position().x ||
-                          node.position.y < position().y
-                        )
-                          return false;
-
-                        const nodeSize = UI.state.nodeBounds.get(node);
-                        if (!nodeSize) return false;
-
-                        if (
-                          node.position.x + nodeSize.width >
-                            position().x + size().x ||
-                          node.position.y + nodeSize.height >
-                            position().y + size().y
-                        )
-                          return false;
-
-                        return true;
-                      }
-                    );
-
                     const handleMouseMove = (e: MouseEvent) => {
                       const scale = UI.state.scale;
 
@@ -77,7 +53,12 @@ export default (props: Props) => {
                         y: box().position.y + e.movementY / scale,
                       };
 
-                      innerNodes.forEach((node) => {
+                      const nodes = box().getNodes(
+                        graph().nodes.values(),
+                        (node) => UI.state.nodeBounds.get(node) ?? null
+                      );
+
+                      nodes.forEach((node) => {
                         node.position = {
                           x: node.position.x + e.movementX / scale,
                           y: node.position.y + e.movementY / scale,

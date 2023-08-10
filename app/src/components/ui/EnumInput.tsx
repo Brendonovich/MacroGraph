@@ -1,15 +1,15 @@
-import { Enum } from "@macrograph/core";
+import { Enum, EnumVariants } from "@macrograph/core";
 import { Select } from "@kobalte/core";
 import clsx from "clsx";
 
-interface Props<T extends Enum> {
+interface Props<T extends Enum<EnumVariants>> {
   enum: T;
   value: T["variants"][number];
   onChange(v: T["variants"][number]): void;
   class?: string;
 }
 
-export const EnumInput = <T extends Enum>(props: Props<T>) => (
+export const EnumInput = <T extends Enum<EnumVariants>>(props: Props<T>) => (
   <Select.Root<T["variants"][number]["name"]>
     class={clsx("w-full text-xs h-5", props.class)}
     options={props.enum.variants.map((v) => v.name)}

@@ -20,6 +20,7 @@ import {
   createMemo,
   Accessor,
 } from "solid-js";
+import { Option } from "../types";
 
 export interface NodeArgs {
   id: number;
@@ -188,4 +189,53 @@ export class Node {
 
     return node;
   }
+}
+
+export const SerializedConnection = z.object({
+  from: z.object({
+    node: z.coerce.number().int(),
+    output: z.string(),
+  }),
+  to: z.object({
+    node: z.coerce.number().int(),
+    input: z.string(),
+  }),
+});
+
+export function serializeConnections(nodes: IterableIterator<Node>) {
+  const connections: z.infer<typeof SerializedConnection>[] = [];
+
+  for (const node of nodes) {
+    node.inputs.forEach((i) => {
+      if (i instanceof ExecInput) {
+        i.connections.forEach((conn) => {
+          connections.push({
+            from: {
+              node: conn.node.id,
+              output: conn.id,
+            },
+            to: {
+              node: i.node.id,
+              input: i.id,
+            },
+          });
+        });
+      } else {
+        (i.connection as unknown as Option<typeof i>).peek((conn) => {
+          connections.push({
+            from: {
+              node: conn.node.id,
+              output: conn.id,
+            },
+            to: {
+              node: i.node.id,
+              input: i.id,
+            },
+          });
+        });
+      }
+    });
+  }
+
+  return connections;
 }

@@ -27,12 +27,12 @@ export class Project {
     return createMutable(this);
   }
 
-  getNewId() {
+  generateGraphId() {
     return this.graphIdCounter++;
   }
 
   createGraph(args?: { name?: string }) {
-    const id = this.getNewId();
+    const id = this.generateGraphId();
 
     const graph = new Graph({
       name: `Graph ${id}`,

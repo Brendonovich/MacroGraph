@@ -66,15 +66,13 @@ export const Graph = (props: Props) => {
 
   const [pan, setPan] = createSignal<PanState>({ state: "none" });
 
-  const [mousePos, setMousePos] = createSignal<null | XY>(null);
-
   onMount(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.code === "KeyK" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
 
         const currentPos = UI.state.schemaMenuPosition;
-        const pos = mousePos();
+        const pos = UI.state.mousePos;
         if (!pos) return;
 
         if (currentPos && currentPos.x === pos.x && currentPos.y === pos.y)
@@ -188,10 +186,6 @@ export const Graph = (props: Props) => {
             }
           }}
           onMouseMove={(e) => {
-            setMousePos({
-              x: e.clientX,
-              y: e.clientY,
-            });
             const MOVE_BUFFER = 3;
             const panData = pan();
 

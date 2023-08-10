@@ -27,7 +27,7 @@ export const GraphList = (props: Props) => {
               core.project,
               JSON.parse(atob(importData))
             );
-            graph.id = core.project.getNewId();
+            graph.id = core.project.generateGraphId();
             core.project.graphs.set(graph.id, graph);
             core.project.save();
             UI.setCurrentGraph(graph);

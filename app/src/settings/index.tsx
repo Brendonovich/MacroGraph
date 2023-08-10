@@ -4,40 +4,19 @@ import Discord from "./Discord";
 import OBS from "./OBS";
 import Twitch from "./Twitch";
 import { Button } from "./ui";
-import { SerializedProject, core } from "@macrograph/core";
+import { core } from "@macrograph/core";
 import { useUIStore } from "~/UIStore";
 import GoXLR from "./GoXLR";
 import Streamlabs from "./Streamlabs";
 
 export default () => {
-  const ui = useUIStore();
+  const UI = useUIStore();
 
   return (
     <div class="flex flex-col items-center p2 space-y-2">
       <SettingsDialog />
-      <Button
-        onClick={async () => {
-          let importData = await navigator.clipboard.readText();
-          await core.load(
-            SerializedProject.parse(JSON.parse(atob(importData)))
-          );
-
-          core.project.save();
-
-          const firstGraph = core.project.graphs.values().next();
-          if (firstGraph) ui.setCurrentGraph(firstGraph.value);
-        }}
-      >
-        Import from Clipboard
-      </Button>
-      <Button
-        onclick={async () => {
-          navigator.clipboard.writeText(
-            btoa(JSON.stringify(core.project.serialize()))
-          );
-        }}
-      >
-        Export to Clipboard
+      <Button onclick={() => UI.copyItem(core.project)}>
+        Copy to Clipboard
       </Button>
     </div>
   );
