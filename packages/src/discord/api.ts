@@ -70,7 +70,7 @@ pkg.createNonEventSchema({
       }),
       everyone: io.dataInput({
         id: "everyone",
-        name: "Allow @Everyone",
+        name: "Allow @everyone",
         type: t.bool(),
       }),
     };

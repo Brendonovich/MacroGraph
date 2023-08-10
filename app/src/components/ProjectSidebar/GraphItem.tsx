@@ -8,6 +8,7 @@ import { TbCopy } from "solid-icons/tb";
 import { AiOutlineDelete } from "solid-icons/ai";
 import { Dialog } from "@kobalte/core";
 import { Button } from "~/settings/ui";
+import { useUIStore } from "~/UIStore";
 
 interface Props {
   graph: Graph;
@@ -17,6 +18,8 @@ interface Props {
 
 export const GraphItem = (props: Props) => {
   const [editing, setEditing] = createSignal(false);
+
+  const UI = useUIStore();
 
   return (
     <div
@@ -36,13 +39,7 @@ export const GraphItem = (props: Props) => {
             <span>{props.graph.name}</span>
             <div class="flex-row flex space-x-3">
               <DeleteButton graph={props.graph} />
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    btoa(JSON.stringify(props.graph.serialize()))
-                  );
-                }}
-              >
+              <button onClick={() => UI.copyItem(props.graph)}>
                 <TbCopy />
               </button>
             </div>

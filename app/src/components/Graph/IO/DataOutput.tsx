@@ -3,7 +3,7 @@ import { Show } from "solid-js";
 import { DataPin } from "./DataPin";
 
 interface Props {
-  output: DataOutputModel;
+  output: DataOutputModel<any>;
 }
 
 export const DataOutput = (props: Props) => {

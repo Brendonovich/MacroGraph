@@ -13,7 +13,9 @@ import {
   Pin,
   ScopeInput,
   ScopeOutput,
+  SerializedConnection,
   SerializedNode,
+  serializeConnections,
 } from ".";
 import { pinsCanConnect } from "../utils";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
@@ -38,20 +40,7 @@ export const SerializedGraph = z.object({
   nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
   commentBoxes: z.array(SerializedCommentBox).default([]),
   nodeIdCounter: z.number(),
-  connections: z
-    .array(
-      z.object({
-        from: z.object({
-          node: z.coerce.number().int(),
-          output: z.string(),
-        }),
-        to: z.object({
-          node: z.coerce.number().int(),
-          input: z.string(),
-        }),
-      })
-    )
-    .default([]),
+  connections: z.array(SerializedConnection).default([]),
 });
 
 export class Graph {
@@ -72,8 +61,12 @@ export class Graph {
     return createMutable(this);
   }
 
+  generateNodeId() {
+    return this.nodeIdCounter++;
+  }
+
   createNode(args: Omit<NodeArgs, "graph" | "id">) {
-    const id = this.nodeIdCounter++;
+    const id = this.generateNodeId();
 
     const node = new Node({ ...args, id, graph: this });
 
@@ -86,8 +79,11 @@ export class Graph {
     return node;
   }
 
-  createCommentBox(args: CommentBoxArgs) {
-    const box = new CommentBox(args);
+  createCommentBox(args: Omit<CommentBoxArgs, "graph">) {
+    const box = new CommentBox({
+      ...args,
+      graph: this,
+    });
 
     this.commentBoxes.add(box);
 
@@ -212,42 +208,10 @@ export class Graph {
       nodes: Object.fromEntries(
         [...this.nodes.entries()].map(([id, node]) => [id, node.serialize()])
       ),
-      commentBoxes: [...this.commentBoxes.values()].map((box) => ({
-        ...box,
-      })),
-      connections: [...this.nodes.entries()].reduce((acc, [_, node]) => {
-        node.inputs.forEach((i) => {
-          if (i instanceof ExecInput) {
-            i.connections.forEach((conn) => {
-              acc.push({
-                from: {
-                  node: conn.node.id,
-                  output: conn.id,
-                },
-                to: {
-                  node: i.node.id,
-                  input: i.id,
-                },
-              });
-            });
-          } else {
-            (i.connection as unknown as Option<typeof i>).peek((conn) => {
-              acc.push({
-                from: {
-                  node: conn.node.id,
-                  output: conn.id,
-                },
-                to: {
-                  node: i.node.id,
-                  input: i.id,
-                },
-              });
-            });
-          }
-        });
-
-        return acc;
-      }, [] as any),
+      commentBoxes: [...this.commentBoxes.values()].map((box) =>
+        box.serialize()
+      ),
+      connections: serializeConnections(this.nodes.values()),
     };
   }
 
@@ -280,8 +244,38 @@ export class Graph {
       );
     });
 
+    await graph.deserializeConnections(data.connections);
+
+    graph.commentBoxes = new ReactiveSet(
+      data.commentBoxes.map(
+        (box) =>
+          new CommentBox({
+            ...box,
+            graph,
+          })
+      )
+    );
+
+    return graph;
+  }
+
+  async deserializeConnections(
+    connections: z.infer<typeof SerializedConnection>[],
+    options?: { nodeIdMap: Map<number, number> }
+  ) {
     let i = 0;
-    let connections = [...data.connections];
+
+    const getNodeId = (rawId: number) => {
+      if (!options?.nodeIdMap) return rawId;
+
+      const id = options.nodeIdMap.get(rawId);
+
+      if (id === undefined) {
+        throw new Error(`Failed to find node with id ${rawId}`);
+      }
+
+      return id;
+    };
 
     while (connections.length > 0) {
       if (i > 10) {
@@ -292,22 +286,18 @@ export class Graph {
       i++;
 
       connections = connections.filter(({ from, to }) => {
-        const output = graph.nodes.get(from.node)?.output(from.output);
-        const input = graph.nodes.get(to.node)?.input(to.input);
+        const output = this.nodes
+          .get(getNodeId(from.node))
+          ?.output(from.output);
+        const input = this.nodes.get(getNodeId(to.node))?.input(to.input);
 
         if (!output || !input) return true;
 
-        return !graph.connectPins(output, input);
+        return !this.connectPins(output, input);
       });
 
       await microtask();
     }
-
-    graph.commentBoxes = new ReactiveSet(
-      data.commentBoxes.map((box) => new CommentBox(box))
-    );
-
-    return graph;
   }
 }
 

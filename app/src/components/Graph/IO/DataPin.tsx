@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import {
   AnyType,
+  BaseType,
   DataInput,
   DataOutput,
   ListType,
@@ -13,7 +14,7 @@ import { Tooltip } from "@kobalte/core";
 import { colour } from "../util";
 
 interface Props {
-  pin: DataInput | DataOutput;
+  pin: DataInput<BaseType> | DataOutput<BaseType>;
 }
 
 export const DataPin = (props: Props) => {
