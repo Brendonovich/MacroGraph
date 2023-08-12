@@ -7,7 +7,7 @@ export class ListType<T extends BaseType> extends BaseType<t.infer<T>[]> {
     super();
   }
 
-  default(): any {
+  default(): t.infer<T>[] {
     return [];
   }
 

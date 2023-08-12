@@ -13,20 +13,20 @@ export class EnumVariant<
     return createMutable(this);
   }
 
-  default(): any {
+  default() {
     const data = this.data;
 
     return data === null
       ? {
           variant: this.name,
         }
-      : ({
+      : {
           variant: this.name,
           data: Object.entries(data).reduce(
             (acc, [name, type]) => ({ ...acc, [name]: type.default() }),
             {}
           ),
-        } as any);
+        };
   }
 }
 

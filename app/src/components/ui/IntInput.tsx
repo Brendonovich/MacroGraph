@@ -2,15 +2,17 @@ import clsx from "clsx";
 import { createSignal } from "solid-js";
 
 interface Props {
-  value: number;
+  initialValue: number;
   onChange(v: number): void;
   class?: string;
 }
 
-const INT_REGEX = /^[+-]?\d+$/;
-
 export const IntInput = (props: Props) => {
-  const [value, setValue] = createSignal(props.value.toString());
+  // if NaN reset to 0
+  const initialValue = isNaN(props.initialValue) ? 0 : props.initialValue;
+  props.onChange(initialValue);
+
+  const [value, setValue] = createSignal(initialValue.toString());
 
   return (
     <input
@@ -21,14 +23,21 @@ export const IntInput = (props: Props) => {
 
         setValue(value);
 
-        if (INT_REGEX.test(value)) props.onChange(parseInt(value));
+        const numValue = parseInt(value);
+        if (!isNaN(numValue)) props.onChange(parseInt(value));
       }}
       onBlur={(e) => {
-        if (e.target.value.length === 0) {
+        const s = e.target.value;
+        const num = parseInt(s);
+
+        if (s.length === 0) {
           setValue("0");
           props.onChange(0);
-        } else if (!INT_REGEX.test(e.target.value)) {
-          setValue(props.value.toString());
+        } else if (isNaN(num)) {
+          setValue(props.initialValue.toString());
+        } else {
+          setValue(num.toString());
+          props.onChange(num);
         }
       }}
       class={clsx(

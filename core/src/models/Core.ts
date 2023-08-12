@@ -138,13 +138,14 @@ class ExecutionContext {
           input.connection as Option<DataOutput<any> | ScopeOutput>
         ).mapOrElse(
           () => {
-            if (input instanceof DataInput) return input.defaultValue;
+            if (input instanceof DataInput)
+              return input.defaultValue ?? input.type.default();
           },
           (conn) => {
             const data = this.data.get(conn);
 
             if (data === undefined)
-              throw new Error(`Data not found for ${input.name}!`);
+              throw new Error(`Data not found for input '${input.name}'!`);
 
             return data;
           }
