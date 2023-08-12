@@ -198,7 +198,7 @@ export type RunCtx = {
     output: TOutput,
     data: t.infer<TOutput["type"]>
   ): void;
-  getInput<TInput extends DataInput<any> | ScopeInput>(
+  getInput<TInput extends DataInput<BaseType<any>> | ScopeInput>(
     input: TInput
   ): TInput extends DataInput<infer T>
     ? t.infer<T>

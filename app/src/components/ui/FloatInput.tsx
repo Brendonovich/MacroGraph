@@ -2,16 +2,17 @@ import clsx from "clsx";
 import { createSignal } from "solid-js";
 
 interface Props {
-  value: number;
+  initialValue: number;
   onChange(v: number): void;
   class?: string;
 }
 
-// floating point regex
-const FLOAT_REGEX = /^[+-]?\d*(\.\d+)?$/;
-
 export const FloatInput = (props: Props) => {
-  const [value, setValue] = createSignal(props.value.toString());
+  // if NaN reset to 0
+  const initialValue = isNaN(props.initialValue) ? 0 : props.initialValue;
+  props.onChange(initialValue);
+
+  const [value, setValue] = createSignal(props.initialValue.toString());
 
   return (
     <input
@@ -21,14 +22,21 @@ export const FloatInput = (props: Props) => {
         const value = e.target.value;
         setValue(value);
 
-        if (FLOAT_REGEX.test(value)) props.onChange(parseFloat(value));
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) props.onChange(numValue);
       }}
       onBlur={(e) => {
-        if (e.target.value.length === 0) {
+        const s = e.target.value;
+        const num = parseFloat(s);
+
+        if (s.length === 0) {
           setValue("0");
           props.onChange(0);
-        } else if (!FLOAT_REGEX.test(e.target.value)) {
-          setValue(props.value.toString());
+        } else if (isNaN(num)) {
+          setValue(props.initialValue.toString());
+        } else {
+          setValue(num.toString());
+          props.onChange(num);
         }
       }}
       class={clsx(

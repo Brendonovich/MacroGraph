@@ -1,4 +1,3 @@
-import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";

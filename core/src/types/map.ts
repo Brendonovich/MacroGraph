@@ -5,14 +5,14 @@ import { BaseType } from "./base";
 export type MapValue<T> = Map<string, T>;
 
 export class MapType<TValue extends BaseType<any>> extends BaseType<
-  Map<string, t.infer<TValue>>
+  MapValue<t.infer<TValue>>
 > {
   constructor(public value: TValue) {
     super();
   }
 
-  default(): any {
-    return new Map();
+  default() {
+    return new Map<string, t.infer<TValue>>();
   }
 
   variant(): TypeVariant {

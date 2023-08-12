@@ -4,9 +4,12 @@ import {
   BasePrimitiveType,
   BaseType,
   DataInput as DataInputModel,
+  Enum,
   EnumType,
   EnumVariants,
+  PrimitiveType,
   WildcardType,
+  t,
 } from "@macrograph/core";
 import { Show, Switch, Match } from "solid-js";
 
@@ -19,10 +22,12 @@ import {
 } from "~/components/ui";
 import { DataPin } from ".";
 
+type EnumValue = t.infer<t.Enum<Enum<EnumVariants>>>;
+
 interface InputProps {
   type: AnyType;
-  value: any;
-  onChange(v: any): void;
+  value: t.infer<PrimitiveType> | EnumValue | null;
+  onChange(v: t.infer<PrimitiveType>): void;
   connected: boolean;
 }
 
@@ -48,13 +53,19 @@ const Input = (props: InputProps) => {
           />
         )}
       </Match>
-      <Match when={props.type instanceof BasePrimitiveType && props.type}>
+      <Match
+        when={
+          props.type instanceof BasePrimitiveType &&
+          props.value !== null &&
+          props.type
+        }
+      >
         {(type) => (
           <Switch>
             <Match when={type().primitiveVariant() === "bool"}>
               <CheckBox
                 class={className()}
-                value={props.value}
+                value={props.value as boolean}
                 onChange={props.onChange}
               />
             </Match>
@@ -62,7 +73,7 @@ const Input = (props: InputProps) => {
               <div class="w-16">
                 <TextInput
                   class={className()}
-                  value={props.value}
+                  value={props.value as string}
                   onChange={props.onChange}
                 />
               </div>
@@ -71,7 +82,9 @@ const Input = (props: InputProps) => {
               <div class="w-16">
                 <IntInput
                   class={className()}
-                  value={props.value}
+                  initialValue={
+                    props.value ? parseInt(props.value.toString()) : 0
+                  }
                   onChange={props.onChange}
                 />
               </div>
@@ -80,7 +93,9 @@ const Input = (props: InputProps) => {
               <div class="w-16">
                 <FloatInput
                   class={className()}
-                  value={props.value}
+                  initialValue={
+                    props.value ? parseFloat(props.value.toString()) : 0
+                  }
                   onChange={props.onChange}
                 />
               </div>
@@ -96,7 +111,7 @@ const Input = (props: InputProps) => {
               enum={type().inner}
               value={
                 (type().inner.variants as EnumVariants).find(
-                  (v) => v.name === props.value?.variant
+                  (v) => v.name === (props.value as EnumValue)?.variant
                 ) ??
                 (props.onChange(type().inner.variants[0].default()),
                 type().inner.variants[0])

@@ -73,14 +73,14 @@ export class StructType<Fields extends StructFields> extends BaseType<
     super();
   }
 
-  default(): any {
+  default(): InferStructFields<Fields> {
     return Object.entries(this.struct.fields).reduce(
       (acc, [key, value]) => ({
         ...acc,
         [key]: value.default(),
       }),
       {}
-    );
+    ) as any;
   }
 
   variant(): TypeVariant {

@@ -1,21 +1,21 @@
 import { createMutable } from "solid-js/store";
 import { ReactiveSet } from "@solid-primitives/set";
 import { Node } from "./Node";
-import { t, Option, None, BaseType } from "../types";
+import { t, Option, None, BaseType, PrimitiveType } from "../types";
 import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
 
 export type DataInputArgs<T extends BaseType<any>> = {
   id: string;
   name?: string;
   type: T;
-  defaultValue?: any;
+  defaultValue?: t.infer<PrimitiveType> | null;
   node: Node;
 };
 
 export class DataInput<T extends BaseType<any>> {
   id: string;
   name?: string;
-  defaultValue: any = null;
+  defaultValue: t.infer<PrimitiveType> | null = null;
   type: T;
   node: Node;
   connection: Option<DataOutput<T>> = None;
@@ -23,7 +23,7 @@ export class DataInput<T extends BaseType<any>> {
   constructor(args: DataInputArgs<T>) {
     this.id = args.id;
     this.name = args.name;
-    this.defaultValue = args.defaultValue || args.type.default();
+    this.defaultValue = args.defaultValue ?? null;
     this.node = args.node;
     this.type = args.type;
 
@@ -48,9 +48,9 @@ export interface DataOutputArgs<T extends BaseType<any>> {
   type: T;
 }
 
-export class DataOutput<T extends BaseType<any>> {
+export class DataOutput<T extends BaseType> {
   id: string;
-  connections = new ReactiveSet<DataInput<any>>();
+  connections = new ReactiveSet<DataInput<BaseType>>();
   node: Node;
   name?: string;
   type: T;

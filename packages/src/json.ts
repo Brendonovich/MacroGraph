@@ -5,6 +5,7 @@ import {
   EnumVariant,
   EnumVariants,
   InferEnum,
+  MapValue,
   Maybe,
   Option,
   t,
@@ -41,29 +42,38 @@ type JSONVariantTypes = [
       value: t.Map<t.Enum<typeof JSON>>;
     }
   >
-] ;
+];
 
-export const JSON: Enum<JSONVariantTypes> = pkg.createEnum<JSONVariantTypes>("JSON", (e) =>
-  e.lazy(() => [
-    ...JSONLiteralVariants(e),
-    e.variant("List", {
-      value: t.list(t.enum(JSON)),
-    }),
-    e.variant("Map", {
-      value: t.map(t.enum(JSON)),
-    }),
-  ] as JSONVariantTypes)
+export const JSON: Enum<JSONVariantTypes> = pkg.createEnum<JSONVariantTypes>(
+  "JSON",
+  (e) =>
+    e.lazy(
+      () =>
+        [
+          ...JSONLiteralVariants(e),
+          e.variant("List", {
+            value: t.list(t.enum(JSON)),
+          }),
+          e.variant("Map", {
+            value: t.map(t.enum(JSON)),
+          }),
+        ] as JSONVariantTypes
+    )
 );
 
 function assistedValueToJSON(
   type: t.Any,
   value: any
 ): InferEnum<typeof JSON> | null {
-  if (type instanceof t.Option) {
+  if (type instanceof t.Wildcard) {
+    return assistedValueToJSON(
+      type.wildcard.value().expect("Wildcard value not found!"),
+      value
+    );
+  } else if (type instanceof t.Option) {
     if (Maybe(value).isNone()) return JSON.variant("Null");
     else return assistedValueToJSON(type.inner, value);
-  }
-  if (type instanceof t.Int || type instanceof t.Float)
+  } else if (type instanceof t.Int || type instanceof t.Float)
     return JSON.variant(["Number", { value }]);
   else if (type instanceof t.String) return JSON.variant(["String", { value }]);
   else if (type instanceof t.Bool) return JSON.variant(["Bool", { value }]);
@@ -72,21 +82,20 @@ function assistedValueToJSON(
       "List",
       { value: value.map((v: any) => assistedValueToJSON(type.item, v)) },
     ]);
-  else if (type instanceof t.Map)
+  else if (type instanceof t.Map) {
+    const newValue: MapValue<any> = new Map();
+
+    for (const [k, v] of value) {
+      newValue.set(k, assistedValueToJSON(type.value, v));
+    }
+
     return JSON.variant([
       "Map",
       {
-        value: new Map(
-          value
-            .entries()
-            .map(([key, value]: any) => [
-              key,
-              assistedValueToJSON(type.value, value),
-            ])
-        ),
+        value: newValue,
       },
     ]);
-  else return null;
+  } else return null;
 }
 
 export function valueToJSON(value: any): InferEnum<typeof JSON> | null {
@@ -173,12 +182,7 @@ pkg.createNonEventSchema({
     };
   },
   run({ ctx, io }) {
-    const val = Maybe(
-      assistedValueToJSON(
-        io.w.value().expect("No wildcard value!"),
-        ctx.getInput(io.in)
-      )
-    );
+    const val = Maybe(assistedValueToJSON(io.in.type, ctx.getInput(io.in)));
 
     ctx.setOutput(
       io.out,

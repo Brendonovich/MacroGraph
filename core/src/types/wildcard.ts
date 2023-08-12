@@ -210,8 +210,11 @@ export class WildcardType extends BaseType<unknown> {
     this.connections.delete(opposite);
   }
 
-  default(): any {
-    return this.wildcard.value().map((v) => v.default());
+  default(): Option<unknown> {
+    return this.wildcard
+      .value()
+      .map((v) => v.default())
+      .expect("Cannot get default of unconnected wildcard!");
   }
 
   variant(): TypeVariant {

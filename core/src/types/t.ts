@@ -3,7 +3,6 @@ import {
   AnyType,
   Enum,
   EnumType,
-  EnumVariants,
   ListType,
   MapType,
   OptionType,

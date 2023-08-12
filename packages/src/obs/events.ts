@@ -1,10 +1,9 @@
 //EVENTS BELOW ______________________________________________|
 
-import { InferEnum, InferStruct, Maybe, t } from "@macrograph/core";
+import { InferEnum, Maybe, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
 import { JSON, valueToJSON } from "../json";
-import { Enum } from "@macrograph/core/src/types/t";
 
 pkg.createEventSchema({
   event: "ExitStarted",
@@ -829,7 +828,7 @@ pkg.createEventSchema({
     const volumeMeters = data.inputs.map((data) =>
       InputVolumeMeter.create({
         inputName: data.inputName as string,
-        inputLevelsMul: data.inputLevelsMul,
+        inputLevelsMul: data.inputLevelsMul as number[][],
       })
     );
     ctx.setOutput(io.inputs, volumeMeters);

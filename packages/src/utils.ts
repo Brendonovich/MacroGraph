@@ -1381,3 +1381,25 @@ pkg.createNonEventSchema({
     );
   },
 });
+
+pkg.createNonEventSchema({
+  name: "Cache",
+  variant: "Exec",
+  generateIO(io) {
+    const w = io.wildcard("");
+
+    return {
+      in: io.dataInput({
+        id: "",
+        type: t.wildcard(w),
+      }),
+      out: io.dataOutput({
+        id: "",
+        type: t.wildcard(w),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.out, ctx.getInput(io.in));
+  },
+});
