@@ -39,7 +39,12 @@ export const GraphItem = (props: Props) => {
             <span>{props.graph.name}</span>
             <div class="flex-row flex space-x-3">
               <DeleteButton graph={props.graph} />
-              <button onClick={() => UI.copyItem(props.graph)}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  UI.copyItem(props.graph);
+                }}
+              >
                 <TbCopy />
               </button>
             </div>
