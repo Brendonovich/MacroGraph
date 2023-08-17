@@ -7,9 +7,16 @@ import {
   on,
   onCleanup,
 } from "solid-js";
-import { EVENT, Event } from "./events";
+import {
+  DONATION,
+  Donation,
+  MEMBERSHIP,
+  Membership,
+  SUPERCHAT,
+  Superchat,
+} from "./events";
 
-const pkg = core.createPackage<Event>({
+const pkg = core.createPackage({
   name: "Streamlabs",
 });
 
@@ -58,14 +65,38 @@ const { setToken, token, state } = createRoot(() => {
             });
 
             socket.on("event", (eventData) => {
-              const parsed = EVENT.safeParse(eventData);
+              console.log(eventData);
 
-              if (!parsed.success) return;
+              if (eventData.for) {
+                console.log(eventData.for);
+              }
 
-              if (parsed.data.type === "donation") {
+              const dono = DONATION.safeParse(eventData);
+              const superchat = SUPERCHAT.safeParse(eventData);
+              const membership = MEMBERSHIP.safeParse(eventData);
+
+              if (!dono.success && !superchat.success && !membership.success)
+                return;
+
+              if (dono.success && dono.data.type === "donation") {
                 pkg.emitEvent({
                   name: "donation",
-                  data: parsed.data.message[0]!,
+                  data: dono.data.message[0]!,
+                });
+              }
+              if (superchat.success && superchat.data.type === "superchat") {
+                pkg.emitEvent({
+                  name: "superchat",
+                  data: superchat.data.message[0]!,
+                });
+              }
+              if (
+                membership.success &&
+                membership.data.type === "subscription"
+              ) {
+                pkg.emitEvent({
+                  name: "membership",
+                  data: membership.data.message[0]!,
                 });
               }
             });
@@ -99,6 +130,45 @@ const { setToken, token, state } = createRoot(() => {
 });
 
 export { setToken, token, state };
+
+pkg.createEventSchema({
+  name: "Youtube Membership",
+  event: "membership",
+  generateIO(io) {
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      name: io.dataOutput({
+        name: "Name",
+        id: "name",
+        type: t.string(),
+      }),
+      months: io.dataOutput({
+        name: "Months",
+        id: "months",
+        type: t.float(),
+      }),
+      message: io.dataOutput({
+        name: "Message",
+        id: "message",
+        type: t.string(),
+      }),
+      membershipLevelName: io.dataOutput({
+        name: "Membership Level Name",
+        id: "membershipLevelName",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.name, data.name);
+    ctx.setOutput(io.months, data.months);
+    ctx.setOutput(io.message, data.message);
+    ctx.setOutput(io.membershipLevelName, data.membershipLevelName);
+    ctx.exec(io.exec);
+  },
+});
 
 pkg.createEventSchema({
   name: "Streamlabs Donation",
@@ -148,6 +218,51 @@ pkg.createEventSchema({
     ctx.setOutput(io.from, data.from);
     ctx.setOutput(io.fromId, data.fromId);
 
+    ctx.exec(io.exec);
+  },
+});
+
+pkg.createEventSchema({
+  name: "Youtube Superchat",
+  event: "superchat",
+  generateIO(io) {
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      name: io.dataOutput({
+        name: "Name",
+        id: "name",
+        type: t.string(),
+      }),
+      currency: io.dataOutput({
+        name: "Currency",
+        id: "currency",
+        type: t.string(),
+      }),
+      displayString: io.dataOutput({
+        name: "Display String",
+        id: "displayString",
+        type: t.string(),
+      }),
+      amount: io.dataOutput({
+        name: "Amount",
+        id: "amount",
+        type: t.string(),
+      }),
+      comment: io.dataOutput({
+        name: "Comment",
+        id: "comment",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.name, data.name);
+    ctx.setOutput(io.currency, data.currency);
+    ctx.setOutput(io.displayString, data.displayString);
+    ctx.setOutput(io.amount, data.amount);
+    ctx.setOutput(io.comment, data.comment);
     ctx.exec(io.exec);
   },
 });
