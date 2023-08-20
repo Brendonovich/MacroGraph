@@ -121,7 +121,13 @@ export class Node {
 
     const allInputs = new Set([...io.inputs]);
     io.inputs.forEach((i) => {
-      if (!allInputs.has(i)) this.graph.disconnectPin(i);
+      if (!allInputs.has(i)) {
+        this.graph.disconnectPin(i);
+
+        if (i instanceof DataInput) {
+          i.dispose();
+        }
+      }
     });
     this.state.inputs.splice(0, this.state.inputs.length, ...io.inputs);
 

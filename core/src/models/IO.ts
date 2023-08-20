@@ -1,14 +1,27 @@
 import { createMutable } from "solid-js/store";
 import { ReactiveSet } from "@solid-primitives/set";
 import { Node } from "./Node";
-import { t, Option, None, BaseType, PrimitiveType } from "../types";
+import {
+  t,
+  Option,
+  None,
+  BaseType,
+  PrimitiveType,
+  BasePrimitiveType,
+} from "../types";
 import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
+import {
+  createEffect,
+  createRoot,
+  getOwner,
+  onCleanup,
+  runWithOwner,
+} from "solid-js";
 
 export type DataInputArgs<T extends BaseType<any>> = {
   id: string;
   name?: string;
   type: T;
-  defaultValue?: t.infer<PrimitiveType> | null;
   node: Node;
 };
 
@@ -19,15 +32,39 @@ export class DataInput<T extends BaseType<any>> {
   type: T;
   node: Node;
   connection: Option<DataOutput<T>> = None;
+  dispose: () => void;
 
   constructor(args: DataInputArgs<T>) {
     this.id = args.id;
     this.name = args.name;
-    this.defaultValue = args.defaultValue ?? null;
+    this.defaultValue =
+      args.type instanceof BasePrimitiveType ? args.type.default() : null;
     this.node = args.node;
     this.type = args.type;
 
-    return createMutable(this);
+    const { owner, dispose } = createRoot((dispose) => ({
+      owner: getOwner(),
+      dispose,
+    }));
+
+    this.dispose = dispose;
+
+    const reactiveThis = createMutable(this);
+
+    runWithOwner(owner, () => {
+      createEffect(() => {
+        const type = this.type;
+        if (!(type instanceof t.Wildcard)) return;
+
+        const value = type.wildcard.value();
+
+        if (value.isSome() && value.unwrap() instanceof BasePrimitiveType)
+          reactiveThis.defaultValue = value.unwrap().default();
+        else reactiveThis.defaultValue = null;
+      });
+    });
+
+    return reactiveThis;
   }
 
   setDefaultValue(value: any) {
