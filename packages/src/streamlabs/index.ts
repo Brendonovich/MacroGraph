@@ -7,14 +7,7 @@ import {
   on,
   onCleanup,
 } from "solid-js";
-import {
-  DONATION,
-  Donation,
-  MEMBERSHIP,
-  Membership,
-  SUPERCHAT,
-  Superchat,
-} from "./events";
+import { EVENT, Event } from "./events";
 
 const pkg = core.createPackage({
   name: "Streamlabs",
@@ -65,38 +58,26 @@ const { setToken, token, state } = createRoot(() => {
             });
 
             socket.on("event", (eventData) => {
-              console.log(eventData);
+              const parsed = EVENT.safeParse(eventData);
 
-              if (eventData.for) {
-                console.log(eventData.for);
-              }
+              if (!parsed.success) return;
 
-              const dono = DONATION.safeParse(eventData);
-              const superchat = SUPERCHAT.safeParse(eventData);
-              const membership = MEMBERSHIP.safeParse(eventData);
-
-              if (!dono.success && !superchat.success && !membership.success)
-                return;
-
-              if (dono.success && dono.data.type === "donation") {
+              if (parsed.data.type === "donation") {
                 pkg.emitEvent({
                   name: "donation",
-                  data: dono.data.message[0]!,
+                  data: parsed.data.message[0]!,
                 });
               }
-              if (superchat.success && superchat.data.type === "superchat") {
+              if (parsed.data.type === "superchat") {
                 pkg.emitEvent({
                   name: "superchat",
-                  data: superchat.data.message[0]!,
+                  data: parsed.data.message[0]!,
                 });
               }
-              if (
-                membership.success &&
-                membership.data.type === "subscription"
-              ) {
+              if (parsed.data.type === "subscription") {
                 pkg.emitEvent({
                   name: "membership",
-                  data: membership.data.message[0]!,
+                  data: parsed.data.message[0]!,
                 });
               }
             });
