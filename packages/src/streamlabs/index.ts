@@ -62,26 +62,10 @@ const { setToken, token, state } = createRoot(() => {
 
               if (!parsed.success) return;
 
-              switch (parsed.data.type) {
-                case "donation":
-                  pkg.emitEvent({
-                    name: "donation",
-                    data: parsed.data.message[0]!,
-                  });
-                  break;
-                case "superchat":
-                  pkg.emitEvent({
-                    name: "superchat",
-                    data: parsed.data.message[0]!,
-                  });
-                  break;
-                case "subscription":
-                  pkg.emitEvent({
-                    name: "membership",
-                    data: parsed.data.message[0]!,
-                  });
-                  break;
-              }
+              pkg.emitEvent({
+                name: parsed.data.type,
+                data: parsed.data.message[0],
+              });
             });
 
             socket.on("connect", () => {
@@ -116,7 +100,7 @@ export { setToken, token, state };
 
 pkg.createEventSchema({
   name: "Youtube Membership",
-  event: "membership",
+  event: "subscription",
   generateIO(io) {
     return {
       exec: io.execOutput({
