@@ -62,23 +62,25 @@ const { setToken, token, state } = createRoot(() => {
 
               if (!parsed.success) return;
 
-              if (parsed.data.type === "donation") {
-                pkg.emitEvent({
-                  name: "donation",
-                  data: parsed.data.message[0]!,
-                });
-              }
-              if (parsed.data.type === "superchat") {
-                pkg.emitEvent({
-                  name: "superchat",
-                  data: parsed.data.message[0]!,
-                });
-              }
-              if (parsed.data.type === "subscription") {
-                pkg.emitEvent({
-                  name: "membership",
-                  data: parsed.data.message[0]!,
-                });
+              switch (parsed.data.type) {
+                case "donation":
+                  pkg.emitEvent({
+                    name: "donation",
+                    data: parsed.data.message[0]!,
+                  });
+                  break;
+                case "superchat":
+                  pkg.emitEvent({
+                    name: "superchat",
+                    data: parsed.data.message[0]!,
+                  });
+                  break;
+                case "subscription":
+                  pkg.emitEvent({
+                    name: "membership",
+                    data: parsed.data.message[0]!,
+                  });
+                  break;
               }
             });
 
