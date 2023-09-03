@@ -406,7 +406,7 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
-  name: "Divide Ints Remainder",
+  name: "Divide Ints Exact",
   variant: "Pure",
   generateIO(io) {
     return {
