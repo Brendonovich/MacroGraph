@@ -361,6 +361,26 @@ pkg.createNonEventSchema({
 });
 
 pkg.createNonEventSchema({
+  name: "Int to Float",
+  variant: "Pure",
+  generateIO(io) {
+    return {
+      in: io.dataInput({
+        id: "in",
+        type: t.int(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.float(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    ctx.setOutput(io.out, ctx.getInput(io.in));
+  },
+});
+
+pkg.createNonEventSchema({
   name: "Divide Ints",
   variant: "Pure",
   generateIO(io) {
@@ -381,6 +401,31 @@ pkg.createNonEventSchema({
   },
   run({ ctx, io }) {
     const number = Math.floor(ctx.getInput(io.one) / ctx.getInput(io.two));
+    ctx.setOutput(io.output, number);
+  },
+});
+
+pkg.createNonEventSchema({
+  name: "Divide Ints Remainder",
+  variant: "Pure",
+  generateIO(io) {
+    return {
+      one: io.dataInput({
+        id: "one",
+        type: t.int(),
+      }),
+      two: io.dataInput({
+        id: "two",
+        type: t.int(),
+      }),
+      output: io.dataOutput({
+        id: "output",
+        type: t.float(),
+      }),
+    };
+  },
+  run({ ctx, io }) {
+    const number = ctx.getInput(io.one) / ctx.getInput(io.two);
     ctx.setOutput(io.output, number);
   },
 });
