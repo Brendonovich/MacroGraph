@@ -1,52 +1,46 @@
 import { test, expect, describe } from "vitest";
-import { assistedValueToJSON, JSON } from "./json";
-import { MapValue, None, Some, t } from "@macrograph/core";
+import { toJSON, JSON, jsonToJS, jsToJSON } from "./json";
+import { None, Some, t } from "@macrograph/core";
 
-describe("assistedValueToJSON", () => {
-  test("Option.None -> null", () => {
-    expect(assistedValueToJSON(t.option(t.int()), None)).toEqual(
-      JSON.variant("Null")
-    );
+describe("toJSON", () => {
+  test("t.Option (None) -> Null", () => {
+    expect(toJSON(t.option(t.int()), None)).toEqual(JSON.variant("Null"));
   });
-  test("Option.Some<Int> -> number", () => {
-    expect(assistedValueToJSON(t.option(t.int()), Some(5))).toEqual(
+  test("t.Option<t.Int> (Some) -> Number", () => {
+    expect(toJSON(t.option(t.int()), Some(5))).toEqual(
       JSON.variant(["Number", { value: 5 }])
     );
   });
-  test("Int  -> number", () => {
-    expect(assistedValueToJSON(t.int(), 0)).toEqual(
-      JSON.variant(["Number", { value: 0 }])
-    );
+  test("t.Int  -> Number", () => {
+    expect(toJSON(t.int(), 0)).toEqual(JSON.variant(["Number", { value: 0 }]));
   });
-  test("Float -> number", () => {
-    expect(assistedValueToJSON(t.int(), 0)).toEqual(
-      JSON.variant(["Number", { value: 0 }])
-    );
+  test("t.Float -> Number", () => {
+    expect(toJSON(t.int(), 0)).toEqual(JSON.variant(["Number", { value: 0 }]));
   });
-  test("String -> string", () => {
-    expect(assistedValueToJSON(t.string(), "")).toEqual(
+  test("t.String -> String", () => {
+    expect(toJSON(t.string(), "")).toEqual(
       JSON.variant(["String", { value: "" }])
     );
   });
-  test("Bool -> boolean", () => {
-    expect(assistedValueToJSON(t.bool(), false)).toEqual(
+  test("t.Bool -> Bool", () => {
+    expect(toJSON(t.bool(), false)).toEqual(
       JSON.variant(["Bool", { value: false }])
     );
   });
-  test("List<Bool> -> Array<bool>", () => {
-    expect(assistedValueToJSON(t.list(t.bool()), [])).toEqual(
+  test("t.List<t.Bool> -> List<bool>", () => {
+    expect(toJSON(t.list(t.bool()), [])).toEqual(
       JSON.variant(["List", { value: [] }])
     );
   });
-  test("Map<Bool> -> MapValue<boolean>", () => {
+  test("t.Map<t.Bool> -> Map<Bool>", () => {
     const value = new Map();
-    expect(assistedValueToJSON(t.map(t.bool()), value)).toEqual(
-      JSON.variant(["Map", { value: value as MapValue<never> }])
+    expect(toJSON(t.map(t.bool()), value)).toEqual(
+      JSON.variant(["Map", { value }])
     );
   });
-  test("Enum<JSON> -> InferEnum<JSON>", () => {
+  test("t.Enum<JSON> -> Map<JSONValue>", () => {
     expect(
-      assistedValueToJSON(t.enum(JSON), JSON.variant(["String", { value: "" }]))
+      toJSON(t.enum(JSON), JSON.variant(["String", { value: "" }]))
     ).toEqual(
       JSON.variant([
         "Map",
@@ -60,5 +54,70 @@ describe("assistedValueToJSON", () => {
         },
       ])
     );
+  });
+});
+
+describe("jsonToJS", () => {
+  test("Null -> null", () => {
+    expect(jsonToJS(JSON.variant("Null"))).toBeNull();
+  });
+  test("Number -> number", () => {
+    const value = 4;
+    expect(jsonToJS(JSON.variant(["Number", { value }]))).toEqual(value);
+  });
+  test("String -> string", () => {
+    const value = "string";
+    expect(jsonToJS(JSON.variant(["String", { value }]))).toEqual(value);
+  });
+  test("Bool -> boolean", () => {
+    const value = true;
+    expect(jsonToJS(JSON.variant(["Bool", { value }]))).toEqual(value);
+  });
+  test("List -> Array<T>", () => {
+    const value = [];
+    expect(jsonToJS(JSON.variant(["List", { value }]))).toEqual(value);
+  });
+  test("Map -> MapValue<T>", () => {
+    expect(jsonToJS(JSON.variant(["Map", { value: new Map() }]))).toEqual({});
+    expect(
+      jsonToJS(
+        JSON.variant([
+          "Map",
+          {
+            value: new Map([
+              ["number", JSON.variant(["Number", { value: 4 }])],
+              ["string", JSON.variant(["String", { value: "string" }])],
+            ]),
+          },
+        ])
+      )
+    ).toEqual({
+      number: 4,
+      string: "string",
+    });
+  });
+});
+
+describe("jsToJSON", () => {
+  test("null -> Null", () => {
+    expect(jsToJSON(null)).toEqual(JSON.variant("Null"));
+  });
+  test("number -> Number", () => {
+    const value = 4;
+    expect(jsToJSON(value)).toEqual(JSON.variant(["Number", { value }]));
+  });
+  test("string -> String", () => {
+    const value = "value";
+    expect(jsToJSON(value)).toEqual(JSON.variant(["String", { value }]));
+  });
+  test("boolean -> Bool", () => {
+    const value = true;
+    expect(jsToJSON(value)).toEqual(JSON.variant(["Bool", { value }]));
+  });
+  test("Array<T> -> List", () => {
+    expect(jsToJSON([])).toEqual(JSON.variant(["List", { value: [] }]));
+  });
+  test("object -> Object", () => {
+    expect(jsToJSON({})).toEqual(JSON.variant(["Map", { value: new Map() }]));
   });
 });

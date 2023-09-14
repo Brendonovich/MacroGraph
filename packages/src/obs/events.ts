@@ -1,9 +1,10 @@
 //EVENTS BELOW ______________________________________________|
 
-import { InferEnum, Maybe, t } from "@macrograph/core";
+import { EnumVariants, InferEnum, Maybe, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
-import { JSON, valueToJSON } from "../json";
+import { JSON, jsToJSON } from "../json";
+import { EnumValues } from "zod";
 
 pkg.createEventSchema({
   event: "ExitStarted",
@@ -51,7 +52,7 @@ pkg.createEventSchema({
   run({ ctx, data, io }) {
     ctx.setOutput(io.vendorName, data.vendorName);
     ctx.setOutput(io.eventType, data.eventType);
-    ctx.setOutput(io.eventData, Maybe(valueToJSON(data.eventData)).unwrap());
+    ctx.setOutput(io.eventData, Maybe(jsToJSON(data.eventData)).unwrap());
     ctx.exec(io.exec);
   },
 });
@@ -441,11 +442,11 @@ pkg.createEventSchema({
     ctx.setOutput(io.unversionedInputKind, data.unversionedInputKind);
     ctx.setOutput(
       io.inputSettings,
-      Maybe(valueToJSON(data.inputSettings)).unwrap()
+      Maybe(jsToJSON(data.inputSettings)).unwrap()
     );
     ctx.setOutput(
       io.defaultInputSettings,
-      Maybe(valueToJSON(data.defaultInputSettings)).unwrap()
+      Maybe(jsToJSON(data.defaultInputSettings)).unwrap()
     );
     ctx.exec(io.exec);
   },
@@ -792,7 +793,7 @@ pkg.createEventSchema({
     ctx.setOutput(
       io.monitorType,
       monitorType.variant(
-        data.monitorType as InferEnum<typeof monitorType.variant>
+        data.monitorType as InferEnum<typeof monitorType>["variant"]
       )
     );
     ctx.exec(io.exec);
@@ -1431,8 +1432,8 @@ pkg.createEventSchema({
       boundsHeight: data.sceneItemTransform.boundsHeight as number,
       boundsType: BoundsType.variant(
         data.sceneItemTransform.boundsType as InferEnum<
-          typeof BoundsType.variant
-        >
+          typeof BoundsType
+        >["variant"]
       ),
       boundsWidth: data.sceneItemTransform.boundsWidth as number,
       cropBottom: data.sceneItemTransform.cropBottom as number,

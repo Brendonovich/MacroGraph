@@ -1,5 +1,5 @@
 import { core, t, Maybe, InferEnum } from "@macrograph/core";
-import { JSON, jsonToValue, valueToJSON } from "./json";
+import { JSON, jsonToJS, jsToJSON } from "./json";
 
 const pkg = core.createPackage({
   name: "Localstorage",
@@ -50,7 +50,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     localStorage.setItem(
       `value-${ctx.getInput(io.key)}`,
-      window.JSON.stringify(jsonToValue(ctx.getInput(io.value)))
+      window.JSON.stringify(jsonToJS(ctx.getInput(io.value)))
     );
   },
 });
@@ -101,7 +101,7 @@ pkg.createNonEventSchema({
       io.output,
       Maybe(localStorage.getItem(`value-${ctx.getInput(io.key)}`))
         .map(window.JSON.parse)
-        .andThen((parsed) => Maybe(valueToJSON(parsed)))
+        .andThen((parsed) => Maybe(jsToJSON(parsed)))
         .unwrap()
     );
   },

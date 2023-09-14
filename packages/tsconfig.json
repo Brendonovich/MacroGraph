@@ -1,19 +1,17 @@
 {
-    "compilerOptions": {
-        "composite": true,
-        "rootDir": ".",
-        "strict": true,
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "node",
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "noUncheckedIndexedAccess": true,
-        "isolatedModules": true,
-        "skipLibCheck": true,
-        "outDir": "dist",
-    },
-    "include": [
-        "src"
-    ]
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "include": ["src"]
 }
