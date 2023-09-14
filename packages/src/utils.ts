@@ -1274,7 +1274,12 @@ pkg.createEventSchema({
         id: "exec",
         name: "",
       }),
-      name: io.dataInput({
+      inname: io.dataInput({
+        id: "name",
+        name: "Event Name",
+        type: t.string(),
+      }),
+      outname: io.dataOutput({
         id: "name",
         name: "Event Name",
         type: t.string(),
@@ -1292,8 +1297,9 @@ pkg.createEventSchema({
     };
   },
   run({ ctx, data, io }) {
-    if (!ctx.getInput(io.name)) return;
-    if (ctx.getInput(io.name) !== data.name) return;
+    if (!ctx.getInput(io.inname)) return;
+    if (ctx.getInput(io.inname) !== data.name) return;
+    ctx.setOutput(io.outname, data.name);
     ctx.setOutput(io.key, data.key);
     ctx.setOutput(io.data, data.data);
     ctx.exec(io.exec);
@@ -1420,6 +1426,7 @@ pkg.createNonEventSchema({
     };
   },
   run({ ctx, io }) {
+    console.log(ctx.getInput(io.in));
     ctx.setOutput(
       io.out,
       window.JSON.stringify(jsonToValue(ctx.getInput(io.in)))

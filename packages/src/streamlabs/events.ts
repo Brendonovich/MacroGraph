@@ -38,6 +38,18 @@ export const STREAMLABS_EVENT = z.discriminatedUnion("type", [
     ),
     type: z.literal("superchat"),
   }),
+  z.object({
+    message: z.array(
+      z.object({
+        name: z.string(),
+        currency: z.string(),
+        displayString: z.string(),
+        amount: z.string(),
+        comment: z.string(),
+      })
+    ),
+    type: z.literal("membershipGift"),
+  }),
 ]);
 
 export const EVENT = STREAMLABS_EVENT;

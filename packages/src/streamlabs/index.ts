@@ -60,7 +60,18 @@ const { setToken, token, state } = createRoot(() => {
             socket.on("event", (eventData) => {
               const parsed = EVENT.safeParse(eventData);
 
+              console.log(eventData);
+
               if (!parsed.success) return;
+
+              if (parsed.data.message[0].giftMembershipsCount) {
+                pkg.emitEvent({
+                  name: "membershipGiftStart",
+                  data: parsed.data.message[0],
+                });
+              }
+
+              console.log(eventData);
 
               pkg.emitEvent({
                 name: parsed.data.type,
@@ -132,6 +143,33 @@ pkg.createEventSchema({
     ctx.setOutput(io.name, data.name);
     ctx.setOutput(io.months, data.months);
     ctx.setOutput(io.message, data.message);
+    ctx.setOutput(io.membershipLevelName, data.membershipLevelName);
+    ctx.exec(io.exec);
+  },
+});
+
+pkg.createEventSchema({
+  name: "Gifted Youtube Membership",
+  event: "membershipGift",
+  generateIO(io) {
+    return {
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      name: io.dataOutput({
+        name: "Name",
+        id: "name",
+        type: t.string(),
+      }),
+      membershipLevelName: io.dataOutput({
+        name: "Membership Level Name",
+        id: "membershipLevelName",
+        type: t.string(),
+      }),
+    };
+  },
+  run({ ctx, data, io }) {
+    ctx.setOutput(io.name, data.name);
     ctx.setOutput(io.membershipLevelName, data.membershipLevelName);
     ctx.exec(io.exec);
   },
