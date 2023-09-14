@@ -79,22 +79,23 @@ describe("jsonToJS", () => {
   });
   test("Map -> MapValue<T>", () => {
     expect(jsonToJS(JSON.variant(["Map", { value: new Map() }]))).toEqual({});
+    const value = {
+      number: 4,
+      string: "string",
+    };
     expect(
       jsonToJS(
         JSON.variant([
           "Map",
           {
             value: new Map([
-              ["number", JSON.variant(["Number", { value: 4 }])],
-              ["string", JSON.variant(["String", { value: "string" }])],
+              ["number", JSON.variant(["Number", { value: value.number }])],
+              ["string", JSON.variant(["String", { value: value.string }])],
             ]),
           },
         ])
       )
-    ).toEqual({
-      number: 4,
-      string: "string",
-    });
+    ).toEqual(value);
   });
 });
 
@@ -119,5 +120,37 @@ describe("jsToJSON", () => {
   });
   test("object -> Object", () => {
     expect(jsToJSON({})).toEqual(JSON.variant(["Map", { value: new Map() }]));
+    const value = {
+      number: 4,
+      string: "string",
+      object: {
+        nested: true,
+      },
+    };
+    expect(jsToJSON(value)).toEqual(
+      JSON.variant([
+        "Map",
+        {
+          value: new Map([
+            ["number", JSON.variant(["Number", { value: value.number }])],
+            ["string", JSON.variant(["String", { value: value.string }])],
+            [
+              "object",
+              JSON.variant([
+                "Map",
+                {
+                  value: new Map([
+                    [
+                      "nested",
+                      JSON.variant(["Bool", { value: value.object.nested }]),
+                    ],
+                  ]),
+                },
+              ]),
+            ],
+          ]),
+        },
+      ])
+    );
   });
 });
