@@ -1,16 +1,21 @@
 {
-    "private": true,
-    "scripts": {
-        "app": "pnpm --filter @macrograph/app --",
-        "core": "pnpm --filter @macrograph/core --",
-        "web": "pnpm --filter @macrograph/web --",
-        "typecheck": "tsc -b",
-        "lint": "turbo run lint",
-        "lint:fix": "turbo run lint -- --fix"
-    },
-    "devDependencies": {
-        "turbo": "^1.10.7",
-        "turbo-ignore": "^1.10.7",
-        "typescript": "^5.1.6"
-    }
+  "private": true,
+  "scripts": {
+    "app": "pnpm --filter @macrograph/app --",
+    "core": "pnpm --filter @macrograph/core --",
+    "web": "pnpm --filter @macrograph/web --",
+    "test": "vitest --browser=safari",
+    "typecheck": "tsc -b",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.7",
+    "turbo-ignore": "^1.10.7",
+    "typescript": "^5.1.6",
+    "webdriverio": "^8.11.2",
+    "safaridriver": "^0.0.5",
+    "@vitest/browser": "^0.32.2",
+    "vitest": "^0.32.2"
+  }
 }

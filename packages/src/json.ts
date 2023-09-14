@@ -1,4 +1,5 @@
 import {
+  BaseType,
   core,
   Enum,
   EnumBuilder,
@@ -61,8 +62,40 @@ export const JSON: Enum<JSONVariantTypes> = pkg.createEnum<JSONVariantTypes>(
     )
 );
 
-function assistedValueToJSON(
-  type: t.Any,
+export function assistedValueToJSON(
+  type: t.Int | t.Float,
+  value: number
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON(
+  type: t.String,
+  value: string
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON(
+  type: t.Bool,
+  value: boolean
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON<T extends BaseType>(
+  type: t.Option<T>,
+  value: t.infer<t.Option<T>>
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON<T extends BaseType>(
+  type: t.List<T>,
+  value: t.infer<t.List<T>>
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON<T extends BaseType>(
+  type: t.Map<T>,
+  value: t.infer<t.Map<T>>
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON<T extends Enum>(
+  type: t.Enum<Enum<any>>,
+  value: t.infer<t.Enum<Enum<any>>>
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON(
+  type: t.Wildcard,
+  value: t.infer<t.Wildcard>
+): InferEnum<typeof JSON>;
+export function assistedValueToJSON(
+  type: BaseType,
   value: any
 ): InferEnum<typeof JSON> | null {
   if (type instanceof t.Wildcard) {
@@ -71,8 +104,8 @@ function assistedValueToJSON(
       value
     );
   } else if (type instanceof t.Option) {
-    if (Maybe(value).isNone()) return JSON.variant("Null");
-    else return assistedValueToJSON(type.inner, value);
+    if (value.isNone()) return JSON.variant("Null");
+    else return assistedValueToJSON(type.inner, value.unwrap());
   } else if (type instanceof t.Int || type instanceof t.Float)
     return JSON.variant(["Number", { value }]);
   else if (type instanceof t.String) return JSON.variant(["String", { value }]);
@@ -95,6 +128,8 @@ function assistedValueToJSON(
         value: newValue,
       },
     ]);
+  } else if (type instanceof t.Enum) {
+    return JSON.variant(["Map", { value: new Map(Object.entries(value)) }]);
   } else return null;
 }
 
