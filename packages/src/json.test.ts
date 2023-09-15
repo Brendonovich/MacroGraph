@@ -99,6 +99,17 @@ describe("jsonToJS", () => {
   });
 });
 
+test("convert json map {`test`: `test`} to js object {`test`:`test`}", () => {
+  expect(
+    jsonToJS(
+      JSON.variant([
+        "Map",
+        { value: new Map(Object.entries({ test: "test" })) },
+      ])
+    )
+  ).toEqual({ test: "test" });
+});
+
 describe("jsToJSON", () => {
   test("null -> Null", () => {
     expect(jsToJSON(null)).toEqual(JSON.variant("Null"));

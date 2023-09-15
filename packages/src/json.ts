@@ -174,10 +174,13 @@ export function jsonToJS(value: JSONValue): any {
     case "List":
       return value.data.value.map((v: any) => jsonToJS(v));
     case "Map":
-      return [...value.data.value.entries()].reduce((acc, [key, value]) => {
-        acc[key] = jsonToJS(value as any);
-        return acc;
-      }, {} as any);
+      return [...value.data.value.get("data").value.entries()].reduce(
+        (acc, [key, value]) => {
+          acc[key] = jsonToJS(value as any);
+          return acc;
+        },
+        {} as any
+      );
   }
 }
 
@@ -201,7 +204,6 @@ pkg.createNonEventSchema({
   },
   run({ ctx, io }) {
     const val = Maybe(toJSON(io.in.type, ctx.getInput(io.in)));
-
     ctx.setOutput(
       io.out,
       val.expect(`Type ${io.w.toString()} cannot be converted to JSON!`)
