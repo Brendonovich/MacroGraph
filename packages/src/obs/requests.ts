@@ -1,14 +1,8 @@
-import { InferEnum, InferStruct, MapValue, Maybe, t } from "@macrograph/core";
+import { InferEnum, Maybe, t } from "@macrograph/core";
 import pkg from "./pkg";
 import { obs } from "./ws";
-import { JSON, jsonToValue, valueToJSON } from "../json";
-import { Enum, list } from "@macrograph/core/src/types/t";
-import {
-  Alignment,
-  BoundsType,
-  SceneItemTransform,
-  alignmentConversion,
-} from "./events";
+import { JSON, jsonToJS, jsToJSON } from "../json";
+import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -162,7 +156,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     return obs.call("TriggerHotkeyByKeySequence", {
       keyId: ctx.getInput(io.id),
-      keyModifiers: jsonToValue(
+      keyModifiers: jsonToJS(
         JSON.variant([
           "Map",
           {
@@ -465,7 +459,7 @@ pkg.createNonEventSchema({
     ctx.setOutput(io.streamServiceType, data.streamServiceType);
     ctx.setOutput(
       io.streamServiceSettings,
-      Maybe(valueToJSON(data.streamServiceSettings)).unwrap()
+      Maybe(jsToJSON(data.streamServiceSettings)).unwrap()
     );
   },
 });
@@ -490,7 +484,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     obs.call("SetStreamServiceSettings", {
       streamServiceType: ctx.getInput(io.streamServiceType),
-      streamServiceSettings: jsonToValue({
+      streamServiceSettings: jsonToJS({
         variant: "Map",
         data: {
           value: ctx.getInput(io.streamServiceSettings),
@@ -833,7 +827,7 @@ pkg.createNonEventSchema({
       sceneName: ctx.getInput(io.sceneName),
       inputName: ctx.getInput(io.inputName),
       sceneItemEnabled: ctx.getInput(io.sceneItemEnabled),
-      inputSettings: jsonToValue({
+      inputSettings: jsonToJS({
         variant: "Map",
         data: {
           value: ctx.getInput(io.inputSettings),
@@ -997,7 +991,7 @@ pkg.createNonEventSchema({
 
     ctx.setOutput(
       io.defaultInputSettings,
-      Maybe(valueToJSON(data.defaultInputSettings)).unwrap()
+      Maybe(jsToJSON(data.defaultInputSettings)).unwrap()
     );
   },
 });
@@ -1033,7 +1027,7 @@ pkg.createNonEventSchema({
       new Map(
         Object.entries(data.inputSettings).map(([key, value]) => [
           key,
-          valueToJSON(value)!,
+          jsToJSON(value)!,
         ])
       )
     );
@@ -1066,7 +1060,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     obs.call("SetInputSettings", {
       inputName: ctx.getInput(io.inputName),
-      inputSettings: jsonToValue({
+      inputSettings: jsonToJS({
         variant: "Map",
         data: {
           value: ctx.getInput(io.inputSettings),
@@ -1401,7 +1395,7 @@ pkg.createNonEventSchema({
 
     ctx.setOutput(
       io.inputAudioTracks,
-      Maybe(valueToJSON(data.inputAudioTracks)).unwrap()
+      Maybe(jsToJSON(data.inputAudioTracks)).unwrap()
     );
   },
 });
@@ -1426,7 +1420,7 @@ pkg.createNonEventSchema({
   run({ ctx, io }) {
     obs.call("SetInputAudioTracks", {
       inputName: ctx.getInput(io.inputName),
-      inputAudioTracks: jsonToValue({
+      inputAudioTracks: jsonToJS({
         variant: "Map",
         data: {
           value: ctx.getInput(io.inputAudioTracks),
@@ -1622,7 +1616,7 @@ pkg.createNonEventSchema({
     ctx.setOutput(io.transitionConfigurable, data.transitionConfigurable);
     ctx.setOutput(
       io.transitionSettings,
-      Maybe(valueToJSON(data.transitionSettings))
+      Maybe(jsToJSON(data.transitionSettings))
     );
   },
 });
@@ -1678,7 +1672,7 @@ pkg.createNonEventSchema({
   },
   async run({ ctx, io }) {
     obs.call("SetCurrentSceneTransitionSettings", {
-      transitionSettings: jsonToValue({
+      transitionSettings: jsonToJS({
         variant: "Map",
         data: {
           value: ctx.getInput(io.transitionSettings),
@@ -1774,7 +1768,7 @@ pkg.createNonEventSchema({
         filterIndex: data.filterIndex as number,
         filterKind: data.filterKind as string,
         filterName: data.filterName as string,
-        filterSettings: valueToJSON(data.filterSettings),
+        filterSettings: jsToJSON(data.filterSettings),
       })
     );
 
@@ -1806,7 +1800,7 @@ pkg.createNonEventSchema({
 
     ctx.setOutput(
       io.defaultFilterSettings,
-      Maybe(valueToJSON(data.defaultFilterSettings)).unwrap()
+      Maybe(jsToJSON(data.defaultFilterSettings)).unwrap()
     );
   },
 });
@@ -1844,7 +1838,7 @@ pkg.createNonEventSchema({
       filterName: ctx.getInput(io.filterName),
       filterKind: ctx.getInput(io.filterKind),
       filterSettings: ctx.getInput(io.filterSettings)
-        ? jsonToValue({
+        ? jsonToJS({
             variant: "Map",
             data: {
               value: ctx.getInput(io.filterSettings),
@@ -1944,7 +1938,7 @@ pkg.createNonEventSchema({
       filterIndex: data.filterIndex as number,
       filterKind: data.filterKind as string,
       filterName: ctx.getInput(io.filterName),
-      filterSettings: valueToJSON(data.filterSettings),
+      filterSettings: jsToJSON(data.filterSettings),
     });
 
     ctx.setOutput(io.filter, filterObj);
@@ -2013,7 +2007,7 @@ pkg.createNonEventSchema({
     obs.call("SetSourceFilterSettings", {
       sourceName: ctx.getInput(io.sourceName),
       filterName: ctx.getInput(io.filterName),
-      filterSettings: jsonToValue({
+      filterSettings: jsonToJS({
         variant: "Map",
         data: {
           value: ctx.getInput(io.filterSettings),
@@ -2114,8 +2108,8 @@ pkg.createNonEventSchema({
           boundsHeight: sceneItemTransformObj.boundsHeight as number,
           boundsType: BoundsType.variant(
             sceneItemTransformObj.boundsType as InferEnum<
-              typeof BoundsType.variant
-            >
+              typeof BoundsType
+            >["variant"]
           ),
           boundsWidth: sceneItemTransformObj.boundsWidth,
           cropBottom: sceneItemTransformObj.cropBottom,
@@ -2317,7 +2311,9 @@ pkg.createNonEventSchema({
       ),
       boundsHeight: sceneItemTransformObj.boundsHeight as number,
       boundsType: BoundsType.variant(
-        sceneItemTransformObj.boundsType as InferEnum<typeof BoundsType.variant>
+        sceneItemTransformObj.boundsType as InferEnum<
+          typeof BoundsType
+        >["variant"]
       ),
       boundsWidth: sceneItemTransformObj.boundsWidth,
       cropBottom: sceneItemTransformObj.cropBottom,
@@ -2365,7 +2361,7 @@ pkg.createNonEventSchema({
     obs.call("SetSceneItemTransform", {
       sceneName: ctx.getInput(io.sceneName),
       sceneItemId: ctx.getInput(io.sceneItemId),
-      sceneItemTransform: jsonToValue({
+      sceneItemTransform: jsonToJS({
         variant: "Map",
         data: {
           value: ctx.getInput(io.sceneItemTransform),

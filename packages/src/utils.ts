@@ -11,7 +11,7 @@ import {
   None,
   ScopeOutput,
 } from "@macrograph/core";
-import { JSON, jsonToValue } from "./json";
+import { JSON, jsonToJS } from "./json";
 
 const pkg = core.createPackage({
   name: "Utils",
@@ -1375,10 +1375,7 @@ pkg.createNonEventSchema({
     };
   },
   run({ ctx, io }) {
-    ctx.setOutput(
-      io.out,
-      window.JSON.stringify(jsonToValue(ctx.getInput(io.in)))
-    );
+    ctx.setOutput(io.out, window.JSON.stringify(jsonToJS(ctx.getInput(io.in))));
   },
 });
 

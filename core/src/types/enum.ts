@@ -173,7 +173,7 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
   }
 }
 
-export type InferEnum<E> = E extends Enum<infer Variants>
+export type InferEnum<E extends Enum<any>> = E extends Enum<infer Variants>
   ? InferEnumVariants<Variants>
   : never;
 
