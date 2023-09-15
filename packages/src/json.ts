@@ -174,13 +174,10 @@ export function jsonToJS(value: JSONValue): any {
     case "List":
       return value.data.value.map((v: any) => jsonToJS(v));
     case "Map":
-      return [...value.data.value.get("data").value.entries()].reduce(
-        (acc, [key, value]) => {
-          acc[key] = jsonToJS(value as any);
-          return acc;
-        },
-        {} as any
-      );
+      return [...value.data.value.entries()].reduce((acc, [key, value]) => {
+        acc[key] = jsonToJS(value as any);
+        return acc;
+      }, {} as any);
   }
 }
 

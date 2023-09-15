@@ -88,30 +88,17 @@ describe("jsonToJS", () => {
         JSON.variant([
           "Map",
           {
-            value: new Map([
-              ["number", JSON.variant(["Number", { value: value.number }])],
-              ["string", JSON.variant(["String", { value: value.string }])],
-            ]),
+            value: new Map(
+              Object.entries({
+                number: JSON.variant(["Number", { value: value.number }]),
+                string: JSON.variant(["String", { value: value.string }]),
+              })
+            ),
           },
         ])
       )
     ).toEqual(value);
   });
-});
-
-test("convert json map {`test`: `test`} to js object {`test`:`test`}", () => {
-  expect(
-    jsonToJS(
-      JSON.variant([
-        "Map",
-        {
-          value: new Map(
-            Object.entries({ test: JSON.variant(["String", "test"]) })
-          ),
-        },
-      ])
-    )
-  ).toEqual({ test: "test" });
 });
 
 describe("jsToJSON", () => {
