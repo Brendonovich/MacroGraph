@@ -104,7 +104,11 @@ test("convert json map {`test`: `test`} to js object {`test`:`test`}", () => {
     jsonToJS(
       JSON.variant([
         "Map",
-        { value: new Map(Object.entries({ test: "test" })) },
+        {
+          value: new Map(
+            Object.entries({ test: JSON.variant(["String", "test"]) })
+          ),
+        },
       ])
     )
   ).toEqual({ test: "test" });
