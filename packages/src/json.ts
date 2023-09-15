@@ -99,6 +99,8 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
       type.wildcard.value().expect("Wildcard value not found!"),
       value
     );
+  } else if (type instanceof t.Enum && type.inner === JSON) {
+    return value;
   } else if (type instanceof t.Option) {
     if (value.isNone()) return JSON.variant("Null");
     else return toJSON(type.inner, value.unwrap());
@@ -118,12 +120,7 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
       newValue.set(k, toJSON(type.value, v));
     }
 
-    return JSON.variant([
-      "Map",
-      {
-        value: newValue,
-      },
-    ]);
+    return JSON.variant(["Map", { value: newValue }]);
   } else if (type instanceof t.Enum) {
     return JSON.variant(["Map", { value: new Map(Object.entries(value)) }]);
   } else return null;
@@ -135,7 +132,18 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
 export function jsToJSON(value: any): JSONValue | null {
   if (Array.isArray(value)) {
     return JSON.variant(["List", { value: value.map(jsToJSON) }]);
-  } else if (value === null) {
+  }
+  // else if (value instanceof Map) {
+  //   return JSON.variant([
+  //     "Map",
+  //     {
+  //       value: new Map(
+  //         [...value.entries()].map(([key, value]) => [key, jsToJSON(value)])
+  //       ),
+  //     },
+  //   ]);
+  // }
+  else if (value === null) {
     return JSON.variant("Null");
   }
 
@@ -224,6 +232,7 @@ pkg.createNonEventSchema({
     };
   },
   run({ ctx, io }) {
+    console.log(ctx.getInput(io.in));
     const value = jsToJSON(window.JSON.parse(ctx.getInput(io.in)));
     ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
   },
