@@ -45,6 +45,11 @@ export default (props: Props) => {
                   case 0: {
                     UI.setSelectedItem(props.box);
 
+                    const nodes = box().getNodes(
+                      graph().nodes.values(),
+                      (node) => UI.state.nodeBounds.get(node) ?? null
+                    );
+
                     const handleMouseMove = (e: MouseEvent) => {
                       const scale = UI.state.scale;
 
@@ -52,11 +57,6 @@ export default (props: Props) => {
                         x: box().position.x + e.movementX / scale,
                         y: box().position.y + e.movementY / scale,
                       };
-
-                      const nodes = box().getNodes(
-                        graph().nodes.values(),
-                        (node) => UI.state.nodeBounds.get(node) ?? null
-                      );
 
                       nodes.forEach((node) => {
                         node.state.position = {
