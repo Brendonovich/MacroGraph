@@ -9,7 +9,18 @@ import {
 } from "solid-js";
 import { EVENT, Event } from "./events";
 
-const pkg = core.createPackage({
+type Events = {
+  donation: Event["donation"];
+  subscription: Event["subscription"];
+  superchat: Event["superchat"];
+  membershipGift: Extract<Event["membershipGift"], { message: any }>;
+  membershipGiftStart: Extract<
+    Event["membershipGift"],
+    { giftMembershipsCount: any }
+  >;
+};
+
+const pkg = core.createPackage<Events>({
   name: "Streamlabs",
 });
 
@@ -64,19 +75,16 @@ const { setToken, token, state } = createRoot(() => {
 
               if (!parsed.success) return;
 
-              if (parsed.data.message[0].giftMembershipsCount) {
+              if ("giftMembershipsCount" in parsed.data.message[0])
                 pkg.emitEvent({
                   name: "membershipGiftStart",
                   data: parsed.data.message[0],
                 });
-              }
-
-              console.log(eventData);
-
-              pkg.emitEvent({
-                name: parsed.data.type,
-                data: parsed.data.message[0],
-              });
+              else
+                pkg.emitEvent({
+                  name: parsed.data.type,
+                  data: parsed.data.message[0],
+                });
             });
 
             socket.on("connect", () => {

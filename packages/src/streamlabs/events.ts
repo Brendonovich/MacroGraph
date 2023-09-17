@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-export const STREAMLABS_EVENT = z.discriminatedUnion("type", [
+export const EVENT = z.discriminatedUnion("type", [
   z.object({
-    message: z.array(
+    type: z.literal("donation"),
+    message: z.tuple([
       z.object({
         name: z.string(),
         amount: z.coerce.number(),
@@ -11,56 +12,69 @@ export const STREAMLABS_EVENT = z.discriminatedUnion("type", [
         message: z.string(),
         from: z.string(),
         fromId: z.string(),
-      })
-    ),
-    type: z.literal("donation"),
+      }),
+    ]),
   }),
   z.object({
-    message: z.array(
+    type: z.literal("subscription"),
+    message: z.tuple([
       z.object({
         name: z.string(),
         months: z.coerce.number(),
         message: z.string(),
         membershipLevelName: z.string(),
-      })
-    ),
-    type: z.literal("subscription"),
+      }),
+    ]),
   }),
   z.object({
-    message: z.array(
-      z.object({
-        name: z.string(),
-        currency: z.string(),
-        displayString: z.string(),
-        amount: z.string(),
-        comment: z.string(),
-      })
-    ),
+    for: z.literal("youtube_account"),
     type: z.literal("superchat"),
-  }),
-  z.object({
-    message: z.array(
+    message: z.tuple([
       z.object({
         name: z.string(),
         currency: z.string(),
         displayString: z.string(),
         amount: z.string(),
         comment: z.string(),
-      })
-    ),
+      }),
+    ]),
+  }),
+  z.object({
+    for: z.literal("youtube_account"),
     type: z.literal("membershipGift"),
+    message: z.tuple([
+      z
+        .object({
+          id: z.string(),
+          name: z.string(),
+          channelUrl: z.string(),
+          _id: z.string(),
+          event_id: z.string(),
+        })
+        .and(
+          z.union([
+            z.object({
+              sponsorSince: z.string(),
+              membershipLevelName: z.string(),
+              message: z.string().nullable(),
+              youtubeMembershipGiftId: z.string(),
+            }),
+            z.object({
+              giftMembershipsLevelName: z.string(),
+              giftMembershipsCount: z.number(),
+              membershipMessageId: z.string(),
+            }),
+          ])
+        ),
+    ]),
   }),
 ]);
 
-export const EVENT = STREAMLABS_EVENT;
+export type Event = EventsToObject<z.infer<typeof EVENT>>;
 
-export type Event = EventsToObject<z.infer<typeof STREAMLABS_EVENT>>;
-
-type EventsToObject<T extends object> = T extends {
-  message: any[];
-}
-  ? { [key in EventToKey<T>]: T["message"][number] }
-  : never;
+type EventsToObject<T extends { type: string; message: [any] }> = {
+  [K in T["type"]]: Extract<T, { type: K }>["message"][0];
+};
 
 type EventToKey<T extends object> = T extends {
   type: infer Type extends string;
