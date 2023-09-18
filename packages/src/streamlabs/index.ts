@@ -1,4 +1,4 @@
-import { Maybe, Option, core, t } from "@macrograph/core";
+import { createPackage, Maybe, Option, t } from "@macrograph/core";
 import { io, Socket } from "socket.io-client";
 import {
   createEffect,
@@ -9,11 +9,11 @@ import {
 } from "solid-js";
 import { EVENT, Event } from "./events";
 
-const pkg = core.createPackage<Event>({
+const STREAMLABS_TOKEN = "streamlabsToken";
+
+const pkg = createPackage<Event>({
   name: "Streamlabs",
 });
-
-const STREAMLABS_TOKEN = "streamlabsToken";
 
 const { setToken, token, state } = createRoot(() => {
   const [state, setState] = createSignal<

@@ -1,4 +1,4 @@
-import { core, t } from "@macrograph/core";
+import { createPackage, t } from "@macrograph/core";
 
 const alphabet = [
   "A",
@@ -31,7 +31,7 @@ const alphabet = [
 
 type Alphabet = (typeof alphabet)[number];
 
-const pkg = core.createPackage<{
+export const pkg = createPackage<{
   [K in `${Lowercase<Alphabet>}-key`]: {
     state: "pressed" | "released";
   };

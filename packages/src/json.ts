@@ -1,6 +1,5 @@
 import {
   BaseType,
-  core,
   Enum,
   EnumBuilder,
   EnumVariant,
@@ -8,16 +7,12 @@ import {
   InferEnum,
   MapValue,
   Maybe,
-  Option,
+  Package,
+  createEnum,
   t,
 } from "@macrograph/core";
 
-// - JSON String
-// - JS Value
-// - Runtime Value
-// -
-
-const pkg = core.createPackage({
+export const pkg = new Package({
   name: "JSON",
 });
 
@@ -50,7 +45,7 @@ type JSONVariantTypes = [
   >
 ];
 
-export const JSON: Enum<JSONVariantTypes> = pkg.createEnum<JSONVariantTypes>(
+export const JSON: Enum<JSONVariantTypes> = createEnum<JSONVariantTypes>(
   "JSON",
   (e) =>
     e.lazy(

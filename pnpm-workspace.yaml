@@ -3,3 +3,5 @@ packages:
   - 'app'
   - 'web'
   - 'packages'
+  - 'interface'
+  - 'ui'

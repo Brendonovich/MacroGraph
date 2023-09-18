@@ -1,5 +1,5 @@
 import { createMutable } from "solid-js/store";
-import { Package, PackageArgs } from "./Package";
+import { Package } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
@@ -34,7 +34,7 @@ export class Core {
     core: this,
   });
 
-  packages = [] as Package[];
+  packages = [] as Package<any, any>[];
 
   eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
@@ -47,20 +47,12 @@ export class Core {
     this.project = await Project.deserialize(this, projectData);
   }
 
-  createPackage<TEvents extends EventsMap>(args: Omit<PackageArgs, "core">) {
-    const pkg = new Package<TEvents>({ ...args, core: this });
-
-    this.packages.push(pkg as any);
-
-    return pkg;
-  }
-
   schema(pkg: string, name: string) {
     return this.packages.find((p) => p.name === pkg)?.schema(name);
   }
 
   emitEvent<TEvents extends EventsMap, TEvent extends keyof EventsMap>(
-    pkg: Package<TEvents>,
+    pkg: Package<TEvents, any>,
     event: { name: TEvent; data: TEvents[TEvent] }
   ) {
     const mappings = this.eventNodeMappings
@@ -190,5 +182,3 @@ class ExecutionContext {
     });
   }
 }
-
-export const core = new Core();

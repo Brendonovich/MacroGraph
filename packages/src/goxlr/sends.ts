@@ -1,5 +1,5 @@
-import pkg from "./pkg";
-import { InferEnum, t } from "@macrograph/core";
+import { t } from "@macrograph/core";
+import { pkg } from "./pkg";
 import { mixerID, state } from "./goxlr";
 
 function getSocket() {

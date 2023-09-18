@@ -1,3 +1,3 @@
-import { core } from "@macrograph/core";
+import { createPackage } from "@macrograph/core";
 
-export default core.createPackage<any>({ name: "Twitch Events" });
+export default createPackage<any>({ name: "Twitch Events" });

@@ -1,5 +1,5 @@
 import { t } from "@macrograph/core";
-import pkg from "./pkg";
+import { pkg } from "./pkg";
 
 pkg.createEventSchema({
   name: "Level Change",

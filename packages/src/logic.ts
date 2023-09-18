@@ -1,6 +1,6 @@
-import { core, t } from "@macrograph/core";
+import { createPackage, t } from "@macrograph/core";
 
-const pkg = core.createPackage({
+export const pkg = createPackage({
   name: "Logic",
 });
 

@@ -1,5 +1,4 @@
 import {
-  core,
   Maybe,
   Option,
   Some,
@@ -10,10 +9,11 @@ import {
   DataInput,
   None,
   ScopeOutput,
+  createPackage,
 } from "@macrograph/core";
 import { JSON, jsonToJS } from "./json";
 
-const pkg = core.createPackage({
+export const pkg = createPackage({
   name: "Utils",
 });
 

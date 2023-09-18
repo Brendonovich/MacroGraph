@@ -1,17 +1,10 @@
-import {
-  createEffect,
-  createSignal,
-  on,
-  onCleanup,
-  createRoot,
-} from "solid-js";
-import { z } from "zod";
-import { t, Maybe, None, Option, Some } from "@macrograph/core";
-import { botToken } from "./auth";
-import pkg from "./pkg";
-import { GUILD_MEMBER_SCHEMA } from "./schemas";
+import { createEffect, createSignal, on, onCleanup } from "solid-js";
+import { Maybe, None, Option, Some } from "@macrograph/core";
 
-const { ws, connect, disconnect } = createRoot(() => {
+// import { GUILD_MEMBER_SCHEMA } from "./schemas";
+import { Auth } from "./auth";
+
+export function create({ botToken }: Auth) {
   const [ws, setWs] = createSignal<Option<WebSocket>>(None);
   const [enabled, setEnabled] = createSignal(true);
 
@@ -79,10 +72,10 @@ const { ws, connect, disconnect } = createRoot(() => {
         case "MESSAGE_CREATE":
           if (d.type !== 0) return;
 
-          pkg.emitEvent({
-            name: "discordMessage",
-            data: d,
-          });
+        // pkg.emitEvent({
+        //   name: "discordMessage",
+        //   data: d,
+        // });
       }
     });
 
@@ -117,69 +110,67 @@ const { ws, connect, disconnect } = createRoot(() => {
   });
 
   return { ws, connect, disconnect };
-});
+}
 
-export { ws, connect, disconnect };
+// pkg.createEventSchema({
+//   name: "Discord Message",
+//   event: "discordMessage",
+//   generateIO: (io) => {
+//     return {
+//       exec: io.execOutput({
+//         id: "exec",
+//       }),
+//       message: io.dataOutput({
+//         id: "message",
+//         name: "Message",
+//         type: t.string(),
+//       }),
+//       channelId: io.dataOutput({
+//         id: "channelId",
+//         name: "Channel ID",
+//         type: t.string(),
+//       }),
+//       username: io.dataOutput({
+//         id: "username",
+//         name: "Username",
+//         type: t.string(),
+//       }),
+//       userId: io.dataOutput({
+//         id: "userId",
+//         name: "User ID",
+//         type: t.string(),
+//       }),
+//       nickname: io.dataOutput({
+//         id: "nickname",
+//         name: "Nickname",
+//         type: t.option(t.string()),
+//       }),
+//       guildId: io.dataOutput({
+//         id: "guildId",
+//         name: "Guild ID",
+//         type: t.option(t.string()),
+//       }),
+//       roles: io.dataOutput({
+//         id: "roles",
+//         name: "Roles",
+//         type: t.list(t.string()),
+//       }),
+//     };
+//   },
+//   run({ ctx, data, io }) {
+//     ctx.setOutput(io.message, data.content);
+//     ctx.setOutput(io.channelId, data.channel_id);
+//     ctx.setOutput(io.username, data.author.username);
+//     ctx.setOutput(io.userId, data.author.id);
+//     ctx.setOutput(
+//       io.nickname,
+//       Maybe(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen((v) =>
+//         Maybe(v.nick)
+//       )
+//     );
+//     ctx.setOutput(io.guildId, Maybe(data.guild_id as string | null));
+//     ctx.setOutput(io.roles, data.member.roles);
 
-pkg.createEventSchema({
-  name: "Discord Message",
-  event: "discordMessage",
-  generateIO: (io) => {
-    return {
-      exec: io.execOutput({
-        id: "exec",
-      }),
-      message: io.dataOutput({
-        id: "message",
-        name: "Message",
-        type: t.string(),
-      }),
-      channelId: io.dataOutput({
-        id: "channelId",
-        name: "Channel ID",
-        type: t.string(),
-      }),
-      username: io.dataOutput({
-        id: "username",
-        name: "Username",
-        type: t.string(),
-      }),
-      userId: io.dataOutput({
-        id: "userId",
-        name: "User ID",
-        type: t.string(),
-      }),
-      nickname: io.dataOutput({
-        id: "nickname",
-        name: "Nickname",
-        type: t.option(t.string()),
-      }),
-      guildId: io.dataOutput({
-        id: "guildId",
-        name: "Guild ID",
-        type: t.option(t.string()),
-      }),
-      roles: io.dataOutput({
-        id: "roles",
-        name: "Roles",
-        type: t.list(t.string()),
-      }),
-    };
-  },
-  run({ ctx, data, io }) {
-    ctx.setOutput(io.message, data.content);
-    ctx.setOutput(io.channelId, data.channel_id);
-    ctx.setOutput(io.username, data.author.username);
-    ctx.setOutput(io.userId, data.author.id);
-    ctx.setOutput(
-      io.nickname,
-      Maybe(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen((v) =>
-        Maybe(v.nick)
-      )
-    );
-    ctx.setOutput(io.guildId, Maybe(data.guild_id as string | null));
-    ctx.setOutput(io.roles, data.member.roles);
-
-    ctx.exec(io.exec);
-  },
-});
+//     ctx.exec(io.exec);
+//   },
+// });

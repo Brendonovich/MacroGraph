@@ -12,18 +12,10 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@kobalte/core": "^0.9.6",
     "@macrograph/core": "workspace:*",
+    "@macrograph/interface": "workspace:*",
     "@macrograph/packages": "workspace:*",
-    "@modular-forms/solid": "^0.12.2",
-    "@rspc/solid": "0.0.0-main-6ed8cc98",
-    "@solid-primitives/map": "^0.4.3",
-    "@tanstack/solid-query": "^4.29.5",
-    "@tauri-apps/api": "^1.2.0",
-    "clsx": "^1.2.1",
-    "solid-icons": "^1.0.4",
-    "solid-js": "^1.7.5",
-    "zod": "^3.21.4"
+    "solid-js": "^1.7.11"
   },
   "devDependencies": {
     "@kobalte/tailwindcss": "^0.6.5",

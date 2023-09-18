@@ -11,7 +11,6 @@ import tmi from "tmi.js";
 import pkg from "./pkg";
 import { t, None, Maybe } from "@macrograph/core";
 import { auth } from "./auth";
-import { P } from "@tauri-apps/api/event-30ea0228";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";

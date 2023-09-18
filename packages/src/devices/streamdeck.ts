@@ -2,9 +2,9 @@
 // import { types } from "../../types";
 // import { WebSocketServer } from "ws";
 
-import { core } from "@macrograph/core";
+import { createPackage } from "@macrograph/core";
 
-const pkg = core.createPackage({
+export const pkg = createPackage({
   name: "Streamdeck",
 });
 

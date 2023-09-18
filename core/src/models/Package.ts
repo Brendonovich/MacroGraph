@@ -1,12 +1,9 @@
-import { createMutable } from "solid-js/store";
 import { Core } from "./Core";
 import {
   EventNodeSchema,
   EventsMap,
-  IOBuilder,
   NodeSchema,
   NonEventNodeSchema,
-  RunCtx,
 } from "./NodeSchema";
 import {
   Enum,
@@ -22,20 +19,25 @@ import {
 } from "../types/struct";
 import { ExecInput, ExecOutput } from "./IO";
 import { ReactiveSet } from "@solid-primitives/set";
+import { Component, type lazy } from "solid-js";
 
-export interface PackageArgs {
+export interface PackageArgs<TCtx> {
   name: string;
-  core: Core;
+  ctx?: TCtx;
+  settingsUI?: Parameters<typeof lazy<Component<TCtx>>>[0];
 }
 
-export class Package<TEvents extends EventsMap = EventsMap> {
+export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
   name: string;
   schemas = new ReactiveSet<NodeSchema<TEvents>>();
-  core: Core;
+  core?: Core;
+  ctx?: TCtx;
+  settingsUI?: Parameters<typeof lazy>[0];
 
-  constructor(args: PackageArgs) {
+  constructor(args: PackageArgs<TCtx>) {
     this.name = args.name;
-    this.core = args.core;
+    this.ctx = args.ctx;
+    this.settingsUI = args.settingsUI;
   }
 
   createNonEventSchema<TState extends object, TIO>(
@@ -93,28 +95,6 @@ export class Package<TEvents extends EventsMap = EventsMap> {
     return this;
   }
 
-  createEnum<Variants extends EnumVariants>(
-    name: string,
-    builderFn: (t: EnumBuilder) => Variants | LazyEnumVariants<Variants>
-  ) {
-    const builder = new EnumBuilder();
-
-    const e = new Enum(name, builderFn(builder));
-
-    return e;
-  }
-
-  createStruct<Fields extends StructFields>(
-    name: string,
-    builderFn: (t: StructBuilder) => Fields | LazyStructFields<Fields>
-  ) {
-    const builder = new StructBuilder();
-
-    const e = new Struct(name, builderFn(builder));
-
-    return e;
-  }
-
   schema(name: string): NodeSchema<TEvents> | undefined {
     for (const schema of this.schemas) {
       if (schema.name === name) return schema;
@@ -125,6 +105,30 @@ export class Package<TEvents extends EventsMap = EventsMap> {
     name: TEvent;
     data: TEvents[TEvent];
   }) {
-    this.core.emitEvent(this, event as any);
+    this.core?.emitEvent(this, event as any);
   }
+
+  registerType(_: Enum<any> | Struct<any>) {}
+}
+
+export function createEnum<Variants extends EnumVariants>(
+  name: string,
+  builderFn: (t: EnumBuilder) => Variants | LazyEnumVariants<Variants>
+) {
+  const builder = new EnumBuilder();
+
+  const e = new Enum(name, builderFn(builder));
+
+  return e;
+}
+
+export function createStruct<Fields extends StructFields>(
+  name: string,
+  builderFn: (t: StructBuilder) => Fields | LazyStructFields<Fields>
+) {
+  const builder = new StructBuilder();
+
+  const e = new Struct(name, builderFn(builder));
+
+  return e;
 }

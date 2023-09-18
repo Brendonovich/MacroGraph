@@ -1,6 +1,6 @@
-import { core, Maybe, t } from "@macrograph/core";
+import { createPackage, Maybe, t } from "@macrograph/core";
 
-const pkg = core.createPackage({
+const pkg = createPackage({
   name: "Map",
 });
 

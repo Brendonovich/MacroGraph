@@ -1,4 +1,4 @@
-import { core } from "@macrograph/core";
+import { createPackage } from "@macrograph/core";
 
 type Event = {
   levelsChange: {
@@ -15,4 +15,4 @@ type Event = {
   };
 };
 
-export default core.createPackage<Event>({ name: "GoXLR" });
+export const pkg = createPackage<Event>({ name: "GoXLR" });

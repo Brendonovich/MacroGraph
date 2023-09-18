@@ -1,7 +1,7 @@
-import { core, t, Maybe, InferEnum } from "@macrograph/core";
+import { t, Maybe, createPackage } from "@macrograph/core";
 import { JSON, jsonToJS, jsToJSON } from "./json";
 
-const pkg = core.createPackage({
+export const pkg = createPackage({
   name: "Localstorage",
 });
 

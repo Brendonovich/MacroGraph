@@ -1,0 +1,8 @@
+.active-fade-in {
+    background-color: white;
+    color: black;
+}
+
+.fade-Duration {
+    transition-duration: 0.5s;
+}

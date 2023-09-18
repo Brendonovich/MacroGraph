@@ -1,0 +1,30 @@
+---
+import Editor from "../components/Editor";
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>MacroGraph</title>
+	</head>
+	<body class="w-screen h-screen bg-neutral-900 text-white">
+		<div class="w-full h-full flex flex-col items-center p-4 gap-4">
+			<header class="text-center">
+				<h1 class="text-5xl font-black">MacroGraph</h1>
+				<h2 class="text-xl font-medium">
+					By <a
+						class="underline hover:text-yellow-400"
+						target="_blank"
+						href="https://www.brendonovich.dev">Brendonovich</a
+					>
+				</h2>
+			</header>
+			<div class="flex-1 w-full max-w-7xl bg-white">
+				<Editor client:only="solid-js" />
+			</div>
+		</div>
+	</body>
+</html>

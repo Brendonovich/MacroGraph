@@ -6,7 +6,7 @@ import {
   on,
   onCleanup,
 } from "solid-js";
-import pkg from "./pkg";
+import { pkg } from "./pkg";
 import { WebsocketResponse } from "./types";
 
 const URL_LOCALSTORAGE_KEY = "GoXLR_WS";

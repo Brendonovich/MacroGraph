@@ -1,7 +1,7 @@
-import { core, t } from "@macrograph/core";
-import { rspcClient } from "@macrograph/core";
+import { createPackage, t } from "@macrograph/core";
+import { rspcClient } from "./rspcClient";
 
-const pkg = core.createPackage<any>({ name: "FS" });
+export const pkg = createPackage<any>({ name: "FS" });
 
 pkg.createNonEventSchema({
   name: "List Files",
