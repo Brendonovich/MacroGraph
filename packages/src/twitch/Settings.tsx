@@ -133,7 +133,7 @@ export default ({ helix, chat, auth }: Ctx) => {
                   redirect_uri: `${window.location.origin}/auth/twitch`,
                   scope: SCOPES.join(" "),
                   response_type: "code",
-                  force_verify: "false",
+                  force_verify: "true",
                 })}`
               );
 
