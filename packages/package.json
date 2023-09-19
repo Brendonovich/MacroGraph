@@ -9,8 +9,7 @@
     "test": "jest",
     "lint": "eslint src",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
-    "typecheck": "tsc -b",
-    "build": "tsc"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@kobalte/core": "^0.9.6",
