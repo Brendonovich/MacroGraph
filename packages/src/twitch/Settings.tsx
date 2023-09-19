@@ -1,13 +1,10 @@
 import { createSignal, For, Match, Switch } from "solid-js";
 import { Some } from "@macrograph/core";
 import { Button } from "@macrograph/ui";
-import { useCore } from "@macrograph/interface";
 
 import { Ctx } from "./ctx";
 
-export default ({ helix, chat, auth }: Ctx) => {
-  const core = useCore();
-
+export default ({ core, helix, chat, auth }: Ctx) => {
   const [loggingIn, setLoggingIn] = createSignal(false);
   // const [currentTime, setCurrentTime] = createSignal(Date.now());
 

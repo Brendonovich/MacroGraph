@@ -11,6 +11,7 @@ export function createCtx(core: Core, onEvent: any) {
   const helix = createHelix(auth, core);
 
   return {
+    core,
     auth,
     helix,
     chat: createChat(auth, onEvent),
