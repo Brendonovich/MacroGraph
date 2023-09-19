@@ -306,12 +306,18 @@ importers:
       '@julr/unocss-preset-forms':
         specifier: ^0.0.5
         version: 0.0.5(unocss@0.55.7)
+      '@kobalte/tailwindcss':
+        specifier: ^0.6.5
+        version: 0.6.5(tailwindcss@3.3.2)
+      '@tailwindcss/forms':
+        specifier: ^0.5.3
+        version: 0.5.3(tailwindcss@3.3.2)
       '@unocss/reset':
         specifier: ^0.55.7
         version: 0.55.7
       unocss:
         specifier: ^0.55.7
-        version: 0.55.7(postcss@8.4.27)(rollup@2.79.1)(vite@4.4.9)
+        version: 0.55.7(postcss@8.4.30)(rollup@2.79.1)(vite@4.4.9)
       unocss-preset-primitives:
         specifier: 0.0.1-beta.11
         version: 0.0.1-beta.11
@@ -1746,7 +1752,7 @@ packages:
       unocss: '>= 0.31.13 < 1'
     dependencies:
       mini-svg-data-uri: 1.4.4
-      unocss: 0.55.7(postcss@8.4.27)(rollup@2.79.1)(vite@4.4.9)
+      unocss: 0.55.7(postcss@8.4.30)(rollup@2.79.1)(vite@4.4.9)
     dev: true
 
   /@kobalte/core@0.9.6(solid-js@1.7.11):
@@ -2645,7 +2651,7 @@ packages:
       sirv: 2.0.3
     dev: true
 
-  /@unocss/postcss@0.55.7(postcss@8.4.27):
+  /@unocss/postcss@0.55.7(postcss@8.4.30):
     resolution: {integrity: sha512-53Z/yv/CNdlTqKZQ9gpYRoLZSuzQ28J0SDrGCdzwjLcvHG/FD7/x1S7yxE7cUp/4sjvLL15HSzkWq8vNy6SkwQ==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -2656,7 +2662,7 @@ packages:
       css-tree: 2.3.1
       fast-glob: 3.3.1
       magic-string: 0.30.3
-      postcss: 8.4.27
+      postcss: 8.4.30
     dev: true
 
   /@unocss/preset-attributify@0.55.7:
@@ -6391,7 +6397,6 @@ packages:
       nanoid: 3.3.6
       picocolors: 1.0.0
       source-map-js: 1.0.2
-    dev: false
 
   /prebuild-install@7.1.1:
     resolution: {integrity: sha512-jAXscXWMcCK8GgCoHOfIr0ODh5ai8mj63L2nWrjuAgXE6tDyYGnx4/8o/rCgU+B4JSyZBKbeZqzhtwtC3ovxjw==}
@@ -7668,7 +7673,7 @@ packages:
       '@unocss/core': 0.55.7
     dev: true
 
-  /unocss@0.55.7(postcss@8.4.27)(rollup@2.79.1)(vite@4.4.9):
+  /unocss@0.55.7(postcss@8.4.30)(rollup@2.79.1)(vite@4.4.9):
     resolution: {integrity: sha512-3W9P7vj2EhSk/4oPCHBS0VgrwSf5zZL6Az1/XARVOpBnRJtCM2szFInYxHkMgt9pkZTsW8SFCuk/g+QIJ6A8tg==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -7684,7 +7689,7 @@ packages:
       '@unocss/cli': 0.55.7(rollup@2.79.1)
       '@unocss/core': 0.55.7
       '@unocss/extractor-arbitrary-variants': 0.55.7
-      '@unocss/postcss': 0.55.7(postcss@8.4.27)
+      '@unocss/postcss': 0.55.7(postcss@8.4.30)
       '@unocss/preset-attributify': 0.55.7
       '@unocss/preset-icons': 0.55.7
       '@unocss/preset-mini': 0.55.7
