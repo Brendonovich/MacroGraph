@@ -20,7 +20,7 @@ export default () => {
     fetch,
     doOAuth: async (urlString, params) => {
       const loginWindow = window.open(
-        `${urlString}/${new URLSearchParams(params)}`
+        `${urlString}?${new URLSearchParams(params)}`
       );
 
       if (!loginWindow) {
