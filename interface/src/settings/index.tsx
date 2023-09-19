@@ -1,4 +1,4 @@
-import { For, ParentProps, Suspense, lazy } from "solid-js";
+import { For, ParentProps, Suspense } from "solid-js";
 
 import { Button, Dialog } from "./ui";
 import { useUIStore } from "../UIStore";
@@ -32,14 +32,12 @@ const OpenSettings = () => {
           <div class="space-y-4">
             <For each={core.packages}>
               {(pkg) => {
-                if (!pkg.settingsUI) return null;
-
-                const Component = lazy(pkg.settingsUI);
+                if (!pkg.SettingsUI) return null;
 
                 return (
                   <Section title={pkg.name}>
                     <Suspense fallback="Loading">
-                      <Component {...pkg.ctx} />
+                      <pkg.SettingsUI {...pkg.ctx} />
                     </Suspense>
                   </Section>
                 );

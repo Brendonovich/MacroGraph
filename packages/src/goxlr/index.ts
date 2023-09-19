@@ -30,7 +30,7 @@ export function pkg() {
   const pkg = new Package<Event>({
     name: "GoXLR",
     ctx,
-    settingsUI: () => import("./Settings"),
+    SettingsUI: () => import("./Settings"),
   });
 
   createEffect(() => {

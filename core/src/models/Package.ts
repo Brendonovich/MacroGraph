@@ -1,3 +1,6 @@
+import { ReactiveSet } from "@solid-primitives/set";
+import { Component, lazy } from "solid-js";
+
 import { Core } from "./Core";
 import {
   EventNodeSchema,
@@ -18,13 +21,11 @@ import {
   StructFields,
 } from "../types/struct";
 import { ExecInput, ExecOutput } from "./IO";
-import { ReactiveSet } from "@solid-primitives/set";
-import { Component, type lazy } from "solid-js";
 
 export interface PackageArgs<TCtx> {
   name: string;
   ctx?: TCtx;
-  settingsUI?: Parameters<typeof lazy<Component<TCtx>>>[0];
+  SettingsUI?: Parameters<typeof lazy<Component<TCtx>>>[0];
 }
 
 export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
@@ -32,12 +33,12 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
   schemas = new ReactiveSet<NodeSchema<TEvents>>();
   core?: Core;
   ctx?: TCtx;
-  settingsUI?: Parameters<typeof lazy>[0];
+  SettingsUI?: ReturnType<typeof lazy>;
 
   constructor(args: PackageArgs<TCtx>) {
     this.name = args.name;
     this.ctx = args.ctx;
-    this.settingsUI = args.settingsUI;
+    this.SettingsUI = args.SettingsUI ? lazy(args.SettingsUI) : undefined;
   }
 
   createNonEventSchema<TState extends object, TIO>(

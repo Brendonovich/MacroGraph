@@ -14,7 +14,7 @@ export function pkg() {
   const pkg = new Package({
     name: "Twitch",
     ctx,
-    settingsUI: () => import("./Settings"),
+    SettingsUI: () => import("./Settings"),
   });
 
   createEffect(() => {

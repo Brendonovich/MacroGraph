@@ -11,7 +11,7 @@ export function pkg(): Package<EventTypes, Ctx> {
   const pkg = new Package<EventTypes, Ctx>({
     name: "OBS Websocket",
     ctx,
-    settingsUI: () => import("./Settings"),
+    SettingsUI: () => import("./Settings"),
   });
 
   events.register(pkg, ctx);

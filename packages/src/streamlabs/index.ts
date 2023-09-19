@@ -11,7 +11,7 @@ export function pkg() {
   const pkg = new Package<Event>({
     name: "Streamlabs",
     ctx: createCtx(setLatestEvent),
-    settingsUI: () => import("./Settings"),
+    SettingsUI: () => import("./Settings"),
   });
 
   createEffect(() => {
