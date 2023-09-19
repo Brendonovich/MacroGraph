@@ -3,3 +3,5 @@ dist
 target
 .turbo
 .vercel
+.env.*
+.DS_Store
