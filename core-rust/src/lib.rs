@@ -35,26 +35,25 @@ struct OAuthArgs {
 pub fn oauth() -> AlphaRouter<()> {
     R.router().procedure(
         "run",
-        R.subscription(|_, args: OAuthArgs| {
+        R.mutation(|_, args: OAuthArgs| async move {
             use axum::*;
 
-            #[derive(Type, Serialize)]
-            #[specta(inline)]
-            enum Message {
-                Listening,
-                #[serde(rename_all = "camelCase")]
-                Received(serde_json::Value),
-            }
-
             let (tx, mut rx) = tokio::sync::mpsc::channel(4);
+
+            #[derive(serde::Deserialize)]
+            struct Response {
+                token: String,
+            }
 
             // build our application with a route
             let app = <Router>::new()
                 .layer(tower_http::cors::CorsLayer::very_permissive())
                 .route(
                     "/",
-                    routing::get(|Query(params): Query<serde_json::Value>| async move {
-                        tx.send(params).await.expect("no send?!");
+                    routing::get(|Query(resp): Query<Response>| async move {
+                        tx.send(serde_json::from_str::<serde_json::Value>(&resp.token).unwrap())
+                            .await
+                            .expect("no send?!");
                         "You can return to macrograph!"
                     }),
                 );
@@ -66,7 +65,7 @@ pub fn oauth() -> AlphaRouter<()> {
             .parse()
             .unwrap();
 
-            let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
+            let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 
             let server = axum::Server::bind(&addr).serve(app.into_make_service());
 
@@ -76,7 +75,6 @@ pub fn oauth() -> AlphaRouter<()> {
                 server
                     .with_graceful_shutdown(async {
                         shutdown_rx.await.ok();
-                        println!("shutting down!")
                     })
                     .await
                     .unwrap();
@@ -100,15 +98,11 @@ pub fn oauth() -> AlphaRouter<()> {
             ))
             .expect("Failed to open twitch URL!");
 
-            async_stream::stream! {
-                yield Message::Listening;
+            let response = rx.recv().await;
 
-                if let Some(token) = rx.recv().await {
-                    yield Message::Received(token);
-                }
+            shutdown_tx.send(()).ok();
 
-                shutdown_tx.send(()).ok();
-            }
+            response
         }),
     )
 }

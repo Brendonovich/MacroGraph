@@ -5,16 +5,14 @@ export type Procedures = {
         { key: "fs.list", input: string, result: Entry[] } | 
         { key: "http.json", input: HTTPRequest, result: { data: any; status: number } } | 
         { key: "http.text", input: HTTPRequest, result: { data: string; status: number } },
-    mutations: never,
-    subscriptions: 
-        { key: "oauth.run", input: { url: string; args: { [key: string]: string } }, result: Message }
+    mutations: 
+        { key: "oauth.run", input: { url: string; args: { [key: string]: string } }, result: any | null },
+    subscriptions: never
 };
 
 export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: HTTPBody | null }
 
 export type HTTPBody = { Json: any } | { Form: { [key: string]: string } }
-
-export type Message = "Listening" | { Received: any }
 
 export type Entry = { Dir: string } | { File: string }
 
