@@ -42,7 +42,6 @@ const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
 		client_id: import.meta.env.TWITCH_CLIENT_ID,
 		client_secret: import.meta.env.TWITCH_CLIENT_SECRET,
 		code: params.code,
-		state: params.state,
 		grant_type: "authorization_code",
 		redirect_uri: Astro.url.origin + Astro.url.pathname,
 	}),
