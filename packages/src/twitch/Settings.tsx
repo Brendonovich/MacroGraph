@@ -1,4 +1,4 @@
-import { createSignal, For, Match, onMount, Switch } from "solid-js";
+import { createSignal, For, Match, Switch } from "solid-js";
 import { Some } from "@macrograph/core";
 import { Button } from "@macrograph/ui";
 
@@ -126,7 +126,19 @@ export default ({ helix, chat, auth }: Ctx) => {
             //   },
             // });
 
-            onMount(async () => {
+            return (
+              <div class="flex space-x-4 items-center">
+                <p>Logging in...</p>
+                <Button onClick={() => setLoggingIn(false)}>Cancel</Button>
+              </div>
+            );
+          }}
+        </Match>
+        <Match when={!loggingIn()}>
+          <Button
+            onClick={async () => {
+              setLoggingIn(true);
+
               const url = new URL(
                 `https://id.twitch.tv/oauth2/authorize?${new URLSearchParams({
                   client_id: "ldbp0fkq9yalf2lzsi146i0cip8y59",
@@ -153,6 +165,8 @@ export default ({ helix, chat, auth }: Ctx) => {
                   })
                 );
 
+                if (!loggingIn()) return;
+
                 await auth.addUser({
                   accessToken: token.access_token,
                   refreshToken: token.refresh_token,
@@ -165,18 +179,10 @@ export default ({ helix, chat, auth }: Ctx) => {
               } finally {
                 setLoggingIn(false);
               }
-            });
-
-            return (
-              <div class="flex space-x-4 items-center">
-                <p>Logging in...</p>
-                <Button onClick={() => setLoggingIn(false)}>Cancel</Button>
-              </div>
-            );
-          }}
-        </Match>
-        <Match when={!loggingIn()}>
-          <Button onClick={() => setLoggingIn(true)}>Add Account</Button>
+            }}
+          >
+            Add Account
+          </Button>
         </Match>
       </Switch>
     </>
