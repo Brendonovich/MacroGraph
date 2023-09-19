@@ -13,6 +13,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@kobalte/core": "^0.9.6",
     "@macrograph/ui": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
     "@rspc/client": "0.0.0-main-6ed8cc98",

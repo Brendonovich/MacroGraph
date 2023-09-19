@@ -132,3 +132,5 @@ export function createStruct<Fields extends StructFields>(
 
   return e;
 }
+
+export type OnEvent = (_: { name: string; data: any }) => void;

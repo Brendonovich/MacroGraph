@@ -1,7 +1,7 @@
 {
   "name": "@macrograph/web",
+  "private": true,
   "type": "module",
-  "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -20,7 +20,9 @@
   },
   "devDependencies": {
     "@astrojs/vercel": "^5.0.0",
+    "@julr/unocss-preset-forms": "^0.0.5",
     "@unocss/reset": "^0.55.7",
-    "unocss": "^0.55.7"
+    "unocss": "^0.55.7",
+    "unocss-preset-primitives": "0.0.1-beta.11"
   }
 }

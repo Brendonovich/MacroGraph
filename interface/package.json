@@ -2,6 +2,10 @@
   "name": "@macrograph/interface",
   "type": "module",
   "main": "./src/index.tsx",
+  "exports": {
+    "solid": "./src/index.tsx",
+    "types": "./src/index.tsx"
+  },
   "dependencies": {
     "@kobalte/core": "^0.9.6",
     "@macrograph/core": "workspace:*",

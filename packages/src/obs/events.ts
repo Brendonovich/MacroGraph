@@ -121,9 +121,7 @@ export function alignmentConversion(alignment: string | number) {
   }
 }
 
-export function register(pkg: Package<EventTypes, Ctx>) {
-  const { obs } = pkg.ctx;
-
+export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.registerType(BoundsType);
   pkg.registerType(Alignment);
   pkg.registerType(SceneItemTransform);

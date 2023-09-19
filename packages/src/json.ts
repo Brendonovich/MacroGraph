@@ -12,9 +12,62 @@ import {
   t,
 } from "@macrograph/core";
 
-export const pkg = new Package({
-  name: "JSON",
-});
+export function pkg() {
+  const pkg = new Package({
+    name: "JSON",
+  });
+
+  pkg.createNonEventSchema({
+    name: "To JSON",
+    variant: "Pure",
+    generateIO(io) {
+      const w = io.wildcard("");
+
+      return {
+        w,
+        in: io.dataInput({
+          id: "in",
+          type: t.wildcard(w),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.enum(JSON),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const val = Maybe(toJSON(io.in.type, ctx.getInput(io.in)));
+      ctx.setOutput(
+        io.out,
+        val.expect(`Type ${io.w.toString()} cannot be converted to JSON!`)
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Parse JSON",
+    variant: "Exec",
+    generateIO(io) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.string(),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.enum(JSON),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      console.log(ctx.getInput(io.in));
+      const value = jsToJSON(window.JSON.parse(ctx.getInput(io.in)));
+      ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
+    },
+  });
+
+  return pkg;
+}
 
 const JSONLiteralVariants = (e: EnumBuilder) =>
   [
@@ -183,52 +236,3 @@ export function jsonToJS(value: JSONValue): any {
       }, {} as any);
   }
 }
-
-pkg.createNonEventSchema({
-  name: "To JSON",
-  variant: "Pure",
-  generateIO(io) {
-    const w = io.wildcard("");
-
-    return {
-      w,
-      in: io.dataInput({
-        id: "in",
-        type: t.wildcard(w),
-      }),
-      out: io.dataOutput({
-        id: "out",
-        type: t.enum(JSON),
-      }),
-    };
-  },
-  run({ ctx, io }) {
-    const val = Maybe(toJSON(io.in.type, ctx.getInput(io.in)));
-    ctx.setOutput(
-      io.out,
-      val.expect(`Type ${io.w.toString()} cannot be converted to JSON!`)
-    );
-  },
-});
-
-pkg.createNonEventSchema({
-  name: "Parse JSON",
-  variant: "Exec",
-  generateIO(io) {
-    return {
-      in: io.dataInput({
-        id: "in",
-        type: t.string(),
-      }),
-      out: io.dataOutput({
-        id: "out",
-        type: t.enum(JSON),
-      }),
-    };
-  },
-  run({ ctx, io }) {
-    console.log(ctx.getInput(io.in));
-    const value = jsToJSON(window.JSON.parse(ctx.getInput(io.in)));
-    ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
-  },
-});

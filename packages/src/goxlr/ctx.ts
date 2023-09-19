@@ -1,17 +1,12 @@
-import { Maybe, Option } from "@macrograph/core";
-import {
-  createEffect,
-  createSignal,
-  createRoot,
-  on,
-  onCleanup,
-} from "solid-js";
-import { pkg } from "./pkg";
+import { Maybe, OnEvent, Option } from "@macrograph/core";
+import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import { WebsocketResponse } from "./types";
 
 const URL_LOCALSTORAGE_KEY = "GoXLR_WS";
 
-const { mixerID, url, setUrl, state, setState } = createRoot(() => {
+export type Ctx = ReturnType<typeof createCtx>;
+
+export function createCtx(onEvent: OnEvent) {
   const [state, setState] = createSignal<
     | {
         type: "disconnected";
@@ -70,7 +65,7 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
 
                 switch (pathParts[2]) {
                   case "levels": {
-                    pkg.emitEvent({
+                    onEvent({
                       name: "levelsChange",
                       data: {
                         channel: pathParts[4]!,
@@ -80,14 +75,14 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
                     break;
                   }
                   case "button_down": {
-                    pkg.emitEvent({
+                    onEvent({
                       name: "buttonDown",
                       data: { buttonName: pathParts[3]!, state: op.value },
                     });
                     break;
                   }
                   case "fader_status": {
-                    pkg.emitEvent({
+                    onEvent({
                       name: "faderStatus",
                       data: { channel: pathParts[3]!, state: op.value },
                     });
@@ -110,6 +105,4 @@ const { mixerID, url, setUrl, state, setState } = createRoot(() => {
   );
 
   return { mixerID: () => mixerID, url, setUrl, state, setState };
-});
-
-export { mixerID, url, setUrl, state, setState };
+}

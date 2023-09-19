@@ -51,6 +51,11 @@ export class Core {
     return this.packages.find((p) => p.name === pkg)?.schema(name);
   }
 
+  registerPackage(pkg: Package<any>) {
+    pkg.core = this;
+    this.packages.push(pkg);
+  }
+
   emitEvent<TEvents extends EventsMap, TEvent extends keyof EventsMap>(
     pkg: Package<TEvents, any>,
     event: { name: TEvent; data: TEvents[TEvent] }

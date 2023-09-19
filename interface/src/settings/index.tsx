@@ -1,12 +1,8 @@
-// import Discord from "./Discord";
-// import OBS from "./OBS";
-// import Twitch from "./Twitch";
-// import GoXLR from "./GoXLR";
-// import Streamlabs from "./Streamlabs";
+import { For, ParentProps, Suspense, lazy } from "solid-js";
+
 import { Button, Dialog } from "./ui";
 import { useUIStore } from "../UIStore";
 import { useCore } from "../contexts";
-import { For, ParentProps, lazy } from "solid-js";
 
 export default () => {
   const UI = useUIStore();
@@ -36,21 +32,19 @@ const OpenSettings = () => {
           <div class="space-y-4">
             <For each={core.packages}>
               {(pkg) => {
-                console.log(pkg);
                 if (!pkg.settingsUI) return null;
 
                 const Component = lazy(pkg.settingsUI);
 
-                const c = <Component {...pkg.ctx} />;
-
-                console.log(c);
-
-                return c;
+                return (
+                  <Section title={pkg.name}>
+                    <Suspense fallback="Loading">
+                      <Component {...pkg.ctx} />
+                    </Suspense>
+                  </Section>
+                );
               }}
             </For>
-            {/* <Section title="Twitch"> */}
-            {/*   <Twitch /> */}
-            {/* </Section> */}
           </div>
         </div>
       </div>

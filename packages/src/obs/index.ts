@@ -14,7 +14,7 @@ export function pkg(): Package<EventTypes, Ctx> {
     settingsUI: () => import("./Settings"),
   });
 
-  events.register(pkg);
+  events.register(pkg, ctx);
   requests.register(pkg);
 
   return pkg;
