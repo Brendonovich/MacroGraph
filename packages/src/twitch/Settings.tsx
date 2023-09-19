@@ -130,7 +130,7 @@ export default ({ helix, chat, auth }: Ctx) => {
               const url = new URL(
                 `https://id.twitch.tv/oauth2/authorize?${new URLSearchParams({
                   client_id: "ldbp0fkq9yalf2lzsi146i0cip8y59",
-                  redirect_uri: "http://localhost:4321/auth/twitch",
+                  redirect_uri: `${window.location.origin}/auth/twitch`,
                   scope: SCOPES.join(" "),
                   response_type: "code",
                   force_verify: "false",
