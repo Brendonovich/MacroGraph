@@ -200,9 +200,6 @@ importers:
       '@macrograph/core':
         specifier: workspace:*
         version: link:../core
-      '@macrograph/interface':
-        specifier: workspace:*
-        version: link:../interface
       '@macrograph/ui':
         specifier: workspace:*
         version: link:../ui
