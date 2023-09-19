@@ -88,9 +88,7 @@ interface SceneItemTransformInterface {
   height: number;
 }
 
-export function register(pkg: Package<EventTypes, Ctx>) {
-  const { obs } = pkg.ctx;
-
+export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   const versionOutputs = [
     {
       id: "obsVersion",

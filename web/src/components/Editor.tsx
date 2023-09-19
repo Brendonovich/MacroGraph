@@ -16,20 +16,41 @@ import {
 import { onMount } from "solid-js";
 
 export default () => {
-  const core = new Core();
+  const core = new Core({
+    fetch,
+    doOAuth: async (urlString, params) => {
+      const loginWindow = window.open(
+        `${urlString}/${new URLSearchParams(params)}`
+      );
+
+      if (!loginWindow) {
+        return null;
+      }
+
+      return await new Promise<any>((res) =>
+        window.addEventListener("message", (e) => {
+          if (e.origin !== window.origin) return;
+
+          res(e.data);
+        })
+      );
+    },
+  });
 
   onMount(() => {
-    core.registerPackage(obs.pkg());
-    core.registerPackage(keyboard.pkg());
-    core.registerPackage(json.pkg());
-    core.registerPackage(list.pkg());
-    core.registerPackage(utils.pkg());
-    core.registerPackage(twitch.pkg());
-    core.registerPackage(logic.pkg());
-    core.registerPackage(streamlabs.pkg());
-    core.registerPackage(goxlr.pkg());
-    core.registerPackage(map.pkg());
-    core.registerPackage(localStorage.pkg());
+    [
+      obs.pkg,
+      keyboard.pkg,
+      json.pkg,
+      list.pkg,
+      utils.pkg,
+      twitch.pkg,
+      logic.pkg,
+      streamlabs.pkg,
+      goxlr.pkg,
+      map.pkg,
+      localStorage.pkg,
+    ].map((p) => core.registerPackage(p));
   });
 
   return <Interface core={core} />;

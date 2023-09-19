@@ -15,11 +15,15 @@
     "@macrograph/core": "workspace:*",
     "@macrograph/interface": "workspace:*",
     "@macrograph/packages": "workspace:*",
+    "@rspc/client": "0.0.0-main-6ed8cc98",
+    "@rspc/solid": "0.0.0-main-6ed8cc98",
+    "@rspc/tauri": "0.0.0-main-6ed8cc98",
+    "@tanstack/solid-query": "^4.29.5",
+    "@tauri-apps/api": "^1.2.0",
     "solid-js": "^1.7.11"
   },
   "devDependencies": {
     "@kobalte/tailwindcss": "^0.6.5",
-    "@macrograph/web": "workspace:*",
     "@tailwindcss/forms": "^0.5.3",
     "@tauri-apps/cli": "^1.2.2",
     "autoprefixer": "^10.4.14",

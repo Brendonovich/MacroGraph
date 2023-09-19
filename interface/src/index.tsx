@@ -8,6 +8,8 @@ import { createUIStore, UIStoreProvider } from "./UIStore";
 // import { PrintOutput } from "./components/PrintOutput";
 import Settings from "./settings";
 
+export { useCore } from "./contexts";
+
 export default (props: { core: Core }) => {
   const UI = createUIStore(props.core);
 

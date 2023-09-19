@@ -1,18 +1,18 @@
 import { createResource, createRoot } from "solid-js";
-import { None } from "@macrograph/core";
+import { Core, None } from "@macrograph/core";
 
 import { Auth } from "./auth";
 import { USER_SCHEMA } from "./schemas";
-import { createEndpoint, nativeFetch } from "../httpEndpoint";
+import { createEndpoint } from "../httpEndpoint";
 
-export function create({ botToken, setBotToken }: Auth) {
+export function create({ botToken, setBotToken }: Auth, core: Core) {
   const root = createEndpoint({
     path: "https://discord.com/api/v10",
-    fetchFn: async (url, args) => {
+    fetch: async (url, args) => {
       const token = botToken();
       if (token.isNone()) throw new Error("No bot token!");
 
-      return await nativeFetch(url, {
+      return await core.fetch(url, {
         ...args,
         headers: {
           ...args?.headers,

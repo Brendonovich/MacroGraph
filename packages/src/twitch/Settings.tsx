@@ -1,10 +1,13 @@
 import { createSignal, For, Match, Switch } from "solid-js";
 import { Some } from "@macrograph/core";
 import { Button } from "@macrograph/ui";
+import { useCore } from "@macrograph/interface";
 
 import { Ctx } from "./ctx";
 
 export default ({ helix, chat, auth }: Ctx) => {
+  const core = useCore();
+
   const [loggingIn, setLoggingIn] = createSignal(false);
   // const [currentTime, setCurrentTime] = createSignal(Date.now());
 
@@ -102,30 +105,6 @@ export default ({ helix, chat, auth }: Ctx) => {
       <Switch>
         <Match when={loggingIn()}>
           {(_) => {
-            // rspc.createSubscription(() => ["auth.twitch"], {
-            //   onData: async (m) => {
-            //     if (typeof m === "object" && "Received" in m) {
-            //       const userId = await auth.addUser({
-            //         ...m.Received,
-            //         obtainmentTimestamp: Date.now(),
-            //         userId: "",
-            //         userName: "",
-            //       });
-
-            //       if (auth.tokens.size === 1) {
-            //         twitch.chat.setReadUserId(Maybe(userId));
-            //         twitch.chat.setWriteUserId(Maybe(userId));
-            //         twitch.helix.setUserId(Maybe(userId));
-            //       }
-
-            //       setLoggingIn(false);
-            //     }
-            //   },
-            //   onError: () => {
-            //     setLoggingIn(false);
-            //   },
-            // });
-
             return (
               <div class="flex space-x-4 items-center">
                 <p>Logging in...</p>
@@ -139,30 +118,16 @@ export default ({ helix, chat, auth }: Ctx) => {
             onClick={async () => {
               setLoggingIn(true);
 
-              const url = new URL(
-                `https://id.twitch.tv/oauth2/authorize?${new URLSearchParams({
-                  client_id: "ldbp0fkq9yalf2lzsi146i0cip8y59",
-                  redirect_uri: `${window.location.origin}/auth/twitch`,
-                  scope: SCOPES.join(" "),
-                  response_type: "code",
-                  force_verify: "true",
-                })}`
-              );
-
-              const loginWindow = window.open(url);
-
-              if (!loginWindow) {
-                setLoggingIn(false);
-                return;
-              }
-
               try {
-                const token = await new Promise<any>((res) =>
-                  window.addEventListener("message", (e) => {
-                    if (e.origin !== window.origin) return;
-
-                    res(e.data);
-                  })
+                const token = await core.doOAuth(
+                  "https://id.twitch.tv/oauth2/authorize",
+                  {
+                    client_id: "ldbp0fkq9yalf2lzsi146i0cip8y59",
+                    redirect_uri: `https://macrograph-git-astro-brendonovich.vercel.app/auth/twitch`,
+                    response_type: "code",
+                    force_verify: "true",
+                    scope: SCOPES.join(" "),
+                  }
                 );
 
                 if (!loggingIn()) return;

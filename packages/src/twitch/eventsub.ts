@@ -1,10 +1,15 @@
 import { createEffect, createSignal, onCleanup, on } from "solid-js";
-import { createEnum, createStruct, Package, t } from "@macrograph/core";
+import {
+  createEnum,
+  createStruct,
+  OnEvent,
+  Package,
+  t,
+} from "@macrograph/core";
 
 import { z } from "zod";
 import { Helix } from "./helix";
 import { Auth } from "./auth";
-import { OnEvent } from "./ctx";
 
 export function createEventSub(auth: Auth, helix: Helix, onEvent: OnEvent) {
   const [state, setState] = createSignal<
@@ -32,7 +37,7 @@ export function createEventSub(auth: Auth, helix: Helix, onEvent: OnEvent) {
                   await Promise.all(
                     SubTypes.map((type) =>
                       helix.client.eventsub.subscriptions.post(z.any(), {
-                        body: {
+                        body: JSON.stringify({
                           type,
                           version: type == "channel.follow" ? "2" : "1",
                           condition: {
@@ -44,7 +49,7 @@ export function createEventSub(auth: Auth, helix: Helix, onEvent: OnEvent) {
                             method: "websocket",
                             session_id: info.payload.session.id,
                           },
-                        },
+                        }),
                       })
                     )
                   );

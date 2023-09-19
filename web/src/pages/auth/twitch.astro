@@ -3,12 +3,18 @@ export const prerender = false;
 
 import { z } from "zod";
 
-export const STATE = z.object({
-	port: z.number(),
-	redirect_uri: z.string(),
-});
+const STATE = z.discriminatedUnion("env", [
+	z.object({
+		port: z.number(),
+		// redirect_uri: z.string(),
+		env: z.literal("desktop"),
+	}),
+	z.object({
+		env: z.literal("web"),
+	}),
+]);
 
-export const TOKEN = z.object({
+const TOKEN = z.object({
 	access_token: z.string(),
 	expires_in: z.number(),
 	refresh_token: z.string(),
@@ -16,17 +22,18 @@ export const TOKEN = z.object({
 	scope: z.array(z.string()),
 });
 
-export const PARAMS = z.object({
+const PARAMS = z.object({
 	code: z.string(),
-	// state: z
-	//   .string()
-	//   .transform((s) => STATE.parse(JSON.parse(decodeURIComponent(s)))),
+	state: z
+		.string()
+		.transform((s) => STATE.parse(JSON.parse(decodeURIComponent(s)))),
 });
 
 const { searchParams } = Astro.url;
 
 const params = PARAMS.parse({
 	code: searchParams.get("code"),
+	state: searchParams.get("state"),
 });
 
 const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
@@ -43,6 +50,14 @@ const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
 const json = await res.json();
 
 const token = TOKEN.parse(json);
+
+if (params.state.env === "desktop") {
+	return Astro.redirect(
+		`http://localhost:${params.state.port}?token=${encodeURIComponent(
+			JSON.stringify(token)
+		)}`
+	);
+}
 ---
 
 <script define:vars={{ token }}>

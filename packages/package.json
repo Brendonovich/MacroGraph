@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@kobalte/core": "^0.9.6",
+    "@macrograph/core": "workspace:*",
+    "@macrograph/interface": "workspace:*",
     "@macrograph/ui": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
     "@rspc/client": "0.0.0-main-6ed8cc98",
@@ -29,7 +31,6 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@macrograph/core": "workspace:*",
     "@total-typescript/ts-reset": "^0.4.2",
     "@types/tmi.js": "^1.8.3",
     "solid-js": "^1.7.0",

@@ -1,15 +1,15 @@
-import { Package } from "@macrograph/core";
+import { Core, Package } from "@macrograph/core";
+import { createEffect, createSignal } from "solid-js";
 
-import { createCtx } from "./ctx";
 import * as helix from "./helix";
 import * as eventsub from "./eventsub";
 import * as chat from "./chat";
-import { createEffect, createSignal } from "solid-js";
+import { createCtx } from "./ctx";
 
-export function pkg() {
+export function pkg(core: Core) {
   const [latestEvent, setLatestEvent] = createSignal<any>();
 
-  const ctx = createCtx(setLatestEvent);
+  const ctx = createCtx(core, setLatestEvent);
 
   const pkg = new Package({
     name: "Twitch",

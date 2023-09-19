@@ -8,10 +8,11 @@ import {
   createEnum,
   createStruct,
   Package,
+  Core,
 } from "@macrograph/core";
 
 import { createEndpoint } from "../httpEndpoint";
-import { Auth } from "./auth"
+import { Auth } from "./auth";
 
 export const HELIX_USER_ID = "helixUserId";
 
@@ -96,43 +97,33 @@ export const Redemption = createStruct("Redemption", (s) => ({
   redemptionDate: s.field("Redemption Date", t.string()),
 }));
 
-export function createHelix(auth: Auth) {
+export function createHelix(auth: Auth, core: Core) {
   const [userId, setUserId] = createSignal(
     Maybe(localStorage.getItem(HELIX_USER_ID))
   );
 
   const root = createEndpoint({
     path: "https://api.twitch.tv/helix",
-    fetchFn: async (url, args) => {
+    fetch: async (url, args) => {
       const user = await auth.getAccessTokenForUser(userId().unwrap());
 
       const token = userId().andThen((id) => Maybe(auth.tokens.get(id)));
       await auth.refreshAccessTokenForUser(token.unwrap().userId);
 
-      if (args.body instanceof URLSearchParams) {
-        url = `${url}?${args.body.toString()}`;
-      }
-
-      return await fetch(url, {
-        method: args.method,
-        headers: {
-          ...args.headers,
-          "content-type": "application/json",
-          "Client-Id": auth.clientId,
-          Authorization: `Bearer ${user.accessToken}`,
-        },
-        body: args.body
-          ? !(
-              args.body instanceof FormData ||
-              args.body instanceof URLSearchParams
-            )
-            ? JSON.stringify(args.body)
-            : undefined
-          : undefined,
-      }).then((res) => {
-        if (res.status === 204) return;
-        return res.json();
-      });
+      return await core
+        .fetch(url, {
+          headers: {
+            ...args?.headers,
+            "content-type": "application/json",
+            "Client-Id": auth.clientId,
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+          ...args,
+        })
+        .then((res) => {
+          if (res.status === 204) return;
+          return res.json();
+        });
     },
   });
 
@@ -441,7 +432,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
       const user = userId().unwrap();
 
       client.moderation.bans.post(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: user,
           moderator_id: user,
           data: {
@@ -449,7 +440,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
             duration: ctx.getInput(io.duration),
             reason: ctx.getInput(io.reason),
           },
-        },
+        }),
       });
     },
   });
@@ -468,11 +459,11 @@ export function register(pkg: Package, { client, userId }: Helix) {
     },
     run({ ctx, io }) {
       client.moderation.bans.delete(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: userId().unwrap(),
           moderator_id: userId().unwrap(),
           user_id: ctx.getInput(io.userId),
-        },
+        }),
       });
     },
   });
@@ -491,10 +482,10 @@ export function register(pkg: Package, { client, userId }: Helix) {
     },
     run({ ctx, io }) {
       return client.moderation.moderators.post(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: userId().unwrap(),
           user_id: ctx.getInput(io.userId),
-        },
+        }),
       });
     },
   });
@@ -513,10 +504,10 @@ export function register(pkg: Package, { client, userId }: Helix) {
     },
     run({ ctx, io }) {
       client.moderation.moderators.delete(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: userId().unwrap(),
           user_id: ctx.getInput(io.userId),
-        },
+        }),
       });
     },
   });
@@ -878,7 +869,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
       const user = userId().unwrap();
 
       const response = await client.channelPoints.customRewards.post(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: user,
           title: ctx.getInput(io.title),
           cost: ctx.getInput(io.cost),
@@ -892,7 +883,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
           ),
           globalCooldown: ctx.getInput(io.globalCooldown),
           autoFulfill: ctx.getInput(io.autoFulfill),
-        },
+        }),
       });
 
       const data = response.data[0];
@@ -941,10 +932,10 @@ export function register(pkg: Package, { client, userId }: Helix) {
     },
     async run({ ctx, io }) {
       const response = await client.channels.commercial.post(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: userId().unwrap(),
           length: ctx.getInput(io.duration),
-        },
+        }),
       });
 
       ctx.setOutput(io.retryAfter, response.data[0].retry_after);
@@ -1072,7 +1063,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
     },
     async run({ ctx, io }) {
       const response = await client.channelPoints.customRewards.patch(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: userId().unwrap(),
           id: ctx.getInput(io.rewardId),
           title: ctx.getInput(io.title),
@@ -1087,7 +1078,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
           ),
           isPaused: ctx.getInput(io.paused),
           globalCooldown: ctx.getInput(io.globalCooldown),
-        },
+        }),
       });
 
       const data = response.data[0];
@@ -1203,10 +1194,10 @@ export function register(pkg: Package, { client, userId }: Helix) {
     },
     async run({ ctx, io }) {
       let rewards = await client.channelPoints.customRewards.get(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: userId().unwrap(),
           only_manageable_rewards: ctx.getInput(io.manageableOnly),
-        },
+        }),
       });
 
       const data = rewards.data.find(
@@ -1394,12 +1385,12 @@ export function register(pkg: Package, { client, userId }: Helix) {
     async run({ ctx, io }) {
       const user = userId().unwrap();
       await client.chat.settings.patch(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
           follower_mode: ctx.getInput(io.enabled),
           follower_mode_duration: ctx.getInput(io.delay),
-        },
+        }),
       });
     },
   });
@@ -1423,18 +1414,20 @@ export function register(pkg: Package, { client, userId }: Helix) {
     async run({ ctx, io }) {
       const user = userId().unwrap();
       await client.chat.settings.patch(z.any(), {
-        body: ctx.getInput(io.enabled)
-          ? {
-              broadcaster_Id: user,
-              moderator_id: user,
-              slow_mode: ctx.getInput(io.enabled),
-              slow_mode_duration: ctx.getInput(io.delay),
-            }
-          : {
-              broadcaster_Id: user,
-              moderator_id: user,
-              slow_mode: ctx.getInput(io.enabled),
-            },
+        body: JSON.stringify(
+          ctx.getInput(io.enabled)
+            ? {
+                broadcaster_Id: user,
+                moderator_id: user,
+                slow_mode: ctx.getInput(io.enabled),
+                slow_mode_duration: ctx.getInput(io.delay),
+              }
+            : {
+                broadcaster_Id: user,
+                moderator_id: user,
+                slow_mode: ctx.getInput(io.enabled),
+              }
+        ),
       });
     },
   });
@@ -1458,18 +1451,20 @@ export function register(pkg: Package, { client, userId }: Helix) {
     async run({ ctx, io }) {
       const user = userId().unwrap();
       await client.chat.settings.patch(z.any(), {
-        body: ctx.getInput(io.enabled)
-          ? {
-              broadcaster_Id: user,
-              moderator_id: user,
-              non_moderator_chat_delay: ctx.getInput(io.enabled),
-              non_moderator_chat_delay_duration: ctx.getInput(io.delay),
-            }
-          : {
-              broadcaster_Id: user,
-              moderator_id: user,
-              non_moderator_chat_delay: ctx.getInput(io.enabled),
-            },
+        body: JSON.stringify(
+          ctx.getInput(io.enabled)
+            ? {
+                broadcaster_Id: user,
+                moderator_id: user,
+                non_moderator_chat_delay: ctx.getInput(io.enabled),
+                non_moderator_chat_delay_duration: ctx.getInput(io.delay),
+              }
+            : {
+                broadcaster_Id: user,
+                moderator_id: user,
+                non_moderator_chat_delay: ctx.getInput(io.enabled),
+              }
+        ),
       });
     },
   });
@@ -1489,11 +1484,11 @@ export function register(pkg: Package, { client, userId }: Helix) {
       const user = userId().unwrap();
 
       await client.chat.settings.patch(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
           subscriber_mode: ctx.getInput(io.enabled),
-        },
+        }),
       });
     },
   });
@@ -1513,11 +1508,11 @@ export function register(pkg: Package, { client, userId }: Helix) {
       const user = userId().unwrap();
 
       await client.chat.settings.patch(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
           unique_chat_mode: ctx.getInput(io.enabled),
-        },
+        }),
       });
     },
   });
@@ -1537,11 +1532,11 @@ export function register(pkg: Package, { client, userId }: Helix) {
       const user = userId().unwrap();
 
       await client.chat.settings.patch(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
           emote_mode: ctx.getInput(io.enabled),
-        },
+        }),
       });
     },
   });
@@ -1596,12 +1591,12 @@ export function register(pkg: Package, { client, userId }: Helix) {
       const user = userId().unwrap();
 
       client.chat.announcements.post(z.any(), {
-        body: {
+        body: JSON.stringify({
           broadcaster_id: user,
           moderator_id: user,
           message: ctx.getInput(io.announcement),
           color: color.variant === "default" ? "primary" : color.variant,
-        },
+        }),
       });
     },
   });

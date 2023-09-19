@@ -29,6 +29,8 @@ class NodeEmit {
 
 export const NODE_EMIT = new NodeEmit();
 
+type DoOAuth = (url: string, params: Record<string, string>) => Promise<any>;
+
 export class Core {
   project: Project = new Project({
     core: this,
@@ -38,7 +40,13 @@ export class Core {
 
   eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
-  constructor() {
+  fetch: typeof fetch;
+  doOAuth: DoOAuth;
+
+  constructor(args: { fetch: typeof fetch; doOAuth: DoOAuth }) {
+    this.fetch = args.fetch;
+    this.doOAuth = args.doOAuth;
+
     return createMutable(this);
   }
 
@@ -51,9 +59,8 @@ export class Core {
     return this.packages.find((p) => p.name === pkg)?.schema(name);
   }
 
-  registerPackage(pkg: Package<any>) {
-    pkg.core = this;
-    this.packages.push(pkg);
+  registerPackage(pkg: (core: this) => Package<any>) {
+    this.packages.push(pkg(this));
   }
 
   emitEvent<TEvents extends EventsMap, TEvent extends keyof EventsMap>(

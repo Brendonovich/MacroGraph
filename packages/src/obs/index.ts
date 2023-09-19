@@ -15,7 +15,7 @@ export function pkg(): Package<EventTypes, Ctx> {
   });
 
   events.register(pkg, ctx);
-  requests.register(pkg);
+  requests.register(pkg, ctx);
 
   return pkg;
 }

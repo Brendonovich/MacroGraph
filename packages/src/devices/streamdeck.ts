@@ -2,11 +2,15 @@
 // import { types } from "../../types";
 // import { WebSocketServer } from "ws";
 
-import { createPackage } from "@macrograph/core";
+import { Package } from "@macrograph/core";
 
-export const pkg = createPackage({
-  name: "Streamdeck",
-});
+export function pkg() {
+  const pkg = new Package({
+    name: "Streamdeck",
+  });
+
+  return pkg;
+}
 
 // const PORT = 1337;
 

@@ -7,15 +7,15 @@ export type Procedures = {
         { key: "http.text", input: HTTPRequest, result: { data: string; status: number } },
     mutations: never,
     subscriptions: 
-        { key: "auth.twitch", input: never, result: Message }
+        { key: "oauth.run", input: { url: string; args: { [key: string]: string } }, result: Message }
 };
 
 export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: HTTPBody | null }
 
 export type HTTPBody = { Json: any } | { Form: { [key: string]: string } }
 
-export type Entry = { Dir: string } | { File: string }
+export type Message = "Listening" | { Received: any }
 
-export type Message = "Listening" | { Received: { accessToken: string; refreshToken: string; scope: string[]; expiresIn: number } }
+export type Entry = { Dir: string } | { File: string }
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
