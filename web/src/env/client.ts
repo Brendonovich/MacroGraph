@@ -12,7 +12,5 @@ export const env = createEnv({
         else return `https://${d}`;
       }),
   },
-  runtimeEnv: {
-    PUBLIC_VERCEL_URL: import.meta.env.VERCEL_URL,
-  },
+  runtimeEnv: import.meta.env,
 });
