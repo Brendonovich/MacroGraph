@@ -112,8 +112,6 @@ export class Auth {
 
     const data = await this.core.oauth.refresh("twitch", token.refreshToken);
 
-    console.log({ data });
-
     const returnData = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token || null,

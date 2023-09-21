@@ -9,7 +9,7 @@ export default () => {
   const core = useCore();
 
   return (
-    <div class="flex flex-col items-center p2 space-y-2">
+    <div class="flex flex-col items-center p-2 space-y-2">
       <OpenSettings />
       <Button onclick={() => UI.copyItem(core.project)}>
         Copy to Clipboard

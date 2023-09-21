@@ -21,8 +21,6 @@ function App() {
           body: JSON.stringify({ refreshToken }),
         });
 
-        console.log(res);
-
         return await res.json();
       },
     },
