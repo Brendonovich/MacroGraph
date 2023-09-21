@@ -21,22 +21,31 @@ type CancelableResponseFuture =
 type RequestTable = HashMap<RequestId, FetchRequest>;
 type ResponseTable = HashMap<RequestId, Response>;
 
-struct FetchRequest(Mutex<CancelableResponseFuture>);
+pub struct FetchRequest(Mutex<CancelableResponseFuture>);
 impl FetchRequest {
     fn new(f: CancelableResponseFuture) -> Self {
         Self(Mutex::new(f))
     }
 }
 
-struct Http<R: Runtime> {
+pub struct Http<R: Runtime> {
     #[allow(dead_code)]
-    app: AppHandle<R>,
-    current_id: AtomicU32,
-    requests: Mutex<RequestTable>,
-    responses: Mutex<ResponseTable>,
+    pub app: AppHandle<R>,
+    pub current_id: AtomicU32,
+    pub requests: Mutex<RequestTable>,
+    pub responses: Mutex<ResponseTable>,
 }
 
 impl<R: Runtime> Http<R> {
+    pub fn new(app: AppHandle<R>) -> Self {
+        Self {
+            app,
+            current_id: 0.into(),
+            requests: Default::default(),
+            responses: Default::default(),
+        }
+    }
+
     fn next_id(&self) -> RequestId {
         self.current_id
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed)

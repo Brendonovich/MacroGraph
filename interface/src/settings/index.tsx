@@ -30,7 +30,9 @@ const OpenSettings = () => {
         </div>
         <div class="flex-1 flex flex-col p-4 pt-0 w-full text-white rounded-lg max-w-2xl overflow-y-scroll">
           <div class="space-y-4">
-            <For each={core.packages}>
+            <For
+              each={core.packages.sort((a, b) => a.name.localeCompare(b.name))}
+            >
               {(pkg) => {
                 if (!pkg.SettingsUI) return null;
 

@@ -60,7 +60,6 @@ export function pkg() {
       };
     },
     run({ ctx, io }) {
-      console.log(ctx.getInput(io.in));
       const value = jsToJSON(window.JSON.parse(ctx.getInput(io.in)));
       ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
     },

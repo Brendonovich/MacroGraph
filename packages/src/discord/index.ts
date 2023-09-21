@@ -22,7 +22,11 @@ export function pkg(core: Core) {
 
   const ctx = createCtx(core, setLatestEvent);
 
-  const pkg = new Package<any>({ name: "Discord", ctx });
+  const pkg = new Package<any>({
+    name: "Discord",
+    ctx,
+    SettingsUI: () => import("./Settings"),
+  });
 
   createEffect(() => {
     const event = latestEvent();

@@ -2,9 +2,9 @@ import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
 import { createSignal, Match, Show, Switch } from "solid-js";
 import { None, Some } from "@macrograph/core";
+import { Button, Input } from "@macrograph/ui";
 
 import { type Ctx } from ".";
-import { Button, Input } from "@macrograph/ui";
 
 const Schema = z.object({
   botToken: z.string(),

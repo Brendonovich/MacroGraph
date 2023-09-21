@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use tauri::Manager;
+
 mod http;
 
 macro_rules! tauri_handlers {
@@ -19,6 +21,10 @@ async fn main() {
             std::sync::Arc::new(macrograph_core::router()),
             || (),
         ))
+        .setup(|app| {
+            app.manage(http::Http::new(app.handle()));
+            Ok(())
+        })
         .invoke_handler(tauri_handlers![
             http::fetch,
             http::fetch_cancel,

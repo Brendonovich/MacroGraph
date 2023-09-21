@@ -23,7 +23,7 @@ export function createEndpoint({ path, extend, fetch }: EndpointArgs) {
         ...args,
       });
 
-      return schema.parse(res);
+      return schema.parse(await res.json());
     };
 
   return {
