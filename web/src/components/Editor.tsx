@@ -37,6 +37,7 @@ export default () => {
 
       return await new Promise<any>((res) =>
         window.addEventListener("message", (e) => {
+          console.log(e);
           if (e.origin !== window.origin) return;
 
           res(e.data);
