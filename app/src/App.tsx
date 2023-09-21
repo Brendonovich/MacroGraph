@@ -12,6 +12,10 @@ import {
   goxlr,
   map,
   localStorage,
+  fs,
+  discord,
+  http,
+  streamdeck,
 } from "@macrograph/packages";
 import { onMount } from "solid-js";
 import { client } from "./rspc";
@@ -28,17 +32,21 @@ function App() {
 
   onMount(() => {
     [
-      obs.pkg,
-      keyboard.pkg,
-      json.pkg,
-      list.pkg,
-      utils.pkg,
-      twitch.pkg,
-      logic.pkg,
-      streamlabs.pkg,
+      discord.pkg,
+      () => fs.pkg({ list: (path) => client.query(["fs.list", path]) }),
       goxlr.pkg,
-      map.pkg,
+      http.pkg,
+      json.pkg,
+      keyboard.pkg,
+      list.pkg,
       localStorage.pkg,
+      logic.pkg,
+      map.pkg,
+      obs.pkg,
+      streamdeck.pkg,
+      streamlabs.pkg,
+      twitch.pkg,
+      utils.pkg,
     ].map((p) => core.registerPackage(p));
   });
 

@@ -1,7 +1,8 @@
 import { Package, t } from "@macrograph/core";
-import { rspcClient } from "./rspcClient";
 
-export function pkg() {
+type Entry = { Dir: string } | { File: string };
+
+export function pkg(actions: { list(path: string): Promise<Entry[]> }) {
   const pkg = new Package({ name: "FS" });
 
   pkg.createNonEventSchema({
@@ -22,8 +23,7 @@ export function pkg() {
       };
     },
     async run({ ctx, io }) {
-      const path = ctx.getInput(io.path);
-      const files = await rspcClient.query(["fs.list", path]);
+      const files = await actions.list(ctx.getInput(io.path));
 
       const array = files
         .map((f) => {

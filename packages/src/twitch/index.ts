@@ -12,7 +12,7 @@ export function pkg(core: Core) {
   const ctx = createCtx(core, setLatestEvent);
 
   const pkg = new Package({
-    name: "Twitch",
+    name: "Twitch Events",
     ctx,
     SettingsUI: () => import("./Settings"),
   });

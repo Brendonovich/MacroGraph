@@ -6,11 +6,6 @@ import { Ctx } from "./ctx";
 
 export default ({ core, helix, chat, auth }: Ctx) => {
   const [loggingIn, setLoggingIn] = createSignal(false);
-  // const [currentTime, setCurrentTime] = createSignal(Date.now());
-
-  // setInterval(() => {
-  //   setCurrentTime(Date.now());
-  // }, 1000);
 
   return (
     <>
@@ -83,15 +78,6 @@ export default ({ core, helix, chat, auth }: Ctx) => {
                         Remove
                       </Button>
                     </td>
-                    {/* <td> */}
-                    {/*   {Math.floor( */}
-                    {/*     (token.obtainmentTimestamp + */}
-                    {/*       (token.expiresIn ?? 0) * 1000 - */}
-                    {/*       currentTime()) / */}
-                    {/*       1000 */}
-                    {/*   )} */}
-                    {/*   s till expiry */}
-                    {/* </td> */}
                   </tr>
                 )}
               </For>

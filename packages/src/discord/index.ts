@@ -16,7 +16,7 @@ function createCtx(core: Core) {
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-export default function (core: Core) {
+export function pkg(core: Core) {
   const ctx = createCtx(core);
 
   const pkg = new Package<any>({ name: "Discord", ctx });
