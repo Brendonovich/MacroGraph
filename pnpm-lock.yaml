@@ -293,9 +293,6 @@ importers:
       astro:
         specifier: ^3.1.0
         version: 3.1.0
-      crypto:
-        specifier: ^1.0.1
-        version: 1.0.1
       jose:
         specifier: ^4.14.6
         version: 4.14.6
@@ -3365,11 +3362,6 @@ packages:
 
   /crypto-js@4.1.1:
     resolution: {integrity: sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw==}
-    dev: false
-
-  /crypto@1.0.1:
-    resolution: {integrity: sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==}
-    deprecated: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
     dev: false
 
   /css-shorthand-properties@1.1.1:
