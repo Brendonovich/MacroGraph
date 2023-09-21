@@ -119,8 +119,8 @@ export const Graph = (props: Props) => {
           )}
           style={{
             transform: `scale(${UI.state.scale})`,
-            height: "200%",
-            width: "200%",
+            height: "400%",
+            width: "400%",
           }}
           onWheel={(e) => {
             e.preventDefault();
