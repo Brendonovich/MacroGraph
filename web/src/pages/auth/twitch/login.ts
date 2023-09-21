@@ -2,6 +2,8 @@ import type { APIRoute } from "astro";
 import { env } from "~/env/server";
 import { SCOPES } from "~/schemas";
 
+export const prerender = false;
+
 export const GET: APIRoute = (ctx) => {
   const params = new URLSearchParams({
     client_id: env.TWITCH_CLIENT_ID,

@@ -1,6 +1,8 @@
 import type { APIRoute } from "astro";
 import { STATE } from "~/schemas";
 
+export const prerender = false;
+
 export const GET: APIRoute = (ctx) => {
   const { searchParams } = ctx.url;
 
