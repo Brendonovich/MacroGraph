@@ -108,6 +108,19 @@ export class Core {
       eventMappings.delete(node);
     }
   }
+
+  private printListeners = new Set<(msg: string) => void>();
+
+  print(msg: string) {
+    for (const cb of this.printListeners) {
+      cb(msg);
+    }
+  }
+
+  printSubscribe(cb: (msg: string) => void) {
+    this.printListeners.add(cb);
+    return () => this.printListeners.delete(cb);
+  }
 }
 
 class ExecutionContext {

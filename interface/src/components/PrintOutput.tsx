@@ -1,16 +1,20 @@
-import { createSignal, For, onCleanup } from "solid-js";
-import { utils } from "@macrograph/packages";
+import { createSignal, For, onCleanup, onMount } from "solid-js";
+import { useCore } from "../contexts";
 
 export const PrintOutput = () => {
   const [items, setItems] = createSignal<{ value: string; timestamp: Date }[]>(
     []
   );
 
-  const unsub = utils.PRINT_CHANNEL.subscribe((value) =>
-    setItems((i) => [{ value, timestamp: new Date() }, ...i])
-  );
+  const core = useCore();
 
-  onCleanup(unsub);
+  onMount(() => {
+    const unsub = core.printSubscribe((value) =>
+      setItems((i) => [{ value, timestamp: new Date() }, ...i])
+    );
+
+    onCleanup(unsub);
+  });
 
   return (
     <div class="flex-1 flex flex-col overflow-y-hidden">

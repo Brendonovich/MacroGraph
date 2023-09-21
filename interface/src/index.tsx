@@ -5,7 +5,7 @@ import { CoreProvider } from "./contexts";
 import { Graph } from "./components/Graph";
 import { GraphList } from "./components/ProjectSidebar";
 import { createUIStore, UIStoreProvider } from "./UIStore";
-// import { PrintOutput } from "./components/PrintOutput";
+import { PrintOutput } from "./components/PrintOutput";
 import Settings from "./settings";
 
 export { useCore } from "./contexts";
@@ -67,7 +67,7 @@ export default (props: { core: Core }) => {
           <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
             <Settings />
             <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
-            {/* <PrintOutput /> */}
+            <PrintOutput />
           </div>
           <Show when={UI.state.currentGraph} fallback="No Graph">
             {(graph) => <Graph graph={graph()} />}

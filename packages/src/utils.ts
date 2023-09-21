@@ -10,30 +10,11 @@ import {
   None,
   ScopeOutput,
   Package,
+  Core,
 } from "@macrograph/core";
 import { JSON, jsonToJS } from "./json";
 
-class PrintChannel {
-  listeners = [] as ((d: string) => any)[];
-
-  emit(data: string) {
-    this.listeners.forEach((l) => l(data));
-  }
-
-  subscribe(cb: (d: string) => any) {
-    this.listeners.push(cb);
-
-    return () =>
-      this.listeners.splice(
-        this.listeners.findIndex((l) => l === cb),
-        1
-      );
-  }
-}
-
-export const PRINT_CHANNEL = new PrintChannel();
-
-export function pkg() {
+export function pkg(core: Core) {
   const pkg = new Package({
     name: "Utils",
   });
@@ -49,7 +30,7 @@ export function pkg() {
       });
     },
     run({ ctx, io }) {
-      PRINT_CHANNEL.emit(ctx.getInput(io));
+      core.print(ctx.getInput(io));
     },
   });
 
