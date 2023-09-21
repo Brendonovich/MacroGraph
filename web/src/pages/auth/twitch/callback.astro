@@ -2,17 +2,9 @@
 export const prerender = false;
 
 import { z } from "zod";
+import { env } from "~/env/server";
 
-const STATE = z.discriminatedUnion("env", [
-	z.object({
-		port: z.number(),
-		// redirect_uri: z.string(),
-		env: z.literal("desktop"),
-	}),
-	z.object({
-		env: z.literal("web"),
-	}),
-]);
+import { STATE } from "~/schemas";
 
 const TOKEN = z.object({
 	access_token: z.string(),
@@ -26,7 +18,9 @@ const PARAMS = z.object({
 	code: z.string(),
 	state: z
 		.string()
-		.transform((s) => STATE.parse(JSON.parse(decodeURIComponent(s)))),
+		.transform((s) =>
+			STATE.parse(JSON.parse(Buffer.from(s, "base64").toString()))
+		),
 });
 
 const { searchParams } = Astro.url;
@@ -43,7 +37,7 @@ const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
 		client_secret: import.meta.env.TWITCH_CLIENT_SECRET,
 		code: params.code,
 		grant_type: "authorization_code",
-		redirect_uri: Astro.url.origin + Astro.url.pathname,
+		redirect_uri: `${env.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
 	}),
 });
 
@@ -53,9 +47,9 @@ const token = TOKEN.parse(json);
 
 if (params.state.env === "desktop") {
 	return Astro.redirect(
-		`http://localhost:${params.state.port}?token=${encodeURIComponent(
+		`http://localhost:${params.state.port}?token=${Buffer.from(
 			JSON.stringify(token)
-		)}`
+		).toString("base64")}`
 	);
 }
 ---

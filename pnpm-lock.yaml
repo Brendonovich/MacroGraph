@@ -287,6 +287,9 @@ importers:
       '@macrograph/packages':
         specifier: workspace:*
         version: link:../packages
+      '@t3-oss/env-core':
+        specifier: ^0.6.1
+        version: 0.6.1(typescript@4.9.5)(zod@3.21.4)
       astro:
         specifier: ^3.1.0
         version: 3.1.0
@@ -2142,6 +2145,16 @@ packages:
     dependencies:
       defer-to-connect: 2.0.1
     dev: true
+
+  /@t3-oss/env-core@0.6.1(typescript@4.9.5)(zod@3.21.4):
+    resolution: {integrity: sha512-KQD7qEDJtkWIWWmTVjNvk0wnHpkvAQ6CRbUxbWMFNG/fiosBQDQvtRpBNu6USxBscJCoC4z6y7P9MN52/mLOzw==}
+    peerDependencies:
+      typescript: '>=4.7.2'
+      zod: ^3.0.0
+    dependencies:
+      typescript: 4.9.5
+      zod: 3.21.4
+    dev: false
 
   /@tailwindcss/forms@0.5.3(tailwindcss@3.3.2):
     resolution: {integrity: sha512-y5mb86JUoiUgBjY/o6FJSFZSEttfb3Q5gllE4xoKjAAD+vBrnIhE4dViwUuow3va8mpH4s9jyUbUbrRGoRdc2Q==}
@@ -7180,7 +7193,6 @@ packages:
     resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
     engines: {node: '>=4.2.0'}
     hasBin: true
-    dev: true
 
   /typescript@5.1.6:
     resolution: {integrity: sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==}

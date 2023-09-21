@@ -19,7 +19,7 @@ import { client } from "./rspc";
 function App() {
   const core = new Core({
     fetch,
-    doOAuth: (url, args) => client.mutation(["oauth.run", { url, args }]),
+    doOAuth: (url) => client.mutation(["oauth.run", url]),
   });
 
   onMount(() => {

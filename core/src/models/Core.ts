@@ -29,7 +29,7 @@ class NodeEmit {
 
 export const NODE_EMIT = new NodeEmit();
 
-type DoOAuth = (url: string, params: Record<string, string>) => Promise<any>;
+type DoOAuth = (url: string) => Promise<any>;
 
 export class Core {
   project: Project = new Project({
@@ -59,8 +59,10 @@ export class Core {
     return this.packages.find((p) => p.name === pkg)?.schema(name);
   }
 
-  registerPackage(pkg: (core: this) => Package<any>) {
-    this.packages.push(pkg(this));
+  registerPackage(packageFactory: (core: this) => Package<any>) {
+    const pkg = packageFactory(this);
+    pkg.core = this;
+    this.packages.push(pkg);
   }
 
   emitEvent<TEvents extends EventsMap, TEvent extends keyof EventsMap>(

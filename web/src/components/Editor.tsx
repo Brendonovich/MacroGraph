@@ -18,13 +18,14 @@ import { onMount } from "solid-js";
 export default () => {
   const core = new Core({
     fetch,
-    doOAuth: async (urlString, params) => {
+    doOAuth: async (urlString) => {
       const loginWindow = window.open(
         `${urlString}?${new URLSearchParams({
-          ...params,
-          state: JSON.stringify({
-            env: "web",
-          }),
+          state: window.btoa(
+            JSON.stringify({
+              env: "web",
+            })
+          ),
         })}`
       );
 

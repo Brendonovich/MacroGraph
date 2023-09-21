@@ -6,7 +6,7 @@ export type Procedures = {
         { key: "http.json", input: HTTPRequest, result: { data: any; status: number } } | 
         { key: "http.text", input: HTTPRequest, result: { data: string; status: number } },
     mutations: 
-        { key: "oauth.run", input: { url: string; args: { [key: string]: string } }, result: any | null },
+        { key: "oauth.run", input: string, result: any | null },
     subscriptions: never
 };
 

@@ -1,9 +1,8 @@
 mod http;
 pub mod twitch;
 
-use std::collections::HashMap;
-
 use axum::extract::Query;
+use base64::prelude::*;
 use rspc::{
     alpha::{AlphaRouter, Rspc},
     Config, Router,
@@ -25,17 +24,10 @@ pub fn router() -> Router {
         ))
 }
 
-#[derive(serde::Deserialize, specta::Type)]
-#[specta(inline)]
-struct OAuthArgs {
-    url: String,
-    args: HashMap<String, String>,
-}
-
 pub fn oauth() -> AlphaRouter<()> {
     R.router().procedure(
         "run",
-        R.mutation(|_, args: OAuthArgs| async move {
+        R.mutation(|_, url: String| async move {
             use axum::*;
 
             let (tx, mut rx) = tokio::sync::mpsc::channel(4);
@@ -51,9 +43,14 @@ pub fn oauth() -> AlphaRouter<()> {
                 .route(
                     "/",
                     routing::get(|Query(resp): Query<Response>| async move {
-                        tx.send(serde_json::from_str::<serde_json::Value>(&resp.token).unwrap())
-                            .await
-                            .expect("no send?!");
+                        tx.send(
+                            serde_json::from_slice::<serde_json::Value>(
+                                &BASE64_STANDARD.decode(resp.token).unwrap(),
+                            )
+                            .unwrap(),
+                        )
+                        .await
+                        .expect("no send?!");
                         "You can return to macrograph!"
                     }),
                 );
@@ -81,20 +78,15 @@ pub fn oauth() -> AlphaRouter<()> {
             });
 
             opener::open(format!(
-                "{}?state={}{}",
-                args.url,
-                urlencoding::encode(
+                "{}?state={}",
+                url,
+                base64::prelude::BASE64_STANDARD.encode(
                     &serde_json::to_string(&json!({
                         "env": "desktop",
                         "port": port
                     }))
                     .unwrap()
                 ),
-                args.args
-                    .into_iter()
-                    .map(|(k, v)| format!("&{k}={v}"))
-                    .collect::<Vec<_>>()
-                    .join(""),
             ))
             .expect("Failed to open twitch URL!");
 
