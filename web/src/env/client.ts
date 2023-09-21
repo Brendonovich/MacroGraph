@@ -4,9 +4,15 @@ import { z } from "zod";
 export const env = createEnv({
   clientPrefix: "PUBLIC_",
   client: {
-    PUBLIC_MACROGRAPH_API_URL: z
+    PUBLIC_VERCEL_URL: z
       .string()
-      .default("https://macrograph-git-astro-brendonovich.vercel.app"),
+      .optional()
+      .transform((d) => {
+        if (!d) return "http://localhost:4321";
+        else return `https://${d}`;
+      }),
   },
-  runtimeEnv: import.meta.env,
+  runtimeEnv: {
+    PUBLIC_VERCEL_URL: import.meta.env.VERCEL_URL,
+  },
 });

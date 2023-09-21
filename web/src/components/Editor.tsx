@@ -21,9 +21,7 @@ export default () => {
     fetch,
     doOAuth: async (provider) => {
       const loginWindow = window.open(
-        `${
-          env.PUBLIC_MACROGRAPH_API_URL
-        }/auth/${provider}/login?${new URLSearchParams({
+        `${env.PUBLIC_VERCEL_URL}/auth/${provider}/login?${new URLSearchParams({
           state: window.btoa(
             JSON.stringify({
               env: "web",
