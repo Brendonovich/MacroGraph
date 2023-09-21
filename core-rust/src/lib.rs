@@ -15,7 +15,6 @@ pub(self) const R: Rspc<()> = Rspc::new();
 
 pub fn router() -> Router {
     R.router()
-        .merge("http.", http())
         .merge("fs.", fs())
         .merge("oauth.", oauth())
         .build(Config::new().export_ts_bindings(
@@ -25,7 +24,7 @@ pub fn router() -> Router {
 
 pub fn oauth() -> AlphaRouter<()> {
     R.router().procedure(
-        "run",
+        "authorize",
         R.mutation(|_, url: String| async move {
             use axum::*;
 
@@ -123,37 +122,4 @@ pub fn fs() -> AlphaRouter<()> {
                 .collect::<Vec<_>>()
         }),
     )
-}
-
-fn http() -> AlphaRouter<()> {
-    #[derive(Type, Serialize)]
-    #[specta(inline)]
-    struct Resp<T> {
-        data: T,
-        status: u16,
-    }
-
-    R.router()
-        .procedure(
-            "text",
-            R.query(|_, request: http::HTTPRequest| async move {
-                let resp = request.exec().await;
-
-                Ok(Resp {
-                    status: resp.status().as_u16(),
-                    data: resp.text().await.unwrap(),
-                })
-            }),
-        )
-        .procedure(
-            "json",
-            R.query(|_, request: http::HTTPRequest| async move {
-                let resp = request.exec().await;
-
-                Ok(Resp {
-                    status: resp.status().as_u16(),
-                    data: resp.json::<serde_json::Value>().await.unwrap(),
-                })
-            }),
-        )
 }

@@ -2,7 +2,7 @@ import { Package, t } from "@macrograph/core";
 
 type Entry = { Dir: string } | { File: string };
 
-export function pkg(actions: { list(path: string): Promise<Entry[]> }) {
+export function register(actions: { list(path: string): Promise<Entry[]> }) {
   const pkg = new Package({ name: "FS" });
 
   pkg.createNonEventSchema({

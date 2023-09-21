@@ -29,7 +29,10 @@ class NodeEmit {
 
 export const NODE_EMIT = new NodeEmit();
 
-type DoOAuth = (provider: string) => Promise<any>;
+type OAuth = {
+  authorize(provider: string): Promise<any>;
+  refresh(provider: string, refreshToken: string): Promise<any>;
+};
 
 export class Core {
   project: Project = new Project({
@@ -41,11 +44,11 @@ export class Core {
   eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
   fetch: typeof fetch;
-  doOAuth: DoOAuth;
+  oauth: OAuth;
 
-  constructor(args: { fetch: typeof fetch; doOAuth: DoOAuth }) {
+  constructor(args: { fetch: typeof fetch; oauth: OAuth }) {
     this.fetch = args.fetch;
-    this.doOAuth = args.doOAuth;
+    this.oauth = args.oauth;
 
     return createMutable(this);
   }

@@ -102,7 +102,7 @@ export default ({ core, helix, chat, auth }: Ctx) => {
               setLoggingIn(true);
 
               try {
-                const token = await core.doOAuth("twitch");
+                const token = await core.oauth.authorize("twitch");
 
                 if (!loggingIn()) return;
 

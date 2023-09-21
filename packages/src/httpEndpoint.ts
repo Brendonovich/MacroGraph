@@ -1,4 +1,3 @@
-import { HTTPMethod } from "@macrograph/core";
 import { z } from "zod";
 
 type Endpoint = ReturnType<typeof createEndpoint>;
@@ -13,7 +12,7 @@ export function createEndpoint({ path, extend, fetch }: EndpointArgs) {
   if (extend) path = `${extend.path}${path}`;
 
   const createFetcher =
-    (method: HTTPMethod) =>
+    (method: string) =>
     async <TSchema extends z.ZodType>(
       schema: TSchema,
       args?: Omit<RequestInit, "method">

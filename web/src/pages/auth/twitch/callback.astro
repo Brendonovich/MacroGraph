@@ -1,25 +1,11 @@
 ---
 export const prerender = false;
 
-import { z } from "zod";
 import * as jose from "jose";
 
 import { env } from "~/env/server";
 
-import { STATE } from "~/schemas";
-
-const TOKEN = z.object({
-	access_token: z.string(),
-	expires_in: z.number(),
-	refresh_token: z.string(),
-	token_type: z.string(),
-	scope: z.array(z.string()),
-});
-
-const PARAMS = z.object({
-	code: z.string(),
-	state: STATE,
-});
+import { PARAMS, TOKEN } from "~/schemas/twitch";
 
 const { searchParams } = Astro.url;
 

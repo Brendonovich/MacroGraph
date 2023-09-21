@@ -1,4 +1,4 @@
-import { Maybe, None, Some } from "@macrograph/core";
+import { Core, Maybe, None, Some } from "@macrograph/core";
 import { z } from "zod";
 import { ReactiveMap } from "@solid-primitives/map";
 
@@ -29,7 +29,7 @@ export type UserIdResolvable = string | number | UserIdResolvableType;
 export class Auth {
   tokens: ReactiveMap<string, User>;
 
-  constructor(public clientId: string) {
+  constructor(public clientId: string, public core: Core) {
     this.tokens = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN))
       .andThen((j) => {
         const data = SCHEMA.safeParse(JSON.parse(j));
@@ -79,6 +79,8 @@ export class Auth {
     this.tokens.set(userId, { ...token, userId, userName });
     this.saveTokens();
 
+    this.refreshAccessTokenForUser(userId, true);
+
     return userId;
   }
 
@@ -108,15 +110,10 @@ export class Auth {
 
     Maybe(token.refreshToken).expect("Refresh token is null!");
 
-    const res = await fetch("https://macrograph.brendonovich.dev/auth/twitch", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        refreshToken: token.refreshToken,
-      }),
-    });
+    const data = await this.core.oauth.refresh("twitch", token.refreshToken);
 
-    const data = await res.json();
+    console.log({ data });
+
     const returnData = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token || null,

@@ -1,54 +1,51 @@
 import { Core } from "@macrograph/core";
 import Interface from "@macrograph/interface";
-import {
-  obs,
-  keyboard,
-  json,
-  list,
-  utils,
-  twitch,
-  logic,
-  streamlabs,
-  goxlr,
-  map,
-  localStorage,
-  fs,
-  discord,
-  http,
-  streamdeck,
-} from "@macrograph/packages";
+import * as pkgs from "@macrograph/packages";
 import { onMount } from "solid-js";
 
 import { fetch } from "./http";
 import { client } from "./rspc";
 
+const AUTH_URL = `${import.meta.env.VITE_MACROGRAPH_API_URL}/auth`;
+
 function App() {
   const core = new Core({
     fetch,
-    doOAuth: (provider) =>
-      client.mutation([
-        "oauth.run",
-        `${import.meta.env.VITE_MACROGRAPH_API_URL}/auth/${provider}/login`,
-      ]),
+    oauth: {
+      authorize: (provider) =>
+        client.mutation(["oauth.authorize", `${AUTH_URL}/${provider}/login`]),
+      refresh: async (provider, refreshToken) => {
+        const res = await fetch(`${AUTH_URL}/${provider}/refresh`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        return await res.json();
+      },
+    },
   });
 
   onMount(() => {
     [
-      discord.pkg,
-      () => fs.pkg({ list: (path) => client.query(["fs.list", path]) }),
-      goxlr.pkg,
-      http.pkg,
-      json.pkg,
-      keyboard.pkg,
-      list.pkg,
-      localStorage.pkg,
-      logic.pkg,
-      map.pkg,
-      obs.pkg,
-      streamdeck.pkg,
-      streamlabs.pkg,
-      twitch.pkg,
-      utils.pkg,
+      pkgs.discord.pkg,
+      () =>
+        pkgs.fs.register({
+          list: (path) => client.query(["fs.list", path]),
+        }),
+      pkgs.goxlr.pkg,
+      pkgs.http.pkg,
+      pkgs.json.pkg,
+      pkgs.keyboard.pkg,
+      pkgs.list.pkg,
+      pkgs.localStorage.pkg,
+      pkgs.logic.pkg,
+      pkgs.map.pkg,
+      pkgs.obs.pkg,
+      pkgs.streamdeck.pkg,
+      pkgs.streamlabs.pkg,
+      pkgs.twitch.pkg,
+      pkgs.utils.pkg,
     ].map((p) => core.registerPackage(p));
   });
 
