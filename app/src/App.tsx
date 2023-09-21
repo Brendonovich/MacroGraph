@@ -19,7 +19,11 @@ import { client } from "./rspc";
 function App() {
   const core = new Core({
     fetch,
-    doOAuth: (url) => client.mutation(["oauth.run", url]),
+    doOAuth: (provider) =>
+      client.mutation([
+        "oauth.run",
+        `${import.meta.env.VITE_MACROGRAPH_API_URL}/auth/${provider}/login`,
+      ]),
   });
 
   onMount(() => {

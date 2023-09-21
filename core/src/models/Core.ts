@@ -29,7 +29,7 @@ class NodeEmit {
 
 export const NODE_EMIT = new NodeEmit();
 
-type DoOAuth = (url: string) => Promise<any>;
+type DoOAuth = (provider: string) => Promise<any>;
 
 export class Core {
   project: Project = new Project({

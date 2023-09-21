@@ -1,5 +1,4 @@
 mod http;
-pub mod twitch;
 
 use axum::extract::Query;
 use base64::prelude::*;

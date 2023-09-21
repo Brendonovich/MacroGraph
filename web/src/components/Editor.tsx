@@ -14,13 +14,16 @@ import {
   localStorage,
 } from "@macrograph/packages";
 import { onMount } from "solid-js";
+import { env } from "~/env/client";
 
 export default () => {
   const core = new Core({
     fetch,
-    doOAuth: async (urlString) => {
+    doOAuth: async (provider) => {
       const loginWindow = window.open(
-        `${urlString}?${new URLSearchParams({
+        `${
+          env.PUBLIC_MACROGRAPH_API_URL
+        }/auth/${provider}/login?${new URLSearchParams({
           state: window.btoa(
             JSON.stringify({
               env: "web",
