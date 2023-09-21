@@ -54,11 +54,11 @@ if (params.state.env === "desktop") {
 }
 ---
 
-<script define:vars={{ token }}>
+<script define:vars={{ token, targetOrigin: params.state.targetOrigin }}>
 	/** @type Window */
 	const opener = window.opener;
 
-	opener.postMessage(token);
+	opener.postMessage(token, targetOrigin);
 
 	console.log(opener);
 	// window.close();

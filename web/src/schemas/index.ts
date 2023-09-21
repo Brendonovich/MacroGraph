@@ -8,6 +8,7 @@ export const STATE = z
     }),
     z.object({
       env: z.literal("web"),
+      targetOrigin: z.string(),
     }),
   ])
   .and(
