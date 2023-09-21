@@ -48,17 +48,25 @@ export const Graph = (props: Props) => {
   const resetListener = () => (lastScale = 1);
 
   onMount(() => {
-    const bounds = graphRef.getBoundingClientRect()!;
+    const handler = () => {
+      const bounds = graphRef.getBoundingClientRect()!;
 
-    UI.setGraphOffset({
-      x: bounds.left,
-      y: bounds.top,
-    });
+      UI.setGraphOffset({
+        x: bounds.left,
+        y: bounds.top,
+      });
+    };
+
+    handler();
+
+    window.addEventListener("resize", handler);
 
     graphRef.addEventListener("gesturestart", resetListener);
     graphRef.addEventListener("gesturechange", listener);
 
     onCleanup(() => {
+      window.removeEventListener("resize", handler);
+
       graphRef.removeEventListener("gesturechange", listener);
       graphRef.removeEventListener("gesturechange", resetListener);
     });

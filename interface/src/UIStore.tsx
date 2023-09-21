@@ -64,6 +64,7 @@ export function createUIStore(core: Core) {
     };
 
     window.addEventListener("mousemove", handler);
+
     return () => window.removeEventListener("mousemove", handler);
   });
 

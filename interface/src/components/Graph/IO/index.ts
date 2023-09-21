@@ -13,6 +13,7 @@ import {
   createMemo,
   createSignal,
   onCleanup,
+  onMount,
 } from "solid-js";
 import { useUIStore } from "../../../UIStore";
 import { useGraph } from "../Graph";
