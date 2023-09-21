@@ -1,5 +1,3 @@
-mod http;
-
 use axum::extract::Query;
 use base64::prelude::*;
 use rspc::{

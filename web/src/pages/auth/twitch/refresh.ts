@@ -3,6 +3,8 @@ import { env } from "~/env/server";
 
 import { TOKEN } from "~/schemas/twitch";
 
+export const prerender = false;
+
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
 
