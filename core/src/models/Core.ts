@@ -31,6 +31,11 @@ export const NODE_EMIT = new NodeEmit();
 
 type DoOAuth = (provider: string) => Promise<any>;
 
+type Fetch = (
+  url: string,
+  init?: Parameters<typeof fetch>[1]
+) => ReturnType<typeof fetch>;
+
 export class Core {
   project: Project = new Project({
     core: this,
@@ -40,10 +45,10 @@ export class Core {
 
   eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
-  fetch: typeof fetch;
+  fetch: Fetch;
   doOAuth: DoOAuth;
 
-  constructor(args: { fetch: typeof fetch; doOAuth: DoOAuth }) {
+  constructor(args: { fetch: Fetch; doOAuth: DoOAuth }) {
     this.fetch = args.fetch;
     this.doOAuth = args.doOAuth;
 

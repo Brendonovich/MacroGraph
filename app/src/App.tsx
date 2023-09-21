@@ -18,6 +18,8 @@ import {
   streamdeck,
 } from "@macrograph/packages";
 import { onMount } from "solid-js";
+
+import { fetch } from "./http";
 import { client } from "./rspc";
 
 function App() {

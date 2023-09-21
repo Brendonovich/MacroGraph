@@ -10,7 +10,7 @@ const Schema = z.object({
   botToken: z.string(),
 });
 
-export default function ({ auth, api, gateway }: Ctx) {
+export default function ({ auth, gateway, bot }: Ctx) {
   return (
     <div class="flex flex-col space-y-2">
       <span class="text-neutral-400 font-medium">Bot</span>
@@ -44,7 +44,7 @@ export default function ({ auth, api, gateway }: Ctx) {
             );
           }}
         </Match>
-        <Match when={api.bot()}>
+        <Match when={bot()}>
           {(bot) => (
             <>
               <div class="flex flex-row items-center space-x-4">

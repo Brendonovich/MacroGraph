@@ -10,7 +10,7 @@ export type Procedures = {
     subscriptions: never
 };
 
-export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string } | null; body?: HTTPBody | null }
+export type HTTPRequest = { url: string; method: HTTPMethod; headers?: { [key: string]: string }; body?: HTTPBody | null }
 
 export type HTTPBody = { Json: any } | { Form: { [key: string]: string } }
 
