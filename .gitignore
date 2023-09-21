@@ -2,3 +2,7 @@ node_modules
 dist
 target
 .turbo
+.vercel
+.env*
+!.env.example
+.DS_Store

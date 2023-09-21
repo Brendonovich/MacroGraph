@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "moduleResolution": "node",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noUncheckedIndexedAccess": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  }
+}

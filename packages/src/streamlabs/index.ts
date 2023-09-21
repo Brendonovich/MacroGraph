@@ -1,21 +1,93 @@
-import { Maybe, Option, core, t } from "@macrograph/core";
+import { Maybe, OnEvent, Option, Package, t } from "@macrograph/core";
 import { io, Socket } from "socket.io-client";
-import {
-  createEffect,
-  createRoot,
-  createSignal,
-  on,
-  onCleanup,
-} from "solid-js";
+import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import { EVENT, Event } from "./events";
-
-const pkg = core.createPackage<Event>({
-  name: "Streamlabs",
-});
 
 const STREAMLABS_TOKEN = "streamlabsToken";
 
-const { setToken, token, state } = createRoot(() => {
+export function pkg() {
+  const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
+
+  const pkg = new Package<Event>({
+    name: "Streamlabs",
+    ctx: createCtx(setLatestEvent),
+    SettingsUI: () => import("./Settings"),
+  });
+
+  createEffect(() => {
+    const event = latestEvent();
+
+    if (!event) return;
+
+    pkg.emitEvent(event);
+  });
+
+  pkg.createEventSchema({
+    name: "Streamlabs Donation",
+    event: "donation",
+    generateIO(io) {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        name: io.dataOutput({
+          name: "Name",
+          id: "name",
+          type: t.string(),
+        }),
+        amount: io.dataOutput({
+          name: "Amount",
+          id: "amount",
+          type: t.float(),
+        }),
+        message: io.dataOutput({
+          name: "Message",
+          id: "message",
+          type: t.string(),
+        }),
+        currency: io.dataOutput({
+          name: "Currency",
+          id: "currency",
+          type: t.string(),
+        }),
+        from: io.dataOutput({
+          name: "From",
+          id: "from",
+          type: t.string(),
+        }),
+        fromId: io.dataOutput({
+          name: "From User Id",
+          id: "fromId",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.name, data.name);
+      ctx.setOutput(io.amount, data.amount);
+      ctx.setOutput(io.message, data.message);
+      ctx.setOutput(io.currency, data.currency);
+      ctx.setOutput(io.from, data.from);
+      ctx.setOutput(io.fromId, data.fromId);
+
+      ctx.exec(io.exec);
+    },
+  });
+
+  return pkg;
+}
+
+export type Ctx = ReturnType<typeof createCtx>;
+
+export function createCtx(onEvent: OnEvent): {
+  auth: ReturnType<typeof createAuth>;
+} {
+  return {
+    auth: createAuth(onEvent),
+  };
+}
+
+export function createAuth(onEvent: OnEvent) {
   const [state, setState] = createSignal<
     | {
         type: "disconnected";
@@ -63,7 +135,7 @@ const { setToken, token, state } = createRoot(() => {
               if (!parsed.success) return;
 
               if (parsed.data.type === "donation") {
-                pkg.emitEvent({
+                onEvent({
                   name: "donation",
                   data: parsed.data.message[0]!,
                 });
@@ -96,58 +168,4 @@ const { setToken, token, state } = createRoot(() => {
     state,
     setToken,
   };
-});
-
-export { setToken, token, state };
-
-pkg.createEventSchema({
-  name: "Streamlabs Donation",
-  event: "donation",
-  generateIO(io) {
-    return {
-      exec: io.execOutput({
-        id: "exec",
-      }),
-      name: io.dataOutput({
-        name: "Name",
-        id: "name",
-        type: t.string(),
-      }),
-      amount: io.dataOutput({
-        name: "Amount",
-        id: "amount",
-        type: t.float(),
-      }),
-      message: io.dataOutput({
-        name: "Message",
-        id: "message",
-        type: t.string(),
-      }),
-      currency: io.dataOutput({
-        name: "Currency",
-        id: "currency",
-        type: t.string(),
-      }),
-      from: io.dataOutput({
-        name: "From",
-        id: "from",
-        type: t.string(),
-      }),
-      fromId: io.dataOutput({
-        name: "From User Id",
-        id: "fromId",
-        type: t.string(),
-      }),
-    };
-  },
-  run({ ctx, data, io }) {
-    ctx.setOutput(io.name, data.name);
-    ctx.setOutput(io.amount, data.amount);
-    ctx.setOutput(io.message, data.message);
-    ctx.setOutput(io.currency, data.currency);
-    ctx.setOutput(io.from, data.from);
-    ctx.setOutput(io.fromId, data.fromId);
-
-    ctx.exec(io.exec);
-  },
-});
+}

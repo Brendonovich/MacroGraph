@@ -1,35 +1,39 @@
-import { core, t } from "@macrograph/core";
-import { rspcClient } from "@macrograph/core";
+import { Package, t } from "@macrograph/core";
 
-const pkg = core.createPackage<any>({ name: "FS" });
+type Entry = { Dir: string } | { File: string };
 
-pkg.createNonEventSchema({
-  name: "List Files",
-  variant: "Exec",
-  generateIO(io) {
-    return {
-      path: io.dataInput({
-        id: "path",
-        name: "Folder Path",
-        type: t.string(),
-      }),
-      files: io.dataOutput({
-        id: "files",
-        name: "Files",
-        type: t.list(t.string()),
-      }),
-    };
-  },
-  async run({ ctx, io }) {
-    const path = ctx.getInput(io.path);
-    const files = await rspcClient.query(["fs.list", path]);
+export function register(actions: { list(path: string): Promise<Entry[]> }) {
+  const pkg = new Package({ name: "FS" });
 
-    const array = files
-      .map((f) => {
-        if ("File" in f) return f.File;
-      })
-      .filter(Boolean) as string[];
+  pkg.createNonEventSchema({
+    name: "List Files",
+    variant: "Exec",
+    generateIO(io) {
+      return {
+        path: io.dataInput({
+          id: "path",
+          name: "Folder Path",
+          type: t.string(),
+        }),
+        files: io.dataOutput({
+          id: "files",
+          name: "Files",
+          type: t.list(t.string()),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      const files = await actions.list(ctx.getInput(io.path));
 
-    ctx.setOutput(io.files, array);
-  },
-});
+      const array = files
+        .map((f) => {
+          if ("File" in f) return f.File;
+        })
+        .filter(Boolean) as string[];
+
+      ctx.setOutput(io.files, array);
+    },
+  });
+
+  return pkg;
+}

@@ -1,17 +1,13 @@
 {
   "name": "@macrograph/core",
-  "version": "0.0.0",
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "files": [
-    "dist/**"
-  ],
+  "type": "module",
   "scripts": {
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
     "test": "vitest --browser=safari",
-    "typecheck": "tsc -b",
-    "build": "tsc"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@rspc/client": "0.0.0-main-6ed8cc98",

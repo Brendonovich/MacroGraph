@@ -1,9 +1,9 @@
-import { createSignal, createRoot } from "solid-js";
+import { createSignal } from "solid-js";
 import { Maybe, Option } from "@macrograph/core";
 
 const DISCORD_BOT_TOKEN = "discordBotToken";
 
-const { botToken, setBotToken } = createRoot(() => {
+export function createAuth() {
   const [botToken, setBotToken] = createSignal<Option<string>>(
     Maybe(localStorage.getItem(DISCORD_BOT_TOKEN))
   );
@@ -18,6 +18,6 @@ const { botToken, setBotToken } = createRoot(() => {
         token.peek((token) => localStorage.setItem(DISCORD_BOT_TOKEN, token));
     },
   };
-});
+}
 
-export { botToken, setBotToken };
+export type Auth = ReturnType<typeof createAuth>;

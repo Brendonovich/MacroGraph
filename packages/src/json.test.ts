@@ -1,6 +1,6 @@
 import { test, expect, describe } from "vitest";
 import { toJSON, JSON, jsonToJS, jsToJSON } from "./json";
-import { None, Some, t } from "@macrograph/core";
+import { MapValue, None, Some, t } from "@macrograph/core";
 
 describe("toJSON", () => {
   test("t.Option (None) -> Null", () => {
@@ -35,7 +35,7 @@ describe("toJSON", () => {
   test("t.Map<t.Bool> -> Map<Bool>", () => {
     const value = new Map();
     expect(toJSON(t.map(t.bool()), value)).toEqual(
-      JSON.variant(["Map", { value }])
+      JSON.variant(["Map", { value: value as never }])
     );
   });
   test("t.Enum<JSON> -> Map<JSONValue>", () => {
@@ -74,11 +74,13 @@ describe("jsonToJS", () => {
     expect(jsonToJS(JSON.variant(["Bool", { value }]))).toEqual(value);
   });
   test("List -> Array<T>", () => {
-    const value = [];
+    const value: never[] = [];
     expect(jsonToJS(JSON.variant(["List", { value }]))).toEqual(value);
   });
   test("Map -> MapValue<T>", () => {
-    expect(jsonToJS(JSON.variant(["Map", { value: new Map() }]))).toEqual({});
+    expect(
+      jsonToJS(JSON.variant(["Map", { value: new Map() as MapValue<never> }]))
+    ).toEqual({});
     const value = {
       number: 4,
       string: "string",
@@ -93,7 +95,7 @@ describe("jsonToJS", () => {
                 number: JSON.variant(["Number", { value: value.number }]),
                 string: JSON.variant(["String", { value: value.string }]),
               })
-            ),
+            ) as MapValue<never>,
           },
         ])
       )
@@ -121,7 +123,9 @@ describe("jsToJSON", () => {
     expect(jsToJSON([])).toEqual(JSON.variant(["List", { value: [] }]));
   });
   test("object -> Object", () => {
-    expect(jsToJSON({})).toEqual(JSON.variant(["Map", { value: new Map() }]));
+    expect(jsToJSON({})).toEqual(
+      JSON.variant(["Map", { value: new Map<string, never>() }])
+    );
     const value = {
       number: 4,
       string: "string",
@@ -134,8 +138,14 @@ describe("jsToJSON", () => {
         "Map",
         {
           value: new Map([
-            ["number", JSON.variant(["Number", { value: value.number }])],
-            ["string", JSON.variant(["String", { value: value.string }])],
+            [
+              "number",
+              JSON.variant(["Number", { value: value.number }]) as never,
+            ],
+            [
+              "string",
+              JSON.variant(["String", { value: value.string }]) as never,
+            ],
             [
               "object",
               JSON.variant([
@@ -144,11 +154,14 @@ describe("jsToJSON", () => {
                   value: new Map([
                     [
                       "nested",
-                      JSON.variant(["Bool", { value: value.object.nested }]),
+                      JSON.variant([
+                        "Bool",
+                        { value: value.object.nested },
+                      ]) as never,
                     ],
                   ]),
                 },
-              ]),
+              ]) as never,
             ],
           ]),
         },

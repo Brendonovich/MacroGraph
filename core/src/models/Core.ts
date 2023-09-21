@@ -1,5 +1,5 @@
 import { createMutable } from "solid-js/store";
-import { Package, PackageArgs } from "./Package";
+import { Package } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
@@ -29,16 +29,27 @@ class NodeEmit {
 
 export const NODE_EMIT = new NodeEmit();
 
+type OAuth = {
+  authorize(provider: string): Promise<any>;
+  refresh(provider: string, refreshToken: string): Promise<any>;
+};
+
 export class Core {
   project: Project = new Project({
     core: this,
   });
 
-  packages = [] as Package[];
+  packages = [] as Package<any, any>[];
 
   eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
-  constructor() {
+  fetch: typeof fetch;
+  oauth: OAuth;
+
+  constructor(args: { fetch: typeof fetch; oauth: OAuth }) {
+    this.fetch = args.fetch;
+    this.oauth = args.oauth;
+
     return createMutable(this);
   }
 
@@ -47,20 +58,18 @@ export class Core {
     this.project = await Project.deserialize(this, projectData);
   }
 
-  createPackage<TEvents extends EventsMap>(args: Omit<PackageArgs, "core">) {
-    const pkg = new Package<TEvents>({ ...args, core: this });
-
-    this.packages.push(pkg as any);
-
-    return pkg;
-  }
-
   schema(pkg: string, name: string) {
     return this.packages.find((p) => p.name === pkg)?.schema(name);
   }
 
+  registerPackage(packageFactory: (core: this) => Package<any>) {
+    const pkg = packageFactory(this);
+    pkg.core = this;
+    this.packages.push(pkg);
+  }
+
   emitEvent<TEvents extends EventsMap, TEvent extends keyof EventsMap>(
-    pkg: Package<TEvents>,
+    pkg: Package<TEvents, any>,
     event: { name: TEvent; data: TEvents[TEvent] }
   ) {
     const mappings = this.eventNodeMappings
@@ -98,6 +107,19 @@ export class Core {
 
       eventMappings.delete(node);
     }
+  }
+
+  private printListeners = new Set<(msg: string) => void>();
+
+  print(msg: string) {
+    for (const cb of this.printListeners) {
+      cb(msg);
+    }
+  }
+
+  printSubscribe(cb: (msg: string) => void) {
+    this.printListeners.add(cb);
+    return () => this.printListeners.delete(cb);
   }
 }
 
@@ -190,5 +212,3 @@ class ExecutionContext {
     });
   }
 }
-
-export const core = new Core();

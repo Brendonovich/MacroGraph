@@ -1,76 +1,55 @@
-import { onMount, Show } from "solid-js";
-import { CoreProvider } from "./contexts";
-import { Graph } from "~/components/Graph";
-import { GraphList } from "~/components/ProjectSidebar";
-import { core, SerializedProject } from "@macrograph/core";
-import "@macrograph/packages";
-import { createUIStore, UIStoreProvider } from "./UIStore";
-import { PrintOutput } from "./components/PrintOutput";
-import Settings from "./settings";
+import { Core } from "@macrograph/core";
+import Interface from "@macrograph/interface";
+import * as pkgs from "@macrograph/packages";
+import { onMount } from "solid-js";
+
+import { fetch } from "./http";
+import { client } from "./rspc";
+
+const AUTH_URL = `${import.meta.env.VITE_MACROGRAPH_API_URL}/auth`;
 
 function App() {
-  const UI = createUIStore();
+  const core = new Core({
+    fetch,
+    oauth: {
+      authorize: (provider) =>
+        client.mutation(["oauth.authorize", `${AUTH_URL}/${provider}/login`]),
+      refresh: async (provider, refreshToken) => {
+        const res = await fetch(`${AUTH_URL}/${provider}/refresh`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
 
-  onMount(async () => {
-    const savedProject = localStorage.getItem("project");
-    if (savedProject)
-      await core.load(SerializedProject.parse(JSON.parse(savedProject)));
-
-    const firstGraph = core.project.graphs.values().next();
-    if (firstGraph) UI.setCurrentGraph(firstGraph.value);
+        return await res.json();
+      },
+    },
   });
 
   onMount(() => {
-    const ctrlHandlers = (e: KeyboardEvent) => {
-      if (!e.metaKey && !e.ctrlKey) return;
-
-      switch (e.code) {
-        case "KeyC": {
-          if (!e.metaKey && !e.ctrlKey) return;
-          const selectedItem = UI.state.selectedItem;
-          if (selectedItem === null) return;
-
-          UI.copyItem(selectedItem);
-
-          break;
-        }
-        case "KeyV": {
-          if (!e.metaKey && !e.ctrlKey) return;
-
-          UI.pasteClipboard();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", ctrlHandlers);
-
-    return () => {
-      window.removeEventListener("keydown", ctrlHandlers);
-    };
+    [
+      pkgs.discord.pkg,
+      () =>
+        pkgs.fs.register({
+          list: (path) => client.query(["fs.list", path]),
+        }),
+      pkgs.goxlr.pkg,
+      pkgs.http.pkg,
+      pkgs.json.pkg,
+      pkgs.keyboard.pkg,
+      pkgs.list.pkg,
+      pkgs.localStorage.pkg,
+      pkgs.logic.pkg,
+      pkgs.map.pkg,
+      pkgs.obs.pkg,
+      pkgs.streamdeck.pkg,
+      pkgs.streamlabs.pkg,
+      pkgs.twitch.pkg,
+      pkgs.utils.pkg,
+    ].map((p) => core.registerPackage(p));
   });
 
-  return (
-    <UIStoreProvider store={UI}>
-      <CoreProvider core={core}>
-        <div
-          class="w-screen h-screen flex flex-row overflow-hidden select-none"
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
-          <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
-            <Settings />
-            <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
-            <PrintOutput />
-          </div>
-          <Show when={UI.state.currentGraph} fallback="No Graph">
-            {(graph) => <Graph graph={graph()} />}
-          </Show>
-        </div>
-      </CoreProvider>
-    </UIStoreProvider>
-  );
+  return <Interface core={core} />;
 }
 
 export default App;

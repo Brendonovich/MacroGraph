@@ -1,9 +1,6 @@
-import { Maybe, None, Some } from "@macrograph/core";
+import { Core, Maybe, None, Some } from "@macrograph/core";
 import { z } from "zod";
 import { ReactiveMap } from "@solid-primitives/map";
-import { chat, helix } from ".";
-
-const clientId = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
 
@@ -29,10 +26,10 @@ export interface UserIdResolvableType {
 
 export type UserIdResolvable = string | number | UserIdResolvableType;
 
-class MacroGraphAuthProvider {
+export class Auth {
   tokens: ReactiveMap<string, User>;
 
-  constructor(public clientId: string) {
+  constructor(public clientId: string, public core: Core) {
     this.tokens = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN))
       .andThen((j) => {
         const data = SCHEMA.safeParse(JSON.parse(j));
@@ -72,7 +69,7 @@ class MacroGraphAuthProvider {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token.accessToken}`,
-        "Client-Id": clientId,
+        "Client-Id": this.clientId,
       },
     });
     const resData = await res.json();
@@ -81,6 +78,8 @@ class MacroGraphAuthProvider {
 
     this.tokens.set(userId, { ...token, userId, userName });
     this.saveTokens();
+
+    this.refreshAccessTokenForUser(userId, true);
 
     return userId;
   }
@@ -111,15 +110,8 @@ class MacroGraphAuthProvider {
 
     Maybe(token.refreshToken).expect("Refresh token is null!");
 
-    const res = await fetch("https://macrograph.brendonovich.dev/auth/twitch", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        refreshToken: token.refreshToken,
-      }),
-    });
+    const data = await this.core.oauth.refresh("twitch", token.refreshToken);
 
-    const data = await res.json();
     const returnData = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token || null,
@@ -140,10 +132,6 @@ class MacroGraphAuthProvider {
   async refreshTimer(token: User) {
     setTimeout(() => {
       this.refreshAccessTokenForUser(token.userId, true);
-      if (chat.writeUserId().unwrap() === token.userId)
-        chat.setWriteUserId(Some(chat.writeUserId().unwrap()));
-      if (helix.userId().unwrap() === token.userId)
-        helix.setUserId(Some(helix.userId().unwrap()));
     }, token.obtainmentTimestamp + token.expiresIn * 1000 - Date.now() - 60000);
   }
 
@@ -182,5 +170,3 @@ export function extractUserId(user: UserIdResolvable): string {
     return user.id;
   }
 }
-
-export const auth = new MacroGraphAuthProvider(clientId);

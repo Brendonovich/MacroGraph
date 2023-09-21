@@ -1,11 +1,11 @@
 {
-    "files": [],
-    "references": [
-        {
-            "path": "./core"
-        },
-        {
-            "path": "./app"
-        }
-    ]
+  "files": [],
+  "references": [
+    { "path": "./core" },
+    { "path": "./packages" },
+    { "path": "./app" },
+    { "path": "./web" },
+    { "path": "./interface" },
+    { "path": "./ui" }
+  ]
 }

@@ -1,18 +1,18 @@
-import { createSignal, createRoot } from "solid-js";
+import { createSignal } from "solid-js";
 import OBS, { EventSubscription } from "obs-websocket-js";
 import { z } from "zod";
 import { Maybe } from "@macrograph/core";
 
-export const obs = new OBS();
-
 const OBS_WS = "obsWs";
 
-export const SCHEMA = z.object({
+export const AUTH_SCHEMA = z.object({
   url: z.string(),
   password: z.string().optional(),
 });
 
-const { connect, disconnect, state } = createRoot(() => {
+export function createWs() {
+  const obs = new OBS();
+
   const [state, setState] = createSignal<
     "disconnected" | "connecting" | "connected"
   >("disconnected");
@@ -42,7 +42,7 @@ const { connect, disconnect, state } = createRoot(() => {
   obs.on("ConnectionError", () => setState("disconnected"));
 
   Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
-    const { url, password } = SCHEMA.parse(JSON.parse(jstr));
+    const { url, password } = AUTH_SCHEMA.parse(JSON.parse(jstr));
 
     try {
       await connect(url, password);
@@ -51,7 +51,5 @@ const { connect, disconnect, state } = createRoot(() => {
     }
   });
 
-  return { connect, disconnect, state };
-});
-
-export { connect, disconnect, state };
+  return { connect, disconnect, state, obs };
+}
