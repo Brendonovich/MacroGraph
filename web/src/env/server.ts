@@ -3,7 +3,13 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    VERCEL_URL: z.string().default("http://localhost:4321"),
+    VERCEL_URL: z
+      .string()
+      .optional()
+      .transform((d) => {
+        if (!d) return "http://localhost:4321";
+        else return `https://${d}`;
+      }),
     AUTH_REDIRECT_PROXY_URL: z.string().default("http://localhost:4321"),
     AUTH_SECRET: z.string(),
     TWITCH_CLIENT_ID: z.string(),
