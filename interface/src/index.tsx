@@ -69,7 +69,14 @@ export default (props: { core: Core }) => {
             <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
             <PrintOutput />
           </div>
-          <Show when={UI.state.currentGraph} fallback="No Graph">
+          <Show
+            when={UI.state.currentGraph}
+            fallback={
+              <div class="flex-1 flex justify-center items-center">
+                No graph selected
+              </div>
+            }
+          >
             {(graph) => <Graph graph={graph()} />}
           </Show>
         </div>
