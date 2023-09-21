@@ -110,20 +110,15 @@ export function createHelix(auth: Auth, core: Core) {
       const token = userId().andThen((id) => Maybe(auth.tokens.get(id)));
       await auth.refreshAccessTokenForUser(token.unwrap().userId);
 
-      return await core
-        .fetch(url, {
-          headers: {
-            ...args?.headers,
-            "content-type": "application/json",
-            "Client-Id": auth.clientId,
-            Authorization: `Bearer ${user.accessToken}`,
-          },
-          ...args,
-        })
-        .then((res) => {
-          if (res.status === 204) return;
-          return res.json();
-        });
+      return await core.fetch(url, {
+        headers: {
+          ...args?.headers,
+          "content-type": "application/json",
+          "Client-Id": auth.clientId,
+          Authorization: `Bearer ${user.accessToken}`,
+        },
+        ...args,
+      });
     },
   });
 

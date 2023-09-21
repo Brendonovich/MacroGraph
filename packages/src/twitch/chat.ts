@@ -155,8 +155,8 @@ export function register(
         type: t.string(),
       });
     },
-    run({ ctx, io }) {
-      client()
+    async run({ ctx, io }) {
+      await client()
         .expect("No Twitch Chat client available!")
         .say(
           Maybe(
