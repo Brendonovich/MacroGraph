@@ -26,6 +26,7 @@ http = "0.2.9"
 data-url = "0.3.0"
 specta = { version = "1.0.5", features = ["url"] }
 tauri-specta = { version = "1.0.2", features = ["typescript"] }
+axum = { version = "0.6.20", features = ["ws"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

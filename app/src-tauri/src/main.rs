@@ -22,7 +22,7 @@ async fn main() {
             || (),
         ))
         .setup(|app| {
-            app.manage(http::Http::new(app.handle()));
+            app.manage(http::State::new(app.handle()));
             Ok(())
         })
         .invoke_handler(tauri_handlers![

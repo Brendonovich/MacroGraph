@@ -28,7 +28,7 @@ impl FetchRequest {
     }
 }
 
-pub struct Http<R: Runtime> {
+pub struct State<R: Runtime> {
     #[allow(dead_code)]
     pub app: AppHandle<R>,
     pub current_id: AtomicU32,
@@ -36,7 +36,7 @@ pub struct Http<R: Runtime> {
     pub responses: Mutex<ResponseTable>,
 }
 
-impl<R: Runtime> Http<R> {
+impl<R: Runtime> State<R> {
     pub fn new(app: AppHandle<R>) -> Self {
         Self {
             app,
@@ -53,11 +53,11 @@ impl<R: Runtime> Http<R> {
 }
 
 trait HttpExt<R: Runtime> {
-    fn http(&self) -> &Http<R>;
+    fn http(&self) -> &State<R>;
 }
 
 impl<R: Runtime, T: Manager<R>> HttpExt<R> for T {
-    fn http(&self) -> &Http<R> {
-        self.state::<Http<R>>().inner()
+    fn http(&self) -> &State<R> {
+        self.state::<State<R>>().inner()
     }
 }

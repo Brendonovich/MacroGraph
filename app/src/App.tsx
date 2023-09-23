@@ -1,7 +1,7 @@
 import { Core } from "@macrograph/core";
 import Interface from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { onMount } from "solid-js";
+import { createResource, onMount, Suspense } from "solid-js";
 
 import { fetch } from "./http";
 import { client } from "./rspc";
@@ -42,7 +42,17 @@ function App() {
       pkgs.logic.pkg,
       pkgs.map.pkg,
       pkgs.obs.pkg,
-      pkgs.streamdeck.pkg,
+      () =>
+        pkgs.streamdeck.pkg({
+          async startServer(port, onData) {
+            return client.addSubscription(["websocket.server", port], {
+              onData: (d) => onData(d),
+            });
+          },
+          async stopServer(unsubscribe) {
+            unsubscribe();
+          },
+        }),
       pkgs.streamlabs.pkg,
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
@@ -52,4 +62,15 @@ function App() {
   return <Interface core={core} />;
 }
 
-export default App;
+export default function () {
+  const [setup] = createResource(async () => {
+    return null;
+  });
+
+  return (
+    <Suspense>
+      {setup()}
+      <App />
+    </Suspense>
+  );
+}
