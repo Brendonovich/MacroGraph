@@ -52,11 +52,9 @@ export default function (ctx: Ctx) {
       <Match when={ctx.state.type === "Running" && ctx.state}>
         {(state) => (
           <div>
-            <p>
-              {"WebSocket server running at "}
-              <code class="select-text">{state().address}</code>
-            </p>
+            <p>WebSocket server running</p>
             <p>No Streamdeck connected</p>
+            <Button onClick={state().stop}>Stop Server</Button>
           </div>
         )}
       </Match>

@@ -3,7 +3,7 @@ import { createEffect, createSignal } from "solid-js";
 
 import { createCtx, Events, WsProvider } from "./ctx";
 
-export function pkg(ws: WsProvider) {
+export function pkg<TServer>(ws: WsProvider<TServer>) {
   const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
 
   const ctx = createCtx(ws, setLatestEvent);
