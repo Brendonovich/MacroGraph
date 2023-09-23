@@ -1,5 +1,6 @@
 import { OnEvent } from "@macrograph/core";
 import { createStore } from "solid-js/store";
+import { z } from "zod";
 
 export type ConnectionState =
   | {
@@ -22,7 +23,36 @@ export interface WsProvider {
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-export function createCtx(ws: WsProvider, onEvent: OnEvent) {
+const COORDINATES = z.object({
+  column: z.number(),
+  row: z.number(),
+});
+
+const keyEvent = <TEvent extends string>(event: TEvent) =>
+  z.object({
+    event: z.literal(event),
+    payload: z.object({
+      coordinates: COORDINATES,
+      isInMultiAction: z.boolean(),
+      settings: z.object({
+        id: z.string(),
+        removeServer: z.string(),
+      }),
+    }),
+  });
+
+const MESSAGE = z.discriminatedUnion("event", [
+  keyEvent("keyDown"),
+  keyEvent("keyUp"),
+]);
+
+export type Message = z.infer<typeof MESSAGE>;
+
+export type Events = {
+  [Event in Message["event"]]: Extract<Message, { event: Event }>["payload"];
+};
+
+export function createCtx(ws: WsProvider, onEvent: OnEvent<Events>) {
   const [state, setState] = createADTStore<ConnectionState>({
     type: "Stopped",
   });
@@ -33,7 +63,11 @@ export function createCtx(ws: WsProvider, onEvent: OnEvent) {
         type: "Starting",
       });
 
-      await ws.startServer(port, (msg) => onEvent(JSON.parse(msg)));
+      await ws.startServer(port, (msg) => {
+        const parsed = MESSAGE.parse(JSON.parse(msg));
+
+        onEvent({ name: parsed.event, data: parsed.payload });
+      });
 
       setState({ type: "Running", port, connected: false });
     } catch {

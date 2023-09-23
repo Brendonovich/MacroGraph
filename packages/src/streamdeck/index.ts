@@ -1,14 +1,14 @@
 import { Package } from "@macrograph/core";
 import { createEffect, createSignal } from "solid-js";
 
-import { createCtx, WsProvider } from "./ctx";
+import { createCtx, Events, WsProvider } from "./ctx";
 
 export function pkg(ws: WsProvider) {
   const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
 
   const ctx = createCtx(ws, setLatestEvent);
 
-  const pkg = new Package({
+  const pkg = new Package<Events>({
     name: "Stream Deck WebSocket",
     ctx,
     SettingsUI: () => import("./Settings"),

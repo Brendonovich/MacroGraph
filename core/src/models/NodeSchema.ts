@@ -207,7 +207,7 @@ export type RunCtx = {
     : never;
 };
 
-export type EventsMap = Record<string, any>;
+export type EventsMap<T extends string = string> = Record<T, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
   | NonEventNodeSchema<any, any>
