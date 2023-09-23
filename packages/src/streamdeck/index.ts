@@ -6,7 +6,7 @@ export function pkg(ws: WsProvider) {
   const ctx = createCtx(ws);
 
   const pkg = new Package({
-    name: "Streamdeck WebSocket",
+    name: "Stream Deck WebSocket",
     ctx,
     SettingsUI: () => import("./Settings"),
   });
