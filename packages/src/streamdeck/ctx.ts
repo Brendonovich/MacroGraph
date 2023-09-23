@@ -1,3 +1,4 @@
+import { OnEvent } from "@macrograph/core";
 import { createStore } from "solid-js/store";
 
 export type ConnectionState =
@@ -21,7 +22,7 @@ export interface WsProvider {
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-export function createCtx(ws: WsProvider) {
+export function createCtx(ws: WsProvider, onEvent: OnEvent) {
   const [state, setState] = createADTStore<ConnectionState>({
     type: "Stopped",
   });
@@ -32,7 +33,7 @@ export function createCtx(ws: WsProvider) {
         type: "Starting",
       });
 
-      await ws.startServer(port, (msg) => console.log(JSON.parse(msg)));
+      await ws.startServer(port, (msg) => onEvent(JSON.parse(msg)));
 
       setState({ type: "Running", port, connected: false });
     } catch {
