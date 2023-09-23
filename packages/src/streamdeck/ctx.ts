@@ -36,7 +36,7 @@ const keyEvent = <TEvent extends string>(event: TEvent) =>
       isInMultiAction: z.boolean(),
       settings: z.object({
         id: z.string(),
-        removeServer: z.string(),
+        remoteServer: z.string(),
       }),
     }),
   });
