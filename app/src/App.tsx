@@ -46,7 +46,7 @@ function App() {
         pkgs.streamdeck.pkg({
           async startServer(port, onData) {
             return client.addSubscription(["websocket.server", port], {
-              onData,
+              onData: (d) => onData(d),
             });
           },
           async stopServer(unsubscribe) {

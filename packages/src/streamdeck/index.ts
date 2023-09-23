@@ -16,10 +16,8 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 
   createEffect(() => {
     const event = latestEvent();
-    console.log(event);
-    if (!event) return;
 
-    console.log(event);
+    if (!event) return;
 
     pkg.emitEvent(event);
   });

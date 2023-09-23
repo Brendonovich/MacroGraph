@@ -6,7 +6,9 @@ export type Procedures = {
     mutations: 
         { key: "oauth.authorize", input: string, result: any | null },
     subscriptions: 
-        { key: "websocket.server", input: number, result: string }
+        { key: "websocket.server", input: number, result: Message }
 };
+
+export type Message = { Text: string } | "Connected" | "Disconnected"
 
 export type Entry = { Dir: string } | { File: string }

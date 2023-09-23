@@ -4,14 +4,13 @@ use std::{
 };
 
 use axum::{
-    extract::{
-        ws::{Message, WebSocket},
-        State, WebSocketUpgrade,
-    },
+    extract::{ws, State, WebSocketUpgrade},
     response::IntoResponse,
     routing::get,
 };
 use rspc::alpha::AlphaRouter;
+use serde::Serialize;
+use specta::Type;
 use tokio::sync::{broadcast, mpsc, oneshot};
 
 use crate::R;
@@ -60,7 +59,6 @@ pub fn router() -> AlphaRouter<()> {
                     .with_graceful_shutdown(async {
                         shutdown_rx.await.ok();
                         ws_shutdown_tx.send(()).ok();
-                        println!("shutdown");
                     })
                     .await
                     .unwrap();
@@ -79,17 +77,24 @@ pub fn router() -> AlphaRouter<()> {
 
 async fn ws_handler(
     ws: WebSocketUpgrade,
-    State((msg_tx, shutdown_rx)): State<(mpsc::Sender<String>, WebSocketShutdown)>,
+    State((msg_tx, shutdown_rx)): State<(mpsc::Sender<Message>, WebSocketShutdown)>,
 ) -> impl IntoResponse {
     ws.on_upgrade(|socket| handle_socket(socket, msg_tx, shutdown_rx))
 }
 
+#[derive(Serialize, Type)]
+enum Message {
+    Text(String),
+    Connected,
+    Disconnected,
+}
+
 async fn handle_socket(
-    mut socket: WebSocket,
-    msg_tx: mpsc::Sender<String>,
+    mut socket: ws::WebSocket,
+    msg_tx: mpsc::Sender<Message>,
     mut shutdown_rx: WebSocketShutdown,
 ) {
-    println!("client connected");
+    msg_tx.send(Message::Connected).await.ok();
 
     loop {
         tokio::select! {
@@ -97,20 +102,20 @@ async fn handle_socket(
             Some(msg) = socket.recv() => {
                 if let Ok(msg) = msg {
                     match msg {
-                        Message::Text(t) => {
-                            msg_tx.send(t).await.ok();
+                        ws::Message::Text(t) => {
+                            msg_tx.send(Message::Text(t)).await.ok();
                         }
-                        Message::Close(_) => {
-                            println!("client disconnected");
-                            return;
+                        ws::Message::Close(_) => {
+                            break;
                         }
                         _ => {}
                     }
                 } else {
-                    println!("client disconnected");
-                    return;
+                    break;
                 }
             }
         };
     }
+
+    msg_tx.send(Message::Disconnected).await.ok();
 }

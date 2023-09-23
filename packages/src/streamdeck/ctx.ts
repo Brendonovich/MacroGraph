@@ -1,4 +1,5 @@
 import { OnEvent } from "@macrograph/core";
+import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { z } from "zod";
 
@@ -10,7 +11,7 @@ export type ConnectionState =
   | {
       type: "Running";
       port: number;
-      connected: boolean;
+      connected(): boolean;
       stop(): Promise<void>;
     };
 
@@ -22,8 +23,10 @@ function createADTStore<T extends object>(init: T) {
   return createStore<T>(init) as [T, (arg: T | ((prev: T) => T)) => void];
 }
 
+export type WsMessage = "Connected" | "Disconnected" | { Text: string };
+
 export interface WsProvider<TServer> {
-  startServer(port: number, cb: (text: string) => void): Promise<TServer>;
+  startServer(port: number, cb: (text: WsMessage) => void): Promise<TServer>;
   stopServer(server: TServer): Promise<void>;
 }
 
@@ -67,16 +70,22 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
     try {
       setState({ type: "Starting" });
 
-      const server = await ws.startServer(port, (msg) => {
-        const parsed = MESSAGE.parse(JSON.parse(msg));
+      const [connected, setConnected] = createSignal(false);
 
-        onEvent({ name: parsed.event, data: parsed.payload });
+      const server = await ws.startServer(port, (msg) => {
+        if (msg === "Connected") setConnected(true);
+        else if (msg === "Disconnected") setConnected(false);
+        else {
+          const parsed = MESSAGE.parse(JSON.parse(msg.Text));
+
+          onEvent({ name: parsed.event, data: parsed.payload });
+        }
       });
 
       setState({
         type: "Running",
         port,
-        connected: false,
+        connected,
         async stop() {
           await ws.stopServer(server);
           setState({ type: "Stopped" });

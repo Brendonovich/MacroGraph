@@ -1,6 +1,6 @@
 import { Button, Input } from "@macrograph/ui";
 import { createForm, zodForm } from "@modular-forms/solid";
-import { Match, Switch } from "solid-js";
+import { createEffect, Match, Show, Switch } from "solid-js";
 import { z } from "zod";
 
 import { Ctx } from "./ctx";
@@ -53,7 +53,11 @@ export default function (ctx: Ctx) {
         {(state) => (
           <div>
             <p>WebSocket server running</p>
-            <p>No Streamdeck connected</p>
+            <p>
+              {state().connected()
+                ? "Stream Deck connected"
+                : "No Stream Deck connected"}
+            </p>
             <Button onClick={state().stop}>Stop Server</Button>
           </div>
         )}
