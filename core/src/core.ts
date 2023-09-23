@@ -5,7 +5,8 @@ export type Procedures = {
         { key: "fs.list", input: string, result: Entry[] },
     mutations: 
         { key: "oauth.authorize", input: string, result: any | null },
-    subscriptions: never
+    subscriptions: 
+        { key: "websocket.server", input: number, result: string }
 };
 
 export type Entry = { Dir: string } | { File: string }

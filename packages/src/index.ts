@@ -9,7 +9,7 @@ export * as localStorage from "./localStorage";
 export * as logic from "./logic";
 export * as map from "./map";
 export * as obs from "./obs";
-export * as streamdeck from "./devices/streamdeck";
+export * as streamdeck from "./streamdeck";
 export * as streamlabs from "./streamlabs";
 export * as twitch from "./twitch";
 export * as utils from "./utils";
