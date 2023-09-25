@@ -5,6 +5,7 @@ import {
   OnEvent,
   Option,
   Package,
+  Some,
   t,
 } from "@macrograph/core";
 import { io, Socket } from "socket.io-client";
@@ -120,16 +121,32 @@ export function createCtx(core: Core, onEvent: OnEvent) {
   const client = createEndpoint({
     path: "https://streamlabs.com/api/v2.0",
     fetch: async (url, opts) => {
-      return await core
-        .fetch(url, {
+      const run = () =>
+        core.fetch(url, {
           ...opts,
           headers: {
             accept: "application/json",
             authorization: `Bearer ${authToken().unwrap().access_token}`,
             ...opts?.headers,
           },
-        })
-        .then((res) => res.json());
+        });
+
+      let resp = await run();
+
+      if (resp.status !== 200) {
+        setAuthToken(
+          Some(
+            await core.oauth.refresh(
+              "streamlabs",
+              authToken().unwrap().refresh_token
+            )
+          )
+        );
+
+        resp = await run();
+      }
+
+      return await resp.json();
     },
   });
 

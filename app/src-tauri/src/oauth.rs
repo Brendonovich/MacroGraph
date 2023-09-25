@@ -8,7 +8,7 @@ use crate::R;
 pub fn router() -> AlphaRouter<()> {
     R.router().procedure(
         "authorize",
-        R.mutation(|_, url: String| async move {
+        R.subscription(|_, url: String| async move {
             use axum::*;
 
             let (tx, mut rx) = tokio::sync::mpsc::channel(4);
@@ -66,11 +66,13 @@ pub fn router() -> AlphaRouter<()> {
             ))
             .expect("Failed to open twitch URL!");
 
-            let response = rx.recv().await;
+            async_stream::stream! {
+                let response = rx.recv().await;
 
-            shutdown_tx.send(()).ok();
+                shutdown_tx.send(()).ok();
 
-            response
+                yield response
+            }
         }),
     )
 }

@@ -1,4 +1,4 @@
-import { Core, Maybe, OAuthToken, Option } from "@macrograph/core";
+import { Core, Maybe, OAuthToken, Option, Some } from "@macrograph/core";
 import { createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
@@ -14,15 +14,31 @@ export function createCtx(core: Core) {
   const client = createEndpoint({
     path: "https://www.patreon.com/api",
     fetch: async (url, opts) => {
-      return await core
-        .fetch(url, {
+      const run = () =>
+        core.fetch(url, {
           ...opts,
           headers: {
             Authorization: `Bearer ${authToken().unwrap().access_token}`,
             ...opts?.headers,
           },
-        })
-        .then((res) => res.json());
+        });
+
+      let resp = await run();
+
+      if (resp.status !== 200) {
+        setAuthToken(
+          Some(
+            await core.oauth.refresh(
+              "patreon",
+              authToken().unwrap().refresh_token
+            )
+          )
+        );
+
+        resp = await run();
+      }
+
+      return await resp.json();
     },
   });
 

@@ -59,6 +59,7 @@ export function createAuth(clientId: string, core: Core) {
   async function refresh(id: string) {
     const account = Maybe(accounts.get(id)).unwrap();
 
+    console.log(account);
     const token = await core.oauth.refresh(
       "twitch",
       account.token.refresh_token

@@ -3,9 +3,9 @@
 export type Procedures = {
     queries: 
         { key: "fs.list", input: string, result: Entry[] },
-    mutations: 
-        { key: "oauth.authorize", input: string, result: any | null },
+    mutations: never,
     subscriptions: 
+        { key: "oauth.authorize", input: string, result: any | null } | 
         { key: "websocket.server", input: number, result: Message }
 };
 

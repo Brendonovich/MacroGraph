@@ -1,4 +1,10 @@
-import { For, ParentProps, Suspense, createSignal } from "solid-js";
+import {
+  ErrorBoundary,
+  For,
+  ParentProps,
+  Suspense,
+  createSignal,
+} from "solid-js";
 
 import { Button, Dialog } from "./ui";
 import { useUIStore } from "../UIStore";
@@ -44,9 +50,17 @@ const OpenSettings = () => {
 
                 return (
                   <Section title={pkg.name}>
-                    <Suspense fallback="Loading">
-                      <pkg.SettingsUI {...pkg.ctx} />
-                    </Suspense>
+                    <ErrorBoundary
+                      fallback={(error: Error) => (
+                        <div>
+                          <p>{error.message}</p>
+                        </div>
+                      )}
+                    >
+                      <Suspense fallback="Loading">
+                        <pkg.SettingsUI {...pkg.ctx} />
+                      </Suspense>
+                    </ErrorBoundary>
                   </Section>
                 );
               }}

@@ -39,7 +39,7 @@ export type OAuthToken = {
 
 type OAuth = {
   authorize(provider: string): Promise<OAuthToken>;
-  refresh(provider: string, refreshToken: string): Promise<any>;
+  refresh(provider: string, refreshToken: string): Promise<OAuthToken>;
 };
 
 export class Core {

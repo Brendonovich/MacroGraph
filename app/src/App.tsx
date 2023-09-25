@@ -12,13 +12,17 @@ export default function () {
   const core = new Core({
     fetch,
     oauth: {
-      authorize: async (provider) => ({
-        ...(await client.mutation([
-          "oauth.authorize",
-          `${AUTH_URL}/${provider}/login`,
-        ])),
-        issued_at: Date.now(),
-      }),
+      authorize: (provider) =>
+        new Promise((res) => {
+          client.addSubscription(
+            ["oauth.authorize", `${AUTH_URL}/${provider}/login`],
+            {
+              onData(data) {
+                res({ ...data, issued_at: Date.now() });
+              },
+            }
+          );
+        }),
       refresh: async (provider, refreshToken) => {
         const res = await fetch(`${AUTH_URL}/${provider}/refresh`, {
           method: "POST",
