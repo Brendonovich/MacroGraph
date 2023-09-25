@@ -12,10 +12,15 @@ import {
 import { BoolType, FloatType, IntType, StringType } from "./primitive";
 import { Struct, StructFields, StructType } from "./struct";
 
-const int = () => new IntType();
-const float = () => new FloatType();
-const string = () => new StringType();
-const bool = () => new BoolType();
+const INT = new IntType();
+const FLOAT = new FloatType();
+const STRING = new StringType();
+const BOOL = new BoolType();
+
+const int = () => INT;
+const float = () => FLOAT;
+const string = () => STRING;
+const bool = () => BOOL;
 const list = <T extends AnyType>(t: T) => new ListType<T>(t);
 const map = <TValue extends AnyType>(v: TValue) => new MapType(v);
 const option = <T extends AnyType>(t: T) => new OptionType<T>(t);
