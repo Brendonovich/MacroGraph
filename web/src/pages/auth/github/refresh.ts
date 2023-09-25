@@ -9,17 +9,14 @@ export const prerender = false;
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
 
-  const res = await fetch("https://id.twitch.tv/oauth2/token", {
+  const res = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
     body: new URLSearchParams({
-      client_id: env.TWITCH_CLIENT_ID,
-      client_secret: env.TWITCH_CLIENT_SECRET,
+      client_id: env.GITHUB_CLIENT_ID,
+      client_secret: env.GITHUB_CLIENT_SECRET,
       grant_type: "refresh_token",
       refresh_token: body.refreshToken,
     }),
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
   });
 
   const json = await res.json();

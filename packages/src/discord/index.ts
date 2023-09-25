@@ -10,6 +10,7 @@ function createCtx(core: Core, onEvent: OnEvent) {
 
   return {
     auth,
+    core,
     gateway: gateway.create(auth, onEvent),
     ...api.create(auth, core),
   };

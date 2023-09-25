@@ -33,7 +33,9 @@ export default function () {
         pkgs.fs.register({
           list: (path) => client.query(["fs.list", path]),
         }),
+      pkgs.github.pkg,
       pkgs.goxlr.pkg,
+      pkgs.google.pkg,
       pkgs.http.pkg,
       pkgs.json.pkg,
       pkgs.keyboard.pkg,
@@ -42,6 +44,7 @@ export default function () {
       pkgs.logic.pkg,
       pkgs.map.pkg,
       pkgs.obs.pkg,
+      pkgs.spotify.pkg,
       () =>
         pkgs.streamdeck.pkg({
           async startServer(port, onData) {

@@ -121,7 +121,7 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
       (value) => {
         value.forEach(([key, id]) => {
           id.map((userId) => {
-            auth.refreshAccessTokenForUser(userId);
+            // auth.refreshAccessTokenForUser(userId);
             localStorage.setItem(key, userId);
             return true;
           }).unwrapOrElse(() => (localStorage.removeItem(key), false));

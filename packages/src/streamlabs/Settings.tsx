@@ -1,17 +1,20 @@
 import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
-import { Match, Switch } from "solid-js";
+import { Match, Switch, createSignal } from "solid-js";
 import { None, Some } from "@macrograph/core";
-import { Ctx } from ".";
 import { Button, Input } from "@macrograph/ui";
+
+import { Ctx } from ".";
 
 const Schema = z.object({
   socketToken: z.string(),
 });
 
-export default ({ auth }: Ctx) => {
+export default ({ auth, core }: Ctx) => {
+  const [loggingIn, setLoggingIn] = createSignal(false);
+
   return (
-    <div class="flex flex-col space-y-2">
+    <div class="flex flex-col items-start space-y-2">
       <span class="text-neutral-400 font-medium">Socket API</span>
       <Switch fallback="Loading...">
         <Match when={auth.state().type === "disconnected"}>
@@ -46,6 +49,33 @@ export default ({ auth }: Ctx) => {
           <div class="flex flex-row items-center space-x-4">
             <Button onClick={() => auth.setToken(None)}>Disconnect</Button>
           </div>
+        </Match>
+      </Switch>
+
+      <span class="text-neutral-400 font-medium">OAuth</span>
+      <Switch>
+        <Match when={loggingIn()}>
+          <div class="flex space-x-4 items-center">
+            <p>Logging in...</p>
+            <Button onClick={() => setLoggingIn(false)}>Cancel</Button>
+          </div>
+        </Match>
+        <Match when={!loggingIn()}>
+          <Button
+            onClick={async () => {
+              setLoggingIn(true);
+
+              try {
+                await core.oauth.authorize("streamlabs");
+
+                if (!loggingIn()) return;
+              } finally {
+                setLoggingIn(false);
+              }
+            }}
+          >
+            Login
+          </Button>
         </Match>
       </Switch>
     </div>

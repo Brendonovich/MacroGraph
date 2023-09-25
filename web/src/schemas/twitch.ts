@@ -6,7 +6,6 @@ export const TOKEN = z.object({
   expires_in: z.number(),
   refresh_token: z.string(),
   token_type: z.string(),
-  scope: z.array(z.string()),
 });
 
 export const PARAMS = z.object({

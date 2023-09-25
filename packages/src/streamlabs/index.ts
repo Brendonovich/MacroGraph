@@ -1,16 +1,16 @@
-import { Maybe, OnEvent, Option, Package, t } from "@macrograph/core";
+import { Core, Maybe, OnEvent, Option, Package, t } from "@macrograph/core";
 import { io, Socket } from "socket.io-client";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import { EVENT, Event } from "./events";
 
 const STREAMLABS_TOKEN = "streamlabsToken";
 
-export function pkg() {
+export function pkg(core: Core) {
   const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
 
   const pkg = new Package<Event>({
     name: "Streamlabs",
-    ctx: createCtx(setLatestEvent),
+    ctx: createCtx(core, setLatestEvent),
     SettingsUI: () => import("./Settings"),
   });
 
@@ -79,10 +79,15 @@ export function pkg() {
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-export function createCtx(onEvent: OnEvent): {
+export function createCtx(
+  core: Core,
+  onEvent: OnEvent
+): {
+  core: Core;
   auth: ReturnType<typeof createAuth>;
 } {
   return {
+    core,
     auth: createAuth(onEvent),
   };
 }

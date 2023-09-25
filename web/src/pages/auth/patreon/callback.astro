@@ -19,14 +19,11 @@ const params = PARAMS.parse({
 	).payload,
 });
 
-const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
+const res = await fetch(`https://www.patreon.com/api/oauth2/token`, {
 	method: "POST",
-	headers: {
-		"Content-Type": "application/x-www-form-urlencoded",
-	},
 	body: new URLSearchParams({
-		client_id: env.TWITCH_CLIENT_ID,
-		client_secret: env.TWITCH_CLIENT_SECRET,
+		client_id: env.PATREON_CLIENT_ID,
+		client_secret: env.PATREON_CLIENT_SECRET,
 		code: params.code,
 		grant_type: "authorization_code",
 		redirect_uri: `${env.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,

@@ -1,19 +1,8 @@
 import { Core } from "@macrograph/core";
 import Interface from "@macrograph/interface";
-import {
-  obs,
-  keyboard,
-  json,
-  list,
-  utils,
-  twitch,
-  logic,
-  streamlabs,
-  goxlr,
-  map,
-  localStorage,
-} from "@macrograph/packages";
+import * as pkgs from "@macrograph/packages";
 import { onMount } from "solid-js";
+
 import { env } from "~/env/client";
 
 const AUTH_URL = `${env.PUBLIC_VERCEL_URL}/auth`;
@@ -42,6 +31,8 @@ export default () => {
           window.addEventListener("message", (e) => {
             if (e.source !== loginWindow) return;
 
+            console.log(provider, e.data);
+
             res(e.data);
           })
         );
@@ -60,17 +51,21 @@ export default () => {
 
   onMount(() => {
     [
-      obs.pkg,
-      keyboard.pkg,
-      json.pkg,
-      list.pkg,
-      utils.pkg,
-      twitch.pkg,
-      logic.pkg,
-      streamlabs.pkg,
-      goxlr.pkg,
-      map.pkg,
-      localStorage.pkg,
+      pkgs.github.pkg,
+      pkgs.google.pkg,
+      pkgs.goxlr.pkg,
+      pkgs.json.pkg,
+      pkgs.keyboard.pkg,
+      pkgs.list.pkg,
+      pkgs.localStorage.pkg,
+      pkgs.logic.pkg,
+      pkgs.map.pkg,
+      pkgs.obs.pkg,
+      pkgs.patreon.pkg,
+      pkgs.spotify.pkg,
+      pkgs.streamlabs.pkg,
+      pkgs.twitch.pkg,
+      pkgs.utils.pkg,
     ].map((p) => core.registerPackage(p));
   });
 

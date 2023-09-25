@@ -10,9 +10,11 @@ const Schema = z.object({
   botToken: z.string(),
 });
 
-export default function ({ auth, gateway, bot }: Ctx) {
+export default function ({ core, auth, gateway, bot }: Ctx) {
+  const [loggingIn, setLoggingIn] = createSignal(false);
+
   return (
-    <div class="flex flex-col space-y-2">
+    <div class="flex flex-col items-start space-y-2">
       <span class="text-neutral-400 font-medium">Bot</span>
       <Switch fallback="Loading...">
         <Match when={auth.botToken().isNone()}>
@@ -85,6 +87,33 @@ export default function ({ auth, gateway, bot }: Ctx) {
               </div>
             </>
           )}
+        </Match>
+      </Switch>
+
+      <span class="text-neutral-400 font-medium">OAuth</span>
+      <Switch>
+        <Match when={loggingIn()}>
+          <div class="flex space-x-4 items-center">
+            <p>Logging in...</p>
+            <Button onClick={() => setLoggingIn(false)}>Cancel</Button>
+          </div>
+        </Match>
+        <Match when={!loggingIn()}>
+          <Button
+            onClick={async () => {
+              setLoggingIn(true);
+
+              try {
+                await core.oauth.authorize("discord");
+
+                if (!loggingIn()) return;
+              } finally {
+                setLoggingIn(false);
+              }
+            }}
+          >
+            Login
+          </Button>
         </Match>
       </Switch>
     </div>

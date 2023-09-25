@@ -9,17 +9,17 @@ export const prerender = false;
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
 
-  const res = await fetch("https://id.twitch.tv/oauth2/token", {
+  const res = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(
+        `${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`
+      ).toString("base64")}`,
+    },
     body: new URLSearchParams({
-      client_id: env.TWITCH_CLIENT_ID,
-      client_secret: env.TWITCH_CLIENT_SECRET,
       grant_type: "refresh_token",
       refresh_token: body.refreshToken,
     }),
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
   });
 
   const json = await res.json();

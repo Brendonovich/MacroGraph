@@ -24,7 +24,7 @@ export function createEventSub(auth: Auth, helix: Helix, onEvent: OnEvent) {
         user.mapOrElse(
           () => setState({ type: "disconnected" }),
           (userId) => {
-            auth.refreshAccessTokenForUser(userId);
+            // auth.refreshAccessTokenForUser(userId);
             const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
             ws.addEventListener("message", async (data) => {

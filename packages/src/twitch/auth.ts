@@ -79,8 +79,6 @@ export class Auth {
     this.tokens.set(userId, { ...token, userId, userName });
     this.saveTokens();
 
-    this.refreshAccessTokenForUser(userId, true);
-
     return userId;
   }
 
@@ -96,10 +94,7 @@ export class Auth {
     };
   }
 
-  async refreshAccessTokenForUser(
-    user: string,
-    force?: boolean
-  ): Promise<User> {
+  async refreshAccessTokenForUser(user: string, force?: boolean): Promise<any> {
     const userId = user;
 
     const token = Maybe(this.tokens.get(userId)).expect(
