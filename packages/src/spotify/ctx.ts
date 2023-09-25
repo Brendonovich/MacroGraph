@@ -20,7 +20,7 @@ export function createCtx(core: Core) {
           Authorization: `Bearer ${authToken().unwrap().access_token}`,
           ...opts?.headers,
         },
-      });
+      }).then((res) => res.json());
     },
   });
 

@@ -120,14 +120,16 @@ export function createCtx(core: Core, onEvent: OnEvent) {
   const client = createEndpoint({
     path: "https://streamlabs.com/api/v2.0",
     fetch: async (url, opts) => {
-      return await core.fetch(url, {
-        ...opts,
-        headers: {
-          accept: "application/json",
-          authorization: `Bearer ${authToken().unwrap().access_token}`,
-          ...opts?.headers,
-        },
-      });
+      return await core
+        .fetch(url, {
+          ...opts,
+          headers: {
+            accept: "application/json",
+            authorization: `Bearer ${authToken().unwrap().access_token}`,
+            ...opts?.headers,
+          },
+        })
+        .then((res) => res.json());
     },
   });
 

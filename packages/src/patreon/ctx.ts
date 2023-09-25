@@ -14,13 +14,15 @@ export function createCtx(core: Core) {
   const client = createEndpoint({
     path: "https://www.patreon.com/api",
     fetch: async (url, opts) => {
-      return await core.fetch(url, {
-        ...opts,
-        headers: {
-          Authorization: `Bearer ${authToken().unwrap().access_token}`,
-          ...opts?.headers,
-        },
-      });
+      return await core
+        .fetch(url, {
+          ...opts,
+          headers: {
+            Authorization: `Bearer ${authToken().unwrap().access_token}`,
+            ...opts?.headers,
+          },
+        })
+        .then((res) => res.json());
     },
   });
 

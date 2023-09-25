@@ -11,14 +11,16 @@ function createApiEndpoint(core: Core, getToken: Accessor<string>) {
   const root = createEndpoint({
     path: "https://discord.com/api/v10",
     fetch: async (url, args) => {
-      return await core.fetch(url, {
-        ...args,
-        headers: {
-          ...args?.headers,
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getToken()}`,
-        },
-      });
+      return await core
+        .fetch(url, {
+          ...args,
+          headers: {
+            ...args?.headers,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+          },
+        })
+        .then((res) => res.json());
     },
   });
 

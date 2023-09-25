@@ -60,7 +60,12 @@ export default ({
         <Match when={authToken().isSome() && authToken().unwrap()}>
           <Suspense fallback="Authenticating...">
             <Show when={user()}>
-              {(user) => <>Logged in as {user().streamlabs.display_name}</>}
+              {(user) => (
+                <div class="flex flex-row items-center gap-2">
+                  <p>Logged in as {user().streamlabs.display_name}</p>
+                  <Button onClick={() => setAuthToken(None)}>Log Out</Button>
+                </div>
+              )}
             </Show>
           </Suspense>
         </Match>
@@ -88,6 +93,9 @@ export default ({
           >
             Login
           </Button>
+          <p class="text-gray-400 text-sm mt-2">
+            Login may not work without approval of project maintainer
+          </p>
         </Match>
       </Switch>
     </div>

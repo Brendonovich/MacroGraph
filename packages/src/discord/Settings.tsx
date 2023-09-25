@@ -101,7 +101,12 @@ export default function ({
         <Match when={authToken().isSome() && authToken().unwrap()}>
           <Suspense fallback="Authenticating...">
             <Show when={user()}>
-              {(user) => <>Logged in as {user().username}</>}
+              {(user) => (
+                <div class="flex flex-row items-center gap-2">
+                  <p>Logged in as {user().username}</p>
+                  <Button onClick={() => setAuthToken(None)}>Log Out</Button>
+                </div>
+              )}
             </Show>
           </Suspense>
         </Match>

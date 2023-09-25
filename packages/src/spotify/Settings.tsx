@@ -2,7 +2,7 @@ import { Match, Switch, createSignal, Suspense, Show } from "solid-js";
 import { Button } from "@macrograph/ui";
 
 import { Ctx } from "./ctx";
-import { Some } from "@macrograph/core";
+import { None, Some } from "@macrograph/core";
 
 export default function ({ core, setAuthToken, authToken, user }: Ctx) {
   const [loggingIn, setLoggingIn] = createSignal(false);
@@ -12,7 +12,12 @@ export default function ({ core, setAuthToken, authToken, user }: Ctx) {
       <Match when={authToken().isSome() && authToken().unwrap()}>
         <Suspense fallback="Authenticating...">
           <Show when={user()}>
-            {(user) => <>Logged in as {user().display_name}</>}
+            {(user) => (
+              <div class="flex flex-row items-center gap-2">
+                <p>Logged in as {user().display_name}</p>
+                <Button onClick={() => setAuthToken(None)}>Log Out</Button>
+              </div>
+            )}
           </Show>
         </Suspense>
       </Match>
