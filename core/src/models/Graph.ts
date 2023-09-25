@@ -243,6 +243,18 @@ export class Graph {
 
     await graph.deserializeConnections(data.connections);
 
+    for (const node of graph.nodes.values()) {
+      const nodeData = data.nodes[node.id]!;
+
+      node.state.inputs.forEach((i) => {
+        const defaultValue = nodeData.defaultValues[i.id];
+
+        if (defaultValue === undefined || !(i instanceof DataInput)) return;
+
+        i.defaultValue = defaultValue;
+      });
+    }
+
     graph.commentBoxes = new ReactiveSet(
       data.commentBoxes.map(
         (box) =>
