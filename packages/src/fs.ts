@@ -25,8 +25,6 @@ export function register(actions: { list(path: string): Promise<Entry[]> }) {
     async run({ ctx, io }) {
       const files = await actions.list(ctx.getInput(io.path));
 
-      console.log(files);
-
       const array = files
         .map((f) => {
           if ("File" in f) return f.File;

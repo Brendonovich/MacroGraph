@@ -1231,7 +1231,32 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   });
 
   pkg.createNonEventSchema({
-    name: "Set Input Volume",
+    name: "Set Input Volume Db",
+    variant: "Exec",
+    generateIO: (io) => {
+      return {
+        inputName: io.dataInput({
+          id: "inputName",
+          name: "Input Name",
+          type: t.string(),
+        }),
+        inputVolumeDb: io.dataInput({
+          id: "inputVolumeDb",
+          name: "Input Volume Db",
+          type: t.float(),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      obs.call("SetInputVolume", {
+        inputName: ctx.getInput(io.inputName),
+        inputVolumeDb: ctx.getInput(io.inputVolumeDb),
+      });
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Input Volume Mul",
     variant: "Exec",
     generateIO: (io) => {
       return {
@@ -1245,26 +1270,13 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
           name: "Input Volume Mul",
           type: t.float(),
         }),
-        inputVolumeDb: io.dataInput({
-          id: "inputVolumeDb",
-          name: "Input Volume Db",
-          type: t.float(),
-        }),
       };
     },
     async run({ ctx, io }) {
-      if (ctx.getInput(io.inputVolumeMul) === 0) {
-        obs.call("SetInputVolume", {
-          inputName: ctx.getInput(io.inputName),
-          inputVolumeDb: ctx.getInput(io.inputVolumeDb),
-        });
-      }
-      if (ctx.getInput(io.inputVolumeDb) === 0) {
-        obs.call("SetInputVolume", {
-          inputName: ctx.getInput(io.inputName),
-          inputVolumeMul: ctx.getInput(io.inputVolumeMul),
-        });
-      }
+      obs.call("SetInputVolume", {
+        inputName: ctx.getInput(io.inputName),
+        inputVolumeMul: ctx.getInput(io.inputVolumeMul),
+      });
     },
   });
 
