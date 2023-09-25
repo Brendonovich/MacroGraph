@@ -3,8 +3,11 @@
   "type": "module",
   "main": "./src/index.tsx",
   "exports": {
-    "solid": "./src/index.tsx",
-    "types": "./src/index.tsx"
+    ".": {
+      "solid": "./src/index.tsx",
+      "types": "./src/index.tsx"
+    },
+    "./tailwind.config.js": "./tailwind.config.js"
   },
   "dependencies": {
     "@kobalte/core": "^0.9.6",
@@ -13,8 +16,14 @@
     "@modular-forms/solid": "^0.12.2",
     "@solid-primitives/map": "^0.4.3",
     "clsx": "^1.2.1",
+    "solid-headless": "^0.13.1",
     "solid-icons": "^1.0.4",
     "solid-js": "^1.7.11",
     "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@kobalte/tailwindcss": "^0.6.5",
+    "@tailwindcss/forms": "^0.5.3",
+    "tailwindcss-animate": "^1.0.7"
   }
 }

@@ -12,8 +12,13 @@ export default function () {
   const core = new Core({
     fetch,
     oauth: {
-      authorize: (provider) =>
-        client.mutation(["oauth.authorize", `${AUTH_URL}/${provider}/login`]),
+      authorize: async (provider) => ({
+        ...(await client.mutation([
+          "oauth.authorize",
+          `${AUTH_URL}/${provider}/login`,
+        ])),
+        issued_at: Date.now(),
+      }),
       refresh: async (provider, refreshToken) => {
         const res = await fetch(`${AUTH_URL}/${provider}/refresh`, {
           method: "POST",
@@ -21,7 +26,7 @@ export default function () {
           body: JSON.stringify({ refreshToken }),
         });
 
-        return await res.json();
+        return { ...(await res.json()), issued_at: Date.now() };
       },
     },
   });
@@ -33,7 +38,9 @@ export default function () {
         pkgs.fs.register({
           list: (path) => client.query(["fs.list", path]),
         }),
+      pkgs.github.pkg,
       pkgs.goxlr.pkg,
+      pkgs.google.pkg,
       pkgs.http.pkg,
       pkgs.json.pkg,
       pkgs.keyboard.pkg,
@@ -42,6 +49,8 @@ export default function () {
       pkgs.logic.pkg,
       pkgs.map.pkg,
       pkgs.obs.pkg,
+      pkgs.patreon.pkg,
+      pkgs.spotify.pkg,
       () =>
         pkgs.streamdeck.pkg({
           async startServer(port, onData) {

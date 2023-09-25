@@ -1,4 +1,10 @@
-import { createComputed, createEffect, createSignal, on } from "solid-js";
+import {
+  Accessor,
+  createComputed,
+  createEffect,
+  createSignal,
+  on,
+} from "solid-js";
 import { z } from "zod";
 import {
   t,
@@ -8,7 +14,6 @@ import {
   createEnum,
   createStruct,
   Package,
-  Core,
 } from "@macrograph/core";
 
 import { createEndpoint } from "../httpEndpoint";
@@ -97,33 +102,29 @@ export const Redemption = createStruct("Redemption", (s) => ({
   redemptionDate: s.field("Redemption Date", t.string()),
 }));
 
-export function createHelix(auth: Auth, core: Core) {
-  const [userId, setUserId] = createSignal(
-    Maybe(localStorage.getItem(HELIX_USER_ID))
-  );
-
+export function createHelixEndpoint(
+  clientId: string,
+  getToken: Accessor<string>
+) {
   const root = createEndpoint({
     path: "https://api.twitch.tv/helix",
     fetch: async (url, args) => {
-      const user = await auth.getAccessTokenForUser(userId().unwrap());
-
-      const token = userId().andThen((id) => Maybe(auth.tokens.get(id)));
-      await auth.refreshAccessTokenForUser(token.unwrap().userId);
-
       if (args?.body && args.body instanceof URLSearchParams) {
         url += `?${args.body.toString()}`;
         delete args.body;
       }
 
-      return await core.fetch(url, {
+      return await fetch(url, {
         headers: {
           ...args?.headers,
           "content-type": "application/json",
-          "Client-Id": auth.clientId,
-          Authorization: `Bearer ${user.accessToken}`,
+          "Client-Id": clientId,
+          Authorization: `Bearer ${getToken()}`,
         },
         ...args,
-      });
+      })
+        .then((res) => res.json())
+        .then((json) => json.data[0]);
     },
   });
 
@@ -380,6 +381,20 @@ export function createHelix(auth: Auth, core: Core) {
     whispers: root.extend(`/whispers`),
   };
 
+  return client;
+}
+
+export function createHelix(auth: Auth) {
+  const [userId, setUserId] = createSignal(
+    Maybe(localStorage.getItem(HELIX_USER_ID))
+  );
+
+  const client = createHelixEndpoint(
+    auth.clientId,
+    () =>
+      Maybe(auth.accounts.get(userId().unwrap())).unwrap().token.access_token
+  );
+
   createEffect(
     on(
       () => userId(),
@@ -392,7 +407,7 @@ export function createHelix(auth: Auth, core: Core) {
 
   createComputed(() => {
     userId().map((id) => {
-      !auth.tokens.has(id) && setUserId(None);
+      !auth.accounts.has(id) && setUserId(None);
     });
   });
 

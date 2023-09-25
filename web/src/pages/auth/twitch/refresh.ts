@@ -17,6 +17,9 @@ export const POST: APIRoute = async ({ request }) => {
       grant_type: "refresh_token",
       refresh_token: body.refreshToken,
     }),
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
   });
 
   const json = await res.json();
