@@ -10,13 +10,7 @@ import {
   BasePrimitiveType,
 } from "../types";
 import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
-import {
-  createEffect,
-  createRoot,
-  getOwner,
-  onCleanup,
-  runWithOwner,
-} from "solid-js";
+import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
 
 export type DataInputArgs<T extends BaseType<any>> = {
   id: string;
@@ -52,16 +46,22 @@ export class DataInput<T extends BaseType<any>> {
     const reactiveThis = createMutable(this);
 
     runWithOwner(owner, () => {
-      createEffect(() => {
+      createEffect<Option<t.Any>>((prev) => {
         const type = this.type;
-        if (!(type instanceof t.Wildcard)) return;
+        if (!(type instanceof t.Wildcard)) return None;
 
         const value = type.wildcard.value();
 
-        if (value.isSome() && value.unwrap() instanceof BasePrimitiveType)
+        if (value.isSome() && value.unwrap() instanceof BasePrimitiveType) {
+          if (prev.isSome() && value.unwrap().eq(prev.unwrap())) return prev;
+
           reactiveThis.defaultValue = value.unwrap().default();
-        else reactiveThis.defaultValue = null;
-      });
+        } else {
+          reactiveThis.defaultValue = null;
+        }
+
+        return value;
+      }, None);
     });
 
     return reactiveThis;

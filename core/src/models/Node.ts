@@ -195,14 +195,6 @@ export class Node {
       graph,
     });
 
-    node.state.inputs.forEach((i) => {
-      const defaultValue = data.defaultValues[i.id];
-
-      if (defaultValue === undefined || !(i instanceof DataInput)) return;
-
-      i.defaultValue = defaultValue;
-    });
-
     return node;
   }
 }

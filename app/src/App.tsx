@@ -1,14 +1,14 @@
+import { onMount } from "solid-js";
 import { Core } from "@macrograph/core";
 import Interface from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { createResource, onMount, Suspense } from "solid-js";
 
 import { fetch } from "./http";
 import { client } from "./rspc";
 
 const AUTH_URL = `${import.meta.env.VITE_MACROGRAPH_API_URL}/auth`;
 
-function App() {
+export default function () {
   const core = new Core({
     fetch,
     oauth: {
@@ -60,17 +60,4 @@ function App() {
   });
 
   return <Interface core={core} />;
-}
-
-export default function () {
-  const [setup] = createResource(async () => {
-    return null;
-  });
-
-  return (
-    <Suspense>
-      {setup()}
-      <App />
-    </Suspense>
-  );
 }

@@ -99,7 +99,7 @@ export function createUIStore(core: Core) {
       state.pinPositions.set(pin, position);
     },
     updateTranslate(delta: XY) {
-      state.translate.x += delta.x;
+      state.translate.x += delta.x; 
       state.translate.y += delta.y;
     },
     setTranslate(translate: XY) {
