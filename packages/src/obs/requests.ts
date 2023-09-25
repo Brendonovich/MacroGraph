@@ -1231,7 +1231,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   });
 
   pkg.createNonEventSchema({
-    name: "Set Input Volume Db",
+    name: "Set Input Volume (dB)",
     variant: "Exec",
     generateIO: (io) => {
       return {
@@ -1242,7 +1242,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         }),
         inputVolumeDb: io.dataInput({
           id: "inputVolumeDb",
-          name: "Input Volume Db",
+          name: "Input Volume (dB)",
           type: t.float(),
         }),
       };
@@ -1256,7 +1256,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   });
 
   pkg.createNonEventSchema({
-    name: "Set Input Volume Mul",
+    name: "Set Input Volume (mul)",
     variant: "Exec",
     generateIO: (io) => {
       return {
@@ -1267,7 +1267,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         }),
         inputVolumeMul: io.dataInput({
           id: "inputVolumeMul",
-          name: "Input Volume Mul",
+          name: "Input Volume (mul)",
           type: t.float(),
         }),
       };
