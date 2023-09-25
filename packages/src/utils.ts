@@ -1041,7 +1041,7 @@ export function pkg(core: Core) {
 
         return {
           wildcard: wt,
-          input: input as unknown as DataInput<t.Struct<StructFields>>,
+          input: input as unknown as DataInput<t.Struct<any>>,
           outputs: dataOutputs,
         };
       });

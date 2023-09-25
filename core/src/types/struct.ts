@@ -66,14 +66,14 @@ export class StructBuilder {
   }
 }
 
-export class StructType<Fields extends StructFields> extends BaseType<
-  InferStructFields<Fields>
+export class StructType<TStruct extends Struct> extends BaseType<
+  InferStruct<TStruct>
 > {
-  constructor(public struct: Struct<Fields>) {
+  constructor(public struct: TStruct) {
     super();
   }
 
-  default(): InferStructFields<Fields> {
+  default(): InferStruct<TStruct> {
     return Object.entries(this.struct.fields).reduce(
       (acc, [key, value]) => ({
         ...acc,
@@ -91,7 +91,7 @@ export class StructType<Fields extends StructFields> extends BaseType<
     return `Struct(${this.struct.name})`;
   }
 
-  asZodType(): z.ZodType<InferStructFields<Fields>> {
+  asZodType(): z.ZodType<InferStruct<TStruct>> {
     return z.object(
       Object.entries(this.struct.fields).reduce(
         (acc, [key, value]) => ({

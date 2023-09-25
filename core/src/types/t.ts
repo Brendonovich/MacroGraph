@@ -10,7 +10,7 @@ import {
   WildcardType,
 } from ".";
 import { BoolType, FloatType, IntType, StringType } from "./primitive";
-import { Struct, StructFields, StructType } from "./struct";
+import { Struct, StructType } from "./struct";
 
 const INT = new IntType();
 const FLOAT = new FloatType();
@@ -25,8 +25,8 @@ const list = <T extends AnyType>(t: T) => new ListType<T>(t);
 const map = <TValue extends AnyType>(v: TValue) => new MapType(v);
 const option = <T extends AnyType>(t: T) => new OptionType<T>(t);
 const enm = <T extends Enum<any>>(t: T) => new EnumType<T>(t);
+const struct = <T extends Struct<any>>(s: T) => new StructType<T>(s);
 const wildcard = (w: Wildcard) => new WildcardType(w);
-const struct = <F extends StructFields>(s: Struct<F>) => new StructType<F>(s);
 
 export {
   int,
