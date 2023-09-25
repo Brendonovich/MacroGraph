@@ -2,10 +2,10 @@
   "name": "@macrograph/interface",
   "type": "module",
   "main": "./src/index.tsx",
-  "types": "./src/index.tsx",
   "exports": {
     ".": {
-      "solid": "./src/index.tsx"
+      "solid": "./src/index.tsx",
+      "types": "./src/index.tsx"
     },
     "./tailwind.config.js": "./tailwind.config.js"
   },
