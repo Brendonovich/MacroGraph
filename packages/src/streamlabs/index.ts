@@ -1,7 +1,6 @@
 import {
   Core,
   Maybe,
-  None,
   OAuthToken,
   OnEvent,
   Option,
@@ -115,7 +114,7 @@ export function createCtx(core: Core, onEvent: OnEvent) {
   );
 
   const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(
-    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
+    Maybe(localStorage.getItem(USER_TOKEN_LOCALSTORAGE)).map(JSON.parse)
   );
 
   const client = createEndpoint({

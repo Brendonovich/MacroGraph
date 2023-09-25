@@ -34,6 +34,7 @@ export type OAuthToken = {
   refresh_token: string;
   expires_in: number;
   scope: string[];
+  issued_at: number;
 };
 
 type OAuth = {

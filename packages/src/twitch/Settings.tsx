@@ -10,7 +10,7 @@ export default ({ core, helix, chat, auth }: Ctx) => {
   return (
     <>
       <Switch>
-        <Match when={auth.tokens.size !== 0}>
+        <Match when={auth.accounts.size !== 0}>
           <table class="mb-2 table-auto">
             <thead>
               <tr>
@@ -27,21 +27,21 @@ export default ({ core, helix, chat, auth }: Ctx) => {
               </tr>
             </thead>
             <tbody>
-              <For each={[...auth.tokens.values()]}>
-                {(token) => (
+              <For each={[...auth.accounts.values()]}>
+                {(account) => (
                   <tr>
-                    <td>{token.userName}</td>
+                    <td>{account.data.display_name}</td>
                     <td class="text-center content-center align-middle">
                       <input
                         type="radio"
                         id="helix"
                         checked={helix
                           .userId()
-                          .map((id) => id === token.userId)
+                          .map((id) => id === account.data.id)
                           .unwrapOr(false)}
                         onChange={async (r) => {
                           if (r.target.checked)
-                            helix.setUserId(Some(token.userId));
+                            helix.setUserId(Some(account.data.id));
                         }}
                       />
                     </td>
@@ -51,11 +51,11 @@ export default ({ core, helix, chat, auth }: Ctx) => {
                         id="Chat Read"
                         checked={chat
                           .readUserId()
-                          .map((u) => u === token.userId)
+                          .map((u) => u === account.data.id)
                           .unwrapOr(false)}
                         onChange={(r) => {
                           if (r.target.checked)
-                            chat.setReadUserId(Some(token.userId));
+                            chat.setReadUserId(Some(account.data.id));
                         }}
                       />
                     </td>
@@ -65,16 +65,16 @@ export default ({ core, helix, chat, auth }: Ctx) => {
                         id="Chat Write"
                         checked={chat
                           .writeUserId()
-                          .map((u) => u === token.userId)
+                          .map((u) => u === account.data.id)
                           .unwrapOr(false)}
                         onChange={(r) => {
                           if (r.target.checked)
-                            chat.setWriteUserId(Some(token.userId));
+                            chat.setWriteUserId(Some(account.data.id));
                         }}
                       />
                     </td>
                     <td>
-                      <Button onClick={() => auth.logOut(token.userId)}>
+                      <Button onClick={() => auth.logOut(account.data.id)}>
                         Remove
                       </Button>
                     </td>
@@ -106,15 +106,7 @@ export default ({ core, helix, chat, auth }: Ctx) => {
 
                 if (!loggingIn()) return;
 
-                await auth.addUser({
-                  accessToken: token.access_token,
-                  refreshToken: token.refresh_token,
-                  expiresIn: token.expires_in,
-                  scope: token.scope,
-                  obtainmentTimestamp: Date.now(),
-                  userId: "",
-                  userName: "",
-                });
+                await auth.addToken(token);
               } finally {
                 setLoggingIn(false);
               }

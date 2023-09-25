@@ -1,167 +1,83 @@
-import { Core, Maybe, None, Some } from "@macrograph/core";
-import { z } from "zod";
+import { Core, Maybe, OAuthToken } from "@macrograph/core";
 import { ReactiveMap } from "@solid-primitives/map";
+import { z } from "zod";
+import { createHelixEndpoint } from "./helix";
 
-export const TWITCH_ACCCESS_TOKEN = "TwitchAccessToken";
+const USER_DATA = z.object({
+  id: z.string(),
+  login: z.string(),
+  display_name: z.string(),
+});
 
-export interface User {
-  userName: string;
-  userId: string;
-  accessToken: string;
-  refreshToken: string;
-  scope: string[];
-  expiresIn: number;
-  obtainmentTimestamp: number;
-}
+const TOKENS_LOCALSTORAGE = "twitchTokens";
 
-const tokenHasExpired = (token: User) =>
-  Date.now() < token.obtainmentTimestamp + token.expiresIn * 1000;
+export function createAuth(clientId: string, core: Core) {
+  const accounts = new ReactiveMap<
+    string,
+    {
+      token: OAuthToken;
+      data: z.infer<typeof USER_DATA>;
+      refreshTimer: ReturnType<typeof setTimeout>;
+    }
+  >();
 
-export interface UserIdResolvableType {
-  /**
-   * The ID of the user.
-   */
-  id: string;
-}
-
-export type UserIdResolvable = string | number | UserIdResolvableType;
-
-export class Auth {
-  tokens: ReactiveMap<string, User>;
-
-  constructor(public clientId: string, public core: Core) {
-    this.tokens = Maybe(localStorage.getItem(TWITCH_ACCCESS_TOKEN))
-      .andThen((j) => {
-        const data = SCHEMA.safeParse(JSON.parse(j));
-        if (data.success)
-          return Some(new ReactiveMap(Object.entries(data.data)));
-        return None;
-      })
-      .unwrapOr(new ReactiveMap());
-
-    this.tokens.forEach((token) => {
-      if (tokenHasExpired(token)) this.refreshTimer(token);
+  Maybe(localStorage.getItem(TOKENS_LOCALSTORAGE))
+    .map(JSON.parse)
+    .map((tokens) => {
+      Object.values(tokens).forEach((token: any) => addToken(token));
     });
+
+  function persistTokens() {
+    const tokens = [...accounts.values()].reduce(
+      (acc, account) => ({
+        [account.data.id]: account.token,
+        ...acc,
+      }),
+      {} as Record<string, OAuthToken>
+    );
+
+    localStorage.setItem(TOKENS_LOCALSTORAGE, JSON.stringify(tokens));
   }
 
-  logOut(userID: UserIdResolvable) {
-    const id = extractUserId(userID);
-    this.tokens.delete(id);
-    this.saveTokens();
-  }
+  async function addToken(token: OAuthToken) {
+    const api = createHelixEndpoint(clientId, () => token.access_token);
 
-  async getAccessTokenForUser(
-    userId: UserIdResolvable,
-    _?: string[] | undefined
-  ) {
-    const id = extractUserId(userId);
-    return {
-      ...Maybe(this.tokens.get(id)).expect(
-        "getAccessTokenForUser missing token"
+    const data = await api.users.get(USER_DATA);
+
+    accounts.set(data.id, {
+      token,
+      data,
+      refreshTimer: setTimeout(
+        () => refresh(data.id),
+        token.issued_at + token.expires_in - Date.now()
       ),
-      obtainmentTimestamp: Date.now(),
-      userId: id,
-    };
-  }
-
-  async addUser(token: User) {
-    const res = await fetch("https://api.twitch.tv/helix/users", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token.accessToken}`,
-        "Client-Id": this.clientId,
-      },
     });
-    const resData = await res.json();
-    const userId = resData.data[0].id;
-    const userName = resData.data[0].display_name;
 
-    this.tokens.set(userId, { ...token, userId, userName });
-    this.saveTokens();
-
-    return userId;
+    persistTokens();
   }
 
-  async getAnyAccessToken(userId?: UserIdResolvable): Promise<User> {
-    return {
-      ...Maybe(
-        this.tokens.get(
-          Maybe(userId)
-            .map(extractUserId)
-            .expect("User Id not provided on any access token")
-        )
-      ).expect("getAnyAccessToken missing token"),
-    };
-  }
+  async function refresh(id: string) {
+    const account = Maybe(accounts.get(id)).unwrap();
 
-  async refreshAccessTokenForUser(user: string, force?: boolean): Promise<any> {
-    const userId = user;
-
-    const token = Maybe(this.tokens.get(userId)).expect(
-      "refreshAccessTokenForUser missing token"
+    const token = await core.oauth.refresh(
+      "twitch",
+      account.token.refresh_token
     );
 
-    if (!force && tokenHasExpired(token)) return token;
-
-    Maybe(token.refreshToken).expect("Refresh token is null!");
-
-    const data = await this.core.oauth.refresh("twitch", token.refreshToken);
-
-    const returnData = {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token || null,
-      scope: data.scope ?? [],
-      expiresIn: data.expires_in ?? null,
-      obtainmentTimestamp: Date.now(),
-      userId,
-      userName: token.userName,
-    };
-
-    this.tokens.set(userId, returnData);
-    this.saveTokens();
-    this.refreshTimer(token);
-
-    return returnData;
+    await addToken(token);
   }
 
-  async refreshTimer(token: User) {
-    setTimeout(() => {
-      this.refreshAccessTokenForUser(token.userId, true);
-    }, token.obtainmentTimestamp + token.expiresIn * 1000 - Date.now() - 60000);
-  }
+  return {
+    accounts,
+    clientId,
+    addToken,
+    refresh,
+    logOut(id: string) {
+      accounts.delete(id);
 
-  saveTokens() {
-    localStorage.setItem(
-      TWITCH_ACCCESS_TOKEN,
-      JSON.stringify(
-        [...this.tokens.entries()].reduce(
-          (acc, [key, value]) => ({ ...acc, [key]: value }),
-          {}
-        )
-      )
-    );
-  }
+      persistTokens();
+    },
+  };
 }
 
-const SCHEMA = z.record(
-  z.string(),
-  z.object({
-    accessToken: z.string(),
-    refreshToken: z.string(),
-    scope: z.array(z.string()),
-    expiresIn: z.number(),
-    obtainmentTimestamp: z.number(),
-    userId: z.string(),
-    userName: z.string(),
-  })
-);
-
-export function extractUserId(user: UserIdResolvable): string {
-  if (typeof user === "string") {
-    return user;
-  } else if (typeof user === "number") {
-    return user.toString(10);
-  } else {
-    return user.id;
-  }
-}
+export type Auth = ReturnType<typeof createAuth>;

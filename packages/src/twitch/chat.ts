@@ -8,8 +8,9 @@ import {
 } from "solid-js";
 import tmi from "tmi.js";
 import { t, None, Maybe, Package, OnEvent } from "@macrograph/core";
-import { Auth } from "./auth";
+
 import { Ctx } from "./ctx";
+import { Auth } from "./auth";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
@@ -25,17 +26,17 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
   const [client] = createResource(
     () => readUserId().zip(writeUserId()).toNullable(),
     ([readUserId, writeUserId]) =>
-      Maybe(auth.tokens.get(readUserId))
-        .zip(Maybe(auth.tokens.get(writeUserId)))
-        .map(([readToken, writeToken]) => {
+      Maybe(auth.accounts.get(readUserId))
+        .zip(Maybe(auth.accounts.get(writeUserId)))
+        .map(([readAcc, writeAcc]) => {
           const client: tmi.Client = tmi.Client({
             options: {
               skipUpdatingEmotesets: true,
             },
-            channels: [writeToken.userName],
+            channels: [writeAcc.data.display_name],
             identity: {
-              username: readToken.userName,
-              password: readToken.accessToken,
+              username: readAcc.data.display_name,
+              password: readAcc.token.access_token,
             },
           });
 
@@ -106,7 +107,7 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
       ] as const
     ).forEach(([value, setValue]) => {
       value().map((id) => {
-        !auth.tokens.has(id) && setValue(None);
+        !auth.accounts.has(id) && setValue(None);
       });
     });
   });
@@ -160,8 +161,10 @@ export function register(
         .expect("No Twitch Chat client available!")
         .say(
           Maybe(
-            auth.tokens.get(writeUserId().expect("Chat write user not chosen!"))
-          ).expect("Write user token not found!").userName,
+            auth.accounts.get(
+              writeUserId().expect("Chat write user not chosen!")
+            )
+          ).expect("Write user token not found!").data.display_name,
           ctx.getInput(io)
         );
     },

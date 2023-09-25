@@ -31,7 +31,7 @@ export default () => {
           window.addEventListener("message", (e) => {
             if (e.source !== loginWindow) return;
 
-            res(e.data);
+            res({ ...e.data, issued_at: Date.now() });
           })
         );
       },
@@ -42,7 +42,7 @@ export default () => {
           body: JSON.stringify({ refreshToken }),
         });
 
-        return await res.json();
+        return { ...(await res.json()), issued_at: Date.now() };
       },
     },
   });

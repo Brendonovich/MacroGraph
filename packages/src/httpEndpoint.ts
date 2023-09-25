@@ -5,7 +5,7 @@ export type Endpoint = ReturnType<typeof createEndpoint>;
 interface EndpointArgs {
   path: string;
   extend?: Endpoint;
-  fetch: typeof fetch;
+  fetch(...args: Parameters<typeof fetch>): any;
 }
 
 export function createEndpoint({ path, extend, fetch }: EndpointArgs) {
@@ -17,12 +17,12 @@ export function createEndpoint({ path, extend, fetch }: EndpointArgs) {
       schema: TSchema,
       args?: Omit<RequestInit, "method">
     ): Promise<z.infer<TSchema>> => {
-      const res = await fetch(path, {
-        method,
-        ...args,
-      });
-
-      return schema.parse(await res.json());
+      return schema.parse(
+        await fetch(path, {
+          method,
+          ...args,
+        })
+      );
     };
 
   return {

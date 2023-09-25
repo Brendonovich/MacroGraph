@@ -12,8 +12,13 @@ export default function () {
   const core = new Core({
     fetch,
     oauth: {
-      authorize: (provider) =>
-        client.mutation(["oauth.authorize", `${AUTH_URL}/${provider}/login`]),
+      authorize: async (provider) => ({
+        ...(await client.mutation([
+          "oauth.authorize",
+          `${AUTH_URL}/${provider}/login`,
+        ])),
+        issued_at: Date.now(),
+      }),
       refresh: async (provider, refreshToken) => {
         const res = await fetch(`${AUTH_URL}/${provider}/refresh`, {
           method: "POST",
@@ -21,7 +26,7 @@ export default function () {
           body: JSON.stringify({ refreshToken }),
         });
 
-        return await res.json();
+        return { ...(await res.json()), issued_at: Date.now() };
       },
     },
   });

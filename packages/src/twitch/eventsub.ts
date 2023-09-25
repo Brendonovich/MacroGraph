@@ -9,9 +9,8 @@ import {
 import { z } from "zod";
 
 import { Helix } from "./helix";
-import { Auth } from "./auth";
 
-export function createEventSub(auth: Auth, helix: Helix, onEvent: OnEvent) {
+export function createEventSub(helix: Helix, onEvent: OnEvent) {
   const [state, setState] = createSignal<
     | { type: "disconnected" }
     | { type: "connecting" | "connected"; ws: WebSocket }
