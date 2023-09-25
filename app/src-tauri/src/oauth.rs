@@ -36,12 +36,7 @@ pub fn router() -> AlphaRouter<()> {
                     }),
                 );
 
-            let addr = format!(
-                "127.0.0.1:{}",
-                cfg!(debug_assertions).then_some(1820).unwrap_or(0)
-            )
-            .parse()
-            .unwrap();
+            let addr = "127.0.0.1:0".parse().unwrap();
 
             let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 
