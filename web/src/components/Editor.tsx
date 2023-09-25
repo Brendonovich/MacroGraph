@@ -31,8 +31,6 @@ export default () => {
           window.addEventListener("message", (e) => {
             if (e.source !== loginWindow) return;
 
-            console.log(provider, e.data);
-
             res(e.data);
           })
         );
