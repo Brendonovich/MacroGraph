@@ -23,12 +23,12 @@ const OpenSettings = () => {
 
   return (
     <Dialog.Root trigger={<Button>Open Settings</Button>}>
-      <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden">
+      <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl">
         <div class="flex flex-row justify-between text-white p-4">
           <Dialog.Title>Settings</Dialog.Title>
           <Dialog.CloseButton>X</Dialog.CloseButton>
         </div>
-        <div class="flex-1 flex flex-col p-4 pt-0 w-full text-white rounded-lg max-w-2xl overflow-y-scroll">
+        <div class="flex-1 flex flex-col p-4 pt-0 w-full text-white rounded-lg overflow-y-scroll">
           <div class="space-y-4">
             <For
               each={core.packages.sort((a, b) => a.name.localeCompare(b.name))}
