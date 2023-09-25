@@ -8,6 +8,7 @@ import {
   MapValue,
   Maybe,
   Package,
+  Struct,
   createEnum,
   t,
 } from "@macrograph/core";
@@ -135,8 +136,12 @@ export function toJSON<T extends BaseType>(
   value: t.infer<t.Map<T>>
 ): JSONValue;
 export function toJSON<T extends Enum>(
-  type: t.Enum<Enum<any>>,
-  value: t.infer<t.Enum<Enum<any>>>
+  type: t.Enum<T>,
+  value: t.infer<t.Enum<T>>
+): JSONValue;
+export function toJSON<T extends Struct>(
+  type: t.Struct<T>,
+  value: t.infer<t.Struct<T>>
 ): JSONValue;
 export function toJSON(type: t.Wildcard, value: t.infer<t.Wildcard>): JSONValue;
 export function toJSON(type: t.Any, value: any): JSONValue | null;
@@ -169,7 +174,48 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
 
     return JSON.variant(["Map", { value: newValue }]);
   } else if (type instanceof t.Enum) {
-    return JSON.variant(["Map", { value: new Map(Object.entries(value)) }]);
+    const enm: Enum = type.inner;
+    const variant = (enm.variants as EnumVariants).find(
+      (v) => v.name === value.variant
+    )!;
+
+    return JSON.variant([
+      "Map",
+      {
+        value: new Map(
+          Object.entries({
+            variant: JSON.variant(["String", { value: value.variant }]),
+            ...(value.data
+              ? {
+                  data: JSON.variant([
+                    "Map",
+                    {
+                      value: new Map(
+                        Object.entries(value.data).map(([name, value]) => {
+                          return [name, toJSON(variant.data![name]!, value)];
+                        })
+                      ),
+                    },
+                  ]),
+                }
+              : undefined),
+          })
+        ),
+      },
+    ]);
+  } else if (type instanceof t.Struct) {
+    const struct: Struct = type.struct;
+
+    return JSON.variant([
+      "Map",
+      {
+        value: new Map(
+          Object.entries(value).map(([name, value]) => {
+            return [name, toJSON(struct.fields[name]!.type, value)];
+          })
+        ),
+      },
+    ]);
   } else return null;
 }
 

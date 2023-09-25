@@ -1,6 +1,14 @@
 import { test, expect, describe } from "vitest";
+import {
+  MapValue,
+  None,
+  Some,
+  createEnum,
+  createStruct,
+  t,
+} from "@macrograph/core";
+
 import { toJSON, JSON, jsonToJS, jsToJSON } from "./json";
-import { MapValue, None, Some, t } from "@macrograph/core";
 
 describe("toJSON", () => {
   test("t.Option (None) -> Null", () => {
@@ -38,17 +46,81 @@ describe("toJSON", () => {
       JSON.variant(["Map", { value: value as never }])
     );
   });
-  test("t.Enum<JSON> -> Map<JSONValue>", () => {
+  test("t.Enum<JSON> -> JSON", () => {
+    const value = JSON.variant(["String", { value: "" }]);
+    expect(toJSON(t.enum(JSON), value)).toEqual(value);
+  });
+  test("t.Enum<TestEnum> -> Map<JSONValue>", () => {
+    const TestEnum = createEnum("TestEnum", (e) => [
+      e.variant("Unit"),
+      e.variant("Named", {
+        value: t.string(),
+      }),
+    ]);
+
+    expect(toJSON(t.enum(TestEnum), TestEnum.variant("Unit"))).toEqual(
+      JSON.variant([
+        "Map",
+        {
+          value: new Map(
+            Object.entries({
+              variant: JSON.variant(["String", { value: "Unit" }]),
+            })
+          ),
+        },
+      ])
+    );
+
     expect(
-      toJSON(t.enum(JSON), JSON.variant(["String", { value: "" }]))
+      toJSON(t.enum(TestEnum), TestEnum.variant(["Named", { value: "" }]))
     ).toEqual(
       JSON.variant([
         "Map",
         {
           value: new Map(
             Object.entries({
-              variant: "String",
-              data: { value: "" },
+              variant: JSON.variant(["String", { value: "Named" }]),
+              data: JSON.variant([
+                "Map",
+                {
+                  value: new Map(
+                    Object.entries({
+                      value: JSON.variant(["String", { value: "" }]),
+                    })
+                  ),
+                },
+              ]),
+            })
+          ),
+        },
+      ])
+    );
+  });
+  test("t.Struct<TestStruct> -> Map<JSONValue>", () => {
+    const TestStruct = createStruct("TestStruct", (s) => ({
+      string: s.field("String", t.string()),
+      int: s.field("Int", t.int()),
+      bool: s.field("Bool", t.bool()),
+      json: s.field("JSON", t.enum(JSON)),
+    }));
+
+    const value = {
+      string: "",
+      int: 0,
+      bool: true,
+      json: JSON.variant("Null"),
+    };
+
+    expect(toJSON(t.struct(TestStruct), value)).toEqual(
+      JSON.variant([
+        "Map",
+        {
+          value: new Map(
+            Object.entries({
+              string: JSON.variant(["String", { value: value.string }]),
+              int: JSON.variant(["Number", { value: value.int }]),
+              bool: JSON.variant(["Bool", { value: value.bool }]),
+              json: value.json,
             })
           ) as any,
         },
