@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
-import { createSignal, Match, Show, Switch } from "solid-js";
+import { createSignal, Match, Show, Suspense, Switch } from "solid-js";
 import { None, Some } from "@macrograph/core";
 import { Button, Input } from "@macrograph/ui";
 
@@ -10,7 +10,13 @@ const Schema = z.object({
   botToken: z.string(),
 });
 
-export default function ({ core, auth, gateway, bot }: Ctx) {
+export default function ({
+  core,
+  auth: { authToken, setAuthToken, ...auth },
+  user,
+  gateway,
+  bot,
+}: Ctx) {
   const [loggingIn, setLoggingIn] = createSignal(false);
 
   return (
@@ -92,6 +98,13 @@ export default function ({ core, auth, gateway, bot }: Ctx) {
 
       <span class="text-neutral-400 font-medium">OAuth</span>
       <Switch>
+        <Match when={authToken().isSome() && authToken().unwrap()}>
+          <Suspense fallback="Authenticating...">
+            <Show when={user()}>
+              {(user) => <>Logged in as {user().username}</>}
+            </Show>
+          </Suspense>
+        </Match>
         <Match when={loggingIn()}>
           <div class="flex space-x-4 items-center">
             <p>Logging in...</p>
@@ -104,9 +117,11 @@ export default function ({ core, auth, gateway, bot }: Ctx) {
               setLoggingIn(true);
 
               try {
-                await core.oauth.authorize("discord");
+                const token = await core.oauth.authorize("discord");
 
                 if (!loggingIn()) return;
+
+                setAuthToken(Some(token));
               } finally {
                 setLoggingIn(false);
               }

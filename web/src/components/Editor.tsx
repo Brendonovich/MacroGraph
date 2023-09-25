@@ -59,9 +59,7 @@ export default () => {
       pkgs.logic.pkg,
       pkgs.map.pkg,
       pkgs.obs.pkg,
-      pkgs.patreon.pkg,
       pkgs.spotify.pkg,
-      pkgs.streamlabs.pkg,
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
     ].map((p) => core.registerPackage(p));

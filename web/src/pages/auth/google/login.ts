@@ -30,4 +30,9 @@ export const GET: APIRoute = async (ctx) => {
   );
 };
 
-const SCOPES = ["https://www.googleapis.com/auth/youtube"];
+const SCOPES = [
+  "https://www.googleapis.com/auth/youtube",
+  "email",
+  "profile",
+  "openid",
+];

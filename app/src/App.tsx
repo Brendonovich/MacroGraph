@@ -44,6 +44,7 @@ export default function () {
       pkgs.logic.pkg,
       pkgs.map.pkg,
       pkgs.obs.pkg,
+      pkgs.patreon.pkg,
       pkgs.spotify.pkg,
       () =>
         pkgs.streamdeck.pkg({

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-type Endpoint = ReturnType<typeof createEndpoint>;
+export type Endpoint = ReturnType<typeof createEndpoint>;
 
 interface EndpointArgs {
   path: string;

@@ -1,6 +1,24 @@
-import { Core, Maybe, OnEvent, Option, Package, t } from "@macrograph/core";
+import {
+  Core,
+  Maybe,
+  None,
+  OAuthToken,
+  OnEvent,
+  Option,
+  Package,
+  t,
+} from "@macrograph/core";
 import { io, Socket } from "socket.io-client";
-import { createEffect, createSignal, on, onCleanup } from "solid-js";
+import {
+  createEffect,
+  createResource,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
+import { z } from "zod";
+
+import { createEndpoint } from "../httpEndpoint";
 import { EVENT, Event } from "./events";
 
 const STREAMLABS_TOKEN = "streamlabsToken";
@@ -79,20 +97,7 @@ export function pkg(core: Core) {
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-export function createCtx(
-  core: Core,
-  onEvent: OnEvent
-): {
-  core: Core;
-  auth: ReturnType<typeof createAuth>;
-} {
-  return {
-    core,
-    auth: createAuth(onEvent),
-  };
-}
-
-export function createAuth(onEvent: OnEvent) {
+export function createCtx(core: Core, onEvent: OnEvent) {
   const [state, setState] = createSignal<
     | {
         type: "disconnected";
@@ -106,6 +111,41 @@ export function createAuth(onEvent: OnEvent) {
 
   const [token, setToken] = createSignal<Option<string>>(
     Maybe(localStorage.getItem(STREAMLABS_TOKEN))
+  );
+
+  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(None);
+
+  const client = createEndpoint({
+    path: "https://streamlabs.com/api/v2.0",
+    fetch: async (url, opts) => {
+      return await core.fetch(url, {
+        ...opts,
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${authToken().unwrap().access_token}`,
+          ...opts?.headers,
+        },
+      });
+    },
+  });
+
+  const api = {
+    user: client.extend("/user"),
+  };
+
+  const [user] = createResource(
+    () => authToken().toNullable(),
+    async () => {
+      const resp = await api.user.get(
+        z.object({
+          streamlabs: z.object({
+            display_name: z.string(),
+          }),
+        })
+      );
+
+      return resp;
+    }
   );
 
   createEffect(
@@ -169,8 +209,14 @@ export function createAuth(onEvent: OnEvent) {
   );
 
   return {
-    token,
-    state,
-    setToken,
+    core,
+    auth: {
+      user,
+      state,
+      token,
+      setToken,
+      authToken,
+      setAuthToken,
+    },
   };
 }

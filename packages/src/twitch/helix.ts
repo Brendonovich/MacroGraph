@@ -107,9 +107,6 @@ export function createHelix(auth: Auth, core: Core) {
     fetch: async (url, args) => {
       const user = await auth.getAccessTokenForUser(userId().unwrap());
 
-      const token = userId().andThen((id) => Maybe(auth.tokens.get(id)));
-      // await auth.refreshAccessTokenForUser(token.unwrap().userId);
-
       if (args?.body && args.body instanceof URLSearchParams) {
         url += `?${args.body.toString()}`;
         delete args.body;

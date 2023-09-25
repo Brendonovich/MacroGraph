@@ -1,37 +1,41 @@
-import { createResource } from "solid-js";
+import { Accessor, createResource } from "solid-js";
 import { Core, Maybe, None, Package, t } from "@macrograph/core";
 import { z } from "zod";
 
 import { Auth } from "./auth";
 import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
-import { createEndpoint } from "../httpEndpoint";
+import { Endpoint, createEndpoint } from "../httpEndpoint";
 import { Ctx } from ".";
 
-export function create({ botToken, setBotToken }: Auth, core: Core) {
+function createApiEndpoint(core: Core, getToken: Accessor<string>) {
   const root = createEndpoint({
     path: "https://discord.com/api/v10",
     fetch: async (url, args) => {
-      const token = botToken();
-      if (token.isNone()) throw new Error("No bot token!");
-
       return await core.fetch(url, {
         ...args,
         headers: {
           ...args?.headers,
           "Content-Type": "application/json",
-          Authorization: `Bot ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
       });
     },
   });
 
-  const api = {
+  return {
     channels: (id: string) => {
       const channel = root.extend(`/channels/${id}`);
 
       return { messages: channel.extend(`/messages`) };
     },
-    users: (id: string) => root.extend(`/users/${id}`),
+    users: (() => {
+      const fn = (id: string) => root.extend(`/users/${id}`);
+      Object.assign(fn, { me: root.extend(`/users/@me`) });
+      return fn as {
+        (id: string): Endpoint;
+        me: Endpoint;
+      };
+    })(),
     guilds: (guildId: string) => {
       const guild = root.extend(`/guilds/${guildId}`);
 
@@ -42,16 +46,33 @@ export function create({ botToken, setBotToken }: Auth, core: Core) {
       };
     },
   };
+}
+
+export function create({ authToken, botToken, setBotToken }: Auth, core: Core) {
+  const userApi = createApiEndpoint(
+    core,
+    () => authToken().expect("Not logged in!").access_token
+  );
+
+  const [user] = createResource(
+    () => authToken().toNullable(),
+    () => userApi.users.me.get(USER_SCHEMA)
+  );
+
+  const botApi = createApiEndpoint(
+    core,
+    () => authToken().expect("Not logged in!").access_token
+  );
 
   const [bot] = createResource(botToken, async () => {
     try {
-      return await api.users("@me").get(USER_SCHEMA);
+      return await botApi.users.me.get(USER_SCHEMA);
     } catch (e) {
       setBotToken(None);
     }
   });
 
-  return { bot, api };
+  return { bot, api: userApi, user };
 }
 
 export function register(pkg: Package, { api }: Ctx, core: Core) {

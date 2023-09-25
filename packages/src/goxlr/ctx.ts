@@ -15,7 +15,7 @@ export function createCtx(onEvent: OnEvent) {
   >({ type: "disconnected" });
 
   const [url, setUrl] = createSignal<Option<string>>(
-    Maybe(localStorage.getItem("GoXLR_WS"))
+    Maybe(localStorage.getItem("GoXLR_WS") || null)
   );
 
   let mixerID: string | undefined;

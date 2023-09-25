@@ -19,7 +19,7 @@ export const GET: APIRoute = async (ctx) => {
     client_id: env.DISCORD_CLIENT_ID,
     redirect_uri: `${env.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
     response_type: "code",
-    scope: "identify",
+    scope: SCOPES.join(" "),
     state,
   });
 
@@ -27,3 +27,5 @@ export const GET: APIRoute = async (ctx) => {
     new URL(`https://discord.com/api/oauth2/authorize?${params}`).toString()
   );
 };
+
+const SCOPES = ["identify", "email"];
