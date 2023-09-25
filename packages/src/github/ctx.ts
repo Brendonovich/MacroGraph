@@ -1,9 +1,13 @@
-import { Core, None, OAuthToken, Option } from "@macrograph/core";
+import { Core, Maybe, OAuthToken, Option } from "@macrograph/core";
 import { createResource, createSignal } from "solid-js";
 import { Octokit } from "octokit";
 
+export const TOKEN_LOCALSTORAGE = "githubToken";
+
 export function createCtx(core: Core) {
-  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(None);
+  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(
+    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
+  );
 
   const [user] = createResource(
     () => authToken().toNullable(),
@@ -14,7 +18,19 @@ export function createCtx(core: Core) {
     }
   );
 
-  return { core, authToken, user, setAuthToken };
+  return {
+    core,
+    authToken,
+    user,
+    setAuthToken: (token: Option<OAuthToken>) => {
+      setAuthToken(token);
+      if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
+      else
+        token.peek((token) =>
+          localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
+        );
+    },
+  };
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

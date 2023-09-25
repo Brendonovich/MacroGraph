@@ -72,7 +72,7 @@ export default (props: { core: Core }) => {
           <Show
             when={UI.state.currentGraph}
             fallback={
-              <div class="flex-1 flex justify-center items-center">
+              <div class="flex-1 flex justify-center items-center text-white">
                 No graph selected
               </div>
             }

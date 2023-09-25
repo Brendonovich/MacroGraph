@@ -1,11 +1,15 @@
-import { Core, None, OAuthToken, Option } from "@macrograph/core";
+import { Core, Maybe, OAuthToken, Option } from "@macrograph/core";
 import { createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
 import { createEndpoint } from "../httpEndpoint";
 
+export const TOKEN_LOCALSTORAGE = "patreonToken";
+
 export function createCtx(core: Core) {
-  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(None);
+  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(
+    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
+  );
 
   const client = createEndpoint({
     path: "https://www.patreon.com/api",
@@ -49,7 +53,19 @@ export function createCtx(core: Core) {
     }
   );
 
-  return { core, authToken, setAuthToken, user };
+  return {
+    core,
+    authToken,
+    setAuthToken: (token: Option<OAuthToken>) => {
+      setAuthToken(token);
+      if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
+      else
+        token.peek((token) =>
+          localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
+        );
+    },
+    user,
+  };
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

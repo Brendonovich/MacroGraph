@@ -21,7 +21,8 @@ import { z } from "zod";
 import { createEndpoint } from "../httpEndpoint";
 import { EVENT, Event } from "./events";
 
-const STREAMLABS_TOKEN = "streamlabsToken";
+const TOKEN_LOCALSTORAGE = "streamlabsToken";
+const USER_TOKEN_LOCALSTORAGE = "streamlabsUserToken";
 
 export function pkg(core: Core) {
   const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
@@ -110,10 +111,12 @@ export function createCtx(core: Core, onEvent: OnEvent) {
   >({ type: "disconnected" });
 
   const [token, setToken] = createSignal<Option<string>>(
-    Maybe(localStorage.getItem(STREAMLABS_TOKEN))
+    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE))
   );
 
-  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(None);
+  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(
+    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
+  );
 
   const client = createEndpoint({
     path: "https://streamlabs.com/api/v2.0",
@@ -146,18 +149,6 @@ export function createCtx(core: Core, onEvent: OnEvent) {
 
       return resp;
     }
-  );
-
-  createEffect(
-    on(
-      () => token(),
-      (token) =>
-        token
-          .map((token) => (localStorage.setItem(STREAMLABS_TOKEN, token), true))
-          .unwrapOrElse(
-            () => (localStorage.removeItem(STREAMLABS_TOKEN), false)
-          )
-    )
   );
 
   createEffect(
@@ -214,9 +205,24 @@ export function createCtx(core: Core, onEvent: OnEvent) {
       user,
       state,
       token,
-      setToken,
+      setToken: (token: Option<string>) => {
+        setToken(token);
+
+        if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
+        else
+          token.peek((token) =>
+            localStorage.setItem(TOKEN_LOCALSTORAGE, token)
+          );
+      },
       authToken,
-      setAuthToken,
+      setAuthToken: (token: Option<OAuthToken>) => {
+        setAuthToken(token);
+        if (token.isNone()) localStorage.removeItem(USER_TOKEN_LOCALSTORAGE);
+        else
+          token.peek((token) =>
+            localStorage.setItem(USER_TOKEN_LOCALSTORAGE, JSON.stringify(token))
+          );
+      },
     },
   };
 }
