@@ -343,6 +343,51 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Int to Float",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.int(),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(io.out, ctx.getInput(io.in));
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Divide Ints Exact",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.int(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.int(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = ctx.getInput(io.one) / ctx.getInput(io.two);
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Divide Ints",
     variant: "Pure",
     generateIO(io) {
@@ -1214,8 +1259,13 @@ export function pkg(core: Core) {
           id: "exec",
           name: "",
         }),
-        name: io.dataInput({
-          id: "name",
+        inName: io.dataInput({
+          id: "inName",
+          name: "Event Name",
+          type: t.string(),
+        }),
+        outName: io.dataOutput({
+          id: "outName",
           name: "Event Name",
           type: t.string(),
         }),
@@ -1232,8 +1282,9 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, data, io }) {
-      if (!ctx.getInput(io.name)) return;
-      if (ctx.getInput(io.name) !== data.name) return;
+      if (!ctx.getInput(io.inName)) return;
+      if (ctx.getInput(io.inName) !== data.name) return;
+      ctx.setOutput(io.outName, data.name);
       ctx.setOutput(io.key, data.key);
       ctx.setOutput(io.data, data.data);
       ctx.exec(io.exec);

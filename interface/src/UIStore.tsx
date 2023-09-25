@@ -99,7 +99,7 @@ export function createUIStore(core: Core) {
       state.pinPositions.set(pin, position);
     },
     updateTranslate(delta: XY) {
-      state.translate.x += delta.x;
+      state.translate.x += delta.x; 
       state.translate.y += delta.y;
     },
     setTranslate(translate: XY) {
@@ -107,7 +107,7 @@ export function createUIStore(core: Core) {
     },
     updateScale(delta: number, screenOrigin: XY) {
       const startGraphOrigin = this.toGraphSpace(screenOrigin);
-      state.scale = Math.min(Math.max(0.25, state.scale + delta / 10), 2.5);
+      state.scale = Math.min(Math.max(0.2, state.scale + delta / 20), 2.5);
       const endGraphOrigin = this.toScreenSpace(startGraphOrigin);
 
       state.translate = {
