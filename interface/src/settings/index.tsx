@@ -1,4 +1,4 @@
-import { For, ParentProps, Suspense } from "solid-js";
+import { For, ParentProps, Suspense, createSignal } from "solid-js";
 
 import { Button, Dialog } from "./ui";
 import { useUIStore } from "../UIStore";
@@ -21,8 +21,14 @@ export default () => {
 const OpenSettings = () => {
   const core = useCore();
 
+  const [open, setOpen] = createSignal(false);
+
   return (
-    <Dialog.Root trigger={<Button>Open Settings</Button>}>
+    <Dialog.Root
+      onOpenChange={setOpen}
+      open={open()}
+      trigger={<Button>Open Settings</Button>}
+    >
       <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl">
         <div class="flex flex-row justify-between text-white p-4">
           <Dialog.Title>Settings</Dialog.Title>

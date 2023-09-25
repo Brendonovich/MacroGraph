@@ -20,14 +20,10 @@ export const Input = (props: ComponentProps<"input">) => (
 );
 
 export const DialogRoot = (props: ParentProps<{ trigger: JSXElement }>) => {
-  // const ctx = useCoreContext();
-
   return (
     <KobalteDialog.Root>
       <KobalteDialog.Trigger as="div">{props.trigger}</KobalteDialog.Trigger>
-      <KobalteDialog.Portal
-      // mount={ctx.rootRef()}
-      >
+      <KobalteDialog.Portal>
         <KobalteDialog.Overlay class="absolute inset-0 bg-black/40" />
         <KobalteDialog.Content class="absolute inset-0 flex flex-col items-center py-10 overflow-hidden">
           {props.children}

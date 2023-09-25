@@ -181,6 +181,9 @@ importers:
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
+      solid-headless:
+        specifier: ^0.13.1
+        version: 0.13.1(solid-js@1.7.11)
       solid-icons:
         specifier: ^1.0.4
         version: 1.0.4(solid-js@1.7.11)
@@ -190,6 +193,16 @@ importers:
       zod:
         specifier: ^3.21.4
         version: 3.21.4
+    devDependencies:
+      '@kobalte/tailwindcss':
+        specifier: ^0.6.5
+        version: 0.6.5(tailwindcss@3.3.2)
+      '@tailwindcss/forms':
+        specifier: ^0.5.3
+        version: 0.5.3(tailwindcss@3.3.2)
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7
 
   packages:
 
@@ -6658,6 +6671,16 @@ packages:
       - supports-color
     dev: false
 
+  /solid-headless@0.13.1(solid-js@1.7.11):
+    resolution: {integrity: sha512-FZJai49YmdBu6oEo8aJGPMQ1Qn8xiW0cnD6vNFDIQWMKJdXEUtDEwz0hTR9aZ7Epq3IkrZs+98E0vNiv1+pZpA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      solid-js: ^1.2
+    dependencies:
+      solid-js: 1.7.11
+      solid-use: 0.6.2(solid-js@1.7.11)
+    dev: false
+
   /solid-icons@1.0.4(solid-js@1.7.11):
     resolution: {integrity: sha512-gJTp4in3+OYCs9WvDkSLt4Los2unR3Uoder8wjh15GsfP20xiNOLfPTJllXmn+fI8+k3x7bRYtLGIgWd9fUQug==}
     engines: {node: '>= 16'}
@@ -6688,6 +6711,15 @@ packages:
       '@babel/helper-module-imports': 7.21.4
       '@babel/types': 7.21.5
       solid-js: 1.7.11
+
+  /solid-use@0.6.2(solid-js@1.7.11):
+    resolution: {integrity: sha512-0ShJ5s+4PIN0pJB/BtsQucsZB+xnUeeTGaxErQDu6USn5jygZWXicAtOEvFbI8gv40xE751uY1Tz7Aib9lxL/Q==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      solid-js: ^1.5
+    dependencies:
+      solid-js: 1.7.11
+    dev: false
 
   /source-map-js@1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
@@ -6897,6 +6929,12 @@ packages:
   /supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
+
+  /tailwindcss-animate@1.0.7:
+    resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
+    dev: true
 
   /tailwindcss@3.3.2:
     resolution: {integrity: sha512-9jPkMiIBXvPc2KywkraqsUfbfj+dHDb+JPWtSJa9MLFdrPyazI7q6WX2sUrm7R9eVR7qqv3Pas7EvQFzxKnI6w==}
