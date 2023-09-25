@@ -25,9 +25,41 @@ export function register(actions: { list(path: string): Promise<Entry[]> }) {
     async run({ ctx, io }) {
       const files = await actions.list(ctx.getInput(io.path));
 
+      console.log(files);
+
       const array = files
         .map((f) => {
           if ("File" in f) return f.File;
+        })
+        .filter(Boolean) as string[];
+
+      ctx.setOutput(io.files, array);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "List Folders",
+    variant: "Exec",
+    generateIO(io) {
+      return {
+        path: io.dataInput({
+          id: "path",
+          name: "Folder Path",
+          type: t.string(),
+        }),
+        files: io.dataOutput({
+          id: "folders",
+          name: "Folders",
+          type: t.list(t.string()),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      const files = await actions.list(ctx.getInput(io.path));
+
+      const array = files
+        .map((f) => {
+          if ("Dir" in f) return f.Dir;
         })
         .filter(Boolean) as string[];
 

@@ -1253,11 +1253,18 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetInputVolume", {
-        inputName: ctx.getInput(io.inputName),
-        inputVolumeMul: ctx.getInput(io.inputVolumeMul),
-        inputVolumeDb: ctx.getInput(io.inputVolumeDb),
-      });
+      if (ctx.getInput(io.inputVolumeMul) === 0) {
+        obs.call("SetInputVolume", {
+          inputName: ctx.getInput(io.inputName),
+          inputVolumeDb: ctx.getInput(io.inputVolumeDb),
+        });
+      }
+      if (ctx.getInput(io.inputVolumeDb) === 0) {
+        obs.call("SetInputVolume", {
+          inputName: ctx.getInput(io.inputName),
+          inputVolumeMul: ctx.getInput(io.inputVolumeMul),
+        });
+      }
     },
   });
 
