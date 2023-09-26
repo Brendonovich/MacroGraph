@@ -40,7 +40,14 @@ export function createAuth(clientId: string, core: Core) {
   }
 
   async function addToken(token: OAuthToken) {
-    const api = createHelixEndpoint(clientId, () => token.access_token);
+    const api = createHelixEndpoint(
+      clientId,
+      () => token,
+      (newToken) => {
+        token = newToken;
+      },
+      core
+    );
 
     const data = await api.users.get(USER_DATA);
 
@@ -49,7 +56,7 @@ export function createAuth(clientId: string, core: Core) {
       data,
       refreshTimer: setTimeout(
         () => refresh(data.id),
-        token.issued_at + token.expires_in - Date.now()
+        (token.issued_at + token.expires_in - Date.now()) * 1000
       ),
     });
 

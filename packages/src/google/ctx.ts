@@ -26,14 +26,13 @@ export function createCtx(core: Core) {
       let resp = await run();
 
       if (resp.status !== 200) {
-        setAuthToken(
-          Some(
-            await core.oauth.refresh(
-              "google",
-              authToken().unwrap().refresh_token
-            )
-          )
+        console.log("hmm");
+        const newToken = await core.oauth.refresh(
+          "google",
+          authToken().unwrap().refresh_token
         );
+        console.log("google", newToken);
+        setAuthToken(Some(newToken));
 
         resp = await run();
       }

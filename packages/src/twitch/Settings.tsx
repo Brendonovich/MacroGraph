@@ -12,7 +12,7 @@ export default ({ core, helix, chat, auth }: Ctx) => {
     <>
       <Switch>
         <Match when={auth.accounts.size !== 0}>
-          <table class="mb-2 table-auto">
+          <table class="mb-2 table-auto w-full">
             <thead>
               <tr>
                 <th class="pr-2 text-left">Account</th>
@@ -31,7 +31,7 @@ export default ({ core, helix, chat, auth }: Ctx) => {
               <For each={[...auth.accounts.values()]}>
                 {(account) => {
                   const expiryTime =
-                    account.token.expires_in * 1000 + account.token.issued_at;
+                    account.token.expires_in + account.token.issued_at;
 
                   const [now, setNow] = createSignal(Date.now());
 
@@ -44,7 +44,7 @@ export default ({ core, helix, chat, auth }: Ctx) => {
                   });
 
                   const expiresIn = () => {
-                    return Math.floor((expiryTime - now()) / 1000);
+                    return Math.floor(expiryTime - now() / 1000);
                   };
 
                   return (

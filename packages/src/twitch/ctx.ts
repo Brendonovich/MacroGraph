@@ -9,7 +9,7 @@ const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 export function createCtx(core: Core, onEvent: any) {
   const auth = createAuth(CLIENT_ID, core);
-  const helix = createHelix(auth, core);
+  const helix = createHelix(core, auth);
 
   return {
     core,

@@ -53,6 +53,7 @@ const OpenSettings = () => {
                     <ErrorBoundary
                       fallback={(error: Error) => (
                         <div>
+                          <p>An error occurred:</p>
                           <p>{error.message}</p>
                         </div>
                       )}

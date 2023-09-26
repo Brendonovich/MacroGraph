@@ -18,7 +18,7 @@ export default function () {
             ["oauth.authorize", `${AUTH_URL}/${provider}/login`],
             {
               onData(data) {
-                res({ ...data, issued_at: Date.now() });
+                res({ ...data, issued_at: Date.now() / 1000 });
               },
             }
           );
@@ -30,7 +30,7 @@ export default function () {
           body: JSON.stringify({ refreshToken }),
         });
 
-        return { ...(await res.json()), issued_at: Date.now() };
+        return { ...(await res.json()), issued_at: Date.now() / 1000 };
       },
     },
   });

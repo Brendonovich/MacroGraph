@@ -14,6 +14,8 @@ import {
   createEnum,
   createStruct,
   Package,
+  OAuthToken,
+  Core,
 } from "@macrograph/core";
 
 import { createEndpoint } from "../httpEndpoint";
@@ -104,8 +106,12 @@ export const Redemption = createStruct("Redemption", (s) => ({
 
 export function createHelixEndpoint(
   clientId: string,
-  getToken: Accessor<string>
+  getToken: Accessor<OAuthToken>,
+  setToken: (token: OAuthToken) => void,
+  core: Core
 ) {
+  let refreshPromise: Promise<any> | null = null;
+
   const root = createEndpoint({
     path: "https://api.twitch.tv/helix",
     fetch: async (url, args) => {
@@ -114,17 +120,34 @@ export function createHelixEndpoint(
         delete args.body;
       }
 
-      return await fetch(url, {
-        headers: {
-          ...args?.headers,
-          "content-type": "application/json",
-          "Client-Id": clientId,
-          Authorization: `Bearer ${getToken()}`,
-        },
-        ...args,
-      })
-        .then((res) => res.json())
-        .then((json) => json.data[0]);
+      const run = () =>
+        fetch(url, {
+          headers: {
+            ...args?.headers,
+            "content-type": "application/json",
+            "Client-Id": clientId,
+            Authorization: `Bearer ${getToken().access_token}`,
+          },
+          ...args,
+        });
+
+      let resp = await run();
+
+      if (resp.status !== 200) {
+        if (!refreshPromise)
+          refreshPromise = (async () => {
+            const token = await core.oauth.refresh(
+              "twitch",
+              getToken().refresh_token
+            );
+            setToken(token);
+            refreshPromise = null;
+          })();
+        await refreshPromise;
+        resp = await run();
+      }
+
+      return resp.json().then((json: any) => json.data[0]);
     },
   });
 
@@ -384,15 +407,23 @@ export function createHelixEndpoint(
   return client;
 }
 
-export function createHelix(auth: Auth) {
+export function createHelix(core: Core, auth: Auth) {
   const [userId, setUserId] = createSignal(
     Maybe(localStorage.getItem(HELIX_USER_ID))
   );
 
   const client = createHelixEndpoint(
     auth.clientId,
-    () =>
-      Maybe(auth.accounts.get(userId().unwrap())).unwrap().token.access_token
+    () => Maybe(auth.accounts.get(userId().unwrap())).unwrap().token,
+    (token) => {
+      const prevData = auth.accounts.get(userId().unwrap());
+      if (prevData)
+        auth.accounts.set(userId().unwrap(), {
+          ...prevData,
+          token,
+        });
+    },
+    core
   );
 
   createEffect(
