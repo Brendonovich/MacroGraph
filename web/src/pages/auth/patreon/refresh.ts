@@ -19,6 +19,8 @@ export const POST: APIRoute = async ({ request }) => {
     }),
   });
 
+  if (res.status !== 200) throw new Error(await res.text());
+
   const json = await res.json();
 
   const token = TOKEN.parse(json);
