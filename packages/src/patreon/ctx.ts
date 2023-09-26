@@ -11,6 +11,7 @@ export function createCtx(core: Core) {
     Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
   );
 
+  let refreshPromise: null | Promise<void> = null;
   const client = createEndpoint({
     path: "https://www.patreon.com/api",
     fetch: async (url, opts) => {
@@ -26,14 +27,15 @@ export function createCtx(core: Core) {
       let resp = await run();
 
       if (resp.status !== 200) {
-        setAuthToken(
-          Some(
-            await core.oauth.refresh(
+        if (!refreshPromise)
+          refreshPromise = (async () => {
+            const token: OAuthToken = (await core.oauth.refresh(
               "patreon",
               authToken().unwrap().refresh_token
-            )
-          )
-        );
+            )) as any;
+            setAuthToken(Some(token));
+          })();
+        await refreshPromise;
 
         resp = await run();
       }
