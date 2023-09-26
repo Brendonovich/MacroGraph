@@ -23,7 +23,6 @@ export function createEventSub(helix: Helix, onEvent: OnEvent) {
         user.mapOrElse(
           () => setState({ type: "disconnected" }),
           (userId) => {
-            // auth.refreshAccessTokenForUser(userId);
             const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
             ws.addEventListener("message", async (data) => {
@@ -33,7 +32,7 @@ export function createEventSub(helix: Helix, onEvent: OnEvent) {
                 case "session_welcome":
                   setState({ type: "connected", ws });
 
-                  await Promise.all(
+                  await Promise.allSettled(
                     SubTypes.map((type) =>
                       helix.client.eventsub.subscriptions.post(z.any(), {
                         body: JSON.stringify({

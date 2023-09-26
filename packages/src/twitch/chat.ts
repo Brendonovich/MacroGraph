@@ -99,19 +99,6 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
     { initialValue: None }
   );
 
-  createComputed(() => {
-    (
-      [
-        [readUserId, setReadUserId],
-        [writeUserId, setWriteUserId],
-      ] as const
-    ).forEach(([value, setValue]) => {
-      value().map((id) => {
-        !auth.accounts.has(id) && setValue(None);
-      });
-    });
-  });
-
   createEffect(
     on(
       () =>
@@ -122,7 +109,6 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
       (value) => {
         value.forEach(([key, id]) => {
           id.map((userId) => {
-            // auth.refreshAccessTokenForUser(userId);
             localStorage.setItem(key, userId);
             return true;
           }).unwrapOrElse(() => (localStorage.removeItem(key), false));

@@ -1,15 +1,8 @@
-import {
-  Accessor,
-  createComputed,
-  createEffect,
-  createSignal,
-  on,
-} from "solid-js";
+import { Accessor, createEffect, createSignal, on } from "solid-js";
 import { z } from "zod";
 import {
   t,
   Maybe,
-  None,
   InferEnum,
   createEnum,
   createStruct,
@@ -134,15 +127,17 @@ export function createHelixEndpoint(
       let resp = await run();
 
       if (resp.status !== 200) {
-        if (!refreshPromise)
+        if (!refreshPromise) {
           refreshPromise = (async () => {
+            const oldToken = getToken();
             const token = await core.oauth.refresh(
               "twitch",
-              getToken().refresh_token
+              oldToken.refresh_token
             );
-            setToken(token);
+            setToken({ ...oldToken, ...token });
             refreshPromise = null;
           })();
+        }
         await refreshPromise;
         resp = await run();
       }
@@ -435,12 +430,6 @@ export function createHelix(core: Core, auth: Auth) {
           .unwrapOrElse(() => (localStorage.removeItem(HELIX_USER_ID), false))
     )
   );
-
-  createComputed(() => {
-    userId().map((id) => {
-      !auth.accounts.has(id) && setUserId(None);
-    });
-  });
 
   return {
     client,
