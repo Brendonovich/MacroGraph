@@ -12,3 +12,8 @@ export const PARAMS = z.object({
   code: z.string(),
   state: STATE,
 });
+
+export const REFRESHED_TOKEN = z.object({
+  access_token: z.string(),
+  expires_in: z.number(),
+});

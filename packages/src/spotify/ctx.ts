@@ -1,4 +1,11 @@
-import { Core, Maybe, OAuthToken, Option, Some } from "@macrograph/core";
+import {
+  Core,
+  Maybe,
+  OAuthToken,
+  Option,
+  RefreshedOAuthToken,
+  Some,
+} from "@macrograph/core";
 import { createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
@@ -26,14 +33,13 @@ export function createCtx(core: Core) {
       let resp = await run();
 
       if (resp.status !== 200) {
-        setAuthToken(
-          Some(
-            await core.oauth.refresh(
-              "spotify",
-              authToken().unwrap().refresh_token
-            )
-          )
-        );
+        const refreshToken = authToken().unwrap().refresh_token;
+        const token: RefreshedOAuthToken = (await core.oauth.refresh(
+          "spotify",
+          refreshToken
+        )) as any;
+
+        setAuthToken(Some({ ...token, refresh_token: refreshToken }));
 
         resp = await run();
       }

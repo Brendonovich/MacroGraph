@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { CORS_HEADERS } from "~/auth";
 import { env } from "~/env/server";
 
-import { TOKEN } from "~/schemas/twitch";
+import { REFRESHED_TOKEN } from "~/schemas/twitch";
 
 export const prerender = false;
 
@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const json = await res.json();
 
-  const token = TOKEN.parse(json);
+  const token = REFRESHED_TOKEN.parse(json);
 
   return new Response(JSON.stringify(token), {
     headers: {
