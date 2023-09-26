@@ -126,7 +126,7 @@ export function createHelixEndpoint(
 
       let resp = await run();
 
-      if (resp.status !== 200) {
+      if (Math.floor(resp.status / 100) !== 2) {
         if (!refreshPromise) {
           refreshPromise = (async () => {
             const oldToken = getToken();
