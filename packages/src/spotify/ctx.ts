@@ -6,7 +6,7 @@ import {
   RefreshedOAuthToken,
   Some,
 } from "@macrograph/core";
-import { createResource, createSignal } from "solid-js";
+import { createEffect, createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
 import { createEndpoint } from "../httpEndpoint";
@@ -33,19 +33,28 @@ export function createCtx(core: Core) {
       let resp = await run();
 
       if (resp.status !== 200) {
-        const refreshToken = authToken().unwrap().refresh_token;
+        const prevToken = authToken().unwrap();
         const token: RefreshedOAuthToken = (await core.oauth.refresh(
           "spotify",
-          refreshToken
+          prevToken.refresh_token
         )) as any;
 
-        setAuthToken(Some({ ...token, refresh_token: refreshToken }));
+        setAuthToken(Some({ ...prevToken, ...token }));
 
         resp = await run();
       }
 
       return await resp.json();
     },
+  });
+
+  createEffect(() => {
+    const token = authToken();
+    if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
+    else
+      token.peek((token) =>
+        localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
+      );
   });
 
   const api = {
@@ -93,14 +102,7 @@ export function createCtx(core: Core) {
   return {
     core,
     authToken,
-    setAuthToken: (token: Option<OAuthToken>) => {
-      setAuthToken(token);
-      if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
-      else
-        token.peek((token) =>
-          localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
-        );
-    },
+    setAuthToken,
     user,
   };
 }

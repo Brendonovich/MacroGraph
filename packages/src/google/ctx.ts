@@ -6,7 +6,7 @@ import {
   RefreshedOAuthToken,
   Some,
 } from "@macrograph/core";
-import { createResource, createSignal } from "solid-js";
+import { createEffect, createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
 import { createEndpoint } from "../httpEndpoint";
@@ -49,6 +49,15 @@ export function createCtx(core: Core) {
     },
   });
 
+  createEffect(() => {
+    const token = authToken();
+    if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
+    else
+      token.peek((token) =>
+        localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
+      );
+  });
+
   const api = {
     oauth: (() => {
       const oauth = client.extend("/oauth2/v3");
@@ -81,14 +90,7 @@ export function createCtx(core: Core) {
   return {
     core,
     authToken,
-    setAuthToken: (token: Option<OAuthToken>) => {
-      setAuthToken(token);
-      if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
-      else
-        token.peek((token) =>
-          localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
-        );
-    },
+    setAuthToken,
     user,
   };
 }
