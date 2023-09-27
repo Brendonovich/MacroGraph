@@ -1,6 +1,8 @@
-import { Core, Maybe, OAuthToken, Option } from "@macrograph/core";
-import { createResource, createSignal } from "solid-js";
+import { Core, Maybe, OAuthToken, Option, Some } from "@macrograph/core";
+import { createEffect, createResource, createSignal } from "solid-js";
 import { Octokit } from "octokit";
+
+import { createCallbackAuth } from "./auth";
 
 export const TOKEN_LOCALSTORAGE = "githubToken";
 
@@ -9,11 +11,43 @@ export function createCtx(core: Core) {
     Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
   );
 
+  createEffect(() => {
+    const token = authToken();
+    if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
+    else
+      token.peek((token) =>
+        localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
+      );
+  });
+
+  let refreshPromise: Promise<any> | null = null;
+
+  const client = new Octokit({
+    authStrategy: createCallbackAuth,
+    auth: {
+      refresh: async () => {
+        if (!refreshPromise)
+          refreshPromise = (async () => {
+            const newToken = await core.oauth.refresh(
+              "github",
+              authToken().unwrap().refresh_token
+            );
+            setAuthToken(Some(newToken as OAuthToken));
+          })();
+
+        await refreshPromise;
+      },
+      callback: () => {
+        return authToken().unwrap().access_token;
+      },
+    },
+  });
+
   const [user] = createResource(
     () => authToken().toNullable(),
-    async (token) => {
-      const client = new Octokit({ auth: token.access_token });
-      const resp = await client.request("GET /user");
+    async () => {
+      const resp = await client.rest.users.getAuthenticated();
+
       return resp.data;
     }
   );
@@ -22,14 +56,7 @@ export function createCtx(core: Core) {
     core,
     authToken,
     user,
-    setAuthToken: (token: Option<OAuthToken>) => {
-      setAuthToken(token);
-      if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
-      else
-        token.peek((token) =>
-          localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
-        );
-    },
+    setAuthToken,
   };
 }
 
