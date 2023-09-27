@@ -22,15 +22,7 @@ export const GraphList = (props: Props) => {
         <button
           class="text-xl font-bold px-1"
           onClick={async () => {
-            let importData = await navigator.clipboard.readText();
-            let graph = await Graph.deserialize(
-              core.project,
-              JSON.parse(atob(importData))
-            );
-            graph.id = core.project.generateGraphId();
-            core.project.graphs.set(graph.id, graph);
-            core.project.save();
-            UI.setCurrentGraph(graph);
+            UI.pasteClipboard();
           }}
         >
           <CgImport />
