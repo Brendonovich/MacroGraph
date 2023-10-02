@@ -37,9 +37,14 @@ export type OAuthToken = {
   issued_at: number;
 };
 
+export type RefreshedOAuthToken = Omit<OAuthToken, "refresh_token">;
+
 type OAuth = {
   authorize(provider: string): Promise<OAuthToken>;
-  refresh(provider: string, refreshToken: string): Promise<OAuthToken>;
+  refresh(
+    provider: string,
+    refreshToken: string
+  ): Promise<OAuthToken | RefreshedOAuthToken>;
 };
 
 export class Core {

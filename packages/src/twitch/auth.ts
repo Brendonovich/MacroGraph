@@ -56,7 +56,7 @@ export function createAuth(clientId: string, core: Core) {
       data,
       refreshTimer: setTimeout(
         () => refresh(data.id),
-        (token.issued_at + token.expires_in - Date.now()) * 1000
+        (token.issued_at + token.expires_in) * 1000 - Date.now()
       ),
     });
 
@@ -66,11 +66,10 @@ export function createAuth(clientId: string, core: Core) {
   async function refresh(id: string) {
     const account = Maybe(accounts.get(id)).unwrap();
 
-    console.log(account);
-    const token = await core.oauth.refresh(
+    const token: OAuthToken = (await core.oauth.refresh(
       "twitch",
       account.token.refresh_token
-    );
+    )) as any;
 
     await addToken(token);
   }

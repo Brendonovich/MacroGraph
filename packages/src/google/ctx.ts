@@ -1,5 +1,12 @@
-import { Core, Maybe, OAuthToken, Option, Some } from "@macrograph/core";
-import { createResource, createSignal } from "solid-js";
+import {
+  Core,
+  Maybe,
+  OAuthToken,
+  Option,
+  RefreshedOAuthToken,
+  Some,
+} from "@macrograph/core";
+import { createEffect, createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
 import { createEndpoint } from "../httpEndpoint";
@@ -26,19 +33,29 @@ export function createCtx(core: Core) {
       let resp = await run();
 
       if (resp.status !== 200) {
-        console.log("hmm");
-        const newToken = await core.oauth.refresh(
+        const refreshToken = authToken().unwrap().refresh_token;
+
+        const newToken: RefreshedOAuthToken = (await core.oauth.refresh(
           "google",
-          authToken().unwrap().refresh_token
-        );
-        console.log("google", newToken);
-        setAuthToken(Some(newToken));
+          refreshToken
+        )) as any;
+
+        setAuthToken(Some({ ...newToken, refresh_token: refreshToken }));
 
         resp = await run();
       }
 
       return await resp.json();
     },
+  });
+
+  createEffect(() => {
+    const token = authToken();
+    if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
+    else
+      token.peek((token) =>
+        localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
+      );
   });
 
   const api = {
@@ -73,14 +90,7 @@ export function createCtx(core: Core) {
   return {
     core,
     authToken,
-    setAuthToken: (token: Option<OAuthToken>) => {
-      setAuthToken(token);
-      if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
-      else
-        token.peek((token) =>
-          localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
-        );
-    },
+    setAuthToken,
     user,
   };
 }
