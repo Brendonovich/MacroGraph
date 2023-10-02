@@ -5,8 +5,9 @@ import * as pkgs from "@macrograph/packages";
 
 import { fetch } from "./http";
 import { client } from "./rspc";
+import { env } from "./env";
 
-const AUTH_URL = `${import.meta.env.VITE_MACROGRAPH_API_URL}/auth`;
+const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
 
 export default function () {
   const core = new Core({
