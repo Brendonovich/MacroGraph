@@ -5,6 +5,7 @@ import {
   None,
   OAuthToken,
   Package,
+  Some,
   createEnum,
   createStruct,
   makePersisted,
