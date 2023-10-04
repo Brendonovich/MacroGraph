@@ -1,51 +1,16 @@
-import {
-  createSignal,
-  onCleanup,
-  createResource,
-  createEffect,
-  on,
-  createComputed,
-  createMemo,
-  untrack,
-} from "solid-js";
+import { onCleanup, createResource } from "solid-js";
 import tmi from "tmi.js";
-import {
-  t,
-  None,
-  Maybe,
-  Package,
-  OnEvent,
-  makePersisted,
-} from "@macrograph/core";
+import { t, None, Maybe, Package, OnEvent } from "@macrograph/core";
 
 import { Ctx } from "./ctx";
-import { Auth } from "./auth";
+import { Auth, createUserInstance } from "./auth";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
 
-function createChatUser(key: string, auth: Auth) {
-  const [id, setId] = makePersisted<string>(createSignal(None), key);
-
-  const account = createMemo(() =>
-    id().map((id) => {
-      const keys = [...auth.accounts.keys()];
-
-      if (!keys.includes(id)) return;
-
-      return untrack(() => auth.accounts.get(id));
-    })
-  );
-
-  return {
-    account,
-    setId,
-  };
-}
-
 export function createChat(auth: Auth, onEvent: OnEvent) {
-  const readUser = createChatUser(CHAT_READ_USER_ID, auth);
-  const writeUser = createChatUser(CHAT_READ_USER_ID, auth);
+  const readUser = createUserInstance(CHAT_READ_USER_ID, auth);
+  const writeUser = createUserInstance(CHAT_WRITE_USER_ID, auth);
 
   const [client] = createResource(
     () => readUser.account().zip(writeUser.account()),

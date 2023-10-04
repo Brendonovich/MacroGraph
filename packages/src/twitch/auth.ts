@@ -1,7 +1,8 @@
-import { Core, Maybe, OAuthToken } from "@macrograph/core";
+import { Core, Maybe, None, OAuthToken, makePersisted } from "@macrograph/core";
 import { ReactiveMap } from "@solid-primitives/map";
 import { z } from "zod";
 import { createHelixEndpoint } from "./helix";
+import { createMemo, createSignal, untrack } from "solid-js";
 
 const USER_DATA = z.object({
   id: z.string(),
@@ -88,3 +89,14 @@ export function createAuth(clientId: string, core: Core) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+
+export function createUserInstance(key: string, auth: Auth) {
+  const [id, setId] = makePersisted<string>(createSignal(None), key);
+
+  const account = createMemo(() => id().map((id) => auth.accounts.get(id)));
+
+  return {
+    account,
+    setId,
+  };
+}
