@@ -1347,7 +1347,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
         }),
       });
 
-      const data = Maybe(response.data[0]).expect("No user found");
+      const data = Maybe(response).expect("No user found");
 
       // const optData = Maybe(data);
       ctx.setOutput(io.userIdOut, data.id);
