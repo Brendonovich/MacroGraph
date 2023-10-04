@@ -1,4 +1,11 @@
-import { Core, Maybe, OAuthToken, Option, Some } from "@macrograph/core";
+import {
+  Core,
+  None,
+  OAuthToken,
+  Option,
+  Some,
+  makePersisted,
+} from "@macrograph/core";
 import { createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
@@ -7,8 +14,9 @@ import { createEndpoint } from "../httpEndpoint";
 export const TOKEN_LOCALSTORAGE = "patreonToken";
 
 export function createCtx(core: Core) {
-  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(
-    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
+  const [authToken, setAuthToken] = makePersisted<OAuthToken>(
+    createSignal(None),
+    TOKEN_LOCALSTORAGE
   );
 
   let refreshPromise: null | Promise<void> = null;

@@ -1,15 +1,19 @@
-import { Accessor, createEffect, createSignal, on } from "solid-js";
-import { z } from "zod";
 import {
-  t,
-  Maybe,
+  Core,
   InferEnum,
+  Maybe,
+  None,
+  OAuthToken,
+  Package,
+  Some,
   createEnum,
   createStruct,
-  Package,
-  OAuthToken,
-  Core,
+  makePersisted,
+  makePersisted as persistSignal,
+  t,
 } from "@macrograph/core";
+import { Accessor, createEffect, createSignal, on } from "solid-js";
+import { z } from "zod";
 
 import { createEndpoint } from "../httpEndpoint";
 import { Auth } from "./auth";
@@ -403,8 +407,9 @@ export function createHelixEndpoint(
 }
 
 export function createHelix(core: Core, auth: Auth) {
-  const [userId, setUserId] = createSignal(
-    Maybe(localStorage.getItem(HELIX_USER_ID))
+  const [userId, setUserId] = makePersisted<string>(
+    createSignal(None),
+    HELIX_USER_ID
   );
 
   const client = createHelixEndpoint(
@@ -419,16 +424,6 @@ export function createHelix(core: Core, auth: Auth) {
         });
     },
     core
-  );
-
-  createEffect(
-    on(
-      () => userId(),
-      (userId) =>
-        userId
-          .map((id) => (localStorage.setItem(HELIX_USER_ID, id), true))
-          .unwrapOrElse(() => (localStorage.removeItem(HELIX_USER_ID), false))
-    )
   );
 
   return {
@@ -1352,7 +1347,7 @@ export function register(pkg: Package, { client, userId }: Helix) {
         }),
       });
 
-      const data = Maybe(response.data[0]).expect("No user found");
+      const data = Maybe(response).expect("No user found");
 
       // const optData = Maybe(data);
       ctx.setOutput(io.userIdOut, data.id);

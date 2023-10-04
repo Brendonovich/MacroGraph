@@ -9,8 +9,9 @@ import {
 import { z } from "zod";
 
 import { Helix } from "./helix";
+import { Auth } from "./auth";
 
-export function createEventSub(helix: Helix, onEvent: OnEvent) {
+export function createEventSub(auth: Auth, helix: Helix, onEvent: OnEvent) {
   const [state, setState] = createSignal<
     | { type: "disconnected" }
     | { type: "connecting" | "connected"; ws: WebSocket }
@@ -18,12 +19,14 @@ export function createEventSub(helix: Helix, onEvent: OnEvent) {
 
   createEffect(
     on(
-      () => helix.userId(),
+      () => helix.userId().map((id) => auth.accounts.get(id)),
       (user) => {
         user.mapOrElse(
           () => setState({ type: "disconnected" }),
-          (userId) => {
+          (user) => {
             const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
+
+            const userId = user.data.id;
 
             ws.addEventListener("message", async (data) => {
               let info = JSON.parse(data.data);

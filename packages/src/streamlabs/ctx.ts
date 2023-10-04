@@ -1,4 +1,10 @@
-import { Core, Maybe, OAuthToken, OnEvent, Option } from "@macrograph/core";
+import {
+  Core,
+  None,
+  OAuthToken,
+  OnEvent,
+  makePersisted,
+} from "@macrograph/core";
 import { io, Socket } from "socket.io-client";
 import {
   createEffect,
@@ -28,29 +34,15 @@ export function createCtx(core: Core, onEvent: OnEvent) {
       }
   >({ type: "disconnected" });
 
-  const [token, setToken] = createSignal<Option<string>>(
-    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE))
+  const [token, setToken] = makePersisted<string>(
+    createSignal(None),
+    TOKEN_LOCALSTORAGE
   );
 
-  createEffect(() => {
-    const _token = token();
-    if (_token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
-    else
-      _token.peek((token) => localStorage.setItem(TOKEN_LOCALSTORAGE, token));
-  });
-
-  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(
-    Maybe(localStorage.getItem(USER_TOKEN_LOCALSTORAGE)).map(JSON.parse)
+  const [authToken, setAuthToken] = makePersisted<OAuthToken>(
+    createSignal(None),
+    USER_TOKEN_LOCALSTORAGE
   );
-
-  createEffect(() => {
-    const token = authToken();
-    if (token.isNone()) localStorage.removeItem(USER_TOKEN_LOCALSTORAGE);
-    else
-      token.peek((token) =>
-        localStorage.setItem(USER_TOKEN_LOCALSTORAGE, JSON.stringify(token))
-      );
-  });
 
   const client = createEndpoint({
     path: "https://streamlabs.com/api/v2.0",

@@ -16,7 +16,7 @@ export function createCtx(core: Core, onEvent: any) {
     auth,
     helix,
     chat: createChat(auth, onEvent),
-    eventSub: createEventSub(helix, onEvent),
+    eventSub: createEventSub(auth, helix, onEvent),
   };
 }
 
