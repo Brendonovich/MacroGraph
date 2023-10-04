@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { Option, Some } from "../types";
+import { None, Option, Some } from "../types";
 
 export * from "./pins";
 
@@ -17,15 +17,9 @@ export function makePersisted<T>(
   const init = localStorage.getItem(key);
 
   if (init) {
-    let value: any;
-
     try {
-      value = JSON.parse(init);
-    } catch {
-      value = init;
-    }
-
-    set(Some(value));
+      set(Some(JSON.parse(init) as any));
+    } catch {}
   }
 
   return [
@@ -36,10 +30,7 @@ export function makePersisted<T>(
       if (newValue.isNone()) localStorage.removeItem(key);
       else
         newValue.peek((value) =>
-          localStorage.setItem(
-            key,
-            typeof value === "string" ? value : JSON.stringify(value)
-          )
+          localStorage.setItem(key, JSON.stringify(value))
         );
 
       return newValue;
