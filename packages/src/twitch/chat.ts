@@ -5,6 +5,8 @@ import {
   createEffect,
   on,
   createComputed,
+  createMemo,
+  untrack,
 } from "solid-js";
 import tmi from "tmi.js";
 import {
@@ -22,107 +24,113 @@ import { Auth } from "./auth";
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
 
+function createChatUser(key: string, auth: Auth) {
+  const [id, setId] = makePersisted<string>(createSignal(None), key);
+
+  const account = createMemo(() =>
+    id().map((id) => {
+      const keys = [...auth.accounts.keys()];
+
+      if (!keys.includes(id)) return;
+
+      return untrack(() => auth.accounts.get(id));
+    })
+  );
+
+  return {
+    account,
+    setId,
+  };
+}
+
 export function createChat(auth: Auth, onEvent: OnEvent) {
-  const [readUserId, setReadUserId] = makePersisted<string>(
-    createSignal(None),
-    CHAT_READ_USER_ID
-  );
-  const [writeUserId, setWriteUserId] = makePersisted<string>(
-    createSignal(None),
-    CHAT_WRITE_USER_ID
-  );
+  const readUser = createChatUser(CHAT_READ_USER_ID, auth);
+  const writeUser = createChatUser(CHAT_READ_USER_ID, auth);
 
   const [client] = createResource(
-    () => readUserId().zip(writeUserId()).toNullable(),
-    ([readUserId, writeUserId]) =>
-      Maybe(auth.accounts.get(readUserId))
-        .zip(Maybe(auth.accounts.get(writeUserId)))
-        .map(([readAcc, writeAcc]) => {
-          const client: tmi.Client = tmi.Client({
-            options: {
-              skipUpdatingEmotesets: true,
-            },
-            channels: [writeAcc.data.display_name],
-            identity: {
-              username: readAcc.data.display_name,
-              password: readAcc.token.access_token,
-            },
+    () => readUser.account().zip(writeUser.account()),
+    (accs) =>
+      accs.map(([readAcc, writeAcc]) => {
+        const client: tmi.Client = tmi.Client({
+          options: {
+            skipUpdatingEmotesets: true,
+          },
+          channels: [writeAcc.data.display_name],
+          identity: {
+            username: readAcc.data.display_name,
+            password: readAcc.token.access_token,
+          },
+        });
+
+        client.connect();
+
+        client.on("connected", () => {
+          console.log("connected");
+        });
+
+        client.on("disconnected", () => console.log("disconnected"));
+
+        client.on("emoteonly", (channel, enabled) => {
+          onEvent({ name: "emoteonly", data: { channel, enabled } });
+        });
+
+        client.on("subscribers", (channel, enabled) => {
+          onEvent({ name: "subonlymode", data: { channel, enabled } });
+        });
+
+        client.on("slowmode", (channel, enabled, length) => {
+          onEvent({
+            name: "slowmode",
+            data: { channel, enabled, length },
           });
+        });
 
-          client.connect();
-
-          client.on("connected", () => {
-            console.log("connected");
-          });
-
-          client.on("disconnected", () => console.log("disconnected"));
-
-          client.on("emoteonly", (channel, enabled) => {
-            onEvent({ name: "emoteonly", data: { channel, enabled } });
-          });
-
-          client.on("subscribers", (channel, enabled) => {
-            onEvent({ name: "subonlymode", data: { channel, enabled } });
-          });
-
-          client.on("slowmode", (channel, enabled, length) => {
+        client.on(
+          "messagedeleted",
+          (channel, username, deletedmessage, userstate) => {
             onEvent({
-              name: "slowmode",
-              data: { channel, enabled, length },
+              name: "messagedeleted",
+              data: { channel, username, deletedmessage, userstate },
             });
+          }
+        );
+
+        client.on("followersonly", (channel, enabled, length) => {
+          onEvent({
+            name: "followersonly",
+            data: { channel, enabled, length },
           });
+        });
 
-          client.on(
-            "messagedeleted",
-            (channel, username, deletedmessage, userstate) => {
-              onEvent({
-                name: "messagedeleted",
-                data: { channel, username, deletedmessage, userstate },
-              });
-            }
-          );
+        client.on("message", (_, tags, message, self) => {
+          const data = { message, tags, self };
+          if (
+            tags["message-type"] === "action" ||
+            tags["message-type"] === "chat"
+          ) {
+            onEvent({ name: "chatMessage", data });
+          }
+        });
 
-          client.on("followersonly", (channel, enabled, length) => {
-            onEvent({
-              name: "followersonly",
-              data: { channel, enabled, length },
-            });
-          });
+        onCleanup(() => {
+          client.disconnect();
+        });
 
-          client.on("message", (_, tags, message, self) => {
-            const data = { message, tags, self };
-            if (
-              tags["message-type"] === "action" ||
-              tags["message-type"] === "chat"
-            ) {
-              onEvent({ name: "chatMessage", data });
-            }
-          });
-
-          onCleanup(() => {
-            client.disconnect();
-          });
-
-          return client;
-        }),
+        return client;
+      }),
     { initialValue: None }
   );
 
   return {
     client,
-    readUserId,
-    writeUserId,
-    setReadUserId,
-    setWriteUserId,
+    readUser,
+    writeUser,
   };
 }
 
 export type Chat = ReturnType<typeof createChat>;
 
-export function register(
-  pkg: Package,
-  { chat: { client, writeUserId }, auth }: Ctx
-) {
+export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createNonEventSchema({
     name: "Send Chat Message",
     variant: "Exec",
@@ -138,9 +146,7 @@ export function register(
         .expect("No Twitch Chat client available!")
         .say(
           Maybe(
-            auth.accounts.get(
-              writeUserId().expect("Chat write user not chosen!")
-            )
+            writeUser.account().expect("Chat write user not chosen!")
           ).expect("Write user token not found!").data.display_name,
           ctx.getInput(io)
         );
