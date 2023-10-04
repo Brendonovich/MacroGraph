@@ -9,7 +9,6 @@ export const STREAMLABS_DONATION = z.object({
       formattedAmount: z.string(),
       message: z.string(),
       from: z.string(),
-      fromId: z.string(),
     })
   ),
   type: z.literal("donation"),

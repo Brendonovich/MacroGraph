@@ -54,11 +54,6 @@ export function pkg(core: Core) {
           id: "from",
           type: t.string(),
         }),
-        fromId: io.dataOutput({
-          name: "From User Id",
-          id: "fromId",
-          type: t.string(),
-        }),
       };
     },
     run({ ctx, data, io }) {
@@ -67,7 +62,6 @@ export function pkg(core: Core) {
       ctx.setOutput(io.message, data.message);
       ctx.setOutput(io.currency, data.currency);
       ctx.setOutput(io.from, data.from);
-      ctx.setOutput(io.fromId, data.fromId);
 
       ctx.exec(io.exec);
     },
