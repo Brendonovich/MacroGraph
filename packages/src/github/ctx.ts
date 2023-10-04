@@ -1,5 +1,5 @@
-import { Core, Maybe, OAuthToken, Option, Some } from "@macrograph/core";
-import { createEffect, createResource, createSignal } from "solid-js";
+import { Core, None, OAuthToken, Some, makePersisted } from "@macrograph/core";
+import { createResource, createSignal } from "solid-js";
 import { Octokit } from "octokit";
 
 import { createCallbackAuth } from "./auth";
@@ -7,18 +7,10 @@ import { createCallbackAuth } from "./auth";
 export const TOKEN_LOCALSTORAGE = "githubToken";
 
 export function createCtx(core: Core) {
-  const [authToken, setAuthToken] = createSignal<Option<OAuthToken>>(
-    Maybe(localStorage.getItem(TOKEN_LOCALSTORAGE)).map(JSON.parse)
+  const [authToken, setAuthToken] = makePersisted<OAuthToken>(
+    createSignal(None),
+    TOKEN_LOCALSTORAGE
   );
-
-  createEffect(() => {
-    const token = authToken();
-    if (token.isNone()) localStorage.removeItem(TOKEN_LOCALSTORAGE);
-    else
-      token.peek((token) =>
-        localStorage.setItem(TOKEN_LOCALSTORAGE, JSON.stringify(token))
-      );
-  });
 
   let refreshPromise: Promise<any> | null = null;
 

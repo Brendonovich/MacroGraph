@@ -1,4 +1,4 @@
-import { Maybe, OnEvent, Option } from "@macrograph/core";
+import { None, OnEvent, makePersisted } from "@macrograph/core";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import { WebsocketResponse } from "./types";
 
@@ -14,23 +14,12 @@ export function createCtx(onEvent: OnEvent) {
     | { type: "connecting" | "connected"; ws: WebSocket }
   >({ type: "disconnected" });
 
-  const [url, setUrl] = createSignal<Option<string>>(
-    Maybe(localStorage.getItem("GoXLR_WS") || null)
+  const [url, setUrl] = makePersisted<string>(
+    createSignal(None),
+    URL_LOCALSTORAGE_KEY
   );
 
   let mixerID: string | undefined;
-
-  createEffect(
-    on(
-      () => url(),
-      (url) =>
-        url
-          .map((url) => (localStorage.setItem(URL_LOCALSTORAGE_KEY, url), true))
-          .unwrapOrElse(
-            () => (localStorage.removeItem(URL_LOCALSTORAGE_KEY), false)
-          )
-    )
-  );
 
   createEffect(
     on(

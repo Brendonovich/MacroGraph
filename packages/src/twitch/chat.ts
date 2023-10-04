@@ -7,7 +7,14 @@ import {
   createComputed,
 } from "solid-js";
 import tmi from "tmi.js";
-import { t, None, Maybe, Package, OnEvent } from "@macrograph/core";
+import {
+  t,
+  None,
+  Maybe,
+  Package,
+  OnEvent,
+  makePersisted,
+} from "@macrograph/core";
 
 import { Ctx } from "./ctx";
 import { Auth } from "./auth";
@@ -16,11 +23,13 @@ export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
 
 export function createChat(auth: Auth, onEvent: OnEvent) {
-  const [readUserId, setReadUserId] = createSignal(
-    Maybe(localStorage.getItem(CHAT_READ_USER_ID))
+  const [readUserId, setReadUserId] = makePersisted<string>(
+    createSignal(None),
+    CHAT_READ_USER_ID
   );
-  const [writeUserId, setWriteUserId] = createSignal(
-    Maybe(localStorage.getItem(CHAT_WRITE_USER_ID))
+  const [writeUserId, setWriteUserId] = makePersisted<string>(
+    createSignal(None),
+    CHAT_WRITE_USER_ID
   );
 
   const [client] = createResource(
@@ -97,24 +106,6 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
           return client;
         }),
     { initialValue: None }
-  );
-
-  createEffect(
-    on(
-      () =>
-        [
-          [CHAT_READ_USER_ID, readUserId()],
-          [CHAT_WRITE_USER_ID, writeUserId()],
-        ] as const,
-      (value) => {
-        value.forEach(([key, id]) => {
-          id.map((userId) => {
-            localStorage.setItem(key, userId);
-            return true;
-          }).unwrapOrElse(() => (localStorage.removeItem(key), false));
-        });
-      }
-    )
   );
 
   return {
