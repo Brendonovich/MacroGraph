@@ -3,8 +3,7 @@ import { createForm, zodForm } from "@modular-forms/solid";
 import { Match, Switch, createSignal, Suspense, Show } from "solid-js";
 import { None, Some } from "@macrograph/core";
 import { Button, Input } from "@macrograph/ui";
-
-import { Ctx } from ".";
+import { Ctx } from "./ctx";
 
 const Schema = z.object({
   socketToken: z.string(),

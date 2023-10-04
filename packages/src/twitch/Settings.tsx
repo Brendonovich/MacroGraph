@@ -80,13 +80,13 @@ export default ({ core, helix, chat, auth }: Ctx) => {
                         <input
                           type="radio"
                           id="Chat Read"
-                          checked={chat
-                            .readUserId()
-                            .map((u) => u === account.data.id)
+                          checked={chat.readUser
+                            .account()
+                            .map((a) => a.data.id === account.data.id)
                             .unwrapOr(false)}
                           onChange={(r) => {
                             if (r.target.checked)
-                              chat.setReadUserId(Some(account.data.id));
+                              chat.readUser.setId(Some(account.data.id));
                           }}
                         />
                       </td>
@@ -94,13 +94,13 @@ export default ({ core, helix, chat, auth }: Ctx) => {
                         <input
                           type="radio"
                           id="Chat Write"
-                          checked={chat
-                            .writeUserId()
-                            .map((u) => u === account.data.id)
+                          checked={chat.writeUser
+                            .account()
+                            .map((a) => a.data.id === account.data.id)
                             .unwrapOr(false)}
                           onChange={(r) => {
                             if (r.target.checked)
-                              chat.setWriteUserId(Some(account.data.id));
+                              chat.writeUser.setId(Some(account.data.id));
                           }}
                         />
                       </td>

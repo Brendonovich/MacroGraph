@@ -1,10 +1,8 @@
 import {
   Core,
-  Maybe,
   None,
   OAuthToken,
   OnEvent,
-  Option,
   makePersisted,
 } from "@macrograph/core";
 import { io, Socket } from "socket.io-client";
