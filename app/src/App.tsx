@@ -38,6 +38,7 @@ export default function () {
 
   onMount(() => {
     [
+      pkgs.audio.pkg,
       pkgs.discord.pkg,
       () =>
         pkgs.fs.register({
