@@ -32,7 +32,6 @@ export const GraphList = (props: Props) => {
         <button
           class="text-xl font-bold px-1"
           onClick={() => {
-            console.log("createGraph onClick");
             const graph = core.project.createGraph();
             UI.setCurrentGraph(graph);
           }}
