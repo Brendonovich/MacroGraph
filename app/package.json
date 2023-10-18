@@ -21,7 +21,7 @@
     "@t3-oss/env-core": "^0.6.1",
     "@tanstack/solid-query": "^4.29.5",
     "@tauri-apps/api": "^1.2.0",
-    "solid-js": "^1.7.11",
+    "solid-js": "^1.8.3",
     "zod": "^3.21.4"
   },
   "devDependencies": {

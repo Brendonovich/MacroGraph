@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { createEffect, For } from "solid-js";
 import { Graph } from "@macrograph/core";
 import { CgImport } from "solid-icons/cg";
 
@@ -15,6 +15,8 @@ export const GraphList = (props: Props) => {
   const core = useCore();
   const UI = useUIStore();
 
+  createEffect(() => console.log([...core.project.graphs.values()]));
+
   return (
     <div class="flex flex-col flex-1">
       <div class="flex flex-row bg-neutral-900 text-white px-2 font-medium shadow">
@@ -30,6 +32,7 @@ export const GraphList = (props: Props) => {
         <button
           class="text-xl font-bold px-1"
           onClick={() => {
+            console.log("createGraph onClick");
             const graph = core.project.createGraph();
             UI.setCurrentGraph(graph);
           }}

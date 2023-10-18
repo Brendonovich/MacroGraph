@@ -12,7 +12,7 @@
   "devDependencies": {
     "@vitest/browser": "^0.32.2",
     "safaridriver": "^0.0.5",
-    "solid-js": "^1.7.11",
+    "solid-js": "^1.8.3",
     "turbo": "^1.10.7",
     "turbo-ignore": "^1.10.7",
     "typescript": "^5.1.6",
