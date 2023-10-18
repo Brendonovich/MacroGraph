@@ -8,6 +8,7 @@ import {
 import { io, Socket } from "socket.io-client";
 import {
   createEffect,
+  createMemo,
   createResource,
   createSignal,
   on,
@@ -39,38 +40,41 @@ export function createCtx(core: Core, onEvent: OnEvent) {
     TOKEN_LOCALSTORAGE
   );
 
-  const [authToken, setAuthToken] = makePersisted<OAuthToken>(
+  const [userToken, setUserToken] = makePersisted<OAuthToken>(
     createSignal(None),
     USER_TOKEN_LOCALSTORAGE
   );
 
-  const client = createEndpoint({
-    path: "https://streamlabs.com/api/v2.0",
-    fetch: async (url, opts) => {
-      const resp = await core.fetch(url, {
-        ...opts,
-        headers: {
-          accept: "application/json",
-          authorization: `Bearer ${authToken().unwrap().access_token}`,
-          ...opts?.headers,
-        },
-      });
+  const user = createMemo(() => {
+    const token = userToken().toNullable();
 
-      const json = await resp.json();
+    if (!token) return;
 
-      if (resp.status !== 200) throw new Error(json);
+    const client = createEndpoint({
+      path: "https://streamlabs.com/api/v2.0",
+      fetch: async (url, opts) => {
+        const resp = await core.fetch(url, {
+          ...opts,
+          headers: {
+            accept: "application/json",
+            authorization: `Bearer ${token.access_token}`,
+            ...opts?.headers,
+          },
+        });
 
-      return json;
-    },
-  });
+        const json = await resp.json();
 
-  const api = {
-    user: client.extend("/user"),
-  };
+        if (resp.status !== 200) throw new Error(json);
 
-  const [user] = createResource(
-    () => authToken().toNullable(),
-    async () => {
+        return json;
+      },
+    });
+
+    const api = {
+      user: client.extend("/user"),
+    };
+
+    const [user] = createResource(async () => {
       const resp = await api.user.get(
         z.object({
           streamlabs: z.object({
@@ -80,8 +84,10 @@ export function createCtx(core: Core, onEvent: OnEvent) {
       );
 
       return resp;
-    }
-  );
+    });
+
+    return user();
+  });
 
   createEffect(
     on(
@@ -138,8 +144,8 @@ export function createCtx(core: Core, onEvent: OnEvent) {
       state,
       token,
       setToken,
-      authToken,
-      setAuthToken,
+      userToken,
+      setUserToken,
     },
   };
 }

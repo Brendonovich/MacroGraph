@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { createEffect, For } from "solid-js";
 import { Graph } from "@macrograph/core";
 import { CgImport } from "solid-icons/cg";
 
@@ -14,6 +14,8 @@ interface Props {
 export const GraphList = (props: Props) => {
   const core = useCore();
   const UI = useUIStore();
+
+  createEffect(() => console.log([...core.project.graphs.values()]));
 
   return (
     <div class="flex flex-col flex-1">

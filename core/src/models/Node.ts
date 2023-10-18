@@ -21,7 +21,7 @@ import {
   Accessor,
 } from "solid-js";
 import { Option } from "../types";
-import { onCleanup } from "@solidjs/reactivity";
+import { onCleanup } from "solid-js";
 
 export interface NodeArgs {
   id: number;
