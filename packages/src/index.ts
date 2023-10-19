@@ -17,3 +17,4 @@ export * as streamdeck from "./streamdeck";
 export * as streamlabs from "./streamlabs";
 export * as twitch from "./twitch";
 export * as utils from "./utils";
+export * as websocket from "./ws";

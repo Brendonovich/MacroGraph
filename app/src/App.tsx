@@ -70,6 +70,7 @@ export default function () {
       pkgs.streamlabs.pkg,
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
+      pkgs.websocket.pkg,
     ].map((p) => core.registerPackage(p));
   });
 
