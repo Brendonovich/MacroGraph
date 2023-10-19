@@ -463,6 +463,31 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Subtract Floats",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const numb = ctx.getInput(io.one) - ctx.getInput(io.two);
+      ctx.setOutput(io.output, numb);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Append String",
     variant: "Pure",
     generateIO(io) {
@@ -595,6 +620,23 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "UUID",
+    variant: "Exec",
+    generateIO(io) {
+      return {
+        output: io.dataOutput({
+          id: "uuid",
+          name: "UUID",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(io.output, crypto.randomUUID());
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Round Float",
     variant: "Pure",
     generateIO(io) {
@@ -621,6 +663,66 @@ export function pkg(core: Core) {
       ctx.setOutput(
         io.output,
         Math.round(input * Math.pow(10, decimal)) / Math.pow(10, decimal)
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Remainder Float",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        number: io.dataInput({
+          id: "input",
+          name: "Number",
+          type: t.float(),
+        }),
+        divisor: io.dataInput({
+          id: "divisor",
+          name: "Divisor",
+          type: t.float(),
+        }),
+        remainder: io.dataOutput({
+          id: "remainder",
+          name: "Remainder",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(
+        io.remainder,
+        ctx.getInput(io.number) % ctx.getInput(io.divisor)
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Remainder Int",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        number: io.dataInput({
+          id: "input",
+          name: "Number",
+          type: t.int(),
+        }),
+        divisor: io.dataInput({
+          id: "divisor",
+          name: "Divisor",
+          type: t.int(),
+        }),
+        remainder: io.dataOutput({
+          id: "remainder",
+          name: "Remainder",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(
+        io.remainder,
+        ctx.getInput(io.number) % ctx.getInput(io.divisor)
       );
     },
   });
@@ -1437,6 +1539,23 @@ export function pkg(core: Core) {
     },
     run({ ctx, io }) {
       ctx.setOutput(io.out, ctx.getInput(io.in));
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Unix Timestamp",
+    variant: "Exec",
+    generateIO(io) {
+      return {
+        out: io.dataOutput({
+          id: "out",
+          name: "Timestamp",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(io.out, Date.now());
     },
   });
 
