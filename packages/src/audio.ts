@@ -19,21 +19,26 @@ export function pkg(core: Core) {
           name: "File Location",
           type: t.string(),
         }),
+        id: io.dataInput({
+          id: "id",
+          name: "ID",
+          type: t.string(),
+        }),
         volume: io.dataInput({
           id: "volume",
           name: "Volume",
           type: t.int(),
         }),
-        uuid: io.dataOutput({
-          id: "uuid",
-          name: "Reference UUID",
+        idOut: io.dataOutput({
+          id: "idOut",
+          name: "ID",
           type: t.string(),
         }),
       };
     },
     run({ ctx, io }) {
-      let uuid = crypto.randomUUID();
-      ctx.setOutput(io.uuid, uuid);
+      let id = ctx.getInput(io.id);
+      ctx.setOutput(io.idOut, id);
       if (ctx.getInput(io.file).startsWith("http")) {
         let mysound = new Audio(ctx.getInput(io.file));
         mysound.volume = ctx.getInput(io.volume) / 100;
@@ -47,9 +52,9 @@ export function pkg(core: Core) {
         );
         mysound.volume = ctx.getInput(io.volume) / 100;
         mysound.play();
-        sounds.set(uuid, mysound);
+        sounds.set(id, mysound);
         mysound.onended = () => {
-          sounds.delete(uuid);
+          sounds.delete(id);
         };
       }
     },
@@ -60,17 +65,17 @@ export function pkg(core: Core) {
     variant: "Exec",
     generateIO(io) {
       return {
-        uuid: io.dataInput({
-          id: "uuid",
-          name: "Reference UUID",
+        id: io.dataInput({
+          id: "id",
+          name: "Reference ID",
           type: t.string(),
         }),
       };
     },
     run({ ctx, io }) {
-      let uuid = ctx.getInput(io.uuid);
-      if (sounds.has(uuid)) {
-        let playing = sounds.get(ctx.getInput(io.uuid));
+      let id = ctx.getInput(io.id);
+      if (sounds.has(id)) {
+        let playing = sounds.get(ctx.getInput(io.id));
         playing!.pause();
       }
     },
@@ -81,9 +86,9 @@ export function pkg(core: Core) {
     variant: "Exec",
     generateIO(io) {
       return {
-        uuid: io.dataInput({
-          id: "uuid",
-          name: "Reference UUID",
+        id: io.dataInput({
+          id: "id",
+          name: "Reference ID",
           type: t.string(),
         }),
         volume: io.dataInput({
@@ -93,9 +98,9 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, io }) {
-      let uuid = ctx.getInput(io.uuid);
-      if (sounds.has(uuid)) {
-        let playing = sounds.get(ctx.getInput(io.uuid));
+      let id = ctx.getInput(io.id);
+      if (sounds.has(id)) {
+        let playing = sounds.get(ctx.getInput(io.id));
         playing!.volume = ctx.getInput(io.volume) / 100;
       }
     },
