@@ -17,11 +17,22 @@
         "all": false,
         "open": true
       },
+      "dialog": {
+        "all": true
+      },
+      "path": {
+        "all": true
+      },
       "fs": {
         "all": true,
         "scope": [
           "**"
         ]
+      },
+      "protocol": {
+        "all": true,
+        "asset": true,
+        "assetScope": ["**"]
       },
       "http": {
         "all": true,
@@ -43,7 +54,7 @@
       "targets": "all"
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; media-src 'self' asset: https://asset.localhost;"
     },
     "updater": {
       "active": true,

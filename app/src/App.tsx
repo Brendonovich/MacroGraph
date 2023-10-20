@@ -2,6 +2,7 @@ import { onMount } from "solid-js";
 import { Core } from "@macrograph/core";
 import Interface from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 
 import { fetch } from "./http";
 import { client } from "./rspc";
@@ -38,6 +39,11 @@ export default function () {
 
   onMount(() => {
     [
+      () =>
+        pkgs.audio.pkg({
+          prepareURL: (url: string) =>
+            convertFileSrc(url).replace("asset://", "https://asset."),
+        }),
       pkgs.discord.pkg,
       () =>
         pkgs.fs.register({
