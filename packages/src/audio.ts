@@ -2,7 +2,7 @@ import { t, Package } from "@macrograph/core";
 
 let sounds = new Map<string, HTMLAudioElement>();
 
-export function pkg(parsing: { prepareURL(url: string): string }) {
+export function pkg(args: { prepareURL(url: string): string }) {
   const pkg = new Package({
     name: "Audio",
   });
