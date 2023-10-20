@@ -2,7 +2,7 @@ import { t, Package } from "@macrograph/core";
 
 let sounds = new Map<string, HTMLAudioElement>();
 
-export function pkg(parsing: { prepareURL(url: string): String }) {
+export function pkg(parsing: { prepareURL(url: string): string }) {
   const pkg = new Package({
     name: "Audio",
   });
@@ -42,11 +42,7 @@ export function pkg(parsing: { prepareURL(url: string): String }) {
         mysound.volume = ctx.getInput(io.volume) / 100;
         mysound.play();
       } else {
-        let mysound = new Audio(
-          parsing
-            .prepareURL(ctx.getInput(io.file))
-            .replace("asset://", "https://asset.")
-        );
+        let mysound = new Audio(parsing.prepareURL(ctx.getInput(io.file)));
         mysound.volume = ctx.getInput(io.volume) / 100;
         mysound.play();
         sounds.set(id, mysound);

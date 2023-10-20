@@ -41,7 +41,8 @@ export default function () {
     [
       () =>
         pkgs.audio.pkg({
-          prepareURL: (url: string) => convertFileSrc(url),
+          prepareURL: (url: string) =>
+            convertFileSrc(url).replace("asset://", "https://asset."),
         }),
       pkgs.discord.pkg,
       () =>
