@@ -1543,7 +1543,7 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
-    name: "Unix Timestamp",
+    name: "Current Timestamp (ms)",
     variant: "Exec",
     generateIO(io) {
       return {
