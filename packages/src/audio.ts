@@ -1,10 +1,8 @@
-import { t, Package, Core } from "@macrograph/core";
-
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { t, Package } from "@macrograph/core";
 
 let sounds = new Map<string, HTMLAudioElement>();
 
-export function pkg(core: Core) {
+export function pkg(parsing: { prepareURL(url: string): String }) {
   const pkg = new Package({
     name: "Audio",
   });
@@ -45,10 +43,9 @@ export function pkg(core: Core) {
         mysound.play();
       } else {
         let mysound = new Audio(
-          convertFileSrc(ctx.getInput(io.file)).replace(
-            "asset://",
-            "https://asset."
-          )
+          parsing
+            .prepareURL(ctx.getInput(io.file))
+            .replace("asset://", "https://asset.")
         );
         mysound.volume = ctx.getInput(io.volume) / 100;
         mysound.play();
