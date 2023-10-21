@@ -42,7 +42,7 @@ export function pkg(args: { prepareURL(url: string): string }) {
         mysound.volume = ctx.getInput(io.volume) / 100;
         mysound.play();
       } else {
-        let mysound = new Audio(parsing.prepareURL(ctx.getInput(io.file)));
+        let mysound = new Audio(args.prepareURL(ctx.getInput(io.file)));
         mysound.volume = ctx.getInput(io.volume) / 100;
         mysound.play();
         sounds.set(id, mysound);
