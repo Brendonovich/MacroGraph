@@ -21,7 +21,6 @@ export function createCtx(callback: any) {
       if (!websockets.has(ip)) return;
       websockets.set(ip, null);
       connectWebsocket(ip);
-      console.log("inside interval");
     };
 
     ws.onmessage = (event) => {
