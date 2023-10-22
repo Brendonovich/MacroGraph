@@ -77,6 +77,23 @@ export default function () {
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
       pkgs.websocket.pkg,
+      () =>
+        pkgs.websocketServer.pkg({
+          async startServer(port, onData) {
+            return client.addSubscription(["websocket.server", port], {
+              onData: (d) => onData(d),
+            });
+          },
+          async stopServer(unsubscribe) {
+            unsubscribe();
+          },
+          async sendMessage(data) {
+            return client.mutation([
+              "websocket.send",
+              { port: data.port, data: data.data },
+            ]);
+          },
+        }),
     ].map((p) => core.registerPackage(p));
   });
 
