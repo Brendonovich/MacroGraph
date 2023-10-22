@@ -30,6 +30,7 @@ export default function (ctx: Ctx) {
             <Form
               onSubmit={(d) => {
                 ctx.startServer(d.port);
+                localStorage.setItem("SDWS_PORT", d.port.toString());
               }}
             >
               <fieldset
