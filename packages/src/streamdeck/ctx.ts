@@ -71,6 +71,7 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
       setState({ type: "Starting" });
 
       const [connected, setConnected] = createSignal(false);
+      localStorage.setItem("SDWS_PORT", port.toString());
 
       const server = await ws.startServer(port, (msg) => {
         if (msg === "Connected") setConnected(true);
@@ -88,6 +89,7 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
         connected,
         async stop() {
           await ws.stopServer(server);
+          localStorage.removeItem("SDWS_PORT");
           setState({ type: "Stopped" });
         },
       });
