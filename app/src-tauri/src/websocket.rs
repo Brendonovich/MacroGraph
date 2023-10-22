@@ -55,7 +55,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
                 let (sender_tx, sender_rx) = mpsc::channel(64);
-                let (receiver_tx, mut msg_rx) = mpsc::channel(64);
+                let (receiver_tx, mut receiver_rx) = mpsc::channel(64);
 
                 ctx.ws.senders.lock().await.insert(port, sender_tx);
 
@@ -65,7 +65,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                             .route("/", get(ws_handler))
                             .with_state(WsState {
                                 receiver_tx,
-                                sender_rx: Arc::new(Mutex::new(Some(sender_rx))),
+                                sender_rx: Arc::new(Mutex::new(sender_rx)),
                                 shutdown_rx: WebSocketShutdown(ws_shutdown_rx),
                             })
                             .into_make_service(),
@@ -78,7 +78,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 tokio::spawn(server);
 
                 async_stream::stream! {
-                    while let Some(msg) = msg_rx.recv().await {
+                    while let Some(msg) = receiver_rx.recv().await {
                         yield msg
                     }
 
@@ -111,17 +111,19 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 
 #[derive(Clone)]
 struct WsState {
-    sender_rx: Arc<Mutex<Option<mpsc::Receiver<String>>>>,
+    sender_rx: Arc<Mutex<mpsc::Receiver<String>>>,
     receiver_tx: mpsc::Sender<Message>,
     shutdown_rx: WebSocketShutdown,
 }
 
 async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> Response {
-    let Some(sender_rx) = state.sender_rx.lock().await.take() else {
+    let Ok(mut sender_rx) = state.sender_rx.clone().try_lock_owned() else {
         return "Connection already established".into_response();
     };
 
-    ws.on_upgrade(|socket| handle_socket(socket, state, sender_rx))
+    ws.on_upgrade(move |socket| async move {
+        handle_socket(socket, state, &mut sender_rx).await;
+    })
 }
 
 #[derive(Serialize, Type)]
@@ -138,7 +140,7 @@ async fn handle_socket(
         mut shutdown_rx,
         ..
     }: WsState,
-    mut sender_rx: mpsc::Receiver<String>,
+    sender_rx: &mut mpsc::Receiver<String>,
 ) {
     receiver_tx.send(Message::Connected).await.ok();
 
