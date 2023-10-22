@@ -3,7 +3,8 @@
 export type Procedures = {
     queries: 
         { key: "fs.list", input: string, result: Entry[] },
-    mutations: never,
+    mutations: 
+        { key: "websocket.send", input: { port: number; data: string }, result: null },
     subscriptions: 
         { key: "oauth.authorize", input: string, result: any | null } | 
         { key: "websocket.server", input: number, result: Message }

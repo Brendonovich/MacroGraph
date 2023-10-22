@@ -5,7 +5,7 @@ use serde_json::json;
 
 use crate::R;
 
-pub fn router() -> AlphaRouter<()> {
+pub fn router() -> AlphaRouter<super::Ctx> {
     R.router().procedure(
         "authorize",
         R.subscription(|_, url: String| async move {
