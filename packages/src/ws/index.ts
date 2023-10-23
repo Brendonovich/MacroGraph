@@ -1,9 +1,9 @@
-import { Core, Package, t, Maybe, createEnum } from "@macrograph/core";
-import { ReactiveMap } from "@solid-primitives/map";
-import { createCtx } from "./ctx";
+import { Package, t } from "@macrograph/core";
 import { createEffect, createSignal } from "solid-js";
 
-export function pkg(core: Core) {
+import { createCtx } from "./ctx";
+
+export function pkg() {
   const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
 
   const sockets = createCtx(setLatestEvent);
