@@ -3,6 +3,8 @@ import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { z } from "zod";
 
+export const SDWS = "SDWS_PORT";
+
 export type ConnectionState =
   | {
       type: "Stopped";
@@ -71,7 +73,7 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
       setState({ type: "Starting" });
 
       const [connected, setConnected] = createSignal(false);
-      localStorage.setItem("SDWS_PORT", port.toString());
+      localStorage.setItem(SDWS, port.toString());
 
       const server = await ws.startServer(port, (msg) => {
         if (msg === "Connected") setConnected(true);
@@ -89,7 +91,7 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
         connected,
         async stop() {
           await ws.stopServer(server);
-          localStorage.removeItem("SDWS_PORT");
+          localStorage.removeItem(SDWS);
           setState({ type: "Stopped" });
         },
       });
@@ -97,6 +99,9 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
       setState({ type: "Stopped" });
     }
   }
+
+  if (localStorage.getItem(SDWS) !== null)
+    startServer(Number(localStorage.getItem(SDWS)));
 
   return { state, startServer };
 }

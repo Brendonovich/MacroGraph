@@ -14,9 +14,6 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
     SettingsUI: () => import("./Settings"),
   });
 
-  if (localStorage.getItem("SDWS_PORT") !== null)
-    ctx.startServer(Number(localStorage.getItem("SDWS_PORT")));
-
   createEffect(() => {
     const event = latestEvent();
 
