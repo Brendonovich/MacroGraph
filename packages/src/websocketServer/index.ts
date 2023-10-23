@@ -22,7 +22,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   });
 
   pkg.createNonEventSchema({
-    name: "WS Emit",
+    name: "WSS Emit",
     variant: "Exec",
     generateIO(io) {
       return {
@@ -48,7 +48,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 
   pkg.createEventSchema({
     event: "wsEvent",
-    name: "WS Event",
+    name: "WSS Event",
     generateIO(io) {
       return {
         exec: io.execOutput({

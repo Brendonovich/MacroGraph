@@ -14,7 +14,7 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
             <thead>
               <tr>
                 <th class="pr-2 text-left">IP Address</th>
-                <th class="pr-2 text-left">State</th>
+                <th class="pr-2 text-left">Clients</th>
               </tr>
             </thead>
             <For each={[...websockets.entries()]}>
@@ -25,7 +25,9 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
                       <span>{key}</span>
                     </td>
                     <td>
-                      <span>{value.client_count}</span>
+                      <span>
+                        {value.client_count ? "Connected" : "Disconnected"}
+                      </span>
                     </td>
                     <td>
                       <Button onClick={() => stopServer(key)}>Remove</Button>

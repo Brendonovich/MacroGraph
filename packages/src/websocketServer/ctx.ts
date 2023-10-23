@@ -6,7 +6,7 @@ import { ReactiveMap } from "@solid-primitives/map";
 export const WS_PORTS_LOCALSTORAGE = "wsPorts";
 
 export type ConnectionState = {
-  client_count: number;
+  client_count: boolean;
   server: any;
 };
 
@@ -41,34 +41,28 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
 
   async function startServer(port: number) {
     try {
-      localStorage.setItem(
-        WS_PORTS_LOCALSTORAGE,
-        JSON.stringify(Array.from(websockets.keys()))
-      );
-
       const server = await ws.startServer(port, (msg) => {
         let websocketData = websockets.get(port);
         if (!websocketData) {
-          console.log("murder?");
           return;
         }
         if (msg === "Connected") {
-          websocketData.client_count++;
-          websockets.set(port, websocketData);
-          console.log("Connected");
+          console.log("connected");
+          websockets.set(port, { ...websocketData, client_count: true });
         } else if (msg === "Disconnected") {
-          websocketData.client_count--;
-          websockets.set(port, websocketData);
+          websockets.set(port, { ...websocketData, client_count: false });
         } else {
           onEvent({ name: "wsEvent", data: { data: msg.Text, port: port } });
         }
-        console.log(msg);
       });
-      websockets.set(port, { client_count: 0, server });
+      websockets.set(port, { client_count: false, server });
     } catch {
-      console.log("murder2?");
       websockets.delete(port);
     }
+    localStorage.setItem(
+      WS_PORTS_LOCALSTORAGE,
+      JSON.stringify(Array.from(websockets.keys()))
+    );
   }
 
   async function stopServer(port: number) {
