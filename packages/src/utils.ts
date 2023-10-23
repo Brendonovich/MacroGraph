@@ -64,6 +64,78 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "String Replace All",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        input: io.dataInput({
+          id: "input",
+          name: "String",
+          type: t.string(),
+        }),
+        find: io.dataInput({
+          id: "find",
+          name: "Find",
+          type: t.string(),
+        }),
+        replace: io.dataInput({
+          id: "replace",
+          name: "Replace",
+          type: t.string(),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(
+        io.out,
+        ctx
+          .getInput(io.input)
+          .replaceAll(ctx.getInput(io.find), ctx.getInput(io.replace))
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "String Replace First",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        input: io.dataInput({
+          id: "input",
+          name: "String",
+          type: t.string(),
+        }),
+        find: io.dataInput({
+          id: "find",
+          name: "Find",
+          type: t.string(),
+        }),
+        replace: io.dataInput({
+          id: "replace",
+          name: "Replace",
+          type: t.string(),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(
+        io.out,
+        ctx
+          .getInput(io.input)
+          .replace(ctx.getInput(io.find), ctx.getInput(io.replace))
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "String Length",
     variant: "Pure",
     generateIO(io) {
