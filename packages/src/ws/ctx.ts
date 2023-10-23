@@ -17,6 +17,11 @@ export function createCtx(callback: any) {
         JSON.stringify(Array.from(websockets.keys()))
       );
     };
+    ws.onclose = () => {
+      if (!websockets.has(ip)) return;
+      websockets.set(ip, null);
+      connectWebsocket(ip);
+    };
 
     ws.onmessage = (event) => {
       callback({ ip, data: event.data });
