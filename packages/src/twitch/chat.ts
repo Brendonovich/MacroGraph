@@ -4,6 +4,7 @@ import { t, None, Maybe, Package, OnEvent } from "@macrograph/core";
 
 import { Ctx } from "./ctx";
 import { Auth, createUserInstance } from "./auth";
+import { jsToJSON, JSON } from "../json";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
@@ -280,6 +281,16 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
           name: "Message ID",
           type: t.string(),
         }),
+        color: io.dataOutput({
+          id: "color",
+          name: "User Color",
+          type: t.string(),
+        }),
+        emotes: io.dataOutput({
+          id: "emotes",
+          name: "Emotes",
+          type: t.map(t.enum(JSON)),
+        }),
         broadcaster: io.dataOutput({
           id: "broadcaster",
           name: "Broadcaster",
@@ -304,6 +315,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
     },
     run({ ctx, data, io }) {
       if (data.self) return;
+      console.log(data);
       ctx.setOutput(io.username, data.tags.username);
       ctx.setOutput(io.displayName, data.tags["display-name"]);
       ctx.setOutput(io.userId, data.tags["user-id"]);
@@ -311,11 +323,26 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
       ctx.setOutput(io.messageId, data.tags.id);
       ctx.setOutput(io.mod, data.tags.mod);
       ctx.setOutput(io.sub, data.tags.subscriber);
-      ctx.setOutput(io.vip, data.tags.vip);
+      ctx.setOutput(io.vip, data.tags.vip ?? false);
+      ctx.setOutput(io.color, data.tags.color);
       ctx.setOutput(
         io.broadcaster,
         data.tags["room-id"] === data.tags["user-id"]
       );
+      if (data.tags.emotes) {
+        ctx.setOutput(
+          io.emotes,
+          new Map(
+            Object.entries(data.tags.emotes).map(([key, value]) => [
+              key,
+              jsToJSON(value)!,
+            ])
+          )
+        );
+      } else {
+        ctx.setOutput(io.emotes, new Map());
+      }
+
       ctx.exec(io.exec);
     },
   });
