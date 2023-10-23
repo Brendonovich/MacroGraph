@@ -41,8 +41,6 @@ export class Project {
       ...args,
     });
 
-    console.log(graph);
-
     this.graphs.set(id, graph);
 
     return graph;

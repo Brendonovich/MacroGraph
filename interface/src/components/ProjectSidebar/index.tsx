@@ -15,8 +15,6 @@ export const GraphList = (props: Props) => {
   const core = useCore();
   const UI = useUIStore();
 
-  createEffect(() => console.log([...core.project.graphs.values()]));
-
   return (
     <div class="flex flex-col flex-1">
       <div class="flex flex-row bg-neutral-900 text-white px-2 font-medium shadow">
