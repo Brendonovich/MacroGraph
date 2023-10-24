@@ -117,8 +117,6 @@ struct WsState {
 }
 
 async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> Response {
-    println!("ws_handler");
-
     let Ok(mut sender_rx) = state.sender_rx.clone().try_lock_owned() else {
         return "Connection already established".into_response();
     };
@@ -144,8 +142,6 @@ async fn handle_socket(
     }: WsState,
     sender_rx: &mut mpsc::Receiver<String>,
 ) {
-    println!("handle_socket");
-
     receiver_tx.send(Message::Connected).await.ok();
 
     loop {
