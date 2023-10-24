@@ -1,17 +1,19 @@
 use std::{
+    collections::BTreeMap,
     net::SocketAddr,
     ops::{Deref, DerefMut},
+    sync::Arc,
 };
 
 use axum::{
     extract::{ws, State, WebSocketUpgrade},
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::get,
 };
 use rspc::alpha::AlphaRouter;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
-use tokio::sync::{broadcast, mpsc, oneshot};
+use tokio::sync::{broadcast, mpsc, oneshot, Mutex};
 
 use crate::R;
 
@@ -37,49 +39,93 @@ impl DerefMut for WebSocketShutdown {
     }
 }
 
-pub fn router() -> AlphaRouter<()> {
-    R.router().procedure(
-        "server",
-        R.subscription(|_, port: u16| {
-            let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-            let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
+#[derive(Default)]
+pub struct Ctx {
+    senders: Mutex<BTreeMap<u16, mpsc::Sender<String>>>,
+}
 
-            let addr = SocketAddr::from(([127, 0, 0, 1], port));
+pub fn router() -> AlphaRouter<super::Ctx> {
+    R.router()
+        .procedure(
+            "server",
+            R.subscription(|ctx, port: u16| async move {
+                let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+                let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
 
-            let (msg_tx, mut msg_rx) = mpsc::channel(64);
+                let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
-            tokio::spawn(async move {
-                axum::Server::bind(&addr)
+                let (sender_tx, sender_rx) = mpsc::channel(64);
+                let (receiver_tx, mut receiver_rx) = mpsc::channel(64);
+
+                ctx.ws.senders.lock().await.insert(port, sender_tx);
+
+                let server = axum::Server::bind(&addr)
                     .serve(
                         axum::Router::new()
                             .route("/", get(ws_handler))
-                            .with_state((msg_tx, WebSocketShutdown(ws_shutdown_rx)))
+                            .with_state(WsState {
+                                receiver_tx,
+                                sender_rx: Arc::new(Mutex::new(sender_rx)),
+                                shutdown_rx: WebSocketShutdown(ws_shutdown_rx),
+                            })
                             .into_make_service(),
                     )
-                    .with_graceful_shutdown(async {
+                    .with_graceful_shutdown(async move {
                         shutdown_rx.await.ok();
                         ws_shutdown_tx.send(()).ok();
-                    })
-                    .await
-                    .unwrap();
-            });
+                    });
 
-            async_stream::stream! {
-                while let Some(msg) = msg_rx.recv().await {
-                    yield msg
+                tokio::spawn(server);
+
+                async_stream::stream! {
+                    while let Some(msg) = receiver_rx.recv().await {
+                        yield msg
+                    }
+
+                    ctx.ws.senders.lock().await.remove(&port);
+
+                    drop(shutdown_tx);
+                }
+            }),
+        )
+        .procedure(
+            "send",
+            R.mutation({
+                #[derive(Deserialize, Type)]
+                #[specta(inline)]
+                struct Args {
+                    port: u16,
+                    data: String,
                 }
 
-                drop(shutdown_tx);
-            }
-        }),
-    )
+                |ctx, Args { port, data }: Args| async move {
+                    let senders = ctx.ws.senders.lock().await;
+
+                    if let Some(sender) = senders.get(&port) {
+                        sender.send(data).await.ok();
+                    }
+                }
+            }),
+        )
 }
 
-async fn ws_handler(
-    ws: WebSocketUpgrade,
-    State((msg_tx, shutdown_rx)): State<(mpsc::Sender<Message>, WebSocketShutdown)>,
-) -> impl IntoResponse {
-    ws.on_upgrade(|socket| handle_socket(socket, msg_tx, shutdown_rx))
+#[derive(Clone)]
+struct WsState {
+    sender_rx: Arc<Mutex<mpsc::Receiver<String>>>,
+    receiver_tx: mpsc::Sender<Message>,
+    shutdown_rx: WebSocketShutdown,
+}
+
+async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> Response {
+    println!("ws_handler");
+
+    let Ok(mut sender_rx) = state.sender_rx.clone().try_lock_owned() else {
+        return "Connection already established".into_response();
+    };
+
+    ws.on_upgrade(move |socket| async move {
+        handle_socket(socket, state, &mut sender_rx).await;
+    })
 }
 
 #[derive(Serialize, Type)]
@@ -91,19 +137,28 @@ enum Message {
 
 async fn handle_socket(
     mut socket: ws::WebSocket,
-    msg_tx: mpsc::Sender<Message>,
-    mut shutdown_rx: WebSocketShutdown,
+    WsState {
+        receiver_tx,
+        mut shutdown_rx,
+        ..
+    }: WsState,
+    sender_rx: &mut mpsc::Receiver<String>,
 ) {
-    msg_tx.send(Message::Connected).await.ok();
+    println!("handle_socket");
+
+    receiver_tx.send(Message::Connected).await.ok();
 
     loop {
         tokio::select! {
             _ = shutdown_rx.recv() => return,
+            Some(msg) = sender_rx.recv() => {
+                socket.send(ws::Message::Text(msg)).await.ok();
+            }
             Some(msg) = socket.recv() => {
                 if let Ok(msg) = msg {
                     match msg {
                         ws::Message::Text(t) => {
-                            msg_tx.send(Message::Text(t)).await.ok();
+                            receiver_tx.send(Message::Text(t)).await.ok();
                         }
                         ws::Message::Close(_) => {
                             break;
@@ -117,5 +172,5 @@ async fn handle_socket(
         };
     }
 
-    msg_tx.send(Message::Disconnected).await.ok();
+    receiver_tx.send(Message::Disconnected).await.ok();
 }

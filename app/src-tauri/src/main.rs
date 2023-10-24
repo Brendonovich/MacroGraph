@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Arc;
+
 use rspc::{alpha::Rspc, Router};
 use tauri::Manager;
 
@@ -20,10 +22,12 @@ macro_rules! tauri_handlers {
 
 #[tokio::main]
 async fn main() {
+    let ctx: Ctx = Default::default();
+
     tauri::Builder::default()
         .plugin(rspc::integrations::tauri::plugin(
             std::sync::Arc::new(router()),
-            || (),
+            move || ctx.clone(),
         ))
         .setup(|app| {
             app.manage(http::State::new(app.handle()));
@@ -40,10 +44,17 @@ async fn main() {
         .expect("error while running tauri application");
 }
 
-#[allow(non_upper_case_globals)]
-pub(self) const R: Rspc<()> = Rspc::new();
+#[derive(Default)]
+pub struct CtxInner {
+    ws: websocket::Ctx,
+}
 
-pub fn router() -> Router {
+pub type Ctx = Arc<CtxInner>;
+
+#[allow(non_upper_case_globals)]
+pub(self) const R: Rspc<Ctx> = Rspc::new();
+
+pub fn router() -> Router<Ctx> {
     R.router()
         .merge("fs.", fs::router())
         .merge("oauth.", oauth::router())

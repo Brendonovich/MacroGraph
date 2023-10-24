@@ -4,7 +4,7 @@ use specta::Type;
 
 use crate::R;
 
-pub fn router() -> AlphaRouter<()> {
+pub fn router() -> AlphaRouter<super::Ctx> {
     #[derive(Type, Serialize)]
     enum Entry {
         Dir(String),

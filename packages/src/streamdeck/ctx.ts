@@ -1,4 +1,4 @@
-import { OnEvent } from "@macrograph/core";
+import { OnEvent, WsProvider } from "@macrograph/core";
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { z } from "zod";
@@ -23,13 +23,6 @@ export type ConnectionState =
  */
 function createADTStore<T extends object>(init: T) {
   return createStore<T>(init) as [T, (arg: T | ((prev: T) => T)) => void];
-}
-
-export type WsMessage = "Connected" | "Disconnected" | { Text: string };
-
-export interface WsProvider<TServer> {
-  startServer(port: number, cb: (text: WsMessage) => void): Promise<TServer>;
-  stopServer(server: TServer): Promise<void>;
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

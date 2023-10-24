@@ -34,6 +34,8 @@ export function createEventSub(helix: Helix, onEvent: OnEvent) {
                 case "session_welcome":
                   setState({ type: "connected", ws });
 
+                  console.log("woah");
+
                   await Promise.allSettled(
                     SubTypes.map((type) =>
                       helix.client.eventsub.subscriptions.post(z.any(), {

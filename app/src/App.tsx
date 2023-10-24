@@ -1,5 +1,5 @@
 import { onMount } from "solid-js";
-import { Core } from "@macrograph/core";
+import { Core, WsProvider, createWsProvider } from "@macrograph/core";
 import Interface from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
@@ -37,6 +37,23 @@ export default function () {
     },
   });
 
+  const wsProvider = createWsProvider({
+    async startServer(port, onData) {
+      return client.addSubscription(["websocket.server", port], {
+        onData: (d) => onData(d),
+      });
+    },
+    async stopServer(unsubscribe) {
+      unsubscribe();
+    },
+    async sendMessage(data) {
+      return client.mutation([
+        "websocket.send",
+        { port: data.port, data: data.data },
+      ]);
+    },
+  });
+
   onMount(() => {
     [
       () =>
@@ -62,21 +79,12 @@ export default function () {
       pkgs.obs.pkg,
       pkgs.patreon.pkg,
       pkgs.spotify.pkg,
-      () =>
-        pkgs.streamdeck.pkg({
-          async startServer(port, onData) {
-            return client.addSubscription(["websocket.server", port], {
-              onData: (d) => onData(d),
-            });
-          },
-          async stopServer(unsubscribe) {
-            unsubscribe();
-          },
-        }),
+      () => pkgs.streamdeck.pkg(wsProvider),
       pkgs.streamlabs.pkg,
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
       pkgs.websocket.pkg,
+      () => pkgs.websocketServer.pkg(wsProvider),
     ].map((p) => core.registerPackage(p));
   });
 

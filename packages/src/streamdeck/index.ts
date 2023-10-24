@@ -1,7 +1,7 @@
-import { Package, t } from "@macrograph/core";
+import { Package, t, WsProvider } from "@macrograph/core";
 import { createEffect, createSignal } from "solid-js";
 
-import { createCtx, Events, WsProvider } from "./ctx";
+import { createCtx, Events } from "./ctx";
 
 export function pkg<TServer>(ws: WsProvider<TServer>) {
   const [latestEvent, setLatestEvent] = createSignal<any | null>(null);

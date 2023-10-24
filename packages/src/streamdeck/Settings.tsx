@@ -37,7 +37,9 @@ export default function (ctx: Ctx) {
                 disabled={state().type === "Starting"}
               >
                 <Field name="port" type="number">
-                  {(field, props) => <Input {...props} value={field.value} />}
+                  {(field, props) => (
+                    <Input {...props} value={field.value} type="number" />
+                  )}
                 </Field>
                 <Button type="submit">
                   {state().type === "Stopped"
