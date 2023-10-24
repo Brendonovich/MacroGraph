@@ -54,7 +54,7 @@
       "targets": "all"
     },
     "security": {
-      "csp": "default-src 'self'; media-src 'self' asset: https://asset.localhost;"
+      "csp": "asset: https://asset.localhost;"
     },
     "updater": {
       "active": true,
