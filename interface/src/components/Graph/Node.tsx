@@ -112,7 +112,7 @@ export const Node = (props: Props) => {
         <div
           class={clsx(
             "h-6 duration-100 text-md font-medium",
-            active() === 1 ? "active-fade-in" : "fade-Duration",
+            active() === 1 ? "active-fade-in" : "",
             (() => {
               const schema = node().schema;
               return SchemaVariantColours[

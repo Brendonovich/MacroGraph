@@ -15,7 +15,7 @@ export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
     <>
       <Switch>
         <Match when={websockets.size !== 0}>
-          <table class="mb-2 table-auto w-full">
+          <table class="mb-4 table-auto w-full">
             <thead>
               <tr>
                 <th class="pr-2 text-left">IP Address</th>
@@ -23,25 +23,32 @@ export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
               </tr>
             </thead>
             <For each={[...websockets.entries()]}>
-              {([key, value]) => {
-                return (
-                  <tr>
-                    <td>
-                      <span>{key}</span>
-                    </td>
-                    <td>
-                      <span>
-                        {value !== null ? "Connected" : "Disconnected"}
-                      </span>
-                    </td>
-                    <td>
-                      <Button onClick={() => removeWebsocket(key)}>
-                        Remove
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              }}
+              {([key, value]) => (
+                <tr>
+                  <td>
+                    <span>{key}</span>
+                  </td>
+                  <td>
+                    <Switch>
+                      <Match when={value.state === "connected" && value}>
+                        Connected
+                      </Match>
+                      <Match when={value.state === "connecting"}>
+                        Connecting
+                      </Match>
+                      <Match when={value.state === "disconnected"}>
+                        <span class="mr-4">Disconnected</span>
+                        <Button onClick={() => addWebsocket(key)}>
+                          Connect
+                        </Button>
+                      </Match>
+                    </Switch>
+                  </td>
+                  <td>
+                    <Button onClick={() => removeWebsocket(key)}>Remove</Button>
+                  </td>
+                </tr>
+              )}
             </For>
           </table>
         </Match>
@@ -52,10 +59,10 @@ export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
       >
         <Field name="ip">
           {(field, props) => (
-            <Input {...props} placeholder="WS IP Address" value={field.value} />
+            <Input {...props} placeholder="WebSocket URL" value={field.value} />
           )}
         </Field>
-        <Button type="submit">Submit</Button>
+        <Button type="submit">Add WebSocket</Button>
       </Form>
     </>
   );

@@ -91,6 +91,8 @@ export const SchemaMenu = (props: Props) => {
               const open = () => openPackages().has(p) || search() !== "";
 
               const filteredSchemas = createMemo(() => {
+                if (p.schemas.size < 1) return [];
+
                 const lowercasePackageName = p.name.toLowerCase();
 
                 const leftoverSearchTokens = lowercaseSearchTokens().filter(

@@ -1421,6 +1421,35 @@ export function register(pkg: Package, { client, user }: Helix) {
   });
 
   pkg.createNonEventSchema({
+    name: "Get User Chat Color By ID",
+    variant: "Exec",
+    generateIO: (io) => {
+      return {
+        userId: io.dataInput({
+          id: "userId",
+          name: "User ID",
+          type: t.string(),
+        }),
+        color: io.dataOutput({
+          id: "color",
+          name: "color",
+          type: t.string(),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      const user = userId().unwrap();
+      let color = await client.chat.color.get(z.any(), {
+        body: new URLSearchParams({
+          user_id: ctx.getInput(io.userId),
+        }),
+      });
+      console.log(color);
+      ctx.setOutput(io.color, color.color);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Slow Mode",
     variant: "Exec",
     generateIO: (io) => {

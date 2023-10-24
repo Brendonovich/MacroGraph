@@ -44,7 +44,6 @@ export function createCtx(onEvent: OnEvent) {
 
             if ("Status" in data) {
               mixerID = Object.keys(data.Status.mixers)[0];
-              console.log(mixerID);
               return;
             } else if ("Patch" in data) {
               for (const op of data.Patch) {
