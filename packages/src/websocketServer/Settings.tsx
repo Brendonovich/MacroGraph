@@ -6,6 +6,12 @@ import { z } from "zod";
 import { Ctx } from "./ctx";
 
 export default ({ websockets, startServer, stopServer }: Ctx) => {
+  const [, { Form, Field }] = createForm({
+    initialValues: {
+      port: 1890,
+    },
+  });
+
   return (
     <>
       <Switch>
@@ -39,27 +45,17 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
           </table>
         </Match>
       </Switch>
-      {(_) => {
-        const [, { Form, Field }] = createForm({
-          initialValues: {
-            port: 1890,
-          },
-        });
-
-        return (
-          <Form
-            onSubmit={(d) => startServer(d.port)}
-            class="flex flex-row space-x-4"
-          >
-            <Field name="port" type="number">
-              {(field, props) => (
-                <Input {...props} value={field.value} type="number" />
-              )}
-            </Field>
-            <Button type="submit">Submit</Button>
-          </Form>
-        );
-      }}
+      <Form
+        onSubmit={(d) => startServer(d.port)}
+        class="flex flex-row space-x-4"
+      >
+        <Field name="port" type="number">
+          {(field, props) => (
+            <Input {...props} value={field.value} type="number" />
+          )}
+        </Field>
+        <Button type="submit">Submit</Button>
+      </Form>
     </>
   );
 };
