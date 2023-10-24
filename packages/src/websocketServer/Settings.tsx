@@ -1,7 +1,6 @@
 import { Button, Input } from "@macrograph/ui";
-import { createForm, zodForm } from "@modular-forms/solid";
+import { createForm } from "@modular-forms/solid";
 import { For, Match, Switch } from "solid-js";
-import { z } from "zod";
 
 import { Ctx } from "./ctx";
 
@@ -19,7 +18,7 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
           <table class="mb-2 table-auto w-full">
             <thead>
               <tr>
-                <th class="pr-2 text-left">IP Address</th>
+                <th class="pr-2 text-left">Port</th>
                 <th class="pr-2 text-left">Clients</th>
               </tr>
             </thead>
@@ -32,7 +31,7 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
                     </td>
                     <td>
                       <span>
-                        {value.client_count ? "Connected" : "Disconnected"}
+                        {value.hasConnection ? "Connected" : "Disconnected"}
                       </span>
                     </td>
                     <td>
@@ -51,10 +50,16 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
       >
         <Field name="port" type="number">
           {(field, props) => (
-            <Input {...props} value={field.value} type="number" />
+            <Input
+              {...props}
+              value={field.value}
+              type="number"
+              min={0}
+              max={65535}
+            />
           )}
         </Field>
-        <Button type="submit">Submit</Button>
+        <Button type="submit">Start Server</Button>
       </Form>
     </>
   );

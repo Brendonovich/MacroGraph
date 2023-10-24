@@ -1,7 +1,7 @@
-import { Package, t } from "@macrograph/core";
+import { Package, WsProvider, t } from "@macrograph/core";
 import { createEffect, createSignal } from "solid-js";
 
-import { createCtx, WsProvider } from "./ctx";
+import { createCtx } from "./ctx";
 
 export function pkg<TServer>(ws: WsProvider<TServer>) {
   const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
@@ -39,7 +39,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
       };
     },
     run({ ctx, io }) {
-      ws?.sendMessage({
+      ws.sendMessage({
         port: ctx.getInput(io.port),
         data: ctx.getInput(io.data),
       });

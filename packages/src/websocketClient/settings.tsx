@@ -2,9 +2,15 @@ import { For, Match, Switch } from "solid-js";
 import { Button, Input } from "@macrograph/ui";
 
 import { Ctx } from "./ctx";
-import { Field, createForm } from "@modular-forms/solid";
+import { createForm } from "@modular-forms/solid";
 
 export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
+  const [, { Form, Field }] = createForm({
+    initialValues: {
+      ip: "",
+    },
+  });
+
   return (
     <>
       <Switch>
@@ -40,31 +46,17 @@ export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
           </table>
         </Match>
       </Switch>
-      {(_) => {
-        const [, { Form, Field }] = createForm({
-          initialValues: {
-            ip: "",
-          },
-        });
-
-        return (
-          <Form
-            onSubmit={(d) => addWebsocket(d.ip)}
-            class="flex flex-row space-x-4"
-          >
-            <Field name="ip">
-              {(field, props) => (
-                <Input
-                  {...props}
-                  placeholder="WS IP Address"
-                  value={field.value}
-                />
-              )}
-            </Field>
-            <Button type="submit">Submit</Button>
-          </Form>
-        );
-      }}
+      <Form
+        onSubmit={(d) => addWebsocket(d.ip)}
+        class="flex flex-row space-x-4"
+      >
+        <Field name="ip">
+          {(field, props) => (
+            <Input {...props} placeholder="WS IP Address" value={field.value} />
+          )}
+        </Field>
+        <Button type="submit">Submit</Button>
+      </Form>
     </>
   );
 };

@@ -1,6 +1,5 @@
-import { Maybe, OnEvent } from "@macrograph/core";
+import { Maybe } from "@macrograph/core";
 import { ReactiveMap } from "@solid-primitives/map";
-import { websocket } from "..";
 
 export const WS_IPS_LOCALSTORAGE = "wsServers";
 

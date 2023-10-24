@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js";
-import { None, Option, Some } from "../types";
+
+import { Option, Some } from "../types";
 
 export * from "./pins";
 
@@ -24,7 +25,7 @@ export function makePersisted<T>(
 
   return [
     get,
-    (value) => {
+    (value: Parameters<CreateSignal<T>[1]>[0]) => {
       const newValue = set(value);
 
       if (newValue.isNone()) localStorage.removeItem(key);
@@ -36,4 +37,16 @@ export function makePersisted<T>(
       return newValue;
     },
   ];
+}
+
+export type WsMessage = "Connected" | "Disconnected" | { Text: string };
+
+export interface WsProvider<TServer> {
+  startServer(port: number, cb: (text: WsMessage) => void): Promise<TServer>;
+  stopServer(server: TServer): Promise<void>;
+  sendMessage(data: { data: string; port: number }): Promise<null>;
+}
+
+export function createWsProvider<T>(p: WsProvider<T>) {
+  return p;
 }
