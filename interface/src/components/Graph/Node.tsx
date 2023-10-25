@@ -174,7 +174,7 @@ export const Node = (props: Props) => {
             }
           >
             {(_) => {
-              const [value, setValue] = createSignal(node.name);
+              const [value, setValue] = createSignal(node().state.name);
 
               let ref: HTMLInputElement | undefined;
 
@@ -187,7 +187,13 @@ export const Node = (props: Props) => {
                     type="text"
                     ref={ref}
                     value={value()}
-                    onInput={(e) => setValue(e.target.value)}
+                    onInput={(e) =>
+                      setValue(
+                        e.target.value === ""
+                          ? node().schema.name
+                          : e.target.value
+                      )
+                    }
                     onBlur={() => {
                       if (value() !== "") node().state.name = value();
                       node().graph.project.save();
