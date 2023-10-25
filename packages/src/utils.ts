@@ -345,6 +345,30 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "String to Float",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        string: io.dataInput({
+          id: "string",
+          type: t.string(),
+        }),
+        float: io.dataOutput({
+          id: "float",
+          type: t.option(t.float()),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = parseFloat(ctx.getInput(io.string));
+      console.log(number);
+      const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
+
+      ctx.setOutput(io.float, opt);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Multiply Ints",
     variant: "Pure",
     generateIO(io) {
