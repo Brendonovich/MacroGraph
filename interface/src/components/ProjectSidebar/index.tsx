@@ -16,7 +16,7 @@ export const GraphList = (props: Props) => {
   const UI = useUIStore();
 
   return (
-    <div class="flex flex-col flex-1">
+    <div class="flex flex-col flex-1 overflow-y-hidden">
       <div class="flex flex-row bg-neutral-900 text-white px-2 font-medium shadow">
         <div class="flex-1 py-1">Graphs</div>
         <button
@@ -37,15 +37,17 @@ export const GraphList = (props: Props) => {
           +
         </button>
       </div>
-      <For each={[...core.project.graphs.values()]}>
-        {(graph) => (
-          <GraphItem
-            graph={graph}
-            onClick={() => props.onChange(graph)}
-            isCurrentGraph={graph === UI.state.currentGraph}
-          />
-        )}
-      </For>
+      <div class="overflow-y-auto">
+        <For each={[...core.project.graphs.values()]}>
+          {(graph) => (
+            <GraphItem
+              graph={graph}
+              onClick={() => props.onChange(graph)}
+              isCurrentGraph={graph === UI.state.currentGraph}
+            />
+          )}
+        </For>
+      </div>
     </div>
   );
 };
