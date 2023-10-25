@@ -68,7 +68,7 @@ export class Node {
     this.schema = args.schema;
 
     this.state = createMutable({
-      name: args.schema.name,
+      name: args.name ? args.name : args.schema.name,
       position: args.position,
       inputs: [],
       outputs: [],
@@ -190,6 +190,7 @@ export class Node {
 
     const node = new Node({
       id: data.id,
+      name: data.name,
       position: data.position,
       schema,
       graph,
