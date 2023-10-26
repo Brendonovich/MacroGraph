@@ -1570,6 +1570,11 @@ export function register(pkg: Package) {
           name: "Username",
           type: t.string(),
         }),
+        displayName: io.dataOutput({
+          id: "displayName",
+          name: "Display Name",
+          type: t.string(),
+        }),
         anonymous: io.dataOutput({
           id: "anonymous",
           name: "Anonymous",
@@ -1590,6 +1595,7 @@ export function register(pkg: Package) {
     run({ ctx, data, io }) {
       ctx.setOutput(io.userId, data.user_id);
       ctx.setOutput(io.userLogin, data.user_login);
+      ctx.setOutput(io.displayName, data.user_name);
       ctx.setOutput(io.anonymous, data.is_anonymous);
       ctx.setOutput(io.message, data.message);
       ctx.setOutput(io.bits, data.bits);

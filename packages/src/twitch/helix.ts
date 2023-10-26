@@ -4,6 +4,7 @@ import {
   Maybe,
   None,
   OAuthToken,
+  Option,
   Package,
   Some,
   createEnum,
@@ -48,7 +49,7 @@ export function createHelixEndpoint(
 
       let resp = await run();
 
-      if (Math.floor(resp.status / 100) !== 2) {
+      if (resp.status === 401) {
         if (!refreshPromise) {
           refreshPromise = (async () => {
             const oldToken = getToken();
@@ -64,7 +65,13 @@ export function createHelixEndpoint(
         resp = await run();
       }
 
-      return resp.json().then((json: any) => json.data[0]);
+      return resp.json().then((json: any) => {
+        if (json.data.length === 1) {
+          return json.data[0];
+        } else {
+          return json.data;
+        }
+      });
     },
   });
 
@@ -847,42 +854,42 @@ export function register(pkg: Package, { client, user }: Helix) {
         prompt: io.dataInput({
           name: "Prompt",
           id: "prompt",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
         enabled: io.dataInput({
           name: "Enabled",
           id: "isEnabled",
-          type: t.bool(),
+          type: t.option(t.bool()),
         }),
         backgroundColor: io.dataInput({
           name: "Background Color",
           id: "backgroundColor",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
         userInputRequired: io.dataInput({
           name: "User Input Required",
           id: "userInputRequired",
-          type: t.bool(),
+          type: t.option(t.bool()),
         }),
         maxRedemptionsPerStream: io.dataInput({
           name: "Max Redemptions Per Stream",
           id: "maxRedemptionsPerStream",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         maxRedemptionsPerUserPerStream: io.dataInput({
           name: "Max Redemptions Per User Per Stream",
           id: "maxRedemptionsPerUserPerStream",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         globalCooldown: io.dataInput({
           name: "Global Cooldown",
           id: "globalCooldown",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         autoFulfill: io.dataInput({
           name: "Skip Redemption Queue",
           id: "autoFulfill",
-          type: t.bool(),
+          type: t.option(t.bool()),
         }),
         out: io.dataOutput({
           id: "out",
@@ -892,26 +899,26 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
     async run({ ctx, io }) {
       const user = userId().unwrap();
+      let body = {};
+
+      Object.entries(io).forEach(([key, value]) => {
+        if (value.connections || value.type.inner === undefined) return;
+        if (ctx.getInput(io[key]).isNone()) return;
+        body[key] = ctx.getInput(io[key]).unwrap();
+      });
 
       const response = await client.channelPoints.customRewards.post(z.any(), {
         body: JSON.stringify({
           broadcaster_id: user,
           title: ctx.getInput(io.title),
           cost: ctx.getInput(io.cost),
-          prompt: ctx.getInput(io.prompt),
-          isEnabled: ctx.getInput(io.enabled),
-          backgroundColor: ctx.getInput(io.backgroundColor),
-          userInputRequired: ctx.getInput(io.userInputRequired),
-          maxRedemptionsPerStream: ctx.getInput(io.maxRedemptionsPerStream),
-          maxRedemptionsPerUserPerStream: ctx.getInput(
-            io.maxRedemptionsPerUserPerStream
-          ),
-          globalCooldown: ctx.getInput(io.globalCooldown),
-          autoFulfill: ctx.getInput(io.autoFulfill),
+          ...body,
         }),
       });
 
-      const data = response.data[0];
+      console.log(response);
+
+      const data = response;
 
       ctx.setOutput(
         io.out,
@@ -1020,7 +1027,7 @@ export function register(pkg: Package, { client, user }: Helix) {
     variant: "Exec",
     generateIO: (io) => {
       return {
-        rewardId: io.dataInput({
+        id: io.dataInput({
           name: "Reward Id",
           id: "id",
           type: t.string(),
@@ -1028,57 +1035,57 @@ export function register(pkg: Package, { client, user }: Helix) {
         title: io.dataInput({
           name: "Title",
           id: "title",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
         cost: io.dataInput({
           name: "Cost",
           id: "cost",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         prompt: io.dataInput({
           name: "Prompt",
           id: "prompt",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
-        enabled: io.dataInput({
+        isEnabled: io.dataInput({
           name: "Enabled",
           id: "isEnabled",
-          type: t.bool(),
+          type: t.option(t.bool()),
         }),
         backgroundColor: io.dataInput({
           name: "Background Color",
           id: "backgroundColor",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
         userInputRequired: io.dataInput({
           name: "User Input Required",
           id: "userInputRequired",
-          type: t.bool(),
+          type: t.option(t.bool()),
         }),
         maxRedemptionsPerStream: io.dataInput({
           name: "Max Redemptions Per Stream",
           id: "maxRedemptionsPerStream",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         maxRedemptionsPerUserPerStream: io.dataInput({
           name: "Max Redemptions Per User Per Stream",
           id: "maxRedemptionsPerUserPerStream",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         globalCooldown: io.dataInput({
           name: "Global Cooldown",
           id: "globalCooldown",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         autoFulfill: io.dataInput({
           name: "Skip Redemption Queue",
           id: "autoFulfill",
-          type: t.bool(),
+          type: t.option(t.bool()),
         }),
         paused: io.dataInput({
           name: "Paused",
           id: "paused",
-          type: t.bool(),
+          type: t.option(t.bool()),
         }),
         out: io.dataOutput({
           id: "out",
@@ -1087,26 +1094,42 @@ export function register(pkg: Package, { client, user }: Helix) {
       };
     },
     async run({ ctx, io }) {
+      let body = {};
+      if (ctx.getInput(io.id) === "") return;
+
+      console.log(ctx.getInput(io.cost).isNone());
+
+      Object.entries(io).forEach(([key, value]) => {
+        if (value.connections || value.type.inner === undefined) return;
+        if (ctx.getInput(io[key]).isNone()) return;
+        body[key] = ctx.getInput(io[key]).unwrap();
+      });
+      console.log(body);
+
       const response = await client.channelPoints.customRewards.patch(z.any(), {
         body: JSON.stringify({
           broadcaster_id: userId().unwrap(),
-          id: ctx.getInput(io.rewardId),
-          title: ctx.getInput(io.title),
-          cost: ctx.getInput(io.cost) === 0 ? undefined : ctx.getInput(io.cost),
-          prompt: ctx.getInput(io.prompt),
-          isEnabled: ctx.getInput(io.enabled),
-          backgroundColor: ctx.getInput(io.backgroundColor),
-          userInputRequired: ctx.getInput(io.userInputRequired),
-          maxRedemptionsPerStream: ctx.getInput(io.maxRedemptionsPerStream),
-          maxRedemptionsPerUserPerStream: ctx.getInput(
-            io.maxRedemptionsPerUserPerStream
-          ),
-          isPaused: ctx.getInput(io.paused),
-          globalCooldown: ctx.getInput(io.globalCooldown),
+          id: ctx.getInput(io.id),
+          ...body,
         }),
       });
 
-      const data = response.data[0];
+      console.log(response);
+
+      // title: ctx.getInput(io.title) ?? undefined,
+      // cost: ctx.getInput(io.cost) === 0 ? undefined : ctx.getInput(io.cost),
+      // prompt: ctx.getInput(io.prompt) ?? undefined,
+      // isEnabled: ctx.getInput(io.enabled) ?? undefined,
+      // backgroundColor: ctx.getInput(io.backgroundColor) ?? undefined,
+      // userInputRequired: ctx.getInput(io.userInputRequired) ?? undefined,
+      // maxRedemptionsPerStream:
+      //   ctx.getInput(io.maxRedemptionsPerStream) ?? undefined,
+      // maxRedemptionsPerUserPerStream:
+      //   ctx.getInput(io.maxRedemptionsPerUserPerStream) ?? undefined,
+      // isPaused: ctx.getInput(io.paused) ?? undefined,
+      // globalCooldown: ctx.getInput(io.globalCooldown) ?? undefined,
+
+      const data = response;
 
       ctx.setOutput(
         io.out,
@@ -1219,13 +1242,15 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
     async run({ ctx, io }) {
       let rewards = await client.channelPoints.customRewards.get(z.any(), {
-        body: JSON.stringify({
+        body: new URLSearchParams({
           broadcaster_id: userId().unwrap(),
-          only_manageable_rewards: ctx.getInput(io.manageableOnly),
+          only_manageable_rewards: ctx.getInput(io.manageableOnly).toString(),
         }),
       });
 
-      const data = rewards.data.find(
+      console.log(rewards);
+
+      const data = rewards.find(
         (reward: any) => reward.title === ctx.getInput(io.title)
       );
 
@@ -1256,23 +1281,27 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  // pkg.createNonEventSchema({
-  //   name: "Delete Custom Reward",
-  //   variant: "Exec",
-  //   generateIO: (io) => {
-  //     io.dataInput({
-  //       id: "id",
-  //       name: "Reward Id",
-  //       type: t.string(),
-  //     });
-  //   },
-  //   run({ ctx, io }) {
-  //     return client.channelPoints.deleteCustomReward(
-  //       userId().unwrap(),
-  //       ctx.getInput(io.id")
-  //     );
-  //   },
-  // });
+  pkg.createNonEventSchema({
+    name: "Delete Custom Reward",
+    variant: "Exec",
+    generateIO: (io) => {
+      return {
+        id: io.dataInput({
+          id: "id",
+          name: "Reward Id",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      return client.channelPoints.customRewards.delete(z.any(), {
+        body: new URLSearchParams({
+          broadcaster_id: userId().unwrap(),
+          id: ctx.getInput(io.id),
+        }),
+      });
+    },
+  });
 
   pkg.createNonEventSchema({
     name: "Get User By ID",
