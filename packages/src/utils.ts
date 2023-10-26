@@ -413,7 +413,34 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, io }) {
-      const number = Math.floor(ctx.getInput(io.one) * ctx.getInput(io.two));
+      const number = ctx.getInput(io.one) * ctx.getInput(io.two);
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Exponent Floats",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          name: "Number",
+          type: t.float(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          name: "Exponent",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = ctx.getInput(io.one) ** ctx.getInput(io.two);
       ctx.setOutput(io.output, number);
     },
   });
@@ -504,6 +531,131 @@ export function pkg(core: Core) {
     },
     run({ ctx, io }) {
       const number = Math.floor(ctx.getInput(io.one) / ctx.getInput(io.two));
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Divide Floats",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = ctx.getInput(io.one) / ctx.getInput(io.two);
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Min Floats",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = Math.min(ctx.getInput(io.one), ctx.getInput(io.two));
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Max Floats",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = Math.max(ctx.getInput(io.one), ctx.getInput(io.two));
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Max ints",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.int(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.int(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = Math.max(ctx.getInput(io.one), ctx.getInput(io.two));
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Min ints",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.int(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.int(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = Math.min(ctx.getInput(io.one), ctx.getInput(io.two));
       ctx.setOutput(io.output, number);
     },
   });
@@ -1467,14 +1619,24 @@ export function pkg(core: Core) {
           name: "Event Name",
           type: t.string(),
         }),
-        key: io.dataOutput({
+        string: io.dataOutput({
           id: "eventKey",
-          name: "Event Key",
+          name: "String Data",
           type: t.string(),
+        }),
+        int: io.dataOutput({
+          id: "eventKey",
+          name: "Int Data",
+          type: t.int(),
+        }),
+        float: io.dataOutput({
+          id: "eventKey",
+          name: "Float Data",
+          type: t.float(),
         }),
         data: io.dataOutput({
           id: "eventData",
-          name: "Event Data",
+          name: "JSON Data",
           type: t.enum(JSON),
         }),
       };
@@ -1483,7 +1645,9 @@ export function pkg(core: Core) {
       if (!ctx.getInput(io.inName)) return;
       if (ctx.getInput(io.inName) !== data.name) return;
       ctx.setOutput(io.outName, data.name);
-      ctx.setOutput(io.key, data.key);
+      ctx.setOutput(io.string, data.string);
+      ctx.setOutput(io.int, data.int);
+      ctx.setOutput(io.float, data.float);
       ctx.setOutput(io.data, data.data);
       ctx.exec(io.exec);
     },
@@ -1498,26 +1662,45 @@ export function pkg(core: Core) {
           id: "exec",
           name: "",
         }),
-        name: io.dataInput({
-          id: "name",
+        inName: io.dataInput({
+          id: "inName",
           name: "Event Name",
           type: t.string(),
         }),
-        key: io.dataOutput({
-          id: "eventKey",
-          name: "Event Key",
+        outName: io.dataOutput({
+          id: "outName",
+          name: "Event Name",
           type: t.string(),
+        }),
+        string: io.dataOutput({
+          id: "eventKey",
+          name: "String Data",
+          type: t.string(),
+        }),
+        int: io.dataOutput({
+          id: "eventKey",
+          name: "Int Data",
+          type: t.int(),
+        }),
+        float: io.dataOutput({
+          id: "eventKey",
+          name: "Float Data",
+          type: t.float(),
         }),
         data: io.dataOutput({
           id: "eventData",
-          name: "Event Data",
+          name: "JSON Data",
           type: t.enum(JSON),
         }),
       };
     },
     run({ ctx, data, io }) {
-      if (ctx.getInput(io.name) !== data.name) return;
-      ctx.setOutput(io.key, data.key);
+      if (!ctx.getInput(io.inName)) return;
+      if (ctx.getInput(io.inName) !== data.name) return;
+      ctx.setOutput(io.outName, data.name);
+      ctx.setOutput(io.string, data.string);
+      ctx.setOutput(io.int, data.int);
+      ctx.setOutput(io.float, data.float);
       ctx.setOutput(io.data, data.data);
       ctx.exec(io.exec);
     },
@@ -1533,14 +1716,24 @@ export function pkg(core: Core) {
           name: "Event Name",
           type: t.string(),
         }),
-        key: io.dataInput({
+        string: io.dataInput({
           id: "eventKey",
-          name: "Event Key",
+          name: "String Data",
           type: t.string(),
+        }),
+        int: io.dataInput({
+          id: "eventKey",
+          name: "Int Data",
+          type: t.int(),
+        }),
+        float: io.dataInput({
+          id: "eventKey",
+          name: "Float Data",
+          type: t.float(),
         }),
         data: io.dataInput({
           id: "eventData",
-          name: "Event Data",
+          name: "JSON Data",
           type: t.enum(JSON),
         }),
       };
@@ -1551,7 +1744,9 @@ export function pkg(core: Core) {
         data: {
           name: ctx.getInput(io.event),
           data: ctx.getInput(io.data),
-          key: ctx.getInput(io.key),
+          string: ctx.getInput(io.string),
+          int: ctx.getInput(io.int),
+          float: ctx.getInput(io.float),
         },
       });
     },
@@ -1567,14 +1762,24 @@ export function pkg(core: Core) {
           name: "Event Name",
           type: t.string(),
         }),
-        key: io.dataInput({
+        string: io.dataInput({
           id: "eventKey",
-          name: "Event Key",
+          name: "String Data",
           type: t.string(),
+        }),
+        int: io.dataInput({
+          id: "eventKey",
+          name: "Int Data",
+          type: t.int(),
+        }),
+        float: io.dataInput({
+          id: "eventKey",
+          name: "Float Data",
+          type: t.float(),
         }),
         data: io.dataInput({
           id: "eventData",
-          name: "Event Data",
+          name: "JSON Data",
           type: t.enum(JSON),
         }),
       };
@@ -1585,7 +1790,9 @@ export function pkg(core: Core) {
         data: {
           name: ctx.getInput(io.event),
           data: ctx.getInput(io.data),
-          key: ctx.getInput(io.key),
+          string: ctx.getInput(io.string),
+          int: ctx.getInput(io.int),
+          float: ctx.getInput(io.float),
         },
       });
     },
