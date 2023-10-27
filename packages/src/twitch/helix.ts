@@ -901,11 +901,26 @@ export function register(pkg: Package, { client, user }: Helix) {
       const user = userId().unwrap();
       let body = {};
 
-      Object.entries(io).forEach(([key, value]) => {
-        if (value.connections || value.type.inner === undefined) return;
-        if (ctx.getInput(io[key]).isNone()) return;
-        body[key] = ctx.getInput(io[key]).unwrap();
-      });
+      if (ctx.getInput(io.prompt).isSome())
+        body.prompt = ctx.getInput(io.prompt).unwrap();
+      if (ctx.getInput(io.enabled).isSome())
+        body.enabled = ctx.getInput(io.enabled).unwrap();
+      if (ctx.getInput(io.backgroundColor).isSome())
+        body.backgroundColor = ctx.getInput(io.backgroundColor).unwrap();
+      if (ctx.getInput(io.userInputRequired).isSome())
+        body.userInputRequired = ctx.getInput(io.userInputRequired).unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerStream).isSome())
+        body.maxRedemptionsPerStream = ctx
+          .getInput(io.maxRedemptionsPerStream)
+          .unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerUserPerStream).isSome())
+        body.maxRedemptionsPerUserPerStream = ctx
+          .getInput(io.maxRedemptionsPerUserPerStream)
+          .unwrap();
+      if (ctx.getInput(io.globalCooldown).isSome())
+        body.globalCooldown = ctx.getInput(io.globalCooldown).unwrap();
+      if (ctx.getInput(io.autoFulfill).isSome())
+        body.autoFulfill = ctx.getInput(io.autoFulfill).unwrap();
 
       const response = await client.channelPoints.customRewards.post(z.any(), {
         body: JSON.stringify({
@@ -916,30 +931,28 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       });
 
-      console.log(response);
-
-      const data = response;
-
       ctx.setOutput(
         io.out,
         Reward.create({
-          id: data.id,
-          title: data.title,
-          prompt: data.prompt,
-          cost: data.cost,
-          bgColor: data.backgroundColor,
-          enabled: data.isEnabled,
-          userInputRequired: data.userInputRequired,
-          maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
+          id: response.id,
+          title: response.title,
+          prompt: response.prompt,
+          cost: response.cost,
+          bgColor: response.backgroundColor,
+          enabled: response.isEnabled,
+          userInputRequired: response.userInputRequired,
+          maxRedemptionsPerStream: Maybe(response.maxRedemptionsPerStream),
           maxRedemptionsPerUserPerStream: Maybe(
-            data.maxRedemptionsPerUserPerStream
+            response.maxRedemptionsPerUserPerStream
           ),
-          globalCooldown: Maybe(data.globalCooldown),
-          paused: data.isPaused,
-          inStock: data.isInStock,
-          skipRequestQueue: data.autoFulfill,
-          redemptionsThisStream: Maybe(data.redemptionsThisStream),
-          cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
+          globalCooldown: Maybe(response.globalCooldown),
+          paused: response.isPaused,
+          inStock: response.isInStock,
+          skipRequestQueue: response.autoFulfill,
+          redemptionsThisStream: Maybe(response.redemptionsThisStream),
+          cooldownExpire: Maybe(response.cooldownExpiryDate).map(
+            JSON.stringify
+          ),
         })
       );
     },
@@ -1097,14 +1110,32 @@ export function register(pkg: Package, { client, user }: Helix) {
       let body = {};
       if (ctx.getInput(io.id) === "") return;
 
-      console.log(ctx.getInput(io.cost).isNone());
-
-      Object.entries(io).forEach(([key, value]) => {
-        if (value.connections || value.type.inner === undefined) return;
-        if (ctx.getInput(io[key]).isNone()) return;
-        body[key] = ctx.getInput(io[key]).unwrap();
-      });
-      console.log(body);
+      if (ctx.getInput(io.title).isSome())
+        body.title = ctx.getInput(io.title).unwrap();
+      if (ctx.getInput(io.cost).isSome())
+        body.cost = ctx.getInput(io.cost).unwrap();
+      if (ctx.getInput(io.prompt).isSome())
+        body.prompt = ctx.getInput(io.prompt).unwrap();
+      if (ctx.getInput(io.isEnabled).isSome())
+        body.isEnabled = ctx.getInput(io.isEnabled).unwrap();
+      if (ctx.getInput(io.backgroundColor).isSome())
+        body.backgroundColor = ctx.getInput(io.backgroundColor).unwrap();
+      if (ctx.getInput(io.userInputRequired).isSome())
+        body.userInputRequired = ctx.getInput(io.userInputRequired).unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerStream).isSome())
+        body.maxRedemptionsPerStream = ctx
+          .getInput(io.maxRedemptionsPerStream)
+          .unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerUserPerStream).isSome())
+        body.maxRedemptionsPerUserPerStream = ctx
+          .getInput(io.maxRedemptionsPerUserPerStream)
+          .unwrap();
+      if (ctx.getInput(io.globalCooldown).isSome())
+        body.globalCooldown = ctx.getInput(io.globalCooldown).unwrap();
+      if (ctx.getInput(io.autoFulfill).isSome())
+        body.autoFulfill = ctx.getInput(io.autoFulfill).unwrap();
+      if (ctx.getInput(io.paused).isSome())
+        body.paused = ctx.getInput(io.paused).unwrap();
 
       const response = await client.channelPoints.customRewards.patch(z.any(), {
         body: JSON.stringify({
@@ -1113,21 +1144,6 @@ export function register(pkg: Package, { client, user }: Helix) {
           ...body,
         }),
       });
-
-      console.log(response);
-
-      // title: ctx.getInput(io.title) ?? undefined,
-      // cost: ctx.getInput(io.cost) === 0 ? undefined : ctx.getInput(io.cost),
-      // prompt: ctx.getInput(io.prompt) ?? undefined,
-      // isEnabled: ctx.getInput(io.enabled) ?? undefined,
-      // backgroundColor: ctx.getInput(io.backgroundColor) ?? undefined,
-      // userInputRequired: ctx.getInput(io.userInputRequired) ?? undefined,
-      // maxRedemptionsPerStream:
-      //   ctx.getInput(io.maxRedemptionsPerStream) ?? undefined,
-      // maxRedemptionsPerUserPerStream:
-      //   ctx.getInput(io.maxRedemptionsPerUserPerStream) ?? undefined,
-      // isPaused: ctx.getInput(io.paused) ?? undefined,
-      // globalCooldown: ctx.getInput(io.globalCooldown) ?? undefined,
 
       const data = response;
 
