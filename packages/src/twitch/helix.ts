@@ -1264,8 +1264,6 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       });
 
-      console.log(rewards);
-
       const data = rewards.find(
         (reward: any) => reward.title === ctx.getInput(io.title)
       );
@@ -1489,7 +1487,6 @@ export function register(pkg: Package, { client, user }: Helix) {
           user_id: ctx.getInput(io.userId),
         }),
       });
-      console.log(color);
       ctx.setOutput(io.color, color.color);
     },
   });

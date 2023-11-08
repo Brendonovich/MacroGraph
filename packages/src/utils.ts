@@ -361,7 +361,6 @@ export function pkg(core: Core) {
     },
     run({ ctx, io }) {
       const number = parseFloat(ctx.getInput(io.string));
-      console.log(number);
       const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
       ctx.setOutput(io.float, opt);

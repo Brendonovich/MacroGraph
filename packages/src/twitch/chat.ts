@@ -315,7 +315,6 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
     },
     run({ ctx, data, io }) {
       if (data.self) return;
-      console.log(data);
       ctx.setOutput(io.username, data.tags.username);
       ctx.setOutput(io.displayName, data.tags["display-name"]);
       ctx.setOutput(io.userId, data.tags["user-id"]);
