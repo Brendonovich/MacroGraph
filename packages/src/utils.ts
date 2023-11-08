@@ -1625,12 +1625,12 @@ export function pkg(core: Core) {
           type: t.string(),
         }),
         int: io.dataOutput({
-          id: "eventKey",
+          id: "int",
           name: "Int Data",
           type: t.int(),
         }),
         float: io.dataOutput({
-          id: "eventKey",
+          id: "float",
           name: "Float Data",
           type: t.float(),
         }),
@@ -1678,12 +1678,12 @@ export function pkg(core: Core) {
           type: t.string(),
         }),
         int: io.dataOutput({
-          id: "eventKey",
+          id: "int",
           name: "Int Data",
           type: t.int(),
         }),
         float: io.dataOutput({
-          id: "eventKey",
+          id: "float",
           name: "Float Data",
           type: t.float(),
         }),
@@ -1717,17 +1717,17 @@ export function pkg(core: Core) {
           type: t.string(),
         }),
         string: io.dataInput({
-          id: "eventKey",
+          id: "string",
           name: "String Data",
           type: t.string(),
         }),
         int: io.dataInput({
-          id: "eventKey",
+          id: "int",
           name: "Int Data",
           type: t.int(),
         }),
         float: io.dataInput({
-          id: "eventKey",
+          id: "float",
           name: "Float Data",
           type: t.float(),
         }),
@@ -1763,17 +1763,17 @@ export function pkg(core: Core) {
           type: t.string(),
         }),
         string: io.dataInput({
-          id: "eventKey",
+          id: "string",
           name: "String Data",
           type: t.string(),
         }),
         int: io.dataInput({
-          id: "eventKey",
+          id: "int",
           name: "Int Data",
           type: t.int(),
         }),
         float: io.dataInput({
-          id: "eventKey",
+          id: "float",
           name: "Float Data",
           type: t.float(),
         }),
