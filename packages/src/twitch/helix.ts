@@ -856,7 +856,7 @@ export function register(pkg: Package, { client, user }: Helix) {
           id: "prompt",
           type: t.option(t.string()),
         }),
-        enabled: io.dataInput({
+        isEnabled: io.dataInput({
           name: "Enabled",
           id: "isEnabled",
           type: t.option(t.bool()),
@@ -871,15 +871,30 @@ export function register(pkg: Package, { client, user }: Helix) {
           id: "userInputRequired",
           type: t.option(t.bool()),
         }),
+        maxRedemptionsPerStreamEnabled: io.dataInput({
+          name: "Max Redemptions Per Stream Enabled",
+          id: "maxRedemptionsPerStreamEnabled",
+          type: t.option(t.bool()),
+        }),
         maxRedemptionsPerStream: io.dataInput({
           name: "Max Redemptions Per Stream",
           id: "maxRedemptionsPerStream",
           type: t.option(t.int()),
         }),
+        maxRedemptionsPerUserPerStreamEnabled: io.dataInput({
+          name: "Max Redemptions Per User Per Stream Enabled",
+          id: "maxRedemptionsPerUserPerStreamEnabled",
+          type: t.option(t.bool()),
+        }),
         maxRedemptionsPerUserPerStream: io.dataInput({
           name: "Max Redemptions Per User Per Stream",
           id: "maxRedemptionsPerUserPerStream",
           type: t.option(t.int()),
+        }),
+        globalCooldownEnabled: io.dataInput({
+          name: "Global Cooldown Enabled",
+          id: "globalCooldown",
+          type: t.option(t.bool()),
         }),
         globalCooldown: io.dataInput({
           name: "Global Cooldown",
@@ -904,23 +919,37 @@ export function register(pkg: Package, { client, user }: Helix) {
       if (ctx.getInput(io.prompt).isSome())
         body.prompt = ctx.getInput(io.prompt).unwrap();
       if (ctx.getInput(io.enabled).isSome())
-        body.enabled = ctx.getInput(io.enabled).unwrap();
+        body.is_enabled = ctx.getInput(io.enabled).unwrap();
       if (ctx.getInput(io.backgroundColor).isSome())
-        body.backgroundColor = ctx.getInput(io.backgroundColor).unwrap();
+        body.background_color = ctx.getInput(io.backgroundColor).unwrap();
       if (ctx.getInput(io.userInputRequired).isSome())
-        body.userInputRequired = ctx.getInput(io.userInputRequired).unwrap();
+        body.is_user_input_required = ctx
+          .getInput(io.userInputRequired)
+          .unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerStreamEnabled).isSome())
+        body.is_max_per_stream_enabled = ctx
+          .getInput(io.maxRedemptionsPerStreamEnabled)
+          .unwrap();
       if (ctx.getInput(io.maxRedemptionsPerStream).isSome())
-        body.maxRedemptionsPerStream = ctx
-          .getInput(io.maxRedemptionsPerStream)
+        body.max_per_stream = ctx.getInput(io.maxRedemptionsPerStream).unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerUserPerStreamEnabled).isSome())
+        body.is_max_per_stream_enabled = ctx
+          .getInput(io.maxRedemptionsPerUserPerStreamEnabled)
           .unwrap();
       if (ctx.getInput(io.maxRedemptionsPerUserPerStream).isSome())
-        body.maxRedemptionsPerUserPerStream = ctx
+        body.max_per_user_per_stream = ctx
           .getInput(io.maxRedemptionsPerUserPerStream)
           .unwrap();
+      if (ctx.getInput(io.globalCooldownEnabled).isSome())
+        body.is_global_cooldown_enabled = ctx
+          .getInput(io.globalCooldownEnabled)
+          .unwrap();
       if (ctx.getInput(io.globalCooldown).isSome())
-        body.globalCooldown = ctx.getInput(io.globalCooldown).unwrap();
+        body.global_cooldown_seconds = ctx.getInput(io.globalCooldown).unwrap();
       if (ctx.getInput(io.autoFulfill).isSome())
-        body.autoFulfill = ctx.getInput(io.autoFulfill).unwrap();
+        body.should_redemptions_skip_request_queue = ctx
+          .getInput(io.autoFulfill)
+          .unwrap();
 
       const response = await client.channelPoints.customRewards.post(z.any(), {
         body: JSON.stringify({
@@ -1075,15 +1104,30 @@ export function register(pkg: Package, { client, user }: Helix) {
           id: "userInputRequired",
           type: t.option(t.bool()),
         }),
+        maxRedemptionsPerStreamEnabled: io.dataInput({
+          name: "Max Redemptions Per Stream Enabled",
+          id: "maxRedemptionsPerStreamEnabled",
+          type: t.option(t.bool()),
+        }),
         maxRedemptionsPerStream: io.dataInput({
           name: "Max Redemptions Per Stream",
           id: "maxRedemptionsPerStream",
           type: t.option(t.int()),
         }),
+        maxRedemptionsPerUserPerStreamEnabled: io.dataInput({
+          name: "Max Redemptions Per User Per Stream Enabled",
+          id: "maxRedemptionsPerUserPerStreamEnabled",
+          type: t.option(t.bool()),
+        }),
         maxRedemptionsPerUserPerStream: io.dataInput({
           name: "Max Redemptions Per User Per Stream",
           id: "maxRedemptionsPerUserPerStream",
           type: t.option(t.int()),
+        }),
+        globalCooldownEnabled: io.dataInput({
+          name: "Global Cooldown Enabled",
+          id: "globalCooldown",
+          type: t.option(t.bool()),
         }),
         globalCooldown: io.dataInput({
           name: "Global Cooldown",
@@ -1117,25 +1161,39 @@ export function register(pkg: Package, { client, user }: Helix) {
       if (ctx.getInput(io.prompt).isSome())
         body.prompt = ctx.getInput(io.prompt).unwrap();
       if (ctx.getInput(io.isEnabled).isSome())
-        body.isEnabled = ctx.getInput(io.isEnabled).unwrap();
+        body.is_enabled = ctx.getInput(io.isEnabled).unwrap();
       if (ctx.getInput(io.backgroundColor).isSome())
-        body.backgroundColor = ctx.getInput(io.backgroundColor).unwrap();
+        body.background_Color = ctx.getInput(io.backgroundColor).unwrap();
       if (ctx.getInput(io.userInputRequired).isSome())
-        body.userInputRequired = ctx.getInput(io.userInputRequired).unwrap();
-      if (ctx.getInput(io.maxRedemptionsPerStream).isSome())
-        body.maxRedemptionsPerStream = ctx
-          .getInput(io.maxRedemptionsPerStream)
+        body.is_user_Input_Required = ctx
+          .getInput(io.userInputRequired)
           .unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerStreamEnabled).isSome())
+        body.is_max_per_stream_enabled = ctx
+          .getInput(io.maxRedemptionsPerStreamEnabled)
+          .unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerStream).isSome())
+        body.max_per_stream = ctx.getInput(io.maxRedemptionsPerStream).unwrap();
       if (ctx.getInput(io.maxRedemptionsPerUserPerStream).isSome())
-        body.maxRedemptionsPerUserPerStream = ctx
+        body.max_per_user_per_stream = ctx
           .getInput(io.maxRedemptionsPerUserPerStream)
           .unwrap();
+      if (ctx.getInput(io.maxRedemptionsPerUserPerStreamEnabled).isSome())
+        body.is_max_per_user_per_stream_enabled = ctx
+          .getInput(io.maxRedemptionsPerUserPerStreamEnabled)
+          .unwrap();
+      if (ctx.getInput(io.globalCooldownEnabled).isSome())
+        body.is_global_cooldown_enabled = ctx
+          .getInput(io.globalCooldownEnabled)
+          .unwrap();
       if (ctx.getInput(io.globalCooldown).isSome())
-        body.globalCooldown = ctx.getInput(io.globalCooldown).unwrap();
+        body.global_cooldown_seconds = ctx.getInput(io.globalCooldown).unwrap();
       if (ctx.getInput(io.autoFulfill).isSome())
-        body.autoFulfill = ctx.getInput(io.autoFulfill).unwrap();
+        body.should_redemptions_skip_request_queue = ctx
+          .getInput(io.autoFulfill)
+          .unwrap();
       if (ctx.getInput(io.paused).isSome())
-        body.paused = ctx.getInput(io.paused).unwrap();
+        body.is_paused = ctx.getInput(io.paused).unwrap();
 
       const response = await client.channelPoints.customRewards.patch(z.any(), {
         body: JSON.stringify({
