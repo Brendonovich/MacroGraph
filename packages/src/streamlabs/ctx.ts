@@ -108,12 +108,16 @@ export function createCtx(core: Core, onEvent: OnEvent) {
 
               if (!parsed.success) return;
 
-              if (parsed.data.type === "donation") {
+              if ("giftMembershipsCount" in parsed.data.message[0])
                 onEvent({
-                  name: "donation",
-                  data: parsed.data.message[0]!,
+                  name: "membershipGiftStart",
+                  data: parsed.data.message[0],
                 });
-              }
+              else
+                onEvent({
+                  name: parsed.data.type,
+                  data: parsed.data.message[0],
+                });
             });
 
             socket.on("connect", () => {
