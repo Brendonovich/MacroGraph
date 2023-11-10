@@ -681,6 +681,89 @@ export function register(pkg: Package, { client, user }: Helix) {
   });
 
   pkg.createNonEventSchema({
+    name: "Get Stream info",
+    variant: "Exec",
+    generateIO: (io) => {
+      return {
+        broadcasterIdIn: io.dataInput({
+          name: "Broadcaster ID",
+          id: "broadcasterId",
+          type: t.string(),
+        }),
+        broadcasterIdOut: io.dataOutput({
+          name: "Broadcaster ID",
+          id: "broadcasterId",
+          type: t.string(),
+        }),
+        broadcasterLogin: io.dataOutput({
+          name: "Broadcaster Login Name",
+          id: "broadcasterLogin",
+          type: t.string(),
+        }),
+        broadcasterDisplay: io.dataOutput({
+          name: "Broadcaster Display Name",
+          id: "broadcasterDisplay",
+          type: t.string(),
+        }),
+        broadcasterLanguage: io.dataOutput({
+          name: "Broadcaster Language",
+          id: "broadcasterLanguage",
+          type: t.string(),
+        }),
+        title: io.dataOutput({
+          name: "Title",
+          id: "title",
+          type: t.string(),
+        }),
+        catagory: io.dataOutput({
+          name: "Stream Catagory",
+          id: "catagory",
+          type: t.string(),
+        }),
+        catagoryId: io.dataOutput({
+          name: "Catagory ID",
+          id: "catagoryId",
+          type: t.string(),
+        }),
+        viewerCount: io.dataOutput({
+          name: "Viewer Count",
+          id: "viewerCount",
+          type: t.int(),
+        }),
+        startedAt: io.dataOutput({
+          name: "Started At",
+          id: "startedAt",
+          type: t.string(),
+        }),
+        thumbnailUrl: io.dataOutput({
+          name: "Thumbnail URL",
+          id: "thumbnailUrl",
+          type: t.string(),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      const data = await client.streams.get(z.any(), {
+        body: new URLSearchParams({
+          user_id: ctx.getInput(io.broadcasterIdIn),
+        }),
+      });
+      const info = data;
+      ctx.setOutput(io.broadcasterIdOut, ctx.getInput(io.broadcasterIdIn));
+      ctx.setOutput(io.broadcasterLogin, info.user_login);
+      ctx.setOutput(io.broadcasterDisplay, info.user_name);
+      ctx.setOutput(io.broadcasterLanguage, info.language);
+      ctx.setOutput(io.catagory, info.game_name);
+      ctx.setOutput(io.catagoryId, info.game_id);
+      ctx.setOutput(io.title, info.title);
+      ctx.setOutput(io.viewerCount, info.viewer_count);
+      ctx.setOutput(io.startedAt, info.started_at);
+      ctx.setOutput(io.broadcasterLanguage, info.language);
+      ctx.setOutput(io.thumbnailUrl, info.thumbnail_url);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Create Clip",
     variant: "Exec",
     generateIO: (io) => {
@@ -918,8 +1001,8 @@ export function register(pkg: Package, { client, user }: Helix) {
 
       if (ctx.getInput(io.prompt).isSome())
         body.prompt = ctx.getInput(io.prompt).unwrap();
-      if (ctx.getInput(io.enabled).isSome())
-        body.is_enabled = ctx.getInput(io.enabled).unwrap();
+      if (ctx.getInput(io.isEnabled).isSome())
+        body.is_enabled = ctx.getInput(io.isEnabled).unwrap();
       if (ctx.getInput(io.backgroundColor).isSome())
         body.background_color = ctx.getInput(io.backgroundColor).unwrap();
       if (ctx.getInput(io.userInputRequired).isSome())
