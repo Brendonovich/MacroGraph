@@ -27,7 +27,7 @@ export default () => {
   const core = useCore();
 
   return (
-    <div class="flex flex-row p-1 gap-1">
+    <div class="flex flex-row p-1 gap-1 text-white">
       <OpenSettingsDialog>
         <IconContainer>
           <TbSettings class="w-full h-full" />
