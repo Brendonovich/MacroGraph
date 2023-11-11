@@ -5,6 +5,7 @@ import { CgImport } from "solid-icons/cg";
 import { useCore } from "../../contexts";
 import { useUIStore } from "../../UIStore";
 import { GraphItem } from "./GraphItem";
+import { SidebarSection } from "../Sidebar";
 
 // React component to show a list of projects
 interface Props {
@@ -16,27 +17,32 @@ export const GraphList = (props: Props) => {
   const UI = useUIStore();
 
   return (
-    <div class="flex flex-col flex-1 overflow-y-hidden">
-      <div class="flex flex-row bg-neutral-900 text-white px-2 font-medium shadow">
-        <div class="flex-1 py-1">Graphs</div>
-        <button
-          class="text-xl font-bold px-1"
-          onClick={async () => {
-            UI.pasteClipboard();
-          }}
-        >
-          <CgImport />
-        </button>
-        <button
-          class="text-xl font-bold px-1"
-          onClick={() => {
-            const graph = core.project.createGraph();
-            UI.setCurrentGraph(graph);
-          }}
-        >
-          +
-        </button>
-      </div>
+    <SidebarSection
+      title={
+        <>
+          Graphs
+          <div class="flex flex-row items-center text-xl font-bold">
+            <button
+              class="px-1"
+              onClick={async () => {
+                UI.pasteClipboard();
+              }}
+            >
+              <CgImport />
+            </button>
+            <button
+              class="px-1"
+              onClick={() => {
+                const graph = core.project.createGraph();
+                UI.setCurrentGraph(graph);
+              }}
+            >
+              +
+            </button>
+          </div>
+        </>
+      }
+    >
       <div class="overflow-y-auto">
         <For each={[...core.project.graphs.values()]}>
           {(graph) => (
@@ -48,6 +54,6 @@ export const GraphList = (props: Props) => {
           )}
         </For>
       </div>
-    </div>
+    </SidebarSection>
   );
 };

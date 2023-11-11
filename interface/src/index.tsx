@@ -3,10 +3,8 @@ import { Core, SerializedProject } from "@macrograph/core";
 
 import { CoreProvider } from "./contexts";
 import { Graph } from "./components/Graph";
-import { GraphList } from "./components/ProjectSidebar";
 import { createUIStore, UIStoreProvider } from "./UIStore";
-import { PrintOutput } from "./components/PrintOutput";
-import Settings from "./settings";
+import { LeftSidebar, RightSidebar } from "./Sidebars";
 
 export { useCore } from "./contexts";
 
@@ -64,11 +62,8 @@ export default (props: { core: Core }) => {
             e.stopPropagation();
           }}
         >
-          <div class="flex flex-col bg-neutral-600 w-64 shadow-2xl">
-            <Settings />
-            <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
-            <PrintOutput />
-          </div>
+          <LeftSidebar />
+
           <Show
             when={UI.state.currentGraph}
             fallback={
@@ -79,6 +74,8 @@ export default (props: { core: Core }) => {
           >
             {(graph) => <Graph graph={graph()} />}
           </Show>
+
+          <RightSidebar />
         </div>
       </UIStoreProvider>
     </CoreProvider>
