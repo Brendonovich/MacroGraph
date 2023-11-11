@@ -4,14 +4,14 @@ import { Graph, Node } from "@macrograph/core";
 import { GraphList } from "./components/ProjectSidebar";
 import { PrintOutput } from "./components/PrintOutput";
 import Settings from "./settings";
-import { Sidebar, SidebarSection } from "./components/Sidebar";
+import { Side, Sidebar, SidebarSection } from "./components/Sidebar";
 import { useUIStore } from "./UIStore";
 
 export function LeftSidebar() {
   const UI = useUIStore();
 
   return (
-    <Sidebar>
+    <Sidebar side={Side.left}>
       <Settings />
       <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
       <PrintOutput />
@@ -41,7 +41,7 @@ export function RightSidebar() {
   const UI = useUIStore();
 
   return (
-    <Sidebar>
+    <Sidebar side={Side.right}>
       <Switch
         fallback={
           <Show when={UI.state.currentGraph}>

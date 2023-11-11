@@ -103,7 +103,7 @@ export const Graph = (props: Props) => {
 
   return (
     <GraphContext.Provider value={graph}>
-      <div class="flex-1 relative overflow-hidden bg-mg-graph">
+      <div class="flex-1 absolute h-full w-full overflow-hidden bg-mg-graph">
         <Show when={UI.state.schemaMenuPosition}>
           {(pos) => (
             <SchemaMenu

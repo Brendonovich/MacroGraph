@@ -24,7 +24,8 @@ export const GraphList = (props: Props) => {
           <div class="flex flex-row items-center text-xl font-bold">
             <button
               class="px-1"
-              onClick={async () => {
+              onClick={async (e) => {
+                e.stopPropagation();
                 UI.pasteClipboard();
               }}
             >
@@ -32,7 +33,8 @@ export const GraphList = (props: Props) => {
             </button>
             <button
               class="px-1"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 const graph = core.project.createGraph();
                 UI.setCurrentGraph(graph);
               }}

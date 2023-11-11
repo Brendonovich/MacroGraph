@@ -62,20 +62,18 @@ export default (props: { core: Core }) => {
             e.stopPropagation();
           }}
         >
-          <LeftSidebar />
-
           <Show
             when={UI.state.currentGraph}
             fallback={
-              <div class="flex-1 flex justify-center items-center text-white">
+              <div class="flex absolute h-full w-full justify-center items-center text-white">
                 No graph selected
               </div>
             }
           >
             {(graph) => <Graph graph={graph()} />}
           </Show>
-
           <RightSidebar />
+          <LeftSidebar />
         </div>
       </UIStoreProvider>
     </CoreProvider>
