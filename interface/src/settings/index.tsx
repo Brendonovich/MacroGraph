@@ -1,44 +1,60 @@
 import {
+  ComponentProps,
   ErrorBoundary,
   For,
   ParentProps,
   Suspense,
   createSignal,
 } from "solid-js";
+import { TbSettings, TbClipboard } from "solid-icons/tb";
+import { VsClose } from "solid-icons/vs";
 
-import { Button, Dialog } from "./ui";
+import { Dialog } from "./ui";
 import { useUIStore } from "../UIStore";
 import { useCore } from "../contexts";
+
+function IconContainer(props: ParentProps<ComponentProps<"div">>) {
+  return (
+    <div
+      {...props}
+      class="bg-neutral-900 rounded w-8 h-8 flex flex-col items-center justify-center p-1"
+    />
+  );
+}
 
 export default () => {
   const UI = useUIStore();
   const core = useCore();
 
   return (
-    <div class="flex flex-col items-center p-2 space-y-2">
-      <OpenSettings />
-      <Button onclick={() => UI.copyItem(core.project)}>
-        Copy to Clipboard
-      </Button>
+    <div class="flex flex-row p-1 gap-1">
+      <OpenSettingsDialog>
+        <IconContainer>
+          <TbSettings class="w-full h-full" />
+        </IconContainer>
+      </OpenSettingsDialog>
+      <button onClick={() => UI.copyItem(core.project)}>
+        <IconContainer>
+          <TbClipboard class="w-full h-full" />
+        </IconContainer>
+      </button>
     </div>
   );
 };
 
-const OpenSettings = () => {
+function OpenSettingsDialog(props: ParentProps) {
   const core = useCore();
 
   const [open, setOpen] = createSignal(false);
 
   return (
-    <Dialog.Root
-      onOpenChange={setOpen}
-      open={open()}
-      trigger={<Button>Open Settings</Button>}
-    >
-      <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl">
+    <Dialog.Root onOpenChange={setOpen} open={open()} trigger={props.children}>
+      <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl min-w-[40rem]">
         <div class="flex flex-row justify-between text-white p-4">
-          <Dialog.Title>Settings</Dialog.Title>
-          <Dialog.CloseButton>X</Dialog.CloseButton>
+          <Dialog.Title class="font-bold text-2xl">Settings</Dialog.Title>
+          <Dialog.CloseButton>
+            <VsClose class="w-8 h-8" />
+          </Dialog.CloseButton>
         </div>
         <div class="flex-1 flex flex-col p-4 pt-0 w-full text-white rounded-lg overflow-y-scroll">
           <div class="space-y-4">
@@ -71,7 +87,7 @@ const OpenSettings = () => {
       </div>
     </Dialog.Root>
   );
-};
+}
 
 const Section = (props: { title: string } & ParentProps) => {
   return (

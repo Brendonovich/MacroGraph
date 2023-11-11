@@ -1,4 +1,4 @@
-import { createEffect, For } from "solid-js";
+import { For } from "solid-js";
 import { Graph } from "@macrograph/core";
 import { CgImport } from "solid-icons/cg";
 
