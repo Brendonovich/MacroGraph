@@ -1,25 +1,14 @@
 import { Package, t } from "@macrograph/core";
-import { createEffect, createSignal } from "solid-js";
 
 import { createCtx } from "./ctx";
 
 export function pkg() {
-  const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
-
-  const sockets = createCtx(setLatestEvent);
+  const sockets = createCtx((data) => pkg.emitEvent({ name: "wsEvent", data }));
 
   const pkg = new Package({
     name: "Websocket",
     ctx: sockets,
     SettingsUI: () => import("./settings"),
-  });
-
-  createEffect(() => {
-    const data = latestEvent();
-
-    if (!data) return;
-
-    pkg.emitEvent({ name: "wsEvent", data });
   });
 
   pkg.createNonEventSchema({

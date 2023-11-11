@@ -1,35 +1,26 @@
 import { Core, Package, t } from "@macrograph/core";
-import { createEffect, createSignal } from "solid-js";
 
 import { createCtx } from "./ctx";
 import { Event } from "./events";
 
-export function pkg(core: Core) {
-  const [latestEvent, setLatestEvent] = createSignal<any | null>(null);
+export type Events = {
+  donation: Event["donation"];
+  subscription: Event["subscription"];
+  superchat: Event["superchat"];
+  membershipGift: Extract<Event["membershipGift"], { message: any }>;
+  membershipGiftStart: Extract<
+    Event["membershipGift"],
+    { giftMembershipsCount: any }
+  >;
+};
 
-  type Events = {
-    donation: Event["donation"];
-    subscription: Event["subscription"];
-    superchat: Event["superchat"];
-    membershipGift: Extract<Event["membershipGift"], { message: any }>;
-    membershipGiftStart: Extract<
-      Event["membershipGift"],
-      { giftMembershipsCount: any }
-    >;
-  };
+export function pkg(core: Core) {
+  const ctx = createCtx(core, (e) => pkg.emitEvent(e));
 
   const pkg = new Package<Events>({
     name: "Streamlabs",
-    ctx: createCtx(core, setLatestEvent),
+    ctx,
     SettingsUI: () => import("./Settings"),
-  });
-
-  createEffect(() => {
-    const event = latestEvent();
-
-    if (!event) return;
-
-    pkg.emitEvent(event);
   });
 
   pkg.createEventSchema({

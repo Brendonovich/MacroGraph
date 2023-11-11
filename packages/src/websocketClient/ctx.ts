@@ -16,7 +16,7 @@ type SocketState =
       socket: WebSocket;
     };
 
-export function createCtx(callback: any) {
+export function createCtx(callback: (data: any) => void) {
   const websockets = new ReactiveMap<string, SocketState>();
 
   function addWebsocket(ip: string, retryOnFail = true) {

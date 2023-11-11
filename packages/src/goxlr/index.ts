@@ -1,11 +1,10 @@
 import { Package } from "@macrograph/core";
-import { createEffect, createSignal } from "solid-js";
 
 import * as events from "./events";
 import * as sends from "./sends";
 import { createCtx } from "./ctx";
 
-type Event = {
+export type Event = {
   levelsChange: {
     channel: string;
     value: number;
@@ -23,21 +22,12 @@ type Event = {
 export type Pkg = ReturnType<typeof pkg>;
 
 export function pkg() {
-  const [latestEvent, setLatestEvent] = createSignal<any>();
-
-  const ctx = createCtx(setLatestEvent);
+  const ctx = createCtx((e) => pkg.emitEvent(e));
 
   const pkg = new Package<Event>({
     name: "GoXLR",
     ctx,
     SettingsUI: () => import("./Settings"),
-  });
-
-  createEffect(() => {
-    const event = latestEvent();
-    if (!event) return;
-
-    pkg.emitEvent(event);
   });
 
   events.register(pkg);

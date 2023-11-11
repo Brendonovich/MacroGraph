@@ -1,12 +1,13 @@
 import { None, OnEvent, makePersisted } from "@macrograph/core";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import { WebsocketResponse } from "./types";
+import { Event } from ".";
 
 const URL_LOCALSTORAGE_KEY = "GoXLR_WS";
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-export function createCtx(onEvent: OnEvent) {
+export function createCtx(onEvent: OnEvent<Event>) {
   const [state, setState] = createSignal<
     | {
         type: "disconnected";

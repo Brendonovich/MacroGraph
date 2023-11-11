@@ -15,6 +15,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { z } from "zod";
+import { Events } from ".";
 import { createEndpoint } from "../httpEndpoint";
 import { EVENT } from "./events";
 
@@ -23,7 +24,7 @@ export type Ctx = ReturnType<typeof createCtx>;
 const TOKEN_LOCALSTORAGE = "streamlabsToken";
 const USER_TOKEN_LOCALSTORAGE = "streamlabsUserToken";
 
-export function createCtx(core: Core, onEvent: OnEvent) {
+export function createCtx(core: Core, onEvent: OnEvent<Events>) {
   const [state, setState] = createSignal<
     | {
         type: "disconnected";

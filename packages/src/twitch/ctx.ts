@@ -1,4 +1,4 @@
-import { Core } from "@macrograph/core";
+import { Core, OnEvent } from "@macrograph/core";
 
 import { createAuth } from "./auth";
 import { createChat } from "./chat";
@@ -7,7 +7,7 @@ import { createHelix } from "./helix";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
-export function createCtx(core: Core, onEvent: any) {
+export function createCtx(core: Core, onEvent: OnEvent) {
   const auth = createAuth(CLIENT_ID, core);
   const helix = createHelix(core, auth);
 
