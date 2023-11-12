@@ -45,17 +45,15 @@ export const GraphList = (props: Props) => {
         </>
       }
     >
-      <div class="overflow-y-auto">
-        <For each={[...core.project.graphs.values()]}>
-          {(graph) => (
-            <GraphItem
-              graph={graph}
-              onClick={() => props.onChange(graph)}
-              isCurrentGraph={graph === UI.state.currentGraph}
-            />
-          )}
-        </For>
-      </div>
+      <For each={[...core.project.graphs.values()]}>
+        {(graph) => (
+          <GraphItem
+            graph={graph}
+            onClick={() => props.onChange(graph)}
+            isCurrentGraph={graph === UI.state.currentGraph}
+          />
+        )}
+      </For>
     </SidebarSection>
   );
 };

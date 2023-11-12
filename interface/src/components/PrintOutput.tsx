@@ -24,7 +24,12 @@ export const PrintOutput = () => {
       title={
         <>
           Print Output
-          <button onClick={() => setItems([])}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setItems([]);
+            }}
+          >
             <AiOutlineDelete />
           </button>
         </>
