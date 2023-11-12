@@ -13,8 +13,10 @@ export function LeftSidebar() {
   return (
     <Sidebar side={Side.left}>
       <Settings />
-      <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
-      <PrintOutput />
+      <div class="overflow-y-auto outer-scroll">
+        <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
+        <PrintOutput />
+      </div>
     </Sidebar>
   );
 }

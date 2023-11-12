@@ -33,7 +33,7 @@ export default () => {
           <TbSettings class="w-full h-full" />
         </IconContainer>
       </OpenSettingsDialog>
-      <button title="Paste Data" onClick={() => UI.copyItem(core.project)}>
+      <button title="Copy Project" onClick={() => UI.copyItem(core.project)}>
         <IconContainer>
           <TbClipboard class="w-full h-full" />
         </IconContainer>
