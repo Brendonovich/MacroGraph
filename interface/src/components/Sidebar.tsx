@@ -150,11 +150,13 @@ export function SidebarSection(props: ParentProps<{ title: JSX.Element }>) {
   );
   const [height, setHeight] = createSignal(
     Number(
-      localStorage.getItem(`sidebar-${JSON.stringify(props.title)}-height`)
-    ) ?? 250
+      localStorage.getItem(`sidebar-${JSON.stringify(props.title)}-height`) ??
+        250
+    )
   );
   const [prevPos, setPrevPos] = createSignal(0);
   const [animation, setAnimation] = createSignal(false);
+
   return (
     <div class={clsx("flex flex-col h-auto relative")}>
       <button
