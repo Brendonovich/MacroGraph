@@ -18,31 +18,29 @@ export const GraphList = (props: Props) => {
 
   return (
     <SidebarSection
-      title={
-        <>
-          Graphs
-          <div class="flex flex-row items-center text-xl font-bold">
-            <button
-              class="px-1"
-              onClick={async (e) => {
-                e.stopPropagation();
-                UI.pasteClipboard();
-              }}
-            >
-              <CgImport />
-            </button>
-            <button
-              class="px-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                const graph = core.project.createGraph();
-                UI.setCurrentGraph(graph);
-              }}
-            >
-              +
-            </button>
-          </div>
-        </>
+      title="Graphs"
+      right={
+        <div class="flex flex-row items-center text-xl font-bold">
+          <button
+            class="px-1"
+            onClick={async (e) => {
+              e.stopPropagation();
+              UI.pasteClipboard();
+            }}
+          >
+            <CgImport />
+          </button>
+          <button
+            class="px-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              const graph = core.project.createGraph();
+              UI.setCurrentGraph(graph);
+            }}
+          >
+            +
+          </button>
+        </div>
       }
     >
       <For each={[...core.project.graphs.values()]}>

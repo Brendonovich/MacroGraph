@@ -9,7 +9,7 @@ import { LeftSidebar, RightSidebar } from "./Sidebars";
 export { useCore } from "./contexts";
 
 export default (props: { core: Core }) => {
-  const UI = createUIStore(props.core);
+  const UI = createUIStore();
 
   onMount(async () => {
     const savedProject = localStorage.getItem("project");
@@ -20,34 +20,34 @@ export default (props: { core: Core }) => {
     if (firstGraph) UI.setCurrentGraph(firstGraph.value);
   });
 
-  onMount(() => {
-    const ctrlHandlers = (e: KeyboardEvent) => {
-      if (!e.metaKey && !e.ctrlKey) return;
+  // onMount(() => {
+  //   const ctrlHandlers = (e: KeyboardEvent) => {
+  //     if (!e.metaKey && !e.ctrlKey) return;
 
-      switch (e.code) {
-        case "KeyC": {
-          if (!e.metaKey && !e.ctrlKey) return;
-          const selectedItem = UI.state.selectedItem;
-          if (selectedItem === null) return;
+  //     switch (e.code) {
+  //       case "KeyC": {
+  //         if (!e.metaKey && !e.ctrlKey) return;
+  //         const selectedItem = UI.state.selectedItem;
+  //         if (selectedItem === null) return;
 
-          UI.copyItem(selectedItem);
+  //         UI.copyItem(selectedItem);
 
-          break;
-        }
-        case "KeyV": {
-          if (!e.metaKey && !e.ctrlKey) return;
+  //         break;
+  //       }
+  //       case "KeyV": {
+  //         if (!e.metaKey && !e.ctrlKey) return;
 
-          UI.pasteClipboard();
-        }
-      }
-    };
+  //         UI.pasteClipboard();
+  //       }
+  //     }
+  //   };
 
-    window.addEventListener("keydown", ctrlHandlers);
+  //   window.addEventListener("keydown", ctrlHandlers);
 
-    return () => {
-      window.removeEventListener("keydown", ctrlHandlers);
-    };
-  });
+  //   return () => {
+  //     window.removeEventListener("keydown", ctrlHandlers);
+  //   };
+  // });
 
   const [rootRef, setRootRef] = createSignal<HTMLDivElement | undefined>();
 
@@ -62,18 +62,20 @@ export default (props: { core: Core }) => {
             e.stopPropagation();
           }}
         >
+          <LeftSidebar />
+
           <Show
             when={UI.state.currentGraph}
             fallback={
-              <div class="flex absolute h-full w-full justify-center items-center text-white">
+              <div class="flex-1 flex h-full justify-center items-center text-white">
                 No graph selected
               </div>
             }
           >
             {(graph) => <Graph graph={graph()} />}
           </Show>
+
           <RightSidebar />
-          <LeftSidebar />
         </div>
       </UIStoreProvider>
     </CoreProvider>

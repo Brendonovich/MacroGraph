@@ -1,16 +1,18 @@
-import { CommentBox } from "@macrograph/core";
+import { CommentBox as CommentBoxModel } from "@macrograph/core";
 import clsx from "clsx";
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 
 import { useUIStore } from "../../UIStore";
+import { useGraphContext } from "./Graph";
 
 interface Props {
-  box: CommentBox;
+  box: CommentBoxModel;
 }
 
-export default (props: Props) => {
+export function CommentBox(props: Props) {
+  const graph = useGraphContext();
+
   const box = () => props.box;
-  const graph = () => props.box.graph;
   const position = () => props.box.position;
   const size = () => props.box.size;
 
@@ -22,7 +24,7 @@ export default (props: Props) => {
     <div
       class={clsx(
         "bg-white/30 rounded border-black/75 border-2 absolute top-0 left-0",
-        UI.state.selectedItem === props.box && "ring-2 ring-yellow-500"
+        graph.state.selectedItem === props.box && "ring-2 ring-yellow-500"
       )}
       style={{
         transform: `translate(${position().x}px, ${position().y}px)`,
@@ -44,15 +46,17 @@ export default (props: Props) => {
 
                 switch (e.button) {
                   case 0: {
-                    UI.setSelectedItem(props.box);
+                    graph.setState({
+                      selectedItem: props.box,
+                    });
 
                     const nodes = box().getNodes(
-                      graph().nodes.values(),
+                      graph.model().nodes.values(),
                       (node) => UI.state.nodeBounds.get(node) ?? null
                     );
 
                     const handleMouseMove = (e: MouseEvent) => {
-                      const scale = UI.state.scale;
+                      const scale = graph.state.scale;
 
                       box().position = {
                         x: box().position.x + e.movementX / scale,
@@ -69,7 +73,7 @@ export default (props: Props) => {
 
                     window.addEventListener("mousemove", handleMouseMove);
                     const listener = () => {
-                      graph().project.save();
+                      graph.model().project.save();
 
                       window.removeEventListener("mouseup", listener);
                       window.removeEventListener("mousemove", handleMouseMove);
@@ -89,7 +93,7 @@ export default (props: Props) => {
                 switch (e.key) {
                   case "Backspace":
                   case "Delete": {
-                    graph().deleteItem(box());
+                    graph.model().deleteItem(box());
                     break;
                   }
                 }
@@ -107,7 +111,9 @@ export default (props: Props) => {
 
             onMount(() => ref?.focus());
 
-            createEffect(() => setEditing(UI.state.selectedItem === props.box));
+            createEffect(() =>
+              setEditing(graph.state.selectedItem === props.box)
+            );
 
             onCleanup(() => {
               if (value() !== "") props.box.text = value();
@@ -136,7 +142,7 @@ export default (props: Props) => {
           setEditing(false);
 
           const handleMouseMove = (e: MouseEvent) => {
-            const scale = UI.state.scale;
+            const scale = graph.state.scale;
 
             props.box.size = {
               x: box().size.x + e.movementX / scale,
@@ -146,14 +152,14 @@ export default (props: Props) => {
 
           switch (e.button) {
             case 0: {
-              UI.setSelectedItem(props.box);
+              graph.setState({ selectedItem: box() });
 
               window.addEventListener("mousemove", handleMouseMove);
               const listener = () => {
                 window.removeEventListener("mouseup", listener);
                 window.removeEventListener("mousemove", handleMouseMove);
 
-                graph().project.save();
+                graph.model().project.save();
               };
               window.addEventListener("mouseup", listener);
 
@@ -166,4 +172,4 @@ export default (props: Props) => {
       />
     </div>
   );
-};
+}

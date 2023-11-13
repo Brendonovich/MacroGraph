@@ -4,16 +4,16 @@ import { Graph, Node } from "@macrograph/core";
 import { GraphList } from "./components/ProjectSidebar";
 import { PrintOutput } from "./components/PrintOutput";
 import Settings from "./settings";
-import { Side, Sidebar, SidebarSection } from "./components/Sidebar";
+import { Sidebar, SidebarSection } from "./components/Sidebar";
 import { useUIStore } from "./UIStore";
 
 export function LeftSidebar() {
   const UI = useUIStore();
 
   return (
-    <Sidebar side={Side.left}>
+    <Sidebar side="left">
       <Settings />
-      <div class="overflow-y-auto outer-scroll">
+      <div class="overflow-y-auto outer-scroll flex-1">
         <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
         <PrintOutput />
       </div>
@@ -43,8 +43,8 @@ export function RightSidebar() {
   const UI = useUIStore();
 
   return (
-    <Sidebar side={Side.right}>
-      <Switch
+    <Sidebar side="right">
+      {/* <Switch
         fallback={
           <Show when={UI.state.currentGraph}>
             {(graph) => <GraphSidebar graph={graph()} />}
@@ -56,7 +56,7 @@ export function RightSidebar() {
         >
           {(item) => <NodeSidebar node={item()} />}
         </Match>
-      </Switch>
+      </Switch> */}
     </Sidebar>
   );
 }

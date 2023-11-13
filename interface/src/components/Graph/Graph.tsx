@@ -1,12 +1,23 @@
 import clsx from "clsx";
-import { Accessor, createContext, useContext } from "solid-js";
-import { Graph as GraphModel } from "@macrograph/core";
-import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { Accessor, createContext, useContext, createRoot } from "solid-js";
+import {
+  Graph as GraphModel,
+  Pin,
+  XY,
+  Node as NodeModel,
+  CommentBox as CommentBoxModel,
+} from "@macrograph/core";
+import { createSignal, For, onMount, Show } from "solid-js";
+import { createResizeObserver } from "@solid-primitives/resize-observer";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createMousePosition } from "@solid-primitives/mouse";
 
 import { Node } from "./Node";
 import { ConnectionRender, SchemaMenu } from "../Graph";
 import { useUIStore } from "../../UIStore";
-import CommentBox from "./CommentBox";
+import { CommentBox } from "./CommentBox";
+import { ReactiveWeakMap } from "@solid-primitives/map";
+import { SetStoreFunction, createStore } from "solid-js/store";
 
 type PanState =
   | { state: "none" }
@@ -17,103 +28,158 @@ interface Props {
   graph: GraphModel;
 }
 
+function createGraphState() {
+  return createStore({
+    offset: {
+      x: 0,
+      y: 0,
+    } as XY,
+    translate: {
+      x: 0,
+      y: 0,
+    } as XY,
+    scale: 1,
+    schemaMenu: {
+      status: "closed",
+    } as { status: "closed" } | { status: "open"; position: XY },
+    selectedItem: null as NodeModel | CommentBoxModel | null,
+  });
+}
+
+export type GraphState = ReturnType<typeof createGraphState>[0];
+
 export const Graph = (props: Props) => {
-  const graph = () => props.graph;
+  const model = () => props.graph;
 
   const UI = useUIStore();
 
   let graphRef: HTMLDivElement;
 
-  let lastScale = 1;
+  const [state, setState] = createGraphState();
+  const pinPositions = new ReactiveWeakMap<Pin, XY>();
 
-  const listener = (e: any) => {
-    let scale = e.scale;
-    let direction = 1;
-    if (scale < 1) {
-      direction = -1;
-      scale = 1 / scale;
-      if (lastScale < 1) {
-        lastScale = 1 / lastScale;
-      }
-    }
+  function onResize() {
+    const bounds = graphRef.getBoundingClientRect()!;
 
-    UI.updateScale((scale - lastScale) * direction, {
-      x: e.clientX,
-      y: e.clientY,
-    });
-
-    lastScale = e.scale;
-  };
-
-  const resetListener = () => (lastScale = 1);
-
-  onMount(() => {
-    const handler = () => {
-      const bounds = graphRef.getBoundingClientRect()!;
-
-      UI.setGraphOffset({
+    setState({
+      offset: {
         x: bounds.left,
         y: bounds.top,
-      });
+      },
+    });
+  }
+
+  createEventListener(window, "resize", onResize);
+
+  function toGraphSpace(relativeScreenSpace: XY) {
+    return {
+      x: (relativeScreenSpace.x - state.offset.x) / state.scale,
+      y: (relativeScreenSpace.y - state.offset.y) / state.scale,
     };
+  }
 
-    handler();
+  function toScreenSpace(point: XY) {
+    return {
+      x: point.x * state.scale + state.offset.x,
+      y: point.y * state.scale + state.offset.y,
+    };
+  }
 
-    window.addEventListener("resize", handler);
+  function updateScale(delta: number, screenOrigin: XY) {
+    const startGraphOrigin = toGraphSpace(screenOrigin);
 
-    graphRef.addEventListener("gesturestart", resetListener);
-    graphRef.addEventListener("gesturechange", listener);
+    setState({
+      scale: Math.min(Math.max(0.2, state.scale + delta / 20), 2.5),
+    });
 
-    onCleanup(() => {
-      window.removeEventListener("resize", handler);
+    const endGraphOrigin = toScreenSpace(startGraphOrigin);
 
-      graphRef.removeEventListener("gesturechange", listener);
-      graphRef.removeEventListener("gesturechange", resetListener);
+    setState({
+      translate: {
+        x:
+          state.translate.x + (endGraphOrigin.x - screenOrigin.x) / state.scale,
+        y:
+          state.translate.y + (endGraphOrigin.y - screenOrigin.y) / state.scale,
+      },
+    });
+  }
+
+  onMount(() => {
+    createResizeObserver(graphRef, onResize);
+
+    createEventListener(graphRef, "gesturestart", () => {
+      let lastScale = 1;
+
+      createRoot((dispose) => {
+        createEventListener(graphRef, "gestureend", dispose);
+
+        createEventListener(graphRef, "gesturechange", (e: any) => {
+          let scale = e.scale;
+          let direction = 1;
+
+          if (scale < 1) {
+            direction = -1;
+            scale = 1 / scale;
+            if (lastScale < 1) lastScale = 1 / lastScale;
+          }
+
+          updateScale((scale - lastScale) * direction, {
+            x: e.clientX,
+            y: e.clientY,
+          });
+
+          lastScale = e.scale;
+        });
+      });
     });
   });
 
   const [pan, setPan] = createSignal<PanState>({ state: "none" });
 
-  onMount(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.code === "KeyK" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
-        e.preventDefault();
+  const mouse = createMousePosition(window);
 
-        const currentPos = UI.state.schemaMenuPosition;
-        const pos = UI.state.mousePos;
-        if (!pos) return;
+  createEventListener(window, "keydown", (e) => {
+    if (e.code === "KeyK" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+      e.preventDefault();
 
-        if (currentPos && currentPos.x === pos.x && currentPos.y === pos.y)
-          UI.setSchemaMenuPosition();
-        else {
-          UI.setSchemaMenuPosition({
-            x: pos.x,
-            y: pos.y,
-          });
-        }
+      const position = toGraphSpace(mouse);
+
+      if (
+        state.schemaMenu.status === "open" &&
+        state.schemaMenu.position.x === position.x &&
+        state.schemaMenu.position.y === position.y
+      )
+        setState({ schemaMenu: { status: "closed" } });
+      else {
+        setState({
+          schemaMenu: { status: "open", position },
+        });
       }
-    };
-
-    window.addEventListener("keydown", handler);
-
-    return () => {
-      window.removeEventListener("keydown", handler);
-    };
+    }
   });
 
   return (
-    <GraphContext.Provider value={graph}>
-      <div class="flex-1 absolute h-full w-full overflow-hidden bg-mg-graph">
-        <Show when={UI.state.schemaMenuPosition}>
-          {(pos) => (
+    <GraphContext.Provider
+      value={{
+        model,
+        state,
+        setState,
+        pinPositions,
+        toGraphSpace,
+        toScreenSpace,
+      }}
+    >
+      <div class="flex-1 relative h-full overflow-hidden bg-mg-graph">
+        <Show when={state.schemaMenu.status === "open" && state.schemaMenu}>
+          {(data) => (
             <SchemaMenu
-              position={pos()}
+              position={data().position}
               onSchemaClicked={(s) => {
-                graph().createNode({
+                model().createNode({
                   schema: s,
-                  position: UI.toGraphSpace(pos()),
+                  position: data().position,
                 });
-                UI.setSchemaMenuPosition();
+                setState({ schemaMenu: { status: "closed" } });
               }}
             />
           )}
@@ -122,14 +188,10 @@ export const Graph = (props: Props) => {
         <div
           ref={graphRef!}
           class={clsx(
-            "absolute inset-0 text-white origin-top-left overflow-hidden",
+            "absolute inset-0 text-white origin-top-left overflow-hidden w-[500%] h-[500%]",
             pan().state === "active" && "cursor-grabbing"
           )}
-          style={{
-            transform: `scale(${UI.state.scale})`,
-            height: "500%",
-            width: "500%",
-          }}
+          style={{ transform: `scale(${state.scale})` }}
           onWheel={(e) => {
             e.preventDefault();
 
@@ -146,14 +208,16 @@ export const Graph = (props: Props) => {
             if (e.ctrlKey) {
               const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
 
-              UI.updateScale(delta, {
+              updateScale(delta, {
                 x: e.clientX - graphRef.getBoundingClientRect().x,
                 y: e.clientY - graphRef.getBoundingClientRect().y,
               });
             } else
-              UI.updateTranslate({
-                x: deltaX,
-                y: deltaY,
+              setState({
+                translate: {
+                  x: state.translate.x + deltaX,
+                  y: state.translate.y + deltaY,
+                },
               });
           }}
           onMouseUp={(e) => {
@@ -162,9 +226,11 @@ export const Graph = (props: Props) => {
                 if (pan().state === "waiting") {
                   if (UI.state.mouseDragLocation) UI.setMouseDragLocation();
                   else
-                    UI.setSchemaMenuPosition({
-                      x: e.clientX,
-                      y: e.clientY,
+                    setState({
+                      schemaMenu: {
+                        status: "open",
+                        position: toGraphSpace({ x: e.clientX, y: e.clientY }),
+                      },
                     });
                 }
                 setPan({ state: "none" });
@@ -174,8 +240,10 @@ export const Graph = (props: Props) => {
           onMouseDown={(e) => {
             switch (e.button) {
               case 0:
-                UI.setSchemaMenuPosition();
-                UI.setSelectedItem();
+                setState({
+                  schemaMenu: { status: "closed" },
+                  selectedItem: null,
+                });
                 break;
               case 2:
                 setPan({
@@ -183,45 +251,82 @@ export const Graph = (props: Props) => {
                   downposx: e.clientX,
                   downposy: e.clientY,
                 });
-                UI.setMouseDownLocation({
+
+                const oldTranslate = { ...state.translate };
+                const startPosition = {
                   x: e.clientX,
                   y: e.clientY,
+                };
+
+                createRoot((dispose) => {
+                  createEventListener(window, "mousemove", (e) => {
+                    const MOVE_BUFFER = 3;
+
+                    if (
+                      Math.abs(startPosition.x - e.clientX) < MOVE_BUFFER &&
+                      Math.abs(startPosition.x - e.clientY) < MOVE_BUFFER
+                    )
+                      return;
+
+                    setPan({ state: "active" });
+
+                    setState({
+                      schemaMenu: {
+                        status: "closed",
+                      },
+                      translate: {
+                        x:
+                          (startPosition.x -
+                            e.clientX +
+                            oldTranslate.x * state.scale) /
+                          state.scale,
+                        y:
+                          (startPosition.y -
+                            e.clientY +
+                            oldTranslate.y * state.scale) /
+                          state.scale,
+                      },
+                    });
+                  });
+
+                  createEventListener(window, "mouseup", dispose);
                 });
-                UI.setMouseDownTranslate({
-                  ...UI.state.translate,
-                });
+
                 break;
             }
           }}
-          onMouseMove={(e) => {
-            const MOVE_BUFFER = 3;
-            const panData = pan();
+          // onMouseMove={(e) => {
+          //   const MOVE_BUFFER = 3;
+          //   const panData = pan();
 
-            if (panData.state === "none") return;
-            if (
-              panData.state === "waiting" &&
-              Math.abs(panData.downposx - e.clientX) < MOVE_BUFFER &&
-              Math.abs(panData.downposy - e.clientY) < MOVE_BUFFER
-            )
-              return;
+          //   if (panData.state === "none") return;
+          //   if (
+          //     panData.state === "waiting" &&
+          //     Math.abs(panData.downposx - e.clientX) < MOVE_BUFFER &&
+          //     Math.abs(panData.downposy - e.clientY) < MOVE_BUFFER
+          //   )
+          //     return;
 
-            setPan({ state: "active" });
+          //   setPan({ state: "active" });
 
-            UI.setSchemaMenuPosition();
-
-            UI.setTranslate({
-              x:
-                (UI.state.mouseDownLocation!.x -
-                  e.clientX +
-                  UI.state.mouseDownTranslate!.x * UI.state.scale) /
-                UI.state.scale,
-              y:
-                (UI.state.mouseDownLocation!.y -
-                  e.clientY +
-                  UI.state.mouseDownTranslate!.y * UI.state.scale) /
-                UI.state.scale,
-            });
-          }}
+          //   setState({
+          //     schemaMenu: {
+          //       status: "closed",
+          //     },
+          //     translate: {
+          //       x:
+          //         (UI.state.mouseDownLocation!.x -
+          //           e.clientX +
+          //           UI.state.mouseDownTranslate!.x * state.scale) /
+          //         state.scale,
+          //       y:
+          //         (UI.state.mouseDownLocation!.y -
+          //           e.clientY +
+          //           UI.state.mouseDownTranslate!.y * state.scale) /
+          //         state.scale,
+          //     },
+          //   });
+          // }}
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -230,15 +335,15 @@ export const Graph = (props: Props) => {
           <div
             class="origin-[0,0]"
             style={{
-              transform: `translate(${UI.state.translate.x * -1}px, ${
-                UI.state.translate.y * -1
+              transform: `translate(${state.translate.x * -1}px, ${
+                state.translate.y * -1
               }px)`,
             }}
           >
-            <For each={[...graph().commentBoxes.values()]}>
+            <For each={[...model().commentBoxes.values()]}>
               {(box) => <CommentBox box={box} />}
             </For>
-            <For each={[...graph().nodes.values()]}>
+            <For each={[...model().nodes.values()]}>
               {(node) => <Node node={node} />}
             </For>
           </div>
@@ -248,9 +353,24 @@ export const Graph = (props: Props) => {
   );
 };
 
-const GraphContext = createContext<Accessor<GraphModel> | null>(null);
+const GraphContext = createContext<{
+  model: Accessor<GraphModel>;
+  pinPositions: ReactiveWeakMap<Pin, XY>;
+  state: GraphState;
+  setState: SetStoreFunction<GraphState>;
+  toGraphSpace(pos: XY): XY;
+  toScreenSpace(pos: XY): XY;
+} | null>(null);
 
 export const useGraph = () => {
+  const ctx = useContext(GraphContext);
+
+  if (!ctx) throw new Error("CurrentGraphContext is missing!");
+
+  return ctx.model;
+};
+
+export const useGraphContext = () => {
   const ctx = useContext(GraphContext);
 
   if (!ctx) throw new Error("CurrentGraphContext is missing!");

@@ -9,7 +9,7 @@ import {
 } from "@macrograph/core";
 
 import { useCore } from "../../contexts";
-import { useGraph } from "./Graph";
+import { useGraph, useGraphContext } from "./Graph";
 import { useUIStore } from "../../UIStore";
 
 interface Props {
@@ -41,8 +41,7 @@ export const SchemaMenu = (props: Props) => {
 
   onMount(() => searchRef.focus());
 
-  const graph = useGraph();
-  const UI = useUIStore();
+  const graph = useGraphContext();
 
   return (
     <div
@@ -72,15 +71,17 @@ export const SchemaMenu = (props: Props) => {
             <button
               class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
               onClick={() => {
-                graph().createCommentBox({
-                  position: UI.toGraphSpace(props.position),
+                graph.model().createCommentBox({
+                  position: graph.toGraphSpace(props.position),
                   size: {
                     x: 400,
                     y: 200,
                   },
                   text: "Comment",
                 });
-                UI.setSchemaMenuPosition();
+                graph.setState({
+                  schemaMenu: { status: "closed" },
+                });
               }}
             >
               Add Comment Box

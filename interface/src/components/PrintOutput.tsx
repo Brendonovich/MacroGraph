@@ -21,18 +21,16 @@ export const PrintOutput = () => {
 
   return (
     <SidebarSection
-      title={
-        <>
-          Print Output
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setItems([]);
-            }}
-          >
-            <AiOutlineDelete />
-          </button>
-        </>
+      title="Print Output"
+      right={
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setItems([]);
+          }}
+        >
+          <AiOutlineDelete />
+        </button>
       }
     >
       <ul class="p-1 gap-y-2 flex flex-col flex-1 overflow-y-auto ">
