@@ -128,6 +128,9 @@ export const Graph = (props: Props) => {
   }
 
   createEffect(() => {
+    setState({
+      model: model(),
+    });
     UI.registerGraphState(props.graph, state);
   });
 
