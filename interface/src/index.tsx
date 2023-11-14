@@ -1,16 +1,30 @@
 import { createSignal, onMount, Show } from "solid-js";
 import { Core, SerializedProject } from "@macrograph/core";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createElementBounds } from "@solid-primitives/bounds";
+import {
+  createMousePosition,
+  createPositionToElement,
+} from "@solid-primitives/mouse";
 
 import { CoreProvider } from "./contexts";
-import { Graph } from "./components/Graph";
+import { Graph, toGraphSpace } from "./components/Graph";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { LeftSidebar, RightSidebar } from "./Sidebars";
-import { createEventListener } from "@solid-primitives/event-listener";
+import { SchemaMenu } from "./components/SchemaMenu";
 
 export { useCore } from "./contexts";
 
 export default (props: { core: Core }) => {
   const UI = createUIStore(props.core);
+
+  const [rootRef, setRootRef] = createSignal<HTMLDivElement | undefined>();
+
+  const mouse = (() => {
+    const mouse = createMousePosition(window);
+
+    return createPositionToElement(rootRef, () => mouse);
+  })();
 
   onMount(async () => {
     const savedProject = localStorage.getItem("project");
@@ -21,9 +35,7 @@ export default (props: { core: Core }) => {
     if (firstGraph) UI.setFocusedGraph(firstGraph.value);
   });
 
-  createEventListener(window, "keydown", (e: KeyboardEvent) => {
-    if (!e.metaKey && !e.ctrlKey) return;
-
+  createEventListener(window, "keydown", (e) => {
     switch (e.code) {
       case "KeyC": {
         if (!e.metaKey && !e.ctrlKey) return;
@@ -38,11 +50,40 @@ export default (props: { core: Core }) => {
         if (!e.metaKey && !e.ctrlKey) return;
 
         UI.pasteClipboard();
+
+        break;
+      }
+      case "KeyK": {
+        if (!((e.metaKey || e.ctrlKey) && e.shiftKey)) return;
+
+        if (
+          UI.state.schemaMenu.status === "open" &&
+          UI.state.schemaMenu.position.x === mouse.x &&
+          UI.state.schemaMenu.position.y === mouse.y
+        )
+          UI.state.schemaMenu = { status: "closed" };
+        else {
+          if (!UI.state.hoveredGraph) return;
+
+          UI.state.schemaMenu = {
+            status: "open",
+            position: {
+              x: mouse.x,
+              y: mouse.y,
+            },
+            graph: UI.state.graphStates.get(UI.state.hoveredGraph)!,
+          };
+        }
+
+        break;
+      }
+      default: {
+        return;
       }
     }
-  });
 
-  const [rootRef, setRootRef] = createSignal<HTMLDivElement | undefined>();
+    e.preventDefault();
+  });
 
   return (
     <CoreProvider core={props.core} rootRef={rootRef}>
@@ -69,6 +110,25 @@ export default (props: { core: Core }) => {
           </Show>
 
           <RightSidebar />
+
+          <Show
+            when={UI.state.schemaMenu.status === "open" && UI.state.schemaMenu}
+          >
+            {(data) => (
+              <SchemaMenu
+                graph={data().graph}
+                position={data().position}
+                onSchemaClicked={(s) => {
+                  data().graph.model.createNode({
+                    schema: s,
+                    position: toGraphSpace(data().position, data().graph),
+                  });
+
+                  UI.state.schemaMenu = { status: "closed" };
+                }}
+              />
+            )}
+          </Show>
         </div>
       </UIStoreProvider>
     </CoreProvider>

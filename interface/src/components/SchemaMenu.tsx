@@ -8,11 +8,12 @@ import {
   EventsMap,
 } from "@macrograph/core";
 
-import { useCore } from "../../contexts";
-import { useGraph, useGraphContext } from "./Graph";
-import { useUIStore } from "../../UIStore";
+import { useCore } from "../contexts";
+import { useGraph, useGraphContext, GraphState, toGraphSpace } from "./Graph";
+import { useUIStore } from "../UIStore";
 
 interface Props {
+  graph: GraphState;
   onSchemaClicked(s: NodeSchema): void | Promise<void>;
   position: XY;
 }
@@ -25,6 +26,7 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 };
 
 export const SchemaMenu = (props: Props) => {
+  const UI = useUIStore();
   const core = useCore();
 
   const [openPackages, setOpenPackages] = createSignal(new Set<Package>());
@@ -41,14 +43,12 @@ export const SchemaMenu = (props: Props) => {
 
   onMount(() => searchRef.focus());
 
-  const graph = useGraphContext();
-
   return (
     <div
       class="flex flex-col bg-neutral-900 border-white text-white border absolute z-10 w-80 h-[30rem] rounded-md shadow-md overflow-hidden text-sm"
       style={{
-        left: props.position.x - 20 + "px",
-        top: props.position.y - 20 + "px",
+        left: `${props.position.x}px`,
+        top: `${props.position.y}px`,
       }}
     >
       <div class="p-2">
@@ -71,17 +71,15 @@ export const SchemaMenu = (props: Props) => {
             <button
               class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
               onClick={() => {
-                graph.model().createCommentBox({
-                  position: graph.toGraphSpace(props.position),
+                props.graph.model.createCommentBox({
+                  position: toGraphSpace(props.position, props.graph),
                   size: {
                     x: 400,
                     y: 200,
                   },
                   text: "Comment",
                 });
-                graph.setState({
-                  schemaMenu: { status: "closed" },
-                });
+                UI.state.schemaMenu = { status: "closed" };
               }}
             >
               Add Comment Box

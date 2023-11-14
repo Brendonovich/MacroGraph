@@ -22,9 +22,15 @@ import {
   useContext,
 } from "solid-js";
 import { z } from "zod";
-import { GraphState, toGraphSpace } from "./components/Graph";
-import { ReactiveWeakMap } from "@solid-primitives/map";
+import { ReactiveMap } from "@solid-primitives/map";
+import { ReactiveSet } from "@solid-primitives/set";
 import { createMousePosition } from "@solid-primitives/mouse";
+
+import { GraphState, toGraphSpace } from "./components/Graph";
+
+type SchemaMenuState =
+  | { status: "closed" }
+  | { status: "open"; position: XY; graph: GraphState };
 
 export function createUIStore(core: Core) {
   const state = createMutable({
@@ -34,7 +40,13 @@ export function createUIStore(core: Core) {
     mouseDownTranslate: null as XY | null,
 
     focusedGraph: null as Graph | null,
-    graphStates: new ReactiveWeakMap<Graph, GraphState>(),
+    graphStates: new ReactiveMap<Graph, GraphState>(),
+
+    hoveredGraph: null as Graph | null,
+
+    schemaMenu: {
+      status: "closed",
+    } as SchemaMenuState,
 
     nodeBounds: new WeakMap<Node, { width: number; height: number }>(),
   });
@@ -123,8 +135,6 @@ export function createUIStore(core: Core) {
 
           const graphState = state.graphStates.get(state.focusedGraph);
           if (!graphState) throw new Error("Graph state not found!");
-
-          console.log(state);
 
           item.node.id = state.focusedGraph.generateNodeId();
           const node = Node.deserialize(state.focusedGraph, {

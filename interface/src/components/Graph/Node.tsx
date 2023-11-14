@@ -23,7 +23,7 @@ import {
 import "./Node.css";
 import { NodeProvider } from "../../contexts";
 import { useUIStore } from "../../UIStore";
-import { useGraph, useGraphContext } from "./Graph";
+import { useGraphContext } from "./Graph";
 import {
   DataInput,
   DataOutput,

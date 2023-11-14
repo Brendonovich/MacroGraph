@@ -178,6 +178,9 @@ importers:
       '@modular-forms/solid':
         specifier: ^0.12.2
         version: 0.12.2(solid-js@1.8.3)
+      '@solid-primitives/bounds':
+        specifier: ^0.0.118
+        version: 0.0.118(solid-js@1.8.3)
       '@solid-primitives/event-listener':
         specifier: ^2.3.0
         version: 2.3.0(solid-js@1.8.3)
@@ -190,6 +193,9 @@ importers:
       '@solid-primitives/resize-observer':
         specifier: ^2.0.22
         version: 2.0.22(solid-js@1.8.3)
+      '@solid-primitives/set':
+        specifier: ^0.4.4
+        version: 0.4.4(solid-js@1.8.3)
       '@solid-primitives/storage':
         specifier: ^2.1.1
         version: 2.1.1(solid-js@1.8.3)
@@ -2208,6 +2214,18 @@ packages:
 
   /@socket.io/component-emitter@3.1.0:
     resolution: {integrity: sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==}
+    dev: false
+
+  /@solid-primitives/bounds@0.0.118(solid-js@1.8.3):
+    resolution: {integrity: sha512-Qj42w8LlnhJ3r/t+t0c0vrdwIvvQMPgjEFGmLiwREaA85ojLbgL9lSBq2tKvljeLCvRVkgj10KEUf+vc99VCIg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/event-listener': 2.3.0(solid-js@1.8.3)
+      '@solid-primitives/resize-observer': 2.0.22(solid-js@1.8.3)
+      '@solid-primitives/static-store': 0.0.5(solid-js@1.8.3)
+      '@solid-primitives/utils': 6.2.1(solid-js@1.8.3)
+      solid-js: 1.8.3
     dev: false
 
   /@solid-primitives/event-listener@2.3.0(solid-js@1.8.3):

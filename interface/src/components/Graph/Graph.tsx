@@ -1,5 +1,12 @@
 import clsx from "clsx";
-import { Accessor, createContext, useContext, createRoot } from "solid-js";
+import {
+  Accessor,
+  createContext,
+  useContext,
+  createRoot,
+  onCleanup,
+  createEffect,
+} from "solid-js";
 import {
   Graph as GraphModel,
   Pin,
@@ -11,13 +18,15 @@ import { createSignal, For, onMount, Show } from "solid-js";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
+import { createElementBounds } from "@solid-primitives/bounds";
 
 import { Node } from "./Node";
-import { ConnectionRender, SchemaMenu } from "../Graph";
+import { ConnectionRender } from "../Graph";
 import { useUIStore } from "../../UIStore";
 import { CommentBox } from "./CommentBox";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { SetStoreFunction, createStore } from "solid-js/store";
+import { useCoreContext } from "../../contexts";
 
 type PanState =
   | { state: "none" }
@@ -28,8 +37,9 @@ interface Props {
   graph: GraphModel;
 }
 
-function createGraphState() {
-  return createStore({
+function createGraphState(model: GraphModel) {
+  const [state, setState] = createStore({
+    model,
     offset: {
       x: 0,
       y: 0,
@@ -39,11 +49,10 @@ function createGraphState() {
       y: 0,
     } as XY,
     scale: 1,
-    schemaMenu: {
-      status: "closed",
-    } as { status: "closed" } | { status: "open"; position: XY },
     selectedItem: null as NodeModel | CommentBoxModel | null,
   });
+
+  return [state, setState] as const;
 }
 
 export type GraphState = ReturnType<typeof createGraphState>[0];
@@ -66,13 +75,15 @@ const MAX_ZOOM_IN = 2.5;
 const MAX_ZOOM_OUT = 5;
 
 export const Graph = (props: Props) => {
+  const coreCtx = useCoreContext();
+
   const model = () => props.graph;
 
   const UI = useUIStore();
 
   let graphRef: HTMLDivElement;
 
-  const [state, setState] = createGraphState();
+  const [state, setState] = createGraphState(props.graph);
   const pinPositions = new ReactiveWeakMap<Pin, XY>();
 
   function onResize() {
@@ -108,9 +119,11 @@ export const Graph = (props: Props) => {
     });
   }
 
-  onMount(() => {
+  createEffect(() => {
     UI.registerGraphState(props.graph, state);
+  });
 
+  onMount(() => {
     createEventListener(window, "resize", onResize);
     createResizeObserver(graphRef, onResize);
 
@@ -143,27 +156,6 @@ export const Graph = (props: Props) => {
 
   const [pan, setPan] = createSignal<PanState>({ state: "none" });
 
-  const mouse = createMousePosition(window);
-
-  createEventListener(window, "keydown", (e) => {
-    if (e.code === "KeyK" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
-      e.preventDefault();
-
-      const position = toGraphSpace(mouse, state);
-
-      if (
-        state.schemaMenu.status === "open" &&
-        state.schemaMenu.position.x === position.x &&
-        state.schemaMenu.position.y === position.y
-      )
-        setState({ schemaMenu: { status: "closed" } });
-      else
-        setState({
-          schemaMenu: { status: "open", position },
-        });
-    }
-  });
-
   return (
     <GraphContext.Provider
       value={{
@@ -179,20 +171,6 @@ export const Graph = (props: Props) => {
         onMouseDown={() => UI.setFocusedGraph(props.graph)}
         class="flex-1 relative h-full overflow-hidden bg-mg-graph"
       >
-        <Show when={state.schemaMenu.status === "open" && state.schemaMenu}>
-          {(data) => (
-            <SchemaMenu
-              position={data().position}
-              onSchemaClicked={(s) => {
-                model().createNode({
-                  schema: s,
-                  position: data().position,
-                });
-                setState({ schemaMenu: { status: "closed" } });
-              }}
-            />
-          )}
-        </Show>
         <ConnectionRender />
         <div
           ref={graphRef!}
@@ -229,21 +207,25 @@ export const Graph = (props: Props) => {
                 },
               });
           }}
-          onMouseUp={(e) => {
+          onContextMenu={(e) => {
             switch (e.button) {
               case 2:
                 if (pan().state === "waiting") {
                   if (UI.state.mouseDragLocation) UI.setMouseDragLocation();
-                  else
-                    setState({
-                      schemaMenu: {
-                        status: "open",
-                        position: toGraphSpace(
-                          { x: e.clientX, y: e.clientY },
-                          state
-                        ),
+                  else {
+                    const rootBounds = coreCtx
+                      .rootRef()
+                      ?.getBoundingClientRect()!;
+
+                    UI.state.schemaMenu = {
+                      status: "open",
+                      graph: state,
+                      position: {
+                        x: e.clientX - rootBounds.left,
+                        y: e.clientY - rootBounds.top,
                       },
-                    });
+                    };
+                  }
                 }
 
                 setPan({ state: "none" });
@@ -253,10 +235,8 @@ export const Graph = (props: Props) => {
           onMouseDown={(e) => {
             switch (e.button) {
               case 0:
-                setState({
-                  schemaMenu: { status: "closed" },
-                  selectedItem: null,
-                });
+                setState({ selectedItem: null });
+                UI.state.schemaMenu = { status: "closed" };
                 break;
               case 2:
                 setPan({
@@ -283,10 +263,11 @@ export const Graph = (props: Props) => {
 
                     setPan({ state: "active" });
 
+                    UI.state.schemaMenu = {
+                      status: "closed",
+                    };
+
                     setState({
-                      schemaMenu: {
-                        status: "closed",
-                      },
                       translate: {
                         x:
                           (startPosition.x -
@@ -308,42 +289,9 @@ export const Graph = (props: Props) => {
                 break;
             }
           }}
-          // onMouseMove={(e) => {
-          //   const MOVE_BUFFER = 3;
-          //   const panData = pan();
-
-          //   if (panData.state === "none") return;
-          //   if (
-          //     panData.state === "waiting" &&
-          //     Math.abs(panData.downposx - e.clientX) < MOVE_BUFFER &&
-          //     Math.abs(panData.downposy - e.clientY) < MOVE_BUFFER
-          //   )
-          //     return;
-
-          //   setPan({ state: "active" });
-
-          //   setState({
-          //     schemaMenu: {
-          //       status: "closed",
-          //     },
-          //     translate: {
-          //       x:
-          //         (UI.state.mouseDownLocation!.x -
-          //           e.clientX +
-          //           UI.state.mouseDownTranslate!.x * state.scale) /
-          //         state.scale,
-          //       y:
-          //         (UI.state.mouseDownLocation!.y -
-          //           e.clientY +
-          //           UI.state.mouseDownTranslate!.y * state.scale) /
-          //         state.scale,
-          //     },
-          //   });
-          // }}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
+          onMouseEnter={() => (UI.state.hoveredGraph = props.graph)}
+          onMouseMove={() => (UI.state.hoveredGraph = props.graph)}
+          onMouseLeave={() => (UI.state.hoveredGraph = null)}
         >
           <div
             class="origin-[0,0]"
