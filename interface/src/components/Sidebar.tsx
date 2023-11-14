@@ -1,7 +1,9 @@
 import clsx from "clsx";
-import { JSX, ParentProps, Show, createSignal, createMemo } from "solid-js";
+import { JSX, ParentProps, Show, createRoot, createSignal } from "solid-js";
 import { RiArrowsExpandRightLine } from "solid-icons/ri";
 import { makePersisted } from "@solid-primitives/storage";
+import { FaSolidChevronRight } from "solid-icons/fa";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 export type Side = "left" | "right";
 
@@ -85,15 +87,16 @@ export function SidebarSection(
     name: `sidebar-section-${props.title}-height`,
   });
 
-  const [prevPos, setPrevPos] = createSignal(0);
-
   return (
     <div class="flex flex-col h-auto relative">
       <button
         onClick={() => setOpen((o) => !o)}
         class="flex flex-row justify-between items-center bg-neutral-900 text-white px-2 font-medium shadow py-1"
       >
-        {props.title}
+        <span class="flex flex-row items-center gap-1.5">
+          <FaSolidChevronRight class={clsx("w-4 h-4", open() && "rotate-90")} />
+          {props.title}
+        </span>
         {props.right}
       </button>
       <Show when={open()}>
@@ -101,23 +104,29 @@ export function SidebarSection(
           {props.children}
         </div>
         <div
-          onMouseDown={(e) => {
-            setPrevPos(e.clientY);
-            e.stopPropagation();
-            if (e.button !== 0) return;
-            const handleMouseMove = (e: MouseEvent) => {
-              setHeight(Math.max(250, height() + (e.clientY - prevPos())));
-              if (height() + (e.clientY - prevPos()) > 250)
-                setPrevPos(e.clientY);
-            };
+          onMouseDown={(downEvent) => {
+            downEvent.stopPropagation();
+            if (downEvent.button !== 0) return;
+
             document.body.style.cursor = "ns-resize";
-            window.addEventListener("mousemove", handleMouseMove);
-            const listener = () => {
-              document.body.style.cursor = "auto";
-              window.removeEventListener("mouseup", listener);
-              window.removeEventListener("mousemove", handleMouseMove);
-            };
-            window.addEventListener("mouseup", listener);
+
+            createRoot((dispose) => {
+              createEventListener(window, "mouseup", () => {
+                document.body.style.cursor = "auto";
+                dispose();
+              });
+
+              const startHeight = height();
+
+              createEventListener(window, "mousemove", (moveEvent) => {
+                setHeight(
+                  Math.max(
+                    250,
+                    startHeight + (moveEvent.clientY - downEvent.clientY)
+                  )
+                );
+              });
+            });
           }}
           class="h-0.5 w-full relative cursor-ns-resize bg-neutral-700 overflow-visible"
         >

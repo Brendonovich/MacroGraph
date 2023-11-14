@@ -150,11 +150,10 @@ export const Graph = (props: Props) => {
         state.schemaMenu.position.y === position.y
       )
         setState({ schemaMenu: { status: "closed" } });
-      else {
+      else
         setState({
           schemaMenu: { status: "open", position },
         });
-      }
     }
   });
 
