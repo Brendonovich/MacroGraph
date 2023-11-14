@@ -50,15 +50,15 @@ export type GraphState = ReturnType<typeof createGraphState>[0];
 
 export function toGraphSpace(clientXY: XY, state: GraphState) {
   return {
-    x: (clientXY.x - state.offset.x) / state.scale,
-    y: (clientXY.y - state.offset.y) / state.scale,
+    x: (clientXY.x - state.offset.x) / state.scale + state.translate.x,
+    y: (clientXY.y - state.offset.y) / state.scale + state.translate.y,
   };
 }
 
 export function toScreenSpace(graphXY: XY, state: GraphState) {
   return {
-    x: graphXY.x * state.scale + state.offset.x,
-    y: graphXY.y * state.scale + state.offset.y,
+    x: (graphXY.x - state.translate.x) * state.scale + state.offset.x,
+    y: (graphXY.y - state.translate.y) * state.scale + state.offset.y,
   };
 }
 
