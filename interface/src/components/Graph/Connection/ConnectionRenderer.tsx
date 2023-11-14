@@ -67,6 +67,38 @@ export const ConnectionRender = () => {
         });
       });
     });
+    const state = dragState();
+    if (state) {
+      const pinPos = () => pinPositions.get(state.draggingPin);
+
+      const diffs = () => ({
+        x: state.mouseDragLocation.x - graphOffset().x,
+        y: state.mouseDragLocation.y - graphOffset().y,
+      });
+
+      const colourClass = createMemo(() => {
+        const draggingPin = state.draggingPin;
+
+        if (
+          draggingPin instanceof ExecInput ||
+          draggingPin instanceof ExecOutput ||
+          draggingPin instanceof ScopeOutput ||
+          draggingPin instanceof ScopeInput
+        )
+          return "white";
+
+        return colour(draggingPin.type);
+      });
+      let pos = pinPos();
+      if (pos) {
+        ctx.lineWidth = 2 * scale();
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(diffs().x, diffs().y);
+        ctx.strokeStyle = colourClass();
+        ctx.stroke();
+      }
+    }
   });
 
   return <canvas ref={canvasRef!} width="2560" height="1440" />;
