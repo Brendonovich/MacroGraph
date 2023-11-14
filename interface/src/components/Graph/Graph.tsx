@@ -25,6 +25,7 @@ import { ReactiveWeakMap } from "@solid-primitives/map";
 import { SetStoreFunction, createStore } from "solid-js/store";
 import { useCoreContext } from "../../contexts";
 import { createElementBounds } from "@solid-primitives/bounds";
+import { GraphList } from "../ProjectSidebar";
 
 type PanState =
   | { state: "none" }
@@ -128,6 +129,9 @@ export const Graph = (props: Props) => {
   }
 
   createEffect(() => {
+    setState({
+      model: model(),
+    });
     UI.registerGraphState(props.graph, state);
   });
 
