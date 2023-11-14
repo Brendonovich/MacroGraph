@@ -7,7 +7,7 @@ import {
   ScopeOutput,
 } from "@macrograph/core";
 import clsx from "clsx";
-import { createMemo, For, Match, Show, Switch } from "solid-js";
+import { createEffect, createMemo, For, Match, Show, Switch } from "solid-js";
 
 import { useUIStore } from "../../../UIStore";
 import { useGraphContext } from "../Graph";
@@ -31,117 +31,43 @@ export const ConnectionRender = () => {
   const graphOffset = () => graph.state.offset;
   const scale = () => graph.state.scale;
 
-  return (
-    <svg class="w-full h-full transform">
-      <g>
-        <For each={[...graph.model().nodes.values()]}>
-          {(n) => (
-            <For each={n.state.inputs}>
-              {(i) => {
-                const connectionData = () => {
-                  const connections =
-                    i instanceof ExecInput
-                      ? [...i.connections]
-                      : i.connection.map((c) => [c]).unwrapOr([]);
+  let canvasRef: HTMLCanvasElement;
 
-                  return connections.map((conn) => {
-                    const inputPosition = Maybe(pinPositions.get(i));
-                    const outputPosition = Maybe(pinPositions.get(conn));
+  createEffect(() => {
+    const ctx = canvasRef.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, 2560, 1440);
+    [...graph.model().nodes.values()].forEach((node) => {
+      node.state.inputs.forEach((i) => {
+        const connectionData = () => {
+          const connections =
+            i instanceof ExecInput
+              ? [...i.connections]
+              : i.connection.map((c) => [c]).unwrapOr([]);
 
-                    return inputPosition
-                      .zip(outputPosition)
-                      .map(([input, output]) => ({
-                        input,
-                        output,
-                      }));
-                  });
-                };
+          return connections.map((conn) => {
+            const inputPosition = Maybe(pinPositions.get(i));
+            const outputPosition = Maybe(pinPositions.get(conn));
 
-                return (
-                  <For each={connectionData()}>
-                    {(data) => (
-                      <Show when={data.toNullable()}>
-                        {(positions) => (
-                          <Switch
-                            fallback={
-                              <line
-                                x1={positions().input.x}
-                                y1={positions().input.y}
-                                x2={positions().output.x}
-                                y2={positions().output.y}
-                                stroke={"white"}
-                                stroke-opacity={0.75}
-                                stroke-width={2 * scale()}
-                              />
-                            }
-                          >
-                            <Match when={i instanceof DataInput && i}>
-                              {(input) => (
-                                <line
-                                  class={clsx(
-                                    "stroke-mg-current",
-                                    colour(input().type)
-                                  )}
-                                  x1={positions().input.x}
-                                  y1={positions().input.y}
-                                  x2={positions().output.x}
-                                  y2={positions().output.y}
-                                  stroke-opacity={0.75}
-                                  stroke-width={2 * scale()}
-                                />
-                              )}
-                            </Match>
-                          </Switch>
-                        )}
-                      </Show>
-                    )}
-                  </For>
-                );
-              }}
-            </For>
-          )}
-        </For>
-        <Show when={dragState()}>
-          {(state) => {
-            const pinPos = () => pinPositions.get(state().draggingPin);
+            return inputPosition.zip(outputPosition).map(([input, output]) => ({
+              input,
+              output,
+            }));
+          });
+        };
+        connectionData().forEach((data) => {
+          data.peek((positions) => {
+            ctx.lineWidth = 2 * scale();
+            ctx.beginPath();
+            ctx.moveTo(positions.input.x, positions.input.y);
+            ctx.lineTo(positions.output.x, positions.output.y);
+            ctx.strokeStyle = i instanceof DataInput ? colour(i.type) : "white";
+            ctx.stroke();
+          });
+        });
+      });
+    });
+  });
 
-            const diffs = () => ({
-              x: state().mouseDragLocation.x - graphOffset().x,
-              y: state().mouseDragLocation.y - graphOffset().y,
-            });
-
-            const colourClass = createMemo(() => {
-              const draggingPin = state().draggingPin;
-
-              if (
-                draggingPin instanceof ExecInput ||
-                draggingPin instanceof ExecOutput ||
-                draggingPin instanceof ScopeOutput ||
-                draggingPin instanceof ScopeInput
-              )
-                return "[--mg-current:white]";
-
-              return colour(draggingPin.type);
-            });
-
-            return (
-              <Show when={pinPos()}>
-                {(pos) => (
-                  <line
-                    class={clsx("stroke-mg-current", colourClass())}
-                    x1={pos().x}
-                    y1={pos().y}
-                    x2={diffs().x}
-                    y2={diffs().y}
-                    stroke-opacity={0.75}
-                    stroke-width={2 * scale()}
-                  />
-                )}
-              </Show>
-            );
-          }}
-        </Show>
-      </g>
-    </svg>
-  );
+  return <canvas ref={canvasRef!} width="2560" height="1440" />;
 };

@@ -87,9 +87,9 @@ export const DataPin = (props: Props) => {
                           return (
                             <div
                               class={clsx(
-                                "h-[0.1875rem] w-full flex flex-row space-x-0.5 justify-between",
-                                colour(type())
+                                "h-[0.1875rem] w-full flex flex-row space-x-0.5 justify-between"
                               )}
+                              style={{ "--mg-current": colour(type()) }}
                             >
                               <div class="w-[0.1875rem] h-full bg-mg-string rounded-full" />
                               <div
@@ -112,11 +112,12 @@ export const DataPin = (props: Props) => {
                       class={clsx(
                         `w-3.5 h-3.5 flex justify-center items-center border-mg-current`,
                         rounding(type()),
-                        colour(type()),
+
                         connected() || active()
                           ? "border-[2.5px]"
                           : "border-[1.5px]"
                       )}
+                      style={{ "--mg-current": colour(type()) }}
                     >
                       <div
                         class={clsx(
@@ -146,9 +147,9 @@ export const DataPin = (props: Props) => {
                     return (
                       <div
                         class={clsx(
-                          "h-[0.1875rem] w-full flex flex-row space-x-0.5 justify-between",
-                          colour(type())
+                          "h-[0.1875rem] w-full flex flex-row space-x-0.5 justify-between"
                         )}
+                        style={{ "--mg-current": colour(type()) }}
                       >
                         <div class="w-[0.1875rem] h-full bg-mg-string rounded-full" />
                         <div
@@ -172,11 +173,11 @@ export const DataPin = (props: Props) => {
                   class={clsx(
                     `w-3.5 h-3.5 border-[2.5px]`,
                     rounding(type()),
-                    colour(type()),
                     connected() || active()
                       ? "border-mg-current bg-mg-current"
                       : "border-mg-current"
                   )}
+                  style={{ "--mg-current": colour(type()) }}
                 />
               );
             }}
