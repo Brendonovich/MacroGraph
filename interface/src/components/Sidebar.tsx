@@ -1,5 +1,12 @@
 import clsx from "clsx";
-import { JSX, ParentProps, Show, createRoot, createSignal } from "solid-js";
+import {
+  JSX,
+  ParentProps,
+  Show,
+  createRoot,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import { RiArrowsExpandRightLine } from "solid-icons/ri";
 import { makePersisted } from "@solid-primitives/storage";
 import { FaSolidChevronRight } from "solid-icons/fa";
@@ -100,7 +107,7 @@ export function SidebarSection(
         {props.right}
       </button>
       <Show when={open()}>
-        <div class="overflow-y-auto" style={`height: ${height()}px`}>
+        <div class="overflow-y-auto" style={{ height: `${height()}px` }}>
           {props.children}
         </div>
         <div
@@ -108,20 +115,18 @@ export function SidebarSection(
             downEvent.stopPropagation();
             if (downEvent.button !== 0) return;
 
-            document.body.style.cursor = "ns-resize";
-
             createRoot((dispose) => {
-              createEventListener(window, "mouseup", () => {
-                document.body.style.cursor = "auto";
-                dispose();
-              });
+              createEventListener(window, "mouseup", dispose);
+
+              document.body.style.cursor = "ns-resize";
+              onCleanup(() => (document.body.style.cursor = "auto"));
 
               const startHeight = height();
 
               createEventListener(window, "mousemove", (moveEvent) => {
                 setHeight(
                   Math.max(
-                    250,
+                    MIN_HEIGHT,
                     startHeight + (moveEvent.clientY - downEvent.clientY)
                   )
                 );

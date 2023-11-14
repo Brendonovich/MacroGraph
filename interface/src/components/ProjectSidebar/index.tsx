@@ -35,7 +35,7 @@ export const GraphList = (props: Props) => {
             onClick={(e) => {
               e.stopPropagation();
               const graph = core.project.createGraph();
-              UI.setCurrentGraph(graph);
+              UI.setFocusedGraph(graph);
             }}
           >
             +
@@ -48,7 +48,7 @@ export const GraphList = (props: Props) => {
           <GraphItem
             graph={graph}
             onClick={() => props.onChange(graph)}
-            isCurrentGraph={graph === UI.state.currentGraph}
+            isCurrentGraph={graph === UI.state.focusedGraph}
           />
         )}
       </For>

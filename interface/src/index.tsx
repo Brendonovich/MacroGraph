@@ -5,11 +5,12 @@ import { CoreProvider } from "./contexts";
 import { Graph } from "./components/Graph";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { LeftSidebar, RightSidebar } from "./Sidebars";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 export { useCore } from "./contexts";
 
 export default (props: { core: Core }) => {
-  const UI = createUIStore();
+  const UI = createUIStore(props.core);
 
   onMount(async () => {
     const savedProject = localStorage.getItem("project");
@@ -17,37 +18,29 @@ export default (props: { core: Core }) => {
       await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
 
     const firstGraph = props.core.project.graphs.values().next();
-    if (firstGraph) UI.setCurrentGraph(firstGraph.value);
+    if (firstGraph) UI.setFocusedGraph(firstGraph.value);
   });
 
-  // onMount(() => {
-  //   const ctrlHandlers = (e: KeyboardEvent) => {
-  //     if (!e.metaKey && !e.ctrlKey) return;
+  createEventListener(window, "keydown", (e: KeyboardEvent) => {
+    if (!e.metaKey && !e.ctrlKey) return;
 
-  //     switch (e.code) {
-  //       case "KeyC": {
-  //         if (!e.metaKey && !e.ctrlKey) return;
-  //         const selectedItem = UI.state.selectedItem;
-  //         if (selectedItem === null) return;
+    switch (e.code) {
+      case "KeyC": {
+        if (!e.metaKey && !e.ctrlKey) return;
 
-  //         UI.copyItem(selectedItem);
+        if (!UI.focusedGraphState?.selectedItem) return;
 
-  //         break;
-  //       }
-  //       case "KeyV": {
-  //         if (!e.metaKey && !e.ctrlKey) return;
+        UI.copyItem(UI.focusedGraphState?.selectedItem);
 
-  //         UI.pasteClipboard();
-  //       }
-  //     }
-  //   };
+        break;
+      }
+      case "KeyV": {
+        if (!e.metaKey && !e.ctrlKey) return;
 
-  //   window.addEventListener("keydown", ctrlHandlers);
-
-  //   return () => {
-  //     window.removeEventListener("keydown", ctrlHandlers);
-  //   };
-  // });
+        UI.pasteClipboard();
+      }
+    }
+  });
 
   const [rootRef, setRootRef] = createSignal<HTMLDivElement | undefined>();
 
@@ -65,7 +58,7 @@ export default (props: { core: Core }) => {
           <LeftSidebar />
 
           <Show
-            when={UI.state.currentGraph}
+            when={UI.state.focusedGraph}
             fallback={
               <div class="flex-1 flex h-full justify-center items-center text-white">
                 No graph selected

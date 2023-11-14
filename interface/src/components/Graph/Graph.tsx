@@ -48,6 +48,23 @@ function createGraphState() {
 
 export type GraphState = ReturnType<typeof createGraphState>[0];
 
+export function toGraphSpace(clientXY: XY, state: GraphState) {
+  return {
+    x: (clientXY.x - state.offset.x) / state.scale,
+    y: (clientXY.y - state.offset.y) / state.scale,
+  };
+}
+
+export function toScreenSpace(graphXY: XY, state: GraphState) {
+  return {
+    x: graphXY.x * state.scale + state.offset.x,
+    y: graphXY.y * state.scale + state.offset.y,
+  };
+}
+
+const MAX_ZOOM_IN = 2.5;
+const MAX_ZOOM_OUT = 5;
+
 export const Graph = (props: Props) => {
   const model = () => props.graph;
 
@@ -69,30 +86,17 @@ export const Graph = (props: Props) => {
     });
   }
 
-  createEventListener(window, "resize", onResize);
-
-  function toGraphSpace(relativeScreenSpace: XY) {
-    return {
-      x: (relativeScreenSpace.x - state.offset.x) / state.scale,
-      y: (relativeScreenSpace.y - state.offset.y) / state.scale,
-    };
-  }
-
-  function toScreenSpace(point: XY) {
-    return {
-      x: point.x * state.scale + state.offset.x,
-      y: point.y * state.scale + state.offset.y,
-    };
-  }
-
   function updateScale(delta: number, screenOrigin: XY) {
-    const startGraphOrigin = toGraphSpace(screenOrigin);
+    const startGraphOrigin = toGraphSpace(screenOrigin, state);
 
     setState({
-      scale: Math.min(Math.max(0.2, state.scale + delta / 20), 2.5),
+      scale: Math.min(
+        Math.max(1 / MAX_ZOOM_OUT, state.scale + delta / 20),
+        MAX_ZOOM_IN
+      ),
     });
 
-    const endGraphOrigin = toScreenSpace(startGraphOrigin);
+    const endGraphOrigin = toScreenSpace(startGraphOrigin, state);
 
     setState({
       translate: {
@@ -105,6 +109,9 @@ export const Graph = (props: Props) => {
   }
 
   onMount(() => {
+    UI.registerGraphState(props.graph, state);
+
+    createEventListener(window, "resize", onResize);
     createResizeObserver(graphRef, onResize);
 
     createEventListener(graphRef, "gesturestart", () => {
@@ -142,7 +149,7 @@ export const Graph = (props: Props) => {
     if (e.code === "KeyK" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
       e.preventDefault();
 
-      const position = toGraphSpace(mouse);
+      const position = toGraphSpace(mouse, state);
 
       if (
         state.schemaMenu.status === "open" &&
@@ -164,11 +171,14 @@ export const Graph = (props: Props) => {
         state,
         setState,
         pinPositions,
-        toGraphSpace,
-        toScreenSpace,
+        toGraphSpace: (xy) => toGraphSpace(xy, state),
+        toScreenSpace: (xy) => toScreenSpace(xy, state),
       }}
     >
-      <div class="flex-1 relative h-full overflow-hidden bg-mg-graph">
+      <div
+        onMouseDown={() => UI.setFocusedGraph(props.graph)}
+        class="flex-1 relative h-full overflow-hidden bg-mg-graph"
+      >
         <Show when={state.schemaMenu.status === "open" && state.schemaMenu}>
           {(data) => (
             <SchemaMenu
@@ -208,8 +218,8 @@ export const Graph = (props: Props) => {
               const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
 
               updateScale(delta, {
-                x: e.clientX - graphRef.getBoundingClientRect().x,
-                y: e.clientY - graphRef.getBoundingClientRect().y,
+                x: e.clientX,
+                y: e.clientY,
               });
             } else
               setState({
@@ -228,10 +238,14 @@ export const Graph = (props: Props) => {
                     setState({
                       schemaMenu: {
                         status: "open",
-                        position: toGraphSpace({ x: e.clientX, y: e.clientY }),
+                        position: toGraphSpace(
+                          { x: e.clientX, y: e.clientY },
+                          state
+                        ),
                       },
                     });
                 }
+
                 setPan({ state: "none" });
                 break;
             }

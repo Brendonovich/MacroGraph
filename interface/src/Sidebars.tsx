@@ -1,4 +1,4 @@
-import { Match, Show, Switch } from "solid-js";
+import { Match, Show, Switch, createMemo } from "solid-js";
 import { Graph, Node } from "@macrograph/core";
 
 import { GraphList } from "./components/ProjectSidebar";
@@ -14,7 +14,7 @@ export function LeftSidebar() {
     <Sidebar side="left">
       <Settings />
       <div class="overflow-y-auto outer-scroll flex-1">
-        <GraphList onChange={(g) => UI.setCurrentGraph(g)} />
+        <GraphList onChange={(g) => UI.setFocusedGraph(g)} />
         <PrintOutput />
       </div>
     </Sidebar>
@@ -44,19 +44,27 @@ export function RightSidebar() {
 
   return (
     <Sidebar side="right">
-      {/* <Switch
-        fallback={
-          <Show when={UI.state.currentGraph}>
-            {(graph) => <GraphSidebar graph={graph()} />}
-          </Show>
-        }
-      >
-        <Match
-          when={UI.state.selectedItem instanceof Node && UI.state.selectedItem}
-        >
-          {(item) => <NodeSidebar node={item()} />}
-        </Match>
-      </Switch> */}
+      <Show when={UI.state.focusedGraph}>
+        {(graph) => {
+          const state = createMemo(() => UI.state.graphStates.get(graph()));
+
+          const selectedItem = {
+            get value() {
+              return state()?.selectedItem;
+            },
+          };
+
+          return (
+            <Switch fallback={<GraphSidebar graph={graph()} />}>
+              <Match
+                when={selectedItem.value instanceof Node && selectedItem.value}
+              >
+                {(item) => <NodeSidebar node={item()} />}
+              </Match>
+            </Switch>
+          );
+        }}
+      </Show>
     </Sidebar>
   );
 }

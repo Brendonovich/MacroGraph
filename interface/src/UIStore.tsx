@@ -1,5 +1,4 @@
 import {
-  Position,
   XY,
   Graph,
   Node,
@@ -15,31 +14,56 @@ import {
   Core,
 } from "@macrograph/core";
 import { createMutable } from "solid-js/store";
-import { createContext, createEffect, ParentProps, useContext } from "solid-js";
+import {
+  createContext,
+  createEffect,
+  onCleanup,
+  ParentProps,
+  useContext,
+} from "solid-js";
 import { z } from "zod";
+import { GraphState, toGraphSpace } from "./components/Graph";
+import { ReactiveWeakMap } from "@solid-primitives/map";
+import { createMousePosition } from "@solid-primitives/mouse";
 
-export function createUIStore() {
+export function createUIStore(core: Core) {
   const state = createMutable({
     draggingPin: null as Pin | null,
     hoveringPin: null as Pin | null,
     mouseDragLocation: null as XY | null,
     mouseDownTranslate: null as XY | null,
 
-    currentGraph: null as Graph | null,
+    focusedGraph: null as Graph | null,
+    graphStates: new ReactiveWeakMap<Graph, GraphState>(),
+
     nodeBounds: new WeakMap<Node, { width: number; height: number }>(),
   });
 
   createEffect(() => {
-    if (!state.currentGraph) return;
+    if (!state.focusedGraph) return;
 
-    const project = state.currentGraph?.project;
+    const project = state.focusedGraph.project;
     if (!project) return;
 
-    if (project.graphs.size === 0) state.currentGraph = null;
+    if (project.graphs.size === 0) state.focusedGraph = null;
   });
+
+  const mouse = createMousePosition(window);
 
   return {
     state,
+    get focusedGraphState() {
+      if (!state.focusedGraph) return null;
+
+      return state.graphStates.get(state.focusedGraph) ?? null;
+    },
+    registerGraphState(graph: Graph, graphState: GraphState) {
+      state.graphStates.set(graph, graphState);
+
+      onCleanup(() => {
+        state.graphStates.delete(graph);
+      });
+    },
     setDraggingPin(pin?: Pin) {
       state.draggingPin = pin ?? null;
     },
@@ -52,8 +76,8 @@ export function createUIStore() {
     setMouseDownTranslate(translate?: XY) {
       state.mouseDownTranslate = translate ?? null;
     },
-    setCurrentGraph(graph: Graph) {
-      state.currentGraph = graph;
+    setFocusedGraph(graph: Graph) {
+      state.focusedGraph = graph;
     },
     copyItem(item: Node | CommentBox | Graph | Project) {
       let data: z.infer<typeof CopyItem>;
@@ -93,74 +117,83 @@ export function createUIStore() {
       const text = await navigator.clipboard.readText();
       const json = JSON.parse(atob(text));
       const item = CopyItem.parse(json);
-      // switch (item.type) {
-      //   case "node": {
-      //     if (!state.currentGraph) return;
-      //     if (!state.mousePos) throw new Error("Mouse position not set");
-      //     item.node.id = state.currentGraph.generateNodeId();
-      //     const node = Node.deserialize(state.currentGraph, {
-      //       ...item.node,
-      //       position: this.toGraphSpace({
-      //         x: state.mousePos.x - 10 - state.graphOffset.x,
-      //         y: state.mousePos.y - 10 - state.graphOffset.y,
-      //       }),
-      //     });
-      //     if (!node) throw new Error("Failed to deserialize node");
-      //     state.currentGraph.nodes.set(item.node.id, node);
-      //     break;
-      //   }
-      //   case "commentBox": {
-      //     if (!state.currentGraph) return;
-      //     if (!state.mousePos) throw new Error("Mouse position not set");
-      //     const commentBox = CommentBox.deserialize(state.currentGraph, {
-      //       ...item.commentBox,
-      //       position: this.toGraphSpace({
-      //         x: state.mousePos.x - 10 - state.graphOffset.x,
-      //         y: state.mousePos.y - 10 - state.graphOffset.y,
-      //       }),
-      //     });
-      //     if (!commentBox) throw new Error("Failed to deserialize comment box");
-      //     state.currentGraph.commentBoxes.add(commentBox);
-      //     const nodeIdMap = new Map<number, number>();
-      //     for (const nodeJson of item.nodes) {
-      //       const id = state.currentGraph.generateNodeId();
-      //       nodeIdMap.set(nodeJson.id, id);
-      //       nodeJson.id = id;
-      //       const node = Node.deserialize(state.currentGraph, {
-      //         ...nodeJson,
-      //         position: {
-      //           x:
-      //             commentBox.position.x +
-      //             nodeJson.position.x -
-      //             item.commentBox.position.x,
-      //           y:
-      //             commentBox.position.y +
-      //             nodeJson.position.y -
-      //             item.commentBox.position.y,
-      //         },
-      //       });
-      //       if (!node) throw new Error("Failed to deserialize node");
-      //       state.currentGraph.nodes.set(node.id, node);
-      //     }
-      //     state.currentGraph.deserializeConnections(item.connections, {
-      //       nodeIdMap,
-      //     });
-      //     break;
-      //   }
-      //   case "graph": {
-      //     item.graph.id = core.project.generateGraphId();
-      //     const graph = await Graph.deserialize(core.project, item.graph);
-      //     if (!graph) throw new Error("Failed to deserialize graph");
-      //     core.project.graphs.set(graph.id, graph);
-      //     break;
-      //   }
-      //   case "project": {
-      //     const project = await Project.deserialize(core, item.project);
-      //     if (!project) throw new Error("Failed to deserialize project");
-      //     core.project = project;
-      //     break;
-      //   }
-      // }
+      switch (item.type) {
+        case "node": {
+          if (!state.focusedGraph) return;
+
+          const graphState = state.graphStates.get(state.focusedGraph);
+          if (!graphState) throw new Error("Graph state not found!");
+
+          console.log(state);
+
+          item.node.id = state.focusedGraph.generateNodeId();
+          const node = Node.deserialize(state.focusedGraph, {
+            ...item.node,
+            position: toGraphSpace(
+              { x: mouse.x - 10, y: mouse.y - 10 },
+              graphState
+            ),
+          });
+          if (!node) throw new Error("Failed to deserialize node");
+          state.focusedGraph.nodes.set(item.node.id, node);
+          break;
+        }
+        case "commentBox": {
+          if (!state.focusedGraph) return;
+
+          const graphState = state.graphStates.get(state.focusedGraph);
+          if (!graphState) return;
+
+          const commentBox = CommentBox.deserialize(state.focusedGraph, {
+            ...item.commentBox,
+            position: toGraphSpace(
+              { x: mouse.x - 10, y: mouse.y - 10 },
+              graphState
+            ),
+          });
+          if (!commentBox) throw new Error("Failed to deserialize comment box");
+          state.focusedGraph.commentBoxes.add(commentBox);
+
+          const nodeIdMap = new Map<number, number>();
+          for (const nodeJson of item.nodes) {
+            const id = state.focusedGraph.generateNodeId();
+            nodeIdMap.set(nodeJson.id, id);
+            nodeJson.id = id;
+            const node = Node.deserialize(state.focusedGraph, {
+              ...nodeJson,
+              position: {
+                x:
+                  commentBox.position.x +
+                  nodeJson.position.x -
+                  item.commentBox.position.x,
+                y:
+                  commentBox.position.y +
+                  nodeJson.position.y -
+                  item.commentBox.position.y,
+              },
+            });
+            if (!node) throw new Error("Failed to deserialize node");
+            state.focusedGraph.nodes.set(node.id, node);
+          }
+          state.focusedGraph.deserializeConnections(item.connections, {
+            nodeIdMap,
+          });
+          break;
+        }
+        case "graph": {
+          item.graph.id = core.project.generateGraphId();
+          const graph = await Graph.deserialize(core.project, item.graph);
+          if (!graph) throw new Error("Failed to deserialize graph");
+          core.project.graphs.set(graph.id, graph);
+          break;
+        }
+        case "project": {
+          const project = await Project.deserialize(core, item.project);
+          if (!project) throw new Error("Failed to deserialize project");
+          core.project = project;
+          break;
+        }
+      }
     },
   };
 }

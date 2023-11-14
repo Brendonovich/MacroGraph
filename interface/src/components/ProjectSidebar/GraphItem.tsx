@@ -81,9 +81,22 @@ export const GraphItem = (props: Props) => {
 const DeleteButton = (props: { graph: Graph }) => {
   const core = useCore();
 
+  function deleteGraph() {
+    core.project.graphs.delete(props.graph.id);
+    core.project.save();
+  }
+
   return (
     <Dialog.Root>
-      <Dialog.Trigger as="div">
+      <Dialog.Trigger
+        onClick={(e) => {
+          if (e.shiftKey) {
+            e.preventDefault();
+            deleteGraph();
+          }
+        }}
+        as="div"
+      >
         <AiOutlineDelete />
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -94,14 +107,7 @@ const DeleteButton = (props: { graph: Graph }) => {
               <Dialog.Title>Confirm Deleting Graph?</Dialog.Title>
             </div>
             <div class="flex flex-row space-x-4 justify-center mb-4">
-              <Button
-                onclick={async () => {
-                  core.project.graphs.delete(props.graph.id);
-                  core.project.save();
-                }}
-              >
-                Delete
-              </Button>
+              <Button onClick={deleteGraph}>Delete</Button>
               <Dialog.CloseButton>
                 <Button>Cancel</Button>
               </Dialog.CloseButton>
