@@ -24,6 +24,7 @@ import { CommentBox } from "./CommentBox";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { SetStoreFunction, createStore } from "solid-js/store";
 import { useCoreContext } from "../../contexts";
+import { createElementBounds } from "@solid-primitives/bounds";
 
 type PanState =
   | { state: "none" }
@@ -34,12 +35,22 @@ interface Props {
   graph: GraphModel;
 }
 
-function createGraphState(model: GraphModel) {
+function createGraphState(
+  model: GraphModel,
+  ref: Accessor<HTMLDivElement | undefined>
+) {
+  const bounds = createElementBounds(ref);
+
   const [state, setState] = createStore({
     model,
+    bounds,
     offset: {
-      x: 0,
-      y: 0,
+      get x() {
+        return bounds.left;
+      },
+      get y() {
+        return bounds.top;
+      },
     } as XY,
     translate: {
       x: 0,
@@ -78,13 +89,13 @@ export const Graph = (props: Props) => {
 
   const UI = useUIStore();
 
-  let graphRef: HTMLDivElement;
+  const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
 
-  const [state, setState] = createGraphState(props.graph);
+  const [state, setState] = createGraphState(props.graph, ref);
   const pinPositions = new ReactiveWeakMap<Pin, XY>();
 
   function onResize() {
-    const bounds = graphRef.getBoundingClientRect()!;
+    const bounds = ref()!.getBoundingClientRect()!;
 
     setState({
       offset: {
@@ -122,15 +133,15 @@ export const Graph = (props: Props) => {
 
   onMount(() => {
     createEventListener(window, "resize", onResize);
-    createResizeObserver(graphRef, onResize);
+    createResizeObserver(ref, onResize);
 
-    createEventListener(graphRef, "gesturestart", () => {
+    createEventListener(ref, "gesturestart", () => {
       let lastScale = 1;
 
       createRoot((dispose) => {
-        createEventListener(graphRef, "gestureend", dispose);
+        createEventListener(ref, "gestureend", dispose);
 
-        createEventListener(graphRef, "gesturechange", (e: any) => {
+        createEventListener(ref, "gesturechange", (e: any) => {
           let scale = e.scale;
           let direction = 1;
 
@@ -167,10 +178,10 @@ export const Graph = (props: Props) => {
       <div
         onMouseDown={() => UI.setFocusedGraph(props.graph)}
         class="flex-1 relative h-full overflow-hidden bg-mg-graph"
+        ref={setRef}
       >
         <ConnectionRender />
         <div
-          ref={graphRef!}
           class={clsx(
             "absolute inset-0 text-white origin-top-left overflow-hidden w-[500%] h-[500%]",
             pan().state === "active" && "cursor-grabbing"
