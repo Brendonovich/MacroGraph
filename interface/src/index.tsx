@@ -19,12 +19,9 @@ export default (props: { core: Core }) => {
   const UI = createUIStore(props.core);
 
   const [rootRef, setRootRef] = createSignal<HTMLDivElement | undefined>();
+  const rootBounds = createElementBounds(rootRef);
 
-  const mouse = (() => {
-    const mouse = createMousePosition(window);
-
-    return createPositionToElement(rootRef, () => mouse);
-  })();
+  const mouse = createMousePosition(window);
 
   onMount(async () => {
     const savedProject = localStorage.getItem("project");
@@ -117,7 +114,10 @@ export default (props: { core: Core }) => {
             {(data) => (
               <SchemaMenu
                 graph={data().graph}
-                position={data().position}
+                position={{
+                  x: data().position.x - rootBounds.left ?? 0,
+                  y: data().position.y - rootBounds.top ?? 0,
+                }}
                 onSchemaClicked={(s) => {
                   data().graph.model.createNode({
                     schema: s,

@@ -212,20 +212,15 @@ export const Graph = (props: Props) => {
               case 2:
                 if (pan().state === "waiting") {
                   if (UI.state.mouseDragLocation) UI.setMouseDragLocation();
-                  else {
-                    const rootBounds = coreCtx
-                      .rootRef()
-                      ?.getBoundingClientRect()!;
-
+                  else
                     UI.state.schemaMenu = {
                       status: "open",
                       graph: state,
                       position: {
-                        x: e.clientX - rootBounds.left,
-                        y: e.clientY - rootBounds.top,
+                        x: e.clientX,
+                        y: e.clientY,
                       },
                     };
-                  }
                 }
 
                 setPan({ state: "none" });
