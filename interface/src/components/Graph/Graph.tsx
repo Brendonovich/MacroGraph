@@ -25,7 +25,6 @@ import { ReactiveWeakMap } from "@solid-primitives/map";
 import { SetStoreFunction, createStore } from "solid-js/store";
 import { useCoreContext } from "../../contexts";
 import { createElementBounds } from "@solid-primitives/bounds";
-import { GraphList } from "../ProjectSidebar";
 
 type PanState =
   | { state: "none" }
