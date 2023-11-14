@@ -23,7 +23,7 @@ import {
 import "./Node.css";
 import { NodeProvider } from "../../contexts";
 import { useUIStore } from "../../UIStore";
-import { useGraph } from "./Graph";
+import { useGraphContext } from "./Graph";
 import {
   DataInput,
   DataOutput,
@@ -47,7 +47,8 @@ const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
 export const Node = (props: Props) => {
   const node = () => props.node;
 
-  const graph = useGraph();
+  const graph = useGraphContext();
+
   const UI = useUIStore();
 
   const ACTIVE = NODE_EMIT.subscribe(node(), (data) => {
@@ -64,7 +65,7 @@ export const Node = (props: Props) => {
   onCleanup(ACTIVE);
 
   const handleMouseMove = (e: MouseEvent) => {
-    const scale = UI.state.scale;
+    const scale = graph.state.scale;
 
     node().setPosition({
       x: node().state.position.x + e.movementX / scale,
@@ -101,7 +102,7 @@ export const Node = (props: Props) => {
         ref={ref}
         class={clsx(
           "absolute top-0 left-0 text-[12px] overflow-hidden rounded-lg flex flex-col bg-black/75 border-black/75 border-2",
-          UI.state.selectedItem === node() && "ring-2 ring-yellow-500"
+          graph.state.selectedItem === node() && "ring-2 ring-yellow-500"
         )}
         style={{
           transform: `translate(${node().state.position.x}px, ${
@@ -132,7 +133,7 @@ export const Node = (props: Props) => {
                   switch (e.key) {
                     case "Backspace":
                     case "Delete": {
-                      graph().deleteItem(node());
+                      graph.model().deleteItem(node());
                       break;
                     }
                   }
@@ -143,7 +144,9 @@ export const Node = (props: Props) => {
                   e.preventDefault();
                   switch (e.button) {
                     case 0: {
-                      UI.setSelectedItem(node());
+                      graph.setState({
+                        selectedItem: node(),
+                      });
 
                       window.addEventListener("mousemove", handleMouseMove);
                       const listener = () => {

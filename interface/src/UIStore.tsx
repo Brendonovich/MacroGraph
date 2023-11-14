@@ -1,5 +1,4 @@
 import {
-  Position,
   XY,
   Graph,
   Node,
@@ -18,104 +17,64 @@ import { createMutable } from "solid-js/store";
 import {
   createContext,
   createEffect,
-  onMount,
+  onCleanup,
   ParentProps,
   useContext,
 } from "solid-js";
-import { ReactiveWeakMap } from "@solid-primitives/map";
 import { z } from "zod";
+import { ReactiveMap } from "@solid-primitives/map";
+import { ReactiveSet } from "@solid-primitives/set";
+import { createMousePosition } from "@solid-primitives/mouse";
+
+import { GraphState, toGraphSpace } from "./components/Graph";
+
+type SchemaMenuState =
+  | { status: "closed" }
+  | { status: "open"; position: XY; graph: GraphState };
 
 export function createUIStore(core: Core) {
   const state = createMutable({
-    selectedItem: null as Node | CommentBox | null,
     draggingPin: null as Pin | null,
     hoveringPin: null as Pin | null,
-    mousePos: null as XY | null,
     mouseDragLocation: null as XY | null,
-    /**
-     *	Screen space relative to graph origin
-     */
-    schemaMenuPosition: null as Position | null,
-    mouseDownLocation: null as XY | null,
     mouseDownTranslate: null as XY | null,
 
-    currentGraph: null as Graph | null,
+    focusedGraph: null as Graph | null,
+    graphStates: new ReactiveMap<Graph, GraphState>(),
+
+    hoveredGraph: null as Graph | null,
+
+    schemaMenu: {
+      status: "closed",
+    } as SchemaMenuState,
+
     nodeBounds: new WeakMap<Node, { width: number; height: number }>(),
-
-    graphOffset: {
-      x: 0,
-      y: 0,
-    } as XY,
-    translate: {
-      x: 0,
-      y: 0,
-    } as XY,
-    scale: 1,
-
-    pinPositions: new ReactiveWeakMap<Pin, XY>(),
-  });
-
-  onMount(() => {
-    const handler = (e: MouseEvent) => {
-      state.mousePos = {
-        x: e.clientX,
-        y: e.clientY,
-      };
-    };
-
-    window.addEventListener("mousemove", handler);
-
-    return () => window.removeEventListener("mousemove", handler);
   });
 
   createEffect(() => {
-    if (!state.currentGraph) return;
+    if (!state.focusedGraph) return;
 
-    const project = state.currentGraph?.project;
+    const project = state.focusedGraph.project;
     if (!project) return;
 
-    if (project.graphs.size === 0) state.currentGraph = null;
+    if (project.graphs.size === 0) state.focusedGraph = null;
   });
+
+  const mouse = createMousePosition(window);
 
   return {
     state,
-    toGraphSpace(relativeScreenSpace: XY) {
-      return {
-        x: relativeScreenSpace.x / state.scale + state.translate.x,
-        y: relativeScreenSpace.y / state.scale + state.translate.y,
-      };
-    },
-    // Converts a location in the graph (eg the graph's origin (0,0)) to its location on screen relative to the graph origin
-    toScreenSpace(point: XY) {
-      return {
-        x: (point.x - state.translate.x) * state.scale,
-        y: (point.y - state.translate.y) * state.scale,
-      };
-    },
-    setSelectedItem(item?: Node | CommentBox) {
-      state.selectedItem = item ?? null;
-    },
-    setPinPosition(pin: Pin, position: XY) {
-      state.pinPositions.set(pin, position);
-    },
-    updateTranslate(delta: XY) {
-      state.translate.x += delta.x;
-      state.translate.y += delta.y;
-    },
-    setTranslate(translate: XY) {
-      state.translate = translate;
-    },
-    updateScale(delta: number, screenOrigin: XY) {
-      const startGraphOrigin = this.toGraphSpace(screenOrigin);
-      state.scale = Math.min(Math.max(0.2, state.scale + delta / 20), 2.5);
-      const endGraphOrigin = this.toScreenSpace(startGraphOrigin);
+    get focusedGraphState() {
+      if (!state.focusedGraph) return null;
 
-      state.translate = {
-        x:
-          state.translate.x + (endGraphOrigin.x - screenOrigin.x) / state.scale,
-        y:
-          state.translate.y + (endGraphOrigin.y - screenOrigin.y) / state.scale,
-      };
+      return state.graphStates.get(state.focusedGraph) ?? null;
+    },
+    registerGraphState(graph: Graph, graphState: GraphState) {
+      state.graphStates.set(graph, graphState);
+
+      onCleanup(() => {
+        state.graphStates.delete(graph);
+      });
     },
     setDraggingPin(pin?: Pin) {
       state.draggingPin = pin ?? null;
@@ -126,31 +85,14 @@ export function createUIStore(core: Core) {
     setMouseDragLocation(location?: XY) {
       state.mouseDragLocation = location ?? null;
     },
-    setMouseDownLocation(location?: XY) {
-      state.mouseDownLocation = location ?? null;
-    },
-    setSchemaMenuPosition(screenSpace?: XY) {
-      if (!screenSpace) state.schemaMenuPosition = null;
-      else
-        state.schemaMenuPosition = {
-          x: screenSpace.x - state.graphOffset.x,
-          y: screenSpace.y - state.graphOffset.y,
-        };
-    },
     setMouseDownTranslate(translate?: XY) {
       state.mouseDownTranslate = translate ?? null;
     },
-    setGraphOffset(offset: XY) {
-      state.graphOffset = offset;
-    },
-    setCurrentGraph(graph: Graph) {
-      this.setSchemaMenuPosition();
-      this.setTranslate({ x: 0, y: 0 });
-      state.currentGraph = graph;
+    setFocusedGraph(graph: Graph) {
+      state.focusedGraph = graph;
     },
     copyItem(item: Node | CommentBox | Graph | Project) {
       let data: z.infer<typeof CopyItem>;
-
       if (item instanceof Node)
         data = {
           type: "node",
@@ -161,9 +103,7 @@ export function createUIStore(core: Core) {
           item.graph.nodes.values(),
           (node) => state.nodeBounds.get(node) ?? null
         );
-
         const connections = serializeConnections(nodes.values());
-
         data = {
           type: "commentBox",
           commentBox: item.serialize(),
@@ -182,64 +122,54 @@ export function createUIStore(core: Core) {
         };
       // impossible
       else return;
-
       const string = JSON.stringify(data);
-
       navigator.clipboard.writeText(btoa(string));
     },
     async pasteClipboard() {
       const text = await navigator.clipboard.readText();
-
       const json = JSON.parse(atob(text));
-
       const item = CopyItem.parse(json);
-
       switch (item.type) {
         case "node": {
-          if (!state.currentGraph) return;
+          if (!state.focusedGraph) return;
 
-          if (!state.mousePos) throw new Error("Mouse position not set");
+          const graphState = state.graphStates.get(state.focusedGraph);
+          if (!graphState) throw new Error("Graph state not found!");
 
-          item.node.id = state.currentGraph.generateNodeId();
-
-          const node = Node.deserialize(state.currentGraph, {
+          item.node.id = state.focusedGraph.generateNodeId();
+          const node = Node.deserialize(state.focusedGraph, {
             ...item.node,
-            position: this.toGraphSpace({
-              x: state.mousePos.x - 10 - state.graphOffset.x,
-              y: state.mousePos.y - 10 - state.graphOffset.y,
-            }),
+            position: toGraphSpace(
+              { x: mouse.x - 10, y: mouse.y - 10 },
+              graphState
+            ),
           });
-
           if (!node) throw new Error("Failed to deserialize node");
-
-          state.currentGraph.nodes.set(item.node.id, node);
-
+          state.focusedGraph.nodes.set(item.node.id, node);
           break;
         }
         case "commentBox": {
-          if (!state.currentGraph) return;
+          if (!state.focusedGraph) return;
 
-          if (!state.mousePos) throw new Error("Mouse position not set");
+          const graphState = state.graphStates.get(state.focusedGraph);
+          if (!graphState) return;
 
-          const commentBox = CommentBox.deserialize(state.currentGraph, {
+          const commentBox = CommentBox.deserialize(state.focusedGraph, {
             ...item.commentBox,
-            position: this.toGraphSpace({
-              x: state.mousePos.x - 10 - state.graphOffset.x,
-              y: state.mousePos.y - 10 - state.graphOffset.y,
-            }),
+            position: toGraphSpace(
+              { x: mouse.x - 10, y: mouse.y - 10 },
+              graphState
+            ),
           });
-
           if (!commentBox) throw new Error("Failed to deserialize comment box");
-          state.currentGraph.commentBoxes.add(commentBox);
+          state.focusedGraph.commentBoxes.add(commentBox);
 
           const nodeIdMap = new Map<number, number>();
-
           for (const nodeJson of item.nodes) {
-            const id = state.currentGraph.generateNodeId();
+            const id = state.focusedGraph.generateNodeId();
             nodeIdMap.set(nodeJson.id, id);
             nodeJson.id = id;
-
-            const node = Node.deserialize(state.currentGraph, {
+            const node = Node.deserialize(state.focusedGraph, {
               ...nodeJson,
               position: {
                 x:
@@ -252,36 +182,25 @@ export function createUIStore(core: Core) {
                   item.commentBox.position.y,
               },
             });
-
             if (!node) throw new Error("Failed to deserialize node");
-
-            state.currentGraph.nodes.set(node.id, node);
+            state.focusedGraph.nodes.set(node.id, node);
           }
-
-          state.currentGraph.deserializeConnections(item.connections, {
+          state.focusedGraph.deserializeConnections(item.connections, {
             nodeIdMap,
           });
-
           break;
         }
         case "graph": {
           item.graph.id = core.project.generateGraphId();
-
           const graph = await Graph.deserialize(core.project, item.graph);
-
           if (!graph) throw new Error("Failed to deserialize graph");
-
           core.project.graphs.set(graph.id, graph);
-
           break;
         }
         case "project": {
           const project = await Project.deserialize(core, item.project);
-
           if (!project) throw new Error("Failed to deserialize project");
-
           core.project = project;
-
           break;
         }
       }

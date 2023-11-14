@@ -10,11 +10,12 @@ import clsx from "clsx";
 import { createMemo, For, Match, Show, Switch } from "solid-js";
 
 import { useUIStore } from "../../../UIStore";
-import { useGraph } from "../Graph";
+import { useGraphContext } from "../Graph";
 import { colour } from "../util";
 
 export const ConnectionRender = () => {
-  const graph = useGraph();
+  const { pinPositions, ...graph } = useGraphContext();
+
   const UI = useUIStore();
 
   const dragState = () => {
@@ -27,13 +28,13 @@ export const ConnectionRender = () => {
     return null;
   };
 
-  const graphOffset = () => UI.state.graphOffset;
-  const scale = () => UI.state.scale;
+  const graphOffset = () => graph.state.offset;
+  const scale = () => graph.state.scale;
 
   return (
     <svg class="w-full h-full transform">
       <g>
-        <For each={[...graph().nodes.values()]}>
+        <For each={[...graph.model().nodes.values()]}>
           {(n) => (
             <For each={n.state.inputs}>
               {(i) => {
@@ -44,10 +45,8 @@ export const ConnectionRender = () => {
                       : i.connection.map((c) => [c]).unwrapOr([]);
 
                   return connections.map((conn) => {
-                    const inputPosition = Maybe(UI.state.pinPositions.get(i));
-                    const outputPosition = Maybe(
-                      UI.state.pinPositions.get(conn)
-                    );
+                    const inputPosition = Maybe(pinPositions.get(i));
+                    const outputPosition = Maybe(pinPositions.get(conn));
 
                     return inputPosition
                       .zip(outputPosition)
@@ -66,10 +65,10 @@ export const ConnectionRender = () => {
                           <Switch
                             fallback={
                               <line
-                                x1={positions().input.x - graphOffset().x}
-                                y1={positions().input.y - graphOffset().y}
-                                x2={positions().output.x - graphOffset().x}
-                                y2={positions().output.y - graphOffset().y}
+                                x1={positions().input.x}
+                                y1={positions().input.y}
+                                x2={positions().output.x}
+                                y2={positions().output.y}
                                 stroke={"white"}
                                 stroke-opacity={0.75}
                                 stroke-width={2 * scale()}
@@ -83,10 +82,10 @@ export const ConnectionRender = () => {
                                     "stroke-mg-current",
                                     colour(input().type)
                                   )}
-                                  x1={positions().input.x - graphOffset().x}
-                                  y1={positions().input.y - graphOffset().y}
-                                  x2={positions().output.x - graphOffset().x}
-                                  y2={positions().output.y - graphOffset().y}
+                                  x1={positions().input.x}
+                                  y1={positions().input.y}
+                                  x2={positions().output.x}
+                                  y2={positions().output.y}
                                   stroke-opacity={0.75}
                                   stroke-width={2 * scale()}
                                 />
@@ -104,7 +103,7 @@ export const ConnectionRender = () => {
         </For>
         <Show when={dragState()}>
           {(state) => {
-            const pinPos = () => UI.state.pinPositions.get(state().draggingPin);
+            const pinPos = () => pinPositions.get(state().draggingPin);
 
             const diffs = () => ({
               x: state().mouseDragLocation.x - graphOffset().x,
@@ -130,8 +129,8 @@ export const ConnectionRender = () => {
                 {(pos) => (
                   <line
                     class={clsx("stroke-mg-current", colourClass())}
-                    x1={pos().x - graphOffset().x}
-                    y1={pos().y - graphOffset().y}
+                    x1={pos().x}
+                    y1={pos().y}
                     x2={diffs().x}
                     y2={diffs().y}
                     stroke-opacity={0.75}

@@ -18,42 +18,40 @@ export const GraphList = (props: Props) => {
 
   return (
     <SidebarSection
-      title={
-        <>
-          Graphs
-          <div class="flex flex-row items-center text-xl font-bold">
-            <button
-              class="px-1"
-              onClick={async () => {
-                UI.pasteClipboard();
-              }}
-            >
-              <CgImport />
-            </button>
-            <button
-              class="px-1"
-              onClick={() => {
-                const graph = core.project.createGraph();
-                UI.setCurrentGraph(graph);
-              }}
-            >
-              +
-            </button>
-          </div>
-        </>
+      title="Graphs"
+      right={
+        <div class="flex flex-row items-center text-xl font-bold">
+          <button
+            class="px-1"
+            onClick={async (e) => {
+              e.stopPropagation();
+              UI.pasteClipboard();
+            }}
+          >
+            <CgImport />
+          </button>
+          <button
+            class="px-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              const graph = core.project.createGraph();
+              UI.setFocusedGraph(graph);
+            }}
+          >
+            +
+          </button>
+        </div>
       }
     >
-      <div class="overflow-y-auto">
-        <For each={[...core.project.graphs.values()]}>
-          {(graph) => (
-            <GraphItem
-              graph={graph}
-              onClick={() => props.onChange(graph)}
-              isCurrentGraph={graph === UI.state.currentGraph}
-            />
-          )}
-        </For>
-      </div>
+      <For each={[...core.project.graphs.values()]}>
+        {(graph) => (
+          <GraphItem
+            graph={graph}
+            onClick={() => props.onChange(graph)}
+            isCurrentGraph={graph === UI.state.focusedGraph}
+          />
+        )}
+      </For>
     </SidebarSection>
   );
 };

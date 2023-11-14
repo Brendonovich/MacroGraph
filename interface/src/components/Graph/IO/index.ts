@@ -15,9 +15,11 @@ import {
   onCleanup,
 } from "solid-js";
 import { useUIStore } from "../../../UIStore";
-import { useGraph } from "../Graph";
+import { useGraphContext } from "../Graph";
 
 export const usePin = (pin: Pin) => {
+  const graph = useGraphContext();
+
   const [getRef, ref] = createSignal<HTMLDivElement>(null!);
 
   const UI = useUIStore();
@@ -26,8 +28,6 @@ export const usePin = (pin: Pin) => {
     hovering: UI.state.hoveringPin === pin,
     dragging: UI.state.draggingPin === pin,
   }));
-
-  const graph = useGraph();
 
   const handleMouseDrag = (e: MouseEvent) => {
     UI.setDraggingPin(pin);
@@ -80,9 +80,9 @@ export const usePin = (pin: Pin) => {
           if (!draggingPin || draggingPin === pin) return;
 
           if (pinIsOutput(pin) && pinIsInput(draggingPin))
-            graph().connectPins(pin, draggingPin);
+            graph.model().connectPins(pin, draggingPin);
           else if (pinIsInput(pin) && pinIsOutput(draggingPin))
-            graph().connectPins(draggingPin, pin);
+            graph.model().connectPins(draggingPin, pin);
 
           UI.setDraggingPin();
         });
@@ -92,7 +92,7 @@ export const usePin = (pin: Pin) => {
         window.addEventListener("mousemove", handleMouseDrag);
       },
       dblclick: () => {
-        graph().disconnectPin(pin);
+        graph.model().disconnectPin(pin);
       },
     };
 
@@ -108,9 +108,9 @@ export const usePin = (pin: Pin) => {
   });
 
   createEffect(() => {
-    UI.state.translate.x;
-    UI.state.translate.y;
-    UI.state.scale;
+    graph.state.translate.x;
+    graph.state.translate.y;
+    graph.state.scale;
 
     pin.node.state.position.x;
     pin.node.state.position.y;
@@ -118,9 +118,9 @@ export const usePin = (pin: Pin) => {
     let rect = getRef().getBoundingClientRect();
 
     if (rect)
-      UI.setPinPosition(pin, {
-        x: rect.x + rect.width / 2,
-        y: rect.y + rect.height / 2,
+      graph.pinPositions.set(pin, {
+        x: rect.x + rect.width / 2 - graph.state.offset.x,
+        y: rect.y + rect.height / 2 - graph.state.offset.y,
       });
   });
 

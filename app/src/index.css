@@ -12,3 +12,24 @@ body {
     height: 100%;
     overflow: auto;
 }
+
+/* Works on Firefox */
+* {
+scrollbar-width: thin;
+scrollbar-color: rgb(229, 231, 235) rgb(38, 38, 38);
+}
+  
+  /* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+width: 12px;
+}
+  
+*::-webkit-scrollbar-track {
+background: rgb(38, 38, 38);
+}
+  
+*::-webkit-scrollbar-thumb {
+background-color: rgb(229, 231, 235);
+border-radius: 20px;
+border: 2px solid rgb(38, 38, 38);
+}

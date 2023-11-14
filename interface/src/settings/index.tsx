@@ -29,11 +29,11 @@ export default () => {
   return (
     <div class="flex flex-row p-1 gap-1 text-white">
       <OpenSettingsDialog>
-        <IconContainer>
+        <IconContainer title="Settings">
           <TbSettings class="w-full h-full" />
         </IconContainer>
       </OpenSettingsDialog>
-      <button onClick={() => UI.copyItem(core.project)}>
+      <button title="Copy Project" onClick={() => UI.copyItem(core.project)}>
         <IconContainer>
           <TbClipboard class="w-full h-full" />
         </IconContainer>
