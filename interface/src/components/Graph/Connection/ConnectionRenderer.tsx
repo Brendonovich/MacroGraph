@@ -110,8 +110,8 @@ export const ConnectionRender = () => {
   return (
     <canvas
       ref={canvasRef!}
-      width={graph.state.bounds.width}
-      height={graph.state.bounds.height}
+      width={graph.state.bounds.width ?? undefined}
+      height={graph.state.bounds.height ?? undefined}
     />
   );
 };
