@@ -5,6 +5,7 @@ import {
   Maybe,
   ScopeInput,
   ScopeOutput,
+  XY,
 } from "@macrograph/core";
 import clsx from "clsx";
 import { createEffect, createMemo, For, Match, Show, Switch } from "solid-js";
@@ -18,7 +19,7 @@ export const ConnectionRender = () => {
 
   const UI = useUIStore();
 
-  const dragState = () => {
+  const getDragState = () => {
     if (UI.state.mouseDragLocation && UI.state.draggingPin) {
       return {
         mouseDragLocation: UI.state.mouseDragLocation,
@@ -28,57 +29,69 @@ export const ConnectionRender = () => {
     return null;
   };
 
-  const graphOffset = () => graph.state.offset;
-  const scale = () => graph.state.scale;
-
   let canvasRef: HTMLCanvasElement;
 
   createEffect(() => {
     const ctx = canvasRef.getContext("2d");
     if (!ctx) return;
+
+    function drawConnection(
+      ctx: CanvasRenderingContext2D,
+      from: XY,
+      to: XY,
+      colour: string
+    ) {
+      ctx.lineWidth = 2 * graph.state.scale;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.strokeStyle = colour;
+      ctx.stroke();
+    }
+
     ctx.clearRect(0, 0, 2560, 1440);
     ctx.globalAlpha = 0.75;
+
     for (const node of graph.model().nodes.values()) {
-      node.state.inputs.forEach((i) => {
-        const connectionData = () => {
-          const connections =
-            i instanceof ExecInput
-              ? [...i.connections]
-              : i.connection.map((c) => [c]).unwrapOr([]);
+      for (const input of node.state.inputs) {
+        const connections =
+          input instanceof ExecInput
+            ? [...input.connections]
+            : input.connection.map((c) => [c]).unwrapOr([]);
 
-          return connections.map((conn) => {
-            const inputPosition = Maybe(pinPositions.get(i));
-            const outputPosition = Maybe(pinPositions.get(conn));
+        for (const conn of connections) {
+          const inputPosition = Maybe(pinPositions.get(input));
+          const outputPosition = Maybe(pinPositions.get(conn));
 
-            return inputPosition.zip(outputPosition).map(([input, output]) => ({
+          inputPosition
+            .zip(outputPosition)
+            .map(([input, output]) => ({
               input,
               output,
-            }));
-          });
-        };
-        connectionData().forEach((data) => {
-          data.peek((positions) => {
-            ctx.lineWidth = 2 * scale();
-            ctx.beginPath();
-            ctx.moveTo(positions.input.x, positions.input.y);
-            ctx.lineTo(positions.output.x, positions.output.y);
-            ctx.strokeStyle = i instanceof DataInput ? colour(i.type) : "white";
-            ctx.stroke();
-          });
-        });
-      });
+            }))
+            .peek((data) => {
+              drawConnection(
+                ctx,
+                data.input,
+                data.output,
+                input instanceof DataInput ? colour(input.type) : "white"
+              );
+            });
+        }
+      }
     }
-    const state = dragState();
-    if (state) {
-      const pinPos = () => pinPositions.get(state.draggingPin);
 
-      const diffs = () => ({
-        x: state.mouseDragLocation.x - graphOffset().x,
-        y: state.mouseDragLocation.y - graphOffset().y,
-      });
+    const dragState = getDragState();
+    if (dragState) {
+      const pinPos = pinPositions.get(dragState.draggingPin);
 
-      const colourClass = createMemo(() => {
-        const draggingPin = state.draggingPin;
+      const diffs = {
+        x: dragState.mouseDragLocation.x - graph.state.offset.x,
+        y: dragState.mouseDragLocation.y - graph.state.offset.y,
+      };
+
+      const colourClass = (() => {
+        const draggingPin = dragState.draggingPin;
 
         if (
           draggingPin instanceof ExecInput ||
@@ -89,16 +102,9 @@ export const ConnectionRender = () => {
           return "white";
 
         return colour(draggingPin.type);
-      });
-      let pos = pinPos();
-      if (pos) {
-        ctx.lineWidth = 2 * scale();
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(diffs().x, diffs().y);
-        ctx.strokeStyle = colourClass();
-        ctx.stroke();
-      }
+      })();
+
+      if (pinPos) drawConnection(ctx, pinPos, diffs, colourClass);
     }
   });
 
