@@ -7,8 +7,7 @@ import {
   ScopeOutput,
   XY,
 } from "@macrograph/core";
-import clsx from "clsx";
-import { createEffect, createMemo, For, Match, Show, Switch } from "solid-js";
+import { createEffect } from "solid-js";
 
 import { useUIStore } from "../../../UIStore";
 import { useGraphContext } from "../Graph";
@@ -108,5 +107,11 @@ export const ConnectionRender = () => {
     }
   });
 
-  return <canvas ref={canvasRef!} width="2560" height="1440" />;
+  return (
+    <canvas
+      ref={canvasRef!}
+      width={graph.state.bounds.width}
+      height={graph.state.bounds.height}
+    />
+  );
 };
