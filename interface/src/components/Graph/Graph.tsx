@@ -4,7 +4,6 @@ import {
   createContext,
   useContext,
   createRoot,
-  onCleanup,
   createEffect,
 } from "solid-js";
 import {
@@ -14,11 +13,9 @@ import {
   Node as NodeModel,
   CommentBox as CommentBoxModel,
 } from "@macrograph/core";
-import { createSignal, For, onMount, Show } from "solid-js";
+import { createSignal, For, onMount } from "solid-js";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import { createEventListener } from "@solid-primitives/event-listener";
-import { createMousePosition } from "@solid-primitives/mouse";
-import { createElementBounds } from "@solid-primitives/bounds";
 
 import { Node } from "./Node";
 import { ConnectionRender } from "../Graph";
@@ -207,7 +204,7 @@ export const Graph = (props: Props) => {
                 },
               });
           }}
-          onContextMenu={(e) => {
+          onMouseUp={(e) => {
             switch (e.button) {
               case 2:
                 if (pan().state === "waiting") {
