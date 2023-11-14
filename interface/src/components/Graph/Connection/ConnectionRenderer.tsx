@@ -37,7 +37,8 @@ export const ConnectionRender = () => {
     const ctx = canvasRef.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, 2560, 1440);
-    [...graph.model().nodes.values()].forEach((node) => {
+    ctx.globalAlpha = 0.75;
+    for (const node of graph.model().nodes.values()) {
       node.state.inputs.forEach((i) => {
         const connectionData = () => {
           const connections =
@@ -66,7 +67,7 @@ export const ConnectionRender = () => {
           });
         });
       });
-    });
+    }
     const state = dragState();
     if (state) {
       const pinPos = () => pinPositions.get(state.draggingPin);
