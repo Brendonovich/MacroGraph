@@ -63,6 +63,7 @@ export default () => {
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
       pkgs.chatgpt.pkg,
+      pkgs.speakerbot.pkg,
     ].map((p) => core.registerPackage(p));
   });
 

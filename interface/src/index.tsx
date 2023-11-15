@@ -78,8 +78,6 @@ export default (props: { core: Core }) => {
         return;
       }
     }
-
-    e.preventDefault();
   });
 
   return (

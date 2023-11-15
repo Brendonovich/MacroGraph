@@ -21,3 +21,5 @@ export * as utils from "./utils";
 export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
 export * as chatgpt from "./chatgpt";
+export * as speakerbot from "./speakerbot";
+

@@ -30,7 +30,7 @@ export function pkg() {
     },
     run({ ctx, io }) {
       let ws = sockets.websockets.get(ctx.getInput(io.ip));
-      ws?.send(ctx.getInput(io.data));
+      ws?.socket.send(ctx.getInput(io.data));
     },
   });
 
