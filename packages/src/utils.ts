@@ -884,6 +884,45 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Date Now (ms)",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        time: io.dataOutput({
+          id: "time",
+          name: "Time (ms)",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(io.time, Date.now());
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Date Parse",
+    variant: "Pure",
+    generateIO(io) {
+      return {
+        timeIn: io.dataInput({
+          id: "timeIn",
+          name: "Time",
+          type: t.string(),
+        }),
+        timeOut: io.dataOutput({
+          id: "timeOut",
+          name: "Time (ms)",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(io.timeOut, Date.parse(ctx.getInput(io.timeIn)));
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Round Float",
     variant: "Pure",
     generateIO(io) {
