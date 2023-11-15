@@ -20,3 +20,4 @@ export * as twitch from "./twitch";
 export * as utils from "./utils";
 export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
+export * as speakerbot from "./speakerbot";

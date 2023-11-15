@@ -84,6 +84,7 @@ export default function () {
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
       pkgs.websocket.pkg,
+      pkgs.speakerbot.pkg,
       () => pkgs.websocketServer.pkg(wsProvider),
     ].map((p) => core.registerPackage(p));
   });
