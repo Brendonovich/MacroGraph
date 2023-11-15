@@ -21,6 +21,7 @@ export function createCtx() {
         key.map((key) => {
           let api = new OpenAI({
             apiKey: key,
+            dangerouslyAllowBrowser: true,
           });
           setState(Some(api));
         });
