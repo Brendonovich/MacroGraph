@@ -83,6 +83,7 @@ export default function () {
       pkgs.streamlabs.pkg,
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
+      pkgs.chatgpt.pkg,
       pkgs.websocket.pkg,
       pkgs.speakerbot.pkg,
       () => pkgs.websocketServer.pkg(wsProvider),
