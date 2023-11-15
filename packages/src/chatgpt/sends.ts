@@ -1,6 +1,7 @@
 import { createEnum, createStruct, t } from "@macrograph/core";
 import { Pkg } from ".";
 import { Ctx } from "./ctx";
+import { JSON, jsToJSON } from "../json";
 
 type Message = {
   role: string;
@@ -51,7 +52,7 @@ export function register(pkg: Pkg, state: Ctx) {
         historyIn: io.dataInput({
           id: "historyIn",
           name: "Chat History",
-          type: t.option(t.list(t.struct(choices))),
+          type: t.option(t.list(t.enum(JSON))),
         }),
         stream: io.scopeOutput({
           id: "stream",
@@ -73,11 +74,6 @@ export function register(pkg: Pkg, state: Ctx) {
               name: "Response",
               type: t.string(),
             });
-            // s.output({
-            //   id: "historyOut",
-            //   name: "Chat History",
-            //   type: t.list(t.struct(choices)),
-            // })
           },
         }),
       };
@@ -96,6 +92,8 @@ export function register(pkg: Pkg, state: Ctx) {
       for await (const chunk of stream) {
         console.log(chunk);
         if (chunk.choices[0]?.finish_reason === "stop") {
+          let array = [];
+
           ctx.execScope(io.complete, { response: message });
           return;
         }
