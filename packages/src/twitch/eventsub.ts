@@ -1635,6 +1635,33 @@ export function register(pkg: Package) {
   });
 
   pkg.createEventSchema({
+    name: "Ad Break Begin",
+    event: "channel.ad_break.begin",
+    generateIO: (io) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        length: io.dataOutput({
+          id: "length",
+          name: "Lenght (seconds)",
+          type: t.int(),
+        }),
+        isAutomatic: io.dataOutput({
+          id: "isAutomatic",
+          name: "Automatic",
+          type: t.bool(),
+        }),
+      };
+    },
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.length, Number(data.length_seconds));
+      ctx.setOutput(io.isAutomatic, data.is_automatic === "true");
+      ctx.exec(io.exec);
+    },
+  });
+
+  pkg.createEventSchema({
     name: "User Followed",
     event: "channel.follow",
     generateIO: (io) => {
@@ -1944,6 +1971,7 @@ const SubTypes = [
   "channel.shield_mode.end",
   "channel.shoutout.create",
   "channel.shoutout.receive",
+  "channel.ad_break.begin",
   "stream.online",
   "stream.offline",
 ];
