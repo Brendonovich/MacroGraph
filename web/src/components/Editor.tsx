@@ -62,6 +62,7 @@ export default () => {
       pkgs.spotify.pkg,
       pkgs.twitch.pkg,
       pkgs.utils.pkg,
+      pkgs.speakerbot.pkg,
     ].map((p) => core.registerPackage(p));
   });
 
