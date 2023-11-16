@@ -47,9 +47,32 @@ export function pkg(args: { prepareURL(url: string): string }) {
         mysound.play();
         sounds.set(id, mysound);
         mysound.onended = () => {
+          pkg.emitEvent({ name: "AudioStopped", data: { id } });
           sounds.delete(id);
         };
       }
+    },
+  });
+
+  pkg.createEventSchema({
+    event: "AudioStopped",
+    name: "Audio Stopped Playing",
+    generateIO: (io) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+          name: "",
+        }),
+        id: io.dataOutput({
+          id: "id",
+          name: "ID",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.id, data.id);
+      ctx.exec(io.exec);
     },
   });
 
@@ -70,6 +93,7 @@ export function pkg(args: { prepareURL(url: string): string }) {
       if (sounds.has(id)) {
         let playing = sounds.get(ctx.getInput(io.id));
         playing!.pause();
+        pkg.emitEvent({ name: "AudioStopped", data: { id } });
       }
     },
   });
