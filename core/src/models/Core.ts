@@ -194,8 +194,6 @@ class ExecutionContext {
 
     NODE_EMIT.emit(node);
 
-    console.trace(node);
-
     // calculate previous outputs
     node.state.inputs.forEach((i) => {
       if (!(i instanceof DataInput)) return;
