@@ -57,6 +57,7 @@ const SCOPES = [
   "channel:read:subscriptions",
   "channel:read:vips",
   "channel:read:ads",
+  "channel.ad_break.begin",
   "chat:edit",
   "chat:read",
   "clips:edit",
