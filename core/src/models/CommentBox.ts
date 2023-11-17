@@ -5,7 +5,7 @@ import { Node } from "./Node";
 import { Graph } from "./Graph";
 
 export const SerializedCommentBox = z.object({
-  id: z.number(),
+  id: z.number().optional(),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -85,7 +85,7 @@ export class CommentBox {
   ): CommentBox | null {
     return new CommentBox({
       graph,
-      id: data.id,
+      id: data.id ?? graph.generateId(),
       position: data.position,
       size: data.size,
       text: data.text,
