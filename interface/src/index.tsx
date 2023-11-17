@@ -20,6 +20,8 @@ import { createElementBounds } from "@solid-primitives/bounds";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import { HiSolidXMark } from "solid-icons/hi";
+import { FaSolidX } from "solid-icons/fa";
+import "@total-typescript/ts-reset";
 
 import { CoreProvider } from "./contexts";
 import {
@@ -37,7 +39,7 @@ import { GraphList } from "./components/ProjectSidebar";
 import { PrintOutput } from "./components/PrintOutput";
 import { GraphSidebar, NodeSidebar } from "./Sidebars";
 import clsx from "clsx";
-import { FaSolidX } from "solid-icons/fa";
+import { mapArray } from "solid-js";
 
 export { useCore } from "./contexts";
 
@@ -86,13 +88,28 @@ export function Interface(props: {
     };
   });
 
+  // reduces the current graph index if the current graph
+  // is the end graph and it gets deleted
+  createEffect(() => {
+    if (currentGraph()) return;
+    setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
+  });
+
+  // removes graph states if graphs are deleted
+  createEffect(() => {
+    for (const state of graphStates) {
+      const graph = props.core.project.graphs.get(state.id);
+      if (!graph) setGraphStates(graphStates.filter((s) => s.id !== state.id));
+    }
+  });
+
   onMount(async () => {
     const savedProject = localStorage.getItem("project");
     if (savedProject)
       await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
 
-    const firstGraph = props.core.project.graphs.values().next();
-    if (firstGraph.value) setGraphStates([createGraphState(firstGraph.value)]);
+    const firstGraph = props.core.project.graphs.values().next().value;
+    if (firstGraph) setGraphStates([createGraphState(firstGraph)]);
   });
 
   createEventListener(window, "keydown", (e) => {
@@ -218,65 +235,48 @@ export function Interface(props: {
           </Show>
 
           <div class="flex-1 flex divide-y divide-black flex-col h-full justify-center items-center text-white">
-            <Show when={graphStates.length > 0} fallback="No graph selected">
-              <div class="h-8 w-full flex flex-row divide-x divide-black">
-                <For each={graphStates}>
-                  {(state, index) => {
-                    const graph = createMemo(() => {
-                      return props.core.project.graphs.get(state.id);
-                    });
+            <Show when={currentGraph()} fallback="No graph selected">
+              {(graph) => (
+                <>
+                  <div class="h-8 w-full flex flex-row divide-x divide-black">
+                    <For
+                      each={graphStates
+                        .map((state) => {
+                          const graph = props.core.project.graphs.get(state.id);
+                          if (!graph) return;
 
-                    createEffect(() => {
-                      if (!graph())
-                        setGraphStates(
-                          produce((s) => {
-                            s.splice(index(), 1);
-                          })
-                        );
-                    });
+                          return [state, graph] as const;
+                        })
+                        .filter(Boolean)}
+                    >
+                      {([_state, graph], index) => (
+                        <button
+                          class={clsx(
+                            "p-2 flex flex-row items-center relative group",
+                            currentGraphIndex() === index() && "bg-white/20"
+                          )}
+                          onClick={() => setCurrentGraphIndex(index)}
+                        >
+                          {graph.name}
+                          <HiSolidXMark
+                            class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
+                            size={20}
+                            stroke-width={1}
+                            onClick={(e) => {
+                              e.stopPropagation();
 
-                    return (
-                      <Show when={graph()}>
-                        {(graph) => (
-                          <button
-                            class={clsx(
-                              "p-2 flex flex-row items-center relative group",
-                              currentGraphIndex() === index() && "bg-white/20"
-                            )}
-                            onClick={() => setCurrentGraphIndex(index)}
-                          >
-                            {graph().name}
-                            <HiSolidXMark
-                              class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
-                              size={20}
-                              stroke-width={1}
-                              onClick={(e) => {
-                                e.stopPropagation();
-
-                                setGraphStates(
-                                  produce((states) => {
-                                    states.splice(index(), 1);
-                                    return states;
-                                  })
-                                );
-
-                                setCurrentGraphIndex(
-                                  Math.min(
-                                    currentGraphIndex(),
-                                    graphStates.length - 1
-                                  )
-                                );
-                              }}
-                            />
-                          </button>
-                        )}
-                      </Show>
-                    );
-                  }}
-                </For>
-              </div>
-              <Show when={currentGraph()}>
-                {(graph) => (
+                              setGraphStates(
+                                produce((states) => {
+                                  states.splice(index(), 1);
+                                  return states;
+                                })
+                              );
+                            }}
+                          />
+                        </button>
+                      )}
+                    </For>
+                  </div>
                   <Graph
                     graph={graph().model}
                     state={graph().state}
@@ -305,8 +305,8 @@ export function Interface(props: {
                       });
                     }}
                   />
-                )}
-              </Show>
+                </>
+              )}
             </Show>
           </div>
 

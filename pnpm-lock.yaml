@@ -224,6 +224,9 @@ importers:
       '@tailwindcss/forms':
         specifier: ^0.5.3
         version: 0.5.3(tailwindcss@3.3.2)
+      '@total-typescript/ts-reset':
+        specifier: ^0.4.2
+        version: 0.4.2
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7

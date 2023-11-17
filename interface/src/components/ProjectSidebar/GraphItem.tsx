@@ -94,10 +94,14 @@ const DeleteButton = (props: { graph: Graph }) => {
       <Dialog.Trigger
         class={buttonClasses}
         onClick={(e) => {
-          if (e.shiftKey) {
-            e.preventDefault();
-            deleteGraph();
-          }
+          if (!e.shiftKey) return;
+
+          // don't open the dialog if shift is pressed
+          e.preventDefault();
+          // don't want parent handlers to fire
+          e.stopPropagation();
+
+          deleteGraph();
         }}
         as="div"
       >
