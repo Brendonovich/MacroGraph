@@ -12,6 +12,11 @@ import { VsClose } from "solid-icons/vs";
 import { Dialog } from "./ui";
 import { useUIStore } from "../UIStore";
 import { useCore } from "../contexts";
+import {
+  projectToClipboardItem,
+  writeClipboardItemToClipboard,
+  writeModelToClipboard,
+} from "../clipboard";
 
 function IconContainer(props: ParentProps<ComponentProps<"div">>) {
   return (
@@ -33,7 +38,12 @@ export default () => {
           <TbSettings class="w-full h-full" />
         </IconContainer>
       </OpenSettingsDialog>
-      <button title="Copy Project" onClick={() => UI.copyItem(core.project)}>
+      <button
+        title="Copy Project"
+        onClick={() =>
+          writeClipboardItemToClipboard(projectToClipboardItem(core.project))
+        }
+      >
         <IconContainer>
           <TbClipboard class="w-full h-full" />
         </IconContainer>

@@ -8,6 +8,10 @@ import { Dialog } from "@kobalte/core";
 import { Button } from "../../settings/ui";
 import { useUIStore } from "../../UIStore";
 import { useCore } from "../../contexts";
+import {
+  graphToClipboardItem,
+  writeClipboardItemToClipboard,
+} from "../../clipboard";
 
 interface Props {
   graph: Graph;
@@ -44,7 +48,9 @@ export const GraphItem = (props: Props) => {
                 class={buttonClasses}
                 onClick={(e) => {
                   e.stopPropagation();
-                  UI.copyItem(props.graph);
+                  writeClipboardItemToClipboard(
+                    graphToClipboardItem(props.graph)
+                  );
                 }}
               >
                 <TbCopy />

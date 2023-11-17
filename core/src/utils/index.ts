@@ -4,6 +4,9 @@ import { Option, Some } from "../types";
 
 export * from "./pins";
 
+export type XY = { x: number; y: number };
+export type Size = { width: number; height: number };
+
 export const map = <I, O>(value: I | null, cb: (v: I) => O): O | null => {
   if (value === null) return null;
   else return cb(value);

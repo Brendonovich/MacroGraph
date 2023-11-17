@@ -21,7 +21,7 @@ import {
   ScopeOutput,
 } from "./IO";
 import { Graph } from ".";
-import { XY } from "../bindings";
+import { XY } from "../utils";
 import { Option } from "../types";
 
 export interface NodeArgs {

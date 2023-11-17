@@ -1,15 +1,5 @@
 import clsx from "clsx";
-import {
-  For,
-  Match,
-  Switch,
-  createSignal,
-  onCleanup,
-  Show,
-  onMount,
-  createMemo,
-  createRoot,
-} from "solid-js";
+import * as Solid from "solid-js";
 import {
   Node as NodeModel,
   DataInput as DataInputModel,
@@ -64,15 +54,15 @@ export const Node = (props: Props) => {
     }
   });
 
-  const [active, updateActive] = createSignal(0);
+  const [active, updateActive] = Solid.createSignal(0);
 
-  onCleanup(ACTIVE);
+  Solid.onCleanup(ACTIVE);
 
-  const [editingName, setEditingName] = createSignal(false);
+  const [editingName, setEditingName] = Solid.createSignal(false);
 
   let ref: HTMLDivElement | undefined;
 
-  onMount(() => {
+  Solid.onMount(() => {
     if (!ref) return;
 
     const obs = new ResizeObserver((resize) => {
@@ -80,7 +70,7 @@ export const Node = (props: Props) => {
 
       if (!contentRect) return;
 
-      UI.state.nodeBounds.set(node(), {
+      graph.state.nodeSizes.set(node(), {
         width: contentRect.width,
         height: contentRect.height,
       });
@@ -88,10 +78,10 @@ export const Node = (props: Props) => {
 
     obs.observe(ref);
 
-    onCleanup(() => obs.disconnect());
+    Solid.onCleanup(() => obs.disconnect());
   });
 
-  const isSelected = createMemo(() => {
+  const isSelected = Solid.createMemo(() => {
     const selectedItem = graph.state.selectedItemId;
     return selectedItem?.type === "node" && selectedItem.id === node().id;
   });
@@ -122,7 +112,7 @@ export const Node = (props: Props) => {
             })()
           )}
         >
-          <Show
+          <Solid.Show
             when={editingName()}
             fallback={
               <div
@@ -146,7 +136,7 @@ export const Node = (props: Props) => {
                     case 0: {
                       props.onSelected();
 
-                      createRoot((dispose) => {
+                      Solid.createRoot((dispose) => {
                         createEventListenerMap(window, {
                           mouseup: dispose,
                           mousemove: (e) => {
@@ -179,11 +169,11 @@ export const Node = (props: Props) => {
             }
           >
             {(_) => {
-              const [value, setValue] = createSignal(node().state.name);
+              const [value, setValue] = Solid.createSignal(node().state.name);
 
               let ref: HTMLInputElement | undefined;
 
-              onMount(() => ref?.focus());
+              Solid.onMount(() => ref?.focus());
 
               return (
                 <div class="px-2 pt-1">
@@ -211,42 +201,42 @@ export const Node = (props: Props) => {
                 </div>
               );
             }}
-          </Show>
+          </Solid.Show>
         </div>
         <div class="flex flex-row gap-2">
           <div class="p-2 flex flex-col space-y-2.5">
-            <For each={node().state.inputs}>
+            <Solid.For each={node().state.inputs}>
               {(i) => (
-                <Switch>
-                  <Match when={i instanceof DataInputModel ? i : null}>
+                <Solid.Switch>
+                  <Solid.Match when={i instanceof DataInputModel ? i : null}>
                     {(i) => <DataInput input={i()} />}
-                  </Match>
-                  <Match when={i instanceof ExecInputModel ? i : null}>
+                  </Solid.Match>
+                  <Solid.Match when={i instanceof ExecInputModel ? i : null}>
                     {(i) => <ExecInput input={i()} />}
-                  </Match>
-                  <Match when={i instanceof ScopeInputModel ? i : null}>
+                  </Solid.Match>
+                  <Solid.Match when={i instanceof ScopeInputModel ? i : null}>
                     {(i) => <ScopeInput input={i()} />}
-                  </Match>
-                </Switch>
+                  </Solid.Match>
+                </Solid.Switch>
               )}
-            </For>
+            </Solid.For>
           </div>
           <div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
-            <For each={node().state.outputs}>
+            <Solid.For each={node().state.outputs}>
               {(o) => (
-                <Switch>
-                  <Match when={o instanceof DataOutputModel ? o : null}>
+                <Solid.Switch>
+                  <Solid.Match when={o instanceof DataOutputModel ? o : null}>
                     {(o) => <DataOutput output={o()} />}
-                  </Match>
-                  <Match when={o instanceof ExecOutputModel ? o : null}>
+                  </Solid.Match>
+                  <Solid.Match when={o instanceof ExecOutputModel ? o : null}>
                     {(o) => <ExecOutput output={o()} />}
-                  </Match>
-                  <Match when={o instanceof ScopeOutputModel ? o : null}>
+                  </Solid.Match>
+                  <Solid.Match when={o instanceof ScopeOutputModel ? o : null}>
                     {(o) => <ScopeOutput output={o()} />}
-                  </Match>
-                </Switch>
+                  </Solid.Match>
+                </Solid.Switch>
               )}
-            </For>
+            </Solid.For>
           </div>
         </div>
       </div>

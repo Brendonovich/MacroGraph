@@ -1,24 +1,33 @@
-import clsx from "clsx";
-import { Accessor, createContext, useContext, createRoot } from "solid-js";
-import { Graph as GraphModel, Pin, XY } from "@macrograph/core";
-import { createSignal, For, onMount } from "solid-js";
+import {
+  Accessor,
+  createContext,
+  useContext,
+  createRoot,
+  createEffect,
+} from "solid-js";
+import {
+  Graph as GraphModel,
+  Pin,
+  XY,
+  Node as NodeModel,
+  Size,
+} from "@macrograph/core";
+import { createSignal, For, onMount, JSX } from "solid-js";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import {
   createEventListener,
   createEventListenerMap,
 } from "@solid-primitives/event-listener";
+import { createBodyCursor } from "@solid-primitives/cursor";
 
 import { Node } from "./Node";
 import { ConnectionRender } from "../Graph";
-import { useUIStore } from "../../UIStore";
 import { CommentBox } from "./CommentBox";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { createStore } from "solid-js/store";
+import { ComponentProps } from "solid-js";
 
-type PanState =
-  | { state: "none" }
-  | { state: "waiting"; downposx: number; downposy: number }
-  | { state: "active" };
+type PanState = "none" | "waiting" | "active";
 
 export type SelectedItemID =
   | { type: "node"; id: number }
@@ -32,6 +41,7 @@ export function createGraphState(model: GraphModel) {
       y: 0,
     } as XY,
     scale: 1,
+    nodeSizes: new WeakMap<NodeModel, Size>(),
     selectedItemId: null as SelectedItemID | null,
   };
 }
@@ -55,10 +65,13 @@ export function toScreenSpace(graphXY: XY, bounds: XY, state: GraphState) {
 const MAX_ZOOM_IN = 2.5;
 const MAX_ZOOM_OUT = 5;
 
-interface Props {
+interface Props extends ComponentProps<"div"> {
   state: GraphState;
   graph: GraphModel;
-  onMouseDown?(): void;
+  onGraphDragStart?(): void;
+  onGraphDrag?(): void;
+  onMouseDown?: JSX.EventHandler<HTMLDivElement, MouseEvent>;
+  onMouseUp?: JSX.EventHandler<HTMLDivElement, MouseEvent>;
   onScaleChange(scale: number): void;
   onTranslateChange(translate: XY): void;
   onSizeChange(size: { width: number; height: number }): void;
@@ -67,7 +80,6 @@ interface Props {
 }
 
 export const Graph = (props: Props) => {
-  const UI = useUIStore();
   const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
 
   const model = () => props.graph;
@@ -151,7 +163,9 @@ export const Graph = (props: Props) => {
     });
   });
 
-  const [pan, setPan] = createSignal<PanState>({ state: "none" });
+  const [pan, setPan] = createSignal<PanState>("none");
+
+  createBodyCursor(() => pan() === "active" && "grabbing");
 
   return (
     <GraphContext.Provider
@@ -167,83 +181,62 @@ export const Graph = (props: Props) => {
       }}
     >
       <div
-        onMouseDown={props.onMouseDown}
+        {...props}
         class="flex-1 w-full relative overflow-hidden bg-mg-graph"
         ref={setRef}
-      >
-        <ConnectionRender graphBounds={{ ...bounds, ...size() }} />
-        <div
-          class={clsx(
-            "absolute inset-0 text-white origin-top-left overflow-hidden w-[500%] h-[500%]",
-            pan().state === "active" && "cursor-grabbing"
-          )}
-          style={{ transform: `scale(${props.state.scale})` }}
-          onWheel={(e) => {
-            e.preventDefault();
+        onWheel={(e) => {
+          e.preventDefault();
 
-            let deltaX = e.deltaX,
-              deltaY = e.deltaY,
-              isTouchpad = false;
+          let deltaX = e.deltaX,
+            deltaY = e.deltaY,
+            isTouchpad = false;
 
-            if (Math.abs((e as any).wheelDeltaY) === Math.abs(e.deltaY) * 3) {
-              deltaX = -(e as any).wheelDeltaX / 3;
-              deltaY = -(e as any).wheelDeltaY / 3;
-              isTouchpad = true;
-            }
+          if (Math.abs((e as any).wheelDeltaY) === Math.abs(e.deltaY) * 3) {
+            deltaX = -(e as any).wheelDeltaX / 3;
+            deltaY = -(e as any).wheelDeltaY / 3;
+            isTouchpad = true;
+          }
 
-            if (e.ctrlKey) {
-              const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
+          if (e.ctrlKey) {
+            const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
 
-              updateScale(delta, {
+            updateScale(delta, {
+              x: e.clientX,
+              y: e.clientY,
+            });
+          } else
+            props.onTranslateChange({
+              x: props.state.translate.x + deltaX,
+              y: props.state.translate.y + deltaY,
+            });
+        }}
+        onMouseUp={(e) => {
+          if (e.button === 2 && pan() === "active") return;
+
+          props.onMouseUp?.(e);
+        }}
+        onMouseDown={(e) => {
+          switch (e.button) {
+            case 2:
+              setPan("waiting");
+
+              const oldTranslate = { ...props.state.translate };
+              const startPosition = {
                 x: e.clientX,
                 y: e.clientY,
-              });
-            } else
-              props.onTranslateChange({
-                x: props.state.translate.x + deltaX,
-                y: props.state.translate.y + deltaY,
-              });
-          }}
-          onMouseUp={(e) => {
-            switch (e.button) {
-              case 2:
-                if (pan().state === "waiting") {
-                  if (UI.state.mouseDragLocation) UI.setMouseDragLocation();
-                  else
-                    UI.state.schemaMenu = {
-                      status: "open",
-                      graph: props.state,
-                      position: {
-                        x: e.clientX,
-                        y: e.clientY,
-                      },
-                    };
-                }
+              };
 
-                setPan({ state: "none" });
-                break;
-            }
-          }}
-          onMouseDown={(e) => {
-            switch (e.button) {
-              case 0:
-                props.onMouseDown?.();
-                break;
-              case 2:
-                setPan({
-                  state: "waiting",
-                  downposx: e.clientX,
-                  downposy: e.clientY,
+              createRoot((dispose) => {
+                createEffect(() => {
+                  if (pan() === "active") props.onGraphDragStart?.();
                 });
 
-                const oldTranslate = { ...props.state.translate };
-                const startPosition = {
-                  x: e.clientX,
-                  y: e.clientY,
-                };
-
-                createRoot((dispose) => {
-                  createEventListener(window, "mousemove", (e) => {
+                createEventListenerMap(window, {
+                  mouseup: () => {
+                    dispose();
+                    setPan("none");
+                  },
+                  mousemove: (e) => {
                     const MOVE_BUFFER = 3;
 
                     if (
@@ -252,11 +245,7 @@ export const Graph = (props: Props) => {
                     )
                       return;
 
-                    setPan({ state: "active" });
-
-                    UI.state.schemaMenu = {
-                      status: "closed",
-                    };
+                    setPan("active");
 
                     const { scale } = props.state;
 
@@ -268,17 +257,24 @@ export const Graph = (props: Props) => {
                         (startPosition.y - e.clientY + oldTranslate.y * scale) /
                         scale,
                     });
-                  });
-
-                  createEventListener(window, "mouseup", dispose);
+                  },
                 });
+              });
 
-                break;
-            }
+              break;
+          }
+
+          props.onMouseDown?.(e);
+        }}
+      >
+        <ConnectionRender graphBounds={{ ...bounds, ...size() }} />
+        <div
+          class="absolute inset-0 text-white origin-top-left overflow-hidden"
+          style={{
+            transform: `scale(${props.state.scale})`,
+            width: `${MAX_ZOOM_OUT * 100}%`,
+            height: `${MAX_ZOOM_OUT * 100}%`,
           }}
-          onMouseEnter={() => (UI.state.hoveredGraph = props.graph)}
-          onMouseMove={() => (UI.state.hoveredGraph = props.graph)}
-          onMouseLeave={() => (UI.state.hoveredGraph = null)}
         >
           <div
             class="origin-[0,0]"

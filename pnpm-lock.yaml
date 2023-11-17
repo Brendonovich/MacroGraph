@@ -181,6 +181,9 @@ importers:
       '@solid-primitives/bounds':
         specifier: ^0.0.118
         version: 0.0.118(solid-js@1.8.3)
+      '@solid-primitives/cursor':
+        specifier: ^0.0.112
+        version: 0.0.112(solid-js@1.8.3)
       '@solid-primitives/event-listener':
         specifier: ^2.3.0
         version: 2.3.0(solid-js@1.8.3)
@@ -2219,6 +2222,15 @@ packages:
       '@solid-primitives/event-listener': 2.3.0(solid-js@1.8.3)
       '@solid-primitives/resize-observer': 2.0.22(solid-js@1.8.3)
       '@solid-primitives/static-store': 0.0.5(solid-js@1.8.3)
+      '@solid-primitives/utils': 6.2.1(solid-js@1.8.3)
+      solid-js: 1.8.3
+    dev: false
+
+  /@solid-primitives/cursor@0.0.112(solid-js@1.8.3):
+    resolution: {integrity: sha512-TAtU7qD7ipSLSXHnq8FhhosAPVX+dnOCb/ITcGcLlj8e/C9YKcxDhgBHJ3R/d1xDRb5/vO/szJtEz6fnQD311Q==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
       '@solid-primitives/utils': 6.2.1(solid-js@1.8.3)
       solid-js: 1.8.3
     dev: false
