@@ -20,7 +20,6 @@ import { createElementBounds } from "@solid-primitives/bounds";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import { HiSolidXMark } from "solid-icons/hi";
-import { FaSolidX } from "solid-icons/fa";
 import "@total-typescript/ts-reset";
 
 import { CoreProvider } from "./contexts";
@@ -39,7 +38,6 @@ import { GraphList } from "./components/ProjectSidebar";
 import { PrintOutput } from "./components/PrintOutput";
 import { GraphSidebar, NodeSidebar } from "./Sidebars";
 import clsx from "clsx";
-import { mapArray } from "solid-js";
 
 export { useCore } from "./contexts";
 
@@ -59,8 +57,8 @@ export function Interface(props: {
 
   const mouse = createMousePosition(window);
 
-  const leftSidebar = makeSidebarState("left-sidebar");
-  const rightSidebar = makeSidebarState("right-sidebar");
+  const leftSidebar = createSidebarState("left-sidebar");
+  const rightSidebar = createSidebarState("right-sidebar");
 
   const [graphBounds, setGraphBounds] = createStore<GraphBounds>({
     x: 0,
@@ -303,6 +301,7 @@ export function Interface(props: {
                       setGraphStates(graph().index, {
                         selectedItemId: null,
                       });
+                      UI.state.schemaMenu = { status: "closed" };
                     }}
                   />
                 </>
@@ -399,7 +398,7 @@ export function Interface(props: {
   );
 }
 
-function makeSidebarState(name: string) {
+function createSidebarState(name: string) {
   const [state, setState] = makePersisted(
     createStore({
       width: MIN_WIDTH,

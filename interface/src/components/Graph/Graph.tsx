@@ -1,11 +1,5 @@
 import clsx from "clsx";
-import {
-  createEffect,
-  Accessor,
-  createContext,
-  useContext,
-  createRoot,
-} from "solid-js";
+import { Accessor, createContext, useContext, createRoot } from "solid-js";
 import { Graph as GraphModel, Pin, XY } from "@macrograph/core";
 import { createSignal, For, onMount } from "solid-js";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
@@ -234,8 +228,6 @@ export const Graph = (props: Props) => {
             switch (e.button) {
               case 0:
                 props.onMouseDown?.();
-                // props.setState({ selectedItemId: null });
-                // UI.state.schemaMenu = { status: "closed" };
                 break;
               case 2:
                 setPan({
@@ -331,14 +323,6 @@ const GraphContext = createContext<{
   toGraphSpace(pos: XY): XY;
   toScreenSpace(pos: XY): XY;
 } | null>(null);
-
-export const useGraph = () => {
-  const ctx = useContext(GraphContext);
-
-  if (!ctx) throw new Error("CurrentGraphContext is missing!");
-
-  return ctx.model;
-};
 
 export const useGraphContext = () => {
   const ctx = useContext(GraphContext);
