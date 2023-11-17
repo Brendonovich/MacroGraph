@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const ExecInput = (props: Props) => {
-  const { ref, active } = usePin(props.input);
+  const { ref, active } = usePin(() => props.input);
 
   return (
     <div class="flex flex-row items-center space-x-1.5 h-5">

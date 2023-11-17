@@ -9,7 +9,8 @@ import { SidebarSection } from "../Sidebar";
 
 // React component to show a list of projects
 interface Props {
-  onChange: (graph: Graph) => void;
+  currentGraph?: number;
+  onGraphClicked(graph: Graph): void;
 }
 
 export const GraphList = (props: Props) => {
@@ -35,7 +36,7 @@ export const GraphList = (props: Props) => {
             onClick={(e) => {
               e.stopPropagation();
               const graph = core.project.createGraph();
-              UI.setFocusedGraph(graph);
+              props.onGraphClicked(graph);
             }}
           >
             +
@@ -47,8 +48,8 @@ export const GraphList = (props: Props) => {
         {(graph) => (
           <GraphItem
             graph={graph}
-            onClick={() => props.onChange(graph)}
-            isCurrentGraph={graph === UI.state.focusedGraph}
+            onClick={() => props.onGraphClicked(graph)}
+            isCurrentGraph={graph.id === props.currentGraph}
           />
         )}
       </For>

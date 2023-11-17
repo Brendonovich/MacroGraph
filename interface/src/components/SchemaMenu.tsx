@@ -9,12 +9,13 @@ import {
 } from "@macrograph/core";
 
 import { useCore } from "../contexts";
-import { useGraph, useGraphContext, GraphState, toGraphSpace } from "./Graph";
+import { GraphState } from "./Graph";
 import { useUIStore } from "../UIStore";
 
 interface Props {
   graph: GraphState;
   onSchemaClicked(s: NodeSchema): void | Promise<void>;
+  onCreateCommentBox(): void;
   position: XY;
 }
 
@@ -70,17 +71,7 @@ export const SchemaMenu = (props: Props) => {
           <Show when={search() === ""}>
             <button
               class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
-              onClick={() => {
-                props.graph.model.createCommentBox({
-                  position: toGraphSpace(props.position, props.graph),
-                  size: {
-                    x: 400,
-                    y: 200,
-                  },
-                  text: "Comment",
-                });
-                UI.state.schemaMenu = { status: "closed" };
-              }}
+              onClick={props.onCreateCommentBox}
             >
               Add Comment Box
             </button>
@@ -115,7 +106,7 @@ export const SchemaMenu = (props: Props) => {
               });
 
               return (
-                <Show when={search() === "" || filteredSchemas().length !== 0}>
+                <Show when={filteredSchemas().length !== 0}>
                   <div>
                     <button
                       class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"

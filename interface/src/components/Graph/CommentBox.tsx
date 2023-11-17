@@ -1,12 +1,21 @@
 import { CommentBox as CommentBoxModel } from "@macrograph/core";
 import clsx from "clsx";
-import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createRoot,
+  createSignal,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 
 import { useUIStore } from "../../UIStore";
 import { useGraphContext } from "./Graph";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 interface Props {
   box: CommentBoxModel;
+  onSelected(): void;
 }
 
 export function CommentBox(props: Props) {
@@ -20,11 +29,16 @@ export function CommentBox(props: Props) {
 
   const [editing, setEditing] = createSignal(false);
 
+  const isSelected = () => {
+    const selected = graph.state.selectedItemId;
+    return selected?.type === "commentBox" && selected.id === props.box.id;
+  };
+
   return (
     <div
       class={clsx(
         "bg-white/30 rounded border-black/75 border-2 absolute top-0 left-0",
-        graph.state.selectedItem === props.box && "ring-2 ring-yellow-500"
+        isSelected() && "ring-2 ring-yellow-500"
       )}
       style={{
         transform: `translate(${position().x}px, ${position().y}px)`,
@@ -46,39 +60,35 @@ export function CommentBox(props: Props) {
 
                 switch (e.button) {
                   case 0: {
-                    graph.setState({
-                      selectedItem: props.box,
-                    });
+                    props.onSelected();
 
                     const nodes = box().getNodes(
                       graph.model().nodes.values(),
                       (node) => UI.state.nodeBounds.get(node) ?? null
                     );
 
-                    const handleMouseMove = (e: MouseEvent) => {
-                      const scale = graph.state.scale;
+                    createRoot((dispose) => {
+                      onCleanup(() => graph.model().project.save());
 
-                      box().position = {
-                        x: box().position.x + e.movementX / scale,
-                        y: box().position.y + e.movementY / scale,
-                      };
+                      createEventListenerMap(window, {
+                        mouseup: dispose,
+                        mousemove: (e) => {
+                          const scale = graph.state.scale;
 
-                      nodes.forEach((node) => {
-                        node.state.position = {
-                          x: node.state.position.x + e.movementX / scale,
-                          y: node.state.position.y + e.movementY / scale,
-                        };
+                          box().position = {
+                            x: box().position.x + e.movementX / scale,
+                            y: box().position.y + e.movementY / scale,
+                          };
+
+                          nodes.forEach((node) => {
+                            node.state.position = {
+                              x: node.state.position.x + e.movementX / scale,
+                              y: node.state.position.y + e.movementY / scale,
+                            };
+                          });
+                        },
                       });
-                    };
-
-                    window.addEventListener("mousemove", handleMouseMove);
-                    const listener = () => {
-                      graph.model().project.save();
-
-                      window.removeEventListener("mouseup", listener);
-                      window.removeEventListener("mousemove", handleMouseMove);
-                    };
-                    window.addEventListener("mouseup", listener);
+                    });
 
                     break;
                   }
@@ -111,9 +121,7 @@ export function CommentBox(props: Props) {
 
             onMount(() => ref?.focus());
 
-            createEffect(() =>
-              setEditing(graph.state.selectedItem === props.box)
-            );
+            createEffect(() => setEditing(isSelected()));
 
             onCleanup(() => {
               if (value() !== "") props.box.text = value();
@@ -141,27 +149,25 @@ export function CommentBox(props: Props) {
 
           setEditing(false);
 
-          const handleMouseMove = (e: MouseEvent) => {
-            const scale = graph.state.scale;
-
-            props.box.size = {
-              x: box().size.x + e.movementX / scale,
-              y: box().size.y + e.movementY / scale,
-            };
-          };
-
           switch (e.button) {
             case 0: {
-              graph.setState({ selectedItem: box() });
+              props.onSelected();
 
-              window.addEventListener("mousemove", handleMouseMove);
-              const listener = () => {
-                window.removeEventListener("mouseup", listener);
-                window.removeEventListener("mousemove", handleMouseMove);
+              createRoot((dispose) => {
+                onCleanup(() => graph.model().project.save());
 
-                graph.model().project.save();
-              };
-              window.addEventListener("mouseup", listener);
+                createEventListenerMap(window, {
+                  mouseup: dispose,
+                  mousemove: (e) => {
+                    const scale = graph.state.scale;
+
+                    props.box.size = {
+                      x: box().size.x + e.movementX / scale,
+                      y: box().size.y + e.movementY / scale,
+                    };
+                  },
+                });
+              });
 
               break;
             }

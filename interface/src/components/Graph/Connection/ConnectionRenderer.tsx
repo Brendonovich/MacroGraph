@@ -12,8 +12,9 @@ import { createEffect } from "solid-js";
 import { useUIStore } from "../../../UIStore";
 import { useGraphContext } from "../Graph";
 import { colour } from "../util";
+import { GraphBounds } from "../../..";
 
-export const ConnectionRender = () => {
+export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
   const { pinPositions, ...graph } = useGraphContext();
 
   const UI = useUIStore();
@@ -48,7 +49,7 @@ export const ConnectionRender = () => {
       ctx.stroke();
     }
 
-    ctx.clearRect(0, 0, 2560, 1440);
+    ctx.clearRect(0, 0, props.graphBounds.width, props.graphBounds.height);
     ctx.globalAlpha = 0.75;
 
     for (const node of graph.model().nodes.values()) {
@@ -85,8 +86,8 @@ export const ConnectionRender = () => {
       const pinPos = pinPositions.get(dragState.draggingPin);
 
       const diffs = {
-        x: dragState.mouseDragLocation.x - graph.state.offset.x,
-        y: dragState.mouseDragLocation.y - graph.state.offset.y,
+        x: dragState.mouseDragLocation.x - props.graphBounds.x,
+        y: dragState.mouseDragLocation.y - props.graphBounds.y,
       };
 
       const colourClass = (() => {
@@ -110,8 +111,9 @@ export const ConnectionRender = () => {
   return (
     <canvas
       ref={canvasRef!}
-      width={graph.state.bounds.width ?? undefined}
-      height={graph.state.bounds.height ?? undefined}
+      class="absolute inset-0"
+      width={props.graphBounds.width}
+      height={props.graphBounds.height}
     />
   );
 };

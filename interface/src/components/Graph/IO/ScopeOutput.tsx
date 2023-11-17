@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const ScopeOutput = (props: Props) => {
-  const { ref, active } = usePin(props.output);
+  const { ref, active } = usePin(() => props.output);
 
   return (
     <div class="flex flex-row items-center space-x-1.5 h-5">

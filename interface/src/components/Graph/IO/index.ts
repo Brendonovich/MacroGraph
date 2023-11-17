@@ -8,60 +8,53 @@ export * from "./ScopeOutput";
 
 import { Pin, pinIsInput, pinIsOutput, pinsCanConnect } from "@macrograph/core";
 import {
+  Accessor,
   batch,
   createEffect,
   createMemo,
+  createRoot,
   createSignal,
   onCleanup,
 } from "solid-js";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
+
 import { useUIStore } from "../../../UIStore";
 import { useGraphContext } from "../Graph";
 
-export const usePin = (pin: Pin) => {
+export function usePin(pin: Accessor<Pin>) {
   const graph = useGraphContext();
 
-  const [getRef, ref] = createSignal<HTMLDivElement>(null!);
+  const [getRef, ref] = createSignal<HTMLDivElement | null>(null!);
 
   const UI = useUIStore();
 
   const mouseState = createMemo(() => ({
-    hovering: UI.state.hoveringPin === pin,
-    dragging: UI.state.draggingPin === pin,
+    hovering: UI.state.hoveringPin === pin(),
+    dragging: UI.state.draggingPin === pin(),
   }));
-
-  const handleMouseDrag = (e: MouseEvent) => {
-    UI.setDraggingPin(pin);
-    UI.setMouseDragLocation({
-      x: e.clientX,
-      y: e.clientY,
-    });
-  };
-
-  const handleMouseUp = () => {
-    UI.setDraggingPin();
-    window.removeEventListener("mouseup", handleMouseUp);
-    window.removeEventListener("mousemove", handleMouseDrag);
-  };
 
   let justMouseUpped = false;
 
   createEffect(() => {
-    const ref = getRef();
+    const thisPin = pin();
 
-    const handlers = {
+    const ref = getRef();
+    if (!ref) return;
+
+    createEventListenerMap(ref, {
       mouseover: () => {
         const draggingPin = UI.state.draggingPin;
 
         if (
           !draggingPin ||
           (pinIsOutput(draggingPin) &&
-            pinIsInput(pin) &&
-            pinsCanConnect(draggingPin, pin)) ||
-          (pinIsOutput(pin) &&
+            pinIsInput(thisPin) &&
+            pinsCanConnect(draggingPin, thisPin)) ||
+          (pinIsOutput(thisPin) &&
             pinIsInput(draggingPin) &&
-            pinsCanConnect(pin, draggingPin))
+            pinsCanConnect(thisPin, draggingPin))
         )
-          UI.setHoveringPin(pin);
+          UI.setHoveringPin(thisPin);
       },
       mouseleave: () => {
         if (justMouseUpped) return;
@@ -73,37 +66,39 @@ export const usePin = (pin: Pin) => {
           justMouseUpped = true;
           setTimeout(() => (justMouseUpped = false), 1);
 
-          UI.setHoveringPin(pin);
+          UI.setHoveringPin(thisPin);
 
           const draggingPin = UI.state.draggingPin;
 
-          if (!draggingPin || draggingPin === pin) return;
+          if (!draggingPin || draggingPin === thisPin) return;
 
-          if (pinIsOutput(pin) && pinIsInput(draggingPin))
-            graph.model().connectPins(pin, draggingPin);
-          else if (pinIsInput(pin) && pinIsOutput(draggingPin))
-            graph.model().connectPins(draggingPin, pin);
+          if (pinIsOutput(thisPin) && pinIsInput(draggingPin))
+            graph.model().connectPins(thisPin, draggingPin);
+          else if (pinIsInput(thisPin) && pinIsOutput(draggingPin))
+            graph.model().connectPins(draggingPin, thisPin);
 
           UI.setDraggingPin();
         });
       },
       mousedown: () => {
-        window.addEventListener("mouseup", handleMouseUp);
-        window.addEventListener("mousemove", handleMouseDrag);
+        createRoot((dispose) => {
+          createEventListenerMap(window, {
+            mouseup: dispose,
+            mousemove: (e) => {
+              UI.setDraggingPin(thisPin);
+              UI.setMouseDragLocation({
+                x: e.clientX,
+                y: e.clientY,
+              });
+            },
+          });
+
+          onCleanup(() => UI.setDraggingPin());
+        });
       },
       dblclick: () => {
-        graph.model().disconnectPin(pin);
+        graph.model().disconnectPin(thisPin);
       },
-    };
-
-    for (const [type, handler] of Object.entries(handlers)) {
-      ref.addEventListener(type, handler);
-    }
-
-    onCleanup(() => {
-      for (const [type, handler] of Object.entries(handlers)) {
-        ref.removeEventListener(type, handler);
-      }
     });
   });
 
@@ -112,15 +107,18 @@ export const usePin = (pin: Pin) => {
     graph.state.translate.y;
     graph.state.scale;
 
-    pin.node.state.position.x;
-    pin.node.state.position.y;
+    pin().node.state.position.x;
+    pin().node.state.position.y;
 
-    let rect = getRef().getBoundingClientRect();
+    const ref = getRef();
+    if (!ref) return;
+
+    let rect = ref.getBoundingClientRect();
 
     if (rect)
-      graph.pinPositions.set(pin, {
-        x: rect.x + rect.width / 2 - graph.state.offset.x,
-        y: rect.y + rect.height / 2 - graph.state.offset.y,
+      graph.pinPositions.set(pin(), {
+        x: rect.x + rect.width / 2 - graph.offset.x,
+        y: rect.y + rect.height / 2 - graph.offset.y,
       });
   });
 
@@ -128,4 +126,4 @@ export const usePin = (pin: Pin) => {
     ref,
     active: () => mouseState().hovering || mouseState().dragging,
   };
-};
+}

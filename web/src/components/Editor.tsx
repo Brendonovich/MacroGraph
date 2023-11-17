@@ -1,5 +1,5 @@
 import { Core } from "@macrograph/core";
-import Interface from "@macrograph/interface";
+import { Interface } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { onMount } from "solid-js";
 
@@ -67,5 +67,5 @@ export default () => {
     ].map((p) => core.registerPackage(p));
   });
 
-  return <Interface core={core} />;
+  return <Interface core={core} environment="browser" />;
 };

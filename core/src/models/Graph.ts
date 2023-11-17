@@ -48,9 +48,9 @@ export class Graph {
   project: Project;
 
   nodes = new ReactiveMap<number, Node>();
-  commentBoxes = new ReactiveSet<CommentBox>();
+  commentBoxes = new ReactiveMap<number, CommentBox>();
 
-  private nodeIdCounter = 0;
+  private idCounter = 0;
 
   constructor(args: GraphArgs) {
     this.id = args.id;
@@ -60,12 +60,12 @@ export class Graph {
     return createMutable(this);
   }
 
-  generateNodeId() {
-    return this.nodeIdCounter++;
+  generateId() {
+    return this.idCounter++;
   }
 
   createNode(args: Omit<NodeArgs, "graph" | "id">) {
-    const id = this.generateNodeId();
+    const id = this.generateId();
 
     const node = new Node({ ...args, id, graph: this });
 
@@ -78,13 +78,16 @@ export class Graph {
     return node;
   }
 
-  createCommentBox(args: Omit<CommentBoxArgs, "graph">) {
+  createCommentBox(args: Omit<CommentBoxArgs, "graph" | "id">) {
+    const id = this.generateId();
+
     const box = new CommentBox({
       ...args,
+      id,
       graph: this,
     });
 
-    this.commentBoxes.add(box);
+    this.commentBoxes.set(id, box);
 
     this.project.save();
 
@@ -187,7 +190,7 @@ export class Graph {
       this.nodes.delete(item.id);
       item.dispose();
     } else {
-      this.commentBoxes.delete(item);
+      this.commentBoxes.delete(item.id);
     }
 
     this.project.save();
@@ -203,7 +206,7 @@ export class Graph {
     return {
       id: this.id,
       name: this.name,
-      nodeIdCounter: this.nodeIdCounter,
+      nodeIdCounter: this.idCounter,
       nodes: Object.fromEntries(
         [...this.nodes.entries()].map(([id, node]) => [id, node.serialize()])
       ),
@@ -224,7 +227,7 @@ export class Graph {
       name: data.name,
     });
 
-    graph.nodeIdCounter = data.nodeIdCounter;
+    graph.idCounter = data.nodeIdCounter;
 
     batch(() => {
       graph.nodes = new ReactiveMap(
@@ -255,14 +258,14 @@ export class Graph {
       });
     }
 
-    graph.commentBoxes = new ReactiveSet(
-      data.commentBoxes.map(
-        (box) =>
-          new CommentBox({
-            ...box,
-            graph,
-          })
-      )
+    graph.commentBoxes = new ReactiveMap(
+      data.commentBoxes.map((box) => [
+        box.id,
+        new CommentBox({
+          ...box,
+          graph,
+        }),
+      ])
     );
 
     return graph;
