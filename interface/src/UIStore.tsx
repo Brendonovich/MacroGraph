@@ -1,12 +1,6 @@
-import { XY, Graph, Node, Pin } from "@macrograph/core";
+import { XY, Pin } from "@macrograph/core";
 import { createMutable } from "solid-js/store";
 import { createContext, useContext, ParentProps } from "solid-js";
-
-import { GraphState } from "./components/Graph";
-
-export type SchemaMenuState =
-  | { status: "closed" }
-  | { status: "open"; position: XY; graph: GraphState };
 
 export function createUIStore() {
   const state = createMutable({
@@ -14,12 +8,6 @@ export function createUIStore() {
     hoveringPin: null as Pin | null,
     mouseDragLocation: null as XY | null,
     mouseDownTranslate: null as XY | null,
-
-    hoveredGraph: null as { model: Graph; state: GraphState } | null,
-
-    schemaMenu: {
-      status: "closed",
-    } as SchemaMenuState,
   });
 
   return {

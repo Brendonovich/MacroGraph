@@ -82,6 +82,8 @@ export function usePin(pin: Accessor<Pin>) {
       },
       mousedown: () => {
         createRoot((dispose) => {
+          onCleanup(() => UI.setDraggingPin());
+
           createEventListenerMap(window, {
             mouseup: dispose,
             mousemove: (e) => {
@@ -92,8 +94,6 @@ export function usePin(pin: Accessor<Pin>) {
               });
             },
           });
-
-          onCleanup(() => UI.setDraggingPin());
         });
       },
       dblclick: () => {

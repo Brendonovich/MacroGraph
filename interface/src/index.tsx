@@ -49,6 +49,10 @@ export type GraphBounds = XY & {
   height: number;
 };
 
+type SchemaMenuState =
+  | { status: "closed" }
+  | { status: "open"; position: XY; graph: GraphState };
+
 export function Interface(props: {
   core: Core;
   environment: "custom" | "browser";
@@ -90,6 +94,10 @@ export function Interface(props: {
       state,
       index,
     };
+  });
+
+  const [schemaMenu, setSchemaMenu] = Solid.createSignal<SchemaMenuState>({
+    status: "closed",
   });
 
   // will account for multi-pane in future
@@ -247,24 +255,26 @@ export function Interface(props: {
       case "KeyK": {
         if (!((e.metaKey || e.ctrlKey) && e.shiftKey)) return;
 
+        const menuState = schemaMenu();
+
         if (
-          UI.state.schemaMenu.status === "open" &&
-          UI.state.schemaMenu.position.x === mouse.x &&
-          UI.state.schemaMenu.position.y === mouse.y
+          menuState.status === "open" &&
+          menuState.position.x === mouse.x &&
+          menuState.position.y === mouse.y
         )
-          UI.state.schemaMenu = { status: "closed" };
+          setSchemaMenu({ status: "closed" });
         else {
           const graph = currentGraph();
           if (!graph) return;
 
-          UI.state.schemaMenu = {
+          setSchemaMenu({
             status: "open",
             position: {
               x: mouse.x,
               y: mouse.y,
             },
             graph: graph.state,
-          };
+          });
         }
 
         break;
@@ -397,6 +407,20 @@ export function Interface(props: {
                     onMouseEnter={() => setHoveredPane(true)}
                     onMouseMove={() => setHoveredPane(true)}
                     onMouseLeave={() => setHoveredPane(null)}
+                    onMouseUp={(e) => {
+                      if (e.button === 2)
+                        setSchemaMenu({
+                          status: "open",
+                          graph: graph().state,
+                          position: {
+                            x: e.clientX,
+                            y: e.clientY,
+                          },
+                        });
+                    }}
+                    onGraphDragStart={() => {
+                      setSchemaMenu({ status: "closed" });
+                    }}
                     onItemSelected={(id) => {
                       setGraphStates(graph().index, { selectedItemId: id });
                     }}
@@ -412,11 +436,15 @@ export function Interface(props: {
                         translate,
                       });
                     }}
-                    onMouseDown={() => {
-                      setGraphStates(graph().index, {
-                        selectedItemId: null,
-                      });
-                      UI.state.schemaMenu = { status: "closed" };
+                    onMouseDown={(e) => {
+                      if (e.button === 0) {
+                        Solid.batch(() => {
+                          setGraphStates(graph().index, {
+                            selectedItemId: null,
+                          });
+                          setSchemaMenu({ status: "closed" });
+                        });
+                      }
                     }}
                   />
                 </>
@@ -463,7 +491,10 @@ export function Interface(props: {
           </Solid.Show>
 
           <Solid.Show
-            when={UI.state.schemaMenu.status === "open" && UI.state.schemaMenu}
+            when={(() => {
+              const state = schemaMenu();
+              return state.status === "open" && state;
+            })()}
           >
             {(data) => {
               const graph = Solid.createMemo(() => {
@@ -471,7 +502,7 @@ export function Interface(props: {
               });
 
               Solid.createEffect(() => {
-                if (!graph()) UI.state.schemaMenu = { status: "closed" };
+                if (!graph()) setSchemaMenu({ status: "closed" });
               });
 
               const graphPosition = () =>
@@ -487,21 +518,25 @@ export function Interface(props: {
                         y: data().position.y - (rootBounds?.top ?? 0),
                       }}
                       onCreateCommentBox={() => {
-                        graph().createCommentBox({
-                          position: graphPosition(),
-                          size: { x: 400, y: 200 },
-                          text: "Comment",
-                        });
+                        Solid.batch(() => {
+                          graph().createCommentBox({
+                            position: graphPosition(),
+                            size: { x: 400, y: 200 },
+                            text: "Comment",
+                          });
 
-                        UI.state.schemaMenu = { status: "closed" };
+                          setSchemaMenu({ status: "closed" });
+                        });
                       }}
                       onSchemaClicked={(schema) => {
-                        graph().createNode({
-                          schema,
-                          position: graphPosition(),
-                        });
+                        Solid.batch(() => {
+                          graph().createNode({
+                            schema,
+                            position: graphPosition(),
+                          });
 
-                        UI.state.schemaMenu = { status: "closed" };
+                          setSchemaMenu({ status: "closed" });
+                        });
                       }}
                     />
                   )}

@@ -16,6 +16,7 @@
     "@macrograph/packages": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
     "@solid-primitives/bounds": "^0.0.118",
+    "@solid-primitives/cursor": "^0.0.112",
     "@solid-primitives/event-listener": "^2.3.0",
     "@solid-primitives/map": "^0.4.3",
     "@solid-primitives/mouse": "^2.0.16",

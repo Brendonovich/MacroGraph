@@ -1,5 +1,10 @@
-import clsx from "clsx";
-import { Accessor, createContext, useContext, createRoot } from "solid-js";
+import {
+  Accessor,
+  createContext,
+  useContext,
+  createRoot,
+  createEffect,
+} from "solid-js";
 import {
   Graph as GraphModel,
   Pin,
@@ -7,25 +12,22 @@ import {
   Node as NodeModel,
   Size,
 } from "@macrograph/core";
-import { createSignal, For, onMount } from "solid-js";
+import { createSignal, For, onMount, JSX } from "solid-js";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import {
   createEventListener,
   createEventListenerMap,
 } from "@solid-primitives/event-listener";
+import { createBodyCursor } from "@solid-primitives/cursor";
 
 import { Node } from "./Node";
 import { ConnectionRender } from "../Graph";
-import { useUIStore } from "../../UIStore";
 import { CommentBox } from "./CommentBox";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { createStore } from "solid-js/store";
 import { ComponentProps } from "solid-js";
 
-type PanState =
-  | { state: "none" }
-  | { state: "waiting"; downposx: number; downposy: number }
-  | { state: "active" };
+type PanState = "none" | "waiting" | "active";
 
 export type SelectedItemID =
   | { type: "node"; id: number }
@@ -66,6 +68,10 @@ const MAX_ZOOM_OUT = 5;
 interface Props extends ComponentProps<"div"> {
   state: GraphState;
   graph: GraphModel;
+  onGraphDragStart?(): void;
+  onGraphDrag?(): void;
+  onMouseDown?: JSX.EventHandler<HTMLDivElement, MouseEvent>;
+  onMouseUp?: JSX.EventHandler<HTMLDivElement, MouseEvent>;
   onScaleChange(scale: number): void;
   onTranslateChange(translate: XY): void;
   onSizeChange(size: { width: number; height: number }): void;
@@ -74,7 +80,6 @@ interface Props extends ComponentProps<"div"> {
 }
 
 export const Graph = (props: Props) => {
-  const UI = useUIStore();
   const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
 
   const model = () => props.graph;
@@ -158,7 +163,9 @@ export const Graph = (props: Props) => {
     });
   });
 
-  const [pan, setPan] = createSignal<PanState>({ state: "none" });
+  const [pan, setPan] = createSignal<PanState>("none");
+
+  createBodyCursor(() => pan() === "active" && "grabbing");
 
   return (
     <GraphContext.Provider
@@ -204,33 +211,14 @@ export const Graph = (props: Props) => {
             });
         }}
         onMouseUp={(e) => {
-          switch (e.button) {
-            case 2:
-              if (pan().state === "waiting") {
-                if (UI.state.mouseDragLocation) UI.setMouseDragLocation();
-                else
-                  UI.state.schemaMenu = {
-                    status: "open",
-                    graph: props.state,
-                    position: {
-                      x: e.clientX,
-                      y: e.clientY,
-                    },
-                  };
-              }
+          if (e.button === 2 && pan() === "active") return;
 
-              setPan({ state: "none" });
-              break;
-          }
+          props.onMouseUp?.(e);
         }}
         onMouseDown={(e) => {
           switch (e.button) {
             case 2:
-              setPan({
-                state: "waiting",
-                downposx: e.clientX,
-                downposy: e.clientY,
-              });
+              setPan("waiting");
 
               const oldTranslate = { ...props.state.translate };
               const startPosition = {
@@ -239,49 +227,54 @@ export const Graph = (props: Props) => {
               };
 
               createRoot((dispose) => {
-                createEventListener(window, "mousemove", (e) => {
-                  const MOVE_BUFFER = 3;
-
-                  if (
-                    Math.abs(startPosition.x - e.clientX) < MOVE_BUFFER &&
-                    Math.abs(startPosition.x - e.clientY) < MOVE_BUFFER
-                  )
-                    return;
-
-                  setPan({ state: "active" });
-
-                  UI.state.schemaMenu = {
-                    status: "closed",
-                  };
-
-                  const { scale } = props.state;
-
-                  props.onTranslateChange({
-                    x:
-                      (startPosition.x - e.clientX + oldTranslate.x * scale) /
-                      scale,
-                    y:
-                      (startPosition.y - e.clientY + oldTranslate.y * scale) /
-                      scale,
-                  });
+                createEffect(() => {
+                  if (pan() === "active") props.onGraphDragStart?.();
                 });
 
-                createEventListener(window, "mouseup", dispose);
+                createEventListenerMap(window, {
+                  mouseup: () => {
+                    dispose();
+                    setPan("none");
+                  },
+                  mousemove: (e) => {
+                    const MOVE_BUFFER = 3;
+
+                    if (
+                      Math.abs(startPosition.x - e.clientX) < MOVE_BUFFER &&
+                      Math.abs(startPosition.x - e.clientY) < MOVE_BUFFER
+                    )
+                      return;
+
+                    setPan("active");
+
+                    const { scale } = props.state;
+
+                    props.onTranslateChange({
+                      x:
+                        (startPosition.x - e.clientX + oldTranslate.x * scale) /
+                        scale,
+                      y:
+                        (startPosition.y - e.clientY + oldTranslate.y * scale) /
+                        scale,
+                    });
+                  },
+                });
               });
 
               break;
           }
 
-          if (typeof props.onMouseDown === "function") props.onMouseDown(e);
+          props.onMouseDown?.(e);
         }}
       >
         <ConnectionRender graphBounds={{ ...bounds, ...size() }} />
         <div
-          class={clsx(
-            "absolute inset-0 text-white origin-top-left overflow-hidden w-[500%] h-[500%]",
-            pan().state === "active" && "cursor-grabbing"
-          )}
-          style={{ transform: `scale(${props.state.scale})` }}
+          class="absolute inset-0 text-white origin-top-left overflow-hidden"
+          style={{
+            transform: `scale(${props.state.scale})`,
+            width: `${MAX_ZOOM_OUT * 100}%`,
+            height: `${MAX_ZOOM_OUT * 100}%`,
+          }}
         >
           <div
             class="origin-[0,0]"
