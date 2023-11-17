@@ -222,10 +222,12 @@ export function Interface(props: {
               <div class="h-8 w-full flex flex-row divide-x divide-black">
                 <For each={graphStates}>
                   {(state, index) => {
-                    createEffect(() => {
-                      const graph = props.core.project.graphs.get(state.id);
+                    const graph = createMemo(() => {
+                      return props.core.project.graphs.get(state.id);
+                    });
 
-                      if (!graph)
+                    createEffect(() => {
+                      if (!graph())
                         setGraphStates(
                           produce((s) => {
                             s.splice(index(), 1);
@@ -234,37 +236,41 @@ export function Interface(props: {
                     });
 
                     return (
-                      <button
-                        class={clsx(
-                          "p-2 flex flex-row items-center relative group",
-                          currentGraphIndex() === index() && "bg-white/20"
+                      <Show when={graph()}>
+                        {(graph) => (
+                          <button
+                            class={clsx(
+                              "p-2 flex flex-row items-center relative group",
+                              currentGraphIndex() === index() && "bg-white/20"
+                            )}
+                            onClick={() => setCurrentGraphIndex(index)}
+                          >
+                            {graph().name}
+                            <HiSolidXMark
+                              class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
+                              size={20}
+                              stroke-width={1}
+                              onClick={(e) => {
+                                e.stopPropagation();
+
+                                setGraphStates(
+                                  produce((states) => {
+                                    states.splice(index(), 1);
+                                    return states;
+                                  })
+                                );
+
+                                setCurrentGraphIndex(
+                                  Math.min(
+                                    currentGraphIndex(),
+                                    graphStates.length - 1
+                                  )
+                                );
+                              }}
+                            />
+                          </button>
                         )}
-                        onClick={() => setCurrentGraphIndex(index)}
-                      >
-                        Graph {state.id}
-                        <HiSolidXMark
-                          class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
-                          size={20}
-                          stroke-width={1}
-                          onClick={(e) => {
-                            e.stopPropagation();
-
-                            setGraphStates(
-                              produce((states) => {
-                                states.splice(index(), 1);
-                                return states;
-                              })
-                            );
-
-                            setCurrentGraphIndex(
-                              Math.min(
-                                currentGraphIndex(),
-                                graphStates.length - 1
-                              )
-                            );
-                          }}
-                        />
-                      </button>
+                      </Show>
                     );
                   }}
                 </For>
