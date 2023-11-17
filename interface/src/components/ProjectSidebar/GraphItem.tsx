@@ -15,6 +15,8 @@ interface Props {
   isCurrentGraph: boolean;
 }
 
+const buttonClasses = "hover:bg-white/20 p-1 rounded";
+
 export const GraphItem = (props: Props) => {
   const [editing, setEditing] = createSignal(false);
 
@@ -31,14 +33,15 @@ export const GraphItem = (props: Props) => {
         when={editing()}
         fallback={
           <div
-            class="flex flex-row items-center px-2 py-1 w-full border-2 border-transparent justify-between"
+            class="flex flex-row items-center px-2 py-1 w-full border-2 border-transparent justify-between group"
             onClick={props.onClick}
             onDblClick={() => setEditing(true)}
           >
             <span>{props.graph.name}</span>
-            <div class="flex-row flex space-x-3">
+            <div class="flex-row flex space-x-1 opacity-0 group-hover:opacity-100">
               <DeleteButton graph={props.graph} />
               <button
+                class={buttonClasses}
                 onClick={(e) => {
                   e.stopPropagation();
                   UI.copyItem(props.graph);
@@ -89,11 +92,16 @@ const DeleteButton = (props: { graph: Graph }) => {
   return (
     <Dialog.Root>
       <Dialog.Trigger
+        class={buttonClasses}
         onClick={(e) => {
-          if (e.shiftKey) {
-            e.preventDefault();
-            deleteGraph();
-          }
+          if (!e.shiftKey) return;
+
+          // don't open the dialog if shift is pressed
+          e.preventDefault();
+          // don't want parent handlers to fire
+          e.stopPropagation();
+
+          deleteGraph();
         }}
         as="div"
       >

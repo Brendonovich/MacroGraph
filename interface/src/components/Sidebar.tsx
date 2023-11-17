@@ -7,77 +7,26 @@ import {
   createSignal,
   onCleanup,
 } from "solid-js";
-import { RiArrowsExpandRightLine } from "solid-icons/ri";
 import { makePersisted } from "@solid-primitives/storage";
 import { FaSolidChevronRight } from "solid-icons/fa";
-import { createEventListener } from "@solid-primitives/event-listener";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 export type Side = "left" | "right";
 
-const MIN_WIDTH = 300;
-const SNAP_CLOSE_PCT = 0.65;
+export const MIN_WIDTH = 300;
+export const SNAP_CLOSE_PCT = 0.65;
 
-export function Sidebar(props: ParentProps<{ side: Side }>) {
-  const [width, setWidth] = makePersisted(createSignal(MIN_WIDTH), {
-    name: `sidebar-${props.side}-width`,
-  });
-  const [open, setOpen] = makePersisted(createSignal(true), {
-    name: `sidebar-${props.side}-open`,
-  });
+export interface SidebarProps extends ParentProps {
+  width: number;
+}
 
+export function Sidebar(props: SidebarProps) {
   return (
     <div
       class="relative flex flex-col bg-neutral-600 shadow-2xl"
-      style={`width: ${open() ? Math.max(MIN_WIDTH, width()) : 0}px;`}
+      style={{ width: `${props.width}px` }}
     >
-      <div
-        class={clsx(
-          "absolute top-1 z-10",
-          props.side === "left" ? "right-[-30px]" : "left-[-30px]"
-        )}
-        style={`transform: rotate(${
-          open() !== (props.side === "right") ? 0.5 : 0
-        }turn);`}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <RiArrowsExpandRightLine size="1.5rem" />
-      </div>
-      <Show when={open()}>
-        <div
-          onMouseDown={(e) => {
-            const startX = e.clientX;
-            const startWidth = width();
-
-            e.stopPropagation();
-            if (e.button !== 0) return;
-
-            const handleMouseMove = (e: MouseEvent) => {
-              setWidth(
-                startWidth +
-                  (e.clientX - startX) * (props.side === "left" ? 1 : -1)
-              );
-
-              if (width() < MIN_WIDTH * (1 - SNAP_CLOSE_PCT)) setOpen(false);
-              else if (width() > MIN_WIDTH * (1 - SNAP_CLOSE_PCT))
-                setOpen(true);
-            };
-            window.addEventListener("mousemove", handleMouseMove);
-
-            const listener = () => {
-              if (width() < MIN_WIDTH) setWidth(MIN_WIDTH);
-
-              window.removeEventListener("mouseup", listener);
-              window.removeEventListener("mousemove", handleMouseMove);
-            };
-            window.addEventListener("mouseup", listener);
-          }}
-          class={clsx(
-            "absolute cursor-ew-resize w-1 inset-y-0 z-10",
-            props.side === "left" ? "right-[-5px]" : "left-0"
-          )}
-        />
-        {props.children}
-      </Show>
+      {props.children}
     </div>
   );
 }
@@ -116,20 +65,21 @@ export function SidebarSection(
             if (downEvent.button !== 0) return;
 
             createRoot((dispose) => {
-              createEventListener(window, "mouseup", dispose);
-
               document.body.style.cursor = "ns-resize";
               onCleanup(() => (document.body.style.cursor = "auto"));
 
               const startHeight = height();
 
-              createEventListener(window, "mousemove", (moveEvent) => {
-                setHeight(
-                  Math.max(
-                    MIN_HEIGHT,
-                    startHeight + (moveEvent.clientY - downEvent.clientY)
-                  )
-                );
+              createEventListenerMap(window, {
+                mouseup: dispose,
+                mousemove: (moveEvent) => {
+                  setHeight(
+                    Math.max(
+                      MIN_HEIGHT,
+                      startHeight + (moveEvent.clientY - downEvent.clientY)
+                    )
+                  );
+                },
               });
             });
           }}

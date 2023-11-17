@@ -5,6 +5,7 @@ import { Node } from "./Node";
 import { Graph } from "./Graph";
 
 export const SerializedCommentBox = z.object({
+  id: z.number().optional(),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -17,6 +18,7 @@ export const SerializedCommentBox = z.object({
 });
 
 export interface CommentBoxArgs {
+  id: number;
   graph: Graph;
   position: XY;
   size: XY;
@@ -24,12 +26,14 @@ export interface CommentBoxArgs {
 }
 
 export class CommentBox {
+  id: number;
   graph: Graph;
   position: XY;
   size: XY;
   text: string;
 
   constructor(args: CommentBoxArgs) {
+    this.id = args.id;
     this.graph = args.graph;
     this.position = args.position;
     this.size = args.size;
@@ -68,6 +72,7 @@ export class CommentBox {
 
   serialize(): z.infer<typeof SerializedCommentBox> {
     return {
+      id: this.id,
       position: this.position,
       size: this.size,
       text: this.text,
@@ -80,6 +85,7 @@ export class CommentBox {
   ): CommentBox | null {
     return new CommentBox({
       graph,
+      id: data.id ?? graph.generateId(),
       position: data.position,
       size: data.size,
       text: data.text,

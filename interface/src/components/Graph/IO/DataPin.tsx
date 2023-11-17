@@ -18,14 +18,12 @@ interface Props {
 }
 
 export const DataPin = (props: Props) => {
-  const pin = props.pin;
-
-  const { ref, active } = usePin(pin);
+  const { ref, active } = usePin(() => props.pin);
 
   const connected = () =>
-    pin instanceof DataInput
-      ? pin.connection.isSome()
-      : pin.connections.size > 0;
+    props.pin instanceof DataInput
+      ? props.pin.connection.isSome()
+      : props.pin.connections.size > 0;
 
   const containerProps = () =>
     ({
@@ -53,9 +51,9 @@ export const DataPin = (props: Props) => {
 
   const innerType = {
     get value() {
-      if (pin.type instanceof WildcardType) {
-        return pin.type.wildcard.value().unwrapOr(pin.type);
-      } else return pin.type;
+      if (props.pin.type instanceof WildcardType) {
+        return props.pin.type.wildcard.value().unwrapOr(props.pin.type);
+      } else return props.pin.type;
     },
   };
 
@@ -187,7 +185,7 @@ export const DataPin = (props: Props) => {
       <Tooltip.Portal>
         <Tooltip.Content class="bg-black min-w-[2.5rem] text-center text-white text-xs px-1 py-0.5 rounded border border-gray-500">
           <Tooltip.Arrow />
-          {pin.type.toString()}
+          {props.pin.type.toString()}
         </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>

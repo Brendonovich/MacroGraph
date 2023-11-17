@@ -1,3 +1,16 @@
+import { createMutable } from "solid-js/store";
+import { z } from "zod";
+import {
+  untrack,
+  createRoot,
+  createRenderEffect,
+  getOwner,
+  runWithOwner,
+  createMemo,
+  Accessor,
+  onCleanup,
+} from "solid-js";
+
 import { IOBuilder, NodeSchema } from "./NodeSchema";
 import {
   DataInput,
@@ -9,19 +22,7 @@ import {
 } from "./IO";
 import { Graph } from ".";
 import { XY } from "../bindings";
-import { createMutable } from "solid-js/store";
-import { z } from "zod";
-import {
-  untrack,
-  createRoot,
-  createRenderEffect,
-  getOwner,
-  runWithOwner,
-  createMemo,
-  Accessor,
-} from "solid-js";
 import { Option } from "../types";
-import { onCleanup } from "solid-js";
 
 export interface NodeArgs {
   id: number;

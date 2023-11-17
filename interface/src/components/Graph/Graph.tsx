@@ -1,138 +1,129 @@
 import clsx from "clsx";
 import {
+  createEffect,
   Accessor,
   createContext,
   useContext,
   createRoot,
-  createEffect,
 } from "solid-js";
-import {
-  Graph as GraphModel,
-  Pin,
-  XY,
-  Node as NodeModel,
-  CommentBox as CommentBoxModel,
-} from "@macrograph/core";
+import { Graph as GraphModel, Pin, XY } from "@macrograph/core";
 import { createSignal, For, onMount } from "solid-js";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
-import { createEventListener } from "@solid-primitives/event-listener";
+import {
+  createEventListener,
+  createEventListenerMap,
+} from "@solid-primitives/event-listener";
 
 import { Node } from "./Node";
 import { ConnectionRender } from "../Graph";
 import { useUIStore } from "../../UIStore";
 import { CommentBox } from "./CommentBox";
 import { ReactiveWeakMap } from "@solid-primitives/map";
-import { SetStoreFunction, createStore } from "solid-js/store";
-import { useCoreContext } from "../../contexts";
-import { createElementBounds } from "@solid-primitives/bounds";
+import { createStore } from "solid-js/store";
 
 type PanState =
   | { state: "none" }
   | { state: "waiting"; downposx: number; downposy: number }
   | { state: "active" };
 
-interface Props {
-  graph: GraphModel;
-}
+export type SelectedItemID =
+  | { type: "node"; id: number }
+  | { type: "commentBox"; id: number };
 
-function createGraphState(
-  model: GraphModel,
-  ref: Accessor<HTMLDivElement | undefined>
-) {
-  const bounds = createElementBounds(ref);
-
-  const [state, setState] = createStore({
-    model,
-    bounds,
-    offset: {
-      get x() {
-        return bounds.left;
-      },
-      get y() {
-        return bounds.top;
-      },
-    } as XY,
+export function createGraphState(model: GraphModel) {
+  return {
+    id: model.id,
     translate: {
       x: 0,
       y: 0,
     } as XY,
     scale: 1,
-    selectedItem: null as NodeModel | CommentBoxModel | null,
-  });
-
-  return [state, setState] as const;
-}
-
-export type GraphState = ReturnType<typeof createGraphState>[0];
-
-export function toGraphSpace(clientXY: XY, state: GraphState) {
-  return {
-    x: (clientXY.x - state.offset.x) / state.scale + state.translate.x,
-    y: (clientXY.y - state.offset.y) / state.scale + state.translate.y,
+    selectedItemId: null as SelectedItemID | null,
   };
 }
 
-export function toScreenSpace(graphXY: XY, state: GraphState) {
+export type GraphState = ReturnType<typeof createGraphState>;
+
+export function toGraphSpace(clientXY: XY, bounds: XY, state: GraphState) {
   return {
-    x: (graphXY.x - state.translate.x) * state.scale + state.offset.x,
-    y: (graphXY.y - state.translate.y) * state.scale + state.offset.y,
+    x: (clientXY.x - bounds.x) / state.scale + state.translate.x,
+    y: (clientXY.y - bounds.y) / state.scale + state.translate.y,
+  };
+}
+
+export function toScreenSpace(graphXY: XY, bounds: XY, state: GraphState) {
+  return {
+    x: (graphXY.x - state.translate.x) * state.scale + bounds.x,
+    y: (graphXY.y - state.translate.y) * state.scale + bounds.y,
   };
 }
 
 const MAX_ZOOM_IN = 2.5;
 const MAX_ZOOM_OUT = 5;
 
+interface Props {
+  state: GraphState;
+  graph: GraphModel;
+  onMouseDown?(): void;
+  onScaleChange(scale: number): void;
+  onTranslateChange(translate: XY): void;
+  onSizeChange(size: { width: number; height: number }): void;
+  onBoundsChange(bounds: XY): void;
+  onItemSelected(id: SelectedItemID | null): void;
+}
+
 export const Graph = (props: Props) => {
-  const coreCtx = useCoreContext();
+  const UI = useUIStore();
+  const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
 
   const model = () => props.graph;
 
-  const UI = useUIStore();
-
-  const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
-
-  const [state, setState] = createGraphState(props.graph, ref);
   const pinPositions = new ReactiveWeakMap<Pin, XY>();
+
+  const [size, setSize] = createSignal({ width: 0, height: 0 });
+  const [bounds, setBounds] = createStore({ x: 0, y: 0 });
+
+  createResizeObserver(ref, (bounds) => {
+    const value = {
+      width: bounds.width,
+      height: bounds.height,
+    };
+
+    props.onSizeChange(value);
+    setSize(value);
+  });
 
   function onResize() {
     const bounds = ref()!.getBoundingClientRect()!;
 
-    setState({
-      offset: {
-        x: bounds.left,
-        y: bounds.top,
-      },
-    });
+    const value = {
+      x: bounds.left,
+      y: bounds.top,
+    };
+
+    props.onBoundsChange(value);
+    setBounds(value);
   }
 
   function updateScale(delta: number, screenOrigin: XY) {
-    const startGraphOrigin = toGraphSpace(screenOrigin, state);
+    const startGraphOrigin = toGraphSpace(screenOrigin, bounds, props.state);
 
-    setState({
-      scale: Math.min(
-        Math.max(1 / MAX_ZOOM_OUT, state.scale + delta / 20),
+    props.onScaleChange(
+      Math.min(
+        Math.max(1 / MAX_ZOOM_OUT, props.state.scale + delta / 20),
         MAX_ZOOM_IN
-      ),
-    });
+      )
+    );
 
-    const endGraphOrigin = toScreenSpace(startGraphOrigin, state);
+    const endGraphOrigin = toScreenSpace(startGraphOrigin, bounds, props.state);
 
-    setState({
-      translate: {
-        x:
-          state.translate.x + (endGraphOrigin.x - screenOrigin.x) / state.scale,
-        y:
-          state.translate.y + (endGraphOrigin.y - screenOrigin.y) / state.scale,
-      },
+    const { translate, scale } = props.state;
+
+    props.onTranslateChange({
+      x: translate.x + (endGraphOrigin.x - screenOrigin.x) / scale,
+      y: translate.y + (endGraphOrigin.y - screenOrigin.y) / scale,
     });
   }
-
-  createEffect(() => {
-    setState({
-      model: model(),
-    });
-    UI.registerGraphState(props.graph, state);
-  });
 
   onMount(() => {
     createEventListener(window, "resize", onResize);
@@ -142,24 +133,25 @@ export const Graph = (props: Props) => {
       let lastScale = 1;
 
       createRoot((dispose) => {
-        createEventListener(ref, "gestureend", dispose);
+        createEventListenerMap(() => ref() ?? [], {
+          gestureend: dispose,
+          gesturechange: (e: any) => {
+            let scale = e.scale;
+            let direction = 1;
 
-        createEventListener(ref, "gesturechange", (e: any) => {
-          let scale = e.scale;
-          let direction = 1;
+            if (scale < 1) {
+              direction = -1;
+              scale = 1 / scale;
+              if (lastScale < 1) lastScale = 1 / lastScale;
+            }
 
-          if (scale < 1) {
-            direction = -1;
-            scale = 1 / scale;
-            if (lastScale < 1) lastScale = 1 / lastScale;
-          }
+            updateScale((scale - lastScale) * direction, {
+              x: e.clientX,
+              y: e.clientY,
+            });
 
-          updateScale((scale - lastScale) * direction, {
-            x: e.clientX,
-            y: e.clientY,
-          });
-
-          lastScale = e.scale;
+            lastScale = e.scale;
+          },
         });
       });
     });
@@ -171,25 +163,27 @@ export const Graph = (props: Props) => {
     <GraphContext.Provider
       value={{
         model,
-        state,
-        setState,
+        get state() {
+          return props.state;
+        },
+        offset: bounds,
         pinPositions,
-        toGraphSpace: (xy) => toGraphSpace(xy, state),
-        toScreenSpace: (xy) => toScreenSpace(xy, state),
+        toGraphSpace: (xy) => toGraphSpace(xy, bounds, props.state),
+        toScreenSpace: (xy) => toScreenSpace(xy, bounds, props.state),
       }}
     >
       <div
-        onMouseDown={() => UI.setFocusedGraph(props.graph)}
-        class="flex-1 relative h-full overflow-hidden bg-mg-graph"
+        onMouseDown={props.onMouseDown}
+        class="flex-1 w-full relative overflow-hidden bg-mg-graph"
         ref={setRef}
       >
-        <ConnectionRender />
+        <ConnectionRender graphBounds={{ ...bounds, ...size() }} />
         <div
           class={clsx(
             "absolute inset-0 text-white origin-top-left overflow-hidden w-[500%] h-[500%]",
             pan().state === "active" && "cursor-grabbing"
           )}
-          style={{ transform: `scale(${state.scale})` }}
+          style={{ transform: `scale(${props.state.scale})` }}
           onWheel={(e) => {
             e.preventDefault();
 
@@ -211,11 +205,9 @@ export const Graph = (props: Props) => {
                 y: e.clientY,
               });
             } else
-              setState({
-                translate: {
-                  x: state.translate.x + deltaX,
-                  y: state.translate.y + deltaY,
-                },
+              props.onTranslateChange({
+                x: props.state.translate.x + deltaX,
+                y: props.state.translate.y + deltaY,
               });
           }}
           onMouseUp={(e) => {
@@ -226,7 +218,7 @@ export const Graph = (props: Props) => {
                   else
                     UI.state.schemaMenu = {
                       status: "open",
-                      graph: state,
+                      graph: props.state,
                       position: {
                         x: e.clientX,
                         y: e.clientY,
@@ -241,8 +233,9 @@ export const Graph = (props: Props) => {
           onMouseDown={(e) => {
             switch (e.button) {
               case 0:
-                setState({ selectedItem: null });
-                UI.state.schemaMenu = { status: "closed" };
+                props.onMouseDown?.();
+                // props.setState({ selectedItemId: null });
+                // UI.state.schemaMenu = { status: "closed" };
                 break;
               case 2:
                 setPan({
@@ -251,7 +244,7 @@ export const Graph = (props: Props) => {
                   downposy: e.clientY,
                 });
 
-                const oldTranslate = { ...state.translate };
+                const oldTranslate = { ...props.state.translate };
                 const startPosition = {
                   x: e.clientX,
                   y: e.clientY,
@@ -273,19 +266,15 @@ export const Graph = (props: Props) => {
                       status: "closed",
                     };
 
-                    setState({
-                      translate: {
-                        x:
-                          (startPosition.x -
-                            e.clientX +
-                            oldTranslate.x * state.scale) /
-                          state.scale,
-                        y:
-                          (startPosition.y -
-                            e.clientY +
-                            oldTranslate.y * state.scale) /
-                          state.scale,
-                      },
+                    const { scale } = props.state;
+
+                    props.onTranslateChange({
+                      x:
+                        (startPosition.x - e.clientX + oldTranslate.x * scale) /
+                        scale,
+                      y:
+                        (startPosition.y - e.clientY + oldTranslate.y * scale) /
+                        scale,
                     });
                   });
 
@@ -302,16 +291,30 @@ export const Graph = (props: Props) => {
           <div
             class="origin-[0,0]"
             style={{
-              transform: `translate(${state.translate.x * -1}px, ${
-                state.translate.y * -1
+              transform: `translate(${props.state.translate.x * -1}px, ${
+                props.state.translate.y * -1
               }px)`,
             }}
           >
             <For each={[...model().commentBoxes.values()]}>
-              {(box) => <CommentBox box={box} />}
+              {(box) => (
+                <CommentBox
+                  box={box}
+                  onSelected={() =>
+                    props.onItemSelected({ type: "commentBox", id: box.id })
+                  }
+                />
+              )}
             </For>
             <For each={[...model().nodes.values()]}>
-              {(node) => <Node node={node} />}
+              {(node) => (
+                <Node
+                  node={node}
+                  onSelected={() =>
+                    props.onItemSelected({ type: "node", id: node.id })
+                  }
+                />
+              )}
             </For>
           </div>
         </div>
@@ -324,7 +327,7 @@ const GraphContext = createContext<{
   model: Accessor<GraphModel>;
   pinPositions: ReactiveWeakMap<Pin, XY>;
   state: GraphState;
-  setState: SetStoreFunction<GraphState>;
+  offset: XY;
   toGraphSpace(pos: XY): XY;
   toScreenSpace(pos: XY): XY;
 } | null>(null);

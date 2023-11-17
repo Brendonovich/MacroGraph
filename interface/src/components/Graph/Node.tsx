@@ -7,6 +7,8 @@ import {
   onCleanup,
   Show,
   onMount,
+  createMemo,
+  createRoot,
 } from "solid-js";
 import {
   Node as NodeModel,
@@ -19,6 +21,7 @@ import {
   NodeSchemaVariant,
   NODE_EMIT,
 } from "@macrograph/core";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 import "./Node.css";
 import { NodeProvider } from "../../contexts";
@@ -35,6 +38,7 @@ import {
 
 interface Props {
   node: NodeModel;
+  onSelected(): void;
 }
 
 const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
@@ -64,15 +68,6 @@ export const Node = (props: Props) => {
 
   onCleanup(ACTIVE);
 
-  const handleMouseMove = (e: MouseEvent) => {
-    const scale = graph.state.scale;
-
-    node().setPosition({
-      x: node().state.position.x + e.movementX / scale,
-      y: node().state.position.y + e.movementY / scale,
-    });
-  };
-
   const [editingName, setEditingName] = createSignal(false);
 
   let ref: HTMLDivElement | undefined;
@@ -96,13 +91,18 @@ export const Node = (props: Props) => {
     onCleanup(() => obs.disconnect());
   });
 
+  const isSelected = createMemo(() => {
+    const selectedItem = graph.state.selectedItemId;
+    return selectedItem?.type === "node" && selectedItem.id === node().id;
+  });
+
   return (
     <NodeProvider node={node()}>
       <div
         ref={ref}
         class={clsx(
           "absolute top-0 left-0 text-[12px] overflow-hidden rounded-lg flex flex-col bg-black/75 border-black/75 border-2",
-          graph.state.selectedItem === node() && "ring-2 ring-yellow-500"
+          isSelected() && "ring-2 ring-yellow-500"
         )}
         style={{
           transform: `translate(${node().state.position.x}px, ${
@@ -113,7 +113,7 @@ export const Node = (props: Props) => {
         <div
           class={clsx(
             "h-6 duration-100 text-md font-medium",
-            active() === 1 ? "active-fade-in" : "",
+            active() === 1 && "opacity-50",
             (() => {
               const schema = node().schema;
               return SchemaVariantColours[
@@ -144,19 +144,21 @@ export const Node = (props: Props) => {
                   e.preventDefault();
                   switch (e.button) {
                     case 0: {
-                      graph.setState({
-                        selectedItem: node(),
-                      });
+                      props.onSelected();
 
-                      window.addEventListener("mousemove", handleMouseMove);
-                      const listener = () => {
-                        window.removeEventListener("mouseup", listener);
-                        window.removeEventListener(
-                          "mousemove",
-                          handleMouseMove
-                        );
-                      };
-                      window.addEventListener("mouseup", listener);
+                      createRoot((dispose) => {
+                        createEventListenerMap(window, {
+                          mouseup: dispose,
+                          mousemove: (e) => {
+                            const scale = graph.state.scale;
+
+                            node().setPosition({
+                              x: node().state.position.x + e.movementX / scale,
+                              y: node().state.position.y + e.movementY / scale,
+                            });
+                          },
+                        });
+                      });
 
                       break;
                     }

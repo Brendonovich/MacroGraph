@@ -1,6 +1,6 @@
 import { onMount } from "solid-js";
-import { Core, WsProvider, createWsProvider } from "@macrograph/core";
-import Interface from "@macrograph/interface";
+import { Core, createWsProvider } from "@macrograph/core";
+import { Interface } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 
@@ -90,5 +90,5 @@ export default function () {
     ].map((p) => core.registerPackage(p));
   });
 
-  return <Interface core={core} />;
+  return <Interface core={core} environment="custom" />;
 }
