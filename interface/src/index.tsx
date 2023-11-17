@@ -1,17 +1,15 @@
+import "@total-typescript/ts-reset";
+import * as Solid from "solid-js";
+import { createStore, produce } from "solid-js/store";
 import {
-  createSignal,
-  onMount,
-  Show,
-  createMemo,
-  Switch,
-  Match,
-  createEffect,
-  createRoot,
-  For,
-  onCleanup,
-  on,
-} from "solid-js";
-import { Core, SerializedProject, XY } from "@macrograph/core";
+  CommentBox,
+  Core,
+  SerializedProject,
+  XY,
+  Node,
+  Graph as GraphModel,
+  Project,
+} from "@macrograph/core";
 import {
   createEventListener,
   createEventListenerMap,
@@ -20,7 +18,7 @@ import { createElementBounds } from "@solid-primitives/bounds";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import { HiSolidXMark } from "solid-icons/hi";
-import "@total-typescript/ts-reset";
+import clsx from "clsx";
 
 import { CoreProvider } from "./contexts";
 import {
@@ -31,13 +29,18 @@ import {
 } from "./components/Graph";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { SchemaMenu } from "./components/SchemaMenu";
-import { createStore, produce } from "solid-js/store";
 import { MIN_WIDTH, SNAP_CLOSE_PCT, Sidebar } from "./components/Sidebar";
 import Settings from "./settings";
 import { GraphList } from "./components/ProjectSidebar";
 import { PrintOutput } from "./components/PrintOutput";
 import { GraphSidebar, NodeSidebar } from "./Sidebars";
-import clsx from "clsx";
+import {
+  commentBoxToClipboardItem,
+  deserializeClipboardItem,
+  nodeToClipboardItem,
+  readFromClipboard,
+  writeClipboardItemToClipboard,
+} from "./clipboard";
 
 export { useCore } from "./contexts";
 
@@ -50,9 +53,11 @@ export function Interface(props: {
   core: Core;
   environment: "custom" | "browser";
 }) {
-  const UI = createUIStore(props.core);
+  const UI = createUIStore();
 
-  const [rootRef, setRootRef] = createSignal<HTMLDivElement | undefined>();
+  const [rootRef, setRootRef] = Solid.createSignal<
+    HTMLDivElement | undefined
+  >();
   const rootBounds = createElementBounds(rootRef);
 
   const mouse = createMousePosition(window);
@@ -67,9 +72,10 @@ export function Interface(props: {
     height: 0,
   });
   const [graphStates, setGraphStates] = createStore<GraphState[]>([]);
-  const [currentGraphIndex, setCurrentGraphIndex] = createSignal<number>(0);
+  const [currentGraphIndex, setCurrentGraphIndex] =
+    Solid.createSignal<number>(0);
 
-  const currentGraph = createMemo(() => {
+  const currentGraph = Solid.createMemo(() => {
     const index = currentGraphIndex();
     if (index === null) return;
 
@@ -86,22 +92,29 @@ export function Interface(props: {
     };
   });
 
+  // will account for multi-pane in future
+  const [hoveredPane, setHoveredPane] = Solid.createSignal<null | true>(null);
+
+  const hoveredGraph = Solid.createMemo(() => {
+    if (hoveredPane()) return currentGraph();
+  });
+
   // reduces the current graph index if the current graph
   // is the end graph and it gets deleted
-  createEffect(() => {
+  Solid.createEffect(() => {
     if (currentGraph()) return;
     setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
   });
 
   // removes graph states if graphs are deleted
-  createEffect(() => {
+  Solid.createEffect(() => {
     for (const state of graphStates) {
       const graph = props.core.project.graphs.get(state.id);
       if (!graph) setGraphStates(graphStates.filter((s) => s.id !== state.id));
     }
   });
 
-  onMount(async () => {
+  Solid.onMount(async () => {
     const savedProject = localStorage.getItem("project");
     if (savedProject)
       await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
@@ -110,21 +123,124 @@ export function Interface(props: {
     if (firstGraph) setGraphStates([createGraphState(firstGraph)]);
   });
 
-  createEventListener(window, "keydown", (e) => {
+  createEventListener(window, "keydown", async (e) => {
+    const { core } = props;
+    const { project } = core;
+
     switch (e.code) {
       case "KeyC": {
         if (!e.metaKey && !e.ctrlKey) return;
         const graph = currentGraph();
-        if (!graph || !graph.state.selectedItemId) return;
+        const selectedItemId = graph?.state?.selectedItemId;
+        if (!selectedItemId) return;
 
-        // UI.copyItem(graph.state.selectedItemId);
+        if (selectedItemId.type === "node") {
+          const node = graph.model.nodes.get(selectedItemId.id);
+          if (!node) break;
+
+          await writeClipboardItemToClipboard(nodeToClipboardItem(node));
+        } else if (selectedItemId.type === "commentBox") {
+          const box = graph.model.commentBoxes.get(selectedItemId.id);
+          if (!box) break;
+
+          await writeClipboardItemToClipboard(
+            commentBoxToClipboardItem(box, (node) =>
+              graph.state.nodeSizes.get(node)
+            )
+          );
+        }
+
+        // TODO: toast
 
         break;
       }
       case "KeyV": {
         if (!e.metaKey && !e.ctrlKey) return;
 
-        // UI.pasteClipboard();
+        const item = deserializeClipboardItem(await readFromClipboard());
+
+        switch (item.type) {
+          case "node": {
+            const graph = hoveredGraph();
+            if (!graph) return;
+
+            const { model, state } = graph;
+
+            item.node.id = model.generateId();
+            const node = Node.deserialize(model, {
+              ...item.node,
+              position: toGraphSpace(
+                { x: mouse.x - 10, y: mouse.y - 10 },
+                graphBounds,
+                state
+              ),
+            });
+            if (!node) throw new Error("Failed to deserialize node");
+
+            model.nodes.set(item.node.id, node);
+
+            break;
+          }
+          case "commentBox": {
+            const graph = hoveredGraph();
+            if (!graph) return;
+
+            const { model, state } = graph;
+
+            item.commentBox.id = model.generateId();
+            const commentBox = CommentBox.deserialize(model, {
+              ...item.commentBox,
+              position: toGraphSpace(
+                { x: mouse.x - 10, y: mouse.y - 10 },
+                graphBounds,
+                state
+              ),
+            });
+            if (!commentBox)
+              throw new Error("Failed to deserialize comment box");
+
+            model.commentBoxes.set(item.commentBox.id, commentBox);
+
+            const nodeIdMap = new Map<number, number>();
+            for (const nodeJson of item.nodes) {
+              const id = model.generateId();
+              nodeIdMap.set(nodeJson.id, id);
+              nodeJson.id = id;
+              const node = Node.deserialize(model, {
+                ...nodeJson,
+                position: {
+                  x:
+                    commentBox.position.x +
+                    nodeJson.position.x -
+                    item.commentBox.position.x,
+                  y:
+                    commentBox.position.y +
+                    nodeJson.position.y -
+                    item.commentBox.position.y,
+                },
+              });
+              if (!node) throw new Error("Failed to deserialize node");
+              model.nodes.set(node.id, node);
+            }
+            model.deserializeConnections(item.connections, {
+              nodeIdMap,
+            });
+            break;
+          }
+          case "graph": {
+            item.graph.id = project.generateGraphId();
+            const graph = await GraphModel.deserialize(project, item.graph);
+            if (!graph) throw new Error("Failed to deserialize graph");
+            core.project.graphs.set(graph.id, graph);
+            break;
+          }
+          case "project": {
+            const project = await Project.deserialize(core, item.project);
+            if (!project) throw new Error("Failed to deserialize project");
+            core.project = project;
+            break;
+          }
+        }
 
         break;
       }
@@ -199,7 +315,7 @@ export function Interface(props: {
             e.stopPropagation();
           }}
         >
-          <Show when={leftSidebar.state.open}>
+          <Solid.Show when={leftSidebar.state.open}>
             <Sidebar width={Math.max(leftSidebar.state.width, MIN_WIDTH)}>
               <Settings />
               <div class="overflow-y-auto outer-scroll flex-1">
@@ -230,14 +346,14 @@ export function Interface(props: {
                 leftSidebar.setState({ width: MIN_WIDTH })
               }
             />
-          </Show>
+          </Solid.Show>
 
           <div class="flex-1 flex divide-y divide-black flex-col h-full justify-center items-center text-white">
-            <Show when={currentGraph()} fallback="No graph selected">
+            <Solid.Show when={currentGraph()} fallback="No graph selected">
               {(graph) => (
                 <>
                   <div class="h-8 w-full flex flex-row divide-x divide-black">
-                    <For
+                    <Solid.For
                       each={graphStates
                         .map((state) => {
                           const graph = props.core.project.graphs.get(state.id);
@@ -273,20 +389,19 @@ export function Interface(props: {
                           />
                         </button>
                       )}
-                    </For>
+                    </Solid.For>
                   </div>
                   <Graph
                     graph={graph().model}
                     state={graph().state}
+                    onMouseEnter={() => setHoveredPane(true)}
+                    onMouseMove={() => setHoveredPane(true)}
+                    onMouseLeave={() => setHoveredPane(null)}
                     onItemSelected={(id) => {
                       setGraphStates(graph().index, { selectedItemId: id });
                     }}
-                    onBoundsChange={(bounds) => {
-                      setGraphBounds(bounds);
-                    }}
-                    onSizeChange={(size) => {
-                      setGraphBounds(size);
-                    }}
+                    onBoundsChange={setGraphBounds}
+                    onSizeChange={setGraphBounds}
                     onScaleChange={(scale) => {
                       setGraphStates(graph().index, {
                         scale,
@@ -306,10 +421,10 @@ export function Interface(props: {
                   />
                 </>
               )}
-            </Show>
+            </Solid.Show>
           </div>
 
-          <Show when={rightSidebar.state.open}>
+          <Solid.Show when={rightSidebar.state.open}>
             <ResizeHandle
               width={rightSidebar.state.width}
               side="left"
@@ -321,10 +436,12 @@ export function Interface(props: {
               }
             />
             <Sidebar width={Math.max(rightSidebar.state.width, MIN_WIDTH)}>
-              <Show when={currentGraph()}>
+              <Solid.Show when={currentGraph()}>
                 {(graph) => (
-                  <Switch fallback={<GraphSidebar graph={graph().model} />}>
-                    <Match
+                  <Solid.Switch
+                    fallback={<GraphSidebar graph={graph().model} />}
+                  >
+                    <Solid.Match
                       when={(() => {
                         const {
                           model,
@@ -338,22 +455,22 @@ export function Interface(props: {
                       })()}
                     >
                       {(node) => <NodeSidebar node={node()} />}
-                    </Match>
-                  </Switch>
+                    </Solid.Match>
+                  </Solid.Switch>
                 )}
-              </Show>
+              </Solid.Show>
             </Sidebar>
-          </Show>
+          </Solid.Show>
 
-          <Show
+          <Solid.Show
             when={UI.state.schemaMenu.status === "open" && UI.state.schemaMenu}
           >
             {(data) => {
-              const graph = createMemo(() => {
+              const graph = Solid.createMemo(() => {
                 return props.core.project.graphs.get(data().graph.id);
               });
 
-              createEffect(() => {
+              Solid.createEffect(() => {
                 if (!graph()) UI.state.schemaMenu = { status: "closed" };
               });
 
@@ -361,7 +478,7 @@ export function Interface(props: {
                 toGraphSpace(data().position, graphBounds, data().graph);
 
               return (
-                <Show when={graph()}>
+                <Solid.Show when={graph()}>
                   {(graph) => (
                     <SchemaMenu
                       graph={data().graph}
@@ -388,10 +505,10 @@ export function Interface(props: {
                       }}
                     />
                   )}
-                </Show>
+                </Solid.Show>
               );
             }}
-          </Show>
+          </Solid.Show>
         </div>
       </UIStoreProvider>
     </CoreProvider>
@@ -407,8 +524,8 @@ function createSidebarState(name: string) {
     { name }
   );
 
-  createEffect(
-    on(
+  Solid.createEffect(
+    Solid.on(
       () => state.width,
       (width) => {
         if (width < MIN_WIDTH * (1 - SNAP_CLOSE_PCT)) setState({ open: false });
@@ -439,10 +556,10 @@ function ResizeHandle(props: {
           const startX = e.clientX;
           const startWidth = props.width;
 
-          createRoot((dispose) => {
+          Solid.createRoot((dispose) => {
             let currentWidth = startWidth;
 
-            onCleanup(() => props.onResizeEnd?.(currentWidth));
+            Solid.onCleanup(() => props.onResizeEnd?.(currentWidth));
 
             createEventListenerMap(window, {
               mouseup: dispose,

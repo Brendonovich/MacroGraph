@@ -64,7 +64,7 @@ export function CommentBox(props: Props) {
 
                     const nodes = box().getNodes(
                       graph.model().nodes.values(),
-                      (node) => UI.state.nodeBounds.get(node) ?? null
+                      (node) => graph.state.nodeSizes.get(node)
                     );
 
                     createRoot((dispose) => {

@@ -6,6 +6,7 @@ import { useCore } from "../../contexts";
 import { useUIStore } from "../../UIStore";
 import { GraphItem } from "./GraphItem";
 import { SidebarSection } from "../Sidebar";
+import { deserializeClipboardItem, readFromClipboard } from "../../clipboard";
 
 // React component to show a list of projects
 interface Props {
@@ -26,7 +27,10 @@ export const GraphList = (props: Props) => {
             class="px-1"
             onClick={async (e) => {
               e.stopPropagation();
-              UI.pasteClipboard();
+              const item = deserializeClipboardItem(await readFromClipboard());
+              if (item.type !== "graph") return;
+
+              // TODO: paste graph
             }}
           >
             <CgImport />

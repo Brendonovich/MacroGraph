@@ -259,13 +259,11 @@ export class Graph {
     }
 
     graph.commentBoxes = new ReactiveMap(
-      data.commentBoxes.map((box) => [
-        box.id,
-        new CommentBox({
-          ...box,
-          graph,
-        }),
-      ])
+      data.commentBoxes.map((box) => {
+        const id = box.id ?? graph.generateId();
+
+        return [id, new CommentBox({ ...box, id, graph })];
+      })
     );
 
     return graph;

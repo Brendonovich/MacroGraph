@@ -1,8 +1,9 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { XY } from "../bindings";
+
 import { Node } from "./Node";
 import { Graph } from "./Graph";
+import { XY, Size } from "../utils";
 
 export const SerializedCommentBox = z.object({
   id: z.number().optional(),
@@ -25,6 +26,8 @@ export interface CommentBoxArgs {
   text: string;
 }
 
+export type GetNodeSize = (node: Node) => Size | undefined;
+
 export class CommentBox {
   id: number;
   graph: Graph;
@@ -42,10 +45,7 @@ export class CommentBox {
     return createMutable(this);
   }
 
-  getNodes(
-    nodes: IterableIterator<Node>,
-    getNodeSize: (node: Node) => { width: number; height: number } | null
-  ) {
+  getNodes(nodes: IterableIterator<Node>, getNodeSize: GetNodeSize) {
     const { size, position } = this;
 
     const ret: Node[] = [];
