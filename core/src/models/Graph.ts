@@ -42,6 +42,12 @@ export const SerializedGraph = z.object({
   connections: z.array(SerializedConnection).default([]),
 });
 
+type Variable = {
+  id: number;
+  name: string;
+  value: string;
+};
+
 export class Graph {
   id: number;
   name: string;
@@ -49,6 +55,7 @@ export class Graph {
 
   nodes = new ReactiveMap<number, Node>();
   commentBoxes = new ReactiveMap<number, CommentBox>();
+  variables: Variable[] = [];
 
   private idCounter = 0;
 
@@ -92,6 +99,16 @@ export class Graph {
     this.project.save();
 
     return box;
+  }
+
+  createVariable(args: Omit<Variable, "id">) {
+    const id = this.generateId();
+
+    this.variables.push({ ...args, id });
+
+    this.project.save();
+
+    return id;
   }
 
   connectPins(
