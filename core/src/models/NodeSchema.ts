@@ -1,4 +1,5 @@
 import { createMutable } from "solid-js/store";
+
 import { AnyType, BaseType, Maybe, None, Option, t } from "../types";
 import { Wildcard } from "../types/wildcard";
 import {
@@ -13,6 +14,7 @@ import {
 } from "./IO";
 import { Package } from "./Package";
 import { Node } from "./Node";
+import { Graph } from "./Graph";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 
@@ -205,31 +207,71 @@ export type RunCtx = {
     : TInput extends ScopeInput
     ? Record<string, unknown>
     : never;
+  getProperty<TProperty extends PropertyDef & { id: string }>(
+    property: TProperty
+  ): PropertyValue;
 };
 
 export type EventsMap<T extends string = string> = Record<T, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
-  | NonEventNodeSchema<any, any>
-  | EventNodeSchema<TEvents, any, any, any>;
+  | NonEventNodeSchema<any, any, Record<string, PropertyDef>>
+  | EventNodeSchema<TEvents, any, any, any, Record<string, PropertyDef>>;
 
-export type NonEventNodeSchema<TState extends object = object, TIO = void> = {
+export type PropertyValue = { id: string; display: string };
+
+export type PropertyDef = {
+  name: string;
+  source(args: { node: Node }): Array<PropertyValue>;
+};
+
+export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
+  [K in keyof TProperties]: {
+    id: K;
+  } & TProperties[K];
+};
+
+export type BaseNodeSchema<
+  TState extends object = object,
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = {
   name: string;
   generateIO: (builder: IOBuilder, state: TState) => TIO;
   package: Package<EventsMap>;
+  properties?: SchemaProperties<TProperties>;
+};
+
+type BaseRunArgs<
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = {
+  ctx: RunCtx;
+  io: TIO;
+  properties: SchemaProperties<TProperties>;
+  graph: Graph;
+};
+
+export type NonEventNodeSchema<
+  TState extends object = object,
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = BaseNodeSchema<TState, TIO, TProperties> & {
   variant: Exclude<NodeSchemaVariant, "Event">;
-  run: (a: { ctx: RunCtx; io: TIO }) => void | Promise<void>;
+  run: (a: BaseRunArgs<TIO, TProperties>) => void | Promise<void>;
 };
 
 export type EventNodeSchema<
   TEvents extends EventsMap = EventsMap,
   TEvent extends keyof TEvents = string,
   TState extends object = object,
-  TIO = void
-> = {
-  name: string;
-  generateIO: (builder: IOBuilder, state: TState) => TIO;
-  package: Package<EventsMap>;
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = BaseNodeSchema<TState, TIO, TProperties> & {
   event: TEvent;
-  run: (a: { ctx: RunCtx; data: TEvents[TEvent]; io: TIO }) => void;
+  run: (
+    a: BaseRunArgs<TIO, TProperties> & {
+      data: TEvents[TEvent];
+    }
+  ) => void;
 };

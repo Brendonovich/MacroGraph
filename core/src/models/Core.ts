@@ -145,13 +145,15 @@ class ExecutionContext {
     NODE_EMIT.emit(this.root);
 
     this.root.schema.run({
-      ctx: this.createCtx(),
+      ctx: this.createCtx(this.root),
       io: this.root.ioReturn,
       data,
+      properties: this.root.schema.properties ?? {},
+      graph: this.root.graph,
     });
   }
 
-  createCtx(): RunCtx {
+  createCtx(node: Node): RunCtx {
     return {
       exec: async (execOutput) => {
         await execOutput.connection.peekAsync((conn) =>
@@ -185,6 +187,9 @@ class ExecutionContext {
             return data;
           }
         );
+      },
+      getProperty: (property) => {
+        return node.state.properties[property.id]!;
       },
     };
   }
@@ -220,8 +225,10 @@ class ExecutionContext {
     });
 
     await node.schema.run({
-      ctx: this.createCtx(),
+      ctx: this.createCtx(node),
       io: node.ioReturn,
+      properties: node.schema.properties ?? {},
+      graph: node.graph,
     });
   }
 }

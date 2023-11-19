@@ -1,8 +1,8 @@
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
-import { ReactiveSet } from "@solid-primitives/set";
 import { z } from "zod";
+
 import {
   DataInput,
   DataOutput,
@@ -33,20 +33,25 @@ export interface GraphArgs {
   project: Project;
 }
 
+const SerializedVariable = z.object({
+  id: z.number(),
+  name: z.string(),
+  value: z.number(),
+});
+
 export const SerializedGraph = z.object({
   id: z.coerce.number(),
   name: z.string(),
   nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
   commentBoxes: z.array(SerializedCommentBox).default([]),
+  variables: z.array(SerializedVariable).default([]),
   nodeIdCounter: z.number(),
   connections: z.array(SerializedConnection).default([]),
 });
 
-type Variable = {
-  id: number;
-  name: string;
-  value: string;
-};
+class Variable {
+  constructor(public id: number, public name: string, public value: number) {}
+}
 
 export class Graph {
   id: number;
@@ -109,6 +114,13 @@ export class Graph {
     this.project.save();
 
     return id;
+  }
+
+  setVariableValue(id: number, value: any) {
+    const variable = this.variables.find((v) => v.id === id);
+    if (variable) variable.value = value;
+
+    this.project.save();
   }
 
   connectPins(
@@ -230,6 +242,7 @@ export class Graph {
       commentBoxes: [...this.commentBoxes.values()].map((box) =>
         box.serialize()
       ),
+      variables: this.variables,
       connections: serializeConnections(this.nodes.values()),
     };
   }
@@ -282,6 +295,8 @@ export class Graph {
         return [id, new CommentBox({ ...box, id, graph })];
       })
     );
+
+    graph.variables = data.variables;
 
     return graph;
   }

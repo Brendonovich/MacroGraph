@@ -34,7 +34,7 @@ export function Sidebar(props: SidebarProps) {
 const MIN_HEIGHT = 250;
 
 export function SidebarSection(
-  props: ParentProps<{ title: string; right?: JSX.Element }>
+  props: ParentProps<{ title: string; right?: JSX.Element; class?: string }>
 ) {
   const [open, setOpen] = makePersisted(createSignal(!false), {
     name: `sidebar-section-${props.title}-open`,
@@ -56,7 +56,10 @@ export function SidebarSection(
         {props.right}
       </button>
       <Show when={open()}>
-        <div class="overflow-y-auto" style={{ height: `${height()}px` }}>
+        <div
+          class={clsx("overflow-y-auto", props.class)}
+          style={{ height: `${height()}px` }}
+        >
           {props.children}
         </div>
         <div

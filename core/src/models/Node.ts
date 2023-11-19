@@ -11,7 +11,7 @@ import {
   onCleanup,
 } from "solid-js";
 
-import { IOBuilder, NodeSchema } from "./NodeSchema";
+import { IOBuilder, NodeSchema, PropertyValue } from "./NodeSchema";
 import {
   DataInput,
   DataOutput,
@@ -55,6 +55,7 @@ export class Node {
     position: XY;
     inputs: (DataInput<any> | ExecInput | ScopeInput)[];
     outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
+    properties: Record<string, string>;
   };
 
   io!: IOBuilder;
@@ -73,6 +74,7 @@ export class Node {
       position: args.position,
       inputs: [],
       outputs: [],
+      properties: {},
     });
 
     const { owner, dispose } = createRoot((dispose) => ({

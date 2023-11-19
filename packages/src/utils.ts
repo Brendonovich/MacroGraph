@@ -1900,6 +1900,35 @@ export function pkg(core: Core) {
     },
   });
 
+  pkg.createNonEventSchema({
+    name: "Get Graph Variable",
+    variant: "Pure",
+    generateIO(io) {
+      return io.dataOutput({
+        id: "",
+        type: t.float(),
+      });
+    },
+    properties: {
+      variable: {
+        name: "Variable",
+        source: ({ node }) =>
+          node.graph.variables.map((v) => ({
+            id: v.id.toString(),
+            display: v.name,
+          })),
+      },
+    },
+    run({ ctx, io, properties, graph }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = graph.variables.find(
+        (v) => v.id === Number(variableId)
+      )!;
+
+      ctx.setOutput(io, variable.value);
+    },
+  });
+
   return pkg;
 }
 
