@@ -18,7 +18,11 @@ export const FloatInput = (props: Props) => {
     <input
       type="text"
       value={value()}
+      onKeyDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
       onChange={(e) => {
+        e.stopPropagation();
+
         const value = e.target.value;
         setValue(value);
 

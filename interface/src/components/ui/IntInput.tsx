@@ -18,6 +18,8 @@ export const IntInput = (props: Props) => {
     <input
       type="text"
       value={value()}
+      onKeyDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
       onChange={(e) => {
         const value = e.target.value;
 

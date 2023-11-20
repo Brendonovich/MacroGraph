@@ -1,6 +1,6 @@
 import { Graph, Node, PropertyValue } from "@macrograph/core";
 import { SidebarSection } from "./components/Sidebar";
-import { For, Match, Show, createMemo, onCleanup, untrack } from "solid-js";
+import { For, Match, Show } from "solid-js";
 import { FloatInput, SelectInput } from "./components/ui";
 import { Switch } from "solid-js";
 
