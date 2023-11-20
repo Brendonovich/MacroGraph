@@ -57,7 +57,7 @@ export function pkg(args: { prepareURL(url: string): string }) {
   pkg.createEventSchema({
     event: "AudioStopped",
     name: "Audio Stopped Playing",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
