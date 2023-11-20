@@ -286,7 +286,7 @@ export function Interface(props: {
 
         break;
       }
-      case "KeyR": {
+      case "KeyE": {
         if (!(e.metaKey || e.ctrlKey)) return;
 
         rightSidebar.setState((s) => ({ open: !s.open }));
@@ -295,9 +295,15 @@ export function Interface(props: {
       }
       case "ArrowLeft":
       case "ArrowRight": {
-        if (props.environment === "browser" && !(e.metaKey && e.ctrlKey))
+        if (
+          props.environment === "browser" &&
+          !(e.metaKey || (e.shiftKey && e.ctrlKey))
+        )
           return;
-        else if (props.environment === "custom" && !(e.metaKey && e.altKey))
+        else if (
+          props.environment === "custom" &&
+          !(e.metaKey || (e.shiftKey && e.altKey))
+        )
           return;
 
         if (e.code === "ArrowLeft")
