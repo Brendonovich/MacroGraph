@@ -319,7 +319,7 @@ export function Interface(props: {
       <UIStoreProvider store={UI}>
         <div
           ref={setRootRef}
-          class="relative w-full h-full flex flex-row overflow-hidden select-none bg-neutral-800"
+          class="relative w-full h-full flex flex-row overflow-hidden select-none bg-neutral-800 text-white"
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
