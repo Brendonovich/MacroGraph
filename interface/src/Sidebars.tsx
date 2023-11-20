@@ -58,13 +58,8 @@ export function NodeSidebar(props: { node: Node }) {
                 <Switch>
                   <Match when={"source" in property && property}>
                     {(property) => {
-                      function getProperty() {
-                        console.log("getProperty");
-                        return property();
-                      }
-
                       const options = () => {
-                        return getProperty().source({ node: props.node });
+                        return property().source({ node: props.node });
                       };
 
                       const selectedOption = () => {
@@ -82,12 +77,9 @@ export function NodeSidebar(props: { node: Node }) {
                             optionValue="id"
                             optionTextValue="display"
                             getLabel={(o) => o.display}
-                            value={(console.log("value"), selectedOption())}
+                            value={selectedOption()}
                             onChange={(v) => {
-                              untrack(() => {
-                                props.node.state.properties[property().id] =
-                                  v.id;
-                              });
+                              props.node.state.properties[property().id] = v.id;
                             }}
                           />
                         </div>

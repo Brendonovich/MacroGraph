@@ -361,10 +361,6 @@ export function Interface(props: {
           <div class="flex-1 flex divide-y divide-black flex-col h-full justify-center items-center text-white">
             <Solid.Show when={currentGraph()} fallback="No graph selected">
               {(graph) => {
-                Solid.createEffect(() =>
-                  console.log("selectedItemId", graph().state.selectedItemId)
-                );
-
                 return (
                   <>
                     <div class="h-8 w-full flex flex-row divide-x divide-black">

@@ -34,6 +34,10 @@ export function SelectInput<TOption>(props: SelectInputProps<TOption>) {
   return (
     <Select.Root<TOption>
       {...props}
+      onChange={(v) => {
+        if (v === undefined) return;
+        props.onChange(v);
+      }}
       multiple={false}
       class={clsx("w-full text-xs h-5", props.class)}
       itemComponent={(itemProps) => (
