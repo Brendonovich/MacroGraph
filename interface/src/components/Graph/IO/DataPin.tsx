@@ -8,9 +8,10 @@ import {
   t,
   WildcardType,
 } from "@macrograph/core";
-import { usePin } from ".";
 import { Match, Switch } from "solid-js";
 import { Tooltip } from "@kobalte/core";
+
+import { usePin } from ".";
 import { colour } from "../util";
 
 interface Props {

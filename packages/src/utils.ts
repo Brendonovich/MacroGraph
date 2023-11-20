@@ -1939,17 +1939,14 @@ export function pkg(core: Core) {
       },
     },
     generateIO({ io, ctx, properties }) {
-      const value = ctx.getProperty(properties.string);
-
+      const value = ctx.getProperty(properties.string) ?? "";
       const [first, ...blocks] = value.split("{") as [string, ...string[]];
-
       return {
         first,
         blocks: blocks
           .map((block) => {
             const [name, rest] = block.split("}");
             if (name === undefined) return;
-
             return {
               input: io.dataInput({
                 id: name,
@@ -1967,15 +1964,13 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, io }) {
-      ctx.setOutput(
-        io.output,
-        io.blocks.reduce((acc, { input, rest }) => {
-          acc += ctx.getInput(input);
-          if (rest === undefined) acc += rest;
-
-          return acc;
-        }, io.first)
-      );
+      const out = io.blocks.reduce((acc, { input, rest }) => {
+        acc += ctx.getInput(input);
+        if (rest !== undefined) acc += rest;
+        return acc;
+      }, io.first);
+      console.log({ out });
+      ctx.setOutput(io.output, out);
     },
   });
 

@@ -1,7 +1,7 @@
-import { Graph, Node, PropertyValue } from "@macrograph/core";
+import { Graph, Node, PropertyValue, StringType, t } from "@macrograph/core";
 import { SidebarSection } from "./components/Sidebar";
-import { For, Match, Show } from "solid-js";
-import { FloatInput, SelectInput } from "./components/ui";
+import { For, Match, Show, createEffect, createMemo } from "solid-js";
+import { FloatInput, SelectInput, TextInput } from "./components/ui";
 import { Switch } from "solid-js";
 
 export function GraphSidebar(props: { graph: Graph }) {
@@ -54,40 +54,83 @@ export function NodeSidebar(props: { node: Node }) {
         {(properties) => (
           <SidebarSection title="Node Properties">
             <For each={Object.values(properties())}>
-              {(property) => (
-                <Switch>
-                  <Match when={"source" in property && property}>
-                    {(property) => {
-                      const options = () => {
-                        return property().source({ node: props.node });
-                      };
+              {(property) => {
+                const properties = createMemo(() => {
+                  return props.node.state.properties;
+                });
 
-                      const selectedOption = () => {
-                        return options().find(
-                          (o) =>
-                            o.id === props.node.state.properties[property().id]!
-                        );
-                      };
+                return (
+                  <div class="p-2 flex flex-row gap-2 items-center">
+                    <Switch>
+                      <Match when={"source" in property && property}>
+                        {(property) => {
+                          const options = () => {
+                            return property().source({ node: props.node });
+                          };
 
-                      return (
-                        <div class="p-2 flex flex-row gap-2 items-center">
-                          <span>{property().name}</span>
-                          <SelectInput<PropertyValue>
-                            options={options()}
-                            optionValue="id"
-                            optionTextValue="display"
-                            getLabel={(o) => o.display}
-                            value={selectedOption()}
-                            onChange={(v) => {
-                              props.node.state.properties[property().id] = v.id;
-                            }}
-                          />
-                        </div>
-                      );
-                    }}
-                  </Match>
-                </Switch>
-              )}
+                          const selectedOption = () => {
+                            return options().find(
+                              (o) => o.id === properties()[property().id]!
+                            );
+                          };
+
+                          return (
+                            <>
+                              <span>{property().name}</span>
+                              <SelectInput<PropertyValue>
+                                options={options()}
+                                optionValue="id"
+                                optionTextValue="display"
+                                getLabel={(o) => o.display}
+                                value={selectedOption()}
+                                onChange={(v) => {
+                                  properties()[property().id] = v.id;
+                                }}
+                              />
+                            </>
+                          );
+                        }}
+                      </Match>
+                      <Match when={"type" in property && property}>
+                        {(property) => {
+                          return (
+                            <Switch>
+                              <Match
+                                when={(() => {
+                                  const value = property();
+
+                                  if (value.type instanceof t.String)
+                                    return {
+                                      ...value,
+                                      type: value.type,
+                                    };
+                                })()}
+                              >
+                                {(property) => {
+                                  return (
+                                    <>
+                                      <span>{property().name}</span>
+                                      <TextInput
+                                        value={properties()[property().id]!}
+                                        onChange={(v) => {
+                                          props.node.setProperty(
+                                            property().id,
+                                            v
+                                          );
+                                        }}
+                                      />
+                                    </>
+                                  );
+                                }}
+                              </Match>
+                            </Switch>
+                          );
+                        }}
+                      </Match>
+                    </Switch>
+                  </div>
+                );
+              }}
             </For>
           </SidebarSection>
         )}
