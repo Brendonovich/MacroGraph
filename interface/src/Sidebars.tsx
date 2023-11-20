@@ -84,7 +84,7 @@ export function NodeSidebar(props: { node: Node }) {
                                 getLabel={(o) => o.display}
                                 value={selectedOption()}
                                 onChange={(v) => {
-                                  properties()[property().id] = v.id;
+                                  props.node.setProperty(property().id, v.id);
                                 }}
                               />
                             </>

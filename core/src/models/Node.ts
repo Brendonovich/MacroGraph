@@ -166,6 +166,10 @@ export class Node {
     if (save) this.graph.project.save();
   }
 
+  setProperty(property: string, value: any) {
+    this.state.properties[property] = value;
+  }
+
   serialize(): z.infer<typeof SerializedNode> {
     return {
       id: this.id,
