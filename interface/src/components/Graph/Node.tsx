@@ -43,8 +43,6 @@ export const Node = (props: Props) => {
 
   const graph = useGraphContext();
 
-  const UI = useUIStore();
-
   const ACTIVE = NODE_EMIT.subscribe(node(), (data) => {
     if (node().id === data.id && data.schema === node().schema) {
       updateActive(1);
@@ -132,6 +130,7 @@ export const Node = (props: Props) => {
                   e.currentTarget.focus();
                   e.stopPropagation();
                   e.preventDefault();
+
                   switch (e.button) {
                     case 0: {
                       props.onSelected();

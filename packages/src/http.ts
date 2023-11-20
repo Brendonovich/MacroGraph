@@ -6,7 +6,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "GET",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         url: io.dataInput({
           id: "url",
@@ -39,7 +39,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "POST",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         url: io.dataInput({
           id: "url",
@@ -81,7 +81,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "PUT",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         url: io.dataInput({
           id: "url",
@@ -123,7 +123,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "DELETE",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         url: io.dataInput({
           id: "url",

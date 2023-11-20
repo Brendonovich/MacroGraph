@@ -1,3 +1,5 @@
+import "@total-typescript/ts-reset";
+
 export * as audio from "./audio";
 export * as discord from "./discord";
 export * as fs from "./fs";
@@ -22,4 +24,3 @@ export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
 export * as chatgpt from "./chatgpt";
 export * as speakerbot from "./speakerbot";
-

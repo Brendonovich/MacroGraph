@@ -43,20 +43,15 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     this.SettingsUI = args.SettingsUI ? lazy(args.SettingsUI) : undefined;
   }
 
-  createNonEventSchema<
-    TState extends object,
-    TIO,
-    TProperties extends Record<string, PropertyDef>
-  >(
+  createNonEventSchema<TIO, TProperties extends Record<string, PropertyDef>>(
     schema: Omit<
-      NonEventNodeSchema<TState, TIO, TProperties>,
+      NonEventNodeSchema<TIO, TProperties>,
       "package" | "properties"
     > & {
       properties?: TProperties;
     }
   ) {
     const altered: NonEventNodeSchema<
-      TState,
       { custom: TIO; default?: { in: ExecInput; out: ExecOutput } },
       TProperties
     > = {
@@ -72,21 +67,21 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
         },
         {} as SchemaProperties<TProperties>
       ),
-      generateIO: (t, state) => {
+      generateIO: (ctx) => {
         let defaultIO;
 
         if (schema.variant === "Exec") {
           defaultIO = {
-            in: t.execInput({
+            in: ctx.io.execInput({
               id: "exec",
             }),
-            out: t.execOutput({
+            out: ctx.io.execOutput({
               id: "exec",
             }),
           };
         }
 
-        const custom = schema.generateIO(t, state);
+        const custom = schema.generateIO(ctx);
 
         return {
           custom,
@@ -102,40 +97,35 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
       package: this as any,
     };
 
-    this.schemas.add(altered);
+    this.schemas.add(altered as any);
 
     return this;
   }
 
   createEventSchema<
     TEvent extends keyof TEvents,
-    TState extends object,
     TIO,
     TProperties extends Record<string, PropertyDef>
   >(
-    schema: Omit<
-      EventNodeSchema<TEvents, TEvent, TState, TIO, TProperties>,
-      "package"
-    >
+    schema: Omit<EventNodeSchema<TEvents, TEvent, TIO, TProperties>, "package">
   ) {
-    const altered: EventNodeSchema<TEvents, TEvent, TState, TIO, TProperties> =
-      {
-        ...schema,
-        properties: Object.entries(schema.properties ?? {}).reduce(
-          (acc, [id, property]: [keyof TProperties, TProperties[string]]) => {
-            acc[id] = {
-              id,
-              ...property,
-            };
+    const altered: EventNodeSchema<TEvents, TEvent, TIO, TProperties> = {
+      ...schema,
+      properties: Object.entries(schema.properties ?? {}).reduce(
+        (acc, [id, property]: [keyof TProperties, TProperties[string]]) => {
+          acc[id] = {
+            id,
+            ...property,
+          };
 
-            return acc;
-          },
-          {} as SchemaProperties<TProperties>
-        ),
-        package: this as any,
-      };
+          return acc;
+        },
+        {} as SchemaProperties<TProperties>
+      ),
+      package: this as any,
+    };
 
-    this.schemas.add(altered);
+    this.schemas.add(altered as any);
 
     return this;
   }

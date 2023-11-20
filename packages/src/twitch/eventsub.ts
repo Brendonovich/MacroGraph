@@ -124,7 +124,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "User Banned",
     event: "channel.ban",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -193,7 +193,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "User Unbanned",
     event: "channel.unban",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -232,7 +232,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Moderator Add",
     event: "channel.moderator.add",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -259,7 +259,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Moderator Remove",
     event: "channel.moderator.remove",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -286,7 +286,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Point Reward Add",
     event: "channel.channel_points_custom_reward.add",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -418,7 +418,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Point Reward Updated",
     event: "channel.channel_points_custom_reward.update",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -550,7 +550,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Point Reward Remove",
     event: "channel.channel_points_custom_reward.remove",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -682,7 +682,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Point Reward Redeemed",
     event: "channel.channel_points_custom_reward_redemption.add",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -757,7 +757,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Poll Begin",
     event: "channel.poll.begin",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -802,7 +802,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Poll Progress",
     event: "channel.poll.progress",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -847,7 +847,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Poll End",
     event: "channel.poll.end",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -892,7 +892,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Prediction Begin",
     event: "channel.prediction.begin",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -919,7 +919,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Prediction Progress",
     event: "channel.prediction.progress",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -946,7 +946,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Prediction Lock",
     event: "channel.prediction.lock",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -973,7 +973,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Prediction End",
     event: "channel.prediction.end",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1012,7 +1012,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Hype Train Begin",
     event: "channel.hype_train.begin",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1126,7 +1126,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Hype Train Progress",
     event: "channel.hype_train.progress",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1240,7 +1240,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Hype Train End",
     event: "channel.hype_train.end",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1321,7 +1321,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Updated",
     event: "channel.update",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1372,7 +1372,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Subscribe",
     event: "channel.subscribe",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1411,7 +1411,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Subscribe End",
     event: "channel.subscription.end",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1450,7 +1450,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Subscription Gift",
     event: "channel.subscription.gift",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1501,7 +1501,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Subscription Message",
     event: "channel.subscription.message",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1558,7 +1558,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Cheers",
     event: "channel.cheer",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1609,7 +1609,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Raid",
     event: "channel.raid",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1642,7 +1642,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Ad Break Begin",
     event: "channel.ad_break.begin",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1669,7 +1669,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "User Followed",
     event: "channel.follow",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1702,7 +1702,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Shoutout Received",
     event: "channel.shoutout.receive",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1730,7 +1730,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Goal Begin",
     event: "channel.goal.begin",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1782,7 +1782,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Goal Progress",
     event: "channel.goal.progress",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1834,7 +1834,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Channel Goal End",
     event: "channel.goal.end",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1898,7 +1898,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Stream Online",
     event: "stream.online",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1931,7 +1931,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Stream Offline",
     event: "stream.offline",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",

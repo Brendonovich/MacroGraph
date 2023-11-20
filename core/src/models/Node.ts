@@ -55,7 +55,7 @@ export class Node {
     position: XY;
     inputs: (DataInput<any> | ExecInput | ScopeInput)[];
     outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
-    properties: Record<string, string>;
+    properties: Record<string, any>;
   };
 
   io!: IOBuilder;
@@ -86,13 +86,19 @@ export class Node {
 
     runWithOwner(owner, () => {
       createRenderEffect(() => {
-        const builder = new IOBuilder(this, this.io);
+        const io = new IOBuilder(this, this.io);
 
-        this.ioReturn = this.schema.generateIO(builder, {});
+        this.ioReturn = this.schema.generateIO({
+          io,
+          properties: this.schema.properties ?? {},
+          ctx: {
+            getProperty: (property) => this.state.properties[property.id]!,
+          },
+        });
 
-        untrack(() => this.updateIO(builder));
+        untrack(() => this.updateIO(io));
 
-        this.io = builder;
+        this.io = io;
       });
 
       this.dataRoots = createMemo(() => {

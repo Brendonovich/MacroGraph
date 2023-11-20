@@ -133,7 +133,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "ExitStarted",
     name: "Exit Started",
-    generateIO: (io) =>
+    generateIO: ({io}) =>
       io.execOutput({
         id: "exec",
         name: "",
@@ -150,7 +150,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "VendorEvent",
     name: "Vendor Event",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -186,7 +186,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentSceneCollectionChanging",
     name: "Current Scene Collection Changing",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -212,7 +212,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentSceneCollectionChanged",
     name: "Current Scene Collection Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -238,7 +238,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneCollectionListChanged",
     name: "Scene Collection List Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -264,7 +264,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentProfileChanging",
     name: "Current Profile Changing",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -290,7 +290,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentProfileChanged",
     name: "Current Profile Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -316,7 +316,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "ProfileListChanged",
     name: "Profile List Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -342,7 +342,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneCreated",
     name: "Scene Created",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -374,7 +374,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneRemoved",
     name: "Scene Removed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -406,7 +406,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneNameChanged",
     name: "Scene Name Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -438,7 +438,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentProgramSceneChanged",
     name: "Current Program Scene Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -464,7 +464,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentPreviewSceneChanged",
     name: "Current Preview Scene Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -490,7 +490,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneListChanged",
     name: "Scene List Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -522,7 +522,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputCreated",
     name: "Input Created",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -578,7 +578,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputRemoved",
     name: "Input Removed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -604,7 +604,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputNameChanged",
     name: "Input Name Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -636,7 +636,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputActiveStateChanged",
     name: "Input Active State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -668,7 +668,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputShowStateChanged",
     name: "Input Show State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -700,7 +700,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputMuteStateChanged",
     name: "Input Mute State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -732,7 +732,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputVolumeChanged",
     name: "Input Volume Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -770,7 +770,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputAudioBalanceChanged",
     name: "Input Audio Balance Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -802,7 +802,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputAudioSyncOffsetChanged",
     name: "Input Audio Sync Offset Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -834,7 +834,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputAudioTracksChanged",
     name: "Input Audio Tracks Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -874,7 +874,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputAudioMonitorTypeChanged",
     name: "Input Audio Monitor Type Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -911,7 +911,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "InputVolumeMeters",
     name: "Input Volume Meters",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -943,7 +943,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentSceneTransitionChanged",
     name: "Current Scene Transition Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -969,7 +969,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "CurrentSceneTransitionDurationChanged",
     name: "Current Scene Transition Duration Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -995,7 +995,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneTransitionStarted",
     name: "Scene Transition Started",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1021,7 +1021,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneTransitionEnded",
     name: "Scene Transition Ended",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1047,7 +1047,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneTransitionVideoEnded",
     name: "Scene Transition Video Ended",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1077,7 +1077,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SourceFilterRemoved",
     name: "Source Filter Removed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1109,7 +1109,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SourceFilterNameChanged",
     name: "Source Filter Name Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1147,7 +1147,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SourceFilterEnableStateChanged",
     name: "Source Filter Enable State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1185,7 +1185,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneItemCreated",
     name: "Scene Item Created",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1229,7 +1229,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneItemRemoved",
     name: "Scene Item Removed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1269,7 +1269,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   // pkg.createEventSchema({
   //   event: "SceneItemListReindexed",
   //   name: "Scene Item List Reindexed",
-  //   generateIO(io) {
+  //   generateIO({io}) {
   //    io.execOutput({
   //       id: "exec",
   //       name: "",
@@ -1299,7 +1299,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneItemEnableStateChanged",
     name: "Scene Item Enable State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1337,7 +1337,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneItemLockStateChanged",
     name: "Scene Item Lock State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1375,7 +1375,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneItemSelected",
     name: "Scene Item Selected",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1407,7 +1407,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "SceneItemTransformChanged",
     name: "Scene Item Transform Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1474,7 +1474,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "StreamStateChanged",
     name: "Stream State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1506,7 +1506,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "RecordStateChanged",
     name: "Record State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1544,7 +1544,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "ReplayBufferStateChanged",
     name: "Replay Buffer State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1576,7 +1576,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "VirtualcamStateChanged",
     name: "Virtual Cam State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1608,7 +1608,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "ReplayBufferSaved",
     name: "Replay Buffer Saved",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1634,7 +1634,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "MediaInputPlaybackStarted",
     name: "Media Input Playback Started",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1660,7 +1660,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "MediaInputPlaybackEnded",
     name: "Media Input Playback Ended",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1686,7 +1686,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "MediaInputActionTriggered",
     name: "Media Input Action Triggered",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1718,7 +1718,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "StudioModeStateChanged",
     name: "Studio Mode State Changed",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1746,7 +1746,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   // pkg.createEventSchema({
   //   event: "ScreenshotSaved",
   //   name: "Screenshot Saved",
-  //   generateIO(io) {
+  //   generateIO({io}) {
   //    io.execOutput({
   //       id: "exec",
   //       name: "",
@@ -1770,7 +1770,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   pkg.createEventSchema({
     event: "ConnectionOpened",
     name: "Connection Opened",
-    generateIO: (io) =>
+    generateIO: ({io}) =>
       io.execOutput({
         id: "exec",
         name: "",

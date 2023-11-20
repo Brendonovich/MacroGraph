@@ -14,7 +14,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createEventSchema({
     event: "keyDown",
     name: "Stream Deck Key Down",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -36,7 +36,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createEventSchema({
     event: "keyUp",
     name: "Stream Deck Key Up",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",

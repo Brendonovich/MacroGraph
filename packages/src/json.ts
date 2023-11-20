@@ -21,7 +21,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "To JSON",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -48,7 +48,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Parse JSON",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",

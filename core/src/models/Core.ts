@@ -189,7 +189,7 @@ class ExecutionContext {
         );
       },
       getProperty: (property) => {
-        return node.state.properties[property.id]!;
+        return node.state.properties[property.id];
       },
     };
   }

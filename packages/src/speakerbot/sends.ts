@@ -6,7 +6,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Speak",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         voice: io.dataInput({
           id: "voice",
@@ -35,7 +35,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Stop Current",
     variant: "Exec",
-    generateIO(io) {},
+    generateIO({ io }) {},
     run({ ctx, io }) {
       state.state().ws.send(
         JSON.stringify({
@@ -49,7 +49,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Toggle TTS",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         state: io.dataInput({
           id: "state",
@@ -71,7 +71,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Events Toggle",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         state: io.dataInput({
           id: "state",
@@ -94,7 +94,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Queue Toggle",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         state: io.dataInput({
           id: "state",
@@ -116,7 +116,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Queue Clear",
     variant: "Exec",
-    generateIO(io) {},
+    generateIO({ io }) {},
     run({ ctx, io }) {
       state.state().ws.send(
         JSON.stringify({

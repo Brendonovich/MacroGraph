@@ -100,7 +100,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createNonEventSchema({
     name: "Send Chat Message",
     variant: "Exec",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return io.dataInput({
         id: "message",
         name: "Message",
@@ -122,7 +122,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createEventSchema({
     name: "Slow Mode Toggled",
     event: "slowmode",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -149,7 +149,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createEventSchema({
     name: "Emote Only Mode Toggled",
     event: "emoteonly",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -170,7 +170,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createEventSchema({
     name: "Subscriber Only Mode Toggled",
     event: "subonlymode",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -191,7 +191,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createEventSchema({
     name: "Follower Only Mode Toggled",
     event: "followersonly",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -218,7 +218,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createEventSchema({
     name: "Messaged Deleted",
     event: "messagedeleted",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -251,7 +251,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createEventSchema({
     name: "Chat Message",
     event: "chatMessage",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",

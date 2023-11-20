@@ -1,7 +1,8 @@
 import { Graph, Node, PropertyValue } from "@macrograph/core";
 import { SidebarSection } from "./components/Sidebar";
-import { For, Show, createMemo } from "solid-js";
+import { For, Match, Show, createMemo, onCleanup, untrack } from "solid-js";
 import { FloatInput, SelectInput } from "./components/ui";
+import { Switch } from "solid-js";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (
@@ -48,42 +49,53 @@ export function NodeSidebar(props: { node: Node }) {
         <p>Name: {props.node.state.name}</p>
       </SidebarSection>
       <Show
-        when={
-          "properties" in props.node.schema &&
-          props.node.schema.properties &&
-          props.node.schema.properties
-        }
+        when={"properties" in props.node.schema && props.node.schema.properties}
       >
         {(properties) => (
           <SidebarSection title="Node Properties">
             <For each={Object.values(properties())}>
-              {(property) => {
-                const options = createMemo(() =>
-                  property.source({ node: props.node })
-                );
+              {(property) => (
+                <Switch>
+                  <Match when={"source" in property && property}>
+                    {(property) => {
+                      function getProperty() {
+                        console.log("getProperty");
+                        return property();
+                      }
 
-                const selectedOption = createMemo(() =>
-                  options().find(
-                    (o) => o.id === props.node.state.properties[property.id]!
-                  )
-                );
+                      const options = () => {
+                        return getProperty().source({ node: props.node });
+                      };
 
-                return (
-                  <div class="p-2 flex flex-row gap-2 items-center">
-                    <span>{property.name}</span>
-                    <SelectInput<PropertyValue>
-                      options={options()}
-                      optionValue="id"
-                      optionTextValue="display"
-                      getLabel={(o) => o.display}
-                      value={selectedOption()}
-                      onChange={(v) => {
-                        props.node.state.properties[property.id] = v.id;
-                      }}
-                    />
-                  </div>
-                );
-              }}
+                      const selectedOption = () => {
+                        return options().find(
+                          (o) =>
+                            o.id === props.node.state.properties[property().id]!
+                        );
+                      };
+
+                      return (
+                        <div class="p-2 flex flex-row gap-2 items-center">
+                          <span>{property().name}</span>
+                          <SelectInput<PropertyValue>
+                            options={options()}
+                            optionValue="id"
+                            optionTextValue="display"
+                            getLabel={(o) => o.display}
+                            value={(console.log("value"), selectedOption())}
+                            onChange={(v) => {
+                              untrack(() => {
+                                props.node.state.properties[property().id] =
+                                  v.id;
+                              });
+                            }}
+                          />
+                        </div>
+                      );
+                    }}
+                  </Match>
+                </Switch>
+              )}
             </For>
           </SidebarSection>
         )}

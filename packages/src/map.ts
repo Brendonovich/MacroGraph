@@ -8,7 +8,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Get",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -37,7 +37,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Insert",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -75,7 +75,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Clear",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return io.dataInput({
@@ -91,7 +91,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Contains",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -120,7 +120,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Keys",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -144,7 +144,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Values",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -168,7 +168,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Size",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -192,7 +192,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Remove",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {

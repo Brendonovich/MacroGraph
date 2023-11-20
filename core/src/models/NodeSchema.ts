@@ -1,6 +1,14 @@
 import { createMutable } from "solid-js/store";
 
-import { AnyType, BaseType, Maybe, None, Option, t } from "../types";
+import {
+  AnyType,
+  BaseType,
+  Maybe,
+  None,
+  Option,
+  PrimitiveType,
+  t,
+} from "../types";
 import { Wildcard } from "../types/wildcard";
 import {
   DataInput,
@@ -209,21 +217,32 @@ export type RunCtx = {
     : never;
   getProperty<TProperty extends PropertyDef & { id: string }>(
     property: TProperty
-  ): PropertyValue;
+  ): inferPropertyDef<TProperty>;
 };
 
 export type EventsMap<T extends string = string> = Record<T, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
-  | NonEventNodeSchema<any, any, Record<string, PropertyDef>>
-  | EventNodeSchema<TEvents, any, any, any, Record<string, PropertyDef>>;
+  | NonEventNodeSchema<any, Record<string, PropertyDef>>
+  | EventNodeSchema<TEvents, any, any, Record<string, PropertyDef>>;
 
-export type PropertyValue = { id: string; display: string };
+export type PropertyValue = { id: string | number; display: string };
+export type inferPropertyValue<TValue extends PropertyValue> = TValue["id"];
 
-export type PropertyDef = {
-  name: string;
-  source(args: { node: Node }): Array<PropertyValue>;
-};
+export type PropertySourceFn = (args: { node: Node }) => Array<PropertyValue>;
+export type inferPropertySourceFn<TFn extends PropertySourceFn> =
+  inferPropertyValue<ReturnType<TFn>[number]>;
+
+export type PropertyDef = { name: string } & (
+  | { source: PropertySourceFn }
+  | { type: PrimitiveType }
+);
+export type inferPropertyDef<TProperty extends PropertyDef> =
+  TProperty extends { type: PrimitiveType }
+    ? t.infer<TProperty["type"]>
+    : TProperty extends { source: PropertySourceFn }
+    ? inferPropertySourceFn<TProperty["source"]>
+    : never;
 
 export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
   [K in keyof TProperties]: {
@@ -231,13 +250,22 @@ export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
   } & TProperties[K];
 };
 
+export type GenerateIOCtx = {
+  getProperty<TProperty extends PropertyDef & { id: string }>(
+    property: TProperty
+  ): inferPropertyDef<TProperty>;
+};
+
 export type BaseNodeSchema<
-  TState extends object = object,
   TIO = void,
   TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
 > = {
   name: string;
-  generateIO: (builder: IOBuilder, state: TState) => TIO;
+  generateIO: (args: {
+    io: IOBuilder;
+    ctx: GenerateIOCtx;
+    properties: SchemaProperties<TProperties>;
+  }) => TIO;
   package: Package<EventsMap>;
   properties?: SchemaProperties<TProperties>;
 };
@@ -253,10 +281,9 @@ type BaseRunArgs<
 };
 
 export type NonEventNodeSchema<
-  TState extends object = object,
   TIO = void,
   TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
-> = BaseNodeSchema<TState, TIO, TProperties> & {
+> = BaseNodeSchema<TIO, TProperties> & {
   variant: Exclude<NodeSchemaVariant, "Event">;
   run: (a: BaseRunArgs<TIO, TProperties>) => void | Promise<void>;
 };
@@ -264,10 +291,9 @@ export type NonEventNodeSchema<
 export type EventNodeSchema<
   TEvents extends EventsMap = EventsMap,
   TEvent extends keyof TEvents = string,
-  TState extends object = object,
   TIO = void,
   TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
-> = BaseNodeSchema<TState, TIO, TProperties> & {
+> = BaseNodeSchema<TIO, TProperties> & {
   event: TEvent;
   run: (
     a: BaseRunArgs<TIO, TProperties> & {

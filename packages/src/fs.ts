@@ -8,7 +8,7 @@ export function register(actions: { list(path: string): Promise<Entry[]> }) {
   pkg.createNonEventSchema({
     name: "List Files",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         path: io.dataInput({
           id: "path",
@@ -38,7 +38,7 @@ export function register(actions: { list(path: string): Promise<Entry[]> }) {
   pkg.createNonEventSchema({
     name: "List Folders",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         path: io.dataInput({
           id: "path",
