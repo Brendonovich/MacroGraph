@@ -1,10 +1,11 @@
 import clsx from "clsx";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 interface Props {
   initialValue: number;
   onChange(v: number): void;
   class?: string;
+  value?: number;
 }
 
 export const FloatInput = (props: Props) => {
@@ -13,6 +14,9 @@ export const FloatInput = (props: Props) => {
   props.onChange(initialValue);
 
   const [value, setValue] = createSignal(props.initialValue.toString());
+  createEffect(() => {
+    if (props.value !== undefined) setValue(props.value.toString());
+  });
 
   return (
     <input

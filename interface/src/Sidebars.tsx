@@ -31,6 +31,7 @@ export function GraphSidebar(props: { graph: Graph }) {
                 <span class="shrink-0">{variable.name}:</span>
                 <FloatInput
                   initialValue={variable.value}
+                  value={variable.value}
                   onChange={(n) => props.graph.setVariableValue(variable.id, n)}
                 />
               </div>
