@@ -11,6 +11,8 @@ import {
   ScopeOutput,
   Package,
   Core,
+  DataOutput,
+  Struct,
 } from "@macrograph/core";
 import { JSON, jsonToJS } from "./json";
 
@@ -1493,6 +1495,52 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Create Struct",
+    variant: "Pure",
+    generateIO({ io }) {
+      const w = io.wildcard("");
+
+      const output = io.dataOutput({
+        id: "",
+        type: t.wildcard(w),
+      });
+
+      const inputs = w.value().map((wt) => {
+        if (!(wt instanceof t.Struct)) return null;
+
+        const dataOutputs = Object.entries(
+          wt.struct.fields as StructFields
+        ).map(([id, field]) =>
+          io.dataInput({
+            id,
+            name: field.name,
+            type: field.type,
+          })
+        );
+
+        return {
+          wildcard: wt,
+          output: output as unknown as DataOutput<t.Struct<Struct>>,
+          inputs: dataOutputs,
+        };
+      });
+
+      return inputs;
+    },
+    run({ ctx, io }) {
+      io.map((io) => {
+        const data = io.inputs.reduce((acc, input) => {
+          acc[input.id] = ctx.getInput(input);
+        }, {} as any);
+
+        let struct = io.output.type.struct.create(data);
+
+        ctx.setOutput(io.output, struct);
+      });
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Match",
     variant: "Base",
     generateIO({ io }) {
@@ -1913,9 +1961,15 @@ export function pkg(core: Core) {
           })),
       },
     },
-    generateIO({ io }) {
+    generateIO({ io, ctx, properties }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = ctx.graph.variables.find(
+        (v) => v.id === Number(variableId)
+      )!;
+      console.log(variable ? variable.name : "");
       return io.dataOutput({
         id: "",
+        name: variable ? variable.name : "",
         type: t.float(),
       });
     },
@@ -1926,6 +1980,40 @@ export function pkg(core: Core) {
       )!;
 
       ctx.setOutput(io, variable.value);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Graph Variable",
+    variant: "Exec",
+    properties: {
+      variable: {
+        name: "Variable",
+        source: ({ node }) =>
+          node.graph.variables.map((v) => ({
+            id: v.id,
+            display: v.name,
+          })),
+      },
+    },
+    generateIO({ io, ctx, properties }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = ctx.graph.variables.find(
+        (v) => v.id === Number(variableId)
+      )!;
+      return io.dataInput({
+        id: "",
+        name: variable ? variable.name : "",
+        type: t.float(),
+      });
+    },
+    run({ ctx, io, properties, graph }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const index = graph.variables.findIndex(
+        (v) => v.id === Number(variableId)
+      )!;
+
+      graph.variables[index].value = ctx.getInput(io);
     },
   });
 

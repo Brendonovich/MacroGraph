@@ -93,6 +93,7 @@ export class Node {
           properties: this.schema.properties ?? {},
           ctx: {
             getProperty: (property) => this.state.properties[property.id]!,
+            graph: this.graph,
           },
         });
 

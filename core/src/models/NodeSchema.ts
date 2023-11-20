@@ -120,6 +120,8 @@ export class IOBuilder {
       )
     ).unwrapOrElse(() => new DataInput({ ...args, node: this.node }));
 
+    newInput.name = args.name;
+
     this.inputs.push(newInput);
 
     return newInput;
@@ -132,6 +134,8 @@ export class IOBuilder {
           o.id === args.id && o instanceof DataOutput && args.type.eq(o.type)
       )
     ).unwrapOrElse(() => new DataOutput({ ...args, node: this.node }));
+
+    newOutput.name = args.name;
 
     this.outputs.push(newOutput);
 
@@ -251,6 +255,7 @@ export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
 };
 
 export type GenerateIOCtx = {
+  graph: Graph;
   getProperty<TProperty extends PropertyDef & { id: string }>(
     property: TProperty
   ): inferPropertyDef<TProperty>;

@@ -15,7 +15,7 @@ import { colour } from "../util";
 import { GraphBounds } from "../../..";
 
 export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
-  const { pinPositions, ...graph } = useGraphContext();
+  const ctx = useGraphContext();
 
   const UI = useUIStore();
 
@@ -32,27 +32,31 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
   let canvasRef: HTMLCanvasElement;
 
   createEffect(() => {
-    const ctx = canvasRef.getContext("2d");
-    if (!ctx) return;
+    console.log(ctx.state.scale);
+  });
+
+  createEffect(() => {
+    const canvas = canvasRef.getContext("2d");
+    if (!canvas) return;
 
     function drawConnection(
-      ctx: CanvasRenderingContext2D,
+      canvas: CanvasRenderingContext2D,
       from: XY,
       to: XY,
       colour: string
     ) {
-      ctx.lineWidth = 2 * graph.state.scale;
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(to.x, to.y);
-      ctx.strokeStyle = colour;
-      ctx.stroke();
+      canvas.lineWidth = 2 * ctx.state.scale;
+      canvas.beginPath();
+      canvas.moveTo(from.x, from.y);
+      canvas.lineTo(to.x, to.y);
+      canvas.strokeStyle = colour;
+      canvas.stroke();
     }
 
-    ctx.clearRect(0, 0, props.graphBounds.width, props.graphBounds.height);
-    ctx.globalAlpha = 0.75;
+    canvas.clearRect(0, 0, props.graphBounds.width, props.graphBounds.height);
+    canvas.globalAlpha = 0.75;
 
-    for (const node of graph.model().nodes.values()) {
+    for (const node of ctx.model().nodes.values()) {
       for (const input of node.state.inputs) {
         const connections =
           input instanceof ExecInput
@@ -60,8 +64,8 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
             : input.connection.map((c) => [c]).unwrapOr([]);
 
         for (const conn of connections) {
-          const inputPosition = Maybe(pinPositions.get(input));
-          const outputPosition = Maybe(pinPositions.get(conn));
+          const inputPosition = Maybe(ctx.pinPositions.get(input));
+          const outputPosition = Maybe(ctx.pinPositions.get(conn));
 
           inputPosition
             .zip(outputPosition)
@@ -71,7 +75,7 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
             }))
             .peek((data) => {
               drawConnection(
-                ctx,
+                canvas,
                 data.input,
                 data.output,
                 input instanceof DataInput ? colour(input.type) : "white"
@@ -83,7 +87,7 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
 
     const dragState = getDragState();
     if (dragState) {
-      const pinPos = pinPositions.get(dragState.draggingPin);
+      const pinPos = ctx.pinPositions.get(dragState.draggingPin);
 
       const diffs = {
         x: dragState.mouseDragLocation.x - props.graphBounds.x,
@@ -104,7 +108,7 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
         return colour(draggingPin.type);
       })();
 
-      if (pinPos) drawConnection(ctx, pinPos, diffs, colourClass);
+      if (pinPos) drawConnection(canvas, pinPos, diffs, colourClass);
     }
   });
 
