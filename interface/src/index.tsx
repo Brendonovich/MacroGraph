@@ -8,7 +8,9 @@ import {
   XY,
   Node,
   Graph as GraphModel,
+  Node as NodeModel,
   Project,
+  Size,
 } from "@macrograph/core";
 import {
   createEventListener,
@@ -75,9 +77,21 @@ export function Interface(props: {
     width: 0,
     height: 0,
   });
-  const [graphStates, setGraphStates] = createStore<GraphState[]>([]);
-  const [currentGraphIndex, setCurrentGraphIndex] =
-    Solid.createSignal<number>(0);
+
+  const [graphStates, setGraphStates] = makePersisted(
+    createStore<GraphState[]>([]),
+    { name: "graph-states" }
+  );
+  const [currentGraphIndex, setCurrentGraphIndex] = makePersisted(
+    Solid.createSignal<number>(0),
+    { name: "current-graph-index" }
+  );
+
+  const [schemaMenu, setSchemaMenu] = Solid.createSignal<SchemaMenuState>({
+    status: "closed",
+  });
+
+  const nodeSizes = new WeakMap<NodeModel, Size>();
 
   const currentGraph = Solid.createMemo(() => {
     const index = currentGraphIndex();
@@ -96,10 +110,6 @@ export function Interface(props: {
     };
   });
 
-  const [schemaMenu, setSchemaMenu] = Solid.createSignal<SchemaMenuState>({
-    status: "closed",
-  });
-
   // will account for multi-pane in future
   const [hoveredPane, setHoveredPane] = Solid.createSignal<null | true>(null);
 
@@ -107,28 +117,40 @@ export function Interface(props: {
     if (hoveredPane()) return currentGraph();
   });
 
-  // reduces the current graph index if the current graph
-  // is the end graph and it gets deleted
-  Solid.createEffect(() => {
-    if (currentGraph()) return;
-    setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
-  });
-
-  // removes graph states if graphs are deleted
-  Solid.createEffect(() => {
-    for (const state of graphStates) {
-      const graph = props.core.project.graphs.get(state.id);
-      if (!graph) setGraphStates(graphStates.filter((s) => s.id !== state.id));
-    }
-  });
-
-  Solid.onMount(async () => {
+  const [loadedProject] = Solid.createResource(async () => {
     const savedProject = localStorage.getItem("project");
-    if (savedProject)
+
+    if (savedProject) {
       await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
 
-    const firstGraph = props.core.project.graphs.values().next().value;
-    if (firstGraph) setGraphStates([createGraphState(firstGraph)]);
+      return props.core.project;
+    } else return null;
+  });
+
+  Solid.createEffect(() => {
+    const project = loadedProject();
+
+    if (project) {
+      const firstGraph = project.graphs.values().next().value;
+      if (graphStates.length === 0 && firstGraph)
+        setGraphStates([createGraphState(firstGraph)]);
+    } else if (loadedProject.state === "pending") return;
+
+    // reduces the current graph index if the current graph
+    // is the end graph and it gets deleted
+    Solid.createEffect(() => {
+      if (currentGraph()) return;
+      setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
+    });
+
+    // removes graph states if graphs are deleted
+    Solid.createEffect(() => {
+      for (const state of graphStates) {
+        const graph = props.core.project.graphs.get(state.id);
+        if (!graph)
+          setGraphStates(graphStates.filter((s) => s.id !== state.id));
+      }
+    });
   });
 
   createEventListener(window, "keydown", async (e) => {
@@ -152,9 +174,7 @@ export function Interface(props: {
           if (!box) break;
 
           await writeClipboardItemToClipboard(
-            commentBoxToClipboardItem(box, (node) =>
-              graph.state.nodeSizes.get(node)
-            )
+            commentBoxToClipboardItem(box, (node) => nodeSizes.get(node))
           );
         }
 
@@ -413,6 +433,7 @@ export function Interface(props: {
                     <Graph
                       graph={graph().model}
                       state={graph().state}
+                      nodeSizes={nodeSizes}
                       onMouseEnter={() => setHoveredPane(true)}
                       onMouseMove={() => setHoveredPane(true)}
                       onMouseLeave={() => setHoveredPane(null)}

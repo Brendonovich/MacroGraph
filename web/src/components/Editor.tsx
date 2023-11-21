@@ -47,25 +47,23 @@ export default () => {
     },
   });
 
-  onMount(() => {
-    [
-      pkgs.github.pkg,
-      pkgs.google.pkg,
-      pkgs.goxlr.pkg,
-      pkgs.json.pkg,
-      pkgs.keyboard.pkg,
-      pkgs.list.pkg,
-      pkgs.localStorage.pkg,
-      pkgs.logic.pkg,
-      pkgs.map.pkg,
-      pkgs.obs.pkg,
-      pkgs.spotify.pkg,
-      pkgs.twitch.pkg,
-      pkgs.utils.pkg,
-      pkgs.chatgpt.pkg,
-      pkgs.speakerbot.pkg,
-    ].map((p) => core.registerPackage(p));
-  });
+  [
+    pkgs.github.pkg,
+    pkgs.google.pkg,
+    pkgs.goxlr.pkg,
+    pkgs.json.pkg,
+    pkgs.keyboard.pkg,
+    pkgs.list.pkg,
+    pkgs.localStorage.pkg,
+    pkgs.logic.pkg,
+    pkgs.map.pkg,
+    pkgs.obs.pkg,
+    pkgs.spotify.pkg,
+    pkgs.twitch.pkg,
+    pkgs.utils.pkg,
+    pkgs.chatgpt.pkg,
+    pkgs.speakerbot.pkg,
+  ].map((p) => core.registerPackage(p));
 
   return <Interface core={core} environment="browser" />;
 };

@@ -15,7 +15,6 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 import "./Node.css";
 import { NodeProvider } from "../../contexts";
-import { useUIStore } from "../../UIStore";
 import { useGraphContext } from "./Graph";
 import {
   DataInput,
@@ -68,7 +67,7 @@ export const Node = (props: Props) => {
 
       if (!contentRect) return;
 
-      graph.state.nodeSizes.set(node(), {
+      graph.nodeSizes.set(node(), {
         width: contentRect.width,
         height: contentRect.height,
       });
@@ -76,7 +75,10 @@ export const Node = (props: Props) => {
 
     obs.observe(ref);
 
-    Solid.onCleanup(() => obs.disconnect());
+    Solid.onCleanup(() => {
+      obs.disconnect();
+      graph.nodeSizes.delete(node());
+    });
   });
 
   const isSelected = Solid.createMemo(() => {

@@ -312,10 +312,7 @@ export class Graph {
     };
   }
 
-  static async deserialize(
-    project: Project,
-    data: z.infer<typeof SerializedGraph>
-  ): Promise<Graph> {
+  static deserialize(project: Project, data: z.infer<typeof SerializedGraph>) {
     const graph = new Graph({
       project,
       id: data.id,
@@ -340,18 +337,6 @@ export class Graph {
           .filter(Boolean) as [number, Node][]
       );
 
-      for (const node of graph.nodes.values()) {
-        const nodeData = data.nodes[node.id]!;
-
-        node.state.inputs.forEach((i) => {
-          const defaultValue = nodeData.defaultValues[i.id];
-
-          if (defaultValue === undefined || !(i instanceof DataInput)) return;
-
-          i.defaultValue = defaultValue;
-        });
-      }
-
       graph.commentBoxes = new ReactiveMap(
         data.commentBoxes.map((box) => {
           const id = box.id ?? graph.generateId();
@@ -359,14 +344,25 @@ export class Graph {
           return [id, new CommentBox({ ...box, id, graph })];
         })
       );
+
+      graph.deserializeConnections(data.connections);
     });
 
-    await graph.deserializeConnections(data.connections);
+    for (const node of graph.nodes.values()) {
+      const nodeData = data.nodes[node.id]!;
 
+      node.state.inputs.forEach((i) => {
+        const defaultValue = nodeData.defaultValues[i.id];
+
+        if (defaultValue === undefined || !(i instanceof DataInput)) return;
+
+        i.defaultValue = defaultValue;
+      });
+    }
     return graph;
   }
 
-  async deserializeConnections(
+  deserializeConnections(
     connections: z.infer<typeof SerializedConnection>[],
     options?: { nodeIdMap: Map<number, number> }
   ) {
@@ -392,18 +388,18 @@ export class Graph {
 
       i++;
 
-      connections = connections.filter(({ from, to }) => {
-        const output = this.nodes
-          .get(getNodeId(from.node))
-          ?.output(from.output);
-        const input = this.nodes.get(getNodeId(to.node))?.input(to.input);
+      connections = batch(() =>
+        connections.filter(({ from, to }) => {
+          const output = this.nodes
+            .get(getNodeId(from.node))
+            ?.output(from.output);
+          const input = this.nodes.get(getNodeId(to.node))?.input(to.input);
 
-        if (!output || !input) return true;
+          if (!output || !input) return true;
 
-        return !this.connectPins(output, input);
-      });
-
-      await microtask();
+          return !this.connectPins(output, input);
+        })
+      );
     }
   }
 }

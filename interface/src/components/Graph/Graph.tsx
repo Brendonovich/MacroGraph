@@ -41,7 +41,6 @@ export function createGraphState(model: GraphModel) {
       y: 0,
     } as XY,
     scale: 1,
-    nodeSizes: new WeakMap<NodeModel, Size>(),
     selectedItemId: null as SelectedItemID | null,
   };
 }
@@ -68,6 +67,7 @@ const MAX_ZOOM_OUT = 5;
 interface Props extends ComponentProps<"div"> {
   state: GraphState;
   graph: GraphModel;
+  nodeSizes: WeakMap<NodeModel, Size>;
   onGraphDragStart?(): void;
   onGraphDrag?(): void;
   onMouseDown?: JSX.EventHandler<HTMLDivElement, MouseEvent>;
@@ -173,6 +173,9 @@ export const Graph = (props: Props) => {
         model,
         get state() {
           return props.state;
+        },
+        get nodeSizes() {
+          return props.nodeSizes;
         },
         offset: bounds,
         pinPositions,
@@ -314,6 +317,7 @@ export const Graph = (props: Props) => {
 const GraphContext = createContext<{
   model: Accessor<GraphModel>;
   pinPositions: ReactiveWeakMap<Pin, XY>;
+  nodeSizes: WeakMap<NodeModel, Size>;
   state: GraphState;
   offset: XY;
   toGraphSpace(pos: XY): XY;

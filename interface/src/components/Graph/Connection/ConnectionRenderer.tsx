@@ -32,10 +32,6 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
   let canvasRef: HTMLCanvasElement;
 
   createEffect(() => {
-    console.log(ctx.state.scale);
-  });
-
-  createEffect(() => {
     const canvas = canvasRef.getContext("2d");
     if (!canvas) return;
 
