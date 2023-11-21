@@ -31,6 +31,7 @@ export interface NodeArgs {
   graph: Graph;
   schema: NodeSchema;
   position: XY;
+  properties?: Record<string, any>;
 }
 
 export const SerializedNode = z.object({
@@ -76,7 +77,7 @@ export class Node {
       position: args.position,
       inputs: [],
       outputs: [],
-      properties: {},
+      properties: args.properties ?? {},
     });
 
     const { owner, dispose } = createRoot((dispose) => ({
@@ -214,6 +215,7 @@ export class Node {
       position: data.position,
       schema,
       graph,
+      properties: data.properties,
     });
 
     Object.entries(data.defaultValues).forEach(([key, data]) => {
@@ -222,8 +224,6 @@ export class Node {
           input.defaultValue = data;
       });
     });
-
-    node.state.properties = data.properties;
 
     return node;
   }
