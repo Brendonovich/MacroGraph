@@ -1,7 +1,12 @@
-import { createEnum, createStruct, t } from "@macrograph/core";
+import { Maybe, Some, createEnum, createStruct, t } from "@macrograph/core";
 import { Pkg } from ".";
 import { Ctx } from "./ctx";
-import { JSON, jsToJSON } from "../json";
+import { JSON, jsToJSON, jsonToJS } from "../json";
+import {
+  ChatCompletion,
+  ChatCompletionAssistantMessageParam,
+} from "openai/resources";
+import { JSONSchema } from "openai/lib/jsonschema";
 
 type Message = {
   role: string;
@@ -79,12 +84,20 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     async run({ ctx, io }) {
+      let history = ctx.getInput(io.historyIn).unwrapOr([]);
+      let array = [] as ChatCompletionAssistantMessageParam[];
+      history.forEach((item) => {
+        array.push(jsonToJS(item));
+      });
       let message = "";
       let stream = await state
         .state()
         .unwrap()
         .chat.completions.create({
-          messages: [{ role: "user", content: ctx.getInput(io.message) }],
+          messages: [
+            ...array,
+            { role: "user", content: ctx.getInput(io.message) },
+          ],
           model: ctx.getInput(io.model).variant,
           stream: true,
         });
