@@ -9,9 +9,10 @@ import {
   createMemo,
   Accessor,
   onCleanup,
+  batch,
 } from "solid-js";
 
-import { IOBuilder, NodeSchema, PropertyValue } from "./NodeSchema";
+import { IOBuilder, NodeSchema } from "./NodeSchema";
 import {
   DataInput,
   DataOutput,
@@ -44,6 +45,7 @@ export const SerializedNode = z.object({
     id: z.string(),
   }),
   defaultValues: z.record(z.string(), z.any()),
+  properties: z.record(z.string(), z.any()).default({}),
 });
 
 export class Node {
@@ -170,6 +172,8 @@ export class Node {
 
   setProperty(property: string, value: any) {
     this.state.properties[property] = value;
+
+    this.graph.project.save();
   }
 
   serialize(): z.infer<typeof SerializedNode> {
@@ -189,6 +193,7 @@ export class Node {
           [i.id]: i.defaultValue,
         };
       }, {}),
+      properties: this.state.properties,
     };
   }
 
@@ -217,6 +222,8 @@ export class Node {
           input.defaultValue = data;
       });
     });
+
+    node.state.properties = data.properties;
 
     return node;
   }
