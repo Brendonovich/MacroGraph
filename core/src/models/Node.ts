@@ -9,7 +9,6 @@ import {
   createMemo,
   Accessor,
   onCleanup,
-  batch,
 } from "solid-js";
 
 import { IOBuilder, NodeSchema } from "./NodeSchema";

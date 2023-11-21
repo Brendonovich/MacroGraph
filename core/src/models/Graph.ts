@@ -359,6 +359,7 @@ export class Graph {
         i.defaultValue = defaultValue;
       });
     }
+
     return graph;
   }
 
@@ -403,5 +404,3 @@ export class Graph {
     }
   }
 }
-
-const microtask = () => new Promise<void>((res) => queueMicrotask(res));

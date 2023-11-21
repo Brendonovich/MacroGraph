@@ -1233,7 +1233,7 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
-    name: `Equal`,
+    name: "Equal",
     variant: "Pure",
     generateIO({ io }) {
       const w = io.wildcard("");

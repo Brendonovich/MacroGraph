@@ -55,10 +55,9 @@ export class DataInput<T extends BaseType<any>> {
         if (value.isSome() && value.unwrap() instanceof BasePrimitiveType) {
           if (prev.isSome() && value.unwrap().eq(prev.unwrap())) return prev;
 
-          reactiveThis.defaultValue = value.unwrap().default();
-        } else {
-          reactiveThis.defaultValue = null;
-        }
+          if (!reactiveThis.defaultValue)
+            reactiveThis.defaultValue = value.unwrap().default();
+        } else reactiveThis.defaultValue = null;
 
         return value;
       }, None);
