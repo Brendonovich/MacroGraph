@@ -7,7 +7,9 @@ import {
   InferEnum,
   MapValue,
   Maybe,
+  None,
   Package,
+  Some,
   Struct,
   createEnum,
   t,
@@ -63,6 +65,116 @@ export function pkg() {
     run({ ctx, io }) {
       const value = jsToJSON(window.JSON.parse(ctx.getInput(io.in)));
       ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "JSON Get String",
+    variant: "Pure",
+    generateIO({ io }) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.enum(JSON),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.option(t.string()),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const input = ctx.getInput(io.in);
+
+      ctx.setOutput(io.out, input.variant === "String" ? Some(input) : None);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "JSON Get Number",
+    variant: "Pure",
+    generateIO({ io }) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.enum(JSON),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.option(t.float()),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const input = ctx.getInput(io.in);
+
+      ctx.setOutput(io.out, input.variant === "Number" ? Some(input) : None);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "JSON Get Boolean",
+    variant: "Pure",
+    generateIO({ io }) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.enum(JSON),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.option(t.bool()),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const input = ctx.getInput(io.in);
+
+      ctx.setOutput(io.out, input.variant === "Bool" ? Some(input) : None);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "JSON Get List",
+    variant: "Pure",
+    generateIO({ io }) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.enum(JSON),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.option(t.list(t.enum(JSON))),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const input = ctx.getInput(io.in);
+
+      ctx.setOutput(io.out, input.variant === "List" ? Some(input) : None);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "JSON Get List",
+    variant: "Pure",
+    generateIO({ io }) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.enum(JSON),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.option(t.map(t.enum(JSON))),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const input = ctx.getInput(io.in);
+
+      ctx.setOutput(io.out, input.variant === "Map" ? Some(input) : None);
     },
   });
 

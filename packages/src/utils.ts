@@ -1386,6 +1386,35 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: `Unwrap Option Or`,
+    variant: "Pure",
+    generateIO({ io }) {
+      const w = io.wildcard("");
+
+      return {
+        input: io.dataInput({
+          id: "input",
+          type: t.option(t.wildcard(w)),
+        }),
+        or: io.dataInput({
+          id: "or",
+          type: t.wildcard(w),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.wildcard(w),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(
+        io.output,
+        ctx.getInput(io.input).unwrapOr(ctx.getInput(io.or))
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: `Is Option Some`,
     variant: "Pure",
     generateIO({ io }) {

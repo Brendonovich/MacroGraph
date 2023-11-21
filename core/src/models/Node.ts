@@ -218,10 +218,12 @@ export class Node {
       properties: data.properties,
     });
 
-    Object.entries(data.defaultValues).forEach(([key, data]) => {
-      node.io.inputs.forEach((input) => {
-        if (input.id == key && input instanceof DataInput)
-          input.defaultValue = data;
+    setTimeout(() => {
+      Object.entries(data.defaultValues).forEach(([key, data]) => {
+        node.io.inputs.forEach((input) => {
+          if (input.id == key && input instanceof DataInput)
+            input.defaultValue = data;
+        });
       });
     });
 
