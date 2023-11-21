@@ -120,9 +120,9 @@ export function NodeSidebar(props: { node: Node }) {
           <SidebarSection title="Node Properties">
             <For each={Object.values(properties())}>
               {(property) => {
-                const properties = createMemo(() => {
-                  return props.node.state.properties;
-                });
+                const properties = createMemo(
+                  () => props.node.state.properties
+                );
 
                 return (
                   <div class="p-2 flex flex-row gap-2 items-center">

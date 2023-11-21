@@ -2026,23 +2026,18 @@ export function pkg(core: Core) {
     },
     generateIO({ io, ctx, properties }) {
       const value = ctx.getProperty(properties.string) ?? "";
-      const [first, ...blocks] = value.split("{") as [string, ...string[]];
+      const blocks = parseFormatString(value);
+
       return {
-        first,
-        blocks: blocks
-          .map((block) => {
-            const [name, rest] = block.split("}");
-            if (name === undefined) return;
-            return {
-              input: io.dataInput({
-                id: name,
-                name,
-                type: t.string(),
-              }),
-              rest,
-            };
-          })
-          .filter(Boolean),
+        blocks: blocks.map((block) => {
+          if ("variable" in block) {
+            return io.dataInput({
+              id: block.variable,
+              name: block.variable,
+              type: t.string(),
+            });
+          } else return block.text;
+        }),
         output: io.dataOutput({
           id: "",
           type: t.string(),
@@ -2050,12 +2045,13 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, io }) {
-      const out = io.blocks.reduce((acc, { input, rest }) => {
-        acc += ctx.getInput(input);
-        if (rest !== undefined) acc += rest;
+      const out = io.blocks.reduce<string>((acc, input) => {
+        if (typeof input === "string") acc += input;
+        else acc += ctx.getInput(input);
+
         return acc;
-      }, io.first);
-      console.log({ out });
+      }, "");
+
       ctx.setOutput(io.output, out);
     },
   });
@@ -2064,3 +2060,48 @@ export function pkg(core: Core) {
 }
 
 const WORD_REGEX = /\s+/;
+
+export function parseFormatString(input: string) {
+  const chars = input.split("");
+
+  const blocks: Array<{ text: string } | { variable: string }> = [];
+
+  let buffer = "";
+  let isInVariable = false;
+
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i];
+
+    if (char === "{") {
+      if (chars[i + 1] === "{") {
+        buffer += "{";
+        i++;
+        continue;
+      }
+
+      if (buffer !== "") blocks.push({ text: buffer });
+
+      buffer = "";
+      isInVariable = true;
+    } else if (chars[i] === "}") {
+      if (isInVariable) {
+        blocks.push({ variable: buffer });
+      } else {
+        if (chars[i + 1] === "}") {
+          buffer += "}";
+          i++;
+          continue;
+        }
+
+        blocks.push({ text: buffer });
+      }
+
+      isInVariable = false;
+      buffer = "";
+    } else buffer += chars[i];
+  }
+
+  if (buffer !== "") blocks.push({ text: buffer });
+
+  return blocks;
+}
