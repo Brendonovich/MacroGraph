@@ -95,6 +95,7 @@ export class Node {
             getProperty: (property) => this.state.properties[property.id]!,
             graph: this.graph,
           },
+          graph: this.graph,
         });
 
         untrack(() => this.updateIO(io));

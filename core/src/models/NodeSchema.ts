@@ -235,7 +235,8 @@ export type inferPropertyValue<TValue extends PropertyValue> = TValue["id"];
 
 export type PropertySourceFn = (args: { node: Node }) => Array<PropertyValue>;
 export type inferPropertySourceFn<TFn extends PropertySourceFn> =
-  inferPropertyValue<ReturnType<TFn>[number]>;
+  | inferPropertyValue<ReturnType<TFn>[number]>
+  | undefined;
 
 export type PropertyDef = { name: string } & (
   | { source: PropertySourceFn }
@@ -270,6 +271,7 @@ export type BaseNodeSchema<
     io: IOBuilder;
     ctx: GenerateIOCtx;
     properties: SchemaProperties<TProperties>;
+    graph: Graph;
   }) => TIO;
   package: Package<EventsMap>;
   properties?: SchemaProperties<TProperties>;

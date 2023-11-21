@@ -1,8 +1,9 @@
 import clsx from "clsx";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 interface Props {
   initialValue: number;
+  value?: number;
   onChange(v: number): void;
   class?: string;
 }
@@ -11,6 +12,10 @@ export const IntInput = (props: Props) => {
   // if NaN reset to 0
   const initialValue = isNaN(props.initialValue) ? 0 : props.initialValue;
   props.onChange(initialValue);
+
+  createEffect(() => {
+    if (props.value !== undefined) setValue(props.value.toString());
+  });
 
   const [value, setValue] = createSignal(initialValue.toString());
 

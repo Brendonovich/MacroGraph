@@ -1,7 +1,13 @@
-import { Graph, Node, PropertyValue, StringType, t } from "@macrograph/core";
+import { Graph, Node, PrimitiveType, PropertyValue, t } from "@macrograph/core";
 import { SidebarSection } from "./components/Sidebar";
-import { For, Match, Show, createEffect, createMemo } from "solid-js";
-import { FloatInput, SelectInput, TextInput } from "./components/ui";
+import { For, Match, Show, createMemo } from "solid-js";
+import {
+  CheckBox,
+  FloatInput,
+  IntInput,
+  SelectInput,
+  TextInput,
+} from "./components/ui";
 import { Switch } from "solid-js";
 
 export function GraphSidebar(props: { graph: Graph }) {
@@ -14,9 +20,11 @@ export function GraphSidebar(props: { graph: Graph }) {
             class="px-1"
             onClick={(e) => {
               e.stopPropagation();
+
               props.graph.createVariable({
                 name: `Variable ${props.graph.variables.length + 1}`,
                 value: 0,
+                type: t.string(),
               });
             }}
           >
@@ -24,16 +32,62 @@ export function GraphSidebar(props: { graph: Graph }) {
           </button>
         }
       >
-        <div class="p-2">
+        <div class="p-2 gap-2 flex flex-col">
           <For each={props.graph.variables}>
             {(variable) => (
-              <div class="flex flex-row items-center gap-2">
-                <span class="shrink-0">{variable.name}:</span>
-                <FloatInput
-                  initialValue={variable.value}
-                  value={variable.value}
-                  onChange={(n) => props.graph.setVariableValue(variable.id, n)}
-                />
+              <div class="flex flex-col gap-2 p-2 border-neutral-400 border rounded bg-neutral-800">
+                <div class="flex flex-row gap-2 justify-start items-center">
+                  <span class="shrink-0">{variable.name}</span>
+                  <SelectInput<PrimitiveType>
+                    options={[t.string(), t.int(), t.float(), t.bool()]}
+                    optionValue={(o) => o.primitiveVariant()}
+                    optionTextValue={(o) => o.toString()}
+                    value={variable.type}
+                    getLabel={(v) => v.toString()}
+                    onChange={(v) => {
+                      if (variable.type.eq(v)) return;
+
+                      variable.type = v;
+                      variable.value = v.default();
+                    }}
+                  />
+                </div>
+                <Switch>
+                  <Match when={variable.type.primitiveVariant() === "bool"}>
+                    <CheckBox
+                      value={variable.value}
+                      onChange={(n) =>
+                        props.graph.setVariableValue(variable.id, n)
+                      }
+                    />
+                  </Match>
+                  <Match when={variable.type.primitiveVariant() === "string"}>
+                    <TextInput
+                      value={variable.value}
+                      onChange={(n) =>
+                        props.graph.setVariableValue(variable.id, n)
+                      }
+                    />
+                  </Match>
+                  <Match when={variable.type.primitiveVariant() === "int"}>
+                    <IntInput
+                      initialValue={variable.value}
+                      value={variable.value}
+                      onChange={(n) =>
+                        props.graph.setVariableValue(variable.id, n)
+                      }
+                    />
+                  </Match>
+                  <Match when={variable.type.primitiveVariant() === "float"}>
+                    <FloatInput
+                      initialValue={variable.value}
+                      value={variable.value}
+                      onChange={(n) =>
+                        props.graph.setVariableValue(variable.id, n)
+                      }
+                    />
+                  </Match>
+                </Switch>
               </div>
             )}
           </For>
@@ -93,40 +147,33 @@ export function NodeSidebar(props: { node: Node }) {
                         }}
                       </Match>
                       <Match when={"type" in property && property}>
-                        {(property) => {
-                          return (
-                            <Switch>
-                              <Match
-                                when={(() => {
-                                  const value = property();
+                        {(property) => (
+                          <Switch>
+                            <Match
+                              when={(() => {
+                                const value = property();
 
-                                  if (value.type instanceof t.String)
-                                    return {
-                                      ...value,
-                                      type: value.type,
-                                    };
-                                })()}
-                              >
-                                {(property) => {
-                                  return (
-                                    <>
-                                      <span>{property().name}</span>
-                                      <TextInput
-                                        value={properties()[property().id]!}
-                                        onChange={(v) => {
-                                          props.node.setProperty(
-                                            property().id,
-                                            v
-                                          );
-                                        }}
-                                      />
-                                    </>
-                                  );
-                                }}
-                              </Match>
-                            </Switch>
-                          );
-                        }}
+                                if (value.type instanceof t.String)
+                                  return {
+                                    ...value,
+                                    type: value.type,
+                                  };
+                              })()}
+                            >
+                              {(property) => (
+                                <>
+                                  <span>{property().name}</span>
+                                  <TextInput
+                                    value={properties()[property().id]!}
+                                    onChange={(v) => {
+                                      props.node.setProperty(property().id, v);
+                                    }}
+                                  />
+                                </>
+                              )}
+                            </Match>
+                          </Switch>
+                        )}
                       </Match>
                     </Switch>
                   </div>

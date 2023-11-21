@@ -1,6 +1,7 @@
 import { Enum, EnumVariants } from "@macrograph/core";
 import { Select } from "@kobalte/core";
 import clsx from "clsx";
+import { ComponentProps } from "solid-js";
 
 interface Props<T extends Enum<EnumVariants>>
   extends Omit<
@@ -20,10 +21,12 @@ export function EnumInput<T extends Enum<EnumVariants>>(props: Props<T>) {
   );
 }
 
-interface SelectInputProps<TOption> {
+interface SelectInputProps<TOption>
+  extends Pick<
+    ComponentProps<typeof Select.Root<TOption>>,
+    "optionValue" | "optionTextValue"
+  > {
   options: Array<TOption>;
-  optionValue?: keyof TOption;
-  optionTextValue?: keyof TOption;
   getLabel(option: TOption): string;
   value?: TOption;
   onChange(v: TOption): void;

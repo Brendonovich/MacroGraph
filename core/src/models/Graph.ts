@@ -24,7 +24,9 @@ import {
   connectWildcardsInIO,
   disconnectWildcardsInIO,
   None,
+  PrimitiveType,
   Some,
+  t,
 } from "../types";
 
 export interface GraphArgs {
@@ -36,7 +38,15 @@ export interface GraphArgs {
 const SerializedVariable = z.object({
   id: z.number(),
   name: z.string(),
-  value: z.number(),
+  value: z.any(),
+  type: z
+    .union([
+      z.literal("float"),
+      z.literal("int"),
+      z.literal("string"),
+      z.literal("bool"),
+    ])
+    .default("float"),
 });
 
 export const SerializedGraph = z.object({
@@ -49,8 +59,56 @@ export const SerializedGraph = z.object({
   connections: z.array(SerializedConnection).default([]),
 });
 
+type VariableArgs = {
+  id: number;
+  name: string;
+  type: PrimitiveType;
+  value: any;
+};
+
 class Variable {
-  constructor(public id: number, public name: string, public value: number) {}
+  id: number;
+  name: string;
+  type: PrimitiveType;
+  value: any;
+
+  constructor(args: VariableArgs) {
+    this.id = args.id;
+    this.name = args.name;
+    this.type = args.type;
+    this.value = args.value;
+
+    return createMutable(this);
+  }
+
+  serialize(): z.infer<typeof SerializedVariable> {
+    return {
+      id: this.id,
+      name: this.name,
+      value: this.value,
+      type: this.type.primitiveVariant(),
+    };
+  }
+
+  static deserialize(data: z.infer<typeof SerializedVariable>) {
+    return new Variable({
+      id: data.id,
+      name: data.name,
+      value: data.value,
+      type: (() => {
+        switch (data.type) {
+          case "int":
+            return t.int();
+          case "float":
+            return t.float();
+          case "string":
+            return t.string();
+          case "bool":
+            return t.bool();
+        }
+      })(),
+    });
+  }
 }
 
 export class Graph {
@@ -106,10 +164,10 @@ export class Graph {
     return box;
   }
 
-  createVariable(args: Omit<Variable, "id">) {
+  createVariable(args: Omit<VariableArgs, "id">) {
     const id = this.generateId();
 
-    this.variables.push({ ...args, id });
+    this.variables.push(new Variable({ ...args, id }));
 
     this.project.save();
 
@@ -242,7 +300,7 @@ export class Graph {
       commentBoxes: [...this.commentBoxes.values()].map((box) =>
         box.serialize()
       ),
-      variables: this.variables,
+      variables: this.variables.map((v) => v.serialize()),
       connections: serializeConnections(this.nodes.values()),
     };
   }
@@ -260,6 +318,8 @@ export class Graph {
     graph.idCounter = data.nodeIdCounter;
 
     batch(() => {
+      graph.variables = data.variables.map((v) => Variable.deserialize(v));
+
       graph.nodes = new ReactiveMap(
         Object.entries(data.nodes)
           .map(([idStr, serializedNode]) => {
@@ -272,31 +332,29 @@ export class Graph {
           })
           .filter(Boolean) as [number, Node][]
       );
+
+      for (const node of graph.nodes.values()) {
+        const nodeData = data.nodes[node.id]!;
+
+        node.state.inputs.forEach((i) => {
+          const defaultValue = nodeData.defaultValues[i.id];
+
+          if (defaultValue === undefined || !(i instanceof DataInput)) return;
+
+          i.defaultValue = defaultValue;
+        });
+      }
+
+      graph.commentBoxes = new ReactiveMap(
+        data.commentBoxes.map((box) => {
+          const id = box.id ?? graph.generateId();
+
+          return [id, new CommentBox({ ...box, id, graph })];
+        })
+      );
     });
 
     await graph.deserializeConnections(data.connections);
-
-    for (const node of graph.nodes.values()) {
-      const nodeData = data.nodes[node.id]!;
-
-      node.state.inputs.forEach((i) => {
-        const defaultValue = nodeData.defaultValues[i.id];
-
-        if (defaultValue === undefined || !(i instanceof DataInput)) return;
-
-        i.defaultValue = defaultValue;
-      });
-    }
-
-    graph.commentBoxes = new ReactiveMap(
-      data.commentBoxes.map((box) => {
-        const id = box.id ?? graph.generateId();
-
-        return [id, new CommentBox({ ...box, id, graph })];
-      })
-    );
-
-    graph.variables = data.variables;
 
     return graph;
   }

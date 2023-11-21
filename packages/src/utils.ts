@@ -13,6 +13,7 @@ import {
   Core,
   DataOutput,
   Struct,
+  PropertyDef,
 } from "@macrograph/core";
 import { JSON, jsonToJS } from "./json";
 
@@ -1948,32 +1949,35 @@ export function pkg(core: Core) {
     },
   });
 
+  const variableProperty = {
+    name: "Variable",
+    source: ({ node }) =>
+      node.graph.variables.map((v) => ({
+        id: v.id,
+        display: v.name,
+      })),
+  } satisfies PropertyDef;
+
   pkg.createNonEventSchema({
     name: "Get Graph Variable",
     variant: "Pure",
     properties: {
-      variable: {
-        name: "Variable",
-        source: ({ node }) =>
-          node.graph.variables.map((v) => ({
-            id: v.id,
-            display: v.name,
-          })),
-      },
+      variable: variableProperty,
     },
     generateIO({ io, ctx, properties }) {
       const variableId = ctx.getProperty(properties.variable);
-      const variable = ctx.graph.variables.find(
-        (v) => v.id === Number(variableId)
-      )!;
-      console.log(variable ? variable.name : "");
+      const variable = ctx.graph.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
       return io.dataOutput({
         id: "",
-        name: variable ? variable.name : "",
-        type: t.float(),
+        name: variable.name,
+        type: variable.type,
       });
     },
     run({ ctx, io, properties, graph }) {
+      if (!io) return;
+
       const variableId = ctx.getProperty(properties.variable);
       const variable = graph.variables.find(
         (v) => v.id === Number(variableId)
@@ -1987,33 +1991,27 @@ export function pkg(core: Core) {
     name: "Set Graph Variable",
     variant: "Exec",
     properties: {
-      variable: {
-        name: "Variable",
-        source: ({ node }) =>
-          node.graph.variables.map((v) => ({
-            id: v.id,
-            display: v.name,
-          })),
-      },
+      variable: variableProperty,
     },
     generateIO({ io, ctx, properties }) {
       const variableId = ctx.getProperty(properties.variable);
-      const variable = ctx.graph.variables.find(
-        (v) => v.id === Number(variableId)
-      )!;
+      const variable = ctx.graph.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
       return io.dataInput({
         id: "",
-        name: variable ? variable.name : "",
-        type: t.float(),
+        name: variable.name,
+        type: variable.type,
       });
     },
     run({ ctx, io, properties, graph }) {
-      const variableId = ctx.getProperty(properties.variable);
-      const index = graph.variables.findIndex(
-        (v) => v.id === Number(variableId)
-      )!;
+      if (!io) return;
 
-      graph.variables[index].value = ctx.getInput(io);
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = graph.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
+      variable.value = ctx.getInput(io);
     },
   });
 
