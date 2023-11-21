@@ -9,6 +9,7 @@ import {
   TextInput,
 } from "./components/ui";
 import { Switch } from "solid-js";
+import { AiOutlineDelete } from "solid-icons/ai";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (
@@ -51,6 +52,15 @@ export function GraphSidebar(props: { graph: Graph }) {
                       variable.value = v.default();
                     }}
                   />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      props.graph.removeVariable(variable.id);
+                    }}
+                  >
+                    <AiOutlineDelete />
+                  </button>
                 </div>
                 <Switch>
                   <Match when={variable.type.primitiveVariant() === "bool"}>
@@ -147,33 +157,68 @@ export function NodeSidebar(props: { node: Node }) {
                         }}
                       </Match>
                       <Match when={"type" in property && property}>
-                        {(property) => (
-                          <Switch>
-                            <Match
-                              when={(() => {
-                                const value = property();
+                        {(property) => {
+                          const value = createMemo(
+                            () => properties()[property().id]!
+                          );
 
-                                if (value.type instanceof t.String)
-                                  return {
-                                    ...value,
-                                    type: value.type,
-                                  };
-                              })()}
-                            >
-                              {(property) => (
-                                <>
-                                  <span>{property().name}</span>
-                                  <TextInput
-                                    value={properties()[property().id]!}
-                                    onChange={(v) => {
-                                      props.node.setProperty(property().id, v);
-                                    }}
+                          const onChange = (v: any) => {
+                            props.node.setProperty(property().id, v);
+                          };
+
+                          return (
+                            <>
+                              <span>{property().name}</span>
+                              <Switch>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() ===
+                                    "bool"
+                                  }
+                                >
+                                  <CheckBox
+                                    value={value()}
+                                    onChange={onChange}
                                   />
-                                </>
-                              )}
-                            </Match>
-                          </Switch>
-                        )}
+                                </Match>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() ===
+                                    "string"
+                                  }
+                                >
+                                  <TextInput
+                                    value={value()}
+                                    onChange={onChange}
+                                  />
+                                </Match>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() === "int"
+                                  }
+                                >
+                                  <IntInput
+                                    initialValue={value()}
+                                    value={value()}
+                                    onChange={onChange}
+                                  />
+                                </Match>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() ===
+                                    "float"
+                                  }
+                                >
+                                  <FloatInput
+                                    initialValue={value()}
+                                    value={value()}
+                                    onChange={onChange}
+                                  />
+                                </Match>
+                              </Switch>
+                            </>
+                          );
+                        }}
                       </Match>
                     </Switch>
                   </div>

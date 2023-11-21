@@ -181,6 +181,13 @@ export class Graph {
     this.project.save();
   }
 
+  removeVariable(id: number) {
+    const index = this.variables.findIndex((v) => v.id === id);
+    if (index === -1) return;
+
+    this.variables.splice(index, 1);
+  }
+
   connectPins(
     output: DataOutput<any> | ExecOutput | ScopeOutput,
     input: DataInput<any> | ExecInput | ScopeInput
