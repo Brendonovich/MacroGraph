@@ -338,11 +338,7 @@ export class ScopeInput {
         });
     });
 
-    this.scope = createMemo(() => {
-      console.log(this.connection());
-
-      return this.connection().map((c) => c.scope);
-    });
+    this.scope = createMemo(() => this.connection().map((c) => c.scope));
 
     return createMutable(this);
   }

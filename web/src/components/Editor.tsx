@@ -1,7 +1,6 @@
 import { Core } from "@macrograph/core";
 import { Interface } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { onMount } from "solid-js";
 
 import { env } from "~/env/client";
 
