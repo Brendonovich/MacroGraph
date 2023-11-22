@@ -1681,14 +1681,11 @@ export function pkg(core: Core) {
     name: "Break Scope",
     variant: "Base",
     generateIO({ io }) {
-      const scope = io.scope("");
-
       const input = io.scopeInput({
         id: "",
-        scope,
       });
 
-      const outputs = scope.value.map((scope) => {
+      const outputs = input.scope().map((scope) => {
         const exec = io.execOutput({
           id: "",
         });

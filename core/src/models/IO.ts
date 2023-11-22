@@ -1,5 +1,4 @@
 import { createMutable } from "solid-js/store";
-import { ReactiveSet } from "@solid-primitives/set";
 import { Node } from "./Node";
 import {
   t,
@@ -8,9 +7,22 @@ import {
   BaseType,
   PrimitiveType,
   BasePrimitiveType,
+  Maybe,
+  connectWildcardsInIO,
+  disconnectWildcardsInIO,
 } from "../types";
 import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
-import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
+import {
+  Accessor,
+  createEffect,
+  createMemo,
+  createRoot,
+  getOwner,
+  mapArray,
+  onCleanup,
+  runWithOwner,
+} from "solid-js";
+import { makeIORef, splitIORef } from "./Graph";
 
 export type DataInputArgs<T extends BaseType<any>> = {
   id: string;
@@ -25,8 +37,9 @@ export class DataInput<T extends BaseType<any>> {
   defaultValue: t.infer<PrimitiveType> | null = null;
   type: T;
   node: Node;
-  connection: Option<DataOutput<T>> = None;
   dispose: () => void;
+
+  connection: Accessor<Option<DataOutput<T>>>;
 
   constructor(args: DataInputArgs<T>) {
     this.id = args.id;
@@ -35,6 +48,21 @@ export class DataInput<T extends BaseType<any>> {
       args.type instanceof BasePrimitiveType ? args.type.default() : null;
     this.node = args.node;
     this.type = args.type;
+
+    this.connection = createMemo(() => {
+      const graph = this.node.graph;
+
+      return Maybe(graph.connections.get(makeIORef(this)))
+        .map(([conn]) => {
+          return conn && splitIORef(conn);
+        })
+        .map(({ nodeId, ioId }) => {
+          const node = graph.nodes.get(nodeId);
+          const output = node?.output(ioId);
+
+          if (output instanceof DataOutput) return output as DataOutput<T>;
+        });
+    });
 
     const { owner, dispose } = createRoot((dispose) => ({
       owner: getOwner(),
@@ -86,10 +114,11 @@ export interface DataOutputArgs<T extends BaseType<any>> {
 
 export class DataOutput<T extends BaseType> {
   id: string;
-  connections = new ReactiveSet<DataInput<BaseType>>();
   node: Node;
   name?: string;
   type: T;
+
+  connections: Accessor<ReadonlyArray<DataInput<T>>>;
 
   constructor(args: DataOutputArgs<T>) {
     this.id = args.id;
@@ -97,7 +126,34 @@ export class DataOutput<T extends BaseType> {
     this.name = args.name;
     this.type = args.type;
 
-    return createMutable(this);
+    this.connections = createMemo(() => {
+      const graph = this.node.graph;
+
+      const conns = graph.connections.get(makeIORef(this)) ?? [];
+
+      return conns
+        .map((conn) => {
+          const { nodeId, ioId } = splitIORef(conn);
+
+          const node = graph.nodes.get(nodeId);
+          const input = node?.input(ioId);
+
+          if (input instanceof DataInput) return input as DataInput<T>;
+        })
+        .filter(Boolean);
+    });
+
+    const self = createMutable(this);
+
+    createEffect(() => {
+      for (const conn of self.connections()) {
+        connectWildcardsInIO(self, conn);
+
+        onCleanup(() => disconnectWildcardsInIO(self, conn));
+      }
+    });
+
+    return self;
   }
 
   get variant() {
@@ -114,14 +170,28 @@ export interface ExecInputArgs {
 
 export class ExecInput {
   id: string;
-  connections = new ReactiveSet<ExecOutput>();
   public node: Node;
   public name?: string;
+
+  connection: Accessor<Option<ExecOutput>>;
 
   constructor(args: ExecInputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
+
+    this.connection = createMemo(() => {
+      const graph = this.node.graph;
+
+      return Maybe(graph.connections.get(makeIORef(this)))
+        .map(([conn]) => conn && splitIORef(conn))
+        .map(({ nodeId, ioId }) => {
+          const node = graph.nodes.get(nodeId);
+          const output = node?.output(ioId);
+
+          if (output instanceof ExecOutput) return output;
+        });
+    });
 
     createMutable(this);
   }
@@ -139,14 +209,36 @@ export interface ExecOutputArgs {
 
 export class ExecOutput {
   id: string;
-  connection: Option<ExecInput> = None;
   public node: Node;
   public name?: string;
+
+  connection: Accessor<Option<ExecInput>>;
 
   constructor(args: ExecOutputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
+
+    this.connection = createMemo(
+      () => {
+        const graph = this.node.graph;
+
+        const ref = makeIORef(this);
+
+        const value = Maybe(graph.connections.get(ref))
+          .map(([conn]) => conn && splitIORef(conn))
+          .map(({ nodeId, ioId }) => {
+            const node = graph.nodes.get(nodeId);
+            const input = node?.input(ioId);
+
+            if (input instanceof ExecInput) return input;
+          });
+
+        return value;
+      },
+      None,
+      { equals: (a, b) => a.eq(b) }
+    );
 
     createMutable(this);
   }
@@ -181,16 +273,30 @@ export interface ScopeOutputArgs {
 
 export class ScopeOutput {
   id: string;
-  connection: Option<ScopeInput> = None;
   node: Node;
   name?: string;
   scope: Scope;
+
+  connection: Accessor<Option<ScopeInput>>;
 
   constructor(args: ScopeOutputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
     this.scope = args.scope;
+
+    this.connection = createMemo(() => {
+      const graph = this.node.graph;
+
+      return Maybe(graph.connections.get(makeIORef(this)))
+        .map(([conn]) => conn && splitIORef(conn))
+        .map(({ nodeId, ioId }) => {
+          const node = graph.nodes.get(nodeId);
+          const input = node?.input(ioId);
+
+          if (input instanceof ScopeInput) return input;
+        });
+    });
 
     return createMutable(this);
   }
@@ -204,21 +310,39 @@ export interface ScopeInputArgs {
   node: Node;
   id: string;
   name?: string;
-  scope: ScopeRef;
 }
 
 export class ScopeInput {
   id: string;
-  connection: Option<ScopeOutput> = None;
   node: Node;
   name?: string;
-  scope: ScopeRef;
+
+  connection: Accessor<Option<ScopeOutput>>;
+  scope: Accessor<Option<Scope>>;
 
   constructor(args: ScopeInputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
-    this.scope = args.scope;
+
+    this.connection = createMemo(() => {
+      const graph = this.node.graph;
+
+      return Maybe(graph.connections.get(makeIORef(this)))
+        .map(([conn]) => conn && splitIORef(conn))
+        .map(({ nodeId, ioId }) => {
+          const node = graph.nodes.get(nodeId);
+          const output = node?.output(ioId);
+
+          if (output instanceof ScopeOutput) return output;
+        });
+    });
+
+    this.scope = createMemo(() => {
+      console.log(this.connection());
+
+      return this.connection().map((c) => c.scope);
+    });
 
     return createMutable(this);
   }

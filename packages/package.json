@@ -30,7 +30,6 @@
     "openai": "^4.18.0",
     "socket.io-client": "^4.7.1",
     "tmi.js": "^1.8.5",
-    "typescript-result-option": "^0.2.5",
     "zod": "^3.21.4"
   },
   "devDependencies": {

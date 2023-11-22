@@ -39,7 +39,6 @@ export type ExecInputBuilder = {
 export type ScopeInputBuilder = {
   id: string;
   name?: string;
-  scope: ScopeRef;
 };
 
 export type InputBuilder =
@@ -74,14 +73,6 @@ export type OutputBuilder =
   | ({
       variant: "Scope";
     } & ScopeOutputBuilder);
-
-export class ScopeRef {
-  value: Option<Scope> = None;
-
-  constructor() {
-    return createMutable(this);
-  }
-}
 
 export class IOBuilder {
   inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];

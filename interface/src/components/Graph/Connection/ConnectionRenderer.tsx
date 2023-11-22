@@ -6,6 +6,7 @@ import {
   ScopeInput,
   ScopeOutput,
   XY,
+  splitIORef,
 } from "@macrograph/core";
 import { createEffect } from "solid-js";
 
@@ -52,34 +53,70 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
     canvas.clearRect(0, 0, props.graphBounds.width, props.graphBounds.height);
     canvas.globalAlpha = 0.75;
 
-    for (const node of ctx.model().nodes.values()) {
-      for (const input of node.state.inputs) {
-        const connections =
-          input instanceof ExecInput
-            ? [...input.connections]
-            : input.connection.map((c) => [c]).unwrapOr([]);
+    const graph = ctx.model();
 
-        for (const conn of connections) {
-          const inputPosition = Maybe(ctx.pinPositions.get(input));
-          const outputPosition = Maybe(ctx.pinPositions.get(conn));
+    for (const [refStr, conns] of graph.connections) {
+      const outRef = splitIORef(refStr);
+      if (outRef.type === "i") continue;
 
-          inputPosition
-            .zip(outputPosition)
-            .map(([input, output]) => ({
-              input,
-              output,
-            }))
-            .peek((data) => {
-              drawConnection(
-                canvas,
-                data.input,
-                data.output,
-                input instanceof DataInput ? colour(input.type) : "white"
-              );
-            });
-        }
+      const output = graph.nodes.get(outRef.nodeId)?.output(outRef.ioId);
+      if (!output) continue;
+
+      for (const conn of conns) {
+        const inRef = splitIORef(conn);
+
+        const input = graph.nodes.get(inRef.nodeId)?.input(inRef.ioId);
+
+        if (!input || !output) continue;
+
+        const inputPosition = Maybe(ctx.pinPositions.get(input));
+        const outputPosition = Maybe(ctx.pinPositions.get(output));
+
+        inputPosition
+          .zip(outputPosition)
+          .map(([input, output]) => ({
+            input,
+            output,
+          }))
+          .peek((data) => {
+            drawConnection(
+              canvas,
+              data.input,
+              data.output,
+              input instanceof DataInput ? colour(input.type) : "white"
+            );
+          });
       }
     }
+
+    // for (const node of ctx.model().nodes.values()) {
+    //   for (const input of node.state.inputs) {
+    //     const connections =
+    //       input instanceof ExecInput
+    //         ? [...input.connections]
+    //         : input.connection.map((c) => [c]).unwrapOr([]);
+
+    //     for (const conn of connections) {
+    //       const inputPosition = Maybe(ctx.pinPositions.get(input));
+    //       const outputPosition = Maybe(ctx.pinPositions.get(conn));
+
+    //       inputPosition
+    //         .zip(outputPosition)
+    //         .map(([input, output]) => ({
+    //           input,
+    //           output,
+    //         }))
+    //         .peek((data) => {
+    //           drawConnection(
+    //             canvas,
+    //             data.input,
+    //             data.output,
+    //             input instanceof DataInput ? colour(input.type) : "white"
+    //           );
+    //         });
+    //     }
+    //   }
+    // }
 
     const dragState = getDragState();
     if (dragState) {

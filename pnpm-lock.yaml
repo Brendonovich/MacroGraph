@@ -138,9 +138,6 @@ importers:
       tmi.js:
         specifier: ^1.8.5
         version: 1.8.5
-      typescript-result-option:
-        specifier: ^0.2.5
-        version: 0.2.5
       zod:
         specifier: ^3.21.4
         version: 3.21.4
@@ -291,9 +288,6 @@ importers:
       tmi.js:
         specifier: ^1.8.5
         version: 1.8.5
-      typescript-result-option:
-        specifier: ^0.2.5
-        version: 0.2.5
       zod:
         specifier: ^3.21.4
         version: 3.21.4
@@ -7871,10 +7865,6 @@ packages:
       call-bind: 1.0.2
       for-each: 0.3.3
       is-typed-array: 1.1.10
-    dev: false
-
-  /typescript-result-option@0.2.5:
-    resolution: {integrity: sha512-4+hOm93ZPKrkEXH9CF/2oZecRo/JLj0xs+Pl0ThBYc/r1UHc2h97v1PbxFDG853CCRcCEUpIO70wlxQE1l1sNw==}
     dev: false
 
   /typescript@4.9.5:

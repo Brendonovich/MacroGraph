@@ -250,9 +250,9 @@ export function Interface(props: {
               if (!node) throw new Error("Failed to deserialize node");
               model.nodes.set(node.id, node);
             }
-            model.deserializeConnections(item.connections, {
-              nodeIdMap,
-            });
+            // model.deserializeConnections(item.connections, {
+            //   nodeIdMap,
+            // });
             break;
           }
           case "graph": {

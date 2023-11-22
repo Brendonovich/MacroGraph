@@ -132,7 +132,7 @@ export const DataInput = (props: Props) => {
         type={props.input.type}
         value={props.input.defaultValue}
         onChange={(v) => props.input.setDefaultValue(v)}
-        connected={props.input.connection.isSome()}
+        connected={props.input.connection().isSome()}
       />
     </div>
   );

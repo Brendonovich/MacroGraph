@@ -20,18 +20,8 @@ import {
   ScopeInput,
   ScopeOutput,
 } from "./IO";
-import { Graph } from ".";
 import { XY } from "../utils";
-import { Option } from "../types";
-
-export interface NodeArgs {
-  id: number;
-  name?: string;
-  graph: Graph;
-  schema: NodeSchema;
-  position: XY;
-  properties?: Record<string, any>;
-}
+import type { Graph } from "./Graph";
 
 export const SerializedNode = z.object({
   id: z.number(),
@@ -47,6 +37,15 @@ export const SerializedNode = z.object({
   defaultValues: z.record(z.string(), z.any()),
   properties: z.record(z.string(), z.any()).default({}),
 });
+
+export interface NodeArgs {
+  id: number;
+  name?: string;
+  graph: Graph;
+  schema: NodeSchema;
+  position: XY;
+  properties?: Record<string, any>;
+}
 
 export class Node {
   id: number;
@@ -110,7 +109,7 @@ export class Node {
 
         for (const input of this.state.inputs) {
           if (input instanceof DataInput) {
-            input.connection.peek((c) => {
+            input.connection().peek((c) => {
               c.node.dataRoots().forEach((n) => roots.add(n));
             });
           }
@@ -219,53 +218,4 @@ export class Node {
 
     return node;
   }
-}
-
-export const SerializedConnection = z.object({
-  from: z.object({
-    node: z.coerce.number().int(),
-    output: z.string(),
-  }),
-  to: z.object({
-    node: z.coerce.number().int(),
-    input: z.string(),
-  }),
-});
-
-export function serializeConnections(nodes: IterableIterator<Node>) {
-  const connections: z.infer<typeof SerializedConnection>[] = [];
-
-  for (const node of nodes) {
-    node.state.inputs.forEach((i) => {
-      if (i instanceof ExecInput) {
-        i.connections.forEach((conn) => {
-          connections.push({
-            from: {
-              node: conn.node.id,
-              output: conn.id,
-            },
-            to: {
-              node: i.node.id,
-              input: i.id,
-            },
-          });
-        });
-      } else {
-        (i.connection as unknown as Option<typeof i>).peek((conn) => {
-          connections.push({
-            from: {
-              node: conn.node.id,
-              output: conn.id,
-            },
-            to: {
-              node: i.node.id,
-              input: i.id,
-            },
-          });
-        });
-      }
-    });
-  }
-
-  return connections;
 }

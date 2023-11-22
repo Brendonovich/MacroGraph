@@ -156,12 +156,12 @@ class ExecutionContext {
   createCtx(node: Node): RunCtx {
     return {
       exec: async (execOutput) => {
-        await execOutput.connection.peekAsync((conn) =>
-          this.execNode(conn.node)
-        );
+        await execOutput
+          .connection()
+          .peekAsync((conn) => this.execNode(conn.node));
       },
       execScope: async (scopeOutput, data) => {
-        await scopeOutput.connection.peekAsync(async (conn) => {
+        await scopeOutput.connection().peekAsync(async (conn) => {
           this.data.set(scopeOutput, data);
 
           await this.execNode(conn.node);
@@ -172,7 +172,7 @@ class ExecutionContext {
       },
       getInput: (input) => {
         return (
-          input.connection as Option<DataOutput<any> | ScopeOutput>
+          input.connection() as Option<DataOutput<any> | ScopeOutput>
         ).mapOrElse(
           () => {
             if (input instanceof DataInput)
@@ -203,7 +203,7 @@ class ExecutionContext {
     node.state.inputs.forEach((i) => {
       if (!(i instanceof DataInput)) return;
 
-      i.connection.peek((conn) => {
+      i.connection().peek((conn) => {
         const connectedNode = conn.node;
         const schema = connectedNode.schema;
 
