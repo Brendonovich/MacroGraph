@@ -283,15 +283,12 @@ export class Graph {
           this.connections.delete(makeIORef(conn));
         });
       } else if (pin instanceof ScopeInput) {
-        pin.connection().peek((conn) => {
+        pin.connection.peek((conn) => {
           this.connections.delete(makeIORef(conn));
         });
       } else if (pin instanceof ExecOutput) {
-        pin.connection().peek((conn) => {
-          this.connections.delete(makeIORef(conn));
-        });
       } else {
-        pin.connection().peek((conn) => {
+        pin.connection.peek((conn) => {
           this.connections.delete(makeIORef(conn));
         });
       }
