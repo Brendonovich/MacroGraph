@@ -1,9 +1,16 @@
 import { Package, t } from "@macrograph/core";
 
 import { createCtx } from "./ctx";
+import { createMemo } from "solid-js";
 
 export function pkg() {
   const sockets = createCtx((data) => pkg.emitEvent({ name: "wsEvent", data }));
+
+  const getWebSocket = (ip: string) => {
+    const ws = sockets.websockets.get(ip);
+    if (ws?.state !== "connected") throw new Error();
+    return ws.socket;
+  };
 
   const pkg = new Package({
     name: "Websocket",
@@ -29,8 +36,7 @@ export function pkg() {
       };
     },
     run({ ctx, io }) {
-      let ws = sockets.websockets.get(ctx.getInput(io.ip));
-      ws?.socket.send(ctx.getInput(io.data));
+      getWebSocket(ctx.getInput(io.ip)).send(ctx.getInput(io.data));
     },
   });
 

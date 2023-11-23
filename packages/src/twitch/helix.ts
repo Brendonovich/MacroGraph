@@ -2,17 +2,13 @@ import {
   Core,
   InferEnum,
   Maybe,
-  None,
   OAuthToken,
-  Option,
   Package,
-  Some,
   createEnum,
   createStruct,
-  makePersisted,
   t,
 } from "@macrograph/core";
-import { Accessor, createSignal } from "solid-js";
+import { Accessor } from "solid-js";
 import { z } from "zod";
 
 import { createEndpoint } from "../httpEndpoint";
@@ -443,7 +439,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Ban User",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "userID",
@@ -480,7 +476,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Unban User",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "userID",
@@ -503,7 +499,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Add Moderator",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "userID",
@@ -525,7 +521,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Remove Moderator",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "userID",
@@ -547,7 +543,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Get Channel Info",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         broadcasterIdIn: io.dataInput({
           name: "Broadcaster ID",
@@ -623,7 +619,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Modify Channel Info",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         broadcasterLanguage: io.dataInput({
           name: "Broadcaster Language",
@@ -683,7 +679,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Get Stream info",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         broadcasterIdIn: io.dataInput({
           name: "Broadcaster ID",
@@ -766,7 +762,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Create Clip",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         clipId: io.dataOutput({
           name: "Clip ID",
@@ -794,7 +790,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Check User Subscription",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "User ID",
@@ -834,7 +830,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Check User Follow",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "User ID",
@@ -864,7 +860,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Check User VIP",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "User ID",
@@ -893,7 +889,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Check User Mod",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           name: "User ID",
@@ -922,7 +918,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Create Custom Reward",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         title: io.dataInput({
           name: "Title",
@@ -997,7 +993,7 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
     async run({ ctx, io }) {
       const user = userId().unwrap();
-      let body = {};
+      let body: Record<string, any> = {};
 
       if (ctx.getInput(io.prompt).isSome())
         body.prompt = ctx.getInput(io.prompt).unwrap();
@@ -1073,7 +1069,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Start Commercial",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         duration: io.dataInput({
           name: "Duration (s)",
@@ -1150,7 +1146,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Edit Custom Reward",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         id: io.dataInput({
           name: "Reward Id",
@@ -1234,7 +1230,7 @@ export function register(pkg: Package, { client, user }: Helix) {
       };
     },
     async run({ ctx, io }) {
-      let body = {};
+      let body: Record<string, any> = {};
       if (ctx.getInput(io.id) === "") return;
 
       if (ctx.getInput(io.title).isSome())
@@ -1316,7 +1312,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Update Redemption Status",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         redemptionId: io.dataInput({
           name: "Redemption ID",
@@ -1379,7 +1375,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Get Reward By Title",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         title: io.dataInput({
           id: "title",
@@ -1439,7 +1435,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Delete Custom Reward",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         id: io.dataInput({
           id: "id",
@@ -1461,7 +1457,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Get User By ID",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userIdIn: io.dataInput({
           id: "userId",
@@ -1578,7 +1574,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Follower Only Mode",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         delay: io.dataInput({
           id: "delay",
@@ -1607,7 +1603,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Get User Chat Color By ID",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           id: "userId",
@@ -1635,7 +1631,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Slow Mode",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         delay: io.dataInput({
           id: "delay",
@@ -1672,7 +1668,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Moderation Chat Delay",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         delay: io.dataInput({
           id: "delay",
@@ -1709,7 +1705,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Sub Only Mode",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         enabled: io.dataInput({
           id: "enabled",
@@ -1733,7 +1729,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Unique Chat Mode",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         enabled: io.dataInput({
           id: "enabled",
@@ -1757,7 +1753,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Emote Only Mode",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         enabled: io.dataInput({
           id: "enabled",
@@ -1781,7 +1777,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Shoutout User",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         toId: io.dataInput({
           id: "toId",
@@ -1806,7 +1802,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   pkg.createNonEventSchema({
     name: "Send Announcement",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         announcement: io.dataInput({
           id: "announcement",

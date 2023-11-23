@@ -805,10 +805,10 @@ export function pkg(core: Core) {
           const last = previousInputs[inputCount - 1]!;
           const secondLast = previousInputs[inputCount - 2];
 
-          if (last.connection.isSome()) return "addOne";
+          if (last.connection().isSome()) return "addOne";
           else if (
             !secondLast ||
-            (last.connection.isNone() && secondLast.connection.isSome())
+            (last.connection().isNone() && secondLast.connection().isSome())
           )
             return "fine";
           else return "twoUnconnected";
@@ -818,7 +818,7 @@ export function pkg(core: Core) {
 
         for (let i = previousInputs.length - 1; i >= 0; i--) {
           const input = previousInputs[i]!;
-          if (input.connection.isSome()) {
+          if (input.connection().isSome()) {
             lastConnectedIndex = Some(i);
             break;
           }

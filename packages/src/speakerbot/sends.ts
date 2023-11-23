@@ -1,8 +1,15 @@
-import { createEnum, t } from "@macrograph/core";
+import { t } from "@macrograph/core";
 import { Pkg } from ".";
 import { Ctx } from "./ctx";
+import { createMemo } from "solid-js";
 
-export function register(pkg: Pkg, state: Ctx) {
+export function register(pkg: Pkg, { state }: Ctx) {
+  const ws = createMemo(() => {
+    const ws = state();
+    if (ws.type !== "connected") throw new Error("WebSocket not connected!");
+    return ws.ws;
+  });
+
   pkg.createNonEventSchema({
     name: "SpeakerBot Speak",
     variant: "Exec",
@@ -21,7 +28,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           voice: ctx.getInput(io.voice),
           message: ctx.getInput(io.message),
@@ -37,7 +44,7 @@ export function register(pkg: Pkg, state: Ctx) {
     variant: "Exec",
     generateIO({ io }) {},
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: "Stop",
@@ -59,7 +66,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: ctx.getInput(io.state) ? "Enable" : "Disable",
@@ -81,7 +88,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: "Events",
@@ -104,7 +111,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: ctx.getInput(io.state) ? "Pause" : "Resume",
@@ -118,7 +125,7 @@ export function register(pkg: Pkg, state: Ctx) {
     variant: "Exec",
     generateIO({ io }) {},
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: "Clear",

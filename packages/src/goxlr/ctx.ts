@@ -1,6 +1,6 @@
 import { None, OnEvent, makePersisted } from "@macrograph/core";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
-import { WebsocketResponse } from "./types";
+import { WebSocketResponse } from "./types";
 import { Event } from ".";
 
 const URL_LOCALSTORAGE_KEY = "GoXLR_WS";
@@ -40,7 +40,7 @@ export function createCtx(onEvent: OnEvent<Event>) {
           });
 
           ws.addEventListener("message", (msg) => {
-            const { data }: WebsocketResponse = JSON.parse(msg.data);
+            const { data } = WebSocketResponse.parse(JSON.parse(msg.data));
             if (data === "Ok") return;
 
             if ("Status" in data) {

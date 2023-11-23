@@ -1,14 +1,4 @@
-import { createMutable } from "solid-js/store";
-
-import {
-  AnyType,
-  BaseType,
-  Maybe,
-  None,
-  Option,
-  PrimitiveType,
-  t,
-} from "../types";
+import { AnyType, BaseType, Maybe, PrimitiveType, t } from "../types";
 import { Wildcard } from "../types/wildcard";
 import {
   DataInput,
@@ -79,7 +69,6 @@ export class IOBuilder {
   outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[] = [];
 
   wildcards = new Map<string, Wildcard>();
-  scopes = new Map<string, ScopeRef>();
 
   constructor(public node: Node, public previous?: IOBuilder) {}
 
@@ -91,16 +80,6 @@ export class IOBuilder {
     this.wildcards.set(id, wildcard);
 
     return wildcard;
-  }
-
-  scope(id: string) {
-    const scope = Maybe(this.previous?.scopes.get(id)).unwrapOrElse(
-      () => new ScopeRef()
-    );
-
-    this.scopes.set(id, scope);
-
-    return scope;
   }
 
   dataInput<T extends DataInputBuilder>(args: T) {

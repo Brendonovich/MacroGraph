@@ -11,14 +11,13 @@ import {
   connectWildcardsInIO,
   disconnectWildcardsInIO,
 } from "../types";
-import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
+import { DataOutputBuilder } from "./NodeSchema";
 import {
   Accessor,
   createEffect,
   createMemo,
   createRoot,
   getOwner,
-  mapArray,
   onCleanup,
   runWithOwner,
 } from "solid-js";
