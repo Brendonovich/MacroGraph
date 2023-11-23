@@ -227,7 +227,7 @@ export class Graph {
         const outputConnections =
           this.connections.get(outRef) ??
           (() => {
-            const array: Array<IORef> = [];
+            const array: Array<IORef> = createMutable([]);
             this.connections.set(outRef, array);
             return array;
           })();
@@ -238,7 +238,7 @@ export class Graph {
         const outputConnections =
           this.connections.get(outRef) ??
           (() => {
-            const array: Array<IORef> = [];
+            const array: Array<IORef> = createMutable([]);
             this.connections.set(outRef, array);
             return array;
           })();
