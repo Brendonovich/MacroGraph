@@ -136,9 +136,7 @@ export class Node {
       if (!allInputs.has(i)) {
         this.graph.disconnectPin(i);
 
-        if (i instanceof DataInput) {
-          i.dispose();
-        }
+        if ("dispose" in i) i.dispose();
       }
     });
     this.state.inputs.splice(0, this.state.inputs.length, ...io.inputs);

@@ -57,7 +57,7 @@ export class DataInput<T extends BaseType<any>> {
 
     this.dispose = dispose;
 
-    const reactiveThis = createMutable(this);
+    const self = createMutable(this);
 
     runWithOwner(owner, () => {
       createEffect<Option<t.Any>>((prev) => {
@@ -69,15 +69,14 @@ export class DataInput<T extends BaseType<any>> {
         if (value.isSome() && value.unwrap() instanceof BasePrimitiveType) {
           if (prev.isSome() && value.unwrap().eq(prev.unwrap())) return prev;
 
-          if (!reactiveThis.defaultValue)
-            reactiveThis.defaultValue = value.unwrap().default();
-        } else reactiveThis.defaultValue = null;
+          if (!self.defaultValue) self.defaultValue = value.unwrap().default();
+        } else self.defaultValue = null;
 
         return value;
       }, None);
     });
 
-    return reactiveThis;
+    return self;
   }
 
   setDefaultValue(value: any) {
@@ -290,7 +289,7 @@ export class ScopeOutput {
     const self = createMutable(this);
 
     createEffect(() => {
-      this.connection().peek((conn) => {
+      self.connection().peek((conn) => {
         conn.connection = Some(self as any);
 
         onCleanup(() => {
@@ -319,16 +318,28 @@ export class ScopeInput {
   name?: string;
 
   connection: Option<ScopeOutput> = None;
-  scope: Accessor<Option<Scope>>;
+  scope!: Accessor<Option<Scope>>;
+  dispose: () => void;
 
   constructor(args: ScopeInputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
 
+    const { owner, dispose } = createRoot((dispose) => ({
+      owner: getOwner(),
+      dispose,
+    }));
+
+    this.dispose = dispose;
+
     const self = createMutable(this);
 
-    this.scope = createMemo(() => self.connection.map((c) => c.scope));
+    runWithOwner(owner, () => {
+      this.scope = createMemo(() => {
+        return self.connection.map((c) => c.scope);
+      });
+    });
 
     return self;
   }

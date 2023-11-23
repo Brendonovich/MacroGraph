@@ -262,38 +262,29 @@ export class Graph {
     batch(() => {
       const ref = makeIORef(pin);
 
+      let outRef: IORef;
+
       if (pin instanceof DataOutput) {
-        pin.connections().forEach((conn) => {
-          this.connections.delete(makeIORef(conn));
-        });
+        outRef = ref;
       } else if (pin instanceof DataInput) {
-        pin.connection.peek((conn) => {
-          const connRef = makeIORef(conn);
+        if (pin.connection.isNone()) return;
 
-          const connections = this.connections.get(connRef);
-          if (!connections) return;
-
-          const index = connections.indexOf(ref);
-          if (index !== -1) connections.splice(index, 1);
-
-          if (connections.length === 0) this.connections.delete(connRef);
-        });
+        outRef = makeIORef(pin.connection.unwrap());
       } else if (pin instanceof ScopeOutput) {
-        pin.connection().peek((conn) => {
-          this.connections.delete(makeIORef(conn));
-        });
+        outRef = ref;
       } else if (pin instanceof ScopeInput) {
-        pin.connection.peek((conn) => {
-          this.connections.delete(makeIORef(conn));
-        });
+        if (pin.connection.isNone()) return;
+
+        outRef = makeIORef(pin.connection.unwrap());
       } else if (pin instanceof ExecOutput) {
-      } else {
-        pin.connection.peek((conn) => {
-          this.connections.delete(makeIORef(conn));
-        });
+        outRef = ref;
+      } else if (pin instanceof ExecInput) {
+        if (pin.connection.isNone()) return;
+
+        outRef = makeIORef(pin.connection.unwrap());
       }
 
-      this.connections.delete(ref);
+      this.connections.delete(outRef!);
     });
 
     this.project.save();
@@ -406,16 +397,6 @@ export class Graph {
           })();
 
         outConns.push(inRef);
-
-        const inConns =
-          acc.get(inRef) ??
-          (() => {
-            const array: Array<IORef> = [];
-            acc.set(inRef, array);
-            return array;
-          })();
-
-        inConns.push(outRef);
 
         return acc;
       }, new ReactiveMap() as Connections);

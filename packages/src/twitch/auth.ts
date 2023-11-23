@@ -1,8 +1,9 @@
 import { Core, Maybe, None, OAuthToken, makePersisted } from "@macrograph/core";
 import { ReactiveMap } from "@solid-primitives/map";
 import { z } from "zod";
+import { createMemo, createSignal } from "solid-js";
+
 import { createHelixEndpoint } from "./helix";
-import { createMemo, createSignal, untrack } from "solid-js";
 
 const USER_DATA = z.object({
   id: z.string(),
