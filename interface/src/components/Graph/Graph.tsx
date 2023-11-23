@@ -1,10 +1,4 @@
-import {
-  Accessor,
-  createContext,
-  useContext,
-  createRoot,
-  createEffect,
-} from "solid-js";
+import * as Solid from "solid-js";
 import {
   Graph as GraphModel,
   Pin,
@@ -12,8 +6,9 @@ import {
   Node as NodeModel,
   Size,
 } from "@macrograph/core";
-import { createSignal, For, onMount, JSX } from "solid-js";
+import { createStore } from "solid-js/store";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
+import { ReactiveWeakMap } from "@solid-primitives/map";
 import {
   createEventListener,
   createEventListenerMap,
@@ -23,9 +18,6 @@ import { createBodyCursor } from "@solid-primitives/cursor";
 import { Node } from "./Node";
 import { ConnectionRender } from "../Graph";
 import { CommentBox } from "./CommentBox";
-import { ReactiveWeakMap } from "@solid-primitives/map";
-import { createStore } from "solid-js/store";
-import { ComponentProps } from "solid-js";
 
 type PanState = "none" | "waiting" | "active";
 
@@ -64,14 +56,14 @@ export function toScreenSpace(graphXY: XY, bounds: XY, state: GraphState) {
 const MAX_ZOOM_IN = 2.5;
 const MAX_ZOOM_OUT = 5;
 
-interface Props extends ComponentProps<"div"> {
+interface Props extends Solid.ComponentProps<"div"> {
   state: GraphState;
   graph: GraphModel;
   nodeSizes: WeakMap<NodeModel, Size>;
   onGraphDragStart?(): void;
   onGraphDrag?(): void;
-  onMouseDown?: JSX.EventHandler<HTMLDivElement, MouseEvent>;
-  onMouseUp?: JSX.EventHandler<HTMLDivElement, MouseEvent>;
+  onMouseDown?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
+  onMouseUp?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
   onScaleChange(scale: number): void;
   onTranslateChange(translate: XY): void;
   onSizeChange(size: { width: number; height: number }): void;
@@ -80,13 +72,13 @@ interface Props extends ComponentProps<"div"> {
 }
 
 export const Graph = (props: Props) => {
-  const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
+  const [ref, setRef] = Solid.createSignal<HTMLDivElement | undefined>();
 
   const model = () => props.graph;
 
   const pinPositions = new ReactiveWeakMap<Pin, XY>();
 
-  const [size, setSize] = createSignal({ width: 0, height: 0 });
+  const [size, setSize] = Solid.createSignal({ width: 0, height: 0 });
   const [bounds, setBounds] = createStore({ x: 0, y: 0 });
 
   createResizeObserver(ref, (bounds) => {
@@ -131,14 +123,14 @@ export const Graph = (props: Props) => {
     });
   }
 
-  onMount(() => {
+  Solid.onMount(() => {
     createEventListener(window, "resize", onResize);
     createResizeObserver(ref, onResize);
 
     createEventListener(ref, "gesturestart", () => {
       let lastScale = 1;
 
-      createRoot((dispose) => {
+      Solid.createRoot((dispose) => {
         createEventListenerMap(() => ref() ?? [], {
           gestureend: dispose,
           gesturechange: (e: any) => {
@@ -163,7 +155,7 @@ export const Graph = (props: Props) => {
     });
   });
 
-  const [pan, setPan] = createSignal<PanState>("none");
+  const [pan, setPan] = Solid.createSignal<PanState>("none");
 
   createBodyCursor(() => pan() === "active" && "grabbing");
 
@@ -229,8 +221,8 @@ export const Graph = (props: Props) => {
                 y: e.clientY,
               };
 
-              createRoot((dispose) => {
-                createEffect(() => {
+              Solid.createRoot((dispose) => {
+                Solid.createEffect(() => {
                   if (pan() === "active") props.onGraphDragStart?.();
                 });
 
@@ -287,7 +279,7 @@ export const Graph = (props: Props) => {
               }px)`,
             }}
           >
-            <For each={[...model().commentBoxes.values()]}>
+            <Solid.For each={[...model().commentBoxes.values()]}>
               {(box) => (
                 <CommentBox
                   box={box}
@@ -296,8 +288,8 @@ export const Graph = (props: Props) => {
                   }
                 />
               )}
-            </For>
-            <For each={[...model().nodes.values()]}>
+            </Solid.For>
+            <Solid.For each={[...model().nodes.values()]}>
               {(node) => (
                 <Node
                   node={node}
@@ -306,7 +298,7 @@ export const Graph = (props: Props) => {
                   }
                 />
               )}
-            </For>
+            </Solid.For>
           </div>
         </div>
       </div>
@@ -314,8 +306,8 @@ export const Graph = (props: Props) => {
   );
 };
 
-const GraphContext = createContext<{
-  model: Accessor<GraphModel>;
+const GraphContext = Solid.createContext<{
+  model: Solid.Accessor<GraphModel>;
   pinPositions: ReactiveWeakMap<Pin, XY>;
   nodeSizes: WeakMap<NodeModel, Size>;
   state: GraphState;
@@ -325,7 +317,7 @@ const GraphContext = createContext<{
 } | null>(null);
 
 export const useGraphContext = () => {
-  const ctx = useContext(GraphContext);
+  const ctx = Solid.useContext(GraphContext);
 
   if (!ctx) throw new Error("CurrentGraphContext is missing!");
 
