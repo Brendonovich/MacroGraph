@@ -10,6 +10,7 @@ import {
   Maybe,
   connectWildcardsInIO,
   disconnectWildcardsInIO,
+  Some,
 } from "../types";
 import { DataOutputBuilder } from "./NodeSchema";
 import {
@@ -38,7 +39,7 @@ export class DataInput<T extends BaseType<any>> {
   node: Node;
   dispose: () => void;
 
-  connection: Accessor<Option<DataOutput<T>>>;
+  connection: Option<DataOutput<T>> = None;
 
   constructor(args: DataInputArgs<T>) {
     this.id = args.id;
@@ -47,21 +48,6 @@ export class DataInput<T extends BaseType<any>> {
       args.type instanceof BasePrimitiveType ? args.type.default() : null;
     this.node = args.node;
     this.type = args.type;
-
-    this.connection = createMemo(() => {
-      const graph = this.node.graph;
-
-      return Maybe(graph.connections.get(makeIORef(this)))
-        .map(([conn]) => {
-          return conn && splitIORef(conn);
-        })
-        .map(({ nodeId, ioId }) => {
-          const node = graph.nodes.get(nodeId);
-          const output = node?.output(ioId);
-
-          if (output instanceof DataOutput) return output as DataOutput<T>;
-        });
-    });
 
     const { owner, dispose } = createRoot((dispose) => ({
       owner: getOwner(),
@@ -146,9 +132,13 @@ export class DataOutput<T extends BaseType> {
 
     createEffect(() => {
       for (const conn of self.connections()) {
+        conn.connection.replace(self);
         connectWildcardsInIO(self, conn);
 
-        onCleanup(() => disconnectWildcardsInIO(self, conn));
+        onCleanup(() => {
+          conn.connection = None;
+          disconnectWildcardsInIO(self, conn);
+        });
       }
     });
 

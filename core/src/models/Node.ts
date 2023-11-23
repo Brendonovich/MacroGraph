@@ -109,7 +109,7 @@ export class Node {
 
         for (const input of this.state.inputs) {
           if (input instanceof DataInput) {
-            input.connection().peek((c) => {
+            input.connection.peek((c) => {
               c.node.dataRoots().forEach((n) => roots.add(n));
             });
           }

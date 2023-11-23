@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { z } from "zod";
 import { CORS_HEADERS } from "~/auth";
 import { env } from "~/env/server";
 
@@ -6,8 +7,10 @@ import { REFRESHED_TOKEN } from "~/schemas/twitch";
 
 export const prerender = false;
 
+const BODY = z.object({ refreshToken: z.string() });
+
 export const POST: APIRoute = async ({ request }) => {
-  const body = await request.json();
+  const body = BODY.parse(await request.json());
 
   const res = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",

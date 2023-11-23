@@ -1,4 +1,4 @@
-import { batch, createEffect, mapArray } from "solid-js";
+import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
 import { z } from "zod";
@@ -18,14 +18,7 @@ import { pinIsInput, pinsCanConnect } from "../utils";
 import { SerializedNode } from "./Node";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
-import {
-  connectWildcardsInIO,
-  disconnectWildcardsInIO,
-  None,
-  PrimitiveType,
-  Some,
-  t,
-} from "../types";
+import { PrimitiveType, t } from "../types";
 
 const SerializedVariable = z.object({
   id: z.number(),
@@ -274,7 +267,7 @@ export class Graph {
           this.connections.delete(makeIORef(conn));
         });
       } else if (pin instanceof DataInput) {
-        pin.connection().peek((conn) => {
+        pin.connection.peek((conn) => {
           const connRef = makeIORef(conn);
 
           const connections = this.connections.get(connRef);

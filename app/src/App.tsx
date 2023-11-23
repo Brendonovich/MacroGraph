@@ -1,5 +1,4 @@
-import { onMount } from "solid-js";
-import { Core, createWsProvider } from "@macrograph/core";
+import { Core, RefreshedOAuthToken, createWsProvider } from "@macrograph/core";
 import { Interface } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
@@ -12,7 +11,7 @@ const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
 
 export default function () {
   const core = new Core({
-    fetch,
+    fetch: fetch as any,
     oauth: {
       authorize: (provider) =>
         new Promise((res) => {
@@ -32,7 +31,10 @@ export default function () {
           body: JSON.stringify({ refreshToken }),
         });
 
-        return { ...(await res.json()), issued_at: Date.now() / 1000 };
+        return {
+          ...((await res.json()) as RefreshedOAuthToken),
+          issued_at: Date.now() / 1000,
+        };
       },
     },
   });
