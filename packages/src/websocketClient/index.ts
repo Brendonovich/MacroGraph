@@ -1,7 +1,6 @@
 import { Package, t } from "@macrograph/core";
 
 import { createCtx } from "./ctx";
-import { createMemo } from "solid-js";
 
 export function pkg() {
   const sockets = createCtx((data) => pkg.emitEvent({ name: "wsEvent", data }));

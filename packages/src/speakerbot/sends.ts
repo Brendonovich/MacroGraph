@@ -1,14 +1,14 @@
 import { t } from "@macrograph/core";
+
 import { Pkg } from ".";
 import { Ctx } from "./ctx";
-import { createMemo } from "solid-js";
 
 export function register(pkg: Pkg, { state }: Ctx) {
-  const ws = createMemo(() => {
+  const ws = () => {
     const ws = state();
     if (ws.type !== "connected") throw new Error("WebSocket not connected!");
     return ws.ws;
-  });
+  };
 
   pkg.createNonEventSchema({
     name: "SpeakerBot Speak",
@@ -42,8 +42,8 @@ export function register(pkg: Pkg, { state }: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Stop Current",
     variant: "Exec",
-    generateIO({ io }) {},
-    run({ ctx, io }) {
+    generateIO() {},
+    run() {
       ws().send(
         JSON.stringify({
           id: "Macrograph",
@@ -124,7 +124,7 @@ export function register(pkg: Pkg, { state }: Ctx) {
     name: "SpeakerBot Queue Clear",
     variant: "Exec",
     generateIO({ io }) {},
-    run({ ctx, io }) {
+    run() {
       ws().send(
         JSON.stringify({
           id: "Macrograph",

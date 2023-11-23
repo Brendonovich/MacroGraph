@@ -1,6 +1,9 @@
 import { Graph, Node, PrimitiveType, PropertyValue, t } from "@macrograph/core";
+import { Switch, For, Match, Show, createMemo, createSignal } from "solid-js";
+import { AiOutlineCheck, AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
+import { BsX } from "solid-icons/bs";
+
 import { SidebarSection } from "./components/Sidebar";
-import { For, Match, Show, createMemo } from "solid-js";
 import {
   CheckBox,
   FloatInput,
@@ -8,8 +11,6 @@ import {
   SelectInput,
   TextInput,
 } from "./components/ui";
-import { Switch } from "solid-js";
-import { AiOutlineDelete } from "solid-icons/ai";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (
@@ -35,71 +36,138 @@ export function GraphSidebar(props: { graph: Graph }) {
       >
         <div class="p-2 gap-2 flex flex-col">
           <For each={props.graph.variables}>
-            {(variable) => (
-              <div class="flex flex-col gap-2 p-2 border-neutral-400 border rounded bg-neutral-800">
-                <div class="flex flex-row gap-2 justify-start items-center">
-                  <span class="shrink-0">{variable.name}</span>
-                  <SelectInput<PrimitiveType>
-                    options={[t.string(), t.int(), t.float(), t.bool()]}
-                    optionValue={(o) => o.primitiveVariant()}
-                    optionTextValue={(o) => o.toString()}
-                    value={variable.type}
-                    getLabel={(v) => v.toString()}
-                    onChange={(v) => {
-                      if (variable.type.eq(v)) return;
+            {(variable) => {
+              const [editingName, setEditingName] = createSignal(false);
 
-                      variable.type = v;
-                      variable.value = v.default();
-                    }}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+              return (
+                <div class="flex flex-col gap-2 p-2 border-neutral-400 border rounded bg-neutral-800">
+                  <div class="flex flex-row gap-2 justify-between items-center">
+                    <Switch>
+                      <Match when={editingName()}>
+                        {(_) => {
+                          const [value, setValue] = createSignal(variable.name);
 
-                      props.graph.removeVariable(variable.id);
-                    }}
-                  >
-                    <AiOutlineDelete />
-                  </button>
+                          return (
+                            <>
+                              <input
+                                class="flex-1 text-black"
+                                value={value()}
+                                onChange={(e) => setValue(e.target.value)}
+                              />
+                              <div class="flex flex-row">
+                                <button
+                                  class="w-6 h-6 flex flex-row items-center justify-center"
+                                  onClick={() => {
+                                    variable.name = value();
+                                    setEditingName(false);
+                                  }}
+                                >
+                                  <AiOutlineCheck />
+                                </button>
+                                <button
+                                  class="w-6 h-6 relative"
+                                  onClick={() => setEditingName(false)}
+                                >
+                                  <BsX
+                                    size={24}
+                                    class="absolute left-0 top-0"
+                                  />
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }}
+                      </Match>
+                      <Match when={!editingName()}>
+                        <span class="shrink-0">{variable.name}</span>
+                        <div class="gap-2 flex flex-row">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+
+                              setEditingName(true);
+                            }}
+                          >
+                            <AiOutlineEdit />
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+
+                              props.graph.removeVariable(variable.id);
+                            }}
+                          >
+                            <AiOutlineDelete />
+                          </button>
+                        </div>
+                      </Match>
+                    </Switch>
+                  </div>
+
+                  <div class="flex flex-row items-center gap-2 text-sm">
+                    <span>Type</span>
+                    <SelectInput<PrimitiveType>
+                      options={[t.string(), t.int(), t.float(), t.bool()]}
+                      optionValue={(o) => o.primitiveVariant()}
+                      optionTextValue={(o) => o.toString()}
+                      value={variable.type}
+                      getLabel={(v) => v.toString()}
+                      onChange={(v) => {
+                        if (variable.type.eq(v)) return;
+
+                        variable.type = v;
+                        variable.value = v.default();
+                      }}
+                    />
+                  </div>
+
+                  <div class="flex flex-row items-center gap-2 text-sm">
+                    <span>Value</span>
+                    <Switch>
+                      <Match when={variable.type.primitiveVariant() === "bool"}>
+                        <CheckBox
+                          value={variable.value}
+                          onChange={(n) =>
+                            props.graph.setVariableValue(variable.id, n)
+                          }
+                        />
+                      </Match>
+                      <Match
+                        when={variable.type.primitiveVariant() === "string"}
+                      >
+                        <TextInput
+                          value={variable.value}
+                          onChange={(n) =>
+                            props.graph.setVariableValue(variable.id, n)
+                          }
+                        />
+                      </Match>
+                      <Match when={variable.type.primitiveVariant() === "int"}>
+                        <IntInput
+                          initialValue={variable.value}
+                          value={variable.value}
+                          onChange={(n) =>
+                            props.graph.setVariableValue(variable.id, n)
+                          }
+                        />
+                      </Match>
+                      <Match
+                        when={variable.type.primitiveVariant() === "float"}
+                      >
+                        <FloatInput
+                          initialValue={variable.value}
+                          value={variable.value}
+                          onChange={(n) =>
+                            props.graph.setVariableValue(variable.id, n)
+                          }
+                        />
+                      </Match>
+                    </Switch>
+                  </div>
                 </div>
-                <Switch>
-                  <Match when={variable.type.primitiveVariant() === "bool"}>
-                    <CheckBox
-                      value={variable.value}
-                      onChange={(n) =>
-                        props.graph.setVariableValue(variable.id, n)
-                      }
-                    />
-                  </Match>
-                  <Match when={variable.type.primitiveVariant() === "string"}>
-                    <TextInput
-                      value={variable.value}
-                      onChange={(n) =>
-                        props.graph.setVariableValue(variable.id, n)
-                      }
-                    />
-                  </Match>
-                  <Match when={variable.type.primitiveVariant() === "int"}>
-                    <IntInput
-                      initialValue={variable.value}
-                      value={variable.value}
-                      onChange={(n) =>
-                        props.graph.setVariableValue(variable.id, n)
-                      }
-                    />
-                  </Match>
-                  <Match when={variable.type.primitiveVariant() === "float"}>
-                    <FloatInput
-                      initialValue={variable.value}
-                      value={variable.value}
-                      onChange={(n) =>
-                        props.graph.setVariableValue(variable.id, n)
-                      }
-                    />
-                  </Match>
-                </Switch>
-              </div>
-            )}
+              );
+            }}
           </For>
         </div>
       </SidebarSection>
