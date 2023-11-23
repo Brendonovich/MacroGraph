@@ -19,7 +19,7 @@ export const ExecInput = (props: Props) => {
           viewBox="0 0 14 17.5"
           class="w-3.5 text-transparent hover:text-white pointer-events-[all]"
           fill={
-            props.input.connection().isSome() || active()
+            props.input.connection.isSome() || active()
               ? "white"
               : "currentColor"
           }
