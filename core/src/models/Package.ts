@@ -107,12 +107,17 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     TIO,
     TProperties extends Record<string, PropertyDef>
   >(
-    schema: Omit<EventNodeSchema<TEvents, TEvent, TIO, TProperties>, "package">
+    schema: Omit<
+      EventNodeSchema<TEvents, TEvent, TIO, TProperties>,
+      "package" | "properties"
+    > & {
+      properties?: TProperties;
+    }
   ) {
     const altered: EventNodeSchema<TEvents, TEvent, TIO, TProperties> = {
       ...schema,
       properties: Object.entries(schema.properties ?? {}).reduce(
-        (acc, [id, property]: [keyof TProperties, TProperties[string]]) => {
+        (acc: any, [id, property]: any) => {
           acc[id] = {
             id,
             ...property,
