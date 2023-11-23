@@ -262,29 +262,46 @@ export class Graph {
     batch(() => {
       const ref = makeIORef(pin);
 
-      let outRef: IORef;
-
       if (pin instanceof DataOutput) {
-        outRef = ref;
+        this.connections.delete(ref);
       } else if (pin instanceof DataInput) {
-        if (pin.connection.isNone()) return;
-
-        outRef = makeIORef(pin.connection.unwrap());
+        pin.connection.peek((conn) => {
+          const connRef = makeIORef(conn);
+          const connArray = this.connections.get(connRef);
+          if (connArray) {
+            const index = connArray.indexOf(ref);
+            if (index !== -1) {
+              connArray.splice(index, 1);
+            }
+          }
+        });
       } else if (pin instanceof ScopeOutput) {
-        outRef = ref;
+        this.connections.delete(ref);
       } else if (pin instanceof ScopeInput) {
-        if (pin.connection.isNone()) return;
-
-        outRef = makeIORef(pin.connection.unwrap());
+        pin.connection.peek((conn) => {
+          const connRef = makeIORef(conn);
+          const connArray = this.connections.get(connRef);
+          if (connArray) {
+            const index = connArray.indexOf(ref);
+            if (index !== -1) {
+              connArray.splice(index, 1);
+            }
+          }
+        });
       } else if (pin instanceof ExecOutput) {
-        outRef = ref;
+        this.connections.delete(ref);
       } else if (pin instanceof ExecInput) {
-        if (pin.connection.isNone()) return;
-
-        outRef = makeIORef(pin.connection.unwrap());
+        pin.connection.peek((conn) => {
+          const connRef = makeIORef(conn);
+          const connArray = this.connections.get(connRef);
+          if (connArray) {
+            const index = connArray.indexOf(ref);
+            if (index !== -1) {
+              connArray.splice(index, 1);
+            }
+          }
+        });
       }
-
-      this.connections.delete(outRef!);
     });
 
     this.project.save();
