@@ -68,7 +68,7 @@ type VariableArgs = {
   value: any;
 };
 
-class Variable {
+export class Variable {
   id: number;
   name: string;
   type: PrimitiveType;

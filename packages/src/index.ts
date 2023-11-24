@@ -24,3 +24,4 @@ export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
 export * as chatgpt from "./chatgpt";
 export * as speakerbot from "./speakerbot";
+export * as variables from "./var";

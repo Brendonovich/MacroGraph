@@ -131,7 +131,6 @@ export class DataOutput<T extends BaseType> {
     const self = createMutable(this);
 
     createEffect(() => {
-      console.log(self.connections().length);
       for (const conn of self.connections()) {
         conn.connection = Some(self as any);
         connectWildcardsInIO(self, conn);
