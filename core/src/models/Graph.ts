@@ -14,11 +14,11 @@ import {
   ScopeInput,
   ScopeOutput,
 } from ".";
-import { pinIsInput, pinsCanConnect } from "../utils";
+import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import { SerializedNode } from "./Node";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
-import { PrimitiveType, t } from "../types";
+import { PrimitiveType, t, Option } from "../types";
 
 const SerializedVariable = z.object({
   id: z.number(),
@@ -223,7 +223,9 @@ export class Graph {
       const outRef = makeIORef(output),
         inRef = makeIORef(input);
 
-      if (output instanceof DataOutput) {
+      if (output instanceof DataOutput && input instanceof DataInput) {
+        this.disconnectPin(input);
+
         const outputConnections =
           this.connections.get(outRef) ??
           (() => {
@@ -242,6 +244,7 @@ export class Graph {
           })();
         outputConnections.push(inRef);
       } else {
+        this.disconnectPin(input);
         this.connections.set(outRef, createMutable([inRef]));
       }
 
@@ -257,34 +260,14 @@ export class Graph {
     batch(() => {
       const ref = makeIORef(pin);
 
-      if (pin instanceof DataOutput) {
+      if (pinIsOutput(pin)) {
         this.connections.delete(ref);
-      } else if (pin instanceof DataInput) {
-        pin.connection.peek((conn) => {
-          const connArray = this.connections.get(makeIORef(conn));
-          if (!connArray) return;
-
-          const index = connArray.indexOf(ref);
-          if (index === -1) return;
-
-          connArray.splice(index, 1);
-        });
-      } else if (pin instanceof ScopeOutput) {
-        this.connections.delete(ref);
-      } else if (pin instanceof ScopeInput) {
-        pin.connection.peek((conn) => {
-          const connArray = this.connections.get(makeIORef(conn));
-          if (!connArray) return;
-
-          const index = connArray.indexOf(ref);
-          if (index === -1) return;
-
-          connArray.splice(index, 1);
-        });
-      } else if (pin instanceof ExecOutput) {
-        this.connections.delete(ref);
-      } else if (pin instanceof ExecInput) {
-        pin.connection.peek((conn) => {
+      } else {
+        (
+          pin.connection as unknown as Option<
+            DataInput<any> | ExecInput | ScopeInput
+          >
+        ).peek((conn) => {
           const connArray = this.connections.get(makeIORef(conn));
           if (!connArray) return;
 
