@@ -210,7 +210,7 @@ export type inferPropertySourceFn<TFn extends PropertySourceFn> =
 
 export type PropertyDef = { name: string } & (
   | { source: PropertySourceFn }
-  | { type: PrimitiveType }
+  | { type: PrimitiveType; default?: any }
 );
 export type inferPropertyDef<TProperty extends PropertyDef> =
   TProperty extends { type: PrimitiveType }

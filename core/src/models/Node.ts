@@ -75,7 +75,15 @@ export class Node {
       position: args.position,
       inputs: [],
       outputs: [],
-      properties: args.properties ?? {},
+      properties: Object.values(args.schema.properties ?? {}).reduce(
+        (acc, property) => {
+          if ("type" in property)
+            acc[property.id] = property.default ?? property.type.default();
+
+          return acc;
+        },
+        {} as Record<string, any>
+      ),
     });
 
     const { owner, dispose } = createRoot((dispose) => ({

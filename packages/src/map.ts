@@ -10,8 +10,9 @@ export function pkg() {
     variant: "Pure",
     properties: {
       number: {
-        name: "Number of Keys",
+        name: "Keys",
         type: t.int(),
+        default: 1,
       },
     },
     generateIO({ io, ctx, properties }) {
@@ -52,8 +53,9 @@ export function pkg() {
     variant: "Exec",
     properties: {
       number: {
-        name: "Number of Keys",
+        name: "Entries",
         type: t.int(),
+        default: 1,
       },
     },
     generateIO({ io, ctx, properties }) {
@@ -94,8 +96,9 @@ export function pkg() {
     variant: "Pure",
     properties: {
       number: {
-        name: "Number of Keys",
+        name: "Entries",
         type: t.int(),
+        default: 1,
       },
     },
     generateIO({ io, ctx, properties }) {
