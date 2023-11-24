@@ -11,7 +11,7 @@ import {
   WildcardType,
   t,
 } from "@macrograph/core";
-import { Show, Switch, Match } from "solid-js";
+import { Show, Switch, Match, createEffect } from "solid-js";
 
 import { CheckBox, EnumInput, FloatInput, IntInput, TextInput } from "../../ui";
 import { DataPin } from ".";

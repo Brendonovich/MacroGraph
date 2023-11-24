@@ -1,6 +1,14 @@
+import {
+  Accessor,
+  createEffect,
+  createMemo,
+  createRoot,
+  getOwner,
+  onCleanup,
+  runWithOwner,
+} from "solid-js";
 import { createMutable } from "solid-js/store";
-import { ReactiveSet } from "@solid-primitives/set";
-import { Node } from "./Node";
+
 import {
   t,
   Option,
@@ -8,9 +16,14 @@ import {
   BaseType,
   PrimitiveType,
   BasePrimitiveType,
+  Maybe,
+  connectWildcardsInIO,
+  disconnectWildcardsInIO,
+  Some,
 } from "../types";
-import { DataOutputBuilder, ScopeRef } from "./NodeSchema";
-import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
+import { Node } from "./Node";
+import { DataOutputBuilder } from "./NodeSchema";
+import { makeIORef, splitIORef } from "./Graph";
 
 export type DataInputArgs<T extends BaseType<any>> = {
   id: string;
@@ -25,8 +38,9 @@ export class DataInput<T extends BaseType<any>> {
   defaultValue: t.infer<PrimitiveType> | null = null;
   type: T;
   node: Node;
-  connection: Option<DataOutput<T>> = None;
   dispose: () => void;
+
+  connection: Option<DataOutput<T>> = None;
 
   constructor(args: DataInputArgs<T>) {
     this.id = args.id;
@@ -43,7 +57,7 @@ export class DataInput<T extends BaseType<any>> {
 
     this.dispose = dispose;
 
-    const reactiveThis = createMutable(this);
+    const self = createMutable(this);
 
     runWithOwner(owner, () => {
       createEffect<Option<t.Any>>((prev) => {
@@ -55,16 +69,14 @@ export class DataInput<T extends BaseType<any>> {
         if (value.isSome() && value.unwrap() instanceof BasePrimitiveType) {
           if (prev.isSome() && value.unwrap().eq(prev.unwrap())) return prev;
 
-          reactiveThis.defaultValue = value.unwrap().default();
-        } else {
-          reactiveThis.defaultValue = null;
-        }
+          if (!self.defaultValue) self.defaultValue = value.unwrap().default();
+        } else self.defaultValue = null;
 
         return value;
       }, None);
     });
 
-    return reactiveThis;
+    return self;
   }
 
   setDefaultValue(value: any) {
@@ -87,10 +99,11 @@ export interface DataOutputArgs<T extends BaseType<any>> {
 
 export class DataOutput<T extends BaseType> {
   id: string;
-  connections = new ReactiveSet<DataInput<BaseType>>();
   node: Node;
   name?: string;
   type: T;
+
+  connections: Accessor<ReadonlyArray<DataInput<T>>>;
 
   constructor(args: DataOutputArgs<T>) {
     this.id = args.id;
@@ -98,7 +111,39 @@ export class DataOutput<T extends BaseType> {
     this.name = args.name;
     this.type = args.type;
 
-    return createMutable(this);
+    this.connections = createMemo(() => {
+      const graph = this.node.graph;
+
+      const conns = graph.connections.get(makeIORef(this)) ?? [];
+
+      return conns
+        .map((conn) => {
+          const { nodeId, ioId } = splitIORef(conn);
+
+          const node = graph.nodes.get(nodeId);
+          const input = node?.input(ioId);
+
+          if (input instanceof DataInput) return input as DataInput<T>;
+        })
+        .filter(Boolean);
+    });
+
+    const self = createMutable(this);
+
+    createEffect(() => {
+      console.log(self.connections().length);
+      for (const conn of self.connections()) {
+        conn.connection = Some(self as any);
+        connectWildcardsInIO(self, conn);
+
+        onCleanup(() => {
+          conn.connection = None;
+          disconnectWildcardsInIO(self, conn);
+        });
+      }
+    });
+
+    return self;
   }
 
   get variant() {
@@ -115,16 +160,17 @@ export interface ExecInputArgs {
 
 export class ExecInput {
   id: string;
-  connections = new ReactiveSet<ExecOutput>();
   public node: Node;
   public name?: string;
+
+  connection: Option<ExecOutput> = None;
 
   constructor(args: ExecInputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
 
-    createMutable(this);
+    return createMutable(this);
   }
 
   get variant() {
@@ -140,16 +186,50 @@ export interface ExecOutputArgs {
 
 export class ExecOutput {
   id: string;
-  connection: Option<ExecInput> = None;
   public node: Node;
   public name?: string;
+
+  connection: Accessor<Option<ExecInput>>;
 
   constructor(args: ExecOutputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
 
-    createMutable(this);
+    this.connection = createMemo(
+      () => {
+        const graph = this.node.graph;
+
+        const ref = makeIORef(this);
+
+        const value = Maybe(graph.connections.get(ref))
+          .map(([conn]) => conn && splitIORef(conn))
+          .map(({ nodeId, ioId }) => {
+            const node = graph.nodes.get(nodeId);
+            const input = node?.input(ioId);
+
+            if (input instanceof ExecInput) return input;
+          });
+
+        return value;
+      },
+      None,
+      { equals: (a, b) => a.eq(b) }
+    );
+
+    const self = createMutable(this);
+
+    createEffect(() => {
+      this.connection().peek((conn) => {
+        conn.connection = Some(self as any);
+
+        onCleanup(() => {
+          conn.connection = None;
+        });
+      });
+    });
+
+    return self;
   }
 
   get variant() {
@@ -182,10 +262,11 @@ export interface ScopeOutputArgs {
 
 export class ScopeOutput {
   id: string;
-  connection: Option<ScopeInput> = None;
   node: Node;
   name?: string;
   scope: Scope;
+
+  connection: Accessor<Option<ScopeInput>>;
 
   constructor(args: ScopeOutputArgs) {
     this.id = args.id;
@@ -193,7 +274,32 @@ export class ScopeOutput {
     this.name = args.name;
     this.scope = args.scope;
 
-    return createMutable(this);
+    this.connection = createMemo(() => {
+      const graph = this.node.graph;
+
+      return Maybe(graph.connections.get(makeIORef(this)))
+        .map(([conn]) => conn && splitIORef(conn))
+        .map(({ nodeId, ioId }) => {
+          const node = graph.nodes.get(nodeId);
+          const input = node?.input(ioId);
+
+          if (input instanceof ScopeInput) return input;
+        });
+    });
+
+    const self = createMutable(this);
+
+    createEffect(() => {
+      self.connection().peek((conn) => {
+        conn.connection = Some(self as any);
+
+        onCleanup(() => {
+          conn.connection = None;
+        });
+      });
+    });
+
+    return self;
   }
 
   get variant() {
@@ -205,23 +311,38 @@ export interface ScopeInputArgs {
   node: Node;
   id: string;
   name?: string;
-  scope: ScopeRef;
 }
 
 export class ScopeInput {
   id: string;
-  connection: Option<ScopeOutput> = None;
   node: Node;
   name?: string;
-  scope: ScopeRef;
+
+  connection: Option<ScopeOutput> = None;
+  scope!: Accessor<Option<Scope>>;
+  dispose: () => void;
 
   constructor(args: ScopeInputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
-    this.scope = args.scope;
 
-    return createMutable(this);
+    const { owner, dispose } = createRoot((dispose) => ({
+      owner: getOwner(),
+      dispose,
+    }));
+
+    this.dispose = dispose;
+
+    const self = createMutable(this);
+
+    runWithOwner(owner, () => {
+      this.scope = createMemo(() => {
+        return self.connection.map((c) => c.scope);
+      });
+    });
+
+    return self;
   }
 
   get variant() {

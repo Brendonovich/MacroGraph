@@ -1,37 +1,53 @@
-export type WebsocketResponse = {
-  id: number;
-  data: DaemonResponse;
-};
+import { z } from "zod";
 
-type DaemonResponse =
-  | "Ok"
-  | { Error: string }
-  | { Status: DaemonStatus }
-  | { Patch: Patch };
+export const Levels = z.object({
+  volumes: z.record(z.string(), z.number()),
+});
 
-type DaemonStatus = {
-  mixers: Record<string, MixerStatus>;
-};
+export const MixerStatus = z.object({
+  levels: Levels,
+});
 
-type MixerStatus = {
-  levels: Levels;
-};
+export const DaemonStatus = z.object({
+  mixers: z.record(z.string(), MixerStatus),
+});
 
-type Levels = {
-  volumes: Record<string, number>;
-};
+function op<K extends string, T extends Record<string, z.ZodSchema> = {}>(
+  op: K,
+  schema: T
+) {
+  return z.object({
+    op: z.literal(op),
+    path: z.string(),
+    ...schema,
+  });
+}
 
-type Op<K extends string, T extends object = {}> = {
-  op: K;
-  path: string;
-} & T;
+export const PatchOperation = z.union([
+  op("add", { value: z.any() }),
+  op("remove", {}),
+  op("replace", { value: z.any() }),
+  op("move", { from: z.string() }),
+  op("copy", { from: z.string() }),
+  op("test", { value: z.any() }),
+]);
 
-type PatchOperation =
-  | Op<"add", { value: any }>
-  | Op<"remove">
-  | Op<"replace", { value: any }>
-  | Op<"move", { from: string }>
-  | Op<"copy", { from: string }>
-  | Op<"test", { value: any }>;
+export const Patch = z.array(PatchOperation);
 
-export type Patch = Array<PatchOperation>;
+export const DaemonResponse = z.union([
+  z.literal("Ok"),
+  z.object({
+    Error: z.string(),
+  }),
+  z.object({
+    Status: DaemonStatus,
+  }),
+  z.object({
+    Patch,
+  }),
+]);
+
+export const WebSocketResponse = z.object({
+  id: z.number(),
+  data: DaemonResponse,
+});

@@ -7,10 +7,10 @@ export type Events = {
   donation: Event["donation"];
   subscription: Event["subscription"];
   superchat: Event["superchat"];
-  membershipGift: Extract<Event["membershipGift"], { message: any }>;
+  membershipGift: Extract<Event["membershipGift"], { message?: any }>;
   membershipGiftStart: Extract<
     Event["membershipGift"],
-    { giftMembershipsCount: any }
+    { giftMembershipsCount?: any }
   >;
 };
 
@@ -26,7 +26,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Membership",
     event: "subscription",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -54,10 +54,10 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.name, data.name);
-      ctx.setOutput(io.months, data.months);
-      ctx.setOutput(io.message, data.message);
-      ctx.setOutput(io.membershipLevelName, data.membershipLevelName);
+      ctx.setOutput(io.name, data.name ?? "");
+      ctx.setOutput(io.months, data.months ?? 0);
+      ctx.setOutput(io.message, data.message ?? "");
+      ctx.setOutput(io.membershipLevelName, data.membershipLevelName ?? "");
       ctx.exec(io.exec);
     },
   });
@@ -65,7 +65,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Membership Giftee",
     event: "membershipGift",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -88,9 +88,9 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.name, data.name);
-      ctx.setOutput(io.membershipLevelName, data.membershipLevelName);
-      ctx.setOutput(io.membershipGiftId, data.youtubeMembershipGiftId);
+      ctx.setOutput(io.name, data.name ?? "");
+      ctx.setOutput(io.membershipLevelName, data.membershipLevelName ?? "");
+      ctx.setOutput(io.membershipGiftId, data.youtubeMembershipGiftId ?? "");
       ctx.exec(io.exec);
     },
   });
@@ -98,7 +98,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Membership Gifter",
     event: "membershipGiftStart",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -126,10 +126,13 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.name, data.name);
-      ctx.setOutput(io.giftMembershipsLevelName, data.giftMembershipsLevelName);
-      ctx.setOutput(io.membershipMessageId, data.membershipMessageId);
-      ctx.setOutput(io.giftMembershipsCount, data.giftMembershipsCount);
+      ctx.setOutput(io.name, data.name ?? "");
+      ctx.setOutput(
+        io.giftMembershipsLevelName,
+        data.giftMembershipsLevelName ?? ""
+      );
+      ctx.setOutput(io.membershipMessageId, data.membershipMessageId ?? "");
+      ctx.setOutput(io.giftMembershipsCount, data.giftMembershipsCount ?? 0);
       ctx.exec(io.exec);
     },
   });
@@ -137,7 +140,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Streamlabs Donation",
     event: "donation",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -175,12 +178,12 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.name, data.name);
-      ctx.setOutput(io.amount, data.amount);
-      ctx.setOutput(io.formattedAmount, data.formattedAmount);
-      ctx.setOutput(io.message, data.message);
-      ctx.setOutput(io.currency, data.currency);
-      ctx.setOutput(io.from, data.from);
+      ctx.setOutput(io.name, data.name ?? "");
+      ctx.setOutput(io.amount, (data.amount ?? 0).toString());
+      ctx.setOutput(io.formattedAmount, data.formattedAmount ?? "");
+      ctx.setOutput(io.message, data.message ?? "");
+      ctx.setOutput(io.currency, data.currency ?? "");
+      ctx.setOutput(io.from, data.from ?? "");
 
       ctx.exec(io.exec);
     },
@@ -189,7 +192,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Superchat",
     event: "superchat",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -222,11 +225,11 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.name, data.name);
-      ctx.setOutput(io.currency, data.currency);
-      ctx.setOutput(io.displayString, data.displayString);
-      ctx.setOutput(io.amount, data.amount);
-      ctx.setOutput(io.comment, data.comment);
+      ctx.setOutput(io.name, data.name ?? "");
+      ctx.setOutput(io.currency, data.currency ?? "");
+      ctx.setOutput(io.displayString, data.displayString ?? "");
+      ctx.setOutput(io.amount, (data.amount ?? 0).toString());
+      ctx.setOutput(io.comment, data.comment ?? "");
       ctx.exec(io.exec);
     },
   });

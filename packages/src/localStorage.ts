@@ -9,7 +9,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Set Data",
     variant: "Exec",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         key: io.dataInput({
           id: "key",
@@ -34,7 +34,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Set JSON Data",
     variant: "Exec",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         key: io.dataInput({
           id: "key",
@@ -59,7 +59,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Get Data",
     variant: "Pure",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         key: io.dataInput({
           id: "key",
@@ -83,7 +83,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Get JSON Data",
     variant: "Pure",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return {
         key: io.dataInput({
           id: "key",
@@ -111,7 +111,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Remove Data",
     variant: "Exec",
-    generateIO: (io) => {
+    generateIO: ({io}) => {
       return io.dataInput({
         id: "key",
         name: "Key",

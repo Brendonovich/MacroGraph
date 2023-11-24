@@ -7,10 +7,8 @@ import {
   SerializedProject,
   SerializedConnection,
   CommentBox,
-  serializeConnections,
   Graph,
   Project,
-  Size,
   GetNodeSize,
 } from "@macrograph/core";
 
@@ -67,13 +65,13 @@ export function commentBoxToClipboardItem(
   getNodeSize: GetNodeSize
 ): Extract<ClipboardItem, { type: "commentBox" }> {
   const nodes = box.getNodes(box.graph.nodes.values(), getNodeSize);
-  const connections = serializeConnections(nodes.values());
+  // const connections = serializeConnections(nodes.values());
 
   return {
     type: "commentBox",
     commentBox: box.serialize(),
     nodes: nodes.map((n) => n.serialize()),
-    connections,
+    connections: [],
   };
 }
 

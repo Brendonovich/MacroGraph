@@ -125,7 +125,7 @@ export function register(pkg: Package) {
   pkg.createEventSchema({
     name: "Discord Message",
     event: "discordMessage",
-    generateIO: (io) => {
+    generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",

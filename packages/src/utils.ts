@@ -11,6 +11,9 @@ import {
   ScopeOutput,
   Package,
   Core,
+  DataOutput,
+  Struct,
+  PropertyDef,
 } from "@macrograph/core";
 import { JSON, jsonToJS } from "./json";
 
@@ -22,7 +25,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Print",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return io.dataInput({
         id: "input",
         name: "Input",
@@ -37,7 +40,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String Includes",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         haystack: io.dataInput({
           id: "haystack",
@@ -66,7 +69,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String Replace All",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -102,7 +105,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String Replace First",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -138,7 +141,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String Length",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -159,7 +162,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String Starts With",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -188,7 +191,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Substring",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -224,7 +227,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String To Uppercase",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -244,7 +247,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String To Lowercase",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -264,7 +267,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Int to String",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "int",
@@ -284,7 +287,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Float to String",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         float: io.dataInput({
           id: "float",
@@ -304,7 +307,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Bool to String",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         bool: io.dataInput({
           id: "bool",
@@ -324,7 +327,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String to Int",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         string: io.dataInput({
           id: "string",
@@ -347,7 +350,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "String to Float",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         string: io.dataInput({
           id: "string",
@@ -370,7 +373,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Multiply Ints",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -395,7 +398,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Multiply Floats",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -420,7 +423,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Exponent Floats",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -447,7 +450,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Float to Int",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -467,7 +470,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Int to Float",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -487,7 +490,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Divide Ints Exact",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -512,7 +515,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Divide Ints",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -537,7 +540,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Divide Floats",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -562,7 +565,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Min Floats",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -587,7 +590,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Max Floats",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -612,7 +615,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Max ints",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -637,7 +640,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Min ints",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -662,7 +665,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Add Ints",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -687,7 +690,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Subtract Ints",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -712,7 +715,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Subtract Floats",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -737,7 +740,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Append String",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -780,7 +783,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Create String",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       let inputs: DataInput<t.String>[];
 
       if (!io.previous) {
@@ -869,7 +872,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "UUID",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         output: io.dataOutput({
           id: "uuid",
@@ -886,7 +889,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Date Now (ms)",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         time: io.dataOutput({
           id: "time",
@@ -903,7 +906,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Date Parse",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         timeIn: io.dataInput({
           id: "timeIn",
@@ -925,7 +928,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Round Float",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -956,7 +959,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Remainder Float",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         number: io.dataInput({
           id: "input",
@@ -986,7 +989,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Remainder Int",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         number: io.dataInput({
           id: "input",
@@ -1016,7 +1019,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Random Float",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return io.dataOutput({
         id: "output",
         type: t.float(),
@@ -1030,7 +1033,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Random Float In Range",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         min: io.dataInput({
           id: "min",
@@ -1059,7 +1062,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Random Integer",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return io.dataOutput({
         id: "output",
         type: t.int(),
@@ -1075,7 +1078,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Random Integer In Range",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         min: io.dataInput({
           id: "min",
@@ -1108,7 +1111,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Compare Int",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "number",
@@ -1150,7 +1153,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Make Any",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -1172,7 +1175,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Make String",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -1192,7 +1195,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Make Int",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -1212,7 +1215,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Make Float",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -1230,9 +1233,9 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
-    name: `Equal`,
+    name: "Equal",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -1258,7 +1261,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "List Includes",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -1287,7 +1290,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "List Length",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         list: io.dataInput({
           id: "list",
@@ -1307,7 +1310,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Split String",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -1334,7 +1337,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Nth Word",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -1363,7 +1366,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: `Unwrap Option`,
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -1383,9 +1386,38 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: `Unwrap Option Or`,
+    variant: "Pure",
+    generateIO({ io }) {
+      const w = io.wildcard("");
+
+      return {
+        input: io.dataInput({
+          id: "input",
+          type: t.option(t.wildcard(w)),
+        }),
+        or: io.dataInput({
+          id: "or",
+          type: t.wildcard(w),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.wildcard(w),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(
+        io.output,
+        ctx.getInput(io.input).unwrapOr(ctx.getInput(io.or))
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: `Is Option Some`,
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -1407,7 +1439,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: `Is Option None`,
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -1429,7 +1461,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: `Make Some`,
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const type = io.wildcard("");
 
       return {
@@ -1451,7 +1483,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Break Struct",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       const input = io.dataInput({
@@ -1493,9 +1525,55 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Create Struct",
+    variant: "Pure",
+    generateIO({ io }) {
+      const w = io.wildcard("");
+
+      const output = io.dataOutput({
+        id: "",
+        type: t.wildcard(w),
+      });
+
+      const inputs = w.value().map((wt) => {
+        if (!(wt instanceof t.Struct)) return null;
+
+        const dataOutputs = Object.entries(
+          wt.struct.fields as StructFields
+        ).map(([id, field]) =>
+          io.dataInput({
+            id,
+            name: field.name,
+            type: field.type,
+          })
+        );
+
+        return {
+          wildcard: wt,
+          output: output as unknown as DataOutput<t.Struct<Struct>>,
+          inputs: dataOutputs,
+        };
+      });
+
+      return inputs;
+    },
+    run({ ctx, io }) {
+      io.map((io) => {
+        const data = io.inputs.reduce((acc, input) => {
+          acc[input.id] = ctx.getInput(input);
+        }, {} as any);
+
+        let struct = io.output.type.struct.create(data);
+
+        ctx.setOutput(io.output, struct);
+      });
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Match",
     variant: "Base",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       io.execInput({
@@ -1602,15 +1680,12 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Break Scope",
     variant: "Base",
-    generateIO(io) {
-      const scope = io.scope("");
-
+    generateIO({ io }) {
       const input = io.scopeInput({
         id: "",
-        scope,
       });
 
-      const outputs = scope.value.map((scope) => {
+      const outputs = input.scope().map((scope) => {
         const exec = io.execOutput({
           id: "",
         });
@@ -1641,7 +1716,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     event: "custom",
     name: "Custom Event",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1694,7 +1769,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     event: "customReturn",
     name: "Custom Event Return",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -1747,7 +1822,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Emit Custom Event",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         event: io.dataInput({
           id: "event",
@@ -1793,7 +1868,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Emit Custom Return Event",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         event: io.dataInput({
           id: "event",
@@ -1839,7 +1914,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Stringify JSON",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -1864,7 +1939,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Cache",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -1886,7 +1961,7 @@ export function pkg(core: Core) {
   pkg.createNonEventSchema({
     name: "Current Timestamp (ms)",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         out: io.dataOutput({
           id: "out",
@@ -1900,7 +1975,159 @@ export function pkg(core: Core) {
     },
   });
 
+  const variableProperty = {
+    name: "Variable",
+    source: ({ node }) =>
+      node.graph.variables.map((v) => ({
+        id: v.id,
+        display: v.name,
+      })),
+  } satisfies PropertyDef;
+
+  pkg.createNonEventSchema({
+    name: "Get Graph Variable",
+    variant: "Pure",
+    properties: {
+      variable: variableProperty,
+    },
+    generateIO({ io, ctx, properties }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = ctx.graph.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
+      return io.dataOutput({
+        id: "",
+        name: variable.name,
+        type: variable.type,
+      });
+    },
+    run({ ctx, io, properties, graph }) {
+      if (!io) return;
+
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = graph.variables.find(
+        (v) => v.id === Number(variableId)
+      )!;
+
+      ctx.setOutput(io, variable.value);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Graph Variable",
+    variant: "Exec",
+    properties: {
+      variable: variableProperty,
+    },
+    generateIO({ io, ctx, properties }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = ctx.graph.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
+      return io.dataInput({
+        id: "",
+        name: variable.name,
+        type: variable.type,
+      });
+    },
+    run({ ctx, io, properties, graph }) {
+      if (!io) return;
+
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = graph.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
+      variable.value = ctx.getInput(io);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Format String",
+    variant: "Pure",
+    properties: {
+      string: {
+        name: "String",
+        type: t.string(),
+      },
+    },
+    generateIO({ io, ctx, properties }) {
+      const value = ctx.getProperty(properties.string) ?? "";
+      const blocks = parseFormatString(value);
+
+      return {
+        blocks: blocks.map((block) => {
+          if ("variable" in block) {
+            return io.dataInput({
+              id: block.variable,
+              name: block.variable,
+              type: t.string(),
+            });
+          } else return block.text;
+        }),
+        output: io.dataOutput({
+          id: "",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const out = io.blocks.reduce<string>((acc, input) => {
+        if (typeof input === "string") acc += input;
+        else acc += ctx.getInput(input);
+
+        return acc;
+      }, "");
+
+      ctx.setOutput(io.output, out);
+    },
+  });
+
   return pkg;
 }
 
 const WORD_REGEX = /\s+/;
+
+export function parseFormatString(input: string) {
+  const chars = input.split("");
+
+  const blocks: Array<{ text: string } | { variable: string }> = [];
+
+  let buffer = "";
+  let isInVariable = false;
+
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i];
+
+    if (char === "{") {
+      if (chars[i + 1] === "{") {
+        buffer += "{";
+        i++;
+        continue;
+      }
+
+      if (buffer !== "") blocks.push({ text: buffer });
+
+      buffer = "";
+      isInVariable = true;
+    } else if (chars[i] === "}") {
+      if (isInVariable) {
+        blocks.push({ variable: buffer });
+      } else {
+        if (chars[i + 1] === "}") {
+          buffer += "}";
+          i++;
+          continue;
+        }
+
+        blocks.push({ text: buffer });
+      }
+
+      isInVariable = false;
+      buffer = "";
+    } else buffer += chars[i];
+  }
+
+  if (buffer !== "") blocks.push({ text: buffer });
+
+  return blocks;
+}

@@ -1,8 +1,8 @@
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
-import { ReactiveSet } from "@solid-primitives/set";
 import { z } from "zod";
+
 import {
   DataInput,
   DataOutput,
@@ -13,19 +13,47 @@ import {
   Pin,
   ScopeInput,
   ScopeOutput,
-  SerializedConnection,
-  SerializedNode,
-  serializeConnections,
 } from ".";
-import { pinsCanConnect } from "../utils";
+import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
+import { SerializedNode } from "./Node";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
-import {
-  connectWildcardsInIO,
-  disconnectWildcardsInIO,
-  None,
-  Some,
-} from "../types";
+import { PrimitiveType, t, Option } from "../types";
+
+const SerializedVariable = z.object({
+  id: z.number(),
+  name: z.string(),
+  value: z.any(),
+  type: z
+    .union([
+      z.literal("float"),
+      z.literal("int"),
+      z.literal("string"),
+      z.literal("bool"),
+    ])
+    .default("float"),
+});
+
+export const SerializedConnection = z.object({
+  from: z.object({
+    node: z.coerce.number().int(),
+    output: z.string(),
+  }),
+  to: z.object({
+    node: z.coerce.number().int(),
+    input: z.string(),
+  }),
+});
+
+export const SerializedGraph = z.object({
+  id: z.coerce.number(),
+  name: z.string(),
+  nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
+  commentBoxes: z.array(SerializedCommentBox).default([]),
+  variables: z.array(SerializedVariable).default([]),
+  nodeIdCounter: z.number(),
+  connections: z.array(SerializedConnection).default([]),
+});
 
 export interface GraphArgs {
   id: number;
@@ -33,14 +61,79 @@ export interface GraphArgs {
   project: Project;
 }
 
-export const SerializedGraph = z.object({
-  id: z.coerce.number(),
-  name: z.string(),
-  nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
-  commentBoxes: z.array(SerializedCommentBox).default([]),
-  nodeIdCounter: z.number(),
-  connections: z.array(SerializedConnection).default([]),
-});
+type VariableArgs = {
+  id: number;
+  name: string;
+  type: PrimitiveType;
+  value: any;
+};
+
+class Variable {
+  id: number;
+  name: string;
+  type: PrimitiveType;
+  value: any;
+
+  constructor(args: VariableArgs) {
+    this.id = args.id;
+    this.name = args.name;
+    this.type = args.type;
+    this.value = args.value;
+
+    return createMutable(this);
+  }
+
+  serialize(): z.infer<typeof SerializedVariable> {
+    return {
+      id: this.id,
+      name: this.name,
+      value: this.value,
+      type: this.type.primitiveVariant(),
+    };
+  }
+
+  static deserialize(data: z.infer<typeof SerializedVariable>) {
+    return new Variable({
+      id: data.id,
+      name: data.name,
+      value: data.value,
+      type: (() => {
+        switch (data.type) {
+          case "int":
+            return t.int();
+          case "float":
+            return t.float();
+          case "string":
+            return t.string();
+          case "bool":
+            return t.bool();
+        }
+      })(),
+    });
+  }
+}
+
+type IORef = `${number}:${"i" | "o"}:${string}`;
+
+export function splitIORef(ref: IORef) {
+  const [nodeId, type, ...ioId] = ref.split(":") as [
+    string,
+    "i" | "o",
+    ...string[]
+  ];
+
+  return {
+    type,
+    nodeId: Number(nodeId),
+    ioId: ioId.join(":"),
+  };
+}
+
+export function makeIORef(io: Pin): IORef {
+  return `${io.node.id}:${pinIsInput(io) ? "i" : "o"}:${io.id}`;
+}
+
+type Connections = ReactiveMap<IORef, Array<IORef>>;
 
 export class Graph {
   id: number;
@@ -49,6 +142,8 @@ export class Graph {
 
   nodes = new ReactiveMap<number, Node>();
   commentBoxes = new ReactiveMap<number, CommentBox>();
+  variables: Array<Variable> = [];
+  connections: Connections = new ReactiveMap();
 
   private idCounter = 0;
 
@@ -94,6 +189,30 @@ export class Graph {
     return box;
   }
 
+  createVariable(args: Omit<VariableArgs, "id">) {
+    const id = this.generateId();
+
+    this.variables.push(new Variable({ ...args, id }));
+
+    this.project.save();
+
+    return id;
+  }
+
+  setVariableValue(id: number, value: any) {
+    const variable = this.variables.find((v) => v.id === id);
+    if (variable) variable.value = value;
+
+    this.project.save();
+  }
+
+  removeVariable(id: number) {
+    const index = this.variables.findIndex((v) => v.id === id);
+    if (index === -1) return;
+
+    this.variables.splice(index, 1);
+  }
+
   connectPins(
     output: DataOutput<any> | ExecOutput | ScopeOutput,
     input: DataInput<any> | ExecInput | ScopeInput
@@ -101,33 +220,32 @@ export class Graph {
     const status = batch(() => {
       if (!pinsCanConnect(output, input)) return false;
 
-      if (output instanceof DataOutput) {
-        const dataOutput = output as DataOutput<any>;
-        const dataInput = input as DataInput<any>;
+      const outRef = makeIORef(output),
+        inRef = makeIORef(input);
 
-        dataOutput.connections.add(dataInput);
-        dataInput.connection.peek((c) => c.connections.delete(dataInput));
-        dataInput.connection = Some(dataOutput);
+      if (output instanceof DataOutput && input instanceof DataInput) {
+        this.disconnectPin(input);
 
-        connectWildcardsInIO(dataOutput, dataInput);
+        const outputConnections =
+          this.connections.get(outRef) ??
+          (() => {
+            const array: Array<IORef> = createMutable([]);
+            this.connections.set(outRef, array);
+            return array;
+          })();
+        outputConnections.push(inRef);
       } else if (output instanceof ExecOutput) {
-        const execOutput = output as ExecOutput;
-        const execInput = input as ExecInput;
-
-        execInput.connections.add(execOutput);
-        execOutput.connection.peek((c) => c.connections.delete(execOutput));
-        execOutput.connection = Some(execInput);
+        const outputConnections =
+          this.connections.get(outRef) ??
+          (() => {
+            const array: Array<IORef> = createMutable([]);
+            this.connections.set(outRef, array);
+            return array;
+          })();
+        outputConnections.push(inRef);
       } else {
-        const scopeOutput = output as ScopeOutput;
-        const scopeInput = input as ScopeInput;
-
-        scopeOutput.connection.peek((c) => (c.connection = None));
-        scopeInput.connection.peek((c) => (c.connection = None));
-
-        scopeOutput.connection = Some(scopeInput);
-        scopeInput.connection = Some(scopeOutput);
-
-        scopeInput.scope.value = Some(scopeOutput.scope);
+        this.disconnectPin(input);
+        this.connections.set(outRef, createMutable([inRef]));
       }
 
       return true;
@@ -140,42 +258,24 @@ export class Graph {
 
   disconnectPin(pin: Pin) {
     batch(() => {
-      if (pin instanceof DataOutput) {
-        pin.connections.forEach((conn) => {
-          disconnectWildcardsInIO(pin, conn);
+      const ref = makeIORef(pin);
 
-          conn.connection = None;
-        });
-
-        pin.connections.clear();
-      } else if (pin instanceof DataInput) {
-        pin.connection.peek((conn) => {
-          disconnectWildcardsInIO(conn, pin);
-
-          conn.connections.delete(pin);
-        });
-
-        pin.connection = None;
-      } else if (pin instanceof ScopeOutput) {
-        pin.connection.peek((conn) => {
-          conn.scope.value = None;
-          conn.connection = None;
-        });
-
-        pin.connection = None;
-      } else if (pin instanceof ScopeInput) {
-        pin.scope.value = None;
-
-        pin.connection.peek((conn) => (conn.connection = None));
-
-        pin.connection = None;
-      } else if (pin instanceof ExecOutput) {
-        pin.connection.peek((conn) => conn.connections.delete(pin));
-        pin.connection = None;
+      if (pinIsOutput(pin)) {
+        this.connections.delete(ref);
       } else {
-        pin.connections.forEach((conn) => (conn.connection = None));
+        (
+          pin.connection as unknown as Option<
+            DataInput<any> | ExecInput | ScopeInput
+          >
+        ).peek((conn) => {
+          const connArray = this.connections.get(makeIORef(conn));
+          if (!connArray) return;
 
-        pin.connections.clear();
+          const index = connArray.indexOf(ref);
+          if (index === -1) return;
+
+          connArray.splice(index, 1);
+        });
       }
     });
 
@@ -213,14 +313,37 @@ export class Graph {
       commentBoxes: [...this.commentBoxes.values()].map((box) =>
         box.serialize()
       ),
-      connections: serializeConnections(this.nodes.values()),
+      variables: this.variables.map((v) => v.serialize()),
+      connections: (() => {
+        const serialized: Array<z.infer<typeof SerializedConnection>> = [];
+
+        for (const [refStr, conns] of this.connections) {
+          const ref = splitIORef(refStr);
+
+          if (ref.type === "i") continue;
+
+          conns.forEach((conn) => {
+            const connRef = splitIORef(conn);
+
+            serialized.push({
+              from: {
+                node: ref.nodeId,
+                output: ref.ioId,
+              },
+              to: {
+                node: connRef.nodeId,
+                input: connRef.ioId,
+              },
+            });
+          });
+        }
+
+        return serialized;
+      })(),
     };
   }
 
-  static async deserialize(
-    project: Project,
-    data: z.infer<typeof SerializedGraph>
-  ): Promise<Graph> {
+  static deserialize(project: Project, data: z.infer<typeof SerializedGraph>) {
     const graph = new Graph({
       project,
       id: data.id,
@@ -230,6 +353,8 @@ export class Graph {
     graph.idCounter = data.nodeIdCounter;
 
     batch(() => {
+      graph.variables = data.variables.map((v) => Variable.deserialize(v));
+
       graph.nodes = new ReactiveMap(
         Object.entries(data.nodes)
           .map(([idStr, serializedNode]) => {
@@ -242,9 +367,32 @@ export class Graph {
           })
           .filter(Boolean) as [number, Node][]
       );
-    });
 
-    await graph.deserializeConnections(data.connections);
+      graph.commentBoxes = new ReactiveMap(
+        data.commentBoxes.map((box) => {
+          const id = box.id ?? graph.generateId();
+
+          return [id, new CommentBox({ ...box, id, graph })];
+        })
+      );
+
+      graph.connections = data.connections.reduce((acc, conn) => {
+        const outRef: IORef = `${conn.from.node}:o:${conn.from.output}`,
+          inRef: IORef = `${conn.to.node}:i:${conn.to.input}`;
+
+        const outConns =
+          acc.get(outRef) ??
+          (() => {
+            const array: Array<IORef> = createMutable([]);
+            acc.set(outRef, array);
+            return array;
+          })();
+
+        outConns.push(inRef);
+
+        return acc;
+      }, new ReactiveMap() as Connections);
+    });
 
     for (const node of graph.nodes.values()) {
       const nodeData = data.nodes[node.id]!;
@@ -258,57 +406,6 @@ export class Graph {
       });
     }
 
-    graph.commentBoxes = new ReactiveMap(
-      data.commentBoxes.map((box) => {
-        const id = box.id ?? graph.generateId();
-
-        return [id, new CommentBox({ ...box, id, graph })];
-      })
-    );
-
     return graph;
   }
-
-  async deserializeConnections(
-    connections: z.infer<typeof SerializedConnection>[],
-    options?: { nodeIdMap: Map<number, number> }
-  ) {
-    let i = 0;
-
-    const getNodeId = (rawId: number) => {
-      if (!options?.nodeIdMap) return rawId;
-
-      const id = options.nodeIdMap.get(rawId);
-
-      if (id === undefined) {
-        throw new Error(`Failed to find node with id ${rawId}`);
-      }
-
-      return id;
-    };
-
-    while (connections.length > 0) {
-      if (i > 10) {
-        console.warn(`Failed to deserialize all connections after ${i} passes`);
-        break;
-      }
-
-      i++;
-
-      connections = connections.filter(({ from, to }) => {
-        const output = this.nodes
-          .get(getNodeId(from.node))
-          ?.output(from.output);
-        const input = this.nodes.get(getNodeId(to.node))?.input(to.input);
-
-        if (!output || !input) return true;
-
-        return !this.connectPins(output, input);
-      });
-
-      await microtask();
-    }
-  }
 }
-
-const microtask = () => new Promise<void>((res) => queueMicrotask(res));

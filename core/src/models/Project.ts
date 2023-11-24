@@ -66,17 +66,15 @@ export class Project {
     project.graphIdCounter = data.graphIdCounter;
 
     project.graphs = new ReactiveMap(
-      (
-        await Promise.all(
-          data.graphs.map(async (serializedGraph) => {
-            const graph = await Graph.deserialize(project, serializedGraph);
+      data.graphs
+        .map((serializedGraph) => {
+          const graph = Graph.deserialize(project, serializedGraph);
 
-            if (graph === null) return null;
+          if (graph === null) return null;
 
-            return [graph.id, graph] as [number, Graph];
-          })
-        )
-      ).filter(Boolean) as [number, Graph][]
+          return [graph.id, graph] as [number, Graph];
+        })
+        .filter(Boolean) as [number, Graph][]
     );
 
     project.disableSave = false;

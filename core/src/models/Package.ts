@@ -7,6 +7,8 @@ import {
   EventsMap,
   NodeSchema,
   NonEventNodeSchema,
+  PropertyDef,
+  SchemaProperties,
 } from "./NodeSchema";
 import {
   Enum,
@@ -41,57 +43,94 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     this.SettingsUI = args.SettingsUI ? lazy(args.SettingsUI) : undefined;
   }
 
-  createNonEventSchema<TState extends object, TIO>(
-    schema: Omit<NonEventNodeSchema<TState, TIO>, "package">
+  createNonEventSchema<TIO, TProperties extends Record<string, PropertyDef>>(
+    schema: Omit<
+      NonEventNodeSchema<TIO, TProperties>,
+      "package" | "properties"
+    > & {
+      properties?: TProperties;
+    }
   ) {
     const altered: NonEventNodeSchema<
-      TState,
-      { custom: TIO; default?: { in: ExecInput; out: ExecOutput } }
+      { custom: TIO; default?: { in: ExecInput; out: ExecOutput } },
+      TProperties
     > = {
       ...schema,
-      generateIO: (t, state) => {
+      properties: Object.entries(schema.properties ?? {}).reduce(
+        (acc: any, [id, property]: any) => {
+          acc[id] = {
+            id,
+            ...property,
+          };
+
+          return acc;
+        },
+        {} as SchemaProperties<TProperties>
+      ),
+      generateIO: (ctx) => {
         let defaultIO;
 
         if (schema.variant === "Exec") {
           defaultIO = {
-            in: t.execInput({
+            in: ctx.io.execInput({
               id: "exec",
             }),
-            out: t.execOutput({
+            out: ctx.io.execOutput({
               id: "exec",
             }),
           };
         }
 
-        const custom = schema.generateIO(t, state);
+        const custom = schema.generateIO(ctx);
 
         return {
           custom,
           default: defaultIO,
         };
       },
-      run: async ({ ctx, io }) => {
-        await schema.run({ ctx, io: io.custom });
+      run: async (args) => {
+        await schema.run({ ...args, io: args.io.custom });
 
-        if (schema.variant === "Exec" && io.default) ctx.exec(io.default.out);
+        if (schema.variant === "Exec" && args.io.default)
+          args.ctx.exec(args.io.default.out);
       },
       package: this as any,
     };
 
-    this.schemas.add(altered);
+    this.schemas.add(altered as any);
 
     return this;
   }
 
-  createEventSchema<TEvent extends keyof TEvents, TState extends object, TIO>(
-    schema: Omit<EventNodeSchema<TEvents, TEvent, TState, TIO>, "package">
+  createEventSchema<
+    TEvent extends keyof TEvents,
+    TIO,
+    TProperties extends Record<string, PropertyDef>
+  >(
+    schema: Omit<
+      EventNodeSchema<TEvents, TEvent, TIO, TProperties>,
+      "package" | "properties"
+    > & {
+      properties?: TProperties;
+    }
   ) {
-    const altered: EventNodeSchema<TEvents, TEvent, TState, TIO> = {
+    const altered: EventNodeSchema<TEvents, TEvent, TIO, TProperties> = {
       ...schema,
+      properties: Object.entries(schema.properties ?? {}).reduce(
+        (acc: any, [id, property]: any) => {
+          acc[id] = {
+            id,
+            ...property,
+          };
+
+          return acc;
+        },
+        {} as SchemaProperties<TProperties>
+      ),
       package: this as any,
     };
 
-    this.schemas.add(altered);
+    this.schemas.add(altered as any);
 
     return this;
   }

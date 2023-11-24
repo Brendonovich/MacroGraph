@@ -8,7 +8,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Push List Value",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -30,7 +30,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Insert List Value",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -58,7 +58,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Set List Value",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -86,7 +86,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Remove List Value",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -116,7 +116,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Get List Value",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {

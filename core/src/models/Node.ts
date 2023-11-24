@@ -20,17 +20,8 @@ import {
   ScopeInput,
   ScopeOutput,
 } from "./IO";
-import { Graph } from ".";
 import { XY } from "../utils";
-import { Option } from "../types";
-
-export interface NodeArgs {
-  id: number;
-  name?: string;
-  graph: Graph;
-  schema: NodeSchema;
-  position: XY;
-}
+import type { Graph } from "./Graph";
 
 export const SerializedNode = z.object({
   id: z.number(),
@@ -44,7 +35,17 @@ export const SerializedNode = z.object({
     id: z.string(),
   }),
   defaultValues: z.record(z.string(), z.any()),
+  properties: z.record(z.string(), z.any()).default({}),
 });
+
+export interface NodeArgs {
+  id: number;
+  name?: string;
+  graph: Graph;
+  schema: NodeSchema;
+  position: XY;
+  properties?: Record<string, any>;
+}
 
 export class Node {
   id: number;
@@ -55,6 +56,7 @@ export class Node {
     position: XY;
     inputs: (DataInput<any> | ExecInput | ScopeInput)[];
     outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
+    properties: Record<string, any>;
   };
 
   io!: IOBuilder;
@@ -73,6 +75,15 @@ export class Node {
       position: args.position,
       inputs: [],
       outputs: [],
+      properties: Object.values(args.schema.properties ?? {}).reduce(
+        (acc, property) => {
+          if ("type" in property)
+            acc[property.id] = property.default ?? property.type.default();
+
+          return acc;
+        },
+        {} as Record<string, any>
+      ),
     });
 
     const { owner, dispose } = createRoot((dispose) => ({
@@ -84,13 +95,21 @@ export class Node {
 
     runWithOwner(owner, () => {
       createRenderEffect(() => {
-        const builder = new IOBuilder(this, this.io);
+        const io = new IOBuilder(this, this.io);
 
-        this.ioReturn = this.schema.generateIO(builder, {});
+        this.ioReturn = this.schema.generateIO({
+          io,
+          properties: this.schema.properties ?? {},
+          ctx: {
+            getProperty: (property) => this.state.properties[property.id]!,
+            graph: this.graph,
+          },
+          graph: this.graph,
+        });
 
-        untrack(() => this.updateIO(builder));
+        untrack(() => this.updateIO(io));
 
-        this.io = builder;
+        this.io = io;
       });
 
       this.dataRoots = createMemo(() => {
@@ -125,9 +144,7 @@ export class Node {
       if (!allInputs.has(i)) {
         this.graph.disconnectPin(i);
 
-        if (i instanceof DataInput) {
-          i.dispose();
-        }
+        if ("dispose" in i) i.dispose();
       }
     });
     this.state.inputs.splice(0, this.state.inputs.length, ...io.inputs);
@@ -158,6 +175,12 @@ export class Node {
     if (save) this.graph.project.save();
   }
 
+  setProperty(property: string, value: any) {
+    this.state.properties[property] = value;
+
+    this.graph.project.save();
+  }
+
   serialize(): z.infer<typeof SerializedNode> {
     return {
       id: this.id,
@@ -175,6 +198,7 @@ export class Node {
           [i.id]: i.defaultValue,
         };
       }, {}),
+      properties: this.state.properties,
     };
   }
 
@@ -195,64 +219,9 @@ export class Node {
       position: data.position,
       schema,
       graph,
-    });
-
-    Object.entries(data.defaultValues).forEach(([key, data]) => {
-      node.io.inputs.forEach((input) => {
-        if (input.id == key && input instanceof DataInput)
-          input.defaultValue = data;
-      });
+      properties: data.properties,
     });
 
     return node;
   }
-}
-
-export const SerializedConnection = z.object({
-  from: z.object({
-    node: z.coerce.number().int(),
-    output: z.string(),
-  }),
-  to: z.object({
-    node: z.coerce.number().int(),
-    input: z.string(),
-  }),
-});
-
-export function serializeConnections(nodes: IterableIterator<Node>) {
-  const connections: z.infer<typeof SerializedConnection>[] = [];
-
-  for (const node of nodes) {
-    node.state.inputs.forEach((i) => {
-      if (i instanceof ExecInput) {
-        i.connections.forEach((conn) => {
-          connections.push({
-            from: {
-              node: conn.node.id,
-              output: conn.id,
-            },
-            to: {
-              node: i.node.id,
-              input: i.id,
-            },
-          });
-        });
-      } else {
-        (i.connection as unknown as Option<typeof i>).peek((conn) => {
-          connections.push({
-            from: {
-              node: conn.node.id,
-              output: conn.id,
-            },
-            to: {
-              node: i.node.id,
-              input: i.id,
-            },
-          });
-        });
-      }
-    });
-  }
-
-  return connections;
 }

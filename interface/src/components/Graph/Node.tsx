@@ -15,7 +15,6 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 import "./Node.css";
 import { NodeProvider } from "../../contexts";
-import { useUIStore } from "../../UIStore";
 import { useGraphContext } from "./Graph";
 import {
   DataInput,
@@ -43,8 +42,6 @@ export const Node = (props: Props) => {
 
   const graph = useGraphContext();
 
-  const UI = useUIStore();
-
   const ACTIVE = NODE_EMIT.subscribe(node(), (data) => {
     if (node().id === data.id && data.schema === node().schema) {
       updateActive(1);
@@ -70,7 +67,7 @@ export const Node = (props: Props) => {
 
       if (!contentRect) return;
 
-      graph.state.nodeSizes.set(node(), {
+      graph.nodeSizes.set(node(), {
         width: contentRect.width,
         height: contentRect.height,
       });
@@ -78,7 +75,10 @@ export const Node = (props: Props) => {
 
     obs.observe(ref);
 
-    Solid.onCleanup(() => obs.disconnect());
+    Solid.onCleanup(() => {
+      obs.disconnect();
+      graph.nodeSizes.delete(node());
+    });
   });
 
   const isSelected = Solid.createMemo(() => {
@@ -132,6 +132,7 @@ export const Node = (props: Props) => {
                   e.currentTarget.focus();
                   e.stopPropagation();
                   e.preventDefault();
+
                   switch (e.button) {
                     case 0: {
                       props.onSelected();

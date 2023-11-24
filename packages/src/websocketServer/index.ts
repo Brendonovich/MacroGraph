@@ -14,7 +14,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createNonEventSchema({
     name: "WSS Emit",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         port: io.dataInput({
           id: "port",
@@ -39,7 +39,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createEventSchema({
     event: "wsEvent",
     name: "WSS Event",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",

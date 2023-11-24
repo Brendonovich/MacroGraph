@@ -1,5 +1,4 @@
-import { onMount } from "solid-js";
-import { Core, createWsProvider } from "@macrograph/core";
+import { Core, RefreshedOAuthToken, createWsProvider } from "@macrograph/core";
 import { Interface } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
@@ -12,7 +11,7 @@ const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
 
 export default function () {
   const core = new Core({
-    fetch,
+    fetch: fetch as any,
     oauth: {
       authorize: (provider) =>
         new Promise((res) => {
@@ -32,7 +31,10 @@ export default function () {
           body: JSON.stringify({ refreshToken }),
         });
 
-        return { ...(await res.json()), issued_at: Date.now() / 1000 };
+        return {
+          ...((await res.json()) as RefreshedOAuthToken),
+          issued_at: Date.now() / 1000,
+        };
       },
     },
   });
@@ -54,41 +56,39 @@ export default function () {
     },
   });
 
-  onMount(() => {
-    [
-      () =>
-        pkgs.audio.pkg({
-          prepareURL: (url: string) =>
-            convertFileSrc(url).replace("asset://", "https://asset."),
-        }),
-      pkgs.discord.pkg,
-      () =>
-        pkgs.fs.register({
-          list: (path) => client.query(["fs.list", path]),
-        }),
-      pkgs.github.pkg,
-      pkgs.goxlr.pkg,
-      pkgs.google.pkg,
-      pkgs.http.pkg,
-      pkgs.json.pkg,
-      pkgs.keyboard.pkg,
-      pkgs.list.pkg,
-      pkgs.localStorage.pkg,
-      pkgs.logic.pkg,
-      pkgs.map.pkg,
-      pkgs.obs.pkg,
-      pkgs.patreon.pkg,
-      pkgs.spotify.pkg,
-      () => pkgs.streamdeck.pkg(wsProvider),
-      pkgs.streamlabs.pkg,
-      pkgs.twitch.pkg,
-      pkgs.utils.pkg,
-      pkgs.chatgpt.pkg,
-      pkgs.websocket.pkg,
-      pkgs.speakerbot.pkg,
-      () => pkgs.websocketServer.pkg(wsProvider),
-    ].map((p) => core.registerPackage(p));
-  });
+  [
+    () =>
+      pkgs.audio.pkg({
+        prepareURL: (url: string) =>
+          convertFileSrc(url).replace("asset://", "https://asset."),
+      }),
+    pkgs.discord.pkg,
+    () =>
+      pkgs.fs.register({
+        list: (path) => client.query(["fs.list", path]),
+      }),
+    pkgs.github.pkg,
+    pkgs.goxlr.pkg,
+    pkgs.google.pkg,
+    pkgs.http.pkg,
+    pkgs.json.pkg,
+    pkgs.keyboard.pkg,
+    pkgs.list.pkg,
+    pkgs.localStorage.pkg,
+    pkgs.logic.pkg,
+    pkgs.map.pkg,
+    pkgs.obs.pkg,
+    pkgs.patreon.pkg,
+    pkgs.spotify.pkg,
+    () => pkgs.streamdeck.pkg(wsProvider),
+    pkgs.streamlabs.pkg,
+    pkgs.twitch.pkg,
+    pkgs.utils.pkg,
+    pkgs.chatgpt.pkg,
+    pkgs.websocket.pkg,
+    pkgs.speakerbot.pkg,
+    () => pkgs.websocketServer.pkg(wsProvider),
+  ].map((p) => core.registerPackage(p));
 
   return <Interface core={core} environment="custom" />;
 }

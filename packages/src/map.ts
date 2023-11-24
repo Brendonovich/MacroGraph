@@ -8,74 +8,135 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Get",
     variant: "Pure",
-    generateIO(io) {
+    properties: {
+      number: {
+        name: "Keys",
+        type: t.int(),
+        default: 1,
+      },
+    },
+    generateIO({ io, ctx, properties }) {
+      const value = ctx.getProperty(properties.number);
       const w = io.wildcard("");
-
       return {
-        map: io.dataInput({
+        mapIn: io.dataInput({
           id: "map",
           type: t.map(t.wildcard(w)),
         }),
-        key: io.dataInput({
-          id: "key",
-          type: t.string(),
+        mapOut: io.dataOutput({
+          id: "map",
+          type: t.map(t.wildcard(w)),
         }),
-        out: io.dataOutput({
-          id: "out",
-          type: t.option(t.wildcard(w)),
-        }),
+        pins: Array.from({ length: value }, (v, i) => ({
+          key: io.dataInput({
+            id: `key-${i}`,
+            type: t.string(),
+          }),
+          value: io.dataOutput({
+            id: `value-${i}`,
+            type: t.option(t.wildcard(w)),
+          }),
+        })),
       };
     },
     run({ ctx, io }) {
-      const map = ctx.getInput(io.map);
-      const key = ctx.getInput(io.key);
-
-      ctx.setOutput(io.out, Maybe(map.get(key)));
+      const map = ctx.getInput(io.mapIn);
+      ctx.setOutput(io.mapOut, map);
+      io.pins.forEach((input) => {
+        ctx.setOutput(input.value, Maybe(map.get(ctx.getInput(input.key))));
+      });
     },
   });
 
   pkg.createNonEventSchema({
     name: "Map Insert",
     variant: "Exec",
-    generateIO(io) {
+    properties: {
+      number: {
+        name: "Entries",
+        type: t.int(),
+        default: 1,
+      },
+    },
+    generateIO({ io, ctx, properties }) {
       const w = io.wildcard("");
-
+      const value = ctx.getProperty(properties.number);
       return {
         map: io.dataInput({
           id: "map",
           type: t.map(t.wildcard(w)),
         }),
-        key: io.dataInput({
-          id: "key",
-          type: t.string(),
-        }),
-        value: io.dataInput({
-          id: "value",
-          type: t.wildcard(w),
-        }),
-        out: io.dataOutput({
-          id: "out",
-          type: t.option(t.wildcard(w)),
-        }),
+        pins: Array.from({ length: value }, (v, i) => ({
+          key: io.dataInput({
+            id: `key-${i}`,
+            type: t.string(),
+          }),
+          value: io.dataInput({
+            id: `value-${i}`,
+            type: t.wildcard(w),
+          }),
+          current: io.dataOutput({
+            id: `current-${i}`,
+            type: t.option(t.wildcard(w)),
+          }),
+        })),
       };
     },
     run({ ctx, io }) {
       const map = ctx.getInput(io.map);
-      const key = ctx.getInput(io.key);
-      const value = ctx.getInput(io.value);
+      io.pins.forEach((input) => {
+        map.set(ctx.getInput(input.key), ctx.getInput(input.value));
+        ctx.setOutput(input.current, Maybe(map.get(ctx.getInput(input.key))));
+      });
+    },
+  });
 
-      const current = Maybe(map.get(key));
+  pkg.createNonEventSchema({
+    name: "Map Create",
+    variant: "Pure",
+    properties: {
+      number: {
+        name: "Entries",
+        type: t.int(),
+        default: 1,
+      },
+    },
+    generateIO({ io, ctx, properties }) {
+      const value = ctx.getProperty(properties.number);
+      const w = io.wildcard("");
+      const inputs = Array.from({ length: value }, (v, i) => ({
+        key: io.dataInput({
+          id: `key-${i}`,
+          type: t.string(),
+        }),
+        value: io.dataInput({
+          id: `value-${i}`,
+          type: t.wildcard(w),
+        }),
+      }));
 
-      map.set(key, value);
+      return {
+        inputs,
+        out: io.dataOutput({
+          id: "",
+          type: t.map(t.wildcard(w)),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const map = new Map<string, any>();
+      io.inputs.forEach((input) => {
+        map.set(ctx.getInput(input.key), ctx.getInput(input.value));
+      });
 
-      ctx.setOutput(io.out, current);
+      ctx.setOutput(io.out, map);
     },
   });
 
   pkg.createNonEventSchema({
     name: "Map Clear",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return io.dataInput({
@@ -91,7 +152,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Contains",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -120,7 +181,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Keys",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -144,7 +205,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Values",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -168,7 +229,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Size",
     variant: "Pure",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -192,7 +253,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Remove",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       const w = io.wildcard("");
 
       return {

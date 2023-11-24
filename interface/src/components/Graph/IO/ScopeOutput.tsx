@@ -20,7 +20,7 @@ export const ScopeOutput = (props: Props) => {
           viewBox="0 0 16 13"
           class="w-4 text-transparent hover:text-white pointer-events-[all]"
           fill={
-            props.output.connection.isSome() || active()
+            props.output.connection().isSome() || active()
               ? "white"
               : "currentColor"
           }

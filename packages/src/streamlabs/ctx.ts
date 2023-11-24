@@ -65,7 +65,7 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 
         const json = await resp.json();
 
-        if (resp.status !== 200) throw new Error(json);
+        if (resp.status !== 200) throw new Error(json as any);
 
         return json;
       },

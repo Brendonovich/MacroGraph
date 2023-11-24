@@ -14,7 +14,7 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
   const websockets = new ReactiveMap<number, ConnectionState>();
 
   Maybe(localStorage.getItem(WS_PORTS_LOCALSTORAGE))
-    .map(JSON.parse)
+    .map((v) => JSON.parse(v) as number[])
     .map((ports) => {
       ports.forEach((port: number) => {
         startServer(port);

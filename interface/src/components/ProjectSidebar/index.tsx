@@ -2,7 +2,7 @@ import { For } from "solid-js";
 import { Graph } from "@macrograph/core";
 import { CgImport } from "solid-icons/cg";
 
-import { useCore } from "../../contexts";
+import { useCore, useCoreContext } from "../../contexts";
 import { useUIStore } from "../../UIStore";
 import { GraphItem } from "./GraphItem";
 import { SidebarSection } from "../Sidebar";
@@ -15,8 +15,7 @@ interface Props {
 }
 
 export const GraphList = (props: Props) => {
-  const core = useCore();
-  const UI = useUIStore();
+  const ctx = useCoreContext();
 
   return (
     <SidebarSection
@@ -30,7 +29,12 @@ export const GraphList = (props: Props) => {
               const item = deserializeClipboardItem(await readFromClipboard());
               if (item.type !== "graph") return;
 
-              // TODO: paste graph
+              item.graph.id = ctx.core.project.generateGraphId();
+              const graph = await Graph.deserialize(
+                ctx.core.project,
+                item.graph
+              );
+              ctx.core.project.graphs.set(graph.id, graph);
             }}
           >
             <CgImport />
@@ -39,7 +43,7 @@ export const GraphList = (props: Props) => {
             class="px-1"
             onClick={(e) => {
               e.stopPropagation();
-              const graph = core.project.createGraph();
+              const graph = ctx.core.project.createGraph();
               props.onGraphClicked(graph);
             }}
           >
@@ -48,7 +52,7 @@ export const GraphList = (props: Props) => {
         </div>
       }
     >
-      <For each={[...core.project.graphs.values()]}>
+      <For each={[...ctx.core.project.graphs.values()]}>
         {(graph) => (
           <GraphItem
             graph={graph}

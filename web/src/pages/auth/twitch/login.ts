@@ -7,9 +7,9 @@ export const prerender = false;
 
 export const GET: APIRoute = async (ctx) => {
   const state = await new jose.SignJWT({
-    ...JSON.parse(
+    ...(JSON.parse(
       Buffer.from(ctx.url.searchParams.get("state")!, "base64").toString()
-    ),
+    ) as any),
     redirect_uri: `${env.VERCEL_URL}/auth/twitch/callback`,
   })
     .setProtectedHeader({ alg: "HS256" })

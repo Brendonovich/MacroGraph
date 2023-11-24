@@ -39,11 +39,7 @@ export const DialogRoot = (
   const [open, setOpen] = createSignal(false);
 
   return (
-    <KobalteDialog.Root
-      open={open()}
-      onOpenChange={(o) => (console.log("open", o), setOpen(o))}
-      {...rootProps}
-    >
+    <KobalteDialog.Root open={open()} onOpenChange={setOpen} {...rootProps}>
       <KobalteDialog.Trigger>{otherProps.trigger}</KobalteDialog.Trigger>
       <KobalteDialog.Portal mount={ctx.rootRef()}>
         <KobalteDialog.Overlay

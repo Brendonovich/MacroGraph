@@ -8,7 +8,9 @@ import {
   XY,
   Node,
   Graph as GraphModel,
+  Node as NodeModel,
   Project,
+  Size,
 } from "@macrograph/core";
 import {
   createEventListener,
@@ -75,9 +77,21 @@ export function Interface(props: {
     width: 0,
     height: 0,
   });
-  const [graphStates, setGraphStates] = createStore<GraphState[]>([]);
-  const [currentGraphIndex, setCurrentGraphIndex] =
-    Solid.createSignal<number>(0);
+
+  const [graphStates, setGraphStates] = makePersisted(
+    createStore<GraphState[]>([]),
+    { name: "graph-states" }
+  );
+  const [currentGraphIndex, setCurrentGraphIndex] = makePersisted(
+    Solid.createSignal<number>(0),
+    { name: "current-graph-index" }
+  );
+
+  const [schemaMenu, setSchemaMenu] = Solid.createSignal<SchemaMenuState>({
+    status: "closed",
+  });
+
+  const nodeSizes = new WeakMap<NodeModel, Size>();
 
   const currentGraph = Solid.createMemo(() => {
     const index = currentGraphIndex();
@@ -96,10 +110,6 @@ export function Interface(props: {
     };
   });
 
-  const [schemaMenu, setSchemaMenu] = Solid.createSignal<SchemaMenuState>({
-    status: "closed",
-  });
-
   // will account for multi-pane in future
   const [hoveredPane, setHoveredPane] = Solid.createSignal<null | true>(null);
 
@@ -107,28 +117,40 @@ export function Interface(props: {
     if (hoveredPane()) return currentGraph();
   });
 
-  // reduces the current graph index if the current graph
-  // is the end graph and it gets deleted
-  Solid.createEffect(() => {
-    if (currentGraph()) return;
-    setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
-  });
-
-  // removes graph states if graphs are deleted
-  Solid.createEffect(() => {
-    for (const state of graphStates) {
-      const graph = props.core.project.graphs.get(state.id);
-      if (!graph) setGraphStates(graphStates.filter((s) => s.id !== state.id));
-    }
-  });
-
-  Solid.onMount(async () => {
+  const [loadedProject] = Solid.createResource(async () => {
     const savedProject = localStorage.getItem("project");
-    if (savedProject)
+
+    if (savedProject) {
       await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
 
-    const firstGraph = props.core.project.graphs.values().next().value;
-    if (firstGraph) setGraphStates([createGraphState(firstGraph)]);
+      return props.core.project;
+    } else return null;
+  });
+
+  Solid.createEffect(() => {
+    const project = loadedProject();
+
+    if (project) {
+      const firstGraph = project.graphs.values().next().value;
+      if (graphStates.length === 0 && firstGraph)
+        setGraphStates([createGraphState(firstGraph)]);
+    } else if (loadedProject.state === "pending") return;
+
+    // reduces the current graph index if the current graph
+    // is the end graph and it gets deleted
+    Solid.createEffect(() => {
+      if (currentGraph()) return;
+      setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
+    });
+
+    // removes graph states if graphs are deleted
+    Solid.createEffect(() => {
+      for (const state of graphStates) {
+        const graph = props.core.project.graphs.get(state.id);
+        if (!graph)
+          setGraphStates(graphStates.filter((s) => s.id !== state.id));
+      }
+    });
   });
 
   createEventListener(window, "keydown", async (e) => {
@@ -152,9 +174,7 @@ export function Interface(props: {
           if (!box) break;
 
           await writeClipboardItemToClipboard(
-            commentBoxToClipboardItem(box, (node) =>
-              graph.state.nodeSizes.get(node)
-            )
+            commentBoxToClipboardItem(box, (node) => nodeSizes.get(node))
           );
         }
 
@@ -230,9 +250,9 @@ export function Interface(props: {
               if (!node) throw new Error("Failed to deserialize node");
               model.nodes.set(node.id, node);
             }
-            model.deserializeConnections(item.connections, {
-              nodeIdMap,
-            });
+            // model.deserializeConnections(item.connections, {
+            //   nodeIdMap,
+            // });
             break;
           }
           case "graph": {
@@ -286,7 +306,7 @@ export function Interface(props: {
 
         break;
       }
-      case "KeyR": {
+      case "KeyE": {
         if (!(e.metaKey || e.ctrlKey)) return;
 
         rightSidebar.setState((s) => ({ open: !s.open }));
@@ -295,9 +315,15 @@ export function Interface(props: {
       }
       case "ArrowLeft":
       case "ArrowRight": {
-        if (props.environment === "browser" && !(e.metaKey && e.ctrlKey))
+        if (
+          props.environment === "browser" &&
+          !(e.metaKey || (e.shiftKey && e.ctrlKey))
+        )
           return;
-        else if (props.environment === "custom" && !(e.metaKey && e.altKey))
+        else if (
+          props.environment === "custom" &&
+          !(e.metaKey || (e.shiftKey && e.altKey))
+        )
           return;
 
         if (e.code === "ArrowLeft")
@@ -319,7 +345,7 @@ export function Interface(props: {
       <UIStoreProvider store={UI}>
         <div
           ref={setRootRef}
-          class="relative w-full h-full flex flex-row overflow-hidden select-none bg-neutral-800"
+          class="relative w-full h-full flex flex-row overflow-hidden select-none bg-neutral-800 text-white"
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -360,95 +386,103 @@ export function Interface(props: {
 
           <div class="flex-1 flex divide-y divide-black flex-col h-full justify-center items-center text-white">
             <Solid.Show when={currentGraph()} fallback="No graph selected">
-              {(graph) => (
-                <>
-                  <div class="h-8 w-full flex flex-row divide-x divide-black">
-                    <Solid.For
-                      each={graphStates
-                        .map((state) => {
-                          const graph = props.core.project.graphs.get(state.id);
-                          if (!graph) return;
+              {(graph) => {
+                return (
+                  <>
+                    <div class="h-8 w-full flex flex-row divide-x divide-black">
+                      <Solid.For
+                        each={graphStates
+                          .map((state) => {
+                            const graph = props.core.project.graphs.get(
+                              state.id
+                            );
+                            if (!graph) return;
 
-                          return [state, graph] as const;
-                        })
-                        .filter(Boolean)}
-                    >
-                      {([_state, graph], index) => (
-                        <button
-                          class={clsx(
-                            "p-2 flex flex-row items-center relative group",
-                            currentGraphIndex() === index() && "bg-white/20"
-                          )}
-                          onClick={() => setCurrentGraphIndex(index)}
-                        >
-                          {graph.name}
-                          <HiSolidXMark
-                            class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
-                            size={20}
-                            stroke-width={1}
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            return [state, graph] as const;
+                          })
+                          .filter(Boolean)}
+                      >
+                        {([_state, graph], index) => (
+                          <button
+                            class={clsx(
+                              "p-2 flex flex-row items-center relative group",
+                              currentGraphIndex() === index() && "bg-white/20"
+                            )}
+                            onClick={() => setCurrentGraphIndex(index)}
+                          >
+                            {graph.name}
+                            <HiSolidXMark
+                              class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
+                              size={20}
+                              stroke-width={1}
+                              onClick={(e) => {
+                                e.stopPropagation();
 
-                              setGraphStates(
-                                produce((states) => {
-                                  states.splice(index(), 1);
-                                  return states;
-                                })
-                              );
-                            }}
-                          />
-                        </button>
-                      )}
-                    </Solid.For>
-                  </div>
-                  <Graph
-                    graph={graph().model}
-                    state={graph().state}
-                    onMouseEnter={() => setHoveredPane(true)}
-                    onMouseMove={() => setHoveredPane(true)}
-                    onMouseLeave={() => setHoveredPane(null)}
-                    onMouseUp={(e) => {
-                      if (e.button === 2)
-                        setSchemaMenu({
-                          status: "open",
-                          graph: graph().state,
-                          position: {
-                            x: e.clientX,
-                            y: e.clientY,
-                          },
-                        });
-                    }}
-                    onGraphDragStart={() => {
-                      setSchemaMenu({ status: "closed" });
-                    }}
-                    onItemSelected={(id) => {
-                      setGraphStates(graph().index, { selectedItemId: id });
-                    }}
-                    onBoundsChange={setGraphBounds}
-                    onSizeChange={setGraphBounds}
-                    onScaleChange={(scale) => {
-                      setGraphStates(graph().index, {
-                        scale,
-                      });
-                    }}
-                    onTranslateChange={(translate) => {
-                      setGraphStates(graph().index, {
-                        translate,
-                      });
-                    }}
-                    onMouseDown={(e) => {
-                      if (e.button === 0) {
-                        Solid.batch(() => {
-                          setGraphStates(graph().index, {
-                            selectedItemId: null,
+                                setGraphStates(
+                                  produce((states) => {
+                                    states.splice(index(), 1);
+                                    return states;
+                                  })
+                                );
+                              }}
+                            />
+                          </button>
+                        )}
+                      </Solid.For>
+                    </div>
+                    <Graph
+                      graph={graph().model}
+                      state={graph().state}
+                      nodeSizes={nodeSizes}
+                      onMouseEnter={() => setHoveredPane(true)}
+                      onMouseMove={() => setHoveredPane(true)}
+                      onMouseLeave={() => setHoveredPane(null)}
+                      onMouseUp={(e) => {
+                        if (e.button === 2)
+                          setSchemaMenu({
+                            status: "open",
+                            graph: graph().state,
+                            position: {
+                              x: e.clientX,
+                              y: e.clientY,
+                            },
                           });
-                          setSchemaMenu({ status: "closed" });
+                      }}
+                      onGraphDragStart={() => {
+                        setSchemaMenu({ status: "closed" });
+                      }}
+                      onItemSelected={(id) => {
+                        setGraphStates(graph().index, { selectedItemId: id });
+                      }}
+                      onBoundsChange={setGraphBounds}
+                      onSizeChange={setGraphBounds}
+                      onScaleChange={(scale) => {
+                        setGraphStates(graph().index, {
+                          scale,
                         });
-                      }
-                    }}
-                  />
-                </>
-              )}
+                      }}
+                      onTranslateChange={(translate) => {
+                        setGraphStates(
+                          produce((states) => {
+                            states[graph().index]!.translate = translate;
+                            return states;
+                          })
+                        );
+                      }}
+                      onMouseDown={(e) => {
+                        if (e.button === 0) {
+                          Solid.batch(() => {
+                            setGraphStates(graph().index, {
+                              selectedItemId: null,
+                            });
+                            setSchemaMenu({ status: "closed" });
+                          });
+                        }
+                      }}
+                    />
+                  </>
+                );
+              }}
             </Solid.Show>
           </div>
 

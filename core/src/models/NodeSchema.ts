@@ -1,5 +1,4 @@
-import { createMutable } from "solid-js/store";
-import { AnyType, BaseType, Maybe, None, Option, t } from "../types";
+import { AnyType, BaseType, Maybe, PrimitiveType, t } from "../types";
 import { Wildcard } from "../types/wildcard";
 import {
   DataInput,
@@ -13,6 +12,7 @@ import {
 } from "./IO";
 import { Package } from "./Package";
 import { Node } from "./Node";
+import { Graph } from "./Graph";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 
@@ -29,7 +29,6 @@ export type ExecInputBuilder = {
 export type ScopeInputBuilder = {
   id: string;
   name?: string;
-  scope: ScopeRef;
 };
 
 export type InputBuilder =
@@ -65,20 +64,11 @@ export type OutputBuilder =
       variant: "Scope";
     } & ScopeOutputBuilder);
 
-export class ScopeRef {
-  value: Option<Scope> = None;
-
-  constructor() {
-    return createMutable(this);
-  }
-}
-
 export class IOBuilder {
   inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];
   outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[] = [];
 
   wildcards = new Map<string, Wildcard>();
-  scopes = new Map<string, ScopeRef>();
 
   constructor(public node: Node, public previous?: IOBuilder) {}
 
@@ -92,16 +82,6 @@ export class IOBuilder {
     return wildcard;
   }
 
-  scope(id: string) {
-    const scope = Maybe(this.previous?.scopes.get(id)).unwrapOrElse(
-      () => new ScopeRef()
-    );
-
-    this.scopes.set(id, scope);
-
-    return scope;
-  }
-
   dataInput<T extends DataInputBuilder>(args: T) {
     const newInput = Maybe(
       this.previous?.inputs.find(
@@ -109,6 +89,8 @@ export class IOBuilder {
           i.id === args.id && i instanceof DataInput && args.type.eq(i.type)
       )
     ).unwrapOrElse(() => new DataInput({ ...args, node: this.node }));
+
+    newInput.name = args.name;
 
     this.inputs.push(newInput);
 
@@ -122,6 +104,8 @@ export class IOBuilder {
           o.id === args.id && o instanceof DataOutput && args.type.eq(o.type)
       )
     ).unwrapOrElse(() => new DataOutput({ ...args, node: this.node }));
+
+    newOutput.name = args.name;
 
     this.outputs.push(newOutput);
 
@@ -205,31 +189,92 @@ export type RunCtx = {
     : TInput extends ScopeInput
     ? Record<string, unknown>
     : never;
+  getProperty<TProperty extends PropertyDef & { id: string }>(
+    property: TProperty
+  ): inferPropertyDef<TProperty>;
 };
 
 export type EventsMap<T extends string = string> = Record<T, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
-  | NonEventNodeSchema<any, any>
-  | EventNodeSchema<TEvents, any, any, any>;
+  | NonEventNodeSchema<any, Record<string, PropertyDef>>
+  | EventNodeSchema<TEvents, any, any, Record<string, PropertyDef>>;
 
-export type NonEventNodeSchema<TState extends object = object, TIO = void> = {
+export type PropertyValue = { id: string | number; display: string };
+export type inferPropertyValue<TValue extends PropertyValue> = TValue["id"];
+
+export type PropertySourceFn = (args: { node: Node }) => Array<PropertyValue>;
+export type inferPropertySourceFn<TFn extends PropertySourceFn> =
+  | inferPropertyValue<ReturnType<TFn>[number]>
+  | undefined;
+
+export type PropertyDef = { name: string } & (
+  | { source: PropertySourceFn }
+  | { type: PrimitiveType; default?: any }
+);
+export type inferPropertyDef<TProperty extends PropertyDef> =
+  TProperty extends { type: PrimitiveType }
+    ? t.infer<TProperty["type"]>
+    : TProperty extends { source: PropertySourceFn }
+    ? inferPropertySourceFn<TProperty["source"]>
+    : never;
+
+export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
+  [K in keyof TProperties]: {
+    id: K;
+  } & TProperties[K];
+};
+
+export type GenerateIOCtx = {
+  graph: Graph;
+  getProperty<TProperty extends PropertyDef & { id: string }>(
+    property: TProperty
+  ): inferPropertyDef<TProperty>;
+};
+
+export type BaseNodeSchema<
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = {
   name: string;
-  generateIO: (builder: IOBuilder, state: TState) => TIO;
+  generateIO: (args: {
+    io: IOBuilder;
+    ctx: GenerateIOCtx;
+    properties: SchemaProperties<TProperties>;
+    graph: Graph;
+  }) => TIO;
   package: Package<EventsMap>;
+  properties?: SchemaProperties<TProperties>;
+};
+
+type BaseRunArgs<
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = {
+  ctx: RunCtx;
+  io: TIO;
+  properties: SchemaProperties<TProperties>;
+  graph: Graph;
+};
+
+export type NonEventNodeSchema<
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = BaseNodeSchema<TIO, TProperties> & {
   variant: Exclude<NodeSchemaVariant, "Event">;
-  run: (a: { ctx: RunCtx; io: TIO }) => void | Promise<void>;
+  run: (a: BaseRunArgs<TIO, TProperties>) => void | Promise<void>;
 };
 
 export type EventNodeSchema<
   TEvents extends EventsMap = EventsMap,
   TEvent extends keyof TEvents = string,
-  TState extends object = object,
-  TIO = void
-> = {
-  name: string;
-  generateIO: (builder: IOBuilder, state: TState) => TIO;
-  package: Package<EventsMap>;
+  TIO = void,
+  TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
+> = BaseNodeSchema<TIO, TProperties> & {
   event: TEvent;
-  run: (a: { ctx: RunCtx; data: TEvents[TEvent]; io: TIO }) => void;
+  run: (
+    a: BaseRunArgs<TIO, TProperties> & {
+      data: TEvents[TEvent];
+    }
+  ) => void;
 };

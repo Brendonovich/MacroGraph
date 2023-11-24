@@ -1,12 +1,19 @@
-import { createEnum, t } from "@macrograph/core";
+import { t } from "@macrograph/core";
+
 import { Pkg } from ".";
 import { Ctx } from "./ctx";
 
-export function register(pkg: Pkg, state: Ctx) {
+export function register(pkg: Pkg, { state }: Ctx) {
+  const ws = () => {
+    const ws = state();
+    if (ws.type !== "connected") throw new Error("WebSocket not connected!");
+    return ws.ws;
+  };
+
   pkg.createNonEventSchema({
     name: "SpeakerBot Speak",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         voice: io.dataInput({
           id: "voice",
@@ -21,7 +28,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           voice: ctx.getInput(io.voice),
           message: ctx.getInput(io.message),
@@ -35,9 +42,9 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Stop Current",
     variant: "Exec",
-    generateIO(io) {},
-    run({ ctx, io }) {
-      state.state().ws.send(
+    generateIO() {},
+    run() {
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: "Stop",
@@ -49,7 +56,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Toggle TTS",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         state: io.dataInput({
           id: "state",
@@ -59,7 +66,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: ctx.getInput(io.state) ? "Enable" : "Disable",
@@ -71,7 +78,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Events Toggle",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         state: io.dataInput({
           id: "state",
@@ -81,7 +88,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: "Events",
@@ -94,7 +101,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Queue Toggle",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         state: io.dataInput({
           id: "state",
@@ -104,7 +111,7 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     run({ ctx, io }) {
-      state.state().ws.send(
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: ctx.getInput(io.state) ? "Pause" : "Resume",
@@ -116,9 +123,9 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "SpeakerBot Queue Clear",
     variant: "Exec",
-    generateIO(io) {},
-    run({ ctx, io }) {
-      state.state().ws.send(
+    generateIO({ io }) {},
+    run() {
+      ws().send(
         JSON.stringify({
           id: "Macrograph",
           request: "Clear",

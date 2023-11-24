@@ -8,9 +8,10 @@ import {
   t,
   WildcardType,
 } from "@macrograph/core";
-import { usePin } from ".";
 import { Match, Switch } from "solid-js";
 import { Tooltip } from "@kobalte/core";
+
+import { usePin } from ".";
 import { colour } from "../util";
 
 interface Props {
@@ -23,7 +24,7 @@ export const DataPin = (props: Props) => {
   const connected = () =>
     props.pin instanceof DataInput
       ? props.pin.connection.isSome()
-      : props.pin.connections.size > 0;
+      : props.pin.connections().length > 0;
 
   const containerProps = () =>
     ({

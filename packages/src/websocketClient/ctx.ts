@@ -48,7 +48,7 @@ export function createCtx(callback: (data: any) => void) {
   }
 
   Maybe(localStorage.getItem(WS_IPS_LOCALSTORAGE))
-    .map(JSON.parse)
+    .map((v) => JSON.parse(v) as string[])
     .map((sockets) => {
       sockets.forEach((key: string) => {
         addWebsocket(key);

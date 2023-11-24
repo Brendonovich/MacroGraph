@@ -5,6 +5,12 @@ import { createCtx } from "./ctx";
 export function pkg() {
   const sockets = createCtx((data) => pkg.emitEvent({ name: "wsEvent", data }));
 
+  const getWebSocket = (ip: string) => {
+    const ws = sockets.websockets.get(ip);
+    if (ws?.state !== "connected") throw new Error();
+    return ws.socket;
+  };
+
   const pkg = new Package({
     name: "Websocket",
     ctx: sockets,
@@ -14,7 +20,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "WS Emit",
     variant: "Exec",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         ip: io.dataInput({
           id: "ip",
@@ -29,15 +35,14 @@ export function pkg() {
       };
     },
     run({ ctx, io }) {
-      let ws = sockets.websockets.get(ctx.getInput(io.ip));
-      ws?.socket.send(ctx.getInput(io.data));
+      getWebSocket(ctx.getInput(io.ip)).send(ctx.getInput(io.data));
     },
   });
 
   pkg.createEventSchema({
     event: "wsEvent",
     name: "WS Event",
-    generateIO(io) {
+    generateIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
