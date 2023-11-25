@@ -144,17 +144,21 @@ export class Node {
 
     const allInputs = new Set([...io.inputs]);
     io.inputs.forEach((i) => {
-      if (!allInputs.has(i)) {
-        this.graph.disconnectPin(i);
+      if (allInputs.has(i)) return;
 
-        if ("dispose" in i) i.dispose();
-      }
+      this.graph.disconnectPin(i);
+
+      if ("dispose" in i) i.dispose();
     });
     this.state.inputs.splice(0, this.state.inputs.length, ...io.inputs);
 
     const allOutputs = new Set([...io.outputs]);
     io.outputs.forEach((o) => {
-      if (!allOutputs.has(o)) this.graph.disconnectPin(o);
+      if (allOutputs.has(o)) return;
+
+      this.graph.disconnectPin(o);
+
+      if ("dispose" in o) o.dispose();
     });
 
     this.state.outputs.splice(0, this.state.outputs.length, ...io.outputs);

@@ -103,7 +103,9 @@ export class DataOutput<T extends BaseType> {
   name?: string;
   type: T;
 
-  connections: Accessor<ReadonlyArray<DataInput<T>>>;
+  connections!: Accessor<ReadonlyArray<DataInput<T>>>;
+
+  dispose: () => void;
 
   constructor(args: DataOutputArgs<T>) {
     this.id = args.id;
@@ -111,36 +113,44 @@ export class DataOutput<T extends BaseType> {
     this.name = args.name;
     this.type = args.type;
 
-    this.connections = createMemo(() => {
-      const graph = this.node.graph;
+    const { owner, dispose } = createRoot((dispose) => ({
+      owner: getOwner(),
+      dispose,
+    }));
 
-      const conns = graph.connections.get(makeIORef(this)) ?? [];
-
-      return conns
-        .map((conn) => {
-          const { nodeId, ioId } = splitIORef(conn);
-
-          const node = graph.nodes.get(nodeId);
-          const input = node?.input(ioId);
-
-          if (input instanceof DataInput) return input as DataInput<T>;
-        })
-        .filter(Boolean);
-    });
+    this.dispose = dispose;
 
     const self = createMutable(this);
 
-    createEffect(() => {
-      console.log(self.connections().length);
-      for (const conn of self.connections()) {
-        conn.connection = Some(self as any);
-        connectWildcardsInIO(self, conn);
+    runWithOwner(owner, () => {
+      this.connections = createMemo(() => {
+        const graph = this.node.graph;
 
-        onCleanup(() => {
-          conn.connection = None;
-          disconnectWildcardsInIO(self, conn);
-        });
-      }
+        const conns = graph.connections.get(makeIORef(this)) ?? [];
+
+        return conns
+          .map((conn) => {
+            const { nodeId, ioId } = splitIORef(conn);
+
+            const node = graph.nodes.get(nodeId);
+            const input = node?.input(ioId);
+
+            if (input instanceof DataInput) return input as DataInput<T>;
+          })
+          .filter(Boolean);
+      });
+
+      createEffect(() => {
+        for (const conn of self.connections()) {
+          conn.connection = Some(self as any);
+          connectWildcardsInIO(self, conn);
+
+          onCleanup(() => {
+            conn.connection = None;
+            disconnectWildcardsInIO(self, conn);
+          });
+        }
+      });
     });
 
     return self;
@@ -189,42 +199,53 @@ export class ExecOutput {
   public node: Node;
   public name?: string;
 
-  connection: Accessor<Option<ExecInput>>;
+  connection!: Accessor<Option<ExecInput>>;
+
+  dispose: () => void;
 
   constructor(args: ExecOutputArgs) {
     this.id = args.id;
     this.node = args.node;
     this.name = args.name;
 
-    this.connection = createMemo(
-      () => {
-        const graph = this.node.graph;
-
-        const ref = makeIORef(this);
-
-        const value = Maybe(graph.connections.get(ref))
-          .map(([conn]) => conn && splitIORef(conn))
-          .map(({ nodeId, ioId }) => {
-            const node = graph.nodes.get(nodeId);
-            const input = node?.input(ioId);
-
-            if (input instanceof ExecInput) return input;
-          });
-
-        return value;
-      },
-      None,
-      { equals: (a, b) => a.eq(b) }
-    );
-
     const self = createMutable(this);
 
-    createEffect(() => {
-      this.connection().peek((conn) => {
-        conn.connection = Some(self as any);
+    const { owner, dispose } = createRoot((dispose) => ({
+      owner: getOwner(),
+      dispose,
+    }));
 
-        onCleanup(() => {
-          conn.connection = None;
+    this.dispose = dispose;
+
+    runWithOwner(owner, () => {
+      this.connection = createMemo(
+        () => {
+          const graph = this.node.graph;
+
+          const ref = makeIORef(this);
+
+          const value = Maybe(graph.connections.get(ref))
+            .map(([conn]) => conn && splitIORef(conn))
+            .map(({ nodeId, ioId }) => {
+              const node = graph.nodes.get(nodeId);
+              const input = node?.input(ioId);
+
+              if (input instanceof ExecInput) return input;
+            });
+
+          return value;
+        },
+        None,
+        { equals: (a, b) => a.eq(b) }
+      );
+
+      createEffect(() => {
+        this.connection().peek((conn) => {
+          conn.connection = Some(self as any);
+
+          onCleanup(() => {
+            conn.connection = None;
+          });
         });
       });
     });
@@ -266,7 +287,9 @@ export class ScopeOutput {
   name?: string;
   scope: Scope;
 
-  connection: Accessor<Option<ScopeInput>>;
+  connection!: Accessor<Option<ScopeInput>>;
+
+  dispose: () => void;
 
   constructor(args: ScopeOutputArgs) {
     this.id = args.id;
@@ -274,27 +297,36 @@ export class ScopeOutput {
     this.name = args.name;
     this.scope = args.scope;
 
-    this.connection = createMemo(() => {
-      const graph = this.node.graph;
-
-      return Maybe(graph.connections.get(makeIORef(this)))
-        .map(([conn]) => conn && splitIORef(conn))
-        .map(({ nodeId, ioId }) => {
-          const node = graph.nodes.get(nodeId);
-          const input = node?.input(ioId);
-
-          if (input instanceof ScopeInput) return input;
-        });
-    });
-
     const self = createMutable(this);
 
-    createEffect(() => {
-      self.connection().peek((conn) => {
-        conn.connection = Some(self as any);
+    const { owner, dispose } = createRoot((dispose) => ({
+      owner: getOwner(),
+      dispose,
+    }));
 
-        onCleanup(() => {
-          conn.connection = None;
+    this.dispose = dispose;
+
+    runWithOwner(owner, () => {
+      this.connection = createMemo(() => {
+        const graph = this.node.graph;
+
+        return Maybe(graph.connections.get(makeIORef(this)))
+          .map(([conn]) => conn && splitIORef(conn))
+          .map(({ nodeId, ioId }) => {
+            const node = graph.nodes.get(nodeId);
+            const input = node?.input(ioId);
+
+            if (input instanceof ScopeInput) return input;
+          });
+      });
+
+      createEffect(() => {
+        self.connection().peek((conn) => {
+          conn.connection = Some(self as any);
+
+          onCleanup(() => {
+            conn.connection = None;
+          });
         });
       });
     });
