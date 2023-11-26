@@ -13,6 +13,7 @@ import {
 import { Package } from "./Package";
 import { Node } from "./Node";
 import { Graph } from "./Graph";
+import { untrack } from "solid-js";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 

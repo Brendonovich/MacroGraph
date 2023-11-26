@@ -61,12 +61,17 @@ export function pkg() {
     generateIO({ io, ctx, properties }) {
       const w = io.wildcard("");
       const value = ctx.getProperty(properties.number);
+
       return {
-        map: io.dataInput({
+        mapIn: io.dataInput({
           id: "map",
           type: t.map(t.wildcard(w)),
         }),
-        pins: Array.from({ length: value }, (v, i) => ({
+        mapOut: io.dataOutput({
+          id: "map",
+          type: t.map(t.wildcard(w)),
+        }),
+        pins: Array.from({ length: value }, (i) => ({
           key: io.dataInput({
             id: `key-${i}`,
             type: t.string(),
@@ -83,11 +88,12 @@ export function pkg() {
       };
     },
     run({ ctx, io }) {
-      const map = ctx.getInput(io.map);
+      const map = ctx.getInput(io.mapIn);
       io.pins.forEach((input) => {
         map.set(ctx.getInput(input.key), ctx.getInput(input.value));
         ctx.setOutput(input.current, Maybe(map.get(ctx.getInput(input.key))));
       });
+      ctx.setOutput(io.mapOut, map);
     },
   });
 

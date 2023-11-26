@@ -1,5 +1,5 @@
 import { ReactiveSet } from "@solid-primitives/set";
-import { Component, lazy } from "solid-js";
+import { Component, lazy, untrack } from "solid-js";
 
 import { Core } from "./Core";
 import {
