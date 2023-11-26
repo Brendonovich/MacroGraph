@@ -352,9 +352,9 @@ export class Graph {
 
     graph.idCounter = data.nodeIdCounter;
 
-    batch(() => {
-      graph.variables = data.variables.map((v) => Variable.deserialize(v));
+    graph.variables = data.variables.map((v) => Variable.deserialize(v));
 
+    batch(() => {
       graph.nodes = new ReactiveMap(
         Object.entries(data.nodes)
           .map(([idStr, serializedNode]) => {

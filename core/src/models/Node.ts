@@ -78,7 +78,11 @@ export class Node {
       properties: Object.values(args.schema.properties ?? {}).reduce(
         (acc, property) => {
           if ("type" in property)
-            acc[property.id] = property.default ?? property.type.default();
+            acc[property.id] =
+              args.properties?.[property.id] ??
+              property.default ??
+              property.type.default();
+          else acc[property.id] = args.properties?.[property.id];
 
           return acc;
         },

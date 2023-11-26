@@ -62,6 +62,7 @@ export default () => {
     pkgs.utils.pkg,
     pkgs.chatgpt.pkg,
     pkgs.speakerbot.pkg,
+    pkgs.variables.pkg,
   ].map((p) => core.registerPackage(p));
 
   return <Interface core={core} environment="browser" />;
