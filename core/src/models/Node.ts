@@ -82,6 +82,7 @@ export class Node {
               args.properties?.[property.id] ??
               property.default ??
               property.type.default();
+          else acc[property.id] = args.properties?.[property.id];
 
           return acc;
         },

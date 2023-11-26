@@ -86,6 +86,7 @@ export default function () {
     pkgs.utils.pkg,
     pkgs.chatgpt.pkg,
     pkgs.websocket.pkg,
+    pkgs.variables.pkg,
     pkgs.speakerbot.pkg,
     () => pkgs.websocketServer.pkg(wsProvider),
   ].map((p) => core.registerPackage(p));
