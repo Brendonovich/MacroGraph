@@ -6,6 +6,44 @@ export function pkg() {
   });
 
   pkg.createNonEventSchema({
+    name: "List Create",
+    variant: "Pure",
+    properties: {
+      number: {
+        name: "Entries",
+        type: t.int(),
+        default: 1,
+      },
+    },
+    generateIO({ io, ctx, properties }) {
+      const value = ctx.getProperty(properties.number);
+      const w = io.wildcard("");
+      const inputs = Array.from({ length: value }, (v, i) => ({
+        value: io.dataInput({
+          id: `value-${i}`,
+          type: t.wildcard(w),
+        }),
+      }));
+
+      return {
+        inputs,
+        out: io.dataOutput({
+          id: "",
+          type: t.list(t.wildcard(w)),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const array = new Array<any>();
+      io.inputs.forEach((input) => {
+        array.push(ctx.getInput(input.value));
+      });
+
+      ctx.setOutput(io.out, array);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Push List Value",
     variant: "Exec",
     generateIO({ io }) {
