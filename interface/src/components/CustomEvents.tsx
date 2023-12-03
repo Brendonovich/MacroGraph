@@ -3,32 +3,22 @@ import {
   For,
   Match,
   ParentProps,
-  Setter,
-  Show,
   Switch,
-  createMemo,
+  children,
   createSignal,
-  createUniqueId,
   useContext,
 } from "solid-js";
-import { Graph, PrimitiveType, t } from "@macrograph/core";
+import { t } from "@macrograph/core";
 import { AiOutlineCheck, AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
 import { BsX } from "solid-icons/bs";
 
 import { useCoreContext } from "../contexts";
 import { SidebarSection } from "./Sidebar";
-import { SelectInput } from "./ui";
-import { DropdownMenu, Popover } from "@kobalte/core";
+import { DropdownMenu } from "@kobalte/core";
 import clsx from "clsx";
 import { createContext } from "solid-js";
 
-// React component to show a list of projects
-interface Props {
-  currentGraph?: number;
-  onGraphClicked(graph: Graph): void;
-}
-
-export const CustomEventList = (props: Props) => {
+export const CustomEventList = () => {
   const ctx = useCoreContext();
 
   return (
@@ -203,12 +193,14 @@ export const CustomEventList = (props: Props) => {
                           </Switch>
                         </div>
 
-                        <TypeEditor
-                          type={field.type}
-                          onChange={(type) => {
-                            event.editFieldType(field.id, type as any);
-                          }}
-                        />
+                        <div class="flex flex-row justify-start">
+                          <TypeEditor
+                            type={field.type}
+                            onChange={(type) => {
+                              event.editFieldType(field.id, type as any);
+                            }}
+                          />
+                        </div>
                       </div>
                     );
                   }}
@@ -232,9 +224,13 @@ function createContextValue() {
   const [typeDialogState, setTypeDialogState] =
     createSignal<null | TypeDialogState>(null);
 
+  const [hoveredType, setHoveredType] = createSignal<t.Any | null>(null);
+
   return {
     typeDialogState,
     setTypeDialogState,
+    hoveredType,
+    setHoveredType,
     openTypeDialog(state: TypeDialogState) {
       setTypeDialogState(state);
     },
@@ -256,14 +252,11 @@ function TypeEditor(props: { type: t.Any; onChange?: (type: t.Any) => void }) {
       >
         <DropdownMenu.Trigger
           as="div"
-          class="bg-black text-left p-1 font-mono rounded border border-gray-300 flex flex-row flex-wrap"
+          class="p-1 overflow-x-auto overflow-y-hidden no-scrollbar font-mono flex flex-row"
         >
           <TypeEditorSegment
             type={props.type}
-            onChange={(type) => {
-              console.log(type);
-              props.onChange?.(type);
-            }}
+            onChange={(type) => props.onChange?.(type)}
           />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
@@ -315,15 +308,14 @@ const ARITIES = [
   ["Map", t.map],
 ] satisfies Array<[string, (current: t.Any) => t.Any]>;
 
-function createTypeEditorSegmentContextValue(props: { type: t.Any }) {
+function createTypeEditorSegmentContextValue(props: { type: Accessor<t.Any> }) {
   const editorCtx = useContext(TypeEditorContext)!;
 
-  const [hovered, setHovered] = createSignal(false);
-
   return {
+    type: props.type,
     hovered: () =>
-      hovered() || editorCtx.typeDialogState()?.currentType === props.type,
-    setHovered,
+      editorCtx.typeDialogState()?.currentType === props.type() ||
+      editorCtx.hoveredType() === props.type(),
   };
 }
 
@@ -338,9 +330,7 @@ function TypeEditorSegment(props: {
   const ctx = useContext(TypeEditorContext)!;
 
   const ctxValue = createTypeEditorSegmentContextValue({
-    get type() {
-      return props.type;
-    },
+    type: () => props.type,
   });
 
   const onClickFactory = (innerType: Accessor<t.Any>) => (e: MouseEvent) => {
@@ -359,7 +349,7 @@ function TypeEditorSegment(props: {
         <Match when={props.type instanceof t.Primitive && props.type}>
           {(primitiveType) => (
             <Span onClick={onClickFactory(primitiveType)}>
-              {primitiveType().toString()}
+              <PaddedSpan>{primitiveType().toString()}</PaddedSpan>
             </Span>
           )}
         </Match>
@@ -368,14 +358,13 @@ function TypeEditorSegment(props: {
             const onClick = onClickFactory(() => optionType().inner);
 
             return (
-              <>
-                <Span onClick={onClick}>Option{"<"}</Span>
+              <Span onClick={onClick}>
+                <PaddedSpan>Option</PaddedSpan>
                 <TypeEditorSegment
                   type={optionType().inner}
                   onChange={(type) => props.onChange?.(t.option(type))}
                 />
-                <Span onClick={onClick}>{">"}</Span>
-              </>
+              </Span>
             );
           }}
         </Match>
@@ -384,14 +373,13 @@ function TypeEditorSegment(props: {
             const onClick = onClickFactory(() => listType().item);
 
             return (
-              <>
-                <Span onClick={onClick}>List{"<"}</Span>
+              <Span onClick={onClick}>
+                <PaddedSpan>List</PaddedSpan>
                 <TypeEditorSegment
                   type={listType().item}
                   onChange={(type) => props.onChange?.(t.list(type))}
                 />
-                <Span onClick={onClick}>{">"}</Span>
-              </>
+              </Span>
             );
           }}
         </Match>
@@ -400,14 +388,13 @@ function TypeEditorSegment(props: {
             const onClick = onClickFactory(() => mapType().value);
 
             return (
-              <>
-                <Span onClick={onClick}>Map{"<"}</Span>
+              <Span onClick={onClick}>
+                <PaddedSpan>Map</PaddedSpan>
                 <TypeEditorSegment
                   type={mapType().value}
                   onChange={(type) => props.onChange?.(t.map(type))}
                 />
-                <Span onClick={onClick}>{">"}</Span>
-              </>
+              </Span>
             );
           }}
         </Match>
@@ -421,16 +408,35 @@ function Span(
     onClick?: (e: MouseEvent) => void;
   }>
 ) {
+  const editorCtx = useContext(TypeEditorContext)!;
   const ctx = useContext(TypeEditorSegmentContext)!;
 
+  const resolved = children(() => props.children);
+
   return (
-    <span
-      class={clsx("cursor-pointer", ctx.hovered() && "bg-cyan-600/50")}
-      onMouseEnter={() => ctx.setHovered(true)}
-      onMouseLeave={() => ctx.setHovered(false)}
+    <div
+      class={clsx(
+        "cursor-pointer border border-white/50 rounded-lg bg-black flex flex-row flex-nowrap shrink-0 -my-px",
+        ctx.hovered() && "bg-cyan-600/50",
+        resolved.toArray().length > 1 && "pr-2"
+      )}
+      onMouseMove={(e) => {
+        e.stopPropagation();
+
+        editorCtx.setHoveredType(ctx.type);
+      }}
+      onMouseLeave={(e) => {
+        e.stopPropagation();
+
+        editorCtx.setHoveredType(null);
+      }}
       onClick={(e) => props.onClick?.(e)}
     >
       {props.children}
-    </span>
+    </div>
   );
+}
+
+function PaddedSpan(props: ParentProps) {
+  return <span class="p-1">{props.children}</span>;
 }

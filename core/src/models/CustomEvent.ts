@@ -3,7 +3,7 @@ import { z } from "zod";
 import { batch } from "solid-js";
 
 import { Project } from "./Project";
-import { PrimitiveType, t } from "../types";
+import { t, PrimitiveType } from "../types";
 
 type CustomEventField = {
   id: number;
@@ -17,22 +17,63 @@ export interface EventArgs {
   project: Project;
 }
 
+// const Source = z.discriminatedUnion("variant", [
+//   z.object({ variant: z.literal("package"), package: z.string() }),
+//   z.object({ variant: z.literal("custom") }),
+// ]);
+
+const SerializedFieldTypeBases = z.union([
+  z.literal("int"),
+  z.literal("float"),
+  z.literal("string"),
+  z.literal("bool"),
+  // z.tuple([
+  //   z.literal("struct"),
+  //   z.string(), // name
+  //   Source,
+  // ]),
+  // z.tuple([
+  //   z.literal("enum"),
+  //   z.string(), // name
+  //   Source,
+  // ]),
+]);
+
+type SerializedFieldType =
+  | z.infer<typeof SerializedFieldTypeBases>
+  | { variant: "option"; inner: SerializedFieldType }
+  | { variant: "list"; item: SerializedFieldType }
+  | { variant: "map"; value: SerializedFieldType };
+
+const SerializedFieldType: z.ZodType<SerializedFieldType> =
+  SerializedFieldTypeBases.or(
+    z.discriminatedUnion("variant", [
+      z.object({
+        variant: z.literal("option"),
+        inner: z.lazy(() => SerializedFieldType),
+      }),
+      z.object({
+        variant: z.literal("list"),
+        item: z.lazy(() => SerializedFieldType),
+      }),
+      z.object({
+        variant: z.literal("map"),
+        value: z.lazy(() => SerializedFieldType),
+      }),
+    ])
+  );
+
 const SerializedField = z.object({
   id: z.number(),
   name: z.string(),
-  type: z.union([
-    z.literal("float"),
-    z.literal("int"),
-    z.literal("string"),
-    z.literal("bool"),
-  ]),
+  type: SerializedFieldType,
 });
 
 export const SerializedEvent = z.object({
   id: z.coerce.number(),
   name: z.string(),
   fields: z.array(SerializedField).default([]),
-  fieldIdCounter: z.number(),
+  fieldIdCounter: z.number().default(0),
 });
 
 export class CustomEvent {
@@ -89,11 +130,10 @@ export class CustomEvent {
     return {
       id: this.id,
       name: this.name,
-      fields: [],
-      // fields: this.fields.map((field) => ({
-      //   ...field,
-      //   type: field.type.primitiveVariant(),
-      // })),
+      fields: this.fields.map((field) => ({
+        ...field,
+        type: field.type.serialize(),
+      })),
       fieldIdCounter: this.fieldIdCounter,
     };
   }
@@ -109,21 +149,80 @@ export class CustomEvent {
 
     batch(() => {
       event.fields = data.fields.map((serializedField) => {
+        function deserializeType(
+          type: z.infer<typeof SerializedFieldType>
+        ): t.Any {
+          switch (type) {
+            case "string":
+              return t.string();
+            case "float":
+              return t.float();
+            case "int":
+              return t.int();
+            case "bool":
+              return t.bool();
+          }
+
+          // if (Array.isArray(type)) {
+          //   const source = type[2];
+
+          //   switch (type[0]) {
+          //     case "struct": {
+          //       let struct: Struct | undefined;
+
+          //       switch (source.variant) {
+          //         case "package": {
+          //           const pkg = project.core.packages.find(
+          //             (p) => p.name === source.package
+          //           );
+
+          //           if (!pkg)
+          //             throw new Error(`Package ${source.package} not found!`);
+
+          //           struct = pkg.structs.get(type[1]);
+          //         }
+          //       }
+
+          //       if (!struct) throw new Error(`Struct ${type[1]} not found!`);
+
+          //       return t.struct(struct);
+          //     }
+          //     case "enum": {
+          //       let e: Enum | undefined;
+
+          //       switch (source.variant) {
+          //         case "package": {
+          //           const pkg = project.core.packages.find(
+          //             (p) => p.name === source.package
+          //           );
+
+          //           if (!pkg)
+          //             throw new Error(`Package ${source.package} not found!`);
+
+          //           e = pkg.enums.get(type[1]);
+          //         }
+          //       }
+
+          //       if (!e) throw new Error(`Struct ${type[1]} not found!`);
+
+          //       return t.enum(e);
+          //     }
+          //   }
+          // } else
+          switch (type.variant) {
+            case "option":
+              return t.option(deserializeType(type.inner));
+            case "list":
+              return t.list(deserializeType(type.item));
+            case "map":
+              return t.map(deserializeType(type.value));
+          }
+        }
+
         return {
           id: serializedField.id,
           name: serializedField.name,
-          type: (() => {
-            switch (serializedField.type) {
-              case "string":
-                return t.string();
-              case "float":
-                return t.float();
-              case "int":
-                return t.int();
-              case "bool":
-                return t.bool();
-            }
-          })(),
+          type: deserializeType(serializedField.type),
         };
       });
     });

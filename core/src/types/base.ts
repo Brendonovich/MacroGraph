@@ -10,6 +10,7 @@ export abstract class BaseType<TOut = any> {
   abstract asZodType(): ZodType<TOut>;
   abstract getWildcards(): Wildcard[];
   abstract eq(other: t.Any): boolean;
+  abstract serialize(): any;
 }
 
 export type infer<T extends BaseType<any>> = T["_type"];

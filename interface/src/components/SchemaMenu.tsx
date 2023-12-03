@@ -27,7 +27,6 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 };
 
 export const SchemaMenu = (props: Props) => {
-  const UI = useUIStore();
   const core = useCore();
 
   const [openPackages, setOpenPackages] = createSignal(new Set<Package>());
@@ -99,7 +98,7 @@ export const SchemaMenu = (props: Props) => {
                       lowercaseSchemaName.includes(t)
                     )
                   )
-                    ret.push(schema);
+                    ret.push(schema as any);
                 }
 
                 return ret;

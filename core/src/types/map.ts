@@ -34,4 +34,8 @@ export class MapType<TValue extends BaseType<any>> extends BaseType<
   eq(other: t.Any): boolean {
     return other instanceof t.Map && this.value.eq(other.value);
   }
+
+  serialize() {
+    return { variant: "map", value: this.value.serialize() };
+  }
 }

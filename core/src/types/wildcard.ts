@@ -248,6 +248,10 @@ export class WildcardType extends BaseType<unknown> {
   eq(other: t.Any) {
     return other instanceof t.Wildcard && other.wildcard === this.wildcard;
   }
+
+  serialize() {
+    throw new Error("Wildcard cannot be serialized!");
+  }
 }
 
 export function connectWildcardsInIO(
