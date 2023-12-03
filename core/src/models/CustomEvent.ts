@@ -8,7 +8,7 @@ import { PrimitiveType, t } from "../types";
 type CustomEventField = {
   id: number;
   name: string;
-  type: PrimitiveType;
+  type: t.Any;
 };
 
 export interface EventArgs {
@@ -89,10 +89,11 @@ export class CustomEvent {
     return {
       id: this.id,
       name: this.name,
-      fields: this.fields.map((field) => ({
-        ...field,
-        type: field.type.primitiveVariant(),
-      })),
+      fields: [],
+      // fields: this.fields.map((field) => ({
+      //   ...field,
+      //   type: field.type.primitiveVariant(),
+      // })),
       fieldIdCounter: this.fieldIdCounter,
     };
   }
