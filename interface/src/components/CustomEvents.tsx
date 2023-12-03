@@ -267,7 +267,7 @@ function TypeEditor(props: { type: t.Any; onChange?: (type: t.Any) => void }) {
           />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content class="p-2 bg-black border border-gray-300 w-52 max-h-48 flex flex-col overflow-y-auto">
+          <DropdownMenu.Content class="p-2 bg-black border border-gray-300 w-52 max-h-48 flex flex-col overflow-y-auto text-white">
             <span>Primitives</span>
             <div class="flex flex-col pl-1 text-sm">
               {PRIMITIVES.map((p) => (
@@ -364,48 +364,52 @@ function TypeEditorSegment(props: {
           )}
         </Match>
         <Match when={props.type instanceof t.Option && props.type}>
-          {(optionType) => (
-            <>
-              <Span onClick={onClickFactory(() => optionType().inner)}>
-                Option{"<"}
-              </Span>
-              <TypeEditorSegment
-                type={optionType().inner}
-                onChange={(type) => props.onChange?.(t.option(type))}
-              />
-              <Span onClick={onClickFactory(() => optionType().inner)}>
-                {">"}
-              </Span>
-            </>
-          )}
+          {(optionType) => {
+            const onClick = onClickFactory(() => optionType().inner);
+
+            return (
+              <>
+                <Span onClick={onClick}>Option{"<"}</Span>
+                <TypeEditorSegment
+                  type={optionType().inner}
+                  onChange={(type) => props.onChange?.(t.option(type))}
+                />
+                <Span onClick={onClick}>{">"}</Span>
+              </>
+            );
+          }}
         </Match>
         <Match when={props.type instanceof t.List && props.type}>
-          {(listType) => (
-            <>
-              <Span onClick={onClickFactory(() => listType().item)}>
-                List{"<"}
-              </Span>
-              <TypeEditorSegment
-                type={listType().item}
-                onChange={(type) => props.onChange?.(t.list(type))}
-              />
-              <Span onClick={onClickFactory(() => listType().item)}>{">"}</Span>
-            </>
-          )}
+          {(listType) => {
+            const onClick = onClickFactory(() => listType().item);
+
+            return (
+              <>
+                <Span onClick={onClick}>List{"<"}</Span>
+                <TypeEditorSegment
+                  type={listType().item}
+                  onChange={(type) => props.onChange?.(t.list(type))}
+                />
+                <Span onClick={onClick}>{">"}</Span>
+              </>
+            );
+          }}
         </Match>
         <Match when={props.type instanceof t.Map && props.type}>
-          {(mapType) => (
-            <>
-              <Span onClick={onClickFactory(() => mapType().value)}>
-                Map{"<"}
-              </Span>
-              <TypeEditorSegment
-                type={mapType().value}
-                onChange={(type) => props.onChange?.(t.map(type))}
-              />
-              <Span onClick={onClickFactory(() => mapType().value)}>{">"}</Span>
-            </>
-          )}
+          {(mapType) => {
+            const onClick = onClickFactory(() => mapType().value);
+
+            return (
+              <>
+                <Span onClick={onClick}>Map{"<"}</Span>
+                <TypeEditorSegment
+                  type={mapType().value}
+                  onChange={(type) => props.onChange?.(t.map(type))}
+                />
+                <Span onClick={onClick}>{">"}</Span>
+              </>
+            );
+          }}
         </Match>
       </Switch>
     </TypeEditorSegmentContext.Provider>
