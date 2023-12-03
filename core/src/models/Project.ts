@@ -1,8 +1,10 @@
 import { ReactiveMap } from "@solid-primitives/map";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
+
 import { Core } from "./Core";
 import { Graph, SerializedGraph } from "./Graph";
+import { CustomEvent, SerializedEvent } from "./CustomEvent";
 
 export interface ProjectArgs {
   core: Core;
@@ -11,15 +13,19 @@ export interface ProjectArgs {
 export const SerializedProject = z.object({
   graphs: z.array(SerializedGraph),
   graphIdCounter: z.number().int(),
+  customEvents: z.array(SerializedEvent).default([]),
+  customEventIdCounter: z.number().int().default(0),
 });
 
 export class Project {
   core: Core;
   graphs = new ReactiveMap<number, Graph>();
+  customEvents = new ReactiveMap<number, CustomEvent>();
 
   private disableSave = false;
 
   private graphIdCounter = 0;
+  private customEventIdCounter = 0;
 
   constructor(args: ProjectArgs) {
     this.core = args.core;
@@ -29,6 +35,10 @@ export class Project {
 
   generateGraphId() {
     return this.graphIdCounter++;
+  }
+
+  generateCustomEventId() {
+    return this.customEventIdCounter++;
   }
 
   createGraph(args?: { name?: string }) {
@@ -46,10 +56,28 @@ export class Project {
     return graph;
   }
 
+  createCustomEvent() {
+    const id = this.generateCustomEventId();
+
+    const event = new CustomEvent({
+      name: `Event ${id}`,
+      id,
+      project: this,
+    });
+
+    this.customEvents.set(id, event);
+
+    this.core.project.save();
+
+    return event;
+  }
+
   serialize(): z.infer<typeof SerializedProject> {
     return {
       graphIdCounter: this.graphIdCounter,
       graphs: [...this.graphs.values()].map((g) => g.serialize()),
+      customEventIdCounter: this.customEventIdCounter,
+      customEvents: [...this.customEvents.values()].map((e) => e.serialize()),
     };
   }
 
@@ -75,6 +103,20 @@ export class Project {
           return [graph.id, graph] as [number, Graph];
         })
         .filter(Boolean) as [number, Graph][]
+    );
+
+    project.customEventIdCounter = data.customEventIdCounter;
+
+    project.customEvents = new ReactiveMap(
+      data.customEvents
+        .map((SerializedEvent) => {
+          const event = CustomEvent.deserialize(project, SerializedEvent);
+
+          if (event === null) return null;
+
+          return [event.id, event] as [number, CustomEvent];
+        })
+        .filter(Boolean) as [number, CustomEvent][]
     );
 
     project.disableSave = false;

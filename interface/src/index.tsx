@@ -43,6 +43,7 @@ import {
   readFromClipboard,
   writeClipboardItemToClipboard,
 } from "./clipboard";
+import { CustomEventList } from "./components/CustomEvents";
 
 export { useCore } from "./contexts";
 
@@ -369,6 +370,7 @@ export function Interface(props: {
                   }}
                 />
                 <PrintOutput />
+                <CustomEventList />
               </div>
             </Sidebar>
 

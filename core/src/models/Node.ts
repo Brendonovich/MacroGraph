@@ -9,6 +9,7 @@ import {
   createMemo,
   Accessor,
   onCleanup,
+  createEffect,
 } from "solid-js";
 
 import { IOBuilder, NodeSchema } from "./NodeSchema";
@@ -130,10 +131,39 @@ export class Node {
         return roots;
       });
 
-      this.graph.project.core.addEventNodeMapping(this);
+      createEffect(() => {
+        const mappings = this.graph.project.core.eventNodeMappings;
 
-      onCleanup(() => {
-        this.graph.project.core.removeEventNodeMapping(this);
+        if ("event" in this.schema) {
+          const event = (() => {
+            const eventFactory = this.schema.event;
+
+            if (typeof eventFactory === "string") return eventFactory;
+            else {
+              return eventFactory({
+                properties: this.schema.properties ?? {},
+                ctx: {
+                  getProperty: (property) =>
+                    this.state.properties[property.id]!,
+                  graph: this.graph,
+                },
+              });
+            }
+          })();
+
+          if (event === undefined) return;
+
+          const pkg = this.schema.package;
+          if (!mappings.has(pkg)) mappings.set(pkg, new Map());
+          const pkgMappings = mappings.get(pkg)!;
+
+          if (!pkgMappings.has(event)) pkgMappings.set(event, new Set());
+          pkgMappings.get(event)!.add(this);
+
+          onCleanup(() => {
+            pkgMappings.get(event)!.delete(this);
+          });
+        }
       });
     });
   }
@@ -225,7 +255,7 @@ export class Node {
       id: data.id,
       name: data.name,
       position: data.position,
-      schema,
+      schema: schema as any,
       graph,
       properties: data.properties,
     });

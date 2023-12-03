@@ -24,14 +24,12 @@ const SerializedVariable = z.object({
   id: z.number(),
   name: z.string(),
   value: z.any(),
-  type: z
-    .union([
-      z.literal("float"),
-      z.literal("int"),
-      z.literal("string"),
-      z.literal("bool"),
-    ])
-    .default("float"),
+  type: z.union([
+    z.literal("float"),
+    z.literal("int"),
+    z.literal("string"),
+    z.literal("bool"),
+  ]),
 });
 
 export const SerializedConnection = z.object({
@@ -165,8 +163,6 @@ export class Graph {
     const node = new Node({ ...args, id, graph: this });
 
     this.nodes.set(id, node);
-
-    this.project.core.addEventNodeMapping(node);
 
     this.project.save();
 

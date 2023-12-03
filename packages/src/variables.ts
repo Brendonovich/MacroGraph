@@ -3,7 +3,7 @@ import { ReactiveSet } from "@solid-primitives/set";
 import { createEffect, createMemo, on, onCleanup, untrack } from "solid-js";
 
 type Events = {
-  graphVarChanged: { variableId: number; value: any };
+  [key: `${number}:${number}`]: { variableId: number; value: any };
 };
 
 export function pkg() {
@@ -80,11 +80,15 @@ export function pkg() {
   const listenedVariables = new ReactiveSet<`${number}:${number}`>();
 
   pkg.createEventSchema({
-    event: "graphVarChanged",
-    name: "Graph Variable Changed",
-    properties: {
-      variable: variableProperty,
+    event: ({ ctx, properties }) => {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = ctx.graph.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
+      return `${ctx.graph.id}:${variable.id}`;
     },
+    name: "Graph Variable Changed",
+    properties: { variable: variableProperty },
     generateIO({ io, ctx, properties, graph }) {
       const variableId = ctx.getProperty(properties.variable);
       const variable = ctx.graph.variables.find((v) => v.id === variableId);
@@ -110,7 +114,7 @@ export function pkg() {
               }
 
               pkg.emitEvent({
-                name: "graphVarChanged",
+                name: `${graph.id}:${variable.id}`,
                 data: { variableId: variable.id, value },
               });
             }

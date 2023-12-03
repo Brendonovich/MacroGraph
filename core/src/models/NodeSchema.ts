@@ -120,6 +120,8 @@ export class IOBuilder {
       )
     ).unwrapOrElse(() => new ExecInput({ ...args, node: this.node }));
 
+    newInput.name = args.name;
+
     this.inputs.push(newInput);
 
     return newInput;
@@ -132,6 +134,8 @@ export class IOBuilder {
       )
     ).unwrapOrElse(() => new ExecOutput({ ...args, node: this.node }));
 
+    newOutput.name = args.name;
+
     this.outputs.push(newOutput);
 
     return newOutput;
@@ -143,6 +147,8 @@ export class IOBuilder {
         (i): i is ScopeInput => i.id === args.id && i instanceof ScopeInput
       )
     ).unwrapOrElse(() => new ScopeInput({ ...args, node: this.node }));
+
+    newInput.name = args.name;
 
     this.inputs.push(newInput);
 
@@ -164,6 +170,8 @@ export class IOBuilder {
         node: this.node,
       });
     });
+
+    newOutput.name = args.name;
 
     this.outputs.push(newOutput);
 
@@ -199,7 +207,7 @@ export type EventsMap<T extends string = string> = Record<T, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
   | NonEventNodeSchema<any, Record<string, PropertyDef>>
-  | EventNodeSchema<TEvents, any, any, Record<string, PropertyDef>>;
+  | EventNodeSchema<TEvents, keyof TEvents, any, Record<string, PropertyDef>>;
 
 export type PropertyValue = { id: string | number; display: string };
 export type inferPropertyValue<TValue extends PropertyValue> = TValue["id"];
@@ -253,8 +261,8 @@ type BaseRunArgs<
   TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
 > = {
   ctx: RunCtx;
-  io: TIO;
   properties: SchemaProperties<TProperties>;
+  io: TIO;
   graph: Graph;
 };
 
@@ -272,7 +280,12 @@ export type EventNodeSchema<
   TIO = void,
   TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
 > = BaseNodeSchema<TIO, TProperties> & {
-  event: TEvent;
+  event:
+    | TEvent
+    | ((arg: {
+        ctx: GenerateIOCtx;
+        properties: SchemaProperties<TProperties>;
+      }) => TEvent | undefined);
   run: (
     a: BaseRunArgs<TIO, TProperties> & {
       data: TEvents[TEvent];

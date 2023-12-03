@@ -92,36 +92,6 @@ export class Core {
     mappings?.forEach((n) => new ExecutionContext(n).run(event.data));
   }
 
-  addEventNodeMapping(node: Node) {
-    if ("event" in node.schema) {
-      const event = node.schema.event;
-      const pkg = node.schema.package;
-      const mappings = this.eventNodeMappings;
-
-      if (!mappings.has(pkg)) mappings.set(pkg, new Map());
-      const pkgMappings = mappings.get(pkg)!;
-
-      if (!pkgMappings.has(event)) pkgMappings.set(event, new Set());
-      pkgMappings.get(event)!.add(node);
-    }
-  }
-
-  removeEventNodeMapping(node: Node) {
-    if ("event" in node.schema) {
-      const event = node.schema.event;
-      const pkg = node.schema.package;
-      const mappings = this.eventNodeMappings;
-
-      const pkgMappings = mappings.get(pkg);
-      if (!pkgMappings) return;
-
-      const eventMappings = pkgMappings.get(event);
-      if (!eventMappings) return;
-
-      eventMappings.delete(node);
-    }
-  }
-
   private printListeners = new Set<(msg: string) => void>();
 
   print(msg: string) {
