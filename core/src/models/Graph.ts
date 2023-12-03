@@ -18,19 +18,8 @@ import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import { SerializedNode } from "./Node";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
-import { PrimitiveType, t, Option } from "../types";
-
-const SerializedVariable = z.object({
-  id: z.number(),
-  name: z.string(),
-  value: z.any(),
-  type: z.union([
-    z.literal("float"),
-    z.literal("int"),
-    z.literal("string"),
-    z.literal("bool"),
-  ]),
-});
+import { Option } from "../types";
+import { SerializedVariable, Variable, VariableArgs } from "./Variable";
 
 export const SerializedConnection = z.object({
   from: z.object({
@@ -57,58 +46,6 @@ export interface GraphArgs {
   id: number;
   name: string;
   project: Project;
-}
-
-type VariableArgs = {
-  id: number;
-  name: string;
-  type: PrimitiveType;
-  value: any;
-};
-
-export class Variable {
-  id: number;
-  name: string;
-  type: PrimitiveType;
-  value: any;
-
-  constructor(args: VariableArgs) {
-    this.id = args.id;
-    this.name = args.name;
-    this.type = args.type;
-    this.value = args.value;
-
-    return createMutable(this);
-  }
-
-  serialize(): z.infer<typeof SerializedVariable> {
-    return {
-      id: this.id,
-      name: this.name,
-      value: this.value,
-      type: this.type.primitiveVariant(),
-    };
-  }
-
-  static deserialize(data: z.infer<typeof SerializedVariable>) {
-    return new Variable({
-      id: data.id,
-      name: data.name,
-      value: data.value,
-      type: (() => {
-        switch (data.type) {
-          case "int":
-            return t.int();
-          case "float":
-            return t.float();
-          case "string":
-            return t.string();
-          case "bool":
-            return t.bool();
-        }
-      })(),
-    });
-  }
 }
 
 type IORef = `${number}:${"i" | "o"}:${string}`;
