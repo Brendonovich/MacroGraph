@@ -86,7 +86,10 @@ export function pkg() {
     run({ ctx, io }) {
       const input = ctx.getInput(io.in);
 
-      ctx.setOutput(io.out, input.variant === "String" ? Some(input) : None);
+      ctx.setOutput(
+        io.out,
+        input.variant === "String" ? Some(jsonToJS(input)) : None
+      );
     },
   });
 
@@ -108,7 +111,10 @@ export function pkg() {
     run({ ctx, io }) {
       const input = ctx.getInput(io.in);
 
-      ctx.setOutput(io.out, input.variant === "Number" ? Some(input) : None);
+      ctx.setOutput(
+        io.out,
+        input.variant === "Number" ? Some(jsonToJS(input)) : None
+      );
     },
   });
 
@@ -130,7 +136,10 @@ export function pkg() {
     run({ ctx, io }) {
       const input = ctx.getInput(io.in);
 
-      ctx.setOutput(io.out, input.variant === "Bool" ? Some(input) : None);
+      ctx.setOutput(
+        io.out,
+        input.variant === "Bool" ? Some(jsonToJS(input)) : None
+      );
     },
   });
 
@@ -152,12 +161,15 @@ export function pkg() {
     run({ ctx, io }) {
       const input = ctx.getInput(io.in);
 
-      ctx.setOutput(io.out, input.variant === "List" ? Some(input) : None);
+      ctx.setOutput(
+        io.out,
+        input.variant === "List" ? Some(input.data.value) : None
+      );
     },
   });
 
   pkg.createNonEventSchema({
-    name: "JSON Get List",
+    name: "JSON Get Map",
     variant: "Pure",
     generateIO({ io }) {
       return {
@@ -174,7 +186,10 @@ export function pkg() {
     run({ ctx, io }) {
       const input = ctx.getInput(io.in);
 
-      ctx.setOutput(io.out, input.variant === "Map" ? Some(input) : None);
+      ctx.setOutput(
+        io.out,
+        input.variant === "Map" ? Some(input.data.value) : None
+      );
     },
   });
 

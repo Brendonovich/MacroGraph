@@ -1,5 +1,6 @@
 import {
   BasePrimitiveType,
+  BaseType,
   Graph,
   Node,
   PrimitiveType,
@@ -167,6 +168,26 @@ export function GraphSidebar(props: { graph: Graph }) {
                           </Match>
                         </Switch>
                       </div>
+                    )}
+                  </Show>
+                  <Show
+                    when={variable.type instanceof BaseType && variable.type}
+                  >
+                    {(type) => (
+                      <Switch>
+                        <Match
+                          when={
+                            type().variant() === "list" ||
+                            type().variant() === "map"
+                          }
+                        >
+                          {" "}
+                          <div class="flex flex-row items-center gap-2 text-sm">
+                            <span>Value2</span>
+                            <span>{JSON.stringify(variable.value)}</span>
+                          </div>
+                        </Match>
+                      </Switch>
                     )}
                   </Show>
                 </div>

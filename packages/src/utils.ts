@@ -1714,6 +1714,22 @@ export function pkg(core: Core) {
   });
 
   pkg.createEventSchema({
+    event: "MGLoaded",
+    name: "Macrograph Started",
+    generateIO({ io }) {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+          name: "",
+        }),
+      };
+    },
+    run({ ctx, data, io }) {
+      ctx.exec(io.exec);
+    },
+  });
+
+  pkg.createEventSchema({
     event: "custom",
     name: "Custom Event",
     generateIO({ io }) {
@@ -1913,7 +1929,7 @@ export function pkg(core: Core) {
 
   pkg.createNonEventSchema({
     name: "Stringify JSON",
-    variant: "Exec",
+    variant: "Pure",
     generateIO({ io }) {
       return {
         in: io.dataInput({
@@ -2015,6 +2031,10 @@ export function pkg(core: Core) {
       ctx.setOutput(io.output, out);
     },
   });
+
+  setTimeout(() => {
+    pkg.emitEvent({ name: "MGLoaded", data: {} });
+  }, 1);
 
   return pkg;
 }

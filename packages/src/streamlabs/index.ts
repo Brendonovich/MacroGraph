@@ -153,7 +153,7 @@ export function pkg(core: Core) {
         amount: io.dataOutput({
           name: "Amount",
           id: "amount",
-          type: t.string(),
+          type: t.float(),
         }),
         formattedAmount: io.dataOutput({
           name: "Formatted Amount",
