@@ -3,7 +3,6 @@ import {
   BaseType,
   Graph,
   Node,
-  PrimitiveType,
   PropertyValue,
   t,
 } from "@macrograph/core";

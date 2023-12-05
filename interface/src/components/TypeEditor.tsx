@@ -77,9 +77,9 @@ export function TypeEditor(props: {
                 </button>
               ))}
             </div>
-            <span>Arities</span>
+            <span>Containers</span>
             <div class="flex flex-col pl-1 text-sm">
-              {ARITIES.map(([name, apply]) => (
+              {CONTAINERS.map(([name, apply]) => (
                 <button
                   class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
                   onClick={() => {
@@ -104,7 +104,7 @@ export function TypeEditor(props: {
 
 const PRIMITIVES = [t.string(), t.int(), t.float(), t.bool()];
 
-const ARITIES = [
+const CONTAINERS = [
   ["Option", t.option],
   ["List", t.list],
   ["Map", t.map],

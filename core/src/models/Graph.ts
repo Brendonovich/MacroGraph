@@ -122,10 +122,10 @@ export class Graph {
     return box;
   }
 
-  createVariable(args: Omit<VariableArgs, "id">) {
+  createVariable(args: Omit<VariableArgs, "id" | "owner">) {
     const id = this.generateId();
 
-    this.variables.push(new Variable({ ...args, id }));
+    this.variables.push(new Variable({ ...args, id, owner: this }));
 
     this.project.save();
 
@@ -143,7 +143,8 @@ export class Graph {
     const index = this.variables.findIndex((v) => v.id === id);
     if (index === -1) return;
 
-    this.variables.splice(index, 1);
+    const v = this.variables.splice(index, 1);
+    v.forEach((v) => v.dispose());
   }
 
   connectPins(
@@ -285,7 +286,7 @@ export class Graph {
 
     graph.idCounter = data.nodeIdCounter;
 
-    graph.variables = data.variables.map((v) => Variable.deserialize(v));
+    graph.variables = data.variables.map((v) => Variable.deserialize(v, graph));
 
     batch(() => {
       graph.nodes = new ReactiveMap(
