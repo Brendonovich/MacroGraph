@@ -1,3 +1,4 @@
+import { ReactiveMap } from "@solid-primitives/map";
 import {
   t,
   Option,
@@ -68,7 +69,6 @@ export function serializeValue(rawValue: any, type: t.Any): any {
 }
 
 export function deserializeValue(rawValue: any, type: t.Any): any {
-  console.log({ rawValue, type });
   if (type instanceof t.Primitive) return rawValue;
 
   if (type instanceof t.List)
@@ -76,7 +76,7 @@ export function deserializeValue(rawValue: any, type: t.Any): any {
       deserializeValue(item, type.item)
     );
   if (type instanceof t.Map) {
-    const val = new Map<string, any>();
+    const val = new ReactiveMap<string, any>();
 
     for (const [key, innerValue] of Object.entries(rawValue)) {
       val.set(key, deserializeValue(innerValue, type.value));

@@ -58,10 +58,19 @@ export class Variable {
       createEffect(
         on(
           () => trackDeep(self.value),
-          (value) => {
-            console.log(value);
-            if (this.owner instanceof Graph) this.owner.project.save();
-            else this.owner.save();
+          () => {
+            if (self.owner instanceof Graph) self.owner.project.save();
+            else self.owner.save();
+          }
+        )
+      );
+
+      createEffect(
+        on(
+          () => self.type,
+          () => {
+            if (self.owner instanceof Graph) self.owner.project.save();
+            else self.owner.save();
           }
         )
       );
@@ -69,7 +78,7 @@ export class Variable {
 
     this.dispose = dispose;
 
-    return;
+    return self;
   }
 
   serialize(): z.infer<typeof SerializedVariable> {
