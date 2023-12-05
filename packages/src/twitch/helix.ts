@@ -354,6 +354,10 @@ export type Helix = ReturnType<typeof createHelix>;
 
 export const UserSubscription = createStruct("User Subscription", (s) => ({
   tier: s.field("Tier", t.string()),
+  userId: s.field("user ID", t.string()),
+  userLogin: s.field("user Login", t.string()),
+  userName: s.field("user Name", t.string()),
+  planName: s.field("Plan Name", t.string()),
   gifted: s.field("Gifted", t.bool()),
   gifterName: s.field("Gifter Name", t.option(t.string())),
   gifterDisplayName: s.field("Gifter Display Name", t.option(t.string())),
@@ -804,26 +808,31 @@ export function register(pkg: Package, { client, user }: Helix) {
       };
     },
     async run({ ctx, io }) {
-      let response = await client.subscriptions.get(z.any(), {
+      let data = await client.subscriptions.get(z.any(), {
         body: new URLSearchParams({
           user_id: ctx.getInput(io.userId),
           broadcaster_id: userId().unwrap(),
         }),
       });
 
-      const data = response.data[0];
-      ctx.setOutput(
-        io.out,
-        Maybe(data).map((data) =>
-          UserSubscription.create({
-            tier: data.tier,
-            gifted: data.isGift,
-            gifterName: Maybe(data.gifterName),
-            gifterDisplayName: Maybe(data.gifterDisplayName),
-            gifterId: Maybe(data.gifterId),
-          })
-        )
+      console.log(data);
+
+      let struct = Maybe(data).map((data) =>
+        UserSubscription.create({
+          tier: data.tier,
+          userId: data.user_id,
+          userLogin: data.user_login,
+          userName: data.user_name,
+          planName: data.plan_name,
+          gifted: data.is_gift,
+          gifterName: Maybe(data.gifter_login),
+          gifterDisplayName: Maybe(data.gifter_name),
+          gifterId: Maybe(data.gifter_id),
+        })
       );
+
+      console.log(struct);
+      ctx.setOutput(io.out, struct);
     },
   });
 
