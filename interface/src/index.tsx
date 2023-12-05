@@ -44,6 +44,7 @@ import {
   writeClipboardItemToClipboard,
 } from "./clipboard";
 import { CustomEventList } from "./components/CustomEvents";
+import "./global.css";
 
 export { useCore } from "./contexts";
 

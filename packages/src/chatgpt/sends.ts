@@ -87,7 +87,7 @@ export function register(pkg: Pkg, state: Ctx) {
       let history = ctx.getInput(io.historyIn).unwrapOr([]);
       let array = [] as ChatCompletionAssistantMessageParam[];
       history.forEach((item) => {
-        array.push(jsonToJS(item));
+        array.push(jsonToJS(item as any));
       });
       let message = "";
       let stream = await state

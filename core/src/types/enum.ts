@@ -40,6 +40,8 @@ export class LazyEnumVariants<Variants extends EnumVariants> {
 }
 
 export class Enum<Variants extends EnumVariants = any> {
+  source?: { variant: "package"; package: string } | { variant: "custom" };
+
   constructor(
     public name: string,
     variants: Variants | LazyEnumVariants<Variants>
@@ -170,6 +172,10 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
 
   eq(other: t.Any): boolean {
     return other instanceof t.Enum && this.inner === other.inner;
+  }
+
+  serialize() {
+    throw new Error("Enum cannot be serialized yet!");
   }
 }
 

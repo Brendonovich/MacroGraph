@@ -30,4 +30,8 @@ export class ListType<T extends BaseType> extends BaseType<t.infer<T>[]> {
   eq(other: t.Any): boolean {
     return other instanceof t.List && this.item.eq(other.item);
   }
+
+  serialize() {
+    return { variant: "list", item: this.item.serialize() };
+  }
 }

@@ -9,7 +9,13 @@ import {
   Wildcard,
   WildcardType,
 } from ".";
-import { BoolType, FloatType, IntType, StringType } from "./primitive";
+import {
+  BoolType,
+  FloatType,
+  IntType,
+  StringType,
+  BasePrimitiveType,
+} from "./primitive";
 import { Struct, StructType } from "./struct";
 
 const INT = new IntType();
@@ -52,6 +58,7 @@ export {
   FloatType as Float,
   BoolType as Bool,
   StructType as Struct,
+  BasePrimitiveType as Primitive,
 };
 
 export type { AnyType as Any, infer };

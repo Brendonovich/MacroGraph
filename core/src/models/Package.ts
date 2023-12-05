@@ -37,6 +37,9 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
   ctx?: TCtx;
   SettingsUI?: ReturnType<typeof lazy>;
 
+  structs = new Map<string, Struct>();
+  enums = new Map<string, Enum>();
+
   constructor(args: PackageArgs<TCtx>) {
     this.name = args.name;
     this.ctx = args.ctx;
@@ -148,7 +151,39 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     this.core?.emitEvent(this, event as any);
   }
 
-  registerType(_: Enum<any> | Struct<any>) {}
+  registerType(type: Enum<any> | Struct<any>) {
+    if (type instanceof Enum) {
+      this.enums.set(type.name, type);
+    } else {
+      this.structs.set(type.name, type);
+    }
+  }
+
+  createEnum<Variants extends EnumVariants>(
+    name: string,
+    builderFn: (t: EnumBuilder) => Variants | LazyEnumVariants<Variants>
+  ) {
+    const builder = new EnumBuilder();
+
+    const e = new Enum(name, builderFn(builder));
+
+    this.registerType(e);
+
+    return e;
+  }
+
+  createStruct<Fields extends StructFields>(
+    name: string,
+    builderFn: (t: StructBuilder) => Fields | LazyStructFields<Fields>
+  ) {
+    const builder = new StructBuilder();
+
+    const s = new Struct(name, builderFn(builder));
+
+    this.registerType(s);
+
+    return s;
+  }
 }
 
 export function createEnum<Variants extends EnumVariants>(
@@ -157,9 +192,7 @@ export function createEnum<Variants extends EnumVariants>(
 ) {
   const builder = new EnumBuilder();
 
-  const e = new Enum(name, builderFn(builder));
-
-  return e;
+  return new Enum(name, builderFn(builder));
 }
 
 export function createStruct<Fields extends StructFields>(
@@ -168,9 +201,7 @@ export function createStruct<Fields extends StructFields>(
 ) {
   const builder = new StructBuilder();
 
-  const e = new Struct(name, builderFn(builder));
-
-  return e;
+  return new Struct(name, builderFn(builder));
 }
 
 export type Events<TEventsMap extends EventsMap = EventsMap> =

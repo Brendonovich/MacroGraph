@@ -88,7 +88,7 @@ export function pkg() {
     run({ ctx, io, data }) {
       if (!io) return;
 
-      io.outputs.forEach((o) => ctx.setOutput(o, data[Number(o.id)]));
+      io.outputs.forEach((o) => ctx.setOutput(o, data[o.id]));
 
       ctx.exec(io.exec);
     },

@@ -20,6 +20,8 @@ export class LazyStructFields<Fields extends StructFields = StructFields> {
 }
 
 export class Struct<Fields extends StructFields = StructFields> {
+  source?: { package: string } | "project";
+
   constructor(public name: string, fields: Fields | LazyStructFields<Fields>) {
     if (fields instanceof LazyStructFields) {
       this._fields = {
@@ -53,6 +55,24 @@ export class Struct<Fields extends StructFields = StructFields> {
 
   create(data: InferStruct<this>): InferStruct<this> {
     return data;
+  }
+
+  static refSchema = z.union([
+    z.object({ source: z.literal("project"), name: z.string() }),
+    z.object({
+      source: z.literal("package"),
+      package: z.string(),
+      name: z.string(),
+    }),
+  ]);
+
+  getRef(): z.infer<typeof Struct.refSchema> {
+    const source = this.source;
+
+    if (!source) throw new Error(`Struct ${this.name} has no source!`);
+
+    if (source === "project") return { source: "project", name: this.name };
+    else return { source: "package", package: source.package, name: this.name };
   }
 }
 
@@ -111,6 +131,14 @@ export class StructType<TStruct extends Struct> extends BaseType<
 
   eq(other: t.Any): boolean {
     return other instanceof t.Struct && other.struct === this.struct;
+  }
+
+  serialize() {
+    throw new Error("Struct cannot be serialized yet!");
+  }
+
+  deserialize() {
+    return this;
   }
 }
 

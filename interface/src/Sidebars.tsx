@@ -1,4 +1,11 @@
-import { Graph, Node, PrimitiveType, PropertyValue, t } from "@macrograph/core";
+import {
+  BasePrimitiveType,
+  BaseType,
+  Graph,
+  Node,
+  PropertyValue,
+  t,
+} from "@macrograph/core";
 import { Switch, For, Match, Show, createMemo, createSignal } from "solid-js";
 import { AiOutlineCheck, AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
 import { BsX } from "solid-icons/bs";
@@ -11,6 +18,8 @@ import {
   SelectInput,
   TextInput,
 } from "./components/ui";
+import { TypeEditor } from "./components/TypeEditor";
+import { serializeValue } from "@macrograph/core/src/types/value";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (
@@ -105,63 +114,74 @@ export function GraphSidebar(props: { graph: Graph }) {
                     </Switch>
                   </div>
 
-                  <div class="flex flex-row items-center gap-2 text-sm">
-                    <span>Type</span>
-                    <SelectInput<PrimitiveType>
-                      options={[t.string(), t.int(), t.float(), t.bool()]}
-                      optionValue={(o) => o.primitiveVariant()}
-                      optionTextValue={(o) => o.toString()}
-                      value={variable.type}
-                      getLabel={(v) => v.toString()}
-                      onChange={(v) => {
-                        if (variable.type.eq(v)) return;
+                  <TypeEditor
+                    type={variable.type}
+                    onChange={(type) => (variable.type = type)}
+                  />
 
-                        variable.type = v;
-                        variable.value = v.default();
-                      }}
-                    />
-                  </div>
-
-                  <div class="flex flex-row items-center gap-2 text-sm">
+                  <div class="flex flex-row items-start gap-2 text-sm">
                     <span>Value</span>
                     <Switch>
-                      <Match when={variable.type.primitiveVariant() === "bool"}>
-                        <CheckBox
-                          value={variable.value}
-                          onChange={(n) =>
-                            props.graph.setVariableValue(variable.id, n)
-                          }
-                        />
+                      <Match
+                        when={
+                          variable.type instanceof BasePrimitiveType &&
+                          variable.type
+                        }
+                      >
+                        {(type) => (
+                          <Switch>
+                            <Match when={type().primitiveVariant() === "bool"}>
+                              <CheckBox
+                                value={variable.value}
+                                onChange={(n) =>
+                                  props.graph.setVariableValue(variable.id, n)
+                                }
+                              />
+                            </Match>
+                            <Match
+                              when={type().primitiveVariant() === "string"}
+                            >
+                              <TextInput
+                                value={variable.value}
+                                onChange={(n) =>
+                                  props.graph.setVariableValue(variable.id, n)
+                                }
+                              />
+                            </Match>
+                            <Match when={type().primitiveVariant() === "int"}>
+                              <IntInput
+                                initialValue={variable.value}
+                                value={variable.value}
+                                onChange={(n) =>
+                                  props.graph.setVariableValue(variable.id, n)
+                                }
+                              />
+                            </Match>
+                            <Match when={type().primitiveVariant() === "float"}>
+                              <FloatInput
+                                initialValue={variable.value}
+                                value={variable.value}
+                                onChange={(n) =>
+                                  props.graph.setVariableValue(variable.id, n)
+                                }
+                              />
+                            </Match>
+                          </Switch>
+                        )}
                       </Match>
                       <Match
-                        when={variable.type.primitiveVariant() === "string"}
+                        when={
+                          variable.type instanceof t.List ||
+                          variable.type instanceof t.Map
+                        }
                       >
-                        <TextInput
-                          value={variable.value}
-                          onChange={(n) =>
-                            props.graph.setVariableValue(variable.id, n)
-                          }
-                        />
-                      </Match>
-                      <Match when={variable.type.primitiveVariant() === "int"}>
-                        <IntInput
-                          initialValue={variable.value}
-                          value={variable.value}
-                          onChange={(n) =>
-                            props.graph.setVariableValue(variable.id, n)
-                          }
-                        />
-                      </Match>
-                      <Match
-                        when={variable.type.primitiveVariant() === "float"}
-                      >
-                        <FloatInput
-                          initialValue={variable.value}
-                          value={variable.value}
-                          onChange={(n) =>
-                            props.graph.setVariableValue(variable.id, n)
-                          }
-                        />
+                        <div class="flex-1 whitespace-pre-wrap max-w-full">
+                          {JSON.stringify(
+                            serializeValue(variable.value, variable.type),
+                            null,
+                            4
+                          )}
+                        </div>
                       </Match>
                     </Switch>
                   </div>

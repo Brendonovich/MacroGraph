@@ -528,4 +528,8 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
   eq(other: t.Any): boolean {
     return other instanceof t.Option && this.inner.eq(other.inner);
   }
+
+  serialize() {
+    return { variant: "option", inner: this.inner.serialize() };
+  }
 }

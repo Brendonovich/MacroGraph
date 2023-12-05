@@ -1,8 +1,10 @@
 import { z, ZodType } from "zod";
+import { ReactiveMap } from "@solid-primitives/map";
+
 import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
-export type MapValue<T> = Map<string, T>;
+export type MapValue<T> = ReactiveMap<string, T>;
 
 export class MapType<TValue extends BaseType<any>> extends BaseType<
   MapValue<t.infer<TValue>>
@@ -12,7 +14,7 @@ export class MapType<TValue extends BaseType<any>> extends BaseType<
   }
 
   default() {
-    return new Map<string, t.infer<TValue>>();
+    return new ReactiveMap<string, t.infer<TValue>>();
   }
 
   variant(): TypeVariant {
@@ -33,5 +35,9 @@ export class MapType<TValue extends BaseType<any>> extends BaseType<
 
   eq(other: t.Any): boolean {
     return other instanceof t.Map && this.value.eq(other.value);
+  }
+
+  serialize() {
+    return { variant: "map", value: this.value.serialize() };
   }
 }

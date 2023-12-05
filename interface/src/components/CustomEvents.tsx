@@ -1,23 +1,12 @@
 import { For, Match, Switch, createSignal } from "solid-js";
-import { Graph, PrimitiveType, t } from "@macrograph/core";
-import { CgImport } from "solid-icons/cg";
-
-import { useCore, useCoreContext } from "../contexts";
-import { useUIStore } from "../UIStore";
-import { SidebarSection } from "./Sidebar";
-import { deserializeClipboardItem, readFromClipboard } from "../clipboard";
-import { GraphItem } from "./ProjectSidebar/GraphItem";
 import { AiOutlineCheck, AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
 import { BsX } from "solid-icons/bs";
-import { SelectInput, CheckBox, TextInput, IntInput, FloatInput } from "./ui";
 
-// React component to show a list of projects
-interface Props {
-  currentGraph?: number;
-  onGraphClicked(graph: Graph): void;
-}
+import { useCoreContext } from "../contexts";
+import { SidebarSection } from "./Sidebar";
+import { TypeEditor } from "./TypeEditor";
 
-export const CustomEventList = (props: Props) => {
+export const CustomEventList = () => {
   const ctx = useCoreContext();
 
   return (
@@ -192,19 +181,11 @@ export const CustomEventList = (props: Props) => {
                           </Switch>
                         </div>
 
-                        <div class="flex flex-row items-center gap-2 text-sm">
-                          <span>Type</span>
-                          <SelectInput<PrimitiveType>
-                            options={[t.string(), t.int(), t.float(), t.bool()]}
-                            optionValue={(o) => o.primitiveVariant()}
-                            optionTextValue={(o) => o.toString()}
-                            value={field.type}
-                            getLabel={(v) => v.toString()}
-                            onChange={(v) => {
-                              if (field.type.eq(v)) return;
-
-                              field.type = v;
-                              event.editFieldType(id, v);
+                        <div class="flex flex-row justify-start">
+                          <TypeEditor
+                            type={field.type}
+                            onChange={(type) => {
+                              event.editFieldType(field.id, type as any);
                             }}
                           />
                         </div>

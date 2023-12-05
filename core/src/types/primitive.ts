@@ -24,6 +24,10 @@ export abstract class BasePrimitiveType<TOut> extends BaseType<TOut> {
       other.primitiveVariant() === this.primitiveVariant()
     );
   }
+
+  serialize() {
+    return this.primitiveVariant();
+  }
 }
 
 export class IntType extends BasePrimitiveType<number> {

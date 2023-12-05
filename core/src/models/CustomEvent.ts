@@ -3,12 +3,13 @@ import { z } from "zod";
 import { batch } from "solid-js";
 
 import { Project } from "./Project";
-import { PrimitiveType, t } from "../types";
+import { t, PrimitiveType } from "../types";
+import { SerializedType, deserializeType } from "../types/serialized";
 
 type CustomEventField = {
   id: number;
   name: string;
-  type: PrimitiveType;
+  type: t.Any;
 };
 
 export interface EventArgs {
@@ -17,22 +18,22 @@ export interface EventArgs {
   project: Project;
 }
 
+// const Source = z.discriminatedUnion("variant", [
+//   z.object({ variant: z.literal("package"), package: z.string() }),
+//   z.object({ variant: z.literal("custom") }),
+// ]);
+
 const SerializedField = z.object({
   id: z.number(),
   name: z.string(),
-  type: z.union([
-    z.literal("float"),
-    z.literal("int"),
-    z.literal("string"),
-    z.literal("bool"),
-  ]),
+  type: SerializedType,
 });
 
 export const SerializedEvent = z.object({
   id: z.coerce.number(),
   name: z.string(),
   fields: z.array(SerializedField).default([]),
-  fieldIdCounter: z.number(),
+  fieldIdCounter: z.number().default(0),
 });
 
 export class CustomEvent {
@@ -91,7 +92,7 @@ export class CustomEvent {
       name: this.name,
       fields: this.fields.map((field) => ({
         ...field,
-        type: field.type.primitiveVariant(),
+        type: field.type.serialize(),
       })),
       fieldIdCounter: this.fieldIdCounter,
     };
@@ -111,18 +112,7 @@ export class CustomEvent {
         return {
           id: serializedField.id,
           name: serializedField.name,
-          type: (() => {
-            switch (serializedField.type) {
-              case "string":
-                return t.string();
-              case "float":
-                return t.float();
-              case "int":
-                return t.int();
-              case "bool":
-                return t.bool();
-            }
-          })(),
+          type: deserializeType(serializedField.type),
         };
       });
     });
