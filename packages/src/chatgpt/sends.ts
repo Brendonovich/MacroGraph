@@ -57,7 +57,7 @@ export function register(pkg: Pkg, state: Ctx) {
         historyIn: io.dataInput({
           id: "historyIn",
           name: "Chat History",
-          type: t.option(t.list(t.enum(JSON))),
+          type: t.list(t.map(t.string())),
         }),
         stream: io.scopeOutput({
           id: "stream",
@@ -84,11 +84,14 @@ export function register(pkg: Pkg, state: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      let history = ctx.getInput(io.historyIn).unwrapOr([]);
+      let history = ctx.getInput(io.historyIn);
+      console.log(history);
       let array = [] as ChatCompletionAssistantMessageParam[];
       history.forEach((item) => {
-        array.push(jsonToJS(item as any));
+        // console.log(item);
+        array.push({ role: item.get("role"), content: item.get("content") });
       });
+      console.log(array);
       let message = "";
       let stream = await state
         .state()

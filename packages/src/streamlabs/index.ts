@@ -132,7 +132,10 @@ export function pkg(core: Core) {
         data.giftMembershipsLevelName ?? ""
       );
       ctx.setOutput(io.membershipMessageId, data.membershipMessageId ?? "");
-      ctx.setOutput(io.giftMembershipsCount, data.giftMembershipsCount ?? 0);
+      ctx.setOutput(
+        io.giftMembershipsCount,
+        Number(data.giftMembershipsCount ?? "0")
+      );
       ctx.exec(io.exec);
     },
   });
@@ -179,7 +182,7 @@ export function pkg(core: Core) {
     },
     run({ ctx, data, io }) {
       ctx.setOutput(io.name, data.name ?? "");
-      ctx.setOutput(io.amount, (data.amount ?? 0).toString());
+      ctx.setOutput(io.amount, data.amount ?? 0);
       ctx.setOutput(io.formattedAmount, data.formattedAmount ?? "");
       ctx.setOutput(io.message, data.message ?? "");
       ctx.setOutput(io.currency, data.currency ?? "");
@@ -215,7 +218,7 @@ export function pkg(core: Core) {
         amount: io.dataOutput({
           name: "Amount",
           id: "amount",
-          type: t.string(),
+          type: t.int(),
         }),
         comment: io.dataOutput({
           name: "Comment",
@@ -228,7 +231,7 @@ export function pkg(core: Core) {
       ctx.setOutput(io.name, data.name ?? "");
       ctx.setOutput(io.currency, data.currency ?? "");
       ctx.setOutput(io.displayString, data.displayString ?? "");
-      ctx.setOutput(io.amount, (data.amount ?? 0).toString());
+      ctx.setOutput(io.amount, data.amount ?? 0);
       ctx.setOutput(io.comment, data.comment ?? "");
       ctx.exec(io.exec);
     },
