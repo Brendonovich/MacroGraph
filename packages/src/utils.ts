@@ -1975,6 +1975,36 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Copy",
+    variant: "Exec",
+    generateIO({ io }) {
+      const w = io.wildcard("");
+
+      return {
+        in: io.dataInput({
+          id: "",
+          type: t.wildcard(w),
+        }),
+        out: io.dataOutput({
+          id: "",
+          type: t.wildcard(w),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      let data = ctx.getInput(io.in);
+
+      if (Array.isArray(data)) {
+        ctx.setOutput(io.out, [...data]);
+      } else if (data instanceof Map) {
+        ctx.setOutput(io.out, new Map(data));
+      } else {
+        ctx.setOutput(io.out, ctx.getInput(io.in));
+      }
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Current Timestamp (ms)",
     variant: "Exec",
     generateIO({ io }) {
