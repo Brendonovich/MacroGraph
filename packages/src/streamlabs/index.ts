@@ -218,7 +218,7 @@ export function pkg(core: Core) {
         amount: io.dataOutput({
           name: "Amount",
           id: "amount",
-          type: t.int(),
+          type: t.string(),
         }),
         comment: io.dataOutput({
           name: "Comment",
@@ -231,7 +231,7 @@ export function pkg(core: Core) {
       ctx.setOutput(io.name, data.name ?? "");
       ctx.setOutput(io.currency, data.currency ?? "");
       ctx.setOutput(io.displayString, data.displayString ?? "");
-      ctx.setOutput(io.amount, data.amount ?? 0);
+      ctx.setOutput(io.amount, data.amount ?? "");
       ctx.setOutput(io.comment, data.comment ?? "");
       ctx.exec(io.exec);
     },

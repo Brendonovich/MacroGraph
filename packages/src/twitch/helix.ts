@@ -690,6 +690,11 @@ export function register(pkg: Package, { client, user }: Helix) {
           id: "broadcasterId",
           type: t.string(),
         }),
+        live: io.dataOutput({
+          name: "Stream Live",
+          id: "live",
+          type: t.bool(),
+        }),
         broadcasterIdOut: io.dataOutput({
           name: "Broadcaster ID",
           id: "broadcasterId",
@@ -749,6 +754,8 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       });
       const info = data;
+      console.log(info);
+      ctx.setOutput(io.live, !Array.isArray(info));
       ctx.setOutput(io.broadcasterIdOut, ctx.getInput(io.broadcasterIdIn));
       ctx.setOutput(io.broadcasterLogin, info.user_login);
       ctx.setOutput(io.broadcasterDisplay, info.user_name);
