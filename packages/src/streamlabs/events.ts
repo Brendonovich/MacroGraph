@@ -35,7 +35,7 @@ export const EVENT = z.discriminatedUnion("type", [
         name: z.string().nullable().optional(),
         currency: z.string().nullable().optional(),
         displayString: z.string().nullable().optional(),
-        amount: z.number().nullable().optional(),
+        amount: z.string().nullable().optional(),
         comment: z.string().nullable().optional(),
       }),
     ]),
@@ -53,9 +53,8 @@ export const EVENT = z.discriminatedUnion("type", [
           z.union([
             z.object({
               giftMembershipsLevelName: z.string().nullable().optional(),
-              giftMembershipsCount: z.string().nullable().optional(),
+              giftMembershipsCount: z.coerce.number().nullable().optional(),
               membershipMessageId: z.string().nullable().optional(),
-              youtubeMembershipGiftId: z.string().nullable().optional(),
             }),
             z.object({
               membershipLevelName: z.string().nullable().optional(),
