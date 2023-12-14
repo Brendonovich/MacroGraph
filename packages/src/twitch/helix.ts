@@ -799,6 +799,51 @@ export function register(pkg: Package, { client, user }: Helix) {
   });
 
   pkg.createNonEventSchema({
+    name: "Get Hype Train",
+    variant: "Exec",
+    generateIO: ({ io }) => {
+      return {
+        cooldownEndTime: io.dataOutput({
+          name: "Cooldown End Time",
+          id: "cooldownEndTime",
+          type: t.string(),
+        }),
+        expires_at: io.dataOutput({
+          name: "Expires At",
+          id: "expiresAt",
+          type: t.string(),
+        }),
+        level: io.dataOutput({
+          name: "Level",
+          id: "level",
+          type: t.int(),
+        }),
+        goal: io.dataOutput({
+          name: "Goal",
+          id: "goal",
+          type: t.int(),
+        }),
+        total: io.dataOutput({
+          name: "Total",
+          id: "total",
+          type: t.int(),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      const data = await client.hypetrain.events.get(z.any(), {
+        body: new URLSearchParams({ broadcaster_id: userId().unwrap() }),
+      });
+
+      ctx.setOutput(io.cooldownEndTime, data.event_data.cooldown_end_time);
+      ctx.setOutput(io.expires_at, data.event_data.expires_at);
+      ctx.setOutput(io.level, data.event_data.level);
+      ctx.setOutput(io.goal, data.event_data.goal);
+      ctx.setOutput(io.total, data.event_data.total);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Check User Subscription",
     variant: "Exec",
     generateIO: ({ io }) => {
