@@ -47,7 +47,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
         port: io.dataOutput({
           id: "port",
           name: "WS Port",
-          type: t.string(),
+          type: t.int(),
         }),
         data: io.dataOutput({
           id: "data",
