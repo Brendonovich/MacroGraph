@@ -22,7 +22,7 @@ export * as twitch from "./twitch";
 export * as utils from "./utils";
 export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
-export * as chatgpt from "./chatgpt";
+export * as openai from "./openai";
 export * as speakerbot from "./speakerbot";
 export * as variables from "./variables";
 export * as customEvents from "./customEvents";

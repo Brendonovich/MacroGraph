@@ -10,7 +10,7 @@ export function pkg() {
   const ctx = createCtx();
 
   const pkg = new Package<Event>({
-    name: "ChatGPT",
+    name: "OpenAi",
     ctx,
     SettingsUI: () => import("./Settings"),
   });
