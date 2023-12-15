@@ -39,12 +39,7 @@ export function createEventSub(helix: Helix, onEvent: OnEvent) {
                       helix.client.eventsub.subscriptions.post(z.any(), {
                         body: JSON.stringify({
                           type,
-                          version:
-                            type == "channel.follow"
-                              ? "2"
-                              : type == "channel.ad_break.begin"
-                              ? "beta"
-                              : "1",
+                          version: type == "channel.follow" ? "2" : "1",
                           condition: {
                             broadcaster_user_id: userId,
                             moderator_user_id: userId,

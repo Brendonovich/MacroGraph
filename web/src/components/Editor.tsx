@@ -60,7 +60,7 @@ export default () => {
     pkgs.spotify.pkg,
     pkgs.twitch.pkg,
     pkgs.utils.pkg,
-    pkgs.chatgpt.pkg,
+    pkgs.openai.pkg,
     pkgs.speakerbot.pkg,
     pkgs.variables.pkg,
     pkgs.customEvents.pkg,

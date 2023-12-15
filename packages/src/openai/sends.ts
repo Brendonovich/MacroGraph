@@ -24,12 +24,6 @@ const message = createStruct("message", (s) => ({
   content: s.field("content", t.string()),
 }));
 
-const choices = createStruct("choices", (s) => ({
-  finish_reason: s.field("Finish Reason", t.string()),
-  index: s.field("index", t.int()),
-  message: s.field("message", t.struct(message)),
-}));
-
 const model = createEnum("model", (e) => [
   e.variant("gpt-3.5-turbo"),
   e.variant("gpt-4"),
@@ -116,6 +110,46 @@ export function register(pkg: Pkg, state: Ctx) {
         message += chunk.choices[0]?.delta.content;
         ctx.execScope(io.stream, { stream: message });
       }
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Dall E Image Generation",
+    variant: "Exec",
+    generateIO({ io }) {
+      return {
+        prompt: io.dataInput({
+          id: "prompt",
+          name: "Prompt",
+          type: t.string(),
+        }),
+        url: io.dataOutput({
+          id: "url",
+          name: "Image URL",
+          type: t.string(),
+        }),
+        revised: io.dataOutput({
+          id: "revised",
+          name: "Revised Prompt",
+          type: t.string(),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      let stream = await state
+        .state()
+        .unwrap()
+        .images.generate({
+          model: "dall-e-3",
+          prompt: ctx.getInput(io.prompt),
+          response_format: "url",
+          size: "1024x1024",
+          style: "vivid",
+        });
+
+      console.log(stream.data[0]?.url);
+      ctx.setOutput(io.url, stream.data[0]?.url);
+      ctx.setOutput(io.revised, stream.data[0]?.revised_prompt);
     },
   });
 }
