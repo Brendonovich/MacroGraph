@@ -1,5 +1,12 @@
-import { AnyType, BaseType, Maybe, PrimitiveType, t } from "../types";
-import { Wildcard } from "../types/wildcard";
+import {
+  Wildcard,
+  AnyType,
+  BaseType,
+  Maybe,
+  PrimitiveType,
+  t,
+} from "@macrograph/typesystem";
+
 import {
   DataInput,
   DataOutput,
@@ -13,7 +20,6 @@ import {
 import { Package } from "./Package";
 import { Node } from "./Node";
 import { Graph } from "./Graph";
-import { untrack } from "solid-js";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
 

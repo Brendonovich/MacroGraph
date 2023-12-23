@@ -1,4 +1,5 @@
-import { Maybe, OnEvent, WsProvider } from "@macrograph/core";
+import { OnEvent, WsProvider } from "@macrograph/core";
+import { Maybe } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 
 export const WS_PORTS_LOCALSTORAGE = "wsPorts";

@@ -6,6 +6,7 @@
     { "path": "./app" },
     { "path": "./web" },
     { "path": "./interface" },
-    { "path": "./ui" }
+    { "path": "./ui" },
+    { "path": "./typesystem" }
   ]
 }

@@ -1,4 +1,6 @@
-import { Package, Maybe, t } from "@macrograph/core";
+import { Package } from "@macrograph/core";
+import { Maybe, t } from "@macrograph/typesystem";
+import { ReactiveMap } from "@solid-primitives/map";
 
 export function pkg() {
   const pkg = new Package({
@@ -130,7 +132,8 @@ export function pkg() {
       };
     },
     run({ ctx, io }) {
-      const map = new Map<string, any>();
+      const map = new ReactiveMap<string, any>();
+
       io.inputs.forEach((input) => {
         map.set(ctx.getInput(input.key), ctx.getInput(input.value));
       });

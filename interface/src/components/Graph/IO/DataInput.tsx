@@ -1,17 +1,17 @@
 import clsx from "clsx";
+import { DataInput as DataInputModel } from "@macrograph/core";
 import {
   AnyType,
   BasePrimitiveType,
   BaseType,
-  DataInput as DataInputModel,
   Enum,
   EnumType,
   EnumVariants,
   PrimitiveType,
   WildcardType,
   t,
-} from "@macrograph/core";
-import { Show, Switch, Match, createEffect } from "solid-js";
+} from "@macrograph/typesystem";
+import { Show, Switch, Match } from "solid-js";
 
 import { CheckBox, EnumInput, FloatInput, IntInput, TextInput } from "../../ui";
 import { DataPin } from ".";

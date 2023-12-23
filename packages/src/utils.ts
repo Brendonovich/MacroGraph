@@ -1,4 +1,11 @@
 import {
+  DataInput,
+  ScopeOutput,
+  Package,
+  Core,
+  DataOutput,
+} from "@macrograph/core";
+import {
   Maybe,
   Option,
   Some,
@@ -6,16 +13,10 @@ import {
   StructFields,
   Enum,
   EnumVariants,
-  DataInput,
   None,
-  ScopeOutput,
-  Package,
-  Core,
-  DataOutput,
   Struct,
-  PropertyDef,
-} from "@macrograph/core";
-import { JSON, jsonToJS } from "./json";
+} from "@macrograph/typesystem";
+import { JSON, jsonToJS } from "@macrograph/json";
 
 export function pkg(core: Core) {
   const pkg = new Package({

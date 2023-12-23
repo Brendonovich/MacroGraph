@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
 import { createSignal, Match, Show, Suspense, Switch } from "solid-js";
-import { None, Some } from "@macrograph/core";
+import { None, Some } from "@macrograph/typesystem";
 import { Button, Input } from "@macrograph/ui";
 
 import { type Ctx } from ".";

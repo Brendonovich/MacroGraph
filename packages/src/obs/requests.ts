@@ -1,15 +1,11 @@
-import {
-  createEnum,
-  createStruct,
-  InferEnum,
-  Maybe,
-  Package,
-  t,
-} from "@macrograph/core";
-import { JSON, jsonToJS, jsToJSON } from "../json";
-import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
+import { createEnum, createStruct, Package } from "@macrograph/core";
+import { InferEnum, Maybe, t } from "@macrograph/typesystem";
+import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
 import { EventTypes } from "obs-websocket-js";
+
+import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
 import { Ctx } from "./ctx";
+import { ReactiveMap } from "@solid-primitives/map";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -1077,7 +1073,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       });
       ctx.setOutput(
         io.inputSettings,
-        new Map(
+        new ReactiveMap(
           Object.entries(data.inputSettings).map(([key, value]) => [
             key,
             jsToJSON(value)!,

@@ -1,13 +1,11 @@
 import {
   Core,
-  InferEnum,
-  Maybe,
   OAuthToken,
   Package,
   createEnum,
   createStruct,
-  t,
 } from "@macrograph/core";
+import { InferEnum, Maybe, t } from "@macrograph/typesystem";
 import { Accessor } from "solid-js";
 import { z } from "zod";
 

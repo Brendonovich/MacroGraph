@@ -1,4 +1,5 @@
-import { Core, Package, t } from "@macrograph/core";
+import { Core, Package } from "@macrograph/core";
+import { t } from "@macrograph/typesystem";
 
 export function pkg(core: Core) {
   const pkg = new Package({ name: "HTTP Requests" });

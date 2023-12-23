@@ -1,4 +1,4 @@
-import { Enum, EnumVariants } from "@macrograph/core";
+import { Enum, EnumVariants } from "@macrograph/typesystem";
 import { Select } from "@kobalte/core";
 import clsx from "clsx";
 import { ComponentProps } from "solid-js";

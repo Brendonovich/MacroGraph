@@ -102,6 +102,9 @@ importers:
 
   core:
     dependencies:
+      '@macrograph/typesystem':
+        specifier: workspace:*
+        version: link:../typesystem
       '@rspc/client':
         specifier: 0.0.0-main-6ed8cc98
         version: 0.0.0-main-6ed8cc98
@@ -154,6 +157,9 @@ importers:
       '@macrograph/packages':
         specifier: workspace:*
         version: link:../packages
+      '@macrograph/typesystem':
+        specifier: workspace:^
+        version: link:../typesystem
       '@modular-forms/solid':
         specifier: ^0.12.2
         version: 0.12.2(solid-js@1.8.3)
@@ -213,6 +219,43 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7
 
+  json:
+    dependencies:
+      '@macrograph/core':
+        specifier: workspace:^
+        version: link:../core
+      '@macrograph/typesystem':
+        specifier: workspace:^
+        version: link:../typesystem
+      '@solid-primitives/deep':
+        specifier: ^0.2.4
+        version: 0.2.4(solid-js@1.8.3)
+      '@solid-primitives/map':
+        specifier: ^0.4.3
+        version: 0.4.4(solid-js@1.8.3)
+      '@solid-primitives/set':
+        specifier: ^0.4.4
+        version: 0.4.4(solid-js@1.8.3)
+      zod:
+        specifier: ^3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@total-typescript/ts-reset':
+        specifier: ^0.4.2
+        version: 0.4.2
+      safaridriver:
+        specifier: ^0.0.5
+        version: 0.0.5
+      solid-js:
+        specifier: ^1.8.3
+        version: 1.8.3
+      type-fest:
+        specifier: ^2.19.0
+        version: 2.19.0
+      webdriverio:
+        specifier: ^8.11.2
+        version: 8.12.3(typescript@5.1.6)
+
   packages:
 
     dependencies:
@@ -222,6 +265,12 @@ importers:
       '@macrograph/core':
         specifier: workspace:*
         version: link:../core
+      '@macrograph/json':
+        specifier: workspace:^
+        version: link:../json
+      '@macrograph/typesystem':
+        specifier: workspace:*
+        version: link:../typesystem
       '@macrograph/ui':
         specifier: workspace:*
         version: link:../ui
@@ -293,6 +342,37 @@ importers:
       typescript:
         specifier: ^4.8.4
         version: 4.9.5
+
+  typesystem:
+    dependencies:
+      '@solid-primitives/deep':
+        specifier: ^0.2.4
+        version: 0.2.4(solid-js@1.8.3)
+      '@solid-primitives/map':
+        specifier: ^0.4.3
+        version: 0.4.4(solid-js@1.8.3)
+      '@solid-primitives/set':
+        specifier: ^0.4.4
+        version: 0.4.4(solid-js@1.8.3)
+      zod:
+        specifier: ^3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@total-typescript/ts-reset':
+        specifier: ^0.4.2
+        version: 0.4.2
+      safaridriver:
+        specifier: ^0.0.5
+        version: 0.0.5
+      solid-js:
+        specifier: ^1.8.3
+        version: 1.8.3
+      type-fest:
+        specifier: ^2.19.0
+        version: 2.19.0
+      webdriverio:
+        specifier: ^8.11.2
+        version: 8.12.3(typescript@5.1.6)
 
   ui:
     dependencies:
@@ -2311,7 +2391,7 @@ packages:
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:
-      '@solid-primitives/utils': 6.1.1(solid-js@1.8.3)
+      '@solid-primitives/utils': 6.2.1(solid-js@1.8.3)
       solid-js: 1.8.3
     dev: false
 
@@ -3496,7 +3576,7 @@ packages:
     dev: true
 
   /concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /console-control-strings@1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
@@ -4358,7 +4438,7 @@ packages:
     engines: {node: '>=14'}
     dependencies:
       cross-spawn: 7.0.3
-      signal-exit: 4.0.2
+      signal-exit: 4.1.0
     dev: true
 
   /form-data-encoder@1.7.2:
@@ -6665,11 +6745,6 @@ packages:
 
   /signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
-
-  /signal-exit@4.0.2:
-    resolution: {integrity: sha512-MY2/qGx4enyjprQnFaZsHib3Yadh3IXyV2C321GY0pjGfVBu4un0uDJkwgdxqO+Rdx8JMT8IfJIRwbYVz3Ob3Q==}
-    engines: {node: '>=14'}
-    dev: true
 
   /signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}

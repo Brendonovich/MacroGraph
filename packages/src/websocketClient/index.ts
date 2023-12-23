@@ -1,4 +1,5 @@
-import { Package, t } from "@macrograph/core";
+import { Package } from "@macrograph/core";
+import { t } from "@macrograph/typesystem";
 
 import { createCtx } from "./ctx";
 

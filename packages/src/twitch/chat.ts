@@ -1,10 +1,12 @@
 import { onCleanup, createResource } from "solid-js";
 import tmi from "tmi.js";
-import { t, None, Maybe, Package, OnEvent } from "@macrograph/core";
+import { Package, OnEvent } from "@macrograph/core";
+import { jsToJSON, JSON } from "@macrograph/json";
+import { t, None, Maybe } from "@macrograph/typesystem";
 
 import { Ctx } from "./ctx";
 import { Auth, createUserInstance } from "./auth";
-import { jsToJSON, JSON } from "../json";
+import { ReactiveMap } from "@solid-primitives/map";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
@@ -331,7 +333,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
       if (data.tags.emotes) {
         ctx.setOutput(
           io.emotes,
-          new Map(
+          new ReactiveMap(
             Object.entries(data.tags.emotes).map(([key, value]) => [
               key,
               jsToJSON(value)!,
@@ -339,7 +341,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
           )
         );
       } else {
-        ctx.setOutput(io.emotes, new Map());
+        ctx.setOutput(io.emotes, new ReactiveMap());
       }
 
       ctx.exec(io.exec);

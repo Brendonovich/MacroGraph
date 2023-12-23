@@ -1,7 +1,9 @@
 packages:
-  - 'core'
-  - 'app'
-  - 'web'
-  - 'packages'
-  - 'interface'
-  - 'ui'
+    - "core"
+    - "app"
+    - "web"
+    - "packages"
+    - "interface"
+    - "ui"
+    - "typesystem"
+    - "json"

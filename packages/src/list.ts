@@ -1,4 +1,5 @@
-import { Maybe, Package, t } from "@macrograph/core";
+import { Package } from "@macrograph/core";
+import { Maybe, t } from "@macrograph/typesystem";
 
 export function pkg() {
   const pkg = new Package({

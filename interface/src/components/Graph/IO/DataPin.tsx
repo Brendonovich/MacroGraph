@@ -1,13 +1,12 @@
 import clsx from "clsx";
+import { DataInput, DataOutput } from "@macrograph/core";
 import {
   AnyType,
   BaseType,
-  DataInput,
-  DataOutput,
   ListType,
   t,
   WildcardType,
-} from "@macrograph/core";
+} from "@macrograph/typesystem";
 import { Match, Switch } from "solid-js";
 import { Tooltip } from "@kobalte/core";
 

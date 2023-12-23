@@ -2,12 +2,12 @@ import {
   DataInput,
   ExecInput,
   ExecOutput,
-  Maybe,
   ScopeInput,
   ScopeOutput,
   XY,
   splitIORef,
 } from "@macrograph/core";
+import { Maybe } from "@macrograph/typesystem";
 import { createEffect } from "solid-js";
 
 import { useUIStore } from "../../../UIStore";

@@ -1,5 +1,6 @@
 import { Accessor, createResource } from "solid-js";
-import { Core, Maybe, None, OAuthToken, Package, t } from "@macrograph/core";
+import { Core, OAuthToken, Package } from "@macrograph/core";
+import { Maybe, None, t } from "@macrograph/typesystem";
 import { z } from "zod";
 
 import { Auth } from "./auth";
@@ -87,7 +88,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Send Discord Message",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         message: io.dataInput({
           id: "message",
@@ -121,7 +122,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Get Discord User",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         userId: io.dataInput({
           id: "userId",
@@ -159,7 +160,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Get Discord Guild User",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         guildId: io.dataInput({
           id: "guildId",
@@ -220,7 +221,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Get Discord Role By Id",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         guildId: io.dataInput({
           id: "guildId",
@@ -281,7 +282,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Send Discord Webhook",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         webhookUrl: io.dataInput({
           id: "webhookUrl",

@@ -1,4 +1,5 @@
 import "@total-typescript/ts-reset";
+export * as json from "@macrograph/json";
 
 export * as audio from "./audio";
 export * as discord from "./discord";
@@ -7,7 +8,6 @@ export * as github from "./github";
 export * as google from "./google";
 export * as goxlr from "./goxlr";
 export * as http from "./http";
-export * as json from "./json";
 export * as keyboard from "./keyboard";
 export * as list from "./list";
 export * as localStorage from "./localStorage";

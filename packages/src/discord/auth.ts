@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js";
-import { None, OAuthToken, Option, makePersisted } from "@macrograph/core";
+import { OAuthToken, makePersisted } from "@macrograph/core";
+import { None, Option } from "@macrograph/typesystem";
 
 const BOT_TOKEN_LOCALSTORAGE = "discordBotToken";
 const USER_TOKEN_LOCALSTORAGE = "discordToken";

@@ -14,6 +14,8 @@
   "dependencies": {
     "@kobalte/core": "^0.9.6",
     "@macrograph/core": "workspace:*",
+    "@macrograph/json": "workspace:^",
+    "@macrograph/typesystem": "workspace:*",
     "@macrograph/ui": "workspace:*",
     "@modular-forms/solid": "^0.12.2",
     "@octokit/auth-callback": "^4.0.0",

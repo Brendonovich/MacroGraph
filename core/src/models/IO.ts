@@ -8,7 +8,6 @@ import {
   runWithOwner,
 } from "solid-js";
 import { createMutable } from "solid-js/store";
-
 import {
   t,
   Option,
@@ -17,13 +16,28 @@ import {
   PrimitiveType,
   BasePrimitiveType,
   Maybe,
-  connectWildcardsInIO,
-  disconnectWildcardsInIO,
   Some,
-} from "../types";
+  connectWildcardsInTypes,
+  disconnectWildcardsInTypes,
+} from "@macrograph/typesystem";
+
 import { Node } from "./Node";
 import { DataOutputBuilder } from "./NodeSchema";
 import { makeIORef, splitIORef } from "./Graph";
+
+export function connectWildcardsInIO(
+  output: DataOutput<t.Any>,
+  input: DataInput<t.Any>
+) {
+  connectWildcardsInTypes(output.type, input.type);
+}
+
+export function disconnectWildcardsInIO(
+  output: DataOutput<t.Any>,
+  input: DataInput<t.Any>
+) {
+  disconnectWildcardsInTypes(output.type, input.type);
+}
 
 export type DataInputArgs<T extends BaseType<any>> = {
   id: string;

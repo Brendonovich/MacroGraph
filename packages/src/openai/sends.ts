@@ -1,12 +1,9 @@
-import { Maybe, Some, createEnum, createStruct, t } from "@macrograph/core";
+import { createEnum, createStruct } from "@macrograph/core";
+import { Maybe, t } from "@macrograph/typesystem";
+import { ChatCompletionAssistantMessageParam } from "openai/resources";
+
 import { Pkg } from ".";
 import { Ctx } from "./ctx";
-import { JSON, jsToJSON, jsonToJS } from "../json";
-import {
-  ChatCompletion,
-  ChatCompletionAssistantMessageParam,
-} from "openai/resources";
-import { JSONSchema } from "openai/lib/jsonschema";
 
 type Message = {
   role: string;
@@ -83,7 +80,10 @@ export function register(pkg: Pkg, state: Ctx) {
       let array = [] as ChatCompletionAssistantMessageParam[];
       history.forEach((item) => {
         // console.log(item);
-        array.push({ role: item.get("role"), content: item.get("content") });
+        array.push({
+          role: item.get("role") as any,
+          content: item.get("content") as any,
+        });
       });
       console.log(array);
       let message = "";
@@ -131,7 +131,7 @@ export function register(pkg: Pkg, state: Ctx) {
         revised: io.dataOutput({
           id: "revised",
           name: "Revised Prompt",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
       };
     },
@@ -147,9 +147,11 @@ export function register(pkg: Pkg, state: Ctx) {
           style: "vivid",
         });
 
-      console.log(stream.data[0]?.url);
-      ctx.setOutput(io.url, stream.data[0]?.url);
-      ctx.setOutput(io.revised, stream.data[0]?.revised_prompt);
+      const image = stream.data[0];
+      if (!image) return;
+
+      ctx.setOutput(io.url, image.url!);
+      ctx.setOutput(io.revised, Maybe(image.revised_prompt));
     },
   });
 }

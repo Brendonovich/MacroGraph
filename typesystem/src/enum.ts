@@ -1,5 +1,5 @@
 import { createMutable } from "solid-js/store";
-import { z } from "zod";
+// import { z } from "zod";
 import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
@@ -39,7 +39,10 @@ export class LazyEnumVariants<Variants extends EnumVariants> {
   constructor(public build: () => Variants) {}
 }
 
-export class Enum<Variants extends EnumVariants = any> {
+export class Enum<
+  Variants extends EnumVariants = any,
+  _Type = InferEnumVariant<Variants[number]>
+> {
   source?: { variant: "package"; package: string } | { variant: "custom" };
 
   constructor(
@@ -141,28 +144,28 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
     return `Enum(${this.inner.name})`;
   }
 
-  asZodType(): z.ZodType<InferEnum<TEnum>> {
-    return z.union(
-      (this.inner.variants as EnumVariants).map((v) =>
-        z.object({
-          variant: z.literal(v.name),
-          ...(v.data === null
-            ? undefined
-            : {
-                data: z.object(
-                  Object.entries(v.data).reduce(
-                    (acc, [key, value]) => ({
-                      ...acc,
-                      [key]: z.lazy(() => value.asZodType()),
-                    }),
-                    {}
-                  )
-                ),
-              }),
-        })
-      ) as any
-    );
-  }
+  // asZodType(): z.ZodType<InferEnum<TEnum>> {
+  //   return z.union(
+  //     (this.inner.variants as EnumVariants).map((v) =>
+  //       z.object({
+  //         variant: z.literal(v.name),
+  //         ...(v.data === null
+  //           ? undefined
+  //           : {
+  //               data: z.object(
+  //                 Object.entries(v.data).reduce(
+  //                   (acc, [key, value]) => ({
+  //                     ...acc,
+  //                     [key]: z.lazy(() => value.asZodType()),
+  //                   }),
+  //                   {}
+  //                 )
+  //               ),
+  //             }),
+  //       })
+  //     ) as any
+  //   );
+  // }
 
   getWildcards(): Wildcard[] {
     return (this.inner.variants as EnumVariants).flatMap((v) =>
@@ -179,10 +182,8 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
   }
 }
 
-export type InferEnum<E extends Enum<any>> = E extends Enum<
-  infer Variants extends EnumVariants
->
-  ? InferEnumVariant<Variants[number]>
+export type InferEnum<E extends Enum<any>> = E extends Enum<any, infer Type>
+  ? Type
   : never;
 
 export type InferEnumVariant<V> = V extends EnumVariant<infer Name, infer Data>

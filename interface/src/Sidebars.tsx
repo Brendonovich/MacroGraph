@@ -1,11 +1,5 @@
-import {
-  BasePrimitiveType,
-  BaseType,
-  Graph,
-  Node,
-  PropertyValue,
-  t,
-} from "@macrograph/core";
+import { Graph, Node, PropertyValue } from "@macrograph/core";
+import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { Switch, For, Match, Show, createMemo, createSignal } from "solid-js";
 import { AiOutlineCheck, AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
 import { BsX } from "solid-icons/bs";
@@ -19,7 +13,6 @@ import {
   TextInput,
 } from "./components/ui";
 import { TypeEditor } from "./components/TypeEditor";
-import { serializeValue } from "@macrograph/core/src/types/value";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (

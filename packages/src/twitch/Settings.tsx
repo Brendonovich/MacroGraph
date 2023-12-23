@@ -1,5 +1,5 @@
 import { createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
-import { Some } from "@macrograph/core";
+import { Some } from "@macrograph/typesystem";
 import { Button } from "@macrograph/ui";
 import { Tooltip } from "@kobalte/core";
 

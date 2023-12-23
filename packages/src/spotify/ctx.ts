@@ -1,14 +1,11 @@
 import {
   Core,
-  Maybe,
-  None,
   OAuthToken,
-  Option,
   RefreshedOAuthToken,
-  Some,
   makePersisted,
 } from "@macrograph/core";
-import { createEffect, createResource, createSignal } from "solid-js";
+import { None, Some } from "@macrograph/typesystem";
+import { createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
 import { createEndpoint } from "../httpEndpoint";
