@@ -1,11 +1,12 @@
 import { createMutable } from "solid-js/store";
+import { z } from "zod";
+import { Option } from "@macrograph/typesystem";
+
 import { Package } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
-import { z } from "zod";
 import { Project, SerializedProject } from "./Project";
-import { Option } from "../types";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();

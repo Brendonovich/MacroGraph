@@ -1,14 +1,8 @@
 import { test, expect, describe } from "vitest";
-import {
-  MapValue,
-  None,
-  Some,
-  createEnum,
-  createStruct,
-  t,
-} from "@macrograph/core";
+import { createEnum, createStruct } from "@macrograph/core";
+import { MapValue, None, Some, t } from "@macrograph/typesystem";
 
-import { toJSON, JSON, jsonToJS, jsToJSON } from "./json";
+import { toJSON, JSON, jsonToJS, jsToJSON } from "./";
 
 describe("toJSON", () => {
   test("t.Option (None) -> Null", () => {

@@ -1,4 +1,4 @@
-import { z } from "zod";
+// import { z } from "zod";
 import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
@@ -19,9 +19,9 @@ export class ListType<T extends BaseType> extends BaseType<t.infer<T>[]> {
     return `List<${this.item.toString()}>`;
   }
 
-  asZodType(): z.ZodType<t.infer<T>[]> {
-    return z.array(this.item.asZodType());
-  }
+  // asZodType(): z.ZodType<t.infer<T>[]> {
+  //   return z.array(this.item.asZodType());
+  // }
 
   getWildcards(): Wildcard[] {
     return this.item.getWildcards();

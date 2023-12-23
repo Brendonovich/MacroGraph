@@ -1,4 +1,5 @@
-import { createEnum, t } from "@macrograph/core";
+import { createEnum } from "@macrograph/core";
+import { t } from "@macrograph/typesystem";
 import { Pkg } from ".";
 import { Ctx } from "./ctx";
 
@@ -39,7 +40,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Mute Slider",
     variant: "Exec",
-    generateIO: ({io}) => {
+    generateIO: ({ io }) => {
       return {
         slider: io.dataInput({
           name: "Slider",
@@ -78,7 +79,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Microphone Type",
     variant: "Exec",
-    generateIO: ({io}) =>
+    generateIO: ({ io }) =>
       io.dataInput({
         name: "Mic Type",
         id: "micType",
@@ -106,7 +107,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set FX State",
     variant: "Exec",
-    generateIO: ({io}) =>
+    generateIO: ({ io }) =>
       io.dataInput({
         name: "State",
         id: "state",
@@ -132,7 +133,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set FX Preset",
     variant: "Exec",
-    generateIO: ({io}) =>
+    generateIO: ({ io }) =>
       io.dataInput({
         name: "Preset",
         id: "preset",

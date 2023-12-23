@@ -111,17 +111,17 @@ export class StructType<TStruct extends Struct> extends BaseType<
     return `Struct(${this.struct.name})`;
   }
 
-  asZodType(): z.ZodType<InferStruct<TStruct>> {
-    return z.object(
-      Object.entries(this.struct.fields).reduce(
-        (acc, [key, value]) => ({
-          ...acc,
-          [key]: value.type.asZodType(),
-        }),
-        {}
-      )
-    ) as any;
-  }
+  // asZodType(): z.ZodType<InferStruct<TStruct>> {
+  //   return z.object(
+  //     Object.entries(this.struct.fields).reduce(
+  //       (acc, [key, value]) => ({
+  //         ...acc,
+  //         [key]: value.type.asZodType(),
+  //       }),
+  //       {}
+  //     )
+  //   ) as any;
+  // }
 
   getWildcards(): Wildcard[] {
     return Object.values(this.struct.fields).flatMap((f) =>

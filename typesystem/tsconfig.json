@@ -3,6 +3,5 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./dist"
-  },
-  "references": [{ "path": "../ui" }, { "path": "../typesystem" }]
+  }
 }

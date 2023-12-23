@@ -2,6 +2,7 @@ import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
 import { z } from "zod";
+import { Option } from "@macrograph/typesystem";
 
 import {
   DataInput,
@@ -18,7 +19,6 @@ import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import { SerializedNode } from "./Node";
 import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
 import { Project } from "./Project";
-import { Option } from "../types";
 import { SerializedVariable, Variable, VariableArgs } from "./Variable";
 
 export const SerializedConnection = z.object({

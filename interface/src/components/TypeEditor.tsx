@@ -6,12 +6,11 @@ import {
   children,
   createSignal,
   useContext,
+  createContext,
 } from "solid-js";
-import { t } from "@macrograph/core";
-
+import { t } from "@macrograph/typesystem";
 import { DropdownMenu } from "@kobalte/core";
 import clsx from "clsx";
-import { createContext } from "solid-js";
 
 type TypeDialogState = {
   currentType: t.Any;

@@ -1,5 +1,7 @@
-import { None, OnEvent, makePersisted } from "@macrograph/core";
+import { OnEvent, makePersisted } from "@macrograph/core";
+import { None } from "@macrograph/typesystem";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
+
 import { WebSocketResponse } from "./types";
 import { Event } from ".";
 

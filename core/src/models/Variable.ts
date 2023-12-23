@@ -1,10 +1,14 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { trackDeep } from "@solid-primitives/deep";
+import {
+  t,
+  SerializedType,
+  deserializeType,
+  deserializeValue,
+  serializeValue,
+} from "@macrograph/typesystem";
 
-import { t } from "../types";
-import { SerializedType, deserializeType } from "../types/serialized";
-import { deserializeValue, serializeValue } from "../types/value";
 import { createEffect, createRoot, getOwner, on, runWithOwner } from "solid-js";
 import { Project } from "./Project";
 import { Graph } from "./Graph";

@@ -1,4 +1,5 @@
-import { Core, None, OAuthToken, Some, makePersisted } from "@macrograph/core";
+import { Core, OAuthToken, makePersisted } from "@macrograph/core";
+import { None, Some } from "@macrograph/typesystem";
 import { createResource, createSignal } from "solid-js";
 import { Octokit } from "octokit";
 

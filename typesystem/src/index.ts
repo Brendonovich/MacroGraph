@@ -11,6 +11,8 @@ export * from "./enum";
 export * from "./struct";
 export * from "./map";
 export * as t from "./t";
+export * from "./serialized";
+export * from "./value";
 
 export type TypeVariant =
   | "primitive"

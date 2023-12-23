@@ -3,7 +3,7 @@ import {
   BasePrimitiveType,
   PrimitiveVariant,
   t,
-} from "@macrograph/core";
+} from "@macrograph/typesystem";
 
 const PrimitiveVariantColours: Record<PrimitiveVariant, string> = {
   bool: "#DC2626",

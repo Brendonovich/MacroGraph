@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-import { Option, Some } from "../types";
+import { Option, Some } from "@macrograph/typesystem";
 
 export * from "./pins";
 

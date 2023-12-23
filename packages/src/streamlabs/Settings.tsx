@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
 import { Match, Switch, createSignal, Suspense, Show } from "solid-js";
-import { None, Some } from "@macrograph/core";
+import { None, Some } from "@macrograph/typesystem";
 import { Button, Input } from "@macrograph/ui";
+
 import { Ctx } from "./ctx";
 
 const Schema = z.object({

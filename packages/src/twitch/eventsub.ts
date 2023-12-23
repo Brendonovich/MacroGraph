@@ -1,11 +1,6 @@
 import { createEffect, createSignal, onCleanup, on } from "solid-js";
-import {
-  createEnum,
-  createStruct,
-  OnEvent,
-  Package,
-  t,
-} from "@macrograph/core";
+import { createEnum, createStruct, OnEvent, Package } from "@macrograph/core";
+import { t } from "@macrograph/typesystem";
 import { z } from "zod";
 
 import { Helix } from "./helix";

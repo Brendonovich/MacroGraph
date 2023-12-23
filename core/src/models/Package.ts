@@ -1,5 +1,15 @@
 import { ReactiveSet } from "@solid-primitives/set";
-import { Component, lazy, untrack } from "solid-js";
+import { Component, lazy } from "solid-js";
+import {
+  Enum,
+  EnumBuilder,
+  EnumVariants,
+  LazyEnumVariants,
+  LazyStructFields,
+  Struct,
+  StructBuilder,
+  StructFields,
+} from "@macrograph/typesystem";
 
 import { Core } from "./Core";
 import {
@@ -10,18 +20,6 @@ import {
   PropertyDef,
   SchemaProperties,
 } from "./NodeSchema";
-import {
-  Enum,
-  EnumBuilder,
-  EnumVariants,
-  LazyEnumVariants,
-} from "../types/enum";
-import {
-  LazyStructFields,
-  Struct,
-  StructBuilder,
-  StructFields,
-} from "../types/struct";
 import { ExecInput, ExecOutput } from "./IO";
 
 export interface PackageArgs<TCtx> {

@@ -6,7 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["src/*"]
-    }
+    },
+    "verbatimModuleSyntax": false
   },
   "references": [
     { "path": "../interface" },

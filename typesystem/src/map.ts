@@ -25,9 +25,9 @@ export class MapType<TValue extends BaseType<any>> extends BaseType<
     return `Map<${this.value.toString()}>`;
   }
 
-  asZodType(): ZodType<Map<string, t.infer<TValue>>> {
-    return z.map(z.string(), this.value.asZodType());
-  }
+  // asZodType() {
+  //   return z.map(z.string(), this.value.asZodType());
+  // }
 
   getWildcards(): Wildcard[] {
     return this.getWildcards();

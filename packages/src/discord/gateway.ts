@@ -1,13 +1,6 @@
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
-import {
-  Maybe,
-  None,
-  OnEvent,
-  Option,
-  Package,
-  Some,
-  t,
-} from "@macrograph/core";
+import { OnEvent, Package } from "@macrograph/core";
+import { Maybe, None, Option, Some, t } from "@macrograph/typesystem";
 import { z } from "zod";
 
 import { GUILD_MEMBER_SCHEMA } from "./schemas";

@@ -1,5 +1,6 @@
-import { None, OnEvent, Option, Some, makePersisted } from "@macrograph/core";
-import { createEffect, createSignal, on, onCleanup } from "solid-js";
+import { makePersisted } from "@macrograph/core";
+import { None, Option, Some } from "@macrograph/typesystem";
+import { createEffect, createSignal, on } from "solid-js";
 import OpenAI from "openai";
 
 const GPT_KEY = "ChatGptKey";

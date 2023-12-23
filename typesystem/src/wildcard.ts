@@ -14,7 +14,6 @@ import { z } from "zod";
 import { BaseType } from "./base";
 import { None, Option, Some } from "./option";
 import { t, TypeVariant } from ".";
-import { DataInput, DataOutput } from "../models";
 import { ReactiveMap } from "@solid-primitives/map";
 
 /**
@@ -231,12 +230,12 @@ export class WildcardType extends BaseType<unknown> {
       .unwrapOr("Wildcard");
   }
 
-  asZodType(): z.ZodType {
-    return this.wildcard
-      .value()
-      .map((v) => v.asZodType())
-      .unwrapOrElse(() => z.any());
-  }
+  // asZodType(): z.ZodType {
+  //   return this.wildcard
+  //     .value()
+  //     .map((v) => v.asZodType())
+  //     .unwrapOrElse(() => z.any());
+  // }
 
   getWildcards(): Wildcard[] {
     return this.wildcard
@@ -252,13 +251,6 @@ export class WildcardType extends BaseType<unknown> {
   serialize() {
     throw new Error("Wildcard cannot be serialized!");
   }
-}
-
-export function connectWildcardsInIO(
-  output: DataOutput<t.Any>,
-  input: DataInput<t.Any>
-) {
-  connectWildcardsInTypes(output.type, input.type);
 }
 
 export function connectWildcardsInTypes(
@@ -280,13 +272,6 @@ export function connectWildcardsInTypes(
     return connectWildcardsInTypes(a.item, b.item);
   else if (a instanceof t.Option && b instanceof t.Option)
     return connectWildcardsInTypes(a.inner, b.inner);
-}
-
-export function disconnectWildcardsInIO(
-  output: DataOutput<t.Any>,
-  input: DataInput<t.Any>
-) {
-  disconnectWildcardsInTypes(output.type, input.type);
 }
 
 export function disconnectWildcardsInTypes(a: t.Any, b: t.Any) {

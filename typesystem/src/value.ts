@@ -1,13 +1,6 @@
 import { ReactiveMap } from "@solid-primitives/map";
-import {
-  t,
-  Option,
-  Enum,
-  EnumVariants,
-  StructFields,
-  Struct,
-  Maybe,
-} from "../types";
+
+import { t, Option, Enum, EnumVariants, StructFields, Struct, Maybe } from ".";
 
 export function serializeValue(rawValue: any, type: t.Any): any {
   const typeOfValue = typeof rawValue;

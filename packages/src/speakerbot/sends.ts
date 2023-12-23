@@ -1,4 +1,4 @@
-import { t } from "@macrograph/core";
+import { t } from "@macrograph/typesystem";
 
 import { Pkg } from ".";
 import { Ctx } from "./ctx";

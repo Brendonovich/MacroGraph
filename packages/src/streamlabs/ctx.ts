@@ -1,10 +1,5 @@
-import {
-  Core,
-  None,
-  OAuthToken,
-  OnEvent,
-  makePersisted,
-} from "@macrograph/core";
+import { Core, OAuthToken, OnEvent, makePersisted } from "@macrograph/core";
+import { None } from "@macrograph/typesystem";
 import { io, Socket } from "socket.io-client";
 import {
   createEffect,
@@ -15,6 +10,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { z } from "zod";
+
 import { Events } from ".";
 import { createEndpoint } from "../httpEndpoint";
 import { EVENT } from "./events";

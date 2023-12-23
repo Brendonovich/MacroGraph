@@ -1,4 +1,5 @@
-import { t, Package } from "@macrograph/core";
+import { Package } from "@macrograph/core";
+import { t } from "@macrograph/typesystem";
 
 let sounds = new Map<string, HTMLAudioElement>();
 
