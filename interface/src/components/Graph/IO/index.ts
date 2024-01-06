@@ -80,9 +80,13 @@ export function usePin(pin: Accessor<Pin>) {
           UI.setDraggingPin();
         });
       },
-      mousedown: () => {
+      mousedown: (e) => {
         createRoot((dispose) => {
           UI.setDraggingPin(thisPin);
+          UI.setMouseDragLocation({
+            x: e.clientX,
+            y: e.clientY,
+          });
 
           onCleanup(() => UI.setDraggingPin());
 
