@@ -76,14 +76,10 @@ export class Wildcard {
           }
 
           const value = connections.values().next();
-          if (!value.done) {
-            const conn = new WildcardValueConnection(
-              value.value,
-              () => value.value
+          if (!value.done)
+            return Some(
+              new WildcardValueConnection(value.value, () => value.value)
             );
-            console.log("direct", conn.id);
-            return Some(conn);
-          }
 
           return None;
         }

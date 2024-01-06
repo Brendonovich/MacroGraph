@@ -1,5 +1,6 @@
 import { CommentBox as CommentBoxModel } from "@macrograph/core";
 import clsx from "clsx";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
 import {
   createEffect,
   createRoot,
@@ -11,7 +12,6 @@ import {
 
 import { useUIStore } from "../../UIStore";
 import { useGraphContext } from "./Graph";
-import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 interface Props {
   box: CommentBoxModel;
@@ -46,12 +46,12 @@ export function CommentBox(props: Props) {
         height: `${size().y}px`,
       }}
     >
-      <div class="truncate p-2 bg-white/50 text-black font-medium cursor-pointer outline-none">
+      <div class="truncate bg-white/50 text-black font-medium cursor-pointer outline-none">
         <Show
           when={editing()}
           fallback={
             <div
-              class="pl-1 outline-none"
+              class="p-2 pl-3 outline-none"
               onMouseDown={(e) => {
                 e.currentTarget.focus();
                 e.stopPropagation();
@@ -130,7 +130,7 @@ export function CommentBox(props: Props) {
             return (
               <input
                 ref={ref}
-                class="p-0 pl-1 border-0 w-full"
+                class="m-2 p-0 pl-1 border-0 w-full"
                 type="text"
                 value={value()}
                 onInput={(e) => setValue(e.target.value)}
