@@ -16,6 +16,7 @@ export function EnumInput<T extends Enum<EnumVariants>>(props: Props<T>) {
     <SelectInput
       {...props}
       options={props.enum.variants}
+      optionValue="name"
       getLabel={(o) => o.name}
     />
   );
