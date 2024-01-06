@@ -169,16 +169,15 @@ export class Graph {
           })();
         outputConnections.push(inRef);
       } else if (output instanceof ExecOutput) {
-        const outputConnections =
-          this.connections.get(outRef) ??
-          (() => {
-            const array: Array<IORef> = createMutable([]);
-            this.connections.set(outRef, array);
-            return array;
-          })();
-        outputConnections.push(inRef);
+        // should allow multi-input in the future
+        this.disconnectPin(input);
+        this.disconnectPin(output);
+
+        this.connections.set(outRef, createMutable([inRef]));
       } else {
         this.disconnectPin(input);
+        this.disconnectPin(output);
+
         this.connections.set(outRef, createMutable([inRef]));
       }
 
