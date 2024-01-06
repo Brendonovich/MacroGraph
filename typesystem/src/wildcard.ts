@@ -1,171 +1,212 @@
-import { ReactiveSet } from "@solid-primitives/set";
 import {
   Accessor,
   createEffect,
+  createMemo,
   createRoot,
-  createSignal,
+  createUniqueId,
   getOwner,
+  on,
   onCleanup,
   runWithOwner,
-  Setter,
-  untrack,
 } from "solid-js";
-import { z } from "zod";
+import { ReactiveSet } from "@solid-primitives/set";
+
 import { BaseType } from "./base";
 import { None, Option, Some } from "./option";
 import { t, TypeVariant } from ".";
-import { ReactiveMap } from "@solid-primitives/map";
+import { createMutable } from "solid-js/store";
+import { createOptionMemo, createOptionSignal, Disposable } from "./utils";
 
 /**
  * A Wildcard that belongs to a Node.
  */
 export class Wildcard {
-  types = new ReactiveSet<t.Wildcard>();
-
+  types = new ReactiveSet<WildcardType>();
   dispose: () => void;
 
-  value: Accessor<Option<t.Any>>;
-  private setRawValue: Setter<Option<t.Any>>;
+  value!: Accessor<Option<t.Any>>;
+
+  directSourceConnections!: Accessor<Set<t.Any>>;
+  wildcardConnections!: Accessor<Set<t.Wildcard>>;
+  directSourceConnection!: Accessor<Option<WildcardValueConnection>>;
+  wildcardConnection!: Accessor<Option<WildcardValueConnection>>;
 
   constructor(public id: string) {
-    const [value, setValue] = createSignal<Option<BaseType<any>>>(None);
-
     const { dispose, owner } = createRoot((dispose) => ({
       dispose,
       owner: getOwner(),
     }));
 
     this.dispose = dispose;
-    this.value = value;
-    this.setRawValue = setValue;
 
-    runWithOwner(owner, () => createEffect(() => this.calculateValue()));
-  }
+    const self = createMutable(this);
 
-  private setValue(value: Option<t.Any>) {
-    this.setRawValue((old) => {
-      if (old.eq(value)) return old;
-      return value;
-    });
-  }
+    runWithOwner(owner, () => {
+      this.directSourceConnections = createMemo(() => {
+        const ret = new Set<t.Any>();
 
-  calculateValue() {
-    // first, we gather all types that are connected to types that are
-    // connected to this wildcard
-    const surroundingValues = (() => {
-      let arr: BaseType<any>[] = [];
-
-      for (const type of this.types) {
-        for (const connection of type.connections.keys()) {
-          arr.push(connection);
-        }
-      }
-
-      return arr;
-    })();
-
-    // if we're only connected to wildcards, reset to nothing
-    // this deals with circular wildcard connections
-    // it's probs not as efficient as it could be but it works so hell yeah
-    if (this.onlyConnectedToWildcards(new Set())) {
-      this.setValue(None);
-      return;
-    }
-
-    // if the wildcard's value is already one of the surrounding values, don't do anything
-    if (
-      untrack(() => this.value())
-        .map((v) => !!surroundingValues.find((sv) => sv === v))
-        .unwrapOr(false)
-    )
-      return;
-
-    const [firstValue] = surroundingValues;
-
-    const newValue = (() => {
-      if (firstValue === undefined) return None;
-
-      const nonWildcardType = surroundingValues.find(
-        (t) => !(t instanceof WildcardType)
-      );
-
-      if (nonWildcardType) return Some(nonWildcardType);
-
-      const selectedValue = firstValue as WildcardType;
-
-      createEffect(() => {
-        this.setValue(selectedValue.wildcard.value());
-      });
-    })();
-
-    if (newValue) this.setValue(newValue);
-  }
-
-  onlyConnectedToWildcards(checked: Set<t.Wildcard>) {
-    // we need to go through all the connections of all types associated with this wildcard
-    for (const type of this.types) {
-      for (const connection of type.connections.keys()) {
-        if (connection instanceof t.Wildcard) {
-          // don't do work twice!
-          if (checked.has(connection)) continue;
-
-          checked.add(connection);
-
-          // this might do some double-work, but it gets the job done
-          if (!connection.wildcard.onlyConnectedToWildcards(checked))
-            return false;
-        } // if this is reached, everything else becomes irrelevant
-        else return false;
-      }
-    }
-
-    return true;
-  }
-}
-
-class WildcardTypeConnector {
-  private _dispose: () => void;
-
-  constructor(public a: t.Any, public b: t.Any) {
-    const { dispose } = createRoot((dispose) => {
-      createEffect(() => {
-        if (a instanceof t.Wildcard === b instanceof t.Wildcard) return;
-
-        let connection: WildcardTypeConnector | undefined;
-
-        function connectWildcards(a: t.Any, b: t.Any) {
-          if (a instanceof t.Wildcard) {
-            const wildcardValue = a.wildcard.value();
-
-            wildcardValue.map((wildcardValue) => {
-              if (wildcardValue === b) return;
-
-              connection = connectWildcardsInTypes(wildcardValue, b);
-            });
+        for (const type of self.types) {
+          for (const conn of type.directSourceConnections) {
+            ret.add(conn);
           }
         }
 
-        connectWildcards(a, b);
-        connectWildcards(b, a);
-
-        onCleanup(() => connection?.dispose());
+        return ret;
       });
 
-      return { dispose };
+      this.wildcardConnections = createMemo(() => {
+        const ret = new Set<t.Wildcard>();
+
+        for (const type of this.types) {
+          for (const w of type.wildcardConnections) {
+            ret.add(w);
+            w.wildcard.value();
+          }
+        }
+
+        return ret;
+      });
+
+      this.directSourceConnection = createOptionMemo<WildcardValueConnection>(
+        (prev) => {
+          const connections = this.directSourceConnections();
+
+          if (prev.isSome() && connections.has(prev.value.parent)) {
+            return prev;
+          }
+
+          const value = connections.values().next();
+          if (!value.done) {
+            const conn = new WildcardValueConnection(
+              value.value,
+              () => value.value
+            );
+            console.log("direct", conn.id);
+            return Some(conn);
+          }
+
+          return None;
+        }
+      );
+
+      createEffect<Option<WildcardValueConnection>>((prev) => {
+        const current = this.directSourceConnection();
+
+        if (prev.isSome()) prev.unwrap().dispose();
+
+        return current;
+      }, None);
+
+      const [wildcardConnection, setWildcardConnection] =
+        createOptionSignal<WildcardValueConnection>(None);
+
+      // reset connection state when connection disposed externally
+      createEffect(() => {
+        const conn = wildcardConnection();
+
+        conn.peek((c) => {
+          c.addDisposeListener(() => setWildcardConnection(None));
+        });
+      });
+
+      createEffect(
+        on(
+          () => {
+            return [
+              this.directSourceConnection(),
+              this.wildcardConnections(),
+            ] as const;
+          },
+          ([directSourceConnection, wildcardConnections]) => {
+            if (
+              directSourceConnection.isSome() ||
+              wildcardConnections.size === 0
+            ) {
+              setWildcardConnection(None);
+              return;
+            }
+
+            if (wildcardConnection().isSome()) {
+              if (
+                wildcardConnections.has(
+                  wildcardConnection().unwrap().parent as any
+                )
+              )
+                return;
+              else wildcardConnection().unwrap().dispose();
+            }
+
+            let connections: Option<
+              [WildcardValueConnection, WildcardValueConnection]
+            > = None;
+
+            for (const conn of wildcardConnections) {
+              const directConnection = conn.wildcard.directSourceConnection();
+
+              if (directConnection.isSome()) {
+                const parentValueConnection = directConnection.unwrap();
+
+                const valueConnection = new WildcardValueConnection(
+                  conn,
+                  parentValueConnection.value
+                );
+
+                connections = Some([parentValueConnection, valueConnection]);
+                break;
+              }
+
+              const wildcardConnection = conn.wildcard.wildcardConnection();
+
+              if (wildcardConnection.isSome()) {
+                const parentValueConnection = wildcardConnection.unwrap();
+
+                const valueConnection = new WildcardValueConnection(conn, () =>
+                  parentValueConnection.value()
+                );
+
+                connections = Some([parentValueConnection, valueConnection]);
+                break;
+              }
+            }
+
+            if (connections.isSome()) {
+              const [parentValueConnection, valueConnection] =
+                connections.unwrap();
+
+              const unsub = parentValueConnection.addDisposeListener(() => {
+                valueConnection.dispose();
+              });
+
+              valueConnection.addDisposeListener(() => {
+                unsub();
+                setWildcardConnection(None);
+              });
+
+              setWildcardConnection(Some(valueConnection));
+            } else setWildcardConnection(None);
+          }
+        )
+      );
+
+      this.wildcardConnection = () => wildcardConnection();
+
+      this.value = createOptionMemo(() => {
+        const direct = this.directSourceConnection();
+        const indirect = this.wildcardConnection();
+
+        return direct.map((d) => d.value()).or(indirect.map((w) => w.value()));
+      });
     });
 
-    this._dispose = dispose;
+    return self;
   }
+}
 
-  getOpposite(a: BaseType<any>) {
-    return a === this.a ? this.b : this.a;
-  }
+class WildcardValueConnection extends Disposable {
+  id = createUniqueId();
 
-  dispose() {
-    if (this.a instanceof t.Wildcard) this.a.removeConnection(this);
-    if (this.b instanceof t.Wildcard) this.b.removeConnection(this);
-
-    this._dispose();
+  constructor(public parent: t.Any, public value: Accessor<t.Any>) {
+    super();
   }
 }
 
@@ -174,7 +215,10 @@ class WildcardTypeConnector {
  * May be owned by an AnyType or data IO.
  */
 export class WildcardType extends BaseType<unknown> {
-  connections = new ReactiveMap<t.Any, WildcardTypeConnector>();
+  id = createUniqueId();
+
+  directSourceConnections = new ReactiveSet<t.Any>();
+  wildcardConnections = new ReactiveSet<WildcardType>();
 
   dispose: () => void;
 
@@ -195,18 +239,6 @@ export class WildcardType extends BaseType<unknown> {
         wildcard.types.delete(this);
       });
     });
-  }
-
-  addConnection(connection: WildcardTypeConnector) {
-    const opposite = connection.getOpposite(this);
-
-    this.connections.set(opposite, connection);
-  }
-
-  removeConnection(connection: WildcardTypeConnector) {
-    const opposite = connection.getOpposite(this);
-
-    this.connections.delete(opposite);
   }
 
   default(): Option<unknown> {
@@ -253,35 +285,37 @@ export class WildcardType extends BaseType<unknown> {
   }
 }
 
-export function connectWildcardsInTypes(
-  a: BaseType<unknown>,
-  b: BaseType<unknown>
-): WildcardTypeConnector | undefined {
+export function connectWildcardsInTypes(a: t.Any, b: t.Any) {
   if (a === b) return;
 
   if (a instanceof t.Wildcard || b instanceof t.Wildcard) {
-    const connection = new WildcardTypeConnector(a, b);
-
-    if (a instanceof t.Wildcard) a.addConnection(connection);
-    if (b instanceof t.Wildcard) b.addConnection(connection);
-
-    return connection;
+    if (!(a instanceof t.Wildcard) && b instanceof t.Wildcard) {
+      b.directSourceConnections.add(a);
+    } else if (a instanceof t.Wildcard && !(b instanceof t.Wildcard)) {
+      a.directSourceConnections.add(b);
+    } else if (a instanceof t.Wildcard && b instanceof t.Wildcard) {
+      a.wildcardConnections.add(b);
+      b.wildcardConnections.add(a);
+    }
   } else if (a instanceof t.Map && b instanceof t.Map)
     return connectWildcardsInTypes(a.value, b.value);
   else if (a instanceof t.List && b instanceof t.List)
     return connectWildcardsInTypes(a.item, b.item);
-  else if (a instanceof t.Option && b instanceof t.Option)
+  else if (a instanceof t.Option && b instanceof t.Option) {
     return connectWildcardsInTypes(a.inner, b.inner);
+  }
 }
 
 export function disconnectWildcardsInTypes(a: t.Any, b: t.Any) {
   if (a instanceof t.Wildcard || b instanceof t.Wildcard) {
-    let connection: WildcardTypeConnector | undefined;
-
-    if (a instanceof t.Wildcard) connection = a.connections.get(b);
-    if (b instanceof t.Wildcard) connection = b.connections.get(a);
-
-    if (connection) connection.dispose();
+    if (!(a instanceof t.Wildcard) && b instanceof t.Wildcard)
+      b.directSourceConnections.delete(a);
+    else if (a instanceof t.Wildcard && !(b instanceof t.Wildcard))
+      a.directSourceConnections.delete(b);
+    else if (a instanceof t.Wildcard && b instanceof t.Wildcard) {
+      a.wildcardConnections.delete(b);
+      b.wildcardConnections.delete(a);
+    }
   } else if (a instanceof t.Map && b instanceof t.Map) {
     disconnectWildcardsInTypes(a.value, b.value);
   } else if (a instanceof t.List && b instanceof t.List)

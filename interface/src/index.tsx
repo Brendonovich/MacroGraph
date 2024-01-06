@@ -596,16 +596,16 @@ function createSidebarState(name: string) {
     { name }
   );
 
-  Solid.createEffect(
-    Solid.on(
-      () => state.width,
-      (width) => {
-        if (width < MIN_WIDTH * (1 - SNAP_CLOSE_PCT)) setState({ open: false });
-        else if (width > MIN_WIDTH * (1 - SNAP_CLOSE_PCT))
-          setState({ open: true });
-      }
-    )
-  );
+  // Solid.createEffect(
+  //   Solid.on(
+  //     () => state.width,
+  //     (width) => {
+  //       if (width < MIN_WIDTH * (1 - SNAP_CLOSE_PCT)) setState({ open: false });
+  //       else if (width > MIN_WIDTH * (1 - SNAP_CLOSE_PCT))
+  //         setState({ open: true });
+  //     }
+  //   )
+  // );
 
   return { state, setState };
 }

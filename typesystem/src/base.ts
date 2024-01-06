@@ -1,5 +1,6 @@
 // import { ZodType } from "zod";
 import { t, TypeVariant, Wildcard } from ".";
+import { Disposable } from "./utils";
 
 export abstract class BaseType<TOut = any> {
   readonly _type!: TOut;

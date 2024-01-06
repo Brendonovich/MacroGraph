@@ -164,21 +164,19 @@ export const DataPin = (props: Props) => {
             }}
           </Match>
           <Match when={innerType.value}>
-            {(type) => {
-              return (
-                <div
-                  {...containerProps()}
-                  class={clsx(
-                    `w-3.5 h-3.5 border-[2.5px]`,
-                    rounding(type()),
-                    connected() || active()
-                      ? "border-mg-current bg-mg-current"
-                      : "border-mg-current"
-                  )}
-                  style={{ "--mg-current": colour(type()) }}
-                />
-              );
-            }}
+            {(type) => (
+              <div
+                {...containerProps()}
+                class={clsx(
+                  `w-3.5 h-3.5 border-[2.5px]`,
+                  rounding(type()),
+                  connected() || active()
+                    ? "border-mg-current bg-mg-current"
+                    : "border-mg-current"
+                )}
+                style={{ "--mg-current": colour(type()) }}
+              />
+            )}
           </Match>
         </Switch>
       </Tooltip.Trigger>

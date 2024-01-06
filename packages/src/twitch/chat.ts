@@ -32,9 +32,7 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
 
         client.connect();
 
-        client.on("connected", () => {
-          console.log("connected");
-        });
+        client.on("connected", () => {});
 
         client.on("disconnected", () => console.log("disconnected"));
 

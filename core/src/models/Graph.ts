@@ -151,7 +151,7 @@ export class Graph {
     output: DataOutput<any> | ExecOutput | ScopeOutput,
     input: DataInput<any> | ExecInput | ScopeInput
   ) {
-    const status = batch(() => {
+    const status = (() => {
       if (!pinsCanConnect(output, input)) return false;
 
       const outRef = makeIORef(output),
@@ -183,7 +183,7 @@ export class Graph {
       }
 
       return true;
-    });
+    })();
 
     this.project.save();
 
@@ -191,27 +191,25 @@ export class Graph {
   }
 
   disconnectPin(pin: Pin) {
-    batch(() => {
-      const ref = makeIORef(pin);
+    const ref = makeIORef(pin);
 
-      if (pinIsOutput(pin)) {
-        this.connections.delete(ref);
-      } else {
-        (
-          pin.connection as unknown as Option<
-            DataInput<any> | ExecInput | ScopeInput
-          >
-        ).peek((conn) => {
-          const connArray = this.connections.get(makeIORef(conn));
-          if (!connArray) return;
+    if (pinIsOutput(pin)) {
+      this.connections.delete(ref);
+    } else {
+      (
+        pin.connection as unknown as Option<
+          DataInput<any> | ExecInput | ScopeInput
+        >
+      ).peek((conn) => {
+        const connArray = this.connections.get(makeIORef(conn));
+        if (!connArray) return;
 
-          const index = connArray.indexOf(ref);
-          if (index === -1) return;
+        const index = connArray.indexOf(ref);
+        if (index === -1) return;
 
-          connArray.splice(index, 1);
-        });
-      }
-    });
+        connArray.splice(index, 1);
+      });
+    }
 
     this.project.save();
   }
