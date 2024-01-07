@@ -28,7 +28,7 @@
     "clsx": "^1.2.1",
     "solid-headless": "^0.13.1",
     "solid-icons": "^1.1.0",
-    "solid-js": "^1.8.3",
+    "solid-js": "^1.8.8",
     "zod": "^3.21.4"
   },
   "devDependencies": {

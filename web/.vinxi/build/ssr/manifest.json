@@ -1,0 +1,24 @@
+{
+  "\u0000virtual:#vinxi/handler/ssr.css": {
+    "file": "assets/ssr-d870915a.css",
+    "src": "\u0000virtual:#vinxi/handler/ssr.css"
+  },
+  "src/routes/index.tsx?pick=default&pick=$css": {
+    "file": "index.js",
+    "isDynamicEntry": true,
+    "isEntry": true,
+    "src": "src/routes/index.tsx?pick=default&pick=$css"
+  },
+  "virtual:#vinxi/handler/ssr": {
+    "css": [
+      "assets/ssr-d870915a.css"
+    ],
+    "dynamicImports": [
+      "src/routes/index.tsx?pick=default&pick=$css",
+      "src/routes/index.tsx?pick=default&pick=$css"
+    ],
+    "file": "ssr.js",
+    "isEntry": true,
+    "src": "virtual:#vinxi/handler/ssr"
+  }
+}

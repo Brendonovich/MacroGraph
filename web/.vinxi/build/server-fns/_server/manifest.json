@@ -1,0 +1,7 @@
+{
+  "virtual:#vinxi/handler/server-fns": {
+    "file": "entry.js",
+    "isEntry": true,
+    "src": "virtual:#vinxi/handler/server-fns"
+  }
+}
