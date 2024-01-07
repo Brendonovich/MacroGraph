@@ -15,5 +15,5 @@ export default [
       }),
     ],
   }),
-  Icons({ compiler: "solid", autoInstall: true, scale: 1 }),
+  Icons({ compiler: "solid", scale: 1 }),
 ] as PluginOption[];
