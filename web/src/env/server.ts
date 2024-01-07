@@ -27,5 +27,5 @@ export const env = createEnv({
     GITHUB_CLIENT_ID: z.string(),
     GITHUB_CLIENT_SECRET: z.string(),
   },
-  runtimeEnv: import.meta.env,
+  runtimeEnv: process.env,
 });

@@ -1,6 +1,4 @@
 import { For, Match, Switch, createSignal } from "solid-js";
-import { AiOutlineCheck, AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
-import { BsX } from "solid-icons/bs";
 
 import { useCoreContext } from "../contexts";
 import { SidebarSection } from "./Sidebar";
@@ -54,13 +52,13 @@ export const CustomEventList = () => {
                                   setEditingName(false);
                                 }}
                               >
-                                <AiOutlineCheck />
+                                <IconAntDesignCheckOutlined />
                               </button>
                               <button
                                 class="w-6 h-6 relative"
                                 onClick={() => setEditingName(false)}
                               >
-                                <BsX size={24} class="absolute left-0 top-0" />
+                                <IconBiX class="w-8 h-8 absolute left-0 top-0" />
                               </button>
                             </div>
                           </>
@@ -77,7 +75,7 @@ export const CustomEventList = () => {
                             setEditingName(true);
                           }}
                         >
-                          <AiOutlineEdit />
+                          <IconAntDesignEditOutlined />
                         </button>
                         <button
                           class="px-1"
@@ -96,7 +94,7 @@ export const CustomEventList = () => {
                             ctx.core.project.save();
                           }}
                         >
-                          <AiOutlineDelete />
+                          <IconAntDesignDeleteOutlined />
                         </button>
                       </div>
                     </Match>
@@ -137,7 +135,7 @@ export const CustomEventList = () => {
                                           setEditingPinName(false);
                                         }}
                                       >
-                                        <AiOutlineCheck />
+                                        <IconAntDesignCheckOutlined />
                                       </button>
                                       <button
                                         class="w-6 h-6 relative"
@@ -163,7 +161,7 @@ export const CustomEventList = () => {
                                     setEditingPinName(true);
                                   }}
                                 >
-                                  <AiOutlineEdit />
+                                  <IconAntDesignEditOutlined />
                                 </button>
 
                                 <button
@@ -174,7 +172,7 @@ export const CustomEventList = () => {
                                     ctx.core.project.save();
                                   }}
                                 >
-                                  <AiOutlineDelete />
+                                  <IconAntDesignDeleteOutlined />
                                 </button>
                               </div>
                             </Match>

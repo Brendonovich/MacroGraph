@@ -1,6 +1,6 @@
 // just exists to get lsp
 module.exports = {
-  content: ["../*/src/**/*.{astro,tsx,ts,html}"],
+  content: ["../*/src/**/*.{tsx,ts,html}"],
   theme: {
     extend: {
       colors: {

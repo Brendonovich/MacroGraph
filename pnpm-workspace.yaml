@@ -2,6 +2,7 @@ packages:
     - "core"
     - "app"
     - "web"
+    - "web-solid"
     - "packages"
     - "interface"
     - "ui"

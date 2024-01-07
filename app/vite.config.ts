@@ -1,19 +1,20 @@
-import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "@solidjs/start/config";
+import interfacePlugin from "@macrograph/interface/vite";
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
-  plugins: [solidPlugin(), tsconfigPaths()],
-
+export default defineConfig({
+  plugins: [interfacePlugin],
+  start: {
+    ssr: false,
+    solid: {} as any,
+    server: {
+      preset: "static",
+      compressPublicAssets: false,
+    },
+  },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   // prevent vite from obscuring rust errors
   clearScreen: false,
-  // tauri expects a fixed port, fail if that port is not available
-  server: {
-    port: 1420,
-    strictPort: true,
-  },
   // to make use of `TAURI_DEBUG` and other env variables
   // https://tauri.studio/v1/api/config#buildconfig.beforedevcommand
   envPrefix: ["VITE_", "TAURI_"],
@@ -25,4 +26,4 @@ export default defineConfig(async () => ({
     // produce sourcemaps for debug builds
     sourcemap: !!process.env.TAURI_DEBUG,
   },
-}));
+});

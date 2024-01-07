@@ -1,8 +1,6 @@
 import clsx from "clsx";
 import { createSignal, onMount, Show } from "solid-js";
 import { Graph } from "@macrograph/core";
-import { TbCopy } from "solid-icons/tb";
-import { AiOutlineDelete } from "solid-icons/ai";
 import { Dialog } from "@kobalte/core";
 
 import { Button } from "../../settings/ui";
@@ -53,7 +51,7 @@ export const GraphItem = (props: Props) => {
                   );
                 }}
               >
-                <TbCopy />
+                <IconTablerCopy />
               </button>
             </div>
           </div>
@@ -111,7 +109,7 @@ const DeleteButton = (props: { graph: Graph }) => {
         }}
         as="div"
       >
-        <AiOutlineDelete />
+        <IconAntDesignDeleteOutlined />
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay class="absolute inset-0 bg-black/40" />

@@ -1,9 +1,9 @@
 {
   "build": {
-    "beforeDevCommand": "pnpm vite dev",
+    "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
     "devPath": "http://localhost:1420",
-    "distDir": "../dist",
+    "distDir": "../.output/public",
     "withGlobalTauri": false
   },
   "package": {
@@ -25,9 +25,7 @@
       },
       "fs": {
         "all": true,
-        "scope": [
-          "**"
-        ]
+        "scope": ["**"]
       },
       "protocol": {
         "all": true,
@@ -36,9 +34,7 @@
       },
       "http": {
         "all": true,
-        "scope": [
-          "https://**"
-        ]
+        "scope": ["https://**"]
       }
     },
     "bundle": {

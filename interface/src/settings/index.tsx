@@ -6,8 +6,6 @@ import {
   Suspense,
   createSignal,
 } from "solid-js";
-import { TbSettings, TbClipboard } from "solid-icons/tb";
-import { VsClose } from "solid-icons/vs";
 
 import { Dialog } from "./ui";
 import { useUIStore } from "../UIStore";
@@ -35,7 +33,7 @@ export default () => {
     <div class="flex flex-row p-1 gap-1 text-white">
       <OpenSettingsDialog>
         <IconContainer title="Settings">
-          <TbSettings class="w-full h-full" />
+          <IconTablerSettings class="w-full h-full" />
         </IconContainer>
       </OpenSettingsDialog>
       <button
@@ -45,7 +43,7 @@ export default () => {
         }
       >
         <IconContainer>
-          <TbClipboard class="w-full h-full" />
+          <IconTablerClipboard class="w-full h-full" />
         </IconContainer>
       </button>
     </div>
@@ -63,7 +61,7 @@ function OpenSettingsDialog(props: ParentProps) {
         <div class="flex flex-row justify-between text-white p-4">
           <Dialog.Title class="font-bold text-2xl">Settings</Dialog.Title>
           <Dialog.CloseButton>
-            <VsClose class="w-8 h-8" />
+            <IconBiX class="w-8 h-8" />
           </Dialog.CloseButton>
         </div>
         <div class="flex-1 flex flex-col p-4 pt-0 w-full text-white rounded-lg overflow-y-scroll">

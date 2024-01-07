@@ -8,7 +8,6 @@ import {
   onCleanup,
 } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
-import { FaSolidChevronRight } from "solid-icons/fa";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 export type Side = "left" | "right";
@@ -50,7 +49,9 @@ export function SidebarSection(
         class="flex flex-row justify-between items-center bg-neutral-900 text-white px-2 font-medium shadow py-1"
       >
         <span class="flex flex-row items-center gap-1.5">
-          <FaSolidChevronRight class={clsx("w-4 h-4", open() && "rotate-90")} />
+          <IconFa6SolidChevronRight
+            class={clsx("w-4 h-4", open() && "rotate-90")}
+          />
           {props.title}
         </span>
         {props.right}
