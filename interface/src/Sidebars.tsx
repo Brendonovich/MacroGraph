@@ -1,4 +1,4 @@
-import { Graph, Node, PropertyValue } from "@macrograph/core";
+import { Graph, Node, PropertyValue } from "@macrograph/runtime";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { Switch, For, Match, Show, createMemo, createSignal } from "solid-js";
 
@@ -68,7 +68,7 @@ export function GraphSidebar(props: { graph: Graph }) {
                                   class="w-6 h-6 relative"
                                   onClick={() => setEditingName(false)}
                                 >
-                                  <IconBiX class="w-8 h-8 absolute left-0 top-0" />
+                                  <IconBiX class="absolute left-0 top-0" />
                                 </button>
                               </div>
                             </>

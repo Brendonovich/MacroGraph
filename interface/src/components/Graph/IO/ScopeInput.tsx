@@ -1,4 +1,4 @@
-import { ScopeInput as ScopeInputModel } from "@macrograph/core";
+import { ScopeInput as ScopeInputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
 import { usePin } from ".";
 

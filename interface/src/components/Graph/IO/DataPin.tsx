@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { DataInput, DataOutput } from "@macrograph/core";
+import { DataInput, DataOutput } from "@macrograph/runtime";
 import {
   AnyType,
   BaseType,

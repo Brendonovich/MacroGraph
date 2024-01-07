@@ -5,7 +5,7 @@ import {
   XY,
   Node as NodeModel,
   Size,
-} from "@macrograph/core";
+} from "@macrograph/runtime";
 import { createStore } from "solid-js/store";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import { ReactiveWeakMap } from "@solid-primitives/map";

@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "app": "pnpm --filter @macrograph/app --",
-    "core": "pnpm --filter @macrograph/core --",
+    "core": "pnpm --filter @macrograph/runtime --",
     "web": "pnpm --filter @macrograph/web --",
     "test": "vitest --browser=safari",
     "typecheck": "tsc -b",

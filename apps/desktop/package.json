@@ -1,0 +1,39 @@
+{
+  "name": "@macrograph/desktop",
+  "version": "0.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "vinxi dev --port 1420",
+    "build": "vinxi build",
+    "start": "vinxi start",
+    "tauri": "tauri",
+    "typecheck": "tsc -b"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@macrograph/interface": "workspace:*",
+    "@macrograph/packages": "workspace:*",
+    "@macrograph/runtime": "workspace:*",
+    "@rspc/client": "0.0.0-main-6ed8cc98",
+    "@rspc/solid": "0.0.0-main-6ed8cc98",
+    "@rspc/tauri": "0.0.0-main-6ed8cc98",
+    "@solidjs/start": "^0.4.4",
+    "@t3-oss/env-core": "^0.6.1",
+    "@tanstack/solid-query": "^4.29.5",
+    "@tauri-apps/api": "^1.2.0",
+    "solid-js": "^1.8.8",
+    "vinxi": "0.1.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@kobalte/tailwindcss": "^0.6.5",
+    "@macrograph/config": "workspace:*",
+    "@tailwindcss/forms": "^0.5.3",
+    "@tauri-apps/cli": "^1.2.2",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.1",
+    "typescript": "^4.9.5",
+    "vite": "^4.5.1"
+  }
+}

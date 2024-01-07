@@ -6,7 +6,7 @@ import {
   ScopeOutput,
   XY,
   splitIORef,
-} from "@macrograph/core";
+} from "@macrograph/runtime";
 import { Maybe } from "@macrograph/typesystem";
 import { createEffect } from "solid-js";
 

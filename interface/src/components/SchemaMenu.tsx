@@ -6,7 +6,7 @@ import {
   NodeSchema,
   NodeSchemaVariant,
   EventsMap,
-} from "@macrograph/core";
+} from "@macrograph/runtime";
 
 import { useCore } from "../contexts";
 import { GraphState } from "./Graph";

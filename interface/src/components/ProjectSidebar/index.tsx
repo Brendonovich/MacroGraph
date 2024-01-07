@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import { Graph } from "@macrograph/core";
+import { Graph } from "@macrograph/runtime";
 
 import { useCoreContext } from "../../contexts";
 import { GraphItem } from "./GraphItem";

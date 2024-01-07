@@ -1,9 +1,14 @@
 {
-  "extends": "../tsconfig.base.json",
+  "extends": "@macrograph/config/tsconfig",
   "compilerOptions": {
-    "composite": true,
+    "rootDir": "src",
     "outDir": "./dist",
     "types": ["unplugin-icons/types/solid"]
   },
-  "references": [{ "path": "../core" }, { "path": "../packages" }]
+  "include": ["src"],
+  "references": [
+    { "path": "../packages/runtime" },
+    { "path": "../packages/packages" },
+    { "path": "../packages/typesystem" }
+  ]
 }

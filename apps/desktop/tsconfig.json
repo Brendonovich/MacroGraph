@@ -1,0 +1,16 @@
+{
+  "extends": "@macrograph/config/tsconfig",
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "rootDir": "src",
+    "composite": false,
+    "noEmit": true,
+    "emitDeclarationOnly": false
+  },
+  "references": [
+    { "path": "../../interface" },
+    { "path": "../../packages/runtime" },
+    { "path": "../../packages/packages" }
+  ],
+  "include": ["src"]
+}
