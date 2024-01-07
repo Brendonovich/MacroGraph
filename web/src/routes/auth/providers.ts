@@ -53,14 +53,14 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
   google: {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
+    authorize: { url: "https://accounts.google.com/o/oauth2/v2/auth" },
     token: {
-      url: "https://accounts.google.com/o/oauth2/v2/auth",
+      url: "https://oauth2.googleapis.com/token",
       searchParams: {
         access_type: "offline",
         prompt: "consent",
       },
     },
-    authorize: { url: "https://oauth2.googleapis.com/token" },
     scopes: [
       "https://www.googleapis.com/auth/youtube",
       "email",
