@@ -47,13 +47,10 @@ jobs:
             - name: install frontend dependencies
               run: pnpm install # change this to npm or pnpm depending on which one you use
 
-            - name: Build frontend
-              run: pnpm app build
-
             - uses: JonasKruckenberg/tauri-build@v1
               id: tauri_build
               with:
-                  projectPath: app
+                  projectPath: apps/desktop
               env:
                   TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
                   TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}

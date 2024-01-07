@@ -1,9 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "app": "pnpm --filter @macrograph/app --",
-    "core": "pnpm --filter @macrograph/runtime --",
+    "desktop": "pnpm --filter @macrograph/desktop --",
     "web": "pnpm --filter @macrograph/web --",
+    "runtime": "pnpm --filter @macrograph/runtime --",
     "test": "vitest --browser=safari",
     "typecheck": "tsc -b",
     "lint": "turbo run lint",
