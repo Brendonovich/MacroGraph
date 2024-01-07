@@ -1,7 +1,6 @@
 {
   "name": "@macrograph/desktop",
-  "version": "0.0.0",
-  "description": "",
+  "private": true,
   "scripts": {
     "dev": "vinxi dev --port 1420",
     "build": "vinxi build",
@@ -9,7 +8,6 @@
     "tauri": "tauri",
     "typecheck": "tsc -b"
   },
-  "license": "MIT",
   "dependencies": {
     "@macrograph/interface": "workspace:*",
     "@macrograph/packages": "workspace:*",
