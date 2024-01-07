@@ -23,12 +23,12 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
   github: {
     clientId: env.GITHUB_CLIENT_ID,
     clientSecret: env.GITHUB_CLIENT_SECRET,
+    authorize: {
+      url: "https://accounts.google.com/o/oauth2/v2/auth",
+    },
     token: {
       url: "https://github.com/login/oauth/access_token",
       headers: { Accept: "application/json" },
-    },
-    authorize: {
-      url: "https://github.com/login/oauth/authorize",
     },
     scopes: [],
   },
