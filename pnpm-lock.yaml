@@ -203,9 +203,6 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
     devDependencies:
-      '@iconify/json':
-        specifier: ^2.2.165
-        version: 2.2.165
       '@kobalte/tailwindcss':
         specifier: ^0.6.5
         version: 0.6.5(tailwindcss@3.3.2)
@@ -1423,13 +1420,6 @@ packages:
     dependencies:
       tslib: 2.6.1
     dev: false
-
-  /@iconify/json@2.2.165:
-    resolution: {integrity: sha512-KlwAxSejmRGx7D9pvT/OanmraEWk364phfrCPYBOMQx4nO1aQSDUBLkUFMAWobqjBMv6wraoiacuDVwAaxuJcQ==}
-    dependencies:
-      '@iconify/types': 2.0.0
-      pathe: 1.1.1
-    dev: true
 
   /@iconify/types@2.0.0:
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
