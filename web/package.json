@@ -25,6 +25,8 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@iconify-json/bi": "^1.1.23",
+    "@iconify-json/heroicons": "^1.1.19",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.3.1"
