@@ -127,6 +127,9 @@ importers:
       '@storybook/testing-library':
         specifier: ^0.2.2
         version: 0.2.2
+      postcss-pseudo-companion-classes:
+        specifier: ^0.1.1
+        version: 0.1.1(postcss@8.4.33)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -517,6 +520,9 @@ importers:
       solid-js:
         specifier: ^1.8.8
         version: 1.8.8
+      storybook-solidjs:
+        specifier: ^1.0.0-beta.2
+        version: 1.0.0-beta.2(babel-preset-solid@1.8.8)(solid-js@1.8.8)
 
 packages:
 
@@ -10355,6 +10361,15 @@ packages:
     dependencies:
       postcss: 8.4.33
       postcss-selector-parser: 6.0.12
+    dev: true
+
+  /postcss-pseudo-companion-classes@0.1.1(postcss@8.4.33):
+    resolution: {integrity: sha512-CJqiANNTMXqKKzaQHANdYGdpqoRbUvsXGWHEbzJ4hsTf2TF/Jj2fONWdsaXANIXIPjlfoIn/++W7FnKKrnZkNg==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      postcss: ^8.3.0
+    dependencies:
+      postcss: 8.4.33
     dev: true
 
   /postcss-selector-parser@6.0.12:

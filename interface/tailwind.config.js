@@ -1,6 +1,9 @@
 // just exists to get lsp
 module.exports = {
-  content: ["../*/src/**/*.{tsx,ts,html}"],
+  content: [
+    `${__dirname}/src/**/*.{tsx,ts,html}`,
+    `${__dirname}/../{apps,packages}/*/src/**/*.{tsx,ts,html}`,
+  ],
   theme: {
     extend: {
       colors: {
