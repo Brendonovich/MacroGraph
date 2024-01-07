@@ -10,7 +10,7 @@ import {
   ScopeOutput as ScopeOutputModel,
   NodeSchemaVariant,
   NODE_EMIT,
-} from "@macrograph/core";
+} from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 import "./Node.css";

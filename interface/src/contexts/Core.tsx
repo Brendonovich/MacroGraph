@@ -1,5 +1,5 @@
 import { Accessor, createContext, ParentProps, useContext } from "solid-js";
-import { Core } from "@macrograph/core";
+import { Core } from "@macrograph/runtime";
 
 type Context = { core: Core; rootRef: Accessor<HTMLDivElement | undefined> };
 

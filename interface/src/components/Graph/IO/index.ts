@@ -6,7 +6,7 @@ export * from "./DataOutput";
 export * from "./ScopeInput";
 export * from "./ScopeOutput";
 
-import { Pin, pinIsInput, pinIsOutput, pinsCanConnect } from "@macrograph/core";
+import { Pin, pinIsInput, pinIsOutput, pinsCanConnect } from "@macrograph/runtime";
 import {
   Accessor,
   batch,

@@ -1,12 +1,16 @@
 {
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
   "files": [],
   "references": [
-    { "path": "./core" },
-    { "path": "./packages" },
-    { "path": "./app" },
-    { "path": "./web" },
+    { "path": "./packages/typesystem" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/runtime" },
+    { "path": "./packages/json" },
+    { "path": "./packages/packages" },
     { "path": "./interface" },
-    { "path": "./ui" },
-    { "path": "./typesystem" }
+    { "path": "./apps/desktop" },
+    { "path": "./apps/web" }
   ]
 }

@@ -1,4 +1,4 @@
-import { ExecOutput as ExecOutputModel } from "@macrograph/core";
+import { ExecOutput as ExecOutputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
 import { usePin } from ".";
 

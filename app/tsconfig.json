@@ -1,8 +1,0 @@
-{
-  "extends": "../tsconfig.base.json",
-  "compilerOptions": {
-    "types": ["vite/client"],
-    "outDir": "./dist"
-  },
-  "references": [{ "path": "../interface" }, { "path": "../core" }]
-}

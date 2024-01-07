@@ -11,7 +11,7 @@ import {
   Node as NodeModel,
   Project,
   Size,
-} from "@macrograph/core";
+} from "@macrograph/runtime";
 import {
   createEventListener,
   createEventListenerMap,
@@ -416,7 +416,6 @@ export function Interface(props: {
                             {graph.name}
                             <HeroiconsXMarkSolid
                               class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
-                              size={20}
                               stroke-width={1}
                               onClick={(e) => {
                                 e.stopPropagation();

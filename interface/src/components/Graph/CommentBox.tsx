@@ -1,4 +1,4 @@
-import { CommentBox as CommentBoxModel } from "@macrograph/core";
+import { CommentBox as CommentBoxModel } from "@macrograph/runtime";
 import clsx from "clsx";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import {

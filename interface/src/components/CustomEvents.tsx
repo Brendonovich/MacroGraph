@@ -58,7 +58,7 @@ export const CustomEventList = () => {
                                 class="w-6 h-6 relative"
                                 onClick={() => setEditingName(false)}
                               >
-                                <IconBiX class="w-8 h-8 absolute left-0 top-0" />
+                                <IconBiX class="absolute left-0 top-0" />
                               </button>
                             </div>
                           </>
@@ -141,10 +141,7 @@ export const CustomEventList = () => {
                                         class="w-6 h-6 relative"
                                         onClick={() => setEditingPinName(false)}
                                       >
-                                        <BsX
-                                          size={24}
-                                          class="absolute left-0 top-0"
-                                        />
+                                        <IconBiX class="absolute left-0 top-0" />
                                       </button>
                                     </div>
                                   </>

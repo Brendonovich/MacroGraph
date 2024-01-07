@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { DataInput as DataInputModel } from "@macrograph/core";
+import { DataInput as DataInputModel } from "@macrograph/runtime";
 import {
   AnyType,
   BasePrimitiveType,

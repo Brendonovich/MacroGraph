@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { createSignal, onMount, Show } from "solid-js";
-import { Graph } from "@macrograph/core";
+import { Graph } from "@macrograph/runtime";
 import { Dialog } from "@kobalte/core";
 
 import { Button } from "../../settings/ui";

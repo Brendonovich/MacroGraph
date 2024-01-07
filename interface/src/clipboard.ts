@@ -10,7 +10,7 @@ import {
   Graph,
   Project,
   GetNodeSize,
-} from "@macrograph/core";
+} from "@macrograph/runtime";
 
 export const ClipboardItem = z.discriminatedUnion("type", [
   z.object({

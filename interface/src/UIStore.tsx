@@ -1,4 +1,4 @@
-import { XY, Pin } from "@macrograph/core";
+import { XY, Pin } from "@macrograph/runtime";
 import { createMutable } from "solid-js/store";
 import { createContext, useContext, ParentProps } from "solid-js";
 
