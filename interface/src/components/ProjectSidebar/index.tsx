@@ -1,9 +1,7 @@
 import { For } from "solid-js";
 import { Graph } from "@macrograph/core";
-import { CgImport } from "solid-icons/cg";
 
-import { useCore, useCoreContext } from "../../contexts";
-import { useUIStore } from "../../UIStore";
+import { useCoreContext } from "../../contexts";
 import { GraphItem } from "./GraphItem";
 import { SidebarSection } from "../Sidebar";
 import { deserializeClipboardItem, readFromClipboard } from "../../clipboard";
@@ -37,7 +35,7 @@ export const GraphList = (props: Props) => {
               ctx.core.project.graphs.set(graph.id, graph);
             }}
           >
-            <CgImport />
+            <IconGgImport />
           </button>
           <button
             class="px-1"

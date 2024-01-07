@@ -1,5 +1,4 @@
 import { createSignal, For, onCleanup, onMount } from "solid-js";
-import { AiOutlineDelete } from "solid-icons/ai";
 
 import { useCore } from "../contexts";
 import { SidebarSection } from "./Sidebar";
@@ -29,7 +28,7 @@ export const PrintOutput = () => {
             setItems([]);
           }}
         >
-          <AiOutlineDelete />
+          <IconAntDesignDeleteOutlined />
         </button>
       }
     >

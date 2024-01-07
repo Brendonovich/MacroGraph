@@ -19,7 +19,7 @@ import {
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
-import { HiSolidXMark } from "solid-icons/hi";
+import HeroiconsXMarkSolid from "~icons/heroicons/x-mark-solid";
 import clsx from "clsx";
 
 import { CoreProvider } from "./contexts";
@@ -31,7 +31,7 @@ import {
 } from "./components/Graph";
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { SchemaMenu } from "./components/SchemaMenu";
-import { MIN_WIDTH, SNAP_CLOSE_PCT, Sidebar } from "./components/Sidebar";
+import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import Settings from "./settings";
 import { GraphList } from "./components/ProjectSidebar";
 import { PrintOutput } from "./components/PrintOutput";
@@ -414,7 +414,7 @@ export function Interface(props: {
                             onClick={() => setCurrentGraphIndex(index)}
                           >
                             {graph.name}
-                            <HiSolidXMark
+                            <HeroiconsXMarkSolid
                               class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
                               size={20}
                               stroke-width={1}

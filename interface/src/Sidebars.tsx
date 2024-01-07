@@ -1,8 +1,6 @@
 import { Graph, Node, PropertyValue } from "@macrograph/core";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { Switch, For, Match, Show, createMemo, createSignal } from "solid-js";
-import { AiOutlineCheck, AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
-import { BsX } from "solid-icons/bs";
 
 import { SidebarSection } from "./components/Sidebar";
 import {
@@ -64,16 +62,13 @@ export function GraphSidebar(props: { graph: Graph }) {
                                     setEditingName(false);
                                   }}
                                 >
-                                  <AiOutlineCheck />
+                                  <IconAntDesignCheckOutlined />
                                 </button>
                                 <button
                                   class="w-6 h-6 relative"
                                   onClick={() => setEditingName(false)}
                                 >
-                                  <BsX
-                                    size={24}
-                                    class="absolute left-0 top-0"
-                                  />
+                                  <IconBiX class="w-8 h-8 absolute left-0 top-0" />
                                 </button>
                               </div>
                             </>
@@ -90,7 +85,7 @@ export function GraphSidebar(props: { graph: Graph }) {
                               setEditingName(true);
                             }}
                           >
-                            <AiOutlineEdit />
+                            <IconAntDesignEditOutlined />
                           </button>
 
                           <button
@@ -100,7 +95,7 @@ export function GraphSidebar(props: { graph: Graph }) {
                               props.graph.removeVariable(variable.id);
                             }}
                           >
-                            <AiOutlineDelete />
+                            <IconAntDesignDeleteOutlined />
                           </button>
                         </div>
                       </Match>
