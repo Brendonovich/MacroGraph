@@ -4,12 +4,10 @@ export type Procedures = {
     queries: 
         { key: "fs.list", input: string, result: Entry[] },
     mutations: 
-        { key: "websocket.send", input: { port: number; data: string }, result: null },
+        { key: "websocket.send", input: { port: number; client: number; data: string }, result: null },
     subscriptions: 
         { key: "oauth.authorize", input: string, result: any | null } | 
-        { key: "websocket.server", input: number, result: Message }
+        { key: "websocket.server", input: number, result: null }
 };
-
-export type Message = { Text: string } | "Connected" | "Disconnected"
 
 export type Entry = { Dir: string } | { File: string }

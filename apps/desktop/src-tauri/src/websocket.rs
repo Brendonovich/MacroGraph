@@ -41,7 +41,25 @@ impl DerefMut for WebSocketShutdown {
 
 #[derive(Default)]
 pub struct Ctx {
-    senders: Mutex<BTreeMap<u16, mpsc::Sender<String>>>,
+    senders: Mutex<BTreeMap<u16, BTreeMap<u8, mpsc::Sender<String>>>>,
+}
+
+fn random_id<T>(map: &BTreeMap<u8, T>) -> u8 {
+    let mut i = 0;
+
+    loop {
+        if !map.contains_key(&i) {
+            break;
+        }
+
+        if i == u8::MAX {
+            panic!("No more ids available");
+        }
+
+        i += 1;
+    }
+
+    i
 }
 
 pub fn router() -> AlphaRouter<super::Ctx> {
@@ -54,10 +72,15 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 
                 let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
-                let (sender_tx, sender_rx) = mpsc::channel(64);
-                let (receiver_tx, mut receiver_rx) = mpsc::channel(64);
+                let (sender_tx, sender_rx) = mpsc::channel(16);
+                let (receiver_tx, mut receiver_rx) = mpsc::channel(16);
 
-                ctx.ws.senders.lock().await.insert(port, sender_tx);
+                let mut senders = ctx.ws.senders.lock().await;
+                let mut clients = senders.entry(port).or_default();
+
+                let id = random_id(&clients);
+
+                clients.insert(id, sender_tx);
 
                 let server = axum::Server::bind(&addr)
                     .serve(
@@ -78,13 +101,13 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 tokio::spawn(server);
 
                 async_stream::stream! {
-                    while let Some(msg) = receiver_rx.recv().await {
-                        yield msg
-                    }
+                    // while let Some(msg) = receiver_rx.recv().await {
+                    //     yield msg
+                    // }
 
-                    ctx.ws.senders.lock().await.remove(&port);
+                    // ctx.ws.senders.lock().await.remove(&port);
 
-                    drop(shutdown_tx);
+                    // drop(shutdown_tx);
                 }
             }),
         )
@@ -95,15 +118,19 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 #[specta(inline)]
                 struct Args {
                     port: u16,
+                    client: u8,
                     data: String,
                 }
 
-                |ctx, Args { port, data }: Args| async move {
+                |ctx, Args { port, client, data }: Args| async move {
                     let senders = ctx.ws.senders.lock().await;
 
-                    if let Some(sender) = senders.get(&port) {
-                        sender.send(data).await.ok();
-                    }
+                    let Some(client) = senders.get(&port).and_then(|clients| clients.get(&client))
+                    else {
+                        return;
+                    };
+
+                    client.send(data).await.ok();
                 }
             }),
         )

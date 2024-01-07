@@ -30,6 +30,7 @@ base64 = "0.21.4"
 async-stream = "0.3.5"
 tower-http = { version = "0.4.4", features = ["cors"] }
 opener = "0.6.1"
+streamunordered = "0.5.3"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
