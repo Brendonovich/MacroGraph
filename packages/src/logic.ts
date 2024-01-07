@@ -274,5 +274,58 @@ export function pkg() {
     },
   });
 
+  pkg.createNonEventSchema({
+    name: `Switch`,
+    variant: "Base",
+    properties: {
+      number: {
+        name: "Keys",
+        type: t.int(),
+        default: 1,
+      },
+    },
+    generateIO({ io, ctx, properties }) {
+      const value = ctx.getProperty(properties.number);
+      const w = io.wildcard("");
+
+      return {
+        exec: io.execInput({
+          id: "exec",
+        }),
+        default: io.execOutput({
+          id: "exec",
+          name: "Default",
+        }),
+        switchOn: io.dataInput({
+          id: "switchOn",
+          type: t.wildcard(w),
+          name: "Data In",
+        }),
+        switchOut: io.dataOutput({
+          id: "switchOut",
+          type: t.wildcard(w),
+          name: "Data Out",
+        }),
+        pins: Array.from({ length: value }, (v, i) => ({
+          case: io.dataInput({
+            id: `key-${i}`,
+            type: t.wildcard(w),
+          }),
+          exec: io.execOutput({
+            id: `key-${i}`,
+          }),
+        })),
+      };
+    },
+    async run({ ctx, io }) {
+      const switchData = ctx.getInput(io.switchOn);
+      ctx.setOutput(io.switchOut, ctx.getInput(io.switchOn));
+      const input = io.pins.find(
+        (input) => ctx.getInput(input.case) === switchData
+      );
+      await ctx.exec(input === undefined ? io.default : input.exec);
+    },
+  });
+
   return pkg;
 }
