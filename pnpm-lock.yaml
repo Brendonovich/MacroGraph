@@ -24,14 +24,14 @@ importers:
         specifier: ^1.10.7
         version: 1.10.7
       typescript:
-        specifier: ^5.1.6
-        version: 5.1.6
+        specifier: ^5.3.3
+        version: 5.3.3
       vitest:
         specifier: ^0.32.2
         version: 0.32.4(@vitest/browser@0.32.4)(safaridriver@0.0.5)(webdriverio@8.12.3)
       webdriverio:
         specifier: ^8.11.2
-        version: 8.12.3(typescript@5.1.6)
+        version: 8.12.3(typescript@5.3.3)
 
   apps/desktop:
     dependencies:
@@ -58,7 +58,7 @@ importers:
         version: 0.4.4(rollup@2.79.1)(solid-js@1.8.8)(vinxi@0.1.1)(vite@4.5.1)
       '@t3-oss/env-core':
         specifier: ^0.6.1
-        version: 0.6.1(typescript@4.9.5)(zod@3.22.4)
+        version: 0.6.1(typescript@5.3.3)(zod@3.22.4)
       '@tanstack/solid-query':
         specifier: ^4.29.5
         version: 4.29.7(solid-js@1.8.8)
@@ -97,8 +97,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.2
       typescript:
-        specifier: ^4.9.5
-        version: 4.9.5
+        specifier: ^5.3.3
+        version: 5.3.3
       vite:
         specifier: ^4.5.1
         version: 4.5.1(@types/node@20.1.4)
@@ -283,7 +283,7 @@ importers:
         version: 2.19.0
       webdriverio:
         specifier: ^8.11.2
-        version: 8.12.3(typescript@5.1.6)
+        version: 8.12.3(typescript@5.3.3)
 
   packages/packages:
     dependencies:
@@ -370,8 +370,8 @@ importers:
         specifier: ^2.19.0
         version: 2.19.0
       typescript:
-        specifier: ^4.8.4
-        version: 4.9.5
+        specifier: ^5.3.3
+        version: 5.3.3
 
   packages/runtime:
     dependencies:
@@ -420,7 +420,7 @@ importers:
         version: 2.19.0
       webdriverio:
         specifier: ^8.11.2
-        version: 8.12.3(typescript@5.1.6)
+        version: 8.12.3(typescript@5.3.3)
 
   packages/typesystem:
     dependencies:
@@ -454,7 +454,7 @@ importers:
         version: 2.19.0
       webdriverio:
         specifier: ^8.11.2
-        version: 8.12.3(typescript@5.1.6)
+        version: 8.12.3(typescript@5.3.3)
 
   packages/ui:
     dependencies:
@@ -2061,7 +2061,7 @@ packages:
       - supports-color
     dev: false
 
-  /@puppeteer/browsers@1.3.0(typescript@5.1.6):
+  /@puppeteer/browsers@1.3.0(typescript@5.3.3):
     resolution: {integrity: sha512-an3QdbNPkuU6qpxpbssxAbjRLJcF+eP4L8UqIY3+6n0sbaVxw5pz7PiCLy9g32XEZuoamUlV5ZQPnA6FxvkIHA==}
     engines: {node: '>=16.0.0'}
     hasBin: true
@@ -2078,7 +2078,7 @@ packages:
       progress: 2.0.3
       proxy-from-env: 1.1.0
       tar-fs: 2.1.1
-      typescript: 5.1.6
+      typescript: 5.3.3
       unbzip2-stream: 1.4.3
       yargs: 17.7.1
     transitivePeerDependencies:
@@ -2690,16 +2690,6 @@ packages:
     dependencies:
       defer-to-connect: 2.0.1
     dev: true
-
-  /@t3-oss/env-core@0.6.1(typescript@4.9.5)(zod@3.22.4):
-    resolution: {integrity: sha512-KQD7qEDJtkWIWWmTVjNvk0wnHpkvAQ6CRbUxbWMFNG/fiosBQDQvtRpBNu6USxBscJCoC4z6y7P9MN52/mLOzw==}
-    peerDependencies:
-      typescript: '>=4.7.2'
-      zod: ^3.0.0
-    dependencies:
-      typescript: 4.9.5
-      zod: 3.22.4
-    dev: false
 
   /@t3-oss/env-core@0.6.1(typescript@5.3.3)(zod@3.22.4):
     resolution: {integrity: sha512-KQD7qEDJtkWIWWmTVjNvk0wnHpkvAQ6CRbUxbWMFNG/fiosBQDQvtRpBNu6USxBscJCoC4z6y7P9MN52/mLOzw==}
@@ -4189,7 +4179,7 @@ packages:
     resolution: {integrity: sha512-MQNeVRDiJ9yAfHUlumx7OCweu15GgMIqEIvz/DTZwpZKjT7oGo9FcwUqS7PyH0mDJsWnuJIn41BZ4SPoQbZfew==}
     dev: true
 
-  /devtools@8.12.1(typescript@5.1.6):
+  /devtools@8.12.1(typescript@5.3.3):
     resolution: {integrity: sha512-R72raQLN1lDSqbr2DVj9SRh07JRyojzmrcLa33VBa2nw3cf5ZyHOHe0DgxlJ/5c2Dfs1+wGNJy16gWKGBq+xgg==}
     engines: {node: ^16.13 || >=18}
     dependencies:
@@ -4202,7 +4192,7 @@ packages:
       chrome-launcher: 0.15.2
       edge-paths: 3.0.5
       import-meta-resolve: 3.0.0
-      puppeteer-core: 20.3.0(typescript@5.1.6)
+      puppeteer-core: 20.3.0(typescript@5.3.3)
       query-selector-shadow-dom: 1.0.1
       ua-parser-js: 1.0.35
       uuid: 9.0.0
@@ -6654,7 +6644,7 @@ packages:
       once: 1.4.0
     dev: true
 
-  /puppeteer-core@20.3.0(typescript@5.1.6):
+  /puppeteer-core@20.3.0(typescript@5.3.3):
     resolution: {integrity: sha512-264pBrIui5bO6NJeOcbJrLa0OCwmA4+WK00JMrLIKTfRiqe2gx8KWTzLsjyw/bizErp3TKS7vt/I0i5fTC+mAw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
@@ -6663,12 +6653,12 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@puppeteer/browsers': 1.3.0(typescript@5.1.6)
+      '@puppeteer/browsers': 1.3.0(typescript@5.3.3)
       chromium-bidi: 0.4.9(devtools-protocol@0.0.1120988)
       cross-fetch: 3.1.6
       debug: 4.3.4
       devtools-protocol: 0.0.1120988
-      typescript: 5.1.6
+      typescript: 5.3.3
       ws: 8.13.0
     transitivePeerDependencies:
       - bufferutil
@@ -7652,28 +7642,16 @@ packages:
     engines: {node: '>=14.16'}
     dev: false
 
-  /typescript@4.9.5:
-    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-
   /typescript@5.0.4:
     resolution: {integrity: sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==}
     engines: {node: '>=12.20'}
     hasBin: true
     dev: false
 
-  /typescript@5.1.6:
-    resolution: {integrity: sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-    dev: true
-
   /typescript@5.3.3:
     resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: false
 
   /ua-parser-js@1.0.35:
     resolution: {integrity: sha512-fKnGuqmTBnIE+/KXSzCn4db8RTigUzw1AN0DmdU6hJovUTbYJKyqj+8Mt1c4VfRDnOVJnENmfYkIPZ946UrSAA==}
@@ -8299,7 +8277,7 @@ packages:
       tinypool: 0.5.0
       vite: 4.5.1(@types/node@20.1.4)
       vite-node: 0.32.4(@types/node@20.1.4)
-      webdriverio: 8.12.3(typescript@5.1.6)
+      webdriverio: 8.12.3(typescript@5.3.3)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
@@ -8341,7 +8319,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /webdriverio@8.12.3(typescript@5.1.6):
+  /webdriverio@8.12.3(typescript@5.3.3):
     resolution: {integrity: sha512-Nxyh0JM95r6nz4S+Kk1y340//tgShe3vKGtUgj9y9hnaEU2kTeTWAcr6Gt3F1KhDMtC03aIbc/zFkgkmwPHElw==}
     engines: {node: ^16.13 || >=18}
     dependencies:
@@ -8356,7 +8334,7 @@ packages:
       aria-query: 5.3.0
       css-shorthand-properties: 1.1.1
       css-value: 0.0.1
-      devtools: 8.12.1(typescript@5.1.6)
+      devtools: 8.12.1(typescript@5.3.3)
       devtools-protocol: 0.0.1161598
       grapheme-splitter: 1.0.4
       import-meta-resolve: 3.0.0
@@ -8364,7 +8342,7 @@ packages:
       lodash.clonedeep: 4.5.0
       lodash.zip: 4.2.0
       minimatch: 9.0.3
-      puppeteer-core: 20.3.0(typescript@5.1.6)
+      puppeteer-core: 20.3.0(typescript@5.3.3)
       query-selector-shadow-dom: 1.0.1
       resq: 1.11.0
       rgb2hex: 0.2.5

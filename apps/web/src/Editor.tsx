@@ -41,7 +41,10 @@ export default () => {
           body: JSON.stringify({ refreshToken }),
         });
 
-        return { ...(await res.json()), issued_at: Date.now() / 1000 };
+        return {
+          ...((await res.json()) as any),
+          issued_at: Date.now() / 1000,
+        };
       },
     },
   });
