@@ -37,6 +37,7 @@
     "@macrograph/config": "workspace:*",
     "@tailwindcss/forms": "^0.5.3",
     "@total-typescript/ts-reset": "^0.4.2",
+    "tailwind-scrollbar": "^3.0.5",
     "tailwindcss-animate": "^1.0.7",
     "unplugin-auto-import": "^0.17.3",
     "unplugin-icons": "^0.18.1",
