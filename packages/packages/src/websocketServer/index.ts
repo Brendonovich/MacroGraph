@@ -19,12 +19,12 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
       return {
         port: io.dataInput({
           id: "port",
-          name: "WS port",
+          name: "Port",
           type: t.int(),
         }),
         client: io.dataInput({
           id: "client",
-          name: "Client ID",
+          name: "Client",
           type: t.int(),
         }),
         data: io.dataInput({
@@ -53,7 +53,12 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
         }),
         port: io.dataOutput({
           id: "port",
-          name: "WS Port",
+          name: "Port",
+          type: t.int(),
+        }),
+        client: io.dataOutput({
+          id: "client",
+          name: "Client",
           type: t.int(),
         }),
         data: io.dataOutput({
@@ -65,6 +70,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
     },
     run({ ctx, data, io }) {
       ctx.setOutput(io.port, data.port);
+      ctx.setOutput(io.client, data.client);
       ctx.setOutput(io.data, data.data);
       ctx.exec(io.exec);
     },
