@@ -13,6 +13,7 @@ import {
   Size,
   Connections,
   IORef,
+  deserializeConnections,
 } from "@macrograph/runtime";
 import {
   createEventListener,
@@ -260,24 +261,7 @@ export function Interface(props: {
             }
 
             Solid.batch(() => {
-              item.connections.forEach((conn) => {
-                const outRef: IORef = `${nodeIdMap.get(conn.from.node)!}:o:${
-                    conn.from.output
-                  }`,
-                  inRef: IORef = `${nodeIdMap.get(conn.to.node)!}:i:${
-                    conn.to.input
-                  }`;
-
-                const outConns =
-                  model.connections.get(outRef) ??
-                  (() => {
-                    const array: Array<IORef> = createMutable([]);
-                    model.connections.set(outRef, array);
-                    return array;
-                  })();
-
-                outConns.push(inRef);
-              }, new ReactiveMap() as Connections);
+              deserializeConnections(item.connections, model.connections);
             });
 
             break;

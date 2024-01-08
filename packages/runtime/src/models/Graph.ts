@@ -307,22 +307,8 @@ export class Graph {
         })
       );
 
-      graph.connections = data.connections.reduce((acc, conn) => {
-        const outRef: IORef = `${conn.from.node}:o:${conn.from.output}`,
-          inRef: IORef = `${conn.to.node}:i:${conn.to.input}`;
-
-        const outConns =
-          acc.get(outRef) ??
-          (() => {
-            const array: Array<IORef> = createMutable([]);
-            acc.set(outRef, array);
-            return array;
-          })();
-
-        outConns.push(inRef);
-
-        return acc;
-      }, new ReactiveMap() as Connections);
+      graph.connections = new ReactiveMap();
+      deserializeConnections(data.connections, graph.connections);
     });
 
     for (const node of graph.nodes.values()) {
@@ -339,4 +325,24 @@ export class Graph {
 
     return graph;
   }
+}
+
+export function deserializeConnections(
+  connections: Array<z.infer<typeof SerializedConnection>>,
+  target: Connections
+) {
+  connections.forEach((conn) => {
+    const outRef: IORef = `${conn.from.node}:o:${conn.from.output}`,
+      inRef: IORef = `${conn.to.node}:i:${conn.to.input}`;
+
+    const outConns =
+      target.get(outRef) ??
+      (() => {
+        const array: Array<IORef> = createMutable([]);
+        target.set(outRef, array);
+        return array;
+      })();
+
+    outConns.push(inRef);
+  });
 }
