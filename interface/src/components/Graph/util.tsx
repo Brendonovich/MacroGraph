@@ -26,7 +26,7 @@ export const colour = (type: AnyType): string => {
   if (type instanceof t.Wildcard) {
     const value = type.wildcard.value();
 
-    if (value.isSome()) return colour(value.unwrap().value());
+    if (value.isSome()) return colour(value.unwrap());
     else return "white";
   }
 
