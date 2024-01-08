@@ -28,8 +28,20 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
       const websocketData = websockets.get(port);
       if (!websocketData) return;
 
-      if (msg === "Connected") websocketData.connections.add(client);
-      else if (msg === "Disconnected") websocketData.connections.delete(client);
+      if (msg === "Connected") {
+        websocketData.connections.add(client);
+        onEvent({
+          name: "WSSConnect",
+          data: { client, port },
+        });
+      }
+      else if (msg === "Disconnected") {
+        websocketData.connections.delete(client);
+        onEvent({
+          name: "WSSDisconnect",
+          data: { client, port },
+        });
+      }
       else
         onEvent({
           name: "wsEvent",
