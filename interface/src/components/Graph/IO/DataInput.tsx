@@ -34,7 +34,7 @@ const Input = (props: InputProps) => {
       <Match
         when={
           props.type instanceof WildcardType &&
-          props.type.wildcard.valueConnection().isSome() &&
+          props.type.wildcard.value().isSome() &&
           props.type
         }
       >
@@ -42,10 +42,7 @@ const Input = (props: InputProps) => {
           <Input
             value={props.value}
             onChange={props.onChange}
-            type={type()
-              .wildcard.valueConnection()
-              .map((v) => v.value())
-              .unwrap()}
+            type={type().wildcard.value().unwrap()}
             connected={props.connected}
           />
         )}

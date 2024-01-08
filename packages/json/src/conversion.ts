@@ -41,10 +41,7 @@ export function toJSON(type: t.Any, value: any): JSONValue | null;
 export function toJSON(type: t.Any, value: any): JSONValue | null {
   if (type instanceof t.Wildcard) {
     return toJSON(
-      type.wildcard
-        .valueConnection()
-        .expect("Wildcard value not found!")
-        .value(),
+      type.wildcard.value().expect("Wildcard value not found!"),
       value
     );
   } else if (type instanceof t.Enum && type.inner === JSON) {

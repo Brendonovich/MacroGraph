@@ -62,7 +62,7 @@ export class Wildcard {
         for (const type of this.types) {
           for (const w of type.wildcardConnections) {
             ret.add(w);
-            w.wildcard.valueConnection();
+            w.wildcard.value();
           }
         }
 
@@ -255,22 +255,22 @@ export class WildcardType extends BaseType<unknown> {
 
   default(): Option<unknown> {
     return this.wildcard
-      .valueConnection()
-      .map((v) => v.value().default())
+      .value()
+      .map((v) => v.default())
       .expect("Cannot get default of unconnected wildcard!");
   }
 
   variant(): TypeVariant {
     return this.wildcard
-      .valueConnection()
-      .map((v) => v.value().variant())
+      .value()
+      .map((v) => v.variant())
       .unwrapOr("wildcard");
   }
 
   toString(): string {
     return this.wildcard
-      .valueConnection()
-      .map((v) => `Wildcard(${v.value().toString()})`)
+      .value()
+      .map((v) => `Wildcard(${v.toString()})`)
       .unwrapOr("Wildcard");
   }
 
@@ -283,8 +283,8 @@ export class WildcardType extends BaseType<unknown> {
 
   getWildcards(): Wildcard[] {
     return this.wildcard
-      .valueConnection()
-      .map((v) => v.value().getWildcards())
+      .value()
+      .map((v) => v.getWildcards())
       .unwrapOrElse(() => [this.wildcard]);
   }
 
@@ -341,10 +341,10 @@ class WildcardTypeConnector extends Disposable {
 
         createEffect(() => {
           // need to disconnect/reconnect each time a new value is available
-          const wildcardValue = a.wildcard.valueConnection();
+          const valueConnection = a.wildcard.valueConnection();
 
-          wildcardValue.peek((wildcardValue) => {
-            const value = wildcardValue.value();
+          valueConnection.peek((valueConnection) => {
+            const value = valueConnection.value();
             if (value === b) return;
 
             // connects stuff like `Map<Wildcard>` and `Wildcard(Map<String>)` since
@@ -356,7 +356,7 @@ class WildcardTypeConnector extends Disposable {
 
             // needed for if `Wildcard(Map<String>)` loses its source.
             // nested wildcard connections wouldn't disconnect with their parents without this
-            const parentListener = wildcardValue.addDisposeListener(cleanup);
+            const parentListener = valueConnection.addDisposeListener(cleanup);
 
             // don't need a listener if we're re-running
             onCleanup(() => {
