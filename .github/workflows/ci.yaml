@@ -7,8 +7,7 @@ on:
     workflow_dispatch:
 
 jobs:
-    build-desktop-tauri:
-        needs: build-desktop-frontend
+    build-desktop:
         strategy:
             fail-fast: false
             matrix:
