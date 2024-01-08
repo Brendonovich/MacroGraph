@@ -6,9 +6,7 @@ import { fileURLToPath } from "node:url";
 
 export default [
   AutoImport({
-    dts: fileURLToPath(
-      new URL("/../src/auto-imports.d.ts", import.meta.url).href
-    ),
+    dts: fileURLToPath(new URL("src/auto-imports.d.ts", import.meta.url).href),
     resolvers: [
       IconsResolver({
         prefix: "Icon",
