@@ -25,8 +25,6 @@ export function CommentBox(props: Props) {
   const position = () => props.box.position;
   const size = () => props.box.size;
 
-  const UI = useUIStore();
-
   const [editing, setEditing] = createSignal(false);
 
   const isSelected = () => {
