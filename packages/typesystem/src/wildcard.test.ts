@@ -112,87 +112,94 @@ describe("Connect Map<String> + Map<Wildcard> + Map<Wildcard>", () => {
 
 describe("Connect Map<String> + Wildcard(A) + Map<Wildcard(B)>", () => {
   function setup() {
-    // Node 1
-    const output1 = t.map(t.string());
+    const node1 = (() => {
+      return { output: t.map(t.string()) };
+    })();
 
-    // Node 2
-    const wildcard2 = new Wildcard("2");
-    const input2 = t.wildcard(wildcard2);
-    const output2 = t.wildcard(wildcard2);
+    const node2 = (() => {
+      const wildcard = new Wildcard("2");
+      const input = t.wildcard(wildcard);
+      const output = t.wildcard(wildcard);
 
-    // Node 3
-    const wildcard3 = new Wildcard("3");
-    const input3 = t.map(t.wildcard(wildcard3));
+      return { wildcard, input, output };
+    })();
+
+    const node3 = (() => {
+      const wildcard = new Wildcard("3");
+      const input = t.map(t.wildcard(wildcard));
+
+      return { wildcard, input };
+    })();
 
     return {
-      output1,
-      wildcard2,
-      input2,
-      output2,
-      wildcard3,
-      input3,
+      node1,
+      node2,
+      node3,
     };
   }
 
   test("Connect Forward", () => {
-    const { output1, wildcard2, input2, output2, wildcard3, input3 } = setup();
+    const { node1, node2, node3 } = setup();
 
-    connectWildcardsInTypes(output1, input2);
-    connectWildcardsInTypes(output2, input3);
+    connectWildcardsInTypes(node1.output, node2.input);
 
-    expect(wildcard2.value().expect("wildcard2 value empty")).toBe(output1);
-    expect(wildcard3.value().expect("wildcard3 value empty")).toBe(
-      output1.value
-    );
+    expect(node2.wildcard.value().value).toBe(node1.output);
+
+    connectWildcardsInTypes(node2.output, node3.input);
+
+    expect(node2.wildcard.value().value).toBe(node1.output);
+    expect(node3.wildcard.value().value).toBe(node1.output.value);
   });
 
   test("Connect Backwards", () => {
-    const { output1, wildcard2, input2, output2, wildcard3, input3 } = setup();
+    const { node1, node2, node3 } = setup();
 
-    connectWildcardsInTypes(output2, input3);
-    connectWildcardsInTypes(output1, input2);
+    connectWildcardsInTypes(node2.output, node3.input);
+    connectWildcardsInTypes(node1.output, node2.input);
 
-    expect(wildcard2.value().unwrap()).toBe(input3);
-    expect(wildcard3.value().unwrap()).toBe(output1.value);
+    expect(node2.wildcard.value().unwrap()).toBe(node1.output);
+    expect(node3.wildcard.value().unwrap()).toBe(node1.output.value);
   });
 
   test("Disconnect Forward", () => {
-    const { output1, wildcard2, input2, output2, wildcard3, input3 } = setup();
+    const { node1, node2, node3 } = setup();
 
-    connectWildcardsInTypes(output1, input2);
-    connectWildcardsInTypes(output2, input3);
+    connectWildcardsInTypes(node1.output, node2.input);
+    connectWildcardsInTypes(node2.output, node3.input);
 
-    expect(wildcard3.value().unwrap()).toBe(output1.value);
+    expect(node3.wildcard.value().unwrap()).toBe(node1.output.value);
 
-    disconnectWildcardsInTypes(output1, input2);
+    disconnectWildcardsInTypes(node1.output, node2.input);
 
-    expect(wildcard2.value().unwrap()).toBe(input3);
-    expect(wildcard3.value()).toBe(None);
+    expect(node2.wildcard.value().unwrap()).toBe(node3.input);
+    expect(node3.wildcard.value()).toBe(None);
 
-    disconnectWildcardsInTypes(output2, input3);
+    disconnectWildcardsInTypes(node2.output, node3.input);
 
-    expect(wildcard2.value()).toBe(None);
-    expect(wildcard3.value()).toBe(None);
+    expect(node2.wildcard.value()).toBe(None);
+    expect(node3.wildcard.value()).toBe(None);
   });
 
   test("Disconnect Backwards", () => {
-    const { output1, wildcard2, input2, output2, wildcard3, input3 } = setup();
+    const { node1, node2, node3 } = setup();
 
-    connectWildcardsInTypes(output2, input3);
-    connectWildcardsInTypes(output1, input2);
+    connectWildcardsInTypes(node2.output, node3.input);
+    connectWildcardsInTypes(node1.output, node2.input);
 
-    expect(wildcard3.value().unwrap()).toBe(output1.value);
-    expect(input3).toBe(wildcard2.value().unwrap());
+    expect(node3.wildcard.value().unwrap()).toBe(node1.output.value);
+    expect(node3.input.value.wildcard.value().unwrap()).toBe(
+      (node2.wildcard.value().unwrap() as t.Map<any>).value
+    );
 
-    disconnectWildcardsInTypes(output2, input3);
+    disconnectWildcardsInTypes(node2.output, node3.input);
 
-    expect(wildcard2.value().unwrap()).toBe(output1);
-    expect(wildcard3.value()).toBe(None);
+    expect(node2.wildcard.value().unwrap()).toBe(node1.output);
+    expect(node3.wildcard.value()).toBe(None);
 
-    disconnectWildcardsInTypes(output1, input2);
+    disconnectWildcardsInTypes(node1.output, node2.input);
 
-    expect(wildcard2.value()).toBe(None);
-    expect(wildcard3.value()).toBe(None);
+    expect(node2.wildcard.value()).toBe(None);
+    expect(node3.wildcard.value()).toBe(None);
   });
 });
 
@@ -256,4 +263,46 @@ describe("connecting two groups", () => {
     expect(wildcard2.value().unwrap()).toBe(bool);
     expect(wildcard1.value().unwrap()).toBe(bool);
   });
+});
+
+// https://github.com/Brendonovich/macrograph/issues/269
+test("#269", () => {
+  const node1 = (() => {
+    return { output: t.string() };
+  })();
+
+  const node2 = (() => {
+    const w = new Wildcard("w");
+    const input = t.wildcard(w);
+    const output = t.list(t.wildcard(w));
+
+    return {
+      w,
+      input,
+      output,
+    };
+  })();
+
+  connectWildcardsInTypes(node1.output, node2.input);
+
+  const node3 = (() => {
+    const w = new Wildcard("w");
+    const input = t.wildcard(w);
+    const output = t.wildcard(w);
+
+    return { w, input, output };
+  })();
+
+  connectWildcardsInTypes(node2.output, node3.input);
+
+  const node4 = (() => {
+    const w = new Wildcard("w");
+    const input = t.list(t.wildcard(w));
+
+    return { w, input };
+  })();
+
+  connectWildcardsInTypes(node3.output, node4.input);
+
+  expect(node4.w.value().unwrap()).toBe(node1.output);
 });

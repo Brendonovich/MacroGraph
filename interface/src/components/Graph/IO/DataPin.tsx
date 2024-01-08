@@ -39,11 +39,9 @@ export const DataPin = (props: Props) => {
     }
 
     if (type instanceof WildcardType) {
-      const value = type.wildcard.value();
+      const value = type.wildcard.valueConnection();
 
-      if (value.isSome()) {
-        return rounding(value.unwrap());
-      }
+      if (value.isSome()) return rounding(value.unwrap().value());
     }
 
     return "rounded-full";
@@ -52,7 +50,10 @@ export const DataPin = (props: Props) => {
   const innerType = {
     get value() {
       if (props.pin.type instanceof WildcardType) {
-        return props.pin.type.wildcard.value().unwrapOr(props.pin.type);
+        return props.pin.type.wildcard
+          .valueConnection()
+          .map((v) => v.value())
+          .unwrapOr(props.pin.type);
       } else return props.pin.type;
     },
   };
@@ -68,7 +69,10 @@ export const DataPin = (props: Props) => {
                   const value = type();
 
                   if (value instanceof t.Wildcard) {
-                    return value.wildcard.value().unwrapOr(value);
+                    return value.wildcard
+                      .valueConnection()
+                      .map((v) => v.value())
+                      .unwrapOr(value);
                   } else return value;
                 },
               };

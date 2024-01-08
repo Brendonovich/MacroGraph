@@ -34,4 +34,8 @@ export class ListType<T extends BaseType> extends BaseType<t.infer<T>[]> {
   serialize() {
     return { variant: "list", item: this.item.serialize() };
   }
+
+  hasWildcard(): boolean {
+    return this.item.hasWildcard();
+  }
 }

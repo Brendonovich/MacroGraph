@@ -28,9 +28,19 @@ export type AnyType = BaseType<any>;
 
 export function typesCanConnect(aRaw: t.Any, bRaw: t.Any): boolean {
   const a =
-    aRaw instanceof t.Wildcard ? aRaw.wildcard.value().unwrapOr(aRaw) : aRaw;
+    aRaw instanceof t.Wildcard
+      ? aRaw.wildcard
+          .valueConnection()
+          .map((v) => v.value())
+          .unwrapOr(aRaw)
+      : aRaw;
   const b =
-    bRaw instanceof t.Wildcard ? bRaw.wildcard.value().unwrapOr(bRaw) : bRaw;
+    bRaw instanceof t.Wildcard
+      ? bRaw.wildcard
+          .valueConnection()
+          .map((v) => v.value())
+          .unwrapOr(bRaw)
+      : bRaw;
 
   if (a instanceof t.Wildcard || b instanceof t.Wildcard) return true;
   else if (a instanceof BasePrimitiveType && b instanceof BasePrimitiveType)

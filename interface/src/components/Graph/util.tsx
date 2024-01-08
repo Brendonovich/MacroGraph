@@ -24,11 +24,11 @@ export const colour = (type: AnyType): string => {
   if (type instanceof t.Struct) return "#FACC15";
 
   if (type instanceof t.Wildcard) {
-    const value = type.wildcard.value();
+    const value = type.wildcard.valueConnection();
 
-    if (value.isSome()) return colour(value.unwrap());
+    if (value.isSome()) return colour(value.unwrap().value());
     else return "white";
   }
 
-  throw new Error();
+  throw new Error(JSON.stringify(type));
 };

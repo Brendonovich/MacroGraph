@@ -532,4 +532,8 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
   serialize() {
     return { variant: "option", inner: this.inner.serialize() };
   }
+
+  hasWildcard(): boolean {
+    return this.inner.hasWildcard();
+  }
 }

@@ -15,4 +15,17 @@ export default [
     ],
   }),
   Icons({ compiler: "solid", scale: 1 }),
+  {
+    enforce: "pre",
+    config() {
+      return {
+        optimizeDeps: {
+          include: [
+            "@solidjs/start > source-map-js",
+            "@solidjs/start > error-stack-parser",
+          ],
+        },
+      };
+    },
+  },
 ] as PluginOption[];

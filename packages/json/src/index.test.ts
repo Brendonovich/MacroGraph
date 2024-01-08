@@ -1,6 +1,12 @@
 import { test, expect, describe } from "vitest";
 import { createEnum, createStruct } from "@macrograph/runtime";
-import { MapValue, None, Some, t } from "@macrograph/typesystem";
+import {
+  MapValue,
+  None,
+  Some,
+  serializeValue,
+  t,
+} from "@macrograph/typesystem";
 
 import { toJSON, JSON, jsonToJS, jsToJSON, JSONValue } from "./";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -37,8 +43,12 @@ describe("toJSON", () => {
   });
   test("t.Map<t.Bool> -> Map<Bool>", () => {
     const value = new Map();
-    expect(toJSON(t.map(t.bool()), value)).toEqual(
-      JSON.variant(["Map", { value: value as never }])
+
+    const actual = toJSON(t.map(t.bool()), value);
+    const expected = JSON.variant(["Map", { value: new ReactiveMap() }]);
+
+    expect(serializeValue(actual, t.enum(JSON))).toEqual(
+      serializeValue(expected, t.enum(JSON))
     );
   });
   test("t.Enum<JSON> -> JSON", () => {
@@ -106,20 +116,25 @@ describe("toJSON", () => {
       json: JSON.variant("Null"),
     };
 
-    expect(toJSON(t.struct(TestStruct), value)).toEqual(
-      JSON.variant([
-        "Map",
-        {
-          value: new Map(
-            Object.entries({
-              string: JSON.variant(["String", { value: value.string }]),
-              int: JSON.variant(["Number", { value: value.int }]),
-              bool: JSON.variant(["Bool", { value: value.bool }]),
-              json: value.json,
-            })
-          ) as any,
-        },
-      ])
+    expect(
+      serializeValue(toJSON(t.struct(TestStruct), value), t.enum(JSON))
+    ).toEqual(
+      serializeValue(
+        JSON.variant([
+          "Map",
+          {
+            value: new Map(
+              Object.entries({
+                string: JSON.variant(["String", { value: value.string }]),
+                int: JSON.variant(["Number", { value: value.int }]),
+                bool: JSON.variant(["Bool", { value: value.bool }]),
+                json: value.json,
+              })
+            ) as any,
+          },
+        ]),
+        t.enum(JSON)
+      )
     );
   });
 });

@@ -78,12 +78,14 @@ export class DataInput<T extends BaseType<any>> {
         const type = this.type;
         if (!(type instanceof t.Wildcard)) return None;
 
-        const value = type.wildcard.value();
+        const value = type.wildcard.valueConnection();
 
         if (value.isSome() && value.unwrap() instanceof BasePrimitiveType) {
-          if (prev.isSome() && value.unwrap().eq(prev.unwrap())) return prev;
+          if (prev.isSome() && value.unwrap().value().eq(prev.unwrap()))
+            return prev;
 
-          if (!self.defaultValue) self.defaultValue = value.unwrap().default();
+          if (!self.defaultValue)
+            self.defaultValue = value.unwrap().value().default();
         } else self.defaultValue = null;
 
         return value;

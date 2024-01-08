@@ -1492,7 +1492,7 @@ export function pkg(core: Core) {
         type: t.wildcard(w),
       });
 
-      const outputs = w.value().map((wt) => {
+      const outputs = w.valueConnection().map((wt) => {
         if (!(wt instanceof t.Struct)) return null;
 
         const dataOutputs = Object.entries(
@@ -1536,7 +1536,7 @@ export function pkg(core: Core) {
         type: t.wildcard(w),
       });
 
-      const inputs = w.value().map((wt) => {
+      const inputs = w.valueConnection().map((wt) => {
         if (!(wt instanceof t.Struct)) return null;
 
         const dataOutputs = Object.entries(
@@ -1586,7 +1586,7 @@ export function pkg(core: Core) {
         type: t.wildcard(w),
       });
 
-      const outputs = w.value().map((v) => {
+      const outputs = w.valueConnection().map((v) => {
         if (v instanceof t.Enum) {
           const variantOutputs = (
             v as t.Enum<Enum<EnumVariants>>
