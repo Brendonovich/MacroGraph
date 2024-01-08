@@ -347,7 +347,7 @@ export function Interface(props: {
       <UIStoreProvider store={UI}>
         <div
           ref={setRootRef}
-          class="relative w-full h-full flex flex-row overflow-hidden select-none bg-neutral-800 text-white"
+          class="relative w-full h-full flex flex-row select-none bg-neutral-800 text-white"
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -392,45 +392,47 @@ export function Interface(props: {
               {(graph) => {
                 return (
                   <>
-                    <div class="h-8 w-full flex flex-row divide-x divide-black">
-                      <Solid.For
-                        each={graphStates
-                          .map((state) => {
-                            const graph = props.core.project.graphs.get(
-                              state.id
-                            );
-                            if (!graph) return;
+                    <div class="overflow-x-auto overflow-y-hidden">
+                      <div class="h-8 w-full flex flex-row divide-x divide-black">
+                        <Solid.For
+                          each={graphStates
+                            .map((state) => {
+                              const graph = props.core.project.graphs.get(
+                                state.id
+                              );
+                              if (!graph) return;
 
-                            return [state, graph] as const;
-                          })
-                          .filter(Boolean)}
-                      >
-                        {([_state, graph], index) => (
-                          <button
-                            class={clsx(
-                              "p-2 flex flex-row items-center relative group",
-                              currentGraphIndex() === index() && "bg-white/20"
-                            )}
-                            onClick={() => setCurrentGraphIndex(index)}
-                          >
-                            {graph.name}
-                            <HeroiconsXMarkSolid
-                              class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
-                              stroke-width={1}
-                              onClick={(e) => {
-                                e.stopPropagation();
+                              return [state, graph] as const;
+                            })
+                            .filter(Boolean)}
+                        >
+                          {([_state, graph], index) => (
+                            <button
+                              class={clsx(
+                                "p-2 flex flex-row items-center relative group break-all flex-shrink-0",
+                                currentGraphIndex() === index() && "bg-white/20"
+                              )}
+                              onClick={() => setCurrentGraphIndex(index)}
+                            >
+                              {graph.name}
+                              <HeroiconsXMarkSolid
+                                class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
+                                stroke-width={1}
+                                onClick={(e) => {
+                                  e.stopPropagation();
 
-                                setGraphStates(
-                                  produce((states) => {
-                                    states.splice(index(), 1);
-                                    return states;
-                                  })
-                                );
-                              }}
-                            />
-                          </button>
-                        )}
-                      </Solid.For>
+                                  setGraphStates(
+                                    produce((states) => {
+                                      states.splice(index(), 1);
+                                      return states;
+                                    })
+                                  );
+                                }}
+                              />
+                            </button>
+                          )}
+                        </Solid.For>
+                      </div>
                     </div>
                     <Graph
                       graph={graph().model}
