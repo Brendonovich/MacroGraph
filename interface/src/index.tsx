@@ -353,7 +353,7 @@ export function Interface(props: {
       <UIStoreProvider store={UI}>
         <div
           ref={setRootRef}
-          class="relative w-full h-full flex flex-row overflow-hidden select-none bg-neutral-800 text-white"
+          class="relative w-full h-full flex flex-row select-none bg-neutral-800 text-white"
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -393,12 +393,12 @@ export function Interface(props: {
             />
           </Solid.Show>
 
-          <div class="flex-1 flex divide-y divide-black flex-col h-full justify-center items-center text-white">
+          <div class="flex-1 flex divide-y divide-black flex-col h-full justify-center items-center text-white overflow-x-hidden">
             <Solid.Show when={currentGraph()} fallback="No graph selected">
-              {(graph) => {
-                return (
-                  <>
-                    <div class="h-8 w-full flex flex-row divide-x divide-black">
+              {(graph) => (
+                <>
+                  <div class="overflow-x-auto w-full scrollbar scrollbar-none">
+                    <div class="h-8 flex flex-row divide-x divide-black">
                       <Solid.For
                         each={graphStates
                           .map((state) => {
@@ -414,7 +414,7 @@ export function Interface(props: {
                         {([_state, graph], index) => (
                           <button
                             class={clsx(
-                              "p-2 flex flex-row items-center relative group",
+                              "p-2 flex flex-row items-center relative group shrink-0 whitespace-nowrap",
                               currentGraphIndex() === index() && "bg-white/20"
                             )}
                             onClick={() => setCurrentGraphIndex(index)}
@@ -437,60 +437,61 @@ export function Interface(props: {
                           </button>
                         )}
                       </Solid.For>
+                      <div class="flex-1" />
                     </div>
-                    <Graph
-                      graph={graph().model}
-                      state={graph().state}
-                      nodeSizes={nodeSizes}
-                      onMouseEnter={() => setHoveredPane(true)}
-                      onMouseMove={() => setHoveredPane(true)}
-                      onMouseLeave={() => setHoveredPane(null)}
-                      onMouseUp={(e) => {
-                        if (e.button === 2)
-                          setSchemaMenu({
-                            status: "open",
-                            graph: graph().state,
-                            position: {
-                              x: e.clientX,
-                              y: e.clientY,
-                            },
-                          });
-                      }}
-                      onGraphDragStart={() => {
-                        setSchemaMenu({ status: "closed" });
-                      }}
-                      onItemSelected={(id) => {
-                        setGraphStates(graph().index, { selectedItemId: id });
-                      }}
-                      onBoundsChange={setGraphBounds}
-                      onSizeChange={setGraphBounds}
-                      onScaleChange={(scale) => {
-                        setGraphStates(graph().index, {
-                          scale,
+                  </div>
+                  <Graph
+                    graph={graph().model}
+                    state={graph().state}
+                    nodeSizes={nodeSizes}
+                    onMouseEnter={() => setHoveredPane(true)}
+                    onMouseMove={() => setHoveredPane(true)}
+                    onMouseLeave={() => setHoveredPane(null)}
+                    onMouseUp={(e) => {
+                      if (e.button === 2)
+                        setSchemaMenu({
+                          status: "open",
+                          graph: graph().state,
+                          position: {
+                            x: e.clientX,
+                            y: e.clientY,
+                          },
                         });
-                      }}
-                      onTranslateChange={(translate) => {
-                        setGraphStates(
-                          produce((states) => {
-                            states[graph().index]!.translate = translate;
-                            return states;
-                          })
-                        );
-                      }}
-                      onMouseDown={(e) => {
-                        if (e.button === 0) {
-                          Solid.batch(() => {
-                            setGraphStates(graph().index, {
-                              selectedItemId: null,
-                            });
-                            setSchemaMenu({ status: "closed" });
+                    }}
+                    onGraphDragStart={() => {
+                      setSchemaMenu({ status: "closed" });
+                    }}
+                    onItemSelected={(id) => {
+                      setGraphStates(graph().index, { selectedItemId: id });
+                    }}
+                    onBoundsChange={setGraphBounds}
+                    onSizeChange={setGraphBounds}
+                    onScaleChange={(scale) => {
+                      setGraphStates(graph().index, {
+                        scale,
+                      });
+                    }}
+                    onTranslateChange={(translate) => {
+                      setGraphStates(
+                        produce((states) => {
+                          states[graph().index]!.translate = translate;
+                          return states;
+                        })
+                      );
+                    }}
+                    onMouseDown={(e) => {
+                      if (e.button === 0) {
+                        Solid.batch(() => {
+                          setGraphStates(graph().index, {
+                            selectedItemId: null,
                           });
-                        }
-                      }}
-                    />
-                  </>
-                );
-              }}
+                          setSchemaMenu({ status: "closed" });
+                        });
+                      }
+                    }}
+                  />
+                </>
+              )}
             </Solid.Show>
           </div>
 

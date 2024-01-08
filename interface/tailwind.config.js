@@ -28,5 +28,6 @@ module.exports = {
     require("@tailwindcss/forms"),
     require("@kobalte/tailwindcss"),
     require("tailwindcss-animate"),
+    require("tailwind-scrollbar"),
   ],
 };
