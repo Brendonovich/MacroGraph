@@ -48,7 +48,7 @@ export interface GraphArgs {
   project: Project;
 }
 
-type IORef = `${number}:${"i" | "o"}:${string}`;
+export type IORef = `${number}:${"i" | "o"}:${string}`;
 
 export function splitIORef(ref: IORef) {
   const [nodeId, type, ...ioId] = ref.split(":") as [
@@ -68,7 +68,7 @@ export function makeIORef(io: Pin): IORef {
   return `${io.node.id}:${pinIsInput(io) ? "i" : "o"}:${io.id}`;
 }
 
-type Connections = ReactiveMap<IORef, Array<IORef>>;
+export type Connections = ReactiveMap<IORef, Array<IORef>>;
 
 export class Graph {
   id: number;

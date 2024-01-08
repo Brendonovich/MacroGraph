@@ -1,6 +1,6 @@
 import "@total-typescript/ts-reset";
 import * as Solid from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import { createMutable, createStore, produce } from "solid-js/store";
 import {
   CommentBox,
   Core,
@@ -11,6 +11,8 @@ import {
   Node as NodeModel,
   Project,
   Size,
+  Connections,
+  IORef,
 } from "@macrograph/runtime";
 import {
   createEventListener,
@@ -45,6 +47,7 @@ import {
 } from "./clipboard";
 import { CustomEventList } from "./components/CustomEvents";
 import "./global.css";
+import { ReactiveMap } from "@solid-primitives/map";
 
 export { useCore } from "./contexts";
 
@@ -232,6 +235,7 @@ export function Interface(props: {
             model.commentBoxes.set(item.commentBox.id, commentBox);
 
             const nodeIdMap = new Map<number, number>();
+
             for (const nodeJson of item.nodes) {
               const id = model.generateId();
               nodeIdMap.set(nodeJson.id, id);
@@ -249,17 +253,38 @@ export function Interface(props: {
                     item.commentBox.position.y,
                 },
               });
+
               if (!node) throw new Error("Failed to deserialize node");
+
               model.nodes.set(node.id, node);
             }
-            // model.deserializeConnections(item.connections, {
-            //   nodeIdMap,
-            // });
+
+            Solid.batch(() => {
+              item.connections.forEach((conn) => {
+                const outRef: IORef = `${nodeIdMap.get(conn.from.node)!}:o:${
+                    conn.from.output
+                  }`,
+                  inRef: IORef = `${nodeIdMap.get(conn.to.node)!}:i:${
+                    conn.to.input
+                  }`;
+
+                const outConns =
+                  model.connections.get(outRef) ??
+                  (() => {
+                    const array: Array<IORef> = createMutable([]);
+                    model.connections.set(outRef, array);
+                    return array;
+                  })();
+
+                outConns.push(inRef);
+              }, new ReactiveMap() as Connections);
+            });
+
             break;
           }
           case "graph": {
             item.graph.id = project.generateGraphId();
-            const graph = await GraphModel.deserialize(project, item.graph);
+            const graph = GraphModel.deserialize(project, item.graph);
             if (!graph) throw new Error("Failed to deserialize graph");
             core.project.graphs.set(graph.id, graph);
             break;

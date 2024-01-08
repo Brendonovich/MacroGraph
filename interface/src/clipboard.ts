@@ -11,6 +11,7 @@ import {
   Project,
   GetNodeSize,
 } from "@macrograph/runtime";
+import { Option } from "@macrograph/typesystem";
 
 export const ClipboardItem = z.discriminatedUnion("type", [
   z.object({
@@ -60,18 +61,36 @@ export function nodeToClipboardItem(
   };
 }
 
+export function serializeConnections(nodes: Set<Node>) {
+  const connections: z.infer<typeof SerializedConnection>[] = [];
+
+  for (const node of nodes) {
+    node.state.inputs.forEach((i) => {
+      (i.connection as unknown as Option<typeof i>).peek((conn) => {
+        if (!nodes.has(conn.node)) return;
+
+        connections.push({
+          from: { node: conn.node.id, output: conn.id },
+          to: { node: i.node.id, input: i.id },
+        });
+      });
+    });
+  }
+
+  return connections;
+}
+
 export function commentBoxToClipboardItem(
   box: CommentBox,
   getNodeSize: GetNodeSize
 ): Extract<ClipboardItem, { type: "commentBox" }> {
   const nodes = box.getNodes(box.graph.nodes.values(), getNodeSize);
-  // const connections = serializeConnections(nodes.values());
 
   return {
     type: "commentBox",
     commentBox: box.serialize(),
-    nodes: nodes.map((n) => n.serialize()),
-    connections: [],
+    nodes: [...nodes].map((n) => n.serialize()),
+    connections: serializeConnections(nodes),
   };
 }
 

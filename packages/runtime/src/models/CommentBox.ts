@@ -48,7 +48,7 @@ export class CommentBox {
   getNodes(nodes: IterableIterator<Node>, getNodeSize: GetNodeSize) {
     const { size, position } = this;
 
-    const ret: Node[] = [];
+    const ret = new Set<Node>();
 
     for (const node of nodes) {
       const nodePosition = node.state.position;
@@ -64,7 +64,7 @@ export class CommentBox {
       )
         continue;
 
-      ret.push(node);
+      ret.add(node);
     }
 
     return ret;
