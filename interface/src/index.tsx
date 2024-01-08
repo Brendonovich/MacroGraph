@@ -1,6 +1,6 @@
 import "@total-typescript/ts-reset";
 import * as Solid from "solid-js";
-import { createMutable, createStore, produce } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import {
   CommentBox,
   Core,
@@ -11,8 +11,6 @@ import {
   Node as NodeModel,
   Project,
   Size,
-  Connections,
-  IORef,
   deserializeConnections,
 } from "@macrograph/runtime";
 import {
@@ -48,7 +46,6 @@ import {
 } from "./clipboard";
 import { CustomEventList } from "./components/CustomEvents";
 import "./global.css";
-import { ReactiveMap } from "@solid-primitives/map";
 
 export { useCore } from "./contexts";
 

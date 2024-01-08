@@ -17,7 +17,12 @@ import {
 } from ".";
 import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import { SerializedNode } from "./Node";
-import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
+import {
+  CommentBox,
+  CommentBoxArgs,
+  GetNodeSize,
+  SerializedCommentBox,
+} from "./CommentBox";
 import { Project } from "./Project";
 import { SerializedVariable, Variable, VariableArgs } from "./Variable";
 
@@ -213,16 +218,32 @@ export class Graph {
     this.project.save();
   }
 
-  deleteItem(item: Node | CommentBox) {
-    if (item instanceof Node) {
-      item.state.inputs.forEach((i) => this.disconnectPin(i));
-      item.state.outputs.forEach((o) => this.disconnectPin(o));
+  deleteNode(node: Node, save = true) {
+    node.state.inputs.forEach((i) => this.disconnectPin(i));
+    node.state.outputs.forEach((o) => this.disconnectPin(o));
 
-      this.nodes.delete(item.id);
-      item.dispose();
-    } else {
-      this.commentBoxes.delete(item.id);
-    }
+    this.nodes.delete(node.id);
+    node.dispose();
+
+    if (save) this.project.save();
+  }
+
+  deleteCommentbox(
+    box: CommentBox,
+    getNodeSize: GetNodeSize,
+    deleteNodes = false
+  ) {
+    batch(() => {
+      this.commentBoxes.delete(box.id);
+
+      if (!deleteNodes) return;
+
+      const nodes = box.getNodes(this.nodes.values(), getNodeSize);
+
+      for (const node of nodes) {
+        this.deleteNode(node, false);
+      }
+    });
 
     this.project.save();
   }
