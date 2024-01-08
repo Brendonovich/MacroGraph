@@ -7,36 +7,7 @@ on:
     workflow_dispatch:
 
 jobs:
-    build-desktop-frontend:
-        runs-on: ubuntu-20.04
-        steps:
-            - uses: actions/checkout@v3
-
-            - name: setup node
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 16
-
-            - uses: pnpm/action-setup@v2
-              name: Install pnpm
-              id: pnpm-install
-              with:
-                  version: 8
-                  run_install: false
-
-            - name: install frontend dependencies
-              run: pnpm install
-
-            - name: build frontend
-              run: pnpm desktop build
-
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: apps-desktop-dotoutput
-                  path: apps/desktop/.output
-
-    build-desktop-tauri:
-        needs: build-desktop-frontend
+    build-desktop:
         strategy:
             fail-fast: false
             matrix:
@@ -75,11 +46,6 @@ jobs:
 
             - name: install frontend dependencies
               run: pnpm install
-
-            - uses: actions/download-artifact@v4
-              with:
-                  name: apps-desktop-dotoutput
-                  path: apps/desktop/.output
 
             - uses: JonasKruckenberg/tauri-build@v1
               id: tauri_build
