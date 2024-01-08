@@ -41,7 +41,25 @@ impl DerefMut for WebSocketShutdown {
 
 #[derive(Default)]
 pub struct Ctx {
-    senders: Mutex<BTreeMap<u16, mpsc::Sender<String>>>,
+    senders: Mutex<BTreeMap<u16, Arc<Mutex<BTreeMap<u8, mpsc::Sender<String>>>>>>,
+}
+
+fn random_id<T>(map: &BTreeMap<u8, T>) -> u8 {
+    let mut i = 0;
+
+    loop {
+        if !map.contains_key(&i) {
+            break;
+        }
+
+        if i == u8::MAX {
+            panic!("No more ids available");
+        }
+
+        i += 1;
+    }
+
+    i
 }
 
 pub fn router() -> AlphaRouter<super::Ctx> {
@@ -54,10 +72,12 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 
                 let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
-                let (sender_tx, sender_rx) = mpsc::channel(64);
-                let (receiver_tx, mut receiver_rx) = mpsc::channel(64);
+                let (receiver_tx, mut receiver_rx) = mpsc::channel::<(u8, Message)>(16);
 
-                ctx.ws.senders.lock().await.insert(port, sender_tx);
+                let sender_txs = {
+                    let mut senders = ctx.ws.senders.lock().await;
+                    senders.entry(port).or_default().clone()
+                };
 
                 let server = axum::Server::bind(&addr)
                     .serve(
@@ -65,7 +85,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                             .route("/", get(ws_handler))
                             .with_state(WsState {
                                 receiver_tx,
-                                sender_rx: Arc::new(Mutex::new(sender_rx)),
+                                sender_txs,
                                 shutdown_rx: WebSocketShutdown(ws_shutdown_rx),
                             })
                             .into_make_service(),
@@ -95,15 +115,23 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 #[specta(inline)]
                 struct Args {
                     port: u16,
+                    client: u8,
                     data: String,
                 }
 
-                |ctx, Args { port, data }: Args| async move {
+                |ctx, Args { port, client, data }: Args| async move {
                     let senders = ctx.ws.senders.lock().await;
 
-                    if let Some(sender) = senders.get(&port) {
-                        sender.send(data).await.ok();
-                    }
+                    let Some(clients) = senders.get(&port) else {
+                        return;
+                    };
+
+                    let clients = clients.lock().await;
+                    let Some(client) = clients.get(&client) else {
+                        return;
+                    };
+
+                    client.send(data).await.ok();
                 }
             }),
         )
@@ -111,18 +139,25 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 
 #[derive(Clone)]
 struct WsState {
-    sender_rx: Arc<Mutex<mpsc::Receiver<String>>>,
-    receiver_tx: mpsc::Sender<Message>,
+    sender_txs: Arc<Mutex<BTreeMap<u8, mpsc::Sender<String>>>>,
+    receiver_tx: mpsc::Sender<(u8, Message)>,
     shutdown_rx: WebSocketShutdown,
 }
 
 async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> Response {
-    let Ok(mut sender_rx) = state.sender_rx.clone().try_lock_owned() else {
-        return "Connection already established".into_response();
+    let (id, send_rx) = {
+        let mut clients = state.sender_txs.lock().await;
+
+        let (send_tx, send_rx) = mpsc::channel(16);
+
+        let id = random_id(&clients);
+        clients.insert(id, send_tx);
+
+        (id, send_rx)
     };
 
     ws.on_upgrade(move |socket| async move {
-        handle_socket(socket, state, &mut sender_rx).await;
+        handle_socket(socket, state, id, send_rx).await;
     })
 }
 
@@ -140,9 +175,10 @@ async fn handle_socket(
         mut shutdown_rx,
         ..
     }: WsState,
-    sender_rx: &mut mpsc::Receiver<String>,
+    id: u8,
+    mut sender_rx: mpsc::Receiver<String>,
 ) {
-    receiver_tx.send(Message::Connected).await.ok();
+    receiver_tx.send((id, Message::Connected)).await.ok();
 
     loop {
         tokio::select! {
@@ -154,7 +190,7 @@ async fn handle_socket(
                 if let Ok(msg) = msg {
                     match msg {
                         ws::Message::Text(t) => {
-                            receiver_tx.send(Message::Text(t)).await.ok();
+                            receiver_tx.send((id, Message::Text(t))).await.ok();
                         }
                         ws::Message::Close(_) => {
                             break;
@@ -168,5 +204,5 @@ async fn handle_socket(
         };
     }
 
-    receiver_tx.send(Message::Disconnected).await.ok();
+    receiver_tx.send((id, Message::Disconnected)).await.ok();
 }

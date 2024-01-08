@@ -1790,6 +1790,7 @@ dependencies = [
  "serde",
  "serde_json",
  "specta",
+ "streamunordered",
  "tauri",
  "tauri-build",
  "tauri-specta",
@@ -3143,6 +3144,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbe866e1e51e8260c9eed836a042a5e7f6726bb2b411dffeaa712e19c388f23b"
 dependencies = [
  "loom",
+]
+
+[[package]]
+name = "streamunordered"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96b49452854e4b797cc320ffc3d88d88a08da8cd675f01958f650a14066f9a16"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "futures-util",
+ "slab",
 ]
 
 [[package]]

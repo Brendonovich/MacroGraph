@@ -30,9 +30,7 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
                       <span>{key}</span>
                     </td>
                     <td>
-                      <span>
-                        {value.hasConnection ? "Connected" : "Disconnected"}
-                      </span>
+                      <span>{value.connections.size} Connections</span>
                     </td>
                     <td>
                       <Button onClick={() => stopServer(key)}>Remove</Button>

@@ -1,4 +1,8 @@
-import { Core, RefreshedOAuthToken, createWsProvider } from "@macrograph/runtime";
+import {
+  Core,
+  RefreshedOAuthToken,
+  createWsProvider,
+} from "@macrograph/runtime";
 import { Interface } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
@@ -51,7 +55,7 @@ export default function () {
     async sendMessage(data) {
       return client.mutation([
         "websocket.send",
-        { port: data.port, data: data.data },
+        { port: data.port, client: data.client, data: data.data },
       ]);
     },
   });
