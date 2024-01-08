@@ -36,6 +36,7 @@ jobs:
                   path: apps/desktop/.output
 
     build-desktop-tauri:
+        needs: build-desktop-frontend
         strategy:
             fail-fast: false
             matrix:
