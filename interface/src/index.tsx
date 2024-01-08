@@ -11,6 +11,7 @@ import {
   Node as NodeModel,
   Project,
   Size,
+  deserializeConnections,
 } from "@macrograph/runtime";
 import {
   createEventListener,
@@ -232,6 +233,7 @@ export function Interface(props: {
             model.commentBoxes.set(item.commentBox.id, commentBox);
 
             const nodeIdMap = new Map<number, number>();
+
             for (const nodeJson of item.nodes) {
               const id = model.generateId();
               nodeIdMap.set(nodeJson.id, id);
@@ -249,17 +251,21 @@ export function Interface(props: {
                     item.commentBox.position.y,
                 },
               });
+
               if (!node) throw new Error("Failed to deserialize node");
+
               model.nodes.set(node.id, node);
             }
-            // model.deserializeConnections(item.connections, {
-            //   nodeIdMap,
-            // });
+
+            Solid.batch(() => {
+              deserializeConnections(item.connections, model.connections);
+            });
+
             break;
           }
           case "graph": {
             item.graph.id = project.generateGraphId();
-            const graph = await GraphModel.deserialize(project, item.graph);
+            const graph = GraphModel.deserialize(project, item.graph);
             if (!graph) throw new Error("Failed to deserialize graph");
             core.project.graphs.set(graph.id, graph);
             break;

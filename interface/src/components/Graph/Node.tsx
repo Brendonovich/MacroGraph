@@ -123,7 +123,7 @@ export const Node = (props: Props) => {
                   switch (e.key) {
                     case "Backspace":
                     case "Delete": {
-                      graph.model().deleteItem(node());
+                      graph.model().deleteNode(node());
                       break;
                     }
                   }

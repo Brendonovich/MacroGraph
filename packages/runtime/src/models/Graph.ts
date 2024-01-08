@@ -17,7 +17,12 @@ import {
 } from ".";
 import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import { SerializedNode } from "./Node";
-import { CommentBox, CommentBoxArgs, SerializedCommentBox } from "./CommentBox";
+import {
+  CommentBox,
+  CommentBoxArgs,
+  GetNodeSize,
+  SerializedCommentBox,
+} from "./CommentBox";
 import { Project } from "./Project";
 import { SerializedVariable, Variable, VariableArgs } from "./Variable";
 
@@ -48,7 +53,7 @@ export interface GraphArgs {
   project: Project;
 }
 
-type IORef = `${number}:${"i" | "o"}:${string}`;
+export type IORef = `${number}:${"i" | "o"}:${string}`;
 
 export function splitIORef(ref: IORef) {
   const [nodeId, type, ...ioId] = ref.split(":") as [
@@ -68,7 +73,7 @@ export function makeIORef(io: Pin): IORef {
   return `${io.node.id}:${pinIsInput(io) ? "i" : "o"}:${io.id}`;
 }
 
-type Connections = ReactiveMap<IORef, Array<IORef>>;
+export type Connections = ReactiveMap<IORef, Array<IORef>>;
 
 export class Graph {
   id: number;
@@ -213,16 +218,32 @@ export class Graph {
     this.project.save();
   }
 
-  deleteItem(item: Node | CommentBox) {
-    if (item instanceof Node) {
-      item.state.inputs.forEach((i) => this.disconnectPin(i));
-      item.state.outputs.forEach((o) => this.disconnectPin(o));
+  deleteNode(node: Node, save = true) {
+    node.state.inputs.forEach((i) => this.disconnectPin(i));
+    node.state.outputs.forEach((o) => this.disconnectPin(o));
 
-      this.nodes.delete(item.id);
-      item.dispose();
-    } else {
-      this.commentBoxes.delete(item.id);
-    }
+    this.nodes.delete(node.id);
+    node.dispose();
+
+    if (save) this.project.save();
+  }
+
+  deleteCommentbox(
+    box: CommentBox,
+    getNodeSize: GetNodeSize,
+    deleteNodes = false
+  ) {
+    batch(() => {
+      this.commentBoxes.delete(box.id);
+
+      if (!deleteNodes) return;
+
+      const nodes = box.getNodes(this.nodes.values(), getNodeSize);
+
+      for (const node of nodes) {
+        this.deleteNode(node, false);
+      }
+    });
 
     this.project.save();
   }
@@ -307,22 +328,8 @@ export class Graph {
         })
       );
 
-      graph.connections = data.connections.reduce((acc, conn) => {
-        const outRef: IORef = `${conn.from.node}:o:${conn.from.output}`,
-          inRef: IORef = `${conn.to.node}:i:${conn.to.input}`;
-
-        const outConns =
-          acc.get(outRef) ??
-          (() => {
-            const array: Array<IORef> = createMutable([]);
-            acc.set(outRef, array);
-            return array;
-          })();
-
-        outConns.push(inRef);
-
-        return acc;
-      }, new ReactiveMap() as Connections);
+      graph.connections = new ReactiveMap();
+      deserializeConnections(data.connections, graph.connections);
     });
 
     for (const node of graph.nodes.values()) {
@@ -339,4 +346,24 @@ export class Graph {
 
     return graph;
   }
+}
+
+export function deserializeConnections(
+  connections: Array<z.infer<typeof SerializedConnection>>,
+  target: Connections
+) {
+  connections.forEach((conn) => {
+    const outRef: IORef = `${conn.from.node}:o:${conn.from.output}`,
+      inRef: IORef = `${conn.to.node}:i:${conn.to.input}`;
+
+    const outConns =
+      target.get(outRef) ??
+      (() => {
+        const array: Array<IORef> = createMutable([]);
+        target.set(outRef, array);
+        return array;
+      })();
+
+    outConns.push(inRef);
+  });
 }

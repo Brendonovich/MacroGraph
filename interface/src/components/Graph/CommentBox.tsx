@@ -25,8 +25,6 @@ export function CommentBox(props: Props) {
   const position = () => props.box.position;
   const size = () => props.box.size;
 
-  const UI = useUIStore();
-
   const [editing, setEditing] = createSignal(false);
 
   const isSelected = () => {
@@ -103,7 +101,13 @@ export function CommentBox(props: Props) {
                 switch (e.key) {
                   case "Backspace":
                   case "Delete": {
-                    graph.model().deleteItem(box());
+                    graph
+                      .model()
+                      .deleteCommentbox(
+                        box(),
+                        (node) => graph.nodeSizes.get(node),
+                        e.shiftKey
+                      );
                     break;
                   }
                 }
