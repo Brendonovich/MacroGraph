@@ -1,9 +1,9 @@
-// import { ZodType } from "zod";
 import { t, TypeVariant, Wildcard } from ".";
-import { Disposable } from "./utils";
 
 export abstract class BaseType<TOut = any> {
-  readonly _type!: TOut;
+  _type(): TOut {
+    throw new Error("don't actually call this!");
+  }
 
   abstract default(): TOut;
   abstract variant(): TypeVariant;
@@ -12,6 +12,7 @@ export abstract class BaseType<TOut = any> {
   abstract getWildcards(): Wildcard[];
   abstract eq(other: t.Any): boolean;
   abstract serialize(): any;
+  abstract hasWildcard(): boolean;
 }
 
-export type infer<T extends BaseType<any>> = T["_type"];
+export type infer<T extends BaseType<any>> = ReturnType<T["_type"]>;

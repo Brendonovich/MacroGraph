@@ -140,6 +140,10 @@ export class StructType<TStruct extends Struct> extends BaseType<
   deserialize() {
     return this;
   }
+
+  hasWildcard(): boolean {
+    return Object.values(this.struct.fields).some((f) => f.type.hasWildcard());
+  }
 }
 
 export type InferStruct<S> = S extends Struct<infer Fields>

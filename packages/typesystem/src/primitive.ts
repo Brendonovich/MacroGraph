@@ -28,6 +28,10 @@ export abstract class BasePrimitiveType<TOut> extends BaseType<TOut> {
   serialize() {
     return this.primitiveVariant();
   }
+
+  hasWildcard(): boolean {
+    return false;
+  }
 }
 
 export class IntType extends BasePrimitiveType<number> {
