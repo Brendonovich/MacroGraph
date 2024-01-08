@@ -7,7 +7,35 @@ on:
     workflow_dispatch:
 
 jobs:
-    test-tauri:
+    build-desktop-frontend:
+        runs-on: ubunt-20.04
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: setup node
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 16
+
+            - uses: pnpm/action-setup@v2
+              name: Install pnpm
+              id: pnpm-install
+              with:
+                  version: 8
+                  run_install: false
+
+            - name: install frontend dependencies
+              run: pnpm install
+
+            - name: build frontend
+              run: pnpm desktop build
+
+            - uses: actions/upload-artifact@v3
+              with:
+                  name: apps-desktop-dotoutput
+                  path: apps/desktop/.output
+
+    build-desktop-tauri:
         strategy:
             fail-fast: false
             matrix:
@@ -45,7 +73,12 @@ jobs:
                   run_install: false
 
             - name: install frontend dependencies
-              run: pnpm install # change this to npm or pnpm depending on which one you use
+              run: pnpm install
+
+            - uses: actions/download-artifact@v4
+              with:
+                  name: apps-desktop-dotoutput
+                  path: apps/desktop/.output
 
             - uses: JonasKruckenberg/tauri-build@v1
               id: tauri_build
@@ -55,7 +88,6 @@ jobs:
                   TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
                   TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
-            # The `artifacts` output can now be used by a different action to upload the artifacts
             - uses: actions/upload-artifact@v3
               with:
                   name: artifacts-${{ matrix.platform }}
