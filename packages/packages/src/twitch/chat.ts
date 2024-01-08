@@ -1,6 +1,6 @@
 import { onCleanup, createResource } from "solid-js";
 import tmi from "tmi.js";
-import { Package, OnEvent } from "@macrograph/runtime";
+import { Package, OnEvent, PropertyDef } from "@macrograph/runtime";
 import { jsToJSON, JSON } from "@macrograph/json";
 import { t, None, Maybe } from "@macrograph/typesystem";
 
@@ -96,7 +96,7 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
 
 export type Chat = ReturnType<typeof createChat>;
 
-export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
+export function register(pkg: Package, { chat: { client, writeUser }, auth }: Ctx) {
   pkg.createNonEventSchema({
     name: "Send Chat Message",
     variant: "Exec",
@@ -248,9 +248,20 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
     },
   });
 
+  const accountProperty = {
+    name: "Account",
+    source: ({}) => [...auth.accounts.values()].map((v) => ({
+      id: v.data.id,
+      display: v.data.display_name
+    }))
+  } satisfies PropertyDef;
+
   pkg.createEventSchema({
     name: "Chat Message",
     event: "chatMessage",
+    properties: {
+      account: accountProperty
+    },
     generateIO: ({ io }) => {
       return {
         exec: io.execOutput({
@@ -313,8 +324,10 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
         }),
       };
     },
-    run({ ctx, data, io }) {
+    run({ ctx, data, io, properties }) {
       if (data.self) return;
+      console.log(data);
+      if (ctx.getProperty(properties.account) !== data.tags["room-id"]) return;
       ctx.setOutput(io.username, data.tags.username);
       ctx.setOutput(io.displayName, data.tags["display-name"]);
       ctx.setOutput(io.userId, data.tags["user-id"]);
