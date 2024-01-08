@@ -22,6 +22,11 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
           name: "WS port",
           type: t.int(),
         }),
+        client: io.dataInput({
+          id: "client",
+          name: "Client ID",
+          type: t.int(),
+        }),
         data: io.dataInput({
           id: "data",
           name: "Data",
@@ -32,6 +37,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
     run({ ctx, io }) {
       ws.sendMessage({
         port: ctx.getInput(io.port),
+        client: ctx.getInput(io.client),
         data: ctx.getInput(io.data),
       });
     },

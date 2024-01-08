@@ -31,7 +31,9 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
                     </td>
                     <td>
                       <span>
-                        {value.hasConnection ? "Connected" : "Disconnected"}
+                        {value.connections.size > 0
+                          ? "Connected"
+                          : "Disconnected"}
                       </span>
                     </td>
                     <td>

@@ -7,7 +7,9 @@ export type Procedures = {
         { key: "websocket.send", input: { port: number; client: number; data: string }, result: null },
     subscriptions: 
         { key: "oauth.authorize", input: string, result: any | null } | 
-        { key: "websocket.server", input: number, result: null }
+        { key: "websocket.server", input: number, result: [number, Message] }
 };
+
+export type Message = { Text: string } | "Connected" | "Disconnected"
 
 export type Entry = { Dir: string } | { File: string }

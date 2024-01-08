@@ -45,9 +45,16 @@ export function makePersisted<T>(
 export type WsMessage = "Connected" | "Disconnected" | { Text: string };
 
 export interface WsProvider<TServer> {
-  startServer(port: number, cb: (text: WsMessage) => void): Promise<TServer>;
+  startServer(
+    port: number,
+    cb: (text: [number, WsMessage]) => void
+  ): Promise<TServer>;
   stopServer(server: TServer): Promise<void>;
-  sendMessage(data: { data: string; port: number }): Promise<null>;
+  sendMessage(data: {
+    data: string;
+    port: number;
+    client: number;
+  }): Promise<null>;
 }
 
 export function createWsProvider<T>(p: WsProvider<T>) {

@@ -65,13 +65,21 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
     try {
       setState({ type: "Starting" });
 
-      const [connected, setConnected] = createSignal(false);
+      const [connectedClient, setConnectedClient] = createSignal<null | number>(
+        null
+      );
       localStorage.setItem(SDWS, port.toString());
 
-      const server = await ws.startServer(port, (msg) => {
-        if (msg === "Connected") setConnected(true);
-        else if (msg === "Disconnected") setConnected(false);
-        else {
+      const server = await ws.startServer(port, ([client, msg]) => {
+        if (msg === "Connected" && connectedClient() === null)
+          setConnectedClient(client);
+        else if (msg === "Disconnected" && client === connectedClient())
+          setConnectedClient(null);
+        else if (
+          typeof msg === "object" &&
+          "Text" in msg &&
+          client === connectedClient()
+        ) {
           const parsed = MESSAGE.parse(JSON.parse(msg.Text));
 
           onEvent({ name: parsed.event, data: parsed.payload });
@@ -81,7 +89,7 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
       setState({
         type: "Running",
         port,
-        connected,
+        connected: () => connectedClient() !== null,
         async stop() {
           await ws.stopServer(server);
           localStorage.removeItem(SDWS);

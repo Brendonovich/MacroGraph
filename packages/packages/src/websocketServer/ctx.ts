@@ -1,11 +1,12 @@
 import { OnEvent, WsProvider } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
+import { ReactiveSet } from "@solid-primitives/set";
 
 export const WS_PORTS_LOCALSTORAGE = "wsPorts";
 
 export type ConnectionState = {
-  hasConnection: boolean;
+  connections: ReactiveSet<number>;
   server: any;
 };
 
@@ -23,17 +24,20 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
     });
 
   async function startServer(port: number) {
-    const server = await ws.startServer(port, (msg) => {
-      let websocketData = websockets.get(port);
+    const server = await ws.startServer(port, ([client, msg]) => {
+      const websocketData = websockets.get(port);
       if (!websocketData) return;
 
-      if (msg === "Connected")
-        websockets.set(port, { ...websocketData, hasConnection: true });
-      else if (msg === "Disconnected")
-        websockets.set(port, { ...websocketData, hasConnection: false });
-      else onEvent({ name: "wsEvent", data: { data: msg.Text, port: port } });
+      if (msg === "Connected") websocketData.connections.add(client);
+      else if (msg === "Disconnected") websocketData.connections.delete(client);
+      else
+        onEvent({
+          name: "wsEvent",
+          data: { data: msg.Text, client, port: port },
+        });
     });
-    websockets.set(port, { hasConnection: false, server });
+
+    websockets.set(port, { connections: new ReactiveSet(), server });
 
     localStorage.setItem(
       WS_PORTS_LOCALSTORAGE,
