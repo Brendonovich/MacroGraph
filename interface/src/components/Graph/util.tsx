@@ -30,5 +30,5 @@ export const colour = (type: AnyType): string => {
     else return "white";
   }
 
-  throw new Error(JSON.stringify(type));
+  throw new Error();
 };
