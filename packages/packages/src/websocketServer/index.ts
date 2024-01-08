@@ -12,6 +12,60 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
     SettingsUI: () => import("./Settings"),
   });
 
+  pkg.createEventSchema({
+    name: "WSS Client Connected",
+    event: "WSSConnect",
+    generateIO({ io }) {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        port: io.dataOutput({
+          id: "port",
+          name: "Port",
+          type: t.int(),
+        }),
+        client: io.dataOutput({
+          id: "client",
+          name: "Client",
+          type: t.int(),
+        }),
+      };
+    },
+    run ({ctx, io, data}) {
+      ctx.setOutput(io.port, data.port);
+      ctx.setOutput(io.client, data.client);
+      ctx.exec(io.exec);
+    }
+  })
+
+  pkg.createEventSchema({
+    name: "WSS Client Disconnected",
+    event: "WSSDisconnect",
+    generateIO({ io }) {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        port: io.dataOutput({
+          id: "port",
+          name: "Port",
+          type: t.int(),
+        }),
+        client: io.dataOutput({
+          id: "client",
+          name: "Client",
+          type: t.int(),
+        }),
+      };
+    },
+    run ({ctx, io, data}) {
+      ctx.setOutput(io.port, data.port);
+      ctx.setOutput(io.client, data.client);
+      ctx.exec(io.exec);
+    }
+  })
+
   pkg.createNonEventSchema({
     name: "WSS Emit",
     variant: "Exec",
