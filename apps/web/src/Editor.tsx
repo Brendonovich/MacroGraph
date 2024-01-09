@@ -1,5 +1,5 @@
 import { Core } from "@macrograph/runtime";
-import { Interface } from "@macrograph/interface";
+import { Interface, PlatformContext } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 
 import { env } from "~/env/client";
@@ -69,5 +69,9 @@ export default () => {
     pkgs.customEvents.pkg,
   ].map((p) => core.registerPackage(p));
 
-  return <Interface core={core} environment="browser" />;
+  return (
+    <PlatformContext.Provider value={{}}>
+      <Interface core={core} environment="browser" />
+    </PlatformContext.Provider>
+  );
 };
