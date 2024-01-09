@@ -53,7 +53,7 @@ export interface WsProvider<TServer> {
   sendMessage(data: {
     data: string;
     port: number;
-    client: number;
+    client: number | null;
   }): Promise<null>;
 }
 

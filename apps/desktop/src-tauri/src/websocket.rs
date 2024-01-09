@@ -115,7 +115,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 #[specta(inline)]
                 struct Args {
                     port: u16,
-                    client: u8,
+                    client: Option<u8>,
                     data: String,
                 }
 
@@ -127,11 +127,16 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                     };
 
                     let clients = clients.lock().await;
-                    let Some(client) = clients.get(&client) else {
-                        return;
-                    };
-
-                    client.send(data).await.ok();
+                    match client.and_then(|client| clients.get(&client)) {
+                        Some(client) => {
+                            client.send(data).await.ok();
+                        }
+                        None => {
+                            for client in clients.values() {
+                                client.send(data.clone()).await.ok();
+                            }
+                        }
+                    }
                 }
             }),
         )
