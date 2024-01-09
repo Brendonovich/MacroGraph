@@ -62,6 +62,32 @@ export function Interface(props: {
   core: Core;
   environment: "custom" | "browser";
 }) {
+  const [loadedProject] = Solid.createResource(async () => {
+    const savedProject = localStorage.getItem("project");
+
+    if (savedProject) {
+      await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
+
+      return props.core.project;
+    } else return null;
+  });
+
+  return (
+    <Solid.Show when={loadedProject() && props.core.project} keyed>
+      <ProjectInterface
+        core={props.core}
+        project={props.core.project}
+        environment={props.environment}
+      />
+    </Solid.Show>
+  );
+}
+
+function ProjectInterface(props: {
+  core: Core;
+  project: Project;
+  environment: "custom" | "browser";
+}) {
   const UI = createUIStore();
 
   const [rootRef, setRootRef] = Solid.createSignal<
@@ -120,40 +146,23 @@ export function Interface(props: {
     if (hoveredPane()) return currentGraph();
   });
 
-  const [loadedProject] = Solid.createResource(async () => {
-    const savedProject = localStorage.getItem("project");
+  const firstGraph = props.project.graphs.values().next().value;
+  if (graphStates.length === 0 && firstGraph)
+    setGraphStates([createGraphState(firstGraph)]);
 
-    if (savedProject) {
-      await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
-
-      return props.core.project;
-    } else return null;
+  // reduces the current graph index if the current graph
+  // is the end graph and it gets deleted
+  Solid.createEffect(() => {
+    if (currentGraph()) return;
+    setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
   });
 
+  // removes graph states if graphs are deleted
   Solid.createEffect(() => {
-    const project = loadedProject();
-
-    if (project) {
-      const firstGraph = project.graphs.values().next().value;
-      if (graphStates.length === 0 && firstGraph)
-        setGraphStates([createGraphState(firstGraph)]);
-    } else if (loadedProject.state === "pending") return;
-
-    // reduces the current graph index if the current graph
-    // is the end graph and it gets deleted
-    Solid.createEffect(() => {
-      if (currentGraph()) return;
-      setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
-    });
-
-    // removes graph states if graphs are deleted
-    Solid.createEffect(() => {
-      for (const state of graphStates) {
-        const graph = props.core.project.graphs.get(state.id);
-        if (!graph)
-          setGraphStates(graphStates.filter((s) => s.id !== state.id));
-      }
-    });
+    for (const state of graphStates) {
+      const graph = props.core.project.graphs.get(state.id);
+      if (!graph) setGraphStates(graphStates.filter((s) => s.id !== state.id));
+    }
   });
 
   createEventListener(window, "keydown", async (e) => {

@@ -29,28 +29,50 @@ export default () => {
   const platform = usePlatform();
 
   return (
-    <div class="flex flex-row p-1 gap-1 text-white">
-      <OpenSettingsDialog>
-        <IconContainer title="Settings">
-          <IconTablerSettings class="w-full h-full" />
-        </IconContainer>
-      </OpenSettingsDialog>
-      <Show when={platform.saveProject} keyed fallback={<CopyProjectButton />}>
-        {(saveProject) => (
-          <button title="Save Project" onClick={(e) => saveProject(e.shiftKey)}>
-            <IconContainer>
-              <IconFaSolidSave class="w-full h-full" />
-            </IconContainer>
-          </button>
-        )}
-      </Show>
-      <Show when={platform.loadProject} keyed>
-        {(loadProject) => (
-          <button title="Load Project" onClick={loadProject}>
-            <IconContainer>
-              <IconMaterialSymbolsFileOpenOutline class="w-full h-full" />
-            </IconContainer>
-          </button>
+    <div class="flex flex-col gap-2 p-1">
+      <div class="flex flex-row gap-1 text-white">
+        <OpenSettingsDialog>
+          <IconContainer title="Settings">
+            <IconTablerSettings class="w-full h-full" />
+          </IconContainer>
+        </OpenSettingsDialog>
+        <Show
+          when={platform.projectPersistence}
+          keyed
+          fallback={<CopyProjectButton />}
+        >
+          {(projectPersistence) => (
+            <>
+              <button
+                title="Save Project"
+                onClick={(e) => projectPersistence.saveProject(e.shiftKey)}
+              >
+                <IconContainer>
+                  <IconFaSolidSave class="w-full h-full" />
+                </IconContainer>
+              </button>
+              <button
+                title="Load Project"
+                onClick={() => projectPersistence.loadProject()}
+              >
+                <IconContainer>
+                  <IconMaterialSymbolsFileOpenOutline class="w-full h-full" />
+                </IconContainer>
+              </button>
+            </>
+          )}
+        </Show>
+      </div>
+      <Show when={platform.projectPersistence} keyed>
+        {(projectPerstence) => (
+          <Show when={projectPerstence.url}>
+            {(url) => (
+              <div class="break-all">
+                <p class="text-xs font-semibold">Project Path</p>
+                <p class="text-sm font-mono">{url()}</p>
+              </div>
+            )}
+          </Show>
         )}
       </Show>
     </div>

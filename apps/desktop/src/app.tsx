@@ -13,35 +13,45 @@ const [projectUrl, setProjectUrl] = makePersisted(
 );
 
 const platform: Platform = {
-  async saveProject(saveAs = false) {
-    let url = !saveAs ? projectUrl() : null;
+  projectPersistence: {
+    async saveProject(saveAs = false) {
+      let url = !saveAs ? projectUrl() : null;
 
-    if (url === null) {
-      url = await save({
-        defaultPath: "macrograph-project.json",
+      if (url === null) {
+        url = await save({
+          defaultPath: "macrograph-project.json",
+          filters: [{ name: "JSON", extensions: ["json"] }],
+        });
+      }
+
+      if (url === null) return;
+
+      await writeTextFile(
+        url,
+        JSON.stringify(core.project.serialize(), null, 4)
+      );
+
+      setProjectUrl(url);
+    },
+    async loadProject() {
+      const url = await open({
         filters: [{ name: "JSON", extensions: ["json"] }],
+        multiple: false,
       });
-    }
 
-    if (url === null) return;
+      if (typeof url !== "string") return;
 
-    await writeTextFile(url, JSON.stringify(core.project.serialize(), null, 4));
+      const data = await readTextFile(url);
 
-    setProjectUrl(url);
-  },
-  async loadProject() {
-    const url = await open({
-      filters: [{ name: "JSON", extensions: ["json"] }],
-      multiple: false,
-    });
+      const serializedProject = SerializedProject.parse(JSON.parse(data));
 
-    if (typeof url !== "string") return;
+      await core.load(serializedProject);
 
-    const data = await readTextFile(url);
-
-    const serializedProject = SerializedProject.parse(JSON.parse(data));
-
-    core.load(serializedProject);
+      setProjectUrl(url);
+    },
+    get url() {
+      return projectUrl();
+    },
   },
 };
 

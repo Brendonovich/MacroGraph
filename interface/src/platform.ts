@@ -2,8 +2,11 @@ import { useContext } from "solid-js";
 import { createContext } from "solid-js";
 
 export interface Platform {
-  saveProject?(saveAs?: boolean): Promise<void>;
-  loadProject?(): Promise<void>;
+  projectPersistence?: {
+    saveProject(saveAs?: boolean): Promise<void>;
+    loadProject(): Promise<void>;
+    url: string | null;
+  };
 }
 
 export const PlatformContext = createContext<Platform | null>(null);
