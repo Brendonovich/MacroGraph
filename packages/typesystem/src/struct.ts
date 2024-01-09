@@ -142,7 +142,7 @@ export class StructType<TStruct extends Struct> extends BaseType<
   }
 
   hasWildcard(): boolean {
-    return Object.values(this.struct.fields).some((f) => f.type.hasWildcard());
+    return false;
   }
 }
 

@@ -182,9 +182,7 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
   }
 
   hasWildcard(): boolean {
-    return (this.inner.variants as EnumVariants).some((v) =>
-      v.data ? Object.values(v.data).some((d) => d.hasWildcard()) : false
-    );
+    return false;
   }
 }
 
