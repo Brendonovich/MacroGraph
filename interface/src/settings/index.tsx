@@ -56,7 +56,7 @@ export default () => {
                 onClick={() => projectPersistence.loadProject()}
               >
                 <IconContainer>
-                  <IconMaterialSymbolsFileOpenOutline class="w-full h-full" />
+                  <IconTdesignFolderImport class="w-full h-full" />
                 </IconContainer>
               </button>
             </>

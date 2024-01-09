@@ -17,4 +17,5 @@ declare global {
   const IconTablerClipboard: typeof import('~icons/tabler/clipboard.jsx')['default']
   const IconTablerCopy: typeof import('~icons/tabler/copy.jsx')['default']
   const IconTablerSettings: typeof import('~icons/tabler/settings.jsx')['default']
+  const IconTdesignFolderImport: typeof import('~icons/tdesign/folder-import.jsx')['default']
 }
