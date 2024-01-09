@@ -57,7 +57,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 "{}?state={}",
                 url,
                 base64::prelude::BASE64_STANDARD.encode(
-                    &serde_json::to_string(&json!({
+                    serde_json::to_string(&json!({
                         "env": "desktop",
                         "port": port
                     }))

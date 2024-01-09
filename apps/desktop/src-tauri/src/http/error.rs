@@ -18,7 +18,7 @@ pub enum Error {
     HttpInvalidHeaderValue(#[from] http::header::InvalidHeaderValue),
     /// URL not allowed by the scope.
     #[error(transparent)]
-    UrlParseError(#[from] url::ParseError),
+    UrlParse(#[from] url::ParseError),
     /// HTTP method error.
     #[error(transparent)]
     HttpMethod(#[from] http::method::InvalidMethod),
@@ -27,9 +27,9 @@ pub enum Error {
     #[error("Request canceled")]
     RequestCanceled,
     #[error("failed to process data url")]
-    DataUrlError,
+    DataUrl,
     #[error("failed to decode data url into bytes")]
-    DataUrlDecodeError,
+    DataUrlDecode,
     #[error("invalid request id: {0}")]
     InvalidRequestId(RequestId),
     #[error(transparent)]

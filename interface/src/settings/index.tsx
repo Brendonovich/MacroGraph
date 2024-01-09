@@ -3,18 +3,18 @@ import {
   ErrorBoundary,
   For,
   ParentProps,
+  Show,
   Suspense,
   createSignal,
 } from "solid-js";
 
 import { Dialog } from "./ui";
-import { useUIStore } from "../UIStore";
 import { useCore } from "../contexts";
 import {
   projectToClipboardItem,
   writeClipboardItemToClipboard,
-  writeModelToClipboard,
 } from "../clipboard";
+import { usePlatform } from "../platform";
 
 function IconContainer(props: ParentProps<ComponentProps<"div">>) {
   return (
@@ -26,8 +26,7 @@ function IconContainer(props: ParentProps<ComponentProps<"div">>) {
 }
 
 export default () => {
-  const UI = useUIStore();
-  const core = useCore();
+  const platform = usePlatform();
 
   return (
     <div class="flex flex-row p-1 gap-1 text-white">
@@ -36,19 +35,44 @@ export default () => {
           <IconTablerSettings class="w-full h-full" />
         </IconContainer>
       </OpenSettingsDialog>
-      <button
-        title="Copy Project"
-        onClick={() =>
-          writeClipboardItemToClipboard(projectToClipboardItem(core.project))
-        }
-      >
-        <IconContainer>
-          <IconTablerClipboard class="w-full h-full" />
-        </IconContainer>
-      </button>
+      <Show when={platform.saveProject} keyed fallback={<CopyProjectButton />}>
+        {(saveProject) => (
+          <button title="Save Project" onClick={(e) => saveProject(e.shiftKey)}>
+            <IconContainer>
+              <IconFaSolidSave class="w-full h-full" />
+            </IconContainer>
+          </button>
+        )}
+      </Show>
+      <Show when={platform.loadProject} keyed>
+        {(loadProject) => (
+          <button title="Load Project" onClick={loadProject}>
+            <IconContainer>
+              <IconMaterialSymbolsFileOpenOutline class="w-full h-full" />
+            </IconContainer>
+          </button>
+        )}
+      </Show>
     </div>
   );
 };
+
+function CopyProjectButton() {
+  const core = useCore();
+
+  return (
+    <button
+      title="Copy Project"
+      onClick={() =>
+        writeClipboardItemToClipboard(projectToClipboardItem(core.project))
+      }
+    >
+      <IconContainer>
+        <IconTablerClipboard class="w-full h-full" />
+      </IconContainer>
+    </button>
+  );
+}
 
 function OpenSettingsDialog(props: ParentProps) {
   const core = useCore();

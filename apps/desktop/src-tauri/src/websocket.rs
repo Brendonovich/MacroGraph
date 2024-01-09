@@ -7,7 +7,7 @@ use std::{
 
 use axum::{
     extract::{ws, State, WebSocketUpgrade},
-    response::{IntoResponse, Response},
+    response::Response,
     routing::get,
 };
 use rspc::alpha::AlphaRouter;
@@ -39,9 +39,11 @@ impl DerefMut for WebSocketShutdown {
     }
 }
 
+type WebsocketServerSenders = Arc<Mutex<BTreeMap<u8, mpsc::Sender<String>>>>;
+
 #[derive(Default)]
 pub struct Ctx {
-    senders: Mutex<BTreeMap<u16, Arc<Mutex<BTreeMap<u8, mpsc::Sender<String>>>>>>,
+    senders: Mutex<BTreeMap<u16, WebsocketServerSenders>>,
 }
 
 fn random_id<T>(map: &BTreeMap<u8, T>) -> u8 {

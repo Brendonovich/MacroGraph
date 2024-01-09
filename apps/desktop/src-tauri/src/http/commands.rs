@@ -90,11 +90,8 @@ pub async fn fetch(
             Ok(rid)
         }
         "data" => {
-            let data_url =
-                data_url::DataUrl::process(url.as_str()).map_err(|_| Error::DataUrlError)?;
-            let (body, _) = data_url
-                .decode_to_vec()
-                .map_err(|_| Error::DataUrlDecodeError)?;
+            let data_url = data_url::DataUrl::process(url.as_str()).map_err(|_| Error::DataUrl)?;
+            let (body, _) = data_url.decode_to_vec().map_err(|_| Error::DataUrlDecode)?;
 
             let response = http::Response::builder()
                 .status(StatusCode::OK)

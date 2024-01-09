@@ -1,100 +1,54 @@
-import {
-  Core,
-  RefreshedOAuthToken,
-  createWsProvider,
-} from "@macrograph/runtime";
-import { Interface } from "@macrograph/interface";
-import * as pkgs from "@macrograph/packages";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { Interface, Platform, PlatformContext } from "@macrograph/interface";
+import { save, open } from "@tauri-apps/api/dialog";
+import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
+import { makePersisted } from "@solid-primitives/storage";
 
-import { fetch } from "./http";
-import { client } from "./rspc";
-import { env } from "./env";
+import { createSignal } from "solid-js";
+import { core } from "./core";
+import { SerializedProject } from "@macrograph/runtime";
 
-const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
+const [projectUrl, setProjectUrl] = makePersisted(
+  createSignal<string | null>(null),
+  { name: "currentProjectUrl" }
+);
+
+const platform: Platform = {
+  async saveProject(saveAs = false) {
+    let url = !saveAs ? projectUrl() : null;
+
+    if (url === null) {
+      url = await save({
+        defaultPath: "macrograph-project.json",
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+    }
+
+    if (url === null) return;
+
+    await writeTextFile(url, JSON.stringify(core.project.serialize(), null, 4));
+
+    setProjectUrl(url);
+  },
+  async loadProject() {
+    const url = await open({
+      filters: [{ name: "JSON", extensions: ["json"] }],
+      multiple: false,
+    });
+
+    if (typeof url !== "string") return;
+
+    const data = await readTextFile(url);
+
+    const serializedProject = SerializedProject.parse(JSON.parse(data));
+
+    core.load(serializedProject);
+  },
+};
 
 export default function () {
-  const core = new Core({
-    fetch: fetch as any,
-    oauth: {
-      authorize: (provider) =>
-        new Promise((res) => {
-          client.addSubscription(
-            ["oauth.authorize", `${AUTH_URL}/${provider}/login`],
-            {
-              onData(data) {
-                res({ ...data, issued_at: Date.now() / 1000 });
-              },
-            }
-          );
-        }),
-      refresh: async (provider, refreshToken) => {
-        const res = await fetch(`${AUTH_URL}/${provider}/refresh`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        return {
-          ...((await res.json()) as RefreshedOAuthToken),
-          issued_at: Date.now() / 1000,
-        };
-      },
-    },
-  });
-
-  const wsProvider = createWsProvider({
-    async startServer(port, onData) {
-      return client.addSubscription(["websocket.server", port], {
-        onData: (d) => onData(d),
-      });
-    },
-    async stopServer(unsubscribe) {
-      unsubscribe();
-    },
-    async sendMessage(data) {
-      return client.mutation([
-        "websocket.send",
-        { port: data.port, client: data.client, data: data.data },
-      ]);
-    },
-  });
-
-  [
-    () =>
-      pkgs.audio.pkg({
-        prepareURL: (url: string) =>
-          convertFileSrc(url).replace("asset://", "https://asset."),
-      }),
-    pkgs.discord.pkg,
-    () =>
-      pkgs.fs.register({
-        list: (path) => client.query(["fs.list", path]),
-      }),
-    pkgs.github.pkg,
-    pkgs.goxlr.pkg,
-    pkgs.google.pkg,
-    pkgs.http.pkg,
-    pkgs.json.pkg,
-    pkgs.keyboard.pkg,
-    pkgs.list.pkg,
-    pkgs.localStorage.pkg,
-    pkgs.logic.pkg,
-    pkgs.map.pkg,
-    pkgs.obs.pkg,
-    pkgs.patreon.pkg,
-    pkgs.spotify.pkg,
-    () => pkgs.streamdeck.pkg(wsProvider),
-    pkgs.streamlabs.pkg,
-    pkgs.twitch.pkg,
-    pkgs.utils.pkg,
-    pkgs.openai.pkg,
-    pkgs.websocket.pkg,
-    pkgs.variables.pkg,
-    pkgs.customEvents.pkg,
-    pkgs.speakerbot.pkg,
-    () => pkgs.websocketServer.pkg(wsProvider),
-  ].map((p) => core.registerPackage(p));
-
-  return <Interface core={core} environment="custom" />;
+  return (
+    <PlatformContext.Provider value={platform}>
+      <Interface core={core} environment="custom" />
+    </PlatformContext.Provider>
+  );
 }
