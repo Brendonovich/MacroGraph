@@ -32,12 +32,12 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
         }),
       };
     },
-    run ({ctx, io, data}) {
+    run({ ctx, io, data }) {
       ctx.setOutput(io.port, data.port);
       ctx.setOutput(io.client, data.client);
       ctx.exec(io.exec);
-    }
-  })
+    },
+  });
 
   pkg.createEventSchema({
     name: "WSS Client Disconnected",
@@ -59,12 +59,12 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
         }),
       };
     },
-    run ({ctx, io, data}) {
+    run({ ctx, io, data }) {
       ctx.setOutput(io.port, data.port);
       ctx.setOutput(io.client, data.client);
       ctx.exec(io.exec);
-    }
-  })
+    },
+  });
 
   pkg.createNonEventSchema({
     name: "WSS Emit",
@@ -79,7 +79,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
         client: io.dataInput({
           id: "client",
           name: "Client",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         data: io.dataInput({
           id: "data",
@@ -91,7 +91,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
     run({ ctx, io }) {
       ws.sendMessage({
         port: ctx.getInput(io.port),
-        client: ctx.getInput(io.client),
+        client: ctx.getInput(io.client).toNullable(),
         data: ctx.getInput(io.data),
       });
     },
