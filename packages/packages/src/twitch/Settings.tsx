@@ -10,8 +10,8 @@ export default ({ core, helix, chat, auth }: Ctx) => {
 
   const columns = [
     { name: "Helix API", user: helix.user },
-    { name: "Chat Read", user: chat.readUser },
-    { name: "Chat Write", user: chat.writeUser },
+    { name: "Chat", user: chat.writeUser },
+    { name: "Chat Writer", user: chat.readUser },
   ];
 
   return (
