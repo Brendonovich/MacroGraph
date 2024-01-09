@@ -2,6 +2,7 @@ import { createEnum, createStruct, Package } from "@macrograph/runtime";
 import { InferEnum, Maybe, t } from "@macrograph/typesystem";
 import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
 import { EventTypes } from "obs-websocket-js";
+import { createLazyMemo } from "@solid-primitives/memo";
 
 import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
 import { Ctx } from "./ctx";
@@ -84,7 +85,15 @@ interface SceneItemTransformInterface {
   height: number;
 }
 
-export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
+export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
+  const obs = createLazyMemo(() => {
+    for (const instance of instances.values()) {
+      if (instance.state === "connected") return instance.obs;
+    }
+
+    throw new Error("No OBS connected!");
+  });
+
   const versionOutputs = [
     {
       id: "obsVersion",
@@ -129,7 +138,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     generateIO: ({ io }) =>
       versionOutputs.map((data) => [data.id, io.dataOutput(data)] as const),
     async run({ ctx, io }) {
-      const data = await obs.call("GetVersion");
+      const data = await obs().call("GetVersion");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
@@ -157,7 +166,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
           [id, io.dataOutput({ id, name, type: t.int() })] as const
       ),
     async run({ ctx, io }) {
-      const data = await obs.call("GetStats");
+      const data = await obs().call("GetStats");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
@@ -176,7 +185,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.list(t.string()),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetHotkeyList");
+      const data = await obs().call("GetHotkeyList");
       ctx.setOutput(io, data.hotkeys);
     },
   });
@@ -191,7 +200,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("TriggerHotkeyByName", { hotkeyName: ctx.getInput(io) });
+      obs().call("TriggerHotkeyByName", { hotkeyName: ctx.getInput(io) });
     },
   });
 
@@ -213,7 +222,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      return obs.call("TriggerHotkeyByKeySequence", {
+      return obs().call("TriggerHotkeyByKeySequence", {
         keyId: ctx.getInput(io.id),
         keyModifiers: jsonToJS(
           JSON.variant([
@@ -251,7 +260,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneCollectionList");
+      const data = await obs().call("GetSceneCollectionList");
       ctx.setOutput(
         io.currentSceneCollectionName,
         data.currentSceneCollectionName
@@ -270,7 +279,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("SetCurrentSceneCollection", {
+      obs().call("SetCurrentSceneCollection", {
         sceneCollectionName: ctx.getInput(io),
       });
     },
@@ -286,7 +295,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("CreateSceneCollection", {
+      obs().call("CreateSceneCollection", {
         sceneCollectionName: ctx.getInput(io),
       });
     },
@@ -310,7 +319,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetProfileList");
+      const data = await obs().call("GetProfileList");
       ctx.setOutput(io.currentProfileName, data.currentProfileName);
       ctx.setOutput(io.profiles, data.profiles);
     },
@@ -325,7 +334,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("SetCurrentProfile", { profileName: ctx.getInput(io) });
+      obs().call("SetCurrentProfile", { profileName: ctx.getInput(io) });
     },
   });
 
@@ -339,7 +348,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("CreateProfile", { profileName: ctx.getInput(io) });
+      obs().call("CreateProfile", { profileName: ctx.getInput(io) });
     },
   });
 
@@ -353,7 +362,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("RemoveProfile", { profileName: ctx.getInput(io) });
+      obs().call("RemoveProfile", { profileName: ctx.getInput(io) });
     },
   });
 
@@ -385,7 +394,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetProfileParameter", {
+      const data = await obs().call("GetProfileParameter", {
         parameterCategory: ctx.getInput(io.parameterCategory),
         parameterName: ctx.getInput(io.parameterName),
       });
@@ -417,7 +426,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetProfileParameter", {
+      obs().call("SetProfileParameter", {
         parameterCategory: ctx.getInput(io.parameterCategory),
         parameterName: ctx.getInput(io.parameterName),
         parameterValue: ctx.getInput(io.parameterValue),
@@ -443,7 +452,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
           [id, io.dataOutput({ id, name, type: t.int() })] as const
       ),
     async run({ ctx, io }) {
-      const data = await obs.call("GetVideoSettings");
+      const data = await obs().call("GetVideoSettings");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
@@ -486,7 +495,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetVideoSettings", {
+      obs().call("SetVideoSettings", {
         fpsNumerator: ctx.getInput(io.fpsNumerator),
         fpsDenominator: ctx.getInput(io.fpsDenominator),
         baseWidth: ctx.getInput(io.baseWidth),
@@ -515,7 +524,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetStreamServiceSettings");
+      const data = await obs().call("GetStreamServiceSettings");
       ctx.setOutput(io.streamServiceType, data.streamServiceType);
       ctx.setOutput(
         io.streamServiceSettings,
@@ -542,7 +551,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetStreamServiceSettings", {
+      obs().call("SetStreamServiceSettings", {
         streamServiceType: ctx.getInput(io.streamServiceType),
         streamServiceSettings: jsonToJS({
           variant: "Map",
@@ -564,7 +573,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetRecordDirectory");
+      const data = await obs().call("GetRecordDirectory");
       ctx.setOutput(io, data.recordDirectory);
     },
   });
@@ -592,7 +601,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSourceActive", {
+      const data = await obs().call("GetSourceActive", {
         sourceName: ctx.getInput(io.sourceName),
       });
       ctx.setOutput(io.videoActive, data.videoActive);
@@ -614,7 +623,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.list(t.string()),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetGroupList");
+      const data = await obs().call("GetGroupList");
       ctx.setOutput(io, data.groups);
     },
   });
@@ -629,7 +638,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetCurrentProgramScene");
+      const data = await obs().call("GetCurrentProgramScene");
       ctx.setOutput(io, data.currentProgramSceneName);
     },
   });
@@ -644,7 +653,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("SetCurrentProgramScene", {
+      obs().call("SetCurrentProgramScene", {
         sceneName: ctx.getInput(io),
       });
     },
@@ -660,7 +669,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetCurrentPreviewScene");
+      const data = await obs().call("GetCurrentPreviewScene");
       ctx.setOutput(io, data.currentPreviewSceneName);
     },
   });
@@ -675,7 +684,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("SetCurrentPreviewScene", {
+      obs().call("SetCurrentPreviewScene", {
         sceneName: ctx.getInput(io),
       });
     },
@@ -691,7 +700,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("CreateScene", { sceneName: ctx.getInput(io) });
+      obs().call("CreateScene", { sceneName: ctx.getInput(io) });
     },
   });
 
@@ -705,7 +714,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("RemoveScene", { sceneName: ctx.getInput(io) });
+      obs().call("RemoveScene", { sceneName: ctx.getInput(io) });
     },
   });
 
@@ -727,7 +736,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetSceneName", {
+      obs().call("SetSceneName", {
         sceneName: ctx.getInput(io.sceneName),
         newSceneName: ctx.getInput(io.newSceneName),
       });
@@ -757,7 +766,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneSceneTransitionOverride", {
+      const data = await obs().call("GetSceneSceneTransitionOverride", {
         sceneName: ctx.getInput(io.sceneName),
       });
       ctx.setOutput(io.transitionName, data.transitionName);
@@ -788,7 +797,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetSceneSceneTransitionOverride", {
+      obs().call("SetSceneSceneTransitionOverride", {
         sceneName: ctx.getInput(io.sceneName),
         transitionName: ctx.getInput(io.transitionName),
         transitionDuration: ctx.getInput(io.transitionDuration),
@@ -814,7 +823,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputKindList", {
+      const data = await obs().call("GetInputKindList", {
         unversioned: ctx.getInput(io.unversioned),
       });
       ctx.setOutput(io.inputKinds, data.inputKinds);
@@ -839,7 +848,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
           [id, io.dataOutput({ id, name, type: t.string() })] as const
       ),
     async run({ ctx, io }) {
-      const data = await obs.call("GetSpecialInputs");
+      const data = await obs().call("GetSpecialInputs");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
@@ -882,7 +891,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("CreateInput", {
+      const data = await obs().call("CreateInput", {
         inputKind: ctx.getInput(io.inputKind),
         sceneName: ctx.getInput(io.sceneName),
         inputName: ctx.getInput(io.inputName),
@@ -908,7 +917,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     run({ ctx, io }) {
-      obs.call("RemoveInput", {
+      obs().call("RemoveInput", {
         inputName: ctx.getInput(io),
       });
     },
@@ -932,7 +941,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetInputName", {
+      obs().call("SetInputName", {
         inputName: ctx.getInput(io.inputName),
         newInputName: ctx.getInput(io.newInputName),
       });
@@ -957,7 +966,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call(
+      const data = await obs().call(
         "GetInputList",
         ctx.getInput(io.inputKind)
           ? {
@@ -1001,7 +1010,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneList");
+      const data = await obs().call("GetSceneList");
 
       const scene = data.scenes.map((input) =>
         Scenes.create({
@@ -1034,7 +1043,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputDefaultSettings", {
+      const data = await obs().call("GetInputDefaultSettings", {
         inputKind: ctx.getInput(io.inputKind),
       });
 
@@ -1068,7 +1077,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputSettings", {
+      const data = await obs().call("GetInputSettings", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(
@@ -1107,7 +1116,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetInputSettings", {
+      obs().call("SetInputSettings", {
         inputName: ctx.getInput(io.inputName),
         inputSettings: jsonToJS({
           variant: "Map",
@@ -1138,7 +1147,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputMute", {
+      const data = await obs().call("GetInputMute", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(io.inputMuted, data.inputMuted);
@@ -1163,7 +1172,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetInputMute", {
+      obs().call("SetInputMute", {
         inputName: ctx.getInput(io.inputName),
         inputMuted: ctx.getInput(io.inputMuted),
       });
@@ -1188,7 +1197,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("ToggleInputMute", {
+      const data = await obs().call("ToggleInputMute", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(io.inputMuted, data.inputMuted);
@@ -1218,7 +1227,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputVolume", {
+      const data = await obs().call("GetInputVolume", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(io.inputVolumeMul, data.inputVolumeMul);
@@ -1244,7 +1253,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetInputVolume", {
+      obs().call("SetInputVolume", {
         inputName: ctx.getInput(io.inputName),
         inputVolumeDb: ctx.getInput(io.inputVolumeDb),
       });
@@ -1269,7 +1278,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetInputVolume", {
+      obs().call("SetInputVolume", {
         inputName: ctx.getInput(io.inputName),
         inputVolumeMul: ctx.getInput(io.inputVolumeMul),
       });
@@ -1294,7 +1303,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputAudioBalance", {
+      const data = await obs().call("GetInputAudioBalance", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(io.inputAudioBalance, data.inputAudioBalance);
@@ -1319,7 +1328,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetInputAudioBalance", {
+      obs().call("SetInputAudioBalance", {
         inputName: ctx.getInput(io.inputName),
         inputAudioBalance: ctx.getInput(io.inputAudioBalance),
       });
@@ -1344,7 +1353,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputAudioSyncOffset", {
+      const data = await obs().call("GetInputAudioSyncOffset", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(io.inputAudioSyncOffset, data.inputAudioSyncOffset);
@@ -1369,7 +1378,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetInputAudioSyncOffset", {
+      obs().call("SetInputAudioSyncOffset", {
         inputName: ctx.getInput(io.inputName),
         inputAudioSyncOffset: ctx.getInput(io.inputAudioSyncOffset),
       });
@@ -1394,7 +1403,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputAudioMonitorType", {
+      const data = await obs().call("GetInputAudioMonitorType", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(io.monitorType, data.monitorType);
@@ -1421,7 +1430,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     async run({ ctx, io }) {
       const data = ctx.getInput(io.monitorType);
 
-      obs.call("SetInputAudioMonitorType", {
+      obs().call("SetInputAudioMonitorType", {
         inputName: ctx.getInput(io.inputName),
         monitorType:
           data.variant === "MonitorOnly"
@@ -1451,7 +1460,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputAudioTracks", {
+      const data = await obs().call("GetInputAudioTracks", {
         inputName: ctx.getInput(io.inputName),
       });
 
@@ -1480,7 +1489,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetInputAudioTracks", {
+      obs().call("SetInputAudioTracks", {
         inputName: ctx.getInput(io.inputName),
         inputAudioTracks: jsonToJS({
           variant: "Map",
@@ -1515,7 +1524,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetInputPropertiesListPropertyItems", {
+      const data = await obs().call("GetInputPropertiesListPropertyItems", {
         inputName: ctx.getInput(io.inputName),
         propertyName: ctx.getInput(io.propertyName),
       });
@@ -1550,7 +1559,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("PressInputPropertiesButton", {
+      obs().call("PressInputPropertiesButton", {
         inputName: ctx.getInput(io.inputName),
         propertyName: ctx.getInput(io.propertyName),
       });
@@ -1567,7 +1576,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.list(t.string()),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetTransitionKindList");
+      const data = await obs().call("GetTransitionKindList");
       ctx.setOutput(io, data.transitionKinds);
     },
   });
@@ -1595,7 +1604,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneTransitionList");
+      const data = await obs().call("GetSceneTransitionList");
 
       const Transition = data.transitions.map((data) =>
         Transitions.create({
@@ -1656,7 +1665,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetCurrentSceneTransition");
+      const data = await obs().call("GetCurrentSceneTransition");
 
       ctx.setOutput(io.transitionName, data.transitionName);
       ctx.setOutput(io.transitionKind, data.transitionKind);
@@ -1680,7 +1689,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      obs.call("SetCurrentSceneTransition", {
+      obs().call("SetCurrentSceneTransition", {
         transitionName: ctx.getInput(io),
       });
     },
@@ -1696,7 +1705,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.int(),
       }),
     async run({ ctx, io }) {
-      obs.call("SetCurrentSceneTransitionDuration", {
+      obs().call("SetCurrentSceneTransitionDuration", {
         transitionDuration: ctx.getInput(io),
       });
     },
@@ -1720,7 +1729,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetCurrentSceneTransitionSettings", {
+      obs().call("SetCurrentSceneTransitionSettings", {
         transitionSettings: jsonToJS({
           variant: "Map",
           data: {
@@ -1742,7 +1751,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.int(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetCurrentSceneTransitionCursor");
+      const data = await obs().call("GetCurrentSceneTransitionCursor");
       ctx.setOutput(io, data.transitionCursor);
     },
   });
@@ -1752,7 +1761,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      await obs.call("TriggerStudioModeTransition");
+      await obs().call("TriggerStudioModeTransition");
     },
   });
 
@@ -1774,7 +1783,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetTBarPosition", {
+      obs().call("SetTBarPosition", {
         position: ctx.getInput(io.position),
         release: ctx.getInput(io.release),
       });
@@ -1799,7 +1808,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSourceFilterList", {
+      const data = await obs().call("GetSourceFilterList", {
         sourceName: ctx.getInput(io.sourceName),
       });
 
@@ -1835,7 +1844,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSourceFilterDefaultSettings", {
+      const data = await obs().call("GetSourceFilterDefaultSettings", {
         filterKind: ctx.getInput(io.filterKind),
       });
 
@@ -1874,7 +1883,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("CreateSourceFilter", {
+      obs().call("CreateSourceFilter", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterKind: ctx.getInput(io.filterKind),
@@ -1908,7 +1917,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("RemoveSourceFilter", {
+      obs().call("RemoveSourceFilter", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
       });
@@ -1938,7 +1947,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetSourceFilterName", {
+      obs().call("SetSourceFilterName", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         newFilterName: ctx.getInput(io.newFilterName),
@@ -1969,7 +1978,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSourceFilter", {
+      const data = await obs().call("GetSourceFilter", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
       });
@@ -2009,7 +2018,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetSourceFilterIndex", {
+      obs().call("SetSourceFilterIndex", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterIndex: ctx.getInput(io.filterIndex),
@@ -2045,7 +2054,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     run({ ctx, io }) {
-      obs.call("SetSourceFilterSettings", {
+      obs().call("SetSourceFilterSettings", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterSettings: jsonToJS({
@@ -2082,7 +2091,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetSourceFilterEnabled", {
+      obs().call("SetSourceFilterEnabled", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterEnabled: ctx.getInput(io.filterEnabled),
@@ -2109,7 +2118,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
     async run({ ctx, io }) {
       console.log(obs);
-      const data = await obs.call("GetSceneItemList", {
+      const data = await obs().call("GetSceneItemList", {
         sceneName: ctx.getInput(io.sceneName),
       });
 
@@ -2193,7 +2202,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneItemId", {
+      const data = await obs().call("GetSceneItemId", {
         sceneName: ctx.getInput(io.sceneName),
         sourceName: ctx.getInput(io.sourceName),
         searchOffset: ctx.getInput(io.searchOffset),
@@ -2230,7 +2239,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("CreateSceneItem", {
+      const data = await obs().call("CreateSceneItem", {
         sceneName: ctx.getInput(io.sceneName),
         sourceName: ctx.getInput(io.sourceName),
         sceneItemEnabled: ctx.getInput(io.sceneItemEnabled),
@@ -2257,7 +2266,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("RemoveSceneItem", {
+      obs().call("RemoveSceneItem", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
       });
@@ -2292,7 +2301,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("DuplicateSceneItem", {
+      const data = await obs().call("DuplicateSceneItem", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemIdIn),
         destinationSceneName: ctx.getInput(io.destinationSceneName),
@@ -2324,7 +2333,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneItemTransform", {
+      const data = await obs().call("GetSceneItemTransform", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
       });
@@ -2388,7 +2397,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetSceneItemTransform", {
+      obs().call("SetSceneItemTransform", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemTransform: jsonToJS({
@@ -2424,7 +2433,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneItemEnabled", {
+      const data = await obs().call("GetSceneItemEnabled", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
       });
@@ -2455,7 +2464,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      await obs.call("SetSceneItemEnabled", {
+      await obs().call("SetSceneItemEnabled", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemEnabled: ctx.getInput(io.sceneItemEnabled),
@@ -2486,7 +2495,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneItemLocked", {
+      const data = await obs().call("GetSceneItemLocked", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
       });
@@ -2517,7 +2526,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetSceneItemLocked", {
+      obs().call("SetSceneItemLocked", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemLocked: ctx.getInput(io.sceneItemLocked),
@@ -2548,7 +2557,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneItemIndex", {
+      const data = await obs().call("GetSceneItemIndex", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
       });
@@ -2579,7 +2588,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetSceneItemIndex", {
+      obs().call("SetSceneItemIndex", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemIndex: ctx.getInput(io.sceneItemIndex),
@@ -2610,7 +2619,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSceneItemBlendMode", {
+      const data = await obs().call("GetSceneItemBlendMode", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
       });
@@ -2641,7 +2650,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetSceneItemBlendMode", {
+      obs().call("SetSceneItemBlendMode", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemBlendMode: ctx.getInput(io.sceneItemBlendMode),
@@ -2659,7 +2668,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.bool(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetVirtualCamStatus");
+      const data = await obs().call("GetVirtualCamStatus");
       ctx.setOutput(io, data.outputActive);
     },
   });
@@ -2674,7 +2683,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.bool(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("ToggleVirtualCam");
+      const data = await obs().call("ToggleVirtualCam");
       ctx.setOutput(io, data.outputActive);
     },
   });
@@ -2684,7 +2693,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("StartVirtualCam");
+      obs().call("StartVirtualCam");
     },
   });
 
@@ -2693,7 +2702,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("StopVirtualCam");
+      obs().call("StopVirtualCam");
     },
   });
 
@@ -2707,7 +2716,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.bool(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetReplayBufferStatus");
+      const data = await obs().call("GetReplayBufferStatus");
       ctx.setOutput(io, data.outputActive);
     },
   });
@@ -2722,7 +2731,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.bool(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("ToggleReplayBuffer");
+      const data = await obs().call("ToggleReplayBuffer");
       ctx.setOutput(io, data.outputActive);
     },
   });
@@ -2732,7 +2741,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("StartReplayBuffer");
+      obs().call("StartReplayBuffer");
     },
   });
 
@@ -2741,7 +2750,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("StopReplayBuffer");
+      obs().call("StopReplayBuffer");
     },
   });
 
@@ -2750,7 +2759,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("SaveReplayBuffer");
+      obs().call("SaveReplayBuffer");
     },
   });
 
@@ -2764,7 +2773,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetLastReplayBufferReplay");
+      const data = await obs().call("GetLastReplayBufferReplay");
       ctx.setOutput(io, data.savedReplayPath);
     },
   });
@@ -2779,7 +2788,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.list(t.enum(JSON)),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetOutputList" as any);
+      const data = await obs().call("GetOutputList" as any);
       ctx.setOutput(io, data.outputs);
     },
   });
@@ -2841,7 +2850,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //     OutputStatus.forEach((data) =>io.dataOutput(data));
   //   },
   //   async run({ ctx }) {
-  //     const data = await obs.call("GetOutputStatus", {
+  //     const data = await obs().call("GetOutputStatus", {
   //       outputName: ctx.getInput("outputName")
   //     });
   //     OutputStatus.forEach(({ id }) => ctx.setOutput(id, data[id]));
@@ -2859,7 +2868,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //     });
   //   },
   //   async run({ ctx }) {
-  //     obs.call("StartOutput", {
+  //     obs().call("StartOutput", {
   //       outputName: ctx.getInput("outputName"),
   //     });
   //   },
@@ -2876,7 +2885,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //     });
   //   },
   //   async run({ ctx }) {
-  //     obs.call("StopOutput", {
+  //     obs().call("StopOutput", {
   //       outputName: ctx.getInput("outputName"),
   //     });
   //   },
@@ -2935,7 +2944,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     generateIO: ({ io }) =>
       StreamStatus.map((data) => [data.id, io.dataOutput(data)] as const),
     async run({ ctx, io }) {
-      const data = await obs.call("GetStreamStatus");
+      const data = await obs().call("GetStreamStatus");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
@@ -2950,7 +2959,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.bool(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("ToggleStream");
+      const data = await obs().call("ToggleStream");
       ctx.setOutput(io, data.outputActive);
     },
   });
@@ -2960,7 +2969,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("StartStream");
+      obs().call("StartStream");
     },
   });
 
@@ -2969,7 +2978,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("StopStream");
+      obs().call("StopStream");
     },
   });
 
@@ -2983,7 +2992,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      obs.call("SendStreamCaption", {
+      obs().call("SendStreamCaption", {
         captionText: ctx.getInput(io),
       });
     },
@@ -3022,7 +3031,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetRecordStatus");
+      const data = await obs().call("GetRecordStatus");
       ctx.setOutput(io.outputActive, data.outputActive);
       ctx.setOutput(io.outputPaused, (data as any).outputPaused);
       ctx.setOutput(io.outputTimecode, data.outputTimecode);
@@ -3036,7 +3045,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      obs.call("ToggleRecord");
+      obs().call("ToggleRecord");
     },
   });
 
@@ -3045,7 +3054,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      await obs.call("StartRecord");
+      await obs().call("StartRecord");
     },
   });
 
@@ -3059,7 +3068,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("StopRecord");
+      const data = await obs().call("StopRecord");
       ctx.setOutput(io, (data as any).outputPath);
     },
   });
@@ -3069,7 +3078,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      await obs.call("ToggleRecordPause");
+      await obs().call("ToggleRecordPause");
     },
   });
 
@@ -3078,7 +3087,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      await obs.call("PauseRecord");
+      await obs().call("PauseRecord");
     },
   });
 
@@ -3087,7 +3096,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     variant: "Exec",
     generateIO() {},
     async run() {
-      await obs.call("ResumeRecord");
+      await obs().call("ResumeRecord");
     },
   });
 
@@ -3119,7 +3128,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetMediaInputStatus", {
+      const data = await obs().call("GetMediaInputStatus", {
         inputName: ctx.getInput(io.inputName),
       });
       ctx.setOutput(io.mediaState, data.mediaState);
@@ -3146,7 +3155,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("SetMediaInputCursor", {
+      obs().call("SetMediaInputCursor", {
         inputName: ctx.getInput(io.inputName),
         mediaCursor: ctx.getInput(io.mediaCursor),
       });
@@ -3171,7 +3180,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("OffsetMediaInputCursor", {
+      obs().call("OffsetMediaInputCursor", {
         inputName: ctx.getInput(io.inputName),
         mediaCursorOffset: ctx.getInput(io.mediaCursorOffset),
       });
@@ -3196,7 +3205,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      obs.call("TriggerMediaInputAction", {
+      obs().call("TriggerMediaInputAction", {
         inputName: ctx.getInput(io.inputName),
         mediaAction: ctx.getInput(io.mediaAction),
       });
@@ -3213,7 +3222,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.bool(),
       }),
     async run({ ctx, io }) {
-      const data = await obs.call("GetStudioModeEnabled");
+      const data = await obs().call("GetStudioModeEnabled");
       ctx.setOutput(io, data.studioModeEnabled);
     },
   });
@@ -3228,7 +3237,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.bool(),
       }),
     async run({ ctx, io }) {
-      obs.call("SetStudioModeEnabled", {
+      obs().call("SetStudioModeEnabled", {
         studioModeEnabled: ctx.getInput(io),
       });
     },
@@ -3244,7 +3253,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      obs.call("OpenInputPropertiesDialog", {
+      obs().call("OpenInputPropertiesDialog", {
         inputName: ctx.getInput(io),
       });
     },
@@ -3260,7 +3269,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      obs.call("OpenInputFiltersDialog", {
+      obs().call("OpenInputFiltersDialog", {
         inputName: ctx.getInput(io),
       });
     },
@@ -3276,7 +3285,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         type: t.string(),
       }),
     async run({ ctx, io }) {
-      obs.call("OpenInputInteractDialog", {
+      obs().call("OpenInputInteractDialog", {
         inputName: ctx.getInput(io),
       });
     },
@@ -3305,7 +3314,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //     });
   //   },
   //   async run({ ctx }) {
-  //     obs.call("OpenVideoMixProjector", {
+  //     obs().call("OpenVideoMixProjector", {
   //       videoMixType: ctx.getInput("videoMixType"),
   //       monitorIndex: ctx.getInput("monitorIndex"),
   //       projectorGeometry: ctx.getInput("projectorGeometry"),
@@ -3334,7 +3343,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //     });
   //   },
   //   async run({ ctx }) {
-  //     obs.call("OpenSourceProjector", {
+  //     obs().call("OpenSourceProjector", {
   //       sourceName: ctx.getInput("sourceName"),
   //       monitorIndex: ctx.getInput("monitorIndex"),
   //       projectorGeometry: ctx.getInput("projectorGeometry"),

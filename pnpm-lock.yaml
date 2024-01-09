@@ -384,6 +384,9 @@ importers:
       '@solid-primitives/map':
         specifier: ^0.4.3
         version: 0.4.4(solid-js@1.8.8)
+      '@solid-primitives/memo':
+        specifier: ^1.3.5
+        version: 1.3.5(solid-js@1.8.8)
       '@solid-primitives/set':
         specifier: ^0.4.4
         version: 0.4.4(solid-js@1.8.8)

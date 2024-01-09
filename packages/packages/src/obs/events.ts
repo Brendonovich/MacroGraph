@@ -116,7 +116,7 @@ export function alignmentConversion(alignment: string | number) {
   }
 }
 
-export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
+export function register(pkg: Package<EventTypes>) {
   pkg.registerType(BoundsType);
   pkg.registerType(Alignment);
   pkg.registerType(SceneItemTransform);
@@ -136,10 +136,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     run({ ctx, io }) {
       ctx.exec(io);
     },
-  });
-
-  obs.on("ExitStarted", () => {
-    pkg.emitEvent({ name: "ExitStarted", data: undefined });
   });
 
   pkg.createEventSchema({
@@ -200,10 +196,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("CurrentSceneCollectionChanging", (data) => {
-    pkg.emitEvent({ name: "CurrentSceneCollectionChanging", data });
-  });
-
   pkg.createEventSchema({
     event: "CurrentSceneCollectionChanged",
     name: "Current Scene Collection Changed",
@@ -224,10 +216,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.sceneCollectionName, data.sceneCollectionName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("CurrentSceneCollectionChanged", (data) => {
-    pkg.emitEvent({ name: "CurrentSceneCollectionChanged", data });
   });
 
   pkg.createEventSchema({
@@ -252,10 +240,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneCollectionListChanged", (data) => {
-    pkg.emitEvent({ name: "SceneCollectionListChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "CurrentProfileChanging",
     name: "Current Profile Changing",
@@ -276,10 +260,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.profileName, data.profileName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("CurrentProfileChanging", (data) => {
-    pkg.emitEvent({ name: "CurrentProfileChanging", data });
   });
 
   pkg.createEventSchema({
@@ -304,10 +284,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("CurrentProfileChanged", (data) => {
-    pkg.emitEvent({ name: "CurrentProfileChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "ProfileListChanged",
     name: "Profile List Changed",
@@ -328,10 +304,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.profiles, data.profiles);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("ProfileListChanged", (data) => {
-    pkg.emitEvent({ name: "ProfileListChanged", data });
   });
 
   pkg.createEventSchema({
@@ -362,10 +334,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneCreated", (data) => {
-    pkg.emitEvent({ name: "SceneCreated", data });
-  });
-
   pkg.createEventSchema({
     event: "SceneRemoved",
     name: "Scene Removed",
@@ -392,10 +360,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.isGroup, data.isGroup);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SceneRemoved", (data) => {
-    pkg.emitEvent({ name: "SceneRemoved", data });
   });
 
   pkg.createEventSchema({
@@ -426,10 +390,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneNameChanged", (data) => {
-    pkg.emitEvent({ name: "SceneNameChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "CurrentProgramSceneChanged",
     name: "Current Program Scene Changed",
@@ -452,10 +412,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("CurrentProgramSceneChanged", (data) => {
-    pkg.emitEvent({ name: "CurrentProgramSceneChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "CurrentPreviewSceneChanged",
     name: "Current Preview Scene Changed",
@@ -476,10 +432,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.sceneName, data.sceneName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("CurrentPreviewSceneChanged", (data) => {
-    pkg.emitEvent({ name: "CurrentPreviewSceneChanged", data });
   });
 
   pkg.createEventSchema({
@@ -508,10 +460,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.scenes, scenes);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SceneListChanged", (data) => {
-    pkg.emitEvent({ name: "SceneListChanged", data });
   });
 
   pkg.createEventSchema({
@@ -566,10 +514,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputCreated", (data) => {
-    pkg.emitEvent({ name: "InputCreated", data });
-  });
-
   pkg.createEventSchema({
     event: "InputRemoved",
     name: "Input Removed",
@@ -590,10 +534,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.inputName, data.inputName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("InputRemoved", (data) => {
-    pkg.emitEvent({ name: "InputRemoved", data });
   });
 
   pkg.createEventSchema({
@@ -624,10 +564,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputNameChanged", (data) => {
-    pkg.emitEvent({ name: "InputNameChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "InputActiveStateChanged",
     name: "Input Active State Changed",
@@ -654,10 +590,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.videoActive, data.videoActive);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("InputActiveStateChanged", (data) => {
-    pkg.emitEvent({ name: "InputActiveStateChanged", data });
   });
 
   pkg.createEventSchema({
@@ -688,10 +620,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputShowStateChanged", (data) => {
-    pkg.emitEvent({ name: "InputShowStateChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "InputMuteStateChanged",
     name: "Input Mute State Changed",
@@ -718,10 +646,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.inputMuted, data.inputMuted);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("InputMuteStateChanged", (data) => {
-    pkg.emitEvent({ name: "InputMuteStateChanged", data });
   });
 
   pkg.createEventSchema({
@@ -758,10 +682,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputVolumeChanged", (data) => {
-    pkg.emitEvent({ name: "InputVolumeChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "InputAudioBalanceChanged",
     name: "Input Audio Balance Changed",
@@ -790,10 +710,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputAudioBalanceChanged", (data) => {
-    pkg.emitEvent({ name: "InputAudioBalanceChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "InputAudioSyncOffsetChanged",
     name: "Input Audio Sync Offset Changed",
@@ -820,10 +736,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.inputAudioSyncOffset, data.inputAudioSyncOffset);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("InputAudioSyncOffsetChanged", (data) => {
-    pkg.emitEvent({ name: "InputAudioSyncOffsetChanged", data });
   });
 
   pkg.createEventSchema({
@@ -862,10 +774,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputAudioTracksChanged", (data) => {
-    pkg.emitEvent({ name: "InputAudioTracksChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "InputAudioMonitorTypeChanged",
     name: "Input Audio Monitor Type Changed",
@@ -899,10 +807,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputAudioMonitorTypeChanged", (data) => {
-    pkg.emitEvent({ name: "InputAudioMonitorTypeChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "InputVolumeMeters",
     name: "Input Volume Meters",
@@ -931,10 +835,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("InputVolumeMeters", (data) => {
-    pkg.emitEvent({ name: "InputVolumeMeters", data });
-  });
-
   pkg.createEventSchema({
     event: "CurrentSceneTransitionChanged",
     name: "Current Scene Transition Changed",
@@ -955,10 +855,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.transitionName, data.transitionName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("CurrentSceneTransitionChanged", (data) => {
-    pkg.emitEvent({ name: "CurrentSceneTransitionChanged", data });
   });
 
   pkg.createEventSchema({
@@ -983,10 +879,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("CurrentSceneTransitionDurationChanged", (data) => {
-    pkg.emitEvent({ name: "CurrentSceneTransitionDurationChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "SceneTransitionStarted",
     name: "Scene Transition Started",
@@ -1007,10 +899,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.transitionName, data.transitionName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SceneTransitionStarted", (data) => {
-    pkg.emitEvent({ name: "SceneTransitionStarted", data });
   });
 
   pkg.createEventSchema({
@@ -1035,10 +923,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneTransitionEnded", (data) => {
-    pkg.emitEvent({ name: "SceneTransitionEnded", data });
-  });
-
   pkg.createEventSchema({
     event: "SceneTransitionVideoEnded",
     name: "Scene Transition Video Ended",
@@ -1059,10 +943,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.transitionName, data.transitionName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SceneTransitionVideoEnded", (data) => {
-    pkg.emitEvent({ name: "SceneTransitionVideoEnded", data });
   });
 
   //SourceFilterListReindexed has array of objects
@@ -1095,10 +975,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.filterName, data.filterName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SourceFilterRemoved", (data) => {
-    pkg.emitEvent({ name: "SourceFilterRemoved", data });
   });
 
   pkg.createEventSchema({
@@ -1135,10 +1011,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SourceFilterNameChanged", (data) => {
-    pkg.emitEvent({ name: "SourceFilterNameChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "SourceFilterEnableStateChanged",
     name: "Source Filter Enable State Changed",
@@ -1171,10 +1043,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.filterName, data.filterName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SourceFilterEnableStateChanged", (data) => {
-    pkg.emitEvent({ name: "SourceFilterEnableStateChanged", data });
   });
 
   pkg.createEventSchema({
@@ -1217,10 +1085,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneItemCreated", (data) => {
-    pkg.emitEvent({ name: "SceneItemCreated", data });
-  });
-
   pkg.createEventSchema({
     event: "SceneItemRemoved",
     name: "Scene Item Removed",
@@ -1255,10 +1119,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneItemRemoved", (data) => {
-    pkg.emitEvent({ name: "SceneItemRemoved", data });
-  });
-
   //Has Object array
 
   // pkg.createEventSchema({
@@ -1287,10 +1147,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //   },
   // });
 
-  // obs.on("SceneItemListReindexed", (data) => {
-  //   pkg.emitEvent({ name: "SceneItemListReindexed", data });
-  // });
-
+  //
   pkg.createEventSchema({
     event: "SceneItemEnableStateChanged",
     name: "Scene Item Enable State Changed",
@@ -1323,10 +1180,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.sceneItemEnabled, data.sceneItemEnabled);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SceneItemEnableStateChanged", (data) => {
-    pkg.emitEvent({ name: "SceneItemEnableStateChanged", data });
   });
 
   pkg.createEventSchema({
@@ -1363,10 +1216,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneItemLockStateChanged", (data) => {
-    pkg.emitEvent({ name: "SceneItemLockStateChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "SceneItemSelected",
     name: "Scene Item Selected",
@@ -1393,10 +1242,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.sceneItemId, data.sceneItemId);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("SceneItemSelected", (data) => {
-    pkg.emitEvent({ name: "SceneItemSelected", data });
   });
 
   pkg.createEventSchema({
@@ -1462,10 +1307,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("SceneItemTransformChanged", (data) => {
-    pkg.emitEvent({ name: "SceneItemTransformChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "StreamStateChanged",
     name: "Stream State Changed",
@@ -1492,10 +1333,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.outputState, data.outputState);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("StreamStateChanged", (data) => {
-    pkg.emitEvent({ name: "StreamStateChanged", data });
   });
 
   pkg.createEventSchema({
@@ -1532,10 +1369,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("RecordStateChanged", (data) => {
-    pkg.emitEvent({ name: "RecordStateChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "ReplayBufferStateChanged",
     name: "Replay Buffer State Changed",
@@ -1562,10 +1395,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.outputState, data.outputState);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("ReplayBufferStateChanged", (data) => {
-    pkg.emitEvent({ name: "ReplayBufferStateChanged", data });
   });
 
   pkg.createEventSchema({
@@ -1596,10 +1425,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("VirtualcamStateChanged", (data) => {
-    pkg.emitEvent({ name: "VirtualcamStateChanged", data });
-  });
-
   pkg.createEventSchema({
     event: "ReplayBufferSaved",
     name: "Replay Buffer Saved",
@@ -1620,10 +1445,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.savedReplayPath, data.savedReplayPath);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("ReplayBufferSaved", (data) => {
-    pkg.emitEvent({ name: "ReplayBufferSaved", data });
   });
 
   pkg.createEventSchema({
@@ -1648,10 +1469,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("MediaInputPlaybackStarted", (data) => {
-    pkg.emitEvent({ name: "MediaInputPlaybackStarted", data });
-  });
-
   pkg.createEventSchema({
     event: "MediaInputPlaybackEnded",
     name: "Media Input Playback Ended",
@@ -1672,10 +1489,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.inputName, data.inputName);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("MediaInputPlaybackEnded", (data) => {
-    pkg.emitEvent({ name: "MediaInputPlaybackEnded", data });
   });
 
   pkg.createEventSchema({
@@ -1706,10 +1519,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  obs.on("MediaInputActionTriggered", (data) => {
-    pkg.emitEvent({ name: "MediaInputActionTriggered", data });
-  });
-
   pkg.createEventSchema({
     event: "StudioModeStateChanged",
     name: "Studio Mode State Changed",
@@ -1730,10 +1539,6 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.setOutput(io.studioModeEnabled, data.studioModeEnabled);
       ctx.exec(io.exec);
     },
-  });
-
-  obs.on("StudioModeStateChanged", (data) => {
-    pkg.emitEvent({ name: "StudioModeStateChanged", data });
   });
 
   //Doesnt Exist Yet
@@ -1758,10 +1563,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //   },
   // });
 
-  // obs.on("ScreenshotSaved", (data) => {
-  //   pkg.emitEvent({ name: "ScreenshotSaved", data });
-  // });
-
+  //
   pkg.createEventSchema({
     event: "ConnectionOpened",
     name: "Connection Opened",
@@ -1774,8 +1576,4 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       ctx.exec(io);
     },
   });
-
-  obs.on("ConnectionOpened", () =>
-    pkg.emitEvent({ name: "ConnectionOpened", data: undefined })
-  );
 }

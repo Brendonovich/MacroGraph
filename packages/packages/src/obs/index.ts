@@ -6,7 +6,7 @@ import * as requests from "./requests";
 import { createCtx, Ctx } from "./ctx";
 
 export function pkg(): Package<EventTypes, Ctx> {
-  const ctx = createCtx();
+  const ctx = createCtx((data) => pkg.emitEvent(data));
 
   const pkg = new Package<EventTypes, Ctx>({
     name: "OBS Websocket",
@@ -14,7 +14,7 @@ export function pkg(): Package<EventTypes, Ctx> {
     SettingsUI: () => import("./Settings"),
   });
 
-  events.register(pkg, ctx);
+  events.register(pkg);
   requests.register(pkg, ctx);
 
   return pkg;

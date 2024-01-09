@@ -6,7 +6,7 @@ import { z } from "zod";
 const OBS_WS = "obsWs";
 
 export const AUTH_SCHEMA = z.object({
-  url: z.string(),
+  url: z.string().url(),
   password: z.string().optional(),
 });
 
