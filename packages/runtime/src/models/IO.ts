@@ -83,8 +83,9 @@ export class DataInput<T extends BaseType<any>> {
         if (value.isSome() && value.unwrap() instanceof BasePrimitiveType) {
           if (prev.isSome() && value.unwrap().eq(prev.unwrap())) return prev;
 
-          if (!self.defaultValue) self.defaultValue = value.unwrap().default();
-        } else self.defaultValue = null;
+          if (self.defaultValue === null)
+            self.defaultValue = value.unwrap().default();
+        } else if (value.isSome()) self.defaultValue = null;
 
         return value;
       }, None);
