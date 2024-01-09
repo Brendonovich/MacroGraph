@@ -9,6 +9,7 @@ import {
   onCleanup,
   onMount,
   Show,
+  untrack,
 } from "solid-js";
 
 import { useGraphContext } from "./Graph";
@@ -65,9 +66,10 @@ export function CommentBox(props: Props) {
                     const nodes = createMemo(() => {
                       if (shift()) return [];
 
-                      return box().getNodes(
-                        graph.model().nodes.values(),
-                        (node) => graph.nodeSizes.get(node)
+                      return untrack(() =>
+                        box().getNodes(graph.model().nodes.values(), (node) =>
+                          graph.nodeSizes.get(node)
+                        )
                       );
                     });
 
