@@ -10,7 +10,6 @@ import {
   Show,
 } from "solid-js";
 
-import { useUIStore } from "../../UIStore";
 import { useGraphContext } from "./Graph";
 
 interface Props {
@@ -78,12 +77,13 @@ export function CommentBox(props: Props) {
                             y: box().position.y + e.movementY / scale,
                           };
 
-                          nodes.forEach((node) => {
-                            node.state.position = {
-                              x: node.state.position.x + e.movementX / scale,
-                              y: node.state.position.y + e.movementY / scale,
-                            };
-                          });
+                          if (!e.shiftKey)
+                            nodes.forEach((node) => {
+                              node.state.position = {
+                                x: node.state.position.x + e.movementX / scale,
+                                y: node.state.position.y + e.movementY / scale,
+                              };
+                            });
                         },
                       });
                     });
