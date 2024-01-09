@@ -10,6 +10,9 @@ import {
   Graph,
   Project,
   GetNodeSize,
+  ExecInput,
+  DataOutput,
+  ScopeOutput,
 } from "@macrograph/runtime";
 import { Option } from "@macrograph/typesystem";
 
@@ -66,14 +69,27 @@ export function serializeConnections(nodes: Set<Node>) {
 
   for (const node of nodes) {
     node.state.inputs.forEach((i) => {
-      (i.connection as unknown as Option<typeof i>).peek((conn) => {
-        if (!nodes.has(conn.node)) return;
+      if (i instanceof ExecInput) {
+        i.connections.forEach((conn) => {
+          if (!nodes.has(conn.node)) return;
 
-        connections.push({
-          from: { node: conn.node.id, output: conn.id },
-          to: { node: i.node.id, input: i.id },
+          connections.push({
+            from: { node: conn.node.id, output: conn.id },
+            to: { node: i.node.id, input: i.id },
+          });
         });
-      });
+      } else {
+        (i.connection as unknown as Option<DataOutput<any> | ScopeOutput>).peek(
+          (conn) => {
+            if (!nodes.has(conn.node)) return;
+
+            connections.push({
+              from: { node: conn.node.id, output: conn.id },
+              to: { node: i.node.id, input: i.id },
+            });
+          }
+        );
+      }
     });
   }
 
