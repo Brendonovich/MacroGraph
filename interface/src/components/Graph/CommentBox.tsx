@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import {
   createEffect,
+  createMemo,
   createRoot,
   createSignal,
   onCleanup,
@@ -59,10 +60,16 @@ export function CommentBox(props: Props) {
                   case 0: {
                     props.onSelected();
 
-                    const nodes = box().getNodes(
-                      graph.model().nodes.values(),
-                      (node) => graph.nodeSizes.get(node)
-                    );
+                    const [shift, setShift] = createSignal(e.shiftKey);
+
+                    const nodes = createMemo(() => {
+                      if (shift()) return [];
+
+                      return box().getNodes(
+                        graph.model().nodes.values(),
+                        (node) => graph.nodeSizes.get(node)
+                      );
+                    });
 
                     createRoot((dispose) => {
                       onCleanup(() => graph.model().project.save());
@@ -70,6 +77,7 @@ export function CommentBox(props: Props) {
                       createEventListenerMap(window, {
                         mouseup: dispose,
                         mousemove: (e) => {
+                          setShift(e.shiftKey);
                           const scale = graph.state.scale;
 
                           box().position = {
@@ -77,13 +85,12 @@ export function CommentBox(props: Props) {
                             y: box().position.y + e.movementY / scale,
                           };
 
-                          if (!e.shiftKey)
-                            nodes.forEach((node) => {
-                              node.state.position = {
-                                x: node.state.position.x + e.movementX / scale,
-                                y: node.state.position.y + e.movementY / scale,
-                              };
-                            });
+                          nodes().forEach((node) => {
+                            node.state.position = {
+                              x: node.state.position.x + e.movementX / scale,
+                              y: node.state.position.y + e.movementY / scale,
+                            };
+                          });
                         },
                       });
                     });
