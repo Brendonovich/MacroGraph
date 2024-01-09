@@ -29,6 +29,7 @@ async fn main() {
             std::sync::Arc::new(router()),
             move || ctx.clone(),
         ))
+        .plugin(tauri_plugin_persisted_scope::init())
         .setup(|app| {
             app.manage(http::State::new(app.handle()));
 
@@ -52,7 +53,7 @@ pub struct CtxInner {
 pub type Ctx = Arc<CtxInner>;
 
 #[allow(non_upper_case_globals)]
-pub(self) const R: Rspc<Ctx> = Rspc::new();
+pub const R: Rspc<Ctx> = Rspc::new();
 
 pub fn router() -> Router<Ctx> {
     R.router()

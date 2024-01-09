@@ -32,6 +32,8 @@ tower-http = { version = "0.4.4", features = ["cors"] }
 opener = "0.6.1"
 streamunordered = "0.5.3"
 
+tauri-plugin-persisted-scope = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!

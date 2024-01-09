@@ -10,6 +10,6 @@ export type Procedures = {
         { key: "websocket.server", input: number, result: [number, Message] }
 };
 
-export type Entry = { Dir: string } | { File: string }
-
 export type Message = { Text: string } | "Connected" | "Disconnected"
+
+export type Entry = { Dir: string } | { File: string }

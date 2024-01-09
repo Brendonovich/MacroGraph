@@ -20,7 +20,6 @@ import {
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
-import HeroiconsXMarkSolid from "~icons/heroicons/x-mark-solid";
 import clsx from "clsx";
 
 import { CoreProvider } from "./contexts";
@@ -48,6 +47,7 @@ import { CustomEventList } from "./components/CustomEvents";
 import "./global.css";
 
 export { useCore } from "./contexts";
+export * from "./platform";
 
 export type GraphBounds = XY & {
   width: number;
@@ -424,7 +424,7 @@ export function Interface(props: {
                             onClick={() => setCurrentGraphIndex(index)}
                           >
                             {graph.name}
-                            <HeroiconsXMarkSolid
+                            <IconHeroiconsXMarkSolid
                               class="hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 ml-2 p-0.5"
                               stroke-width={1}
                               onClick={(e) => {
