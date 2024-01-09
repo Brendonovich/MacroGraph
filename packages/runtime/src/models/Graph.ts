@@ -350,11 +350,15 @@ export class Graph {
 
 export function deserializeConnections(
   connections: Array<z.infer<typeof SerializedConnection>>,
-  target: Connections
+  target: Connections,
+  nodeIdMap?: Map<number, number>
 ) {
   connections.forEach((conn) => {
-    const outRef: IORef = `${conn.from.node}:o:${conn.from.output}`,
-      inRef: IORef = `${conn.to.node}:i:${conn.to.input}`;
+    const fromNode = nodeIdMap?.get(conn.from.node) ?? conn.from.node;
+    const toNode = nodeIdMap?.get(conn.to.node) ?? conn.to.node;
+
+    const outRef: IORef = `${fromNode}:o:${conn.from.output}`,
+      inRef: IORef = `${toNode}:i:${conn.to.input}`;
 
     const outConns =
       target.get(outRef) ??

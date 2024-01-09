@@ -234,31 +234,35 @@ export function Interface(props: {
 
             const nodeIdMap = new Map<number, number>();
 
-            for (const nodeJson of item.nodes) {
-              const id = model.generateId();
-              nodeIdMap.set(nodeJson.id, id);
-              nodeJson.id = id;
-              const node = Node.deserialize(model, {
-                ...nodeJson,
-                position: {
-                  x:
-                    commentBox.position.x +
-                    nodeJson.position.x -
-                    item.commentBox.position.x,
-                  y:
-                    commentBox.position.y +
-                    nodeJson.position.y -
-                    item.commentBox.position.y,
-                },
-              });
-
-              if (!node) throw new Error("Failed to deserialize node");
-
-              model.nodes.set(node.id, node);
-            }
-
             Solid.batch(() => {
-              deserializeConnections(item.connections, model.connections);
+              for (const nodeJson of item.nodes) {
+                const id = model.generateId();
+                nodeIdMap.set(nodeJson.id, id);
+                nodeJson.id = id;
+                const node = Node.deserialize(model, {
+                  ...nodeJson,
+                  position: {
+                    x:
+                      commentBox.position.x +
+                      nodeJson.position.x -
+                      item.commentBox.position.x,
+                    y:
+                      commentBox.position.y +
+                      nodeJson.position.y -
+                      item.commentBox.position.y,
+                  },
+                });
+
+                if (!node) throw new Error("Failed to deserialize node");
+
+                model.nodes.set(node.id, node);
+              }
+
+              deserializeConnections(
+                item.connections,
+                model.connections,
+                nodeIdMap
+              );
             });
 
             break;
