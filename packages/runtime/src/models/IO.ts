@@ -24,6 +24,7 @@ import {
 import { Node } from "./Node";
 import { DataOutputBuilder } from "./NodeSchema";
 import { makeIORef, splitIORef } from "./Graph";
+import { ReactiveSet } from "@solid-primitives/set";
 
 export function connectWildcardsInIO(
   output: DataOutput<t.Any>,
@@ -188,7 +189,7 @@ export class ExecInput {
   public node: Node;
   public name?: string;
 
-  connection: Option<ExecOutput> = None;
+  connections = new ReactiveSet<ExecOutput>();
 
   constructor(args: ExecInputArgs) {
     this.id = args.id;
@@ -256,10 +257,10 @@ export class ExecOutput {
 
       createEffect(() => {
         this.connection().peek((conn) => {
-          conn.connection = Some(self as any);
+          conn.connections.add(self);
 
           onCleanup(() => {
-            conn.connection = None;
+            conn.connections.delete(self);
           });
         });
       });

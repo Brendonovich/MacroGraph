@@ -11,6 +11,7 @@ import {
   onCleanup,
   createEffect,
 } from "solid-js";
+import { None, Option, Some } from "@macrograph/typesystem";
 
 import { IOBuilder, NodeSchema } from "./NodeSchema";
 import {
@@ -268,5 +269,20 @@ export class Node {
     });
 
     return node;
+  }
+
+  ancestor(): Option<Node> {
+    for (const input of this.state.inputs) {
+      if (input instanceof ExecInput) {
+        for (const conn of input.connections) {
+          const anc = conn.node.ancestor();
+
+          if (anc.isSome()) return anc;
+          else return Some(conn.node);
+        }
+      }
+    }
+
+    return None;
   }
 }

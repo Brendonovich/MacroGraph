@@ -173,12 +173,17 @@ export class Graph {
             return array;
           })();
         outputConnections.push(inRef);
-      } else if (output instanceof ExecOutput) {
-        // should allow multi-input in the future
-        this.disconnectPin(input);
+      } else if (output instanceof ExecOutput && input instanceof ExecInput) {
         this.disconnectPin(output);
 
-        this.connections.set(outRef, createMutable([inRef]));
+        const outputConnections =
+          this.connections.get(outRef) ??
+          (() => {
+            const array: Array<IORef> = createMutable([]);
+            this.connections.set(outRef, array);
+            return array;
+          })();
+        outputConnections.push(inRef);
       } else {
         this.disconnectPin(input);
         this.disconnectPin(output);
@@ -200,19 +205,25 @@ export class Graph {
     if (pinIsOutput(pin)) {
       this.connections.delete(ref);
     } else {
-      (
-        pin.connection as unknown as Option<
-          DataInput<any> | ExecInput | ScopeInput
-        >
-      ).peek((conn) => {
-        const connArray = this.connections.get(makeIORef(conn));
-        if (!connArray) return;
+      if (pin instanceof ExecInput) {
+        batch(() => {
+          pin.connections.forEach((conn) => {
+            this.connections.delete(makeIORef(conn));
+          });
+        });
+      } else {
+        (
+          pin.connection as unknown as Option<DataOutput<any> | ScopeOutput>
+        ).peek((conn) => {
+          const connArray = this.connections.get(makeIORef(conn));
+          if (!connArray) return;
 
-        const index = connArray.indexOf(ref);
-        if (index === -1) return;
+          const index = connArray.indexOf(ref);
+          if (index === -1) return;
 
-        connArray.splice(index, 1);
-      });
+          connArray.splice(index, 1);
+        });
+      }
     }
 
     this.project.save();
