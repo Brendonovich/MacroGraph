@@ -5,7 +5,7 @@ export function register(pkg: Pkg) {
   pkg.createEventSchema({
     name: "Level Change",
     event: "levelsChange",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -32,7 +32,7 @@ export function register(pkg: Pkg) {
   pkg.createEventSchema({
     name: "Button State",
     event: "buttonDown",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -59,7 +59,7 @@ export function register(pkg: Pkg) {
   pkg.createEventSchema({
     name: "Channel Mute State",
     event: "faderStatus",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         exec: io.execOutput({
           id: "exec",

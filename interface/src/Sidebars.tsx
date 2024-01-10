@@ -11,6 +11,7 @@ import {
   TextInput,
 } from "./components/ui";
 import { TypeEditor } from "./components/TypeEditor";
+import { useCore } from "./contexts";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (
@@ -202,6 +203,7 @@ export function NodeSidebar(props: { node: Node }) {
 
                 return (
                   <div class="p-2 flex flex-row gap-2 items-center">
+                    <span>{property.name}</span>
                     <Switch>
                       <Match when={"source" in property && property}>
                         {(property) => {
@@ -216,19 +218,16 @@ export function NodeSidebar(props: { node: Node }) {
                           };
 
                           return (
-                            <>
-                              <span>{property().name}</span>
-                              <SelectInput<PropertyValue>
-                                options={options()}
-                                optionValue="id"
-                                optionTextValue="display"
-                                getLabel={(o) => o.display}
-                                value={selectedOption()}
-                                onChange={(v) => {
-                                  props.node.setProperty(property().id, v.id);
-                                }}
-                              />
-                            </>
+                            <SelectInput<PropertyValue>
+                              options={options()}
+                              optionValue="id"
+                              optionTextValue="display"
+                              getLabel={(o) => o.display}
+                              value={selectedOption()}
+                              onChange={(v) => {
+                                props.node.setProperty(property().id, v.id);
+                              }}
+                            />
                           );
                         }}
                       </Match>
@@ -243,56 +242,74 @@ export function NodeSidebar(props: { node: Node }) {
                           };
 
                           return (
-                            <>
-                              <span>{property().name}</span>
-                              <Switch>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() ===
-                                    "bool"
-                                  }
-                                >
-                                  <CheckBox
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() ===
-                                    "string"
-                                  }
-                                >
-                                  <TextInput
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() === "int"
-                                  }
-                                >
-                                  <IntInput
-                                    initialValue={value()}
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() ===
-                                    "float"
-                                  }
-                                >
-                                  <FloatInput
-                                    initialValue={value()}
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                              </Switch>
-                            </>
+                            <Switch>
+                              <Match
+                                when={
+                                  property().type.primitiveVariant() === "bool"
+                                }
+                              >
+                                <CheckBox value={value()} onChange={onChange} />
+                              </Match>
+                              <Match
+                                when={
+                                  property().type.primitiveVariant() ===
+                                  "string"
+                                }
+                              >
+                                <TextInput
+                                  value={value()}
+                                  onChange={onChange}
+                                />
+                              </Match>
+                              <Match
+                                when={
+                                  property().type.primitiveVariant() === "int"
+                                }
+                              >
+                                <IntInput
+                                  initialValue={value()}
+                                  value={value()}
+                                  onChange={onChange}
+                                />
+                              </Match>
+                              <Match
+                                when={
+                                  property().type.primitiveVariant() === "float"
+                                }
+                              >
+                                <FloatInput
+                                  initialValue={value()}
+                                  value={value()}
+                                  onChange={onChange}
+                                />
+                              </Match>
+                            </Switch>
+                          );
+                        }}
+                      </Match>
+                      <Match when={"resource" in property && property}>
+                        {(property) => {
+                          const core = useCore();
+
+                          const items = () =>
+                            core.project.resources.get(property().resource)
+                              ?.items ?? [];
+
+                          const valueId = createMemo(
+                            () => props.node.state.properties[property().id]
+                          );
+
+                          return (
+                            <SelectInput
+                              options={items()}
+                              optionValue="id"
+                              optionTextValue="name"
+                              getLabel={(o) => o.name}
+                              value={items().find((i) => i.id === valueId())}
+                              onChange={(v) =>
+                                props.node.setProperty(property().id, v.id)
+                              }
+                            />
                           );
                         }}
                       </Match>

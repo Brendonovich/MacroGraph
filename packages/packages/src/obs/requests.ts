@@ -3,10 +3,10 @@ import { InferEnum, Maybe, t } from "@macrograph/typesystem";
 import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
 import { EventTypes } from "obs-websocket-js";
 import { createLazyMemo } from "@solid-primitives/memo";
+import { ReactiveMap } from "@solid-primitives/map";
 
 import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
 import { Ctx } from "./ctx";
-import { ReactiveMap } from "@solid-primitives/map";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -135,7 +135,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get OBS Version",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       versionOutputs.map((data) => [data.id, io.dataOutput(data)] as const),
     async run({ ctx, io }) {
       const data = await obs().call("GetVersion");
@@ -160,7 +160,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get OBS Stats",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       statsOutputs.map(
         ([id, name]) =>
           [id, io.dataOutput({ id, name, type: t.int() })] as const
@@ -178,7 +178,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Hotkey list",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "hotkeys",
         name: "Hotkeys",
@@ -193,7 +193,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Trigger Hotkey By Name",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "hotkeyName",
         name: "Hotkey Name",
@@ -207,7 +207,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Trigger Hotkey By Key Sequence",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         id: io.dataInput({
           id: "keyId",
@@ -245,7 +245,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Collection List",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         currentSceneCollectionName: io.dataOutput({
           id: "currentSceneCollectionName",
@@ -272,7 +272,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Current Scene Collection",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneCollectionName",
         name: "Scene Collection Name",
@@ -288,7 +288,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Create Scene Collection",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneCollectionName",
         name: "Scene Collection Name",
@@ -304,7 +304,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Profile list",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         currentProfileName: io.dataOutput({
           id: "currentProfileName",
@@ -327,7 +327,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Current Profile",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "profileName",
         name: "Profile Name",
@@ -341,7 +341,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Create Profile",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "profileName",
         name: "Profile Name",
@@ -355,7 +355,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Remove Profile",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "profileName",
         name: "Profile Name",
@@ -369,7 +369,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Profile Parameter",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         parameterCategory: io.dataInput({
           id: "parameterCategory",
@@ -406,7 +406,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Profile Parameter",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         parameterCategory: io.dataInput({
           id: "parameterCategory",
@@ -446,7 +446,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Video Settings",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       videoSettingOutputs.map(
         ([id, name]) =>
           [id, io.dataOutput({ id, name, type: t.int() })] as const
@@ -460,7 +460,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Video Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         fpsNumerator: io.dataInput({
           id: "fpsNumerator",
@@ -509,7 +509,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Stream Service Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         streamServiceType: io.dataOutput({
           id: "streamServiceType",
@@ -536,7 +536,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Stream Service Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         streamServiceType: io.dataInput({
           id: "streamServiceType",
@@ -566,7 +566,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Record Directory",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "recordDirectory",
         name: "Record Directory",
@@ -581,7 +581,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Source Active",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -616,7 +616,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Group List",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "groups",
         name: "Groups",
@@ -631,10 +631,9 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Current Program Scene",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "currentProgramSceneName",
-        name: "Current Program Scene Name",
         type: t.string(),
       }),
     async run({ ctx, io }) {
@@ -646,7 +645,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Current Program Scene",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
@@ -662,7 +661,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Current Preview Scene",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "currentPreviewSceneName",
         name: "Current Program Scene Name",
@@ -677,7 +676,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Current Preview Scene",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
@@ -693,7 +692,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Create Scene",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
@@ -707,7 +706,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Remove Scene",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
@@ -721,7 +720,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Scene Name",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -746,7 +745,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Transition Override",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -777,7 +776,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Scene Transition Override",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -808,7 +807,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Kind List",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         unversioned: io.dataInput({
           id: "unversioned",
@@ -842,7 +841,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Special Inputs",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       SpecialInputsOutputs.map(
         ([id, name]) =>
           [id, io.dataOutput({ id, name, type: t.string() })] as const
@@ -856,7 +855,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Create Input",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -910,7 +909,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Remove Input",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
@@ -926,7 +925,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Name",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -951,7 +950,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input List",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputKind: io.dataInput({
           id: "inputKind",
@@ -990,7 +989,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene List",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         currentProgramSceneName: io.dataOutput({
           id: "currentProgramSceneName",
@@ -1028,7 +1027,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Default Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputKind: io.dataInput({
           id: "inputKind",
@@ -1057,7 +1056,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1096,7 +1095,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1132,7 +1131,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Mute",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1157,7 +1156,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Mute",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1182,7 +1181,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Toggle Input Mute",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1207,7 +1206,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Volume",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1238,7 +1237,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Volume (dB)",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1263,7 +1262,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Volume (mul)",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1288,7 +1287,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Audio Balance",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1313,7 +1312,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Audio Balance",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1338,7 +1337,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Audio Sync Offset",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1363,7 +1362,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Audio Sync Offset",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1388,7 +1387,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Audio Monitor Type",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1413,7 +1412,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Audio Monitor Type",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1445,7 +1444,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Input Audio Tracks",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1474,7 +1473,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Input Audio Tracks",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1504,7 +1503,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get input Properties List Property Items",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1544,7 +1543,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Press Input Properties Button",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -1569,7 +1568,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Transition Kind List",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "transitionKinds",
         name: "Transition Kinds",
@@ -1584,7 +1583,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Transition List",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         currentSceneTransitionName: io.dataOutput({
           id: "currentSceneTransitionName",
@@ -1630,7 +1629,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Current Scene Transition",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         transitionName: io.dataOutput({
           id: "transitionName",
@@ -1682,7 +1681,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Current Scene Transition",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "transitionName",
         name: "Transition Name",
@@ -1698,7 +1697,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Current Scene Transition Duration",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "transitionDuration",
         name: "Transition Duration",
@@ -1714,7 +1713,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Current Scene Transition Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         transitionSettings: io.dataInput({
           id: "transitionSettings",
@@ -1744,7 +1743,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Current Scene Transition Cursor",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "transitionCursor",
         name: "Transition Cursor",
@@ -1759,7 +1758,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Trigger Studio Mode Transition",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       await obs().call("TriggerStudioModeTransition");
     },
@@ -1768,7 +1767,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set T Bar Position",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         position: io.dataInput({
           id: "position",
@@ -1793,7 +1792,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Source Filter List",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -1829,7 +1828,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Source Filter Default Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         filterKind: io.dataInput({
           id: "filterKind",
@@ -1858,7 +1857,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Create Source Filter",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -1902,7 +1901,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Remove Source Filter",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -1927,7 +1926,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Source Filter Name",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -1958,7 +1957,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Source Filter",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -1998,7 +1997,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Source Filter Name",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -2029,7 +2028,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Source Filter Settings",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -2071,7 +2070,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Source Filter Enabled",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sourceName: io.dataInput({
           id: "sourceName",
@@ -2102,7 +2101,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Item List",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2177,7 +2176,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Item Id",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2214,7 +2213,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Create Scene Item",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2251,7 +2250,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Remove Scene Item",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2276,7 +2275,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Duplicate Scene Item",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2313,7 +2312,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Item Transform",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2377,7 +2376,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Scene Item Transform",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2413,7 +2412,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Item Enabled",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2444,7 +2443,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Scene Item Enabled",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2475,7 +2474,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Item Locked",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2506,7 +2505,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Scene Item Locked",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2537,7 +2536,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Item Index",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2568,7 +2567,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Scene Item Index",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2599,7 +2598,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Scene Item Blend Mode",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2630,7 +2629,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Scene Item Blend Mode",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         sceneName: io.dataInput({
           id: "sceneName",
@@ -2661,7 +2660,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Virtual Cam Status",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
@@ -2676,7 +2675,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Toggle Virtual Cam",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
@@ -2691,7 +2690,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Start Virtual Cam",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("StartVirtualCam");
     },
@@ -2700,7 +2699,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Stop Virtual Cam",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("StopVirtualCam");
     },
@@ -2709,7 +2708,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Replay Buffer Status",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
@@ -2724,7 +2723,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Toggle Replay Buffer",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
@@ -2739,7 +2738,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Start Replay Buffer",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("StartReplayBuffer");
     },
@@ -2748,7 +2747,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Stop Replay Buffer",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("StopReplayBuffer");
     },
@@ -2757,7 +2756,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Save Replay Buffer",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("SaveReplayBuffer");
     },
@@ -2766,7 +2765,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Last Replay Buffer Replay",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "savedReplayPath",
         name: "Save Replay Path",
@@ -2781,7 +2780,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Output List",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputs",
         name: "Outputs",
@@ -2941,7 +2940,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Toggle Output",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       StreamStatus.map((data) => [data.id, io.dataOutput(data)] as const),
     async run({ ctx, io }) {
       const data = await obs().call("GetStreamStatus");
@@ -2952,7 +2951,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Toggle Stream",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
@@ -2967,7 +2966,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Start Stream",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("StartStream");
     },
@@ -2976,7 +2975,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Stop Stream",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("StopStream");
     },
@@ -2985,7 +2984,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Send Stream Caption",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "captionText",
         name: "Caption Text",
@@ -3001,7 +3000,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Record Status",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         outputActive: io.dataOutput({
           id: "outputActive",
@@ -3043,7 +3042,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Toggle Record",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       obs().call("ToggleRecord");
     },
@@ -3052,7 +3051,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Start Record",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       await obs().call("StartRecord");
     },
@@ -3061,7 +3060,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Stop Record",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputPath",
         name: "Output Path",
@@ -3076,7 +3075,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Toggle Record Paused",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       await obs().call("ToggleRecordPause");
     },
@@ -3085,7 +3084,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Pause Record",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       await obs().call("PauseRecord");
     },
@@ -3094,7 +3093,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Resume Record",
     variant: "Exec",
-    generateIO() {},
+    createIO() {},
     async run() {
       await obs().call("ResumeRecord");
     },
@@ -3103,7 +3102,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Media Input Status",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -3140,7 +3139,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Media Input Cursor",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -3165,7 +3164,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Offset Media Input Cursor",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -3190,7 +3189,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Trigger Media Input Action",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         inputName: io.dataInput({
           id: "inputName",
@@ -3215,7 +3214,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Get Studio Mode Enabled",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "studioModeEnabled",
         name: "Studio Mode Enabled",
@@ -3230,7 +3229,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Studio Mode Enabled",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "studioModeEnabled",
         name: "Studio Mode Enabled",
@@ -3246,7 +3245,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Open Input Properties Dialogue",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
@@ -3262,7 +3261,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Open Input Filters Dialogue",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
@@ -3278,7 +3277,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
   pkg.createNonEventSchema({
     name: "Open Input Interact Dialogue",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",

@@ -3,7 +3,6 @@ import { z } from "zod";
 import { trackDeep } from "@solid-primitives/deep";
 import {
   t,
-  SerializedType,
   deserializeType,
   deserializeValue,
   serializeValue,
@@ -12,6 +11,7 @@ import {
 import { createEffect, createRoot, getOwner, on, runWithOwner } from "solid-js";
 import { Project } from "./Project";
 import { Graph } from "./Graph";
+import { SerializedVariable } from "./serialized";
 
 export type VariableArgs = {
   id: number;
@@ -20,13 +20,6 @@ export type VariableArgs = {
   value: any;
   owner: Graph | Project;
 };
-
-export const SerializedVariable = z.object({
-  id: z.number(),
-  name: z.string(),
-  value: z.any(),
-  type: SerializedType,
-});
 
 export class Variable {
   id: number;

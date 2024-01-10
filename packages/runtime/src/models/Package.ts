@@ -1,5 +1,5 @@
 import { ReactiveSet } from "@solid-primitives/set";
-import { Component, lazy } from "solid-js";
+import { Accessor, Component, lazy } from "solid-js";
 import {
   Enum,
   EnumBuilder,
@@ -13,14 +13,17 @@ import {
 
 import { Core } from "./Core";
 import {
+  EventSchema as EventSchema,
   EventNodeSchema,
   EventsMap,
   NodeSchema,
   NonEventNodeSchema,
   PropertyDef,
   SchemaProperties,
+  CreateEventSchema,
 } from "./NodeSchema";
 import { ExecInput, ExecOutput } from "./IO";
+import { createLazyMemo } from "@solid-primitives/memo";
 
 export interface PackageArgs<TCtx> {
   name: string;
@@ -37,6 +40,7 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 
   structs = new Map<string, Struct>();
   enums = new Map<string, Enum>();
+  resources = new Set<ResourceType<any, any>>();
 
   constructor(args: PackageArgs<TCtx>) {
     this.name = args.name;
@@ -68,7 +72,7 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
         },
         {} as SchemaProperties<TProperties>
       ),
-      generateIO: (ctx) => {
+      createIO: (ctx) => {
         let defaultIO;
 
         if (schema.variant === "Exec") {
@@ -82,7 +86,7 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
           };
         }
 
-        const custom = schema.generateIO(ctx);
+        const custom = schema.createIO(ctx);
 
         return {
           custom,
@@ -136,6 +140,30 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     return this;
   }
 
+  createSchema(schema: CreateEventSchema<any, any, any>) {
+    const altered: EventSchema<any, any, any> = {
+      ...schema,
+      properties: Object.entries(schema.properties ?? {}).reduce(
+        (acc: any, [id, property]: any) => {
+          acc[id] = {
+            id,
+            ...property,
+          };
+
+          return acc;
+        },
+        {} as SchemaProperties<any>
+      ),
+      package: this as any,
+    };
+
+    this.schemas.add(altered);
+
+    return this;
+  }
+
+  // createSchema(args: CreateSchema) {}
+
   schema(name: string): NodeSchema<TEvents> | undefined {
     for (const schema of this.schemas) {
       if (schema.name === name) return schema;
@@ -155,6 +183,11 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     } else {
       this.structs.set(type.name, type);
     }
+  }
+
+  registerResourceType<T extends ResourceType<any, any>>(resource: T) {
+    this.resources.add(resource);
+    resource.package = this;
   }
 
   createEnum<Variants extends EnumVariants>(
@@ -212,3 +245,18 @@ export type Events<TEventsMap extends EventsMap = EventsMap> =
 export type OnEvent<TEventsMap extends EventsMap = EventsMap> = (
   _: Events<TEventsMap>
 ) => void;
+
+export class ResourceType<TPkg extends Package<any, any>, TValue> {
+  name: string;
+  sources: Accessor<{ id: string; display: string; value: TValue }[]>;
+
+  package!: TPkg;
+
+  constructor(args: {
+    name: string;
+    sources: (pkg: TPkg) => { id: string; display: string; value: TValue }[];
+  }) {
+    this.name = args.name;
+    this.sources = createLazyMemo(() => args.sources(this.package));
+  }
+}

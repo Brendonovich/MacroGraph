@@ -7,6 +7,7 @@ import {
   Suspense,
   createSignal,
 } from "solid-js";
+import { Dialog as KDialog } from "@kobalte/core";
 
 import { Dialog } from "./ui";
 import { useCore } from "../contexts";
@@ -31,11 +32,13 @@ export default () => {
   return (
     <div class="flex flex-col gap-2 p-1">
       <div class="flex flex-row gap-1 text-white">
-        <OpenSettingsDialog>
-          <IconContainer title="Settings">
-            <IconTablerSettings class="w-full h-full" />
-          </IconContainer>
-        </OpenSettingsDialog>
+        <ConnectionsDialog>
+          <KDialog.Trigger title="Connections">
+            <IconContainer>
+              <IconMdiConnection class="w-full h-full" />
+            </IconContainer>
+          </KDialog.Trigger>
+        </ConnectionsDialog>
         <Show
           when={platform.projectPersistence}
           keyed
@@ -96,7 +99,7 @@ function CopyProjectButton() {
   );
 }
 
-function OpenSettingsDialog(props: ParentProps) {
+export function ConnectionsDialog(props: ParentProps) {
   const core = useCore();
 
   const [open, setOpen] = createSignal(false);
@@ -105,7 +108,7 @@ function OpenSettingsDialog(props: ParentProps) {
     <Dialog.Root onOpenChange={setOpen} open={open()} trigger={props.children}>
       <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl min-w-[40rem]">
         <div class="flex flex-row justify-between text-white p-4">
-          <Dialog.Title class="font-bold text-2xl">Settings</Dialog.Title>
+          <Dialog.Title class="font-bold text-2xl">Connections</Dialog.Title>
           <Dialog.CloseButton>
             <IconBiX class="w-8 h-8" />
           </Dialog.CloseButton>

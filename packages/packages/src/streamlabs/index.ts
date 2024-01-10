@@ -27,7 +27,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Membership",
     event: "subscription",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -66,7 +66,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Membership Giftee",
     event: "membershipGift",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -99,7 +99,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Membership Gifter",
     event: "membershipGiftStart",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -144,7 +144,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Streamlabs Donation",
     event: "donation",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -196,7 +196,7 @@ export function pkg(core: Core) {
   pkg.createEventSchema({
     name: "Youtube Superchat",
     event: "superchat",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",

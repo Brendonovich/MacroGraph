@@ -11,9 +11,16 @@ import {
   onCleanup,
   createEffect,
 } from "solid-js";
-import { None, Option, Some } from "@macrograph/typesystem";
+import { Maybe, None, Option, Some } from "@macrograph/typesystem";
+import { createLazyMemo } from "@solid-primitives/memo";
 
-import { IOBuilder, NodeSchema } from "./NodeSchema";
+import {
+  IOBuilder,
+  NodeSchema,
+  Property,
+  PropertyDef,
+  inferPropertyDef,
+} from "./NodeSchema";
 import {
   DataInput,
   DataOutput,
@@ -24,6 +31,7 @@ import {
 } from "./IO";
 import { XY } from "../utils";
 import type { Graph } from "./Graph";
+import { ExecutionContext } from "./Core";
 
 export const SerializedNode = z.object({
   id: z.number(),
@@ -58,7 +66,7 @@ export class Node {
     position: XY;
     inputs: (DataInput<any> | ExecInput | ScopeInput)[];
     outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
-    properties: Record<string, any>;
+    properties: Record<string, inferPropertyDef<PropertyDef>>;
   };
 
   io!: IOBuilder;
@@ -84,7 +92,11 @@ export class Node {
               args.properties?.[property.id] ??
               property.default ??
               property.type.default();
-          else acc[property.id] = args.properties?.[property.id];
+          else if ("resource" in property) {
+            acc[property.id] = args.properties?.[property.id] ?? {
+              default: true,
+            };
+          } else acc[property.id] = args.properties?.[property.id];
 
           return acc;
         },
@@ -103,11 +115,12 @@ export class Node {
       createRenderEffect(() => {
         const io = new IOBuilder(this, this.io);
 
-        this.ioReturn = this.schema.generateIO({
+        this.ioReturn = this.schema.createIO({
           io,
           properties: this.schema.properties ?? {},
           ctx: {
-            getProperty: (property) => this.state.properties[property.id]!,
+            getProperty: (property) =>
+              this.state.properties[property.id] as any,
             graph: this.graph,
           },
           graph: this.graph,
@@ -166,7 +179,43 @@ export class Node {
           });
         }
       });
+
+      if ("type" in this.schema) {
+        const s = this.schema;
+
+        createEffect(() => {
+          try {
+            s.createListener({
+              properties: s.properties ?? {},
+              ctx: {
+                getProperty: (p) => this.getProperty(p) as any,
+                graph: this.graph,
+              },
+            }).listen((data) => new ExecutionContext(this).run(data));
+          } catch (e) {
+            console.error(e);
+          }
+        });
+      }
     });
+  }
+
+  getProperty(property: Property) {
+    if ("source" in property) {
+      return property
+        .source({ node: this })
+        .find(this.state.properties[property.id] as any)?.id;
+    } else if ("type" in property) {
+      return this.state.properties[property.id];
+    } else {
+      const value: string | undefined = this.state.properties[
+        property.id
+      ] as any;
+
+      const source = property.resource.sources().find((s) => s.id === value);
+
+      return Maybe(source?.value);
+    }
   }
 
   updateIO(io: IOBuilder) {

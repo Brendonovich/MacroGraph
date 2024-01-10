@@ -10,7 +10,6 @@ import {
 
 import { useCore } from "../contexts";
 import { GraphState } from "./Graph";
-import { useUIStore } from "../UIStore";
 
 interface Props {
   graph: GraphState;
@@ -45,7 +44,7 @@ export const SchemaMenu = (props: Props) => {
 
   return (
     <div
-      class="flex flex-col bg-neutral-900 border-white text-white border absolute z-10 w-80 h-[30rem] rounded-md shadow-md overflow-hidden text-sm"
+      class="flex flex-col bg-neutral-900 border-black text-white border absolute z-10 w-80 h-[30rem] rounded-xl shadow-md overflow-hidden text-sm"
       style={{
         left: `${props.position.x}px`,
         top: `${props.position.y}px`,

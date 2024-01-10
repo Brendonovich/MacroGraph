@@ -6,7 +6,8 @@ import { Package } from "./Package";
 import { Node } from "./Node";
 import { DataInput, DataOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
-import { Project, SerializedProject } from "./Project";
+import { Project } from "./Project";
+import { SerializedProject } from "./serialized";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -107,7 +108,7 @@ export class Core {
   }
 }
 
-class ExecutionContext {
+export class ExecutionContext {
   data = new Map<DataOutput<any> | ScopeOutput, any>();
 
   constructor(public root: Node) {}
@@ -166,7 +167,8 @@ class ExecutionContext {
   }
 
   async execNode(node: Node) {
-    if ("event" in node.schema) throw new Error("Cannot exec an Event node!");
+    if ("event" in node.schema || "type" in node.schema)
+      throw new Error("Cannot exec an Event node!");
 
     NODE_EMIT.emit(node);
 

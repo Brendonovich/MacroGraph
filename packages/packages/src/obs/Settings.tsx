@@ -1,15 +1,11 @@
 import { For, Match, Switch } from "solid-js";
 import { createForm, reset, zodForm } from "@modular-forms/solid";
 import { Button, Input } from "@macrograph/ui";
+
 import { Ctx } from "./ctx";
 import { AUTH_SCHEMA } from "./ws";
 
-export default function ({
-  instances,
-  connectInstance,
-  addInstance,
-  removeInstance,
-}: Ctx) {
+export default function (ctx: Ctx) {
   const [form, { Form, Field }] = createForm({
     validate: zodForm(AUTH_SCHEMA),
     initialValues: { url: "" },
@@ -18,7 +14,7 @@ export default function ({
   return (
     <>
       <Switch>
-        <Match when={instances.size !== 0}>
+        <Match when={ctx.instances.size !== 0}>
           <table class="mb-4 table-auto w-full">
             <thead>
               <tr>
@@ -26,7 +22,7 @@ export default function ({
                 <th class="pr-2 text-left">State</th>
               </tr>
             </thead>
-            <For each={[...instances]}>
+            <For each={[...ctx.instances]}>
               {([ip, instance]) => (
                 <tr>
                   <td>
@@ -42,14 +38,16 @@ export default function ({
                       </Match>
                       <Match when={instance.state === "disconnected"}>
                         <span class="mr-4">Disconnected</span>
-                        <Button onClick={() => connectInstance(ip)}>
+                        <Button onClick={() => ctx.connectInstance(ip)}>
                           Connect
                         </Button>
                       </Match>
                     </Switch>
                   </td>
                   <td>
-                    <Button onClick={() => removeInstance(ip)}>Remove</Button>
+                    <Button onClick={() => ctx.removeInstance(ip)}>
+                      Remove
+                    </Button>
                   </td>
                 </tr>
               )}
@@ -59,7 +57,7 @@ export default function ({
       </Switch>
       <Form
         onSubmit={({ url, password }) => {
-          addInstance(url, password);
+          ctx.addInstance(url, password);
           reset(form);
         }}
       >

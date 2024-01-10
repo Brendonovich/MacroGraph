@@ -9,6 +9,7 @@ import {
 } from "@macrograph/typesystem";
 
 import { Project } from "./Project";
+import { SerializedEvent } from "./serialized";
 
 type CustomEventField = {
   id: number;
@@ -26,19 +27,6 @@ export interface EventArgs {
 //   z.object({ variant: z.literal("package"), package: z.string() }),
 //   z.object({ variant: z.literal("custom") }),
 // ]);
-
-const SerializedField = z.object({
-  id: z.number(),
-  name: z.string(),
-  type: SerializedType,
-});
-
-export const SerializedEvent = z.object({
-  id: z.coerce.number(),
-  name: z.string(),
-  fields: z.array(SerializedField).default([]),
-  fieldIdCounter: z.number().default(0),
-});
 
 export class CustomEvent {
   id: number;

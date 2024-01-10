@@ -13,8 +13,11 @@ declare global {
   const IconFaSolidSave: typeof import('~icons/fa-solid/save.jsx')['default']
   const IconGgImport: typeof import('~icons/gg/import.jsx')['default']
   const IconHeroiconsXMarkSolid: typeof import('~icons/heroicons/x-mark-solid.jsx')['default']
+  const IconMaterialSymbolsAddRounded: typeof import('~icons/material-symbols/add-rounded.jsx')['default']
   const IconMaterialSymbolsFileOpenOutline: typeof import('~icons/material-symbols/file-open-outline.jsx')['default']
+  const IconMdiConnection: typeof import('~icons/mdi/connection.jsx')['default']
   const IconTablerClipboard: typeof import('~icons/tabler/clipboard.jsx')['default']
   const IconTablerCopy: typeof import('~icons/tabler/copy.jsx')['default']
   const IconTablerSettings: typeof import('~icons/tabler/settings.jsx')['default']
+  const IconTdesignFolderImport: typeof import('~icons/tdesign/folder-import.jsx')['default']
 }

@@ -17,7 +17,7 @@ export function pkg() {
         default: 1,
       },
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const value = ctx.getProperty(properties.number);
       const w = io.wildcard("");
       return {
@@ -60,7 +60,7 @@ export function pkg() {
         default: 1,
       },
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const w = io.wildcard("");
       const value = ctx.getProperty(properties.number);
 
@@ -109,7 +109,7 @@ export function pkg() {
         default: 1,
       },
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const value = ctx.getProperty(properties.number);
       const w = io.wildcard("");
       const inputs = Array.from({ length: value }, (v, i) => ({
@@ -145,7 +145,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Clear",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return io.dataInput({
@@ -161,7 +161,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Contains",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -190,7 +190,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Keys",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -214,7 +214,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Values",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -238,7 +238,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Size",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -262,7 +262,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Remove",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {

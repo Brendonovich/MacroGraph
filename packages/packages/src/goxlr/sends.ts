@@ -40,7 +40,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Mute Slider",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         slider: io.dataInput({
           name: "Slider",
@@ -79,7 +79,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set Microphone Type",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         name: "Mic Type",
         id: "micType",
@@ -107,7 +107,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set FX State",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         name: "State",
         id: "state",
@@ -133,7 +133,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   pkg.createNonEventSchema({
     name: "Set FX Preset",
     variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         name: "Preset",
         id: "preset",

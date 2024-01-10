@@ -15,7 +15,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createEventSchema({
     name: "WSS Client Connected",
     event: "WSSConnect",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -42,7 +42,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createEventSchema({
     name: "WSS Client Disconnected",
     event: "WSSDisconnect",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",
@@ -69,7 +69,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createNonEventSchema({
     name: "WSS Emit",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         port: io.dataInput({
           id: "port",
@@ -100,7 +100,7 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
   pkg.createEventSchema({
     event: "wsEvent",
     name: "WSS Event",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",

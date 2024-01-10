@@ -54,7 +54,12 @@ export function SidebarSection(
           />
           {props.title}
         </span>
-        {props.right}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          class="flex flex-row items-center"
+        >
+          {props.right}
+        </div>
       </button>
       <Show when={open()}>
         <div

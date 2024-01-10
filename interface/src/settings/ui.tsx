@@ -40,7 +40,7 @@ export const DialogRoot = (
 
   return (
     <KobalteDialog.Root open={open()} onOpenChange={setOpen} {...rootProps}>
-      <KobalteDialog.Trigger>{otherProps.trigger}</KobalteDialog.Trigger>
+      {otherProps.trigger}
       <KobalteDialog.Portal mount={ctx.rootRef()}>
         <KobalteDialog.Overlay
           class={clsx(

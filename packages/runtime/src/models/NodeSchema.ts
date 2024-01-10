@@ -5,7 +5,9 @@ import {
   Maybe,
   PrimitiveType,
   t,
+  Option,
 } from "@macrograph/typesystem";
+import { EventBus } from "@solid-primitives/event-bus";
 
 import {
   DataInput,
@@ -17,7 +19,7 @@ import {
   ScopeInput,
   ScopeOutput,
 } from "./IO";
-import { Package } from "./Package";
+import { Package, ResourceType } from "./Package";
 import { Node } from "./Node";
 import { Graph } from "./Graph";
 
@@ -213,7 +215,8 @@ export type EventsMap<T extends string = string> = Record<T, any>;
 
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
   | NonEventNodeSchema<any, Record<string, PropertyDef>>
-  | EventNodeSchema<TEvents, keyof TEvents, any, Record<string, PropertyDef>>;
+  | EventNodeSchema<TEvents, keyof TEvents, any, Record<string, PropertyDef>>
+  | EventSchema<Record<string, PropertyDef>, any, any>;
 
 export type PropertyValue = { id: string | number; display: string };
 export type inferPropertyValue<TValue extends PropertyValue> = TValue["id"];
@@ -226,15 +229,21 @@ export type inferPropertySourceFn<TFn extends PropertySourceFn> =
 export type PropertyDef = { name: string } & (
   | { source: PropertySourceFn }
   | { type: PrimitiveType; default?: any }
+  | { resource: ResourceType<any, any> }
 );
+
+export type Property = PropertyDef & { id: string };
+
 export type inferPropertyDef<TProperty extends PropertyDef> =
   TProperty extends { type: PrimitiveType }
     ? t.infer<TProperty["type"]>
     : TProperty extends { source: PropertySourceFn }
     ? inferPropertySourceFn<TProperty["source"]>
+    : TProperty extends { resource: ResourceType<any, infer TValue> }
+    ? Option<TValue>
     : never;
 
-export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
+export type SchemaProperties<TProperties> = {
   [K in keyof TProperties]: {
     id: K;
   } & TProperties[K];
@@ -252,7 +261,7 @@ export type BaseNodeSchema<
   TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
 > = {
   name: string;
-  generateIO: (args: {
+  createIO: (args: {
     io: IOBuilder;
     ctx: GenerateIOCtx;
     properties: SchemaProperties<TProperties>;
@@ -297,4 +306,39 @@ export type EventNodeSchema<
       data: TEvents[TEvent];
     }
   ) => void;
+};
+
+// NEW STUFF
+
+export type CreateIOFn<TProperties, TIO> = (args: {
+  ctx: GenerateIOCtx;
+  io: IOBuilder;
+  properties: SchemaProperties<TProperties>;
+}) => TIO;
+
+export type SchemaBase<TProperties, TIO> = {
+  name: string;
+  properties: SchemaProperties<TProperties>;
+  createIO: CreateIOFn<TProperties, TIO>;
+  package: Package;
+};
+
+export type EventSchema<TProperties, TIO, TFire> = SchemaBase<
+  TProperties,
+  TIO
+> & {
+  type: "event";
+  createListener(args: {
+    ctx: GenerateIOCtx;
+    properties: SchemaProperties<TProperties>;
+  }): EventBus<TFire>;
+  run(args: { ctx: RunCtx; io: TIO; data: TFire }): void | Promise<void>;
+};
+
+export type CreateEventSchema<
+  TProperties extends Record<string, PropertyDef>,
+  TIO,
+  TFire
+> = Omit<EventSchema<TProperties, TIO, TFire>, "package" | "properties"> & {
+  properties?: TProperties;
 };
