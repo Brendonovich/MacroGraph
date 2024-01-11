@@ -10,40 +10,37 @@ import { ReactiveMap } from "@solid-primitives/map";
 //missing availableRequests & supportedImageForamts Array<string>
 
 export const SceneItem = createStruct("Scene Item", (s) => ({
+  sceneItemId: s.field("ID", t.int()),
   inputKind: s.field("Input Kind", t.option(t.string())),
   isGroup: s.field("Is Group", t.bool()),
-  sceneItemBlendMode: s.field("Scene Item Blend Mode", t.string()),
-  sceneItemEnabled: s.field("Scene Item Enabled", t.bool()),
-  sceneItemId: s.field("Scene Item ID", t.int()),
-  sceneItemIndex: s.field("Scene Item Index", t.int()),
-  sceneItemLocked: s.field("Scene Item Locked", t.bool()),
-  sceneItemTransform: s.field(
-    "Scene Item Transform",
-    t.struct(SceneItemTransform)
-  ),
+  sceneItemBlendMode: s.field("Blend Mode", t.string()),
+  sceneItemEnabled: s.field("Enabled", t.bool()),
+  sceneItemIndex: s.field("Index", t.int()),
+  sceneItemLocked: s.field("Locked", t.bool()),
+  sceneItemTransform: s.field("Transform", t.struct(SceneItemTransform)),
   sourceName: s.field("Source Name", t.string()),
   sourceType: s.field("Source Type", t.string()),
 }));
 
-export const Filters = createStruct("Filters", (s) => ({
-  filterEnabled: s.field("Filter Enabled", t.bool()),
-  filterIndex: s.field("Filter Index", t.int()),
-  filterKind: s.field("Filter Kind", t.string()),
-  filterName: s.field("Filter Name", t.string()),
-  filterSettings: s.field("Filter Settings", t.enum(JSON)),
+export const Filter = createStruct("Filter", (s) => ({
+  filterEnabled: s.field("Enabled", t.bool()),
+  filterIndex: s.field("Index", t.int()),
+  filterKind: s.field("Kind", t.string()),
+  filterName: s.field("Name", t.string()),
+  filterSettings: s.field("Settings", t.enum(JSON)),
 }));
 
-export const Transitions = createStruct("Transitions", (s) => ({
-  transitionConfigurable: s.field("Transition Configurable", t.bool()),
-  transitionFixed: s.field("Transition Fixed", t.bool()),
-  transitionKind: s.field("Transition Kind", t.string()),
-  transitionName: s.field("Transition Name", t.string()),
+export const Transition = createStruct("Transition", (s) => ({
+  transitionConfigurable: s.field("Configurable", t.bool()),
+  transitionFixed: s.field("Fixed", t.bool()),
+  transitionKind: s.field("Kind", t.string()),
+  transitionName: s.field("Name", t.string()),
 }));
 
-export const PropertyItems = createStruct("Property Items", (s) => ({
-  itemEnabled: s.field("Item Enabled", t.bool()),
-  itemName: s.field("Item Name", t.string()),
-  itemValue: s.field("Item Value", t.string()),
+export const PropertyItem = createStruct("Property Item", (s) => ({
+  itemEnabled: s.field("Enabled", t.bool()),
+  itemName: s.field("Name", t.string()),
+  itemValue: s.field("Value", t.string()),
 }));
 
 export const MonitorType = createEnum("Monitor Type", (e) => [
@@ -52,9 +49,9 @@ export const MonitorType = createEnum("Monitor Type", (e) => [
   e.variant("None"),
 ]);
 
-export const Scenes = createStruct("Scenes", (s) => ({
-  sceneName: s.field("Scene name", t.string()),
-  sceneIndex: s.field("Scene Index", t.int()),
+export const Scene = createStruct("Scenes", (s) => ({
+  sceneName: s.field("Name", t.string()),
+  sceneIndex: s.field("Index", t.int()),
 }));
 
 export const InputInfo = createStruct("Input Info", (s) => ({
@@ -996,7 +993,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         inputs: io.dataOutput({
           id: "inputs",
           name: "Inputs",
-          type: t.list(t.struct(Scenes)),
+          type: t.list(t.struct(Scene)),
         }),
       };
     },
@@ -1004,7 +1001,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       const data = await obs.call("GetSceneList");
 
       const scene = data.scenes.map((input) =>
-        Scenes.create({
+        Scene.create({
           sceneIndex: input.sceneIndex as number,
           sceneName: input.sceneName as string,
         })
@@ -1510,7 +1507,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         propertyItems: io.dataOutput({
           id: "propertyItems",
           name: "Property Items",
-          type: t.list(t.struct(PropertyItems)),
+          type: t.list(t.struct(PropertyItem)),
         }),
       };
     },
@@ -1521,7 +1518,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       });
 
       const propertyItems = data.propertyItems.map((data) =>
-        PropertyItems.create({
+        PropertyItem.create({
           itemEnabled: data.itemEnabled as boolean,
           itemName: data.itemName as string,
           itemValue: data.itemValue as string,
@@ -1590,21 +1587,12 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         transitions: io.dataOutput({
           id: "transitions",
           name: "Transitions",
-          type: t.list(t.struct(Transitions)),
+          type: t.list(t.struct(Transition)),
         }),
       };
     },
     async run({ ctx, io }) {
       const data = await obs.call("GetSceneTransitionList");
-
-      const Transition = data.transitions.map((data) =>
-        Transitions.create({
-          transitionConfigurable: data.transitionConfigurable as boolean,
-          transitionFixed: data.transitionFixed as boolean,
-          transitionKind: data.transitionKind as string,
-          transitionName: data.transitionName as string,
-        })
-      );
 
       ctx.setOutput(
         io.currentSceneTransitionName,
@@ -1614,7 +1602,17 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         io.currentSceneTransitionKind,
         data.currentSceneTransitionKind
       );
-      ctx.setOutput(io.transitions, Transition);
+      ctx.setOutput(
+        io.transitions,
+        data.transitions.map((data) =>
+          Transition.create({
+            transitionConfigurable: data.transitionConfigurable as boolean,
+            transitionFixed: data.transitionFixed as boolean,
+            transitionKind: data.transitionKind as string,
+            transitionName: data.transitionName as string,
+          })
+        )
+      );
     },
   });
 
@@ -1794,7 +1792,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         filters: io.dataOutput({
           id: "filters",
           name: "Filters",
-          type: t.list(t.struct(Filters)),
+          type: t.list(t.struct(Filter)),
         }),
       };
     },
@@ -1804,7 +1802,7 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
       });
 
       const filter = data.filters.map((data) =>
-        Filters.create({
+        Filter.create({
           filterEnabled: data.filterEnabled as boolean,
           filterIndex: data.filterIndex as number,
           filterKind: data.filterKind as string,
@@ -1964,25 +1962,30 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
         filter: io.dataOutput({
           id: "filter",
           name: "Filter",
-          type: t.struct(Filters),
+          type: t.option(t.struct(Filter)),
         }),
       };
     },
     async run({ ctx, io }) {
-      const data = await obs.call("GetSourceFilter", {
-        sourceName: ctx.getInput(io.sourceName),
-        filterName: ctx.getInput(io.filterName),
-      });
+      const data = await obs
+        .call("GetSourceFilter", {
+          sourceName: ctx.getInput(io.sourceName),
+          filterName: ctx.getInput(io.filterName),
+        })
+        .catch(() => null);
 
-      const filterObj = Filters.create({
-        filterEnabled: data.filterEnabled as boolean,
-        filterIndex: data.filterIndex as number,
-        filterKind: data.filterKind as string,
-        filterName: ctx.getInput(io.filterName),
-        filterSettings: jsToJSON(data.filterSettings),
-      });
-
-      ctx.setOutput(io.filter, filterObj);
+      ctx.setOutput(
+        io.filter,
+        Maybe(data).map((data) =>
+          Filter.create({
+            filterEnabled: data.filterEnabled,
+            filterIndex: data.filterIndex,
+            filterKind: data.filterKind,
+            filterName: ctx.getInput(io.filterName),
+            filterSettings: jsToJSON(data.filterSettings),
+          })
+        )
+      );
     },
   });
 

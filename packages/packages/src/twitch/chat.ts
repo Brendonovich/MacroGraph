@@ -284,7 +284,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
         color: io.dataOutput({
           id: "color",
           name: "User Color",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
         emotes: io.dataOutput({
           id: "emotes",
@@ -323,7 +323,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
       ctx.setOutput(io.mod, data.tags.mod);
       ctx.setOutput(io.sub, data.tags.subscriber);
       ctx.setOutput(io.vip, data.tags.vip ?? false);
-      ctx.setOutput(io.color, data.tags.color);
+      ctx.setOutput(io.color, Maybe(data.tags.color));
       ctx.setOutput(
         io.broadcaster,
         data.tags["room-id"] === data.tags["user-id"]
