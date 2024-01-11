@@ -10,6 +10,7 @@ import {
   StructBuilder,
   StructFields,
 } from "@macrograph/typesystem";
+import { Simplify } from "type-fest";
 
 import { Core } from "./Core";
 import {
@@ -140,7 +141,7 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     return this;
   }
 
-  createSchema(schema: CreateEventSchema<any, any, any>) {
+  createSchema(schema: Simplify<CreateEventSchema<any, any, any>>) {
     const altered: EventSchema<any, any, any> = {
       ...schema,
       properties: Object.entries(schema.properties ?? {}).reduce(
@@ -161,8 +162,6 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 
     return this;
   }
-
-  // createSchema(args: CreateSchema) {}
 
   schema(name: string): NodeSchema<TEvents> | undefined {
     for (const schema of this.schemas) {

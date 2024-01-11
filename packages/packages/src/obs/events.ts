@@ -208,10 +208,9 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "VendorEvent",
     name: "Vendor Event",
-    properties: defaultProperties,
     createIO: ({ io }) => {
       return {
         exec: io.execOutput({
@@ -245,10 +244,9 @@ export function register(pkg: Package<EventTypes>) {
 
   //CustomEvent has object
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "CurrentSceneCollectionChanging",
     name: "Current Scene Collection Changing",
-    properties: defaultProperties,
     createIO: ({ io }) => {
       return {
         exec: io.execOutput({
@@ -268,10 +266,9 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "CurrentSceneCollectionChanged",
     name: "Current Scene Collection Changed",
-    properties: defaultProperties,
     createIO: ({ io }) => {
       return {
         exec: io.execOutput({
@@ -291,7 +288,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneCollectionListChanged",
     name: "Scene Collection List Changed",
     createIO: ({ io }) => {
@@ -313,7 +310,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "CurrentProfileChanging",
     name: "Current Profile Changing",
     createIO: ({ io }) => {
@@ -335,7 +332,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "CurrentProfileChanged",
     name: "Current Profile Changed",
     createIO: ({ io }) => {
@@ -357,7 +354,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "ProfileListChanged",
     name: "Profile List Changed",
     createIO: ({ io }) => {
@@ -379,7 +376,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneCreated",
     name: "Scene Created",
     createIO: ({ io }) => {
@@ -407,7 +404,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneRemoved",
     name: "Scene Removed",
     createIO: ({ io }) => {
@@ -435,7 +432,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneNameChanged",
     name: "Scene Name Changed",
     createIO: ({ io }) => {
@@ -485,7 +482,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "CurrentPreviewSceneChanged",
     name: "Current Preview Scene Changed",
     createIO: ({ io }) => {
@@ -507,7 +504,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneListChanged",
     name: "Scene List Changed",
     createIO: ({ io }) => {
@@ -535,7 +532,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputCreated",
     name: "Input Created",
     createIO: ({ io }) => {
@@ -587,7 +584,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputRemoved",
     name: "Input Removed",
     createIO: ({ io }) => {
@@ -609,7 +606,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputNameChanged",
     name: "Input Name Changed",
     createIO: ({ io }) => {
@@ -637,7 +634,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputActiveStateChanged",
     name: "Input Active State Changed",
     createIO: ({ io }) => {
@@ -665,7 +662,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputShowStateChanged",
     name: "Input Show State Changed",
     createIO: ({ io }) => {
@@ -693,7 +690,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputMuteStateChanged",
     name: "Input Mute State Changed",
     createIO: ({ io }) => {
@@ -721,7 +718,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputVolumeChanged",
     name: "Input Volume Changed",
     createIO: ({ io }) => {
@@ -755,7 +752,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputAudioBalanceChanged",
     name: "Input Audio Balance Changed",
     createIO: ({ io }) => {
@@ -783,7 +780,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputAudioSyncOffsetChanged",
     name: "Input Audio Sync Offset Changed",
     createIO: ({ io }) => {
@@ -811,7 +808,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputAudioTracksChanged",
     name: "Input Audio Tracks Changed",
     createIO: ({ io }) => {
@@ -847,7 +844,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputAudioMonitorTypeChanged",
     name: "Input Audio Monitor Type Changed",
     createIO: ({ io }) => {
@@ -880,7 +877,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "InputVolumeMeters",
     name: "Input Volume Meters",
     createIO: ({ io }) => {
@@ -908,7 +905,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "CurrentSceneTransitionChanged",
     name: "Current Scene Transition Changed",
     createIO: ({ io }) => {
@@ -930,7 +927,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "CurrentSceneTransitionDurationChanged",
     name: "Current Scene Transition Duration Changed",
     createIO: ({ io }) => {
@@ -952,7 +949,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneTransitionStarted",
     name: "Scene Transition Started",
     createIO: ({ io }) => {
@@ -974,7 +971,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneTransitionEnded",
     name: "Scene Transition Ended",
     createIO: ({ io }) => {
@@ -996,7 +993,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneTransitionVideoEnded",
     name: "Scene Transition Video Ended",
     createIO: ({ io }) => {
@@ -1022,7 +1019,7 @@ export function register(pkg: Package<EventTypes>) {
 
   //SourceFilterCreated has object
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SourceFilterRemoved",
     name: "Source Filter Removed",
     createIO: ({ io }) => {
@@ -1050,7 +1047,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SourceFilterNameChanged",
     name: "Source Filter Name Changed",
     createIO: ({ io }) => {
@@ -1084,7 +1081,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SourceFilterEnableStateChanged",
     name: "Source Filter Enable State Changed",
     createIO: ({ io }) => {
@@ -1118,7 +1115,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneItemCreated",
     name: "Scene Item Created",
     createIO: ({ io }) => {
@@ -1158,7 +1155,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneItemRemoved",
     name: "Scene Item Removed",
     createIO: ({ io }) => {
@@ -1194,7 +1191,7 @@ export function register(pkg: Package<EventTypes>) {
 
   //Has Object array
 
-  // pkg.createEventSchema({
+  // createOBSEventSchema({
   //   event: "SceneItemListReindexed",
   //   name: "Scene Item List Reindexed",
   //   generateIO({io}) {
@@ -1221,7 +1218,7 @@ export function register(pkg: Package<EventTypes>) {
   // });
 
   //
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneItemEnableStateChanged",
     name: "Scene Item Enable State Changed",
     createIO: ({ io }) => {
@@ -1255,7 +1252,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneItemLockStateChanged",
     name: "Scene Item Lock State Changed",
     createIO: ({ io }) => {
@@ -1289,7 +1286,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneItemSelected",
     name: "Scene Item Selected",
     createIO: ({ io }) => {
@@ -1317,7 +1314,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "SceneItemTransformChanged",
     name: "Scene Item Transform Changed",
     createIO: ({ io }) => {
@@ -1380,7 +1377,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "StreamStateChanged",
     name: "Stream State Changed",
     createIO: ({ io }) => {
@@ -1408,7 +1405,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "RecordStateChanged",
     name: "Record State Changed",
     createIO: ({ io }) => {
@@ -1442,7 +1439,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "ReplayBufferStateChanged",
     name: "Replay Buffer State Changed",
     createIO: ({ io }) => {
@@ -1470,7 +1467,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "VirtualcamStateChanged",
     name: "Virtual Cam State Changed",
     createIO: ({ io }) => {
@@ -1498,7 +1495,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "ReplayBufferSaved",
     name: "Replay Buffer Saved",
     createIO: ({ io }) => {
@@ -1520,7 +1517,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "MediaInputPlaybackStarted",
     name: "Media Input Playback Started",
     createIO: ({ io }) => {
@@ -1542,7 +1539,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "MediaInputPlaybackEnded",
     name: "Media Input Playback Ended",
     createIO: ({ io }) => {
@@ -1564,7 +1561,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "MediaInputActionTriggered",
     name: "Media Input Action Triggered",
     createIO: ({ io }) => {
@@ -1592,7 +1589,7 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "StudioModeStateChanged",
     name: "Studio Mode State Changed",
     createIO: ({ io }) => {
@@ -1616,7 +1613,7 @@ export function register(pkg: Package<EventTypes>) {
 
   //Doesnt Exist Yet
 
-  // pkg.createEventSchema({
+  // createOBSEventSchema({
   //   event: "ScreenshotSaved",
   //   name: "Screenshot Saved",
   //   generateIO({io}) {
@@ -1637,7 +1634,7 @@ export function register(pkg: Package<EventTypes>) {
   // });
 
   //
-  pkg.createEventSchema({
+  createOBSEventSchema({
     event: "ConnectionOpened",
     name: "Connection Opened",
     createIO: ({ io }) =>
