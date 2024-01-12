@@ -1,3 +1,4 @@
+import { JSON, toJSON } from "@macrograph/json";
 import { Package } from "@macrograph/runtime";
 import { Maybe, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -136,6 +137,52 @@ export function pkg() {
 
       io.inputs.forEach((input) => {
         map.set(ctx.getInput(input.key), ctx.getInput(input.value));
+      });
+
+      ctx.setOutput(io.out, map);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "JSON Map Create",
+    variant: "Pure",
+    properties: {
+      number: {
+        name: "Entries",
+        type: t.int(),
+        default: 1,
+      },
+    },
+    createIO({ io, ctx, properties }) {
+      const value = ctx.getProperty(properties.number);
+
+      const inputs = Array.from({ length: value }, (v, i) => ({
+        key: io.dataInput({
+          id: `key-${i}`,
+          type: t.string(),
+        }),
+        value: io.dataInput({
+          id: `value-${i}`,
+          type: t.wildcard(io.wildcard(`${i}`)),
+        }),
+      }));
+
+      return {
+        inputs,
+        out: io.dataOutput({
+          id: "",
+          type: t.map(t.enum(JSON)),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const map = new ReactiveMap<string, any>();
+
+      io.inputs.forEach((input) => {
+        map.set(
+          ctx.getInput(input.key),
+          toJSON(input.value.type, ctx.getInput(input.value))
+        );
       });
 
       ctx.setOutput(io.out, map);

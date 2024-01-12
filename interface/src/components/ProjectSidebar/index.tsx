@@ -1,4 +1,4 @@
-import { For, createMemo } from "solid-js";
+import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 import { Graph } from "@macrograph/runtime";
 import { Dialog, DropdownMenu, Select } from "@kobalte/core";
 
@@ -70,21 +70,88 @@ export function Resources() {
               <p>{type.name}</p>
               <ul>
                 <For each={data.items}>
-                  {(item) => (
-                    <li>
-                      <span class="text-sm">{item.name}</span>
-                      <SelectInput
-                        options={type.sources()}
-                        optionValue="id"
-                        optionTextValue="display"
-                        getLabel={(i) => i.display}
-                        onChange={(source) => (item.sourceId = source.id)}
-                        value={type
-                          .sources()
-                          .find((s) => s.id === item.sourceId)}
-                      />
-                    </li>
-                  )}
+                  {(item, index) => {
+                    const [editingName, setEditingName] = createSignal(false);
+
+                    return (
+                      <li>
+                        <div class="flex flex-row gap-2 justify-between items-center">
+                          <Switch>
+                            <Match when={editingName()}>
+                              {(_) => {
+                                const [value, setValue] = createSignal(
+                                  item.name
+                                );
+
+                                return (
+                                  <>
+                                    <input
+                                      class="flex-1 text-black"
+                                      value={value()}
+                                      onChange={(e) => setValue(e.target.value)}
+                                    />
+                                    <div class="flex flex-row">
+                                      <button
+                                        class="w-6 h-6 flex flex-row items-center justify-center"
+                                        onClick={() => {
+                                          item.name = value();
+                                          setEditingName(false);
+                                          core.project.save();
+                                        }}
+                                      >
+                                        <IconAntDesignCheckOutlined />
+                                      </button>
+                                      <button
+                                        class="w-6 h-6 relative"
+                                        onClick={() => setEditingName(false)}
+                                      >
+                                        <IconBiX class="absolute left-0 top-0" />
+                                      </button>
+                                    </div>
+                                  </>
+                                );
+                              }}
+                            </Match>
+                            <Match when={!editingName()}>
+                              <span class="shrink-0">{item.name}</span>
+                              <div class="gap-2 flex flex-row">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    setEditingName(true);
+                                  }}
+                                >
+                                  <IconAntDesignEditOutlined />
+                                </button>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    data.items.splice(index(), 1);
+                                    core.project.save();
+                                  }}
+                                >
+                                  <IconAntDesignDeleteOutlined />
+                                </button>
+                              </div>
+                            </Match>
+                          </Switch>
+                        </div>
+                        <SelectInput
+                          options={type.sources()}
+                          optionValue="id"
+                          optionTextValue="display"
+                          getLabel={(i) => i.display}
+                          onChange={(source) => (item.sourceId = source.id)}
+                          value={type
+                            .sources()
+                            .find((s) => s.id === item.sourceId)}
+                        />
+                      </li>
+                    );
+                  }}
                 </For>
               </ul>
             </li>
