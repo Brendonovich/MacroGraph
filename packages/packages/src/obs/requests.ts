@@ -1972,7 +1972,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
         filter: io.dataOutput({
           id: "filter",
           name: "Filter",
-          type: t.struct(Filters),
+          type: t.option(t.struct(Filters)),
         }),
       };
     },
@@ -1990,7 +1990,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
         filterSettings: jsToJSON(data.filterSettings),
       });
 
-      ctx.setOutput(io.filter, filterObj);
+      ctx.setOutput(io.filter, Maybe(filterObj));
     },
   });
 
@@ -3130,6 +3130,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
       const data = await obs().call("GetMediaInputStatus", {
         inputName: ctx.getInput(io.inputName),
       });
+      console.log(data);
       ctx.setOutput(io.mediaState, data.mediaState);
       ctx.setOutput(io.mediaDuration, data.mediaDuration);
       ctx.setOutput(io.mediaCursor, data.mediaCursor);

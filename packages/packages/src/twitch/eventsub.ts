@@ -1644,7 +1644,7 @@ export function register(pkg: Package) {
         }),
         length: io.dataOutput({
           id: "length",
-          name: "Lenght (seconds)",
+          name: "Length (seconds)",
           type: t.int(),
         }),
         isAutomatic: io.dataOutput({
@@ -1655,8 +1655,9 @@ export function register(pkg: Package) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.length, Number(data.length_seconds));
-      ctx.setOutput(io.isAutomatic, data.is_automatic === "true");
+      console.log(data);
+      ctx.setOutput(io.length, Number(data.duration_seconds));
+      ctx.setOutput(io.isAutomatic, data.is_automatic);
       ctx.exec(io.exec);
     },
   });
