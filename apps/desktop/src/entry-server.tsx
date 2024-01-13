@@ -13,11 +13,15 @@ export default createHandler(() => (
         </head>
 
         <body>
-          <div
-            class="w-screen h-screen bg-neutral-900 text-white flex flex-col"
-            id="app"
-          >
-            {children}
+          <div>
+            <div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
+              <main
+                class="flex-1 w-full bg-neutral-800 overflow-hidden"
+                id="app"
+              >
+                {children}
+              </main>
+            </div>
           </div>
           {scripts}
         </body>
