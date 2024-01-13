@@ -16,7 +16,7 @@
     "@rspc/solid": "0.0.0-main-6ed8cc98",
     "@rspc/tauri": "0.0.0-main-6ed8cc98",
     "@solid-primitives/storage": "^2.1.1",
-    "@solidjs/start": "^0.4.5",
+    "@solidjs/start": "^0.4.9",
     "@t3-oss/env-core": "^0.6.1",
     "@tanstack/solid-query": "^4.29.5",
     "@tauri-apps/api": "^1.2.0",
