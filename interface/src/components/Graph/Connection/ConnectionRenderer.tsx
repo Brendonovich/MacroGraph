@@ -5,6 +5,7 @@ import {
   ScopeInput,
   ScopeOutput,
   XY,
+  pinIsOutput,
   splitIORef,
 } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/typesystem";
@@ -38,21 +39,16 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
 
     function drawConnection(
       canvas: CanvasRenderingContext2D,
+      colour: string,
       from: XY,
       to: XY,
-      colour: string
+      cp1: XY,
+      cp2: XY
     ) {
       canvas.lineWidth = 3 * ctx.state.scale;
       canvas.beginPath();
       canvas.moveTo(from.x, from.y);
-      canvas.bezierCurveTo(
-        from.x - Math.abs(Math.min(200, (from.x - to.x) / 2)),
-        from.y,
-        to.x + Math.abs(Math.min(200, (from.x - to.x) / 2)),
-        to.y,
-        to.x,
-        to.y
-      );
+      canvas.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, to.x, to.y);
       canvas.strokeStyle = colour;
       canvas.stroke();
     }
@@ -86,70 +82,72 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
             output,
           }))
           .peek((data) => {
+            const xDiff = data.input.x - data.output.x;
+            const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
+
             drawConnection(
               canvas,
+              input instanceof DataInput ? colour(input.type) : "white",
               data.input,
               data.output,
-              input instanceof DataInput ? colour(input.type) : "white"
+              {
+                x: data.input.x - cpMagnitude,
+                y: data.input.y,
+              },
+              {
+                x: data.output.x + cpMagnitude,
+                y: data.output.y,
+              }
             );
           });
       }
     }
 
-    // for (const node of ctx.model().nodes.values()) {
-    //   for (const input of node.state.inputs) {
-    //     const connections =
-    //       input instanceof ExecInput
-    //         ? [...input.connections]
-    //         : input.connection.map((c) => [c]).unwrapOr([]);
-
-    //     for (const conn of connections) {
-    //       const inputPosition = Maybe(ctx.pinPositions.get(input));
-    //       const outputPosition = Maybe(ctx.pinPositions.get(conn));
-
-    //       inputPosition
-    //         .zip(outputPosition)
-    //         .map(([input, output]) => ({
-    //           input,
-    //           output,
-    //         }))
-    //         .peek((data) => {
-    //           drawConnection(
-    //             canvas,
-    //             data.input,
-    //             data.output,
-    //             input instanceof DataInput ? colour(input.type) : "white"
-    //           );
-    //         });
-    //     }
-    //   }
-    // }
-
     const dragState = getDragState();
-    if (dragState) {
-      const pinPos = ctx.pinPositions.get(dragState.draggingPin);
+    if (!dragState) return;
+    const pinPos = ctx.pinPositions.get(dragState.draggingPin);
 
-      const diffs = {
-        x: dragState.mouseDragLocation.x - props.graphBounds.x,
-        y: dragState.mouseDragLocation.y - props.graphBounds.y,
-      };
+    const diffs = {
+      x: dragState.mouseDragLocation.x - props.graphBounds.x,
+      y: dragState.mouseDragLocation.y - props.graphBounds.y,
+    };
 
-      const colourClass = (() => {
-        const draggingPin = dragState.draggingPin;
+    const colourClass = (() => {
+      const draggingPin = dragState.draggingPin;
 
-        if (
-          draggingPin instanceof ExecInput ||
-          draggingPin instanceof ExecOutput ||
-          draggingPin instanceof ScopeOutput ||
-          draggingPin instanceof ScopeInput
-        )
-          return "white";
+      if (
+        draggingPin instanceof ExecInput ||
+        draggingPin instanceof ExecOutput ||
+        draggingPin instanceof ScopeOutput ||
+        draggingPin instanceof ScopeInput
+      )
+        return "white";
 
-        return colour(draggingPin.type);
-      })();
+      return colour(draggingPin.type);
+    })();
 
-      if (pinPos) drawConnection(canvas, pinPos, diffs, colourClass);
-    }
+    if (!pinPos) return;
+
+    const xDiff = pinPos.x - diffs.x;
+    const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
+
+    drawConnection(
+      canvas,
+      colourClass,
+      pinPos,
+      diffs,
+      {
+        x:
+          pinPos.x +
+          cpMagnitude * (+pinIsOutput(dragState.draggingPin) * 2 - 1),
+        y: pinPos.y,
+      },
+      {
+        x:
+          diffs.x - cpMagnitude * (+pinIsOutput(dragState.draggingPin) * 2 - 1),
+        y: diffs.y,
+      }
+    );
   });
 
   return (
