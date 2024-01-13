@@ -91,5 +91,6 @@ const wsProvider = createWsProvider({
   pkgs.variables.pkg,
   pkgs.customEvents.pkg,
   pkgs.speakerbot.pkg,
+  pkgs.azure.pkg,
   () => pkgs.websocketServer.pkg(wsProvider),
 ].map((p) => core.registerPackage(p));
