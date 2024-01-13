@@ -211,7 +211,7 @@ export class Node {
     if ("source" in property) {
       return property
         .source({ node: this })
-        .find(this.state.properties[property.id] as any)?.id;
+        .find((s) => s.id === (this.state.properties[property.id] as any))?.id;
     } else if ("type" in property) {
       return this.state.properties[property.id];
     } else {
