@@ -165,7 +165,10 @@ export class ExecutionContext {
   }
 
   async execNode(node: Node) {
-    if ("event" in node.schema || "type" in node.schema)
+    if (
+      "event" in node.schema ||
+      ("type" in node.schema && node.schema.type === "event")
+    )
       throw new Error("Cannot exec an Event node!");
 
     NODE_EMIT.emit(node);

@@ -20,10 +20,18 @@ import {
   ScopeOutput,
 } from "./IO";
 import { Package, ResourceType } from "./Package";
-import { DEFAULT, Node } from "./Node";
+import { Node } from "./Node";
 import { Graph } from "./Graph";
 
-export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
+export type NodeSchemaVariant =
+  | "Base"
+  | "Pure"
+  | "Exec"
+  | "Event"
+  | "base"
+  | "pure"
+  | "exec"
+  | "event";
 
 export type DataInputBuilder = {
   id: string;
@@ -216,7 +224,8 @@ export type EventsMap<T extends string = string> = Record<T, any>;
 export type NodeSchema<TEvents extends EventsMap = EventsMap> =
   | NonEventNodeSchema<any, Record<string, PropertyDef>>
   | EventNodeSchema<TEvents, keyof TEvents, any, Record<string, PropertyDef>>
-  | EventSchema<Record<string, PropertyDef>, any, any>;
+  | EventSchema<Record<string, PropertyDef>, any, any>
+  | NonEventSchema<Record<string, PropertyDef>, any>;
 
 export type PropertyValue = { id: string | number; display: string };
 export type inferPropertyValue<TValue extends PropertyValue> = TValue["id"];
@@ -323,6 +332,12 @@ export type SchemaBase<TProperties, TIO> = {
   package: Package;
 };
 
+export type RunProps<TProperties, TIO> = {
+  properties: SchemaProperties<TProperties>;
+  ctx: RunCtx;
+  io: TIO;
+};
+
 export type EventSchema<TProperties, TIO, TFire> = SchemaBase<
   TProperties,
   TIO
@@ -332,8 +347,19 @@ export type EventSchema<TProperties, TIO, TFire> = SchemaBase<
     ctx: GenerateIOCtx;
     properties: SchemaProperties<TProperties>;
   }): EventBus<TFire>;
-  run(args: { ctx: RunCtx; io: TIO; data: TFire }): void | Promise<void>;
+  run(
+    props: RunProps<TProperties, TIO> & { data: TFire }
+  ): void | Promise<void>;
 };
+
+export type NonEventSchema<TProperties, TIO> = SchemaBase<TProperties, TIO> & {
+  type: "exec" | "pure" | "base";
+  run(props: RunProps<TProperties, TIO>): void | Promise<void>;
+};
+
+export type Schema<TProperties, TIO, TFire> =
+  | EventSchema<TProperties, TIO, TFire>
+  | NonEventSchema<TProperties, TIO>;
 
 export type CreateEventSchema<
   TProperties extends Record<string, PropertyDef>,
@@ -342,3 +368,18 @@ export type CreateEventSchema<
 > = Omit<EventSchema<TProperties, TIO, TFire>, "package" | "properties"> & {
   properties?: TProperties;
 };
+
+export type CreateNonEventSchema<
+  TProperties extends Record<string, PropertyDef>,
+  TIO
+> = Omit<NonEventSchema<TProperties, TIO>, "package" | "properties"> & {
+  properties?: TProperties;
+};
+
+export type CreateSchema<
+  TProperties extends Record<string, PropertyDef>,
+  TIO,
+  TFire
+> =
+  | CreateEventSchema<TProperties, TIO, TFire>
+  | CreateNonEventSchema<TProperties, TIO>;

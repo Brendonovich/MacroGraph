@@ -12,15 +12,8 @@ import {
   createEffect,
 } from "solid-js";
 import { Maybe, None, Option, Some } from "@macrograph/typesystem";
-import { createLazyMemo } from "@solid-primitives/memo";
 
-import {
-  IOBuilder,
-  NodeSchema,
-  Property,
-  PropertyDef,
-  inferPropertyDef,
-} from "./NodeSchema";
+import { IOBuilder, NodeSchema, Property } from "./NodeSchema";
 import {
   DataInput,
   DataOutput,
@@ -187,7 +180,7 @@ export class Node {
         }
       });
 
-      if ("type" in this.schema) {
+      if ("type" in this.schema && this.schema.type === "event") {
         const s = this.schema;
 
         createEffect(() => {

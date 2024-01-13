@@ -79,6 +79,7 @@ export class Project {
     const item = {
       id,
       name: args.name,
+      sourceId: null,
     };
 
     if (!this.resources.has(args.type)) {

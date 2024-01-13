@@ -1,12 +1,21 @@
-import { createEnum, createStruct, Package } from "@macrograph/runtime";
+import {
+  createEnum,
+  CreateNonEventSchema,
+  createStruct,
+  Package,
+  PropertyDef,
+  RunProps,
+  SchemaProperties,
+} from "@macrograph/runtime";
 import { InferEnum, Maybe, t } from "@macrograph/typesystem";
 import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
-import { EventTypes } from "obs-websocket-js";
+import OBSWebSocket, { EventTypes } from "obs-websocket-js";
 import { createLazyMemo } from "@solid-primitives/memo";
 import { ReactiveMap } from "@solid-primitives/map";
 
 import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
 import { Ctx } from "./ctx";
+import { defaultProperties } from "./resource";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -83,6 +92,44 @@ interface SceneItemTransformInterface {
 }
 
 export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
+  function createOBSExecSchema<
+    TProperties extends Record<string, PropertyDef> = {},
+    TIO = void
+  >(
+    s: Omit<
+      CreateNonEventSchema<TProperties & typeof defaultProperties, TIO>,
+      "type" | "createListener" | "run"
+    > & {
+      properties?: TProperties;
+      run(
+        props: RunProps<TProperties, TIO> & {
+          obs: OBSWebSocket;
+        }
+      ): void | Promise<void>;
+    }
+  ) {
+    pkg.createSchema({
+      ...s,
+      type: "exec",
+      properties: { ...s.properties, ...defaultProperties } as any,
+      run(props) {
+        const instance = props.ctx
+          .getProperty(
+            props.properties.instance as SchemaProperties<
+              typeof defaultProperties
+            >["instance"]
+          )
+          .expect("No OBS instance available!");
+
+        if (instance.state !== "connected")
+          throw new Error("OBS instance not connected!");
+
+        s.run({ ...props, obs: instance.obs });
+      },
+    });
+  }
+
+  /** @deprecated */
   const obs = createLazyMemo(() => {
     for (const instance of instances.values()) {
       if (instance.state === "connected") return instance.obs;
@@ -129,13 +176,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
     },
   ] as const;
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get OBS Version",
-    variant: "Exec",
     createIO: ({ io }) =>
       versionOutputs.map((data) => [data.id, io.dataOutput(data)] as const),
-    async run({ ctx, io }) {
-      const data = await obs().call("GetVersion");
+    async run({ ctx, io, obs }) {
+      const data = await obs.call("GetVersion");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
@@ -154,16 +200,15 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
     ["webSocketSessionOutgoingMessages", "Outgoing Messaes"],
   ] as const;
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get OBS Stats",
-    variant: "Exec",
     createIO: ({ io }) =>
       statsOutputs.map(
         ([id, name]) =>
           [id, io.dataOutput({ id, name, type: t.int() })] as const
       ),
-    async run({ ctx, io }) {
-      const data = await obs().call("GetStats");
+    async run({ ctx, io, obs }) {
+      const data = await obs.call("GetStats");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
@@ -1975,7 +2020,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
       };
     },
     async run({ ctx, io }) {
-      const data = await obs
+      const data = await obs()
         .call("GetSourceFilter", {
           sourceName: ctx.getInput(io.sourceName),
           filterName: ctx.getInput(io.filterName),

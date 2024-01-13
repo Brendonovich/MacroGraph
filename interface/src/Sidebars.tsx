@@ -238,53 +238,63 @@ export function NodeSidebar(props: { node: Node }) {
                             };
 
                             return (
-                              <Switch>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() ===
-                                    "bool"
-                                  }
-                                >
-                                  <CheckBox
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() ===
-                                    "string"
-                                  }
-                                >
-                                  <TextInput
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() === "int"
-                                  }
-                                >
-                                  <IntInput
-                                    initialValue={value()}
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                                <Match
-                                  when={
-                                    property().type.primitiveVariant() ===
-                                    "float"
-                                  }
-                                >
-                                  <FloatInput
-                                    initialValue={value()}
-                                    value={value()}
-                                    onChange={onChange}
-                                  />
-                                </Match>
-                              </Switch>
+                              <Show
+                                when={(() => {
+                                  const v = value();
+                                  return typeof v !== "symbol" && (v as any);
+                                })()}
+                              >
+                                {(value) => (
+                                  <Switch>
+                                    <Match
+                                      when={
+                                        property().type.primitiveVariant() ===
+                                        "bool"
+                                      }
+                                    >
+                                      <CheckBox
+                                        value={value()}
+                                        onChange={onChange}
+                                      />
+                                    </Match>
+                                    <Match
+                                      when={
+                                        property().type.primitiveVariant() ===
+                                        "string"
+                                      }
+                                    >
+                                      <TextInput
+                                        value={value()}
+                                        onChange={onChange}
+                                      />
+                                    </Match>
+                                    <Match
+                                      when={
+                                        property().type.primitiveVariant() ===
+                                        "int"
+                                      }
+                                    >
+                                      <IntInput
+                                        initialValue={value()}
+                                        value={value()}
+                                        onChange={onChange}
+                                      />
+                                    </Match>
+                                    <Match
+                                      when={
+                                        property().type.primitiveVariant() ===
+                                        "float"
+                                      }
+                                    >
+                                      <FloatInput
+                                        initialValue={value()}
+                                        value={value()}
+                                        onChange={onChange}
+                                      />
+                                    </Match>
+                                  </Switch>
+                                )}
+                              </Show>
                             );
                           }}
                         </Match>

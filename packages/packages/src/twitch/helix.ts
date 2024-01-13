@@ -61,7 +61,7 @@ export function createHelixEndpoint(
 
       return resp.text().then((text: any) => {
         if (text === "") return {};
-        let json = JSON.parse(text);
+        let json: any = JSON.parse(text);
         if (json.data.length === 1) {
           return json.data[0];
         } else {

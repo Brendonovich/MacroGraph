@@ -22,6 +22,9 @@ import {
   PropertyDef,
   SchemaProperties,
   CreateEventSchema,
+  CreateSchema,
+  Schema,
+  RunProps,
 } from "./NodeSchema";
 import { ExecInput, ExecOutput } from "./IO";
 import { createLazyMemo } from "@solid-primitives/memo";
@@ -141,8 +144,12 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
     return this;
   }
 
-  createSchema(schema: Simplify<CreateEventSchema<any, any, any>>) {
-    const altered: EventSchema<any, any, any> = {
+  createSchema<TProperties extends Record<string, PropertyDef>, TIO, TFire>(
+    schema: Simplify<CreateSchema<TProperties, TIO, TFire>>
+  ) {
+    type IO = { custom: TIO; default?: { in: ExecInput; out: ExecOutput } };
+
+    const altered: Schema<TProperties, IO, TFire> = {
       ...schema,
       properties: Object.entries(schema.properties ?? {}).reduce(
         (acc: any, [id, property]: any) => {
@@ -155,10 +162,35 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
         },
         {} as SchemaProperties<any>
       ),
+      createIO: (ctx) => {
+        let defaultIO;
+
+        if (schema.type === "exec") {
+          defaultIO = {
+            in: ctx.io.execInput({ id: "exec" }),
+            out: ctx.io.execOutput({ id: "exec" }),
+          };
+        }
+
+        const custom = schema.createIO(ctx);
+
+        return {
+          custom,
+          default: defaultIO,
+        };
+      },
+      ...((schema.type !== "event" && {
+        run: async (props: RunProps<TProperties, IO>) => {
+          await schema.run({ ...props, io: props.io.custom });
+
+          if (schema.type === "exec" && props.io.default)
+            props.ctx.exec(props.io.default.out);
+        },
+      }) as any),
       package: this as any,
     };
 
-    this.schemas.add(altered);
+    this.schemas.add(altered as any);
 
     return this;
   }

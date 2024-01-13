@@ -12,8 +12,7 @@ import { EventTypes } from "obs-websocket-js";
 import { onCleanup } from "solid-js";
 import { EventEmitter } from "eventemitter3";
 import { createEventBus } from "@solid-primitives/event-bus";
-
-import { OBSInstance } from ".";
+import { OBSInstance, defaultProperties } from "./resource";
 
 export const BoundsType = createEnum("Bounds Type", (e) => [
   e.variant("OBS_BOUNDS_MAX_ONLY"),
@@ -133,13 +132,6 @@ export function register(pkg: Package<EventTypes>) {
   pkg.registerType(MonitorType);
   pkg.registerType(InputVolumeMeter);
 
-  const instanceProperty = {
-    name: "OBS Instance",
-    resource: OBSInstance,
-  } satisfies PropertyDef;
-
-  const defaultProperties = { instance: instanceProperty };
-
   type MapValueToArgsArray<T extends Record<string, unknown>> = {
     [K in keyof T]: T[K] extends void ? [] : [T[K]];
   };
@@ -169,7 +161,7 @@ export function register(pkg: Package<EventTypes>) {
     pkg.createSchema({
       ...s,
       type: "event",
-      properties: { ...s.properties, ...defaultProperties },
+      properties: { ...s.properties, ...defaultProperties } as any,
       createListener({ ctx, properties }) {
         const instance = ctx
           .getProperty(

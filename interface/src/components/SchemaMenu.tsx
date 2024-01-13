@@ -23,6 +23,10 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
   Exec: "bg-mg-exec",
   Event: "bg-mg-event",
   Pure: "bg-mg-pure",
+  base: "bg-mg-base",
+  exec: "bg-mg-exec",
+  event: "bg-mg-event",
+  pure: "bg-mg-pure",
 };
 
 export function SchemaMenu(props: Props) {
