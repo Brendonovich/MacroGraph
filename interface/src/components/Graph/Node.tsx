@@ -133,6 +133,13 @@ export const Node = (props: Props) => {
                   e.stopPropagation();
                   e.preventDefault();
 
+                  const downPosition = graph.toGraphSpace({
+                    x: e.clientX,
+                    y: e.clientY,
+                  });
+
+                  const startPosition = node().state.position;
+
                   switch (e.button) {
                     case 0: {
                       props.onSelected();
@@ -143,10 +150,28 @@ export const Node = (props: Props) => {
                           mousemove: (e) => {
                             const scale = graph.state.scale;
 
-                            node().setPosition({
-                              x: node().state.position.x + e.movementX / scale,
-                              y: node().state.position.y + e.movementY / scale,
+                            const currentPosition = graph.toGraphSpace({
+                              x: e.clientX,
+                              y: e.clientY,
                             });
+
+                            const newPosition = {
+                              x:
+                                startPosition.x +
+                                currentPosition.x -
+                                downPosition.x,
+                              y:
+                                startPosition.y +
+                                currentPosition.y -
+                                downPosition.y,
+                            };
+
+                            if (!e.shiftKey)
+                              node().setPosition({
+                                x: Math.round(newPosition.x / 25) * 25,
+                                y: Math.round(newPosition.y / 25) * 25,
+                              });
+                            else node().setPosition(newPosition);
                           },
                         });
                       });
