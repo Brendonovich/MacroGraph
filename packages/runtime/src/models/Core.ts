@@ -160,9 +160,7 @@ export class ExecutionContext {
           }
         );
       },
-      getProperty: (property) => {
-        return node.state.properties[property.id];
-      },
+      getProperty: (p) => node.getProperty(p) as any,
     };
   }
 

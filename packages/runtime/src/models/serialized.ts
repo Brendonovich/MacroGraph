@@ -67,12 +67,12 @@ export const SerializedProject = z.object({
       z.object({
         type: z.object({ pkg: z.string(), name: z.string() }),
         entry: z.object({
-          default: z.number().optional(),
+          default: z.number().nullable().default(null),
           items: z.array(
             z.object({
               id: z.number(),
               name: z.string(),
-              sourceId: z.string().optional(),
+              sourceId: z.string().nullable().default(null),
             })
           ),
         }),

@@ -8,15 +8,13 @@ import { CustomEvent } from "./CustomEvent";
 import { SerializedProject } from "./serialized";
 import { ResourceType } from "./Package";
 
-type NonEmptyArray<T> = [T, ...T[]];
-
 export interface ProjectArgs {
   core: Core;
 }
 
 type ResourceEntry = {
-  items: Array<{ id: number; name: string; sourceId?: string }>;
-  default?: number;
+  items: Array<{ id: number; name: string; sourceId: string | null }>;
+  default: number | null;
 };
 
 export class Project {
@@ -85,7 +83,13 @@ export class Project {
 
     if (!this.resources.has(args.type)) {
       const entry: ResourceEntry = createMutable({
-        items: [{ ...item, source: args.type.sources()[0]?.id }],
+        items: [
+          {
+            ...item,
+            sourceId: args.type.sources()[0]?.id ?? null,
+          },
+        ],
+        default: item.id,
       });
       this.resources.set(args.type, entry);
       entry.default = id;

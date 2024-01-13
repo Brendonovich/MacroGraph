@@ -186,7 +186,7 @@ importers:
         version: 0.10.6(solid-js@1.8.8)
       '@solidjs/start':
         specifier: ^0.4.5
-        version: 0.4.5(rollup@2.79.1)(solid-js@1.8.8)(vinxi@0.1.1)(vite@4.5.1)
+        version: 0.4.9(rollup@2.79.1)(solid-js@1.8.8)(vinxi@0.1.1)(vite@4.5.1)
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.3.3)(zod@3.22.4)
@@ -236,6 +236,9 @@ importers:
       '@macrograph/typesystem':
         specifier: workspace:^
         version: link:../packages/typesystem
+      '@macrograph/ui':
+        specifier: workspace:^
+        version: link:../packages/ui
       '@modular-forms/solid':
         specifier: ^0.12.2
         version: 0.12.2(solid-js@1.8.8)
@@ -351,12 +354,6 @@ importers:
       webdriverio:
         specifier: ^8.11.2
         version: 8.12.3(typescript@5.3.3)
-
-  packages/option:
-    devDependencies:
-      '@macrograph/config':
-        specifier: workspace:*
-        version: link:../config
 
   packages/packages:
     dependencies:
@@ -552,6 +549,9 @@ importers:
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
+      clsx:
+        specifier: ^1.2.1
+        version: 1.2.1
     devDependencies:
       solid-js:
         specifier: ^1.8.8
@@ -4374,6 +4374,31 @@ packages:
       - vite
     dev: false
 
+  /@solidjs/start@0.4.9(rollup@2.79.1)(solid-js@1.8.8)(vinxi@0.1.1)(vite@4.5.1):
+    resolution: {integrity: sha512-+WiNRDjKdEzP45eiF4WLXiuXIohUYk+WZAYiy/qqMJi0BmCkkPUzIXnkYPYwVx3nAyXHMdfUc6/7Xys2qEb+8Q==}
+    dependencies:
+      '@vinxi/plugin-directives': 0.1.0(vinxi@0.1.1)
+      '@vinxi/server-components': 0.1.0(vinxi@0.1.1)
+      '@vinxi/server-functions': 0.1.0(vinxi@0.1.1)
+      defu: 6.1.4
+      error-stack-parser: 2.1.4
+      html-to-image: 1.11.11
+      seroval: 1.0.3
+      seroval-plugins: 1.0.3(seroval@1.0.3)
+      shikiji: 0.9.18
+      source-map-js: 1.0.2
+      terracotta: 1.0.4(seroval@1.0.3)(solid-js@1.8.8)
+      vite-plugin-inspect: 0.7.42(rollup@2.79.1)(vite@4.5.1)
+      vite-plugin-solid: 2.8.0(solid-js@1.8.8)(vite@4.5.1)
+    transitivePeerDependencies:
+      - '@nuxt/kit'
+      - rollup
+      - solid-js
+      - supports-color
+      - vinxi
+      - vite
+    dev: false
+
   /@storybook/addon-actions@7.6.7:
     resolution: {integrity: sha512-+6EZvhIeKEqG/RNsU3R5DxOrd60BL5GEvmzE2w60s2eKaNNxtyilDjiO1g4z2s2zDNyr7JL/Ft03pJ0Jgo0lew==}
     dependencies:
@@ -4792,7 +4817,7 @@ packages:
       '@storybook/node-logger': 8.0.0-alpha.9
       '@storybook/types': 8.0.0-alpha.9
       '@types/find-cache-dir': 3.2.1
-      '@types/node': 18.19.5
+      '@types/node': 18.19.6
       '@types/node-fetch': 2.6.10
       '@types/pretty-hrtime': 1.0.3
       chalk: 4.1.2
@@ -5533,8 +5558,8 @@ packages:
     dependencies:
       undici-types: 5.26.5
 
-  /@types/node@18.19.5:
-    resolution: {integrity: sha512-22MG6T02Hos2JWfa1o5jsIByn+bc5iOt1IS4xyg6OG68Bu+wMonVZzdrgCw693++rpLE9RUT/Bx15BeDzO0j+g==}
+  /@types/node@18.19.6:
+    resolution: {integrity: sha512-X36s5CXMrrJOs2lQCdDF68apW4Rfx9ixYMawlepwmE4Anezv/AV2LSpKD1Ub8DAc+urp5bk0BGZ6NtmBitfnsg==}
     dependencies:
       undici-types: 5.26.5
     dev: true

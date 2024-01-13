@@ -51,17 +51,14 @@ export function TypeEditor(props: {
         open={ctx.typeDialogState() !== null}
         onOpenChange={() => ctx.setTypeDialogState(null)}
       >
-        <DropdownMenu.Trigger
-          as="div"
-          class="p-1 overflow-x-auto overflow-y-hidden no-scrollbar font-mono flex flex-row"
-        >
+        <DropdownMenu.Trigger class="py-px overflow-x-auto overflow-y-hidden no-scrollbar font-mono flex flex-row">
           <TypeEditorSegment
             type={props.type}
             onChange={(type) => props.onChange?.(type)}
           />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content class="p-2 bg-black border border-gray-300 w-52 max-h-48 flex flex-col overflow-y-auto text-white">
+          <DropdownMenu.Content class="p-2 bg-black border border-neutral-300 w-52 max-h-48 flex flex-col overflow-y-auto text-white">
             <span>Primitives</span>
             <div class="flex flex-col pl-1 text-sm">
               {PRIMITIVES.map((p) => (
@@ -217,7 +214,7 @@ function Span(
   return (
     <div
       class={clsx(
-        "cursor-pointer border border-white/50 rounded-lg bg-black flex flex-row flex-nowrap shrink-0 -my-px",
+        "cursor-pointer border border-white/30 rounded-lg bg-black flex flex-row flex-nowrap shrink-0 -my-px",
         ctx.hovered() && "bg-cyan-600/50",
         resolved.toArray().length > 1 && "pr-2"
       )}

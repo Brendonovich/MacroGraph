@@ -52,7 +52,7 @@ export const DialogRoot = (
         <div class="absolute inset-0 z-50 flex flex-col justify-center items-center">
           <KobalteDialog.Content
             class={clsx(
-              "flex-1 flex flex-col items-center duration-200 overflow-hidden p-8 z-50",
+              "flex-1 flex flex-col items-center justify-center duration-200 overflow-hidden p-8 z-50",
               "ui-expanded:animate-in ui-expanded:fade-in-0 ui-expanded:zoom-in-[0.98]",
               "ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-not-expanded:zoom-out-[0.98]"
               // "ui-not-expanded:slide-out-to-left-1/2 ui-not-expanded:slide-out-to-top-[48%] ui-expanded:slide-in-from-left-1/2 ui-expanded:slide-in-from-top-[48%]"

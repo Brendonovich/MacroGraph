@@ -45,7 +45,15 @@ export const SerializedNode = z.object({
     id: z.string(),
   }),
   defaultValues: z.record(z.string(), z.any()),
-  properties: z.record(z.string(), z.any()).default({}),
+  properties: z
+    .record(
+      z.string(),
+      z
+        .string()
+        .or(z.number())
+        .or(z.object({ default: z.literal(true) }))
+    )
+    .default({}),
 });
 
 export interface NodeArgs {
@@ -54,9 +62,10 @@ export interface NodeArgs {
   graph: Graph;
   schema: NodeSchema;
   position: XY;
-  properties?: Record<string, any>;
+  properties?: Record<string, string | typeof DEFAULT>;
 }
 
+export const DEFAULT = Symbol("default");
 export class Node {
   id: number;
   graph: Graph;
@@ -66,7 +75,7 @@ export class Node {
     position: XY;
     inputs: (DataInput<any> | ExecInput | ScopeInput)[];
     outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
-    properties: Record<string, inferPropertyDef<PropertyDef>>;
+    properties: Record<string, string | typeof DEFAULT>;
   };
 
   io!: IOBuilder;
@@ -119,8 +128,7 @@ export class Node {
           io,
           properties: this.schema.properties ?? {},
           ctx: {
-            getProperty: (property) =>
-              this.state.properties[property.id] as any,
+            getProperty: (p) => this.getProperty(p) as any,
             graph: this.graph,
           },
           graph: this.graph,
@@ -157,8 +165,7 @@ export class Node {
               return eventFactory({
                 properties: this.schema.properties ?? {},
                 ctx: {
-                  getProperty: (property) =>
-                    this.state.properties[property.id]!,
+                  getProperty: (p) => this.getProperty(p) as any,
                   graph: this.graph,
                 },
               });
@@ -286,7 +293,13 @@ export class Node {
           [i.id]: i.defaultValue,
         };
       }, {}),
-      properties: this.state.properties,
+      properties: Object.entries(this.state.properties).reduce(
+        (acc, [k, v]) => ({
+          ...acc,
+          [k]: v === DEFAULT ? { default: true } : v,
+        }),
+        {}
+      ),
     };
   }
 
@@ -307,7 +320,13 @@ export class Node {
       position: data.position,
       schema: schema as any,
       graph,
-      properties: data.properties,
+      properties: Object.entries(data.properties).reduce(
+        (acc, [k, v]) => ({
+          ...acc,
+          [k]: typeof v === "object" ? DEFAULT : v,
+        }),
+        {}
+      ),
     });
 
     Object.entries(data.defaultValues).forEach(([key, data]) => {

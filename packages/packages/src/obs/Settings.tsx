@@ -8,7 +8,7 @@ import { AUTH_SCHEMA } from "./ws";
 export default function (ctx: Ctx) {
   const [form, { Form, Field }] = createForm({
     validate: zodForm(AUTH_SCHEMA),
-    initialValues: { url: "" },
+    initialValues: { url: "ws://localhost:4455" },
   });
 
   return (

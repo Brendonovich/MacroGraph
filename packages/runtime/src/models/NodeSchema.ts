@@ -20,7 +20,7 @@ import {
   ScopeOutput,
 } from "./IO";
 import { Package, ResourceType } from "./Package";
-import { Node } from "./Node";
+import { DEFAULT, Node } from "./Node";
 import { Graph } from "./Graph";
 
 export type NodeSchemaVariant = "Base" | "Pure" | "Exec" | "Event";
@@ -239,7 +239,7 @@ export type inferPropertyDef<TProperty extends PropertyDef> =
     ? t.infer<TProperty["type"]>
     : TProperty extends { source: PropertySourceFn }
     ? inferPropertySourceFn<TProperty["source"]>
-    : TProperty extends { resource: ResourceType<any, infer TValue> }
+    : TProperty extends { resource: ResourceType<infer TValue, any> }
     ? Option<TValue>
     : never;
 

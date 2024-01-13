@@ -1,4 +1,5 @@
-import { For, Match, Switch, createSignal } from "solid-js";
+import { For, Match, Show, Switch, createSignal } from "solid-js";
+import { Card } from "@macrograph/ui";
 
 import { useCoreContext } from "../contexts";
 import { SidebarSection } from "./Sidebar";
@@ -11,27 +12,31 @@ export const CustomEventList = () => {
     <SidebarSection
       title="Custom Events"
       right={
-        <div class="flex flex-row items-center text-xl font-bold">
-          <button
-            class="px-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              ctx.core.project.createCustomEvent();
-            }}
-          >
-            +
-          </button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            ctx.core.project.createCustomEvent();
+          }}
+        >
+          <IconMaterialSymbolsAddRounded class="w-6 h-6" />
+        </button>
       }
     >
-      <div class="p-2 gap-2 flex flex-col">
+      <ul class="p-2 space-y-2">
         <For each={[...ctx.core.project.customEvents]}>
           {([id, event]) => {
             const [editingName, setEditingName] = createSignal(false);
+            const [fieldsHidden, setFieldsHidden] = createSignal(false);
 
             return (
-              <div class="flex flex-col gap-2 p-2 border-neutral-400 border rounded bg-neutral-800">
-                <div class="flex flex-row gap-2 justify-between items-center">
+              <Card class="divide-y divide-black">
+                <div class="p-2 flex flex-row gap-2 justify-between items-center">
+                  <button onClick={() => setFieldsHidden((h) => !h)}>
+                    <IconFa6SolidChevronRight
+                      class="w-3 h-3"
+                      classList={{ "rotate-90": !fieldsHidden() }}
+                    />
+                  </button>
                   <Switch>
                     <Match when={editingName()}>
                       {(_) => {
@@ -40,25 +45,21 @@ export const CustomEventList = () => {
                         return (
                           <>
                             <input
-                              class="flex-1 text-black"
+                              class="flex-1 text-black -ml-1 pl-1"
                               value={value()}
                               onChange={(e) => setValue(e.target.value)}
                             />
-                            <div class="flex flex-row">
+                            <div class="flex flex-row space-x-1">
                               <button
-                                class="w-6 h-6 flex flex-row items-center justify-center"
                                 onClick={() => {
                                   event.name = value();
                                   setEditingName(false);
                                 }}
                               >
-                                <IconAntDesignCheckOutlined />
+                                <IconAntDesignCheckOutlined class="w-4 h-4" />
                               </button>
-                              <button
-                                class="w-6 h-6 relative"
-                                onClick={() => setEditingName(false)}
-                              >
-                                <IconBiX class="absolute left-0 top-0" />
+                              <button onClick={() => setEditingName(false)}>
+                                <IconAntDesignCloseOutlined class="w-4 h-4" />
                               </button>
                             </div>
                           </>
@@ -67,7 +68,7 @@ export const CustomEventList = () => {
                     </Match>
                     <Match when={!editingName()}>
                       <span class="shrink-0">{event.name}</span>
-                      <div class="gap-2 flex flex-row">
+                      <div class="flex-1 gap-2 flex flex-row justify-end">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -75,16 +76,15 @@ export const CustomEventList = () => {
                             setEditingName(true);
                           }}
                         >
-                          <IconAntDesignEditOutlined />
+                          <IconAntDesignEditOutlined class="w-4 h-4" />
                         </button>
                         <button
-                          class="px-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const newPin = event.createField();
+                            event.createField();
                           }}
                         >
-                          +
+                          <IconMaterialSymbolsAddRounded class="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -94,105 +94,111 @@ export const CustomEventList = () => {
                             ctx.core.project.save();
                           }}
                         >
-                          <IconAntDesignDeleteOutlined />
+                          <IconAntDesignDeleteOutlined class="w-4 h-4" />
                         </button>
                       </div>
                     </Match>
                   </Switch>
                 </div>
 
-                <For each={[...event.fields]}>
-                  {(field) => {
-                    const [editingPinName, setEditingPinName] =
-                      createSignal(false);
+                <Show when={!fieldsHidden()}>
+                  <ul class="divide-y divide-black">
+                    <For each={[...event.fields]}>
+                      {(field) => {
+                        const [editingPinName, setEditingPinName] =
+                          createSignal(false);
 
-                    return (
-                      <div class="flex flex-col gap-2 p-2 border-neutral-400 border rounded bg-neutral-800">
-                        <div class="flex flex-row gap-2 justify-between items-center">
-                          <Switch>
-                            <Match when={editingPinName()}>
-                              {(_) => {
-                                const [value, setValue] = createSignal(
-                                  field.name
-                                );
+                        return (
+                          <li class="flex flex-col gap-2 p-2">
+                            <div class="flex flex-row gap-2 justify-between items-center">
+                              <Switch>
+                                <Match when={editingPinName()}>
+                                  {(_) => {
+                                    const [value, setValue] = createSignal(
+                                      field.name
+                                    );
 
-                                return (
-                                  <>
-                                    <input
-                                      class="flex-1 text-black"
-                                      value={value()}
-                                      onChange={(e) => setValue(e.target.value)}
-                                    />
-                                    <div class="flex flex-row">
-                                      <button
-                                        class="w-6 h-6 flex flex-row items-center justify-center"
-                                        onClick={() => {
-                                          event.editFieldName(
-                                            field.id,
-                                            value()
-                                          );
-                                          ctx.core.project.save();
-                                          setEditingPinName(false);
-                                        }}
-                                      >
-                                        <IconAntDesignCheckOutlined />
-                                      </button>
-                                      <button
-                                        class="w-6 h-6 relative"
-                                        onClick={() => setEditingPinName(false)}
-                                      >
-                                        <IconBiX class="absolute left-0 top-0" />
-                                      </button>
-                                    </div>
-                                  </>
-                                );
-                              }}
-                            </Match>
-                            <Match when={!editingPinName()}>
-                              <span class="shrink-0">{field.name}</span>
-                              <div class="gap-2 flex flex-row">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-
-                                    setEditingPinName(true);
+                                    return (
+                                      <>
+                                        <input
+                                          class="flex-1 text-black  -ml-1 pl-1"
+                                          value={value()}
+                                          onChange={(e) =>
+                                            setValue(e.target.value)
+                                          }
+                                        />
+                                        <div class="flex flex-row space-x-1">
+                                          <button
+                                            onClick={() => {
+                                              event.editFieldName(
+                                                field.id,
+                                                value()
+                                              );
+                                              ctx.core.project.save();
+                                              setEditingPinName(false);
+                                            }}
+                                          >
+                                            <IconAntDesignCheckOutlined class="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              setEditingPinName(false)
+                                            }
+                                          >
+                                            <IconAntDesignCloseOutlined class="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      </>
+                                    );
                                   }}
-                                >
-                                  <IconAntDesignEditOutlined />
-                                </button>
+                                </Match>
+                                <Match when={!editingPinName()}>
+                                  <span class="shrink-0">{field.name}</span>
+                                  <div class="gap-2 flex flex-row">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
 
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+                                        setEditingPinName(true);
+                                      }}
+                                    >
+                                      <IconAntDesignEditOutlined class="w-4 h-4" />
+                                    </button>
 
-                                    event.deletePin(field.id);
-                                    ctx.core.project.save();
-                                  }}
-                                >
-                                  <IconAntDesignDeleteOutlined />
-                                </button>
-                              </div>
-                            </Match>
-                          </Switch>
-                        </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
 
-                        <div class="flex flex-row justify-start">
-                          <TypeEditor
-                            type={field.type}
-                            onChange={(type) => {
-                              event.editFieldType(field.id, type as any);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  }}
-                </For>
-              </div>
+                                        event.deletePin(field.id);
+                                        ctx.core.project.save();
+                                      }}
+                                    >
+                                      <IconAntDesignDeleteOutlined class="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </Match>
+                              </Switch>
+                            </div>
+
+                            <div class="flex flex-row justify-start">
+                              <TypeEditor
+                                type={field.type}
+                                onChange={(type) => {
+                                  event.editFieldType(field.id, type as any);
+                                }}
+                              />
+                            </div>
+                          </li>
+                        );
+                      }}
+                    </For>
+                  </ul>
+                </Show>
+              </Card>
             );
           }}
         </For>
-      </div>
+      </ul>
     </SidebarSection>
   );
 };

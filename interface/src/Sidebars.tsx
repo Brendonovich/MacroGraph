@@ -1,4 +1,4 @@
-import { Graph, Node, PropertyValue } from "@macrograph/runtime";
+import { DEFAULT, Graph, Node, PropertyValue } from "@macrograph/runtime";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { Switch, For, Match, Show, createMemo, createSignal } from "solid-js";
 
@@ -12,6 +12,7 @@ import {
 } from "./components/ui";
 import { TypeEditor } from "./components/TypeEditor";
 import { useCore } from "./contexts";
+import { Card } from "@macrograph/ui";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (
@@ -20,7 +21,6 @@ export function GraphSidebar(props: { graph: Graph }) {
         title="Variables"
         right={
           <button
-            class="px-1"
             onClick={(e) => {
               e.stopPropagation();
 
@@ -31,17 +31,17 @@ export function GraphSidebar(props: { graph: Graph }) {
               });
             }}
           >
-            +
+            <IconMaterialSymbolsAddRounded class="w-6 h-6" />
           </button>
         }
       >
-        <div class="p-2 gap-2 flex flex-col">
+        <ul class="p-2 gap-2 flex flex-col">
           <For each={props.graph.variables}>
             {(variable) => {
               const [editingName, setEditingName] = createSignal(false);
 
               return (
-                <div class="flex flex-col gap-2 p-2 border-neutral-400 border rounded bg-neutral-800">
+                <Card as="li" class="p-2 space-y-2">
                   <div class="flex flex-row gap-2 justify-between items-center">
                     <Switch>
                       <Match when={editingName()}>
@@ -51,25 +51,21 @@ export function GraphSidebar(props: { graph: Graph }) {
                           return (
                             <>
                               <input
-                                class="flex-1 text-black"
+                                class="flex-1 text-black -ml-1 pl-1"
                                 value={value()}
                                 onChange={(e) => setValue(e.target.value)}
                               />
-                              <div class="flex flex-row">
+                              <div class="flex flex-row space-x-1">
                                 <button
-                                  class="w-6 h-6 flex flex-row items-center justify-center"
                                   onClick={() => {
                                     variable.name = value();
                                     setEditingName(false);
                                   }}
                                 >
-                                  <IconAntDesignCheckOutlined />
+                                  <IconAntDesignCheckOutlined class="w-4 h-4" />
                                 </button>
-                                <button
-                                  class="w-6 h-6 relative"
-                                  onClick={() => setEditingName(false)}
-                                >
-                                  <IconBiX class="absolute left-0 top-0" />
+                                <button onClick={() => setEditingName(false)}>
+                                  <IconAntDesignCloseOutlined class="w-4 h-4" />
                                 </button>
                               </div>
                             </>
@@ -86,7 +82,7 @@ export function GraphSidebar(props: { graph: Graph }) {
                               setEditingName(true);
                             }}
                           >
-                            <IconAntDesignEditOutlined />
+                            <IconAntDesignEditOutlined class="w-4 h-4" />
                           </button>
 
                           <button
@@ -96,7 +92,7 @@ export function GraphSidebar(props: { graph: Graph }) {
                               props.graph.removeVariable(variable.id);
                             }}
                           >
-                            <IconAntDesignDeleteOutlined />
+                            <IconAntDesignDeleteOutlined class="w-4 h-4" />
                           </button>
                         </div>
                       </Match>
@@ -109,7 +105,6 @@ export function GraphSidebar(props: { graph: Graph }) {
                   />
 
                   <div class="flex flex-row items-start gap-2 text-sm">
-                    <span>Value</span>
                     <Switch>
                       <Match
                         when={
@@ -174,11 +169,11 @@ export function GraphSidebar(props: { graph: Graph }) {
                       </Match>
                     </Switch>
                   </div>
-                </div>
+                </Card>
               );
             }}
           </For>
-        </div>
+        </ul>
       </SidebarSection>
     </>
   );
@@ -204,116 +199,143 @@ export function NodeSidebar(props: { node: Node }) {
                 return (
                   <div class="p-2 flex flex-row gap-2 items-center">
                     <span>{property.name}</span>
-                    <Switch>
-                      <Match when={"source" in property && property}>
-                        {(property) => {
-                          const options = () => {
-                            return property().source({ node: props.node });
-                          };
+                    <div class="flex-1">
+                      <Switch>
+                        <Match when={"source" in property && property}>
+                          {(property) => {
+                            const options = () => {
+                              return property().source({ node: props.node });
+                            };
 
-                          const selectedOption = () => {
-                            return options().find(
-                              (o) => o.id === properties()[property().id]!
+                            const selectedOption = () => {
+                              return options().find(
+                                (o) => o.id === properties()[property().id]!
+                              );
+                            };
+
+                            return (
+                              <SelectInput<PropertyValue>
+                                options={options()}
+                                optionValue="id"
+                                optionTextValue="display"
+                                getLabel={(o) => o.display}
+                                value={selectedOption()}
+                                onChange={(v) => {
+                                  props.node.setProperty(property().id, v.id);
+                                }}
+                              />
                             );
-                          };
+                          }}
+                        </Match>
+                        <Match when={"type" in property && property}>
+                          {(property) => {
+                            const value = createMemo(
+                              () => properties()[property().id]!
+                            );
 
-                          return (
-                            <SelectInput<PropertyValue>
-                              options={options()}
-                              optionValue="id"
-                              optionTextValue="display"
-                              getLabel={(o) => o.display}
-                              value={selectedOption()}
-                              onChange={(v) => {
-                                props.node.setProperty(property().id, v.id);
-                              }}
-                            />
-                          );
-                        }}
-                      </Match>
-                      <Match when={"type" in property && property}>
-                        {(property) => {
-                          const value = createMemo(
-                            () => properties()[property().id]!
-                          );
+                            const onChange = (v: any) => {
+                              props.node.setProperty(property().id, v);
+                            };
 
-                          const onChange = (v: any) => {
-                            props.node.setProperty(property().id, v);
-                          };
+                            return (
+                              <Switch>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() ===
+                                    "bool"
+                                  }
+                                >
+                                  <CheckBox
+                                    value={value()}
+                                    onChange={onChange}
+                                  />
+                                </Match>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() ===
+                                    "string"
+                                  }
+                                >
+                                  <TextInput
+                                    value={value()}
+                                    onChange={onChange}
+                                  />
+                                </Match>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() === "int"
+                                  }
+                                >
+                                  <IntInput
+                                    initialValue={value()}
+                                    value={value()}
+                                    onChange={onChange}
+                                  />
+                                </Match>
+                                <Match
+                                  when={
+                                    property().type.primitiveVariant() ===
+                                    "float"
+                                  }
+                                >
+                                  <FloatInput
+                                    initialValue={value()}
+                                    value={value()}
+                                    onChange={onChange}
+                                  />
+                                </Match>
+                              </Switch>
+                            );
+                          }}
+                        </Match>
+                        <Match when={"resource" in property && property}>
+                          {(property) => {
+                            const core = useCore();
 
-                          return (
-                            <Switch>
-                              <Match
-                                when={
-                                  property().type.primitiveVariant() === "bool"
+                            const items = () => {
+                              const resource = core.project.resources.get(
+                                property().resource
+                              );
+                              if (!resource) return [];
+
+                              const dflt = resource.items.find(
+                                (i) => i.id === resource.default
+                              );
+
+                              return [
+                                {
+                                  id: DEFAULT,
+                                  name: dflt
+                                    ? `Default (${dflt.name})`
+                                    : `No Items Available`,
+                                },
+                                ...resource.items,
+                              ];
+                            };
+
+                            const valueId = createMemo(
+                              () => props.node.state.properties[property().id]
+                            );
+
+                            return (
+                              <SelectInput
+                                options={items()}
+                                optionValue="id"
+                                optionTextValue="name"
+                                getLabel={(o) => o.name}
+                                value={
+                                  items().find((i) => i.id === valueId()) ??
+                                  items().find((i) => i.id === DEFAULT)
                                 }
-                              >
-                                <CheckBox value={value()} onChange={onChange} />
-                              </Match>
-                              <Match
-                                when={
-                                  property().type.primitiveVariant() ===
-                                  "string"
+                                onChange={(v) =>
+                                  props.node.setProperty(property().id, v.id)
                                 }
-                              >
-                                <TextInput
-                                  value={value()}
-                                  onChange={onChange}
-                                />
-                              </Match>
-                              <Match
-                                when={
-                                  property().type.primitiveVariant() === "int"
-                                }
-                              >
-                                <IntInput
-                                  initialValue={value()}
-                                  value={value()}
-                                  onChange={onChange}
-                                />
-                              </Match>
-                              <Match
-                                when={
-                                  property().type.primitiveVariant() === "float"
-                                }
-                              >
-                                <FloatInput
-                                  initialValue={value()}
-                                  value={value()}
-                                  onChange={onChange}
-                                />
-                              </Match>
-                            </Switch>
-                          );
-                        }}
-                      </Match>
-                      <Match when={"resource" in property && property}>
-                        {(property) => {
-                          const core = useCore();
-
-                          const items = () =>
-                            core.project.resources.get(property().resource)
-                              ?.items ?? [];
-
-                          const valueId = createMemo(
-                            () => props.node.state.properties[property().id]
-                          );
-
-                          return (
-                            <SelectInput
-                              options={items()}
-                              optionValue="id"
-                              optionTextValue="name"
-                              getLabel={(o) => o.name}
-                              value={items().find((i) => i.id === valueId())}
-                              onChange={(v) =>
-                                props.node.setProperty(property().id, v.id)
-                              }
-                            />
-                          );
-                        }}
-                      </Match>
-                    </Switch>
+                              />
+                            );
+                          }}
+                        </Match>
+                      </Switch>
+                    </div>
                   </div>
                 );
               }}

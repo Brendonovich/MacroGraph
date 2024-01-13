@@ -25,7 +25,7 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
   Pure: "bg-mg-pure",
 };
 
-export const SchemaMenu = (props: Props) => {
+export function SchemaMenu(props: Props) {
   const core = useCore();
 
   const [openPackages, setOpenPackages] = createSignal(new Set<Package>());
@@ -117,7 +117,10 @@ export const SchemaMenu = (props: Props) => {
                         })
                       }
                     >
-                      <div class="w-2">{open() ? "v" : ">"}</div>
+                      <IconFa6SolidChevronRight
+                        class="w-3 h-3"
+                        classList={{ "rotate-90": open() }}
+                      />
                       <span>{p.name}</span>
                     </button>
                     <Show when={open()}>
@@ -153,4 +156,4 @@ export const SchemaMenu = (props: Props) => {
       </div>
     </div>
   );
-};
+}

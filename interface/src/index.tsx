@@ -376,7 +376,6 @@ function ProjectInterface(props: {
             <Sidebar width={Math.max(leftSidebar.state.width, MIN_WIDTH)}>
               <Settings />
               <div class="overflow-y-auto outer-scroll flex-1">
-                <Resources />
                 <GraphList
                   currentGraph={currentGraph()?.model.id}
                   onGraphClicked={(graph) => {
@@ -392,6 +391,7 @@ function ProjectInterface(props: {
                 />
                 <PrintOutput />
                 <CustomEventList />
+                <Resources />
               </div>
             </Sidebar>
 

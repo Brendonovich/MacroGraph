@@ -245,7 +245,10 @@ export type OnEvent<TEventsMap extends EventsMap = EventsMap> = (
   _: Events<TEventsMap>
 ) => void;
 
-export class ResourceType<TPkg extends Package<any, any>, TValue> {
+export class ResourceType<
+  TValue,
+  TPkg extends Package<any, any> = Package<any, any>
+> {
   name: string;
   sources: Accessor<{ id: string; display: string; value: TValue }[]>;
 

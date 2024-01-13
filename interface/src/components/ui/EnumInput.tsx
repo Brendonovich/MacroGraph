@@ -39,7 +39,6 @@ export function SelectInput<TOption>(props: SelectInputProps<TOption>) {
     <Select.Root<TOption>
       {...props}
       onChange={(v) => {
-        console.log(v);
         if (v === undefined) return;
         props.onChange(v);
       }}
