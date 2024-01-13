@@ -124,7 +124,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
         if (instance.state !== "connected")
           throw new Error("OBS instance not connected!");
 
-        s.run({ ...props, obs: instance.obs });
+        return s.run({ ...props, obs: instance.obs });
       },
     });
   }

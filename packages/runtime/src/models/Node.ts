@@ -68,7 +68,7 @@ export class Node {
     position: XY;
     inputs: (DataInput<any> | ExecInput | ScopeInput)[];
     outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
-    properties: Record<string, string | typeof DEFAULT>;
+    properties: Record<string, string | number | typeof DEFAULT>;
   };
 
   io!: IOBuilder;
@@ -208,11 +208,15 @@ export class Node {
     } else if ("type" in property) {
       return this.state.properties[property.id];
     } else {
-      const value: string | undefined = this.state.properties[
-        property.id
-      ] as any;
+      const value = this.state.properties[property.id];
 
-      const source = property.resource.sources().find((s) => s.id === value);
+      const instance = this.graph.project.resources.get(property.resource);
+      const item = instance?.items.find(
+        (i) => i.id === (value === DEFAULT ? instance.default : value)
+      );
+
+      const sources = property.resource.sources();
+      const source = sources.find((s) => s.id === item?.sourceId);
 
       return Maybe(source?.value);
     }
