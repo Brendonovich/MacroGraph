@@ -88,7 +88,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Send Discord Message",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         message: io.dataInput({
           id: "message",
@@ -122,7 +122,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Get Discord User",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         userId: io.dataInput({
           id: "userId",
@@ -160,7 +160,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Get Discord Guild User",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         guildId: io.dataInput({
           id: "guildId",
@@ -221,7 +221,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Get Discord Role By Id",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         guildId: io.dataInput({
           id: "guildId",
@@ -282,7 +282,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
   pkg.createNonEventSchema({
     name: "Send Discord Webhook",
     variant: "Exec",
-    generateIO: ({ io }) => {
+    createIO: ({ io }) => {
       return {
         webhookUrl: io.dataInput({
           id: "webhookUrl",

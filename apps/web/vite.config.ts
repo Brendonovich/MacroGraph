@@ -1,5 +1,5 @@
 import { defineConfig } from "@solidjs/start/config";
-import interfacePlugin from "@macrograph/interface/vite";
+import interfacePlugin from "../../interface/vite";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });

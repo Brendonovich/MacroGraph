@@ -9,7 +9,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Branch",
     variant: "Base",
-    generateIO({ io }) {
+    createIO({ io }) {
       io.execInput({
         id: "exec",
       });
@@ -38,7 +38,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Wait",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       return io.dataInput({
         id: "delay",
         name: "Wait in ms",
@@ -53,7 +53,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "AND",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -77,7 +77,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "NAND",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -101,7 +101,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "OR",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -125,7 +125,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "NOR",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -149,7 +149,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "XOR",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         one: io.dataInput({
           id: "one",
@@ -173,7 +173,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "NOT",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         input: io.dataInput({
           id: "input",
@@ -193,7 +193,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: `Conditional`,
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -231,7 +231,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: `For Each`,
     variant: "Base",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -284,7 +284,7 @@ export function pkg() {
         default: 1,
       },
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const value = ctx.getProperty(properties.number);
       const w = io.wildcard("");
 

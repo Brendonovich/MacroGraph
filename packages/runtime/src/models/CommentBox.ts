@@ -4,19 +4,7 @@ import { z } from "zod";
 import { Node } from "./Node";
 import { Graph } from "./Graph";
 import { XY, Size } from "../utils";
-
-export const SerializedCommentBox = z.object({
-  id: z.number().optional(),
-  position: z.object({
-    x: z.number(),
-    y: z.number(),
-  }),
-  size: z.object({
-    x: z.number(),
-    y: z.number(),
-  }),
-  text: z.string(),
-});
+import { SerializedCommentBox } from "./serialized";
 
 export interface CommentBoxArgs {
   id: number;

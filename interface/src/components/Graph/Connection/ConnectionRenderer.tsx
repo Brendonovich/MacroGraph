@@ -42,10 +42,17 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
       to: XY,
       colour: string
     ) {
-      canvas.lineWidth = 2 * ctx.state.scale;
+      canvas.lineWidth = 3 * ctx.state.scale;
       canvas.beginPath();
       canvas.moveTo(from.x, from.y);
-      canvas.lineTo(to.x, to.y);
+      canvas.bezierCurveTo(
+        from.x - Math.abs(Math.min(200, (from.x - to.x) / 2)),
+        from.y,
+        to.x + Math.abs(Math.min(200, (from.x - to.x) / 2)),
+        to.y,
+        to.x,
+        to.y
+      );
       canvas.strokeStyle = colour;
       canvas.stroke();
     }

@@ -26,7 +26,7 @@ export function pkg() {
     properties: {
       variable: variableProperty,
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const variableId = ctx.getProperty(properties.variable);
       const variable = ctx.graph.variables.find((v) => v.id === variableId);
       if (!variable) return;
@@ -55,7 +55,7 @@ export function pkg() {
     properties: {
       variable: variableProperty,
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const variableId = ctx.getProperty(properties.variable);
       const variable = ctx.graph.variables.find((v) => v.id === variableId);
       if (!variable) return;
@@ -89,7 +89,7 @@ export function pkg() {
     },
     name: "Graph Variable Changed",
     properties: { variable: variableProperty },
-    generateIO({ io, ctx, properties, graph }) {
+    createIO({ io, ctx, properties, graph }) {
       const variableId = ctx.getProperty(properties.variable);
       const variable = ctx.graph.variables.find((v) => v.id === variableId);
       if (!variable) return;

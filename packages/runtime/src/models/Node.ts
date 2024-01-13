@@ -11,9 +11,9 @@ import {
   onCleanup,
   createEffect,
 } from "solid-js";
-import { None, Option, Some } from "@macrograph/typesystem";
+import { Maybe, None, Option, Some } from "@macrograph/typesystem";
 
-import { IOBuilder, NodeSchema } from "./NodeSchema";
+import { IOBuilder, NodeSchema, Property } from "./NodeSchema";
 import {
   DataInput,
   DataOutput,
@@ -24,6 +24,7 @@ import {
 } from "./IO";
 import { XY } from "../utils";
 import type { Graph } from "./Graph";
+import { ExecutionContext } from "./Core";
 
 export const SerializedNode = z.object({
   id: z.number(),
@@ -37,7 +38,15 @@ export const SerializedNode = z.object({
     id: z.string(),
   }),
   defaultValues: z.record(z.string(), z.any()),
-  properties: z.record(z.string(), z.any()).default({}),
+  properties: z
+    .record(
+      z.string(),
+      z
+        .string()
+        .or(z.number())
+        .or(z.object({ default: z.literal(true) }))
+    )
+    .default({}),
 });
 
 export interface NodeArgs {
@@ -46,9 +55,10 @@ export interface NodeArgs {
   graph: Graph;
   schema: NodeSchema;
   position: XY;
-  properties?: Record<string, any>;
+  properties?: Record<string, string | typeof DEFAULT>;
 }
 
+export const DEFAULT = Symbol("default");
 export class Node {
   id: number;
   graph: Graph;
@@ -58,7 +68,7 @@ export class Node {
     position: XY;
     inputs: (DataInput<any> | ExecInput | ScopeInput)[];
     outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
-    properties: Record<string, any>;
+    properties: Record<string, string | number | typeof DEFAULT>;
   };
 
   io!: IOBuilder;
@@ -84,7 +94,11 @@ export class Node {
               args.properties?.[property.id] ??
               property.default ??
               property.type.default();
-          else acc[property.id] = args.properties?.[property.id];
+          else if ("resource" in property) {
+            acc[property.id] = args.properties?.[property.id] ?? {
+              default: true,
+            };
+          } else acc[property.id] = args.properties?.[property.id];
 
           return acc;
         },
@@ -103,11 +117,11 @@ export class Node {
       createRenderEffect(() => {
         const io = new IOBuilder(this, this.io);
 
-        this.ioReturn = this.schema.generateIO({
+        this.ioReturn = this.schema.createIO({
           io,
           properties: this.schema.properties ?? {},
           ctx: {
-            getProperty: (property) => this.state.properties[property.id]!,
+            getProperty: (p) => this.getProperty(p) as any,
             graph: this.graph,
           },
           graph: this.graph,
@@ -144,8 +158,7 @@ export class Node {
               return eventFactory({
                 properties: this.schema.properties ?? {},
                 ctx: {
-                  getProperty: (property) =>
-                    this.state.properties[property.id]!,
+                  getProperty: (p) => this.getProperty(p) as any,
                   graph: this.graph,
                 },
               });
@@ -166,7 +179,47 @@ export class Node {
           });
         }
       });
+
+      if ("type" in this.schema && this.schema.type === "event") {
+        const s = this.schema;
+
+        createEffect(() => {
+          try {
+            s.createListener({
+              properties: s.properties ?? {},
+              ctx: {
+                getProperty: (p) => this.getProperty(p) as any,
+                graph: this.graph,
+              },
+            }).listen((data) => new ExecutionContext(this).run(data));
+          } catch (e) {
+            console.error(e);
+          }
+        });
+      }
     });
+  }
+
+  getProperty(property: Property) {
+    if ("source" in property) {
+      return property
+        .source({ node: this })
+        .find((s) => s.id === (this.state.properties[property.id] as any))?.id;
+    } else if ("type" in property) {
+      return this.state.properties[property.id];
+    } else {
+      const value = this.state.properties[property.id];
+
+      const instance = this.graph.project.resources.get(property.resource);
+      const item = instance?.items.find(
+        (i) => i.id === (value === DEFAULT ? instance.default : value)
+      );
+
+      const sources = property.resource.sources();
+      const source = sources.find((s) => s.id === item?.sourceId);
+
+      return Maybe(source?.value);
+    }
   }
 
   updateIO(io: IOBuilder) {
@@ -237,7 +290,13 @@ export class Node {
           [i.id]: i.defaultValue,
         };
       }, {}),
-      properties: this.state.properties,
+      properties: Object.entries(this.state.properties).reduce(
+        (acc, [k, v]) => ({
+          ...acc,
+          [k]: v === DEFAULT ? { default: true } : v,
+        }),
+        {}
+      ),
     };
   }
 
@@ -258,7 +317,13 @@ export class Node {
       position: data.position,
       schema: schema as any,
       graph,
-      properties: data.properties,
+      properties: Object.entries(data.properties).reduce(
+        (acc, [k, v]) => ({
+          ...acc,
+          [k]: typeof v === "object" ? DEFAULT : v,
+        }),
+        {}
+      ),
     });
 
     Object.entries(data.defaultValues).forEach(([key, data]) => {

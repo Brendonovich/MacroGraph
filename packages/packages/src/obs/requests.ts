@@ -1,11 +1,21 @@
-import { createEnum, createStruct, Package } from "@macrograph/runtime";
+import {
+  createEnum,
+  CreateNonEventSchema,
+  createStruct,
+  Package,
+  PropertyDef,
+  RunProps,
+  SchemaProperties,
+} from "@macrograph/runtime";
 import { InferEnum, Maybe, t } from "@macrograph/typesystem";
 import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
-import { EventTypes } from "obs-websocket-js";
+import OBSWebSocket, { EventTypes } from "obs-websocket-js";
+import { createLazyMemo } from "@solid-primitives/memo";
+import { ReactiveMap } from "@solid-primitives/map";
 
 import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
 import { Ctx } from "./ctx";
-import { ReactiveMap } from "@solid-primitives/map";
+import { defaultProperties } from "./resource";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -81,7 +91,44 @@ interface SceneItemTransformInterface {
   height: number;
 }
 
-export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
+export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
+  function createOBSExecSchema<
+    TProperties extends Record<string, PropertyDef> = {},
+    TIO = void
+  >(
+    s: Omit<
+      CreateNonEventSchema<TProperties & typeof defaultProperties, TIO>,
+      "type" | "createListener" | "run"
+    > & {
+      properties?: TProperties;
+      run(
+        props: RunProps<TProperties, TIO> & {
+          obs: OBSWebSocket;
+        }
+      ): void | Promise<void>;
+    }
+  ) {
+    pkg.createSchema({
+      ...s,
+      type: "exec",
+      properties: { ...s.properties, ...defaultProperties } as any,
+      run(props) {
+        const instance = props.ctx
+          .getProperty(
+            props.properties.instance as SchemaProperties<
+              typeof defaultProperties
+            >["instance"]
+          )
+          .expect("No OBS instance available!");
+
+        if (instance.state !== "connected")
+          throw new Error("OBS instance not connected!");
+
+        return s.run({ ...props, obs: instance.obs });
+      },
+    });
+  }
+
   const versionOutputs = [
     {
       id: "obsVersion",
@@ -120,12 +167,11 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   ] as const;
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get OBS Version",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       versionOutputs.map((data) => [data.id, io.dataOutput(data)] as const),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetVersion");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
@@ -145,15 +191,14 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     ["webSocketSessionOutgoingMessages", "Outgoing Messaes"],
   ] as const;
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get OBS Stats",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       statsOutputs.map(
         ([id, name]) =>
           [id, io.dataOutput({ id, name, type: t.int() })] as const
       ),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetStats");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
@@ -163,53 +208,48 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
 
   // Missing CallVendorRequest requires Object request and response
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Hotkey list",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "hotkeys",
         name: "Hotkeys",
         type: t.list(t.string()),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetHotkeyList");
       ctx.setOutput(io, data.hotkeys);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Trigger Hotkey By Name",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "hotkeyName",
         name: "Hotkey Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("TriggerHotkeyByName", { hotkeyName: ctx.getInput(io) });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Trigger Hotkey By Key Sequence",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        id: io.dataInput({
-          id: "keyId",
-          name: "Key ID",
-          type: t.string(),
-        }),
-        modifiers: io.dataInput({
-          id: "keyModifiers",
-          name: "Key Modifiers",
-          type: t.map(t.enum(JSON)),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      id: io.dataInput({
+        id: "keyId",
+        name: "Key ID",
+        type: t.string(),
+      }),
+      modifiers: io.dataInput({
+        id: "keyModifiers",
+        name: "Key Modifiers",
+        type: t.map(t.enum(JSON)),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       return obs.call("TriggerHotkeyByKeySequence", {
         keyId: ctx.getInput(io.id),
         keyModifiers: jsonToJS(
@@ -230,24 +270,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
 
   // Missing SetPersistentData as it has any type in request
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Collection List",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        currentSceneCollectionName: io.dataOutput({
-          id: "currentSceneCollectionName",
-          name: "Scene Collection Name",
-          type: t.string(),
-        }),
-        sceneCollections: io.dataOutput({
-          id: "sceneCollections",
-          name: "Scene Collections",
-          type: t.list(t.string()),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      currentSceneCollectionName: io.dataOutput({
+        id: "currentSceneCollectionName",
+        name: "Scene Collection Name",
+        type: t.string(),
+      }),
+      sceneCollections: io.dataOutput({
+        id: "sceneCollections",
+        name: "Scene Collections",
+        type: t.list(t.string()),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneCollectionList");
       ctx.setOutput(
         io.currentSceneCollectionName,
@@ -257,131 +294,120 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Current Scene Collection",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneCollectionName",
         name: "Scene Collection Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("SetCurrentSceneCollection", {
         sceneCollectionName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Create Scene Collection",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneCollectionName",
         name: "Scene Collection Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("CreateSceneCollection", {
         sceneCollectionName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Profile list",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        currentProfileName: io.dataOutput({
-          id: "currentProfileName",
-          name: "Profile Name",
-          type: t.string(),
-        }),
-        profiles: io.dataOutput({
-          id: "profiles",
-          name: "Profiles",
-          type: t.list(t.string()),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      currentProfileName: io.dataOutput({
+        id: "currentProfileName",
+        name: "Profile Name",
+        type: t.string(),
+      }),
+      profiles: io.dataOutput({
+        id: "profiles",
+        name: "Profiles",
+        type: t.list(t.string()),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetProfileList");
       ctx.setOutput(io.currentProfileName, data.currentProfileName);
       ctx.setOutput(io.profiles, data.profiles);
     },
   });
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Current Profile",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "profileName",
         name: "Profile Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("SetCurrentProfile", { profileName: ctx.getInput(io) });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Create Profile",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "profileName",
         name: "Profile Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("CreateProfile", { profileName: ctx.getInput(io) });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Remove Profile",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "profileName",
         name: "Profile Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("RemoveProfile", { profileName: ctx.getInput(io) });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Profile Parameter",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        parameterCategory: io.dataInput({
-          id: "parameterCategory",
-          name: "Catagory",
-          type: t.string(),
-        }),
-        parameterName: io.dataInput({
-          id: "parameterName",
-          name: "Name",
-          type: t.string(),
-        }),
-        parameterValue: io.dataOutput({
-          id: "parameterValue",
-          name: "Value",
-          type: t.string(),
-        }),
-        defaultParameterValue: io.dataOutput({
-          id: "defaultParameterValue",
-          name: "Default Value",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      parameterCategory: io.dataInput({
+        id: "parameterCategory",
+        name: "Catagory",
+        type: t.string(),
+      }),
+      parameterName: io.dataInput({
+        id: "parameterName",
+        name: "Name",
+        type: t.string(),
+      }),
+      parameterValue: io.dataOutput({
+        id: "parameterValue",
+        name: "Value",
+        type: t.string(),
+      }),
+      defaultParameterValue: io.dataOutput({
+        id: "defaultParameterValue",
+        name: "Default Value",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetProfileParameter", {
         parameterCategory: ctx.getInput(io.parameterCategory),
         parameterName: ctx.getInput(io.parameterName),
@@ -391,29 +417,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Profile Parameter",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        parameterCategory: io.dataInput({
-          id: "parameterCategory",
-          name: "Catagory",
-          type: t.string(),
-        }),
-        parameterName: io.dataInput({
-          id: "parameterName",
-          name: "Name",
-          type: t.string(),
-        }),
-        parameterValue: io.dataInput({
-          id: "parameterValue",
-          name: "Value",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      parameterCategory: io.dataInput({
+        id: "parameterCategory",
+        name: "Catagory",
+        type: t.string(),
+      }),
+      parameterName: io.dataInput({
+        id: "parameterName",
+        name: "Name",
+        type: t.string(),
+      }),
+      parameterValue: io.dataInput({
+        id: "parameterValue",
+        name: "Value",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetProfileParameter", {
         parameterCategory: ctx.getInput(io.parameterCategory),
         parameterName: ctx.getInput(io.parameterName),
@@ -431,58 +454,54 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     ["outputHeight", "Output Height"],
   ] as const;
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Video Settings",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       videoSettingOutputs.map(
         ([id, name]) =>
           [id, io.dataOutput({ id, name, type: t.int() })] as const
       ),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetVideoSettings");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Video Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        fpsNumerator: io.dataInput({
-          id: "fpsNumerator",
-          name: "FPS Numberator",
-          type: t.int(),
-        }),
-        fpsDenominator: io.dataInput({
-          id: "fpsDenominator",
-          name: "FPS Denominator",
-          type: t.int(),
-        }),
-        baseWidth: io.dataInput({
-          id: "baseWidth",
-          name: "Base Width",
-          type: t.int(),
-        }),
-        baseHeight: io.dataInput({
-          id: "baseHeight",
-          name: "Base Height",
-          type: t.int(),
-        }),
-        outputWidth: io.dataInput({
-          id: "outputWidth",
-          name: "Output Width",
-          type: t.int(),
-        }),
-        outputHeight: io.dataInput({
-          id: "outputHeight",
-          name: "Output Height",
-          type: t.int(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      fpsNumerator: io.dataInput({
+        id: "fpsNumerator",
+        name: "FPS Numberator",
+        type: t.int(),
+      }),
+      fpsDenominator: io.dataInput({
+        id: "fpsDenominator",
+        name: "FPS Denominator",
+        type: t.int(),
+      }),
+      baseWidth: io.dataInput({
+        id: "baseWidth",
+        name: "Base Width",
+        type: t.int(),
+      }),
+      baseHeight: io.dataInput({
+        id: "baseHeight",
+        name: "Base Height",
+        type: t.int(),
+      }),
+      outputWidth: io.dataInput({
+        id: "outputWidth",
+        name: "Output Width",
+        type: t.int(),
+      }),
+      outputHeight: io.dataInput({
+        id: "outputHeight",
+        name: "Output Height",
+        type: t.int(),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetVideoSettings", {
         fpsNumerator: ctx.getInput(io.fpsNumerator),
         fpsDenominator: ctx.getInput(io.fpsDenominator),
@@ -494,24 +513,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Stream Service Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        streamServiceType: io.dataOutput({
-          id: "streamServiceType",
-          name: "Stream Service Type",
-          type: t.string(),
-        }),
-        streamServiceSettings: io.dataOutput({
-          id: "streamServiceSettings",
-          name: "Stream Service Settings",
-          type: t.enum(JSON),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      streamServiceType: io.dataOutput({
+        id: "streamServiceType",
+        name: "Stream Service Type",
+        type: t.string(),
+      }),
+      streamServiceSettings: io.dataOutput({
+        id: "streamServiceSettings",
+        name: "Stream Service Settings",
+        type: t.enum(JSON),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetStreamServiceSettings");
       ctx.setOutput(io.streamServiceType, data.streamServiceType);
       ctx.setOutput(
@@ -521,24 +537,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Stream Service Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        streamServiceType: io.dataInput({
-          id: "streamServiceType",
-          name: "Stream Service Type",
-          type: t.string(),
-        }),
-        streamServiceSettings: io.dataInput({
-          id: "streamServiceSettings",
-          name: "Stream Service Settings",
-          type: t.map(t.enum(JSON)),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      streamServiceType: io.dataInput({
+        id: "streamServiceType",
+        name: "Stream Service Type",
+        type: t.string(),
+      }),
+      streamServiceSettings: io.dataInput({
+        id: "streamServiceSettings",
+        name: "Stream Service Settings",
+        type: t.map(t.enum(JSON)),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetStreamServiceSettings", {
         streamServiceType: ctx.getInput(io.streamServiceType),
         streamServiceSettings: jsonToJS({
@@ -551,44 +564,40 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Record Directory",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "recordDirectory",
         name: "Record Directory",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetRecordDirectory");
       ctx.setOutput(io, data.recordDirectory);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Source Active",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        videoActive: io.dataOutput({
-          id: "videoActive",
-          name: "Video Active",
-          type: t.bool(),
-        }),
-        videoShowing: io.dataOutput({
-          id: "videoShowing",
-          name: "Video Showing",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      videoActive: io.dataOutput({
+        id: "videoActive",
+        name: "Video Active",
+        type: t.bool(),
+      }),
+      videoShowing: io.dataOutput({
+        id: "videoShowing",
+        name: "Video Showing",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSourceActive", {
         sourceName: ctx.getInput(io.sourceName),
       });
@@ -601,129 +610,118 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
 
   //Missing SaveSourceScreenshot as it has Base64-Encoded Screenshot data
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Group List",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "groups",
         name: "Groups",
         type: t.list(t.string()),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetGroupList");
       ctx.setOutput(io, data.groups);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Current Program Scene",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "currentProgramSceneName",
-        name: "Current Program Scene Name",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetCurrentProgramScene");
       ctx.setOutput(io, data.currentProgramSceneName);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Current Program Scene",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("SetCurrentProgramScene", {
         sceneName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Current Preview Scene",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "currentPreviewSceneName",
         name: "Current Program Scene Name",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetCurrentPreviewScene");
       ctx.setOutput(io, data.currentPreviewSceneName);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Current Preview Scene",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("SetCurrentPreviewScene", {
         sceneName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Create Scene",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("CreateScene", { sceneName: ctx.getInput(io) });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Remove Scene",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("RemoveScene", { sceneName: ctx.getInput(io) });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Scene Name",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        newSceneName: io.dataInput({
-          id: "newSceneName",
-          name: "New Scene Name",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      newSceneName: io.dataInput({
+        id: "newSceneName",
+        name: "New Scene Name",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetSceneName", {
         sceneName: ctx.getInput(io.sceneName),
         newSceneName: ctx.getInput(io.newSceneName),
@@ -731,29 +729,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Transition Override",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        transitionName: io.dataOutput({
-          id: "transitionName",
-          name: "Transition Name",
-          type: t.string(),
-        }),
-        transitionDuration: io.dataOutput({
-          id: "transitionDuration",
-          name: "Transition Duration",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      transitionName: io.dataOutput({
+        id: "transitionName",
+        name: "Transition Name",
+        type: t.string(),
+      }),
+      transitionDuration: io.dataOutput({
+        id: "transitionDuration",
+        name: "Transition Duration",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneSceneTransitionOverride", {
         sceneName: ctx.getInput(io.sceneName),
       });
@@ -762,29 +757,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Scene Transition Override",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        transitionName: io.dataInput({
-          id: "transitionName",
-          name: "Transition Name",
-          type: t.string(),
-        }),
-        transitionDuration: io.dataInput({
-          id: "transitionDuration",
-          name: "Transition Duration",
-          type: t.int(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      transitionName: io.dataInput({
+        id: "transitionName",
+        name: "Transition Name",
+        type: t.string(),
+      }),
+      transitionDuration: io.dataInput({
+        id: "transitionDuration",
+        name: "Transition Duration",
+        type: t.int(),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetSceneSceneTransitionOverride", {
         sceneName: ctx.getInput(io.sceneName),
         transitionName: ctx.getInput(io.transitionName),
@@ -793,24 +785,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Kind List",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        unversioned: io.dataInput({
-          id: "unversioned",
-          name: "Unversioned",
-          type: t.bool(),
-        }),
-        inputKinds: io.dataOutput({
-          id: "inputKinds",
-          name: "Input Kinds",
-          type: t.list(t.string()),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      unversioned: io.dataInput({
+        id: "unversioned",
+        name: "Unversioned",
+        type: t.bool(),
+      }),
+      inputKinds: io.dataOutput({
+        id: "inputKinds",
+        name: "Input Kinds",
+        type: t.list(t.string()),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputKindList", {
         unversioned: ctx.getInput(io.unversioned),
       });
@@ -827,58 +816,54 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     ["mic4", "Mic4"],
   ] as const;
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Special Inputs",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       SpecialInputsOutputs.map(
         ([id, name]) =>
           [id, io.dataOutput({ id, name, type: t.string() })] as const
       ),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSpecialInputs");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Create Input",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputKind: io.dataInput({
-          id: "inputKind",
-          name: "Input kind",
-          type: t.string(),
-        }),
-        inputSettings: io.dataInput({
-          id: "inputSettings",
-          name: "Input Settings",
-          type: t.map(t.enum(JSON)),
-        }),
-        sceneItemEnabled: io.dataInput({
-          id: "sceneItemEnabled",
-          name: "Scene Item Enabled",
-          type: t.bool(),
-        }),
-        sceneItemId: io.dataOutput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputKind: io.dataInput({
+        id: "inputKind",
+        name: "Input kind",
+        type: t.string(),
+      }),
+      inputSettings: io.dataInput({
+        id: "inputSettings",
+        name: "Input Settings",
+        type: t.map(t.enum(JSON)),
+      }),
+      sceneItemEnabled: io.dataInput({
+        id: "sceneItemEnabled",
+        name: "Scene Item Enabled",
+        type: t.bool(),
+      }),
+      sceneItemId: io.dataOutput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("CreateInput", {
         inputKind: ctx.getInput(io.inputKind),
         sceneName: ctx.getInput(io.sceneName),
@@ -895,40 +880,36 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Remove Input",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
       }),
-    run({ ctx, io }) {
+    run({ ctx, io, obs }) {
       obs.call("RemoveInput", {
         inputName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Name",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        newInputName: io.dataInput({
-          id: "newInputName",
-          name: "New Input Name",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      newInputName: io.dataInput({
+        id: "newInputName",
+        name: "New Input Name",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetInputName", {
         inputName: ctx.getInput(io.inputName),
         newInputName: ctx.getInput(io.newInputName),
@@ -936,24 +917,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input List",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputKind: io.dataInput({
-          id: "inputKind",
-          name: "Input Kind",
-          type: t.string(),
-        }),
-        inputs: io.dataOutput({
-          id: "inputs",
-          name: "Inputs",
-          type: t.list(t.struct(InputInfo)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputKind: io.dataInput({
+        id: "inputKind",
+        name: "Input Kind",
+        type: t.string(),
+      }),
+      inputs: io.dataOutput({
+        id: "inputs",
+        name: "Inputs",
+        type: t.list(t.struct(InputInfo)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call(
         "GetInputList",
         ctx.getInput(io.inputKind)
@@ -975,29 +953,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene List",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        currentProgramSceneName: io.dataOutput({
-          id: "currentProgramSceneName",
-          name: "Program Scene Name",
-          type: t.string(),
-        }),
-        currentPreviewSceneName: io.dataOutput({
-          id: "currentPreviewSceneName",
-          name: "Preview Scene Name",
-          type: t.string(),
-        }),
-        inputs: io.dataOutput({
-          id: "inputs",
-          name: "Inputs",
-          type: t.list(t.struct(Scene)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      currentProgramSceneName: io.dataOutput({
+        id: "currentProgramSceneName",
+        name: "Program Scene Name",
+        type: t.string(),
+      }),
+      currentPreviewSceneName: io.dataOutput({
+        id: "currentPreviewSceneName",
+        name: "Preview Scene Name",
+        type: t.string(),
+      }),
+      inputs: io.dataOutput({
+        id: "inputs",
+        name: "Inputs",
+        type: t.list(t.struct(Scene)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneList");
 
       const scene = data.scenes.map((input) =>
@@ -1013,24 +988,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Default Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputKind: io.dataInput({
-          id: "inputKind",
-          name: "Input Kind",
-          type: t.string(),
-        }),
-        defaultInputSettings: io.dataOutput({
-          id: "defaultInputSettings",
-          name: "Default Input Settings",
-          type: t.enum(JSON),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputKind: io.dataInput({
+        id: "inputKind",
+        name: "Input Kind",
+        type: t.string(),
+      }),
+      defaultInputSettings: io.dataOutput({
+        id: "defaultInputSettings",
+        name: "Default Input Settings",
+        type: t.enum(JSON),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputDefaultSettings", {
         inputKind: ctx.getInput(io.inputKind),
       });
@@ -1042,29 +1014,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputSettings: io.dataOutput({
-          id: "inputSettings",
-          name: "Input Settings",
-          type: t.map(t.enum(JSON)),
-        }),
-        inputKind: io.dataOutput({
-          id: "inputKind",
-          name: "Input Kind",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputSettings: io.dataOutput({
+        id: "inputSettings",
+        name: "Input Settings",
+        type: t.map(t.enum(JSON)),
+      }),
+      inputKind: io.dataOutput({
+        id: "inputKind",
+        name: "Input Kind",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputSettings", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1081,29 +1050,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputSettings: io.dataInput({
-          id: "inputSettings",
-          name: "Input Settings",
-          type: t.map(t.enum(JSON)),
-        }),
-        overlay: io.dataInput({
-          id: "overlay",
-          name: "Overlay",
-          type: t.bool(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputSettings: io.dataInput({
+        id: "inputSettings",
+        name: "Input Settings",
+        type: t.map(t.enum(JSON)),
+      }),
+      overlay: io.dataInput({
+        id: "overlay",
+        name: "Overlay",
+        type: t.bool(),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetInputSettings", {
         inputName: ctx.getInput(io.inputName),
         inputSettings: jsonToJS({
@@ -1117,24 +1083,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Mute",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputMuted: io.dataOutput({
-          id: "inputMuted",
-          name: "Input Muted",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputMuted: io.dataOutput({
+        id: "inputMuted",
+        name: "Input Muted",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputMute", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1142,24 +1105,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Mute",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputMuted: io.dataInput({
-          id: "inputMuted",
-          name: "Input Muted",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputMuted: io.dataInput({
+        id: "inputMuted",
+        name: "Input Muted",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetInputMute", {
         inputName: ctx.getInput(io.inputName),
         inputMuted: ctx.getInput(io.inputMuted),
@@ -1167,24 +1127,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Toggle Input Mute",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputMuted: io.dataOutput({
-          id: "inputMuted",
-          name: "Input Muted",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputMuted: io.dataOutput({
+        id: "inputMuted",
+        name: "Input Muted",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("ToggleInputMute", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1192,29 +1149,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Volume",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputVolumeMul: io.dataOutput({
-          id: "inputVolumeMul",
-          name: "Input Volume Mul",
-          type: t.int(),
-        }),
-        inputVolumeDb: io.dataOutput({
-          id: "inputVolumeDb",
-          name: "Input Volume Db",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputVolumeMul: io.dataOutput({
+        id: "inputVolumeMul",
+        name: "Input Volume Mul",
+        type: t.int(),
+      }),
+      inputVolumeDb: io.dataOutput({
+        id: "inputVolumeDb",
+        name: "Input Volume Db",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputVolume", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1223,24 +1177,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Volume (dB)",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputVolumeDb: io.dataInput({
-          id: "inputVolumeDb",
-          name: "Input Volume (dB)",
-          type: t.float(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputVolumeDb: io.dataInput({
+        id: "inputVolumeDb",
+        name: "Input Volume (dB)",
+        type: t.float(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetInputVolume", {
         inputName: ctx.getInput(io.inputName),
         inputVolumeDb: ctx.getInput(io.inputVolumeDb),
@@ -1248,24 +1199,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Volume (mul)",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputVolumeMul: io.dataInput({
-          id: "inputVolumeMul",
-          name: "Input Volume (mul)",
-          type: t.float(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputVolumeMul: io.dataInput({
+        id: "inputVolumeMul",
+        name: "Input Volume (mul)",
+        type: t.float(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetInputVolume", {
         inputName: ctx.getInput(io.inputName),
         inputVolumeMul: ctx.getInput(io.inputVolumeMul),
@@ -1273,24 +1221,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Audio Balance",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputAudioBalance: io.dataOutput({
-          id: "inputAudioBalance",
-          name: "Input Audio Balance",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputAudioBalance: io.dataOutput({
+        id: "inputAudioBalance",
+        name: "Input Audio Balance",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputAudioBalance", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1298,24 +1243,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Audio Balance",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputAudioBalance: io.dataInput({
-          id: "inputAudioBalance",
-          name: "Input Audio Balance",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputAudioBalance: io.dataInput({
+        id: "inputAudioBalance",
+        name: "Input Audio Balance",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetInputAudioBalance", {
         inputName: ctx.getInput(io.inputName),
         inputAudioBalance: ctx.getInput(io.inputAudioBalance),
@@ -1323,24 +1265,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Audio Sync Offset",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputAudioSyncOffset: io.dataOutput({
-          id: "inputAudioSyncOffset",
-          name: "Input Audio Sync Offset",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputAudioSyncOffset: io.dataOutput({
+        id: "inputAudioSyncOffset",
+        name: "Input Audio Sync Offset",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputAudioSyncOffset", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1348,24 +1287,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Audio Sync Offset",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputAudioSyncOffset: io.dataInput({
-          id: "inputAudioSyncOffset",
-          name: "Input Audio Sync Offset",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputAudioSyncOffset: io.dataInput({
+        id: "inputAudioSyncOffset",
+        name: "Input Audio Sync Offset",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetInputAudioSyncOffset", {
         inputName: ctx.getInput(io.inputName),
         inputAudioSyncOffset: ctx.getInput(io.inputAudioSyncOffset),
@@ -1373,24 +1309,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Audio Monitor Type",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        monitorType: io.dataOutput({
-          id: "monitorType",
-          name: "Monitor Type",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      monitorType: io.dataOutput({
+        id: "monitorType",
+        name: "Monitor Type",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputAudioMonitorType", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1398,24 +1331,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Audio Monitor Type",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        monitorType: io.dataInput({
-          id: "monitorType",
-          name: "Monitor Type",
-          type: t.enum(MonitorType),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      monitorType: io.dataInput({
+        id: "monitorType",
+        name: "Monitor Type",
+        type: t.enum(MonitorType),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = ctx.getInput(io.monitorType);
 
       obs.call("SetInputAudioMonitorType", {
@@ -1430,24 +1360,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Input Audio Tracks",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputAudioTracks: io.dataOutput({
-          id: "inputAudioTracks",
-          name: "Input Audio Tracks",
-          type: t.enum(JSON),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputAudioTracks: io.dataOutput({
+        id: "inputAudioTracks",
+        name: "Input Audio Tracks",
+        type: t.enum(JSON),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputAudioTracks", {
         inputName: ctx.getInput(io.inputName),
       });
@@ -1459,24 +1386,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Input Audio Tracks",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        inputAudioTracks: io.dataInput({
-          id: "inputAudioTracks",
-          name: "Input Audio Tracks",
-          type: t.map(t.enum(JSON)),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      inputAudioTracks: io.dataInput({
+        id: "inputAudioTracks",
+        name: "Input Audio Tracks",
+        type: t.map(t.enum(JSON)),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetInputAudioTracks", {
         inputName: ctx.getInput(io.inputName),
         inputAudioTracks: jsonToJS({
@@ -1489,29 +1413,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get input Properties List Property Items",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        propertyName: io.dataInput({
-          id: "propertyName",
-          name: "Property Name",
-          type: t.string(),
-        }),
-        propertyItems: io.dataOutput({
-          id: "propertyItems",
-          name: "Property Items",
-          type: t.list(t.struct(PropertyItem)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      propertyName: io.dataInput({
+        id: "propertyName",
+        name: "Property Name",
+        type: t.string(),
+      }),
+      propertyItems: io.dataOutput({
+        id: "propertyItems",
+        name: "Property Items",
+        type: t.list(t.struct(PropertyItem)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputPropertiesListPropertyItems", {
         inputName: ctx.getInput(io.inputName),
         propertyName: ctx.getInput(io.propertyName),
@@ -1529,24 +1450,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Press Input Properties Button",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        propertyName: io.dataInput({
-          id: "propertyName",
-          name: "Property Name",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      propertyName: io.dataInput({
+        id: "propertyName",
+        name: "Property Name",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("PressInputPropertiesButton", {
         inputName: ctx.getInput(io.inputName),
         propertyName: ctx.getInput(io.propertyName),
@@ -1554,44 +1472,40 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Transition Kind List",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "transitionKinds",
         name: "Transition Kinds",
         type: t.list(t.string()),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetTransitionKindList");
       ctx.setOutput(io, data.transitionKinds);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Transition List",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        currentSceneTransitionName: io.dataOutput({
-          id: "currentSceneTransitionName",
-          name: "Current Scene Transition Name",
-          type: t.string(),
-        }),
-        currentSceneTransitionKind: io.dataOutput({
-          id: "currentSceneTransitionKind",
-          name: "Current Scene Transition Kind",
-          type: t.string(),
-        }),
-        transitions: io.dataOutput({
-          id: "transitions",
-          name: "Transitions",
-          type: t.list(t.struct(Transition)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      currentSceneTransitionName: io.dataOutput({
+        id: "currentSceneTransitionName",
+        name: "Current Scene Transition Name",
+        type: t.string(),
+      }),
+      currentSceneTransitionKind: io.dataOutput({
+        id: "currentSceneTransitionKind",
+        name: "Current Scene Transition Kind",
+        type: t.string(),
+      }),
+      transitions: io.dataOutput({
+        id: "transitions",
+        name: "Transitions",
+        type: t.list(t.struct(Transition)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneTransitionList");
 
       ctx.setOutput(
@@ -1616,44 +1530,41 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Current Scene Transition",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        transitionName: io.dataOutput({
-          id: "transitionName",
-          name: "Transition Name",
-          type: t.string(),
-        }),
-        transitionKind: io.dataOutput({
-          id: "transitionKind",
-          name: "Transition Kind",
-          type: t.string(),
-        }),
-        transitionFixed: io.dataOutput({
-          id: "transitionFixed",
-          name: "Transition Fixed",
-          type: t.bool(),
-        }),
-        transitionDuration: io.dataOutput({
-          id: "transitionDuration",
-          name: "Transition Duration",
-          type: t.option(t.int()),
-        }),
-        transitionConfigurable: io.dataOutput({
-          id: "transitionConfigurable",
-          name: "Transition Configurable",
-          type: t.bool(),
-        }),
-        transitionSettings: io.dataOutput({
-          id: "transitionSettings",
-          name: "Transition Settings",
-          type: t.option(t.enum(JSON)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      transitionName: io.dataOutput({
+        id: "transitionName",
+        name: "Transition Name",
+        type: t.string(),
+      }),
+      transitionKind: io.dataOutput({
+        id: "transitionKind",
+        name: "Transition Kind",
+        type: t.string(),
+      }),
+      transitionFixed: io.dataOutput({
+        id: "transitionFixed",
+        name: "Transition Fixed",
+        type: t.bool(),
+      }),
+      transitionDuration: io.dataOutput({
+        id: "transitionDuration",
+        name: "Transition Duration",
+        type: t.option(t.int()),
+      }),
+      transitionConfigurable: io.dataOutput({
+        id: "transitionConfigurable",
+        name: "Transition Configurable",
+        type: t.bool(),
+      }),
+      transitionSettings: io.dataOutput({
+        id: "transitionSettings",
+        name: "Transition Settings",
+        type: t.option(t.enum(JSON)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetCurrentSceneTransition");
 
       ctx.setOutput(io.transitionName, data.transitionName);
@@ -1668,56 +1579,51 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Current Scene Transition",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "transitionName",
         name: "Transition Name",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       obs.call("SetCurrentSceneTransition", {
         transitionName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Current Scene Transition Duration",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "transitionDuration",
         name: "Transition Duration",
         type: t.int(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       obs.call("SetCurrentSceneTransitionDuration", {
         transitionDuration: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Current Scene Transition Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        transitionSettings: io.dataInput({
-          id: "transitionSettings",
-          name: "Transition Settings",
-          type: t.map(t.enum(JSON)),
-        }),
-        overlay: io.dataInput({
-          id: "overlay",
-          name: "Overlay",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      transitionSettings: io.dataInput({
+        id: "transitionSettings",
+        name: "Transition Settings",
+        type: t.map(t.enum(JSON)),
+      }),
+      overlay: io.dataInput({
+        id: "overlay",
+        name: "Overlay",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetCurrentSceneTransitionSettings", {
         transitionSettings: jsonToJS({
           variant: "Map",
@@ -1730,48 +1636,43 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Current Scene Transition Cursor",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "transitionCursor",
         name: "Transition Cursor",
         type: t.int(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetCurrentSceneTransitionCursor");
       ctx.setOutput(io, data.transitionCursor);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Trigger Studio Mode Transition",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       await obs.call("TriggerStudioModeTransition");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set T Bar Position",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        position: io.dataInput({
-          id: "position",
-          name: "Position",
-          type: t.int(),
-        }),
-        release: io.dataInput({
-          id: "release",
-          name: "Release",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      position: io.dataInput({
+        id: "position",
+        name: "Position",
+        type: t.int(),
+      }),
+      release: io.dataInput({
+        id: "release",
+        name: "Release",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetTBarPosition", {
         position: ctx.getInput(io.position),
         release: ctx.getInput(io.release),
@@ -1779,24 +1680,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Source Filter List",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filters: io.dataOutput({
-          id: "filters",
-          name: "Filters",
-          type: t.list(t.struct(Filter)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filters: io.dataOutput({
+        id: "filters",
+        name: "Filters",
+        type: t.list(t.struct(Filter)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSourceFilterList", {
         sourceName: ctx.getInput(io.sourceName),
       });
@@ -1815,24 +1713,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Source Filter Default Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        filterKind: io.dataInput({
-          id: "filterKind",
-          name: "Filter Kind",
-          type: t.string(),
-        }),
-        defaultFilterSettings: io.dataOutput({
-          id: "defaultFilterSettings",
-          name: "Default Filter Settings",
-          type: t.enum(JSON),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      filterKind: io.dataInput({
+        id: "filterKind",
+        name: "Filter Kind",
+        type: t.string(),
+      }),
+      defaultFilterSettings: io.dataOutput({
+        id: "defaultFilterSettings",
+        name: "Default Filter Settings",
+        type: t.enum(JSON),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSourceFilterDefaultSettings", {
         filterKind: ctx.getInput(io.filterKind),
       });
@@ -1844,34 +1739,31 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Create Source Filter",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filterName: io.dataInput({
-          id: "filterName",
-          name: "Filter Name",
-          type: t.string(),
-        }),
-        filterKind: io.dataInput({
-          id: "filterKind",
-          name: "Filter Kind",
-          type: t.string(),
-        }),
-        filterSettings: io.dataInput({
-          id: "filterSettings",
-          name: "Filter Settings",
-          type: t.map(t.enum(JSON)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filterName: io.dataInput({
+        id: "filterName",
+        name: "Filter Name",
+        type: t.string(),
+      }),
+      filterKind: io.dataInput({
+        id: "filterKind",
+        name: "Filter Kind",
+        type: t.string(),
+      }),
+      filterSettings: io.dataInput({
+        id: "filterSettings",
+        name: "Filter Settings",
+        type: t.map(t.enum(JSON)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("CreateSourceFilter", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
@@ -1888,24 +1780,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Remove Source Filter",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filterName: io.dataInput({
-          id: "filterName",
-          name: "Filter Name",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filterName: io.dataInput({
+        id: "filterName",
+        name: "Filter Name",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("RemoveSourceFilter", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
@@ -1913,29 +1802,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Source Filter Name",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filterName: io.dataInput({
-          id: "filterName",
-          name: "Filter Name",
-          type: t.string(),
-        }),
-        newFilterName: io.dataInput({
-          id: "newFilterName",
-          name: "New Filter Name",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filterName: io.dataInput({
+        id: "filterName",
+        name: "Filter Name",
+        type: t.string(),
+      }),
+      newFilterName: io.dataInput({
+        id: "newFilterName",
+        name: "New Filter Name",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetSourceFilterName", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
@@ -1944,29 +1830,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Source Filter",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filterName: io.dataInput({
-          id: "filterName",
-          name: "Filter Name",
-          type: t.string(),
-        }),
-        filter: io.dataOutput({
-          id: "filter",
-          name: "Filter",
-          type: t.option(t.struct(Filter)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filterName: io.dataInput({
+        id: "filterName",
+        name: "Filter Name",
+        type: t.string(),
+      }),
+      filter: io.dataOutput({
+        id: "filter",
+        name: "Filter",
+        type: t.option(t.struct(Filter)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs
         .call("GetSourceFilter", {
           sourceName: ctx.getInput(io.sourceName),
@@ -1989,29 +1872,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Source Filter Name",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filterName: io.dataInput({
-          id: "filterName",
-          name: "Filter Name",
-          type: t.string(),
-        }),
-        filterIndex: io.dataInput({
-          id: "filterIndex",
-          name: "Filter Index",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filterName: io.dataInput({
+        id: "filterName",
+        name: "Filter Name",
+        type: t.string(),
+      }),
+      filterIndex: io.dataInput({
+        id: "filterIndex",
+        name: "Filter Index",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetSourceFilterIndex", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
@@ -2020,34 +1900,31 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Source Filter Settings",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filterName: io.dataInput({
-          id: "filterName",
-          name: "Filter Name",
-          type: t.string(),
-        }),
-        filterSettings: io.dataInput({
-          id: "filterSettings",
-          name: "Filter Settings",
-          type: t.map(t.enum(JSON)),
-        }),
-        overlay: io.dataInput({
-          id: "overlay",
-          name: "Overlay",
-          type: t.bool(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filterName: io.dataInput({
+        id: "filterName",
+        name: "Filter Name",
+        type: t.string(),
+      }),
+      filterSettings: io.dataInput({
+        id: "filterSettings",
+        name: "Filter Settings",
+        type: t.map(t.enum(JSON)),
+      }),
+      overlay: io.dataInput({
+        id: "overlay",
+        name: "Overlay",
+        type: t.bool(),
+      }),
+    }),
+    run({ ctx, io, obs }) {
       obs.call("SetSourceFilterSettings", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
@@ -2062,29 +1939,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Source Filter Enabled",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        filterName: io.dataInput({
-          id: "filterName",
-          name: "Filter Name",
-          type: t.string(),
-        }),
-        filterEnabled: io.dataInput({
-          id: "filterEnabled",
-          name: "Filter Enabled",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      filterName: io.dataInput({
+        id: "filterName",
+        name: "Filter Name",
+        type: t.string(),
+      }),
+      filterEnabled: io.dataInput({
+        id: "filterEnabled",
+        name: "Filter Enabled",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetSourceFilterEnabled", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
@@ -2093,24 +1967,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Item List",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItems: io.dataOutput({
-          id: "sceneItems",
-          name: "Scene Items",
-          type: t.list(t.struct(SceneItem)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItems: io.dataOutput({
+        id: "sceneItems",
+        name: "Scene Items",
+        type: t.list(t.struct(SceneItem)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       console.log(obs);
       const data = await obs.call("GetSceneItemList", {
         sceneName: ctx.getInput(io.sceneName),
@@ -2168,34 +2039,31 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
 
   //GetGroupSceneItemList - groups are dumb dont use
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Item Id",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        searchOffset: io.dataInput({
-          id: "searchOffset",
-          name: "Search Offset",
-          type: t.int(),
-        }),
-        sceneItemId: io.dataOutput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      searchOffset: io.dataInput({
+        id: "searchOffset",
+        name: "Search Offset",
+        type: t.int(),
+      }),
+      sceneItemId: io.dataOutput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemId", {
         sceneName: ctx.getInput(io.sceneName),
         sourceName: ctx.getInput(io.sourceName),
@@ -2205,34 +2073,31 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Create Scene Item",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sourceName: io.dataInput({
-          id: "sourceName",
-          name: "Source Name",
-          type: t.string(),
-        }),
-        sceneItemEnabled: io.dataInput({
-          id: "sceneItemEnabled",
-          name: "Search Offset",
-          type: t.bool(),
-        }),
-        sceneItemId: io.dataOutput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sourceName: io.dataInput({
+        id: "sourceName",
+        name: "Source Name",
+        type: t.string(),
+      }),
+      sceneItemEnabled: io.dataInput({
+        id: "sceneItemEnabled",
+        name: "Search Offset",
+        type: t.bool(),
+      }),
+      sceneItemId: io.dataOutput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("CreateSceneItem", {
         sceneName: ctx.getInput(io.sceneName),
         sourceName: ctx.getInput(io.sourceName),
@@ -2242,24 +2107,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Remove Scene Item",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("RemoveSceneItem", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2267,34 +2129,31 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Duplicate Scene Item",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemIdIn: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        destinationSceneName: io.dataInput({
-          id: "destinationSceneName",
-          name: "Destination Scene Name",
-          type: t.string(),
-        }),
-        sceneItemIdOut: io.dataOutput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemIdIn: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      destinationSceneName: io.dataInput({
+        id: "destinationSceneName",
+        name: "Destination Scene Name",
+        type: t.string(),
+      }),
+      sceneItemIdOut: io.dataOutput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("DuplicateSceneItem", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemIdIn),
@@ -2304,29 +2163,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Item Transform",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item ID",
-          type: t.int(),
-        }),
-        sceneItemTransform: io.dataOutput({
-          id: "sceneItemTransform",
-          name: "Scene Item Transform",
-          type: t.struct(SceneItemTransform),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item ID",
+        type: t.int(),
+      }),
+      sceneItemTransform: io.dataOutput({
+        id: "sceneItemTransform",
+        name: "Scene Item Transform",
+        type: t.struct(SceneItemTransform),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemTransform", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2368,29 +2224,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Scene Item Transform",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item ID",
-          type: t.int(),
-        }),
-        sceneItemTransform: io.dataInput({
-          id: "sceneItemTransform",
-          name: "Scene Item Transform",
-          type: t.map(t.enum(JSON)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item ID",
+        type: t.int(),
+      }),
+      sceneItemTransform: io.dataInput({
+        id: "sceneItemTransform",
+        name: "Scene Item Transform",
+        type: t.map(t.enum(JSON)),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetSceneItemTransform", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2404,29 +2257,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Item Enabled",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemEnabled: io.dataOutput({
-          id: "sceneItemEnabled",
-          name: "Scene Item Enabled",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemEnabled: io.dataOutput({
+        id: "sceneItemEnabled",
+        name: "Scene Item Enabled",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemEnabled", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2435,29 +2285,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Scene Item Enabled",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemEnabled: io.dataInput({
-          id: "sceneItemEnabled",
-          name: "Scene Item Enabled",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemEnabled: io.dataInput({
+        id: "sceneItemEnabled",
+        name: "Scene Item Enabled",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       await obs.call("SetSceneItemEnabled", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2466,29 +2313,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Item Locked",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemLocked: io.dataOutput({
-          id: "sceneItemLocked",
-          name: "Scene Item Locked",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemLocked: io.dataOutput({
+        id: "sceneItemLocked",
+        name: "Scene Item Locked",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemLocked", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2497,29 +2341,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Scene Item Locked",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemLocked: io.dataInput({
-          id: "sceneItemLocked",
-          name: "Scene Item Locked",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemLocked: io.dataInput({
+        id: "sceneItemLocked",
+        name: "Scene Item Locked",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetSceneItemLocked", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2528,29 +2369,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Item Index",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemIndex: io.dataOutput({
-          id: "sceneItemIndex",
-          name: "Scene Item Index",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemIndex: io.dataOutput({
+        id: "sceneItemIndex",
+        name: "Scene Item Index",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemIndex", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2559,29 +2397,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Scene Item Index",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemIndex: io.dataInput({
-          id: "sceneItemIndex",
-          name: "Scene Item Index",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemIndex: io.dataInput({
+        id: "sceneItemIndex",
+        name: "Scene Item Index",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetSceneItemIndex", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2590,29 +2425,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Scene Item Blend Mode",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemBlendMode: io.dataOutput({
-          id: "sceneItemBlendMode",
-          name: "Scene Item Blend Mode",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemBlendMode: io.dataOutput({
+        id: "sceneItemBlendMode",
+        name: "Scene Item Blend Mode",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemBlendMode", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2621,29 +2453,26 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Scene Item Blend Mode",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        sceneName: io.dataInput({
-          id: "sceneName",
-          name: "Scene Name",
-          type: t.string(),
-        }),
-        sceneItemId: io.dataInput({
-          id: "sceneItemId",
-          name: "Scene Item Id",
-          type: t.int(),
-        }),
-        sceneItemBlendMode: io.dataInput({
-          id: "sceneItemBlendMode",
-          name: "Scene Item Blend Mode",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      sceneName: io.dataInput({
+        id: "sceneName",
+        name: "Scene Name",
+        type: t.string(),
+      }),
+      sceneItemId: io.dataInput({
+        id: "sceneItemId",
+        name: "Scene Item Id",
+        type: t.int(),
+      }),
+      sceneItemBlendMode: io.dataInput({
+        id: "sceneItemBlendMode",
+        name: "Scene Item Blend Mode",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetSceneItemBlendMode", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
@@ -2652,136 +2481,125 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Virtual Cam Status",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
         type: t.bool(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetVirtualCamStatus");
       ctx.setOutput(io, data.outputActive);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Toggle Virtual Cam",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
         type: t.bool(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("ToggleVirtualCam");
       ctx.setOutput(io, data.outputActive);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Start Virtual Cam",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("StartVirtualCam");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Stop Virtual Cam",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("StopVirtualCam");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Replay Buffer Status",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
         type: t.bool(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetReplayBufferStatus");
       ctx.setOutput(io, data.outputActive);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Toggle Replay Buffer",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
         type: t.bool(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("ToggleReplayBuffer");
       ctx.setOutput(io, data.outputActive);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Start Replay Buffer",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("StartReplayBuffer");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Stop Replay Buffer",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("StopReplayBuffer");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Save Replay Buffer",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("SaveReplayBuffer");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Last Replay Buffer Replay",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "savedReplayPath",
         name: "Save Replay Path",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetLastReplayBufferReplay");
       ctx.setOutput(io, data.savedReplayPath);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Output List",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputs",
         name: "Outputs",
         type: t.list(t.enum(JSON)),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetOutputList" as any);
       ctx.setOutput(io, data.outputs);
     },
@@ -2832,9 +2650,9 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //   },
   // ] as const;
 
-  // pkg.createNonEventSchema({
+  // createOBSExecSchema({
   //   name: "Toggle Output",
-  //   variant: "Exec",
+  //   type: "exec",
   //   generateIO({io}) {
   //    io.dataInput({
   //       id: "outputName",
@@ -2851,9 +2669,9 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //   },
   // });
 
-  // pkg.createNonEventSchema({
+  // createOBSExecSchema({
   //   name: "Start Output",
-  //   variant: "Exec",
+  //   type: "exec",
   //   generateIO({io}) {
   //    io.dataInput({
   //       id: "outputName",
@@ -2868,9 +2686,9 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //   },
   // });
 
-  // pkg.createNonEventSchema({
+  // createOBSExecSchema({
   //   name: "Stop Output",
-  //   variant: "Exec",
+  //   type: "exec",
   //   generateIO({io}) {
   //    io.dataInput({
   //       id: "outputName",
@@ -2932,99 +2750,91 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   ] as const;
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Toggle Output",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       StreamStatus.map((data) => [data.id, io.dataOutput(data)] as const),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetStreamStatus");
       io.forEach(([id, output]) => ctx.setOutput(output, data[id]));
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Toggle Stream",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputActive",
         name: "Ouput Active",
         type: t.bool(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("ToggleStream");
       ctx.setOutput(io, data.outputActive);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Start Stream",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("StartStream");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Stop Stream",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("StopStream");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Send Stream Caption",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "captionText",
         name: "Caption Text",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       obs.call("SendStreamCaption", {
         captionText: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Record Status",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        outputActive: io.dataOutput({
-          id: "outputActive",
-          name: "Output Active",
-          type: t.bool(),
-        }),
-        outputPaused: io.dataOutput({
-          id: "outputPaused",
-          name: "Output Paused",
-          type: t.bool(),
-        }),
-        outputTimecode: io.dataOutput({
-          id: "outputTimecode",
-          name: "Output Timecode",
-          type: t.string(),
-        }),
-        outputDuration: io.dataOutput({
-          id: "outputDuration",
-          name: "Output Duration",
-          type: t.int(),
-        }),
-        outputBytes: io.dataOutput({
-          id: "outputBytes",
-          name: "Output Bytes",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      outputActive: io.dataOutput({
+        id: "outputActive",
+        name: "Output Active",
+        type: t.bool(),
+      }),
+      outputPaused: io.dataOutput({
+        id: "outputPaused",
+        name: "Output Paused",
+        type: t.bool(),
+      }),
+      outputTimecode: io.dataOutput({
+        id: "outputTimecode",
+        name: "Output Timecode",
+        type: t.string(),
+      }),
+      outputDuration: io.dataOutput({
+        id: "outputDuration",
+        name: "Output Duration",
+        type: t.int(),
+      }),
+      outputBytes: io.dataOutput({
+        id: "outputBytes",
+        name: "Output Bytes",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetRecordStatus");
       ctx.setOutput(io.outputActive, data.outputActive);
       ctx.setOutput(io.outputPaused, (data as any).outputPaused);
@@ -3034,121 +2844,110 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Toggle Record",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       obs.call("ToggleRecord");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Start Record",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       await obs.call("StartRecord");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Stop Record",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "outputPath",
         name: "Output Path",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("StopRecord");
       ctx.setOutput(io, (data as any).outputPath);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Toggle Record Paused",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       await obs.call("ToggleRecordPause");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Pause Record",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       await obs.call("PauseRecord");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Resume Record",
-    variant: "Exec",
-    generateIO() {},
-    async run() {
+    createIO() {},
+    async run({ obs }) {
       await obs.call("ResumeRecord");
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Media Input Status",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        mediaState: io.dataOutput({
-          id: "mediaState	",
-          name: "Media State",
-          type: t.string(),
-        }),
-        mediaDuration: io.dataOutput({
-          id: "mediaDuration",
-          name: "Media Duration",
-          type: t.int(),
-        }),
-        mediaCursor: io.dataOutput({
-          id: "mediaCursor",
-          name: "Media Cursor",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      mediaState: io.dataOutput({
+        id: "mediaState	",
+        name: "Media State",
+        type: t.string(),
+      }),
+      mediaDuration: io.dataOutput({
+        id: "mediaDuration",
+        name: "Media Duration",
+        type: t.int(),
+      }),
+      mediaCursor: io.dataOutput({
+        id: "mediaCursor",
+        name: "Media Cursor",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetMediaInputStatus", {
         inputName: ctx.getInput(io.inputName),
       });
+      console.log(data);
       ctx.setOutput(io.mediaState, data.mediaState);
       ctx.setOutput(io.mediaDuration, data.mediaDuration);
       ctx.setOutput(io.mediaCursor, data.mediaCursor);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Media Input Cursor",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        mediaCursor: io.dataInput({
-          id: "mediaCursor",
-          name: "Media Cursor",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      mediaCursor: io.dataInput({
+        id: "mediaCursor",
+        name: "Media Cursor",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("SetMediaInputCursor", {
         inputName: ctx.getInput(io.inputName),
         mediaCursor: ctx.getInput(io.mediaCursor),
@@ -3156,24 +2955,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Offset Media Input Cursor",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        mediaCursorOffset: io.dataInput({
-          id: "mediaCursorOffset",
-          name: "Media Cursor Offset",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      mediaCursorOffset: io.dataInput({
+        id: "mediaCursorOffset",
+        name: "Media Cursor Offset",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("OffsetMediaInputCursor", {
         inputName: ctx.getInput(io.inputName),
         mediaCursorOffset: ctx.getInput(io.mediaCursorOffset),
@@ -3181,24 +2977,21 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Trigger Media Input Action",
-    variant: "Exec",
-    generateIO: ({ io }) => {
-      return {
-        inputName: io.dataInput({
-          id: "inputName",
-          name: "Input Name",
-          type: t.string(),
-        }),
-        mediaAction: io.dataInput({
-          id: "mediaAction",
-          name: "Media Action",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      inputName: io.dataInput({
+        id: "inputName",
+        name: "Input Name",
+        type: t.string(),
+      }),
+      mediaAction: io.dataInput({
+        id: "mediaAction",
+        name: "Media Action",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, obs }) {
       obs.call("TriggerMediaInputAction", {
         inputName: ctx.getInput(io.inputName),
         mediaAction: ctx.getInput(io.mediaAction),
@@ -3206,79 +2999,74 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Get Studio Mode Enabled",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataOutput({
         id: "studioModeEnabled",
         name: "Studio Mode Enabled",
         type: t.bool(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       const data = await obs.call("GetStudioModeEnabled");
       ctx.setOutput(io, data.studioModeEnabled);
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Set Studio Mode Enabled",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "studioModeEnabled",
         name: "Studio Mode Enabled",
         type: t.bool(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       obs.call("SetStudioModeEnabled", {
         studioModeEnabled: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Open Input Properties Dialogue",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       obs.call("OpenInputPropertiesDialog", {
         inputName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Open Input Filters Dialogue",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       obs.call("OpenInputFiltersDialog", {
         inputName: ctx.getInput(io),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createOBSExecSchema({
     name: "Open Input Interact Dialogue",
-    variant: "Exec",
-    generateIO: ({ io }) =>
+    createIO: ({ io }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
       }),
-    async run({ ctx, io }) {
+    async run({ ctx, io, obs }) {
       obs.call("OpenInputInteractDialog", {
         inputName: ctx.getInput(io),
       });
@@ -3287,9 +3075,9 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
 
   //GetMonitorList has array of objects
 
-  // pkg.createNonEventSchema({
+  // createOBSExecSchema({
   //   name: "Open Video Mix Projector",
-  //   variant: "Exec",
+  //   type: "exec",
   //   generateIO({io}) {
   //    io.dataInput({
   //       id: "videoMixType",
@@ -3316,9 +3104,9 @@ export function register(pkg: Package<EventTypes>, { obs }: Ctx) {
   //   },
   // });
 
-  // pkg.createNonEventSchema({
+  // createOBSExecSchema({
   //   name: "Open Source Projector",
-  //   variant: "Exec",
+  //   type: "exec",
   //   generateIO({io}) {
   //    io.dataInput({
   //       id: "sourceName",

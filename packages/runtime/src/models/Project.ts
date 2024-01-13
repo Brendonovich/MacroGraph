@@ -3,29 +3,31 @@ import { createMutable } from "solid-js/store";
 import { z } from "zod";
 
 import { Core } from "./Core";
-import { Graph, SerializedGraph } from "./Graph";
-import { CustomEvent, SerializedEvent } from "./CustomEvent";
+import { Graph } from "./Graph";
+import { CustomEvent } from "./CustomEvent";
+import { SerializedProject } from "./serialized";
+import { ResourceType } from "./Package";
 
 export interface ProjectArgs {
   core: Core;
 }
 
-export const SerializedProject = z.object({
-  graphs: z.array(SerializedGraph),
-  graphIdCounter: z.number().int(),
-  customEvents: z.array(SerializedEvent).default([]),
-  customEventIdCounter: z.number().int().default(0),
-});
+type ResourceEntry = {
+  items: Array<{ id: number; name: string; sourceId: string | null }>;
+  default: number | null;
+};
 
 export class Project {
   core: Core;
   graphs = new ReactiveMap<number, Graph>();
   customEvents = new ReactiveMap<number, CustomEvent>();
+  resources = new ReactiveMap<ResourceType<any, any>, ResourceEntry>();
 
   private disableSave = false;
 
   private graphIdCounter = 0;
   private customEventIdCounter = 0;
+  private counter = 0;
 
   constructor(args: ProjectArgs) {
     this.core = args.core;
@@ -72,12 +74,46 @@ export class Project {
     return event;
   }
 
+  createResource(args: { type: ResourceType<any, any>; name: string }) {
+    const id = this.counter++;
+    const item = {
+      id,
+      name: args.name,
+      sourceId: null,
+    };
+
+    if (!this.resources.has(args.type)) {
+      const entry: ResourceEntry = createMutable({
+        items: [
+          {
+            ...item,
+            sourceId: args.type.sources()[0]?.id ?? null,
+          },
+        ],
+        default: item.id,
+      });
+      this.resources.set(args.type, entry);
+      entry.default = id;
+    } else {
+      const entry = this.resources.get(args.type)!;
+      entry.items.push(item);
+    }
+  }
+
   serialize(): z.infer<typeof SerializedProject> {
     return {
       graphIdCounter: this.graphIdCounter,
       graphs: [...this.graphs.values()].map((g) => g.serialize()),
       customEventIdCounter: this.customEventIdCounter,
       customEvents: [...this.customEvents.values()].map((e) => e.serialize()),
+      counter: this.counter,
+      resources: [...this.resources].map(([type, entry]) => ({
+        type: {
+          pkg: type.package.name,
+          name: type.name,
+        },
+        entry,
+      })),
     };
   }
 
@@ -117,6 +153,27 @@ export class Project {
           return [event.id, event] as [number, CustomEvent];
         })
         .filter(Boolean) as [number, CustomEvent][]
+    );
+
+    project.counter = data.counter;
+
+    project.resources = new ReactiveMap(
+      data.resources
+        .map(({ type, entry }) => {
+          let resource: ResourceType<any, any> | undefined;
+
+          for (const r of core.packages.find((p) => p.name === type.pkg)
+            ?.resources ?? []) {
+            if (r.name === type.name) {
+              resource = r;
+              break;
+            }
+          }
+          if (!resource) return;
+
+          return [resource, createMutable(entry)] satisfies [any, any];
+        })
+        .filter(Boolean)
     );
 
     project.disableSave = false;

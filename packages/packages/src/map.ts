@@ -1,3 +1,4 @@
+import { JSON, toJSON } from "@macrograph/json";
 import { Package } from "@macrograph/runtime";
 import { Maybe, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -17,7 +18,7 @@ export function pkg() {
         default: 1,
       },
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const value = ctx.getProperty(properties.number);
       const w = io.wildcard("");
       return {
@@ -60,7 +61,7 @@ export function pkg() {
         default: 1,
       },
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const w = io.wildcard("");
       const value = ctx.getProperty(properties.number);
 
@@ -109,7 +110,7 @@ export function pkg() {
         default: 1,
       },
     },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const value = ctx.getProperty(properties.number);
       const w = io.wildcard("");
       const inputs = Array.from({ length: value }, (v, i) => ({
@@ -143,9 +144,55 @@ export function pkg() {
   });
 
   pkg.createNonEventSchema({
+    name: "JSON Map Create",
+    variant: "Pure",
+    properties: {
+      number: {
+        name: "Entries",
+        type: t.int(),
+        default: 1,
+      },
+    },
+    createIO({ io, ctx, properties }) {
+      const value = ctx.getProperty(properties.number);
+
+      const inputs = Array.from({ length: value }, (v, i) => ({
+        key: io.dataInput({
+          id: `key-${i}`,
+          type: t.string(),
+        }),
+        value: io.dataInput({
+          id: `value-${i}`,
+          type: t.wildcard(io.wildcard(`${i}`)),
+        }),
+      }));
+
+      return {
+        inputs,
+        out: io.dataOutput({
+          id: "",
+          type: t.map(t.enum(JSON)),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const map = new ReactiveMap<string, any>();
+
+      io.inputs.forEach((input) => {
+        map.set(
+          ctx.getInput(input.key),
+          toJSON(input.value.type, ctx.getInput(input.value))
+        );
+      });
+
+      ctx.setOutput(io.out, map);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Map Clear",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return io.dataInput({
@@ -161,7 +208,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Contains",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -190,7 +237,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Keys",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -214,7 +261,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Values",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -238,7 +285,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Size",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -262,7 +309,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Map Remove",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {

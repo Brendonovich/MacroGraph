@@ -21,7 +21,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "WS Emit",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         ip: io.dataInput({
           id: "ip",
@@ -43,7 +43,7 @@ export function pkg() {
   pkg.createEventSchema({
     event: "wsEvent",
     name: "WS Event",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execOutput({
           id: "exec",

@@ -30,7 +30,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "ChatGPT Message",
     variant: "Base",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         exec: io.execInput({
           id: "exec",
@@ -116,7 +116,7 @@ export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "Dall E Image Generation",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         prompt: io.dataInput({
           id: "prompt",

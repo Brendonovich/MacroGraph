@@ -36,7 +36,7 @@ export function pkg() {
     pkg.createEventSchema({
       name: `${a} Key`,
       event: `${toLowercase(a)}-key`,
-      generateIO({ io }) {
+      createIO({ io }) {
         return {
           pressed: io.execOutput({
             id: "pressed",
@@ -58,7 +58,7 @@ export function pkg() {
     pkg.createNonEventSchema({
       name: `${a} Key Pressed`,
       variant: "Pure",
-      generateIO({ io }) {
+      createIO({ io }) {
         return io.dataOutput({
           id: "value",
           type: t.bool(),

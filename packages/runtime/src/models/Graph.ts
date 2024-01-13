@@ -9,43 +9,16 @@ import {
   DataOutput,
   ExecInput,
   ExecOutput,
-  Node,
-  NodeArgs,
   Pin,
   ScopeInput,
   ScopeOutput,
-} from ".";
+} from "./IO";
 import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
-import { SerializedNode } from "./Node";
-import {
-  CommentBox,
-  CommentBoxArgs,
-  GetNodeSize,
-  SerializedCommentBox,
-} from "./CommentBox";
+import { Node, NodeArgs } from "./Node";
+import { CommentBox, CommentBoxArgs, GetNodeSize } from "./CommentBox";
 import { Project } from "./Project";
-import { SerializedVariable, Variable, VariableArgs } from "./Variable";
-
-export const SerializedConnection = z.object({
-  from: z.object({
-    node: z.coerce.number().int(),
-    output: z.string(),
-  }),
-  to: z.object({
-    node: z.coerce.number().int(),
-    input: z.string(),
-  }),
-});
-
-export const SerializedGraph = z.object({
-  id: z.coerce.number(),
-  name: z.string(),
-  nodes: z.record(z.coerce.number().int(), SerializedNode).default({}),
-  commentBoxes: z.array(SerializedCommentBox).default([]),
-  variables: z.array(SerializedVariable).default([]),
-  nodeIdCounter: z.number(),
-  connections: z.array(SerializedConnection).default([]),
-});
+import { Variable, VariableArgs } from "./Variable";
+import { SerializedConnection, SerializedGraph } from "./serialized";
 
 export interface GraphArgs {
   id: number;

@@ -33,7 +33,7 @@ import { createUIStore, UIStoreProvider } from "./UIStore";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import Settings from "./settings";
-import { GraphList } from "./components/ProjectSidebar";
+import { GraphList, Resources } from "./components/ProjectSidebar";
 import { PrintOutput } from "./components/PrintOutput";
 import { GraphSidebar, NodeSidebar } from "./Sidebars";
 import {
@@ -69,7 +69,7 @@ export function Interface(props: {
       await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
 
       return props.core.project;
-    } else return null;
+    } else return props.core.project;
   });
 
   return (
@@ -391,6 +391,7 @@ function ProjectInterface(props: {
                 />
                 <PrintOutput />
                 <CustomEventList />
+                <Resources />
               </div>
             </Sidebar>
 

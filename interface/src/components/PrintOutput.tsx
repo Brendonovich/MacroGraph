@@ -23,12 +23,13 @@ export const PrintOutput = () => {
       title="Print Output"
       right={
         <button
+          class="w-6 h-6 flex justify-center items-center"
           onClick={(e) => {
             e.stopPropagation();
             setItems([]);
           }}
         >
-          <IconAntDesignDeleteOutlined />
+          <IconAntDesignDeleteOutlined class="w-4 h-4" />
         </button>
       }
     >

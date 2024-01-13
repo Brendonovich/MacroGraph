@@ -46,15 +46,21 @@ export function SidebarSection(
     <div class="flex flex-col h-auto relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        class="flex flex-row justify-between items-center bg-neutral-900 text-white px-2 font-medium shadow py-1"
+        class="flex flex-row justify-between items-center bg-neutral-900 text-white font-medium shadow p-1 pl-2"
       >
         <span class="flex flex-row items-center gap-1.5">
           <IconFa6SolidChevronRight
-            class={clsx("w-4 h-4", open() && "rotate-90")}
+            class="w-3 h-3"
+            classList={{ "rotate-90": open() }}
           />
           {props.title}
         </span>
-        {props.right}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          class="flex flex-row items-center"
+        >
+          {props.right}
+        </div>
       </button>
       <Show when={open()}>
         <div

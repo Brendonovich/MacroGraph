@@ -18,7 +18,7 @@ export function pkg() {
     name: "Emit Custom Event",
     variant: "Base",
     properties: { event: eventProperty },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const eventId = ctx.getProperty(properties.event);
       if (eventId === undefined) return;
       const event = ctx.graph.project.customEvents.get(eventId);
@@ -64,7 +64,7 @@ export function pkg() {
     },
     name: "Custom Event",
     properties: { event: eventProperty },
-    generateIO({ io, ctx, properties }) {
+    createIO({ io, ctx, properties }) {
       const eventId = ctx.getProperty(properties.event);
       if (eventId === undefined) return;
       const event = ctx.graph.project.customEvents.get(eventId);

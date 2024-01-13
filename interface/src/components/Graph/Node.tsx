@@ -35,6 +35,10 @@ const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
   Base: "bg-mg-base",
   Event: "bg-mg-event",
   Pure: "bg-mg-pure",
+  exec: "bg-mg-exec",
+  base: "bg-mg-base",
+  event: "bg-mg-event",
+  pure: "bg-mg-pure",
 };
 
 export const Node = (props: Props) => {
@@ -107,7 +111,11 @@ export const Node = (props: Props) => {
             (() => {
               const schema = node().schema;
               return SchemaVariantColours[
-                "variant" in schema ? schema.variant : "Event"
+                "variant" in schema
+                  ? schema.variant
+                  : "type" in schema
+                  ? schema.type
+                  : "Event"
               ];
             })()
           )}

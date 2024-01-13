@@ -10,7 +10,6 @@ import {
 
 import { useCore } from "../contexts";
 import { GraphState } from "./Graph";
-import { useUIStore } from "../UIStore";
 
 interface Props {
   graph: GraphState;
@@ -24,9 +23,13 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
   Exec: "bg-mg-exec",
   Event: "bg-mg-event",
   Pure: "bg-mg-pure",
+  base: "bg-mg-base",
+  exec: "bg-mg-exec",
+  event: "bg-mg-event",
+  pure: "bg-mg-pure",
 };
 
-export const SchemaMenu = (props: Props) => {
+export function SchemaMenu(props: Props) {
   const core = useCore();
 
   const [openPackages, setOpenPackages] = createSignal(new Set<Package>());
@@ -45,7 +48,7 @@ export const SchemaMenu = (props: Props) => {
 
   return (
     <div
-      class="flex flex-col bg-neutral-900 border-white text-white border absolute z-10 w-80 h-[30rem] rounded-md shadow-md overflow-hidden text-sm"
+      class="flex flex-col bg-neutral-900 border-black text-white border absolute z-10 w-80 h-[30rem] rounded-xl shadow-md overflow-hidden text-sm"
       style={{
         left: `${props.position.x}px`,
         top: `${props.position.y}px`,
@@ -118,7 +121,10 @@ export const SchemaMenu = (props: Props) => {
                         })
                       }
                     >
-                      <div class="w-2">{open() ? "v" : ">"}</div>
+                      <IconFa6SolidChevronRight
+                        class="w-3 h-3"
+                        classList={{ "rotate-90": open() }}
+                      />
                       <span>{p.name}</span>
                     </button>
                     <Show when={open()}>
@@ -154,4 +160,4 @@ export const SchemaMenu = (props: Props) => {
       </div>
     </div>
   );
-};
+}

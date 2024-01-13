@@ -7,12 +7,13 @@ import { jsToJSON, jsonToJS, toJSON } from "./conversion";
 export function pkg() {
   const pkg = new Package({
     name: "JSON",
+    ctx: {},
   });
 
   pkg.createNonEventSchema({
     name: "To JSON",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       const w = io.wildcard("");
 
       return {
@@ -39,7 +40,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "Parse JSON",
     variant: "Exec",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -60,7 +61,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "JSON Get String",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -85,7 +86,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "JSON Get Number",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -110,7 +111,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "JSON Get Boolean",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -135,7 +136,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "JSON Get List",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
@@ -160,7 +161,7 @@ export function pkg() {
   pkg.createNonEventSchema({
     name: "JSON Get Map",
     variant: "Pure",
-    generateIO({ io }) {
+    createIO({ io }) {
       return {
         in: io.dataInput({
           id: "in",
