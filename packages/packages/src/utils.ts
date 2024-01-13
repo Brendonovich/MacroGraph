@@ -266,6 +266,26 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Reverse String",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        input: io.dataInput({
+          id: "input",
+          type: t.string(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(io.output, [...ctx.getInput(io.input)].reverse().join(""));
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Int to String",
     variant: "Pure",
     createIO({ io }) {
@@ -282,6 +302,34 @@ export function pkg(core: Core) {
     },
     run({ ctx, io }) {
       ctx.setOutput(io.output, ctx.getInput(io.input).toString());
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Int to String (specify base)",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        input: io.dataInput({
+          id: "int",
+          type: t.int(),
+        }),
+        base: io.dataInput({
+          id: "base",
+          name: "Base",
+          type: t.int(),
+        }),
+        output: io.dataOutput({
+          id: "string",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.setOutput(
+        io.output,
+        ctx.getInput(io.input).toString(ctx.getInput(io.base))
+      );
     },
   });
 
@@ -342,6 +390,34 @@ export function pkg(core: Core) {
     },
     run({ ctx, io }) {
       const number = Number(ctx.getInput(io.string));
+      const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
+
+      ctx.setOutput(io.int, opt.map(Math.floor));
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "String to int (specify base)",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        string: io.dataInput({
+          id: "string",
+          type: t.string(),
+        }),
+        base: io.dataInput({
+          id: "base",
+          name: "Base",
+          type: t.int(),
+        }),
+        int: io.dataOutput({
+          id: "int",
+          type: t.option(t.int()),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = parseInt(ctx.getInput(io.string), ctx.getInput(io.base));
       const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
       ctx.setOutput(io.int, opt.map(Math.floor));
