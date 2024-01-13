@@ -12,7 +12,7 @@ import { EventTypes } from "obs-websocket-js";
 import { onCleanup } from "solid-js";
 import { EventEmitter } from "eventemitter3";
 import { createEventBus } from "@solid-primitives/event-bus";
-import { OBSInstance, defaultProperties } from "./resource";
+import { defaultProperties } from "./resource";
 
 export const BoundsType = createEnum("Bounds Type", (e) => [
   e.variant("OBS_BOUNDS_MAX_ONLY"),

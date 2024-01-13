@@ -179,14 +179,12 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
           default: defaultIO,
         };
       },
-      ...((schema.type !== "event" && {
-        run: async (props: RunProps<TProperties, IO>) => {
-          await schema.run({ ...props, io: props.io.custom });
+      run: async (props: RunProps<TProperties, IO>) => {
+        await schema.run({ ...(props as any), io: props.io.custom });
 
-          if (schema.type === "exec" && props.io.default)
-            props.ctx.exec(props.io.default.out);
-        },
-      }) as any),
+        if (schema.type === "exec" && props.io.default)
+          props.ctx.exec(props.io.default.out);
+      },
       package: this as any,
     };
 
