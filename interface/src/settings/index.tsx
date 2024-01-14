@@ -142,22 +142,24 @@ export function ConnectionsDialog(props: ParentProps) {
             </For>
           </ul>
           <div class="flex-1 flex flex-col p-4 w-full text-white">
-            <ErrorBoundary
-              fallback={(error: Error) => (
-                <div>
-                  <p>An error occurred:</p>
-                  <p>{error.message}</p>
-                </div>
+            <Show when={selectedPackage()?.SettingsUI} keyed>
+              {(UI) => (
+                <ErrorBoundary
+                  fallback={(error: Error) => (
+                    <div>
+                      <p>An error occurred:</p>
+                      <p>{error.message}</p>
+                    </div>
+                  )}
+                >
+                  <Suspense fallback="Loading">
+                    <div>
+                      <UI {...selectedPackage()?.ctx} />
+                    </div>
+                  </Suspense>
+                </ErrorBoundary>
               )}
-            >
-              <Suspense fallback="Loading">
-                <div>
-                  <Show when={selectedPackage()?.SettingsUI} keyed>
-                    {(UI) => <UI {...selectedPackage()?.ctx} />}
-                  </Show>
-                </div>
-              </Suspense>
-            </ErrorBoundary>
+            </Show>
           </div>
         </div>
       </div>
