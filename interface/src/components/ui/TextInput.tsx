@@ -1,14 +1,6 @@
-import { Combobox, Popover } from "@kobalte/core";
+import { Popover } from "@kobalte/core";
 import clsx from "clsx";
-import {
-  For,
-  ResourceReturn,
-  createMemo,
-  getOwner,
-  on,
-  onMount,
-  runWithOwner,
-} from "solid-js";
+import { For, ResourceReturn, createMemo, on, onMount } from "solid-js";
 import {
   Show,
   Suspense,
@@ -33,14 +25,16 @@ export const TextInput = (props: Props) => {
     if (open() !== undefined)
       return createResource(
         () => props.fetchSuggestions?.(),
-        () => {
-          return props.fetchSuggestions?.() ?? [];
-        }
+        () => props.fetchSuggestions?.() ?? []
       );
   });
 
   return (
-    <Popover.Root open={open() !== undefined} placement="bottom" gutter={4}>
+    <Popover.Root
+      open={open() !== undefined}
+      placement="bottom-start"
+      gutter={4}
+    >
       <Popover.Anchor>
         <input
           value={props.value}

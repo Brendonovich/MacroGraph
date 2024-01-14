@@ -23,6 +23,7 @@ import { ReactiveMap } from "@solid-primitives/map";
 
 import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
 import { defaultProperties } from "./resource";
+import { Accessor } from "solid-js";
 
 //missing availableRequests & supportedImageForamts Array<string>
 
@@ -670,9 +671,9 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  function sceneListSuggestionFactory(obs: Option<OBSWebSocket>) {
+  function sceneListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
     return async () => {
-      const o = await obs.mapAsync(async (obs) => {
+      const o = await obs().mapAsync(async (obs) => {
         const resp = await obs.call("GetSceneList");
         return resp.scenes.map((scene) => scene.sceneName);
       });
@@ -680,9 +681,9 @@ export function register(pkg: Package<EventTypes>) {
     };
   }
 
-  function inputListSuggestionFactory(obs: Option<OBSWebSocket>) {
+  function inputListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
     return async () => {
-      const o = await obs.mapAsync(async (obs) => {
+      const o = await obs().mapAsync(async (obs) => {
         const resp = await obs.call("GetInputList");
         return (resp.inputs as { inputName: string }[]).map(
           (input) => input.inputName
@@ -699,7 +700,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
     run({ ctx, io, obs }) {
       obs.call("SetCurrentProgramScene", {
@@ -729,7 +730,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
     run({ ctx, io, obs }) {
       obs.call("SetCurrentPreviewScene", {
@@ -758,7 +759,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
     run({ ctx, io, obs }) {
       obs.call("RemoveScene", { sceneName: ctx.getInput(io) });
@@ -772,7 +773,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       newSceneName: io.dataInput({
         id: "newSceneName",
@@ -823,7 +824,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       transitionName: io.dataInput({
         id: "transitionName",
@@ -889,9 +890,9 @@ export function register(pkg: Package<EventTypes>) {
     },
   });
 
-  function inputKindSuggestionFactory(obs: Option<OBSWebSocket>) {
+  function inputKindSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
     return async () => {
-      const o = await obs.mapAsync(async (obs) => {
+      const o = await obs().mapAsync(async (obs) => {
         const resp = await obs.call("GetInputKindList");
         return resp.inputKinds;
       });
@@ -906,7 +907,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       inputName: io.dataInput({
         id: "inputName",
@@ -917,7 +918,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputKind",
         name: "Input Kind",
         type: t.string(),
-        fetchSuggestions: inputKindSuggestionFactory(obs()),
+        fetchSuggestions: inputKindSuggestionFactory(obs),
       }),
       inputSettings: io.dataInput({
         id: "inputSettings",
@@ -959,7 +960,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
     run({ ctx, io, obs }) {
       obs.call("RemoveInput", {
@@ -975,7 +976,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       newInputName: io.dataInput({
         id: "newInputName",
@@ -1095,7 +1096,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputSettings: io.dataOutput({
         id: "inputSettings",
@@ -1132,7 +1133,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputSettings: io.dataInput({
         id: "inputSettings",
@@ -1166,7 +1167,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputMuted: io.dataOutput({
         id: "inputMuted",
@@ -1189,7 +1190,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputMuted: io.dataInput({
         id: "inputMuted",
@@ -1212,7 +1213,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputMuted: io.dataOutput({
         id: "inputMuted",
@@ -1235,7 +1236,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputVolumeMul: io.dataOutput({
         id: "inputVolumeMul",
@@ -1264,7 +1265,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputVolumeDb: io.dataInput({
         id: "inputVolumeDb",
@@ -1287,7 +1288,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       inputVolumeMul: io.dataInput({
         id: "inputVolumeMul",
@@ -2056,7 +2057,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItems: io.dataOutput({
         id: "sceneItems",
@@ -2129,7 +2130,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sourceName: io.dataInput({
         id: "sourceName",
@@ -2164,7 +2165,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sourceName: io.dataInput({
         id: "sourceName",
@@ -2199,7 +2200,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2222,7 +2223,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemIdIn: io.dataInput({
         id: "sceneItemId",
@@ -2233,7 +2234,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "destinationSceneName",
         name: "Destination Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemIdOut: io.dataOutput({
         id: "sceneItemId",
@@ -2258,7 +2259,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2320,7 +2321,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2354,7 +2355,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2383,7 +2384,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2412,7 +2413,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2441,7 +2442,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2470,7 +2471,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2499,7 +2500,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2528,7 +2529,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2557,7 +2558,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
-        fetchSuggestions: sceneListSuggestionFactory(obs()),
+        fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2998,12 +2999,12 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Get Media Input Status",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       mediaState: io.dataOutput({
         id: "mediaState	",
@@ -3039,7 +3040,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       mediaCursor: io.dataInput({
         id: "mediaCursor",
@@ -3062,7 +3063,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       mediaCursorOffset: io.dataInput({
         id: "mediaCursorOffset",
@@ -3085,7 +3086,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
       mediaAction: io.dataInput({
         id: "mediaAction",
@@ -3137,7 +3138,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
     async run({ ctx, io, obs }) {
       obs.call("OpenInputPropertiesDialog", {
@@ -3153,7 +3154,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
     async run({ ctx, io, obs }) {
       obs.call("OpenInputFiltersDialog", {
@@ -3169,7 +3170,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
-        fetchSuggestions: inputListSuggestionFactory(obs()),
+        fetchSuggestions: inputListSuggestionFactory(obs),
       }),
     async run({ ctx, io, obs }) {
       obs.call("OpenInputInteractDialog", {
