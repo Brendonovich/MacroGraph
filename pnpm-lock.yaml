@@ -4433,17 +4433,17 @@ packages:
   /@solidjs/start@0.4.9(rollup@2.79.1)(solid-js@1.8.8)(vinxi@0.1.1)(vite@4.5.1):
     resolution: {integrity: sha512-+WiNRDjKdEzP45eiF4WLXiuXIohUYk+WZAYiy/qqMJi0BmCkkPUzIXnkYPYwVx3nAyXHMdfUc6/7Xys2qEb+8Q==}
     dependencies:
-      '@vinxi/plugin-directives': 0.1.0(vinxi@0.1.1)
-      '@vinxi/server-components': 0.1.0(vinxi@0.1.1)
-      '@vinxi/server-functions': 0.1.0(vinxi@0.1.1)
+      '@vinxi/plugin-directives': 0.1.1(vinxi@0.1.1)
+      '@vinxi/server-components': 0.1.1(vinxi@0.1.1)
+      '@vinxi/server-functions': 0.1.1(vinxi@0.1.1)
       defu: 6.1.4
       error-stack-parser: 2.1.4
       html-to-image: 1.11.11
-      seroval: 1.0.3
-      seroval-plugins: 1.0.3(seroval@1.0.3)
-      shikiji: 0.9.18
+      seroval: 1.0.4
+      seroval-plugins: 1.0.4(seroval@1.0.4)
+      shikiji: 0.9.19
       source-map-js: 1.0.2
-      terracotta: 1.0.4(seroval@1.0.3)(solid-js@1.8.8)
+      terracotta: 1.0.4(seroval@1.0.4)(solid-js@1.8.8)
       vite-plugin-inspect: 0.7.42(rollup@2.79.1)(vite@4.5.1)
       vite-plugin-solid: 2.8.0(solid-js@1.8.8)(vite@4.5.1)
     transitivePeerDependencies:
@@ -5794,10 +5794,10 @@ packages:
       uqr: 0.1.2
     dev: false
 
-  /@vinxi/plugin-directives@0.1.0(vinxi@0.1.1):
-    resolution: {integrity: sha512-Uk7jxV+38UDXZkP6O5NcPwrCJDHj5EPCE6LojoC6CjabZMzQEWBjhtxjSlrq70FraGawmpVwGI4gXDrR2ujAew==}
+  /@vinxi/plugin-directives@0.1.1(vinxi@0.1.1):
+    resolution: {integrity: sha512-O+ck136VSa1p0YNMvmoM/Ne3pXJZgDDNmF/wXseLASk6fdcBGY4cAb5jFzr+alBXj5sbBKzQsw2fVVFD5gWctA==}
     peerDependencies:
-      vinxi: ^0.1.0
+      vinxi: ^0.1.2
     dependencies:
       '@babel/parser': 7.23.6
       acorn: 8.11.3
@@ -5811,12 +5811,12 @@ packages:
       vinxi: 0.1.1(preact@10.19.3)(rollup@2.79.1)
     dev: false
 
-  /@vinxi/server-components@0.1.0(vinxi@0.1.1):
-    resolution: {integrity: sha512-neGlOj3hBewkycgdGAt97+uYzdqu7ine5IXWGx1IJzUj91TzJu5gqsIxaT92we3OMd3OtOQ4m18j60F47kqGYA==}
+  /@vinxi/server-components@0.1.1(vinxi@0.1.1):
+    resolution: {integrity: sha512-67w6jgaEw0cTymdbLCpI5NcL+uZ6nrIjPe9HK+O74eSMJGfQzeecu+FmWpYVhuspqGOsC6UXbuTIkREwrkEnbw==}
     peerDependencies:
-      vinxi: ^0.1.0
+      vinxi: ^0.1.2
     dependencies:
-      '@vinxi/plugin-directives': 0.1.0(vinxi@0.1.1)
+      '@vinxi/plugin-directives': 0.1.1(vinxi@0.1.1)
       acorn: 8.11.3
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.11.3)
@@ -5826,12 +5826,12 @@ packages:
       vinxi: 0.1.1(preact@10.19.3)(rollup@2.79.1)
     dev: false
 
-  /@vinxi/server-functions@0.1.0(vinxi@0.1.1):
-    resolution: {integrity: sha512-LA1ju9Cmw4dWW6LWmftAjaNm6vasxPHUUVNaTle4jSWWpzf/vdOu9GZBR75vYqzB4RRhg6ccO4PDYein8DNIxQ==}
+  /@vinxi/server-functions@0.1.1(vinxi@0.1.1):
+    resolution: {integrity: sha512-hZtT9QaLMtasXH1G2r/kIALuARg3C5lDrv0EPTLln8PvoJmx23hK7NVp9TjNB4oI0VCswiVn25m0CzsnUPnbkA==}
     peerDependencies:
-      vinxi: ^0.1.0
+      vinxi: ^0.1.2
     dependencies:
-      '@vinxi/plugin-directives': 0.1.0(vinxi@0.1.1)
+      '@vinxi/plugin-directives': 0.1.1(vinxi@0.1.1)
       acorn: 8.11.3
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.11.3)
@@ -11529,18 +11529,23 @@ packages:
       randombytes: 2.1.0
     dev: false
 
-  /seroval-plugins@1.0.3(seroval@1.0.3):
-    resolution: {integrity: sha512-/nda3/5lVpznsbsliN8SNbx075VH6nO6lCpIknLxOPUtfqXA5ji30ThFjQD1PNed3Dnxkkj8raK/WtS8PbEuKQ==}
+  /seroval-plugins@1.0.4(seroval@1.0.4):
+    resolution: {integrity: sha512-DQ2IK6oQVvy8k+c2V5x5YCtUa/GGGsUwUBNN9UqohrZ0rWdUapBFpNMYP1bCyRHoxOJjdKGl+dieacFIpU/i1A==}
     engines: {node: '>=10'}
     peerDependencies:
       seroval: ^1.0
     dependencies:
-      seroval: 1.0.3
+      seroval: 1.0.4
     dev: false
 
   /seroval@1.0.3:
     resolution: {integrity: sha512-v5Psun3O2OdehTS/BpTC9EezHxyQRM4lqtvOdbngEq8qOZUECqG5XaoFNZgBQrJKXZFgcyZtMH6Dv7G96pKSSQ==}
     engines: {node: '>=10'}
+
+  /seroval@1.0.4:
+    resolution: {integrity: sha512-qQs/N+KfJu83rmszFQaTxcoJoPn6KNUruX4KmnmyD0oZkUoiNvJ1rpdYKDf4YHM05k+HOgCxa3yvf15QbVijGg==}
+    engines: {node: '>=10'}
+    dev: false
 
   /serve-placeholder@2.0.1:
     resolution: {integrity: sha512-rUzLlXk4uPFnbEaIz3SW8VISTxMuONas88nYWjAWaM2W9VDbt9tyFOr3lq8RhVOFrT3XISoBw8vni5una8qMnQ==}
@@ -11601,14 +11606,14 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  /shikiji-core@0.9.18:
-    resolution: {integrity: sha512-PKTXptbrp/WEDjNHV8OFG9KkfhmR0pSd161kzlDDlgQ0HXAnqJYNDSjqsy1CYZMx5bSvLMy42yJj9oFTqmkNTQ==}
+  /shikiji-core@0.9.19:
+    resolution: {integrity: sha512-AFJu/vcNT21t0e6YrfadZ+9q86gvPum6iywRyt1OtIPjPFe25RQnYJyxHQPMLKCCWA992TPxmEmbNcOZCAJclw==}
     dev: false
 
-  /shikiji@0.9.18:
-    resolution: {integrity: sha512-/tFMIdV7UQklzN13VjF0/XFzmii6C606Jc878hNezvB8ZR8FG8FW9j0I4J9EJre0owlnPntgLVPpHqy27Gs+DQ==}
+  /shikiji@0.9.19:
+    resolution: {integrity: sha512-Kw2NHWktdcdypCj1GkKpXH4o6Vxz8B8TykPlPuLHOGSV8VkhoCLcFOH4k19K4LXAQYRQmxg+0X/eM+m2sLhAkg==}
     dependencies:
-      shikiji-core: 0.9.18
+      shikiji-core: 0.9.19
     dev: false
 
   /side-channel@1.0.4:
@@ -11736,7 +11741,7 @@ packages:
       solid-js: 1.8.8
     dev: false
 
-  /solid-use@0.7.2(seroval@1.0.3)(solid-js@1.8.8):
+  /solid-use@0.7.2(seroval@1.0.4)(solid-js@1.8.8):
     resolution: {integrity: sha512-ZJbTj55W4VF2NSg86+PFioWOAI7STrZ6+38vuEWl6IB4ZBm7Q1U/Mncf+T/zc9e1xUk+4/FfFfM9ZaroycNKNw==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -11746,7 +11751,7 @@ packages:
       seroval:
         optional: true
     dependencies:
-      seroval: 1.0.3
+      seroval: 1.0.4
       solid-js: 1.8.8
     dev: false
 
@@ -12118,14 +12123,14 @@ packages:
       unique-string: 2.0.0
     dev: true
 
-  /terracotta@1.0.4(seroval@1.0.3)(solid-js@1.8.8):
+  /terracotta@1.0.4(seroval@1.0.4)(solid-js@1.8.8):
     resolution: {integrity: sha512-tMy152HBz6NehMYR63Phv9Zr+axhoKbHIuejurRa220J8zVKJ/L9hyjsiEC7WzjTdjherWe8g/ECYb3+jG/bBA==}
     engines: {node: '>=10'}
     peerDependencies:
       solid-js: ^1.8
     dependencies:
       solid-js: 1.8.8
-      solid-use: 0.7.2(seroval@1.0.3)(solid-js@1.8.8)
+      solid-use: 0.7.2(seroval@1.0.4)(solid-js@1.8.8)
     transitivePeerDependencies:
       - seroval
     dev: false

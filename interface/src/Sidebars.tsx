@@ -1,6 +1,7 @@
 import { DEFAULT, Graph, Node, PropertyValue } from "@macrograph/runtime";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { Switch, For, Match, Show, createMemo, createSignal } from "solid-js";
+import { Card } from "@macrograph/ui";
 
 import { SidebarSection } from "./components/Sidebar";
 import {
@@ -12,7 +13,6 @@ import {
 } from "./components/ui";
 import { TypeEditor } from "./components/TypeEditor";
 import { useCore } from "./contexts";
-import { Card } from "@macrograph/ui";
 
 export function GraphSidebar(props: { graph: Graph }) {
   return (

@@ -169,16 +169,16 @@ function AddResourceButton() {
         <IconMaterialSymbolsAddRounded class="w-6 h-6" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content class="p-2 bg-black border border-gray-300 w-52 max-h-48 flex flex-col overflow-y-auto text-white">
+        <DropdownMenu.Content class="bg-neutral-900 border border-black p-2 rounded w-52 max-h-48 flex flex-col overflow-y-auto text-white">
           <For each={resourceTypes()}>
             {([pkg, types]) => (
               <>
-                <span>{pkg.name}</span>
+                <span class="p-1">{pkg.name}</span>
                 <For each={types}>
                   {(type) => (
                     <DropdownMenu.Item
                       as="button"
-                      class="flex flex-row items-center w-full px-2 py-1 text-left hover:bg-white/20"
+                      class="flex flex-row items-center w-full px-2 py-0.5 text-left hover:bg-white/20 rounded text-sm"
                       onSelect={() => {
                         core.project.createResource({
                           type,

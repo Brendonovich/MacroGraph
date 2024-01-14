@@ -18,6 +18,7 @@ import {
 } from "../clipboard";
 import { usePlatform } from "../platform";
 import { createMemo } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
 function IconContainer(props: ParentProps<ComponentProps<"div">>) {
   return (
@@ -154,7 +155,7 @@ export function ConnectionsDialog(props: ParentProps) {
                 >
                   <Suspense fallback="Loading">
                     <div>
-                      <UI {...selectedPackage()?.ctx} />
+                      <Dynamic {...selectedPackage()?.ctx} component={UI} />
                     </div>
                   </Suspense>
                 </ErrorBoundary>
