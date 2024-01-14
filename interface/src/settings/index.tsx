@@ -6,6 +6,7 @@ import {
   Show,
   Suspense,
   createSignal,
+  startTransition,
 } from "solid-js";
 import { Dialog as KDialog } from "@kobalte/core";
 
@@ -128,7 +129,9 @@ export function ConnectionsDialog(props: ParentProps) {
               {(pkg) => (
                 <li>
                   <button
-                    onClick={() => setSelectedPackage(pkg)}
+                    onClick={() =>
+                      startTransition(() => setSelectedPackage(pkg))
+                    }
                     class={"p-2 w-full h-full text-left"}
                     classList={{ "bg-black": selectedPackage() === pkg }}
                   >

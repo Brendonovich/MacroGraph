@@ -1,20 +1,27 @@
 import {
   createEnum,
+  CreateIOFn,
   CreateNonEventSchema,
   createStruct,
+  MergeFnProps,
   Package,
   PropertyDef,
   RunProps,
   SchemaProperties,
 } from "@macrograph/runtime";
-import { InferEnum, Maybe, t } from "@macrograph/typesystem";
+import {
+  InferEnum,
+  Maybe,
+  t,
+  Option,
+  None,
+  Some,
+} from "@macrograph/typesystem";
 import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
 import OBSWebSocket, { EventTypes } from "obs-websocket-js";
-import { createLazyMemo } from "@solid-primitives/memo";
 import { ReactiveMap } from "@solid-primitives/map";
 
 import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
-import { Ctx } from "./ctx";
 import { defaultProperties } from "./resource";
 
 //missing availableRequests & supportedImageForamts Array<string>
@@ -91,14 +98,14 @@ interface SceneItemTransformInterface {
   height: number;
 }
 
-export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
+export function register(pkg: Package<EventTypes>) {
   function createOBSExecSchema<
     TProperties extends Record<string, PropertyDef> = {},
     TIO = void
   >(
     s: Omit<
       CreateNonEventSchema<TProperties & typeof defaultProperties, TIO>,
-      "type" | "createListener" | "run"
+      "type" | "createListener" | "run" | "createIO"
     > & {
       properties?: TProperties;
       run(
@@ -106,12 +113,37 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
           obs: OBSWebSocket;
         }
       ): void | Promise<void>;
+      createIO: MergeFnProps<
+        CreateIOFn<TProperties, TIO>,
+        { obs(): Option<OBSWebSocket> }
+      >;
     }
   ) {
     pkg.createSchema({
       ...s,
       type: "exec",
       properties: { ...s.properties, ...defaultProperties } as any,
+      createIO(props) {
+        // const obs = createMemo(() =>
+        const obs = props.ctx
+          .getProperty(
+            props.properties.instance as SchemaProperties<
+              typeof defaultProperties
+            >["instance"]
+          )
+          .andThen((instance) => {
+            if (instance.state !== "connected") return None;
+            return Some(instance.obs);
+          });
+        // );
+
+        return s.createIO({
+          ...props,
+          obs() {
+            return obs;
+          },
+        });
+      },
       run(props) {
         const instance = props.ctx
           .getProperty(
@@ -344,6 +376,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
       ctx.setOutput(io.profiles, data.profiles);
     },
   });
+
   createOBSExecSchema({
     name: "Set Current Profile",
     createIO: ({ io }) =>
@@ -637,13 +670,36 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
     },
   });
 
+  function sceneListSuggestionFactory(obs: Option<OBSWebSocket>) {
+    return async () => {
+      const o = await obs.mapAsync(async (obs) => {
+        const resp = await obs.call("GetSceneList");
+        return resp.scenes.map((scene) => scene.sceneName);
+      });
+      return o.unwrapOr([]);
+    };
+  }
+
+  function inputListSuggestionFactory(obs: Option<OBSWebSocket>) {
+    return async () => {
+      const o = await obs.mapAsync(async (obs) => {
+        const resp = await obs.call("GetInputList");
+        return (resp.inputs as { inputName: string }[]).map(
+          (input) => input.inputName
+        );
+      });
+      return o.unwrapOr([]);
+    };
+  }
+
   createOBSExecSchema({
     name: "Set Current Program Scene",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
     run({ ctx, io, obs }) {
       obs.call("SetCurrentProgramScene", {
@@ -668,11 +724,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Current Preview Scene",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
     run({ ctx, io, obs }) {
       obs.call("SetCurrentPreviewScene", {
@@ -696,11 +753,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Remove Scene",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
     run({ ctx, io, obs }) {
       obs.call("RemoveScene", { sceneName: ctx.getInput(io) });
@@ -709,11 +767,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Scene Name",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       newSceneName: io.dataInput({
         id: "newSceneName",
@@ -759,11 +818,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Scene Transition Override",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       transitionName: io.dataInput({
         id: "transitionName",
@@ -829,13 +889,24 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
     },
   });
 
+  function inputKindSuggestionFactory(obs: Option<OBSWebSocket>) {
+    return async () => {
+      const o = await obs.mapAsync(async (obs) => {
+        const resp = await obs.call("GetInputKindList");
+        return resp.inputKinds;
+      });
+      return o.unwrapOr([]);
+    };
+  }
+
   createOBSExecSchema({
     name: "Create Input",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       inputName: io.dataInput({
         id: "inputName",
@@ -844,8 +915,9 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
       }),
       inputKind: io.dataInput({
         id: "inputKind",
-        name: "Input kind",
+        name: "Input Kind",
         type: t.string(),
+        fetchSuggestions: inputKindSuggestionFactory(obs()),
       }),
       inputSettings: io.dataInput({
         id: "inputSettings",
@@ -882,11 +954,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Remove Input",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
     run({ ctx, io, obs }) {
       obs.call("RemoveInput", {
@@ -897,11 +970,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Input Name",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       newInputName: io.dataInput({
         id: "newInputName",
@@ -1016,11 +1090,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Input Settings",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputSettings: io.dataOutput({
         id: "inputSettings",
@@ -1052,11 +1127,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Input Settings",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputSettings: io.dataInput({
         id: "inputSettings",
@@ -1085,11 +1161,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Input Mute",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputMuted: io.dataOutput({
         id: "inputMuted",
@@ -1107,11 +1184,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Input Mute",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputMuted: io.dataInput({
         id: "inputMuted",
@@ -1129,11 +1207,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Toggle Input Mute",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputMuted: io.dataOutput({
         id: "inputMuted",
@@ -1151,11 +1230,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Input Volume",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputVolumeMul: io.dataOutput({
         id: "inputVolumeMul",
@@ -1179,11 +1259,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Input Volume (dB)",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputVolumeDb: io.dataInput({
         id: "inputVolumeDb",
@@ -1201,11 +1282,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Input Volume (mul)",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       inputVolumeMul: io.dataInput({
         id: "inputVolumeMul",
@@ -1969,11 +2051,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Scene Item List",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItems: io.dataOutput({
         id: "sceneItems",
@@ -2041,11 +2124,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Scene Item Id",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sourceName: io.dataInput({
         id: "sourceName",
@@ -2075,11 +2159,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Create Scene Item",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sourceName: io.dataInput({
         id: "sourceName",
@@ -2109,11 +2194,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Remove Scene Item",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2131,11 +2217,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Duplicate Scene Item",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemIdIn: io.dataInput({
         id: "sceneItemId",
@@ -2146,6 +2233,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
         id: "destinationSceneName",
         name: "Destination Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemIdOut: io.dataOutput({
         id: "sceneItemId",
@@ -2165,11 +2253,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Scene Item Transform",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2226,11 +2315,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Scene Item Transform",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2259,11 +2349,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Scene Item Enabled",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2287,11 +2378,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Scene Item Enabled",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2315,11 +2407,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Scene Item Locked",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2343,11 +2436,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Scene Item Locked",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2371,11 +2465,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Scene Item Index",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2399,11 +2494,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Scene Item Index",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2427,11 +2523,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Get Scene Item Blend Mode",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2455,11 +2552,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Scene Item Blend Mode",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sceneName: io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
+        fetchSuggestions: sceneListSuggestionFactory(obs()),
       }),
       sceneItemId: io.dataInput({
         id: "sceneItemId",
@@ -2905,6 +3003,7 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       mediaState: io.dataOutput({
         id: "mediaState	",
@@ -2935,11 +3034,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Set Media Input Cursor",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       mediaCursor: io.dataInput({
         id: "mediaCursor",
@@ -2957,11 +3057,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Offset Media Input Cursor",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       mediaCursorOffset: io.dataInput({
         id: "mediaCursorOffset",
@@ -2979,11 +3080,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Trigger Media Input Action",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       inputName: io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
       mediaAction: io.dataInput({
         id: "mediaAction",
@@ -3030,11 +3132,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Open Input Properties Dialogue",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
     async run({ ctx, io, obs }) {
       obs.call("OpenInputPropertiesDialog", {
@@ -3045,11 +3148,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Open Input Filters Dialogue",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
     async run({ ctx, io, obs }) {
       obs.call("OpenInputFiltersDialog", {
@@ -3060,11 +3164,12 @@ export function register(pkg: Package<EventTypes>, { instances }: Ctx) {
 
   createOBSExecSchema({
     name: "Open Input Interact Dialogue",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "inputName",
         name: "Input Name",
         type: t.string(),
+        fetchSuggestions: inputListSuggestionFactory(obs()),
       }),
     async run({ ctx, io, obs }) {
       obs.call("OpenInputInteractDialog", {

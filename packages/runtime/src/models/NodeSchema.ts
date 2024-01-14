@@ -33,11 +33,18 @@ export type NodeSchemaVariant =
   | "exec"
   | "event";
 
-export type DataInputBuilder = {
-  id: string;
-  name?: string;
-  type: AnyType;
-};
+export type DataInputBuilder =
+  | {
+      id: string;
+      name?: string;
+      type: AnyType;
+    }
+  | {
+      id: string;
+      name?: string;
+      type: t.String;
+      fetchSuggestions?(): Promise<any[]>;
+    };
 export type ExecInputBuilder = {
   id: string;
   name?: string;
@@ -108,6 +115,7 @@ export class IOBuilder {
     ).unwrapOrElse(() => new DataInput({ ...args, node: this.node }));
 
     newInput.name = args.name;
+    newInput.fetchSuggestions = (args as any).fetchSuggestions;
 
     this.inputs.push(newInput);
 
@@ -324,6 +332,12 @@ export type CreateIOFn<TProperties, TIO> = (args: {
   io: IOBuilder;
   properties: SchemaProperties<TProperties>;
 }) => TIO;
+
+export type MergeFnProps<Fn, Props> = Fn extends (
+  arg: infer FnProps extends Record<string, any>
+) => infer Ret
+  ? (props: FnProps & Props) => Ret
+  : never;
 
 export type SchemaBase<TProperties, TIO> = {
   name: string;

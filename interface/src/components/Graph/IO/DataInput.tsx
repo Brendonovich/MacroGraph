@@ -23,6 +23,7 @@ interface InputProps {
   value: t.infer<PrimitiveType> | EnumValue | null;
   onChange(v: t.infer<PrimitiveType>): void;
   connected: boolean;
+  input: DataInputModel<any>;
 }
 
 const Input = (props: InputProps) => {
@@ -44,6 +45,7 @@ const Input = (props: InputProps) => {
             onChange={props.onChange}
             type={type().wildcard.value().unwrap()}
             connected={props.connected}
+            input={props.input}
           />
         )}
       </Match>
@@ -53,26 +55,28 @@ const Input = (props: InputProps) => {
           props.value !== null &&
           props.type
         }
+        keyed
       >
         {(type) => (
           <Switch>
-            <Match when={type().primitiveVariant() === "bool"}>
+            <Match when={type.primitiveVariant() === "bool"}>
               <CheckBox
                 class={className()}
                 value={props.value as boolean}
                 onChange={props.onChange}
               />
             </Match>
-            <Match when={type().primitiveVariant() === "string"}>
+            <Match when={type.primitiveVariant() === "string"}>
               <div class="w-16">
                 <TextInput
                   class={className()}
                   value={props.value as string}
                   onChange={props.onChange}
+                  fetchSuggestions={props.input.fetchSuggestions}
                 />
               </div>
             </Match>
-            <Match when={type().primitiveVariant() === "int"}>
+            <Match when={type.primitiveVariant() === "int"}>
               <div class="w-16">
                 <IntInput
                   class={className()}
@@ -83,7 +87,7 @@ const Input = (props: InputProps) => {
                 />
               </div>
             </Match>
-            <Match when={type().primitiveVariant() === "float"}>
+            <Match when={type.primitiveVariant() === "float"}>
               <div class="w-16">
                 <FloatInput
                   class={className()}
@@ -133,6 +137,7 @@ export const DataInput = (props: Props) => {
         value={props.input.defaultValue}
         onChange={(v) => props.input.setDefaultValue(v)}
         connected={props.input.connection.isSome()}
+        input={props.input}
       />
     </div>
   );
