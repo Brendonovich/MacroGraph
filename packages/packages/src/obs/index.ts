@@ -19,7 +19,7 @@ export function pkg(): Pkg {
   });
 
   events.register(pkg);
-  requests.register(pkg, ctx);
+  requests.register(pkg);
 
   pkg.registerResourceType(OBSInstance);
 

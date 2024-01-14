@@ -140,7 +140,11 @@ export function SchemaMenu(props: Props) {
                                   class={clsx(
                                     "h-3 w-3 rounded-full",
                                     TypeIndicatorColours[
-                                      "variant" in s ? s.variant : "Event"
+                                      "variant" in s
+                                        ? s.variant
+                                        : "type" in s
+                                        ? s.type
+                                        : "Base"
                                     ]
                                   )}
                                 />

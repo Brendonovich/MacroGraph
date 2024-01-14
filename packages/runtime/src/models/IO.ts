@@ -45,6 +45,7 @@ export type DataInputArgs<T extends BaseType<any>> = {
   name?: string;
   type: T;
   node: Node;
+  fetchSuggestions?: () => Promise<t.infer<T>[]>;
 };
 
 export class DataInput<T extends BaseType<any>> {
@@ -54,6 +55,7 @@ export class DataInput<T extends BaseType<any>> {
   type: T;
   node: Node;
   dispose: () => void;
+  fetchSuggestions?: () => Promise<t.infer<T>[]>;
 
   connection: Option<DataOutput<T>> = None;
 
@@ -64,6 +66,7 @@ export class DataInput<T extends BaseType<any>> {
       args.type instanceof BasePrimitiveType ? args.type.default() : null;
     this.node = args.node;
     this.type = args.type;
+    this.fetchSuggestions = args.fetchSuggestions;
 
     const { owner, dispose } = createRoot((dispose) => ({
       owner: getOwner(),

@@ -95,9 +95,7 @@ export class Node {
               property.default ??
               property.type.default();
           else if ("resource" in property) {
-            acc[property.id] = args.properties?.[property.id] ?? {
-              default: true,
-            };
+            acc[property.id] = args.properties?.[property.id] ?? DEFAULT;
           } else acc[property.id] = args.properties?.[property.id];
 
           return acc;
