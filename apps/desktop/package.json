@@ -2,8 +2,8 @@
   "name": "@macrograph/desktop",
   "private": true,
   "scripts": {
-    "dev": "vinxi dev --port 1420",
-    "build": "vinxi build",
+    "dev": "vite dev --port 1420",
+    "build": "vite build",
     "start": "vinxi start",
     "tauri": "tauri",
     "typecheck": "tsc -b"
