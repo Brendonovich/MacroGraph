@@ -47,13 +47,9 @@ jobs:
             - name: install frontend dependencies
               run: pnpm install
 
-            - uses: JonasKruckenberg/tauri-build@v1
-              id: tauri_build
-              with:
-                  projectPath: apps/desktop
-              env:
-                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+            - name: Build
+              run: |
+                  pnpm desktop tauri build --ci -v
 
             - uses: actions/upload-artifact@v3
               with:
