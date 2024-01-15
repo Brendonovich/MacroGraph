@@ -5,10 +5,11 @@ import {
   OnEvent,
   Package,
 } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { Maybe, Option, t } from "@macrograph/typesystem";
 import { z } from "zod";
 
 import { Helix } from "./helix";
+import { option } from "@macrograph/typesystem/src/t";
 
 export function createEventSub(helix: Helix, onEvent: OnEvent) {
   const [state, setState] = createSignal<
@@ -44,6 +45,7 @@ export function createEventSub(helix: Helix, onEvent: OnEvent) {
                             broadcaster_user_id: userId,
                             moderator_user_id: userId,
                             to_broadcaster_user_id: userId,
+                            user_id: userId,
                           },
                           transport: {
                             method: "websocket",
@@ -1938,11 +1940,576 @@ export function register(pkg: Package) {
       ctx.exec(io.exec);
     },
   });
+
+  pkg.createEventSchema({
+    name: "Channel Chat Clear User Messages",
+    event: "channel.chat.clear_user_messages",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        targetUserId: io.dataOutput({
+          id: "targetUserId",
+          name: "User ID",
+          type: t.string(),
+        }),
+        targetUserName: io.dataOutput({
+          id: "targetUserName",
+          name: "UserName",
+          type: t.string(),
+        }),
+        targetUserLogin: io.dataOutput({
+          id: "targetUserLogin",
+          name: "User Login",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io, data }) {
+      ctx.setOutput(io.targetUserId, data.target_user_id);
+      ctx.setOutput(io.targetUserName, data.target_user_name);
+      ctx.setOutput(io.targetUserLogin, data.target_user_login);
+      ctx.exec(io.exec);
+    },
+  });
+
+  pkg.createEventSchema({
+    name: "Chat Message Deleted Eventsub",
+    event: "channel.chat.message_delete",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        targetUserId: io.dataOutput({
+          id: "targetUserId",
+          name: "User ID",
+          type: t.string(),
+        }),
+        targetUserName: io.dataOutput({
+          id: "targetUserName",
+          name: "UserName",
+          type: t.string(),
+        }),
+        targetUserLogin: io.dataOutput({
+          id: "targetUserLogin",
+          name: "User Login",
+          type: t.string(),
+        }),
+        messageId: io.dataOutput({
+          id: "messageId",
+          name: "Message ID",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io, data }) {
+      ctx.setOutput(io.targetUserId, data.target_user_id);
+      ctx.setOutput(io.targetUserName, data.target_user_name);
+      ctx.setOutput(io.targetUserLogin, data.target_user_login);
+      ctx.setOutput(io.messageId, data.message_id);
+      ctx.exec(io.exec);
+    },
+  });
+
+  pkg.createEventSchema({
+    name: "Channel Chat Clear",
+    event: "channel.chat.clear",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.exec(io.exec);
+    },
+  });
+
+  const SubStruct = createStruct("Sub", (s) => ({
+    sub_Tier: s.field("Sub Tier", t.string()),
+    is_prime: s.field("Is Prime", t.bool()),
+    duration_months: s.field("Duration Months", t.int()),
+  }));
+
+  const ReSubStruct = createStruct("Resub", (s) => ({
+    sub_tier: s.field("Sub Tier", t.string()),
+    is_prime: s.field("Is Prime", t.bool()),
+    is_gift: s.field("Is Gift", t.bool()),
+    cumulative_months: s.field("Cumulative Months", t.int()),
+    duration_months: s.field("Duration Months", t.int()),
+    streak_months: s.field("Streak Months", t.int()),
+    gifter_is_anonymous: s.field("Anonymous Gifter", t.bool()),
+    gifter_user_name: s.field("Gifter UserName", t.string()),
+    gifter_user_id: s.field("Gifter User ID", t.string()),
+    gifter_user_login: s.field("Gifter User Login", t.string()),
+  }));
+
+  const SubGiftStruct = createStruct("Gift Sub", (s) => ({
+    sub_tier: s.field("Sub Tier", t.string()),
+    cumulative_months: s.field("Cumulative Months", t.int()),
+    duration_months: s.field("Duration Months", t.int()),
+    recipient_user_name: s.field("Recipient UserName", t.string()),
+    recipient_user_id: s.field("Recipient User ID", t.string()),
+    recipient_user_login: s.field("Recipient User Login", t.string()),
+    community_gift_id: s.field("Community Gift ID", t.option(t.string())),
+  }));
+
+  const CommunitySubGiftStruct = createStruct("Community Gift Sub", (s) => ({
+    sub_tier: s.field("Sub Tier", t.string()),
+    id: s.field("ID", t.string()),
+    total: s.field("Total", t.int()),
+    cumulative_total: s.field("Cumulative Total", t.int()),
+  }));
+
+  const GiftPaidUpgradeStruct = createStruct("Gift Paid Upgrade", (s) => ({
+    gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
+    gifter_user_id: s.field("Gifter User ID", t.string()),
+    gifter_user_name: s.field("Gifter UserName", t.string()),
+    gifter_user_login: s.field("Gifter User Login", t.string()),
+  }));
+
+  const RaidStruct = createStruct("Raid", (s) => ({
+    user_id: s.field("User ID", t.string()),
+    user_name: s.field("UserName", t.string()),
+    user_login: s.field("User Login", t.string()),
+    viewer_count: s.field("Viewer Count", t.int()),
+    profile_image_url: s.field("Profile Image URL", t.string()),
+  }));
+
+  const PayItForwardStruct = createStruct("Pay It Forward", (s) => ({
+    gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
+    gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
+    gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
+    gifter_user_login: s.field("Gifter UserLogin", t.option(t.string())),
+  }));
+
+  const AmountStruct = createStruct("Amount", (s) => ({
+    value: s.field("Value", t.int()),
+    decimal_places: s.field("Decimal Places", t.int()),
+    currency: s.field("Currency", t.string()),
+  }));
+
+  const CharityDonationStruct = createStruct("Charity Donation", (s) => ({
+    charity_name: s.field("Charity Name", t.string()),
+    amount: s.field("Gifter User ID", t.struct(AmountStruct)),
+  }));
+
+  const BroadcasterInfoStruct = createStruct("Broadcaster", (s) => ({
+    broadcaster_user_id: s.field("User ID", t.string()),
+    broadcaster_user_name: s.field("UserName", t.string()),
+    broadcaster_user_login: s.field("User Login", t.string()),
+  }));
+
+  const ChatterStruct = createStruct("Chatter", (s) => ({
+    chatter_user_id: s.field("User ID", t.string()),
+    chatter_user_name: s.field("UserName", t.string()),
+    chatter_user_login: s.field("User Login", t.string()),
+  }));
+
+  const EmoteStruct = createStruct("Emote", (s) => ({
+    id: s.field("ID", t.string()),
+    emote_set_id: s.field("Emote Set ID", t.string()),
+    owner_id: s.field("Owner ID", t.string()),
+    format: s.field("Format", t.list(t.string())),
+  }));
+
+  const MentionStruct = createStruct("Mention", (s) => ({
+    user_id: s.field("User ID", t.string()),
+    user_name: s.field("UserName", t.string()),
+    user_login: s.field("User Login", t.string()),
+  }));
+
+  const CheermoteStruct = createStruct("Cheermote", (s) => ({
+    prefix: s.field("Prefix", t.string()),
+    bits: s.field("Bits", t.int()),
+    tier: s.field("Tier", t.int()),
+  }));
+
+  const FragmentsStruct = createStruct("Message", (s) => ({
+    type: s.field("Type", t.option(t.string())),
+    text: s.field("Text", t.option(t.string())),
+    cheermote: s.field("Cheermote", t.option(t.struct(CheermoteStruct))),
+    emote: s.field("Emote", t.option(t.struct(EmoteStruct))),
+    mention: s.field("Mention", t.option(t.struct(MentionStruct))),
+  }));
+
+  const BadgesStruct = createStruct("Badges", (s) => ({
+    set_id: s.field("Set ID", t.string()),
+    id: s.field("ID", t.string()),
+    info: s.field("Info", t.string()),
+  }));
+
+  const MessageStruct = createStruct("Message", (s) => ({
+    text: s.field("Text", t.string()),
+    fragments: s.field("Fragments", t.list(t.struct(FragmentsStruct))),
+  }));
+
+  interface badge {
+    set_id: string;
+    id: string;
+    info: string;
+  }
+
+  interface fragment {
+    type: string;
+    text: string;
+    cheermote: cheermote;
+    emote: emote;
+    mention: mention;
+  }
+
+  interface cheermote {
+    prefix: string;
+    bits: number;
+    tier: number;
+  }
+
+  interface emote {
+    id: string;
+    emote_set_id: string;
+    owner_id: string;
+    format: string[];
+  }
+
+  interface mention {
+    user_id: string;
+    user_name: string;
+    user_login: string;
+  }
+
+  const ChannelChatNotificationEnum = createEnum(
+    "Channel Chat Notification",
+    (e) => [
+      e.variant("Sub", {
+        value: t.struct(SubStruct),
+      }),
+      e.variant("Resub", {
+        value: t.struct(ReSubStruct),
+      }),
+      e.variant("Sub Gift", {
+        value: t.struct(SubGiftStruct),
+      }),
+      e.variant("Community Sub Gift", {
+        value: t.struct(CommunitySubGiftStruct),
+      }),
+      e.variant("Gift Paid Upgrade", {
+        value: t.struct(GiftPaidUpgradeStruct),
+      }),
+      e.variant("Prime Paid Upgrade", {
+        value: t.string(),
+      }),
+      e.variant("Raid", {
+        value: t.struct(RaidStruct),
+      }),
+      e.variant("Pay It Forward", {
+        value: t.struct(PayItForwardStruct),
+      }),
+      e.variant("Announcement", {
+        value: t.string(),
+      }),
+      e.variant("Charity Donation", {
+        value: t.struct(CharityDonationStruct),
+      }),
+      e.variant("Bits Badge Tier", {
+        value: t.int(),
+      }),
+    ]
+  );
+
+  pkg.createEventSchema({
+    name: "Channel Chat Notification",
+    event: "channel.chat.notification",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        broadcaster: io.dataOutput({
+          id: "broadcaster",
+          name: "Broadcaster",
+          type: t.struct(BroadcasterInfoStruct),
+        }),
+        chatter: io.dataOutput({
+          id: "chatter",
+          name: "Chatter",
+          type: t.struct(ChatterStruct),
+        }),
+        chatterIsAnonymous: io.dataOutput({
+          id: "chatterAnonymous",
+          name: "Chatter is Anonymous",
+          type: t.bool(),
+        }),
+        color: io.dataOutput({
+          id: "color",
+          name: "Color",
+          type: t.string(),
+        }),
+        badges: io.dataOutput({
+          id: "badges",
+          name: "Badges",
+          type: t.list(t.struct(BadgesStruct)),
+        }),
+        systemMessage: io.dataOutput({
+          id: "systemMessage",
+          name: "System Message",
+          type: t.string(),
+        }),
+        message_id: io.dataOutput({
+          id: "messageid",
+          name: "Message ID",
+          type: t.string(),
+        }),
+        message: io.dataOutput({
+          id: "message",
+          name: "Message",
+          type: t.struct(MessageStruct),
+        }),
+        noticeType: io.dataOutput({
+          id: "noticeType",
+          name: "Notice Type",
+          type: t.string(),
+        }),
+        notice: io.dataOutput({
+          id: "notice",
+          name: "Notice",
+          type: t.enum(ChannelChatNotificationEnum),
+        }),
+      };
+    },
+    run({ ctx, io, data }) {
+      console.log(data);
+      ctx.setOutput(io.chatterIsAnonymous, data.chatter_is_anonymous);
+      ctx.setOutput(io.color, data.color);
+      ctx.setOutput(io.message_id, data.message_id);
+      ctx.setOutput(io.noticeType, data.notice_type);
+      ctx.setOutput(
+        io.broadcaster,
+        BroadcasterInfoStruct.create({
+          broadcaster_user_id: data.broadcaster_user_id,
+          broadcaster_user_name: data.broadcaster_user_name,
+          broadcaster_user_login: data.broadcaster_user_login,
+        })
+      );
+      ctx.setOutput(
+        io.chatter,
+        ChatterStruct.create({
+          chatter_user_id: data.chatter_user_id,
+          chatter_user_name: data.chatter_user_name,
+          chatter_user_login: data.chatter_user_login,
+        })
+      );
+      let badges = [] as badge[];
+      data.badges.forEach((badge: badge) => {
+        badges.push(
+          BadgesStruct.create({
+            set_id: badge.set_id,
+            id: badge.id,
+            info: badge.info,
+          })
+        );
+      });
+      ctx.setOutput(io.badges, badges);
+      let fragments = [] as fragment[];
+
+      data.message.fragments.forEach((fragment: fragment) => {
+        FragmentsStruct.create({
+          type: Maybe(fragment.type),
+          text: Maybe(fragment.text),
+          cheermote: Maybe(
+            fragment.cheermote === null
+              ? null
+              : CheermoteStruct.create({
+                  prefix: fragment.cheermote.prefix,
+                  bits: fragment.cheermote.bits,
+                  tier: fragment.cheermote.tier,
+                })
+          ),
+          emote: Maybe(
+            fragment.emote === null
+              ? null
+              : EmoteStruct.create({
+                  id: fragment.emote.id,
+                  emote_set_id: fragment.emote.emote_set_id,
+                  owner_id: fragment.emote.owner_id,
+                  format: fragment.emote.format,
+                })
+          ),
+          mention: Maybe(
+            fragment.mention === null
+              ? null
+              : MentionStruct.create({
+                  user_id: fragment.mention.user_id,
+                  user_name: fragment.mention.user_name,
+                  user_login: fragment.mention.user_login,
+                })
+          ),
+        });
+      });
+      let Notice: any;
+      if (data.sub !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Sub",
+          {
+            value: {
+              sub_Tier: data.sub.sub_Tier,
+              is_prime: data.sub.is_prime,
+              duration_months: data.sub.duration_months,
+            },
+          },
+        ]);
+      }
+      if (data.resub !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Resub",
+          {
+            value: {
+              cumulative_months: data.resub.cumulative_months,
+              duration_months: data.resub.duration_months,
+              streak_months: data.resub.streak_months,
+              sub_tier: data.resub.sub_tier,
+              is_prime: data.resub.is_prime,
+              is_gift: data.resub.is_gift,
+              gifter_is_anonymous: data.resub.gifter_is_anonymous,
+              gifter_user_id: data.resub.gifter_user_id,
+              gifter_user_name: data.resub.gifter_user_name,
+              gifter_user_login: data.resub.gifter_user_login,
+            },
+          },
+        ]);
+      }
+      if (data.sub_gift !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Sub Gift",
+          {
+            value: {
+              cumulative_months: data.sub_gift.cumulative_months,
+              duration_months: data.sub_gift.duration_months,
+              sub_tier: data.sub_gift.sub_tier,
+              recipient_user_id: data.sub_gift.recipient_user_id,
+              recipient_user_name: data.sub_gift.recipient_user_name,
+              recipient_user_login: data.sub_gift.recipient_user_login,
+              community_gift_id: Maybe(data.sub_gift.community_gift_id),
+            },
+          },
+        ]);
+      }
+      if (data.community_sub_gift !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Community Sub Gift",
+          {
+            value: {
+              id: data.community_sub_gift.id,
+              total: data.community_sub_gift.total,
+              sub_tier: data.community_sub_gift.sub_tier,
+              cumulative_total: data.community_sub_gift.cumulative_total,
+            },
+          },
+        ]);
+      }
+      if (data.gift_paid_upgrade !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Gift Paid Upgrade",
+          {
+            value: {
+              gifter_is_anonymous: data.gift_paid_upgrade.gifter_is_anonymous,
+              gifter_user_id: data.gift_paid_upgrade.gifter_user_id,
+              gifter_user_name: data.gift_paid_upgrade.gifter_user_name,
+              gifter_user_login: data.gift_paid_upgrade.gifter_user_login,
+            },
+          },
+        ]);
+      }
+      if (data.prime_paid_upgrade !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Prime Paid Upgrade",
+          {
+            value: data.prime_paid_upgrade.sub_tier,
+          },
+        ]);
+      }
+      if (data.raid !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Raid",
+          {
+            value: {
+              user_id: data.raid.user_id,
+              user_name: data.raid.user_name,
+              user_login: data.raid.user_login,
+              viewer_count: data.raid.viewer_count,
+              profile_image_url: data.raid.profile_image_url,
+            },
+          },
+        ]);
+      }
+      if (data.pay_it_forward !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Pay It Forward",
+          {
+            value: {
+              gifter_is_anonymous: data.pay_it_forward.gifter_is_anonymous,
+              gifter_user_id: data.pay_it_forward.gifter_user_id,
+              gifter_user_name: data.pay_it_forward.gifter_user_name,
+              gifter_user_login: data.pay_it_forward.gifter_user_login,
+            },
+          },
+        ]);
+      }
+      if (data.charity_donation !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Charity Donation",
+          {
+            value: {
+              charity_name: data.charity_donation.charity_name,
+              amount: AmountStruct.create({
+                value: data.charity_donation.amount.value,
+                decimal_places: data.charity_donation.amount.decimal_places,
+                currency: data.charity_donation.amount.currency,
+              }),
+            },
+          },
+        ]);
+      }
+      if (data.bits_badge_tier !== null) {
+        Notice = ChannelChatNotificationEnum.variant([
+          "Bits Badge Tier",
+          {
+            value: data.bits_badge_tier.tier,
+          },
+        ]);
+      }
+      if (data.announcement !== null) {
+        console.log("test");
+        Notice = ChannelChatNotificationEnum.variant([
+          "Announcement",
+          { value: data.announcement.color },
+        ]);
+      }
+
+      ctx.setOutput(
+        io.message,
+        MessageStruct.create({
+          text: data.message.text,
+          fragments: fragments,
+        })
+      );
+      console.log(Notice);
+      ctx.setOutput(io.notice, Notice);
+      ctx.exec(io.exec);
+    },
+  });
 }
 
 const SubTypes = [
   "channel.update",
   "channel.follow",
+  "channel.ad_break.begin",
+  "channel.chat.clear",
+  "channel.chat.notification",
+  "channel.chat.message_delete",
+  "channel.chat.clear_user_messages",
   "channel.subscribe",
   "channel.subscription.end",
   "channel.subscription.gift",
@@ -1965,6 +2532,9 @@ const SubTypes = [
   "channel.prediction.progress",
   "channel.prediction.lock",
   "channel.prediction.end",
+  "channel.goal.begin",
+  "channel.goal.progress",
+  "channel.goal.end",
   "channel.hype_train.begin",
   "channel.hype_train.progress",
   "channel.hype_train.end",
@@ -1972,7 +2542,6 @@ const SubTypes = [
   "channel.shield_mode.end",
   "channel.shoutout.create",
   "channel.shoutout.receive",
-  "channel.ad_break.begin",
   "stream.online",
   "stream.offline",
 ];
