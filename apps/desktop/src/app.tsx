@@ -6,6 +6,7 @@ import { makePersisted } from "@solid-primitives/storage";
 import { createSignal } from "solid-js";
 import { core } from "./core";
 import { SerializedProject } from "@macrograph/runtime";
+import { render } from "solid-js/web";
 
 const [projectUrl, setProjectUrl] = makePersisted(
   createSignal<string | null>(null),
@@ -55,10 +56,12 @@ const platform: Platform = {
   },
 };
 
-export default function () {
+function App() {
   return (
     <PlatformContext.Provider value={platform}>
       <Interface core={core} environment="custom" />
     </PlatformContext.Provider>
   );
 }
+
+render(App, document.getElementById("app")!);
