@@ -70,7 +70,6 @@ export const TextInput = (props: Props) => {
                     on(
                       () => props.value,
                       () => {
-                        console.log(props.value);
                         if (mounted()) setShouldFilter(true);
                       },
                       { defer: true }
