@@ -1941,6 +1941,93 @@ export function register(pkg: Package) {
     },
   });
 
+  pkg.createEventSchema({
+    name: "Channel Chat Clear User Messages",
+    event: "channel.chat.clear_user_messages",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        targetUserId: io.dataOutput({
+          id: "targetUserId",
+          name: "User ID",
+          type: t.string(),
+        }),
+        targetUserName: io.dataOutput({
+          id: "targetUserName",
+          name: "UserName",
+          type: t.string(),
+        }),
+        targetUserLogin: io.dataOutput({
+          id: "targetUserLogin",
+          name: "User Login",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io, data }) {
+      ctx.setOutput(io.targetUserId, data.target_user_id);
+      ctx.setOutput(io.targetUserName, data.target_user_name);
+      ctx.setOutput(io.targetUserLogin, data.target_user_login);
+      ctx.exec(io.exec);
+    },
+  });
+
+  pkg.createEventSchema({
+    name: "Chat Message Deleted Eventsub",
+    event: "channel.chat.message_delete",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        targetUserId: io.dataOutput({
+          id: "targetUserId",
+          name: "User ID",
+          type: t.string(),
+        }),
+        targetUserName: io.dataOutput({
+          id: "targetUserName",
+          name: "UserName",
+          type: t.string(),
+        }),
+        targetUserLogin: io.dataOutput({
+          id: "targetUserLogin",
+          name: "User Login",
+          type: t.string(),
+        }),
+        messageId: io.dataOutput({
+          id: "messageId",
+          name: "Message ID",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io, data }) {
+      ctx.setOutput(io.targetUserId, data.target_user_id);
+      ctx.setOutput(io.targetUserName, data.target_user_name);
+      ctx.setOutput(io.targetUserLogin, data.target_user_login);
+      ctx.setOutput(io.messageId, data.message_id);
+      ctx.exec(io.exec);
+    },
+  });
+
+  pkg.createEventSchema({
+    name: "Channel Chat Clear",
+    event: "channel.chat.clear",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      ctx.exec(io.exec);
+    },
+  });
+
   const SubStruct = createStruct("Sub", (s) => ({
     sub_Tier: s.field("Sub Tier", t.string()),
     is_prime: s.field("Is Prime", t.bool()),
@@ -1967,7 +2054,7 @@ export function register(pkg: Package) {
     recipient_user_name: s.field("Recipient UserName", t.string()),
     recipient_user_id: s.field("Recipient User ID", t.string()),
     recipient_user_login: s.field("Recipient User Login", t.string()),
-    community_gift_id: s.field("Community Gift ID", t.string()),
+    community_gift_id: s.field("Community Gift ID", t.option(t.string())),
   }));
 
   const CommunitySubGiftStruct = createStruct("Community Gift Sub", (s) => ({
@@ -2304,7 +2391,7 @@ export function register(pkg: Package) {
               recipient_user_id: data.sub_gift.recipient_user_id,
               recipient_user_name: data.sub_gift.recipient_user_name,
               recipient_user_login: data.sub_gift.recipient_user_login,
-              community_gift_id: data.sub_gift.community_gift_id,
+              community_gift_id: Maybe(data.sub_gift.community_gift_id),
             },
           },
         ]);
@@ -2418,6 +2505,11 @@ export function register(pkg: Package) {
 const SubTypes = [
   "channel.update",
   "channel.follow",
+  "channel.ad_break.begin",
+  "channel.chat.clear",
+  "channel.chat.notification",
+  "channel.chat.message_delete",
+  "channel.chat.clear_user_messages",
   "channel.subscribe",
   "channel.subscription.end",
   "channel.subscription.gift",
@@ -2428,7 +2520,6 @@ const SubTypes = [
   "channel.unban",
   "channel.moderator.add",
   "channel.moderator.remove",
-  "channel.chat.notification",
   "channel.channel_points_custom_reward.add",
   "channel.channel_points_custom_reward.update",
   "channel.channel_points_custom_reward.remove",
@@ -2441,6 +2532,9 @@ const SubTypes = [
   "channel.prediction.progress",
   "channel.prediction.lock",
   "channel.prediction.end",
+  "channel.goal.begin",
+  "channel.goal.progress",
+  "channel.goal.end",
   "channel.hype_train.begin",
   "channel.hype_train.progress",
   "channel.hype_train.end",
@@ -2448,7 +2542,6 @@ const SubTypes = [
   "channel.shield_mode.end",
   "channel.shoutout.create",
   "channel.shoutout.receive",
-  "channel.ad_break.begin",
   "stream.online",
   "stream.offline",
 ];

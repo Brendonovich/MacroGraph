@@ -216,7 +216,7 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   });
 
   pkg.createEventSchema({
-    name: "Messaged Deleted",
+    name: "Chat Message Deleted IRC",
     event: "messagedeleted",
     createIO: ({ io }) => {
       return {
