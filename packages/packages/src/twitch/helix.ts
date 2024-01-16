@@ -791,10 +791,9 @@ export function register(pkg: Package, { client, user }: Helix) {
       const clipId = await client.clips.post(z.any(), {
         body: new URLSearchParams({ broadcaster_id: userId().unwrap() }),
       });
-      const data = clipId.data[0];
 
-      ctx.setOutput(io.clipId, data.id);
-      ctx.setOutput(io.editUrl, data.edit_url);
+      ctx.setOutput(io.clipId, clipId.id);
+      ctx.setOutput(io.editUrl, clipId.edit_url);
     },
   });
 
