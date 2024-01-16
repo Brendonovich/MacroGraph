@@ -14,14 +14,12 @@ import { Simplify } from "type-fest";
 
 import { Core } from "./Core";
 import {
-  EventSchema as EventSchema,
   EventNodeSchema,
   EventsMap,
   NodeSchema,
   NonEventNodeSchema,
   PropertyDef,
   SchemaProperties,
-  CreateEventSchema,
   CreateSchema,
   Schema,
   RunProps,
