@@ -1,11 +1,9 @@
 import { For, Match, Show, Switch, createSignal } from "solid-js";
 import { Card } from "@macrograph/ui";
+import { useCoreContext } from "../../contexts";
+import { SidebarSection } from "../../components/Sidebar";
 
-import { useCoreContext } from "../contexts";
-import { SidebarSection } from "./Sidebar";
-import { TypeEditor } from "./TypeEditor";
-
-export const CustomEventList = () => {
+export function CustomEvents() {
   const ctx = useCoreContext();
 
   return (
@@ -201,4 +199,4 @@ export const CustomEventList = () => {
       </ul>
     </SidebarSection>
   );
-};
+}

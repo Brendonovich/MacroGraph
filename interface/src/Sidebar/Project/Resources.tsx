@@ -1,13 +1,10 @@
 import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
-import { Graph } from "@macrograph/runtime";
 import { Card } from "@macrograph/ui";
 import { DropdownMenu } from "@kobalte/core";
 
-import { useCore, useCoreContext } from "../../contexts";
-import { GraphItem } from "./GraphItem";
-import { SidebarSection } from "../Sidebar";
-import { deserializeClipboardItem, readFromClipboard } from "../../clipboard";
-import { SelectInput } from "../ui";
+import { useCore } from "../../contexts";
+import { SidebarSection } from "../../components/Sidebar";
+import { SelectInput } from "../../components/ui";
 
 export function Resources() {
   const core = useCore();
@@ -16,7 +13,7 @@ export function Resources() {
 
   return (
     <SidebarSection title="Resources" right={<AddResourceButton />}>
-      <ul class="p-2">
+      <ul class="p-2 space-y-2">
         <For each={resources()}>
           {([type, data]) => {
             const [open, setOpen] = createSignal(true);
@@ -196,57 +193,5 @@ function AddResourceButton() {
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
-  );
-}
-
-// React component to show a list of projects
-interface Props {
-  currentGraph?: number;
-  onGraphClicked(graph: Graph): void;
-}
-
-export function GraphList(props: Props) {
-  const ctx = useCoreContext();
-
-  return (
-    <SidebarSection
-      title="Graphs"
-      right={
-        <div class="flex flex-row items-center text-xl font-bold space-x-1">
-          <button
-            onClick={async (e) => {
-              e.stopPropagation();
-              const item = deserializeClipboardItem(await readFromClipboard());
-              if (item.type !== "graph") return;
-
-              item.graph.id = ctx.core.project.generateGraphId();
-              const graph = Graph.deserialize(ctx.core.project, item.graph);
-              ctx.core.project.graphs.set(graph.id, graph);
-            }}
-          >
-            <IconGgImport />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              const graph = ctx.core.project.createGraph();
-              props.onGraphClicked(graph);
-            }}
-          >
-            <IconMaterialSymbolsAddRounded class="w-6 h-6" />
-          </button>
-        </div>
-      }
-    >
-      <For each={[...ctx.core.project.graphs.values()]}>
-        {(graph) => (
-          <GraphItem
-            graph={graph}
-            onClick={() => props.onGraphClicked(graph)}
-            isCurrentGraph={graph.id === props.currentGraph}
-          />
-        )}
-      </For>
-    </SidebarSection>
   );
 }
