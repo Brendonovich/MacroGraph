@@ -83,14 +83,19 @@ export function pkg() {
     run({ ctx, io, properties }) {
       const value = jsonToJS(ctx.getInput(io.in));
       let query = ctx.getProperty(properties.query);
-      let output = value;
-      query.split(".").forEach((key) => {
-        if (output !== null && key in output) {
-          output = output[key];
-        } else {
-          output = null;
-        }
-      });
+      let output: { [x: string]: any } | null = null;
+      if (query[0] === ".") {
+        query = query.slice(1);
+        output = value;
+        let keys = query.split(".");
+        keys.forEach((key) => {
+          if (output !== null && output[key] !== undefined) {
+            output = output[key];
+          } else {
+            output = null;
+          }
+        });
+      }
 
       ctx.setOutput(io.out, Maybe(jsToJSON(output)));
     },
