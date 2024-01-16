@@ -133,7 +133,7 @@ export function ConnectionsDialog(props: ParentProps) {
                     onClick={() =>
                       startTransition(() => setSelectedPackage(pkg))
                     }
-                    class={"p-2 w-full h-full text-left"}
+                    class={"p-2 w-full text-left"}
                     classList={{ "bg-black": selectedPackage() === pkg }}
                   >
                     {pkg.name}
