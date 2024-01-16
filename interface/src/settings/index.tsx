@@ -124,8 +124,8 @@ export function ConnectionsDialog(props: ParentProps) {
             <IconBiX class="w-8 h-8" />
           </Dialog.CloseButton>
         </div>
-        <div class="flex flex-row divide-x divide-black">
-          <ul>
+        <div class="flex flex-row divide-x divide-black overflow-auto">
+          <ul class="h-full overflow-auto">
             <For each={packages()}>
               {(pkg) => (
                 <li>
