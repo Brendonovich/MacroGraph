@@ -260,7 +260,7 @@ export type inferPropertyDef<TProperty extends PropertyDef> =
     ? Option<TValue>
     : never;
 
-export type SchemaProperties<TProperties> = {
+export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
   [K in keyof TProperties]: {
     id: K;
   } & TProperties[K];
