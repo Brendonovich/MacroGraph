@@ -3,6 +3,7 @@ import { Maybe, None, Some, t } from "@macrograph/typesystem";
 
 import { JSON } from "./type";
 import { jsToJSON, jsonToJS, toJSON } from "./conversion";
+import { Properties } from "solid-js/web";
 
 export function pkg() {
   const pkg = new Package({
@@ -55,6 +56,48 @@ export function pkg() {
     run({ ctx, io }) {
       const value = jsToJSON(window.JSON.parse(ctx.getInput(io.in)));
       ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Query JSON",
+    variant: "Exec",
+    properties: {
+      query: {
+        name: "Query",
+        type: t.string(),
+      },
+    },
+    createIO({ io }) {
+      return {
+        in: io.dataInput({
+          id: "in",
+          type: t.enum(JSON),
+        }),
+        out: io.dataOutput({
+          id: "out",
+          type: t.option(t.enum(JSON)),
+        }),
+      };
+    },
+    run({ ctx, io, properties }) {
+      const value = jsonToJS(ctx.getInput(io.in));
+      let query = ctx.getProperty(properties.query);
+      let output: { [x: string]: any } | null = null;
+      if (query[0] === ".") {
+        query = query.slice(1);
+        output = value;
+        let keys = query.split(".");
+        keys.forEach((key) => {
+          if (output !== null && output[key] !== undefined) {
+            output = output[key];
+          } else {
+            output = null;
+          }
+        });
+      }
+
+      ctx.setOutput(io.out, Maybe(jsToJSON(output)));
     },
   });
 
