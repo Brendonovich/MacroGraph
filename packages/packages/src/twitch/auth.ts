@@ -1,10 +1,15 @@
-import { Core, OAuthToken, makePersisted } from "@macrograph/runtime";
+import {
+  Core,
+  OAUTH_TOKEN,
+  OAuthToken,
+  makePersisted,
+} from "@macrograph/runtime";
 import { Maybe, None } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
-import { z } from "zod";
 import { createMemo, createSignal } from "solid-js";
+import { z } from "zod";
 
-import { createHelixEndpoint } from "./helix";
+import { Helix } from "./helix";
 
 const USER_DATA = z.object({
   id: z.string(),
@@ -12,20 +17,29 @@ const USER_DATA = z.object({
   display_name: z.string(),
 });
 
+const LOCALSTORAGE = z.record(
+  z.string(),
+  OAUTH_TOKEN.and(
+    z.object({
+      eventsub: z.boolean().default(false),
+    })
+  )
+);
+
 const TOKENS_LOCALSTORAGE = "twitchTokens";
 
-export function createAuth(clientId: string, core: Core) {
-  const accounts = new ReactiveMap<
-    string,
-    {
-      token: OAuthToken;
-      data: z.infer<typeof USER_DATA>;
-      refreshTimer: ReturnType<typeof setTimeout>;
-    }
-  >();
+export interface Account {
+  token: OAuthToken;
+  eventsub: boolean;
+  data: z.infer<typeof USER_DATA>;
+  refreshTimer: ReturnType<typeof setTimeout>;
+}
+
+export function createAuth(clientId: string, core: Core, helixClient: Helix) {
+  const accounts = new ReactiveMap<string, Account>();
 
   Maybe(localStorage.getItem(TOKENS_LOCALSTORAGE))
-    .map(JSON.parse)
+    .map((s) => LOCALSTORAGE.parse(JSON.parse(s)))
     .map((tokens) => {
       Object.values(tokens).forEach((token: any) => addToken(token));
     });
@@ -33,30 +47,25 @@ export function createAuth(clientId: string, core: Core) {
   function persistTokens() {
     const tokens = [...accounts.values()].reduce(
       (acc, account) => ({
-        [account.data.id]: account.token,
+        [account.data.id]: {
+          ...account.token,
+          eventsub: account.eventsub,
+        },
         ...acc,
       }),
-      {} as Record<string, OAuthToken>
+      {} as z.infer<typeof LOCALSTORAGE>
     );
 
     localStorage.setItem(TOKENS_LOCALSTORAGE, JSON.stringify(tokens));
   }
 
   async function addToken(token: OAuthToken) {
-    const api = createHelixEndpoint(
-      clientId,
-      () => token,
-      (newToken) => {
-        token = newToken;
-      },
-      core
-    );
-
-    const data = await api.users.get(USER_DATA);
+    const data = await helixClient.call("GET /users", { token } as any, {});
 
     accounts.set(data.id, {
       token,
       data,
+      eventsub: false,
       refreshTimer: setTimeout(
         () => refresh(data.id),
         (token.issued_at + token.expires_in) * 1000 - Date.now()

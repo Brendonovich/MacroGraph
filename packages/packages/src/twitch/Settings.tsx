@@ -1,108 +1,85 @@
 import { createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
-import { Some } from "@macrograph/typesystem";
 import { Button } from "@macrograph/ui";
 import { Tooltip } from "@kobalte/core";
 
 import { Ctx } from "./ctx";
 
-export default ({ core, helix, chat, auth }: Ctx) => {
+export default ({ core, auth, eventSub }: Ctx) => {
   const [loggingIn, setLoggingIn] = createSignal(false);
-
-  const columns = [
-    { name: "Helix API", user: helix.user },
-    { name: "Chat", user: chat.writeUser },
-    { name: "Chat Writer", user: chat.readUser },
-  ];
 
   return (
     <>
-      <Switch>
-        <Match when={auth.accounts.size !== 0}>
-          <table class="mb-2 table-auto w-full">
-            <thead>
-              <tr>
-                <th class="pr-2 text-left">Account</th>
-                <For each={columns}>
-                  {(column) => <th class="px-2 text-center">{column.name}</th>}
-                </For>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={[...auth.accounts.values()]}>
-                {(account) => {
-                  const expiryTime =
-                    account.token.expires_in + account.token.issued_at;
+      <ul class="flex flex-col mb-2 space-y-2">
+        <For each={[...auth.accounts.values()]}>
+          {(account) => {
+            const expiryTime =
+              account.token.expires_in + account.token.issued_at;
 
-                  const [now, setNow] = createSignal(Date.now());
+            const [now, setNow] = createSignal(Date.now());
 
-                  onMount(() => {
-                    const interval = setInterval(() => {
-                      setNow(Date.now());
-                    }, 1000);
+            onMount(() => {
+              const interval = setInterval(() => {
+                setNow(Date.now());
+              }, 1000);
 
-                    onCleanup(() => clearInterval(interval));
-                  });
+              onCleanup(() => clearInterval(interval));
+            });
 
-                  const expiresIn = () => {
-                    return Math.floor(expiryTime - now() / 1000);
-                  };
+            const expiresIn = () => {
+              return Math.floor(expiryTime - now() / 1000);
+            };
 
-                  return (
-                    <tr>
-                      <td>
-                        <Tooltip.Root>
-                          <Tooltip.Trigger>
-                            <span>{account.data.display_name}</span>
-                          </Tooltip.Trigger>
-                          <Tooltip.Portal>
-                            <Tooltip.Content class="bg-neutral-900 text-white border border-neutral-400 px-2 py-1 rounded">
-                              <Tooltip.Arrow />
-                              <p>Expires in {expiresIn()}s</p>
-                            </Tooltip.Content>
-                          </Tooltip.Portal>
-                        </Tooltip.Root>
-                      </td>
-                      <For each={columns}>
-                        {(column) => (
-                          <td class="text-center content-center align-middle">
-                            <input
-                              type="radio"
-                              id={column.name}
-                              checked={column.user
-                                .account()
-                                .map((a) => a.data.id === account.data.id)
-                                .unwrapOr(false)}
-                              onChange={async (r) => {
-                                if (r.target.checked)
-                                  column.user.setId(Some(account.data.id));
-                              }}
-                            />
-                          </td>
-                        )}
-                      </For>
-                      <td>
-                        <Button onClick={() => auth.logOut(account.data.id)}>
-                          Remove
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                }}
-              </For>
-            </tbody>
-          </table>
-        </Match>
-      </Switch>
-      <Switch>
-        <Match when={loggingIn()}>
-          {(_) => {
             return (
-              <div class="flex space-x-4 items-center">
-                <p>Logging in...</p>
-                <Button onClick={() => setLoggingIn(false)}>Cancel</Button>
-              </div>
+              <li>
+                <div class="flex flex-row items-center justify-between">
+                  <Tooltip.Root>
+                    <Tooltip.Trigger>
+                      <span>{account.data.display_name}</span>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content class="bg-neutral-900 text-white border border-neutral-400 px-2 py-1 rounded">
+                        <Tooltip.Arrow />
+                        <p>Expires in {expiresIn()}s</p>
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                  <Button onClick={() => auth.logOut(account.data.id)}>
+                    Remove
+                  </Button>
+                </div>
+                <div class="space-x-2">
+                  <Switch fallback="EventSub Connecting...">
+                    <Match when={!account.eventsub}>
+                      <span>EventSub Disconnected</span>
+                      <Button
+                        onClick={() => eventSub.connectSocket(account.data.id)}
+                      >
+                        Connect
+                      </Button>
+                    </Match>
+                    <Match when={eventSub.sockets.get(account.data.id)}>
+                      EventSub Connected
+                      <Button
+                        onClick={() =>
+                          eventSub.disconnectSocket(account.data.id)
+                        }
+                      >
+                        Disconnect
+                      </Button>
+                    </Match>
+                  </Switch>
+                </div>
+              </li>
             );
           }}
+        </For>
+      </ul>
+      <Switch>
+        <Match when={loggingIn()}>
+          <div class="flex space-x-4 items-center">
+            <p>Logging in...</p>
+            <Button onClick={() => setLoggingIn(false)}>Cancel</Button>
+          </div>
         </Match>
         <Match when={!loggingIn()}>
           <Button

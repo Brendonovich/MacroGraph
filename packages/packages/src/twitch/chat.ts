@@ -7,6 +7,8 @@ import { t, None, Maybe } from "@macrograph/typesystem";
 import { Ctx } from "./ctx";
 import { Auth, createUserInstance } from "./auth";
 import { ReactiveMap } from "@solid-primitives/map";
+import { TwitchAccount, accountProperty, defaultProperties } from "./resource";
+import { createEventBus } from "@solid-primitives/event-bus";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
 export const CHAT_WRITE_USER_ID = "chatWriteUserId";
@@ -100,13 +102,22 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
   pkg.createNonEventSchema({
     name: "Send Chat Message",
     variant: "Exec",
-    createIO: ({ io }) => {
-      return io.dataInput({
+    properties: {
+      sender: {
+        name: "Sender",
+        resource: TwitchAccount,
+      },
+      receiver: {
+        name: "Receiver",
+        type: t.string(),
+      },
+    },
+    createIO: ({ io }) =>
+      io.dataInput({
         id: "message",
         name: "Message",
         type: t.string(),
-      });
-    },
+      }),
     async run({ ctx, io }) {
       await client()
         .expect("No Twitch Chat client available!")
@@ -248,9 +259,117 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
     },
   });
 
+  pkg.createSchema({
+    name: "Chat Message (new)",
+    type: "event",
+    properties: {
+      source: {
+        name: "Twitch Channel",
+        type: t.string(),
+      },
+    },
+    createListener() {
+      return createEventBus();
+    },
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        username: io.dataOutput({
+          id: "username",
+          name: "Username",
+          type: t.string(),
+        }),
+        displayName: io.dataOutput({
+          id: "displayName",
+          name: "Display Name",
+          type: t.string(),
+        }),
+        userId: io.dataOutput({
+          id: "userId",
+          name: "User ID",
+          type: t.string(),
+        }),
+        message: io.dataOutput({
+          id: "message",
+          name: "Message",
+          type: t.string(),
+        }),
+        messageId: io.dataOutput({
+          id: "messageId",
+          name: "Message ID",
+          type: t.string(),
+        }),
+        color: io.dataOutput({
+          id: "color",
+          name: "User Color",
+          type: t.option(t.string()),
+        }),
+        emotes: io.dataOutput({
+          id: "emotes",
+          name: "Emotes",
+          type: t.map(t.enum(JSON)),
+        }),
+        broadcaster: io.dataOutput({
+          id: "broadcaster",
+          name: "Broadcaster",
+          type: t.bool(),
+        }),
+        mod: io.dataOutput({
+          id: "mod",
+          name: "Moderator",
+          type: t.bool(),
+        }),
+        sub: io.dataOutput({
+          id: "sub",
+          name: "Subscriber",
+          type: t.bool(),
+        }),
+        vip: io.dataOutput({
+          id: "vip",
+          name: "VIP",
+          type: t.bool(),
+        }),
+      };
+    },
+    run({ ctx, data, io }) {
+      if (data.self) return;
+      ctx.setOutput(io.username, data.tags.username);
+      ctx.setOutput(io.displayName, data.tags["display-name"]);
+      ctx.setOutput(io.userId, data.tags["user-id"]);
+      ctx.setOutput(io.message, data.message);
+      ctx.setOutput(io.messageId, data.tags.id);
+      ctx.setOutput(io.mod, data.tags.mod);
+      ctx.setOutput(io.sub, data.tags.subscriber);
+      ctx.setOutput(io.vip, data.tags.vip ?? false);
+      ctx.setOutput(io.color, Maybe(data.tags.color));
+      ctx.setOutput(
+        io.broadcaster,
+        data.tags["room-id"] === data.tags["user-id"]
+      );
+      if (data.tags.emotes) {
+        ctx.setOutput(
+          io.emotes,
+          new ReactiveMap(
+            Object.entries(data.tags.emotes).map(([key, value]) => [
+              key,
+              jsToJSON(value)!,
+            ])
+          )
+        );
+      } else {
+        ctx.setOutput(io.emotes, new ReactiveMap());
+      }
+
+      ctx.exec(io.exec);
+    },
+  });
+
   pkg.createEventSchema({
     name: "Chat Message",
     event: "chatMessage",
+    properties: { account: accountProperty },
     createIO: ({ io }) => {
       return {
         exec: io.execOutput({

@@ -18,8 +18,8 @@ export function pkg(core: Core) {
     SettingsUI: () => import("./Settings"),
   });
 
-  helix.register(pkg, ctx.helix);
-  eventsub.register(pkg);
+  helix.register(pkg, ctx.helixClient);
+  // eventsub.register(pkg);
   chat.register(pkg, ctx);
 
   pkg.registerResourceType(TwitchAccount);

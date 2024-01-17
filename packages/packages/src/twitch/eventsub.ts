@@ -1,84 +1,87 @@
-import { createEffect, createSignal, onCleanup, on } from "solid-js";
+import { onCleanup } from "solid-js";
 import {
   createEnum,
+  CreateEventSchema,
   createStruct,
   OnEvent,
   Package,
+  PropertyDef,
+  SchemaProperties,
 } from "@macrograph/runtime";
-import { Maybe, Option, t } from "@macrograph/typesystem";
-import { z } from "zod";
+import { Maybe, t } from "@macrograph/typesystem";
 
 import { Helix } from "./helix";
-import { option } from "@macrograph/typesystem/src/t";
+import { defaultProperties } from "./resource";
+import { createEventBus } from "@solid-primitives/event-bus";
+import { Auth } from "./auth";
+import { ReactiveMap } from "@solid-primitives/map";
 
-export function createEventSub(helix: Helix, onEvent: OnEvent) {
-  const [state, setState] = createSignal<
-    | { type: "disconnected" }
-    | { type: "connecting" | "connected"; ws: WebSocket }
-  >({ type: "disconnected" });
+export function createEventSub(
+  onEvent: OnEvent,
+  helixClient: Helix,
+  auth: Auth
+) {
+  const sockets = new ReactiveMap<string, WebSocket>();
 
-  createEffect(
-    on(
-      () => helix.user.account(),
-      (user) => {
-        user.mapOrElse(
-          () => setState({ type: "disconnected" }),
-          (user) => {
-            const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
+  function connectSocket(userId: string) {
+    if (sockets.has(userId)) return;
+    const account = auth.accounts.get(userId);
+    if (!account) return;
 
-            const userId = user.data.id;
+    const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-            ws.addEventListener("message", async (data) => {
-              let info: any = JSON.parse(data.data);
+    ws.onmessage = async (data) => {
+      let info: any = JSON.parse(data.data);
 
-              switch (info.metadata.message_type) {
-                case "session_welcome":
-                  setState({ type: "connected", ws });
+      switch (info.metadata.message_type) {
+        case "session_welcome":
+          sockets.set(userId, ws);
 
-                  await Promise.allSettled(
-                    SubTypes.map((type) =>
-                      helix.client.eventsub.subscriptions.post(z.any(), {
-                        body: JSON.stringify({
-                          type,
-                          version: type == "channel.follow" ? "2" : "1",
-                          condition: {
-                            broadcaster_user_id: userId,
-                            moderator_user_id: userId,
-                            to_broadcaster_user_id: userId,
-                            user_id: userId,
-                          },
-                          transport: {
-                            method: "websocket",
-                            session_id: info.payload.session.id,
-                          },
-                        }),
-                      })
-                    )
-                  );
+          await Promise.allSettled(
+            SubTypes.map((type) =>
+              helixClient.call("POST /eventsub/subscriptions", account, {
+                body: JSON.stringify({
+                  type,
+                  version: type == "channel.follow" ? "2" : "1",
+                  condition: {
+                    broadcaster_user_id: userId,
+                    moderator_user_id: userId,
+                    to_broadcaster_user_id: userId,
+                    user_id: userId,
+                  },
+                  transport: {
+                    method: "websocket",
+                    session_id: info.payload.session.id,
+                  },
+                }),
+              })
+            )
+          );
 
-                  break;
-                case "notification":
-                  onEvent({
-                    name: info.payload.subscription.type,
-                    data: info.payload.event,
-                  });
-                  break;
-              }
-            });
-
-            setState({ type: "connecting", ws });
-
-            onCleanup(() => {
-              ws.close();
-              setState({ type: "disconnected" });
-            });
-          }
-        );
+          break;
+        case "notification":
+          onEvent({
+            name: info.payload.subscription.type,
+            data: info.payload.event,
+          });
+          break;
       }
-    )
-  );
+    };
 
-  return { state };
+    ws.onclose = () => {
+      sockets.delete(userId);
+      account.eventsub = false;
+    };
+  }
+
+  function disconnectSocket(userId: string) {
+    const ws = sockets.get(userId);
+    if (!ws) return;
+
+    ws.close();
+  }
+
+  return { sockets, connectSocket, disconnectSocket };
 }
 
 const PredictionStatus = createEnum("Prediction Status", (e) => [
@@ -118,6 +121,43 @@ const Poll = createStruct("Choices", (s) => ({
 }));
 
 export function register(pkg: Package) {
+  function createEventsubEventSchema<
+    TEvent extends keyof {},
+    TProperties extends Record<string, PropertyDef> = {},
+    TIO = void
+  >(
+    s: Omit<
+      CreateEventSchema<TProperties & typeof defaultProperties, TIO, any>,
+      "type" | "createListener"
+    > & {
+      properties?: TProperties;
+      event: TEvent;
+    }
+  ) {
+    pkg.createSchema({
+      ...s,
+      type: "event",
+      properties: { ...s.properties, ...defaultProperties } as any,
+      createListener({ ctx, properties }) {
+        const account = ctx
+          .getProperty(
+            properties.account as SchemaProperties<
+              typeof defaultProperties
+            >["account"]
+          )
+          .expect("No account available");
+
+        const bus = createEventBus<any>();
+
+        const fn = (...d: any[]) => bus.emit(d[0]);
+        obs.on(s.event, fn);
+        onCleanup(() => obs.off(s.event, fn));
+
+        return bus;
+      },
+    });
+  }
+
   pkg.createEventSchema({
     name: "User Banned",
     event: "channel.ban",
@@ -2128,7 +2168,7 @@ export function register(pkg: Package) {
     tier: s.field("Tier", t.int()),
   }));
 
-  const FragmentsStruct = createStruct("Message", (s) => ({
+  const FragmentsStruct = createStruct("MessageFragment", (s) => ({
     type: s.field("Type", t.option(t.string())),
     text: s.field("Text", t.option(t.string())),
     cheermote: s.field("Cheermote", t.option(t.struct(CheermoteStruct))),
@@ -2147,34 +2187,34 @@ export function register(pkg: Package) {
     fragments: s.field("Fragments", t.list(t.struct(FragmentsStruct))),
   }));
 
-  interface badge {
+  interface Badge {
     set_id: string;
     id: string;
     info: string;
   }
 
-  interface fragment {
+  interface Fragment {
     type: string;
     text: string;
-    cheermote: cheermote;
-    emote: emote;
-    mention: mention;
+    cheermote: Cheermote | null;
+    emote: Emote | null;
+    mention: Mention | null;
   }
 
-  interface cheermote {
+  interface Cheermote {
     prefix: string;
     bits: number;
     tier: number;
   }
 
-  interface emote {
+  interface Emote {
     id: string;
     emote_set_id: string;
     owner_id: string;
     format: string[];
   }
 
-  interface mention {
+  interface Mention {
     user_id: string;
     user_name: string;
     user_login: string;
@@ -2301,202 +2341,188 @@ export function register(pkg: Package) {
           chatter_user_login: data.chatter_user_login,
         })
       );
-      let badges = [] as badge[];
-      data.badges.forEach((badge: badge) => {
-        badges.push(
+      ctx.setOutput(
+        io.badges,
+        (data.badges as Badge[]).map((badge) =>
           BadgesStruct.create({
             set_id: badge.set_id,
             id: badge.id,
             info: badge.info,
           })
-        );
-      });
-      ctx.setOutput(io.badges, badges);
-      let fragments = [] as fragment[];
-
-      data.message.fragments.forEach((fragment: fragment) => {
-        FragmentsStruct.create({
-          type: Maybe(fragment.type),
-          text: Maybe(fragment.text),
-          cheermote: Maybe(
-            fragment.cheermote === null
-              ? null
-              : CheermoteStruct.create({
-                  prefix: fragment.cheermote.prefix,
-                  bits: fragment.cheermote.bits,
-                  tier: fragment.cheermote.tier,
-                })
-          ),
-          emote: Maybe(
-            fragment.emote === null
-              ? null
-              : EmoteStruct.create({
-                  id: fragment.emote.id,
-                  emote_set_id: fragment.emote.emote_set_id,
-                  owner_id: fragment.emote.owner_id,
-                  format: fragment.emote.format,
-                })
-          ),
-          mention: Maybe(
-            fragment.mention === null
-              ? null
-              : MentionStruct.create({
-                  user_id: fragment.mention.user_id,
-                  user_name: fragment.mention.user_name,
-                  user_login: fragment.mention.user_login,
-                })
-          ),
-        });
-      });
-      let Notice: any;
-      if (data.sub !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Sub",
-          {
-            value: {
-              sub_Tier: data.sub.sub_Tier,
-              is_prime: data.sub.is_prime,
-              duration_months: data.sub.duration_months,
-            },
-          },
-        ]);
-      }
-      if (data.resub !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Resub",
-          {
-            value: {
-              cumulative_months: data.resub.cumulative_months,
-              duration_months: data.resub.duration_months,
-              streak_months: data.resub.streak_months,
-              sub_tier: data.resub.sub_tier,
-              is_prime: data.resub.is_prime,
-              is_gift: data.resub.is_gift,
-              gifter_is_anonymous: data.resub.gifter_is_anonymous,
-              gifter_user_id: data.resub.gifter_user_id,
-              gifter_user_name: data.resub.gifter_user_name,
-              gifter_user_login: data.resub.gifter_user_login,
-            },
-          },
-        ]);
-      }
-      if (data.sub_gift !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Sub Gift",
-          {
-            value: {
-              cumulative_months: data.sub_gift.cumulative_months,
-              duration_months: data.sub_gift.duration_months,
-              sub_tier: data.sub_gift.sub_tier,
-              recipient_user_id: data.sub_gift.recipient_user_id,
-              recipient_user_name: data.sub_gift.recipient_user_name,
-              recipient_user_login: data.sub_gift.recipient_user_login,
-              community_gift_id: Maybe(data.sub_gift.community_gift_id),
-            },
-          },
-        ]);
-      }
-      if (data.community_sub_gift !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Community Sub Gift",
-          {
-            value: {
-              id: data.community_sub_gift.id,
-              total: data.community_sub_gift.total,
-              sub_tier: data.community_sub_gift.sub_tier,
-              cumulative_total: data.community_sub_gift.cumulative_total,
-            },
-          },
-        ]);
-      }
-      if (data.gift_paid_upgrade !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Gift Paid Upgrade",
-          {
-            value: {
-              gifter_is_anonymous: data.gift_paid_upgrade.gifter_is_anonymous,
-              gifter_user_id: data.gift_paid_upgrade.gifter_user_id,
-              gifter_user_name: data.gift_paid_upgrade.gifter_user_name,
-              gifter_user_login: data.gift_paid_upgrade.gifter_user_login,
-            },
-          },
-        ]);
-      }
-      if (data.prime_paid_upgrade !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Prime Paid Upgrade",
-          {
-            value: data.prime_paid_upgrade.sub_tier,
-          },
-        ]);
-      }
-      if (data.raid !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Raid",
-          {
-            value: {
-              user_id: data.raid.user_id,
-              user_name: data.raid.user_name,
-              user_login: data.raid.user_login,
-              viewer_count: data.raid.viewer_count,
-              profile_image_url: data.raid.profile_image_url,
-            },
-          },
-        ]);
-      }
-      if (data.pay_it_forward !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Pay It Forward",
-          {
-            value: {
-              gifter_is_anonymous: data.pay_it_forward.gifter_is_anonymous,
-              gifter_user_id: data.pay_it_forward.gifter_user_id,
-              gifter_user_name: data.pay_it_forward.gifter_user_name,
-              gifter_user_login: data.pay_it_forward.gifter_user_login,
-            },
-          },
-        ]);
-      }
-      if (data.charity_donation !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Charity Donation",
-          {
-            value: {
-              charity_name: data.charity_donation.charity_name,
-              amount: AmountStruct.create({
-                value: data.charity_donation.amount.value,
-                decimal_places: data.charity_donation.amount.decimal_places,
-                currency: data.charity_donation.amount.currency,
-              }),
-            },
-          },
-        ]);
-      }
-      if (data.bits_badge_tier !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Bits Badge Tier",
-          {
-            value: data.bits_badge_tier.tier,
-          },
-        ]);
-      }
-      if (data.announcement !== null) {
-        console.log("test");
-        Notice = ChannelChatNotificationEnum.variant([
-          "Announcement",
-          { value: data.announcement.color },
-        ]);
-      }
+        )
+      );
 
       ctx.setOutput(
         io.message,
         MessageStruct.create({
           text: data.message.text,
-          fragments: fragments,
+          fragments: (data.message.fragments as Fragment[]).map((fragment) =>
+            FragmentsStruct.create({
+              type: Maybe(fragment.type),
+              text: Maybe(fragment.text),
+              cheermote: Maybe(fragment.cheermote).map((cheermote) =>
+                CheermoteStruct.create({
+                  prefix: cheermote.prefix,
+                  bits: cheermote.bits,
+                  tier: cheermote.tier,
+                })
+              ),
+              emote: Maybe(fragment.emote).map((emote) =>
+                EmoteStruct.create({
+                  id: emote.id,
+                  emote_set_id: emote.emote_set_id,
+                  owner_id: emote.owner_id,
+                  format: emote.format,
+                })
+              ),
+              mention: Maybe(fragment.mention).map((mention) =>
+                MentionStruct.create({
+                  user_id: mention.user_id,
+                  user_name: mention.user_name,
+                  user_login: mention.user_login,
+                })
+              ),
+            })
+          ),
         })
       );
-      console.log(Notice);
-      ctx.setOutput(io.notice, Notice);
+
+      ctx.setOutput(
+        io.notice,
+        (() => {
+          switch (data.notice_type) {
+            case "sub": {
+              return ChannelChatNotificationEnum.variant([
+                "Sub",
+                {
+                  value: {
+                    sub_Tier: data.sub.sub_Tier,
+                    is_prime: data.sub.is_prime,
+                    duration_months: data.sub.duration_months,
+                  },
+                },
+              ]);
+            }
+            case "resub": {
+              return ChannelChatNotificationEnum.variant([
+                "Resub",
+                {
+                  value: {
+                    cumulative_months: data.resub.cumulative_months,
+                    duration_months: data.resub.duration_months,
+                    streak_months: data.resub.streak_months,
+                    sub_tier: data.resub.sub_tier,
+                    is_prime: data.resub.is_prime,
+                    is_gift: data.resub.is_gift,
+                    gifter_is_anonymous: data.resub.gifter_is_anonymous,
+                    gifter_user_id: data.resub.gifter_user_id,
+                    gifter_user_name: data.resub.gifter_user_name,
+                    gifter_user_login: data.resub.gifter_user_login,
+                  },
+                },
+              ]);
+            }
+            case "sub_gift": {
+              return ChannelChatNotificationEnum.variant([
+                "Sub Gift",
+                {
+                  value: {
+                    cumulative_months: data.sub_gift.cumulative_months,
+                    duration_months: data.sub_gift.duration_months,
+                    sub_tier: data.sub_gift.sub_tier,
+                    recipient_user_id: data.sub_gift.recipient_user_id,
+                    recipient_user_name: data.sub_gift.recipient_user_name,
+                    recipient_user_login: data.sub_gift.recipient_user_login,
+                    community_gift_id: Maybe(data.sub_gift.community_gift_id),
+                  },
+                },
+              ]);
+            }
+            case "community_sub_gift": {
+              return ChannelChatNotificationEnum.variant([
+                "Community Sub Gift",
+                {
+                  value: {
+                    id: data.community_sub_gift.id,
+                    total: data.community_sub_gift.total,
+                    sub_tier: data.community_sub_gift.sub_tier,
+                    cumulative_total: data.community_sub_gift.cumulative_total,
+                  },
+                },
+              ]);
+            }
+            case "gift_paid_upgrade": {
+              return ChannelChatNotificationEnum.variant([
+                "Gift Paid Upgrade",
+                {
+                  value: {
+                    gifter_is_anonymous:
+                      data.gift_paid_upgrade.gifter_is_anonymous,
+                    gifter_user_id: data.gift_paid_upgrade.gifter_user_id,
+                    gifter_user_name: data.gift_paid_upgrade.gifter_user_name,
+                    gifter_user_login: data.gift_paid_upgrade.gifter_user_login,
+                  },
+                },
+              ]);
+            }
+            case "prime_paid_upgrade": {
+              return ChannelChatNotificationEnum.variant([
+                "Prime Paid Upgrade",
+                {
+                  value: data.prime_paid_upgrade.sub_tier,
+                },
+              ]);
+            }
+            case "raid": {
+              return ChannelChatNotificationEnum.variant([
+                "Raid",
+                {
+                  value: {
+                    user_id: data.raid.user_id,
+                    user_name: data.raid.user_name,
+                    user_login: data.raid.user_login,
+                    viewer_count: data.raid.viewer_count,
+                    profile_image_url: data.raid.profile_image_url,
+                  },
+                },
+              ]);
+            }
+            case "charity_donation": {
+              return ChannelChatNotificationEnum.variant([
+                "Charity Donation",
+                {
+                  value: {
+                    charity_name: data.charity_donation.charity_name,
+                    amount: AmountStruct.create({
+                      value: data.charity_donation.amount.value,
+                      decimal_places:
+                        data.charity_donation.amount.decimal_places,
+                      currency: data.charity_donation.amount.currency,
+                    }),
+                  },
+                },
+              ]);
+            }
+            case "bits_badge_tier": {
+              return ChannelChatNotificationEnum.variant([
+                "Bits Badge Tier",
+                {
+                  value: data.bits_badge_tier.tier,
+                },
+              ]);
+            }
+            case "announcement": {
+              return ChannelChatNotificationEnum.variant([
+                "Announcement",
+                { value: data.announcement.color },
+              ]);
+            }
+            default: {
+              throw new Error(`Unknown notice type "${data.notice_type}"`);
+            }
+          }
+        })()
+      );
       ctx.exec(io.exec);
     },
   });

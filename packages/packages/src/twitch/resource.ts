@@ -7,7 +7,7 @@ export const TwitchAccount = new ResourceType({
     [...pkg.ctx!.auth.accounts].map(([userId, account]) => ({
       id: userId,
       display: account.data.display_name,
-      value: userId,
+      value: account,
     })),
 });
 

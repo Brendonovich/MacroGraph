@@ -2,21 +2,21 @@ import { Core, OnEvent } from "@macrograph/runtime";
 
 import { createAuth } from "./auth";
 import { createChat } from "./chat";
-import { createEventSub } from "./eventsub";
 import { createHelix } from "./helix";
+import { createEventSub } from "./eventsub";
 
-const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
+export const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 export function createCtx(core: Core, onEvent: OnEvent) {
-  const auth = createAuth(CLIENT_ID, core);
-  const helix = createHelix(core, auth);
+  const helixClient = createHelix();
+  const auth = createAuth(CLIENT_ID, core, helixClient);
 
   return {
     core,
     auth,
-    helix,
+    helixClient,
     chat: createChat(auth, onEvent),
-    eventSub: createEventSub(helix, onEvent),
+    eventSub: createEventSub(onEvent, helixClient, auth),
   };
 }
 

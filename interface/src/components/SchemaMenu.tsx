@@ -144,7 +144,7 @@ export function SchemaMenu(props: Props) {
                                         ? s.variant
                                         : "type" in s
                                         ? s.type
-                                        : "Base"
+                                        : "Event"
                                     ]
                                   )}
                                 />

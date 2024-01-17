@@ -2,6 +2,7 @@ import { For, Match, Show, Switch, createSignal } from "solid-js";
 import { Card } from "@macrograph/ui";
 import { useCoreContext } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
+import { TypeEditor } from "../../components/TypeEditor";
 
 export function CustomEvents() {
   const ctx = useCoreContext();

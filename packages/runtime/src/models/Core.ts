@@ -39,6 +39,14 @@ export type OAuthToken = {
   issued_at: number;
 };
 
+export const OAUTH_TOKEN = z.object({
+  access_token: z.string(),
+  refresh_token: z.string(),
+  expires_in: z.number(),
+  scope: z.array(z.string()).default([]),
+  issued_at: z.number(),
+});
+
 export type RefreshedOAuthToken = Omit<OAuthToken, "refresh_token">;
 
 type OAuth = {
