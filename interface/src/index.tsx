@@ -9,6 +9,7 @@ import {
   Node,
   Graph as GraphModel,
   Node as NodeModel,
+  CustomEvent,
   Project,
   Size,
   deserializeConnections,
@@ -45,6 +46,11 @@ import {
 } from "./clipboard";
 import { CustomEventList } from "./components/CustomEvents";
 import "./global.css";
+import {
+  CommandDialog,
+  Control,
+  createSection,
+} from "./components/CommandDialog";
 
 export { useCore } from "./contexts";
 export * from "./platform";
@@ -318,6 +324,8 @@ function ProjectInterface(props: {
           });
         }
 
+        e.stopPropagation();
+
         break;
       }
       case "KeyB": {
@@ -372,6 +380,60 @@ function ProjectInterface(props: {
             e.stopPropagation();
           }}
         >
+          {((_) => {
+            const GraphSection = createSection({
+              title: "Graphs",
+              source: () => [
+                {
+                  title: "Create New Graph",
+                  run(control: Control) {
+                    const graph = props.core.project.createGraph();
+
+                    const currentIndex = graphStates.findIndex(
+                      (s) => s.id === graph.id
+                    );
+
+                    if (currentIndex === -1) {
+                      setGraphStates((s) => [...s, createGraphState(graph)]);
+                      setCurrentGraphIndex(graphStates.length - 1);
+                    } else setCurrentGraphIndex(currentIndex);
+
+                    control.hide();
+                  },
+                },
+                ...[...props.core.project.graphs.values()].map((graph) => ({
+                  title: graph.name,
+                  run(control: Control) {
+                    const currentIndex = graphStates.findIndex(
+                      (s) => s.id === graph.id
+                    );
+
+                    if (currentIndex === -1) {
+                      setGraphStates((s) => [...s, createGraphState(graph)]);
+                      setCurrentGraphIndex(graphStates.length - 1);
+                    } else setCurrentGraphIndex(currentIndex);
+
+                    control.hide();
+                  },
+                })),
+              ],
+            });
+
+            // const CustomEventsSection = createSection({
+            //   title: "Custom Events",
+            //   source: Solid.createMemo(() =>
+            //     [...props.core.project.customEvents.values()].map(
+            //       (customEvent) => ({
+            //         title: customEvent.name,
+            //         run() {},
+            //       })
+            //     )
+            //   ),
+            // });
+
+            return <CommandDialog sections={[GraphSection]} />;
+          })()}
+
           <Solid.Show when={leftSidebar.state.open}>
             <Sidebar width={Math.max(leftSidebar.state.width, MIN_WIDTH)}>
               <Settings />

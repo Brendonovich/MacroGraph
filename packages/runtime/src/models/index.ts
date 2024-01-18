@@ -1,4 +1,5 @@
 export * from "./IO";
+export * from "./CustomEvent";
 export * from "./NodeSchema";
 export * from "./Node";
 export * from "./CommentBox";
