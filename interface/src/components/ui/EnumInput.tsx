@@ -66,7 +66,7 @@ export function SelectInput<TOption>(props: SelectInputProps<TOption>) {
       </Select.Trigger>
       <Select.Portal>
         <Select.Content>
-          <Select.Listbox class="bg-black border border-gray-300 text-white rounded text-xs overflow-hidden" />
+          <Select.Listbox class="bg-black border border-neutral-300 text-white rounded text-xs overflow-hidden" />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

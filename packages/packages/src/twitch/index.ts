@@ -5,7 +5,7 @@ import * as eventsub from "./eventsub";
 import * as chat from "./chat";
 
 import { Ctx, createCtx } from "./ctx";
-import { TwitchAccount } from "./resource";
+import { TwitchAccount, TwitchChat } from "./resource";
 
 export type Pkg = Package<any, Ctx>;
 
@@ -19,10 +19,11 @@ export function pkg(core: Core) {
   });
 
   helix.register(pkg, ctx.helixClient);
-  // eventsub.register(pkg);
+  eventsub.register(pkg);
   chat.register(pkg, ctx);
 
   pkg.registerResourceType(TwitchAccount);
+  pkg.registerResourceType(TwitchChat);
 
   return pkg;
 }

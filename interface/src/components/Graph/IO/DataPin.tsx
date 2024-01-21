@@ -179,7 +179,7 @@ export const DataPin = (props: Props) => {
         </Switch>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content class="bg-black min-w-[2.5rem] text-center text-white text-xs px-1 py-0.5 rounded border border-gray-500">
+        <Tooltip.Content class="bg-black min-w-[2.5rem] text-center text-white text-xs px-1 py-0.5 rounded border border-neutral-500">
           <Tooltip.Arrow />
           {props.pin.type.toString()}
         </Tooltip.Content>

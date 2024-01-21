@@ -181,7 +181,10 @@ export class Project {
           }
           if (!resource) return;
 
-          return [resource, createMutable(entry)] satisfies [any, any];
+          return [resource, createMutable(entry)] satisfies [
+            any,
+            ResourceTypeEntry
+          ];
         })
         .filter(Boolean)
     );

@@ -63,8 +63,8 @@ export const SerializedResourceItem = z
   })
   .and(
     z.union([
-      z.object({ sourceId: z.string().nullable().default(null) }),
       z.object({ value: z.string() }),
+      z.object({ sourceId: z.string().nullable() }),
     ])
   );
 
