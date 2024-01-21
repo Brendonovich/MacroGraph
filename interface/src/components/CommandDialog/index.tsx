@@ -111,6 +111,7 @@ export function CommandDialog(props: { sections: Section[] }) {
 
   createEventListener(window, "keydown", (e) => {
     if (e.key === "k" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+      e.preventDefault();
       if (control.open()) control.hide();
       else control.show();
     }

@@ -214,6 +214,7 @@ export function GraphList(props: Props) {
       right={
         <div class="flex flex-row items-center text-xl font-bold space-x-1">
           <button
+            title="Import graph from clipboard"
             onClick={async (e) => {
               e.stopPropagation();
               const item = deserializeClipboardItem(await readFromClipboard());
@@ -227,6 +228,7 @@ export function GraphList(props: Props) {
             <IconGgImport />
           </button>
           <button
+            title="New Graph"
             onClick={(e) => {
               e.stopPropagation();
               const graph = ctx.core.project.createGraph();

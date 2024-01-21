@@ -51,7 +51,7 @@ export type DataInputArgs<T extends BaseType<any>> = {
 export class DataInput<T extends BaseType<any>> {
   id: string;
   name?: string;
-  defaultValue: t.infer<PrimitiveType> | null = null;
+  defaultValue: t.infer<T> | null = null;
   type: T;
   node: Node;
   dispose: () => void;
