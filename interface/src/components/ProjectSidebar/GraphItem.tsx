@@ -43,6 +43,7 @@ export const GraphItem = (props: Props) => {
             <div class="flex-row flex space-x-1 opacity-0 group-hover:opacity-100">
               <DeleteButton graph={props.graph} />
               <button
+                title="Copy graph to clipboard"
                 class={buttonClasses}
                 onClick={(e) => {
                   e.stopPropagation();
