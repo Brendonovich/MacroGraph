@@ -693,6 +693,20 @@ export function register(pkg: Package<EventTypes>) {
     };
   }
 
+  // function sourceNameSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
+  //   return async () => {
+  //     const o = await obs().mapAsync(async (obs) => {
+  //       const resp = await obs.call("GetSceneItemList", {
+  //         sceneName: test,
+  //       });
+  //       return (resp.sceneItems as { sourceName: string }[]).map(
+  //         (input) => input.sourceName
+  //       );
+  //     });
+  //     return o.unwrapOr([]);
+  //   };
+  // }
+
   createOBSExecSchema({
     name: "Set Current Program Scene",
     createIO: ({ io, obs }) =>
@@ -2136,6 +2150,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
+        // fetchSuggestions: sourceNameSuggestionFactory(obs)
       }),
       searchOffset: io.dataInput({
         id: "searchOffset",
@@ -3026,7 +3041,6 @@ export function register(pkg: Package<EventTypes>) {
       const data = await obs.call("GetMediaInputStatus", {
         inputName: ctx.getInput(io.inputName),
       });
-      console.log(data);
       ctx.setOutput(io.mediaState, data.mediaState);
       ctx.setOutput(io.mediaDuration, data.mediaDuration);
       ctx.setOutput(io.mediaCursor, data.mediaCursor);

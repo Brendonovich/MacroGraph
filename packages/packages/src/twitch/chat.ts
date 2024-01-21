@@ -271,6 +271,11 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
           name: "User ID",
           type: t.string(),
         }),
+        channelId: io.dataOutput({
+          id: "channelId",
+          name: "Channel ID",
+          type: t.string(),
+        }),
         message: io.dataOutput({
           id: "message",
           name: "Message",
@@ -314,10 +319,12 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
+      console.log(data);
       if (data.self) return;
       ctx.setOutput(io.username, data.tags.username);
       ctx.setOutput(io.displayName, data.tags["display-name"]);
       ctx.setOutput(io.userId, data.tags["user-id"]);
+      ctx.setOutput(io.channelId, data.tags["room-id"]);
       ctx.setOutput(io.message, data.message);
       ctx.setOutput(io.messageId, data.tags.id);
       ctx.setOutput(io.mod, data.tags.mod);
