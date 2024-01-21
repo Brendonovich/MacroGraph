@@ -13,7 +13,12 @@ import {
 } from "solid-js";
 import { Maybe, None, Option, Some } from "@macrograph/typesystem";
 
-import { IOBuilder, NodeSchema, Property } from "./NodeSchema";
+import {
+  IOBuilder,
+  NodeSchema,
+  Property,
+  inferPropertyDef,
+} from "./NodeSchema";
 import {
   DataInput,
   DataOutput,
@@ -199,25 +204,37 @@ export class Node {
   }
 
   getProperty(property: Property) {
-    if ("source" in property) {
+    if ("type" in property)
+      return this.state.properties[property.id] as inferPropertyDef<
+        typeof property
+      >;
+
+    if ("source" in property)
       return property
         .source({ node: this })
-        .find((s) => s.id === (this.state.properties[property.id] as any))?.id;
-    } else if ("type" in property) {
-      return this.state.properties[property.id];
-    } else {
-      const value = this.state.properties[property.id];
+        .find((s) => s.id === (this.state.properties[property.id] as any))
+        ?.id as inferPropertyDef<typeof property>;
 
-      const instance = this.graph.project.resources.get(property.resource);
-      const item = instance?.items.find(
-        (i) => i.id === (value === DEFAULT ? instance.default : value)
-      );
+    const { resource } = property;
 
-      const sources = property.resource.sources();
-      const source = sources.find((s) => s.id === item?.sourceId);
+    const value = this.state.properties[property.id];
 
-      return Maybe(source?.value);
-    }
+    return Maybe(this.graph.project.resources.get(resource))
+      .andThen((instance) =>
+        Maybe(
+          instance.items.find(
+            (i) => i.id === (value === DEFAULT ? instance.default : value)
+          )
+        )
+      )
+      .andThen((item) => {
+        if (!("sources" in resource)) return None;
+        if ("value" in item) return Some(item.value);
+
+        return Maybe(
+          resource.sources(resource.package).find((s) => s.id === item.sourceId)
+        ).map((s) => s.value);
+      }) as inferPropertyDef<typeof property>;
   }
 
   updateIO(io: IOBuilder) {

@@ -1,6 +1,6 @@
 import { Graph } from "@macrograph/runtime";
-import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { Card } from "@macrograph/ui";
+import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { For, Match, Switch, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";

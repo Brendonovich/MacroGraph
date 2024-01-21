@@ -4,7 +4,7 @@ import { DropdownMenu } from "@kobalte/core";
 
 import { useCore } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
-import { SelectInput } from "../../components/ui";
+import { SelectInput, TextInput } from "../../components/ui";
 
 export function Resources() {
   const core = useCore();
@@ -124,16 +124,48 @@ export function Resources() {
                                 </Match>
                               </Switch>
                             </div>
-                            <SelectInput
-                              options={type.sources()}
-                              optionValue="id"
-                              optionTextValue="display"
-                              getLabel={(i) => i.display}
-                              onChange={(source) => (item.sourceId = source.id)}
-                              value={type
-                                .sources()
-                                .find((s) => s.id === item.sourceId)}
-                            />
+                            <Switch>
+                              <Match
+                                when={
+                                  "sources" in type &&
+                                  "sourceId" in item &&
+                                  ([type, item] as const)
+                                }
+                                keyed
+                              >
+                                {([type, item]) => {
+                                  const sources = createMemo(() =>
+                                    type.sources(type.package)
+                                  );
+
+                                  return (
+                                    <SelectInput
+                                      options={sources()}
+                                      optionValue="id"
+                                      optionTextValue="display"
+                                      getLabel={(i) => i.display}
+                                      onChange={(source) =>
+                                        (item.sourceId = source.id)
+                                      }
+                                      value={sources().find(
+                                        (s) => s.id === item.sourceId
+                                      )}
+                                    />
+                                  );
+                                }}
+                              </Match>
+                              <Match
+                                when={"type" in type && "value" in item && item}
+                                keyed
+                              >
+                                {(item) => (
+                                  <TextInput
+                                    value={item.value}
+                                    onChange={(n) => (item.value = n)}
+                                  />
+                                )}
+                              </Match>
+                            </Switch>
                           </li>
                         );
                       }}

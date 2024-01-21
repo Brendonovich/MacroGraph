@@ -1,7 +1,8 @@
-import { PropertyDef, ResourceType } from "@macrograph/runtime";
+import { PropertyDef, createResourceType } from "@macrograph/runtime";
 import { Pkg } from ".";
+import { t } from "@macrograph/typesystem";
 
-export const TwitchAccount = new ResourceType({
+export const TwitchAccount = createResourceType({
   name: "Twitch Account",
   sources: (pkg: Pkg) =>
     [...pkg.ctx!.auth.accounts].map(([userId, account]) => ({
@@ -17,3 +18,8 @@ export const accountProperty = {
 } satisfies PropertyDef;
 
 export const defaultProperties = { account: accountProperty };
+
+export const TwitchChat = createResourceType({
+  name: "Twitch Channel",
+  type: t.string(),
+});

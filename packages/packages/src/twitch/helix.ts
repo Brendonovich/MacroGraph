@@ -1,4 +1,5 @@
 import {
+  Core,
   CreateIOFn,
   CreateNonEventSchema,
   MergeFnProps,
@@ -15,6 +16,7 @@ import { createHTTPClient } from "../httpEndpoint";
 import { Account } from "./auth";
 import { defaultProperties } from "./resource";
 import { CLIENT_ID } from "./ctx";
+import { Pkg } from ".";
 
 export const HELIX_USER_ID = "helixUserId";
 
@@ -135,7 +137,7 @@ type Reqs = {
   "POST /eventsub/subscriptions": any;
 };
 
-export function createHelix() {
+export function createHelix(core: Core) {
   let refreshPromises = new Map<string, Promise<any>>();
 
   return createHTTPClient<Reqs, Account>({
@@ -163,7 +165,7 @@ export function createHelix() {
         if (!refreshPromises.has(account.data.id)) {
           const promise = (async () => {
             const oldToken = account.token;
-            const token = await pkg.core!.oauth.refresh(
+            const token = await core.oauth.refresh(
               "twitch",
               oldToken.refresh_token
             );

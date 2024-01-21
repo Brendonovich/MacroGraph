@@ -33,7 +33,6 @@ import { createUIStore, UIStoreProvider } from "./UIStore";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import Settings from "./settings";
-import { NodeSidebar } from "./Sidebars";
 import {
   commentBoxToClipboardItem,
   deserializeClipboardItem,

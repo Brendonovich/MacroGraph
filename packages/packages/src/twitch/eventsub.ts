@@ -150,8 +150,8 @@ export function register(pkg: Package) {
         const bus = createEventBus<any>();
 
         const fn = (...d: any[]) => bus.emit(d[0]);
-        obs.on(s.event, fn);
-        onCleanup(() => obs.off(s.event, fn));
+        // obs.on(s.event, fn);
+        // onCleanup(() => obs.off(s.event, fn));
 
         return bus;
       },

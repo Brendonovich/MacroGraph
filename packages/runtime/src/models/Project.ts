@@ -12,8 +12,13 @@ export interface ProjectArgs {
   core: Core;
 }
 
-type ResourceEntry = {
-  items: Array<{ id: number; name: string; sourceId: string | null }>;
+export type ResourceTypeItem = {
+  id: number;
+  name: string;
+} & ({ sourceId: string | null } | { value: string });
+
+export type ResourceTypeEntry = {
+  items: Array<ResourceTypeItem>;
   default: number | null;
 };
 
@@ -21,7 +26,7 @@ export class Project {
   core: Core;
   graphs = new ReactiveMap<number, Graph>();
   customEvents = new ReactiveMap<number, CustomEvent>();
-  resources = new ReactiveMap<ResourceType<any, any>, ResourceEntry>();
+  resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 
   private disableSave = false;
 
@@ -76,20 +81,25 @@ export class Project {
 
   createResource(args: { type: ResourceType<any, any>; name: string }) {
     const id = this.counter++;
-    const item = {
+    const itemBase = {
       id,
       name: args.name,
-      sourceId: null,
     };
 
+    let item: ResourceTypeItem;
+
+    if ("sources" in args.type) {
+      item = {
+        ...itemBase,
+        sourceId: args.type.sources(args.type.package)[0]?.id ?? null,
+      };
+    } else {
+      item = { ...itemBase, value: args.type.type.default() };
+    }
+
     if (!this.resources.has(args.type)) {
-      const entry: ResourceEntry = createMutable({
-        items: [
-          {
-            ...item,
-            sourceId: args.type.sources()[0]?.id ?? null,
-          },
-        ],
+      const entry: ResourceTypeEntry = createMutable({
+        items: [item],
         default: item.id,
       });
       this.resources.set(args.type, entry);

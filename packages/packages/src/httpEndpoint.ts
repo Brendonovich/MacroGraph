@@ -40,7 +40,7 @@ export function createEndpoint({ path, extend, fetch }: EndpointArgs) {
     put: createFetcher("PUT"),
     patch: createFetcher("PATCH"),
     delete: createFetcher("DELETE"),
-  } as any;
+  };
 }
 
 export function createHTTPClient<TReqs extends RESTDefinitions, TCtx>(args: {
