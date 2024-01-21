@@ -17,6 +17,10 @@ import {
   Struct,
 } from "@macrograph/typesystem";
 import { JSON, jsonToJS } from "@macrograph/json";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+
+dayjs.extend(duration);
 
 export function pkg(core: Core) {
   const pkg = new Package({
@@ -389,10 +393,14 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, io }) {
-      const number = Number(ctx.getInput(io.string));
-      const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
+      if (ctx.getInput(io.string) !== "") {
+        const number = Number(ctx.getInput(io.string));
+        const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
-      ctx.setOutput(io.int, opt.map(Math.floor));
+        ctx.setOutput(io.int, opt.map(Math.floor));
+      } else {
+        ctx.setOutput(io.int, None);
+      }
     },
   });
 
@@ -999,6 +1007,37 @@ export function pkg(core: Core) {
     },
     run({ ctx, io }) {
       ctx.setOutput(io.timeOut, Date.parse(ctx.getInput(io.timeIn)));
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Format Time",
+    variant: "Pure",
+    properties: {
+      string: {
+        name: "String",
+        type: t.string(),
+      },
+    },
+    createIO({ io }) {
+      return {
+        timeIn: io.dataInput({
+          id: "timeIn",
+          type: t.int(),
+        }),
+        timeOut: io.dataOutput({
+          id: "timeOut",
+          type: t.string(),
+        }),
+      };
+    },
+    run({ ctx, io, properties }) {
+      ctx.setOutput(
+        io.timeOut,
+        dayjs
+          .duration(ctx.getInput(io.timeIn))
+          .format(ctx.getProperty(properties.string))
+      );
     },
   });
 
