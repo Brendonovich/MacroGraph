@@ -110,14 +110,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
       getSocket().send(
         JSON.stringify({
           id: 0,
-          data: {
-            Command: [
-              mixerID(),
-              {
-                SetMicrophoneType: type.variant,
-              },
-            ],
-          },
+          data: { Command: [mixerID(), { SetMicrophoneType: type.variant }] },
         })
       );
     },
@@ -128,7 +121,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
     variant: "Exec",
     createIO: ({ io }) =>
       io.dataInput({
-        name: "(%)",
+        name: "Amount (%)",
         id: "amount",
         type: t.int(),
       }),
@@ -136,14 +129,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
       getSocket().send(
         JSON.stringify({
           id: 0,
-          data: {
-            Command: [
-              mixerID(),
-              {
-                SetReverbAmount: ctx.getInput(io),
-              },
-            ],
-          },
+          data: { Command: [mixerID(), { SetReverbAmount: ctx.getInput(io) }] },
         })
       );
     },
@@ -154,7 +140,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
     variant: "Exec",
     createIO: ({ io }) =>
       io.dataInput({
-        name: "(%)",
+        name: "Amount (%)",
         id: "amount",
         type: t.int(),
       }),
@@ -162,14 +148,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
       getSocket().send(
         JSON.stringify({
           id: 0,
-          data: {
-            Command: [
-              mixerID(),
-              {
-                SetEchoAmount: ctx.getInput(io),
-              },
-            ],
-          },
+          data: { Command: [mixerID(), { SetEchoAmount: ctx.getInput(io) }] },
         })
       );
     },
@@ -180,7 +159,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
     variant: "Exec",
     createIO: ({ io }) =>
       io.dataInput({
-        name: "(%)",
+        name: "Amount (%)",
         id: "amount",
         type: t.int(),
       }),
@@ -188,14 +167,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
       getSocket().send(
         JSON.stringify({
           id: 0,
-          data: {
-            Command: [
-              mixerID(),
-              {
-                SetPitchAmount: ctx.getInput(io),
-              },
-            ],
-          },
+          data: { Command: [mixerID(), { SetPitchAmount: ctx.getInput(io) }] },
         })
       );
     },
@@ -269,12 +241,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
         JSON.stringify({
           id: 0,
           data: {
-            Command: [
-              mixerID(),
-              {
-                SetActiveEffectPreset: preset.variant,
-              },
-            ],
+            Command: [mixerID(), { SetActiveEffectPreset: preset.variant }],
           },
         })
       );
