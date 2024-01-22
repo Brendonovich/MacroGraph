@@ -773,7 +773,7 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
-    name: "add Floats",
+    name: "Add Floats",
     variant: "Pure",
     createIO({ io }) {
       return {
@@ -792,8 +792,7 @@ export function pkg(core: Core) {
       };
     },
     run({ ctx, io }) {
-      const numb = ctx.getInput(io.one) + ctx.getInput(io.two);
-      ctx.setOutput(io.output, numb);
+      ctx.setOutput(io.output, ctx.getInput(io.one) + ctx.getInput(io.two));
     },
   });
 
