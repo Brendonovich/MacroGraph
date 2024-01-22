@@ -1,10 +1,11 @@
-import { createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
+import { createEffect, createSignal, For, Match, Switch } from "solid-js";
+import { makeTimer } from "@solid-primitives/timer";
 import { Button } from "@macrograph/ui";
 import { Tooltip } from "@kobalte/core";
 
 import { Ctx } from "./ctx";
 
-export default ({ core, auth, eventSub }: Ctx) => {
+export default ({ core, auth, eventSub, chat }: Ctx) => {
   const [loggingIn, setLoggingIn] = createSignal(false);
 
   return (
@@ -17,17 +18,10 @@ export default ({ core, auth, eventSub }: Ctx) => {
 
             const [now, setNow] = createSignal(Date.now());
 
-            onMount(() => {
-              const interval = setInterval(() => {
-                setNow(Date.now());
-              }, 1000);
+            makeTimer(() => setNow(Date.now()), 1000, setInterval);
 
-              onCleanup(() => clearInterval(interval));
-            });
-
-            const expiresIn = () => {
-              return Math.floor(expiryTime - now() / 1000);
-            };
+            const eventSubSocket = () => eventSub.sockets.get(account.data.id);
+            const chatClient = () => chat.clients.get(account.data.id);
 
             return (
               <li>
@@ -39,7 +33,9 @@ export default ({ core, auth, eventSub }: Ctx) => {
                     <Tooltip.Portal>
                       <Tooltip.Content class="bg-neutral-900 text-white border border-neutral-400 px-2 py-1 rounded">
                         <Tooltip.Arrow />
-                        <p>Expires in {expiresIn()}s</p>
+                        <p>
+                          Expires in {Math.floor(expiryTime - now() / 1000)}s
+                        </p>
                       </Tooltip.Content>
                     </Tooltip.Portal>
                   </Tooltip.Root>
@@ -47,27 +43,52 @@ export default ({ core, auth, eventSub }: Ctx) => {
                     Remove
                   </Button>
                 </div>
-                <div class="space-x-2">
-                  <Switch fallback="EventSub Connecting...">
-                    <Match when={!account.eventsub}>
-                      <span>EventSub Disconnected</span>
-                      <Button
-                        onClick={() => eventSub.connectSocket(account.data.id)}
-                      >
-                        Connect
-                      </Button>
-                    </Match>
-                    <Match when={eventSub.sockets.get(account.data.id)}>
-                      EventSub Connected
-                      <Button
-                        onClick={() =>
-                          eventSub.disconnectSocket(account.data.id)
+                <div class="space-y-2">
+                  <div class="space-x-2">
+                    <Switch fallback="EventSub Connecting...">
+                      <Match when={!eventSubSocket()}>
+                        <span>EventSub Disconnected</span>
+                        <Button
+                          onClick={() =>
+                            eventSub.connectSocket(account.data.id)
+                          }
+                        >
+                          Connect
+                        </Button>
+                      </Match>
+                      <Match when={eventSubSocket()}>
+                        EventSub Connected
+                        <Button
+                          onClick={() =>
+                            eventSub.disconnectSocket(account.data.id)
+                          }
+                        >
+                          Disconnect
+                        </Button>
+                      </Match>
+                    </Switch>
+                  </div>
+                  <div class="space-x-2">
+                    <Switch fallback="Chat Connecting...">
+                      <Match when={chatClient()?.status === "connected"}>
+                        <span>Chat Connected</span>
+                        <Button onClick={() => chat.disconnectClient(account)}>
+                          Disconnect
+                        </Button>
+                      </Match>
+                      <Match
+                        when={
+                          !chatClient() ||
+                          chatClient()?.status === "disconnected"
                         }
                       >
-                        Disconnect
-                      </Button>
-                    </Match>
-                  </Switch>
+                        <span>Chat Disconnected</span>
+                        <Button onClick={() => chat.connectClient(account)}>
+                          Connect
+                        </Button>
+                      </Match>
+                    </Switch>
+                  </div>
                 </div>
               </li>
             );

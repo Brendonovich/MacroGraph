@@ -1584,7 +1584,7 @@ export function register(pkg: Package, helix: Helix) {
       return {
         delay: io.dataInput({
           id: "delay",
-          name: "Delay (seconds)",
+          name: "Delay (s)",
           type: t.int(),
         }),
         enabled: io.dataInput({
@@ -1620,7 +1620,7 @@ export function register(pkg: Package, helix: Helix) {
       return {
         delay: io.dataInput({
           id: "delay",
-          name: "Delay (seconds)",
+          name: "Delay (s)",
           type: t.int(),
         }),
         enabled: io.dataInput({

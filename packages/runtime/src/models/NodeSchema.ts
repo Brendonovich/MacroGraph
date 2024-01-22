@@ -368,7 +368,7 @@ export type EventSchema<TProperties, TIO, TFire> = SchemaBase<
 
 export type NonEventSchema<TProperties, TIO> = SchemaBase<TProperties, TIO> & {
   type: "exec" | "pure" | "base";
-  run(props: RunProps<TProperties, TIO>): void | Promise<void>;
+  run(props: RunProps<TProperties, TIO>): any | Promise<any>;
 };
 
 export type Schema<TProperties, TIO, TFire> =

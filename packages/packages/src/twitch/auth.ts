@@ -21,7 +21,7 @@ const LOCALSTORAGE = z.record(
   z.string(),
   OAUTH_TOKEN.and(
     z.object({
-      eventsub: z.boolean().default(false),
+      // eventsub: z.boolean().default(false),
     })
   )
 );
@@ -30,7 +30,6 @@ const TOKENS_LOCALSTORAGE = "twitchTokens";
 
 export interface Account {
   token: OAuthToken;
-  eventsub: boolean;
   data: z.infer<typeof USER_DATA>;
   refreshTimer: ReturnType<typeof setTimeout>;
 }
@@ -49,7 +48,7 @@ export function createAuth(clientId: string, core: Core, helixClient: Helix) {
       (acc, account) => ({
         [account.data.id]: {
           ...account.token,
-          eventsub: account.eventsub,
+          // eventsub: account.eventsub,
         },
         ...acc,
       }),
@@ -65,7 +64,8 @@ export function createAuth(clientId: string, core: Core, helixClient: Helix) {
     accounts.set(data.id, {
       token,
       data,
-      eventsub: false,
+      // eventsub: false,
+      // chat: false,
       refreshTimer: setTimeout(
         () => refresh(data.id),
         (token.issued_at + token.expires_in) * 1000 - Date.now()

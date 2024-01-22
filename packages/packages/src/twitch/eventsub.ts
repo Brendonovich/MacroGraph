@@ -1,4 +1,3 @@
-import { onCleanup } from "solid-js";
 import {
   createEnum,
   CreateEventSchema,
@@ -9,12 +8,12 @@ import {
   SchemaProperties,
 } from "@macrograph/runtime";
 import { Maybe, t } from "@macrograph/typesystem";
+import { createEventBus } from "@solid-primitives/event-bus";
+import { ReactiveMap } from "@solid-primitives/map";
 
 import { Helix } from "./helix";
 import { defaultProperties } from "./resource";
-import { createEventBus } from "@solid-primitives/event-bus";
 import { Auth } from "./auth";
-import { ReactiveMap } from "@solid-primitives/map";
 
 export function createEventSub(
   onEvent: OnEvent,
@@ -70,7 +69,7 @@ export function createEventSub(
 
     ws.onclose = () => {
       sockets.delete(userId);
-      account.eventsub = false;
+      // account.eventsub = false;
     };
   }
 

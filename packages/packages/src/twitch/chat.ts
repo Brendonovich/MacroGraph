@@ -1,322 +1,259 @@
-import { onCleanup, createResource, createEffect, on } from "solid-js";
-import tmi from "tmi.js";
-import { Package, OnEvent } from "@macrograph/runtime";
+import {
+  onCleanup,
+  createResource,
+  createEffect,
+  on,
+  createMemo,
+  Accessor,
+} from "solid-js";
+import tmi, { Events } from "tmi.js";
+import {
+  Package,
+  OnEvent,
+  PropertyDef,
+  CreateEventSchema,
+  SchemaProperties,
+} from "@macrograph/runtime";
 import { jsToJSON, JSON } from "@macrograph/json";
 import { t, None, Maybe } from "@macrograph/typesystem";
 
 import { Ctx } from "./ctx";
-import { Auth, createUserInstance } from "./auth";
+import { Account, Auth, createUserInstance } from "./auth";
 import { ReactiveMap } from "@solid-primitives/map";
 import { TwitchAccount, TwitchChannel, accountProperty } from "./resource";
-import { createEventBus } from "@solid-primitives/event-bus";
+import { EventBus, createEventBus } from "@solid-primitives/event-bus";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createMutable } from "solid-js/store";
 
-export const CHAT_READ_USER_ID = "chatReadUserId";
-export const CHAT_WRITE_USER_ID = "chatWriteUserId";
+type ChatState = {
+  client: tmi.Client;
+  status: "disconnected" | "connecting" | "connected";
+};
 
 export function createChat(auth: Auth, onEvent: OnEvent) {
-  const readUser = createUserInstance(CHAT_READ_USER_ID, auth);
-  const writeUser = createUserInstance(CHAT_WRITE_USER_ID, auth);
+  const clients = new ReactiveMap<string, ChatState>();
 
-  const [client] = createResource(
-    () => readUser.account().zip(writeUser.account()),
-    (accs) =>
-      accs.map(([readAcc, writeAcc]) => {
-        const client: tmi.Client = tmi.Client({
-          options: {
-            skipUpdatingEmotesets: true,
-          },
-          channels: [writeAcc.data.display_name],
-          identity: {
-            username: readAcc.data.display_name,
-            password: readAcc.token.access_token,
-          },
-        });
+  // client.on("emoteonly", (channel, enabled) => {
+  //   onEvent({ name: "emoteonly", data: { channel, enabled } });
+  // });
 
-        client.connect();
+  // client.on("subscribers", (channel, enabled) => {
+  //   onEvent({ name: "subonlymode", data: { channel, enabled } });
+  // });
 
-        client.on("connected", () => {});
+  // client.on("slowmode", (channel, enabled, length) => {
+  //   onEvent({
+  //     name: "slowmode",
+  //     data: { channel, enabled, length },
+  //   });
+  // });
 
-        client.on("disconnected", () => console.log("disconnected"));
+  // client.on(
+  //   "messagedeleted",
+  //   (channel, username, deletedmessage, userstate) => {
+  //     onEvent({
+  //       name: "messagedeleted",
+  //       data: { channel, username, deletedmessage, userstate },
+  //     });
+  //   }
+  // );
 
-        client.on("emoteonly", (channel, enabled) => {
-          onEvent({ name: "emoteonly", data: { channel, enabled } });
-        });
+  // client.on("followersonly", (channel, enabled, length) => {
+  //   onEvent({
+  //     name: "followersonly",
+  //     data: { channel, enabled, length },
+  //   });
+  // });
 
-        client.on("subscribers", (channel, enabled) => {
-          onEvent({ name: "subonlymode", data: { channel, enabled } });
-        });
+  // client.on("message", (_, tags, message, self) => {
+  //   const data = { message, tags, self };
+  //   if (
+  //     tags["message-type"] === "action" ||
+  //     tags["message-type"] === "chat"
+  //   ) {
+  //     onEvent({ name: "chatMessage", data });
+  //   }
+  // });
 
-        client.on("slowmode", (channel, enabled, length) => {
-          onEvent({
-            name: "slowmode",
-            data: { channel, enabled, length },
-          });
-        });
+  function createClient(account: Account) {
+    const client = new tmi.Client({
+      options: { skipUpdatingEmotesets: true },
+      identity: {
+        username: account.data.display_name,
+        password: account.token.access_token,
+      },
+    });
 
-        client.on(
-          "messagedeleted",
-          (channel, username, deletedmessage, userstate) => {
-            onEvent({
-              name: "messagedeleted",
-              data: { channel, username, deletedmessage, userstate },
-            });
-          }
-        );
+    const state = createMutable<ChatState>({ client, status: "disconnected" });
 
-        client.on("followersonly", (channel, enabled, length) => {
-          onEvent({
-            name: "followersonly",
-            data: { channel, enabled, length },
-          });
-        });
+    client.on("connected", () => {
+      state.status = "connected";
+      console.log(clients);
+    });
+    client.on("disconnected", () => {
+      state.status = "disconnected";
+    });
 
-        client.on("message", (_, tags, message, self) => {
-          const data = { message, tags, self };
-          if (
-            tags["message-type"] === "action" ||
-            tags["message-type"] === "chat"
-          ) {
-            onEvent({ name: "chatMessage", data });
-          }
-        });
+    return state;
+  }
 
-        onCleanup(() => {
-          client.disconnect();
-        });
+  async function connectClient(account: Account) {
+    if (!clients.has(account.data.id))
+      clients.set(account.data.id, createClient(account));
 
-        return client;
-      }),
-    { initialValue: None }
-  );
+    const chat = clients.get(account.data.id)!;
+
+    if (chat.status !== "disconnected") return;
+
+    await chat.client.connect();
+  }
+
+  async function disconnectClient(account: Account) {
+    const chat = clients.get(account.data.id);
+    if (!chat) return;
+
+    await chat.client.disconnect();
+  }
 
   return {
-    client,
-    readUser,
-    writeUser,
+    clients,
+    connectClient,
+    disconnectClient,
   };
 }
 
 export type Chat = ReturnType<typeof createChat>;
 
-export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
-  pkg.createNonEventSchema({
-    name: "Send Chat Message",
-    variant: "Exec",
-    properties: {
-      sender: {
-        name: "Sender",
-        resource: TwitchAccount,
-      },
-      receiver: {
-        name: "Receiver",
-        type: t.string(),
-      },
-    },
-    createIO: ({ io }) =>
-      io.dataInput({
-        id: "message",
-        name: "Message",
-        type: t.string(),
-      }),
-    async run({ ctx, io }) {
-      await client()
-        .expect("No Twitch Chat client available!")
-        .say(
-          Maybe(
-            writeUser.account().expect("Chat write user not chosen!")
-          ).expect("Write user token not found!").data.display_name,
-          ctx.getInput(io)
-        );
-    },
-  });
+export function register(pkg: Package, { chat }: Ctx) {
+  const defaultProperties = {
+    channel: { name: "Twitch Channel", resource: TwitchChannel },
+    sender: { name: "Sender Account", resource: TwitchAccount },
+  };
 
-  pkg.createEventSchema({
-    name: "Slow Mode Toggled",
-    event: "slowmode",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        enabled: io.dataOutput({
-          id: "enabled",
-          name: "Enabled",
-          type: t.bool(),
-        }),
-        length: io.dataOutput({
-          id: "length",
-          name: "Duration",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, data, io }) {
-      ctx.setOutput(io.enabled, data.enabled);
-      ctx.setOutput(io.length, data.length);
-      ctx.exec(io.exec);
-    },
-  });
-
-  pkg.createEventSchema({
-    name: "Emote Only Mode Toggled",
-    event: "emoteonly",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        enabled: io.dataOutput({
-          id: "enabled",
-          name: "Enabled",
-          type: t.bool(),
-        }),
-      };
-    },
-    run({ ctx, data, io }) {
-      ctx.setOutput(io.enabled, data.enabled);
-      ctx.exec(io.exec);
-    },
-  });
-
-  pkg.createEventSchema({
-    name: "Subscriber Only Mode Toggled",
-    event: "subonlymode",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        enabled: io.dataOutput({
-          id: "enabled",
-          name: "Enabled",
-          type: t.bool(),
-        }),
-      };
-    },
-    run({ ctx, data, io }) {
-      ctx.setOutput(io.enabled, data.enabled);
-      ctx.exec(io.exec);
-    },
-  });
-
-  pkg.createEventSchema({
-    name: "Follower Only Mode Toggled",
-    event: "followersonly",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        enabled: io.dataOutput({
-          id: "enabled",
-          name: "Enabled",
-          type: t.bool(),
-        }),
-        length: io.dataOutput({
-          id: "length",
-          name: "Duration",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, data, io }) {
-      ctx.setOutput(io.enabled, data.enabled);
-      ctx.setOutput(io.length, data.length);
-      ctx.exec(io.exec);
-    },
-  });
-
-  pkg.createEventSchema({
-    name: "Chat Message Deleted IRC",
-    event: "messagedeleted",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        username: io.dataOutput({
-          id: "username",
-          name: "Username",
-          type: t.string(),
-        }),
-        deletedMessage: io.dataOutput({
-          id: "deletedMessage",
-          name: "Deleted Message",
-          type: t.string(),
-        }),
-        messageId: io.dataOutput({
-          id: "messageId",
-          name: "Messasge ID",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, data, io }) {
-      ctx.setOutput(io.username, data.username);
-      ctx.setOutput(io.deletedMessage, data.deletedmessage);
-      ctx.setOutput(io.messageId, data.userstate["target-msg-id"]);
-      ctx.exec(io.exec);
-    },
-  });
+  type DefaultProperties = SchemaProperties<typeof defaultProperties>;
 
   pkg.createSchema({
-    name: "Chat Message (new)",
-    type: "event",
-    properties: {
-      channel: {
-        name: "Twitch Channel",
-        resource: TwitchChannel,
-      },
-      sender: {
-        name: "Sender Account",
-        resource: TwitchAccount,
-      },
-    },
-    createListener({ ctx, properties }) {
-      const data = () =>
+    name: "Send Chat Message",
+    type: "exec",
+    properties: defaultProperties,
+    createIO: ({ ctx, properties, io }) => {
+      const state = () =>
         ctx
-          .getProperty(properties.channel)
-          .zip(ctx.getProperty(properties.sender));
+          .getProperty(properties.sender as DefaultProperties["sender"])
+          .andThen((sender) => Maybe(chat.clients.get(sender.data.id)))
+          .filter((s) => s.status === "connected");
 
-      const bus = createEventBus<{
-        message: string;
-        tags: tmi.ChatUserstate;
-        self: boolean;
-      }>();
+      const data = () =>
+        [
+          state().expect("No chat client connected"),
+          ctx
+            .getProperty(properties.channel as DefaultProperties["channel"])
+            .expect("Channel not provided"),
+        ] as const;
 
-      createEffect(
-        on(
-          () => data().expect("Channel or sender not chosen!"),
-          ([channel, sender]) => {
-            const client: tmi.Client = tmi.Client({
-              options: {
-                skipUpdatingEmotesets: true,
-              },
-              channels: [channel],
-              identity: {
-                username: sender.data.display_name,
-                password: sender.token.access_token,
-              },
-            });
+      createEffect(() => {
+        const [state, channel] = data();
+        state.client.join(channel);
+        onCleanup(() => state.client.part(channel));
+      });
 
-            client.connect();
+      return {
+        message: io.dataInput({
+          id: "message",
+          name: "Message",
+          type: t.string(),
+        }),
+        data,
+      };
+    },
+    run({ ctx, io }) {
+      const [state, channel] = io.data();
 
-            client.on("message", (_, tags, message, self) => {
-              if (
-                tags["message-type"] === "action" ||
-                tags["message-type"] === "chat"
-              )
-                bus.emit({ message, tags, self });
-            });
+      return state.client.say(channel, ctx.getInput(io.message));
+    },
+  });
 
-            onCleanup(() => {
-              client.disconnect();
-            });
-          }
-        )
-      );
+  type ListenerType<T> = [T] extends [(...args: infer U) => any]
+    ? U
+    : [T] extends [never]
+    ? []
+    : [T];
+  function createChatEventSchema<
+    TFire,
+    TEvent extends keyof Events,
+    TProperties extends Record<string, PropertyDef> = {},
+    TIO = void
+  >(
+    s: Omit<
+      CreateEventSchema<TProperties & typeof defaultProperties, TIO, TFire>,
+      "type" | "createListener"
+    > & {
+      properties?: TProperties;
+      event: {
+        type: TEvent;
+        handler(...args: ListenerType<Events[TEvent]>): {
+          channel: string;
+          data: TFire;
+        };
+      };
+    }
+  ) {
+    pkg.createSchema({
+      ...s,
+      type: "event",
+      properties: { ...s.properties, ...defaultProperties } as any,
+      createListener({ ctx, properties }) {
+        const client = () =>
+          ctx
+            .getProperty(properties.sender as DefaultProperties["sender"])
+            .andThen((sender) => Maybe(chat.clients.get(sender.data.id)))
+            .filter((s) => s.status === "connected");
 
-      return bus;
+        const data = () =>
+          [
+            client().expect("No chat client connected"),
+            ctx
+              .getProperty(properties.channel as DefaultProperties["channel"])
+              .expect("Channel not provided"),
+          ] as const;
+
+        createEffect(() => {
+          const [state, channel] = data();
+          state.client.join(channel);
+          onCleanup(() => state.client.part(channel));
+        });
+
+        const bus = createEventBus<TFire>();
+
+        createEffect(() => {
+          const [state, channel] = data();
+
+          const channelHash = `#${channel.toLowerCase()}`;
+
+          const cb = (...args: ListenerType<Events[TEvent]>) => {
+            const { channel, data } = s.event.handler(...args);
+            if (channel !== channelHash) return;
+
+            bus.emit(data);
+          };
+
+          state.client.addListener(s.event.type, cb);
+          onCleanup(() => state.client.removeListener(s.event.type, cb));
+        });
+
+        return bus;
+      },
+    });
+  }
+
+  createChatEventSchema({
+    name: "Chat Message",
+    event: {
+      type: "message",
+      handler: (channel, userstate, message, self) => ({
+        channel,
+        data: { userstate, message, self },
+      }),
     },
     createIO: ({ io }) => ({
       exec: io.execOutput({
@@ -380,132 +317,172 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
     }),
     run({ ctx, data, io }) {
       if (data.self) return;
-      ctx.setOutput(io.username, data.tags.username!);
-      ctx.setOutput(io.displayName, data.tags["display-name"]!);
-      ctx.setOutput(io.userId, data.tags["user-id"]!);
+      ctx.setOutput(io.username, data.userstate.username!);
+      ctx.setOutput(io.displayName, data.userstate["display-name"]!);
+      ctx.setOutput(io.userId, data.userstate["user-id"]!);
       ctx.setOutput(io.message, data.message);
-      ctx.setOutput(io.messageId, data.tags.id!);
-      ctx.setOutput(io.mod, data.tags.mod !== true);
-      ctx.setOutput(io.sub, data.tags.subscriber !== true);
-      ctx.setOutput(io.vip, data.tags.vip !== true);
-      ctx.setOutput(io.color, Maybe(data.tags.color));
+      ctx.setOutput(io.messageId, data.userstate.id!);
+      ctx.setOutput(io.mod, data.userstate.mod !== true);
+      ctx.setOutput(io.sub, data.userstate.subscriber !== true);
+      ctx.setOutput(io.vip, data.userstate.vip !== true);
+      ctx.setOutput(io.color, Maybe(data.userstate.color));
       ctx.setOutput(
         io.broadcaster,
-        data.tags["room-id"] === data.tags["user-id"]
+        data.userstate["room-id"] === data.userstate["user-id"]
       );
-      if (data.tags.emotes) {
-        ctx.setOutput(
-          io.emotes,
-          new ReactiveMap(
-            Object.entries(data.tags.emotes).map(([key, value]) => [
-              key,
-              jsToJSON(value)!,
-            ])
-          )
-        );
-      } else {
-        ctx.setOutput(io.emotes, new ReactiveMap());
-      }
+      ctx.setOutput(
+        io.emotes,
+        new ReactiveMap(
+          Object.entries(data.userstate.emotes ?? {}).map(([key, value]) => [
+            key,
+            jsToJSON(value)!,
+          ])
+        )
+      );
 
-      ctx.exec(io.exec);
+      return ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
-    name: "Chat Message",
-    event: "chatMessage",
-    properties: { account: accountProperty },
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        username: io.dataOutput({
-          id: "username",
-          name: "Username",
-          type: t.string(),
-        }),
-        displayName: io.dataOutput({
-          id: "displayName",
-          name: "Display Name",
-          type: t.string(),
-        }),
-        userId: io.dataOutput({
-          id: "userId",
-          name: "User ID",
-          type: t.string(),
-        }),
-        message: io.dataOutput({
-          id: "message",
-          name: "Message",
-          type: t.string(),
-        }),
-        messageId: io.dataOutput({
-          id: "messageId",
-          name: "Message ID",
-          type: t.string(),
-        }),
-        color: io.dataOutput({
-          id: "color",
-          name: "User Color",
-          type: t.option(t.string()),
-        }),
-        emotes: io.dataOutput({
-          id: "emotes",
-          name: "Emotes",
-          type: t.map(t.enum(JSON)),
-        }),
-        broadcaster: io.dataOutput({
-          id: "broadcaster",
-          name: "Broadcaster",
-          type: t.bool(),
-        }),
-        mod: io.dataOutput({
-          id: "mod",
-          name: "Moderator",
-          type: t.bool(),
-        }),
-        sub: io.dataOutput({
-          id: "sub",
-          name: "Subscriber",
-          type: t.bool(),
-        }),
-        vip: io.dataOutput({
-          id: "vip",
-          name: "VIP",
-          type: t.bool(),
-        }),
-      };
+  createChatEventSchema({
+    name: "Slow Mode Toggled",
+    event: {
+      type: "slowmode",
+      handler: (channel, enabled, length) => ({
+        channel,
+        data: { enabled, length },
+      }),
     },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+      length: io.dataOutput({
+        id: "length",
+        name: "Duration",
+        type: t.int(),
+      }),
+    }),
     run({ ctx, data, io }) {
-      if (data.self) return;
-      ctx.setOutput(io.username, data.tags.username);
-      ctx.setOutput(io.displayName, data.tags["display-name"]);
-      ctx.setOutput(io.userId, data.tags["user-id"]);
-      ctx.setOutput(io.message, data.message);
-      ctx.setOutput(io.messageId, data.tags.id);
-      ctx.setOutput(io.mod, data.tags.mod);
-      ctx.setOutput(io.sub, data.tags.subscriber);
-      ctx.setOutput(io.vip, data.tags.vip ?? false);
-      ctx.setOutput(io.color, Maybe(data.tags.color));
-      ctx.setOutput(
-        io.broadcaster,
-        data.tags["room-id"] === data.tags["user-id"]
-      );
-      if (data.tags.emotes) {
-        ctx.setOutput(
-          io.emotes,
-          new ReactiveMap(
-            Object.entries(data.tags.emotes).map(([key, value]) => [
-              key,
-              jsToJSON(value)!,
-            ])
-          )
-        );
-      } else {
-        ctx.setOutput(io.emotes, new ReactiveMap());
-      }
+      ctx.setOutput(io.enabled, data.enabled);
+      ctx.setOutput(io.length, data.length);
+      return ctx.exec(io.exec);
+    },
+  });
 
+  createChatEventSchema({
+    name: "Emote Only Mode Toggled",
+    event: {
+      type: "emoteonly",
+      handler: (channel, data) => ({ channel, data }),
+    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+    }),
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.enabled, data);
+      return ctx.exec(io.exec);
+    },
+  });
+
+  createChatEventSchema({
+    name: "Subscriber Only Mode Toggled",
+    event: {
+      type: "subscribers",
+      handler: (channel, data) => ({ channel, data }),
+    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+    }),
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.enabled, data);
+      return ctx.exec(io.exec);
+    },
+  });
+
+  createChatEventSchema({
+    name: "Follower Only Mode Toggled",
+    event: {
+      type: "followersonly",
+      handler: (channel, enabled, length) => ({
+        channel,
+        data: { enabled, length },
+      }),
+    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+      length: io.dataOutput({
+        id: "length",
+        name: "Duration",
+        type: t.int(),
+      }),
+    }),
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.enabled, data.enabled);
+      ctx.setOutput(io.length, data.length);
+      return ctx.exec(io.exec);
+    },
+  });
+
+  createChatEventSchema({
+    name: "Chat Message Deleted",
+    event: {
+      type: "messagedeleted",
+      handler: (channel, username, deletedMessage, userstate) => ({
+        channel,
+        data: { username, deletedMessage, userstate },
+      }),
+    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      username: io.dataOutput({
+        id: "username",
+        name: "Username",
+        type: t.string(),
+      }),
+      deletedMessage: io.dataOutput({
+        id: "deletedMessage",
+        name: "Deleted Message",
+        type: t.string(),
+      }),
+      messageId: io.dataOutput({
+        id: "messageId",
+        name: "Messasge ID",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.username, data.username);
+      ctx.setOutput(io.deletedMessage, data.deletedMessage);
+      ctx.setOutput(io.messageId, data.userstate["target-msg-id"]!);
       ctx.exec(io.exec);
     },
   });

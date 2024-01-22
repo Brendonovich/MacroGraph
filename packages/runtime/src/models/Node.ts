@@ -121,15 +121,20 @@ export class Node {
       createRenderEffect(() => {
         const io = new IOBuilder(this, this.io);
 
-        this.ioReturn = this.schema.createIO({
-          io,
-          properties: this.schema.properties ?? {},
-          ctx: {
-            getProperty: (p) => this.getProperty(p) as any,
-            graph: this.graph,
+        catchError(
+          () => {
+            this.ioReturn = this.schema.createIO({
+              io,
+              properties: this.schema.properties ?? {},
+              ctx: {
+                getProperty: (p) => this.getProperty(p) as any,
+                graph: this.graph,
+              },
+              graph: this.graph,
+            });
           },
-          graph: this.graph,
-        });
+          (e) => console.error(e)
+        );
 
         untrack(() => this.updateIO(io));
 
