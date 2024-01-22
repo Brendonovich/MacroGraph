@@ -748,7 +748,7 @@ export function register(pkg: Package<EventTypes>) {
         .then((o) => o.unwrapOr([]));
   }
 
-  function sourceNameSuggestionFactory(
+  function sceneSourceListSuggestionFactory(
     sceneName: DataInput<t.String>,
     obs: Accessor<Option<OBSWebSocket>>
   ) {
@@ -2254,7 +2254,7 @@ export function register(pkg: Package<EventTypes>) {
           id: "sourceName",
           name: "Source Name",
           type: t.string(),
-          fetchSuggestions: sourceNameSuggestionFactory(sceneName, obs),
+          fetchSuggestions: sceneSourceListSuggestionFactory(sceneName, obs),
         }),
         searchOffset: io.dataInput({
           id: "searchOffset",
