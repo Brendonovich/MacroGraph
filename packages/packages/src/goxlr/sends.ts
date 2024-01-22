@@ -124,6 +124,110 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   });
 
   pkg.createNonEventSchema({
+    name: "Set Reverb Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "(%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: {
+            Command: [
+              mixerID(),
+              {
+                SetReverbAmount: ctx.getInput(io),
+              },
+            ],
+          },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Echo Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "(%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: {
+            Command: [
+              mixerID(),
+              {
+                SetEchoAmount: ctx.getInput(io),
+              },
+            ],
+          },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Pitch Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "(%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: {
+            Command: [
+              mixerID(),
+              {
+                SetPitchAmount: ctx.getInput(io),
+              },
+            ],
+          },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Gender Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "(%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: {
+            Command: [
+              mixerID(),
+              {
+                SetGenderAmount: ctx.getInput(io),
+              },
+            ],
+          },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Set FX State",
     variant: "Exec",
     createIO: ({ io }) =>

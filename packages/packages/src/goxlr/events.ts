@@ -57,6 +57,33 @@ export function register(pkg: Pkg) {
   });
 
   pkg.createEventSchema({
+    name: "Dial State",
+    event: "effects",
+    createIO: ({ io }) => {
+      return {
+        exec: io.execOutput({
+          id: "exec",
+        }),
+        buttonName: io.dataOutput({
+          name: "Dial",
+          id: "dial",
+          type: t.string(),
+        }),
+        state: io.dataOutput({
+          name: "Amount",
+          id: "amount",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.buttonName, data.dial);
+      ctx.setOutput(io.state, data.amount);
+      ctx.exec(io.exec);
+    },
+  });
+
+  pkg.createEventSchema({
     name: "Channel Mute State",
     event: "faderStatus",
     createIO: ({ io }) => {

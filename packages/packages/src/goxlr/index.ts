@@ -17,6 +17,10 @@ export type Event = {
     channel: string;
     state: boolean;
   };
+  effects: {
+    dial: string;
+    amount: number;
+  };
 };
 
 export type Pkg = ReturnType<typeof pkg>;
