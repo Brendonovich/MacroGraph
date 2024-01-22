@@ -748,6 +748,27 @@ export function register(pkg: Package<EventTypes>) {
         .then((o) => o.unwrapOr([]));
   }
 
+  function sceneSourceListSuggestionFactory(
+    sceneName: DataInput<t.String>,
+    obs: Accessor<Option<OBSWebSocket>>
+  ) {
+    return () =>
+      Maybe(sceneName.defaultValue)
+        .zip(obs())
+        .mapAsync(async ([sceneName, obs]) => {
+          const { sceneItems } = await obs.call("GetSceneItemList", {
+            sceneName,
+          });
+
+          const bruh = (sceneItems as Array<{ sourceName: string }>).map(
+            (s) => s.sourceName
+          );
+
+          return bruh;
+        })
+        .then((o) => o.unwrapOr([]));
+  }
+
   createOBSExecSchema({
     name: "Set Current Program Scene",
     createIO: ({ io, obs }) =>
@@ -2219,30 +2240,34 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Get Scene Item Id",
-    createIO: ({ io, obs }) => ({
-      sceneName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sceneName = io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
         fetchSuggestions: sceneListSuggestionFactory(obs),
-      }),
-      sourceName: io.dataInput({
-        id: "sourceName",
-        name: "Source Name",
-        type: t.string(),
-        // fetchSuggestions: sourceNameSuggestionFactory(obs)
-      }),
-      searchOffset: io.dataInput({
-        id: "searchOffset",
-        name: "Search Offset",
-        type: t.int(),
-      }),
-      sceneItemId: io.dataOutput({
-        id: "sceneItemId",
-        name: "Scene Item Id",
-        type: t.int(),
-      }),
-    }),
+      });
+
+      return {
+        sceneName,
+        sourceName: io.dataInput({
+          id: "sourceName",
+          name: "Source Name",
+          type: t.string(),
+          fetchSuggestions: sceneSourceListSuggestionFactory(sceneName, obs),
+        }),
+        searchOffset: io.dataInput({
+          id: "searchOffset",
+          name: "Search Offset",
+          type: t.int(),
+        }),
+        sceneItemId: io.dataOutput({
+          id: "sceneItemId",
+          name: "Scene Item Id",
+          type: t.int(),
+        }),
+      };
+    },
     async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemId", {
         sceneName: ctx.getInput(io.sceneName),
