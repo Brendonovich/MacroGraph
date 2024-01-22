@@ -1,4 +1,4 @@
-import { onCleanup, createResource } from "solid-js";
+import { onCleanup, createResource, createEffect, on } from "solid-js";
 import tmi from "tmi.js";
 import { Package, OnEvent } from "@macrograph/runtime";
 import { jsToJSON, JSON } from "@macrograph/json";
@@ -7,7 +7,7 @@ import { t, None, Maybe } from "@macrograph/typesystem";
 import { Ctx } from "./ctx";
 import { Auth, createUserInstance } from "./auth";
 import { ReactiveMap } from "@solid-primitives/map";
-import { TwitchAccount, accountProperty, defaultProperties } from "./resource";
+import { TwitchAccount, TwitchChannel, accountProperty } from "./resource";
 import { createEventBus } from "@solid-primitives/event-bus";
 
 export const CHAT_READ_USER_ID = "chatReadUserId";
@@ -31,8 +31,6 @@ export function createChat(auth: Auth, onEvent: OnEvent) {
             password: readAcc.token.access_token,
           },
         });
-
-        client.join;
 
         client.connect();
 
@@ -261,112 +259,157 @@ export function register(pkg: Package, { chat: { client, writeUser } }: Ctx) {
     },
   });
 
-  // pkg.createSchema({
-  //   name: "Chat Message (new)",
-  //   type: "event",
-  //   properties: {
-  //     source: {
-  //       name: "Twitch Channel",
-  //       type: t.string(),
-  //     },
-  //   },
-  //   createListener() {
-  //     return createEventBus();
-  //   },
-  //   createIO: ({ io }) => {
-  //     return {
-  //       exec: io.execOutput({
-  //         id: "exec",
-  //       }),
-  //       username: io.dataOutput({
-  //         id: "username",
-  //         name: "Username",
-  //         type: t.string(),
-  //       }),
-  //       displayName: io.dataOutput({
-  //         id: "displayName",
-  //         name: "Display Name",
-  //         type: t.string(),
-  //       }),
-  //       userId: io.dataOutput({
-  //         id: "userId",
-  //         name: "User ID",
-  //         type: t.string(),
-  //       }),
-  //       message: io.dataOutput({
-  //         id: "message",
-  //         name: "Message",
-  //         type: t.string(),
-  //       }),
-  //       messageId: io.dataOutput({
-  //         id: "messageId",
-  //         name: "Message ID",
-  //         type: t.string(),
-  //       }),
-  //       color: io.dataOutput({
-  //         id: "color",
-  //         name: "User Color",
-  //         type: t.option(t.string()),
-  //       }),
-  //       emotes: io.dataOutput({
-  //         id: "emotes",
-  //         name: "Emotes",
-  //         type: t.map(t.enum(JSON)),
-  //       }),
-  //       broadcaster: io.dataOutput({
-  //         id: "broadcaster",
-  //         name: "Broadcaster",
-  //         type: t.bool(),
-  //       }),
-  //       mod: io.dataOutput({
-  //         id: "mod",
-  //         name: "Moderator",
-  //         type: t.bool(),
-  //       }),
-  //       sub: io.dataOutput({
-  //         id: "sub",
-  //         name: "Subscriber",
-  //         type: t.bool(),
-  //       }),
-  //       vip: io.dataOutput({
-  //         id: "vip",
-  //         name: "VIP",
-  //         type: t.bool(),
-  //       }),
-  //     };
-  //   },
-  //   run({ ctx, data, io }) {
-  //     if (data.self) return;
-  //     ctx.setOutput(io.username, data.tags.username);
-  //     ctx.setOutput(io.displayName, data.tags["display-name"]);
-  //     ctx.setOutput(io.userId, data.tags["user-id"]);
-  //     ctx.setOutput(io.message, data.message);
-  //     ctx.setOutput(io.messageId, data.tags.id);
-  //     ctx.setOutput(io.mod, data.tags.mod);
-  //     ctx.setOutput(io.sub, data.tags.subscriber);
-  //     ctx.setOutput(io.vip, data.tags.vip ?? false);
-  //     ctx.setOutput(io.color, Maybe(data.tags.color));
-  //     ctx.setOutput(
-  //       io.broadcaster,
-  //       data.tags["room-id"] === data.tags["user-id"]
-  //     );
-  //     if (data.tags.emotes) {
-  //       ctx.setOutput(
-  //         io.emotes,
-  //         new ReactiveMap(
-  //           Object.entries(data.tags.emotes).map(([key, value]) => [
-  //             key,
-  //             jsToJSON(value)!,
-  //           ])
-  //         )
-  //       );
-  //     } else {
-  //       ctx.setOutput(io.emotes, new ReactiveMap());
-  //     }
+  pkg.createSchema({
+    name: "Chat Message (new)",
+    type: "event",
+    properties: {
+      channel: {
+        name: "Twitch Channel",
+        resource: TwitchChannel,
+      },
+      sender: {
+        name: "Sender Account",
+        resource: TwitchAccount,
+      },
+    },
+    createListener({ ctx, properties }) {
+      const data = () =>
+        ctx
+          .getProperty(properties.channel)
+          .zip(ctx.getProperty(properties.sender));
 
-  //     ctx.exec(io.exec);
-  //   },
-  // });
+      const bus = createEventBus<{
+        message: string;
+        tags: tmi.ChatUserstate;
+        self: boolean;
+      }>();
+
+      createEffect(
+        on(
+          () => data().expect("Channel or sender not chosen!"),
+          ([channel, sender]) => {
+            const client: tmi.Client = tmi.Client({
+              options: {
+                skipUpdatingEmotesets: true,
+              },
+              channels: [channel],
+              identity: {
+                username: sender.data.display_name,
+                password: sender.token.access_token,
+              },
+            });
+
+            client.connect();
+
+            client.on("message", (_, tags, message, self) => {
+              if (
+                tags["message-type"] === "action" ||
+                tags["message-type"] === "chat"
+              )
+                bus.emit({ message, tags, self });
+            });
+
+            onCleanup(() => {
+              client.disconnect();
+            });
+          }
+        )
+      );
+
+      return bus;
+    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      username: io.dataOutput({
+        id: "username",
+        name: "Username",
+        type: t.string(),
+      }),
+      displayName: io.dataOutput({
+        id: "displayName",
+        name: "Display Name",
+        type: t.string(),
+      }),
+      userId: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      message: io.dataOutput({
+        id: "message",
+        name: "Message",
+        type: t.string(),
+      }),
+      messageId: io.dataOutput({
+        id: "messageId",
+        name: "Message ID",
+        type: t.string(),
+      }),
+      color: io.dataOutput({
+        id: "color",
+        name: "User Color",
+        type: t.option(t.string()),
+      }),
+      emotes: io.dataOutput({
+        id: "emotes",
+        name: "Emotes",
+        type: t.map(t.enum(JSON)),
+      }),
+      broadcaster: io.dataOutput({
+        id: "broadcaster",
+        name: "Broadcaster",
+        type: t.bool(),
+      }),
+      mod: io.dataOutput({
+        id: "mod",
+        name: "Moderator",
+        type: t.bool(),
+      }),
+      sub: io.dataOutput({
+        id: "sub",
+        name: "Subscriber",
+        type: t.bool(),
+      }),
+      vip: io.dataOutput({
+        id: "vip",
+        name: "VIP",
+        type: t.bool(),
+      }),
+    }),
+    run({ ctx, data, io }) {
+      if (data.self) return;
+      ctx.setOutput(io.username, data.tags.username!);
+      ctx.setOutput(io.displayName, data.tags["display-name"]!);
+      ctx.setOutput(io.userId, data.tags["user-id"]!);
+      ctx.setOutput(io.message, data.message);
+      ctx.setOutput(io.messageId, data.tags.id!);
+      ctx.setOutput(io.mod, data.tags.mod !== true);
+      ctx.setOutput(io.sub, data.tags.subscriber !== true);
+      ctx.setOutput(io.vip, data.tags.vip !== true);
+      ctx.setOutput(io.color, Maybe(data.tags.color));
+      ctx.setOutput(
+        io.broadcaster,
+        data.tags["room-id"] === data.tags["user-id"]
+      );
+      if (data.tags.emotes) {
+        ctx.setOutput(
+          io.emotes,
+          new ReactiveMap(
+            Object.entries(data.tags.emotes).map(([key, value]) => [
+              key,
+              jsToJSON(value)!,
+            ])
+          )
+        );
+      } else {
+        ctx.setOutput(io.emotes, new ReactiveMap());
+      }
+
+      ctx.exec(io.exec);
+    },
+  });
 
   pkg.createEventSchema({
     name: "Chat Message",

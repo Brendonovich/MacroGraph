@@ -10,6 +10,7 @@ import {
   Accessor,
   onCleanup,
   createEffect,
+  catchError,
 } from "solid-js";
 import { Maybe, None, Option, Some } from "@macrograph/typesystem";
 
@@ -187,17 +188,18 @@ export class Node {
         const s = this.schema;
 
         createEffect(() => {
-          try {
-            s.createListener({
-              properties: s.properties ?? {},
-              ctx: {
-                getProperty: (p) => this.getProperty(p) as any,
-                graph: this.graph,
-              },
-            }).listen((data) => new ExecutionContext(this).run(data));
-          } catch (e) {
-            console.error(e);
-          }
+          catchError(
+            () => {
+              s.createListener({
+                properties: s.properties ?? {},
+                ctx: {
+                  getProperty: (p) => this.getProperty(p) as any,
+                  graph: this.graph,
+                },
+              }).listen((data) => new ExecutionContext(this).run(data));
+            },
+            (e) => console.error(e)
+          );
         });
       }
     });
@@ -228,8 +230,8 @@ export class Node {
         )
       )
       .andThen((item) => {
-        if (!("sources" in resource)) return None;
         if ("value" in item) return Some(item.value);
+        if (!("sources" in resource)) return None;
 
         return Maybe(
           resource.sources(resource.package).find((s) => s.id === item.sourceId)

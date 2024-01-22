@@ -5,7 +5,7 @@ import * as eventsub from "./eventsub";
 import * as chat from "./chat";
 
 import { Ctx, createCtx } from "./ctx";
-import { TwitchAccount, TwitchChat } from "./resource";
+import { TwitchAccount, TwitchChannel } from "./resource";
 
 export type Pkg = Package<any, Ctx>;
 
@@ -23,7 +23,7 @@ export function pkg(core: Core) {
   chat.register(pkg, ctx);
 
   pkg.registerResourceType(TwitchAccount);
-  pkg.registerResourceType(TwitchChat);
+  pkg.registerResourceType(TwitchChannel);
 
   return pkg;
 }

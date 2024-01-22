@@ -1,6 +1,6 @@
 import { PropertyDef, createResourceType } from "@macrograph/runtime";
-import { Pkg } from ".";
 import { t } from "@macrograph/typesystem";
+import { Pkg } from ".";
 
 export const TwitchAccount = createResourceType({
   name: "Twitch Account",
@@ -19,7 +19,7 @@ export const accountProperty = {
 
 export const defaultProperties = { account: accountProperty };
 
-export const TwitchChat = createResourceType({
+export const TwitchChannel = createResourceType({
   name: "Twitch Channel",
   type: t.string(),
 });

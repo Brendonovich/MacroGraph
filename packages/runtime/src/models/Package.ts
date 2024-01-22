@@ -2,11 +2,13 @@ import { ReactiveSet } from "@solid-primitives/set";
 import { createLazyMemo } from "@solid-primitives/memo";
 import { Component, lazy } from "solid-js";
 import {
+  BaseType,
   Enum,
   EnumBuilder,
   EnumVariants,
   LazyEnumVariants,
   LazyStructFields,
+  PrimitiveType,
   Struct,
   StructBuilder,
   StructFields,
@@ -283,8 +285,19 @@ export type ResourceType<
         pkg: TPkg
       ) => Array<{ id: string; display: string; value: TValue }>;
     }
-  | { type: t.String }
+  | { type: BaseType<TValue> }
 );
+
+export type inferResourceTypeValue<T> = T extends ResourceType<
+  infer TValue,
+  any
+>
+  ? T extends { source: any }
+    ? TValue
+    : T extends { type: BaseType }
+    ? t.infer<T["type"]>
+    : never
+  : never;
 
 type DistributiveOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
