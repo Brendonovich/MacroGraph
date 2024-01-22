@@ -773,6 +773,31 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "add Floats",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        two: io.dataInput({
+          id: "two",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const numb = ctx.getInput(io.one) + ctx.getInput(io.two);
+      ctx.setOutput(io.output, numb);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Subtract Ints",
     variant: "Pure",
     createIO({ io }) {
