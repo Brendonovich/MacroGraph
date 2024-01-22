@@ -43,6 +43,7 @@
     "@macrograph/config": "workspace:*",
     "@octokit/types": "^12.0.0",
     "@total-typescript/ts-reset": "^0.4.2",
+    "@twurple/eventsub-base": "^7.0.7",
     "@types/tmi.js": "^1.8.3",
     "solid-js": "^1.8.8",
     "type-fest": "^2.19.0",

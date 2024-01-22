@@ -1,79 +1,28 @@
 import {
-  onCleanup,
-  createResource,
-  createEffect,
-  on,
-  createMemo,
-  Accessor,
-} from "solid-js";
-import tmi, { Events } from "tmi.js";
-import {
   Package,
-  OnEvent,
   PropertyDef,
   CreateEventSchema,
   SchemaProperties,
 } from "@macrograph/runtime";
 import { jsToJSON, JSON } from "@macrograph/json";
-import { t, None, Maybe } from "@macrograph/typesystem";
+import { t, Maybe } from "@macrograph/typesystem";
+import { onCleanup, createEffect } from "solid-js";
+import tmi, { Events } from "tmi.js";
+import { ReactiveMap } from "@solid-primitives/map";
+import { createEventBus } from "@solid-primitives/event-bus";
+import { createMutable } from "solid-js/store";
 
 import { Ctx } from "./ctx";
-import { Account, Auth, createUserInstance } from "./auth";
-import { ReactiveMap } from "@solid-primitives/map";
-import { TwitchAccount, TwitchChannel, accountProperty } from "./resource";
-import { EventBus, createEventBus } from "@solid-primitives/event-bus";
-import { createEventListener } from "@solid-primitives/event-listener";
-import { createMutable } from "solid-js/store";
+import { Account } from "./auth";
+import { TwitchAccount, TwitchChannel } from "./resource";
 
 type ChatState = {
   client: tmi.Client;
   status: "disconnected" | "connecting" | "connected";
 };
 
-export function createChat(auth: Auth, onEvent: OnEvent) {
+export function createChat() {
   const clients = new ReactiveMap<string, ChatState>();
-
-  // client.on("emoteonly", (channel, enabled) => {
-  //   onEvent({ name: "emoteonly", data: { channel, enabled } });
-  // });
-
-  // client.on("subscribers", (channel, enabled) => {
-  //   onEvent({ name: "subonlymode", data: { channel, enabled } });
-  // });
-
-  // client.on("slowmode", (channel, enabled, length) => {
-  //   onEvent({
-  //     name: "slowmode",
-  //     data: { channel, enabled, length },
-  //   });
-  // });
-
-  // client.on(
-  //   "messagedeleted",
-  //   (channel, username, deletedmessage, userstate) => {
-  //     onEvent({
-  //       name: "messagedeleted",
-  //       data: { channel, username, deletedmessage, userstate },
-  //     });
-  //   }
-  // );
-
-  // client.on("followersonly", (channel, enabled, length) => {
-  //   onEvent({
-  //     name: "followersonly",
-  //     data: { channel, enabled, length },
-  //   });
-  // });
-
-  // client.on("message", (_, tags, message, self) => {
-  //   const data = { message, tags, self };
-  //   if (
-  //     tags["message-type"] === "action" ||
-  //     tags["message-type"] === "chat"
-  //   ) {
-  //     onEvent({ name: "chatMessage", data });
-  //   }
-  // });
 
   function createClient(account: Account) {
     const client = new tmi.Client({
