@@ -47,6 +47,8 @@ jobs:
             - name: install frontend dependencies
               run: pnpm install
 
+            - run: mkdir apps/desktop/dist
+
             - name: Build
               id: tauri_build
               run: |

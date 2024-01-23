@@ -2,12 +2,12 @@ import { Core, OAUTH_TOKEN, OnEvent } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createStore } from "solid-js/store";
 import { z } from "zod";
+import { createResource } from "solid-js";
 
 import { createAuth } from "./auth";
 import { createChat } from "./chat";
 import { createHelix } from "./helix";
 import { createEventSub } from "./eventSub";
-import { createResource } from "solid-js";
 
 export const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
