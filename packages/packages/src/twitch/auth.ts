@@ -1,5 +1,5 @@
-import { Core, OAuthToken, makePersistedOption } from "@macrograph/runtime";
-import { Maybe, None } from "@macrograph/typesystem";
+import { Core, OAuthToken } from "@macrograph/runtime";
+import { Maybe, None, makePersistedOption } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createMemo, createSignal } from "solid-js";
 import { z } from "zod";

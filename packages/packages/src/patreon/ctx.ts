@@ -1,5 +1,10 @@
-import { Core, OAuthToken, makePersistedOption } from "@macrograph/runtime";
-import { None, Option, Some } from "@macrograph/typesystem";
+import { Core, OAuthToken } from "@macrograph/runtime";
+import {
+  None,
+  Option,
+  Some,
+  makePersistedOption,
+} from "@macrograph/typesystem";
 import { createResource, createSignal } from "solid-js";
 import { z } from "zod";
 

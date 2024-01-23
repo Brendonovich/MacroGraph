@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { createSignal } from "solid-js";
+
 import { t, TypeVariant, Wildcard } from ".";
 import { BaseType } from "./base";
 
@@ -536,4 +538,34 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
   hasWildcard(): boolean {
     return this.inner.hasWildcard();
   }
+}
+
+type CreateSignal<T> = ReturnType<typeof createSignal<Option<T>>>;
+
+export function makePersistedOption<T>(
+  [get, set]: CreateSignal<T>,
+  key: string
+): CreateSignal<T> {
+  const init = localStorage.getItem(key);
+
+  if (init) {
+    try {
+      set(Some(JSON.parse(init) as any));
+    } catch {}
+  }
+
+  return [
+    get,
+    (value: Parameters<CreateSignal<T>[1]>[0]) => {
+      const newValue = set(value);
+
+      if (newValue.isNone()) localStorage.removeItem(key);
+      else
+        newValue.peek((value) =>
+          localStorage.setItem(key, JSON.stringify(value))
+        );
+
+      return newValue;
+    },
+  ];
 }

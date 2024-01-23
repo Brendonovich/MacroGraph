@@ -1,5 +1,9 @@
-import { makePersistedOption } from "@macrograph/runtime";
-import { None, Option, Some } from "@macrograph/typesystem";
+import {
+  None,
+  Option,
+  Some,
+  makePersistedOption,
+} from "@macrograph/typesystem";
 import { createEffect, createSignal, on } from "solid-js";
 import OpenAI from "openai";
 

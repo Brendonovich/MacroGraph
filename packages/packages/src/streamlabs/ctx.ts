@@ -1,10 +1,5 @@
-import {
-  Core,
-  OAuthToken,
-  OnEvent,
-  makePersistedOption,
-} from "@macrograph/runtime";
-import { None } from "@macrograph/typesystem";
+import { Core, OAuthToken, OnEvent } from "@macrograph/runtime";
+import { None, makePersistedOption } from "@macrograph/typesystem";
 import { io, Socket } from "socket.io-client";
 import {
   createEffect,

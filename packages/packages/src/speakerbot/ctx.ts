@@ -1,5 +1,4 @@
-import { makePersistedOption } from "@macrograph/runtime";
-import { None } from "@macrograph/typesystem";
+import { None, makePersistedOption } from "@macrograph/typesystem";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 
 const SPEAKER_BOT_PORT = "SpeakerBotPort";
