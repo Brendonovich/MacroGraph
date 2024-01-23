@@ -6,7 +6,7 @@ import {
 } from "@macrograph/runtime";
 import { jsToJSON, JSON } from "@macrograph/json";
 import { t, Maybe } from "@macrograph/typesystem";
-import { onCleanup, createEffect } from "solid-js";
+import { onCleanup, createEffect, mapArray, createMemo, on } from "solid-js";
 import tmi, { Events } from "tmi.js";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createEventBus } from "@solid-primitives/event-bus";
@@ -19,6 +19,7 @@ import { TwitchAccount, TwitchChannel } from "./resource";
 type ChatState = {
   client: tmi.Client;
   status: "disconnected" | "connecting" | "connected";
+  channelListenerCounts: Record<string, number>;
 };
 
 export function createChat() {
@@ -33,11 +34,33 @@ export function createChat() {
       },
     });
 
-    const state = createMutable<ChatState>({ client, status: "disconnected" });
+    const state = createMutable<ChatState>({
+      client,
+      status: "disconnected",
+      channelListenerCounts: {},
+    });
 
     client.on("connected", () => {
       state.status = "connected";
-      console.log(clients);
+
+      createEffect(
+        mapArray(
+          () => Object.keys(state.channelListenerCounts),
+          (channel) => {
+            const shouldListen = createMemo(() => {
+              const count = state.channelListenerCounts[channel];
+              return count !== undefined && count > 0;
+            });
+
+            createEffect(
+              on(shouldListen, (shouldListen) => {
+                if (shouldListen) client.join(channel);
+                else client.part(channel);
+              })
+            );
+          }
+        )
+      );
     });
     client.on("disconnected", () => {
       state.status = "disconnected";
@@ -102,8 +125,12 @@ export function register(pkg: Package, { chat }: Ctx) {
 
       createEffect(() => {
         const [state, channel] = data();
-        state.client.join(channel);
-        onCleanup(() => state.client.part(channel));
+        const channelLowercase = channel.toLowerCase();
+
+        state.channelListenerCounts[channelLowercase] ??= 0;
+        state.channelListenerCounts[channelLowercase] += 1;
+
+        onCleanup(() => (state.channelListenerCounts[channelLowercase] -= 1));
       });
 
       return {

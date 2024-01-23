@@ -1,11 +1,17 @@
-import { createEffect, createSignal, For, Match, Switch } from "solid-js";
+import { createSignal, For, Match, Switch } from "solid-js";
 import { makeTimer } from "@solid-primitives/timer";
 import { Button } from "@macrograph/ui";
 import { Tooltip } from "@kobalte/core";
 
 import { Ctx } from "./ctx";
 
-export default ({ core, auth, eventSub, chat }: Ctx) => {
+export default ({
+  core,
+  auth,
+  eventSub,
+  chat,
+  persisted: [, setPersisted],
+}: Ctx) => {
   const [loggingIn, setLoggingIn] = createSignal(false);
 
   return (
@@ -48,16 +54,22 @@ export default ({ core, auth, eventSub, chat }: Ctx) => {
                     <Switch fallback="EventSub Connecting...">
                       <Match when={!eventSubSocket()}>
                         <span>EventSub Disconnected</span>
-                        <Button onClick={() => eventSub.connectSocket(account)}>
+                        <Button
+                          onClick={() => {
+                            eventSub.connectSocket(account);
+                            setPersisted(account.data.id, "eventsub", true);
+                          }}
+                        >
                           Connect
                         </Button>
                       </Match>
                       <Match when={eventSubSocket()}>
-                        EventSub Connected
+                        <span>EventSub Connected</span>
                         <Button
-                          onClick={() =>
-                            eventSub.disconnectSocket(account.data.id)
-                          }
+                          onClick={() => {
+                            eventSub.disconnectSocket(account.data.id);
+                            setPersisted(account.data.id, "eventsub", false);
+                          }}
                         >
                           Disconnect
                         </Button>
@@ -68,7 +80,12 @@ export default ({ core, auth, eventSub, chat }: Ctx) => {
                     <Switch fallback="Chat Connecting...">
                       <Match when={chatClient()?.status === "connected"}>
                         <span>Chat Connected</span>
-                        <Button onClick={() => chat.disconnectClient(account)}>
+                        <Button
+                          onClick={() => {
+                            chat.disconnectClient(account);
+                            setPersisted(account.data.id, "chat", false);
+                          }}
+                        >
                           Disconnect
                         </Button>
                       </Match>
@@ -79,7 +96,12 @@ export default ({ core, auth, eventSub, chat }: Ctx) => {
                         }
                       >
                         <span>Chat Disconnected</span>
-                        <Button onClick={() => chat.connectClient(account)}>
+                        <Button
+                          onClick={() => {
+                            chat.connectClient(account);
+                            setPersisted(account.data.id, "chat", true);
+                          }}
+                        >
                           Connect
                         </Button>
                       </Match>

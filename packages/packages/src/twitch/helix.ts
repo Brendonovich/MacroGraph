@@ -16,7 +16,6 @@ import { createHTTPClient } from "../httpEndpoint";
 import { Account } from "./auth";
 import { defaultProperties } from "./resource";
 import { CLIENT_ID } from "./ctx";
-import { Pkg } from ".";
 
 export const HELIX_USER_ID = "helixUserId";
 
@@ -105,42 +104,10 @@ export const Redemption = createStruct("Redemption", (s) => ({
   redemptionDate: s.field("Redemption Date", t.string()),
 }));
 
-type Reqs = {
-  "POST /moderation/bans": any;
-  "DELETE /moderation/bans": any;
-  "GET /moderation/moderators": any;
-  "POST /moderation/moderators": any;
-  "DELETE /moderation/moderators": any;
-  "GET /channels": any;
-  "PATCH /channels": any;
-  "GET /users": any;
-  "GET /games": any;
-  "GET /streams": any;
-  "POST /clips": any;
-  "GET /hypetrain/events": any;
-  "GET /subscriptions": any;
-  "GET /channels/followers": any;
-  "GET /channels/vips": any;
-
-  "GET /channel_points/custom_rewards": any;
-  "POST /channel_points/custom_rewards": any;
-  "PATCH /channel_points/custom_rewards": any;
-  "DELETE /channel_points/custom_rewards": any;
-  "PATCH /channel_points/custom_rewards/redemptions": any;
-
-  "PATCH /chat/settings": any;
-  "GET /chat/color": any;
-  "POST /chat/shoutouts": any;
-  "POST /chat/announcements": any;
-  "POST /channels/commercial": any;
-
-  "POST /eventsub/subscriptions": any;
-};
-
 export function createHelix(core: Core) {
   let refreshPromises = new Map<string, Promise<any>>();
 
-  return createHTTPClient<Reqs, Account>({
+  return createHTTPClient<Requests, Account>({
     root: "https://api.twitch.tv/helix",
     fetch: async (account, url, args) => {
       if (args?.body && args.body instanceof URLSearchParams) {
@@ -180,15 +147,7 @@ export function createHelix(core: Core) {
         resp = await run();
       }
 
-      return resp.text().then((text: any) => {
-        if (text === "") return {};
-        let json: any = JSON.parse(text);
-        if (json.data.length === 1) {
-          return json.data[0];
-        } else {
-          return json.data;
-        }
-      });
+      return resp.json();
     },
   });
 }
@@ -312,7 +271,7 @@ export function register(pkg: Package, helix: Helix) {
       }),
     }),
     run({ ctx, io, account }) {
-      helix.call("POST /moderation/moderators", account, {
+      return helix.call("POST /moderation/moderators", account, {
         body: JSON.stringify({
           broadcaster_id: account.data.id,
           user_id: ctx.getInput(io.userId),
@@ -400,7 +359,7 @@ export function register(pkg: Package, helix: Helix) {
           broadcaster_id: ctx.getInput(io.broadcasterIdIn),
         }),
       });
-      const info = data.data[0];
+      const info = data.data[0]!;
       ctx.setOutput(io.broadcasterIdOut, info.broadcaster_id);
       ctx.setOutput(io.broadcasterLogin, info.broadcaster_login);
       ctx.setOutput(io.broadcasterDisplay, info.broadcaster_name);
@@ -728,20 +687,18 @@ export function register(pkg: Package, helix: Helix) {
 
   createHelixExecSchema({
     name: "Check User Mod",
-    createIO: ({ io }) => {
-      return {
-        userId: io.dataInput({
-          name: "User ID",
-          id: "userId",
-          type: t.string(),
-        }),
-        moderator: io.dataOutput({
-          name: "Moderator",
-          id: "moderator",
-          type: t.bool(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      moderator: io.dataOutput({
+        name: "Moderator",
+        id: "moderator",
+        type: t.bool(),
+      }),
+    }),
     async run({ ctx, io, account }) {
       const data = await helix.call("GET /moderation/moderators", account, {
         body: new URLSearchParams({
@@ -1365,7 +1322,7 @@ export function register(pkg: Package, helix: Helix) {
         }),
       });
 
-      const data = Maybe(response).expect("No user found");
+      const data = Maybe(response.data[0]).expect("No user found");
 
       // const optData = Maybe(data);
       ctx.setOutput(io.userIdOut, data.id);
@@ -1416,72 +1373,70 @@ export function register(pkg: Package, helix: Helix) {
 
   createHelixExecSchema({
     name: "Get User By ID",
-    createIO: ({ io }) => {
-      return {
-        userIdIn: io.dataInput({
-          id: "userId",
-          name: "User ID",
-          type: t.string(),
-        }),
-        userIdOut: io.dataOutput({
-          id: "userId",
-          name: "User ID",
-          type: t.string(),
-        }),
-        userLogin: io.dataOutput({
-          id: "userLogin",
-          name: "Login Name",
-          type: t.string(),
-        }),
-        displayName: io.dataOutput({
-          id: "displayName",
-          name: "Display Name",
-          type: t.string(),
-        }),
-        type: io.dataOutput({
-          id: "type",
-          name: "User Type",
-          type: t.enum(UserType),
-        }),
-        broadcasterType: io.dataOutput({
-          id: "broadcasterType",
-          name: "Broadcaster Type",
-          type: t.enum(BroadcasterType),
-        }),
-        description: io.dataOutput({
-          id: "description",
-          name: "Description",
-          type: t.string(),
-        }),
-        profileImageUrl: io.dataOutput({
-          id: "profileImageUrl",
-          name: "Profile Image URL",
-          type: t.string(),
-        }),
-        offlineImageUrl: io.dataOutput({
-          id: "offlineImageUrl",
-          name: "Offline Image URL",
-          type: t.string(),
-        }),
-        createdAt: io.dataOutput({
-          id: "createdAt",
-          name: "Created At",
-          type: t.string(),
-        }),
-        //out: io.dataOutput({
-        //   id: "out",
-        //   type: t.option(t.struct(User)),
-        // }),
-      };
-    },
+    createIO: ({ io }) => ({
+      userIdIn: io.dataInput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userIdOut: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userLogin: io.dataOutput({
+        id: "userLogin",
+        name: "Login Name",
+        type: t.string(),
+      }),
+      displayName: io.dataOutput({
+        id: "displayName",
+        name: "Display Name",
+        type: t.string(),
+      }),
+      type: io.dataOutput({
+        id: "type",
+        name: "User Type",
+        type: t.enum(UserType),
+      }),
+      broadcasterType: io.dataOutput({
+        id: "broadcasterType",
+        name: "Broadcaster Type",
+        type: t.enum(BroadcasterType),
+      }),
+      description: io.dataOutput({
+        id: "description",
+        name: "Description",
+        type: t.string(),
+      }),
+      profileImageUrl: io.dataOutput({
+        id: "profileImageUrl",
+        name: "Profile Image URL",
+        type: t.string(),
+      }),
+      offlineImageUrl: io.dataOutput({
+        id: "offlineImageUrl",
+        name: "Offline Image URL",
+        type: t.string(),
+      }),
+      createdAt: io.dataOutput({
+        id: "createdAt",
+        name: "Created At",
+        type: t.string(),
+      }),
+      //out: io.dataOutput({
+      //   id: "out",
+      //   type: t.option(t.struct(User)),
+      // }),
+    }),
     async run({ ctx, io, account }) {
-      const response = await helix.call("GET /users", account, {
+      const resp = await helix.call("GET /users", account, {
         body: new URLSearchParams({
           id: ctx.getInput(io.userIdIn),
         }),
       });
 
-      const data = Maybe(response).expect("No user found");
+      const data = Maybe(resp.data[0]).expect("No user found");
 
       // const optData = Maybe(data);
       ctx.setOutput(io.userIdOut, data.id);
@@ -1740,7 +1695,7 @@ export function register(pkg: Package, helix: Helix) {
     run({ ctx, io, account }) {
       const user = account.data.id;
 
-      helix.call("POST /chat/shoutouts", account, {
+      return helix.call("POST /chat/shoutouts", account, {
         body: new URLSearchParams({
           from_broadcaster_id: user,
           moderator_id: user,
@@ -1773,7 +1728,7 @@ export function register(pkg: Package, helix: Helix) {
       >;
       const user = account.data.id;
 
-      helix.call("POST /chat/announcements", account, {
+      return helix.call("POST /chat/announcements", account, {
         body: JSON.stringify({
           broadcaster_id: user,
           moderator_id: user,
@@ -1784,3 +1739,74 @@ export function register(pkg: Package, helix: Helix) {
     },
   });
 }
+
+type PaginatedData<T> = {
+  data: Array<T>;
+  pagination: Partial<{
+    cursor: string;
+  }>;
+};
+
+// thanks twurple :)
+type Requests = {
+  "POST /moderation/bans": any;
+  "DELETE /moderation/bans": any;
+  "GET /moderation/moderators": PaginatedData<{
+    user_id: string;
+    user_name: string;
+    user_login: string;
+  }>;
+  "POST /moderation/moderators": any;
+  "DELETE /moderation/moderators": any;
+  "GET /channels": {
+    data: Array<{
+      broadcaster_id: string;
+      broadcaster_name: string;
+      broadcaster_login: string;
+      broadcaster_language: string;
+      game_id: string;
+      game_name: string;
+      title: string;
+      delay: number;
+      tags: string[];
+      content_classification_labels: string[];
+      is_branded_content: boolean;
+    }>;
+  };
+  "PATCH /channels": any;
+  "GET /users": {
+    data: Array<{
+      id: string;
+      login: string;
+      display_name: string;
+      type: "admin" | "global_mod" | "staff" | "";
+      broadcaster_type: "affiliate" | "partner" | "";
+      description: string;
+      profile_image_url: string;
+      offline_image_url: string;
+      email: string;
+      created_at: string;
+    }>;
+  };
+  "GET /games": any;
+  "GET /streams": any;
+  "POST /clips": any;
+  "GET /hypetrain/events": any;
+  "GET /subscriptions": any;
+  "GET /channels/followers": any;
+  "GET /channels/vips": any;
+
+  "GET /channel_points/custom_rewards": any;
+  "POST /channel_points/custom_rewards": any;
+  "PATCH /channel_points/custom_rewards": any;
+  "DELETE /channel_points/custom_rewards": any;
+  "PATCH /channel_points/custom_rewards/redemptions": any;
+
+  "PATCH /chat/settings": any;
+  "GET /chat/color": any;
+  "POST /chat/shoutouts": any;
+  "POST /chat/announcements": any;
+  "POST /channels/commercial": any;
+
+  "POST /eventsub/subscriptions": any;
+};

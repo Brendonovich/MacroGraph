@@ -52,7 +52,7 @@ export function createHTTPClient<TReqs extends RESTDefinitions, TCtx>(args: {
       restPath: TPath,
       ctx: TCtx,
       init?: Omit<RequestInit, "method">
-    ) {
+    ): Promise<TReqs[TPath]> {
       const [method, path] = splitRESTPath(restPath as any);
       return args.fetch(ctx, `${args.root}${path}`, {
         method,

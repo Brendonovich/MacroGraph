@@ -1,7 +1,7 @@
 import { Core, Package } from "@macrograph/runtime";
 
 import * as helix from "./helix";
-import * as eventsub from "./eventsub";
+import * as eventsub from "./eventSub";
 import * as chat from "./chat";
 
 import { Ctx, createCtx } from "./ctx";
