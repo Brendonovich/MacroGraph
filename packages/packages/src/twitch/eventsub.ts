@@ -93,11 +93,11 @@ const OutcomesBegin = createStruct("Outcomes Begin", (s) => ({
 }));
 
 const TopPredictors = createStruct("Top Predictors", (s) => ({
-  userName: s.field("User Name", t.string()),
-  userLogin: s.field("User Login", t.string()),
-  userId: s.field("User ID", t.string()),
-  channelPointsWon: s.field("Channel Points Won", t.option(t.int())),
-  channelPointsUser: s.field("Channel Points User", t.int()),
+  user_name: s.field("User Name", t.string()),
+  user_login: s.field("User Login", t.string()),
+  user_id: s.field("User ID", t.string()),
+  channel_points_won: s.field("Channel Points Won", t.option(t.int())),
+  channel_points_used: s.field("Channel Points User", t.int()),
 }));
 
 const OutcomesProgress = createStruct("Outcomes Progress", (s) => ({
@@ -105,15 +105,14 @@ const OutcomesProgress = createStruct("Outcomes Progress", (s) => ({
   title: s.field("title", t.string()),
   color: s.field("Color", t.string()),
   users: s.field("Users", t.int()),
-  channelPoints: s.field("Channel Points", t.int()),
-  topPredictors: s.field("Top Predictors", t.list(t.struct(TopPredictors))),
-  votes: s.field("votes", t.int()),
+  channel_points: s.field("Channel Points", t.int()),
+  top_predictors: s.field("Top Predictors", t.list(t.struct(TopPredictors))),
 }));
 
 const PollChoice = createStruct("Choice", (s) => ({
   id: s.field("id", t.string()),
   title: s.field("title", t.string()),
-  channel_points_votes: s.field("Channel Points Votes", t.option(t.int())),
+  channel_points_votes: s.field("Channel Points Votes", t.int()),
   votes: s.field("votes", t.int()),
 }));
 
@@ -151,7 +150,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 
         const bus = createEventBus<Events[TEvent]>();
 
-        createEventListener(socket, "message", (msg) => {
+        createEventListener(socket, "message", (msg: any) => {
           const info: any = JSON.parse(msg.data);
 
           if (
@@ -489,7 +488,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       redemptTotalStream: io.dataOutput({
         id: "redemptTotalStream",
         name: "Current Stream Total Redemptions",
-        type: t.int(),
+        type: t.option(t.int()),
       }),
       maxPerStream: io.dataOutput({
         id: "maxPerStreamValue",
@@ -910,7 +909,20 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
     run({ ctx, data, io }) {
       ctx.setOutput(io.title, data.title);
-      ctx.setOutput(io.outcomes, data.outcomes);
+      ctx.setOutput(
+        io.outcomes,
+        data.outcomes.map((outcome) =>
+          OutcomesProgress.create({
+            ...outcome,
+            top_predictors: outcome.top_predictors.map((predictor) =>
+              TopPredictors.create({
+                ...predictor,
+                channel_points_won: Maybe(predictor.channel_points_won),
+              })
+            ),
+          })
+        )
+      );
       ctx.exec(io.exec);
     },
   });
@@ -937,7 +949,20 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
     run({ ctx, data, io }) {
       ctx.setOutput(io.title, data.title);
-      ctx.setOutput(io.outcomes, data.outcomes);
+      ctx.setOutput(
+        io.outcomes,
+        data.outcomes.map((outcome) =>
+          OutcomesProgress.create({
+            ...outcome,
+            top_predictors: outcome.top_predictors.map((predictor) =>
+              TopPredictors.create({
+                ...predictor,
+                channel_points_won: Maybe(predictor.channel_points_won),
+              })
+            ),
+          })
+        )
+      );
       ctx.exec(io.exec);
     },
   });
@@ -963,7 +988,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
         winningOutcomeId: io.dataOutput({
           id: "winningOutcomeId",
           name: "Winning Outcome ID",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
         status: io.dataOutput({
           id: "status",
@@ -974,12 +999,46 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
     run({ ctx, data, io }) {
       ctx.setOutput(io.title, data.title);
-      ctx.setOutput(io.outcomes, data.outcomes);
-      ctx.setOutput(io.winningOutcomeId, data.winning_outcome_id);
-      ctx.setOutput(io.status, data.status);
+      ctx.setOutput(
+        io.outcomes,
+        data.outcomes.map((outcome) =>
+          OutcomesProgress.create({
+            ...outcome,
+            top_predictors: outcome.top_predictors.map((predictor) =>
+              TopPredictors.create({
+                ...predictor,
+                channel_points_won: Maybe(predictor.channel_points_won),
+              })
+            ),
+          })
+        )
+      );
+      ctx.setOutput(io.winningOutcomeId, Maybe(data.winning_outcome_id));
+      ctx.setOutput(io.status, PredictionStatus.variant(data.status));
       ctx.exec(io.exec);
     },
   });
+
+  const HypeTrainContributionTypeEnum = createEnum(
+    "Hype Train Contribution Type",
+    (e) => [e.variant("bits"), e.variant("subscription"), e.variant("other")]
+  );
+
+  const TopContribution = createStruct("Contribution", (s) => ({
+    user_id: s.field("User ID", t.string()),
+    user_login: s.field("User Login", t.string()),
+    user_name: s.field("User Name", t.string()),
+    type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
+    total: s.field("Total", t.int()),
+  }));
+
+  const LastContribute = createStruct("Contribution", (s) => ({
+    user_id: s.field("User ID", t.string()),
+    user_login: s.field("User Login", t.string()),
+    user_name: s.field("User Name", t.string()),
+    type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
+    total: s.field("Total", t.int()),
+  }));
 
   createEventsubEventSchema({
     name: "Channel Hype Train Begin",
@@ -1004,55 +1063,15 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           name: "Goal",
           type: t.int(),
         }),
-        topContributeBitsUserName: io.dataOutput({
-          id: "topContributeBitsUserName",
-          name: "Top Contribute Bit User Name",
-          type: t.string(),
+        topContributions: io.dataOutput({
+          id: "topContributions",
+          name: "Top Contributions",
+          type: t.list(t.struct(TopContribution)),
         }),
-        topContributeBitsUserId: io.dataOutput({
-          id: "topContributeBitsUserId",
-          name: "Top Contribute Bit User ID",
-          type: t.string(),
-        }),
-        topContributeBitsTotal: io.dataOutput({
-          id: "topContributeBitsTotal",
-          name: "Top Contribute Bits Total",
-          type: t.int(),
-        }),
-        topContributeSubsUserName: io.dataOutput({
-          id: "topContributeSubsUserName",
-          name: "Top Contribute Subs Username",
-          type: t.string(),
-        }),
-        topContributeSubsUserId: io.dataOutput({
-          id: "topContributeSubsUserId",
-          name: "Top Contribute Subs User ID",
-          type: t.string(),
-        }),
-        topContributeSubsTotal: io.dataOutput({
-          id: "topContributeSubsTotal",
-          name: "Top Contribute Subs Total",
-          type: t.int(),
-        }),
-        lastContributeUserName: io.dataOutput({
-          id: "lastContributeUserName",
-          name: "Last Contribute Username",
-          type: t.string(),
-        }),
-        lastContributeUserId: io.dataOutput({
-          id: "lastContributeUserId",
-          name: "Last Contribute User ID",
-          type: t.string(),
-        }),
-        lastContributeTotal: io.dataOutput({
-          id: "lastContributeTotal",
-          name: "Last Contribute Total",
-          type: t.int(),
-        }),
-        lastContributeType: io.dataOutput({
-          id: "lastContributeType",
-          name: "Last Contribute Type",
-          type: t.string(),
+        lastContribution: io.dataOutput({
+          id: "lastContribution",
+          name: "Last Contribution",
+          type: t.struct(LastContribute),
         }),
         level: io.dataOutput({
           id: "level",
@@ -1062,35 +1081,32 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
+      let topContributions = data.top_contributions.map((contribution) =>
+        TopContribution.create({
+          user_id: contribution.user_id,
+          user_login: contribution.user_login,
+          user_name: contribution.user_name,
+          total: contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(contribution.type),
+        })
+      );
       ctx.setOutput(io.total, data.total);
       ctx.setOutput(io.progress, data.progress);
       ctx.setOutput(io.goal, data.goal);
       ctx.setOutput(io.level, data.level);
+      ctx.setOutput(io.topContributions, topContributions);
       ctx.setOutput(
-        io.topContributeBitsUserName,
-        data.top_contributions[0].user_name
+        io.lastContribution,
+        LastContribute.create({
+          user_id: data.last_contribution.user_id,
+          user_login: data.last_contribution.user_login,
+          user_name: data.last_contribution.user_name,
+          total: data.last_contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(
+            data.last_contribution.type
+          ),
+        })
       );
-      ctx.setOutput(
-        io.topContributeBitsUserId,
-        data.top_contributions[0].user_id
-      );
-      ctx.setOutput(io.topContributeBitsTotal, data.top_contributions[0].total);
-      ctx.setOutput(
-        io.topContributeSubsUserName,
-        data.top_contributions[1].user_name
-      );
-      ctx.setOutput(
-        io.topContributeSubsUserId,
-        data.top_contributions[1].user_id
-      );
-      ctx.setOutput(io.topContributeSubsTotal, data.top_contributions[1].total);
-      ctx.setOutput(
-        io.lastContributeUserName,
-        data.last_contribution.user_name
-      );
-      ctx.setOutput(io.lastContributeUserId, data.last_contribution.user_id);
-      ctx.setOutput(io.lastContributeTotal, data.last_contribution.total);
-      ctx.setOutput(io.lastContributeType, data.last_contribution.type);
       ctx.exec(io.exec);
     },
   });
@@ -1118,55 +1134,15 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           name: "Goal",
           type: t.int(),
         }),
-        topContributeBitsUserName: io.dataOutput({
-          id: "topContributeBitsUserName",
-          name: "Top Contribute Bit User Name",
-          type: t.string(),
+        topContributions: io.dataOutput({
+          id: "topContributions",
+          name: "Top Contributions",
+          type: t.list(t.struct(TopContribution)),
         }),
-        topContributeBitsUserId: io.dataOutput({
-          id: "topContributeBitsUserId",
-          name: "Top Contribute Bit User ID",
-          type: t.string(),
-        }),
-        topContributeBitsTotal: io.dataOutput({
-          id: "topContributeBitsTotal",
-          name: "Top Contribute Bits Total",
-          type: t.int(),
-        }),
-        topContributeSubsUserName: io.dataOutput({
-          id: "topContributeSubsUserName",
-          name: "Top Contribute Subs Username",
-          type: t.string(),
-        }),
-        topContributeSubsUserId: io.dataOutput({
-          id: "topContributeSubsUserId",
-          name: "Top Contribute Subs User ID",
-          type: t.string(),
-        }),
-        topContributeSubsTotal: io.dataOutput({
-          id: "topContributeSubsTotal",
-          name: "Top Contribute Subs Total",
-          type: t.int(),
-        }),
-        lastContributeUserName: io.dataOutput({
-          id: "lastContributeUserName",
-          name: "Last Contribute Username",
-          type: t.string(),
-        }),
-        lastContributeUserId: io.dataOutput({
-          id: "lastContributeUserId",
-          name: "Last Contribute User ID",
-          type: t.string(),
-        }),
-        lastContributeTotal: io.dataOutput({
-          id: "lastContributeTotal",
-          name: "Last Contribute Total",
-          type: t.int(),
-        }),
-        lastContributeType: io.dataOutput({
-          id: "lastContributeType",
-          name: "Last Contribute Type",
-          type: t.string(),
+        lastContribution: io.dataOutput({
+          id: "lastContribution",
+          name: "Last Contribution",
+          type: t.struct(LastContribute),
         }),
         level: io.dataOutput({
           id: "level",
@@ -1176,35 +1152,33 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
+      let topContributions = data.top_contributions.map((contribution) =>
+        TopContribution.create({
+          user_id: contribution.user_id,
+          user_login: contribution.user_login,
+          user_name: contribution.user_name,
+          total: contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(contribution.type),
+        })
+      );
+
       ctx.setOutput(io.total, data.total);
       ctx.setOutput(io.progress, data.progress);
       ctx.setOutput(io.goal, data.goal);
       ctx.setOutput(io.level, data.level);
+      ctx.setOutput(io.topContributions, topContributions);
       ctx.setOutput(
-        io.topContributeBitsUserName,
-        data.top_contributions[0].user_name
+        io.lastContribution,
+        LastContribute.create({
+          user_id: data.last_contribution.user_id,
+          user_login: data.last_contribution.user_login,
+          user_name: data.last_contribution.user_name,
+          total: data.last_contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(
+            data.last_contribution.type
+          ),
+        })
       );
-      ctx.setOutput(
-        io.topContributeBitsUserId,
-        data.top_contributions[0].user_id
-      );
-      ctx.setOutput(io.topContributeBitsTotal, data.top_contributions[0].total);
-      ctx.setOutput(
-        io.topContributeSubsUserName,
-        data.top_contributions[1].user_name
-      );
-      ctx.setOutput(
-        io.topContributeSubsUserId,
-        data.top_contributions[1].user_id
-      );
-      ctx.setOutput(io.topContributeSubsTotal, data.top_contributions[1].total);
-      ctx.setOutput(
-        io.lastContributeUserName,
-        data.last_contribution.user_name
-      );
-      ctx.setOutput(io.lastContributeUserId, data.last_contribution.user_id);
-      ctx.setOutput(io.lastContributeTotal, data.last_contribution.total);
-      ctx.setOutput(io.lastContributeType, data.last_contribution.type);
       ctx.exec(io.exec);
     },
   });
@@ -1227,35 +1201,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           name: "Level",
           type: t.int(),
         }),
-        topContributeBitsUserName: io.dataOutput({
-          id: "topContributeBitsUserName",
-          name: "Top Contribute Bit Username",
-          type: t.string(),
-        }),
-        topContributeBitsUserId: io.dataOutput({
-          id: "topContributeBitsUserId",
-          name: "Top Contribute Bit User ID",
-          type: t.string(),
-        }),
-        topContributeBitsTotal: io.dataOutput({
-          id: "topContributeBitsTotal",
-          name: "Top Contribute Bits Total",
-          type: t.int(),
-        }),
-        topContributeSubsUserName: io.dataOutput({
-          id: "topContributeSubsUserName",
-          name: "Top Contribute Subs Username",
-          type: t.string(),
-        }),
-        topContributeSubsUserId: io.dataOutput({
-          id: "topContributeSubsUserId",
-          name: "Top Contribute Subs User ID",
-          type: t.string(),
-        }),
-        topContributeSubsTotal: io.dataOutput({
-          id: "topContributeSubsTotal",
-          name: "Top Contribute Subs Total",
-          type: t.int(),
+        topContributions: io.dataOutput({
+          id: "topContributions",
+          name: "Top Contributions",
+          type: t.list(t.struct(TopContribution)),
         }),
         cooldownEndsAt: io.dataOutput({
           id: "cooldownEndsAt",
@@ -1265,26 +1214,19 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
+      let topContributions = data.top_contributions.map((contribution) =>
+        TopContribution.create({
+          user_id: contribution.user_id,
+          user_login: contribution.user_login,
+          user_name: contribution.user_name,
+          total: contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(contribution.type),
+        })
+      );
+
       ctx.setOutput(io.total, data.total);
       ctx.setOutput(io.level, data.level);
-      ctx.setOutput(
-        io.topContributeBitsUserName,
-        data.top_contributions[0].user_name
-      );
-      ctx.setOutput(
-        io.topContributeBitsUserId,
-        data.top_contributions[0].user_id
-      );
-      ctx.setOutput(io.topContributeBitsTotal, data.top_contributions[0].total);
-      ctx.setOutput(
-        io.topContributeSubsUserName,
-        data.top_contributions[1].user_name
-      );
-      ctx.setOutput(
-        io.topContributeSubsUserId,
-        data.top_contributions[1].user_id
-      );
-      ctx.setOutput(io.topContributeSubsTotal, data.top_contributions[1].total);
+      ctx.setOutput(io.topContributions, topContributions);
       ctx.setOutput(io.cooldownEndsAt, data.cooldown_ends_at);
       ctx.exec(io.exec);
     },
@@ -1323,10 +1265,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           name: "Category Name",
           type: t.string(),
         }),
-        mature: io.dataOutput({
-          id: "mature",
-          name: "Mature",
-          type: t.string(),
+        contentClassificationLabels: io.dataOutput({
+          id: "contentClassificationLabels",
+          name: "Classification Labels",
+          type: t.list(t.string()),
         }),
       };
     },
@@ -1336,7 +1278,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.title, data.title);
       ctx.setOutput(io.categoryId, data.category_id);
       ctx.setOutput(io.categoryName, data.category_name);
-      ctx.setOutput(io.mature, data.is_mature);
+      ctx.setOutput(
+        io.contentClassificationLabels,
+        data.content_classification_labels
+      );
       ctx.exec(io.exec);
     },
   });
@@ -1450,7 +1395,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
         cumulative: io.dataOutput({
           id: "cumulative",
           name: "Cumulative Total",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         anonymous: io.dataOutput({
           id: "anonymous",
@@ -1464,7 +1409,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.userLogin, data.user_login);
       ctx.setOutput(io.tier, data.tier);
       ctx.setOutput(io.total, data.total);
-      ctx.setOutput(io.cumulative, data.cumulative_total);
+      ctx.setOutput(io.cumulative, Maybe(data.cumulative_total));
       ctx.setOutput(io.anonymous, data.is_anonymous);
       ctx.exec(io.exec);
     },
@@ -1501,7 +1446,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
         streak: io.dataOutput({
           id: "streak",
           name: "Streak Months",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         cumulative: io.dataOutput({
           id: "cumulative",
@@ -1521,7 +1466,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.tier, data.tier);
       ctx.setOutput(io.message, data.message.text);
       ctx.setOutput(io.cumulative, data.cumulative_months);
-      ctx.setOutput(io.streak, data.streak_months);
+      ctx.setOutput(io.streak, Maybe(data.streak_months));
       ctx.setOutput(io.duration, data.duration_months);
       ctx.exec(io.exec);
     },
@@ -1568,9 +1513,9 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.userId, data.user_id);
-      ctx.setOutput(io.userLogin, data.user_login);
-      ctx.setOutput(io.displayName, data.user_name);
+      ctx.setOutput(io.userId, data.user_id ?? "Anonymous");
+      ctx.setOutput(io.userLogin, data.user_login ?? "");
+      ctx.setOutput(io.displayName, data.user_name ?? "");
       ctx.setOutput(io.anonymous, data.is_anonymous);
       ctx.setOutput(io.message, data.message);
       ctx.setOutput(io.bits, data.bits);
@@ -1746,7 +1691,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.description, data.description);
       ctx.setOutput(io.currentAmount, data.current_amount);
       ctx.setOutput(io.targetAmount, data.target_amount);
-      ctx.setOutput(io.startedAt, data.started_at);
+      ctx.setOutput(io.startedAt, data.started_at.toString());
 
       ctx.exec(io.exec);
     },
@@ -1798,7 +1743,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.description, data.description);
       ctx.setOutput(io.currentAmount, data.current_amount);
       ctx.setOutput(io.targetAmount, data.target_amount);
-      ctx.setOutput(io.startedAt, data.started_at);
+      ctx.setOutput(io.startedAt, data.started_at.toString());
 
       ctx.exec(io.exec);
     },
@@ -1861,8 +1806,8 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.isAchieved, data.is_achieved);
       ctx.setOutput(io.currentAmount, data.current_amount);
       ctx.setOutput(io.targetAmount, data.target_amount);
-      ctx.setOutput(io.startedAt, data.started_at);
-      ctx.setOutput(io.endedAt, data.ended_at);
+      ctx.setOutput(io.startedAt, data.started_at.toString());
+      ctx.setOutput(io.endedAt, data.ended_at.toString());
 
       ctx.exec(io.exec);
     },
@@ -2016,15 +1961,15 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     cumulative_months: s.field("Cumulative Months", t.int()),
     duration_months: s.field("Duration Months", t.int()),
     streak_months: s.field("Streak Months", t.int()),
-    gifter_is_anonymous: s.field("Anonymous Gifter", t.bool()),
-    gifter_user_name: s.field("Gifter UserName", t.string()),
-    gifter_user_id: s.field("Gifter User ID", t.string()),
-    gifter_user_login: s.field("Gifter User Login", t.string()),
+    gifter_is_anonymous: s.field("Anonymous Gifter", t.option(t.bool())),
+    gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
+    gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
+    gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
   }));
 
   const SubGiftStruct = createStruct("Gift Sub", (s) => ({
     sub_tier: s.field("Sub Tier", t.string()),
-    cumulative_months: s.field("Cumulative Months", t.int()),
+    cumulative_total: s.field("Cumulative Months", t.option(t.int())),
     duration_months: s.field("Duration Months", t.int()),
     recipient_user_name: s.field("Recipient UserName", t.string()),
     recipient_user_id: s.field("Recipient User ID", t.string()),
@@ -2036,14 +1981,14 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     sub_tier: s.field("Sub Tier", t.string()),
     id: s.field("ID", t.string()),
     total: s.field("Total", t.int()),
-    cumulative_total: s.field("Cumulative Total", t.int()),
+    cumulative_total: s.field("Cumulative Total", t.option(t.int())),
   }));
 
   const GiftPaidUpgradeStruct = createStruct("Gift Paid Upgrade", (s) => ({
     gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
-    gifter_user_id: s.field("Gifter User ID", t.string()),
-    gifter_user_name: s.field("Gifter UserName", t.string()),
-    gifter_user_login: s.field("Gifter User Login", t.string()),
+    gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
+    gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
+    gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
   }));
 
   const RaidStruct = createStruct("Raid", (s) => ({
@@ -2331,9 +2276,9 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                 "Sub",
                 {
                   value: {
-                    sub_Tier: data.sub.sub_Tier,
-                    is_prime: data.sub.is_prime,
-                    duration_months: data.sub.duration_months,
+                    sub_Tier: data.sub!.sub_tier,
+                    is_prime: data.sub!.is_prime,
+                    duration_months: data.sub!.duration_months,
                   },
                 },
               ]);
@@ -2343,16 +2288,16 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                 "Resub",
                 {
                   value: {
-                    cumulative_months: data.resub.cumulative_months,
-                    duration_months: data.resub.duration_months,
-                    streak_months: data.resub.streak_months,
-                    sub_tier: data.resub.sub_tier,
-                    is_prime: data.resub.is_prime,
-                    is_gift: data.resub.is_gift,
-                    gifter_is_anonymous: data.resub.gifter_is_anonymous,
-                    gifter_user_id: data.resub.gifter_user_id,
-                    gifter_user_name: data.resub.gifter_user_name,
-                    gifter_user_login: data.resub.gifter_user_login,
+                    cumulative_months: data.resub!.cumulative_months,
+                    duration_months: data.resub!.duration_months,
+                    streak_months: data.resub!.streak_months,
+                    sub_tier: data.resub!.sub_tier,
+                    is_prime: data.resub!.is_prime,
+                    is_gift: data.resub!.is_gift,
+                    gifter_is_anonymous: Maybe(data.resub!.gifter_is_anonymous),
+                    gifter_user_id: Maybe(data.resub!.gifter_user_id),
+                    gifter_user_name: Maybe(data.resub!.gifter_user_name),
+                    gifter_user_login: Maybe(data.resub!.gifter_user_login),
                   },
                 },
               ]);
@@ -2362,13 +2307,13 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                 "Sub Gift",
                 {
                   value: {
-                    cumulative_months: data.sub_gift.cumulative_months,
-                    duration_months: data.sub_gift.duration_months,
-                    sub_tier: data.sub_gift.sub_tier,
-                    recipient_user_id: data.sub_gift.recipient_user_id,
-                    recipient_user_name: data.sub_gift.recipient_user_name,
-                    recipient_user_login: data.sub_gift.recipient_user_login,
-                    community_gift_id: Maybe(data.sub_gift.community_gift_id),
+                    cumulative_total: Maybe(data.sub_gift!.cumulative_total),
+                    duration_months: data.sub_gift!.duration_months,
+                    sub_tier: data.sub_gift!.sub_tier,
+                    recipient_user_id: data.sub_gift!.recipient_user_id,
+                    recipient_user_name: data.sub_gift!.recipient_user_name,
+                    recipient_user_login: data.sub_gift!.recipient_user_login,
+                    community_gift_id: Maybe(data.sub_gift!.community_gift_id),
                   },
                 },
               ]);
@@ -2378,10 +2323,12 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                 "Community Sub Gift",
                 {
                   value: {
-                    id: data.community_sub_gift.id,
-                    total: data.community_sub_gift.total,
-                    sub_tier: data.community_sub_gift.sub_tier,
-                    cumulative_total: data.community_sub_gift.cumulative_total,
+                    id: data.community_sub_gift!.id,
+                    total: data.community_sub_gift!.total,
+                    sub_tier: data.community_sub_gift!.sub_tier,
+                    cumulative_total: Maybe(
+                      data.community_sub_gift!.cumulative_total
+                    ),
                   },
                 },
               ]);
@@ -2392,10 +2339,16 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                 {
                   value: {
                     gifter_is_anonymous:
-                      data.gift_paid_upgrade.gifter_is_anonymous,
-                    gifter_user_id: data.gift_paid_upgrade.gifter_user_id,
-                    gifter_user_name: data.gift_paid_upgrade.gifter_user_name,
-                    gifter_user_login: data.gift_paid_upgrade.gifter_user_login,
+                      data.gift_paid_upgrade!.gifter_is_anonymous,
+                    gifter_user_id: Maybe(
+                      data.gift_paid_upgrade!.gifter_user_id
+                    ),
+                    gifter_user_name: Maybe(
+                      data.gift_paid_upgrade!.gifter_user_name
+                    ),
+                    gifter_user_login: Maybe(
+                      data.gift_paid_upgrade!.gifter_user_login
+                    ),
                   },
                 },
               ]);
@@ -2404,7 +2357,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
               return ChannelChatNotificationEnum.variant([
                 "Prime Paid Upgrade",
                 {
-                  value: data.prime_paid_upgrade.sub_tier,
+                  value: data.prime_paid_upgrade!.sub_tier,
                 },
               ]);
             }
@@ -2413,11 +2366,11 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                 "Raid",
                 {
                   value: {
-                    user_id: data.raid.user_id,
-                    user_name: data.raid.user_name,
-                    user_login: data.raid.user_login,
-                    viewer_count: data.raid.viewer_count,
-                    profile_image_url: data.raid.profile_image_url,
+                    user_id: data.raid!.user_id,
+                    user_name: data.raid!.user_name,
+                    user_login: data.raid!.user_login,
+                    viewer_count: data.raid!.viewer_count,
+                    profile_image_url: data.raid!.profile_image_url,
                   },
                 },
               ]);
@@ -2427,12 +2380,12 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                 "Charity Donation",
                 {
                   value: {
-                    charity_name: data.charity_donation.charity_name,
+                    charity_name: data.charity_donation!.charity_name,
                     amount: AmountStruct.create({
-                      value: data.charity_donation.amount.value,
+                      value: data.charity_donation!.amount.value,
                       decimal_places:
-                        data.charity_donation.amount.decimal_places,
-                      currency: data.charity_donation.amount.currency,
+                        data.charity_donation!.amount.decimal_places,
+                      currency: data.charity_donation!.amount.currency,
                     }),
                   },
                 },
@@ -2442,14 +2395,14 @@ export function register(pkg: Package, { eventSub }: Ctx) {
               return ChannelChatNotificationEnum.variant([
                 "Bits Badge Tier",
                 {
-                  value: data.bits_badge_tier.tier,
+                  value: data.bits_badge_tier!.tier,
                 },
               ]);
             }
             case "announcement": {
               return ChannelChatNotificationEnum.variant([
                 "Announcement",
-                { value: data.announcement.color },
+                { value: data.announcement!.color },
               ]);
             }
             default: {
@@ -2519,14 +2472,212 @@ interface RedemptionReward {
   prompt: string;
 }
 
-interface PollChoice {
+interface BeginPollChoice {
   id: string;
   title: string;
+}
+
+interface PollChoice extends BeginPollChoice {
+  bits_votes: number;
+  channel_points_votes: number;
+  votes: number;
 }
 
 interface VoteTypeSettings {
   is_enabled: boolean;
   amount_per_vote: number;
+}
+
+type PollEndStatus = "completed" | "archived" | "terminated";
+
+interface PredictionBeginOutcomeData {
+  id: string;
+  title: string;
+  color: PredictionColor;
+}
+
+interface PredictionPredictorData {
+  user_name: string;
+  user_login: string;
+  user_id: string;
+  channel_points_won: number | null;
+  channel_points_used: number;
+}
+
+interface PredictionOutcomeData extends PredictionBeginOutcomeData {
+  users: number;
+  channel_points: number;
+  top_predictors: PredictionPredictorData[];
+}
+
+type PredictionColor = "blue" | "pink";
+
+type PredictionEndStatus = "resolved" | "canceled";
+
+interface HypeTrainContributionData {
+  user_id: string;
+  user_login: string;
+  user_name: string;
+  type: HypeTrainContributionType;
+  total: number;
+}
+
+type HypeTrainContributionType = "bits" | "subscription" | "other";
+
+type SubscriptionEventTier = "1000" | "2000" | "3000";
+
+type SubscriptionGiftEventTier = "1000" | "2000" | "3000";
+
+interface SubscriptionMessageEmoteData {
+  begin: number;
+  end: number;
+  id: string;
+}
+
+interface SubscriptionMessageData {
+  text: string;
+  emotes: SubscriptionMessageEmoteData[] | null;
+}
+
+type SubscriptionMessageEventTier = "1000" | "2000" | "3000";
+
+type SubscriptionEndEventTier = "1000" | "2000" | "3000";
+
+type GoalType =
+  | "follow"
+  | "subscription"
+  | "subscription_count"
+  | "new_subscription"
+  | "new_subscription_count";
+
+type StreamOnlineEventStreamType =
+  | "live"
+  | "playlist"
+  | "watch_party"
+  | "premiere"
+  | "rerun";
+
+interface Badge {
+  set_id: string;
+  id: string;
+  info: string;
+}
+
+interface SubNoticeMetadata {
+  sub_tier: "1000" | "2000" | "3000";
+  is_prime: boolean;
+  duration_months: number;
+}
+
+interface ResubNoticeMetadata {
+  cumulative_months: number;
+  duration_months: number;
+  streak_months: number;
+  sub_tier: "1000" | "2000" | "3000";
+  is_prime: boolean;
+  is_gift: boolean;
+  gifter_is_anonymous: boolean | null;
+  gifter_user_id: string | null;
+  gifter_user_name: string | null;
+  gifter_user_login: string | null;
+}
+
+interface SubGiftNoticeMetadata {
+  duration_months: number;
+  cumulative_total: number | null;
+  recipient_user_id: string;
+  recipient_user_name: string;
+  recipient_user_login: string;
+  sub_tier: "1000" | "2000" | "3000";
+  community_gift_id: string | null;
+}
+
+interface CommunitySubGiftNoticeMetadata {
+  id: string;
+  total: number;
+  sub_tier: "1000" | "2000" | "3000";
+  cumulative_total: number | null;
+}
+
+interface GiftPaidUpgradeNoticeMetadata {
+  gifter_is_anonymous: boolean;
+  gifter_user_id: string | null;
+  gifter_user_name: string | null;
+  gifter_user_login: string | null;
+}
+
+interface PrimePaidUpgradeNoticeMetadata {
+  sub_tier: "1000" | "2000" | "3000";
+}
+
+interface UnraidNoticeMetadata {
+  // No specific properties provided in the original class
+}
+
+interface RaidNoticeMetadata {
+  user_id: string;
+  user_name: string;
+  user_login: string;
+  viewer_count: number;
+  profile_image_url: string;
+}
+
+interface PayItForwardNoticeMetadata {
+  gifter_is_anonymous: boolean;
+  gifter_user_id: string | null;
+  gifter_user_name: string | null;
+  gifter_user_login: string | null;
+}
+
+interface AnnouncementNoticeMetadata {
+  color: string;
+}
+
+interface Amount {
+  value: number;
+  decimal_places: number;
+  currency: string;
+}
+
+interface CharityDonationNoticeMetadata {
+  charity_name: string;
+  amount: Amount;
+}
+
+interface BitsBadgeTierNoticeMetadata {
+  tier: number;
+}
+
+interface MessageFragmentCheermote {
+  prefix: string;
+  bits: number;
+  tier: number;
+}
+
+interface MessageFragmentEmote {
+  id: string;
+  emote_set_id: string;
+  owner_id: string;
+  format: string[];
+}
+
+interface MessageFragmentMention {
+  user_id: string;
+  user_name: string;
+  user_login: string;
+}
+
+interface MessageFragment {
+  type: "text" | "cheermote" | "emote" | "mention";
+  text: string;
+  cheermote: MessageFragmentCheermote | null;
+  emote: MessageFragmentEmote | null;
+  mention: MessageFragmentMention | null;
+}
+
+interface Message {
+  text: string;
+  fragments: MessageFragment[];
 }
 
 // thanks twurple :)
@@ -2616,10 +2767,334 @@ interface Events {
     broadcaster_user_login: string;
     broadcaster_user_name: string;
     title: string;
+    choices: BeginPollChoice[];
+    bits_voting: VoteTypeSettings;
+    channel_points_voting: VoteTypeSettings;
+    started_at: string;
+    ends_at: string;
+  };
+  "channel.poll.progress": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    title: string;
     choices: PollChoice[];
     bits_voting: VoteTypeSettings;
     channel_points_voting: VoteTypeSettings;
     started_at: string;
     ends_at: string;
+  };
+  "channel.poll.end": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    title: string;
+    choices: PollChoice[];
+    bits_voting: VoteTypeSettings;
+    channel_points_voting: VoteTypeSettings;
+    status: PollEndStatus;
+    started_at: string;
+    ended_at: string;
+  };
+  "channel.prediction.begin": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    title: string;
+    outcomes: PredictionBeginOutcomeData[];
+    started_at: string;
+    locks_at: string;
+  };
+  "channel.prediction.progress": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    title: string;
+    outcomes: PredictionOutcomeData[];
+    started_at: string;
+    locks_at: string;
+  };
+  "channel.prediction.lock": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    title: string;
+    outcomes: PredictionOutcomeData[];
+    started_at: string;
+    locked_at: string;
+  };
+  "channel.prediction.end": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    title: string;
+    winning_outcome_id: string | null;
+    outcomes: PredictionOutcomeData[];
+    status: PredictionEndStatus;
+    started_at: string;
+    ended_at: string;
+  };
+  "channel.hype_train.begin": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    level: number;
+    total: number;
+    progress: number;
+    goal: number;
+    top_contributions: HypeTrainContributionData[];
+    last_contribution: HypeTrainContributionData;
+    started_at: string;
+    expires_at: string;
+  };
+  "channel.hype_train.progress": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    level: number;
+    total: number;
+    progress: number;
+    goal: number;
+    top_contributions: HypeTrainContributionData[];
+    last_contribution: HypeTrainContributionData;
+    started_at: string;
+    expires_at: string;
+  };
+  "channel.hype_train.end": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    level: number;
+    total: number;
+    top_contributions: HypeTrainContributionData[];
+    started_at: string;
+    ended_at: string;
+    cooldown_ends_at: string;
+  };
+  "channel.update": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    title: string;
+    language: string;
+    category_id: string;
+    category_name: string;
+    content_classification_labels: string[];
+  };
+  "channel.subscribe": {
+    user_id: string;
+    user_login: string;
+    user_name: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    tier: SubscriptionEventTier;
+    is_gift: boolean;
+  };
+  "channel.subscription.end": {
+    user_id: string;
+    user_login: string;
+    user_name: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    tier: SubscriptionEndEventTier;
+    is_gift: boolean;
+  };
+  "channel.subscription.gift": {
+    user_id: string;
+    user_login: string;
+    user_name: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    total: number;
+    tier: SubscriptionGiftEventTier;
+    cumulative_total: number | null;
+    is_anonymous: boolean;
+  };
+  "channel.subscription.message": {
+    user_id: string;
+    user_login: string;
+    user_name: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    tier: SubscriptionMessageEventTier;
+    message: SubscriptionMessageData;
+    cumulative_months: number;
+    streak_months: number | null;
+    duration_months: number;
+  };
+  "channel.cheer": {
+    is_anonymous: boolean;
+    user_id: string | null;
+    user_login: string | null;
+    user_name: string | null;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    message: string;
+    bits: number;
+  };
+  "channel.raid": {
+    from_broadcaster_user_id: string;
+    from_broadcaster_user_login: string;
+    from_broadcaster_user_name: string;
+    to_broadcaster_user_id: string;
+    to_broadcaster_user_login: string;
+    to_broadcaster_user_name: string;
+    viewers: number;
+  };
+  "channel.ad_break.begin": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    requester_user_id: string;
+    requester_user_login: string;
+    requester_user_name: string;
+    started_at: string;
+    duration_seconds: number;
+    is_automatic: boolean;
+  };
+  "channel.follow": {
+    user_id: string;
+    user_login: string;
+    user_name: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    followed_at: string;
+  };
+  "channel.shoutout.receive": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    from_broadcaster_user_id: string;
+    from_broadcaster_user_login: string;
+    from_broadcaster_user_name: string;
+    viewer_count: number;
+    started_at: string;
+  };
+  "channel.shoutout.create": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    to_broadcaster_user_id: string;
+    to_broadcaster_user_login: string;
+    to_broadcaster_user_name: string;
+    moderator_user_id: string;
+    moderator_user_login: string;
+    moderator_user_name: string;
+    viewer_count: number;
+    started_at: string;
+    cooldown_ends_at: string;
+    target_cooldown_ends_at: string;
+  };
+  "channel.goal.begin": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    type: GoalType;
+    description: string;
+    current_amount: number;
+    target_amount: number;
+    started_at: Date;
+  };
+  "channel.goal.progress": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    type: GoalType;
+    description: string;
+    current_amount: number;
+    target_amount: number;
+    started_at: Date;
+  };
+  "channel.goal.end": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    type: GoalType;
+    description: string;
+    is_achieved: boolean;
+    current_amount: number;
+    target_amount: number;
+    started_at: Date;
+    ended_at: Date;
+  };
+  "stream.online": {
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    type: StreamOnlineEventStreamType;
+    started_at: string;
+  };
+  "stream.offline": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+  };
+  "channel.chat.clear_user_messages": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    target_user_id: string;
+    target_user_login: string;
+    target_user_name: string;
+  };
+  "channel.chat.message_delete": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    target_user_id: string;
+    target_user_login: string;
+    target_user_name: string;
+    message_id: string;
+  };
+  "channel.chat.clear": {
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+  };
+  "channel.chat.notification": {
+    broadcaster_user_id: string;
+    broadcaster_user_name: string;
+    broadcaster_user_login: string;
+    chatter_user_id: string;
+    chatter_user_name: string;
+    chatter_user_login: string;
+    chatter_is_anonymous: boolean;
+    color: string;
+    badges: Badge[];
+    system_message: string;
+    message_id: string;
+    message: Message;
+    notice_type: string;
+    sub: SubNoticeMetadata | null;
+    resub: ResubNoticeMetadata | null;
+    sub_gift: SubGiftNoticeMetadata | null;
+    community_sub_gift: CommunitySubGiftNoticeMetadata | null;
+    gift_paid_upgrade: GiftPaidUpgradeNoticeMetadata | null;
+    prime_paid_upgrade: PrimePaidUpgradeNoticeMetadata | null;
+    raid: RaidNoticeMetadata | null;
+    unraid: UnraidNoticeMetadata | null;
+    pay_it_forward: PayItForwardNoticeMetadata | null;
+    announcement: AnnouncementNoticeMetadata | null;
+    charity_donation: CharityDonationNoticeMetadata | null;
+    bits_badge_tier: BitsBadgeTierNoticeMetadata | null;
   };
 }
