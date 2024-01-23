@@ -48,11 +48,7 @@ export default ({ core, auth, eventSub, chat }: Ctx) => {
                     <Switch fallback="EventSub Connecting...">
                       <Match when={!eventSubSocket()}>
                         <span>EventSub Disconnected</span>
-                        <Button
-                          onClick={() =>
-                            eventSub.connectSocket(account.data.id)
-                          }
-                        >
+                        <Button onClick={() => eventSub.connectSocket(account)}>
                           Connect
                         </Button>
                       </Match>

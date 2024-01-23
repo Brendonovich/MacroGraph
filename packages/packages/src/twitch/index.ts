@@ -19,7 +19,7 @@ export function pkg(core: Core) {
   });
 
   helix.register(pkg, ctx.helixClient);
-  eventsub.register(pkg);
+  eventsub.register(pkg, ctx);
   chat.register(pkg, ctx);
 
   pkg.registerResourceType(TwitchAccount);
