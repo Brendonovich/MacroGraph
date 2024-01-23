@@ -251,7 +251,7 @@ export const SignalingFeatureStatus = createStruct("Signaling Status", (s) => ({
 }));
 
 export const SignalingFeature = createStruct("Signaling", (s) => ({
-  status: s.field("Status", t.struct(SignalingFeatureStatus)),
+  status: s.field("Status", t.option(t.struct(SignalingFeatureStatus))),
   signal_values: s.field("Signal Values", t.list(t.enum(Signal))),
 }));
 
@@ -308,7 +308,8 @@ export const PowerUpFeatureColorState = createStruct(
 export const PowerUpFeature = createStruct("PowerUp", (s) => ({
   preset: s.field("Preset", t.enum(PowerUpPreset)),
   configured: s.field("Configured", t.bool()),
-  on: s.field("On", t.option(t.struct(PowerUpFeatureDimmingState))),
+  on: s.field("On", t.struct(PowerUpFeatureOnState)),
+  dimming: s.field("Dimming", t.option(t.struct(PowerUpFeatureDimmingState))),
   color: s.field("Color", t.option(t.struct(PowerUpFeatureColorState))),
 }));
 

@@ -1,5 +1,6 @@
 import { Core, Package } from "@macrograph/runtime";
 import { createCtx } from "./ctx";
+import * as api from "./api";
 
 export function pkg(core: Core) {
   const ctx = createCtx(core);
@@ -10,5 +11,6 @@ export function pkg(core: Core) {
     SettingsUI: () => import("./Settings"),
   });
 
+  api.register(pkg, ctx);
   return pkg;
 }
