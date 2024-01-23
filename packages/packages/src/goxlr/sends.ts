@@ -25,6 +25,25 @@ const Presets = createEnum("Presets", (e) => [
   e.variant("Preset6"),
 ]);
 
+const Inputs = createEnum("Inputs", (e) => [
+  e.variant("Microphone"),
+  e.variant("Chat"),
+  e.variant("Music"),
+  e.variant("Game"),
+  e.variant("Console"),
+  e.variant("LineIn"),
+  e.variant("System"),
+  e.variant("Samples"),
+]);
+
+const Outputs = createEnum("Outputs", (e) => [
+  e.variant("Headphones"),
+  e.variant("BroadcastMix"),
+  e.variant("LineOut"),
+  e.variant("ChatMic"),
+  e.variant("Sampler"),
+]);
+
 export function register(pkg: Pkg, { mixerID, state }: Ctx) {
   function getSocket() {
     const s = state();
@@ -91,11 +110,87 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
       getSocket().send(
         JSON.stringify({
           id: 0,
+          data: { Command: [mixerID(), { SetMicrophoneType: type.variant }] },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Reverb Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "Amount (%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: { Command: [mixerID(), { SetReverbAmount: ctx.getInput(io) }] },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Echo Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "Amount (%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: { Command: [mixerID(), { SetEchoAmount: ctx.getInput(io) }] },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Pitch Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "Amount (%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: { Command: [mixerID(), { SetPitchAmount: ctx.getInput(io) }] },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Gender Amount",
+    variant: "Exec",
+    createIO: ({ io }) =>
+      io.dataInput({
+        name: "(%)",
+        id: "amount",
+        type: t.int(),
+      }),
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
           data: {
             Command: [
               mixerID(),
               {
-                SetMicrophoneType: type.variant,
+                SetGenderAmount: ctx.getInput(io),
               },
             ],
           },
@@ -146,10 +241,48 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
         JSON.stringify({
           id: 0,
           data: {
+            Command: [mixerID(), { SetActiveEffectPreset: preset.variant }],
+          },
+        })
+      );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Route State",
+    variant: "Exec",
+    createIO: ({ io }) => {
+      return {
+        input: io.dataInput({
+          name: "Input",
+          id: "input",
+          type: t.enum(Inputs),
+        }),
+        output: io.dataInput({
+          name: "Output",
+          id: "output",
+          type: t.enum(Outputs),
+        }),
+        state: io.dataInput({
+          name: "State",
+          id: "state",
+          type: t.bool(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      getSocket().send(
+        JSON.stringify({
+          id: 0,
+          data: {
             Command: [
               mixerID(),
               {
-                SetActiveEffectPreset: preset.variant,
+                SetRouter: [
+                  ctx.getInput(io.input).variant,
+                  ctx.getInput(io.output).variant,
+                  ctx.getInput(io.state),
+                ],
               },
             ],
           },

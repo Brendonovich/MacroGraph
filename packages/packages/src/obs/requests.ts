@@ -3,6 +3,7 @@ import {
   CreateIOFn,
   CreateNonEventSchema,
   createStruct,
+  DataInput,
   MergeFnProps,
   Package,
   PropertyDef,
@@ -263,8 +264,8 @@ export function register(pkg: Package<EventTypes>) {
         name: "Hotkey Name",
         type: t.string(),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("TriggerHotkeyByName", { hotkeyName: ctx.getInput(io) });
+    async run({ ctx, io, obs }) {
+      await obs.call("TriggerHotkeyByName", { hotkeyName: ctx.getInput(io) });
     },
   });
 
@@ -282,16 +283,11 @@ export function register(pkg: Package<EventTypes>) {
         type: t.map(t.enum(JSON)),
       }),
     }),
-    run({ ctx, io, obs }) {
-      return obs.call("TriggerHotkeyByKeySequence", {
+    async run({ ctx, io, obs }) {
+      await obs.call("TriggerHotkeyByKeySequence", {
         keyId: ctx.getInput(io.id),
         keyModifiers: jsonToJS(
-          JSON.variant([
-            "Map",
-            {
-              value: ctx.getInput(io.modifiers),
-            },
-          ])
+          JSON.variant(["Map", { value: ctx.getInput(io.modifiers) }])
         ),
       });
     },
@@ -329,14 +325,15 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Set Current Scene Collection",
-    createIO: ({ io }) =>
+    createIO: ({ io, obs }) =>
       io.dataInput({
         id: "sceneCollectionName",
         name: "Scene Collection Name",
         type: t.string(),
+        fetchSuggestions: sceneCollectionListSuggestionFactory(obs),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("SetCurrentSceneCollection", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetCurrentSceneCollection", {
         sceneCollectionName: ctx.getInput(io),
       });
     },
@@ -350,8 +347,8 @@ export function register(pkg: Package<EventTypes>) {
         name: "Scene Collection Name",
         type: t.string(),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("CreateSceneCollection", {
+    async run({ ctx, io, obs }) {
+      await obs.call("CreateSceneCollection", {
         sceneCollectionName: ctx.getInput(io),
       });
     },
@@ -386,8 +383,8 @@ export function register(pkg: Package<EventTypes>) {
         name: "Profile Name",
         type: t.string(),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("SetCurrentProfile", { profileName: ctx.getInput(io) });
+    async run({ ctx, io, obs }) {
+      await obs.call("SetCurrentProfile", { profileName: ctx.getInput(io) });
     },
   });
 
@@ -399,8 +396,8 @@ export function register(pkg: Package<EventTypes>) {
         name: "Profile Name",
         type: t.string(),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("CreateProfile", { profileName: ctx.getInput(io) });
+    async run({ ctx, io, obs }) {
+      await obs.call("CreateProfile", { profileName: ctx.getInput(io) });
     },
   });
 
@@ -412,8 +409,8 @@ export function register(pkg: Package<EventTypes>) {
         name: "Profile Name",
         type: t.string(),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("RemoveProfile", { profileName: ctx.getInput(io) });
+    async run({ ctx, io, obs }) {
+      await obs.call("RemoveProfile", { profileName: ctx.getInput(io) });
     },
   });
 
@@ -470,8 +467,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetProfileParameter", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetProfileParameter", {
         parameterCategory: ctx.getInput(io.parameterCategory),
         parameterName: ctx.getInput(io.parameterName),
         parameterValue: ctx.getInput(io.parameterValue),
@@ -535,8 +532,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.int(),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetVideoSettings", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetVideoSettings", {
         fpsNumerator: ctx.getInput(io.fpsNumerator),
         fpsDenominator: ctx.getInput(io.fpsDenominator),
         baseWidth: ctx.getInput(io.baseWidth),
@@ -585,8 +582,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.map(t.enum(JSON)),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetStreamServiceSettings", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetStreamServiceSettings", {
         streamServiceType: ctx.getInput(io.streamServiceType),
         streamServiceSettings: jsonToJS({
           variant: "Map",
@@ -681,16 +678,95 @@ export function register(pkg: Package<EventTypes>) {
     };
   }
 
+  function sceneCollectionListSuggestionFactory(
+    obs: Accessor<Option<OBSWebSocket>>
+  ) {
+    return async () => {
+      const o = await obs().mapAsync(async (obs) => {
+        const resp = await obs.call("GetSceneCollectionList", undefined);
+        return resp.sceneCollections;
+      });
+      return o.unwrapOr([]);
+    };
+  }
+
   function inputListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
     return async () => {
       const o = await obs().mapAsync(async (obs) => {
         const resp = await obs.call("GetInputList");
-        return (resp.inputs as { inputName: string }[]).map(
+        return (resp.inputs as Array<{ inputName: string }>).map(
           (input) => input.inputName
         );
       });
       return o.unwrapOr([]);
     };
+  }
+
+  function sourceListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
+    return async () => {
+      const o = await obs().mapAsync(async (obs) => {
+        const [scenesRequest, inputsRequest] = await obs.callBatch([
+          { requestType: "GetSceneList" },
+          { requestType: "GetInputList", requestData: {} },
+        ]);
+
+        const scenes = (
+          scenesRequest!.responseData as unknown as {
+            scenes: Array<{ sceneName: string }>;
+          }
+        ).scenes.map((scene) => scene.sceneName);
+        const inputs = (
+          inputsRequest!.responseData as unknown as {
+            inputs: Array<{ inputName: string }>;
+          }
+        ).inputs.map((input: { inputName: string }) => input.inputName);
+
+        return [...scenes, ...inputs];
+      });
+      return o.unwrapOr([]);
+    };
+  }
+
+  function sourceFilterSuggestionFactory(
+    sourceName: DataInput<t.String>,
+    obs: Accessor<Option<OBSWebSocket>>
+  ) {
+    return () =>
+      Maybe(sourceName.defaultValue)
+        .zip(obs())
+        .mapAsync(async ([sourceName, obs]) => {
+          const { filters } = await obs.call("GetSourceFilterList", {
+            sourceName,
+          });
+
+          const bruh = (filters as Array<{ filterName: string }>).map(
+            (f) => f.filterName
+          );
+
+          return bruh;
+        })
+        .then((o) => o.unwrapOr([]));
+  }
+
+  function sceneSourceListSuggestionFactory(
+    sceneName: DataInput<t.String>,
+    obs: Accessor<Option<OBSWebSocket>>
+  ) {
+    return () =>
+      Maybe(sceneName.defaultValue)
+        .zip(obs())
+        .mapAsync(async ([sceneName, obs]) => {
+          const { sceneItems } = await obs.call("GetSceneItemList", {
+            sceneName,
+          });
+
+          const bruh = (sceneItems as Array<{ sourceName: string }>).map(
+            (s) => s.sourceName
+          );
+
+          return bruh;
+        })
+        .then((o) => o.unwrapOr([]));
   }
 
   createOBSExecSchema({
@@ -702,8 +778,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
         fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("SetCurrentProgramScene", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetCurrentProgramScene", {
         sceneName: ctx.getInput(io),
       });
     },
@@ -732,8 +808,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
         fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("SetCurrentPreviewScene", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetCurrentPreviewScene", {
         sceneName: ctx.getInput(io),
       });
     },
@@ -747,8 +823,8 @@ export function register(pkg: Package<EventTypes>) {
         name: "Scene Name",
         type: t.string(),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("CreateScene", { sceneName: ctx.getInput(io) });
+    async run({ ctx, io, obs }) {
+      await obs.call("CreateScene", { sceneName: ctx.getInput(io) });
     },
   });
 
@@ -761,8 +837,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
         fetchSuggestions: sceneListSuggestionFactory(obs),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("RemoveScene", { sceneName: ctx.getInput(io) });
+    async run({ ctx, io, obs }) {
+      await obs.call("RemoveScene", { sceneName: ctx.getInput(io) });
     },
   });
 
@@ -781,8 +857,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetSceneName", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetSceneName", {
         sceneName: ctx.getInput(io.sceneName),
         newSceneName: ctx.getInput(io.newSceneName),
       });
@@ -837,8 +913,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.int(),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetSceneSceneTransitionOverride", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetSceneSceneTransitionOverride", {
         sceneName: ctx.getInput(io.sceneName),
         transitionName: ctx.getInput(io.transitionName),
         transitionDuration: ctx.getInput(io.transitionDuration),
@@ -962,8 +1038,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
         fetchSuggestions: inputListSuggestionFactory(obs),
       }),
-    run({ ctx, io, obs }) {
-      obs.call("RemoveInput", {
+    async run({ ctx, io, obs }) {
+      await obs.call("RemoveInput", {
         inputName: ctx.getInput(io),
       });
     },
@@ -984,8 +1060,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetInputName", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetInputName", {
         inputName: ctx.getInput(io.inputName),
         newInputName: ctx.getInput(io.newInputName),
       });
@@ -1146,8 +1222,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.bool(),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetInputSettings", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetInputSettings", {
         inputName: ctx.getInput(io.inputName),
         inputSettings: jsonToJS({
           variant: "Map",
@@ -1199,7 +1275,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetInputMute", {
+      await obs.call("SetInputMute", {
         inputName: ctx.getInput(io.inputName),
         inputMuted: ctx.getInput(io.inputMuted),
       });
@@ -1274,7 +1350,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetInputVolume", {
+      await obs.call("SetInputVolume", {
         inputName: ctx.getInput(io.inputName),
         inputVolumeDb: ctx.getInput(io.inputVolumeDb),
       });
@@ -1297,7 +1373,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetInputVolume", {
+      await obs.call("SetInputVolume", {
         inputName: ctx.getInput(io.inputName),
         inputVolumeMul: ctx.getInput(io.inputVolumeMul),
       });
@@ -1341,7 +1417,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetInputAudioBalance", {
+      await obs.call("SetInputAudioBalance", {
         inputName: ctx.getInput(io.inputName),
         inputAudioBalance: ctx.getInput(io.inputAudioBalance),
       });
@@ -1385,7 +1461,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetInputAudioSyncOffset", {
+      await obs.call("SetInputAudioSyncOffset", {
         inputName: ctx.getInput(io.inputName),
         inputAudioSyncOffset: ctx.getInput(io.inputAudioSyncOffset),
       });
@@ -1483,8 +1559,8 @@ export function register(pkg: Package<EventTypes>) {
         type: t.map(t.enum(JSON)),
       }),
     }),
-    run({ ctx, io, obs }) {
-      obs.call("SetInputAudioTracks", {
+    async run({ ctx, io, obs }) {
+      await obs.call("SetInputAudioTracks", {
         inputName: ctx.getInput(io.inputName),
         inputAudioTracks: jsonToJS({
           variant: "Map",
@@ -1548,7 +1624,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("PressInputPropertiesButton", {
+      await obs.call("PressInputPropertiesButton", {
         inputName: ctx.getInput(io.inputName),
         propertyName: ctx.getInput(io.propertyName),
       });
@@ -1671,7 +1747,7 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
       }),
     async run({ ctx, io, obs }) {
-      obs.call("SetCurrentSceneTransition", {
+      await obs.call("SetCurrentSceneTransition", {
         transitionName: ctx.getInput(io),
       });
     },
@@ -1686,7 +1762,7 @@ export function register(pkg: Package<EventTypes>) {
         type: t.int(),
       }),
     async run({ ctx, io, obs }) {
-      obs.call("SetCurrentSceneTransitionDuration", {
+      await obs.call("SetCurrentSceneTransitionDuration", {
         transitionDuration: ctx.getInput(io),
       });
     },
@@ -1707,7 +1783,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetCurrentSceneTransitionSettings", {
+      await obs.call("SetCurrentSceneTransitionSettings", {
         transitionSettings: jsonToJS({
           variant: "Map",
           data: {
@@ -1756,7 +1832,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetTBarPosition", {
+      await obs.call("SetTBarPosition", {
         position: ctx.getInput(io.position),
         release: ctx.getInput(io.release),
       });
@@ -1824,16 +1900,19 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Create Source Filter",
-    createIO: ({ io }) => ({
+    createIO: ({ io, obs }) => ({
       sourceName: io.dataInput({
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
+        fetchSuggestions: sourceListSuggestionFactory(obs),
       }),
       filterName: io.dataInput({
         id: "filterName",
         name: "Filter Name",
         type: t.string(),
+        // TODO: suggestion
+        // fetchSuggestion: filterListSuggestionFactory(obs)
       }),
       filterKind: io.dataInput({
         id: "filterKind",
@@ -1847,7 +1926,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("CreateSourceFilter", {
+      await obs.call("CreateSourceFilter", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterKind: ctx.getInput(io.filterKind),
@@ -1865,20 +1944,26 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Remove Source Filter",
-    createIO: ({ io }) => ({
-      sourceName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sourceName = io.dataInput({
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
-      }),
-      filterName: io.dataInput({
-        id: "filterName",
-        name: "Filter Name",
-        type: t.string(),
-      }),
-    }),
+        fetchSuggestions: sourceListSuggestionFactory(obs),
+      });
+
+      return {
+        sourceName,
+        filterName: io.dataInput({
+          id: "filterName",
+          name: "Filter Name",
+          type: t.string(),
+          fetchSuggestions: sourceFilterSuggestionFactory(sourceName, obs),
+        }),
+      };
+    },
     async run({ ctx, io, obs }) {
-      obs.call("RemoveSourceFilter", {
+      await obs.call("RemoveSourceFilter", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
       });
@@ -1887,25 +1972,31 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Set Source Filter Name",
-    createIO: ({ io }) => ({
-      sourceName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sourceName = io.dataInput({
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
-      }),
-      filterName: io.dataInput({
-        id: "filterName",
-        name: "Filter Name",
-        type: t.string(),
-      }),
-      newFilterName: io.dataInput({
-        id: "newFilterName",
-        name: "New Filter Name",
-        type: t.string(),
-      }),
-    }),
+        fetchSuggestions: sourceListSuggestionFactory(obs),
+      });
+
+      return {
+        sourceName,
+        filterName: io.dataInput({
+          id: "filterName",
+          name: "Filter Name",
+          type: t.string(),
+          fetchSuggestions: sourceFilterSuggestionFactory(sourceName, obs),
+        }),
+        newFilterName: io.dataInput({
+          id: "newFilterName",
+          name: "New Filter Name",
+          type: t.string(),
+        }),
+      };
+    },
     async run({ ctx, io, obs }) {
-      obs.call("SetSourceFilterName", {
+      await obs.call("SetSourceFilterName", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         newFilterName: ctx.getInput(io.newFilterName),
@@ -1915,23 +2006,29 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Get Source Filter",
-    createIO: ({ io }) => ({
-      sourceName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sourceName = io.dataInput({
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
-      }),
-      filterName: io.dataInput({
-        id: "filterName",
-        name: "Filter Name",
-        type: t.string(),
-      }),
-      filter: io.dataOutput({
-        id: "filter",
-        name: "Filter",
-        type: t.option(t.struct(Filter)),
-      }),
-    }),
+        fetchSuggestions: sourceListSuggestionFactory(obs),
+      });
+
+      return {
+        sourceName,
+        filterName: io.dataInput({
+          id: "filterName",
+          name: "Filter Name",
+          type: t.string(),
+          fetchSuggestions: sourceFilterSuggestionFactory(sourceName, obs),
+        }),
+        filter: io.dataOutput({
+          id: "filter",
+          name: "Filter",
+          type: t.option(t.struct(Filter)),
+        }),
+      };
+    },
     async run({ ctx, io, obs }) {
       const data = await obs
         .call("GetSourceFilter", {
@@ -1957,25 +2054,31 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Set Source Filter Name",
-    createIO: ({ io }) => ({
-      sourceName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sourceName = io.dataInput({
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
-      }),
-      filterName: io.dataInput({
-        id: "filterName",
-        name: "Filter Name",
-        type: t.string(),
-      }),
-      filterIndex: io.dataInput({
-        id: "filterIndex",
-        name: "Filter Index",
-        type: t.int(),
-      }),
-    }),
+        fetchSuggestions: sourceListSuggestionFactory(obs),
+      });
+
+      return {
+        sourceName,
+        filterName: io.dataInput({
+          id: "filterName",
+          name: "Filter Name",
+          type: t.string(),
+          fetchSuggestions: sourceFilterSuggestionFactory(sourceName, obs),
+        }),
+        filterIndex: io.dataInput({
+          id: "filterIndex",
+          name: "Filter Index",
+          type: t.int(),
+        }),
+      };
+    },
     async run({ ctx, io, obs }) {
-      obs.call("SetSourceFilterIndex", {
+      await obs.call("SetSourceFilterIndex", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterIndex: ctx.getInput(io.filterIndex),
@@ -1985,30 +2088,36 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Set Source Filter Settings",
-    createIO: ({ io }) => ({
-      sourceName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sourceName = io.dataInput({
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
-      }),
-      filterName: io.dataInput({
-        id: "filterName",
-        name: "Filter Name",
-        type: t.string(),
-      }),
-      filterSettings: io.dataInput({
-        id: "filterSettings",
-        name: "Filter Settings",
-        type: t.map(t.enum(JSON)),
-      }),
-      overlay: io.dataInput({
-        id: "overlay",
-        name: "Overlay",
-        type: t.bool(),
-      }),
-    }),
-    run({ ctx, io, obs }) {
-      obs.call("SetSourceFilterSettings", {
+        fetchSuggestions: sourceListSuggestionFactory(obs),
+      });
+
+      return {
+        sourceName,
+        filterName: io.dataInput({
+          id: "filterName",
+          name: "Filter Name",
+          type: t.string(),
+          fetchSuggestions: sourceFilterSuggestionFactory(sourceName, obs),
+        }),
+        filterSettings: io.dataInput({
+          id: "filterSettings",
+          name: "Filter Settings",
+          type: t.map(t.enum(JSON)),
+        }),
+        overlay: io.dataInput({
+          id: "overlay",
+          name: "Overlay",
+          type: t.bool(),
+        }),
+      };
+    },
+    async run({ ctx, io, obs }) {
+      await obs.call("SetSourceFilterSettings", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterSettings: jsonToJS({
@@ -2024,25 +2133,31 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Set Source Filter Enabled",
-    createIO: ({ io }) => ({
-      sourceName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sourceName = io.dataInput({
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
-      }),
-      filterName: io.dataInput({
-        id: "filterName",
-        name: "Filter Name",
-        type: t.string(),
-      }),
-      filterEnabled: io.dataInput({
-        id: "filterEnabled",
-        name: "Filter Enabled",
-        type: t.bool(),
-      }),
-    }),
+        fetchSuggestions: sourceListSuggestionFactory(obs),
+      });
+
+      return {
+        sourceName,
+        filterName: io.dataInput({
+          id: "filterName",
+          name: "Filter Name",
+          type: t.string(),
+          fetchSuggestions: sourceFilterSuggestionFactory(sourceName, obs),
+        }),
+        filterEnabled: io.dataInput({
+          id: "filterEnabled",
+          name: "Filter Enabled",
+          type: t.bool(),
+        }),
+      };
+    },
     async run({ ctx, io, obs }) {
-      obs.call("SetSourceFilterEnabled", {
+      await obs.call("SetSourceFilterEnabled", {
         sourceName: ctx.getInput(io.sourceName),
         filterName: ctx.getInput(io.filterName),
         filterEnabled: ctx.getInput(io.filterEnabled),
@@ -2125,29 +2240,34 @@ export function register(pkg: Package<EventTypes>) {
 
   createOBSExecSchema({
     name: "Get Scene Item Id",
-    createIO: ({ io, obs }) => ({
-      sceneName: io.dataInput({
+    createIO: ({ io, obs }) => {
+      const sceneName = io.dataInput({
         id: "sceneName",
         name: "Scene Name",
         type: t.string(),
         fetchSuggestions: sceneListSuggestionFactory(obs),
-      }),
-      sourceName: io.dataInput({
-        id: "sourceName",
-        name: "Source Name",
-        type: t.string(),
-      }),
-      searchOffset: io.dataInput({
-        id: "searchOffset",
-        name: "Search Offset",
-        type: t.int(),
-      }),
-      sceneItemId: io.dataOutput({
-        id: "sceneItemId",
-        name: "Scene Item Id",
-        type: t.int(),
-      }),
-    }),
+      });
+
+      return {
+        sceneName,
+        sourceName: io.dataInput({
+          id: "sourceName",
+          name: "Source Name",
+          type: t.string(),
+          fetchSuggestions: sceneSourceListSuggestionFactory(sceneName, obs),
+        }),
+        searchOffset: io.dataInput({
+          id: "searchOffset",
+          name: "Search Offset",
+          type: t.int(),
+        }),
+        sceneItemId: io.dataOutput({
+          id: "sceneItemId",
+          name: "Scene Item Id",
+          type: t.int(),
+        }),
+      };
+    },
     async run({ ctx, io, obs }) {
       const data = await obs.call("GetSceneItemId", {
         sceneName: ctx.getInput(io.sceneName),
@@ -2171,6 +2291,7 @@ export function register(pkg: Package<EventTypes>) {
         id: "sourceName",
         name: "Source Name",
         type: t.string(),
+        fetchSuggestions: sourceListSuggestionFactory(obs),
       }),
       sceneItemEnabled: io.dataInput({
         id: "sceneItemEnabled",
@@ -2209,7 +2330,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("RemoveSceneItem", {
+      await obs.call("RemoveSceneItem", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
       });
@@ -2335,7 +2456,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetSceneItemTransform", {
+      await obs.call("SetSceneItemTransform", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemTransform: jsonToJS({
@@ -2456,7 +2577,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetSceneItemLocked", {
+      await obs.call("SetSceneItemLocked", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemLocked: ctx.getInput(io.sceneItemLocked),
@@ -2514,7 +2635,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetSceneItemIndex", {
+      await obs.call("SetSceneItemIndex", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemIndex: ctx.getInput(io.sceneItemIndex),
@@ -2572,7 +2693,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetSceneItemBlendMode", {
+      await obs.call("SetSceneItemBlendMode", {
         sceneName: ctx.getInput(io.sceneName),
         sceneItemId: ctx.getInput(io.sceneItemId),
         sceneItemBlendMode: ctx.getInput(io.sceneItemBlendMode),
@@ -2898,7 +3019,7 @@ export function register(pkg: Package<EventTypes>) {
         type: t.string(),
       }),
     async run({ ctx, io, obs }) {
-      obs.call("SendStreamCaption", {
+      await obs.call("SendStreamCaption", {
         captionText: ctx.getInput(io),
       });
     },
@@ -3026,7 +3147,6 @@ export function register(pkg: Package<EventTypes>) {
       const data = await obs.call("GetMediaInputStatus", {
         inputName: ctx.getInput(io.inputName),
       });
-      console.log(data);
       ctx.setOutput(io.mediaState, data.mediaState);
       ctx.setOutput(io.mediaDuration, data.mediaDuration);
       ctx.setOutput(io.mediaCursor, data.mediaCursor);
@@ -3049,7 +3169,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("SetMediaInputCursor", {
+      await obs.call("SetMediaInputCursor", {
         inputName: ctx.getInput(io.inputName),
         mediaCursor: ctx.getInput(io.mediaCursor),
       });
@@ -3072,7 +3192,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("OffsetMediaInputCursor", {
+      await obs.call("OffsetMediaInputCursor", {
         inputName: ctx.getInput(io.inputName),
         mediaCursorOffset: ctx.getInput(io.mediaCursorOffset),
       });
@@ -3095,7 +3215,7 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      obs.call("TriggerMediaInputAction", {
+      await obs.call("TriggerMediaInputAction", {
         inputName: ctx.getInput(io.inputName),
         mediaAction: ctx.getInput(io.mediaAction),
       });
@@ -3125,7 +3245,7 @@ export function register(pkg: Package<EventTypes>) {
         type: t.bool(),
       }),
     async run({ ctx, io, obs }) {
-      obs.call("SetStudioModeEnabled", {
+      await obs.call("SetStudioModeEnabled", {
         studioModeEnabled: ctx.getInput(io),
       });
     },
@@ -3141,7 +3261,7 @@ export function register(pkg: Package<EventTypes>) {
         fetchSuggestions: inputListSuggestionFactory(obs),
       }),
     async run({ ctx, io, obs }) {
-      obs.call("OpenInputPropertiesDialog", {
+      await obs.call("OpenInputPropertiesDialog", {
         inputName: ctx.getInput(io),
       });
     },
@@ -3157,7 +3277,7 @@ export function register(pkg: Package<EventTypes>) {
         fetchSuggestions: inputListSuggestionFactory(obs),
       }),
     async run({ ctx, io, obs }) {
-      obs.call("OpenInputFiltersDialog", {
+      await obs.call("OpenInputFiltersDialog", {
         inputName: ctx.getInput(io),
       });
     },
@@ -3173,7 +3293,7 @@ export function register(pkg: Package<EventTypes>) {
         fetchSuggestions: inputListSuggestionFactory(obs),
       }),
     async run({ ctx, io, obs }) {
-      obs.call("OpenInputInteractDialog", {
+      await obs.call("OpenInputInteractDialog", {
         inputName: ctx.getInput(io),
       });
     },

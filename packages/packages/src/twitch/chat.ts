@@ -127,26 +127,28 @@ export function register(pkg: Package, { chat }: Ctx) {
     : [T] extends [never]
     ? []
     : [T];
+
   function createChatEventSchema<
     TFire,
     TEvent extends keyof Events,
     TProperties extends Record<string, PropertyDef> = {},
     TIO = void
-  >(
-    s: Omit<
-      CreateEventSchema<TProperties & typeof defaultProperties, TIO, TFire>,
-      "type" | "createListener"
-    > & {
-      properties?: TProperties;
-      event: {
-        type: TEvent;
-        handler(...args: ListenerType<Events[TEvent]>): {
-          channel: string;
-          data: TFire;
-        };
+  >({
+    event,
+    ...s
+  }: Omit<
+    CreateEventSchema<TProperties & typeof defaultProperties, TIO, TFire>,
+    "type" | "createListener"
+  > & {
+    properties?: TProperties;
+    event: {
+      type: TEvent;
+      handler(...args: ListenerType<Events[TEvent]>): {
+        channel: string;
+        data: TFire;
       };
-    }
-  ) {
+    };
+  }) {
     pkg.createSchema({
       ...s,
       type: "event",
@@ -180,14 +182,14 @@ export function register(pkg: Package, { chat }: Ctx) {
           const channelHash = `#${channel.toLowerCase()}`;
 
           const cb = (...args: ListenerType<Events[TEvent]>) => {
-            const { channel, data } = s.event.handler(...args);
+            const { channel, data } = event.handler(...args);
             if (channel !== channelHash) return;
 
             bus.emit(data);
           };
 
-          state.client.addListener(s.event.type, cb);
-          onCleanup(() => state.client.removeListener(s.event.type, cb));
+          state.client.addListener(event.type, cb);
+          onCleanup(() => state.client.removeListener(event.type, cb));
         });
 
         return bus;
@@ -266,6 +268,7 @@ export function register(pkg: Package, { chat }: Ctx) {
     }),
     run({ ctx, data, io }) {
       if (data.self) return;
+      console.log(data);
       ctx.setOutput(io.username, data.userstate.username!);
       ctx.setOutput(io.displayName, data.userstate["display-name"]!);
       ctx.setOutput(io.userId, data.userstate["user-id"]!);

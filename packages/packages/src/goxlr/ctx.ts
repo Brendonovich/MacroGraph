@@ -55,6 +55,16 @@ export function createCtx(onEvent: OnEvent<Event>) {
                 if (op.op !== "add" && op.op !== "replace") return;
 
                 switch (pathParts[2]) {
+                  case "effects": {
+                    onEvent({
+                      name: "effects",
+                      data: {
+                        dial: pathParts[4],
+                        amount: Math.round(op.value),
+                      },
+                    });
+                    break;
+                  }
                   case "levels": {
                     onEvent({
                       name: "levelsChange",

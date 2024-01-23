@@ -208,6 +208,13 @@ export interface IOSchema {
   outputs?: Record<string, OutputBuilder>;
 }
 
+export type inferInput<TInput extends DataInput<BaseType<any>> | ScopeInput> =
+  TInput extends DataInput<infer T>
+    ? t.infer<T>
+    : TInput extends ScopeInput
+    ? Record<string, unknown>
+    : never;
+
 export type RunCtx = {
   exec(t: ExecOutput): Promise<void>;
   execScope(t: ScopeOutput, data: Record<string, any>): Promise<void>;
@@ -217,11 +224,7 @@ export type RunCtx = {
   ): void;
   getInput<TInput extends DataInput<BaseType<any>> | ScopeInput>(
     input: TInput
-  ): TInput extends DataInput<infer T>
-    ? t.infer<T>
-    : TInput extends ScopeInput
-    ? Record<string, unknown>
-    : never;
+  ): inferInput<TInput>;
   getProperty<TProperty extends PropertyDef & { id: string }>(
     property: TProperty
   ): inferPropertyDef<TProperty>;

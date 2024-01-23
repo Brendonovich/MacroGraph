@@ -676,6 +676,11 @@ export function register(pkg: Package, helix: Helix) {
           id: "following",
           type: t.bool(),
         }),
+        followedAt: io.dataOutput({
+          name: "Followed At",
+          id: "followedAt",
+          type: t.option(t.string()),
+        }),
       };
     },
     async run({ ctx, io, account }) {
@@ -687,7 +692,9 @@ export function register(pkg: Package, helix: Helix) {
           user_id: ctx.getInput(io.userId),
         }),
       });
-      ctx.setOutput(io.following, data?.data.length === 1);
+      console.log(data);
+      ctx.setOutput(io.following, !Array.isArray(data));
+      ctx.setOutput(io.followedAt, Maybe(data.followed_at));
     },
   });
 
