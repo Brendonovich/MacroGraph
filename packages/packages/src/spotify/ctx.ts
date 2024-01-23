@@ -1,10 +1,5 @@
-import {
-  Core,
-  OAuthToken,
-  RefreshedOAuthToken,
-  makePersisted,
-} from "@macrograph/runtime";
-import { None, Some } from "@macrograph/typesystem";
+import { Core, OAuthToken, RefreshedOAuthToken } from "@macrograph/runtime";
+import { None, Some, makePersistedOption } from "@macrograph/typesystem";
 import { createResource, createSignal } from "solid-js";
 import { z } from "zod";
 
@@ -42,7 +37,7 @@ const USER_PRIVATE = USER.and(
 );
 
 export function createCtx(core: Core) {
-  const [authToken, setAuthToken] = makePersisted<OAuthToken>(
+  const [authToken, setAuthToken] = makePersistedOption<OAuthToken>(
     createSignal(None),
     TOKEN_LOCALSTORAGE
   );

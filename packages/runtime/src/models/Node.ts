@@ -10,10 +10,16 @@ import {
   Accessor,
   onCleanup,
   createEffect,
+  catchError,
 } from "solid-js";
 import { Maybe, None, Option, Some } from "@macrograph/typesystem";
 
-import { IOBuilder, NodeSchema, Property } from "./NodeSchema";
+import {
+  IOBuilder,
+  NodeSchema,
+  Property,
+  inferPropertyDef,
+} from "./NodeSchema";
 import {
   DataInput,
   DataOutput,
@@ -115,15 +121,20 @@ export class Node {
       createRenderEffect(() => {
         const io = new IOBuilder(this, this.io);
 
-        this.ioReturn = this.schema.createIO({
-          io,
-          properties: this.schema.properties ?? {},
-          ctx: {
-            getProperty: (p) => this.getProperty(p) as any,
-            graph: this.graph,
+        catchError(
+          () => {
+            this.ioReturn = this.schema.createIO({
+              io,
+              properties: this.schema.properties ?? {},
+              ctx: {
+                getProperty: (p) => this.getProperty(p) as any,
+                graph: this.graph,
+              },
+              graph: this.graph,
+            });
           },
-          graph: this.graph,
-        });
+          (e) => console.error(e)
+        );
 
         untrack(() => this.updateIO(io));
 
@@ -182,42 +193,55 @@ export class Node {
         const s = this.schema;
 
         createEffect(() => {
-          try {
-            s.createListener({
-              properties: s.properties ?? {},
-              ctx: {
-                getProperty: (p) => this.getProperty(p) as any,
-                graph: this.graph,
-              },
-            }).listen((data) => new ExecutionContext(this).run(data));
-          } catch (e) {
-            console.error(e);
-          }
+          catchError(
+            () => {
+              s.createListener({
+                properties: s.properties ?? {},
+                ctx: {
+                  getProperty: (p) => this.getProperty(p) as any,
+                  graph: this.graph,
+                },
+              }).listen((data) => new ExecutionContext(this).run(data));
+            },
+            (e) => console.error(e)
+          );
         });
       }
     });
   }
 
   getProperty(property: Property) {
-    if ("source" in property) {
+    if ("type" in property)
+      return this.state.properties[property.id] as inferPropertyDef<
+        typeof property
+      >;
+
+    if ("source" in property)
       return property
         .source({ node: this })
-        .find((s) => s.id === (this.state.properties[property.id] as any))?.id;
-    } else if ("type" in property) {
-      return this.state.properties[property.id];
-    } else {
-      const value = this.state.properties[property.id];
+        .find((s) => s.id === (this.state.properties[property.id] as any))
+        ?.id as inferPropertyDef<typeof property>;
 
-      const instance = this.graph.project.resources.get(property.resource);
-      const item = instance?.items.find(
-        (i) => i.id === (value === DEFAULT ? instance.default : value)
-      );
+    const { resource } = property;
 
-      const sources = property.resource.sources();
-      const source = sources.find((s) => s.id === item?.sourceId);
+    const value = this.state.properties[property.id];
 
-      return Maybe(source?.value);
-    }
+    return Maybe(this.graph.project.resources.get(resource))
+      .andThen((instance) =>
+        Maybe(
+          instance.items.find(
+            (i) => i.id === (value === DEFAULT ? instance.default : value)
+          )
+        )
+      )
+      .andThen((item) => {
+        if ("value" in item) return Some(item.value);
+        if (!("sources" in resource)) return None;
+
+        return Maybe(
+          resource.sources(resource.package).find((s) => s.id === item.sourceId)
+        ).map((s) => s.value);
+      }) as inferPropertyDef<typeof property>;
   }
 
   updateIO(io: IOBuilder) {

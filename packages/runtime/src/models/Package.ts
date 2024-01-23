@@ -1,33 +1,34 @@
 import { ReactiveSet } from "@solid-primitives/set";
-import { Accessor, Component, lazy } from "solid-js";
+import { createLazyMemo } from "@solid-primitives/memo";
+import { Component, lazy } from "solid-js";
 import {
+  BaseType,
   Enum,
   EnumBuilder,
   EnumVariants,
   LazyEnumVariants,
   LazyStructFields,
+  PrimitiveType,
   Struct,
   StructBuilder,
   StructFields,
+  t,
 } from "@macrograph/typesystem";
 import { Simplify } from "type-fest";
 
 import { Core } from "./Core";
 import {
-  EventSchema as EventSchema,
   EventNodeSchema,
   EventsMap,
   NodeSchema,
   NonEventNodeSchema,
   PropertyDef,
   SchemaProperties,
-  CreateEventSchema,
   CreateSchema,
   Schema,
   RunProps,
 } from "./NodeSchema";
 import { ExecInput, ExecOutput } from "./IO";
-import { createLazyMemo } from "@solid-primitives/memo";
 
 export interface PackageArgs<TCtx> {
   name: string;
@@ -275,20 +276,43 @@ export type OnEvent<TEventsMap extends EventsMap = EventsMap> = (
   _: Events<TEventsMap>
 ) => void;
 
-export class ResourceType<
+export type ResourceType<
   TValue,
   TPkg extends Package<any, any> = Package<any, any>
-> {
-  name: string;
-  sources: Accessor<{ id: string; display: string; value: TValue }[]>;
+> = { name: string; package: TPkg } & (
+  | {
+      sources: (
+        pkg: TPkg
+      ) => Array<{ id: string; display: string; value: TValue }>;
+    }
+  | { type: BaseType<TValue> }
+);
 
-  package!: TPkg;
+export type inferResourceTypeValue<T> = T extends ResourceType<
+  infer TValue,
+  any
+>
+  ? T extends { source: any }
+    ? TValue
+    : T extends { type: BaseType }
+    ? t.infer<T["type"]>
+    : never
+  : never;
 
-  constructor(args: {
-    name: string;
-    sources: (pkg: TPkg) => { id: string; display: string; value: TValue }[];
-  }) {
-    this.name = args.name;
-    this.sources = createLazyMemo(() => args.sources(this.package));
+type DistributiveOmit<T, K extends keyof any> = T extends any
+  ? Omit<T, K>
+  : never;
+
+export function createResourceType<
+  TValue,
+  TPkg extends Package<any, any> = Package<any, any>
+>(args: DistributiveOmit<ResourceType<TValue, TPkg>, "package">) {
+  const type = args as ResourceType<TValue, TPkg>;
+
+  if ("sources" in type) {
+    const oldSources = type.sources;
+    type.sources = createLazyMemo(() => oldSources(type.package));
   }
+
+  return type;
 }

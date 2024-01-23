@@ -1,9 +1,13 @@
 import { Core, Package } from "@macrograph/runtime";
 
 import * as helix from "./helix";
-import * as eventsub from "./eventsub";
+import * as eventsub from "./eventSub";
 import * as chat from "./chat";
-import { createCtx } from "./ctx";
+
+import { Ctx, createCtx } from "./ctx";
+import { TwitchAccount, TwitchChannel } from "./resource";
+
+export type Pkg = Package<any, Ctx>;
 
 export function pkg(core: Core) {
   const ctx = createCtx(core, (e) => pkg.emitEvent(e));
@@ -14,9 +18,12 @@ export function pkg(core: Core) {
     SettingsUI: () => import("./Settings"),
   });
 
-  helix.register(pkg, ctx.helix);
-  eventsub.register(pkg);
+  helix.register(pkg, ctx.helixClient);
+  eventsub.register(pkg, ctx);
   chat.register(pkg, ctx);
+
+  pkg.registerResourceType(TwitchAccount);
+  pkg.registerResourceType(TwitchChannel);
 
   return pkg;
 }

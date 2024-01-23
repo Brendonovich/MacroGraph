@@ -1,356 +1,23 @@
 import {
   Core,
-  OAuthToken,
+  CreateIOFn,
+  CreateNonEventSchema,
+  MergeFnProps,
   Package,
+  PropertyDef,
+  RunProps,
+  SchemaProperties,
   createEnum,
   createStruct,
 } from "@macrograph/runtime";
-import { InferEnum, Maybe, t } from "@macrograph/typesystem";
-import { Accessor } from "solid-js";
-import { z } from "zod";
+import { Option, InferEnum, Maybe, t } from "@macrograph/typesystem";
 
-import { createEndpoint } from "../httpEndpoint";
-import { Auth, createUserInstance } from "./auth";
+import { createHTTPClient } from "../httpEndpoint";
+import { Account } from "./auth";
+import { defaultProperties } from "./resource";
+import { CLIENT_ID } from "./ctx";
 
 export const HELIX_USER_ID = "helixUserId";
-
-export function createHelixEndpoint(
-  clientId: string,
-  getToken: Accessor<OAuthToken>,
-  setToken: (token: OAuthToken) => void,
-  core: Core
-) {
-  let refreshPromise: Promise<any> | null = null;
-
-  const root = createEndpoint({
-    path: "https://api.twitch.tv/helix",
-    fetch: async (url, args) => {
-      if (args?.body && args.body instanceof URLSearchParams) {
-        url += `?${args.body.toString()}`;
-        delete args.body;
-      }
-
-      const run = () =>
-        fetch(url, {
-          headers: {
-            ...args?.headers,
-            "content-type": "application/json",
-            "Client-Id": clientId,
-            Authorization: `Bearer ${getToken().access_token}`,
-          },
-          ...args,
-        });
-
-      let resp = await run();
-
-      if (resp.status === 401) {
-        if (!refreshPromise) {
-          refreshPromise = (async () => {
-            const oldToken = getToken();
-            const token = await core.oauth.refresh(
-              "twitch",
-              oldToken.refresh_token
-            );
-            setToken({ ...oldToken, ...token });
-            refreshPromise = null;
-          })();
-        }
-        await refreshPromise;
-        resp = await run();
-      }
-
-      return resp.text().then((text: any) => {
-        if (text === "") return {};
-        let json: any = JSON.parse(text);
-        if (json.data.length === 1) {
-          return json.data[0];
-        } else {
-          return json.data;
-        }
-      });
-    },
-  });
-
-  const client = {
-    channels: (() => {
-      const channels = root.extend(`/channels`);
-
-      return {
-        ...channels,
-        followers: channels.extend(`/followers`),
-        vips: channels.extend(`/vips`),
-        followed: channels.extend(`/followed`),
-        editors: channels.extend(`/editors`),
-        commercial: channels.extend(`/commercial`),
-      };
-    })(),
-    analytics: (() => {
-      const analytics = root.extend(`/analytics`);
-
-      return {
-        games: analytics.extend(`/games`),
-        extensions: analytics.extend(`/extensions`),
-      };
-    })(),
-    bits: (() => {
-      const bits = root.extend(`/bits`);
-
-      return {
-        leaderboard: bits.extend(`/leaderboard`),
-        cheermotes: bits.extend(`/cheermotes`),
-        extensions: bits.extend(`/extensions`),
-      };
-    })(),
-    extensions: (() => {
-      const extensions = root.extend(`/extensions`);
-
-      return {
-        transactions: extensions.extend(`/transactions`),
-        configurations: extensions.extend(`/configurations`),
-        requiredConfiguration: extensions.extend(`/required_configuration`),
-        pubsub: extensions.extend(`/pubsub`),
-        live: extensions.extend(`/live`),
-        jwt: () => {
-          const jwt = extensions.extend(`/jwt`);
-
-          return {
-            ...jwt,
-            secrets: jwt.extend(`/secrets`),
-          };
-        },
-        chat: extensions.extend(`/chat`),
-        released: extensions.extend(`/released`),
-      };
-    })(),
-    moderation: (() => {
-      const moderation = root.extend(`/moderation`);
-
-      return {
-        bans: moderation.extend(`/bans`),
-        blockedTerms: moderation.extend(`/blocked_terms`),
-        chat: moderation.extend(`/chat`),
-        moderators: moderation.extend(`/moderators`),
-        shieldMode: moderation.extend(`/shield_mode`),
-        enforcements: (() => {
-          const enforcements = moderation.extend(`/enforcements`);
-
-          return {
-            ...enforcements,
-            status: enforcements.extend(`/status`),
-          };
-        })(),
-
-        automod: (() => {
-          const automod = moderation.extend(`/automod`);
-
-          return {
-            ...automod,
-            message: automod.extend(`/message`),
-            settings: automod.extend(`/settings`),
-          };
-        })(),
-      };
-    })(),
-    eventsub: (() => {
-      const eventsub = root.extend(`/eventsub`);
-
-      return {
-        ...eventsub,
-        subscriptions: eventsub.extend(`/subscriptions`),
-      };
-    })(),
-    channelPoints: (() => {
-      const channelPoints = root.extend(`/channel_points`);
-
-      return {
-        ...channelPoints,
-        customRewards: (() => {
-          const customRewards = channelPoints.extend(`/custom_rewards`);
-
-          return {
-            ...customRewards,
-            redemptions: customRewards.extend(`/redemptions`),
-          };
-        })(),
-      };
-    })(),
-    charity: (() => {
-      const charity = root.extend(`/charity`);
-
-      return {
-        ...charity,
-        donations: charity.extend(`/donations`),
-        campaigns: charity.extend(`/campaigns`),
-      };
-    })(),
-    chat: (() => {
-      const chat = root.extend(`/chat`);
-
-      return {
-        chatters: chat.extend(`/chatters`),
-        settings: chat.extend(`/settings`),
-        announcements: chat.extend(`/announcements`),
-        shoutouts: chat.extend(`/shoutouts`),
-        color: chat.extend(`/color`),
-        emotes: (() => {
-          const emotes = chat.extend(`/emotes`);
-
-          return {
-            ...emotes,
-            global: emotes.extend(`/global`),
-            set: emotes.extend(`/set`),
-          };
-        })(),
-        badges: (() => {
-          const badges = chat.extend(`/badges`);
-
-          return {
-            ...badges,
-            global: badges.extend(`/global`),
-          };
-        })(),
-      };
-    })(),
-    clips: root.extend(`/clips`),
-    entitlements: (() => {
-      const entitlements = root.extend(`/entitlements`);
-
-      return {
-        drops: entitlements.extend(`/drops`),
-      };
-    })(),
-    games: (() => {
-      const games = root.extend(`/games`);
-
-      return {
-        ...games,
-        top: root.extend(`/top`),
-      };
-    })(),
-    goals: root.extend(`/goals`),
-    guestStar: (() => {
-      const guestStar = root.extend(`/guest_star`);
-
-      return {
-        channelSettings: guestStar.extend(`/channel_settings`),
-        session: guestStar.extend(`/session`),
-        invites: guestStar.extend(`/invites`),
-        slot: guestStar.extend(`/slot`),
-        slotSettings: guestStar.extend(`/slot_settings`),
-      };
-    })(),
-    hypetrain: (() => {
-      const hypetrain = root.extend(`/hypetrain`);
-
-      return {
-        events: hypetrain.extend(`/events`),
-      };
-    })(),
-    polls: root.extend(`/polls`),
-    predictions: root.extend(`/predictions`),
-    raids: root.extend(`/raids`),
-    schedule: (() => {
-      const schedule = root.extend(`/schedule`);
-
-      return {
-        ...schedule,
-        icalendar: schedule.extend(`/icalendar`),
-        settings: schedule.extend(`/settings`),
-        segment: schedule.extend(`/segment`),
-      };
-    })(),
-    search: (() => {
-      const search = root.extend(`/search`);
-
-      return {
-        catagories: search.extend(`/catagories`),
-        channels: search.extend(`/channels`),
-      };
-    })(),
-    soundtrack: (() => {
-      const soundtrack = root.extend(`/soundtrack`);
-
-      return {
-        playlist: soundtrack.extend(`/playlist`),
-        playlists: soundtrack.extend(`/playlists`),
-        currentTrack: soundtrack.extend(`/current_track`),
-      };
-    })(),
-    streams: (() => {
-      const streams = root.extend(`/streams`);
-
-      return {
-        ...streams,
-        key: streams.extend(`/key`),
-        followed: streams.extend(`/followed`),
-        markers: streams.extend(`/markers`),
-        tags: streams.extend(`/tags`),
-      };
-    })(),
-    subscriptions: (() => {
-      const subscriptions = root.extend(`/subscriptions`);
-
-      return {
-        ...subscriptions,
-        user: subscriptions.extend(`/user`),
-      };
-    })(),
-    teams: (() => {
-      const teams = root.extend(`/teams`);
-
-      return {
-        ...teams,
-        channel: teams.extend(`/channel`),
-      };
-    })(),
-    users: (() => {
-      const users = root.extend(`/users`);
-
-      return {
-        ...users,
-        follows: users.extend(`/follows`),
-        blocks: users.extend(`/blocks`),
-        extensions: (() => {
-          const extensions = users.extend(`/extensions`);
-
-          return {
-            ...extensions,
-            list: extensions.extend(`/list`),
-          };
-        })(),
-      };
-    })(),
-    videos: root.extend(`/videos`),
-    whispers: root.extend(`/whispers`),
-  };
-
-  return client;
-}
-
-export function createHelix(core: Core, auth: Auth) {
-  const user = createUserInstance(HELIX_USER_ID, auth);
-
-  const client = createHelixEndpoint(
-    auth.clientId,
-    () => user.account().unwrap().token,
-    (token) => {
-      const prevData = user.account().unwrap();
-      if (prevData)
-        auth.accounts.set(prevData.data.id, {
-          ...prevData,
-          token,
-        });
-    },
-    core
-  );
-
-  return {
-    client,
-    user,
-  };
-}
-
-export type Helix = ReturnType<typeof createHelix>;
 
 export const UserSubscription = createStruct("User Subscription", (s) => ({
   tier: s.field("Tier", t.string()),
@@ -437,36 +104,133 @@ export const Redemption = createStruct("Redemption", (s) => ({
   redemptionDate: s.field("Redemption Date", t.string()),
 }));
 
-export function register(pkg: Package, { client, user }: Helix) {
-  const userId = () => user.account().map((a) => a.data.id);
+export function createHelix(core: Core) {
+  let refreshPromises = new Map<string, Promise<any>>();
 
-  pkg.createNonEventSchema({
-    name: "Ban User",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        userId: io.dataInput({
-          name: "userID",
-          id: "userId",
-          type: t.string(),
-        }),
-        duration: io.dataInput({
-          name: "Duration",
-          id: "duration",
-          type: t.int(),
-        }),
-        reason: io.dataInput({
-          name: "Reason",
-          id: "reason",
-          type: t.string(),
-        }),
-      };
+  return createHTTPClient<Requests, Account>({
+    root: "https://api.twitch.tv/helix",
+    fetch: async (account, url, args) => {
+      if (args?.body && args.body instanceof URLSearchParams) {
+        url += `?${args.body.toString()}`;
+        delete args.body;
+      }
+
+      const run = () =>
+        fetch(url, {
+          headers: {
+            ...args?.headers,
+            "content-type": "application/json",
+            "Client-Id": CLIENT_ID,
+            Authorization: `Bearer ${account.token.access_token}`,
+          },
+          ...args,
+        });
+
+      let resp = await run();
+
+      if (resp.status === 401) {
+        if (!refreshPromises.has(account.data.id)) {
+          const promise = (async () => {
+            const oldToken = account.token;
+            const token = await core.oauth.refresh(
+              "twitch",
+              oldToken.refresh_token
+            );
+            account.token = { ...oldToken, ...token };
+            refreshPromises.delete(account.data.id);
+          })();
+
+          refreshPromises.set(account.data.id, promise);
+
+          await promise;
+        }
+        resp = await run();
+      }
+
+      return resp.json();
     },
-    async run({ ctx, io }) {
-      client.moderation.bans.post(z.any(), {
+  });
+}
+
+export type Helix = ReturnType<typeof createHelix>;
+
+export function register(pkg: Package, helix: Helix) {
+  function createHelixExecSchema<
+    TProperties extends Record<string, PropertyDef> = {},
+    TIO = void
+  >(
+    s: Omit<
+      CreateNonEventSchema<TProperties & typeof defaultProperties, TIO>,
+      "type" | "createListener" | "run" | "createIO"
+    > & {
+      properties?: TProperties;
+      run(
+        props: RunProps<TProperties, TIO> & {
+          account: Account;
+        }
+      ): void | Promise<void>;
+      createIO: MergeFnProps<
+        CreateIOFn<TProperties, TIO>,
+        { account(): Option<Account> }
+      >;
+    }
+  ) {
+    pkg.createSchema({
+      ...s,
+      type: "exec",
+      properties: { ...s.properties, ...defaultProperties } as any,
+      createIO(props) {
+        const account = props.ctx.getProperty(
+          props.properties.account as SchemaProperties<
+            typeof defaultProperties
+          >["account"]
+        );
+
+        return s.createIO({
+          ...props,
+          account() {
+            return account;
+          },
+        });
+      },
+      run(props) {
+        const account = props.ctx
+          .getProperty(
+            props.properties.account as SchemaProperties<
+              typeof defaultProperties
+            >["account"]
+          )
+          .expect("No Twitch account available!");
+
+        return s.run({ ...props, account });
+      },
+    });
+  }
+
+  createHelixExecSchema({
+    name: "Ban User",
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      duration: io.dataInput({
+        name: "Duration",
+        id: "duration",
+        type: t.int(),
+      }),
+      reason: io.dataInput({
+        name: "Reason",
+        id: "reason",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, account }) {
+      return helix.call("POST /moderation/bans", account, {
         body: JSON.stringify({
-          broadcaster_id: userId().unwrap(),
-          moderator_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
+          moderator_id: account.data.id,
           data: {
             user_id: ctx.getInput(io.userId),
             duration: ctx.getInput(io.duration),
@@ -477,137 +241,125 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Unban User",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        userId: io.dataInput({
-          name: "userID",
-          id: "userId",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
-      client.moderation.bans.delete(z.any(), {
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "userID",
+        id: "userId",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, account }) {
+      return helix.call("DELETE /moderation/bans", account, {
         body: JSON.stringify({
-          broadcaster_id: userId().unwrap(),
-          moderator_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
+          moderator_id: account.data.id,
           user_id: ctx.getInput(io.userId),
         }),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Add Moderator",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        userId: io.dataInput({
-          name: "userID",
-          id: "userId",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
-      return client.moderation.moderators.post(z.any(), {
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "userID",
+        id: "userId",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, account }) {
+      return helix.call("POST /moderation/moderators", account, {
         body: JSON.stringify({
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
           user_id: ctx.getInput(io.userId),
         }),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Remove Moderator",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        userId: io.dataInput({
-          name: "userID",
-          id: "userId",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
-      client.moderation.moderators.delete(z.any(), {
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "userID",
+        id: "userId",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, account }) {
+      return helix.call("DELETE /moderation/moderators", account, {
         body: JSON.stringify({
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
           user_id: ctx.getInput(io.userId),
         }),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Get Channel Info",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        broadcasterIdIn: io.dataInput({
-          name: "Broadcaster ID",
-          id: "broadcasterId",
-          type: t.string(),
-        }),
-        broadcasterIdOut: io.dataOutput({
-          name: "Broadcaster ID",
-          id: "broadcasterId",
-          type: t.string(),
-        }),
-        broadcasterLogin: io.dataOutput({
-          name: "Broadcaster Login Name",
-          id: "broadcasterLogin",
-          type: t.string(),
-        }),
-        broadcasterDisplay: io.dataOutput({
-          name: "Broadcaster Display Name",
-          id: "broadcasterDisplay",
-          type: t.string(),
-        }),
-        broadcasterLanguage: io.dataOutput({
-          name: "Broadcaster Language",
-          id: "broadcasterLanguage",
-          type: t.string(),
-        }),
-        title: io.dataOutput({
-          name: "Title",
-          id: "title",
-          type: t.string(),
-        }),
-        catagory: io.dataOutput({
-          name: "Stream Catagory",
-          id: "catagory",
-          type: t.string(),
-        }),
-        catagoryId: io.dataOutput({
-          name: "Catagory ID",
-          id: "catagoryId",
-          type: t.string(),
-        }),
-        tags: io.dataOutput({
-          name: "Tags",
-          id: "tags",
-          type: t.list(t.string()),
-        }),
-        delay: io.dataOutput({
-          name: "Delay",
-          id: "delay",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
-      const data = await client.channels.get(z.any(), {
+    createIO: ({ io }) => ({
+      broadcasterIdIn: io.dataInput({
+        name: "ID",
+        id: "broadcasterId",
+        type: t.string(),
+      }),
+      broadcasterIdOut: io.dataOutput({
+        name: "ID",
+        id: "broadcasterId",
+        type: t.string(),
+      }),
+      broadcasterLogin: io.dataOutput({
+        name: "Login",
+        id: "broadcasterLogin",
+        type: t.string(),
+      }),
+      broadcasterDisplay: io.dataOutput({
+        name: "Display Name",
+        id: "broadcasterDisplay",
+        type: t.string(),
+      }),
+      broadcasterLanguage: io.dataOutput({
+        name: "Language",
+        id: "broadcasterLanguage",
+        type: t.string(),
+      }),
+      title: io.dataOutput({
+        name: "Title",
+        id: "title",
+        type: t.string(),
+      }),
+      catagory: io.dataOutput({
+        name: "Stream Catagory",
+        id: "catagory",
+        type: t.string(),
+      }),
+      catagoryId: io.dataOutput({
+        name: "Catagory ID",
+        id: "catagoryId",
+        type: t.string(),
+      }),
+      tags: io.dataOutput({
+        name: "Tags",
+        id: "tags",
+        type: t.list(t.string()),
+      }),
+      delay: io.dataOutput({
+        name: "Delay",
+        id: "delay",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, account }) {
+      const data = await helix.call("GET /channels", account, {
         body: new URLSearchParams({
           broadcaster_id: ctx.getInput(io.broadcasterIdIn),
         }),
       });
-      const info = data.data[0];
+      const info = data.data[0]!;
       ctx.setOutput(io.broadcasterIdOut, info.broadcaster_id);
       ctx.setOutput(io.broadcasterLogin, info.broadcaster_login);
       ctx.setOutput(io.broadcasterDisplay, info.broadcaster_name);
@@ -620,39 +372,36 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Modify Channel Info",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        broadcasterLanguage: io.dataInput({
-          name: "Broadcaster Language",
-          id: "broadcasterLanguage",
-          type: t.string(),
-        }),
-        title: io.dataInput({
-          name: "Title",
-          id: "title",
-          type: t.string(),
-        }),
-        catagoryName: io.dataInput({
-          name: "Catagory Name",
-          id: "catagoryName",
-          type: t.string(),
-        }),
-        tags: io.dataInput({
-          name: "Tags",
-          id: "tags",
-          type: t.list(t.string()),
-        }),
-        delay: io.dataInput({
-          name: "Delay",
-          id: "delay",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
+    createIO: ({ io }) => ({
+      broadcasterLanguage: io.dataInput({
+        name: "Broadcaster Language",
+        id: "broadcasterLanguage",
+        type: t.string(),
+      }),
+      title: io.dataInput({
+        name: "Title",
+        id: "title",
+        type: t.string(),
+      }),
+      catagoryName: io.dataInput({
+        name: "Catagory",
+        id: "catagoryName",
+        type: t.string(),
+      }),
+      tags: io.dataInput({
+        name: "Tags",
+        id: "tags",
+        type: t.list(t.string()),
+      }),
+      delay: io.dataInput({
+        name: "Delay",
+        id: "delay",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, account }) {
       const body = {} as any;
 
       if (ctx.getInput(io.broadcasterLanguage))
@@ -662,7 +411,7 @@ export function register(pkg: Package, { client, user }: Helix) {
       if (ctx.getInput(io.tags)) body.tags = ctx.getInput(io.tags);
 
       if (ctx.getInput(io.catagoryName)) {
-        let data = await client.games.get(z.any(), {
+        let data = await helix.call("GET /games", account, {
           body: new URLSearchParams({
             name: ctx.getInput(io.catagoryName),
           }),
@@ -671,84 +420,81 @@ export function register(pkg: Package, { client, user }: Helix) {
         body.game_id = data.data[0].id;
       }
 
-      client.channels.patch(z.any(), {
+      await helix.call("PATCH /channels", account, {
         body: {
           ...body,
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
         },
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Get Stream info",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        broadcasterIdIn: io.dataInput({
-          name: "Broadcaster ID",
-          id: "broadcasterId",
-          type: t.string(),
-        }),
-        live: io.dataOutput({
-          name: "Stream Live",
-          id: "live",
-          type: t.bool(),
-        }),
-        broadcasterIdOut: io.dataOutput({
-          name: "Broadcaster ID",
-          id: "broadcasterId",
-          type: t.string(),
-        }),
-        broadcasterLogin: io.dataOutput({
-          name: "Broadcaster Login Name",
-          id: "broadcasterLogin",
-          type: t.string(),
-        }),
-        broadcasterDisplay: io.dataOutput({
-          name: "Broadcaster Display Name",
-          id: "broadcasterDisplay",
-          type: t.string(),
-        }),
-        broadcasterLanguage: io.dataOutput({
-          name: "Broadcaster Language",
-          id: "broadcasterLanguage",
-          type: t.string(),
-        }),
-        title: io.dataOutput({
-          name: "Title",
-          id: "title",
-          type: t.string(),
-        }),
-        catagory: io.dataOutput({
-          name: "Stream Catagory",
-          id: "catagory",
-          type: t.string(),
-        }),
-        catagoryId: io.dataOutput({
-          name: "Catagory ID",
-          id: "catagoryId",
-          type: t.string(),
-        }),
-        viewerCount: io.dataOutput({
-          name: "Viewer Count",
-          id: "viewerCount",
-          type: t.int(),
-        }),
-        startedAt: io.dataOutput({
-          name: "Started At",
-          id: "startedAt",
-          type: t.string(),
-        }),
-        thumbnailUrl: io.dataOutput({
-          name: "Thumbnail URL",
-          id: "thumbnailUrl",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
-      const data = await client.streams.get(z.any(), {
+    createIO: ({ io }) => ({
+      broadcasterIdIn: io.dataInput({
+        name: "Broadcaster ID",
+        id: "broadcasterId",
+        type: t.string(),
+      }),
+      live: io.dataOutput({
+        name: "Stream Live",
+        id: "live",
+        type: t.bool(),
+      }),
+      broadcasterIdOut: io.dataOutput({
+        name: "Broadcaster ID",
+        id: "broadcasterId",
+        type: t.string(),
+      }),
+      broadcasterLogin: io.dataOutput({
+        name: "Broadcaster Login Name",
+        id: "broadcasterLogin",
+        type: t.string(),
+      }),
+      broadcasterDisplay: io.dataOutput({
+        name: "Broadcaster Display Name",
+        id: "broadcasterDisplay",
+        type: t.string(),
+      }),
+      broadcasterLanguage: io.dataOutput({
+        name: "Broadcaster Language",
+        id: "broadcasterLanguage",
+        type: t.string(),
+      }),
+      title: io.dataOutput({
+        name: "Title",
+        id: "title",
+        type: t.string(),
+      }),
+      catagory: io.dataOutput({
+        name: "Stream Catagory",
+        id: "catagory",
+        type: t.string(),
+      }),
+      catagoryId: io.dataOutput({
+        name: "Catagory ID",
+        id: "catagoryId",
+        type: t.string(),
+      }),
+      viewerCount: io.dataOutput({
+        name: "Viewer Count",
+        id: "viewerCount",
+        type: t.int(),
+      }),
+      startedAt: io.dataOutput({
+        name: "Started At",
+        id: "startedAt",
+        type: t.string(),
+      }),
+      thumbnailUrl: io.dataOutput({
+        name: "Thumbnail URL",
+        id: "thumbnailUrl",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, account }) {
+      const data = await helix.call("GET /streams", account, {
         body: new URLSearchParams({
           user_id: ctx.getInput(io.broadcasterIdIn),
         }),
@@ -770,26 +516,23 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Create Clip",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        clipId: io.dataOutput({
-          name: "Clip ID",
-          id: "clipId",
-          type: t.string(),
-        }),
-        editUrl: io.dataOutput({
-          name: "Edit URL",
-          id: "editUrl",
-          type: t.string(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
-      const clipId = await client.clips.post(z.any(), {
-        body: new URLSearchParams({ broadcaster_id: userId().unwrap() }),
+    createIO: ({ io }) => ({
+      clipId: io.dataOutput({
+        name: "Clip ID",
+        id: "clipId",
+        type: t.string(),
+      }),
+      editUrl: io.dataOutput({
+        name: "Edit URL",
+        id: "editUrl",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, account }) {
+      const clipId = await helix.call("POST /clips", account, {
+        body: new URLSearchParams({ broadcaster_id: account.data.id }),
       });
 
       ctx.setOutput(io.clipId, clipId.id);
@@ -797,41 +540,38 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Get Hype Train",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        cooldownEndTime: io.dataOutput({
-          name: "Cooldown End Time",
-          id: "cooldownEndTime",
-          type: t.string(),
-        }),
-        expires_at: io.dataOutput({
-          name: "Expires At",
-          id: "expiresAt",
-          type: t.string(),
-        }),
-        level: io.dataOutput({
-          name: "Level",
-          id: "level",
-          type: t.int(),
-        }),
-        goal: io.dataOutput({
-          name: "Goal",
-          id: "goal",
-          type: t.int(),
-        }),
-        total: io.dataOutput({
-          name: "Total",
-          id: "total",
-          type: t.int(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
-      const data = await client.hypetrain.events.get(z.any(), {
-        body: new URLSearchParams({ broadcaster_id: userId().unwrap() }),
+    createIO: ({ io }) => ({
+      cooldownEndTime: io.dataOutput({
+        name: "Cooldown End Time",
+        id: "cooldownEndTime",
+        type: t.string(),
+      }),
+      expires_at: io.dataOutput({
+        name: "Expires At",
+        id: "expiresAt",
+        type: t.string(),
+      }),
+      level: io.dataOutput({
+        name: "Level",
+        id: "level",
+        type: t.int(),
+      }),
+      goal: io.dataOutput({
+        name: "Goal",
+        id: "goal",
+        type: t.int(),
+      }),
+      total: io.dataOutput({
+        name: "Total",
+        id: "total",
+        type: t.int(),
+      }),
+    }),
+    async run({ ctx, io, account }) {
+      const data = await helix.call("GET /hypetrain/events", account, {
+        body: new URLSearchParams({ broadcaster_id: account.data.id }),
       });
 
       ctx.setOutput(io.cooldownEndTime, data.event_data.cooldown_end_time);
@@ -842,31 +582,26 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Check User Subscription",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        userId: io.dataInput({
-          name: "User ID",
-          id: "userId",
-          type: t.string(),
-        }),
-        out: io.dataOutput({
-          id: "out",
-          type: t.option(t.struct(UserSubscription)),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
-      let data = await client.subscriptions.get(z.any(), {
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      out: io.dataOutput({
+        id: "out",
+        type: t.option(t.struct(UserSubscription)),
+      }),
+    }),
+    async run({ ctx, io, account }) {
+      let data = await helix.call("GET /subscriptions", account, {
         body: new URLSearchParams({
           user_id: ctx.getInput(io.userId),
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
         }),
       });
-
-      console.log(data);
 
       let struct = Maybe(data).map((data) =>
         UserSubscription.create({
@@ -882,14 +617,12 @@ export function register(pkg: Package, { client, user }: Helix) {
         })
       );
 
-      console.log(struct);
       ctx.setOutput(io.out, struct);
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Check User Follow",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         userId: io.dataInput({
@@ -909,10 +642,10 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
 
-      let data = await client.channels.followers.get(z.any(), {
+      let data = await helix.call("GET /channels/followers", account, {
         body: new URLSearchParams({
           broadcaster_id: user,
           user_id: ctx.getInput(io.userId),
@@ -924,9 +657,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Check User VIP",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         userId: io.dataInput({
@@ -941,10 +673,10 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const data = await client.channels.vips.get(z.any(), {
+    async run({ ctx, io, account }) {
+      const data = await helix.call("GET /channels/vips", account, {
         body: new URLSearchParams({
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
           user_id: ctx.getInput(io.userId),
         }),
       });
@@ -953,27 +685,24 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Check User Mod",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        userId: io.dataInput({
-          name: "User ID",
-          id: "userId",
-          type: t.string(),
-        }),
-        moderator: io.dataOutput({
-          name: "Moderator",
-          id: "moderator",
-          type: t.bool(),
-        }),
-      };
-    },
-    async run({ ctx, io }) {
-      const data = await client.moderation.moderators.get(z.any(), {
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      moderator: io.dataOutput({
+        name: "Moderator",
+        id: "moderator",
+        type: t.bool(),
+      }),
+    }),
+    async run({ ctx, io, account }) {
+      const data = await helix.call("GET /moderation/moderators", account, {
         body: new URLSearchParams({
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
           user_id: ctx.getInput(io.userId),
         }),
       });
@@ -982,9 +711,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Create Custom Reward",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         title: io.dataInput({
@@ -1058,30 +786,26 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
       let body: Record<string, any> = {};
 
-      if (ctx.getInput(io.prompt).isSome())
-        body.prompt = ctx.getInput(io.prompt).unwrap();
-      if (ctx.getInput(io.isEnabled).isSome())
-        body.is_enabled = ctx.getInput(io.isEnabled).unwrap();
-      if (ctx.getInput(io.backgroundColor).isSome())
-        body.background_color = ctx.getInput(io.backgroundColor).unwrap();
-      if (ctx.getInput(io.userInputRequired).isSome())
-        body.is_user_input_required = ctx
-          .getInput(io.userInputRequired)
-          .unwrap();
-      if (ctx.getInput(io.maxRedemptionsPerStreamEnabled).isSome())
-        body.is_max_per_stream_enabled = ctx
-          .getInput(io.maxRedemptionsPerStreamEnabled)
-          .unwrap();
-      if (ctx.getInput(io.maxRedemptionsPerStream).isSome())
-        body.max_per_stream = ctx.getInput(io.maxRedemptionsPerStream).unwrap();
-      if (ctx.getInput(io.maxRedemptionsPerUserPerStreamEnabled).isSome())
-        body.is_max_per_stream_enabled = ctx
-          .getInput(io.maxRedemptionsPerUserPerStreamEnabled)
-          .unwrap();
+      ctx.getInput(io.prompt).peek((v) => (body.prompt = v));
+      ctx.getInput(io.isEnabled).peek((v) => (body.is_enabled = v));
+      ctx.getInput(io.backgroundColor).peek((v) => (body.background_color = v));
+      ctx
+        .getInput(io.userInputRequired)
+        .peek((v) => (body.is_user_input_required = v));
+      ctx
+        .getInput(io.maxRedemptionsPerStreamEnabled)
+        .peek((v) => (body.is_max_per_stream_enabled = v));
+      ctx
+        .getInput(io.maxRedemptionsPerStream)
+        .peek((v) => (body.max_per_stream = v));
+      ctx
+        .getInput(io.maxRedemptionsPerUserPerStream)
+        .peek((v) => (body.maxRedemptionsPerUserPerStream = v));
+
       if (ctx.getInput(io.maxRedemptionsPerUserPerStream).isSome())
         body.max_per_user_per_stream = ctx
           .getInput(io.maxRedemptionsPerUserPerStream)
@@ -1097,14 +821,18 @@ export function register(pkg: Package, { client, user }: Helix) {
           .getInput(io.autoFulfill)
           .unwrap();
 
-      const response = await client.channelPoints.customRewards.post(z.any(), {
-        body: JSON.stringify({
-          broadcaster_id: user,
-          title: ctx.getInput(io.title),
-          cost: ctx.getInput(io.cost),
-          ...body,
-        }),
-      });
+      const response = await helix.call(
+        "POST /channel_points/custom_rewards",
+        account,
+        {
+          body: JSON.stringify({
+            broadcaster_id: user,
+            title: ctx.getInput(io.title),
+            cost: ctx.getInput(io.cost),
+            ...body,
+          }),
+        }
+      );
 
       ctx.setOutput(
         io.out,
@@ -1133,9 +861,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Start Commercial",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         duration: io.dataInput({
@@ -1150,10 +877,10 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const response = await client.channels.commercial.post(z.any(), {
+    async run({ ctx, io, account }) {
+      const response = await helix.call("POST /channels/commercial", account, {
         body: JSON.stringify({
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
           length: ctx.getInput(io.duration),
         }),
       });
@@ -1170,7 +897,7 @@ export function register(pkg: Package, { client, user }: Helix) {
   //   e.variant("all"),
   // ]);
 
-  // pkg.createNonEventSchema({
+  // createHelixExecSchema({
   //   name: "Get Bits Leaderboard",
   //   variant: "Exec",
   //   generateIO: ({io}) => {
@@ -1210,9 +937,8 @@ export function register(pkg: Package, { client, user }: Helix) {
   //   },
   // });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Edit Custom Reward",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         id: io.dataInput({
@@ -1296,7 +1022,7 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
+    async run({ ctx, io, account }) {
       let body: Record<string, any> = {};
       if (ctx.getInput(io.id) === "") return;
 
@@ -1341,13 +1067,17 @@ export function register(pkg: Package, { client, user }: Helix) {
       if (ctx.getInput(io.paused).isSome())
         body.is_paused = ctx.getInput(io.paused).unwrap();
 
-      const response = await client.channelPoints.customRewards.patch(z.any(), {
-        body: JSON.stringify({
-          broadcaster_id: userId().unwrap(),
-          id: ctx.getInput(io.id),
-          ...body,
-        }),
-      });
+      const response = await helix.call(
+        "PATCH /channel_points/custom_rewards",
+        account,
+        {
+          body: JSON.stringify({
+            broadcaster_id: account.data.id,
+            id: ctx.getInput(io.id),
+            ...body,
+          }),
+        }
+      );
 
       const data = response;
 
@@ -1376,9 +1106,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Update Redemption Status",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         redemptionId: io.dataInput({
@@ -1403,20 +1132,23 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
+    async run({ ctx, io, account }) {
       const status = ctx.getInput(io.status) as InferEnum<
         typeof RedemptionStatus
       >;
 
-      const response =
-        await client.channelPoints.customRewards.redemptions.patch(z.any(), {
+      const response = await helix.call(
+        "PATCH /channel_points/custom_rewards/redemptions",
+        account,
+        {
           body: new URLSearchParams({
             id: ctx.getInput(io.redemptionId),
-            broadcaster_id: userId().unwrap(),
+            broadcaster_id: account.data.id,
             reward_id: ctx.getInput(io.rewardId),
             status: status.variant === "Fulfilled" ? "FULFILLED" : "CANCELED",
           }),
-        });
+        }
+      );
 
       const data = response.data[0];
 
@@ -1439,9 +1171,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Get Reward By Title",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         title: io.dataInput({
@@ -1460,13 +1191,17 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      let rewards = await client.channelPoints.customRewards.get(z.any(), {
-        body: new URLSearchParams({
-          broadcaster_id: userId().unwrap(),
-          only_manageable_rewards: ctx.getInput(io.manageableOnly).toString(),
-        }),
-      });
+    async run({ ctx, io, account }) {
+      let rewards = await helix.call(
+        "GET /channel_points/custom_rewards",
+        account,
+        {
+          body: new URLSearchParams({
+            broadcaster_id: account.data.id,
+            only_manageable_rewards: ctx.getInput(io.manageableOnly).toString(),
+          }),
+        }
+      );
 
       const data = rewards.find(
         (reward: any) => reward.title === ctx.getInput(io.title)
@@ -1499,9 +1234,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Delete Custom Reward",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         id: io.dataInput({
@@ -1511,19 +1245,18 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    run({ ctx, io }) {
-      return client.channelPoints.customRewards.delete(z.any(), {
+    run({ ctx, io, account }) {
+      return helix.call("DELETE /channel_points/custom_rewards", account, {
         body: new URLSearchParams({
-          broadcaster_id: userId().unwrap(),
+          broadcaster_id: account.data.id,
           id: ctx.getInput(io.id),
         }),
       });
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Get User By Login",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         userLoginIn: io.dataInput({
@@ -1582,14 +1315,14 @@ export function register(pkg: Package, { client, user }: Helix) {
         // }),
       };
     },
-    async run({ ctx, io }) {
-      const response = await client.users.get(z.any(), {
+    async run({ ctx, io, account }) {
+      const response = await helix.call("GET /users", account, {
         body: new URLSearchParams({
           login: ctx.getInput(io.userLoginIn),
         }),
       });
 
-      const data = Maybe(response).expect("No user found");
+      const data = Maybe(response.data[0]).expect("No user found");
 
       // const optData = Maybe(data);
       ctx.setOutput(io.userIdOut, data.id);
@@ -1638,75 +1371,72 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Get User By ID",
-    variant: "Exec",
-    createIO: ({ io }) => {
-      return {
-        userIdIn: io.dataInput({
-          id: "userId",
-          name: "User ID",
-          type: t.string(),
-        }),
-        userIdOut: io.dataOutput({
-          id: "userId",
-          name: "User ID",
-          type: t.string(),
-        }),
-        userLogin: io.dataOutput({
-          id: "userLogin",
-          name: "Login Name",
-          type: t.string(),
-        }),
-        displayName: io.dataOutput({
-          id: "displayName",
-          name: "Display Name",
-          type: t.string(),
-        }),
-        type: io.dataOutput({
-          id: "type",
-          name: "User Type",
-          type: t.enum(UserType),
-        }),
-        broadcasterType: io.dataOutput({
-          id: "broadcasterType",
-          name: "Broadcaster Type",
-          type: t.enum(BroadcasterType),
-        }),
-        description: io.dataOutput({
-          id: "description",
-          name: "Description",
-          type: t.string(),
-        }),
-        profileImageUrl: io.dataOutput({
-          id: "profileImageUrl",
-          name: "Profile Image URL",
-          type: t.string(),
-        }),
-        offlineImageUrl: io.dataOutput({
-          id: "offlineImageUrl",
-          name: "Offline Image URL",
-          type: t.string(),
-        }),
-        createdAt: io.dataOutput({
-          id: "createdAt",
-          name: "Created At",
-          type: t.string(),
-        }),
-        //out: io.dataOutput({
-        //   id: "out",
-        //   type: t.option(t.struct(User)),
-        // }),
-      };
-    },
-    async run({ ctx, io }) {
-      const response = await client.users.get(z.any(), {
+    createIO: ({ io }) => ({
+      userIdIn: io.dataInput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userIdOut: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userLogin: io.dataOutput({
+        id: "userLogin",
+        name: "Login Name",
+        type: t.string(),
+      }),
+      displayName: io.dataOutput({
+        id: "displayName",
+        name: "Display Name",
+        type: t.string(),
+      }),
+      type: io.dataOutput({
+        id: "type",
+        name: "User Type",
+        type: t.enum(UserType),
+      }),
+      broadcasterType: io.dataOutput({
+        id: "broadcasterType",
+        name: "Broadcaster Type",
+        type: t.enum(BroadcasterType),
+      }),
+      description: io.dataOutput({
+        id: "description",
+        name: "Description",
+        type: t.string(),
+      }),
+      profileImageUrl: io.dataOutput({
+        id: "profileImageUrl",
+        name: "Profile Image URL",
+        type: t.string(),
+      }),
+      offlineImageUrl: io.dataOutput({
+        id: "offlineImageUrl",
+        name: "Offline Image URL",
+        type: t.string(),
+      }),
+      createdAt: io.dataOutput({
+        id: "createdAt",
+        name: "Created At",
+        type: t.string(),
+      }),
+      //out: io.dataOutput({
+      //   id: "out",
+      //   type: t.option(t.struct(User)),
+      // }),
+    }),
+    async run({ ctx, io, account }) {
+      const resp = await helix.call("GET /users", account, {
         body: new URLSearchParams({
           id: ctx.getInput(io.userIdIn),
         }),
       });
 
-      const data = Maybe(response).expect("No user found");
+      const data = Maybe(resp.data[0]).expect("No user found");
 
       // const optData = Maybe(data);
       ctx.setOutput(io.userIdOut, data.id);
@@ -1755,9 +1485,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Follower Only Mode",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         delay: io.dataInput({
@@ -1771,9 +1500,9 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
-      await client.chat.settings.patch(z.any(), {
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
+      await helix.call("PATCH /chat/settings", account, {
         body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
@@ -1784,9 +1513,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Get User Chat Color By ID",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         userId: io.dataInput({
@@ -1801,8 +1529,8 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      let color = await client.chat.color.get(z.any(), {
+    async run({ ctx, io, account }) {
+      let color = await helix.call("GET /chat/color", account, {
         body: new URLSearchParams({
           user_id: ctx.getInput(io.userId),
         }),
@@ -1812,14 +1540,13 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Slow Mode",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         delay: io.dataInput({
           id: "delay",
-          name: "Delay (seconds)",
+          name: "Delay (s)",
           type: t.int(),
         }),
         enabled: io.dataInput({
@@ -1828,9 +1555,9 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
-      await client.chat.settings.patch(z.any(), {
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
+      await helix.call("PATCH /chat/settings", account, {
         body: JSON.stringify(
           ctx.getInput(io.enabled)
             ? {
@@ -1849,14 +1576,13 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Moderation Chat Delay",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         delay: io.dataInput({
           id: "delay",
-          name: "Delay (seconds)",
+          name: "Delay (s)",
           type: t.int(),
         }),
         enabled: io.dataInput({
@@ -1865,9 +1591,9 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
-      await client.chat.settings.patch(z.any(), {
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
+      await helix.call("PATCH /chat/settings", account, {
         body: JSON.stringify(
           ctx.getInput(io.enabled)
             ? {
@@ -1886,9 +1612,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Sub Only Mode",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         enabled: io.dataInput({
@@ -1897,10 +1622,10 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
 
-      await client.chat.settings.patch(z.any(), {
+      await helix.call("PATCH /chat/settings", account, {
         body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
@@ -1910,9 +1635,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Unique Chat Mode",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         enabled: io.dataInput({
@@ -1921,10 +1645,10 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
 
-      await client.chat.settings.patch(z.any(), {
+      await helix.call("PATCH /chat/settings", account, {
         body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
@@ -1934,9 +1658,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Emote Only Mode",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         enabled: io.dataInput({
@@ -1945,10 +1668,10 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    async run({ ctx, io }) {
-      const user = userId().unwrap();
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
 
-      await client.chat.settings.patch(z.any(), {
+      await helix.call("PATCH /chat/settings", account, {
         body: JSON.stringify({
           broadcaster_Id: user,
           moderator_id: user,
@@ -1958,9 +1681,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Shoutout User",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         toId: io.dataInput({
@@ -1970,10 +1692,10 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    run({ ctx, io }) {
-      const user = userId().unwrap();
+    run({ ctx, io, account }) {
+      const user = account.data.id;
 
-      client.chat.shoutouts.post(z.any(), {
+      return helix.call("POST /chat/shoutouts", account, {
         body: new URLSearchParams({
           from_broadcaster_id: user,
           moderator_id: user,
@@ -1983,9 +1705,8 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 
-  pkg.createNonEventSchema({
+  createHelixExecSchema({
     name: "Send Announcement",
-    variant: "Exec",
     createIO: ({ io }) => {
       return {
         announcement: io.dataInput({
@@ -2001,13 +1722,13 @@ export function register(pkg: Package, { client, user }: Helix) {
         }),
       };
     },
-    run({ ctx, io }) {
+    run({ ctx, io, account }) {
       const color = ctx.getInput(io.color) as InferEnum<
         typeof AnnouncementColors
       >;
-      const user = userId().unwrap();
+      const user = account.data.id;
 
-      client.chat.announcements.post(z.any(), {
+      return helix.call("POST /chat/announcements", account, {
         body: JSON.stringify({
           broadcaster_id: user,
           moderator_id: user,
@@ -2018,3 +1739,74 @@ export function register(pkg: Package, { client, user }: Helix) {
     },
   });
 }
+
+type PaginatedData<T> = {
+  data: Array<T>;
+  pagination: Partial<{
+    cursor: string;
+  }>;
+};
+
+// thanks twurple :)
+type Requests = {
+  "POST /moderation/bans": any;
+  "DELETE /moderation/bans": any;
+  "GET /moderation/moderators": PaginatedData<{
+    user_id: string;
+    user_name: string;
+    user_login: string;
+  }>;
+  "POST /moderation/moderators": any;
+  "DELETE /moderation/moderators": any;
+  "GET /channels": {
+    data: Array<{
+      broadcaster_id: string;
+      broadcaster_name: string;
+      broadcaster_login: string;
+      broadcaster_language: string;
+      game_id: string;
+      game_name: string;
+      title: string;
+      delay: number;
+      tags: string[];
+      content_classification_labels: string[];
+      is_branded_content: boolean;
+    }>;
+  };
+  "PATCH /channels": any;
+  "GET /users": {
+    data: Array<{
+      id: string;
+      login: string;
+      display_name: string;
+      type: "admin" | "global_mod" | "staff" | "";
+      broadcaster_type: "affiliate" | "partner" | "";
+      description: string;
+      profile_image_url: string;
+      offline_image_url: string;
+      email: string;
+      created_at: string;
+    }>;
+  };
+  "GET /games": any;
+  "GET /streams": any;
+  "POST /clips": any;
+  "GET /hypetrain/events": any;
+  "GET /subscriptions": any;
+  "GET /channels/followers": any;
+  "GET /channels/vips": any;
+
+  "GET /channel_points/custom_rewards": any;
+  "POST /channel_points/custom_rewards": any;
+  "PATCH /channel_points/custom_rewards": any;
+  "DELETE /channel_points/custom_rewards": any;
+  "PATCH /channel_points/custom_rewards/redemptions": any;
+
+  "PATCH /chat/settings": any;
+  "GET /chat/color": any;
+  "POST /chat/shoutouts": any;
+  "POST /chat/announcements": any;
+  "POST /channels/commercial": any;
+
+  "POST /eventsub/subscriptions": any;
+};

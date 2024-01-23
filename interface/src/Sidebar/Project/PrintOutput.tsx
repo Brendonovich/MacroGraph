@@ -1,9 +1,9 @@
-import { createSignal, For, onCleanup, onMount } from "solid-js";
+import { For, createSignal, onCleanup, onMount } from "solid-js";
 
-import { useCore } from "../contexts";
-import { SidebarSection } from "./Sidebar";
+import { useCore } from "../../contexts";
+import { SidebarSection } from "../../components/Sidebar";
 
-export const PrintOutput = () => {
+export function PrintOutput() {
   const [items, setItems] = createSignal<{ value: string; timestamp: Date }[]>(
     []
   );
@@ -47,4 +47,4 @@ export const PrintOutput = () => {
       </ul>
     </SidebarSection>
   );
-};
+}

@@ -1,5 +1,9 @@
-import { makePersisted } from "@macrograph/runtime";
-import { None, Option, Some } from "@macrograph/typesystem";
+import {
+  None,
+  Option,
+  Some,
+  makePersistedOption,
+} from "@macrograph/typesystem";
 import { createEffect, createSignal, on } from "solid-js";
 import OpenAI from "openai";
 
@@ -10,7 +14,7 @@ export type Ctx = ReturnType<typeof createCtx>;
 export function createCtx() {
   const [state, setState] = createSignal<Option<OpenAI>>(None);
 
-  const [key, setKey] = makePersisted(
+  const [key, setKey] = makePersistedOption(
     createSignal<Option<string>>(None),
     GPT_KEY
   );

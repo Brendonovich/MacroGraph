@@ -1,10 +1,11 @@
-import { Core, OAuthToken, makePersisted } from "@macrograph/runtime";
-import { Maybe, None } from "@macrograph/typesystem";
+import { Core, OAuthToken } from "@macrograph/runtime";
+import { Maybe, None, makePersistedOption } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
-import { z } from "zod";
 import { createMemo, createSignal } from "solid-js";
+import { z } from "zod";
 
-import { createHelixEndpoint } from "./helix";
+import { Helix } from "./helix";
+import { PersistedStore } from "./ctx";
 
 const USER_DATA = z.object({
   id: z.string(),
@@ -12,58 +13,34 @@ const USER_DATA = z.object({
   display_name: z.string(),
 });
 
-const TOKENS_LOCALSTORAGE = "twitchTokens";
+export interface Account {
+  token: OAuthToken;
+  data: z.infer<typeof USER_DATA>;
+  refreshTimer: ReturnType<typeof setTimeout>;
+}
 
-export function createAuth(clientId: string, core: Core) {
-  const accounts = new ReactiveMap<
-    string,
-    {
-      token: OAuthToken;
-      data: z.infer<typeof USER_DATA>;
-      refreshTimer: ReturnType<typeof setTimeout>;
-    }
-  >();
-
-  Maybe(localStorage.getItem(TOKENS_LOCALSTORAGE))
-    .map(JSON.parse)
-    .map((tokens) => {
-      Object.values(tokens).forEach((token: any) => addToken(token));
-    });
-
-  function persistTokens() {
-    const tokens = [...accounts.values()].reduce(
-      (acc, account) => ({
-        [account.data.id]: account.token,
-        ...acc,
-      }),
-      {} as Record<string, OAuthToken>
-    );
-
-    localStorage.setItem(TOKENS_LOCALSTORAGE, JSON.stringify(tokens));
-  }
+export function createAuth(
+  clientId: string,
+  core: Core,
+  helixClient: Helix,
+  [, setPersisted]: PersistedStore
+) {
+  const accounts = new ReactiveMap<string, Account>();
 
   async function addToken(token: OAuthToken) {
-    const api = createHelixEndpoint(
-      clientId,
-      () => token,
-      (newToken) => {
-        token = newToken;
-      },
-      core
-    );
+    const { data } = await helixClient.call("GET /users", { token } as any, {});
+    const userData = USER_DATA.parse(data[0]);
 
-    const data = await api.users.get(USER_DATA);
-
-    accounts.set(data.id, {
+    accounts.set(userData.id, {
       token,
-      data,
+      data: userData,
       refreshTimer: setTimeout(
-        () => refresh(data.id),
+        () => refresh(userData.id),
         (token.issued_at + token.expires_in) * 1000 - Date.now()
       ),
     });
 
-    persistTokens();
+    setPersisted(userData.id, token);
   }
 
   async function refresh(id: string) {
@@ -75,6 +52,8 @@ export function createAuth(clientId: string, core: Core) {
     )) as any;
 
     await addToken(token);
+
+    setPersisted(id, token);
   }
 
   return {
@@ -85,15 +64,15 @@ export function createAuth(clientId: string, core: Core) {
     logOut(id: string) {
       accounts.delete(id);
 
-      persistTokens();
+      setPersisted(id, undefined!);
     },
   };
 }
 
-export type Auth = ReturnType<typeof createAuth>;
+export type Auth = Awaited<ReturnType<typeof createAuth>>;
 
 export function createUserInstance(key: string, auth: Auth) {
-  const [id, setId] = makePersisted<string>(createSignal(None), key);
+  const [id, setId] = makePersistedOption<string>(createSignal(None), key);
 
   const account = createMemo(() => id().map((id) => auth.accounts.get(id)));
 

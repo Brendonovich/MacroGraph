@@ -45,7 +45,7 @@ export default function ({ core, setAuthToken, authToken, user }: Ctx) {
         >
           Login
         </Button>
-        <p class="text-gray-400 text-sm mt-2">
+        <p class="text-neutral-400 text-sm mt-2">
           Login may not work without approval of project maintainer
         </p>
       </Match>

@@ -59,14 +59,14 @@ export function SelectInput<TOption>(props: SelectInputProps<TOption>) {
         </Select.Item>
       )}
     >
-      <Select.Trigger class="w-full h-full text-left pl-1 border border-gray-300 rounded bg-black ui-expanded:border-yellow-500 focus:outline-none appearance-none">
+      <Select.Trigger class="w-full h-full text-left pl-1 border border-neutral-500 rounded bg-black ui-expanded:border-yellow-500 focus:outline-none appearance-none">
         <Select.Value<TOption>>
           {(state) => props.getLabel(state.selectedOption())}
         </Select.Value>
       </Select.Trigger>
       <Select.Portal>
         <Select.Content>
-          <Select.Listbox class="bg-black border border-gray-300 text-white rounded text-xs overflow-hidden" />
+          <Select.Listbox class="bg-black border border-neutral-300 text-white rounded text-xs overflow-hidden" />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

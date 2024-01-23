@@ -1,178 +1,195 @@
-import { createEffect, createSignal, onCleanup, on } from "solid-js";
 import {
   createEnum,
+  CreateEventSchema,
   createStruct,
   OnEvent,
   Package,
+  PropertyDef,
+  SchemaProperties,
 } from "@macrograph/runtime";
-import { Maybe, Option, t } from "@macrograph/typesystem";
-import { z } from "zod";
+import { Maybe, t } from "@macrograph/typesystem";
+import { createEventBus } from "@solid-primitives/event-bus";
+import { ReactiveMap } from "@solid-primitives/map";
+import { createEventListener } from "@solid-primitives/event-listener";
 
-import { Helix } from "./helix";
-import { option } from "@macrograph/typesystem/src/t";
+import { Helix } from "../helix";
+import { defaultProperties } from "../resource";
+import { Account } from "../auth";
+import { Ctx } from "../ctx";
+import { Events } from "./types";
+import {
+  PollChoice,
+  OutcomesBegin,
+  PredictionStatus,
+  OutcomesProgress,
+  TopPredictors,
+} from "./structs";
 
-export function createEventSub(helix: Helix, onEvent: OnEvent) {
-  const [state, setState] = createSignal<
-    | { type: "disconnected" }
-    | { type: "connecting" | "connected"; ws: WebSocket }
-  >({ type: "disconnected" });
+export function createEventSub(onEvent: OnEvent, helixClient: Helix) {
+  const sockets = new ReactiveMap<string, WebSocket>();
 
-  createEffect(
-    on(
-      () => helix.user.account(),
-      (user) => {
-        user.mapOrElse(
-          () => setState({ type: "disconnected" }),
-          (user) => {
-            const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
+  function connectSocket(account: Account) {
+    const userId = account.data.id;
 
-            const userId = user.data.id;
+    if (sockets.has(userId)) return;
 
-            ws.addEventListener("message", async (data) => {
-              let info: any = JSON.parse(data.data);
+    const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
 
-              switch (info.metadata.message_type) {
-                case "session_welcome":
-                  setState({ type: "connected", ws });
+    ws.onmessage = async (data) => {
+      let info: any = JSON.parse(data.data);
 
-                  await Promise.allSettled(
-                    SubTypes.map((type) =>
-                      helix.client.eventsub.subscriptions.post(z.any(), {
-                        body: JSON.stringify({
-                          type,
-                          version: type == "channel.follow" ? "2" : "1",
-                          condition: {
-                            broadcaster_user_id: userId,
-                            moderator_user_id: userId,
-                            to_broadcaster_user_id: userId,
-                            user_id: userId,
-                          },
-                          transport: {
-                            method: "websocket",
-                            session_id: info.payload.session.id,
-                          },
-                        }),
-                      })
-                    )
-                  );
+      switch (info.metadata.message_type) {
+        case "session_welcome":
+          sockets.set(userId, ws);
 
-                  break;
-                case "notification":
-                  onEvent({
-                    name: info.payload.subscription.type,
-                    data: info.payload.event,
-                  });
-                  break;
-              }
-            });
+          await Promise.allSettled(
+            SubTypes.map((type) =>
+              helixClient.call("POST /eventsub/subscriptions", account, {
+                body: JSON.stringify({
+                  type,
+                  version: type == "channel.follow" ? "2" : "1",
+                  condition: {
+                    broadcaster_user_id: userId,
+                    moderator_user_id: userId,
+                    to_broadcaster_user_id: userId,
+                    user_id: userId,
+                  },
+                  transport: {
+                    method: "websocket",
+                    session_id: info.payload.session.id,
+                  },
+                }),
+              })
+            )
+          );
 
-            setState({ type: "connecting", ws });
-
-            onCleanup(() => {
-              ws.close();
-              setState({ type: "disconnected" });
-            });
-          }
-        );
+          break;
+        case "notification":
+          onEvent({
+            name: info.payload.subscription.type,
+            data: info.payload.event,
+          });
+          break;
       }
-    )
-  );
+    };
 
-  return { state };
+    ws.onclose = () => {
+      sockets.delete(userId);
+    };
+  }
+
+  function disconnectSocket(userId: string) {
+    const ws = sockets.get(userId);
+    if (!ws) return;
+
+    ws.close();
+  }
+
+  return { sockets, connectSocket, disconnectSocket };
 }
 
-const PredictionStatus = createEnum("Prediction Status", (e) => [
-  e.variant("resolved"),
-  e.variant("canceled"),
-]);
+export function register(pkg: Package, { eventSub }: Ctx) {
+  function createEventsubEventSchema<
+    TEvent extends keyof Events,
+    TProperties extends Record<string, PropertyDef> = {},
+    TIO = void
+  >(
+    s: Omit<
+      CreateEventSchema<
+        TProperties & typeof defaultProperties,
+        TIO,
+        Events[TEvent]
+      >,
+      "type" | "createListener"
+    > & {
+      properties?: TProperties;
+      event: TEvent;
+    }
+  ) {
+    pkg.createSchema({
+      ...s,
+      type: "event",
+      properties: { ...s.properties, ...defaultProperties } as any,
+      createListener({ ctx, properties }) {
+        const socket = ctx
+          .getProperty(
+            properties.account as SchemaProperties<
+              typeof defaultProperties
+            >["account"]
+          )
+          .andThen((account) => Maybe(eventSub.sockets.get(account.data.id)))
+          .expect("No account available");
 
-const OutcomesBegin = createStruct("Outcomes Begin", (s) => ({
-  id: s.field("id", t.string()),
-  title: s.field("title", t.string()),
-  color: s.field("Color", t.string()),
-}));
+        const bus = createEventBus<Events[TEvent]>();
 
-const TopPredictors = createStruct("Top Predictors", (s) => ({
-  userName: s.field("User Name", t.string()),
-  userLogin: s.field("User Login", t.string()),
-  userId: s.field("User ID", t.string()),
-  channelPointsWon: s.field("Channel Points Won", t.option(t.int())),
-  channelPointsUser: s.field("Channel Points User", t.int()),
-}));
+        createEventListener(socket, "message", (msg: any) => {
+          const info: any = JSON.parse(msg.data);
 
-const OutcomesProgress = createStruct("Outcomes Progress", (s) => ({
-  id: s.field("id", t.string()),
-  title: s.field("title", t.string()),
-  color: s.field("Color", t.string()),
-  users: s.field("Users", t.int()),
-  channelPoints: s.field("Channel Points", t.int()),
-  topPredictors: s.field("Top Predictors", t.list(t.struct(TopPredictors))),
-  votes: s.field("votes", t.int()),
-}));
+          if (
+            info.metadata.message_type === "notification" &&
+            info.metadata.message_type === s.event
+          )
+            bus.emit(info.payload.event);
+        });
 
-const Poll = createStruct("Choices", (s) => ({
-  id: s.field("id", t.string()),
-  title: s.field("title", t.string()),
-  channel_points_votes: s.field("Channel Points Votes", t.option(t.int())),
-  votes: s.field("votes", t.int()),
-}));
+        return bus;
+      },
+    });
+  }
 
-export function register(pkg: Package) {
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "User Banned",
     event: "channel.ban",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        channelId: io.dataOutput({
-          id: "channelId",
-          name: "Channel ID",
-          type: t.string(),
-        }),
-        channelName: io.dataOutput({
-          id: "channelName",
-          name: "Channel Name",
-          type: t.string(),
-        }),
-        modId: io.dataOutput({
-          id: "modId",
-          name: "Mod Who Banned ID",
-          type: t.string(),
-        }),
-        modName: io.dataOutput({
-          id: "modName",
-          name: "Mod Who Banned Name",
-          type: t.string(),
-        }),
-        bannedUserID: io.dataOutput({
-          id: "bannedUserID",
-          name: "Banned User ID",
-          type: t.string(),
-        }),
-        bannedUserLogin: io.dataOutput({
-          id: "bannedUserLogin",
-          name: "Banned Username",
-          type: t.string(),
-        }),
-        reason: io.dataOutput({
-          id: "reason",
-          name: "Ban Reason",
-          type: t.string(),
-        }),
-        permanent: io.dataOutput({
-          id: "permanent",
-          name: "Perma Ban",
-          type: t.bool(),
-        }),
-        ends: io.dataOutput({
-          id: "ends",
-          name: "End Time",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      channelId: io.dataOutput({
+        id: "channelId",
+        name: "Channel ID",
+        type: t.string(),
+      }),
+      channelName: io.dataOutput({
+        id: "channelName",
+        name: "Channel Name",
+        type: t.string(),
+      }),
+      modId: io.dataOutput({
+        id: "modId",
+        name: "Mod Who Banned ID",
+        type: t.string(),
+      }),
+      modName: io.dataOutput({
+        id: "modName",
+        name: "Mod Who Banned Name",
+        type: t.string(),
+      }),
+      bannedUserID: io.dataOutput({
+        id: "bannedUserID",
+        name: "Banned User ID",
+        type: t.string(),
+      }),
+      bannedUserLogin: io.dataOutput({
+        id: "bannedUserLogin",
+        name: "Banned Username",
+        type: t.string(),
+      }),
+      reason: io.dataOutput({
+        id: "reason",
+        name: "Ban Reason",
+        type: t.string(),
+      }),
+      permanent: io.dataOutput({
+        id: "permanent",
+        name: "Perma Ban",
+        type: t.bool(),
+      }),
+      ends: io.dataOutput({
+        id: "ends",
+        name: "End Time",
+        type: t.option(t.string()),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.channelId, data.broadcaster_user_id);
       ctx.setOutput(io.channelName, data.broadcaster_user_login);
@@ -182,70 +199,66 @@ export function register(pkg: Package) {
       ctx.setOutput(io.bannedUserLogin, data.user_login);
       ctx.setOutput(io.reason, data.reason);
       ctx.setOutput(io.permanent, data.is_permanent);
-      ctx.setOutput(io.ends, data.ends_at);
+      ctx.setOutput(io.ends, Maybe(data.ends_at));
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "User Unbanned",
     event: "channel.unban",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        userId: io.dataOutput({
-          id: "userId",
-          name: "userID",
-          type: t.string(),
-        }),
-        userLogin: io.dataOutput({
-          id: "userLogin",
-          name: "Username",
-          type: t.string(),
-        }),
-        modName: io.dataOutput({
-          id: "modName",
-          name: "Mod Who unbanned name",
-          type: t.string(),
-        }),
-        modId: io.dataOutput({
-          id: "modId",
-          name: "Mod Who unbanned Id",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      userId: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userLogin: io.dataOutput({
+        id: "userLogin",
+        name: "User Name",
+        type: t.string(),
+      }),
+      modName: io.dataOutput({
+        id: "modName",
+        name: "Mod Name",
+        type: t.string(),
+      }),
+      modId: io.dataOutput({
+        id: "modId",
+        name: "Mod ID",
+        type: t.string(),
+      }),
+    }),
     run({ ctx, data, io }) {
-      ctx.setOutput(io.userId, data.from_broadcaster_user_id);
-      ctx.setOutput(io.userLogin, data.from_broadcaster_user_login);
+      ctx.setOutput(io.userId, data.user_id);
+      ctx.setOutput(io.userLogin, data.user_login);
       ctx.setOutput(io.modName, data.moderator_user_login);
       ctx.setOutput(io.modId, data.moderator_user_id);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Moderator Add",
     event: "channel.moderator.add",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        userId: io.dataOutput({
-          id: "userId",
-          name: "userID",
-          type: t.string(),
-        }),
-        userLogin: io.dataOutput({
-          id: "userLogin",
-          name: "Username",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      userId: io.dataOutput({
+        id: "userId",
+        name: "userID",
+        type: t.string(),
+      }),
+      userLogin: io.dataOutput({
+        id: "userLogin",
+        name: "Username",
+        type: t.string(),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.userId, data.user_id);
       ctx.setOutput(io.userLogin, data.user_login);
@@ -253,26 +266,24 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Moderator Remove",
     event: "channel.moderator.remove",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        userId: io.dataOutput({
-          id: "userId",
-          name: "userID",
-          type: t.string(),
-        }),
-        userLogin: io.dataOutput({
-          id: "userLogin",
-          name: "Username",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      userId: io.dataOutput({
+        id: "userId",
+        name: "userID",
+        type: t.string(),
+      }),
+      userLogin: io.dataOutput({
+        id: "userLogin",
+        name: "Username",
+        type: t.string(),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.userId, data.user_id);
       ctx.setOutput(io.userLogin, data.user_login);
@@ -280,106 +291,89 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Point Reward Add",
     event: "channel.channel_points_custom_reward.add",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        id: io.dataOutput({
-          id: "id",
-          name: "ID",
-          type: t.string(),
-        }),
-        enabled: io.dataOutput({
-          id: "enabled",
-          name: "Enabled",
-          type: t.bool(),
-        }),
-        paused: io.dataOutput({
-          id: "paused",
-          name: "Paused",
-          type: t.bool(),
-        }),
-        inStock: io.dataOutput({
-          id: "inStock",
-          name: "In Stock",
-          type: t.bool(),
-        }),
-        title: io.dataOutput({
-          id: "title",
-          name: "Title",
-          type: t.string(),
-        }),
-        cost: io.dataOutput({
-          id: "cost",
-          name: "Cost",
-          type: t.int(),
-        }),
-        prompt: io.dataOutput({
-          id: "prompt",
-          name: "Prompt",
-          type: t.string(),
-        }),
-        inputRequired: io.dataOutput({
-          id: "inputRequired",
-          name: "Input Required",
-          type: t.bool(),
-        }),
-        skipQueue: io.dataOutput({
-          id: "skipQueue",
-          name: "Skip Request Queue",
-          type: t.bool(),
-        }),
-        cooldownExpire: io.dataOutput({
-          id: "cooldownExpire",
-          name: "Cooldown Expire Timestamp",
-          type: t.string(),
-        }),
-        redemptTotalStream: io.dataOutput({
-          id: "redemptTotalStream",
-          name: "Current Stream Total Redemptions",
-          type: t.int(),
-        }),
-        maxPerStreamEnabled: io.dataOutput({
-          id: "maxPerStreamEnabled",
-          name: "Max per Stream",
-          type: t.bool(),
-        }),
-        maxPerStreamValue: io.dataOutput({
-          id: "maxPerStreamValue",
-          name: "Max Per Stream Value",
-          type: t.int(),
-        }),
-        maxUserPerStream: io.dataOutput({
-          id: "maxUserPerStream",
-          name: "Max User Per Stream Enabled",
-          type: t.bool(),
-        }),
-        maxUserPerStreamValue: io.dataOutput({
-          id: "maxUserPerStreamValue",
-          name: "Max User Per Stream Value",
-          type: t.int(),
-        }),
-        globalCooldown: io.dataOutput({
-          id: "globalCooldown",
-          name: "Global Cooldown",
-          type: t.bool(),
-        }),
-        globalCooldownValue: io.dataOutput({
-          id: "globalCooldownValue",
-          name: "Global Cooldown Value",
-          type: t.int(),
-        }),
-        backgroundColor: io.dataOutput({
-          id: "backgroundColor",
-          name: "Background Color",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      id: io.dataOutput({
+        id: "id",
+        name: "ID",
+        type: t.string(),
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+      paused: io.dataOutput({
+        id: "paused",
+        name: "Paused",
+        type: t.bool(),
+      }),
+      inStock: io.dataOutput({
+        id: "inStock",
+        name: "In Stock",
+        type: t.bool(),
+      }),
+      title: io.dataOutput({
+        id: "title",
+        name: "Title",
+        type: t.string(),
+      }),
+      cost: io.dataOutput({
+        id: "cost",
+        name: "Cost",
+        type: t.int(),
+      }),
+      prompt: io.dataOutput({
+        id: "prompt",
+        name: "Prompt",
+        type: t.string(),
+      }),
+      inputRequired: io.dataOutput({
+        id: "inputRequired",
+        name: "Input Required",
+        type: t.bool(),
+      }),
+      skipQueue: io.dataOutput({
+        id: "skipQueue",
+        name: "Skip Request Queue",
+        type: t.bool(),
+      }),
+      cooldownExpire: io.dataOutput({
+        id: "cooldownExpire",
+        name: "Cooldown Expire Timestamp",
+        type: t.option(t.string()),
+      }),
+      redemptTotalStream: io.dataOutput({
+        id: "redemptTotalStream",
+        name: "Current Stream Total Redemptions",
+        type: t.option(t.int()),
+      }),
+      maxPerStream: io.dataOutput({
+        id: "maxPerStream",
+        name: "Max Per Stream",
+        type: t.option(t.int()),
+      }),
+      maxUserPerStream: io.dataOutput({
+        id: "maxUserPerStreamValue",
+        name: "Max User Per Stream",
+        type: t.option(t.int()),
+      }),
+      globalCooldown: io.dataOutput({
+        id: "globalCooldown",
+        name: "Global Cooldown",
+        type: t.option(t.int()),
+      }),
+      backgroundColor: io.dataOutput({
+        id: "backgroundColor",
+        name: "Background Color",
+        type: t.string(),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.id, data.id);
       ctx.setOutput(io.enabled, data.is_enabled);
@@ -390,128 +384,105 @@ export function register(pkg: Package) {
       ctx.setOutput(io.prompt, data.prompt);
       ctx.setOutput(io.inputRequired, data.is_user_input_required);
       ctx.setOutput(io.skipQueue, data.should_redemptions_skip_request_queue);
-      ctx.setOutput(io.cooldownExpire, data.cooldown_expires_at);
+      ctx.setOutput(io.cooldownExpire, Maybe(data.cooldown_expires_at));
       ctx.setOutput(
         io.redemptTotalStream,
-        data.redemptions_redeemed_current_stream
+        Maybe(data.redemptions_redeemed_current_stream)
       );
-      ctx.setOutput(io.maxPerStreamEnabled, data.max_per_stream.is_enabled);
-      ctx.setOutput(io.maxPerStreamValue, data.max_per_stream.value);
+      ctx.setOutput(io.maxPerStream, Maybe(data.max_per_stream.value));
       ctx.setOutput(
         io.maxUserPerStream,
-        data.max_per_user_per_stream.is_enabled
+        Maybe(data.max_per_user_per_stream.value)
       );
-      ctx.setOutput(
-        io.maxUserPerStreamValue,
-        data.max_per_user_per_stream.value
-      );
-      ctx.setOutput(io.globalCooldown, data.global_cooldown.is_enabled);
-      ctx.setOutput(io.globalCooldownValue, data.global_cooldown.seconds);
+      ctx.setOutput(io.globalCooldown, Maybe(data.global_cooldown.seconds));
       ctx.setOutput(io.backgroundColor, data.background_color);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Point Reward Updated",
     event: "channel.channel_points_custom_reward.update",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        id: io.dataOutput({
-          id: "id",
-          name: "ID",
-          type: t.string(),
-        }),
-        enabled: io.dataOutput({
-          id: "enabled",
-          name: "Enabled",
-          type: t.bool(),
-        }),
-        paused: io.dataOutput({
-          id: "paused",
-          name: "Paused",
-          type: t.bool(),
-        }),
-        inStock: io.dataOutput({
-          id: "inStock",
-          name: "In Stock",
-          type: t.bool(),
-        }),
-        title: io.dataOutput({
-          id: "title",
-          name: "Title",
-          type: t.string(),
-        }),
-        cost: io.dataOutput({
-          id: "cost",
-          name: "Cost",
-          type: t.int(),
-        }),
-        prompt: io.dataOutput({
-          id: "prompt",
-          name: "Prompt",
-          type: t.string(),
-        }),
-        inputRequired: io.dataOutput({
-          id: "inputRequired",
-          name: "Input Required",
-          type: t.bool(),
-        }),
-        skipQueue: io.dataOutput({
-          id: "skipQueue",
-          name: "Skip Request Queue",
-          type: t.bool(),
-        }),
-        cooldownExpire: io.dataOutput({
-          id: "cooldownExpire",
-          name: "Cooldown Expire Timestamp",
-          type: t.string(),
-        }),
-        redemptTotalStream: io.dataOutput({
-          id: "redemptTotalStream",
-          name: "Current Stream Total Redemptions",
-          type: t.int(),
-        }),
-        maxPerStreamEnabled: io.dataOutput({
-          id: "maxPerStreamEnabled",
-          name: "Max per Stream",
-          type: t.bool(),
-        }),
-        maxPerStreamValue: io.dataOutput({
-          id: "maxPerStreamValue",
-          name: "Max Per Stream Value",
-          type: t.int(),
-        }),
-        maxUserPerStream: io.dataOutput({
-          id: "maxUserPerStream",
-          name: "Max User Per Stream Enabled",
-          type: t.bool(),
-        }),
-        maxUserPerStreamValue: io.dataOutput({
-          id: "maxUserPerStreamValue",
-          name: "Max User Per Stream Value",
-          type: t.int(),
-        }),
-        globalCooldown: io.dataOutput({
-          id: "globalCooldown",
-          name: "Global Cooldown",
-          type: t.bool(),
-        }),
-        globalCooldownValue: io.dataOutput({
-          id: "globalCooldownValue",
-          name: "Global Cooldown Value",
-          type: t.int(),
-        }),
-        backgroundColor: io.dataOutput({
-          id: "backgroundColor",
-          name: "Background Color",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      id: io.dataOutput({
+        id: "id",
+        name: "ID",
+        type: t.string(),
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+      paused: io.dataOutput({
+        id: "paused",
+        name: "Paused",
+        type: t.bool(),
+      }),
+      inStock: io.dataOutput({
+        id: "inStock",
+        name: "In Stock",
+        type: t.bool(),
+      }),
+      title: io.dataOutput({
+        id: "title",
+        name: "Title",
+        type: t.string(),
+      }),
+      cost: io.dataOutput({
+        id: "cost",
+        name: "Cost",
+        type: t.int(),
+      }),
+      prompt: io.dataOutput({
+        id: "prompt",
+        name: "Prompt",
+        type: t.string(),
+      }),
+      inputRequired: io.dataOutput({
+        id: "inputRequired",
+        name: "Input Required",
+        type: t.bool(),
+      }),
+      skipQueue: io.dataOutput({
+        id: "skipQueue",
+        name: "Skip Request Queue",
+        type: t.bool(),
+      }),
+      cooldownExpire: io.dataOutput({
+        id: "cooldownExpire",
+        name: "Cooldown Expire Timestamp",
+        type: t.option(t.string()),
+      }),
+      redemptTotalStream: io.dataOutput({
+        id: "redemptTotalStream",
+        name: "Current Stream Total Redemptions",
+        type: t.option(t.int()),
+      }),
+      maxPerStream: io.dataOutput({
+        id: "maxPerStreamValue",
+        name: "Max Per Stream",
+        type: t.option(t.int()),
+      }),
+      maxUserPerStream: io.dataOutput({
+        id: "maxUserPerStream",
+        name: "Max User Per Stream",
+        type: t.option(t.int()),
+      }),
+      globalCooldown: io.dataOutput({
+        id: "globalCooldown",
+        name: "Global Cooldown",
+        type: t.option(t.int()),
+      }),
+      backgroundColor: io.dataOutput({
+        id: "backgroundColor",
+        name: "Background Color",
+        type: t.string(),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.id, data.id);
       ctx.setOutput(io.enabled, data.is_enabled);
@@ -522,128 +493,105 @@ export function register(pkg: Package) {
       ctx.setOutput(io.prompt, data.prompt);
       ctx.setOutput(io.inputRequired, data.is_user_input_required);
       ctx.setOutput(io.skipQueue, data.should_redemptions_skip_request_queue);
-      ctx.setOutput(io.cooldownExpire, data.cooldown_expires_at);
+      ctx.setOutput(io.cooldownExpire, Maybe(data.cooldown_expires_at));
       ctx.setOutput(
         io.redemptTotalStream,
-        data.redemptions_redeemed_current_stream
+        Maybe(data.redemptions_redeemed_current_stream)
       );
-      ctx.setOutput(io.maxPerStreamEnabled, data.max_per_stream.is_enabled);
-      ctx.setOutput(io.maxPerStreamValue, data.max_per_stream.value);
+      ctx.setOutput(io.maxPerStream, Maybe(data.max_per_stream.value));
       ctx.setOutput(
         io.maxUserPerStream,
-        data.max_per_user_per_stream.is_enabled
+        Maybe(data.max_per_user_per_stream.value)
       );
-      ctx.setOutput(
-        io.maxUserPerStreamValue,
-        data.max_per_user_per_stream.value
-      );
-      ctx.setOutput(io.globalCooldown, data.global_cooldown.is_enabled);
-      ctx.setOutput(io.globalCooldownValue, data.global_cooldown.seconds);
+      ctx.setOutput(io.globalCooldown, Maybe(data.global_cooldown.seconds));
       ctx.setOutput(io.backgroundColor, data.background_color);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
-    name: "Channel Point Reward Remove",
+  createEventsubEventSchema({
+    name: "Channel Point Reward Removed",
     event: "channel.channel_points_custom_reward.remove",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        id: io.dataOutput({
-          id: "id",
-          name: "ID",
-          type: t.string(),
-        }),
-        enabled: io.dataOutput({
-          id: "enabled",
-          name: "Enabled",
-          type: t.bool(),
-        }),
-        paused: io.dataOutput({
-          id: "paused",
-          name: "Paused",
-          type: t.bool(),
-        }),
-        inStock: io.dataOutput({
-          id: "inStock",
-          name: "In Stock",
-          type: t.bool(),
-        }),
-        title: io.dataOutput({
-          id: "title",
-          name: "Title",
-          type: t.string(),
-        }),
-        cost: io.dataOutput({
-          id: "cost",
-          name: "Cost",
-          type: t.int(),
-        }),
-        prompt: io.dataOutput({
-          id: "prompt",
-          name: "Prompt",
-          type: t.string(),
-        }),
-        inputRequired: io.dataOutput({
-          id: "inputRequired",
-          name: "Input Required",
-          type: t.bool(),
-        }),
-        skipQueue: io.dataOutput({
-          id: "skipQueue",
-          name: "Skip Request Queue",
-          type: t.bool(),
-        }),
-        cooldownExpire: io.dataOutput({
-          id: "cooldownExpire",
-          name: "Cooldown Expire Timestamp",
-          type: t.string(),
-        }),
-        redemptTotalStream: io.dataOutput({
-          id: "redemptTotalStream",
-          name: "Current Stream Total Redemptions",
-          type: t.int(),
-        }),
-        maxPerStreamEnabled: io.dataOutput({
-          id: "maxPerStreamEnabled",
-          name: "Max per Stream",
-          type: t.bool(),
-        }),
-        maxPerStreamValue: io.dataOutput({
-          id: "maxPerStreamValue",
-          name: "Max Per Stream Value",
-          type: t.int(),
-        }),
-        maxUserPerStream: io.dataOutput({
-          id: "maxUserPerStream",
-          name: "Max User Per Stream Enabled",
-          type: t.bool(),
-        }),
-        maxUserPerStreamValue: io.dataOutput({
-          id: "maxUserPerStreamValue",
-          name: "Max User Per Stream Value",
-          type: t.int(),
-        }),
-        globalCooldown: io.dataOutput({
-          id: "globalCooldown",
-          name: "Global Cooldown",
-          type: t.bool(),
-        }),
-        globalCooldownValue: io.dataOutput({
-          id: "globalCooldownValue",
-          name: "Global Cooldown Value",
-          type: t.int(),
-        }),
-        backgroundColor: io.dataOutput({
-          id: "backgroundColor",
-          name: "Background Color",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      id: io.dataOutput({
+        id: "id",
+        name: "ID",
+        type: t.string(),
+      }),
+      enabled: io.dataOutput({
+        id: "enabled",
+        name: "Enabled",
+        type: t.bool(),
+      }),
+      paused: io.dataOutput({
+        id: "paused",
+        name: "Paused",
+        type: t.bool(),
+      }),
+      inStock: io.dataOutput({
+        id: "inStock",
+        name: "In Stock",
+        type: t.bool(),
+      }),
+      title: io.dataOutput({
+        id: "title",
+        name: "Title",
+        type: t.string(),
+      }),
+      cost: io.dataOutput({
+        id: "cost",
+        name: "Cost",
+        type: t.int(),
+      }),
+      prompt: io.dataOutput({
+        id: "prompt",
+        name: "Prompt",
+        type: t.string(),
+      }),
+      inputRequired: io.dataOutput({
+        id: "inputRequired",
+        name: "Input Required",
+        type: t.bool(),
+      }),
+      skipQueue: io.dataOutput({
+        id: "skipQueue",
+        name: "Skip Request Queue",
+        type: t.bool(),
+      }),
+      cooldownExpire: io.dataOutput({
+        id: "cooldownExpire",
+        name: "Cooldown Expire Timestamp",
+        type: t.option(t.string()),
+      }),
+      redemptTotalStream: io.dataOutput({
+        id: "redemptTotalStream",
+        name: "Current Stream Total Redemptions",
+        type: t.option(t.int()),
+      }),
+      maxPerStream: io.dataOutput({
+        id: "maxPerStreamValue",
+        name: "Max Per Stream",
+        type: t.option(t.int()),
+      }),
+      maxUserPerStream: io.dataOutput({
+        id: "maxUserPerStream",
+        name: "Max User Per Stream",
+        type: t.option(t.int()),
+      }),
+      globalCooldown: io.dataOutput({
+        id: "globalCooldown",
+        name: "Global Cooldown",
+        type: t.option(t.int()),
+      }),
+      backgroundColor: io.dataOutput({
+        id: "backgroundColor",
+        name: "Background Color",
+        type: t.string(),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.id, data.id);
       ctx.setOutput(io.enabled, data.is_enabled);
@@ -654,88 +602,80 @@ export function register(pkg: Package) {
       ctx.setOutput(io.prompt, data.prompt);
       ctx.setOutput(io.inputRequired, data.is_user_input_required);
       ctx.setOutput(io.skipQueue, data.should_redemptions_skip_request_queue);
-      ctx.setOutput(io.cooldownExpire, data.cooldown_expires_at);
+      ctx.setOutput(io.cooldownExpire, Maybe(data.cooldown_expires_at));
       ctx.setOutput(
         io.redemptTotalStream,
-        data.redemptions_redeemed_current_stream
+        Maybe(data.redemptions_redeemed_current_stream)
       );
-      ctx.setOutput(io.maxPerStreamEnabled, data.max_per_stream.is_enabled);
-      ctx.setOutput(io.maxPerStreamValue, data.max_per_stream.value);
+      ctx.setOutput(io.maxPerStream, Maybe(data.max_per_stream.value));
       ctx.setOutput(
         io.maxUserPerStream,
-        data.max_per_user_per_stream.is_enabled
+        Maybe(data.max_per_user_per_stream.value)
       );
-      ctx.setOutput(
-        io.maxUserPerStreamValue,
-        data.max_per_user_per_stream.value
-      );
-      ctx.setOutput(io.globalCooldown, data.global_cooldown.is_enabled);
-      ctx.setOutput(io.globalCooldownValue, data.global_cooldown.seconds);
+      ctx.setOutput(io.globalCooldown, Maybe(data.global_cooldown.seconds));
       ctx.setOutput(io.backgroundColor, data.background_color);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Point Reward Redeemed",
     event: "channel.channel_points_custom_reward_redemption.add",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        id: io.dataOutput({
-          id: "id",
-          name: "Redemption ID",
-          type: t.string(),
-        }),
-        userId: io.dataOutput({
-          id: "userId",
-          name: "User ID",
-          type: t.string(),
-        }),
-        userLogin: io.dataOutput({
-          id: "userLogin",
-          name: "User Login",
-          type: t.string(),
-        }),
-        userName: io.dataOutput({
-          id: "userName",
-          name: "User Name",
-          type: t.string(),
-        }),
-        userInput: io.dataOutput({
-          id: "userInput",
-          name: "User Input",
-          type: t.string(),
-        }),
-        status: io.dataOutput({
-          id: "status",
-          name: "Status",
-          type: t.string(),
-        }),
-        rewardId: io.dataOutput({
-          id: "rewardId",
-          name: "Reward Id",
-          type: t.string(),
-        }),
-        rewardTitle: io.dataOutput({
-          id: "rewardTitle",
-          name: "Reward Title",
-          type: t.string(),
-        }),
-        rewardCost: io.dataOutput({
-          id: "rewardCost",
-          name: "Reward Cost",
-          type: t.int(),
-        }),
-        rewardPrompt: io.dataOutput({
-          id: "rewardPrompt",
-          name: "Reward Prompt",
-          type: t.string(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      id: io.dataOutput({
+        id: "id",
+        name: "Redemption ID",
+        type: t.string(),
+      }),
+      userId: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      userLogin: io.dataOutput({
+        id: "userLogin",
+        name: "User Login",
+        type: t.string(),
+      }),
+      userName: io.dataOutput({
+        id: "userName",
+        name: "User Name",
+        type: t.string(),
+      }),
+      userInput: io.dataOutput({
+        id: "userInput",
+        name: "User Input",
+        type: t.string(),
+      }),
+      status: io.dataOutput({
+        id: "status",
+        name: "Status",
+        type: t.string(),
+      }),
+      rewardId: io.dataOutput({
+        id: "rewardId",
+        name: "Reward Id",
+        type: t.string(),
+      }),
+      rewardTitle: io.dataOutput({
+        id: "rewardTitle",
+        name: "Reward Title",
+        type: t.string(),
+      }),
+      rewardCost: io.dataOutput({
+        id: "rewardCost",
+        name: "Reward Cost",
+        type: t.int(),
+      }),
+      rewardPrompt: io.dataOutput({
+        id: "rewardPrompt",
+        name: "Reward Prompt",
+        type: t.string(),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.id, data.id);
       ctx.setOutput(io.userId, data.user_id);
@@ -747,43 +687,49 @@ export function register(pkg: Package) {
       ctx.setOutput(io.rewardTitle, data.reward.title);
       ctx.setOutput(io.rewardCost, data.reward.cost);
       ctx.setOutput(io.rewardPrompt, data.reward.prompt);
-      ctx.exec(io.exec);
+      return ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  const PollBeginChoice = createStruct("Poll Begin Choice", (s) => ({
+    id: s.field("id", t.string()),
+    title: s.field("title", t.string()),
+  }));
+
+  createEventsubEventSchema({
     name: "Channel Poll Begin",
     event: "channel.poll.begin",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        title: io.dataOutput({
-          id: "title",
-          name: "Title",
-          type: t.string(),
-        }),
-        choices: io.dataOutput({
-          id: "choices",
-          name: "Choices",
-          type: t.list(t.struct(Poll)),
-        }),
-        channelPointVotingEnabled: io.dataOutput({
-          id: "channelPointVotingEnabled",
-          name: "Channel Point Voting Enabled",
-          type: t.bool(),
-        }),
-        channelPointVotingCost: io.dataOutput({
-          id: "channelPointVotingCost",
-          name: "Channel Point Voting Cost",
-          type: t.int(),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      title: io.dataOutput({
+        id: "title",
+        name: "Title",
+        type: t.string(),
+      }),
+      choices: io.dataOutput({
+        id: "choices",
+        name: "Choices",
+        type: t.list(t.struct(PollBeginChoice)),
+      }),
+      channelPointVotingEnabled: io.dataOutput({
+        id: "channelPointVotingEnabled",
+        name: "Channel Point Voting Enabled",
+        type: t.bool(),
+      }),
+      channelPointVotingCost: io.dataOutput({
+        id: "channelPointVotingCost",
+        name: "Channel Point Voting Cost",
+        type: t.int(),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.title, data.title);
-      ctx.setOutput(io.choices, data.choices);
+      ctx.setOutput(
+        io.choices,
+        data.choices.map((choice) => PollBeginChoice.create(choice))
+      );
       ctx.setOutput(
         io.channelPointVotingEnabled,
         data.channel_points_voting.is_enabled
@@ -792,11 +738,11 @@ export function register(pkg: Package) {
         io.channelPointVotingCost,
         data.channel_points_voting.amount_per_vote
       );
-      ctx.exec(io.exec);
+      return ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Poll Progress",
     event: "channel.poll.progress",
     createIO: ({ io }) => {
@@ -812,7 +758,7 @@ export function register(pkg: Package) {
         choices: io.dataOutput({
           id: "choices",
           name: "Choices",
-          type: t.list(t.struct(Poll)),
+          type: t.list(t.struct(PollChoice)),
         }),
         channelPointVotingEnabled: io.dataOutput({
           id: "channelPointVotingEnabled",
@@ -841,7 +787,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Poll End",
     event: "channel.poll.end",
     createIO: ({ io }) => {
@@ -857,7 +803,7 @@ export function register(pkg: Package) {
         choices: io.dataOutput({
           id: "choices",
           name: "Choices",
-          type: t.list(t.struct(Poll)),
+          type: t.list(t.struct(PollChoice)),
         }),
         channelPointVotingEnabled: io.dataOutput({
           id: "channelPointVotingEnabled",
@@ -886,7 +832,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Prediction Begin",
     event: "channel.prediction.begin",
     createIO: ({ io }) => {
@@ -913,7 +859,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Prediction Progress",
     event: "channel.prediction.progress",
     createIO: ({ io }) => {
@@ -935,39 +881,63 @@ export function register(pkg: Package) {
     },
     run({ ctx, data, io }) {
       ctx.setOutput(io.title, data.title);
-      ctx.setOutput(io.outcomes, data.outcomes);
+      ctx.setOutput(
+        io.outcomes,
+        data.outcomes.map((outcome) =>
+          OutcomesProgress.create({
+            ...outcome,
+            top_predictors: outcome.top_predictors.map((predictor) =>
+              TopPredictors.create({
+                ...predictor,
+                channel_points_won: Maybe(predictor.channel_points_won),
+              })
+            ),
+          })
+        )
+      );
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Prediction Lock",
     event: "channel.prediction.lock",
-    createIO: ({ io }) => {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        title: io.dataOutput({
-          id: "title",
-          name: "Title",
-          type: t.string(),
-        }),
-        outcomes: io.dataOutput({
-          id: "outcomes",
-          name: "Outcomes",
-          type: t.list(t.struct(OutcomesProgress)),
-        }),
-      };
-    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      title: io.dataOutput({
+        id: "title",
+        name: "Title",
+        type: t.string(),
+      }),
+      outcomes: io.dataOutput({
+        id: "outcomes",
+        name: "Outcomes",
+        type: t.list(t.struct(OutcomesProgress)),
+      }),
+    }),
     run({ ctx, data, io }) {
       ctx.setOutput(io.title, data.title);
-      ctx.setOutput(io.outcomes, data.outcomes);
+      ctx.setOutput(
+        io.outcomes,
+        data.outcomes.map((outcome) =>
+          OutcomesProgress.create({
+            ...outcome,
+            top_predictors: outcome.top_predictors.map((predictor) =>
+              TopPredictors.create({
+                ...predictor,
+                channel_points_won: Maybe(predictor.channel_points_won),
+              })
+            ),
+          })
+        )
+      );
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Prediction End",
     event: "channel.prediction.end",
     createIO: ({ io }) => {
@@ -988,7 +958,7 @@ export function register(pkg: Package) {
         winningOutcomeId: io.dataOutput({
           id: "winningOutcomeId",
           name: "Winning Outcome ID",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
         status: io.dataOutput({
           id: "status",
@@ -999,14 +969,48 @@ export function register(pkg: Package) {
     },
     run({ ctx, data, io }) {
       ctx.setOutput(io.title, data.title);
-      ctx.setOutput(io.outcomes, data.outcomes);
-      ctx.setOutput(io.winningOutcomeId, data.winning_outcome_id);
-      ctx.setOutput(io.status, data.status);
+      ctx.setOutput(
+        io.outcomes,
+        data.outcomes.map((outcome) =>
+          OutcomesProgress.create({
+            ...outcome,
+            top_predictors: outcome.top_predictors.map((predictor) =>
+              TopPredictors.create({
+                ...predictor,
+                channel_points_won: Maybe(predictor.channel_points_won),
+              })
+            ),
+          })
+        )
+      );
+      ctx.setOutput(io.winningOutcomeId, Maybe(data.winning_outcome_id));
+      ctx.setOutput(io.status, PredictionStatus.variant(data.status));
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  const HypeTrainContributionTypeEnum = createEnum(
+    "Hype Train Contribution Type",
+    (e) => [e.variant("bits"), e.variant("subscription"), e.variant("other")]
+  );
+
+  const TopContribution = createStruct("Contribution", (s) => ({
+    user_id: s.field("User ID", t.string()),
+    user_login: s.field("User Login", t.string()),
+    user_name: s.field("User Name", t.string()),
+    type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
+    total: s.field("Total", t.int()),
+  }));
+
+  const LastContribute = createStruct("Contribution", (s) => ({
+    user_id: s.field("User ID", t.string()),
+    user_login: s.field("User Login", t.string()),
+    user_name: s.field("User Name", t.string()),
+    type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
+    total: s.field("Total", t.int()),
+  }));
+
+  createEventsubEventSchema({
     name: "Channel Hype Train Begin",
     event: "channel.hype_train.begin",
     createIO: ({ io }) => {
@@ -1029,55 +1033,15 @@ export function register(pkg: Package) {
           name: "Goal",
           type: t.int(),
         }),
-        topContributeBitsUserName: io.dataOutput({
-          id: "topContributeBitsUserName",
-          name: "Top Contribute Bit User Name",
-          type: t.string(),
+        topContributions: io.dataOutput({
+          id: "topContributions",
+          name: "Top Contributions",
+          type: t.list(t.struct(TopContribution)),
         }),
-        topContributeBitsUserId: io.dataOutput({
-          id: "topContributeBitsUserId",
-          name: "Top Contribute Bit User ID",
-          type: t.string(),
-        }),
-        topContributeBitsTotal: io.dataOutput({
-          id: "topContributeBitsTotal",
-          name: "Top Contribute Bits Total",
-          type: t.int(),
-        }),
-        topContributeSubsUserName: io.dataOutput({
-          id: "topContributeSubsUserName",
-          name: "Top Contribute Subs Username",
-          type: t.string(),
-        }),
-        topContributeSubsUserId: io.dataOutput({
-          id: "topContributeSubsUserId",
-          name: "Top Contribute Subs User ID",
-          type: t.string(),
-        }),
-        topContributeSubsTotal: io.dataOutput({
-          id: "topContributeSubsTotal",
-          name: "Top Contribute Subs Total",
-          type: t.int(),
-        }),
-        lastContributeUserName: io.dataOutput({
-          id: "lastContributeUserName",
-          name: "Last Contribute Username",
-          type: t.string(),
-        }),
-        lastContributeUserId: io.dataOutput({
-          id: "lastContributeUserId",
-          name: "Last Contribute User ID",
-          type: t.string(),
-        }),
-        lastContributeTotal: io.dataOutput({
-          id: "lastContributeTotal",
-          name: "Last Contribute Total",
-          type: t.int(),
-        }),
-        lastContributeType: io.dataOutput({
-          id: "lastContributeType",
-          name: "Last Contribute Type",
-          type: t.string(),
+        lastContribution: io.dataOutput({
+          id: "lastContribution",
+          name: "Last Contribution",
+          type: t.struct(LastContribute),
         }),
         level: io.dataOutput({
           id: "level",
@@ -1087,40 +1051,37 @@ export function register(pkg: Package) {
       };
     },
     run({ ctx, data, io }) {
+      let topContributions = data.top_contributions.map((contribution) =>
+        TopContribution.create({
+          user_id: contribution.user_id,
+          user_login: contribution.user_login,
+          user_name: contribution.user_name,
+          total: contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(contribution.type),
+        })
+      );
       ctx.setOutput(io.total, data.total);
       ctx.setOutput(io.progress, data.progress);
       ctx.setOutput(io.goal, data.goal);
       ctx.setOutput(io.level, data.level);
+      ctx.setOutput(io.topContributions, topContributions);
       ctx.setOutput(
-        io.topContributeBitsUserName,
-        data.top_contributions[0].user_name
+        io.lastContribution,
+        LastContribute.create({
+          user_id: data.last_contribution.user_id,
+          user_login: data.last_contribution.user_login,
+          user_name: data.last_contribution.user_name,
+          total: data.last_contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(
+            data.last_contribution.type
+          ),
+        })
       );
-      ctx.setOutput(
-        io.topContributeBitsUserId,
-        data.top_contributions[0].user_id
-      );
-      ctx.setOutput(io.topContributeBitsTotal, data.top_contributions[0].total);
-      ctx.setOutput(
-        io.topContributeSubsUserName,
-        data.top_contributions[1].user_name
-      );
-      ctx.setOutput(
-        io.topContributeSubsUserId,
-        data.top_contributions[1].user_id
-      );
-      ctx.setOutput(io.topContributeSubsTotal, data.top_contributions[1].total);
-      ctx.setOutput(
-        io.lastContributeUserName,
-        data.last_contribution.user_name
-      );
-      ctx.setOutput(io.lastContributeUserId, data.last_contribution.user_id);
-      ctx.setOutput(io.lastContributeTotal, data.last_contribution.total);
-      ctx.setOutput(io.lastContributeType, data.last_contribution.type);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Hype Train Progress",
     event: "channel.hype_train.progress",
     createIO: ({ io }) => {
@@ -1143,55 +1104,15 @@ export function register(pkg: Package) {
           name: "Goal",
           type: t.int(),
         }),
-        topContributeBitsUserName: io.dataOutput({
-          id: "topContributeBitsUserName",
-          name: "Top Contribute Bit User Name",
-          type: t.string(),
+        topContributions: io.dataOutput({
+          id: "topContributions",
+          name: "Top Contributions",
+          type: t.list(t.struct(TopContribution)),
         }),
-        topContributeBitsUserId: io.dataOutput({
-          id: "topContributeBitsUserId",
-          name: "Top Contribute Bit User ID",
-          type: t.string(),
-        }),
-        topContributeBitsTotal: io.dataOutput({
-          id: "topContributeBitsTotal",
-          name: "Top Contribute Bits Total",
-          type: t.int(),
-        }),
-        topContributeSubsUserName: io.dataOutput({
-          id: "topContributeSubsUserName",
-          name: "Top Contribute Subs Username",
-          type: t.string(),
-        }),
-        topContributeSubsUserId: io.dataOutput({
-          id: "topContributeSubsUserId",
-          name: "Top Contribute Subs User ID",
-          type: t.string(),
-        }),
-        topContributeSubsTotal: io.dataOutput({
-          id: "topContributeSubsTotal",
-          name: "Top Contribute Subs Total",
-          type: t.int(),
-        }),
-        lastContributeUserName: io.dataOutput({
-          id: "lastContributeUserName",
-          name: "Last Contribute Username",
-          type: t.string(),
-        }),
-        lastContributeUserId: io.dataOutput({
-          id: "lastContributeUserId",
-          name: "Last Contribute User ID",
-          type: t.string(),
-        }),
-        lastContributeTotal: io.dataOutput({
-          id: "lastContributeTotal",
-          name: "Last Contribute Total",
-          type: t.int(),
-        }),
-        lastContributeType: io.dataOutput({
-          id: "lastContributeType",
-          name: "Last Contribute Type",
-          type: t.string(),
+        lastContribution: io.dataOutput({
+          id: "lastContribution",
+          name: "Last Contribution",
+          type: t.struct(LastContribute),
         }),
         level: io.dataOutput({
           id: "level",
@@ -1201,40 +1122,38 @@ export function register(pkg: Package) {
       };
     },
     run({ ctx, data, io }) {
+      let topContributions = data.top_contributions.map((contribution) =>
+        TopContribution.create({
+          user_id: contribution.user_id,
+          user_login: contribution.user_login,
+          user_name: contribution.user_name,
+          total: contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(contribution.type),
+        })
+      );
+
       ctx.setOutput(io.total, data.total);
       ctx.setOutput(io.progress, data.progress);
       ctx.setOutput(io.goal, data.goal);
       ctx.setOutput(io.level, data.level);
+      ctx.setOutput(io.topContributions, topContributions);
       ctx.setOutput(
-        io.topContributeBitsUserName,
-        data.top_contributions[0].user_name
+        io.lastContribution,
+        LastContribute.create({
+          user_id: data.last_contribution.user_id,
+          user_login: data.last_contribution.user_login,
+          user_name: data.last_contribution.user_name,
+          total: data.last_contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(
+            data.last_contribution.type
+          ),
+        })
       );
-      ctx.setOutput(
-        io.topContributeBitsUserId,
-        data.top_contributions[0].user_id
-      );
-      ctx.setOutput(io.topContributeBitsTotal, data.top_contributions[0].total);
-      ctx.setOutput(
-        io.topContributeSubsUserName,
-        data.top_contributions[1].user_name
-      );
-      ctx.setOutput(
-        io.topContributeSubsUserId,
-        data.top_contributions[1].user_id
-      );
-      ctx.setOutput(io.topContributeSubsTotal, data.top_contributions[1].total);
-      ctx.setOutput(
-        io.lastContributeUserName,
-        data.last_contribution.user_name
-      );
-      ctx.setOutput(io.lastContributeUserId, data.last_contribution.user_id);
-      ctx.setOutput(io.lastContributeTotal, data.last_contribution.total);
-      ctx.setOutput(io.lastContributeType, data.last_contribution.type);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Hype Train End",
     event: "channel.hype_train.end",
     createIO: ({ io }) => {
@@ -1252,35 +1171,10 @@ export function register(pkg: Package) {
           name: "Level",
           type: t.int(),
         }),
-        topContributeBitsUserName: io.dataOutput({
-          id: "topContributeBitsUserName",
-          name: "Top Contribute Bit Username",
-          type: t.string(),
-        }),
-        topContributeBitsUserId: io.dataOutput({
-          id: "topContributeBitsUserId",
-          name: "Top Contribute Bit User ID",
-          type: t.string(),
-        }),
-        topContributeBitsTotal: io.dataOutput({
-          id: "topContributeBitsTotal",
-          name: "Top Contribute Bits Total",
-          type: t.int(),
-        }),
-        topContributeSubsUserName: io.dataOutput({
-          id: "topContributeSubsUserName",
-          name: "Top Contribute Subs Username",
-          type: t.string(),
-        }),
-        topContributeSubsUserId: io.dataOutput({
-          id: "topContributeSubsUserId",
-          name: "Top Contribute Subs User ID",
-          type: t.string(),
-        }),
-        topContributeSubsTotal: io.dataOutput({
-          id: "topContributeSubsTotal",
-          name: "Top Contribute Subs Total",
-          type: t.int(),
+        topContributions: io.dataOutput({
+          id: "topContributions",
+          name: "Top Contributions",
+          type: t.list(t.struct(TopContribution)),
         }),
         cooldownEndsAt: io.dataOutput({
           id: "cooldownEndsAt",
@@ -1290,32 +1184,25 @@ export function register(pkg: Package) {
       };
     },
     run({ ctx, data, io }) {
+      let topContributions = data.top_contributions.map((contribution) =>
+        TopContribution.create({
+          user_id: contribution.user_id,
+          user_login: contribution.user_login,
+          user_name: contribution.user_name,
+          total: contribution.total,
+          type: HypeTrainContributionTypeEnum.variant(contribution.type),
+        })
+      );
+
       ctx.setOutput(io.total, data.total);
       ctx.setOutput(io.level, data.level);
-      ctx.setOutput(
-        io.topContributeBitsUserName,
-        data.top_contributions[0].user_name
-      );
-      ctx.setOutput(
-        io.topContributeBitsUserId,
-        data.top_contributions[0].user_id
-      );
-      ctx.setOutput(io.topContributeBitsTotal, data.top_contributions[0].total);
-      ctx.setOutput(
-        io.topContributeSubsUserName,
-        data.top_contributions[1].user_name
-      );
-      ctx.setOutput(
-        io.topContributeSubsUserId,
-        data.top_contributions[1].user_id
-      );
-      ctx.setOutput(io.topContributeSubsTotal, data.top_contributions[1].total);
+      ctx.setOutput(io.topContributions, topContributions);
       ctx.setOutput(io.cooldownEndsAt, data.cooldown_ends_at);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Updated",
     event: "channel.update",
     createIO: ({ io }) => {
@@ -1348,10 +1235,10 @@ export function register(pkg: Package) {
           name: "Category Name",
           type: t.string(),
         }),
-        mature: io.dataOutput({
-          id: "mature",
-          name: "Mature",
-          type: t.string(),
+        contentClassificationLabels: io.dataOutput({
+          id: "contentClassificationLabels",
+          name: "Classification Labels",
+          type: t.list(t.string()),
         }),
       };
     },
@@ -1361,12 +1248,15 @@ export function register(pkg: Package) {
       ctx.setOutput(io.title, data.title);
       ctx.setOutput(io.categoryId, data.category_id);
       ctx.setOutput(io.categoryName, data.category_name);
-      ctx.setOutput(io.mature, data.is_mature);
+      ctx.setOutput(
+        io.contentClassificationLabels,
+        data.content_classification_labels
+      );
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Subscribe",
     event: "channel.subscribe",
     createIO: ({ io }) => {
@@ -1405,7 +1295,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Subscribe End",
     event: "channel.subscription.end",
     createIO: ({ io }) => {
@@ -1444,7 +1334,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Subscription Gift",
     event: "channel.subscription.gift",
     createIO: ({ io }) => {
@@ -1475,7 +1365,7 @@ export function register(pkg: Package) {
         cumulative: io.dataOutput({
           id: "cumulative",
           name: "Cumulative Total",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         anonymous: io.dataOutput({
           id: "anonymous",
@@ -1489,13 +1379,13 @@ export function register(pkg: Package) {
       ctx.setOutput(io.userLogin, data.user_login);
       ctx.setOutput(io.tier, data.tier);
       ctx.setOutput(io.total, data.total);
-      ctx.setOutput(io.cumulative, data.cumulative_total);
+      ctx.setOutput(io.cumulative, Maybe(data.cumulative_total));
       ctx.setOutput(io.anonymous, data.is_anonymous);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Subscription Message",
     event: "channel.subscription.message",
     createIO: ({ io }) => {
@@ -1526,7 +1416,7 @@ export function register(pkg: Package) {
         streak: io.dataOutput({
           id: "streak",
           name: "Streak Months",
-          type: t.int(),
+          type: t.option(t.int()),
         }),
         cumulative: io.dataOutput({
           id: "cumulative",
@@ -1546,13 +1436,13 @@ export function register(pkg: Package) {
       ctx.setOutput(io.tier, data.tier);
       ctx.setOutput(io.message, data.message.text);
       ctx.setOutput(io.cumulative, data.cumulative_months);
-      ctx.setOutput(io.streak, data.streak_months);
+      ctx.setOutput(io.streak, Maybe(data.streak_months));
       ctx.setOutput(io.duration, data.duration_months);
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Cheers",
     event: "channel.cheer",
     createIO: ({ io }) => {
@@ -1593,9 +1483,9 @@ export function register(pkg: Package) {
       };
     },
     run({ ctx, data, io }) {
-      ctx.setOutput(io.userId, data.user_id);
-      ctx.setOutput(io.userLogin, data.user_login);
-      ctx.setOutput(io.displayName, data.user_name);
+      ctx.setOutput(io.userId, data.user_id ?? "Anonymous");
+      ctx.setOutput(io.userLogin, data.user_login ?? "");
+      ctx.setOutput(io.displayName, data.user_name ?? "");
       ctx.setOutput(io.anonymous, data.is_anonymous);
       ctx.setOutput(io.message, data.message);
       ctx.setOutput(io.bits, data.bits);
@@ -1603,7 +1493,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Raid",
     event: "channel.raid",
     createIO: ({ io }) => {
@@ -1636,7 +1526,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Ad Break Begin",
     event: "channel.ad_break.begin",
     createIO: ({ io }) => {
@@ -1664,7 +1554,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "User Followed",
     event: "channel.follow",
     createIO: ({ io }) => {
@@ -1697,7 +1587,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Shoutout Received",
     event: "channel.shoutout.receive",
     createIO: ({ io }) => {
@@ -1725,7 +1615,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Goal Begin",
     event: "channel.goal.begin",
     createIO: ({ io }) => {
@@ -1771,13 +1661,13 @@ export function register(pkg: Package) {
       ctx.setOutput(io.description, data.description);
       ctx.setOutput(io.currentAmount, data.current_amount);
       ctx.setOutput(io.targetAmount, data.target_amount);
-      ctx.setOutput(io.startedAt, data.started_at);
+      ctx.setOutput(io.startedAt, data.started_at.toString());
 
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Goal Progress",
     event: "channel.goal.progress",
     createIO: ({ io }) => {
@@ -1823,13 +1713,13 @@ export function register(pkg: Package) {
       ctx.setOutput(io.description, data.description);
       ctx.setOutput(io.currentAmount, data.current_amount);
       ctx.setOutput(io.targetAmount, data.target_amount);
-      ctx.setOutput(io.startedAt, data.started_at);
+      ctx.setOutput(io.startedAt, data.started_at.toString());
 
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Goal End",
     event: "channel.goal.end",
     createIO: ({ io }) => {
@@ -1886,14 +1776,14 @@ export function register(pkg: Package) {
       ctx.setOutput(io.isAchieved, data.is_achieved);
       ctx.setOutput(io.currentAmount, data.current_amount);
       ctx.setOutput(io.targetAmount, data.target_amount);
-      ctx.setOutput(io.startedAt, data.started_at);
-      ctx.setOutput(io.endedAt, data.ended_at);
+      ctx.setOutput(io.startedAt, data.started_at.toString());
+      ctx.setOutput(io.endedAt, data.ended_at.toString());
 
       ctx.exec(io.exec);
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Stream Online",
     event: "stream.online",
     createIO: ({ io }) => {
@@ -1926,7 +1816,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Stream Offline",
     event: "stream.offline",
     createIO: ({ io }) => {
@@ -1941,7 +1831,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Chat Clear User Messages",
     event: "channel.chat.clear_user_messages",
     createIO: ({ io }) => {
@@ -1974,7 +1864,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Chat Message Deleted Eventsub",
     event: "channel.chat.message_delete",
     createIO: ({ io }) => {
@@ -2013,7 +1903,7 @@ export function register(pkg: Package) {
     },
   });
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Chat Clear",
     event: "channel.chat.clear",
     createIO: ({ io }) => {
@@ -2041,15 +1931,15 @@ export function register(pkg: Package) {
     cumulative_months: s.field("Cumulative Months", t.int()),
     duration_months: s.field("Duration Months", t.int()),
     streak_months: s.field("Streak Months", t.int()),
-    gifter_is_anonymous: s.field("Anonymous Gifter", t.bool()),
-    gifter_user_name: s.field("Gifter UserName", t.string()),
-    gifter_user_id: s.field("Gifter User ID", t.string()),
-    gifter_user_login: s.field("Gifter User Login", t.string()),
+    gifter_is_anonymous: s.field("Anonymous Gifter", t.option(t.bool())),
+    gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
+    gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
+    gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
   }));
 
   const SubGiftStruct = createStruct("Gift Sub", (s) => ({
     sub_tier: s.field("Sub Tier", t.string()),
-    cumulative_months: s.field("Cumulative Months", t.int()),
+    cumulative_total: s.field("Cumulative Months", t.option(t.int())),
     duration_months: s.field("Duration Months", t.int()),
     recipient_user_name: s.field("Recipient UserName", t.string()),
     recipient_user_id: s.field("Recipient User ID", t.string()),
@@ -2061,14 +1951,14 @@ export function register(pkg: Package) {
     sub_tier: s.field("Sub Tier", t.string()),
     id: s.field("ID", t.string()),
     total: s.field("Total", t.int()),
-    cumulative_total: s.field("Cumulative Total", t.int()),
+    cumulative_total: s.field("Cumulative Total", t.option(t.int())),
   }));
 
   const GiftPaidUpgradeStruct = createStruct("Gift Paid Upgrade", (s) => ({
     gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
-    gifter_user_id: s.field("Gifter User ID", t.string()),
-    gifter_user_name: s.field("Gifter UserName", t.string()),
-    gifter_user_login: s.field("Gifter User Login", t.string()),
+    gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
+    gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
+    gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
   }));
 
   const RaidStruct = createStruct("Raid", (s) => ({
@@ -2128,7 +2018,7 @@ export function register(pkg: Package) {
     tier: s.field("Tier", t.int()),
   }));
 
-  const FragmentsStruct = createStruct("Message", (s) => ({
+  const FragmentsStruct = createStruct("MessageFragment", (s) => ({
     type: s.field("Type", t.option(t.string())),
     text: s.field("Text", t.option(t.string())),
     cheermote: s.field("Cheermote", t.option(t.struct(CheermoteStruct))),
@@ -2147,34 +2037,34 @@ export function register(pkg: Package) {
     fragments: s.field("Fragments", t.list(t.struct(FragmentsStruct))),
   }));
 
-  interface badge {
+  interface Badge {
     set_id: string;
     id: string;
     info: string;
   }
 
-  interface fragment {
+  interface Fragment {
     type: string;
     text: string;
-    cheermote: cheermote;
-    emote: emote;
-    mention: mention;
+    cheermote: Cheermote | null;
+    emote: Emote | null;
+    mention: Mention | null;
   }
 
-  interface cheermote {
+  interface Cheermote {
     prefix: string;
     bits: number;
     tier: number;
   }
 
-  interface emote {
+  interface Emote {
     id: string;
     emote_set_id: string;
     owner_id: string;
     format: string[];
   }
 
-  interface mention {
+  interface Mention {
     user_id: string;
     user_name: string;
     user_login: string;
@@ -2219,7 +2109,7 @@ export function register(pkg: Package) {
     ]
   );
 
-  pkg.createEventSchema({
+  createEventsubEventSchema({
     name: "Channel Chat Notification",
     event: "channel.chat.notification",
     createIO: ({ io }) => {
@@ -2301,202 +2191,196 @@ export function register(pkg: Package) {
           chatter_user_login: data.chatter_user_login,
         })
       );
-      let badges = [] as badge[];
-      data.badges.forEach((badge: badge) => {
-        badges.push(
+      ctx.setOutput(
+        io.badges,
+        (data.badges as Badge[]).map((badge) =>
           BadgesStruct.create({
             set_id: badge.set_id,
             id: badge.id,
             info: badge.info,
           })
-        );
-      });
-      ctx.setOutput(io.badges, badges);
-      let fragments = [] as fragment[];
-
-      data.message.fragments.forEach((fragment: fragment) => {
-        FragmentsStruct.create({
-          type: Maybe(fragment.type),
-          text: Maybe(fragment.text),
-          cheermote: Maybe(
-            fragment.cheermote === null
-              ? null
-              : CheermoteStruct.create({
-                  prefix: fragment.cheermote.prefix,
-                  bits: fragment.cheermote.bits,
-                  tier: fragment.cheermote.tier,
-                })
-          ),
-          emote: Maybe(
-            fragment.emote === null
-              ? null
-              : EmoteStruct.create({
-                  id: fragment.emote.id,
-                  emote_set_id: fragment.emote.emote_set_id,
-                  owner_id: fragment.emote.owner_id,
-                  format: fragment.emote.format,
-                })
-          ),
-          mention: Maybe(
-            fragment.mention === null
-              ? null
-              : MentionStruct.create({
-                  user_id: fragment.mention.user_id,
-                  user_name: fragment.mention.user_name,
-                  user_login: fragment.mention.user_login,
-                })
-          ),
-        });
-      });
-      let Notice: any;
-      if (data.sub !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Sub",
-          {
-            value: {
-              sub_Tier: data.sub.sub_Tier,
-              is_prime: data.sub.is_prime,
-              duration_months: data.sub.duration_months,
-            },
-          },
-        ]);
-      }
-      if (data.resub !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Resub",
-          {
-            value: {
-              cumulative_months: data.resub.cumulative_months,
-              duration_months: data.resub.duration_months,
-              streak_months: data.resub.streak_months,
-              sub_tier: data.resub.sub_tier,
-              is_prime: data.resub.is_prime,
-              is_gift: data.resub.is_gift,
-              gifter_is_anonymous: data.resub.gifter_is_anonymous,
-              gifter_user_id: data.resub.gifter_user_id,
-              gifter_user_name: data.resub.gifter_user_name,
-              gifter_user_login: data.resub.gifter_user_login,
-            },
-          },
-        ]);
-      }
-      if (data.sub_gift !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Sub Gift",
-          {
-            value: {
-              cumulative_months: data.sub_gift.cumulative_months,
-              duration_months: data.sub_gift.duration_months,
-              sub_tier: data.sub_gift.sub_tier,
-              recipient_user_id: data.sub_gift.recipient_user_id,
-              recipient_user_name: data.sub_gift.recipient_user_name,
-              recipient_user_login: data.sub_gift.recipient_user_login,
-              community_gift_id: Maybe(data.sub_gift.community_gift_id),
-            },
-          },
-        ]);
-      }
-      if (data.community_sub_gift !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Community Sub Gift",
-          {
-            value: {
-              id: data.community_sub_gift.id,
-              total: data.community_sub_gift.total,
-              sub_tier: data.community_sub_gift.sub_tier,
-              cumulative_total: data.community_sub_gift.cumulative_total,
-            },
-          },
-        ]);
-      }
-      if (data.gift_paid_upgrade !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Gift Paid Upgrade",
-          {
-            value: {
-              gifter_is_anonymous: data.gift_paid_upgrade.gifter_is_anonymous,
-              gifter_user_id: data.gift_paid_upgrade.gifter_user_id,
-              gifter_user_name: data.gift_paid_upgrade.gifter_user_name,
-              gifter_user_login: data.gift_paid_upgrade.gifter_user_login,
-            },
-          },
-        ]);
-      }
-      if (data.prime_paid_upgrade !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Prime Paid Upgrade",
-          {
-            value: data.prime_paid_upgrade.sub_tier,
-          },
-        ]);
-      }
-      if (data.raid !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Raid",
-          {
-            value: {
-              user_id: data.raid.user_id,
-              user_name: data.raid.user_name,
-              user_login: data.raid.user_login,
-              viewer_count: data.raid.viewer_count,
-              profile_image_url: data.raid.profile_image_url,
-            },
-          },
-        ]);
-      }
-      if (data.pay_it_forward !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Pay It Forward",
-          {
-            value: {
-              gifter_is_anonymous: data.pay_it_forward.gifter_is_anonymous,
-              gifter_user_id: data.pay_it_forward.gifter_user_id,
-              gifter_user_name: data.pay_it_forward.gifter_user_name,
-              gifter_user_login: data.pay_it_forward.gifter_user_login,
-            },
-          },
-        ]);
-      }
-      if (data.charity_donation !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Charity Donation",
-          {
-            value: {
-              charity_name: data.charity_donation.charity_name,
-              amount: AmountStruct.create({
-                value: data.charity_donation.amount.value,
-                decimal_places: data.charity_donation.amount.decimal_places,
-                currency: data.charity_donation.amount.currency,
-              }),
-            },
-          },
-        ]);
-      }
-      if (data.bits_badge_tier !== null) {
-        Notice = ChannelChatNotificationEnum.variant([
-          "Bits Badge Tier",
-          {
-            value: data.bits_badge_tier.tier,
-          },
-        ]);
-      }
-      if (data.announcement !== null) {
-        console.log("test");
-        Notice = ChannelChatNotificationEnum.variant([
-          "Announcement",
-          { value: data.announcement.color },
-        ]);
-      }
+        )
+      );
 
       ctx.setOutput(
         io.message,
         MessageStruct.create({
           text: data.message.text,
-          fragments: fragments,
+          fragments: (data.message.fragments as Fragment[]).map((fragment) =>
+            FragmentsStruct.create({
+              type: Maybe(fragment.type),
+              text: Maybe(fragment.text),
+              cheermote: Maybe(fragment.cheermote).map((cheermote) =>
+                CheermoteStruct.create({
+                  prefix: cheermote.prefix,
+                  bits: cheermote.bits,
+                  tier: cheermote.tier,
+                })
+              ),
+              emote: Maybe(fragment.emote).map((emote) =>
+                EmoteStruct.create({
+                  id: emote.id,
+                  emote_set_id: emote.emote_set_id,
+                  owner_id: emote.owner_id,
+                  format: emote.format,
+                })
+              ),
+              mention: Maybe(fragment.mention).map((mention) =>
+                MentionStruct.create({
+                  user_id: mention.user_id,
+                  user_name: mention.user_name,
+                  user_login: mention.user_login,
+                })
+              ),
+            })
+          ),
         })
       );
-      console.log(Notice);
-      ctx.setOutput(io.notice, Notice);
+
+      ctx.setOutput(
+        io.notice,
+        (() => {
+          switch (data.notice_type) {
+            case "sub": {
+              return ChannelChatNotificationEnum.variant([
+                "Sub",
+                {
+                  value: {
+                    sub_Tier: data.sub!.sub_tier,
+                    is_prime: data.sub!.is_prime,
+                    duration_months: data.sub!.duration_months,
+                  },
+                },
+              ]);
+            }
+            case "resub": {
+              return ChannelChatNotificationEnum.variant([
+                "Resub",
+                {
+                  value: {
+                    cumulative_months: data.resub!.cumulative_months,
+                    duration_months: data.resub!.duration_months,
+                    streak_months: data.resub!.streak_months,
+                    sub_tier: data.resub!.sub_tier,
+                    is_prime: data.resub!.is_prime,
+                    is_gift: data.resub!.is_gift,
+                    gifter_is_anonymous: Maybe(data.resub!.gifter_is_anonymous),
+                    gifter_user_id: Maybe(data.resub!.gifter_user_id),
+                    gifter_user_name: Maybe(data.resub!.gifter_user_name),
+                    gifter_user_login: Maybe(data.resub!.gifter_user_login),
+                  },
+                },
+              ]);
+            }
+            case "sub_gift": {
+              return ChannelChatNotificationEnum.variant([
+                "Sub Gift",
+                {
+                  value: {
+                    cumulative_total: Maybe(data.sub_gift!.cumulative_total),
+                    duration_months: data.sub_gift!.duration_months,
+                    sub_tier: data.sub_gift!.sub_tier,
+                    recipient_user_id: data.sub_gift!.recipient_user_id,
+                    recipient_user_name: data.sub_gift!.recipient_user_name,
+                    recipient_user_login: data.sub_gift!.recipient_user_login,
+                    community_gift_id: Maybe(data.sub_gift!.community_gift_id),
+                  },
+                },
+              ]);
+            }
+            case "community_sub_gift": {
+              return ChannelChatNotificationEnum.variant([
+                "Community Sub Gift",
+                {
+                  value: {
+                    id: data.community_sub_gift!.id,
+                    total: data.community_sub_gift!.total,
+                    sub_tier: data.community_sub_gift!.sub_tier,
+                    cumulative_total: Maybe(
+                      data.community_sub_gift!.cumulative_total
+                    ),
+                  },
+                },
+              ]);
+            }
+            case "gift_paid_upgrade": {
+              return ChannelChatNotificationEnum.variant([
+                "Gift Paid Upgrade",
+                {
+                  value: {
+                    gifter_is_anonymous:
+                      data.gift_paid_upgrade!.gifter_is_anonymous,
+                    gifter_user_id: Maybe(
+                      data.gift_paid_upgrade!.gifter_user_id
+                    ),
+                    gifter_user_name: Maybe(
+                      data.gift_paid_upgrade!.gifter_user_name
+                    ),
+                    gifter_user_login: Maybe(
+                      data.gift_paid_upgrade!.gifter_user_login
+                    ),
+                  },
+                },
+              ]);
+            }
+            case "prime_paid_upgrade": {
+              return ChannelChatNotificationEnum.variant([
+                "Prime Paid Upgrade",
+                {
+                  value: data.prime_paid_upgrade!.sub_tier,
+                },
+              ]);
+            }
+            case "raid": {
+              return ChannelChatNotificationEnum.variant([
+                "Raid",
+                {
+                  value: {
+                    user_id: data.raid!.user_id,
+                    user_name: data.raid!.user_name,
+                    user_login: data.raid!.user_login,
+                    viewer_count: data.raid!.viewer_count,
+                    profile_image_url: data.raid!.profile_image_url,
+                  },
+                },
+              ]);
+            }
+            case "charity_donation": {
+              return ChannelChatNotificationEnum.variant([
+                "Charity Donation",
+                {
+                  value: {
+                    charity_name: data.charity_donation!.charity_name,
+                    amount: AmountStruct.create({
+                      value: data.charity_donation!.amount.value,
+                      decimal_places:
+                        data.charity_donation!.amount.decimal_places,
+                      currency: data.charity_donation!.amount.currency,
+                    }),
+                  },
+                },
+              ]);
+            }
+            case "bits_badge_tier": {
+              return ChannelChatNotificationEnum.variant([
+                "Bits Badge Tier",
+                {
+                  value: data.bits_badge_tier!.tier,
+                },
+              ]);
+            }
+            case "announcement": {
+              return ChannelChatNotificationEnum.variant([
+                "Announcement",
+                { value: data.announcement!.color },
+              ]);
+            }
+            default: {
+              throw new Error(`Unknown notice type "${data.notice_type}"`);
+            }
+          }
+        })()
+      );
       ctx.exec(io.exec);
     },
   });

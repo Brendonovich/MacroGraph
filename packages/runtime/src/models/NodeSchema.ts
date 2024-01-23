@@ -19,7 +19,7 @@ import {
   ScopeInput,
   ScopeOutput,
 } from "./IO";
-import { Package, ResourceType } from "./Package";
+import { Package, ResourceType, inferResourceTypeValue } from "./Package";
 import { Node } from "./Node";
 import { Graph } from "./Graph";
 
@@ -259,8 +259,8 @@ export type inferPropertyDef<TProperty extends PropertyDef> =
     ? t.infer<TProperty["type"]>
     : TProperty extends { source: PropertySourceFn }
     ? inferPropertySourceFn<TProperty["source"]>
-    : TProperty extends { resource: ResourceType<infer TValue, any> }
-    ? Option<TValue>
+    : TProperty extends { resource: ResourceType<any, any> }
+    ? Option<inferResourceTypeValue<TProperty["resource"]>>
     : never;
 
 export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
@@ -305,7 +305,7 @@ export type NonEventNodeSchema<
   TIO = void,
   TProperties extends Record<string, PropertyDef> = Record<string, PropertyDef>
 > = BaseNodeSchema<TIO, TProperties> & {
-  variant: Exclude<NodeSchemaVariant, "Event">;
+  variant: "Base" | "Pure" | "Exec";
   run: (a: BaseRunArgs<TIO, TProperties>) => void | Promise<void>;
 };
 
@@ -371,7 +371,7 @@ export type EventSchema<TProperties, TIO, TFire> = SchemaBase<
 
 export type NonEventSchema<TProperties, TIO> = SchemaBase<TProperties, TIO> & {
   type: "exec" | "pure" | "base";
-  run(props: RunProps<TProperties, TIO>): void | Promise<void>;
+  run(props: RunProps<TProperties, TIO>): any | Promise<any>;
 };
 
 export type Schema<TProperties, TIO, TFire> =

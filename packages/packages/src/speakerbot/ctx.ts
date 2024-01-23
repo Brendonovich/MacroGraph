@@ -1,5 +1,4 @@
-import { makePersisted } from "@macrograph/runtime";
-import { None } from "@macrograph/typesystem";
+import { None, makePersistedOption } from "@macrograph/typesystem";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 
 const SPEAKER_BOT_PORT = "SpeakerBotPort";
@@ -14,7 +13,7 @@ export function createCtx() {
     | { type: "connecting" | "connected"; ws: WebSocket }
   >({ type: "disconnected" });
 
-  const [url, setUrl] = makePersisted<string>(
+  const [url, setUrl] = makePersistedOption<string>(
     createSignal(None),
     SPEAKER_BOT_PORT
   );

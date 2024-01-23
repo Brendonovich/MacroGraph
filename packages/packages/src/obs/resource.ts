@@ -1,7 +1,7 @@
-import { PropertyDef, ResourceType } from "@macrograph/runtime";
+import { PropertyDef, createResourceType } from "@macrograph/runtime";
 import { Pkg } from ".";
 
-export const OBSInstance = new ResourceType({
+export const OBSInstance = createResourceType({
   name: "OBS Instance",
   sources: (pkg: Pkg) =>
     [...pkg.ctx!.instances].map(([ip, instance]) => ({

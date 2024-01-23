@@ -56,27 +56,31 @@ export const SerializedGraph = z.object({
   connections: z.array(SerializedConnection).default([]),
 });
 
+export const SerializedResourceItem = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+  })
+  .and(
+    z.union([
+      z.object({ value: z.string() }),
+      z.object({ sourceId: z.string().nullable() }),
+    ])
+  );
+
+export const SerializedResource = z.object({
+  type: z.object({ pkg: z.string(), name: z.string() }),
+  entry: z.object({
+    default: z.number().nullable().default(null),
+    items: z.array(SerializedResourceItem),
+  }),
+});
+
 export const SerializedProject = z.object({
   graphs: z.array(SerializedGraph),
   graphIdCounter: z.number().int(),
   customEvents: z.array(SerializedEvent).default([]),
   customEventIdCounter: z.number().int().default(0),
   counter: z.number().default(0),
-  resources: z
-    .array(
-      z.object({
-        type: z.object({ pkg: z.string(), name: z.string() }),
-        entry: z.object({
-          default: z.number().nullable().default(null),
-          items: z.array(
-            z.object({
-              id: z.number(),
-              name: z.string(),
-              sourceId: z.string().nullable().default(null),
-            })
-          ),
-        }),
-      })
-    )
-    .default([]),
+  resources: z.array(SerializedResource).default([]),
 });

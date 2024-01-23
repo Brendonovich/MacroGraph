@@ -9,7 +9,6 @@ import {
   Node,
   Graph as GraphModel,
   Node as NodeModel,
-  CustomEvent,
   Project,
   Size,
   deserializeConnections,
@@ -34,9 +33,6 @@ import { createUIStore, UIStoreProvider } from "./UIStore";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import Settings from "./settings";
-import { GraphList, Resources } from "./components/ProjectSidebar";
-import { PrintOutput } from "./components/PrintOutput";
-import { GraphSidebar, NodeSidebar } from "./Sidebars";
 import {
   commentBoxToClipboardItem,
   deserializeClipboardItem,
@@ -44,8 +40,14 @@ import {
   readFromClipboard,
   writeClipboardItemToClipboard,
 } from "./clipboard";
-import { CustomEventList } from "./components/CustomEvents";
 import "./global.css";
+import { Graphs } from "./Sidebar/Project/Graphs";
+import { Resources } from "./Sidebar/Project/Resources";
+import { PrintOutput } from "./Sidebar/Project/PrintOutput";
+import { CustomEvents } from "./Sidebar/Project/CustomEvents";
+import { Variables } from "./Sidebar/Graph/Variables";
+import { NodeInfo } from "./Sidebar/Node/Info";
+import { Properties } from "./Sidebar/Node/Properties";
 import {
   CommandDialog,
   Control,
@@ -438,7 +440,7 @@ function ProjectInterface(props: {
             <Sidebar width={Math.max(leftSidebar.state.width, MIN_WIDTH)}>
               <Settings />
               <div class="overflow-y-auto outer-scroll flex-1">
-                <GraphList
+                <Graphs
                   currentGraph={currentGraph()?.model.id}
                   onGraphClicked={(graph) => {
                     const currentIndex = graphStates.findIndex(
@@ -452,7 +454,7 @@ function ProjectInterface(props: {
                   }}
                 />
                 <PrintOutput />
-                <CustomEventList />
+                <CustomEvents />
                 <Resources />
               </div>
             </Sidebar>
@@ -585,9 +587,7 @@ function ProjectInterface(props: {
             <Sidebar width={Math.max(rightSidebar.state.width, MIN_WIDTH)}>
               <Solid.Show when={currentGraph()}>
                 {(graph) => (
-                  <Solid.Switch
-                    fallback={<GraphSidebar graph={graph().model} />}
-                  >
+                  <Solid.Switch fallback={<Variables graph={graph().model} />}>
                     <Solid.Match
                       when={(() => {
                         const {
@@ -601,7 +601,24 @@ function ProjectInterface(props: {
                         return model.nodes.get(selectedItemId.id);
                       })()}
                     >
-                      {(node) => <NodeSidebar node={node()} />}
+                      {(node) => (
+                        <>
+                          <NodeInfo node={node()} />
+                          <Solid.Show
+                            when={
+                              "properties" in node().schema &&
+                              node().schema.properties
+                            }
+                          >
+                            {(properties) => (
+                              <Properties
+                                node={node()}
+                                properties={properties()}
+                              />
+                            )}
+                          </Solid.Show>
+                        </>
+                      )}
                     </Solid.Match>
                   </Solid.Switch>
                 )}

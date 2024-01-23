@@ -1,5 +1,5 @@
-import { OnEvent, makePersisted } from "@macrograph/runtime";
-import { None } from "@macrograph/typesystem";
+import { OnEvent } from "@macrograph/runtime";
+import { None, makePersistedOption } from "@macrograph/typesystem";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 
 import { WebSocketResponse } from "./types";
@@ -17,7 +17,7 @@ export function createCtx(onEvent: OnEvent<Event>) {
     | { type: "connecting" | "connected"; ws: WebSocket }
   >({ type: "disconnected" });
 
-  const [url, setUrl] = makePersisted<string>(
+  const [url, setUrl] = makePersistedOption<string>(
     createSignal(None),
     URL_LOCALSTORAGE_KEY
   );

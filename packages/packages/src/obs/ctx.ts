@@ -1,16 +1,11 @@
 import { ReactiveMap } from "@solid-primitives/map";
-import OBS, { EventSubscription, EventTypes } from "obs-websocket-js";
+import OBS, { EventSubscription } from "obs-websocket-js";
 import { Maybe } from "@macrograph/typesystem";
 import { z } from "zod";
 
 type InstanceState = { password: string | null } & (
-  | {
-      state: "disconnected" | "connecting";
-    }
-  | {
-      state: "connected";
-      obs: OBS;
-    }
+  | { state: "disconnected" | "connecting" }
+  | { state: "connected"; obs: OBS }
 );
 
 // old localstorage key
@@ -22,12 +17,7 @@ const INSTANCE_SCHEMA = z.object({
   password: z.string().optional(),
 });
 
-export function createCtx(
-  emitEvent: <T extends keyof EventTypes>(data: {
-    name: T;
-    data: EventTypes[T];
-  }) => void
-) {
+export function createCtx() {
   const instances = new ReactiveMap<string, InstanceState>();
 
   async function addInstance(ip: string, password?: string) {
