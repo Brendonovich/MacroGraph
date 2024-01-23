@@ -41,6 +41,9 @@ const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
   pure: "bg-mg-pure",
 };
 
+const GRID_SIZE = 25;
+const SHIFT_MULTIPLIER = 6;
+
 export const Node = (props: Props) => {
   const node = () => props.node;
 
@@ -123,15 +126,59 @@ export const Node = (props: Props) => {
           <Solid.Show
             when={editingName()}
             fallback={
-              <div
-                class="px-2 pt-1 cursor-pointer outline-none"
-                tabIndex={-1}
+              <button
+                class="px-2 pt-1 cursor-pointer outline-none w-full h-full text-left"
                 onDblClick={() => setEditingName(true)}
+                onClick={(e) => {
+                  e.currentTarget.focus();
+                  if (e.button === 0) {
+                    props.onSelected();
+                  } else return;
+
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
                 onKeyDown={(e) => {
                   switch (e.key) {
                     case "Backspace":
                     case "Delete": {
                       graph.model().deleteNode(node());
+                      break;
+                    }
+                    case "ArrowLeft": {
+                      node().setPosition({
+                        x:
+                          node().state.position.x -
+                          GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+                        y: node().state.position.y,
+                      });
+                      break;
+                    }
+                    case "ArrowRight": {
+                      node().setPosition({
+                        x:
+                          node().state.position.x +
+                          GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+                        y: node().state.position.y,
+                      });
+                      break;
+                    }
+                    case "ArrowUp": {
+                      node().setPosition({
+                        x: node().state.position.x,
+                        y:
+                          node().state.position.y -
+                          GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+                      });
+                      break;
+                    }
+                    case "ArrowDown": {
+                      node().setPosition({
+                        x: node().state.position.x,
+                        y:
+                          node().state.position.y +
+                          GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+                      });
                       break;
                     }
                   }
@@ -156,8 +203,6 @@ export const Node = (props: Props) => {
                         createEventListenerMap(window, {
                           mouseup: dispose,
                           mousemove: (e) => {
-                            const scale = graph.state.scale;
-
                             const currentPosition = graph.toGraphSpace({
                               x: e.clientX,
                               y: e.clientY,
@@ -176,8 +221,12 @@ export const Node = (props: Props) => {
 
                             if (!e.shiftKey)
                               node().setPosition({
-                                x: Math.round(newPosition.x / 25) * 25,
-                                y: Math.round(newPosition.y / 25) * 25,
+                                x:
+                                  Math.round(newPosition.x / GRID_SIZE) *
+                                  GRID_SIZE,
+                                y:
+                                  Math.round(newPosition.y / GRID_SIZE) *
+                                  GRID_SIZE,
                               });
                             else node().setPosition(newPosition);
                           },
@@ -198,8 +247,8 @@ export const Node = (props: Props) => {
                   e.stopPropagation();
                 }}
               >
-                <div>{node().state.name}</div>
-              </div>
+                {node().state.name}
+              </button>
             }
           >
             {(_) => {
