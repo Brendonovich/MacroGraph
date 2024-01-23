@@ -44,7 +44,7 @@ export function createCtx(core: Core, onEvent: OnEvent) {
       if (!account) return;
 
       if (data.chat) chat.connectClient(account);
-      if (!data.eventsub) eventSub.connectSocket(account);
+      if (data.eventsub) eventSub.connectSocket(account);
     });
   });
 

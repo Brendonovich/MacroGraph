@@ -27,6 +27,7 @@ import {
 
 export function createEventSub(onEvent: OnEvent, helixClient: Helix) {
   const sockets = new ReactiveMap<string, WebSocket>();
+
   function connectSocket(account: Account) {
     const userId = account.data.id;
 
