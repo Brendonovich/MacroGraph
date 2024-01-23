@@ -1,4 +1,4 @@
-import { Core, OAuthToken, makePersisted } from "@macrograph/runtime";
+import { Core, OAuthToken, makePersistedOption } from "@macrograph/runtime";
 import { None, Some } from "@macrograph/typesystem";
 import { createResource, createSignal } from "solid-js";
 import { Octokit } from "octokit";
@@ -8,7 +8,7 @@ import { createCallbackAuth } from "./auth";
 export const TOKEN_LOCALSTORAGE = "githubToken";
 
 export function createCtx(core: Core) {
-  const [authToken, setAuthToken] = makePersisted<OAuthToken>(
+  const [authToken, setAuthToken] = makePersistedOption<OAuthToken>(
     createSignal(None),
     TOKEN_LOCALSTORAGE
   );

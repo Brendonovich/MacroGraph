@@ -14,7 +14,7 @@ export const map = <I, O>(value: I | null, cb: (v: I) => O): O | null => {
 
 type CreateSignal<T> = ReturnType<typeof createSignal<Option<T>>>;
 
-export function makePersisted<T>(
+export function makePersistedOption<T>(
   [get, set]: CreateSignal<T>,
   key: string
 ): CreateSignal<T> {

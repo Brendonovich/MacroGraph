@@ -2,7 +2,7 @@ import {
   Core,
   OAuthToken,
   RefreshedOAuthToken,
-  makePersisted,
+  makePersistedOption,
 } from "@macrograph/runtime";
 import { None, Some } from "@macrograph/typesystem";
 import { createResource, createSignal } from "solid-js";
@@ -13,7 +13,7 @@ import { createEndpoint } from "../httpEndpoint";
 export const TOKEN_LOCALSTORAGE = "googleToken";
 
 export function createCtx(core: Core) {
-  const [authToken, setAuthToken] = makePersisted<OAuthToken>(
+  const [authToken, setAuthToken] = makePersistedOption<OAuthToken>(
     createSignal(None),
     TOKEN_LOCALSTORAGE
   );

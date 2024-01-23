@@ -2,7 +2,7 @@ import {
   Core,
   OAUTH_TOKEN,
   OAuthToken,
-  makePersisted,
+  makePersistedOption,
 } from "@macrograph/runtime";
 import { Maybe, None } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -102,7 +102,7 @@ export function createAuth(clientId: string, core: Core, helixClient: Helix) {
 export type Auth = ReturnType<typeof createAuth>;
 
 export function createUserInstance(key: string, auth: Auth) {
-  const [id, setId] = makePersisted<string>(createSignal(None), key);
+  const [id, setId] = makePersistedOption<string>(createSignal(None), key);
 
   const account = createMemo(() => id().map((id) => auth.accounts.get(id)));
 

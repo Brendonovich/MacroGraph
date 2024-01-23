@@ -19,7 +19,7 @@ import {
 } from "@solid-primitives/event-listener";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createMousePosition } from "@solid-primitives/mouse";
-import { makePersisted } from "@solid-primitives/storage";
+import { makePersisted as makePersistedOption } from "@solid-primitives/storage";
 import clsx from "clsx";
 
 import { CoreProvider } from "./contexts";
@@ -110,11 +110,11 @@ function ProjectInterface(props: {
     height: 0,
   });
 
-  const [graphStates, setGraphStates] = makePersisted(
+  const [graphStates, setGraphStates] = makePersistedOption(
     createStore<GraphState[]>([]),
     { name: "graph-states" }
   );
-  const [currentGraphIndex, setCurrentGraphIndex] = makePersisted(
+  const [currentGraphIndex, setCurrentGraphIndex] = makePersistedOption(
     Solid.createSignal<number>(0),
     { name: "current-graph-index" }
   );
@@ -626,7 +626,7 @@ function ProjectInterface(props: {
 }
 
 function createSidebarState(name: string) {
-  const [state, setState] = makePersisted(
+  const [state, setState] = makePersistedOption(
     createStore({
       width: MIN_WIDTH,
       open: true,

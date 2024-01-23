@@ -1,4 +1,9 @@
-import { Core, OAuthToken, OnEvent, makePersisted } from "@macrograph/runtime";
+import {
+  Core,
+  OAuthToken,
+  OnEvent,
+  makePersistedOption,
+} from "@macrograph/runtime";
 import { None } from "@macrograph/typesystem";
 import { io, Socket } from "socket.io-client";
 import {
@@ -32,12 +37,12 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
       }
   >({ type: "disconnected" });
 
-  const [token, setToken] = makePersisted<string>(
+  const [token, setToken] = makePersistedOption<string>(
     createSignal(None),
     TOKEN_LOCALSTORAGE
   );
 
-  const [userToken, setUserToken] = makePersisted<OAuthToken>(
+  const [userToken, setUserToken] = makePersistedOption<OAuthToken>(
     createSignal(None),
     USER_TOKEN_LOCALSTORAGE
   );
