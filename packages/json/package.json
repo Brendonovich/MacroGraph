@@ -10,6 +10,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@macrograph/option": "workspace:^",
     "@macrograph/runtime": "workspace:^",
     "@macrograph/typesystem": "workspace:^",
     "@solid-primitives/deep": "^0.2.4",

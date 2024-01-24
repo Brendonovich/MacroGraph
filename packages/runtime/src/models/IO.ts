@@ -10,21 +10,17 @@ import {
 import { createMutable } from "solid-js/store";
 import {
   t,
-  Option,
-  None,
   BaseType,
-  PrimitiveType,
   BasePrimitiveType,
-  Maybe,
-  Some,
   connectWildcardsInTypes,
   disconnectWildcardsInTypes,
 } from "@macrograph/typesystem";
+import { Option, None, Maybe, Some } from "@macrograph/option";
+import { ReactiveSet } from "@solid-primitives/set";
 
 import { Node } from "./Node";
 import { DataOutputBuilder } from "./NodeSchema";
 import { makeIORef, splitIORef } from "./Graph";
-import { ReactiveSet } from "@solid-primitives/set";
 
 export function connectWildcardsInIO(
   output: DataOutput<t.Any>,

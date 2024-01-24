@@ -12,7 +12,8 @@ import {
   createEffect,
   catchError,
 } from "solid-js";
-import { Maybe, None, Option, Some, Disposable } from "@macrograph/typesystem";
+import { Maybe, None, Option, Some } from "@macrograph/option";
+import { Disposable } from "@macrograph/typesystem";
 
 import {
   IOBuilder,

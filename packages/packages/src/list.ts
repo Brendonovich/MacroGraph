@@ -1,5 +1,6 @@
 import { Package } from "@macrograph/runtime";
-import { Maybe, t } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
+import { t } from "@macrograph/typesystem";
 
 export function pkg() {
   const pkg = new Package({

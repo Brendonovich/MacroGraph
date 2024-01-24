@@ -1,15 +1,10 @@
 import { test, expect, describe } from "vitest";
 import { createEnum, createStruct } from "@macrograph/runtime";
-import {
-  MapValue,
-  None,
-  Some,
-  serializeValue,
-  t,
-} from "@macrograph/typesystem";
-
-import { toJSON, JSON, jsonToJS, jsToJSON, JSONValue } from "./";
+import { MapValue, serializeValue, t } from "@macrograph/typesystem";
+import { None, Some } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
+
+import { toJSON, JSON, jsonToJS, jsToJSON, JSONValue } from ".";
 
 describe("toJSON", () => {
   test("t.Option (None) -> Null", () => {

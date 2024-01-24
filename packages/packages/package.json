@@ -14,6 +14,7 @@
   "dependencies": {
     "@kobalte/core": "^0.9.6",
     "@macrograph/json": "workspace:^",
+    "@macrograph/option": "workspace:^",
     "@macrograph/runtime": "workspace:*",
     "@macrograph/typesystem": "workspace:*",
     "@macrograph/ui": "workspace:*",
