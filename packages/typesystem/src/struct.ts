@@ -20,7 +20,7 @@ export class LazyStructFields<Fields extends StructFields = StructFields> {
 }
 
 export class Struct<Fields extends StructFields = StructFields> {
-  source?: { package: string } | "project";
+  source!: { variant: "package"; package: string } | { variant: "custom" };
 
   constructor(public name: string, fields: Fields | LazyStructFields<Fields>) {
     if (fields instanceof LazyStructFields) {
@@ -65,15 +65,6 @@ export class Struct<Fields extends StructFields = StructFields> {
       name: z.string(),
     }),
   ]);
-
-  getRef(): z.infer<typeof Struct.refSchema> {
-    const source = this.source;
-
-    if (!source) throw new Error(`Struct ${this.name} has no source!`);
-
-    if (source === "project") return { source: "project", name: this.name };
-    else return { source: "package", package: source.package, name: this.name };
-  }
 }
 
 export class StructBuilder {
@@ -134,7 +125,10 @@ export class StructType<TStruct extends Struct> extends BaseType<
   }
 
   serialize() {
-    throw new Error("Struct cannot be serialized yet!");
+    return {
+      variant: "struct",
+      struct: { ...this.struct.source, name: this.struct.name },
+    };
   }
 
   deserialize() {

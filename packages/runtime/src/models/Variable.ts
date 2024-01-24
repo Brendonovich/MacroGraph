@@ -91,7 +91,10 @@ export class Variable {
     data: z.infer<typeof SerializedVariable>,
     owner: Graph | Project
   ) {
-    const type = deserializeType(data.type);
+    const type = deserializeType(
+      data.type,
+      owner.core.getType.bind(owner.core)
+    );
 
     return new Variable({
       id: data.id,

@@ -1,21 +1,31 @@
 import { z } from "zod";
-import { t } from ".";
+import { Option } from "@macrograph/option";
+
+import { Enum, Struct, t } from ".";
 
 const SerializedTypeBases = z.union([
   z.literal("int"),
   z.literal("float"),
   z.literal("string"),
   z.literal("bool"),
-  // z.tuple([
-  //   z.literal("struct"),
-  //   z.string(), // name
-  //   Source,
-  // ]),
-  // z.tuple([
-  //   z.literal("enum"),
-  //   z.string(), // name
-  //   Source,
-  // ]),
+  z.object({
+    variant: z.literal("struct"),
+    struct: z
+      .discriminatedUnion("variant", [
+        z.object({ variant: z.literal("package"), package: z.string() }),
+        z.object({ variant: z.literal("custom") }),
+      ])
+      .and(z.object({ name: z.string() })),
+  }),
+  z.object({
+    variant: z.literal("enum"),
+    enum: z
+      .discriminatedUnion("variant", [
+        z.object({ variant: z.literal("package"), package: z.string() }),
+        z.object({ variant: z.literal("custom") }),
+      ])
+      .and(z.object({ name: z.string() })),
+  }),
 ]);
 
 type SerializedFieldType =
@@ -26,7 +36,7 @@ type SerializedFieldType =
 
 export const SerializedType: z.ZodType<SerializedFieldType> =
   SerializedTypeBases.or(
-    z.discriminatedUnion("variant", [
+    z.union([
       z.object({
         variant: z.literal("option"),
         inner: z.lazy(() => SerializedType),
@@ -42,7 +52,10 @@ export const SerializedType: z.ZodType<SerializedFieldType> =
     ])
   );
 
-export function deserializeType(type: z.infer<typeof SerializedType>): t.Any {
+export function deserializeType(
+  type: z.infer<typeof SerializedType>,
+  getType: (variant: "struct" | "enum", data: any) => Option<Struct | Enum>
+): t.Any {
   switch (type) {
     case "string":
       return t.string();
@@ -54,58 +67,20 @@ export function deserializeType(type: z.infer<typeof SerializedType>): t.Any {
       return t.bool();
   }
 
-  // if (Array.isArray(type)) {
-  //   const source = type[2];
-
-  //   switch (type[0]) {
-  //     case "struct": {
-  //       let struct: Struct | undefined;
-
-  //       switch (source.variant) {
-  //         case "package": {
-  //           const pkg = project.core.packages.find(
-  //             (p) => p.name === source.package
-  //           );
-
-  //           if (!pkg)
-  //             throw new Error(`Package ${source.package} not found!`);
-
-  //           struct = pkg.structs.get(type[1]);
-  //         }
-  //       }
-
-  //       if (!struct) throw new Error(`Struct ${type[1]} not found!`);
-
-  //       return t.struct(struct);
-  //     }
-  //     case "enum": {
-  //       let e: Enum | undefined;
-
-  //       switch (source.variant) {
-  //         case "package": {
-  //           const pkg = project.core.packages.find(
-  //             (p) => p.name === source.package
-  //           );
-
-  //           if (!pkg)
-  //             throw new Error(`Package ${source.package} not found!`);
-
-  //           e = pkg.enums.get(type[1]);
-  //         }
-  //       }
-
-  //       if (!e) throw new Error(`Struct ${type[1]} not found!`);
-
-  //       return t.enum(e);
-  //     }
-  //   }
-  // } else
   switch (type.variant) {
     case "option":
-      return t.option(deserializeType(type.inner));
+      return t.option(deserializeType(type.inner, getType));
     case "list":
-      return t.list(deserializeType(type.item));
+      return t.list(deserializeType(type.item, getType));
     case "map":
-      return t.map(deserializeType(type.value));
+      return t.map(deserializeType(type.value, getType));
+    case "struct":
+      return t.struct(
+        getType("struct", type.struct).expect("Struct not found!") as Struct
+      );
+    case "enum":
+      return t.enum(
+        getType("enum", type.enum).expect("Enum not found!") as Enum
+      );
   }
 }

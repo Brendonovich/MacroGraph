@@ -252,6 +252,20 @@ function TypeEditorSegment(props: {
             );
           }}
         </Match>
+        <Match when={props.type instanceof t.Struct && props.type}>
+          {(structType) => (
+            <Span onClick={onClickFactory(structType)}>
+              <PaddedSpan>{structType().toString()}</PaddedSpan>
+            </Span>
+          )}
+        </Match>
+        <Match when={props.type instanceof t.Enum && props.type}>
+          {(enumType) => (
+            <Span onClick={onClickFactory(enumType)}>
+              <PaddedSpan>{enumType().toString()}</PaddedSpan>
+            </Span>
+          )}
+        </Match>
       </Switch>
     </TypeEditorSegmentContext.Provider>
   );

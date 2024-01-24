@@ -71,6 +71,10 @@ export class Graph extends Disposable {
     return createMutable(this);
   }
 
+  get core() {
+    return this.project.core;
+  }
+
   generateId() {
     return this.idCounter++;
   }

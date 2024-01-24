@@ -208,11 +208,10 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
   }
 
   registerType(type: Enum<any> | Struct<any>) {
-    if (type instanceof Enum) {
-      this.enums.set(type.name, type);
-    } else {
-      this.structs.set(type.name, type);
-    }
+    if (type instanceof Enum) this.enums.set(type.name, type);
+    else this.structs.set(type.name, type);
+
+    type.source = { variant: "package", package: this.name };
   }
 
   registerResourceType<T extends ResourceType<any, any>>(resource: T) {

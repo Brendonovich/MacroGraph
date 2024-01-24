@@ -1,12 +1,7 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { batch } from "solid-js";
-import {
-  t,
-  PrimitiveType,
-  SerializedType,
-  deserializeType,
-} from "@macrograph/typesystem";
+import { t, PrimitiveType, deserializeType } from "@macrograph/typesystem";
 
 import { Project } from "./Project";
 import { SerializedEvent } from "./serialized";
@@ -104,7 +99,10 @@ export class CustomEvent {
         return {
           id: serializedField.id,
           name: serializedField.name,
-          type: deserializeType(serializedField.type),
+          type: deserializeType(
+            serializedField.type,
+            project.core.getType.bind(project.core)
+          ),
         };
       });
     });

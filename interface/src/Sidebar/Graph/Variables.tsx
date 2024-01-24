@@ -1,7 +1,7 @@
 import { Graph } from "@macrograph/runtime";
 import { Card } from "@macrograph/ui";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
-import { For, Match, Switch, createSignal } from "solid-js";
+import { For, Match, Switch, batch, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
@@ -93,7 +93,12 @@ export function Variables(props: { graph: Graph }) {
 
                 <TypeEditor
                   type={variable.type}
-                  onChange={(type) => (variable.type = type)}
+                  onChange={(type) => {
+                    batch(() => {
+                      variable.type = type;
+                      variable.value = type.default();
+                    });
+                  }}
                 />
 
                 <div class="flex flex-row items-start gap-2 text-sm">

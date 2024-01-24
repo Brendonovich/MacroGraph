@@ -43,7 +43,7 @@ export class Enum<
   Variants extends EnumVariants = any,
   _Type = InferEnumVariant<Variants[number]>
 > {
-  source?: { variant: "package"; package: string } | { variant: "custom" };
+  source!: { variant: "package"; package: string } | { variant: "custom" };
 
   constructor(
     public name: string,
@@ -178,7 +178,10 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
   }
 
   serialize() {
-    throw new Error("Enum cannot be serialized yet!");
+    return {
+      variant: "enum",
+      enum: { ...this.inner.source, name: this.inner.name },
+    };
   }
 
   hasUnconnectedWildcard(): boolean {
