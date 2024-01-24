@@ -85,8 +85,8 @@ export class Wildcard {
           for (const connection of connections) {
             if (!maybeConnection) maybeConnection = connection;
             else if (
-              maybeConnection.hasWildcard() &&
-              !connection.hasWildcard()
+              maybeConnection.hasUnconnectedWildcard() &&
+              !connection.hasUnconnectedWildcard()
             ) {
               maybeConnection = connection;
               break;
@@ -134,6 +134,7 @@ export class Wildcard {
             ] as const;
           },
           ([directSourceConnection, wildcardConnections]) => {
+            // no need for wildcard connection if we've got a direct connection
             if (
               directSourceConnection.isSome() ||
               wildcardConnections.size === 0
@@ -142,6 +143,7 @@ export class Wildcard {
               return;
             }
 
+            // use previous connection if possible
             if (wildcardConnection().isSome()) {
               if (
                 wildcardConnections.has(
@@ -179,6 +181,19 @@ export class Wildcard {
                 const valueConnection = new WildcardValueConnection(conn, () =>
                   parentValueConnection.value()
                 );
+
+                console.log(conn);
+
+                if (
+                  conn.hasUnconnectedWildcard() &&
+                  !connections
+                    .map(([, valueConnection]) =>
+                      valueConnection.value().hasUnconnectedWildcard()
+                    )
+                    .unwrapOr(false)
+                ) {
+                  continue;
+                }
 
                 connections = Some([parentValueConnection, valueConnection]);
                 break;
@@ -303,8 +318,8 @@ export class WildcardType extends BaseType<unknown> {
     throw new Error("Wildcard cannot be serialized!");
   }
 
-  hasWildcard(): boolean {
-    return true;
+  hasUnconnectedWildcard(): boolean {
+    return this.wildcard.valueConnection().isNone();
   }
 
   addConnection(connection: WildcardTypeConnector) {
@@ -339,47 +354,52 @@ class WildcardTypeConnector extends Disposable {
     super();
 
     const disposeRoot = createRoot((dispose) => {
-      if (a instanceof t.Wildcard === b instanceof t.Wildcard) return dispose;
-
-      let connection: WildcardTypeConnector | undefined;
-
-      function connectWildcards(a: t.Any, b: t.Any) {
-        if (!(a instanceof t.Wildcard)) return;
-
+      if (a instanceof t.Wildcard && b instanceof t.Wildcard) {
         createEffect(() => {
-          // need to disconnect/reconnect each time a new value is available
-          const valueConnection = a.wildcard.valueConnection();
+          const aValue = a.wildcard.value();
+          const bValue = b.wildcard.value();
 
-          valueConnection.peek((valueConnection) => {
-            const value = valueConnection.value();
-            if (value === b) return;
-
-            // connects stuff like `Map<Wildcard>` and `Wildcard(Map<String>)` since
-            // a) `value` is the `Map<String>` from `Wildcard(Map<String>)` and
-            // b) cWIT will connect their `inner` values since they're both maps
-            connectWildcardsInTypes(value, b);
-
-            const cleanup = () => disconnectWildcardsInTypes(value, b);
-
-            // needed for if `Wildcard(Map<String>)` loses its source.
-            // nested wildcard connections wouldn't disconnect with their parents without this
-            const parentListener = valueConnection.addDisposeListener(cleanup);
-
-            // don't need a listener if we're re-running
-            onCleanup(() => {
-              parentListener();
-              cleanup();
-            });
+          aValue.zip(bValue).peek(([aValue, bValue]) => {
+            connectWildcardsInTypes(aValue, bValue);
+            onCleanup(() => disconnectWildcardsInTypes(aValue, bValue));
           });
         });
+      } else if (a instanceof t.Wildcard !== b instanceof t.Wildcard) {
+        function connectWildcards(a: t.Any, b: t.Any) {
+          if (!(a instanceof t.Wildcard)) return;
+
+          createEffect(() => {
+            // need to disconnect/reconnect each time a new value is available
+            const valueConnection = a.wildcard.valueConnection();
+
+            valueConnection.peek((valueConnection) => {
+              const value = valueConnection.value();
+              if (value === b) return;
+
+              // connects stuff like `Map<Wildcard>` and `Wildcard(Map<String>)` since
+              // a) `value` is the `Map<String>` from `Wildcard(Map<String>)` and
+              // b) cWIT will connect their `inner` values since they're both maps
+              connectWildcardsInTypes(value, b);
+
+              const cleanup = () => disconnectWildcardsInTypes(value, b);
+
+              // needed for if `Wildcard(Map<String>)` loses its source.
+              // nested wildcard connections wouldn't disconnect with their parents without this
+              const parentListener =
+                valueConnection.addDisposeListener(cleanup);
+
+              // don't need a listener if we're re-running
+              onCleanup(() => {
+                parentListener();
+                cleanup();
+              });
+            });
+          });
+        }
+
+        connectWildcards(a, b);
+        connectWildcards(b, a);
       }
-
-      connectWildcards(a, b);
-      connectWildcards(b, a);
-
-      onCleanup(() => {
-        connection?.dispose();
-      });
 
       return dispose;
     });

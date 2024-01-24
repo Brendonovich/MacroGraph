@@ -265,92 +265,96 @@ describe("connecting two groups", () => {
   });
 });
 
-// https://github.com/Brendonovich/macrograph/issues/269
-test("#269", () => {
-  const node1 = (() => {
-    return { output: t.string() };
-  })();
+describe("issues", () => {
+  // https://github.com/Brendonovich/macrograph/issues/269
+  test("#269", () => {
+    const node1 = (() => {
+      return { output: t.string() };
+    })();
 
-  const node2 = (() => {
-    const w = new Wildcard("w");
-    const input = t.wildcard(w);
-    const output = t.list(t.wildcard(w));
+    const node2 = (() => {
+      const w = new Wildcard("w");
+      const input = t.wildcard(w);
+      const output = t.list(t.wildcard(w));
 
-    return {
-      w,
-      input,
-      output,
-    };
-  })();
+      return {
+        w,
+        input,
+        output,
+      };
+    })();
 
-  connectWildcardsInTypes(node1.output, node2.input);
+    connectWildcardsInTypes(node1.output, node2.input);
 
-  const node3 = (() => {
-    const w = new Wildcard("w");
-    const input = t.wildcard(w);
-    const output = t.wildcard(w);
+    const node3 = (() => {
+      const w = new Wildcard("w");
+      const input = t.wildcard(w);
+      const output = t.wildcard(w);
 
-    return { w, input, output };
-  })();
+      return { w, input, output };
+    })();
 
-  connectWildcardsInTypes(node2.output, node3.input);
+    connectWildcardsInTypes(node2.output, node3.input);
 
-  const node4 = (() => {
-    const w = new Wildcard("w");
-    const input = t.list(t.wildcard(w));
+    const node4 = (() => {
+      const w = new Wildcard("w");
+      const input = t.list(t.wildcard(w));
 
-    return { w, input };
-  })();
+      return { w, input };
+    })();
 
-  connectWildcardsInTypes(node3.output, node4.input);
+    connectWildcardsInTypes(node3.output, node4.input);
 
-  expect(node4.w.value().unwrap()).toBe(node1.output);
-});
+    expect(node4.w.value().unwrap()).toBe(node1.output);
+  });
 
-// https://github.com/Brendonovich/macrograph/issues/315
-test("#315", () => {
-  const node1 = (() => {
-    const output = t.map(t.map(t.string()));
+  // https://github.com/Brendonovich/macrograph/issues/315
+  test("#315", () => {
+    const node1 = (() => {
+      const output = t.map(t.map(t.string()));
 
-    return { output };
-  })();
+      return { output };
+    })();
 
-  const node2 = (() => {
-    const w = new Wildcard("");
-    const input = t.map(t.wildcard(w));
-    const output = t.option(t.wildcard(w));
+    const node2 = (() => {
+      const w = new Wildcard("");
+      const input = t.map(t.wildcard(w));
+      const output = t.option(t.wildcard(w));
 
-    return { w, input, output };
-  })();
+      return { w, input, output };
+    })();
 
-  connectWildcardsInTypes(node1.output, node2.input);
+    connectWildcardsInTypes(node1.output, node2.input);
 
-  expect(node2.input.value.wildcard.value().unwrap()).toBe(node1.output.value);
+    expect(node2.input.value.wildcard.value().unwrap()).toBe(
+      node1.output.value
+    );
 
-  const node3 = (() => {
-    const w = new Wildcard("");
-    const input = t.option(t.wildcard(w));
-    const output = t.wildcard(w);
+    const node3 = (() => {
+      const w = new Wildcard("");
+      const input = t.option(t.wildcard(w));
+      const output = t.wildcard(w);
 
-    return { w, input, output };
-  })();
+      return { w, input, output };
+    })();
 
-  connectWildcardsInTypes(node2.output, node3.input);
+    connectWildcardsInTypes(node2.output, node3.input);
 
-  expect(node3.input.inner.wildcard.value().unwrap()).toBe(
-    node2.output.inner.wildcard.value().unwrap()
-  );
+    expect(node3.input.inner.wildcard.value().unwrap()).toBe(
+      node2.output.inner.wildcard.value().unwrap()
+    );
 
-  const node4 = (() => {
-    const w = new Wildcard("");
-    const input = t.map(t.wildcard(w));
+    const node4 = (() => {
+      const w = new Wildcard("");
+      const input = t.map(t.wildcard(w));
 
-    return { w, input };
-  })();
+      return { w, input };
+    })();
 
-  connectWildcardsInTypes(node3.output, node4.input);
+    connectWildcardsInTypes(node3.output, node4.input);
 
-  expect(node4.w.value().value).toBe(
-    (node3.w.value().value as t.Map<any>).value
-  );
+    expect(node4.w.value().value).toBe(
+      (node3.w.value().value as t.Map<t.Wildcard>).value.wildcard.value().value
+    );
+  });
 });

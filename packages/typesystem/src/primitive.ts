@@ -29,7 +29,7 @@ export abstract class BasePrimitiveType<TOut> extends BaseType<TOut> {
     return this.primitiveVariant();
   }
 
-  hasWildcard(): boolean {
+  hasUnconnectedWildcard(): boolean {
     return false;
   }
 }

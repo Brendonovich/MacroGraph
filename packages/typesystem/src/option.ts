@@ -47,7 +47,7 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
     return { variant: "option", inner: this.inner.serialize() };
   }
 
-  hasWildcard(): boolean {
-    return this.inner.hasWildcard();
+  hasUnconnectedWildcard(): boolean {
+    return this.inner.hasUnconnectedWildcard();
   }
 }

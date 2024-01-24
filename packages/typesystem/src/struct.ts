@@ -141,7 +141,7 @@ export class StructType<TStruct extends Struct> extends BaseType<
     return this;
   }
 
-  hasWildcard(): boolean {
+  hasUnconnectedWildcard(): boolean {
     return false;
   }
 }

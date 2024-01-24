@@ -41,7 +41,7 @@ export class MapType<TValue extends BaseType<any>> extends BaseType<
     return { variant: "map", value: this.value.serialize() };
   }
 
-  hasWildcard(): boolean {
-    return this.value.hasWildcard();
+  hasUnconnectedWildcard(): boolean {
+    return this.value.hasUnconnectedWildcard();
   }
 }
