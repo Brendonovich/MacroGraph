@@ -1,5 +1,6 @@
 import { createEnum, createStruct } from "@macrograph/runtime";
-import { Maybe, t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { ChatCompletionAssistantMessageParam } from "openai/resources";
 
 import { Pkg } from ".";

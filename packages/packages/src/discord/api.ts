@@ -1,6 +1,7 @@
 import { Accessor, createResource } from "solid-js";
 import { Core, OAuthToken, Package } from "@macrograph/runtime";
-import { Maybe, None, t } from "@macrograph/typesystem";
+import { Maybe, None } from "@macrograph/option";
+import { t } from "@macrograph/typesystem";
 import { z } from "zod";
 
 import { Auth } from "./auth";

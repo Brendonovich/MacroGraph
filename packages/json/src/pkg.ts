@@ -1,9 +1,9 @@
 import { Package } from "@macrograph/runtime";
-import { Maybe, None, Some, t } from "@macrograph/typesystem";
+import { Maybe, None, Some } from "@macrograph/option";
+import { t } from "@macrograph/typesystem";
 
 import { JSON } from "./type";
 import { jsToJSON, jsonToJS, toJSON } from "./conversion";
-import { Properties } from "solid-js/web";
 
 export function pkg() {
   const pkg = new Package({

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@kobalte/core": "^0.9.6",
+    "@macrograph/option": "workspace:^",
     "@macrograph/packages": "workspace:*",
     "@macrograph/runtime": "workspace:*",
     "@macrograph/typesystem": "workspace:^",

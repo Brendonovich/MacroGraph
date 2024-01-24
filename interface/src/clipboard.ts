@@ -14,7 +14,7 @@ import {
   DataOutput,
   ScopeOutput,
 } from "@macrograph/runtime";
-import { Option } from "@macrograph/typesystem";
+import { Option } from "@macrograph/option";
 
 export const ClipboardItem = z.discriminatedUnion("type", [
   z.object({

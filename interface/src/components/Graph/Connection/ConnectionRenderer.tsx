@@ -8,7 +8,7 @@ import {
   pinIsOutput,
   splitIORef,
 } from "@macrograph/runtime";
-import { Maybe } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { createEffect } from "solid-js";
 
 import { useUIStore } from "../../../UIStore";

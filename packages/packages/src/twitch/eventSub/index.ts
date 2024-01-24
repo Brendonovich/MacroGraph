@@ -7,7 +7,8 @@ import {
   PropertyDef,
   SchemaProperties,
 } from "@macrograph/runtime";
-import { Maybe, t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createEventListener } from "@solid-primitives/event-listener";

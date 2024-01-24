@@ -1,5 +1,5 @@
 import { Core, OAuthToken, OnEvent } from "@macrograph/runtime";
-import { None, makePersistedOption } from "@macrograph/typesystem";
+import { None, makePersistedOption } from "@macrograph/option";
 import { io, Socket } from "socket.io-client";
 import {
   createEffect,

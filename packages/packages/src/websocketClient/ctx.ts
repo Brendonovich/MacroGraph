@@ -1,4 +1,4 @@
-import { Maybe } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 
 export const WS_IPS_LOCALSTORAGE = "wsServers";

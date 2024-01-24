@@ -1,5 +1,6 @@
 import { Package } from "@macrograph/runtime";
-import { t, Maybe } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
 
 export function pkg() {

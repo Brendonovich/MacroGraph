@@ -227,6 +227,9 @@ importers:
       '@kobalte/core':
         specifier: ^0.9.6
         version: 0.9.6(solid-js@1.8.8)
+      '@macrograph/option':
+        specifier: workspace:^
+        version: link:../packages/option
       '@macrograph/packages':
         specifier: workspace:*
         version: link:../packages/packages
@@ -317,6 +320,9 @@ importers:
 
   packages/json:
     dependencies:
+      '@macrograph/option':
+        specifier: workspace:^
+        version: link:../option
       '@macrograph/runtime':
         specifier: workspace:^
         version: link:../runtime
@@ -355,6 +361,15 @@ importers:
         specifier: ^8.11.2
         version: 8.12.3(typescript@5.3.3)
 
+  packages/option:
+    devDependencies:
+      '@macrograph/config':
+        specifier: workspace:*
+        version: link:../config
+      solid-js:
+        specifier: ^1.8.8
+        version: 1.8.8
+
   packages/packages:
     dependencies:
       '@kobalte/core':
@@ -363,6 +378,9 @@ importers:
       '@macrograph/json':
         specifier: workspace:^
         version: link:../json
+      '@macrograph/option':
+        specifier: workspace:^
+        version: link:../option
       '@macrograph/runtime':
         specifier: workspace:*
         version: link:../runtime
@@ -466,6 +484,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@macrograph/option':
+        specifier: workspace:^
+        version: link:../option
       '@macrograph/typesystem':
         specifier: workspace:*
         version: link:../typesystem
@@ -521,6 +542,9 @@ importers:
 
   packages/typesystem:
     dependencies:
+      '@macrograph/option':
+        specifier: workspace:^
+        version: link:../option
       '@solid-primitives/deep':
         specifier: ^0.2.4
         version: 0.2.4(solid-js@1.8.8)

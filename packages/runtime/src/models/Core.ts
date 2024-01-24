@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { Option } from "@macrograph/typesystem";
+import { Option } from "@macrograph/option";
 
 import { Package } from "./Package";
 import { Node } from "./Node";

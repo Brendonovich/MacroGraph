@@ -10,7 +10,8 @@ import {
   createEnum,
   createStruct,
 } from "@macrograph/runtime";
-import { Option, InferEnum, Maybe, t } from "@macrograph/typesystem";
+import { InferEnum, t } from "@macrograph/typesystem";
+import { Option, Maybe } from "@macrograph/option";
 
 import { createHTTPClient } from "../httpEndpoint";
 import { Account } from "./auth";

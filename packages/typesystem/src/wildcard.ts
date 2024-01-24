@@ -11,13 +11,20 @@ import {
   runWithOwner,
 } from "solid-js";
 import { ReactiveSet } from "@solid-primitives/set";
+import {
+  None,
+  Option,
+  Some,
+  createOptionMemo,
+  createOptionSignal,
+} from "@macrograph/option";
+import { createMutable } from "solid-js/store";
+import { ReactiveMap } from "@solid-primitives/map";
 
 import { BaseType } from "./base";
-import { None, Option, Some } from "./option";
+
 import { t, TypeVariant } from ".";
-import { createMutable } from "solid-js/store";
-import { createOptionMemo, createOptionSignal, Disposable } from "./utils";
-import { ReactiveMap } from "@solid-primitives/map";
+import { Disposable } from "./utils";
 
 /**
  * A Wildcard that belongs to a Node.

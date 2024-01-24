@@ -1,6 +1,6 @@
 import { ReactiveMap } from "@solid-primitives/map";
 import OBS, { EventSubscription } from "obs-websocket-js";
-import { Maybe } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { z } from "zod";
 
 type InstanceState = { password: string | null } & (

@@ -10,6 +10,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@macrograph/option": "workspace:^",
     "@macrograph/typesystem": "workspace:*",
     "@rspc/client": "0.0.0-main-6ed8cc98",
     "@rspc/tauri": "0.0.0-main-6ed8cc98",

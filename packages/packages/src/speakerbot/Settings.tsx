@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { createForm, zodForm } from "@modular-forms/solid";
 import { Match, Switch } from "solid-js";
-import { None, Some } from "@macrograph/typesystem";
-import { Ctx } from "./ctx";
+import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
+
+import { Ctx } from "./ctx";
 
 const Schema = z.object({
   url: z.string(),

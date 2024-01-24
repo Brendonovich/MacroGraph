@@ -1,5 +1,5 @@
 import { OnEvent, WsProvider } from "@macrograph/runtime";
-import { Maybe } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 import { ReactiveSet } from "@solid-primitives/set";
 
@@ -34,15 +34,13 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
           name: "WSSConnect",
           data: { client, port },
         });
-      }
-      else if (msg === "Disconnected") {
+      } else if (msg === "Disconnected") {
         websocketData.connections.delete(client);
         onEvent({
           name: "WSSDisconnect",
           data: { client, port },
         });
-      }
-      else
+      } else
         onEvent({
           name: "wsEvent",
           data: { data: msg.Text, client, port: port },

@@ -2,11 +2,10 @@ import {
   Wildcard,
   AnyType,
   BaseType,
-  Maybe,
   PrimitiveType,
   t,
-  Option,
 } from "@macrograph/typesystem";
+import { Maybe, Option } from "@macrograph/option";
 import { EventBus } from "@solid-primitives/event-bus";
 
 import {

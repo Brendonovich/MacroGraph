@@ -5,7 +5,8 @@ import {
   SchemaProperties,
 } from "@macrograph/runtime";
 import { jsToJSON, JSON } from "@macrograph/json";
-import { t, Maybe } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
 import { onCleanup, createEffect, mapArray, createMemo, on } from "solid-js";
 import tmi, { Events } from "tmi.js";
 import { ReactiveMap } from "@solid-primitives/map";

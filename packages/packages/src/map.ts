@@ -1,6 +1,7 @@
 import { JSON, toJSON } from "@macrograph/json";
 import { Package } from "@macrograph/runtime";
-import { Maybe, t } from "@macrograph/typesystem";
+import { Maybe } from "@macrograph/option";
+import { t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 
 export function pkg() {

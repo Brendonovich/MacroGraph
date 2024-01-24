@@ -2,10 +2,10 @@ import { test, expect, describe } from "vitest";
 import {
   connectWildcardsInTypes,
   disconnectWildcardsInTypes,
-  None,
   Wildcard,
   t,
 } from ".";
+import { None } from "@macrograph/option";
 
 test("Connect String + Wildcard", () => {
   // Node 1

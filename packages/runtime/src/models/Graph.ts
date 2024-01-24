@@ -2,7 +2,7 @@ import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
 import { z } from "zod";
-import { Option } from "@macrograph/typesystem";
+import { Option } from "@macrograph/option";
 
 import {
   DataInput,

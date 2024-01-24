@@ -6,16 +6,13 @@ import {
   DataOutput,
 } from "@macrograph/runtime";
 import {
-  Maybe,
-  Option,
-  Some,
   t,
   StructFields,
   Enum,
   EnumVariants,
-  None,
   Struct,
 } from "@macrograph/typesystem";
+import { Maybe, Option, Some, None } from "@macrograph/option";
 import { JSON, jsonToJS } from "@macrograph/json";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";

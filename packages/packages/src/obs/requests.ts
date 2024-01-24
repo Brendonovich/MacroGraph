@@ -10,14 +10,8 @@ import {
   RunProps,
   SchemaProperties,
 } from "@macrograph/runtime";
-import {
-  InferEnum,
-  Maybe,
-  t,
-  Option,
-  None,
-  Some,
-} from "@macrograph/typesystem";
+import { Maybe, Option, None, Some } from "@macrograph/option";
+import { InferEnum, t } from "@macrograph/typesystem";
 import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
 import OBSWebSocket, { EventTypes } from "obs-websocket-js";
 import { ReactiveMap } from "@solid-primitives/map";
