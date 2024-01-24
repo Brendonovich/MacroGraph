@@ -142,6 +142,7 @@ const DeleteButton = (props: { graph: Graph }) => {
 
   function deleteGraph() {
     core.project.graphs.delete(props.graph.id);
+    props.graph.dispose();
     core.project.save();
   }
 

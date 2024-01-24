@@ -3,6 +3,7 @@ import { createMutable } from "solid-js/store";
 import { ReactiveMap } from "@solid-primitives/map";
 import { z } from "zod";
 import { Option } from "@macrograph/option";
+import { Disposable } from "@macrograph/typesystem";
 
 import {
   DataInput,
@@ -48,7 +49,7 @@ export function makeIORef(io: Pin): IORef {
 
 export type Connections = ReactiveMap<IORef, Array<IORef>>;
 
-export class Graph {
+export class Graph extends Disposable {
   id: number;
   name: string;
   project: Project;
@@ -61,6 +62,8 @@ export class Graph {
   private idCounter = 0;
 
   constructor(args: GraphArgs) {
+    super();
+
     this.id = args.id;
     this.name = args.name;
     this.project = args.project;
@@ -78,6 +81,8 @@ export class Graph {
     const node = new Node({ ...args, id, graph: this });
 
     this.nodes.set(id, node);
+
+    this.addDisposeListener(() => node.dispose());
 
     this.project.save();
 
