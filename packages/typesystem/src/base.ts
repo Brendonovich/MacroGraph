@@ -12,7 +12,7 @@ export abstract class BaseType<TOut = any> {
   abstract getWildcards(): Wildcard[];
   abstract eq(other: t.Any): boolean;
   abstract serialize(): any;
-  abstract hasWildcard(): boolean;
+  abstract hasUnconnectedWildcard(): boolean;
 }
 
 export type infer<T extends BaseType<any>> = ReturnType<T["_type"]>;

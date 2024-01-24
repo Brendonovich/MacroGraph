@@ -181,7 +181,7 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
     throw new Error("Enum cannot be serialized yet!");
   }
 
-  hasWildcard(): boolean {
+  hasUnconnectedWildcard(): boolean {
     return false;
   }
 }
