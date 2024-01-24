@@ -162,7 +162,7 @@ export class ExecutionContext {
             const data = this.data.get(conn);
 
             if (data === undefined)
-              throw new Error(`Data not found for input '${input.name}'!`);
+              throw new Error(`Data not found for input '${input.id}'!`);
 
             return data;
           }
@@ -182,29 +182,31 @@ export class ExecutionContext {
     NODE_EMIT.emit(node);
 
     // calculate previous outputs
-    node.state.inputs.forEach((i) => {
-      if (!(i instanceof DataInput)) return;
+    await Promise.allSettled(
+      node.state.inputs.map((i) => {
+        if (!(i instanceof DataInput)) return;
 
-      i.connection.peek((conn) => {
-        const connectedNode = conn.node;
-        const schema = connectedNode.schema;
+        i.connection.peekAsync(async (conn) => {
+          const connectedNode = conn.node;
+          const schema = connectedNode.schema;
 
-        if ("variant" in schema && schema.variant === "Pure") {
-          // Pure nodes recalculate each time
+          if ("variant" in schema && schema.variant === "Pure") {
+            // Pure nodes recalculate each time
 
-          this.execNode(connectedNode as any);
-        } else {
-          // Value should already be present for non-pure nodes
+            await this.execNode(connectedNode as any);
+          } else {
+            // Value should already be present for non-pure nodes
 
-          let value = this.data.get(conn);
+            let value = this.data.get(conn);
 
-          if (value === undefined)
-            throw new Error(
-              `Data for Pin ${conn.name}, Node ${conn.node.state.name} not found!`
-            );
-        }
-      });
-    });
+            if (value === undefined)
+              throw new Error(
+                `Data for Pin ${conn.id}, Node ${conn.node.state.name} not found!`
+              );
+          }
+        });
+      })
+    );
 
     await node.schema.run({
       ctx: this.createCtx(node),

@@ -1794,19 +1794,15 @@ export function pkg(core: Core) {
           const output = v.outputs.find((o) => o.id === data.variant)!;
 
           if (output instanceof ScopeOutput) {
-            if ("data" in data) ctx.execScope(output, data.data);
-          } else ctx.exec(output);
+            if ("data" in data) return ctx.execScope(output, data.data);
+          } else return ctx.exec(output);
         } else if (v.type === "option") {
           const data = ctx.getInput(v.input);
 
-          data.mapOrElse(
+          return data.mapOrElse(
             () => ctx.exec(v.outputs.none),
             (value) => {
-              ctx.execScope(v.outputs.some, {
-                data: {
-                  value,
-                },
-              });
+              return ctx.execScope(v.outputs.some, { value });
             }
           );
         }
@@ -1841,9 +1837,7 @@ export function pkg(core: Core) {
       const data = ctx.getInput(io.input);
 
       await io.outputs.mapAsync((s) => {
-        s.outputs.forEach((o) => {
-          ctx.setOutput(o, data[o.id]);
-        });
+        s.outputs.forEach((o) => ctx.setOutput(o, data[o.id]));
 
         return ctx.exec(s.exec);
       });
