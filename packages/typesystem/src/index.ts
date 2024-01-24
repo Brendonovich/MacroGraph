@@ -13,6 +13,7 @@ export * from "./map";
 export * as t from "./t";
 export * from "./serialized";
 export * from "./value";
+export { Disposable } from "./utils";
 
 export type TypeVariant =
   | "primitive"
