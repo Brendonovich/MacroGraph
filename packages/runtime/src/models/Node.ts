@@ -12,7 +12,7 @@ import {
   createEffect,
   catchError,
 } from "solid-js";
-import { Maybe, None, Option, Some } from "@macrograph/typesystem";
+import { Maybe, None, Option, Some, Disposable } from "@macrograph/typesystem";
 
 import {
   IOBuilder,
@@ -65,7 +65,7 @@ export interface NodeArgs {
 }
 
 export const DEFAULT = Symbol("default");
-export class Node {
+export class Node extends Disposable {
   id: number;
   graph: Graph;
   schema: NodeSchema;
@@ -79,11 +79,12 @@ export class Node {
 
   io!: IOBuilder;
   ioReturn: any;
-  dispose: () => void;
 
   dataRoots!: Accessor<Set<Node>>;
 
   constructor(args: NodeArgs) {
+    super();
+
     this.id = args.id;
     this.graph = args.graph;
     this.schema = args.schema;
@@ -115,7 +116,7 @@ export class Node {
       dispose,
     }));
 
-    this.dispose = dispose;
+    this.addDisposeListener(dispose);
 
     runWithOwner(owner, () => {
       createRenderEffect(() => {
