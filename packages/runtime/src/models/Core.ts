@@ -199,12 +199,10 @@ export class ExecutionContext {
 
             let value = this.data.get(conn);
 
-            if (value === undefined) {
-              console.log(conn, this.data);
+            if (value === undefined)
               throw new Error(
                 `Data for Pin ${conn.id}, Node ${conn.node.state.name} not found!`
               );
-            }
           }
         });
       })
