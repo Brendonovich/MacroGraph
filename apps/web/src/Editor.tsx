@@ -4,7 +4,7 @@ import * as pkgs from "@macrograph/packages";
 
 import { env } from "~/env/client";
 
-const AUTH_URL = `${env.PUBLIC_VERCEL_URL}/auth`;
+const AUTH_URL = `${env.VITE_VERCEL_URL}/auth`;
 
 export default () => {
   const core = new Core({

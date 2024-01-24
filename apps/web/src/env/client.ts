@@ -2,9 +2,9 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
 export const env = createEnv({
-  clientPrefix: "PUBLIC_",
+  clientPrefix: "VITE_",
   client: {
-    PUBLIC_VERCEL_URL: z
+    VITE_VERCEL_URL: z
       .string()
       .optional()
       .transform((d) => {
