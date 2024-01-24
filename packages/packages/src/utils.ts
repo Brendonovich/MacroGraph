@@ -1837,11 +1837,7 @@ export function pkg(core: Core) {
       const data = ctx.getInput(io.input);
 
       await io.outputs.mapAsync((s) => {
-        s.outputs.forEach((o) => {
-          const d = data[o.id];
-          console.log({ o, d, data });
-          ctx.setOutput(o, d);
-        });
+        s.outputs.forEach((o) => ctx.setOutput(o, data[o.id]));
 
         return ctx.exec(s.exec);
       });
