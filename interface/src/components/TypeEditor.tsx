@@ -7,10 +7,13 @@ import {
   createSignal,
   useContext,
   createContext,
+  For,
+  Show,
 } from "solid-js";
 import { t } from "@macrograph/typesystem";
 import { DropdownMenu } from "@kobalte/core";
 import clsx from "clsx";
+import { useCore } from "../contexts";
 
 type TypeDialogState = {
   currentType: t.Any;
@@ -43,6 +46,7 @@ export function TypeEditor(props: {
   type: t.Any;
   onChange?: (type: t.Any) => void;
 }) {
+  const core = useCore();
   const ctx = createContextValue();
 
   return (
@@ -58,7 +62,7 @@ export function TypeEditor(props: {
           />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content class="p-2 bg-black border border-neutral-300 w-52 max-h-48 flex flex-col overflow-y-auto text-white">
+          <DropdownMenu.Content class="p-2 bg-black border border-black w-64 max-h-52 flex flex-col overflow-y-auto text-white">
             <span>Primitives</span>
             <div class="flex flex-col pl-1 text-sm">
               {PRIMITIVES.map((p) => (
@@ -90,6 +94,58 @@ export function TypeEditor(props: {
                   {name.toString()}
                 </button>
               ))}
+            </div>
+            <span>Structs</span>
+            <div class="flex flex-col pl-1 text-sm">
+              <For each={core.packages}>
+                {(pkg) => (
+                  <Show when={pkg.structs.size > 0}>
+                    <span class="text-neutral-300 text-xs py-1">
+                      {pkg.name}
+                    </span>
+                    <For each={[...pkg.structs.values()]}>
+                      {(struct) => (
+                        <button
+                          class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
+                          onClick={() => {
+                            ctx
+                              .typeDialogState()
+                              ?.onTypeSelected(t.struct(struct));
+                            ctx.setTypeDialogState(null);
+                          }}
+                        >
+                          {struct.name}
+                        </button>
+                      )}
+                    </For>
+                  </Show>
+                )}
+              </For>
+            </div>
+            <span>Enums</span>
+            <div class="flex flex-col pl-1 text-sm">
+              <For each={core.packages}>
+                {(pkg) => (
+                  <Show when={pkg.enums.size > 0}>
+                    <span class="text-neutral-300 text-xs py-1">
+                      {pkg.name}
+                    </span>
+                    <For each={[...pkg.enums.values()]}>
+                      {(enm) => (
+                        <button
+                          class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
+                          onClick={() => {
+                            ctx.typeDialogState()?.onTypeSelected(t.enum(enm));
+                            ctx.setTypeDialogState(null);
+                          }}
+                        >
+                          {enm.name}
+                        </button>
+                      )}
+                    </For>
+                  </Show>
+                )}
+              </For>
             </div>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
