@@ -354,7 +354,7 @@ describe("issues", () => {
     connectWildcardsInTypes(node3.output, node4.input);
 
     expect(node4.w.value().value).toBe(
-      (node3.w.value().value as t.Map<any>).value
+      (node3.w.value().value as t.Map<t.Wildcard>).value.wildcard.value().value
     );
   });
 });
