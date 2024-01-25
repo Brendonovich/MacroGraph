@@ -197,17 +197,17 @@ export class Node extends Disposable {
         createEffect(() => {
           catchError(
             () => {
-              const stopListening = s
-                .createListener({
-                  properties: s.properties ?? {},
-                  ctx: {
-                    getProperty: (p) => this.getProperty(p) as any,
-                    graph: this.graph,
-                  },
-                })
-                .listen((data) => new ExecutionContext(this).run(data));
-
-              onCleanup(stopListening);
+              onCleanup(
+                s
+                  .createListener({
+                    properties: s.properties ?? {},
+                    ctx: {
+                      getProperty: (p) => this.getProperty(p) as any,
+                      graph: this.graph,
+                    },
+                  })
+                  .listen((data) => new ExecutionContext(this).run(data))
+              );
             },
             (e) => console.error(e)
           );
