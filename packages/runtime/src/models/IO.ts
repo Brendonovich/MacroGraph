@@ -180,7 +180,6 @@ export class DataOutput<T extends BaseType> {
           connectWildcardsInIO(self, conn);
 
           onCleanup(() => {
-            console.log("a cleanup");
             conn.connection = None;
           });
         })

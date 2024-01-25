@@ -183,7 +183,6 @@ export function register(pkg: Package, { chat }: Ctx) {
       type: "event",
       properties: { ...s.properties, ...defaultProperties } as any,
       createListener({ ctx, properties }) {
-        console.log("listener");
         const client = () =>
           ctx
             .getProperty(properties.sender as DefaultProperties["sender"])
