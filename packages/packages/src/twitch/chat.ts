@@ -124,15 +124,16 @@ export function register(pkg: Package, { chat }: Ctx) {
             .expect("Channel not provided"),
         ] as const;
 
-      createEffect(() => {
-        const [state, channel] = data();
-        const channelLowercase = channel.toLowerCase();
+      createEffect(
+        on(data, ([state, channel]) => {
+          const channelLowercase = channel.toLowerCase();
 
-        state.channelListenerCounts[channelLowercase] ??= 0;
-        state.channelListenerCounts[channelLowercase] += 1;
+          state.channelListenerCounts[channelLowercase] ??= 0;
+          state.channelListenerCounts[channelLowercase] += 1;
 
-        onCleanup(() => (state.channelListenerCounts[channelLowercase] -= 1));
-      });
+          onCleanup(() => (state.channelListenerCounts[channelLowercase] -= 1));
+        })
+      );
 
       return {
         message: io.dataInput({
@@ -182,6 +183,7 @@ export function register(pkg: Package, { chat }: Ctx) {
       type: "event",
       properties: { ...s.properties, ...defaultProperties } as any,
       createListener({ ctx, properties }) {
+        console.log("listener");
         const client = () =>
           ctx
             .getProperty(properties.sender as DefaultProperties["sender"])
