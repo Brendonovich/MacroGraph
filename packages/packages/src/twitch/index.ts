@@ -10,7 +10,7 @@ import { TwitchAccount, TwitchChannel } from "./resource";
 export type Pkg = Package<any, Ctx>;
 
 export function pkg(core: Core) {
-  const ctx = createCtx(core, (e) => pkg.emitEvent(e));
+  const ctx = createCtx(core);
 
   const pkg = new Package({
     name: "Twitch Events",
