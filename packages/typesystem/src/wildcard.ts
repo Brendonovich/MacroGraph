@@ -9,6 +9,7 @@ import {
   on,
   onCleanup,
   runWithOwner,
+  untrack,
 } from "solid-js";
 import { ReactiveSet } from "@solid-primitives/set";
 import {
@@ -82,67 +83,53 @@ export class Wildcard {
 
           let maybeConnection: t.Any | undefined;
 
-          for (const connection of connections) {
-            if (!maybeConnection) maybeConnection = connection;
-            else if (
-              maybeConnection.hasUnconnectedWildcard() &&
-              !connection.hasUnconnectedWildcard()
-            ) {
-              maybeConnection = connection;
-              break;
+          // fixed #358
+          untrack(() => {
+            for (const connection of connections) {
+              if (!maybeConnection) maybeConnection = connection;
+              else if (
+                maybeConnection.hasUnconnectedWildcard() &&
+                !connection.hasUnconnectedWildcard()
+              ) {
+                maybeConnection = connection;
+                break;
+              }
             }
-          }
+          });
 
           if (maybeConnection) {
             const connection = maybeConnection;
 
-            return Some(
-              new WildcardValueConnection(connection, () => connection)
+            const valueConnection = new WildcardValueConnection(
+              connection,
+              () => connection
             );
+
+            onCleanup(() => valueConnection.dispose());
+
+            return Some(valueConnection);
           }
 
           return None;
         }
       );
 
-      createEffect<Option<WildcardValueConnection>>((prev) => {
-        const current = this.directSourceConnection();
-
-        if (prev.isSome()) prev.unwrap().dispose();
-
-        return current;
-      }, None);
-
       const [wildcardConnection, setWildcardConnection] =
         createOptionSignal<WildcardValueConnection>(None);
 
       // reset connection state when connection disposed externally
-      createEffect(() => {
-        const conn = wildcardConnection();
-
-        conn.peek((c) => {
-          c.addDisposeListener(() => setWildcardConnection(None));
-        });
-      });
+      createEffect(
+        on(wildcardConnection, (conn) => {
+          conn.peek((c) => {
+            c.addDisposeListener(() => setWildcardConnection(None));
+          });
+        })
+      );
 
       createEffect(
         on(
-          () => {
-            return [
-              this.directSourceConnection(),
-              this.wildcardConnections(),
-            ] as const;
-          },
-          ([directSourceConnection, wildcardConnections]) => {
-            // no need for wildcard connection if we've got a direct connection
-            if (
-              directSourceConnection.isSome() ||
-              wildcardConnections.size === 0
-            ) {
-              setWildcardConnection(None);
-              return;
-            }
-
+          () => this.wildcardConnections(),
+          (wildcardConnections) => {
             // use previous connection if possible
             if (wildcardConnection().isSome()) {
               if (
@@ -182,8 +169,6 @@ export class Wildcard {
                   parentValueConnection.value()
                 );
 
-                console.log(conn);
-
                 if (
                   conn.hasUnconnectedWildcard() &&
                   !connections
@@ -219,10 +204,19 @@ export class Wildcard {
         )
       );
 
-      this.wildcardConnection = () => wildcardConnection();
+      this.wildcardConnection = createOptionMemo(() => {
+        // no need for wildcard connection if we've got a direct connection
+        if (
+          this.directSourceConnection().isSome() ||
+          this.wildcardConnections().size === 0
+        )
+          return None;
+
+        return wildcardConnection();
+      });
 
       this.valueConnection = createOptionMemo(() =>
-        this.directSourceConnection().or(this.wildcardConnection())
+        this.directSourceConnection().orElse(() => this.wildcardConnection())
       );
     });
 
@@ -358,45 +352,12 @@ class WildcardTypeConnector extends Disposable {
         createEffect(() => {
           const aValue = a.wildcard.value();
           const bValue = b.wildcard.value();
-
           aValue.zip(bValue).peek(([aValue, bValue]) => {
             connectWildcardsInTypes(aValue, bValue);
             onCleanup(() => disconnectWildcardsInTypes(aValue, bValue));
           });
         });
       } else if (a instanceof t.Wildcard !== b instanceof t.Wildcard) {
-        function connectWildcards(a: t.Any, b: t.Any) {
-          if (!(a instanceof t.Wildcard)) return;
-
-          createEffect(() => {
-            // need to disconnect/reconnect each time a new value is available
-            const valueConnection = a.wildcard.valueConnection();
-
-            valueConnection.peek((valueConnection) => {
-              const value = valueConnection.value();
-              if (value === b) return;
-
-              // connects stuff like `Map<Wildcard>` and `Wildcard(Map<String>)` since
-              // a) `value` is the `Map<String>` from `Wildcard(Map<String>)` and
-              // b) cWIT will connect their `inner` values since they're both maps
-              connectWildcardsInTypes(value, b);
-
-              const cleanup = () => disconnectWildcardsInTypes(value, b);
-
-              // needed for if `Wildcard(Map<String>)` loses its source.
-              // nested wildcard connections wouldn't disconnect with their parents without this
-              const parentListener =
-                valueConnection.addDisposeListener(cleanup);
-
-              // don't need a listener if we're re-running
-              onCleanup(() => {
-                parentListener();
-                cleanup();
-              });
-            });
-          });
-        }
-
         connectWildcards(a, b);
         connectWildcards(b, a);
       }
@@ -417,6 +378,47 @@ class WildcardTypeConnector extends Disposable {
   getOpposite(self: t.Any) {
     return self === this.a ? this.b : this.a;
   }
+}
+
+export function connectWildcards(a: t.Any, b: t.Any) {
+  if (!(a instanceof t.Wildcard)) return;
+
+  const valueConnection = createOptionMemo(
+    () => {
+      const valueConnection = a.wildcard.valueConnection();
+
+      return valueConnection
+        .map((conn) => ({ value: conn.value(), conn }))
+        .filter(({ value }) => value !== b);
+    },
+    {
+      equals: (prev, next) =>
+        prev.value === next.value && prev.conn === next.conn,
+    }
+  );
+
+  createEffect(
+    on(valueConnection, (valueConnection) => {
+      valueConnection.peek(({ value, conn }) => {
+        // connects stuff like `Map<Wildcard>` and `Wildcard(Map<String>)` since
+        // a) `value` is the `Map<String>` from `Wildcard(Map<String>)` and
+        // b) cWIT will connect their `inner` values since they're both maps
+        connectWildcardsInTypes(value, b);
+
+        const cleanup = () => disconnectWildcardsInTypes(value, b);
+
+        // needed for if `Wildcard(Map<String>)` loses its source.
+        // nested wildcard connections wouldn't disconnect with their parents without this
+        const parentListener = conn.addDisposeListener(cleanup);
+
+        // don't need a listener if we're re-running
+        onCleanup(() => {
+          parentListener();
+          cleanup();
+        });
+      });
+    })
+  );
 }
 
 export function connectWildcardsInTypes(a: t.Any, b: t.Any) {
