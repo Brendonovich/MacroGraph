@@ -15,7 +15,7 @@ export default function (ctx: Ctx) {
     <>
       <Switch>
         <Match when={ctx.instances.size !== 0}>
-          <table class="mb-4 table-auto w-full">
+          <table class="mb-4 table-auto w-full text-white">
             <thead>
               <tr>
                 <th class="pr-2 text-left">IP Address</th>
@@ -62,7 +62,7 @@ export default function (ctx: Ctx) {
         }}
       >
         <fieldset disabled={form.submitting} class="space-y-4">
-          <div class="space-x-4">
+          <div class="space-x-4 flex flex-row">
             <Field name="url">
               {(field, props) => (
                 <Input

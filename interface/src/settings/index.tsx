@@ -117,8 +117,8 @@ export function ConnectionsDialog(props: ParentProps) {
 
   return (
     <Dialog.Root onOpenChange={setOpen} open={open()} trigger={props.children}>
-      <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl min-w-[40rem] divide-y divide-black border border-black">
-        <div class="flex flex-row justify-between text-white p-4">
+      <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl min-w-[40rem] divide-y divide-black border border-black text-white">
+        <div class="flex flex-row justify-between p-4">
           <Dialog.Title class="font-bold text-2xl">Connections</Dialog.Title>
           <Dialog.CloseButton>
             <IconBiX class="w-8 h-8" />
