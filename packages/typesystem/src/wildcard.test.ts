@@ -357,4 +357,37 @@ describe("issues", () => {
       (node3.w.value().value as t.Map<t.Wildcard>).value.wildcard.value().value
     );
   });
+
+  // https://github.com/Brendonovich/macrograph/issues/358
+  test(
+    "#358",
+    () => {
+      const variable = t.map(t.list(t.string()));
+
+      const create = (() => {
+        const w = new Wildcard("");
+
+        const input = t.wildcard(w);
+        const output = t.map(t.wildcard(w));
+
+        return { w, input, output };
+      })();
+
+      connectWildcardsInTypes(create.output, variable);
+
+      expect(create.w.value().unwrap()).toBe(variable.value);
+
+      const listCreate = (() => {
+        const w = new Wildcard("");
+        const output = t.list(t.wildcard(w));
+
+        return { w, output };
+      })();
+
+      connectWildcardsInTypes(listCreate.output, create.input);
+
+      expect(listCreate.w.value().unwrap()).toBe(variable.value.item);
+    },
+    { timeout: 100 }
+  );
 });
