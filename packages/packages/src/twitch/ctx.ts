@@ -25,7 +25,7 @@ const PERSISTED_SCHEMA = z.record(
 export type Persisted = z.infer<typeof PERSISTED_SCHEMA>;
 export type PersistedStore = ReturnType<typeof createStore<Persisted>>;
 
-export function createCtx(core: Core, onEvent: OnEvent) {
+export function createCtx(core: Core) {
   const persisted = makePersisted(
     createStore<z.infer<typeof PERSISTED_SCHEMA>>({}),
     { name: "twitchTokens" }
@@ -33,7 +33,7 @@ export function createCtx(core: Core, onEvent: OnEvent) {
 
   const helixClient = createHelix(core);
   const auth = createAuth(CLIENT_ID, core, helixClient, persisted);
-  const eventSub = createEventSub(onEvent, helixClient);
+  const eventSub = createEventSub(helixClient);
   const chat = createChat();
 
   const setup = createResource(async () => {

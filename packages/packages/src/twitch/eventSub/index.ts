@@ -25,8 +25,9 @@ import {
   OutcomesProgress,
   TopPredictors,
 } from "./structs";
+import { onCleanup } from "solid-js";
 
-export function createEventSub(onEvent: OnEvent, helixClient: Helix) {
+export function createEventSub(helixClient: Helix) {
   const sockets = new ReactiveMap<string, WebSocket>();
 
   function connectSocket(account: Account) {
@@ -39,38 +40,29 @@ export function createEventSub(onEvent: OnEvent, helixClient: Helix) {
     ws.onmessage = async (data) => {
       let info: any = JSON.parse(data.data);
 
-      switch (info.metadata.message_type) {
-        case "session_welcome":
-          sockets.set(userId, ws);
+      if (info.metadata.message_type === "session_welcome") {
+        sockets.set(userId, ws);
 
-          await Promise.allSettled(
-            SubTypes.map((type) =>
-              helixClient.call("POST /eventsub/subscriptions", account, {
-                body: JSON.stringify({
-                  type,
-                  version: type == "channel.follow" ? "2" : "1",
-                  condition: {
-                    broadcaster_user_id: userId,
-                    moderator_user_id: userId,
-                    to_broadcaster_user_id: userId,
-                    user_id: userId,
-                  },
-                  transport: {
-                    method: "websocket",
-                    session_id: info.payload.session.id,
-                  },
-                }),
-              })
-            )
-          );
-
-          break;
-        case "notification":
-          onEvent({
-            name: info.payload.subscription.type,
-            data: info.payload.event,
-          });
-          break;
+        await Promise.allSettled(
+          SubTypes.map((type) =>
+            helixClient.call("POST /eventsub/subscriptions", account, {
+              body: JSON.stringify({
+                type,
+                version: type == "channel.follow" ? "2" : "1",
+                condition: {
+                  broadcaster_user_id: userId,
+                  moderator_user_id: userId,
+                  to_broadcaster_user_id: userId,
+                  user_id: userId,
+                },
+                transport: {
+                  method: "websocket",
+                  session_id: info.payload.session.id,
+                },
+              }),
+            })
+          )
+        );
       }
     };
 
@@ -90,23 +82,24 @@ export function createEventSub(onEvent: OnEvent, helixClient: Helix) {
 }
 
 export function register(pkg: Package, { eventSub }: Ctx) {
-  function createEventsubEventSchema<
+  function createEventSubEventSchema<
     TEvent extends keyof Events,
     TProperties extends Record<string, PropertyDef> = {},
     TIO = void
-  >(
-    s: Omit<
-      CreateEventSchema<
-        TProperties & typeof defaultProperties,
-        TIO,
-        Events[TEvent]
-      >,
-      "type" | "createListener"
-    > & {
-      properties?: TProperties;
-      event: TEvent;
-    }
-  ) {
+  >({
+    event,
+    ...s
+  }: Omit<
+    CreateEventSchema<
+      TProperties & typeof defaultProperties,
+      TIO,
+      Events[TEvent]
+    >,
+    "type" | "createListener"
+  > & {
+    properties?: TProperties;
+    event: TEvent;
+  }) {
     pkg.createSchema({
       ...s,
       type: "event",
@@ -123,14 +116,17 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 
         const bus = createEventBus<Events[TEvent]>();
 
-        createEventListener(socket, "message", (msg: any) => {
-          const info: any = JSON.parse(msg.data);
+        createEventListener(socket, "message", (msg: MessageEvent) => {
+          const data: any = JSON.parse(msg.data);
+
+          console.log(socket);
+          console.log(data);
 
           if (
-            info.metadata.message_type === "notification" &&
-            info.metadata.message_type === s.event
+            data.metadata.message_type === "notification" &&
+            data.metadata.subscription_type === event
           )
-            bus.emit(info.payload.event);
+            bus.emit(data.payload.event);
         });
 
         return bus;
@@ -138,7 +134,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     });
   }
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "User Banned",
     event: "channel.ban",
     createIO: ({ io }) => ({
@@ -205,7 +201,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "User Unbanned",
     event: "channel.unban",
     createIO: ({ io }) => ({
@@ -242,7 +238,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Moderator Add",
     event: "channel.moderator.add",
     createIO: ({ io }) => ({
@@ -267,7 +263,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Moderator Remove",
     event: "channel.moderator.remove",
     createIO: ({ io }) => ({
@@ -292,7 +288,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Point Reward Add",
     event: "channel.channel_points_custom_reward.add",
     createIO: ({ io }) => ({
@@ -401,7 +397,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Point Reward Updated",
     event: "channel.channel_points_custom_reward.update",
     createIO: ({ io }) => ({
@@ -510,7 +506,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Point Reward Removed",
     event: "channel.channel_points_custom_reward.remove",
     createIO: ({ io }) => ({
@@ -619,7 +615,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Point Reward Redeemed",
     event: "channel.channel_points_custom_reward_redemption.add",
     createIO: ({ io }) => ({
@@ -697,7 +693,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     title: s.field("title", t.string()),
   }));
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Poll Begin",
     event: "channel.poll.begin",
     createIO: ({ io }) => ({
@@ -743,7 +739,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Poll Progress",
     event: "channel.poll.progress",
     createIO: ({ io }) => {
@@ -788,7 +784,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Poll End",
     event: "channel.poll.end",
     createIO: ({ io }) => {
@@ -833,7 +829,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Prediction Begin",
     event: "channel.prediction.begin",
     createIO: ({ io }) => {
@@ -860,7 +856,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Prediction Progress",
     event: "channel.prediction.progress",
     createIO: ({ io }) => {
@@ -900,7 +896,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Prediction Lock",
     event: "channel.prediction.lock",
     createIO: ({ io }) => ({
@@ -938,7 +934,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Prediction End",
     event: "channel.prediction.end",
     createIO: ({ io }) => {
@@ -1011,7 +1007,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     total: s.field("Total", t.int()),
   }));
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Hype Train Begin",
     event: "channel.hype_train.begin",
     createIO: ({ io }) => {
@@ -1082,7 +1078,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Hype Train Progress",
     event: "channel.hype_train.progress",
     createIO: ({ io }) => {
@@ -1154,7 +1150,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Hype Train End",
     event: "channel.hype_train.end",
     createIO: ({ io }) => {
@@ -1203,7 +1199,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Updated",
     event: "channel.update",
     createIO: ({ io }) => {
@@ -1257,7 +1253,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Subscribe",
     event: "channel.subscribe",
     createIO: ({ io }) => {
@@ -1296,7 +1292,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Subscribe End",
     event: "channel.subscription.end",
     createIO: ({ io }) => {
@@ -1335,7 +1331,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Subscription Gift",
     event: "channel.subscription.gift",
     createIO: ({ io }) => {
@@ -1386,7 +1382,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Subscription Message",
     event: "channel.subscription.message",
     createIO: ({ io }) => {
@@ -1443,7 +1439,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Cheers",
     event: "channel.cheer",
     createIO: ({ io }) => {
@@ -1494,7 +1490,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Raid",
     event: "channel.raid",
     createIO: ({ io }) => {
@@ -1527,7 +1523,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Ad Break Begin",
     event: "channel.ad_break.begin",
     createIO: ({ io }) => {
@@ -1555,7 +1551,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "User Followed",
     event: "channel.follow",
     createIO: ({ io }) => {
@@ -1588,7 +1584,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Shoutout Received",
     event: "channel.shoutout.receive",
     createIO: ({ io }) => {
@@ -1616,7 +1612,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Goal Begin",
     event: "channel.goal.begin",
     createIO: ({ io }) => {
@@ -1668,7 +1664,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Goal Progress",
     event: "channel.goal.progress",
     createIO: ({ io }) => {
@@ -1720,7 +1716,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Goal End",
     event: "channel.goal.end",
     createIO: ({ io }) => {
@@ -1784,7 +1780,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Stream Online",
     event: "stream.online",
     createIO: ({ io }) => {
@@ -1817,7 +1813,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Stream Offline",
     event: "stream.offline",
     createIO: ({ io }) => {
@@ -1832,7 +1828,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Chat Clear User Messages",
     event: "channel.chat.clear_user_messages",
     createIO: ({ io }) => {
@@ -1865,7 +1861,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Chat Message Deleted Eventsub",
     event: "channel.chat.message_delete",
     createIO: ({ io }) => {
@@ -1904,7 +1900,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     },
   });
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Chat Clear",
     event: "channel.chat.clear",
     createIO: ({ io }) => {
@@ -2110,7 +2106,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
     ]
   );
 
-  createEventsubEventSchema({
+  createEventSubEventSchema({
     name: "Channel Chat Notification",
     event: "channel.chat.notification",
     createIO: ({ io }) => {
