@@ -2175,12 +2175,10 @@ export function register(pkg: Package<EventTypes>) {
       }),
     }),
     async run({ ctx, io, obs }) {
-      console.log(obs);
       const data = await obs.call("GetSceneItemList", {
         sceneName: ctx.getInput(io.sceneName),
       });
 
-      console.log(data);
       const sceneItems = data.sceneItems.map((data) => {
         const sceneItemTransformObj: SceneItemTransformInterface =
           data.sceneItemTransform as any;

@@ -93,7 +93,6 @@ export const TextInput = (props: Props) => {
                         <li
                           onClick={() => {
                             props.onChange(option);
-                            console.log(option);
                             setOpen();
                           }}
                           class="w-full px-2 py-1 hover:bg-white/20"

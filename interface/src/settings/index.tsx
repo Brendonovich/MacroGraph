@@ -59,13 +59,7 @@ export default () => {
               </button>
               <button
                 title="Load Project"
-                onClick={() => {
-                  if (window.confirm("Would you like to save your chages?")) {
-                    projectPersistence.saveProject();
-                  }
-
-                  projectPersistence.loadProject();
-                }}
+                onClick={() => projectPersistence.loadProject()}
               >
                 <IconContainer>
                   <IconTdesignFolderImport class="w-full h-full" />

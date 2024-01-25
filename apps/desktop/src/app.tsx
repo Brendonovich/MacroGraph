@@ -1,5 +1,5 @@
 import { Interface, Platform, PlatformContext } from "@macrograph/interface";
-import { save, open } from "@tauri-apps/api/dialog";
+import { save, open, ask } from "@tauri-apps/api/dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
 import { makePersisted } from "@solid-primitives/storage";
 
@@ -35,6 +35,9 @@ const platform: Platform = {
       setProjectUrl(url);
     },
     async loadProject() {
+      if (await ask("Woudl you like to save this project?"))
+        await this.saveProject();
+
       const url = await open({
         filters: [{ name: "JSON", extensions: ["json"] }],
         multiple: false,
