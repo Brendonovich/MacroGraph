@@ -2,3 +2,4 @@ packages:
     - "interface"
     - "apps/*"
     - "packages/*"
+    - "crates/tauri-plugin-midi"
