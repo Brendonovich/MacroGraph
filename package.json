@@ -20,6 +20,7 @@
     "typescript": "^5.3.3",
     "vite-plugin-solid": "^2.8.0",
     "vitest": "^0.32.2",
+    "vitest-github-actions-reporter": "^0.11.1",
     "webdriverio": "^8.11.2"
   }
 }
