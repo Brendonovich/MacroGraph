@@ -21,6 +21,7 @@ import {
 import { Package, ResourceType, inferResourceTypeValue } from "./Package";
 import { Node } from "./Node";
 import { Graph } from "./Graph";
+import { batch } from "solid-js";
 
 export type NodeSchemaVariant =
   | "Base"
@@ -109,14 +110,17 @@ export class IOBuilder {
     const newInput = Maybe(
       this.previous?.inputs.find(
         (i): i is DataInput<T["type"]> =>
-          i.id === args.id && i instanceof DataInput && args.type.eq(i.type)
+          i.id === args.id && i instanceof DataInput
       )
     ).unwrapOrElse(() => new DataInput({ ...args, node: this.node }));
 
-    newInput.name = args.name;
-    newInput.fetchSuggestions = (args as any).fetchSuggestions;
+    batch(() => {
+      newInput.name = args.name;
+      newInput.fetchSuggestions = (args as any).fetchSuggestions;
+      if (!newInput.type.eq(args.type)) newInput.type = args.type;
 
-    this.inputs.push(newInput);
+      this.inputs.push(newInput);
+    });
 
     return newInput;
   }
@@ -125,13 +129,16 @@ export class IOBuilder {
     const newOutput = Maybe(
       this.previous?.outputs.find(
         (o): o is DataOutput<T["type"]> =>
-          o.id === args.id && o instanceof DataOutput && args.type.eq(o.type)
+          o.id === args.id && o instanceof DataOutput
       )
     ).unwrapOrElse(() => new DataOutput({ ...args, node: this.node }));
 
-    newOutput.name = args.name;
+    batch(() => {
+      newOutput.name = args.name;
+      if (!newOutput.type.eq(args.type)) newOutput.type = args.type;
 
-    this.outputs.push(newOutput);
+      this.outputs.push(newOutput);
+    });
 
     return newOutput;
   }

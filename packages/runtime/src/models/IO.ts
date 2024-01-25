@@ -4,6 +4,8 @@ import {
   createMemo,
   createRoot,
   getOwner,
+  mapArray,
+  on,
   onCleanup,
   runWithOwner,
 } from "solid-js";
@@ -26,14 +28,23 @@ export function connectWildcardsInIO(
   output: DataOutput<t.Any>,
   input: DataInput<t.Any>
 ) {
-  connectWildcardsInTypes(output.type, input.type);
-}
+  createEffect(
+    on(
+      () => {
+        const outType = output.type;
+        const inType = input.type;
 
-export function disconnectWildcardsInIO(
-  output: DataOutput<t.Any>,
-  input: DataInput<t.Any>
-) {
-  disconnectWildcardsInTypes(output.type, input.type);
+        return { outType, inType };
+      },
+      ({ outType, inType }) => {
+        connectWildcardsInTypes(outType, inType);
+
+        onCleanup(() => {
+          disconnectWildcardsInTypes(outType, inType);
+        });
+      }
+    )
+  );
 }
 
 export type DataInputArgs<T extends BaseType<any>> = {
@@ -138,34 +149,42 @@ export class DataOutput<T extends BaseType> {
     const self = createMutable(this);
 
     runWithOwner(owner, () => {
-      this.connections = createMemo(() => {
-        const graph = this.node.graph;
+      this.connections = createMemo(
+        () => {
+          const graph = this.node.graph;
 
-        const conns = graph.connections.get(makeIORef(this)) ?? [];
+          const conns = graph.connections.get(makeIORef(this)) ?? [];
 
-        return conns
-          .map((conn) => {
-            const { nodeId, ioId } = splitIORef(conn);
+          return conns
+            .map((conn) => {
+              const { nodeId, ioId } = splitIORef(conn);
 
-            const node = graph.nodes.get(nodeId);
-            const input = node?.input(ioId);
+              const node = graph.nodes.get(nodeId);
+              const input = node?.input(ioId);
 
-            if (input instanceof DataInput) return input as DataInput<T>;
-          })
-          .filter(Boolean);
-      });
+              if (input instanceof DataInput) return input as DataInput<T>;
+            })
+            .filter(Boolean);
+        },
+        [],
+        {
+          equals: (prev, next) =>
+            prev.length === next.length && prev.every((p, i) => p === next[i]),
+        }
+      );
 
-      createEffect(() => {
-        for (const conn of self.connections()) {
+      createEffect(
+        mapArray(self.connections, (conn) => {
           conn.connection = Some(self as any);
+
           connectWildcardsInIO(self, conn);
 
           onCleanup(() => {
+            console.log("a cleanup");
             conn.connection = None;
-            disconnectWildcardsInIO(self, conn);
           });
-        }
-      });
+        })
+      );
     });
 
     return self;
