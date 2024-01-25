@@ -6,6 +6,7 @@ import {
   deserializeType,
   deserializeValue,
   serializeValue,
+  Disposable,
 } from "@macrograph/typesystem";
 
 import { createEffect, createRoot, getOwner, on, runWithOwner } from "solid-js";
@@ -21,16 +22,16 @@ export type VariableArgs = {
   owner: Graph | Project;
 };
 
-export class Variable {
+export class Variable extends Disposable {
   id: number;
   name: string;
   type: t.Any;
   value: any;
   owner: Graph | Project;
 
-  dispose: () => void;
-
   constructor(args: VariableArgs) {
+    super();
+
     this.id = args.id;
     this.name = args.name;
     this.type = args.type;
@@ -43,6 +44,8 @@ export class Variable {
       owner: getOwner(),
       dispose,
     }));
+
+    this.addDisposeListener(dispose);
 
     runWithOwner(owner, () => {
       createEffect((prevType) => {
@@ -72,8 +75,6 @@ export class Variable {
         )
       );
     });
-
-    this.dispose = dispose;
 
     return self;
   }
