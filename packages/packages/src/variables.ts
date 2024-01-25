@@ -11,7 +11,7 @@ export function pkg() {
     name: "Variables",
   });
 
-  const variableProperty = {
+  const graphVariableProperty = {
     name: "Variable",
     source: ({ node }) =>
       node.graph.variables.map((v) => ({
@@ -24,7 +24,7 @@ export function pkg() {
     name: "Get Graph Variable",
     variant: "Pure",
     properties: {
-      variable: variableProperty,
+      variable: graphVariableProperty,
     },
     createIO({ io, ctx, properties }) {
       const variableId = ctx.getProperty(properties.variable);
@@ -53,7 +53,7 @@ export function pkg() {
     name: "Set Graph Variable",
     variant: "Exec",
     properties: {
-      variable: variableProperty,
+      variable: graphVariableProperty,
     },
     createIO({ io, ctx, properties }) {
       const variableId = ctx.getProperty(properties.variable);
@@ -77,6 +77,76 @@ export function pkg() {
     },
   });
 
+  const projectVariableProperty = {
+    name: "Variable",
+    source: ({ node }) =>
+      node.graph.project.variables.map((v) => ({
+        id: v.id,
+        display: v.name,
+      })),
+  } satisfies PropertyDef;
+
+  pkg.createNonEventSchema({
+    name: "Get Project Variable",
+    variant: "Pure",
+    properties: {
+      variable: projectVariableProperty,
+    },
+    createIO({ io, ctx, properties }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = ctx.graph.project.variables.find(
+        (v) => v.id === variableId
+      );
+      if (!variable) return;
+
+      return io.dataOutput({
+        id: "",
+        name: variable.name,
+        type: variable.type,
+      });
+    },
+    run({ ctx, io, properties, graph }) {
+      if (!io) return;
+
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = graph.project.variables.find(
+        (v) => v.id === Number(variableId)
+      )!;
+
+      ctx.setOutput(io, variable.value);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Set Project Variable",
+    variant: "Exec",
+    properties: {
+      variable: projectVariableProperty,
+    },
+    createIO({ io, ctx, properties }) {
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = ctx.graph.project.variables.find(
+        (v) => v.id === variableId
+      );
+      if (!variable) return;
+
+      return io.dataInput({
+        id: "",
+        name: variable.name,
+        type: variable.type,
+      });
+    },
+    run({ ctx, io, properties, graph }) {
+      if (!io) return;
+
+      const variableId = ctx.getProperty(properties.variable);
+      const variable = graph.project.variables.find((v) => v.id === variableId);
+      if (!variable) return;
+
+      variable.value = ctx.getInput(io);
+    },
+  });
+
   const listenedVariables = new ReactiveSet<`${number}:${number}`>();
 
   pkg.createEventSchema({
@@ -88,7 +158,7 @@ export function pkg() {
       return `${ctx.graph.id}:${variable.id}`;
     },
     name: "Graph Variable Changed",
-    properties: { variable: variableProperty },
+    properties: { variable: graphVariableProperty },
     createIO({ io, ctx, properties, graph }) {
       const variableId = ctx.getProperty(properties.variable);
       const variable = ctx.graph.variables.find((v) => v.id === variableId);

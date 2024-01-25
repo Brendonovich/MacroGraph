@@ -41,19 +41,12 @@ import {
   writeClipboardItemToClipboard,
 } from "./clipboard";
 import "./global.css";
-import { Graphs } from "./Sidebar/Project/Graphs";
-import { Resources } from "./Sidebar/Project/Resources";
-import { PrintOutput } from "./Sidebar/Project/PrintOutput";
-import { CustomEvents } from "./Sidebar/Project/CustomEvents";
-import { Variables } from "./Sidebar/Graph/Variables";
-import { NodeInfo } from "./Sidebar/Node/Info";
-import { Properties } from "./Sidebar/Node/Properties";
 import {
   CommandDialog,
   Control,
   createSection,
 } from "./components/CommandDialog";
-
+import * as Sidebars from "./Sidebar";
 export { useCore } from "./contexts";
 export * from "./platform";
 
@@ -440,8 +433,8 @@ function ProjectInterface(props: {
             <Sidebar width={Math.max(leftSidebar.state.width, MIN_WIDTH)}>
               <Settings />
               <div class="overflow-y-auto outer-scroll flex-1">
-                <Graphs
-                  currentGraph={currentGraph()?.model.id}
+                <Sidebars.Project
+                  project={props.core.project}
                   onGraphClicked={(graph) => {
                     const currentIndex = graphStates.findIndex(
                       (s) => s.id === graph.id
@@ -453,9 +446,6 @@ function ProjectInterface(props: {
                     } else setCurrentGraphIndex(currentIndex);
                   }}
                 />
-                <PrintOutput />
-                <CustomEvents />
-                <Resources />
               </div>
             </Sidebar>
 
@@ -587,7 +577,9 @@ function ProjectInterface(props: {
             <Sidebar width={Math.max(rightSidebar.state.width, MIN_WIDTH)}>
               <Solid.Show when={currentGraph()}>
                 {(graph) => (
-                  <Solid.Switch fallback={<Variables graph={graph().model} />}>
+                  <Solid.Switch
+                    fallback={<Sidebars.Graph graph={graph().model} />}
+                  >
                     <Solid.Match
                       when={(() => {
                         const {
@@ -601,24 +593,7 @@ function ProjectInterface(props: {
                         return model.nodes.get(selectedItemId.id);
                       })()}
                     >
-                      {(node) => (
-                        <>
-                          <NodeInfo node={node()} />
-                          <Solid.Show
-                            when={
-                              "properties" in node().schema &&
-                              node().schema.properties
-                            }
-                          >
-                            {(properties) => (
-                              <Properties
-                                node={node()}
-                                properties={properties()}
-                              />
-                            )}
-                          </Solid.Show>
-                        </>
-                      )}
+                      {(node) => <Sidebars.Node node={node()} />}
                     </Solid.Match>
                   </Solid.Switch>
                 )}

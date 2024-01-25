@@ -8,6 +8,7 @@ import { CustomEvent } from "./CustomEvent";
 import { SerializedProject } from "./serialized";
 import { ResourceType } from "./Package";
 import { batch } from "solid-js";
+import { Variable, VariableArgs } from "./Variable";
 
 export interface ProjectArgs {
   core: Core;
@@ -28,12 +29,13 @@ export class Project {
   graphs = new ReactiveMap<number, Graph>();
   customEvents = new ReactiveMap<number, CustomEvent>();
   resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
+  variables: Array<Variable> = [];
 
   private disableSave = false;
 
   private graphIdCounter = 0;
   private customEventIdCounter = 0;
-  private counter = 0;
+  private idCounter = 0;
 
   constructor(args: ProjectArgs) {
     this.core = args.core;
@@ -80,8 +82,12 @@ export class Project {
     return event;
   }
 
+  generateId() {
+    return this.idCounter++;
+  }
+
   createResource(args: { type: ResourceType<any, any>; name: string }) {
-    const id = this.counter++;
+    const id = this.idCounter++;
     const itemBase = {
       id,
       name: args.name,
@@ -111,13 +117,38 @@ export class Project {
     }
   }
 
+  createVariable(args: Omit<VariableArgs, "id" | "owner">) {
+    const id = this.generateId();
+
+    this.variables.push(new Variable({ ...args, id, owner: this }));
+
+    this.save();
+
+    return id;
+  }
+
+  setVariableValue(id: number, value: any) {
+    const variable = this.variables.find((v) => v.id === id);
+    if (variable) variable.value = value;
+
+    this.save();
+  }
+
+  removeVariable(id: number) {
+    const index = this.variables.findIndex((v) => v.id === id);
+    if (index === -1) return;
+
+    const v = this.variables.splice(index, 1);
+    v.forEach((v) => v.dispose());
+  }
+
   serialize(): z.infer<typeof SerializedProject> {
     return {
       graphIdCounter: this.graphIdCounter,
       graphs: [...this.graphs.values()].map((g) => g.serialize()),
       customEventIdCounter: this.customEventIdCounter,
       customEvents: [...this.customEvents.values()].map((e) => e.serialize()),
-      counter: this.counter,
+      counter: this.idCounter,
       resources: [...this.resources].map(([type, entry]) => ({
         type: {
           pkg: type.package.name,
@@ -125,6 +156,7 @@ export class Project {
         },
         entry,
       })),
+      variables: this.variables.map((v) => v.serialize()),
     };
   }
 
@@ -155,7 +187,7 @@ export class Project {
           .filter(Boolean) as [number, CustomEvent][]
       );
 
-      project.counter = data.counter;
+      project.idCounter = data.counter;
 
       project.resources = new ReactiveMap(
         data.resources
@@ -177,6 +209,10 @@ export class Project {
             ];
           })
           .filter(Boolean)
+      );
+
+      project.variables = data.variables.map((v) =>
+        Variable.deserialize(v, project)
       );
 
       project.graphs = new ReactiveMap(

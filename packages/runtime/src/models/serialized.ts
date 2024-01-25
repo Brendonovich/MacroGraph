@@ -83,4 +83,5 @@ export const SerializedProject = z.object({
   customEventIdCounter: z.number().int().default(0),
   counter: z.number().default(0),
   resources: z.array(SerializedResource).default([]),
+  variables: z.array(SerializedVariable).default([]),
 });
