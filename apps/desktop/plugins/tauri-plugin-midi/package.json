@@ -2,5 +2,11 @@
   "name": "tauri-plugin-midi",
   "version": "0.0.0",
   "main": "./guest-js/index.ts",
-  "types": "./guest-js/index.ts"
+  "types": "./guest-js/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
 }
