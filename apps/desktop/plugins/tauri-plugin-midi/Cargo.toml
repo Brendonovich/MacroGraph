@@ -1,8 +1,9 @@
 [package]
 name = "tauri-plugin-midi"
+description = "A WebMIDI-compatible plugin for Tauri"
+license = "MIT"
 version = "0.0.0"
 authors = [ "You" ]
-description = ""
 edition = "2021"
 rust-version = "1.60"
 exclude = ["/examples"]
