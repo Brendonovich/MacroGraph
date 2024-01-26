@@ -1,0 +1,5 @@
+{
+  "name": "tauri-plugin-midi",
+  "main": "./guest-js/index.ts",
+  "types": "./guest-js/index.ts"
+}

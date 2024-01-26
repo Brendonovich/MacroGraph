@@ -83,6 +83,9 @@ importers:
       solid-js:
         specifier: ^1.8.8
         version: 1.8.8
+      tauri-plugin-midi:
+        specifier: workspace:*
+        version: link:plugins/tauri-plugin-midi
       vinxi:
         specifier: 0.1.1
         version: 0.1.1(preact@10.19.3)(rollup@2.79.1)
@@ -117,6 +120,8 @@ importers:
       vite:
         specifier: ^4.5.1
         version: 4.5.1(@types/node@20.1.4)
+
+  apps/desktop/plugins/tauri-plugin-midi: {}
 
   apps/storybook:
     dependencies:
@@ -224,12 +229,6 @@ importers:
       tailwindcss:
         specifier: ^3.3.1
         version: 3.3.2
-
-  crates/tauri-plugin-midi:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^1.5.3
-        version: 1.5.3
 
   interface:
     dependencies:
@@ -5275,11 +5274,6 @@ packages:
 
   /@tauri-apps/api@1.3.0:
     resolution: {integrity: sha512-AH+3FonkKZNtfRtGrObY38PrzEj4d+1emCbwNGu0V2ENbXjlLHMZQlUh+Bhu/CRmjaIwZMGJ3yFvWaZZgTHoog==}
-    engines: {node: '>= 14.6.0', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
-    dev: false
-
-  /@tauri-apps/api@1.5.3:
-    resolution: {integrity: sha512-zxnDjHHKjOsrIzZm6nO5Xapb/BxqUq1tc7cGkFXsFkGTsSWgCPH1D8mm0XS9weJY2OaR73I3k3S+b7eSzJDfqA==}
     engines: {node: '>= 14.6.0', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
     dev: false
 

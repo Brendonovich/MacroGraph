@@ -7,7 +7,9 @@
     "test": "vitest",
     "typecheck": "tsc -b",
     "lint": "turbo run lint",
-    "lint:fix": "turbo run lint -- --fix"
+    "lint:fix": "turbo run lint -- --fix",
+    "dev:wev": "pnpm web dev",
+    "dev:desktop": "pnpm desktop tauri dev"
   },
   "devDependencies": {
     "@vitest/browser": "^0.32.2",

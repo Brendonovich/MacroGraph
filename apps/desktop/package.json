@@ -22,7 +22,8 @@
     "@tauri-apps/api": "^1.2.0",
     "solid-js": "^1.8.8",
     "vinxi": "0.1.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "tauri-plugin-midi": "workspace:*"
   },
   "devDependencies": {
     "@kobalte/tailwindcss": "^0.6.5",
