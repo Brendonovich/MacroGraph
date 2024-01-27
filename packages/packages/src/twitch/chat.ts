@@ -7,7 +7,15 @@ import {
 import { jsToJSON, JSON } from "@macrograph/json";
 import { t } from "@macrograph/typesystem";
 import { Maybe } from "@macrograph/option";
-import { onCleanup, createEffect, mapArray, createMemo, on } from "solid-js";
+import {
+  onCleanup,
+  createEffect,
+  mapArray,
+  createMemo,
+  on,
+  createRoot,
+  runWithOwner,
+} from "solid-js";
 import tmi, { Events } from "tmi.js";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createEventBus } from "@solid-primitives/event-bus";
@@ -16,6 +24,7 @@ import { createMutable } from "solid-js/store";
 import { Ctx } from "./ctx";
 import { Account } from "./auth";
 import { TwitchAccount, TwitchChannel } from "./resource";
+import { getOwner } from "solid-js/web";
 
 type ChatState = {
   client: tmi.Client;
@@ -41,30 +50,41 @@ export function createChat() {
       channelListenerCounts: {},
     });
 
+    let dispose: () => void | undefined;
+
     client.on("connected", () => {
+      if (state.status === "connected") return;
+
       state.status = "connected";
 
-      createEffect(
-        mapArray(
-          () => Object.keys(state.channelListenerCounts),
-          (channel) => {
-            const shouldListen = createMemo(() => {
-              const count = state.channelListenerCounts[channel];
-              return count !== undefined && count > 0;
-            });
+      dispose = createRoot((dispose) => {
+        createEffect(
+          mapArray(
+            () => Object.keys(state.channelListenerCounts),
+            (channel) => {
+              const shouldListen = createMemo(() => {
+                const count = state.channelListenerCounts[channel];
+                return count !== undefined && count > 0;
+              });
 
-            createEffect(
-              on(shouldListen, (shouldListen) => {
-                if (shouldListen) client.join(channel);
-                else client.part(channel);
-              })
-            );
-          }
-        )
-      );
+              createEffect(
+                on(shouldListen, (shouldListen) => {
+                  if (shouldListen) client.join(channel);
+                  else client.part(channel);
+                })
+              );
+            }
+          )
+        );
+
+        return dispose;
+      });
     });
+
     client.on("disconnected", () => {
       state.status = "disconnected";
+
+      dispose?.();
     });
 
     return state;
