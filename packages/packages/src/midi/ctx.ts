@@ -4,7 +4,7 @@ export type Ctx = ReturnType<typeof createCtx>;
 
 export function createCtx() {
   const [access, accessActions] = createResource(() =>
-    navigator.requestMIDIAccess()
+    navigator.requestMIDIAccess({ sysex: true })
   );
 
   function requestAccess() {
