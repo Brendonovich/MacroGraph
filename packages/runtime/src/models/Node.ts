@@ -195,25 +195,19 @@ export class Node extends Disposable {
         const s = this.schema;
 
         createEffect(() => {
-          onCleanup(() => console.log("what the bruh"));
-          try {
-            const unsub = s
-              .createListener({
-                properties: s.properties ?? {},
-                ctx: {
-                  getProperty: (p) => this.getProperty(p) as any,
-                  graph: this.graph,
-                },
-              })
-              .listen((data) => new ExecutionContext(this).run(data));
-
-            onCleanup(unsub);
-          } catch {}
-          // catchError(
-          //   () => {
-          //   },
-          //   (e) => console.error(e)
-          // );
+          catchError(() => {
+            onCleanup(
+              s
+                .createListener({
+                  properties: s.properties ?? {},
+                  ctx: {
+                    getProperty: (p) => this.getProperty(p) as any,
+                    graph: this.graph,
+                  },
+                })
+                .listen((data) => new ExecutionContext(this).run(data))
+            );
+          }, console.error);
         });
       }
     });
