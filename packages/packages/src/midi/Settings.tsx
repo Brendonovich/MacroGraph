@@ -13,7 +13,7 @@ const Schema = z.object({
 export default ({ access, requestAccess }: Ctx) => {
   return (
     <div class="flex flex-col space-y-2">
-      <Suspense fallback="">
+      <Suspense fallback="Requesting MIDI Access...">
         <Show
           when={access()}
           fallback={
