@@ -30,13 +30,17 @@ class TauriMIDIAccess extends EventTarget implements MIDIAccess {
   constructor() {
     super();
 
-    events.midiInputs.listen((event) => {
-      const inputs = event.payload;
+    events.stateChange.listen((event) => {
+      const { inputs, outputs } = event.payload;
+
+      let dirty = false;
 
       for (const [id, input] of this.inputs) {
         if (!inputs.includes(id)) {
           this.inputs.delete(id);
           input.state = "disconnected";
+
+          dirty = true;
         }
       }
 
@@ -47,16 +51,16 @@ class TauriMIDIAccess extends EventTarget implements MIDIAccess {
         input.state = "connected";
 
         this.inputs.set(inputName, input);
-      }
-    });
 
-    events.midiOutputs.listen((event) => {
-      const outputs = event.payload;
+        dirty = true;
+      }
 
       for (const [id, output] of this.outputs) {
         if (!outputs.includes(id)) {
           this.outputs.delete(id);
           output.state = "disconnected";
+
+          dirty = true;
         }
       }
 
@@ -67,7 +71,11 @@ class TauriMIDIAccess extends EventTarget implements MIDIAccess {
         output.state = "connected";
 
         this.outputs.set(outputName, output);
+
+        dirty = true;
       }
+
+      if (dirty) this.dispatchEvent(new Event("statechange"));
     });
   }
 }

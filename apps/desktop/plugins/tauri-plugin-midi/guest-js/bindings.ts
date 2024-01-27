@@ -19,20 +19,17 @@ export const commands = {
 };
 
 export const events = __makeEvents__<{
-  midiInputs: MIDIInputs;
-  midiOutputs: MIDIOutputs;
+  stateChange: StateChange;
   midiMessage: MIDIMessage;
 }>({
-  midiInputs: "plugin:midi:midi-inputs",
-  midiOutputs: "plugin:midi:midi-outputs",
+  stateChange: "plugin:midi:state-change",
   midiMessage: "plugin:midi:midi-message",
 });
 
 /** user-defined types **/
 
-export type MIDIInputs = string[];
 export type MIDIMessage = [string, number[]];
-export type MIDIOutputs = string[];
+export type StateChange = { inputs: string[]; outputs: string[] };
 
 /** tauri-specta globals **/
 

@@ -1846,6 +1846,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-midi",
  "tauri-plugin-persisted-scope",
+ "tauri-plugin-window-state",
  "tauri-specta 1.0.2",
  "thiserror",
  "tokio",
@@ -3584,10 +3585,24 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-persisted-scope"
 version = "0.1.3"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#c5e8cd31ec86ba7ddcd524f1377a5bf09229fb9e"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#70d99086de3a58189d65c49954a3495972880725"
 dependencies = [
  "aho-corasick",
  "bincode",
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "thiserror",
+]
+
+[[package]]
+name = "tauri-plugin-window-state"
+version = "0.1.0"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#70d99086de3a58189d65c49954a3495972880725"
+dependencies = [
+ "bincode",
+ "bitflags 2.4.1",
  "log",
  "serde",
  "serde_json",

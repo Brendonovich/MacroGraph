@@ -1,4 +1,5 @@
 import { PropertyDef, createResourceType } from "@macrograph/runtime";
+
 import { Pkg } from ".";
 
 export const OBSInstance = createResourceType({

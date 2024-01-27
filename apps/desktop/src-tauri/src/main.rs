@@ -30,6 +30,7 @@ async fn main() {
             move || ctx.clone(),
         ))
         .plugin(tauri_plugin_persisted_scope::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_midi::init())
         .setup(|app| {
             app.manage(http::State::new(app.handle()));

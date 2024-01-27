@@ -151,23 +151,16 @@ fn close_output(name: String, state: tauri::State<State>) {
 fn output_send(name: String, msg: Vec<u8>, state: tauri::State<State>) {
     let mut state = state.lock().unwrap();
 
-    // let Some(connection) = state.output_connections.get_mut(&name) else {
-    //     return;
-    // };
-
-    // connection.send(&msg).ok();
-
-    println!("getting output connection {name}");
     let connection = state.output_connections.get_mut(&name).unwrap();
 
     connection.send(&msg).unwrap();
 }
 
-#[derive(serde::Serialize, specta::Type, tauri_specta::Event, Clone)]
-struct MIDIInputs(Vec<String>);
-
-#[derive(serde::Serialize, specta::Type, tauri_specta::Event, Clone)]
-struct MIDIOutputs(Vec<String>);
+#[derive(serde::Serialize, specta::Type, tauri_specta::Event, Clone, Debug)]
+struct StateChange {
+    inputs: Vec<String>,
+    outputs: Vec<String>,
+}
 
 #[derive(serde::Serialize, specta::Type, tauri_specta::Event, Clone)]
 struct MIDIMessage(String, Vec<u8>);
@@ -182,11 +175,7 @@ macro_rules! specta_builder {
                 close_output,
                 output_send
             ])
-            .events(tauri_specta::collect_events![
-                MIDIInputs,
-                MIDIOutputs,
-                MIDIMessage
-            ])
+            .events(tauri_specta::collect_events![StateChange, MIDIMessage])
     };
 }
 
@@ -215,23 +204,12 @@ pub fn init<R: tauri::Runtime>() -> TauriPlugin<R> {
                     .unwrap();
 
                 loop {
-                    match get_inputs(&midi_in) {
-                        Ok(inputs) => {
-                            MIDIInputs(inputs).emit_all(&app).ok();
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to get MIDI inputs: {}", e);
-                        }
-                    };
-
-                    match get_outputs(&midi_out) {
-                        Ok(outputs) => {
-                            MIDIOutputs(outputs).emit_all(&app).ok();
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to get MIDI outputs: {}", e);
-                        }
-                    };
+                    StateChange {
+                        inputs: get_inputs(&midi_in).unwrap_or_default(),
+                        outputs: get_outputs(&midi_out).unwrap_or_default(),
+                    }
+                    .emit_all(&app)
+                    .ok();
 
                     std::thread::sleep(Duration::from_millis(1000));
                 }
