@@ -8,7 +8,7 @@
     "typecheck": "tsc -b",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
-    "dev:wev": "pnpm web dev",
+    "dev:web": "pnpm web dev",
     "dev:desktop": "pnpm desktop tauri dev"
   },
   "devDependencies": {

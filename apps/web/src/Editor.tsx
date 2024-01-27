@@ -67,6 +67,7 @@ export default () => {
     pkgs.speakerbot.pkg,
     pkgs.variables.pkg,
     pkgs.customEvents.pkg,
+    pkgs.midi.pkg,
   ].map((p) => core.registerPackage(p));
 
   return (

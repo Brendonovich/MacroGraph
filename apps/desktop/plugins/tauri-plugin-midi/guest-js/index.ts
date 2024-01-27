@@ -197,4 +197,4 @@ class TauriMIDIOutput extends TauriMIDIPort implements MIDIOutput {
 
 const access = new TauriMIDIAccess();
 
-export const midiAccess = access as MIDIAccess;
+navigator.requestMIDIAccess = () => Promise.resolve(access);
