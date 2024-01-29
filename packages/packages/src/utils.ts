@@ -751,11 +751,11 @@ export function pkg(core: Core) {
       return {
         one: io.dataInput({
           id: "one",
-          type: t.int(),
+          type: t.float(),
         }),
         output: io.dataOutput({
           id: "output",
-          type: t.int(),
+          type: t.float(),
         }),
       };
     },
@@ -772,11 +772,11 @@ export function pkg(core: Core) {
       return {
         one: io.dataInput({
           id: "one",
-          type: t.int(),
+          type: t.float(),
         }),
         output: io.dataOutput({
           id: "output",
-          type: t.int(),
+          type: t.float(),
         }),
       };
     },
@@ -793,11 +793,11 @@ export function pkg(core: Core) {
       return {
         one: io.dataInput({
           id: "one",
-          type: t.int(),
+          type: t.float(),
         }),
         output: io.dataOutput({
           id: "output",
-          type: t.int(),
+          type: t.float(),
         }),
       };
     },
