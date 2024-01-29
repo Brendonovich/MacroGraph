@@ -304,14 +304,14 @@ export function register(pkg: Package, { chat }: Ctx) {
         name: "Moderator",
         type: t.bool(),
       }),
-      sub: io.dataOutput({
-        id: "sub",
-        name: "Subscriber",
-        type: t.bool(),
-      }),
       vip: io.dataOutput({
         id: "vip",
         name: "VIP",
+        type: t.bool(),
+      }),
+      sub: io.dataOutput({
+        id: "sub",
+        name: "Subscriber",
         type: t.bool(),
       }),
     }),
@@ -323,9 +323,9 @@ export function register(pkg: Package, { chat }: Ctx) {
       ctx.setOutput(io.userId, data.userstate["user-id"]!);
       ctx.setOutput(io.message, data.message);
       ctx.setOutput(io.messageId, data.userstate.id!);
-      ctx.setOutput(io.mod, data.userstate.mod !== true);
-      ctx.setOutput(io.sub, data.userstate.subscriber !== true);
-      ctx.setOutput(io.vip, data.userstate.vip !== true);
+      ctx.setOutput(io.mod, data.userstate.mod!);
+      ctx.setOutput(io.sub, data.userstate.subscriber!);
+      ctx.setOutput(io.vip, data.userstate.vip ?? false);
       ctx.setOutput(io.color, Maybe(data.userstate.color));
       ctx.setOutput(
         io.broadcaster,
