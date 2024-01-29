@@ -119,9 +119,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
         createEventListener(socket, "message", (msg: MessageEvent) => {
           const data: any = JSON.parse(msg.data);
 
-          console.log(socket);
-          console.log(data);
-
           if (
             data.metadata.message_type === "notification" &&
             data.metadata.subscription_type === event
