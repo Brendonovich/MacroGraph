@@ -1,0 +1,81 @@
+Arguments:
+  /Users/brendonovich/Library/pnpm/nodejs/20.11.0/bin/node /opt/homebrew/Cellar/yarn/1.22.19/libexec/bin/yarn.js add @kobalte/core solid-icons
+
+PATH:
+  /Users/brendonovich/Library/pnpm/store/v3/tmp/dlx-35660/node_modules/.bin:/Users/brendonovich/.bun/bin:/Users/brendonovich/Library/pnpm:/Users/brendonovich/.local/bin:/Users/brendonovich/Library/pnpm:/Users/brendonovich/Library/Caches/fnm_multishells/35633_1706453782425/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin:/Users/brendonovich/Library/Android/sdk/platform-tools:/Users/brendonovich/.bun/bin:/Users/brendonovich/Library/pnpm:/Users/brendonovich/.local/bin:/Users/brendonovich/Library/Caches/fnm_multishells/75048_1706320207898/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/brendonovich/.cargo/bin:/Users/brendonovich/Library/Android/sdk/emulator:/Users/brendonovich/Library/Android/sdk/emulator:/Users/brendonovich/Library/Android/sdk/platform-tools
+
+Yarn version:
+  1.22.19
+
+Node version:
+  20.11.0
+
+Platform:
+  darwin arm64
+
+Trace:
+  Error: https://registry.yarnpkg.com/@macrograph%2fhttp-client: Not found
+      at params.callback [as _callback] (/opt/homebrew/Cellar/yarn/1.22.19/libexec/lib/cli.js:66145:18)
+      at self.callback (/opt/homebrew/Cellar/yarn/1.22.19/libexec/lib/cli.js:140890:22)
+      at Request.emit (node:events:518:28)
+      at Request.<anonymous> (/opt/homebrew/Cellar/yarn/1.22.19/libexec/lib/cli.js:141862:10)
+      at Request.emit (node:events:518:28)
+      at IncomingMessage.<anonymous> (/opt/homebrew/Cellar/yarn/1.22.19/libexec/lib/cli.js:141784:12)
+      at Object.onceWrapper (node:events:632:28)
+      at IncomingMessage.emit (node:events:530:35)
+      at endReadableNT (node:internal/streams/readable:1696:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+
+npm manifest:
+  {
+    "name": "@macrograph/web",
+    "type": "module",
+    "scripts": {
+      "dev": "vinxi dev --port 4321",
+      "build": "vinxi build",
+      "start": "vinxi start",
+      "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts"
+    },
+    "dependencies": {
+      "@kobalte/core": "^0.9.6",
+      "@lucia-auth/adapter-drizzle": "^1.0.0",
+      "@macrograph/http-client": "workspace:^",
+      "@macrograph/interface": "workspace:^",
+      "@macrograph/packages": "workspace:^",
+      "@macrograph/runtime": "workspace:^",
+      "@planetscale/database": "^1.14.0",
+      "@solidjs/meta": "^0.29.2",
+      "@solidjs/router": "^0.10.6",
+      "@solidjs/start": "^0.4.11",
+      "@t3-oss/env-core": "^0.6.1",
+      "class-variance-authority": "^0.7.0",
+      "clsx": "^1.2.1",
+      "dotenv": "^16.3.1",
+      "drizzle-orm": "^0.29.3",
+      "jose": "^4.14.6",
+      "lucia": "^3.0.0",
+      "oslo": "^1.0.2",
+      "solid-js": "^1.8.8",
+      "tailwind-merge": "^2.2.1",
+      "tailwindcss-animate": "^1.0.7",
+      "vinxi": "0.1.10",
+      "vite": "^4.5.1",
+      "zod": "^3.22.4"
+    },
+    "engines": {
+      "node": ">=18"
+    },
+    "devDependencies": {
+      "@macrograph/config": "workspace:*",
+      "autoprefixer": "^10.4.14",
+      "drizzle-kit": "^0.20.13",
+      "postcss": "^8.4.21",
+      "tailwindcss": "^3.3.2"
+    }
+  }
+
+yarn manifest:
+  No manifest
+
+Lockfile:
+  No lockfile

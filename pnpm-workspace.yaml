@@ -1,0 +1,4 @@
+packages:
+    - "interface"
+    - "apps/*"
+    - "packages/*"

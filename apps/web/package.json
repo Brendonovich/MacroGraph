@@ -1,0 +1,47 @@
+{
+  "name": "@macrograph/web",
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev --port 4321",
+    "build": "vinxi build",
+    "start": "vinxi start",
+    "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts"
+  },
+  "dependencies": {
+    "@kobalte/core": "^0.9.6",
+    "@lucia-auth/adapter-drizzle": "^1.0.0",
+    "@macrograph/http-client": "workspace:^",
+    "@macrograph/interface": "workspace:^",
+    "@macrograph/packages": "workspace:^",
+    "@macrograph/runtime": "workspace:^",
+    "@planetscale/database": "^1.14.0",
+    "@solidjs/meta": "^0.29.2",
+    "@solidjs/router": "^0.10.6",
+    "@solidjs/start": "^0.4.11",
+    "@t3-oss/env-core": "^0.6.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^1.2.1",
+    "dotenv": "^16.3.1",
+    "drizzle-orm": "^0.29.3",
+    "jose": "^4.14.6",
+    "lucia": "^3.0.0",
+    "octokit": "^3.1.0",
+    "oslo": "^1.0.2",
+    "solid-js": "^1.8.8",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "vinxi": "0.1.10",
+    "vite": "^4.5.1",
+    "zod": "^3.22.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@macrograph/config": "workspace:*",
+    "autoprefixer": "^10.4.14",
+    "drizzle-kit": "^0.20.13",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.2"
+  }
+}

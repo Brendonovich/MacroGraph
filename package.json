@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "scripts": {
+    "desktop": "pnpm --filter @macrograph/desktop --",
+    "web": "pnpm --filter @macrograph/web --",
+    "runtime": "pnpm --filter @macrograph/runtime --",
+    "test": "vitest",
+    "typecheck": "tsc -b",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix"
+  },
+  "devDependencies": {
+    "@vitest/browser": "^0.32.2",
+    "@vitest/ui": "^1.1.3",
+    "jsdom": "^23.2.0",
+    "safaridriver": "^0.0.5",
+    "solid-js": "^1.8.8",
+    "turbo": "^1.10.7",
+    "turbo-ignore": "^1.10.7",
+    "typescript": "^5.3.3",
+    "vite-plugin-solid": "^2.8.0",
+    "vitest": "^0.32.2",
+    "vitest-github-actions-reporter": "^0.11.1",
+    "webdriverio": "^8.11.2"
+  }
+}
