@@ -30,7 +30,7 @@
     "@solid-primitives/storage": "^2.1.1",
     "clsx": "^1.2.1",
     "solid-headless": "^0.13.1",
-    "solid-js": "^1.8.8",
+    "solid-js": "^1.8.12",
     "zod": "^3.22.4"
   },
   "devDependencies": {

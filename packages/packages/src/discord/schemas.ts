@@ -3,6 +3,7 @@ import { z } from "zod";
 export const USER_SCHEMA = z.object({
   id: z.string(),
   username: z.string(),
+  global_name: z.string().nullish(),
   discriminator: z.string(),
   avatar: z.string().nullish(),
   bot: z.boolean().nullish(),

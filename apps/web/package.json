@@ -7,18 +7,29 @@
     "start": "vinxi start"
   },
   "dependencies": {
+    "@kobalte/core": "^0.9.8",
+    "@lucia-auth/adapter-drizzle": "^1.0.0",
+    "@macrograph/http-client": "workspace:^",
     "@macrograph/interface": "workspace:^",
     "@macrograph/packages": "workspace:^",
     "@macrograph/runtime": "workspace:^",
-    "@solidjs/meta": "^0.29.2",
-    "@solidjs/router": "^0.10.6",
-    "@solidjs/start": "^0.4.9",
+    "@planetscale/database": "^1.14.0",
+    "@solidjs/meta": "^0.29.3",
+    "@solidjs/router": "^0.10.10",
+    "@solidjs/start": "^0.4.11",
     "@t3-oss/env-core": "^0.6.1",
-    "dotenv": "^16.3.1",
-    "jose": "^4.14.6",
-    "solid-js": "^1.8.8",
-    "vinxi": "0.1.1",
-    "vite": "^4.5.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^1.2.1",
+    "dotenv": "^16.4.1",
+    "drizzle-orm": "^0.29.3",
+    "jose": "^4.15.4",
+    "lucia": "^3.0.1",
+    "octokit": "^3.1.0",
+    "oslo": "^1.0.3",
+    "solid-js": "^1.8.12",
+    "tailwind-merge": "^2.2.1",
+    "vinxi": "0.1.10",
+    "vite": "^4.5.2",
     "zod": "^3.22.4"
   },
   "engines": {
@@ -26,8 +37,8 @@
   },
   "devDependencies": {
     "@macrograph/config": "workspace:*",
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.21",
-    "tailwindcss": "^3.3.1"
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1"
   }
 }

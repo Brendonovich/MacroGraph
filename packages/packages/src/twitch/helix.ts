@@ -1749,7 +1749,7 @@ type PaginatedData<T> = {
 };
 
 // thanks twurple :)
-type Requests = {
+export type Requests = {
   "POST /moderation/bans": any;
   "DELETE /moderation/bans": any;
   "GET /moderation/moderators": PaginatedData<{

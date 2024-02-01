@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { Maybe, None, Option } from "@macrograph/option";
+import { Maybe, Option } from "@macrograph/option";
 
 import { Package } from "./Package";
 import { Node } from "./Node";
@@ -8,12 +8,7 @@ import { DataInput, DataOutput, ScopeOutput } from "./IO";
 import { EventsMap, RunCtx } from "./NodeSchema";
 import { Project } from "./Project";
 import { SerializedProject } from "./serialized";
-import {
-  Enum,
-  SerializedStructOrEnum,
-  SerializedType,
-  Struct,
-} from "@macrograph/typesystem";
+import { Enum, Struct } from "@macrograph/typesystem";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -121,7 +116,7 @@ export class Core {
     return () => this.printListeners.delete(cb);
   }
 
-  getType<T extends z.infer<typeof SerializedStructOrEnum>["variant"]>(
+  getType<T extends "struct" | "enum">(
     variant: T,
     data: any
   ): Option<Struct | Enum> {

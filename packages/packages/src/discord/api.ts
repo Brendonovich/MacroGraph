@@ -9,6 +9,15 @@ import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
 import { Endpoint, createEndpoint } from "../httpEndpoint";
 import { Ctx } from ".";
 
+export type Requests = {
+  [_: `POST /channels/${string}/messages`]: any;
+  "GET /users/@me": z.infer<typeof USER_SCHEMA>;
+  [_: `GET /users/${string}`]: any;
+  [_: `GET /guids/${string}/members`]: any;
+  [_: `GET /guids/${string}/members/${string}`]: any;
+  [_: `GET /guids/${string}/roles`]: any;
+};
+
 function createApiEndpoint(core: Core, getToken: Accessor<OAuthToken>) {
   const root = createEndpoint({
     path: "https://discord.com/api/v10",

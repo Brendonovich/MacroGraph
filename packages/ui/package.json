@@ -6,7 +6,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "devDependencies": {
-    "solid-js": "^1.8.8",
+    "solid-js": "^1.8.12",
     "storybook-solidjs": "^1.0.0-beta.2"
   },
   "peerDependencies": {
