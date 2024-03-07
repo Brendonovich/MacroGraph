@@ -10,8 +10,6 @@ import { Project } from "./Project";
 import { SerializedProject } from "./serialized";
 import {
   Enum,
-  SerializedStructOrEnum,
-  SerializedType,
   Struct,
 } from "@macrograph/typesystem";
 
@@ -121,7 +119,7 @@ export class Core {
     return () => this.printListeners.delete(cb);
   }
 
-  getType<T extends z.infer<typeof SerializedStructOrEnum>["variant"]>(
+  getType<T extends "struct" | "enum">(
     variant: T,
     data: any
   ): Option<Struct | Enum> {
