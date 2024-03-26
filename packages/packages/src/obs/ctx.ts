@@ -39,6 +39,11 @@ export function createCtx() {
         state: "disconnected",
         password: instance.password,
       });
+
+      setTimeout(() => {
+        console.log("disconnect running");
+        connectInstance(ip);
+      }, 10000);
     }
 
     const obs = new OBS();
