@@ -1,4 +1,5 @@
 packages:
     - "interface"
     - "apps/*"
+    - "apps/desktop/plugins/*"
     - "packages/*"
