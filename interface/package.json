@@ -43,6 +43,6 @@
     "tailwindcss-animate": "^1.0.7",
     "unplugin-auto-import": "^0.17.3",
     "unplugin-icons": "^0.18.1",
-    "vite": "^4.5.1"
+    "vite": "^5.1.5"
   }
 }

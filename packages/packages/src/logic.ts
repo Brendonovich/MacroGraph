@@ -275,6 +275,45 @@ export function pkg() {
   });
 
   pkg.createNonEventSchema({
+    name: `For Loop`,
+    variant: "Base",
+    createIO({ io }) {
+      return {
+        exec: io.execInput({
+          id: "exec",
+        }),
+        number: io.dataInput({
+          id: "numberOfLoops",
+          name: "Times to Loop",
+          type: t.int(),
+        }),
+        body: io.scopeOutput({
+          id: "body",
+          name: "Loop Body",
+          scope: (s) => {
+            s.output({
+              id: "index",
+              name: "Array Index",
+              type: t.int(),
+            });
+          },
+        }),
+        completed: io.execOutput({
+          id: "completed",
+          name: "Completed",
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      for (let x = 0; x < ctx.getInput(io.number); x++) {
+        await ctx.execScope(io.body, { index: x });
+      }
+
+      await ctx.exec(io.completed);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: `Switch`,
     variant: "Base",
     properties: {

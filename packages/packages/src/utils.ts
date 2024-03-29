@@ -745,6 +745,69 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Sin",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = Math.sin(ctx.getInput(io.one));
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Cos",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = Math.cos(ctx.getInput(io.one));
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Tan",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        one: io.dataInput({
+          id: "one",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.float(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const number = Math.tan(ctx.getInput(io.one));
+      ctx.setOutput(io.output, number);
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Add Ints",
     variant: "Pure",
     createIO({ io }) {

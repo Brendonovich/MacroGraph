@@ -28,6 +28,10 @@ export function createAuth(
   const accounts = new ReactiveMap<string, Account>();
 
   async function addToken(token: OAuthToken) {
+    if (Date.now() > (token.issued_at + token.expires_in) * 1000) {
+      refreshToken(token);
+      return;
+    }
     const { data } = await helixClient.call("GET /users", { token } as any, {});
     const userData = USER_DATA.parse(data[0]);
 
@@ -41,6 +45,15 @@ export function createAuth(
     });
 
     setPersisted(userData.id, token);
+  }
+
+  async function refreshToken(tokenOld: OAuthToken) {
+    const token: OAuthToken = (await core.oauth.refresh(
+      "twitch",
+      tokenOld.refresh_token
+    )) as any;
+
+    await addToken(token);
   }
 
   async function refresh(id: string) {
