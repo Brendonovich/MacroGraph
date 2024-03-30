@@ -127,6 +127,12 @@ importers:
         specifier: ^5.3.3
         version: 5.4.2
 
+  apps/desktop/plugins/tauri-plugin-rdev:
+    devDependencies:
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.2
+
   apps/storybook:
     dependencies:
       solid-js:
@@ -468,6 +474,9 @@ importers:
       socket.io-client:
         specifier: ^4.7.1
         version: 4.7.1
+      tauri-plugin-rdev:
+        specifier: workspace:^
+        version: link:../../apps/desktop/plugins/tauri-plugin-rdev
       tmi.js:
         specifier: ^1.8.5
         version: 1.8.5
