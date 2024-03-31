@@ -13,6 +13,9 @@ export const commands = {
       holdDuration,
     });
   },
+  async setMousePosition(x: number, y: number): Promise<null> {
+    return await TAURI_INVOKE("plugin:rdev|set_mouse_position", { x, y });
+  },
 };
 
 /** user-defined types **/

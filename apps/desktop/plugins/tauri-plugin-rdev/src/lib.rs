@@ -29,11 +29,18 @@ async fn simulate_mouse(button: Button, hold_duration: u32) {
     rdev::simulate(&EventType::ButtonRelease(button)).ok();
 }
 
+#[tauri::command]
+#[specta::specta]
+async fn set_mouse_position(x: f64, y: f64) {
+    rdev::simulate(&EventType::MouseMove { x, y }).ok();
+}
+
 macro_rules! specta_builder {
     () => {
         tauri_specta::ts::builder().commands(tauri_specta::collect_commands![
             simulate_keys,
-            simulate_mouse
+            simulate_mouse,
+            set_mouse_position
         ])
         // .events(tauri_specta::collect_events![])
     };

@@ -23,10 +23,10 @@ export function pkg() {
       }),
     }),
     async run({ ctx, io }) {
-      const keys = ctx.getInput(io.keys);
-      const delay = ctx.getInput(io.delay);
-
-      await commands.simulateKeys(keys as Key[], delay);
+      await commands.simulateKeys(
+        ctx.getInput(io.keys) as Key[],
+        ctx.getInput(io.delay)
+      );
     },
   });
 
@@ -52,10 +52,30 @@ export function pkg() {
       }),
     }),
     async run({ ctx, io }) {
-      const button = ctx.getInput(io.button);
-      const delay = ctx.getInput(io.delay);
+      await commands.simulateMouse(
+        ctx.getInput(io.button).variant,
+        ctx.getInput(io.delay)
+      );
+    },
+  });
 
-      await commands.simulateMouse(button.variant, delay);
+  pkg.createSchema({
+    name: "Set Mouse Position",
+    type: "exec",
+    createIO: ({ io }) => ({
+      x: io.dataInput({
+        id: "x",
+        name: "X",
+        type: t.float(),
+      }),
+      y: io.dataInput({
+        id: "y",
+        name: "Y",
+        type: t.float(),
+      }),
+    }),
+    async run({ ctx, io }) {
+      await commands.setMousePosition(ctx.getInput(io.x), ctx.getInput(io.y));
     },
   });
 
