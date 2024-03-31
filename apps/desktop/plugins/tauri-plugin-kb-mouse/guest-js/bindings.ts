@@ -2,19 +2,27 @@
 
 export const commands = {
   async simulateKeys(keys: Key[], holdDuration: number): Promise<null> {
-    return await TAURI_INVOKE("plugin:rdev|simulate_keys", {
+    return await TAURI_INVOKE("plugin:kb-mouse|simulate_keys", {
       keys,
       holdDuration,
     });
   },
   async simulateMouse(button: Button, holdDuration: number): Promise<null> {
-    return await TAURI_INVOKE("plugin:rdev|simulate_mouse", {
+    return await TAURI_INVOKE("plugin:kb-mouse|simulate_mouse", {
       button,
       holdDuration,
     });
   },
-  async setMousePosition(x: number, y: number): Promise<null> {
-    return await TAURI_INVOKE("plugin:rdev|set_mouse_position", { x, y });
+  async setMousePosition(
+    x: number,
+    y: number,
+    absolute: boolean
+  ): Promise<null> {
+    return await TAURI_INVOKE("plugin:kb-mouse|set_mouse_position", {
+      x,
+      y,
+      absolute,
+    });
   },
 };
 

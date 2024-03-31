@@ -1,9 +1,10 @@
 use std::time::Duration;
 
+use enigo::{Enigo, MouseControllable};
 use rdev::{Button, EventType, Key};
 use tauri::plugin::{Builder, TauriPlugin};
 
-const PLUGIN_NAME: &str = "rdev";
+const PLUGIN_NAME: &str = "kb-mouse";
 
 #[tauri::command]
 #[specta::specta]
@@ -31,8 +32,13 @@ async fn simulate_mouse(button: Button, hold_duration: u32) {
 
 #[tauri::command]
 #[specta::specta]
-async fn set_mouse_position(x: f64, y: f64) {
-    rdev::simulate(&EventType::MouseMove { x, y }).ok();
+async fn set_mouse_position(x: i32, y: i32, absolute: bool) {
+    let mut enigo = Enigo::new();
+    if absolute {
+        enigo.mouse_move_to(x, y);
+    } else {
+        enigo.mouse_move_relative(x, y);
+    }
 }
 
 macro_rules! specta_builder {

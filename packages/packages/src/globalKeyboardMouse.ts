@@ -1,4 +1,4 @@
-import { Key, commands } from "tauri-plugin-rdev";
+import { Key, commands } from "tauri-plugin-kb-mouse";
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
@@ -73,9 +73,18 @@ export function pkg() {
         name: "Y",
         type: t.float(),
       }),
+      absolute: io.dataInput({
+        id: "absolute",
+        name: "Absolute",
+        type: t.bool(),
+      }),
     }),
     async run({ ctx, io }) {
-      await commands.setMousePosition(ctx.getInput(io.x), ctx.getInput(io.y));
+      await commands.setMousePosition(
+        ctx.getInput(io.x),
+        ctx.getInput(io.y),
+        ctx.getInput(io.absolute)
+      );
     },
   });
 
