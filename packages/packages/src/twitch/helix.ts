@@ -542,6 +542,31 @@ export function register(pkg: Package, helix: Helix) {
   });
 
   createHelixExecSchema({
+    name: "Send Whisper",
+    createIO: ({ io }) => ({
+      touserId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      message: io.dataInput({
+        name: "Message",
+        id: "message",
+        type: t.string(),
+      }),
+    }),
+    async run({ ctx, io, account }) {
+      await helix.call("POST /whispers", account, {
+        body: new URLSearchParams({
+          from_user_id: account.data.id,
+          to_user_id: ctx.getInput(io.touserId),
+          message: ctx.getInput(io.message),
+        }),
+      });
+    },
+  });
+
+  createHelixExecSchema({
     name: "Get Hype Train",
     createIO: ({ io }) => ({
       cooldownEndTime: io.dataOutput({
@@ -1750,6 +1775,7 @@ type PaginatedData<T> = {
 
 // thanks twurple :)
 type Requests = {
+  "POST /whispers": any;
   "POST /moderation/bans": any;
   "DELETE /moderation/bans": any;
   "GET /moderation/moderators": PaginatedData<{
