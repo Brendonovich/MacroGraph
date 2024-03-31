@@ -74,7 +74,7 @@ export default () => {
           <Show when={projectPerstence.url}>
             {(url) => (
               <div class="break-all">
-                <p class="text-xs font-semibold">Project Path</p>
+                <p class="text-xs font-medium text-gray-200">Project Path</p>
                 <p class="text-sm font-mono">{url()}</p>
               </div>
             )}

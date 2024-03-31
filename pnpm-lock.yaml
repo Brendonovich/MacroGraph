@@ -121,6 +121,12 @@ importers:
         specifier: ^5.1.5
         version: 5.1.5
 
+  apps/desktop/plugins/tauri-plugin-kb-mouse:
+    devDependencies:
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.2
+
   apps/desktop/plugins/tauri-plugin-midi:
     devDependencies:
       typescript:
@@ -468,6 +474,9 @@ importers:
       socket.io-client:
         specifier: ^4.7.1
         version: 4.7.1
+      tauri-plugin-kb-mouse:
+        specifier: workspace:^
+        version: link:../../apps/desktop/plugins/tauri-plugin-kb-mouse
       tmi.js:
         specifier: ^1.8.5
         version: 1.8.5

@@ -182,7 +182,7 @@ macro_rules! specta_builder {
 pub fn init<R: tauri::Runtime>() -> TauriPlugin<R> {
     let plugin_utils = specta_builder!().into_plugin_utils(PLUGIN_NAME);
 
-    Builder::new("midi")
+    Builder::new(PLUGIN_NAME)
         .invoke_handler(plugin_utils.invoke_handler)
         .setup(move |app| {
             app.manage(State::default());

@@ -32,6 +32,7 @@ async fn main() {
         .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_midi::init())
+        .plugin(tauri_plugin_kb_mouse::init())
         .setup(|app| {
             app.manage(http::State::new(app.handle()));
 
