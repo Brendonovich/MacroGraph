@@ -1,13 +1,12 @@
-import { drizzle } from "drizzle-orm/planetscale-serverless";
-import { connect } from "@planetscale/database";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+
 import { env } from "~/env/server";
 
 import * as schema from "./schema";
 export { schema };
 
-// create the connection
-const connection = connect({
-  url: env.DATABASE_URL,
-});
+// Disable prefetch as it is not supported for "Transaction" pool mode
+const connection = postgres(env.DATABASE_URL, { prepare: false });
 
 export const db = drizzle(connection, { schema });

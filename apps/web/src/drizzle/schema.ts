@@ -1,33 +1,34 @@
 import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
+  integer,
   varchar,
-  int,
   json,
-  datetime,
   primaryKey,
   timestamp,
-} from "drizzle-orm/mysql-core";
+  pgTable,
+  serial,
+  pgEnum,
+} from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TOKEN } from "~/schemas/twitch";
 
-export const users = mysqlTable("user", {
+export const users = pgTable("user", {
   id: varchar("id", { length: 255 }).primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   hashedPassword: varchar("hashed_password", { length: 255 }).notNull(),
 });
 
-export const sessions = mysqlTable("session", {
+export const sessions = pgTable("session", {
   id: varchar("id", {
     length: 255,
   }).primaryKey(),
   userId: varchar("user_id", {
     length: 255,
   }).notNull(),
-  expiresAt: datetime("expires_at").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
 });
 
-export const oauthCredentials = mysqlTable(
+export const oauthCredentials = pgTable(
   "oauth_credential",
   {
     providerId: varchar("provider_id", { length: 255 }).notNull(),
@@ -47,16 +48,13 @@ export const usersRelations = relations(users, ({ many }) => ({
   oauthConnections: many(oauthCredentials),
 }));
 
-export const ClientType = {
-  web: 0,
-  desktop: 1,
-};
+const clientTypeEnum = pgEnum("ClientType", ["web", "desktop"]);
 
-export const projects = mysqlTable("project", {
-  id: int("id").autoincrement().primaryKey(),
+export const projects = pgTable("project", {
+  id: serial("id").primaryKey(),
   ownerId: varchar("owner_id", { length: 255 }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
-  clientType: int("client_type").notNull(),
+  clientType: clientTypeEnum("client_type").notNull(),
   data: json("data"),
   lastUpdated: timestamp("last_updated").notNull(),
 });

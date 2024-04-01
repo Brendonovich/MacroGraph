@@ -26,3 +26,5 @@ export * as openai from "./openai";
 export * as speakerbot from "./speakerbot";
 export * as variables from "./variables";
 export * as customEvents from "./customEvents";
+export * as midi from "./midi";
+export * as globalKeyboardMouse from "./globalKeyboardMouse";

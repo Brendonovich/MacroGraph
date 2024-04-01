@@ -5,6 +5,7 @@ import {
 } from "@macrograph/runtime";
 import * as pkgs from "@macrograph/packages";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
+import "tauri-plugin-midi";
 
 import { fetch } from "./http";
 import { client } from "./rspc";
@@ -92,4 +93,6 @@ const wsProvider = createWsProvider({
   pkgs.customEvents.pkg,
   pkgs.speakerbot.pkg,
   () => pkgs.websocketServer.pkg(wsProvider),
+  pkgs.globalKeyboardMouse.pkg,
+  // pkgs.midi.pkg,
 ].map((p) => core.registerPackage(p));

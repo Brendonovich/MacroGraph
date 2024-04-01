@@ -1,11 +1,7 @@
-import { action, cache, redirect, reload } from "@solidjs/router";
+import { action, cache, redirect } from "@solidjs/router";
 import { and, eq } from "drizzle-orm";
 import { getRequestEvent } from "solid-js/web";
-import {
-  getCookie,
-  getHeader,
-  appendResponseHeader,
-} from "@solidjs/start/server";
+import { getCookie, getHeader, appendResponseHeader } from "vinxi/server";
 import { verifyRequestOrigin } from "lucia";
 
 import { db } from "~/drizzle";
@@ -25,9 +21,10 @@ function loginRedirect() {
 export async function ensureAuthenticated() {
   "use server";
 
-  const event = getRequestEvent()!;
+  const requestEvent = getRequestEvent()!;
+  const event = requestEvent.nativeEvent;
 
-  if (event.request.method !== "GET") {
+  if (requestEvent.request.method !== "GET") {
     const originHeader = getHeader(event, "Origin") ?? null;
     // NOTE: You may need to use `X-Forwarded-Host` instead
     const hostHeader = getHeader(event, "Host") ?? null;

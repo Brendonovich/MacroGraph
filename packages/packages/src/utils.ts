@@ -1157,6 +1157,28 @@ export function pkg(core: Core) {
   });
 
   pkg.createNonEventSchema({
+    name: "Floor Float",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        input: io.dataInput({
+          id: "input",
+          type: t.float(),
+        }),
+        output: io.dataOutput({
+          id: "output",
+          type: t.int(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const input = ctx.getInput(io.input);
+
+      ctx.setOutput(io.output, Math.floor(input));
+    },
+  });
+
+  pkg.createNonEventSchema({
     name: "Remainder Float",
     variant: "Pure",
     createIO({ io }) {
@@ -1305,6 +1327,48 @@ export function pkg(core: Core) {
         io.output,
         Math.floor(Math.random() * (max + 1 - min) + min)
       );
+    },
+  });
+
+  pkg.createNonEventSchema({
+    name: "Compare Float",
+    variant: "Pure",
+    createIO({ io }) {
+      return {
+        input: io.dataInput({
+          id: "number",
+          name: "Number",
+          type: t.float(),
+        }),
+        compare: io.dataInput({
+          id: "compare",
+          name: "Compare against",
+          type: t.float(),
+        }),
+        equal: io.dataOutput({
+          id: "outputE",
+          name: "Equal",
+          type: t.bool(),
+        }),
+        greater: io.dataOutput({
+          id: "outputG",
+          name: "Greater",
+          type: t.bool(),
+        }),
+        less: io.dataOutput({
+          id: "outputL",
+          name: "Less",
+          type: t.bool(),
+        }),
+      };
+    },
+    run({ ctx, io }) {
+      const input = ctx.getInput(io.input),
+        compare = ctx.getInput(io.compare);
+
+      ctx.setOutput(io.equal, input === compare);
+      ctx.setOutput(io.greater, input > compare);
+      ctx.setOutput(io.less, input < compare);
     },
   });
 

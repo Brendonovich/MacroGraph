@@ -15,24 +15,25 @@
     "@rspc/client": "0.0.0-main-6ed8cc98",
     "@rspc/solid": "0.0.0-main-6ed8cc98",
     "@rspc/tauri": "0.0.0-main-6ed8cc98",
-    "@solid-primitives/storage": "^2.1.1",
-    "@solidjs/start": "^0.4.11",
+    "@solid-primitives/storage": "^2.1.4",
+    "@solidjs/start": "1.0.0-rc.0",
     "@t3-oss/env-core": "^0.6.1",
-    "@tanstack/solid-query": "^4.29.5",
-    "@tauri-apps/api": "^1.2.0",
-    "solid-js": "^1.8.12",
-    "vinxi": "0.1.10",
+    "@tanstack/solid-query": "^4.36.1",
+    "@tauri-apps/api": "^1.5.3",
+    "solid-js": "^1.8.16",
+    "tauri-plugin-midi": "workspace:*",
+    "vinxi": "0.3.10",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@kobalte/tailwindcss": "^0.6.5",
     "@macrograph/config": "workspace:*",
-    "@tailwindcss/forms": "^0.5.3",
-    "@tauri-apps/cli": "^1.2.2",
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.21",
-    "tailwindcss": "^3.3.1",
-    "typescript": "^5.3.3",
-    "vite": "^4.5.1"
+    "@tailwindcss/forms": "^0.5.7",
+    "@tauri-apps/cli": "^1.5.11",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.3",
+    "vite": "^5.2.7"
   }
 }

@@ -1,11 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-	"apps/desktop/src-tauri",
-]
-
-[workspace.dependencies]
-rspc = "0.1.4"
+members = ["apps/desktop/src-tauri", "apps/desktop/plugins/*"]
 
 [patch.crates-io]
 rspc = { git = "https://github.com/oscartbeaumont/rspc", rev = "799eec5df7533edf331f41d3f1be03de07e038d7" }
