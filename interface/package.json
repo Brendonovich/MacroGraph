@@ -4,10 +4,7 @@
   "sideEffects": false,
   "main": "./src/index.tsx",
   "exports": {
-    ".": {
-      "solid": "./src/index.tsx",
-      "types": "./src/index.tsx"
-    },
+    ".": "./src/index.tsx",
     "./tailwind.config.js": "./tailwind.config.js",
     "./vite": "./vite.ts"
   },

@@ -2,9 +2,9 @@
   "name": "@macrograph/desktop",
   "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
-    "build": "vinxi build",
-    "start": "vinxi start",
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite start",
     "tauri": "tauri",
     "typecheck": "tsc -b"
   },
