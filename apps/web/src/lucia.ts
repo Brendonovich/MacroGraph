@@ -12,7 +12,7 @@ export const lucia = new Lucia(adapter, {
       secure: import.meta.env.PROD,
     },
   },
-  getUserAttributes: (attributes) => {
+  getUserAttributes: (attributes: any) => {
     return {
       // we don't need to expose the hashed password!
       email: attributes.email,

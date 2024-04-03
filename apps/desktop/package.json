@@ -1,14 +1,15 @@
 {
   "name": "@macrograph/desktop",
-  "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "vite dev --port 1420",
-    "build": "vite build",
+    "dev": "vinxi dev",
+    "build": "vinxi build",
     "start": "vinxi start",
     "tauri": "tauri",
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@iconify/json": "^2.2.196",
     "@macrograph/interface": "workspace:*",
     "@macrograph/packages": "workspace:*",
     "@macrograph/runtime": "workspace:*",
@@ -22,7 +23,7 @@
     "@tauri-apps/api": "^1.5.3",
     "solid-js": "^1.8.16",
     "tauri-plugin-midi": "workspace:*",
-    "vinxi": "0.3.10",
+    "vinxi": "0.3.11",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -34,6 +35,8 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.3",
+    "unplugin-auto-import": "^0.17.5",
+    "unplugin-icons": "^0.18.5",
     "vite": "^5.2.7"
   }
 }

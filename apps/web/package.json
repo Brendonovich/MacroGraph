@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "vinxi dev --port 4321",
     "build": "vinxi build",
-    "start": "vinxi start"
+    "start": "vinxi start",
+    "db:push": "drizzle-kit push:pg"
   },
   "dependencies": {
     "@iconify/json": "^2.2.196",
@@ -42,6 +43,7 @@
   "devDependencies": {
     "@macrograph/config": "workspace:*",
     "autoprefixer": "^10.4.19",
+    "drizzle-kit": "^0.20.14",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3"
   }

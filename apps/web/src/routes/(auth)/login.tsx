@@ -2,7 +2,7 @@ import { Argon2id } from "oslo/password";
 import { eq } from "drizzle-orm";
 import { A, action, redirect, useSubmission } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import { appendResponseHeader } from "@solidjs/start/server";
+import { appendResponseHeader } from "vinxi/http";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -34,7 +34,7 @@ const loginWithCredentials = action(async (form: FormData) => {
   const sessionCookie = lucia.createSessionCookie(session.id);
 
   appendResponseHeader(
-    getRequestEvent()!,
+    getRequestEvent()!.nativeEvent,
     "Set-Cookie",
     sessionCookie.serialize()
   );

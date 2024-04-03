@@ -48,7 +48,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   oauthConnections: many(oauthCredentials),
 }));
 
-const clientTypeEnum = pgEnum("ClientType", ["web", "desktop"]);
+export const clientTypeEnum = pgEnum("ClientType", ["web", "desktop"]);
 
 export const projects = pgTable("project", {
   id: serial("id").primaryKey(),

@@ -65,7 +65,7 @@ function AddCredentialButton() {
 }
 
 function CredentialsList() {
-  const credentials = createAsync(getCredentials);
+  const credentials = createAsync(() => getCredentials());
 
   return (
     <ul class="border border-neutral-800 rounded-lg divide-y divide-neutral-800">
