@@ -1,6 +1,5 @@
-let token = document.currentScript.getAttribute("data-token");
 let targetOrigin = document.currentScript.getAttribute("data-target-origin");
 
 const opener = window.opener;
-opener.postMessage(JSON.parse(token), targetOrigin);
+opener.postMessage(location.search, targetOrigin);
 window.close();

@@ -4,7 +4,7 @@ import { renderToString } from "solid-js/web";
 import { z } from "zod";
 
 import { env } from "~/env/server";
-import { PARAMS as SEARCH_PARAMS, TOKEN } from "~/schemas/twitch";
+import { PARAMS as SEARCH_PARAMS, TOKEN } from "./types";
 import { AuthProviders } from "../providers";
 import responderScript from "../responderScript.js?raw";
 

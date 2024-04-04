@@ -36,6 +36,10 @@ const USER_PRIVATE = USER.and(
   })
 );
 
+export type Requests = {
+  "GET /me": z.infer<typeof USER_PRIVATE>;
+};
+
 export function createCtx(core: Core) {
   const [authToken, setAuthToken] = makePersistedOption<OAuthToken>(
     createSignal(None),

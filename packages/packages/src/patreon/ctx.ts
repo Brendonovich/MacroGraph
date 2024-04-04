@@ -7,6 +7,18 @@ import { createEndpoint } from "../httpEndpoint";
 
 export const TOKEN_LOCALSTORAGE = "patreonToken";
 
+export type Requests = {
+  "GET /oauth2/api/current_user": {
+    data: {
+      attributes: {
+        email: string;
+        full_name: string;
+      };
+      id: string;
+    };
+  };
+};
+
 export function createCtx(core: Core) {
   const [authToken, setAuthToken] = makePersistedOption<OAuthToken>(
     createSignal(None),

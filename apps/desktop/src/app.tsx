@@ -1,12 +1,12 @@
 import { Interface, Platform, PlatformContext } from "@macrograph/interface";
-import { save, open, ask } from "@tauri-apps/api/dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
 import { makePersisted } from "@solid-primitives/storage";
-import { createSignal } from "solid-js";
+import { save, open, ask } from "@tauri-apps/api/dialog";
 import { SerializedProject } from "@macrograph/runtime";
-import { render } from "solid-js/web";
+import { createSignal } from "solid-js";
 
 import { core } from "./core";
+import { render } from "solid-js/web";
 
 const [projectUrl, setProjectUrl] = makePersisted(
   createSignal<string | null>(null),

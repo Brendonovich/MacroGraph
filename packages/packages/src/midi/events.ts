@@ -44,7 +44,7 @@ export function register(pkg: Pkg) {
         const bus = createEventBus<TFire>();
 
         createEventListener(input, "midimessage", ((e: MIDIMessageEvent) => {
-          const data = Array.from(e.data);
+          const data = Array.from(e.data!);
 
           const fire = handleMessage(data);
           if (!fire) return;

@@ -1774,7 +1774,7 @@ type PaginatedData<T> = {
 };
 
 // thanks twurple :)
-type Requests = {
+export type Requests = {
   "POST /whispers": any;
   "POST /moderation/bans": any;
   "DELETE /moderation/bans": any;

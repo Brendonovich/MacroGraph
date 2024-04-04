@@ -1,5 +1,6 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
+import "dotenv/config";
 
 export const env = createEnv({
   server: {
@@ -26,6 +27,8 @@ export const env = createEnv({
     PATREON_CLIENT_SECRET: z.string(),
     GITHUB_CLIENT_ID: z.string(),
     GITHUB_CLIENT_SECRET: z.string(),
+    DATABASE_URL: z.string(),
+    RESEND_API_KEY: z.string(),
   },
   runtimeEnv: process.env,
 });

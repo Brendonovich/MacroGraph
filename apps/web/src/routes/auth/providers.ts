@@ -1,4 +1,10 @@
 import { env } from "~/env/server";
+import { createHTTPClient } from "@macrograph/http-client";
+
+import type * as TwitchHelix from "@macrograph/packages/src/twitch/helix";
+import type * as DiscordAPI from "@macrograph/packages/src/discord/api";
+import type * as SpotifyAPI from "@macrograph/packages/src/spotify/ctx";
+import type * as PatreonAPI from "@macrograph/packages/src/patreon/ctx";
 
 export const AuthProviders: Record<string, AuthProviderConfig> = {
   twitch: {
@@ -12,6 +18,30 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     get scopes() {
       return TWITCH_SCOPES;
     },
+    async getUserData(accessToken) {
+      const client = createHTTPClient<TwitchHelix.Requests, string>({
+        root: "https://api.twitch.tv/helix",
+        fetch: async (accessToken, url, args) => {
+          const r = await fetch(url, {
+            headers: {
+              ...args?.headers,
+              "content-type": "application/json",
+              "Client-Id": this.clientId,
+              Authorization: `Bearer ${accessToken}`,
+            },
+            ...args,
+          });
+          return await r.json();
+        },
+      });
+
+      const users = await client.call("GET /users", accessToken);
+
+      const user = users.data[0];
+      if (!user) throw new Error("Failed to get user");
+
+      return { id: user.id, displayName: user.display_name };
+    },
   },
   discord: {
     clientId: env.DISCORD_CLIENT_ID,
@@ -19,6 +49,30 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     authorize: { url: "https://discord.com/api/oauth2/authorize" },
     token: { url: "https://discord.com/api/oauth2/token" },
     scopes: ["identify", "email"],
+    async getUserData(accessToken) {
+      const client = createHTTPClient<DiscordAPI.Requests, string>({
+        root: "https://discord.com/api/v10",
+        fetch: async (accessToken, url, args) => {
+          const r = await fetch(url, {
+            headers: {
+              ...args?.headers,
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            ...args,
+          });
+          return await r.json();
+        },
+      });
+
+      const user = await client.call("GET /users/@me", accessToken);
+      if (!user) throw new Error("Failed to get user");
+
+      return {
+        id: user.id,
+        displayName: user.global_name ?? user.username,
+      };
+    },
   },
   github: {
     clientId: env.GITHUB_CLIENT_ID,
@@ -31,6 +85,18 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
       headers: { Accept: "application/json" },
     },
     scopes: [],
+    async getUserData(accessToken) {
+      const octo = await import("octokit").then(
+        ({ Octokit }) => new Octokit({ auth: accessToken })
+      );
+
+      const user = await octo.rest.users.getAuthenticated();
+
+      return {
+        id: user.data.id.toString(),
+        displayName: user.data.login,
+      };
+    },
   },
   spotify: {
     clientId: env.SPOTIFY_CLIENT_ID,
@@ -48,6 +114,29 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
           `${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`
         ).toString("base64")}`,
       },
+    },
+    async getUserData(accessToken) {
+      const client = createHTTPClient<SpotifyAPI.Requests, string>({
+        root: "https://api.spotify.com/v1",
+        fetch: async (accessToken, url, opts) => {
+          const r = await fetch(url, {
+            ...opts,
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              ...opts?.headers,
+            },
+          });
+          return await r.json();
+        },
+      });
+
+      const user = await client.call("GET /me", accessToken);
+      if (!user) throw new Error("Failed to get user");
+
+      return {
+        id: user.id,
+        displayName: user.display_name ?? user.email,
+      };
     },
   },
   google: {
@@ -75,7 +164,32 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     clientSecret: env.PATREON_CLIENT_SECRET,
     authorize: { url: "https://www.patreon.com/oauth2/authorize" },
     token: { url: "https://www.patreon.com/api/oauth2/token" },
-    scopes: [],
+    scopes: ["identity"],
+    async getUserData(accessToken) {
+      const client = createHTTPClient<PatreonAPI.Requests, string>({
+        root: "https://www.patreon.com/api",
+        fetch: async (accessToken, url, opts) => {
+          const r = await fetch(url, {
+            ...opts,
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              ...opts?.headers,
+            },
+          });
+          return await r.json();
+        },
+      });
+
+      const { data } = await client.call(
+        "GET /oauth2/api/current_user",
+        accessToken
+      );
+
+      return {
+        id: data.id,
+        displayName: data.attributes.full_name,
+      };
+    },
   },
   streamlabs: {
     clientId: env.STREAMLABS_CLIENT_ID,
@@ -87,7 +201,7 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
   },
 };
 
-interface AuthProviderConfig {
+export interface AuthProviderConfig {
   clientId: string;
   clientSecret: string;
   /**
@@ -103,6 +217,9 @@ interface AuthProviderConfig {
    */
   refresh?: boolean;
   scopes: string[];
+  getUserData?(
+    accessToken: string
+  ): Promise<{ id: string; displayName: string }>;
 }
 
 type OAuthFetchConfig = {
@@ -110,6 +227,7 @@ type OAuthFetchConfig = {
   searchParams?: Record<string, any>;
   headers?: Record<string, string>;
 };
+
 const TWITCH_SCOPES = [
   "analytics:read:extensions",
   "analytics:read:games",

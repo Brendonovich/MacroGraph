@@ -1,0 +1,15 @@
+{
+  "name": "@macrograph/http-client",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "test": "vitest",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@macrograph/config": "workspace:*"
+  }
+}
