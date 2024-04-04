@@ -1,13 +1,22 @@
 name: Setup JS (pnpm & node)
 description: Sets up pnpm & node with dependencies and caching
+inputs:
+    save-cache:
+        description: "Whether to save the cache"
+        required: false
+        default: "false"
+    target:
+        description: "Toolchain target triple"
+        required: false
 runs:
     using: "composite"
     steps:
         - name: Install Rust stable
           uses: dtolnay/rust-toolchain@stable
+          with:
+              target: ${{ inputs.target }}
 
         - name: Cache Rust Dependencies
           uses: Swatinem/rust-cache@v2
           with:
-              shared-key: rust-deps
-              save-if: false
+              save-if: ${{ inputs.save-cache }}
