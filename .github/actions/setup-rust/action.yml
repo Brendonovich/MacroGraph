@@ -1,0 +1,13 @@
+name: Setup JS (pnpm & node)
+description: Sets up pnpm & node with dependencies and caching
+runs:
+    using: "composite"
+    steps:
+        - name: Install Rust stable
+          uses: dtolnay/rust-toolchain@stable
+
+        - name: Cache Rust Dependencies
+          uses: Swatinem/rust-cache@v2
+          with:
+              shared-key: rust-deps
+              save-if: false

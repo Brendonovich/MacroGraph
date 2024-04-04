@@ -46,31 +46,11 @@ jobs:
                   p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
                   p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-            - name: setup node
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 16
+            - uses: ./.github/actions/setup-js
 
-            - name: Install Rust stable
-              uses: dtolnay/rust-toolchain@stable
+            - uses: ./.github/actions/setup-rust
 
-            - name: Install desktop deps
-              uses: ./.github/actions/install-desktop-deps
-
-            - name: Cache Rust Dependencies
-              uses: Swatinem/rust-cache@v2
-              with:
-                  shared-key: rust-deps
-                  save-if: false
-
-            - name: Install pnpm
-              uses: pnpm/action-setup@v2
-              with:
-                  version: 8
-                  run_install: false
-
-            - name: Install frontend dependencies
-              run: pnpm install
+            - uses: ./.github/actions/install-desktop-deps
 
             - name: Build Desktop
               run: pnpm desktop tauri build --ci
