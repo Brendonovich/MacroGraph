@@ -91,7 +91,7 @@ importers:
         version: 1.8.16
       tauri-plugin-midi:
         specifier: workspace:*
-        version: link:plugins/tauri-plugin-midi
+        version: link:../../crates/tauri-plugin-midi
       vinxi:
         specifier: 0.3.11
         version: 0.3.11(@planetscale/database@1.16.0)(drizzle-orm@0.29.5)
@@ -120,9 +120,6 @@ importers:
       tailwindcss:
         specifier: ^3.4.3
         version: 3.4.3
-      typescript:
-        specifier: ^5.4.3
-        version: 5.4.3
       unplugin-auto-import:
         specifier: ^0.17.5
         version: 0.17.5(rollup@2.79.1)
@@ -132,18 +129,6 @@ importers:
       vite:
         specifier: ^5.2.7
         version: 5.2.7
-
-  apps/desktop/plugins/tauri-plugin-kb-mouse:
-    devDependencies:
-      typescript:
-        specifier: ^5.4.3
-        version: 5.4.3
-
-  apps/desktop/plugins/tauri-plugin-midi:
-    devDependencies:
-      typescript:
-        specifier: ^5.4.3
-        version: 5.4.3
 
   apps/storybook:
     dependencies:
@@ -305,6 +290,18 @@ importers:
       tsx:
         specifier: ^4.7.2
         version: 4.7.2
+
+  crates/tauri-plugin-kb-mouse:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^1.5.3
+        version: 1.5.3
+
+  crates/tauri-plugin-midi:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^1.5.3
+        version: 1.5.3
 
   interface:
     dependencies:
@@ -541,8 +538,8 @@ importers:
         specifier: ^4.7.5
         version: 4.7.5
       tauri-plugin-kb-mouse:
-        specifier: workspace:^
-        version: link:../../apps/desktop/plugins/tauri-plugin-kb-mouse
+        specifier: workspace:*
+        version: link:../../crates/tauri-plugin-kb-mouse
       tmi.js:
         specifier: ^1.8.5
         version: 1.8.5

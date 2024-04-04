@@ -38,7 +38,7 @@
     "octokit": "^3.1.2",
     "openai": "^4.31.0",
     "socket.io-client": "^4.7.5",
-    "tauri-plugin-kb-mouse": "workspace:^",
+    "tauri-plugin-kb-mouse": "workspace:*",
     "tmi.js": "^1.8.5",
     "zod": "^3.22.4"
   },
