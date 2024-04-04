@@ -34,14 +34,13 @@ jobs:
                   shared-key: rust-deps
                   save-if: false
 
-            - uses: pnpm/action-setup@v2
-              name: Install pnpm
-              id: pnpm-install
+            - name: Install pnpm
+              uses: pnpm/action-setup@v2
               with:
                   version: 8
                   run_install: false
 
-            - name: install frontend dependencies
+            - name: Install frontend dependencies
               run: pnpm install
 
             - run: mkdir apps/desktop/dist

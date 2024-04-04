@@ -1,4 +1,4 @@
-name: Release
+name: "Release Desktop"
 
 on:
     workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
               with:
                   node-version: 16
 
-            - name: install Rust stable
+            - name: Install Rust stable
               uses: dtolnay/rust-toolchain@stable
 
             - name: Install desktop deps
@@ -44,9 +44,8 @@ jobs:
                   shared-key: rust-deps
                   save-if: false
 
-            - uses: pnpm/action-setup@v2
-              name: Install pnpm
-              id: pnpm-install
+            - name: Install pnpm
+              uses: pnpm/action-setup@v2
               with:
                   version: 8
                   run_install: false
