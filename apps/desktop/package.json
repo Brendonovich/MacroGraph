@@ -2,9 +2,9 @@
   "name": "@macrograph/desktop",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "start": "vite start",
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start",
     "tauri": "tauri",
     "typecheck": "tsc -b"
   },
@@ -13,6 +13,7 @@
     "@macrograph/interface": "workspace:*",
     "@macrograph/packages": "workspace:*",
     "@macrograph/runtime": "workspace:*",
+    "@modular-forms/solid": "^0.12.2",
     "@rspc/client": "0.0.0-main-6ed8cc98",
     "@rspc/solid": "0.0.0-main-6ed8cc98",
     "@rspc/tauri": "0.0.0-main-6ed8cc98",

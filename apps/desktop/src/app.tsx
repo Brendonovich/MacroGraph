@@ -6,7 +6,7 @@ import { SerializedProject } from "@macrograph/runtime";
 import { createSignal } from "solid-js";
 
 import { core } from "./core";
-import { render } from "solid-js/web";
+import "./app.css";
 
 const [projectUrl, setProjectUrl] = makePersisted(
   createSignal<string | null>(null),
@@ -59,12 +59,10 @@ const platform: Platform = {
   },
 };
 
-function App() {
+export default function Editor() {
   return (
     <PlatformContext.Provider value={platform}>
       <Interface core={core} environment="custom" />
     </PlatformContext.Provider>
   );
 }
-
-render(App, document.getElementById("app")!);

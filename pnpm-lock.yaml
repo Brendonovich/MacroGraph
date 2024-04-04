@@ -59,6 +59,9 @@ importers:
       '@macrograph/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
+      '@modular-forms/solid':
+        specifier: ^0.12.2
+        version: 0.12.2(solid-js@1.8.16)
       '@rspc/client':
         specifier: 0.0.0-main-6ed8cc98
         version: 0.0.0-main-6ed8cc98

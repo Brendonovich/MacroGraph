@@ -10,7 +10,7 @@ const Schema = z.object({
   key: z.string(),
 });
 
-export default ({ state, setKey, key }: Ctx) => {
+export default function ({ state, setKey, key }: Ctx) {
   return (
     <div class="flex flex-col space-y-2">
       <span class="text-neutral-400 font-medium">Open AI API</span>
@@ -52,4 +52,4 @@ export default ({ state, setKey, key }: Ctx) => {
       </Switch>
     </div>
   );
-};
+}

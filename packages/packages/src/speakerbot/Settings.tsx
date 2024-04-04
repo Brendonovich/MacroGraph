@@ -10,7 +10,7 @@ const Schema = z.object({
   url: z.string(),
 });
 
-export default ({ state, setUrl }: Ctx) => {
+export default function ({ state, setUrl }: Ctx) {
   return (
     <div class="flex flex-col space-y-2">
       <span class="text-neutral-400 font-medium">Socket API</span>
@@ -50,4 +50,4 @@ export default ({ state, setUrl }: Ctx) => {
       </Switch>
     </div>
   );
-};
+}
