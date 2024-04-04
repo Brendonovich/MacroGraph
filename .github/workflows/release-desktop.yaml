@@ -1,0 +1,75 @@
+name: Release
+
+on:
+    workflow_dispatch:
+
+jobs:
+    draft:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Create draft release
+              uses: crabnebula-dev/cloud-release
+              with:
+                  command: release draft ${{ secrets.CN_APP_ID }} --framework tauri
+                  api-key: ${{ secrets.CN_API_KEY }}
+
+    build:
+        needs: draft
+        strategy:
+            fail-fast: false
+            matrix:
+                platform: [macos-latest, ubuntu-20.04, windows-latest]
+
+        runs-on: ${{ matrix.platform }}
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: setup node
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 16
+
+            - name: install Rust stable
+              uses: dtolnay/rust-toolchain@stable
+
+            - name: Install desktop deps
+              uses: ./.github/actions/install-desktop-deps
+
+            - name: Cache Rust Dependencies
+              uses: Swatinem/rust-cache@v2
+              with:
+                  shared-key: rust-deps
+                  save-if: false
+
+            - uses: pnpm/action-setup@v2
+              name: Install pnpm
+              id: pnpm-install
+              with:
+                  version: 8
+                  run_install: false
+
+            - name: Install frontend dependencies
+              run: pnpm install
+
+            - name: Build Desktop
+              run: pnpm desktop tauri build
+
+            - name: Upload assets to CrabNebula Cloud
+              uses: crabnebula-dev/cloud-release
+              with:
+                  command: release upload ${{ secrets.CN_APP_ID }} --framework tauri
+                  api-key: ${{ secrets.CN_API_KEY }}
+
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Publish release
+              uses: crabnebula-dev/cloud-release
+              with:
+                  command: release publish ${{ secrets.CN_APP_ID }} --framework tauri
+                  api-key: ${{ secrets.CN_API_KEY }}

@@ -25,7 +25,8 @@ jobs:
             - name: install Rust stable
               uses: dtolnay/rust-toolchain@stable
 
-            - uses: ./.github/actions/install-desktop-deps
+            - name: Install desktop deps
+              uses: ./.github/actions/install-desktop-deps
 
             - name: Cache Rust Dependencies
               uses: Swatinem/rust-cache@v2

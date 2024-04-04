@@ -28,7 +28,8 @@ jobs:
               with:
                   shared-key: rust-deps
 
-            - uses: ./.github/actions/install-desktop-deps
+            - name: Install desktop deps
+              uses: ./.github/actions/install-desktop-deps
 
             - run: mkdir apps/desktop/dist
 
