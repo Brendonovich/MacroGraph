@@ -17,6 +17,7 @@ declare global {
   const IconMaterialSymbolsAddRounded: typeof import('~icons/material-symbols/add-rounded.jsx')['default']
   const IconMdiConnection: typeof import('~icons/mdi/connection.jsx')['default']
   const IconTablerCheck: typeof import('~icons/tabler/check.jsx')['default']
+  const IconTablerChevronDown: typeof import('~icons/tabler/chevron-down.jsx')['default']
   const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx')['default']
   const IconTablerCircle: typeof import('~icons/tabler/circle.jsx')['default']
   const IconTablerClipboard: typeof import('~icons/tabler/clipboard.jsx')['default']
