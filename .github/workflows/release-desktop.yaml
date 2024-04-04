@@ -62,8 +62,7 @@ jobs:
                   APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
                   APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
                   APPLE_PROVIDER_SHORT_NAME: ${{ secrets.APPLE_PROVIDER_SHORT_NAME }}
-                  APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-                  APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
             - name: Upload assets to CrabNebula Cloud
               uses: crabnebula-dev/cloud-release@v0.1.0
