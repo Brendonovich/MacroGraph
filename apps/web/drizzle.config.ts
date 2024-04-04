@@ -12,6 +12,7 @@ if ("DATABASE_URL" in process.env === false)
 export default defineConfig({
   schema: "./src/drizzle/schema.ts",
   driver: "pg",
+  out: "./drizzle",
   dbCredentials: {
     connectionString: env.DATABASE_URL,
   },

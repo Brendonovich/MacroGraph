@@ -5,7 +5,9 @@
     "dev": "vinxi dev --port 4321",
     "build": "vinxi build",
     "start": "vinxi start",
-    "db:push": "drizzle-kit push:pg"
+    "db:push": "drizzle-kit push:pg",
+    "db:gen": "drizzle-kit generate:pg",
+    "db:deploy": "tsx ./drizzle/migrate.ts"
   },
   "dependencies": {
     "@iconify/json": "^2.2.196",
@@ -45,6 +47,7 @@
     "autoprefixer": "^10.4.19",
     "drizzle-kit": "^0.20.14",
     "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.3"
+    "tailwindcss": "^3.4.3",
+    "tsx": "^4.7.2"
   }
 }

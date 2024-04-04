@@ -31,4 +31,5 @@ export const env = createEnv({
     RESEND_API_KEY: z.string(),
   },
   runtimeEnv: process.env,
+  skipValidation: process.env.NODE_ENV === "development",
 });

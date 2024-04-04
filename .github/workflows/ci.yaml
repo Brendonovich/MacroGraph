@@ -84,3 +84,25 @@ jobs:
 
             - name: Run tests
               run: pnpm test
+    migrate-db:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: setup node
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 16
+
+            - uses: pnpm/action-setup@v2
+              name: Install pnpm
+              id: pnpm-install
+              with:
+                  version: 8
+                  run_install: false
+
+            - name: install frontend dependencies
+              run: pnpm install
+
+            - name: Migrate Database
+              run: pnpm web db:deploy
