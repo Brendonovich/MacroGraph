@@ -1936,7 +1936,7 @@ checksum = "58093314a45e00c77d5c508f76e77c3396afbbc0d01506e7fae47b018bac2b1d"
 
 [[package]]
 name = "macrograph"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "async-stream",
  "axum",
