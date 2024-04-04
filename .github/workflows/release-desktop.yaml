@@ -1,7 +1,10 @@
 name: "Release Desktop"
 
-on:
-    workflow_dispatch:
+on: workflow_dispatch
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
     draft:
@@ -54,7 +57,17 @@ jobs:
               run: pnpm install
 
             - name: Build Desktop
-              run: pnpm desktop tauri build
+              run: pnpm desktop tauri build --ci
+              env:
+                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+                  ENABLE_CODE_SIGNING: ${{ secrets.APPLE_CERTIFICATE }}
+                  APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+                  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+                  APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+                  APPLE_PROVIDER_SHORT_NAME: ${{ secrets.APPLE_PROVIDER_SHORT_NAME }}
+                  APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+                  APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
 
             - name: Upload assets to CrabNebula Cloud
               uses: crabnebula-dev/cloud-release@v0.1.0
