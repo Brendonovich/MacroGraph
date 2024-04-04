@@ -26,9 +26,7 @@ jobs:
 
             - run: mkdir apps/desktop/dist
 
-            - name: Build
-              id: tauri_build
-              run: |
+            - run: |
                   pnpm desktop tauri build --ci
               env:
                   TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -44,42 +42,17 @@ jobs:
         steps:
             - uses: actions/checkout@v3
 
-            - name: setup node
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 16
-
-            - uses: pnpm/action-setup@v2
-              name: Install pnpm
-              id: pnpm-install
-              with:
-                  version: 8
-                  run_install: false
-
-            - name: install frontend dependencies
-              run: pnpm install
+            - uses: ./.github/actions/setup-js
 
             - name: Run tests
               run: pnpm test
+
     migrate-db:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
 
-            - name: setup node
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 16
-
-            - uses: pnpm/action-setup@v2
-              name: Install pnpm
-              id: pnpm-install
-              with:
-                  version: 8
-                  run_install: false
-
-            - name: install frontend dependencies
-              run: pnpm install
+            - uses: ./.github/actions/setup-js
 
             - name: Migrate Database
               env:

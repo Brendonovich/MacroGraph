@@ -16,7 +16,7 @@ jobs:
             - name: Create draft release
               uses: crabnebula-dev/cloud-release@v0.1.0
               with:
-                  command: release draft ${{ secrets.CN_APP_ID }} --framework tauri ${{ github.ref_name }}
+                  command: release draft ${{ vars.CN_APP_ID }} --framework tauri ${{ github.ref_name }}
                   api-key: ${{ secrets.CN_API_KEY }}
 
     build:
@@ -60,13 +60,12 @@ jobs:
                   APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
                   APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
                   APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-                  APPLE_PROVIDER_SHORT_NAME: ${{ secrets.APPLE_PROVIDER_SHORT_NAME }}
                   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
             - name: Upload assets to CrabNebula Cloud
               uses: crabnebula-dev/cloud-release@v0.1.0
               with:
-                  command: release upload ${{ secrets.CN_APP_ID }} --framework tauri ${{ github.ref_name }}
+                  command: release upload ${{ vars.CN_APP_ID }} --framework tauri ${{ github.ref_name }}
                   api-key: ${{ secrets.CN_API_KEY }}
 
     publish:
@@ -78,5 +77,5 @@ jobs:
             - name: Publish release
               uses: crabnebula-dev/cloud-release@v0.1.0
               with:
-                  command: release publish ${{ secrets.CN_APP_ID }} --framework tauri ${{ github.ref_name }}
+                  command: release publish ${{ vars.CN_APP_ID }} --framework tauri ${{ github.ref_name }}
                   api-key: ${{ secrets.CN_API_KEY }}
