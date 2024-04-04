@@ -16,4 +16,5 @@ runs:
               cache: pnpm
 
         - name: Install frontend dependencies
+          shell: bash
           run: pnpm install
