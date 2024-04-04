@@ -24,9 +24,17 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                platform: [macos-latest, ubuntu-latest, windows-latest]
+                settings:
+                    - host: macos-latest
+                      target: x86_64-apple-darwin
+                    - host: macos-latest
+                      target: aarch64-apple-darwin
+                    - host: windows-latest
+                      target: x86_64-pc-windows-msvc
+                    - host: ubuntu-latest
+                      target: x86_64-unknown-linux-gnu
 
-        runs-on: ${{ matrix.platform }}
+        runs-on: ${{ matrix.settings.platform }}
         steps:
             - uses: actions/checkout@v3
 
@@ -43,7 +51,7 @@ jobs:
             - uses: ./.github/actions/install-desktop-deps
 
             - name: Build Desktop
-              run: pnpm desktop tauri build --ci
+              run: pnpm desktop tauri build --ci --target ${{ matrix.settings.target }}
               env:
                   TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
                   TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
