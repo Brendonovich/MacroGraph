@@ -105,4 +105,7 @@ jobs:
               run: pnpm install
 
             - name: Migrate Database
+              env:
+                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+                  NODE_ENV: development
               run: pnpm web db:deploy
