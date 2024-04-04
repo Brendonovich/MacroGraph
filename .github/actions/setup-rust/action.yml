@@ -1,5 +1,5 @@
-name: Setup JS (pnpm & node)
-description: Sets up pnpm & node with dependencies and caching
+name: Setup Rust
+description: Sets up rust and caching
 inputs:
     save-cache:
         description: "Whether to save the cache"
@@ -7,7 +7,7 @@ inputs:
         default: "false"
     target:
         description: "Toolchain target triple"
-        required: false
+        required: true
 runs:
     using: "composite"
     steps:
@@ -20,4 +20,4 @@ runs:
           uses: Swatinem/rust-cache@v2
           with:
               save-if: ${{ inputs.save-cache }}
-              shared-key: stable-cache
+              shared-key: ${{ inputs.target }}
