@@ -20,3 +20,4 @@ runs:
           uses: Swatinem/rust-cache@v2
           with:
               save-if: ${{ inputs.save-cache }}
+              shared-key: stable-cache
