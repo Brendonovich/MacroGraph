@@ -2795,7 +2795,7 @@ checksum = "f2ff9a1f06a88b01621b7ae906ef0211290d1c8a168a15542486a8f61c0833b9"
 [[package]]
 name = "rdev"
 version = "0.5.3"
-source = "git+https://github.com/brendonovich/rdev#b95e30c6b8788feb640ff6c1a0e8041689d8c599"
+source = "git+https://github.com/brendonovich/rdev#136bfb79bc0a0459fa8c449517a18b0938321a12"
 dependencies = [
  "cocoa 0.22.0",
  "core-foundation 0.7.0",
