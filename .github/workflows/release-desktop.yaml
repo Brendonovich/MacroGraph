@@ -11,7 +11,7 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Create draft release
-              uses: crabnebula-dev/cloud-release
+              uses: crabnebula-dev/cloud-release@v0.1.0
               with:
                   command: release draft ${{ secrets.CN_APP_ID }} --framework tauri
                   api-key: ${{ secrets.CN_API_KEY }}
@@ -57,7 +57,7 @@ jobs:
               run: pnpm desktop tauri build
 
             - name: Upload assets to CrabNebula Cloud
-              uses: crabnebula-dev/cloud-release
+              uses: crabnebula-dev/cloud-release@v0.1.0
               with:
                   command: release upload ${{ secrets.CN_APP_ID }} --framework tauri
                   api-key: ${{ secrets.CN_API_KEY }}
@@ -68,7 +68,7 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Publish release
-              uses: crabnebula-dev/cloud-release
+              uses: crabnebula-dev/cloud-release@v0.1.0
               with:
                   command: release publish ${{ secrets.CN_APP_ID }} --framework tauri
                   api-key: ${{ secrets.CN_API_KEY }}
