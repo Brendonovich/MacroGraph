@@ -44,9 +44,9 @@ export const oauthCredentials = pgTable(
   })
 );
 
-export const usersRelations = relations(users, ({ many }) => ({
-  oauthConnections: many(oauthCredentials),
-}));
+// export const usersRelations = relations(users, ({ many }) => ({
+//   oauthConnections: many(oauthCredentials),
+// }));
 
 export const clientTypeEnum = pgEnum("ClientType", ["web", "desktop"]);
 
@@ -59,6 +59,6 @@ export const projects = pgTable("project", {
   lastUpdated: timestamp("last_updated").notNull(),
 });
 
-export const projectsRelations = relations(projects, ({ one }) => ({
-  owner: one(users, { fields: [projects.ownerId], references: [users.id] }),
-}));
+// export const projectsRelations = relations(projects, ({ one }) => ({
+//   owner: one(users, { fields: [projects.ownerId], references: [users.id] }),
+// }));

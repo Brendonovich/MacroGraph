@@ -25,11 +25,7 @@ jobs:
             - name: install Rust stable
               uses: dtolnay/rust-toolchain@stable
 
-            - name: install dependencies (ubuntu only)
-              if: matrix.platform == 'ubuntu-20.04'
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libasound2-dev libxtst-dev libevdev-dev libxdo-dev
+            - uses: ./.github/actions/install-desktop-deps
 
             - name: Cache Rust Dependencies
               uses: Swatinem/rust-cache@v2
