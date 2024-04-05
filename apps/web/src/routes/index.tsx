@@ -72,7 +72,7 @@ function Header() {
             <For
               each={
                 [
-                  ["win-x86_64", "Windows"],
+                  ["windows-x86_64", "Windows"],
                   ["darwin-aarch64", "macOS (Apple Silicon)"],
                   ["darwin-x86_64", "macOS (Intel)"],
                   ["linux-x86_64-AppImage", "Linux (AppImage)"],

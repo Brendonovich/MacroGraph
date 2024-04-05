@@ -9,7 +9,7 @@ type TauriTarget =
   | "linux-x86_64";
 
 const DownloadOptions = {
-  "win-x86_64": { tauriTarget: "windows-x86_64" },
+  "windows-x86_64": { tauriTarget: "windows-x86_64" },
   "darwin-aarch64": { tauriTarget: "darwin-aarch64" },
   "darwin-x86_64": { tauriTarget: "darwin-x86_64" },
   "linux-x86_64-AppImage": { tauriTarget: "linux-x86_64" },
@@ -19,7 +19,7 @@ const DownloadOptions = {
 export type DownloadTarget = keyof typeof DownloadOptions;
 
 const AssetNames = {
-  "win-x86_64": (v) => `MacroGraph_${v}_x64_en-US.msi`,
+  "windows-x86_64": (v) => `MacroGraph_${v}_x64_en-US.msi`,
   "darwin-aarch64": (v) => `MacroGraph_${v}_aarch64.dmg`,
   "darwin-x86_64": (v) => `MacroGraph_${v}_x64.dmg`,
   "linux-x86_64-AppImage": (v) => `macro-graph_${v}_amd64.AppImage`,
