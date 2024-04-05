@@ -7,10 +7,9 @@ export const env = createEnv({
     VITE_VERCEL_URL: z
       .string()
       .optional()
-      .transform((d) => {
-        if (!d) return "http://localhost:4321";
-        else return `https://${d}`;
-      }),
+      .transform((d) => (d ? `https://${d}` : "http://localhost:4321")),
   },
-  runtimeEnv: import.meta.env,
+  runtimeEnv: {
+    ...import.meta.env,
+  },
 });

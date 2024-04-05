@@ -201,6 +201,8 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
   },
 };
 
+export type AuthProvider = keyof typeof AuthProviders;
+
 export interface AuthProviderConfig {
   clientId: string;
   clientSecret: string;

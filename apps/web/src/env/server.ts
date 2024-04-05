@@ -6,12 +6,8 @@ export const env = createEnv({
   server: {
     VERCEL_URL: z
       .string()
-      .optional()
-      .transform((d) => {
-        if (!d) return "http://localhost:4321";
-        else return `https://${d}`;
-      }),
-    AUTH_REDIRECT_PROXY_URL: z.string().default("http://localhost:4321"),
+      .transform((d) => (d ? `https://${d}` : "http://localhost:4321")),
+    AUTH_REDIRECT_PROXY_URL: z.string(),
     AUTH_SECRET: z.string(),
     TWITCH_CLIENT_ID: z.string(),
     TWITCH_CLIENT_SECRET: z.string(),
@@ -30,6 +26,10 @@ export const env = createEnv({
     DATABASE_URL: z.string(),
     RESEND_API_KEY: z.string(),
   },
-  runtimeEnv: process.env,
+  runtimeEnv: {
+    VERCEL_URL: "http://localhost:4321",
+    AUTH_REDIRECT_PROXY_URL: "http://localhost:4321",
+    ...process.env,
+  },
   skipValidation: process.env.NODE_ENV === "development",
 });
