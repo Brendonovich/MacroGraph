@@ -13,6 +13,7 @@ export default defineConfig({
     preset: "vercel_edge",
     prerender: {
       crawlLinks: true,
+      routes: ["/credentials"],
     },
   },
 });
