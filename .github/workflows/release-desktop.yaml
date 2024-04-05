@@ -37,7 +37,7 @@ jobs:
             - name: Create draft release
               uses: crabnebula-dev/cloud-release@v0.1.0
               with:
-                  command: release draft ${{ vars.CN_APP_ID }} "${{ steps.read_version.outputs.value }}" --framework tauri ${{ github.ref_name }}
+                  command: release draft ${{ vars.CN_APP_ID }} "${{ steps.read_version.outputs.value }}" --framework tauri
                   api-key: ${{ secrets.CN_API_KEY }}
 
     build:
@@ -88,7 +88,7 @@ jobs:
             - name: Upload assets to CrabNebula Cloud
               uses: crabnebula-dev/cloud-release@v0.1.0
               with:
-                  command: release upload ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri ${{ github.ref_name }}
+                  command: release upload ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
                   api-key: ${{ secrets.CN_API_KEY }}
 
     publish:
@@ -100,5 +100,5 @@ jobs:
             - name: Publish release
               uses: crabnebula-dev/cloud-release@v0.1.0
               with:
-                  command: release publish ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri ${{ github.ref_name }}
+                  command: release publish ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
                   api-key: ${{ secrets.CN_API_KEY }}
