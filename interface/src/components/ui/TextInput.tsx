@@ -49,63 +49,70 @@ export const TextInput = (props: Props) => {
       </Popover.Anchor>
       <Popover.Portal>
         <Show when={open()}>
-          <Popover.Content
-            as="ul"
-            class="max-w-4 max-h-48 bg-black text-white overflow-y-auto text-sm rounded overflow-x-hidden border border-neutral-700"
-            onOpenAutoFocus={(e) => e.preventDefault()}
-            onInteractOutside={() => setOpen()}
-          >
-            <Suspense>
-              <Show when={resource()} keyed>
-                {([options, { refetch }]) => {
-                  const [mounted, setMounted] = createSignal(false);
-                  const [shouldFilter, setShouldFilter] = createSignal(false);
+          <Suspense>
+            <Show when={resource()} keyed>
+              {([options, { refetch }]) => {
+                const [mounted, setMounted] = createSignal(false);
+                const [shouldFilter, setShouldFilter] = createSignal(false);
 
-                  onMount(() => {
-                    refetch();
-                    setMounted(true);
-                  });
+                onMount(() => {
+                  refetch();
+                  setMounted(true);
+                });
 
-                  createEffect(
-                    on(
-                      () => props.value,
-                      () => {
-                        if (mounted()) setShouldFilter(true);
-                      },
-                      { defer: true }
-                    )
-                  );
+                createEffect(
+                  on(
+                    () => props.value,
+                    () => {
+                      if (mounted()) setShouldFilter(true);
+                    },
+                    { defer: true }
+                  )
+                );
 
-                  const filteredOptions = createMemo(() => {
-                    if (shouldFilter())
-                      return (
-                        options.latest?.filter((o) =>
-                          o.toLowerCase().includes(props.value.toLowerCase())
-                        ) ?? []
-                      );
+                const filteredOptions = createMemo(() => {
+                  if (shouldFilter())
+                    return (
+                      options.latest?.filter((o) =>
+                        o.toLowerCase().includes(props.value.toLowerCase())
+                      ) ?? []
+                    );
 
-                    return options.latest;
-                  });
+                  return options.latest;
+                });
 
-                  return (
-                    <For each={filteredOptions()}>
-                      {(option) => (
-                        <li
-                          onClick={() => {
-                            props.onChange(option);
-                            setOpen();
-                          }}
-                          class="w-full px-2 py-1 hover:bg-white/20"
-                        >
-                          {option}
-                        </li>
-                      )}
-                    </For>
-                  );
-                }}
-              </Show>
-            </Suspense>
-          </Popover.Content>
+                return (
+                  <Show
+                    when={(() => {
+                      const f = filteredOptions();
+                      return f && f.length > 0;
+                    })()}
+                  >
+                    <Popover.Content
+                      as="ul"
+                      class="w-52 max-h-48 bg-black text-white overflow-y-auto text-sm rounded overflow-x-hidden border border-neutral-700"
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                      onInteractOutside={() => setOpen()}
+                    >
+                      <For each={filteredOptions()}>
+                        {(option) => (
+                          <li
+                            onClick={() => {
+                              props.onChange(option);
+                              setOpen();
+                            }}
+                            class="w-full px-2 py-1 hover:bg-white/20"
+                          >
+                            {option}
+                          </li>
+                        )}
+                      </For>
+                    </Popover.Content>
+                  </Show>
+                );
+              }}
+            </Show>
+          </Suspense>
         </Show>
       </Popover.Portal>
     </Popover.Root>
