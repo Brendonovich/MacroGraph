@@ -9,7 +9,7 @@ export default defineConfig({
     plugins: [interfacePlugin],
   },
   server: {
-    preset: "vercel",
+    preset: "vercel_edge",
     prerender: {
       crawlLinks: true,
     },

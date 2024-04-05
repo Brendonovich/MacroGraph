@@ -1,6 +1,4 @@
-import { relations } from "drizzle-orm";
 import {
-  integer,
   varchar,
   json,
   primaryKey,
