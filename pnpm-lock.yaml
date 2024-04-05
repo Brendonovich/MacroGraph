@@ -205,6 +205,9 @@ importers:
       '@macrograph/runtime':
         specifier: workspace:^
         version: link:../../packages/runtime
+      '@neondatabase/serverless':
+        specifier: ^0.9.0
+        version: 0.9.0
       '@planetscale/database':
         specifier: ^1.16.0
         version: 1.16.0
@@ -231,7 +234,7 @@ importers:
         version: 16.4.5
       drizzle-orm:
         specifier: ^0.29.5
-        version: 0.29.5(@planetscale/database@1.16.0)(pg@8.11.5)(postgres@3.4.4)
+        version: 0.29.5(@neondatabase/serverless@0.9.0)(@planetscale/database@1.16.0)(pg@8.11.5)(postgres@3.4.4)
       jose:
         specifier: ^4.15.5
         version: 4.15.5
@@ -3105,6 +3108,12 @@ packages:
       pump: 3.0.0
       tar-fs: 2.1.1
     dev: true
+
+  /@neondatabase/serverless@0.9.0:
+    resolution: {integrity: sha512-mmJnUAzlzvxNSZuuhI6kgJjH+JgFdBMYUWxihtq/nj0Tjt+Y5UU3W+SvRFoucnd5NObYkuLYQzk+zV5DGFKGJg==}
+    dependencies:
+      '@types/pg': 8.6.6
+    dev: false
 
   /@netlify/functions@2.6.0:
     resolution: {integrity: sha512-vU20tij0fb4nRGACqb+5SQvKd50JYyTyEhQetCMHdakcJFzjLDivvRR16u1G2Oy4A7xNAtGJF1uz8reeOtTVcQ==}
@@ -6525,6 +6534,14 @@ packages:
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
     dev: true
 
+  /@types/pg@8.6.6:
+    resolution: {integrity: sha512-O2xNmXebtwVekJDD+02udOncjVcMZQuTEQEMpKJ0ZRf5E7/9JJX3izhKUcUifBkyKpljyUM6BTgy2trmviKlpw==}
+    dependencies:
+      '@types/node': 20.12.2
+      pg-protocol: 1.6.1
+      pg-types: 2.2.0
+    dev: false
+
   /@types/pretty-hrtime@1.0.3:
     resolution: {integrity: sha512-nj39q0wAIdhwn7DGUyT9irmsKK1tV0bd5WFEhgpqNTMFZ8cE+jieuTphCW0tfdm47S2zVT5mr09B28b1chmQMA==}
     dev: true
@@ -8064,7 +8081,7 @@ packages:
       drizzle-orm:
         optional: true
     dependencies:
-      drizzle-orm: 0.29.5(@planetscale/database@1.16.0)(pg@8.11.5)(postgres@3.4.4)
+      drizzle-orm: 0.29.5(@neondatabase/serverless@0.9.0)(@planetscale/database@1.16.0)(pg@8.11.5)(postgres@3.4.4)
     dev: false
 
   /debug@2.6.9:
@@ -8421,7 +8438,7 @@ packages:
       - supports-color
     dev: true
 
-  /drizzle-orm@0.29.5(@planetscale/database@1.16.0)(pg@8.11.5)(postgres@3.4.4):
+  /drizzle-orm@0.29.5(@neondatabase/serverless@0.9.0)(@planetscale/database@1.16.0)(pg@8.11.5)(postgres@3.4.4):
     resolution: {integrity: sha512-jS3+uyzTz4P0Y2CICx8FmRQ1eplURPaIMWDn/yq6k4ShRFj9V7vlJk67lSf2kyYPzQ60GkkNGXcJcwrxZ6QCRw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
@@ -8492,6 +8509,7 @@ packages:
       sqlite3:
         optional: true
     dependencies:
+      '@neondatabase/serverless': 0.9.0
       '@planetscale/database': 1.16.0
       pg: 8.11.5
       postgres: 3.4.4

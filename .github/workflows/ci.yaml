@@ -57,6 +57,15 @@ jobs:
             - name: Run tests
               run: pnpm test
 
+    types:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - uses: ./.github/actions/setup-js
+
+            - name: pnpm tsc -b
+
     migrate-db:
         runs-on: ubuntu-latest
         steps:
