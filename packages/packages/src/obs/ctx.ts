@@ -41,7 +41,6 @@ export function createCtx() {
       });
 
       setTimeout(() => {
-        console.log("disconnect running");
         connectInstance(ip);
       }, 10000);
     }
