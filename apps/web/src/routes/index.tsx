@@ -27,54 +27,15 @@ import { For } from "solid-js";
 import { As } from "@kobalte/core";
 import { appendResponseHeader } from "vinxi/http";
 import { cache } from "@solidjs/router";
+import { DownloadTarget, getDownloadURL } from "~/lib/releases";
 
-const getLatestVersion = cache(async (target: string) => {
+const getDownloadURL_cached = cache((target: DownloadTarget) => {
   "use server";
-
-  const res = await fetch(
-    `https://cdn.crabnebula.app/update/macrograph/macrograph/${target}/latest`
-  );
-
-  const { version } = (await res.json()) as { version: string };
 
   appendResponseHeader("Cache-Control", `public, max-age=${60 * 60 * 24}`);
 
-  return version;
+  return getDownloadURL(target);
 }, "getLatestVersion");
-
-interface DownloadOption {
-  name: string;
-  target: string;
-  getAssetName: (version: string) => string;
-}
-
-const DownloadOptions = [
-  {
-    name: "Windows",
-    target: "windows-x86_64",
-    getAssetName: (version) => `MacroGraph_${version}_x64_en-US.msi`,
-  },
-  {
-    name: "macOS (Apple Silicon)",
-    target: "darwin-aarch64",
-    getAssetName: (version) => `MacroGraph_${version}_aarch64.dmg`,
-  },
-  {
-    name: "macOS (Intel)",
-    target: "darwin-x86_64",
-    getAssetName: (version) => `MacroGraph_${version}_x64.dmg`,
-  },
-  {
-    name: "Linux (AppImage)",
-    target: "linux-x86_64",
-    getAssetName: (version) => `macro-graph_${version}_amd64.AppImage`,
-  },
-  {
-    name: "Linux (deb)",
-    target: "linux-x86_64",
-    getAssetName: (version) => `macro-graph_${version}_amd64.deb`,
-  },
-] satisfies Array<DownloadOption>;
 
 function Header() {
   return (
@@ -108,20 +69,26 @@ function Header() {
             </As>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <For each={DownloadOptions}>
-              {(option) => (
+            <For
+              each={
+                [
+                  ["win-x86_64", "Windows"],
+                  ["darwin-aarch64", "macOS (Apple Silicon)"],
+                  ["darwin-x86_64", "macOS (Intel)"],
+                  ["linux-x86_64-AppImage", "Linux (AppImage)"],
+                  ["linux-x86_64-deb", "Linux (deb)"],
+                ] satisfies Array<[DownloadTarget, string]>
+              }
+            >
+              {([target, name]) => (
                 <DropdownMenuItem
-                  onSelect={() => {
-                    getLatestVersion(option.target).then((version) => {
-                      window.open(
-                        `https://cdn.crabnebula.app/download/macrograph/macrograph/latest/${option.getAssetName(
-                          version
-                        )}`
-                      );
-                    });
-                  }}
+                  onSelect={() =>
+                    getDownloadURL_cached(target).then((url) =>
+                      window.open(url)
+                    )
+                  }
                 >
-                  {option.name}
+                  {name}
                 </DropdownMenuItem>
               )}
             </For>
