@@ -1,15 +1,25 @@
-# MacroGraph
-
-<p>
-      <a href="https://discord.gg/FEyYaC8v53">
-            <img alt="MacroGraph uses Discord as a place to chat and ask questions" src="https://img.shields.io/discord/1101415635449286729?color=blue&style=flat-square&logo=discord">
-      </a>
-      <a href="https://twitter.com/macrographio">
-            <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/macrographio?label=%40macrographio&style=social">
-      </a>
+<p align="center">
+   <h1 align="center">MacroGraph</h1>
+    <p align="center"> 
+      Node-based programming for streamers     
+    <br />
+    <a href="https://macrograph.brendonovich.dev"><strong>macrograph.brendonovich.dev »</strong></a>
+    <br />
+    <br />
+    <b>Download for </b>
+    <a href="https://macrograph.brendonovich.dev/api/desktop/download/latest/windows-x86_64">Windows</a> ·
+    macOS (<a href="https://macrograph.brendonovich.dev/api/desktop/download/latest/darwin-aarch64">Apple Silicon</a> | <a href="https://macrograph.brendonovich.dev/api/desktop/download/latest/darwin-x86_64">Intel</a>) ·
+    Linux (<a href="https://macrograph.brendonovich.dev/api/desktop/download/latest/linux-x86_64-AppImage">AppImage</a> | <a href="https://macrograph.brendonovich.dev/api/desktop/download/latest/linux-x86_64-deb">deb</a>)
+    <br />
+    <br/>
+·   <a href="https://discord.gg/FEyYaC8v53">
+      <img alt="MacroGraph uses Discord as a place to chat and ask questions" src="https://img.shields.io/discord/1101415635449286729?color=blue&style=flat-square&logo=discord">
+    </a>
+    <a href="https://twitter.com/macrographio">
+      <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/macrographio?label=%40macrographio&style=social">
+    </a>
+  </p>
 </p>
-
-An application for node-based programming.
 
 ## Example
 
