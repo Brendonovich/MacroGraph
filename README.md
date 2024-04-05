@@ -1,7 +1,7 @@
 <p align="center">
    <h1 align="center">MacroGraph</h1>
    <p align="center"> 
-      Node-based programming for streamers     
+      Visual programming for streamers     
       <br />
       <a href="https://macrograph.brendonovich.dev"><strong>macrograph.brendonovich.dev »</strong></a>
       <br />
@@ -16,7 +16,7 @@
       <img alt="MacroGraph uses Discord as a place to chat and ask questions" src="https://img.shields.io/discord/1101415635449286729?color=blue&style=flat-square&logo=discord">
       </a>
       <a href="https://twitter.com/macrographio">
-      <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/macrographio?label=%40macrographio&style=social">
+      <img alt="Twitter Follow" src="https://img.shields.io/badge/Twitter-black?logo=x&logoColor=white">
       </a>
    </p>
 </p>
