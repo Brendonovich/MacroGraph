@@ -25,6 +25,7 @@ import IconTablerChevronDown from "~icons/tabler/chevron-down.jsx";
 import { Button } from "~/components/ui/button";
 import { For } from "solid-js";
 import { As } from "@kobalte/core";
+import { appendResponseHeader } from "vinxi/http";
 
 async function getLatestVersion(target: string) {
   "use server";
@@ -34,6 +35,8 @@ async function getLatestVersion(target: string) {
   );
 
   const { version } = (await res.json()) as { version: string };
+
+  appendResponseHeader("Cache-Control", `public, max-age=${60 * 60 * 24}`);
 
   return version;
 }
