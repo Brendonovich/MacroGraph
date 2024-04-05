@@ -26,8 +26,9 @@ import { Button } from "~/components/ui/button";
 import { For } from "solid-js";
 import { As } from "@kobalte/core";
 import { appendResponseHeader } from "vinxi/http";
+import { cache } from "@solidjs/router";
 
-async function getLatestVersion(target: string) {
+const getLatestVersion = cache(async (target: string) => {
   "use server";
 
   const res = await fetch(
@@ -39,7 +40,7 @@ async function getLatestVersion(target: string) {
   appendResponseHeader("Cache-Control", `public, max-age=${60 * 60 * 24}`);
 
   return version;
-}
+}, "getLatestVersion");
 
 interface DownloadOption {
   name: string;
