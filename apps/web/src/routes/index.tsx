@@ -32,7 +32,7 @@ import { DownloadTarget, getDownloadURL } from "~/lib/releases";
 const getDownloadURL_cached = cache((target: DownloadTarget) => {
   "use server";
 
-  appendResponseHeader("Cache-Control", `public, max-age=${60 * 60 * 24}`);
+  appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 24}`);
 
   return getDownloadURL(target);
 }, "getLatestVersion");
