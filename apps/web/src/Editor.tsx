@@ -29,7 +29,6 @@ export default () => {
         return await new Promise<any>((res) =>
           window.addEventListener("message", (e) => {
             if (e.source !== loginWindow) return;
-            console.log(e);
 
             res({ ...e.data, issued_at: Date.now() / 1000 });
           })
