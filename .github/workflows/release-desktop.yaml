@@ -11,6 +11,8 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
             tag_name: ${{ steps.read_version.outputs.value }}
+        permissions:
+            contents: write
         steps:
             - uses: actions/checkout@v4
 
@@ -22,7 +24,7 @@ jobs:
                   field: "package.version"
 
             - name: Create tag
-              uses: actions/github-script@v5
+              uses: actions/github-script@v7
               with:
                   script: |
                       github.rest.git.createRef({
