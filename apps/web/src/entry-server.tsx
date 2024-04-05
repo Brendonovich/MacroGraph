@@ -17,4 +17,4 @@ export default createHandler(() => (
       </html>
     )}
   />
-), { mode: "async" });
+));

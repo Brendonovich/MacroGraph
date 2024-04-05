@@ -5,6 +5,7 @@ import interfacePlugin from "../../interface/vite";
 dotenv.config({ path: ".env.local" });
 
 export default defineConfig({
+  ssr: false,
   vite: {
     plugins: [interfacePlugin],
   },
