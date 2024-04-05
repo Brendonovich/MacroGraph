@@ -112,6 +112,8 @@ export const addCredentialAction = action(async (provider: string) => {
     });
   });
 
+  console.log({ searchParams });
+
   await addConnection(provider, searchParams);
 });
 

@@ -1,13 +1,17 @@
 import { z } from "zod";
 
-export const STATE = z
+export const OAUTH_STATE = z
   .union([
     z.object({
-      port: z.number(),
       env: z.literal("desktop"),
+      port: z.number(),
     }),
     z.object({
       env: z.literal("web"),
+      targetOrigin: z.string(),
+    }),
+    z.object({
+      env: z.literal("credentials"),
       targetOrigin: z.string(),
     }),
   ])
@@ -24,9 +28,9 @@ export const TOKEN = z.object({
   token_type: z.string(),
 });
 
-export const PARAMS = z.object({
+export const CALLBACK_SEARCH_PARAMS = z.object({
   code: z.string(),
-  state: STATE,
+  state: OAUTH_STATE,
 });
 
 export const REFRESHED_TOKEN = z.object({

@@ -10,7 +10,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { TOKEN } from "~/schemas/twitch";
+import { TOKEN } from "~/routes/auth/[provider]/types";
 
 export const users = pgTable("user", {
   id: varchar("id", { length: 255 }).primaryKey(),

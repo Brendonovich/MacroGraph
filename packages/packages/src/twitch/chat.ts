@@ -14,7 +14,6 @@ import {
   createMemo,
   on,
   createRoot,
-  runWithOwner,
 } from "solid-js";
 import tmi, { Events } from "tmi.js";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -24,7 +23,6 @@ import { createMutable } from "solid-js/store";
 import { Ctx } from "./ctx";
 import { Account } from "./auth";
 import { TwitchAccount, TwitchChannel } from "./resource";
-import { getOwner } from "solid-js/web";
 
 type ChatState = {
   client: tmi.Client;

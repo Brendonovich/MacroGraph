@@ -2,8 +2,9 @@ import { APIHandler } from "@solidjs/start/server";
 import { z } from "zod";
 
 import { CORS_HEADERS } from "~/auth";
-import { TOKEN } from "~/schemas/twitch";
 import { AuthProviders } from "../providers";
+import { TOKEN } from "./types";
+import { json } from "@solidjs/router";
 
 export const prerender = false;
 
@@ -32,15 +33,10 @@ export const POST: APIHandler = async ({ request, params }) => {
     headers: providerConfig.token?.headers,
   });
 
-  const json = await res.json();
+  const token = TOKEN.parse(await res.json());
 
-  const token = TOKEN.parse(json);
-
-  return new Response(JSON.stringify(token), {
-    headers: {
-      ...CORS_HEADERS,
-      "Content-Type": "application/json",
-    },
+  return json(token, {
+    headers: CORS_HEADERS,
   });
 };
 
