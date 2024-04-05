@@ -1,7 +1,5 @@
-import { Argon2id } from "oslo/password";
 import { eq } from "drizzle-orm";
 import { A, action, redirect, useSubmission } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
 import { appendResponseHeader } from "vinxi/http";
 
 import { Button } from "~/components/ui/button";
@@ -9,7 +7,8 @@ import { Input } from "~/components/ui/input";
 import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
-import { CREDENTIALS } from "./utils";
+import { CREDENTIALS, hashPassword } from "./utils";
+import { env } from "~/env/server";
 
 const loginWithCredentials = action(async (form: FormData) => {
   "use server";
@@ -24,20 +23,15 @@ const loginWithCredentials = action(async (form: FormData) => {
   });
   if (!user) return { success: false, error: "email-invalid" };
 
-  const validPassword = await new Argon2id().verify(
-    user.hashedPassword,
-    data.password
-  );
+  const validPassword =
+    user.hashedPassword ===
+    (await hashPassword(data.password, env.AUTH_SECRET));
   if (!validPassword) return { success: false, error: "password-invalid" };
 
   const session = await lucia.createSession(user.id, {});
   const sessionCookie = lucia.createSessionCookie(session.id);
 
-  appendResponseHeader(
-    getRequestEvent()!.nativeEvent,
-    "Set-Cookie",
-    sessionCookie.serialize()
-  );
+  appendResponseHeader("Set-Cookie", sessionCookie.serialize());
 
   throw redirect("/credentials");
 });

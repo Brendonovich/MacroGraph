@@ -1,13 +1,13 @@
 import { generateId } from "lucia";
 import { A, action, redirect } from "@solidjs/router";
-import { Argon2id } from "oslo/password";
 
 import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { CREDENTIALS } from "./utils";
+import { CREDENTIALS, hashPassword } from "./utils";
+import { env } from "~/env/server";
 
 const signUp = action(async (form: FormData) => {
   "use server";
@@ -17,7 +17,8 @@ const signUp = action(async (form: FormData) => {
     password: form.get("password"),
   });
 
-  const hashedPassword = await new Argon2id().hash(data.password);
+  const hashedPassword = await hashPassword(data.password, env.AUTH_SECRET);
+
   const userId = generateId(15);
 
   await db.insert(users).values({
