@@ -16,8 +16,6 @@ export const GET: APIHandler = async (event) => {
     new URL(event.request.url).searchParams
   );
 
-  console.log(params);
-
   switch (params.state.env) {
     case "desktop": {
       const token = await exchangeOAuthToken(providerConfig, params);
