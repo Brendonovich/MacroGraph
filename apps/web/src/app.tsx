@@ -5,6 +5,8 @@ import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import { Toaster } from "solid-sonner";
 
+import "@macrograph/ui/global.css";
+
 export default function App() {
   return (
     <Router

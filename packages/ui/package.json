@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./tailwind.preset.js": "./tailwind.preset.js",
-    "./vite": "./vite.ts"
+    "./vite": "./vite.ts",
+    "./global.css": "./src/global.css"
   },
   "devDependencies": {
     "solid-js": "^1.8.16",
