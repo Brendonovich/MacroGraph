@@ -31,66 +31,60 @@ export default function Index() {
 function DesktopListener() {
   const auth = createAsync(() => getAuthState());
 
-  const [mgDesktopId, mgDesktopIdActions] = createResource(async () => {
-    try {
-      const id = await fetch("http://localhost:25000");
+  const [mgDesktopId, mgDesktopIdActions] = createResource(
+    () => auth() || true,
+    async () => {
+      try {
+        const ws = new WebSocket("ws://localhost:25000/ws");
 
-      await getAuthState();
+        await new Promise((res) => {
+          ws.onopen = res;
+        });
 
-      const toastId = toast.info(
-        <>
-          <b>MacroGraph Desktop</b> detected.
-          <br />
-          <Show when={auth()} fallback={undefined /* TODO!!! */}>
-            {(auth) => (
-              <>
-                Login as <b>{auth().user.email}</b>?
-                <div class="flex flex-row gap-2 mt-2">
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      toast.promise(
-                        fetch("http://localhost:25000/session", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(auth().session.id),
-                        }),
-                        {
-                          loading: <></>,
-                          error: <></>,
-                          success: (
-                            <>
-                              Login successful, head to{" "}
-                              <b>MacroGraph Desktop</b>
-                            </>
-                          ),
-                          finally: () => {
-                            mgDesktopIdActions.refetch();
-                          },
-                        }
-                      )
-                    }
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    variant="default"
-                    onClick={() => toast.dismiss(toastId)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </>
-            )}
-          </Show>
-        </>
-      );
+        await getAuthState();
 
-      return id;
-    } catch (e) {
-      return undefined;
+        const toastId = toast.info(
+          <>
+            <b>MacroGraph Desktop</b> detected.
+            <br />
+            <Show when={auth()} fallback={undefined /* TODO!!! */}>
+              {(auth) => (
+                <>
+                  Login as <b>{auth().user.email}</b>?
+                  <div class="flex flex-row gap-2 mt-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        ws.send(auth().session.id);
+                        toast.success(
+                          <>
+                            Login successful, head to <b>MacroGraph Desktop</b>
+                          </>
+                        );
+                        mgDesktopIdActions.refetch();
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="default"
+                      onClick={() => toast.dismiss(toastId)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Show>
+          </>
+        );
+
+        return id;
+      } catch (e) {
+        return undefined;
+      }
     }
-  });
+  );
 
   createEventListener(window, "focus", () => {
     if (mgDesktopId.latest === undefined) mgDesktopIdActions.refetch();

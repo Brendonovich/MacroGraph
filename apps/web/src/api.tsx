@@ -47,7 +47,7 @@ export const getAuthState = cache(async () => {
   // cookie auth
   else {
     const sessionId = getCookie(event, lucia.sessionCookieName) ?? null;
-    if (!sessionId) throw loginRedirect();
+    if (!sessionId) return;
 
     data = await lucia.validateSession(sessionId);
 

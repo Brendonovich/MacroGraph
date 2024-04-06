@@ -3,8 +3,17 @@
 
 use std::sync::Arc;
 
+use axum::{
+    extract::{
+        ws::{Message, WebSocket},
+        State, WebSocketUpgrade,
+    },
+    response::Response,
+    routing::get,
+};
 use rspc::{alpha::Rspc, Router};
 use tauri::Manager;
+use tokio::sync::mpsc::UnboundedSender;
 
 mod fs;
 mod http;
@@ -75,14 +84,31 @@ pub fn router() -> Router<Ctx> {
 
                 let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
 
-                let app = <axum::Router>::new()
-                    .route(
-                        "/session",
-                        routing::post(|Json(body): Json<String>| async move {
-                            tx.send(body).ok();
-                        }),
-                    )
-                    .route("/", routing::get(move || async move { Json(id) }))
+                async fn ws_handler(
+                    ws: WebSocketUpgrade,
+                    State(state): State<UnboundedSender<String>>,
+                ) -> Response {
+                    ws.on_upgrade(|socket| handle_socket(socket, state))
+                }
+
+                async fn handle_socket(mut socket: WebSocket, tx: UnboundedSender<String>) {
+                    while let Some(msg) = socket.recv().await {
+                        let msg = if let Ok(msg) = msg {
+                            msg
+                        } else {
+                            // client disconnected
+                            return;
+                        };
+
+                        if let Message::Text(text) = msg {
+                            tx.send(text).ok();
+                        }
+                    }
+                }
+
+                let app = axum::Router::new()
+                    .route("/ws", get(ws_handler))
+                    .with_state(tx)
                     .layer(tower_http::cors::CorsLayer::very_permissive());
 
                 let addr = ([127, 0, 0, 1], 25000).into();
