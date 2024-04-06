@@ -2,7 +2,6 @@ import {
   createEnum,
   CreateEventSchema,
   createStruct,
-  OnEvent,
   Package,
   PropertyDef,
   SchemaProperties,
@@ -15,7 +14,6 @@ import { createEventListener } from "@solid-primitives/event-listener";
 
 import { Helix } from "../helix";
 import { defaultProperties } from "../resource";
-import { Account } from "../auth";
 import { Ctx } from "../ctx";
 import { Events } from "./types";
 import {
@@ -25,7 +23,7 @@ import {
   OutcomesProgress,
   TopPredictors,
 } from "./structs";
-import { onCleanup } from "solid-js";
+import { Account } from "../auth";
 
 export function createEventSub(helixClient: Helix) {
   const sockets = new ReactiveMap<string, WebSocket>();
@@ -43,26 +41,26 @@ export function createEventSub(helixClient: Helix) {
       if (info.metadata.message_type === "session_welcome") {
         sockets.set(userId, ws);
 
-        await Promise.allSettled(
-          SubTypes.map((type) =>
-            helixClient.call("POST /eventsub/subscriptions", account, {
-              body: JSON.stringify({
-                type,
-                version: type == "channel.follow" ? "2" : "1",
-                condition: {
-                  broadcaster_user_id: userId,
-                  moderator_user_id: userId,
-                  to_broadcaster_user_id: userId,
-                  user_id: userId,
-                },
-                transport: {
-                  method: "websocket",
-                  session_id: info.payload.session.id,
-                },
-              }),
-            })
-          )
-        );
+        // await Promise.allSettled(
+        //   SubTypes.map((type) =>
+        //     helixClient.call("POST /eventsub/subscriptions", account.credential, {
+        //       body: JSON.stringify({
+        //         type,
+        //         version: type == "channel.follow" ? "2" : "1",
+        //         condition: {
+        //           broadcaster_user_id: userId,
+        //           moderator_user_id: userId,
+        //           to_broadcaster_user_id: userId,
+        //           user_id: userId,
+        //         },
+        //         transport: {
+        //           method: "websocket",
+        //           session_id: info.payload.session.id,
+        //         },
+        //       }),
+        //     })
+        //   )
+        // );
       }
     };
 

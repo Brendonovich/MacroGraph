@@ -1,4 +1,4 @@
-import { Core, OAUTH_TOKEN, OnEvent } from "@macrograph/runtime";
+import { Core } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createStore } from "solid-js/store";
 import { z } from "zod";
@@ -13,13 +13,11 @@ export const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 const PERSISTED_SCHEMA = z.record(
   z.string(),
-  OAUTH_TOKEN.and(
-    // auto connect on setup
-    z.object({
-      eventsub: z.boolean().optional(),
-      chat: z.boolean().optional(),
-    })
-  )
+  // auto connect on setup
+  z.object({
+    eventsub: z.boolean().optional(),
+    chat: z.boolean().optional(),
+  })
 );
 
 export type Persisted = z.infer<typeof PERSISTED_SCHEMA>;
@@ -37,10 +35,12 @@ export function createCtx(core: Core) {
   const chat = createChat();
 
   const setup = createResource(async () => {
-    await Promise.allSettled(Object.values(persisted[0]).map(auth.addToken));
+    await Promise.allSettled(Object.keys(persisted[0]).map(auth.enableAccount));
 
     Object.entries(persisted[0]).forEach(([id, data]) => {
-      const account = auth.accounts.get(id);
+      const account = auth.accounts.get(id)?.();
+
+      console.log({ ...data }, account);
       if (!account) return;
 
       if (data.chat) chat.connectClient(account);

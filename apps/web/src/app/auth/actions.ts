@@ -2,10 +2,12 @@
 
 import * as jose from "jose";
 
-import { env } from "~/env/server";
+import { serverEnv } from "~/env/server";
 import { AuthProvider, AuthProviderConfig, AuthProviders } from "./providers";
-import { OAUTH_STATE, CALLBACK_SEARCH_PARAMS, TOKEN } from "./[provider]/types";
+import { OAUTH_STATE, CALLBACK_SEARCH_PARAMS } from "./[provider]/types";
+import { OAUTH_TOKEN } from "@macrograph/api-contract";
 import { z } from "zod";
+import { getRequestHost } from "vinxi/http";
 
 type DistributiveOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
@@ -20,16 +22,16 @@ export async function getOAuthLoginURL(
   const state = await new jose.SignJWT(
     OAUTH_STATE.parse({
       ...statePayload,
-      redirect_uri: `${env.VERCEL_URL}/auth/${provider}/callback`,
+      redirect_uri: `${serverEnv.VERCEL_URL}/auth/${provider}/callback`,
     })
   )
     .setProtectedHeader({ alg: "HS256" })
-    .sign(new TextEncoder().encode(env.AUTH_SECRET));
+    .sign(new TextEncoder().encode(serverEnv.AUTH_SECRET));
 
   const params = new URLSearchParams({
     ...providerConfig.authorize?.searchParams,
     client_id: providerConfig.clientId,
-    redirect_uri: `${env.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
+    redirect_uri: `${serverEnv.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
     response_type: "code",
     scope: (providerConfig.scopes || []).join(" "),
     state,
@@ -42,9 +44,16 @@ export async function loginURLForProvider(provider: AuthProvider) {
   const providerConfig = AuthProviders[provider];
   if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
+  const requestOrigin = `https://${getRequestHost()}`;
+
+  const targetOrigin =
+    requestOrigin === serverEnv.AUTH_REDIRECT_PROXY_URL
+      ? requestOrigin
+      : serverEnv.VERCEL_URL;
+
   return await getOAuthLoginURL(provider, {
     env: "credentials",
-    targetOrigin: env.VERCEL_URL,
+    targetOrigin,
   });
 }
 
@@ -60,12 +69,12 @@ export async function exchangeOAuthToken(
       client_secret: providerConfig.clientSecret,
       code,
       grant_type: "authorization_code",
-      redirect_uri: `${env.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
+      redirect_uri: `${serverEnv.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
     }),
     headers: providerConfig.token?.headers,
   });
 
-  return TOKEN.parse(await res.json());
+  return OAUTH_TOKEN.parse(await res.json());
 }
 
 export async function validateCallbackSearchParams(
@@ -76,7 +85,7 @@ export async function validateCallbackSearchParams(
     state: (
       await jose.jwtVerify(
         searchParams.get("state")!,
-        new TextEncoder().encode(env.AUTH_SECRET)
+        new TextEncoder().encode(serverEnv.AUTH_SECRET)
       )
     ).payload,
   });

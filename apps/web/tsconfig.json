@@ -21,6 +21,5 @@
     { "path": "../../interface" },
     { "path": "../../packages/runtime" },
     { "path": "../../packages/packages" }
-  ],
-  "include": ["src/**/*"]
+  ]
 }

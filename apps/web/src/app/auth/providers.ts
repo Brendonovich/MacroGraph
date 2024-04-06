@@ -1,4 +1,4 @@
-import { env } from "~/env/server";
+import { serverEnv } from "~/env/server";
 import { createHTTPClient } from "@macrograph/http-client";
 
 import type * as TwitchHelix from "@macrograph/packages/src/twitch/helix";
@@ -8,8 +8,8 @@ import type * as PatreonAPI from "@macrograph/packages/src/patreon/ctx";
 
 export const AuthProviders: Record<string, AuthProviderConfig> = {
   twitch: {
-    clientId: env.TWITCH_CLIENT_ID,
-    clientSecret: env.TWITCH_CLIENT_SECRET,
+    clientId: serverEnv.TWITCH_CLIENT_ID,
+    clientSecret: serverEnv.TWITCH_CLIENT_SECRET,
     authorize: {
       url: "https://id.twitch.tv/oauth2/authorize",
       searchParams: { force_verify: "true" },
@@ -44,8 +44,8 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     },
   },
   discord: {
-    clientId: env.DISCORD_CLIENT_ID,
-    clientSecret: env.DISCORD_CLIENT_SECRET,
+    clientId: serverEnv.DISCORD_CLIENT_ID,
+    clientSecret: serverEnv.DISCORD_CLIENT_SECRET,
     authorize: { url: "https://discord.com/api/oauth2/authorize" },
     token: { url: "https://discord.com/api/oauth2/token" },
     scopes: ["identify", "email"],
@@ -75,8 +75,8 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     },
   },
   github: {
-    clientId: env.GITHUB_CLIENT_ID,
-    clientSecret: env.GITHUB_CLIENT_SECRET,
+    clientId: serverEnv.GITHUB_CLIENT_ID,
+    clientSecret: serverEnv.GITHUB_CLIENT_SECRET,
     authorize: {
       url: "https://github.com/login/oauth/authorize",
     },
@@ -99,8 +99,8 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     },
   },
   spotify: {
-    clientId: env.SPOTIFY_CLIENT_ID,
-    clientSecret: env.SPOTIFY_CLIENT_SECRET,
+    clientId: serverEnv.SPOTIFY_CLIENT_ID,
+    clientSecret: serverEnv.SPOTIFY_CLIENT_SECRET,
     scopes: ["user-read-private", "user-read-email"],
     authorize: {
       url: "https://accounts.spotify.com/authorize",
@@ -111,7 +111,7 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization: `Basic ${Buffer.from(
-          `${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`
+          `${serverEnv.SPOTIFY_CLIENT_ID}:${serverEnv.SPOTIFY_CLIENT_SECRET}`
         ).toString("base64")}`,
       },
     },
@@ -140,8 +140,8 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     },
   },
   google: {
-    clientId: env.GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    clientId: serverEnv.GOOGLE_CLIENT_ID,
+    clientSecret: serverEnv.GOOGLE_CLIENT_SECRET,
     authorize: {
       url: "https://accounts.google.com/o/oauth2/v2/auth",
       searchParams: {
@@ -160,8 +160,8 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     ],
   },
   patreon: {
-    clientId: env.PATREON_CLIENT_ID,
-    clientSecret: env.PATREON_CLIENT_SECRET,
+    clientId: serverEnv.PATREON_CLIENT_ID,
+    clientSecret: serverEnv.PATREON_CLIENT_SECRET,
     authorize: { url: "https://www.patreon.com/oauth2/authorize" },
     token: { url: "https://www.patreon.com/api/oauth2/token" },
     scopes: ["identity"],
@@ -192,8 +192,8 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
     },
   },
   streamlabs: {
-    clientId: env.STREAMLABS_CLIENT_ID,
-    clientSecret: env.STREAMLABS_CLIENT_SECRET,
+    clientId: serverEnv.STREAMLABS_CLIENT_ID,
+    clientSecret: serverEnv.STREAMLABS_CLIENT_SECRET,
     authorize: { url: "https://streamlabs.com/api/v2.0/authorize" },
     token: { url: "https://streamlabs.com/api/v2.0/token" },
     refresh: false,

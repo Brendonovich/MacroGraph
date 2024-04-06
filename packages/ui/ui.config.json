@@ -1,8 +1,8 @@
 {
   "tsx": true,
-  "componentDir": "./src/components/ui",
+  "componentDir": "./src",
   "tailwind": {
-    "config": "tailwind.config.cjs",
+    "config": "tailwind.preset.js",
     "css": "src/app.css"
   },
   "aliases": {

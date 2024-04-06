@@ -4,12 +4,22 @@ import { Pkg } from ".";
 
 export const TwitchAccount = createResourceType({
   name: "Twitch Account",
-  sources: (pkg: Pkg) =>
-    [...pkg.ctx!.auth.accounts].map(([userId, account]) => ({
-      id: userId,
-      display: account.data.display_name,
-      value: account,
-    })),
+  sources: (pkg: Pkg) => {
+    const allAccounts = [...pkg.ctx!.auth.accounts];
+
+    return allAccounts
+      .map(([id, data]) => {
+        const d = data();
+        if (!d) return;
+        return [id, d] as const;
+      })
+      .filter(Boolean)
+      .map(([userId, account]) => ({
+        id: userId,
+        display: account.data.display_name,
+        value: account,
+      }));
+  },
 });
 
 export const accountProperty = {

@@ -30,4 +30,5 @@ module.exports = {
     require("tailwindcss-animate"),
     require("tailwind-scrollbar"),
   ],
+  presets: [require("@macrograph/ui/tailwind.preset.js")],
 };

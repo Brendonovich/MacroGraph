@@ -48,7 +48,7 @@ export const IntInput = (props: Props) => {
         }
       }}
       class={clsx(
-        "w-full text-xs h-5 px-1 border border-neutral-300 rounded bg-black focus:border-yellow-500 focus:ring-0",
+        "w-full text-xs h-5 px-1 border border-neutral-500 rounded bg-black focus:border-yellow-500 focus:ring-0",
         props.class
       )}
     />

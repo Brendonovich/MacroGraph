@@ -1,6 +1,8 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { Maybe, Option } from "@macrograph/option";
+import { contract } from "@macrograph/api-contract";
+import { InitClientReturn } from "@ts-rest/core";
 
 import { Package } from "./Package";
 import { Node } from "./Node";
@@ -9,6 +11,7 @@ import { EventsMap, RunCtx } from "./NodeSchema";
 import { Project } from "./Project";
 import { SerializedProject } from "./serialized";
 import { Enum, Struct } from "@macrograph/typesystem";
+import { cache } from "@solidjs/router";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -69,10 +72,23 @@ export class Core {
 
   fetch: typeof fetch;
   oauth: OAuth;
+  api: InitClientReturn<typeof contract, any>;
 
-  constructor(args: { fetch: typeof fetch; oauth: OAuth }) {
+  getCredentials = () => this.api.getCredentials();
+  getCredential = (provider: string, id: string | number) =>
+    this.getCredentials().then((c) => {
+      if (c.status !== 200) return;
+      return c.body.find((c) => c.provider === provider && c.id === id);
+    });
+
+  constructor(args: {
+    fetch: typeof fetch;
+    oauth: OAuth;
+    api: InitClientReturn<typeof contract, any>;
+  }) {
     this.fetch = args.fetch;
     this.oauth = args.oauth;
+    this.api = args.api;
 
     return createMutable(this);
   }

@@ -77,6 +77,7 @@ export const SerializedResource = z.object({
 });
 
 export const SerializedProject = z.object({
+  name: z.string().optional(),
   graphs: z.array(SerializedGraph),
   graphIdCounter: z.number().int(),
   customEvents: z.array(SerializedEvent).default([]),

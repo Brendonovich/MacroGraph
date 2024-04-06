@@ -66,11 +66,11 @@ pub fn router() -> AlphaRouter<super::Ctx> {
             ))
             .expect("Failed to open twitch URL!");
 
+            let response = rx.recv().await;
+
+            shutdown_tx.send(()).ok();
+
             async_stream::stream! {
-                let response = rx.recv().await;
-
-                shutdown_tx.send(()).ok();
-
                 yield response
             }
         }),

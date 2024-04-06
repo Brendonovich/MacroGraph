@@ -1,9 +1,10 @@
 import { defineConfig } from "@solidjs/start/config";
 
-import interfacePlugin from "../../interface/vite";
+import interfacePlugin from "../../packages/ui/vite";
 
 export default defineConfig({
   ssr: false,
+  routeDir: "app",
   server: {
     preset: "static",
   },

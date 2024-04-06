@@ -38,7 +38,7 @@ export function createChat() {
       options: { skipUpdatingEmotesets: true },
       identity: {
         username: account.data.display_name,
-        password: account.token.access_token,
+        password: account.credential.token.access_token,
       },
     });
 

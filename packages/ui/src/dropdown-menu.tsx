@@ -3,7 +3,7 @@ import { splitProps } from "solid-js";
 
 import { DropdownMenu as DropdownMenuPrimitive } from "@kobalte/core";
 
-import { cn } from "~/lib/utils";
+import { cn } from "./lib/utils";
 
 const DropdownMenu: Component<DropdownMenuPrimitive.DropdownMenuRootProps> = (
   props

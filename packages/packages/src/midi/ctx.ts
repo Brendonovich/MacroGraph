@@ -1,5 +1,5 @@
 import { createEventListener } from "@solid-primitives/event-listener";
-import { createEffect, createResource, on, onCleanup } from "solid-js";
+import { createEffect, createResource, on } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export type Ctx = ReturnType<typeof createCtx>;

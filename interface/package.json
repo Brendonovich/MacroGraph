@@ -5,11 +5,11 @@
   "main": "./src/index.tsx",
   "exports": {
     ".": "./src/index.tsx",
-    "./tailwind.config.js": "./tailwind.config.js",
-    "./vite": "./vite.ts"
+    "./tailwind.config.js": "./tailwind.config.js"
   },
   "dependencies": {
     "@kobalte/core": "^0.9.8",
+    "@macrograph/api-contract": "workspace:^",
     "@macrograph/option": "workspace:^",
     "@macrograph/packages": "workspace:*",
     "@macrograph/runtime": "workspace:*",
@@ -25,6 +25,9 @@
     "@solid-primitives/resize-observer": "^2.0.25",
     "@solid-primitives/set": "^0.4.11",
     "@solid-primitives/storage": "^2.1.4",
+    "@solidjs/router": "^0.12.5",
+    "@ts-rest/core": "^3.41.1",
+    "@ts-rest/solid-query": "^3.41.1",
     "clsx": "^1.2.1",
     "solid-headless": "^0.13.1",
     "solid-js": "^1.8.16",

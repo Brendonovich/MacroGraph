@@ -35,13 +35,6 @@ export default () => {
   return (
     <div class="flex flex-col gap-2 p-1">
       <div class="flex flex-row gap-1 text-white">
-        <ConnectionsDialog>
-          <KDialog.Trigger title="Connections">
-            <IconContainer>
-              <IconMdiConnection class="w-full h-full" />
-            </IconContainer>
-          </KDialog.Trigger>
-        </ConnectionsDialog>
         <Show
           when={platform.projectPersistence}
           keyed
@@ -99,72 +92,6 @@ function CopyProjectButton() {
         <IconTablerClipboard class="w-full h-full" />
       </IconContainer>
     </button>
-  );
-}
-
-export function ConnectionsDialog(props: ParentProps) {
-  const core = useCore();
-
-  const [open, setOpen] = createSignal(false);
-
-  const packages = createMemo(() =>
-    core.packages
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .filter((p) => !!p.SettingsUI)
-  );
-
-  const [selectedPackage, setSelectedPackage] = createSignal(packages()[0]);
-
-  return (
-    <Dialog.Root onOpenChange={setOpen} open={open()} trigger={props.children}>
-      <div class="flex flex-col bg-neutral-800 rounded-lg overflow-hidden w-full max-w-2xl min-w-[40rem] divide-y divide-black border border-black text-white">
-        <div class="flex flex-row justify-between p-4">
-          <Dialog.Title class="font-bold text-2xl">Connections</Dialog.Title>
-          <Dialog.CloseButton>
-            <IconBiX class="w-8 h-8" />
-          </Dialog.CloseButton>
-        </div>
-        <div class="flex flex-row divide-x divide-black overflow-auto">
-          <ul class="h-full overflow-auto">
-            <For each={packages()}>
-              {(pkg) => (
-                <li>
-                  <button
-                    onClick={() =>
-                      startTransition(() => setSelectedPackage(pkg))
-                    }
-                    class={"p-2 w-full text-left"}
-                    classList={{ "bg-black": selectedPackage() === pkg }}
-                  >
-                    {pkg.name}
-                  </button>
-                </li>
-              )}
-            </For>
-          </ul>
-          <div class="flex-1 flex flex-col p-4 w-full text-white">
-            <Show when={selectedPackage()?.SettingsUI} keyed>
-              {(UI) => (
-                <ErrorBoundary
-                  fallback={(error: Error) => (
-                    <div>
-                      <p>An error occurred:</p>
-                      <p>{error.message}</p>
-                    </div>
-                  )}
-                >
-                  <Suspense fallback="Loading">
-                    <div>
-                      <Dynamic {...selectedPackage()?.ctx} component={UI} />
-                    </div>
-                  </Suspense>
-                </ErrorBoundary>
-              )}
-            </Show>
-          </div>
-        </div>
-      </div>
-    </Dialog.Root>
   );
 }
 

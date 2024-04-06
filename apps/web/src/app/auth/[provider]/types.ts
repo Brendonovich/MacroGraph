@@ -21,13 +21,6 @@ export const OAUTH_STATE = z
     })
   );
 
-export const TOKEN = z.object({
-  access_token: z.string(),
-  expires_in: z.number(),
-  refresh_token: z.string(),
-  token_type: z.string(),
-});
-
 export const CALLBACK_SEARCH_PARAMS = z.object({
   code: z.string(),
   state: OAUTH_STATE,

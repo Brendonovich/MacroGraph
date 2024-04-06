@@ -1,7 +1,9 @@
-import { Core, OAuthToken } from "@macrograph/runtime";
-import { Maybe, None, makePersistedOption } from "@macrograph/option";
+import { Core } from "@macrograph/runtime";
+import { None, makePersistedOption } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
-import { createMemo, createSignal } from "solid-js";
+import { Accessor, createMemo, createSignal } from "solid-js";
+import { Credential } from "@macrograph/api-contract";
+import { createAsync } from "@solidjs/router";
 import { z } from "zod";
 
 import { Helix } from "./helix";
@@ -14,9 +16,17 @@ const USER_DATA = z.object({
 });
 
 export interface Account {
-  token: OAuthToken;
+  credential: Credential;
   data: z.infer<typeof USER_DATA>;
-  refreshTimer: ReturnType<typeof setTimeout>;
+}
+
+function makeCache<T extends () => any>(fn: T) {
+  let value: ReturnType<T> | undefined;
+
+  return (): ReturnType<T> => {
+    if (value) return value;
+    return fn();
+  };
 }
 
 export function createAuth(
@@ -25,56 +35,38 @@ export function createAuth(
   helixClient: Helix,
   [, setPersisted]: PersistedStore
 ) {
-  const accounts = new ReactiveMap<string, Account>();
+  const accounts = new ReactiveMap<string, Accessor<Account | undefined>>();
 
-  async function addToken(token: OAuthToken) {
-    if (Date.now() > (token.issued_at + token.expires_in) * 1000) {
-      refreshToken(token);
-      return;
-    }
-    const { data } = await helixClient.call("GET /users", { token } as any, {});
-    const userData = USER_DATA.parse(data[0]);
+  async function enableAccount(userId: string) {
+    const getAccount = makeCache(async () => {
+      const c = await core.getCredential("twitch", userId);
+      if (!c) return undefined;
 
-    accounts.set(userData.id, {
-      token,
-      data: userData,
-      refreshTimer: setTimeout(
-        () => refresh(userData.id),
-        (token.issued_at + token.expires_in) * 1000 - Date.now()
-      ),
+      const data = await helixClient
+        .call("GET /users", c, {})
+        .then(({ data }) => (console.log(data), USER_DATA.parse(data[0])));
+
+      return {
+        data,
+        credential: c,
+      };
     });
 
-    setPersisted(userData.id, token);
-  }
+    await getAccount();
 
-  async function refreshToken(tokenOld: OAuthToken) {
-    const token: OAuthToken = (await core.oauth.refresh(
-      "twitch",
-      tokenOld.refresh_token
-    )) as any;
+    accounts.set(
+      userId,
+      createAsync(() => getAccount())
+    );
 
-    await addToken(token);
-  }
-
-  async function refresh(id: string) {
-    const account = Maybe(accounts.get(id)).unwrap();
-
-    const token: OAuthToken = (await core.oauth.refresh(
-      "twitch",
-      account.token.refresh_token
-    )) as any;
-
-    await addToken(token);
-
-    setPersisted(id, token);
+    setPersisted(userId, {});
   }
 
   return {
     accounts,
     clientId,
-    addToken,
-    refresh,
-    logOut(id: string) {
+    enableAccount,
+    disableAccount(id: string) {
       accounts.delete(id);
 
       setPersisted(id, undefined!);
@@ -83,14 +75,3 @@ export function createAuth(
 }
 
 export type Auth = Awaited<ReturnType<typeof createAuth>>;
-
-export function createUserInstance(key: string, auth: Auth) {
-  const [id, setId] = makePersistedOption<string>(createSignal(None), key);
-
-  const account = createMemo(() => id().map((id) => auth.accounts.get(id)));
-
-  return {
-    account,
-    setId,
-  };
-}

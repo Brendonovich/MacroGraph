@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { CORS_HEADERS } from "~/auth";
 import { AuthProviders } from "../providers";
-import { TOKEN } from "./types";
+import { OAUTH_TOKEN } from "@macrograph/api-contract";
 import { json } from "@solidjs/router";
 
 export const prerender = false;
@@ -33,7 +33,7 @@ export const POST: APIHandler = async ({ request, params }) => {
     headers: providerConfig.token?.headers,
   });
 
-  const token = TOKEN.parse(await res.json());
+  const token = OAUTH_TOKEN.parse(await res.json());
 
   return json(token, {
     headers: CORS_HEADERS,

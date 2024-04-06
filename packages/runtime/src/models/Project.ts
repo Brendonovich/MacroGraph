@@ -30,6 +30,7 @@ export class Project {
   customEvents = new ReactiveMap<number, CustomEvent>();
   resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
   variables: Array<Variable> = [];
+  name: string = "New Project";
 
   private disableSave = false;
 
@@ -144,6 +145,7 @@ export class Project {
 
   serialize(): z.infer<typeof SerializedProject> {
     return {
+      name: this.name,
       graphIdCounter: this.graphIdCounter,
       graphs: [...this.graphs.values()].map((g) => g.serialize()),
       customEventIdCounter: this.customEventIdCounter,
@@ -171,6 +173,8 @@ export class Project {
     project.disableSave = true;
 
     batch(() => {
+      project.name = data.name ?? "New Project";
+
       project.graphIdCounter = data.graphIdCounter;
 
       project.customEventIdCounter = data.customEventIdCounter;

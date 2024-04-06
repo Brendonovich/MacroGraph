@@ -22,7 +22,7 @@ import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import clsx from "clsx";
 
-import { CoreProvider } from "./contexts";
+export { CoreProvider } from "./contexts";
 import {
   Graph,
   GraphState,
@@ -32,7 +32,6 @@ import {
 import { createUIStore, UIStoreProvider } from "./UIStore";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
-import Settings from "./settings";
 import {
   commentBoxToClipboardItem,
   deserializeClipboardItem,
@@ -47,8 +46,11 @@ import {
   createSection,
 } from "./components/CommandDialog";
 import * as Sidebars from "./Sidebar";
+import { CoreProvider } from "./contexts";
 export { useCore } from "./contexts";
+
 export * from "./platform";
+export * from "./ConnectionsDialog";
 
 export type GraphBounds = XY & {
   width: number;
@@ -431,7 +433,6 @@ function ProjectInterface(props: {
 
           <Solid.Show when={leftSidebar.state.open}>
             <Sidebar width={Math.max(leftSidebar.state.width, MIN_WIDTH)}>
-              <Settings />
               <div class="overflow-y-auto outer-scroll flex-1">
                 <Sidebars.Project
                   project={props.core.project}

@@ -57,7 +57,7 @@ export const DataPin = (props: Props) => {
 
   return (
     <Tooltip.Root>
-      <Tooltip.Trigger class="cursor-auto">
+      <Tooltip.Trigger class="cursor-auto rounded-full focus-visible:outline-transparent outline-offset-1 outline-[0.1px]">
         <Switch>
           <Match when={innerType.value instanceof t.Option && innerType.value}>
             {(type) => {
@@ -108,7 +108,6 @@ export const DataPin = (props: Props) => {
                       class={clsx(
                         `w-3.5 h-3.5 flex justify-center items-center border-mg-current`,
                         rounding(type()),
-
                         connected() || active()
                           ? "border-[2.5px]"
                           : "border-[1.5px]"

@@ -26,3 +26,27 @@ export interface WsProvider<TServer> {
 export function createWsProvider<T>(p: WsProvider<T>) {
   return p;
 }
+
+// Modified from the amazing Tanstack Query library (MIT)
+// https://github.com/TanStack/query/blob/main/packages/query-core/src/utils.ts#L168
+export function hashKey<T extends Array<any>>(args: T): string {
+  return JSON.stringify(args, (_, val) =>
+    isPlainObject(val)
+      ? Object.keys(val)
+          .sort()
+          .reduce((result, key) => {
+            result[key] = val[key];
+            return result;
+          }, {} as any)
+      : val
+  );
+}
+
+function isPlainObject(obj: object) {
+  let proto;
+  return (
+    obj != null &&
+    typeof obj === "object" &&
+    (!(proto = Object.getPrototypeOf(obj)) || proto === Object.prototype)
+  );
+}

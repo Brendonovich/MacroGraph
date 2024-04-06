@@ -1,6 +1,4 @@
-import { relations } from "drizzle-orm";
 import {
-  integer,
   varchar,
   json,
   primaryKey,
@@ -10,7 +8,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { TOKEN } from "~/routes/auth/[provider]/types";
+import { OAUTH_TOKEN } from "@macrograph/api-contract";
 
 export const users = pgTable("user", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -34,8 +32,9 @@ export const oauthCredentials = pgTable(
     providerId: varchar("provider_id", { length: 255 }).notNull(),
     userId: varchar("user_id", { length: 255 }).notNull(),
     providerUserId: varchar("provider_user_id", { length: 255 }).notNull(),
-    token: json("token").$type<z.infer<typeof TOKEN>>().notNull(),
+    token: json("token").$type<z.infer<typeof OAUTH_TOKEN>>().notNull(),
     displayName: varchar("display_name", { length: 255 }),
+    tokenCreatedAt: timestamp("token_created_at"),
   },
   (table) => ({
     id: primaryKey({

@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { defineConfig } from "drizzle-kit";
-import { env } from "~/env/server";
+import { serverEnv } from "./src/env/server";
 
 dotenv.config({
   path: ".env",
@@ -14,6 +14,6 @@ export default defineConfig({
   driver: "pg",
   out: "./drizzle",
   dbCredentials: {
-    connectionString: env.DATABASE_URL,
+    connectionString: serverEnv.DATABASE_URL,
   },
 });
