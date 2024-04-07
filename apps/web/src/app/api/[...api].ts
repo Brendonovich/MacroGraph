@@ -5,6 +5,7 @@ import type { APIHandler } from "@solidjs/start/server";
 import { getCredentials, getUser } from "~/api";
 import {
   appendResponseHeaders,
+  getHeader,
   setResponseHeader,
   setResponseHeaders,
 } from "vinxi/http";
@@ -33,7 +34,7 @@ const app = new Hono().basePath("/api");
 createHonoEndpoints(contract, router, app);
 
 const createHandler = (): APIHandler => async (event) => {
-  setResponseHeader("Access-Control-Allow-Origin", "*");
+  setResponseHeader("Access-Control-Allow-Origin", getHeader("Origin")!);
   setResponseHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, PATCH, OPTIONS"
