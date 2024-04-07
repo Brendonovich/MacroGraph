@@ -1,6 +1,7 @@
 import { contract } from "@macrograph/api-contract";
 import { initServer, createHonoEndpoints } from "ts-rest-hono";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import type { APIHandler } from "@solidjs/start/server";
 import { getCredentials, getUser } from "~/api";
 
@@ -23,7 +24,7 @@ const router = s.router(contract, {
   getUser: async () => ({ status: 200, body: await getUser() }),
 });
 
-const app = new Hono().basePath("/api");
+const app = new Hono().basePath("/api").use(cors());
 
 createHonoEndpoints(contract, router, app);
 

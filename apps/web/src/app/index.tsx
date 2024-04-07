@@ -79,7 +79,7 @@ function DesktopListener() {
           </>
         );
 
-        return id;
+        true;
       } catch (e) {
         return undefined;
       }
