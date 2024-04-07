@@ -24,7 +24,7 @@ const router = s.router(contract, {
   getUser: async () => ({ status: 200, body: await getUser() }),
 });
 
-const app = new Hono().basePath("/api").use(cors());
+const app = new Hono().basePath("/api").use(cors({ origin: (o) => o }));
 
 createHonoEndpoints(contract, router, app);
 
