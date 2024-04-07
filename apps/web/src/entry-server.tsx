@@ -11,6 +11,10 @@ export default createHandler(
               name="viewport"
               content="width=device-width, initial-scale=1"
             />
+            <meta
+              http-equiv="Content-Security-Policy"
+              content="connect-src 'self' https: wss: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*;"
+            />
             <link rel="icon" href="/favicon.png" />
             {assets}
           </head>

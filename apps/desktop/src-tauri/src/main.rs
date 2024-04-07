@@ -88,11 +88,14 @@ pub fn router() -> Router<Ctx> {
                     ws: WebSocketUpgrade,
                     State(state): State<UnboundedSender<String>>,
                 ) -> Response {
+                    println!("ws handler");
                     ws.on_upgrade(|socket| handle_socket(socket, state))
                 }
 
                 async fn handle_socket(mut socket: WebSocket, tx: UnboundedSender<String>) {
                     while let Some(msg) = socket.recv().await {
+                        dbg!(&msg);
+
                         let msg = if let Ok(msg) = msg {
                             msg
                         } else {
@@ -123,6 +126,7 @@ pub fn router() -> Router<Ctx> {
                         }),
                 );
 
+                println!("waiting!");
                 let res = rx.recv().await;
                 shutdown_tx.send(()).ok();
 
