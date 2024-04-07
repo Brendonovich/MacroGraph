@@ -247,7 +247,7 @@ function Socials() {
 
 import { parse } from "cookie-es";
 
-const isLoggedIn = parse(document.cookie)[IS_LOGGED_IN] === "true";
+const isLoggedIn = () => parse(document.cookie)[IS_LOGGED_IN] === "true";
 
 function AuthSection() {
   const user = createAsync(() => getUser());
@@ -261,7 +261,7 @@ function AuthSection() {
       <Show
         when={(() => {
           if (user()) return user();
-          if (!isLoggedIn) return false;
+          if (!isLoggedIn()) return false;
           return user();
         })()}
         fallback={<LoginButton />}
@@ -328,7 +328,7 @@ function LoginButton() {
 
   onMount(() => {
     if (search.promptLogin) {
-      if (!isLoggedIn) setOpen(true);
+      if (!isLoggedIn()) setOpen(true);
 
       setSearch({ promptLogin: null }, { replace: true });
     }
