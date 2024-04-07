@@ -9,7 +9,7 @@ use axum::{
         State, WebSocketUpgrade,
     },
     response::Response,
-    routing::get,
+    routing::{get, post},
 };
 use rspc::{alpha::Rspc, Router};
 use tauri::Manager;
@@ -84,34 +84,14 @@ pub fn router() -> Router<Ctx> {
 
                 let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
 
-                async fn ws_handler(
-                    ws: WebSocketUpgrade,
-                    State(state): State<UnboundedSender<String>>,
-                ) -> Response {
-                    println!("ws handler");
-                    ws.on_upgrade(|socket| handle_socket(socket, state))
-                }
-
-                async fn handle_socket(mut socket: WebSocket, tx: UnboundedSender<String>) {
-                    while let Some(msg) = socket.recv().await {
-                        dbg!(&msg);
-
-                        let msg = if let Ok(msg) = msg {
-                            msg
-                        } else {
-                            // client disconnected
-                            return;
-                        };
-
-                        if let Message::Text(text) = msg {
-                            tx.send(text).ok();
-                        }
-                    }
-                }
-
                 let app = axum::Router::new()
-                    .route("/ws", get(ws_handler))
-                    .with_state(tx)
+                    .route(
+                        "/session",
+                        post(move |Json(session): Json<String>| async move {
+                            tx.send(session).ok();
+                        }),
+                    )
+                    .route("/", get(move || async move { id.to_string() }))
                     .layer(tower_http::cors::CorsLayer::very_permissive());
 
                 let addr = ([127, 0, 0, 1], 25000).into();
@@ -126,7 +106,6 @@ pub fn router() -> Router<Ctx> {
                         }),
                 );
 
-                println!("waiting!");
                 let res = rx.recv().await;
                 shutdown_tx.send(()).ok();
 

@@ -7,6 +7,7 @@ import { makePersisted } from "@solid-primitives/storage";
 import { env } from "./env";
 import { action } from "@solidjs/router";
 import { queryClient } from "./rspc";
+import { fetch } from "./http";
 
 export const [sessionToken, setSessionToken] = makePersisted(
   createSignal<string | null>(null),
@@ -14,6 +15,12 @@ export const [sessionToken, setSessionToken] = makePersisted(
 );
 
 export const rawApi = initClient(contract, {
+  api: (args) =>
+    fetch(args.path, args).then(async (r) => ({
+      status: r.status,
+      body: await r.json(),
+      headers: r.headers,
+    })),
   baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
   get baseHeaders(): Record<string, string> {
     const token = sessionToken();
@@ -22,6 +29,12 @@ export const rawApi = initClient(contract, {
 });
 
 export const api = initQueryClient(contract, {
+  api: (args) =>
+    fetch(args.path, args).then(async (r) => ({
+      status: r.status,
+      body: await r.json(),
+      headers: r.headers,
+    })),
   baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
   get baseHeaders(): Record<string, string> {
     const token = sessionToken();

@@ -147,7 +147,11 @@ function LogInDialog(props: ParentProps) {
         <DialogTitle class="text-xl">Browser Log In</DialogTitle>
         <DialogDescription class="max-w-sm mt-1">
           Go to MacroGraph Web and login to share login details with MacroGraph
-          Desktop
+          Desktop.
+          <br />
+          <br />
+          Make sure to disable your browser's security hardening if MacroGraph
+          Desktop isn't detected.
         </DialogDescription>
 
         <span class="my-8 text-neutral-200 text-center">

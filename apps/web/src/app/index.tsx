@@ -28,66 +28,78 @@ export default function Index() {
   );
 }
 
+const doDesktopAuth = action(async () => {
+  try {
+    const id = await fetch("http://localhost:25000");
+
+    const auth = await getAuthState();
+
+    const toastId = toast.info(
+      <>
+        <b>MacroGraph Desktop</b> detected.
+        <br />
+        <Show when={auth} fallback={undefined /* TODO!!! */}>
+          {(auth) => (
+            <>
+              Login as <b>{auth().user.email}</b>?
+              <div class="flex flex-row gap-2 mt-2">
+                <Button
+                  variant="secondary"
+                  onClick={async () => {
+                    await fetch("http://localhost:25000/session", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify(auth().session.id),
+                    });
+
+                    toast.success(
+                      <>
+                        Login successful, head to <b>MacroGraph Desktop</b>
+                      </>
+                    );
+
+                    mgDesktopIdActions.refetch();
+                  }}
+                >
+                  Login
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => toast.dismiss(toastId)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </>
+          )}
+        </Show>
+      </>
+    );
+
+    return id;
+  } catch (e) {
+    // if (auth())
+    //   toast.info(
+    //     <>
+    //       <b>MacroGraph Desktop</b> not detected. If this is unexpected,
+    //       make sure your browser's security hardening is disabled.
+    //     </>
+    //   );
+
+    return undefined;
+  }
+});
+
 function DesktopListener() {
-  const auth = createAsync(() => getAuthState());
+  const desktopAuth = useAction(doDesktopAuth);
+  const submission = useSubmission(doDesktopAuth);
 
-  const [mgDesktopId, mgDesktopIdActions] = createResource(
-    () => auth() || true,
-    async () => {
-      try {
-        const ws = new WebSocket("ws://localhost:25000/ws");
-
-        await new Promise((res) => {
-          ws.onopen = res;
-        });
-
-        await getAuthState();
-
-        const toastId = toast.info(
-          <>
-            <b>MacroGraph Desktop</b> detected.
-            <br />
-            <Show when={auth()} fallback={undefined /* TODO!!! */}>
-              {(auth) => (
-                <>
-                  Login as <b>{auth().user.email}</b>?
-                  <div class="flex flex-row gap-2 mt-2">
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        ws.send(auth().session.id);
-                        toast.success(
-                          <>
-                            Login successful, head to <b>MacroGraph Desktop</b>
-                          </>
-                        );
-                        mgDesktopIdActions.refetch();
-                      }}
-                    >
-                      Login
-                    </Button>
-                    <Button
-                      variant="default"
-                      onClick={() => toast.dismiss(toastId)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </>
-              )}
-            </Show>
-          </>
-        );
-
-        true;
-      } catch (e) {
-        return undefined;
-      }
-    }
-  );
+  desktopAuth();
 
   createEventListener(window, "focus", () => {
-    if (mgDesktopId.latest === undefined) mgDesktopIdActions.refetch();
+    if (submission.result === undefined) desktopAuth();
   });
 
   return null;
@@ -107,7 +119,13 @@ import {
 } from "solid-js";
 import { As } from "@kobalte/core";
 import { appendResponseHeader } from "vinxi/http";
-import { cache, createAsync, useAction } from "@solidjs/router";
+import {
+  action,
+  cache,
+  createAsync,
+  useAction,
+  useSubmission,
+} from "@solidjs/router";
 import { DownloadTarget, getDownloadURL } from "~/lib/releases";
 
 const getDownloadURL_cached = cache((target: DownloadTarget) => {
