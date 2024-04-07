@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { APIHandler } from "@solidjs/start/server";
 import { getCredentials, getUser } from "~/api";
+import { appendResponseHeaders } from "vinxi/http";
 
 const s = initServer();
 
@@ -24,14 +25,21 @@ const router = s.router(contract, {
   getUser: async () => ({ status: 200, body: await getUser() }),
 });
 
-const app = new Hono().basePath("/api").use(cors({ origin: (o) => o }));
+const app = new Hono().basePath("/api");
 
 createHonoEndpoints(contract, router, app);
 
-const createHandler = (): APIHandler => async (event) =>
-  app.fetch(event.request, {
+const createHandler = (): APIHandler => async (event) => {
+  appendResponseHeaders({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  });
+
+  return await app.fetch(event.request, {
     h3Event: event.nativeEvent,
   });
+};
 
 export const GET = createHandler();
 export const POST = createHandler();
