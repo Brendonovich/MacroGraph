@@ -59,8 +59,6 @@ const doDesktopAuth = action(async () => {
                         Login successful, head to <b>MacroGraph Desktop</b>
                       </>
                     );
-
-                    mgDesktopIdActions.refetch();
                   }}
                 >
                   Login
@@ -94,12 +92,11 @@ const doDesktopAuth = action(async () => {
 
 function DesktopListener() {
   const desktopAuth = useAction(doDesktopAuth);
-  const submission = useSubmission(doDesktopAuth);
 
   desktopAuth();
 
   createEventListener(window, "focus", () => {
-    if (submission.result === undefined) desktopAuth();
+    desktopAuth();
   });
 
   return null;
@@ -114,8 +111,8 @@ import {
   ParentProps,
   Show,
   Suspense,
-  createResource,
   createSignal,
+  onMount,
 } from "solid-js";
 import { As } from "@kobalte/core";
 import { appendResponseHeader } from "vinxi/http";
@@ -124,7 +121,7 @@ import {
   cache,
   createAsync,
   useAction,
-  useSubmission,
+  useSearchParams,
 } from "@solidjs/router";
 import { DownloadTarget, getDownloadURL } from "~/lib/releases";
 
@@ -250,10 +247,10 @@ function Socials() {
 
 import { parse } from "cookie-es";
 
+const isLoggedIn = parse(document.cookie)[IS_LOGGED_IN] === "true";
+
 function AuthSection() {
   const user = createAsync(() => getUser());
-
-  const isLoggedInCookie = parse(document.cookie)[IS_LOGGED_IN];
 
   return (
     <Suspense
@@ -264,7 +261,7 @@ function AuthSection() {
       <Show
         when={(() => {
           if (user()) return user();
-          if (isLoggedInCookie !== "true") return false;
+          if (!isLoggedIn) return false;
           return user();
         })()}
         fallback={<LoginButton />}
@@ -326,6 +323,16 @@ function LoginButton() {
     setOpen(false);
     toast.success("You are now logged in!");
   }
+
+  const [search, setSearch] = useSearchParams();
+
+  onMount(() => {
+    if (search.promptLogin) {
+      if (!isLoggedIn) setOpen(true);
+
+      setSearch({ promptLogin: null }, { replace: true });
+    }
+  });
 
   return (
     <Dialog open={open()} onOpenChange={setOpen}>

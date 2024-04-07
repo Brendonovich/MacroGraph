@@ -1,6 +1,6 @@
 import { ConnectionsDialog, CoreProvider } from "@macrograph/interface";
 import { FileRoutes } from "@solidjs/start/router";
-import { Router, action, createAsync, useAction } from "@solidjs/router";
+import { Router, createAsync, useAction } from "@solidjs/router";
 import { ErrorBoundary, ParentProps, Show, Suspense } from "solid-js";
 import {
   As,
@@ -150,8 +150,8 @@ function LogInDialog(props: ParentProps) {
           Desktop.
           <br />
           <br />
-          Make sure to disable your browser's security hardening if MacroGraph
-          Desktop isn't detected.
+          If MacroGraph Desktop isn't detected, make sure to use a browser other
+          than Safari and disable its security hardening.
         </DialogDescription>
 
         <span class="my-8 text-neutral-200 text-center">
