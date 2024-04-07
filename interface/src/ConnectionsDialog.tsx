@@ -9,7 +9,6 @@ import {
 import { createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { useCore } from "./contexts";
 import {
   Button,
   Dialog,
@@ -19,14 +18,13 @@ import {
   DialogTrigger,
 } from "@macrograph/ui";
 import { As, Tabs } from "@kobalte/core";
+import { Core } from "@macrograph/runtime";
 
-export function ConnectionsDialog() {
-  const core = useCore();
-
+export function ConnectionsDialog(props: { core: Core }) {
   const [open, setOpen] = createSignal(false);
 
   const packages = createMemo(() =>
-    core.packages
+    props.core.packages
       .sort((a, b) => a.name.localeCompare(b.name))
       .filter((p) => !!p.SettingsUI)
   );

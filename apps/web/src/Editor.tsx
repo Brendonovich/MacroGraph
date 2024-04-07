@@ -92,11 +92,7 @@ export default () => {
 };
 
 export function ConnectionsDialogButton() {
-  return (
-    <CoreProvider core={core} rootRef={() => null!}>
-      <ConnectionsDialog />
-    </CoreProvider>
-  );
+  return <ConnectionsDialog core={core} />;
 }
 
 export function ProjectName() {

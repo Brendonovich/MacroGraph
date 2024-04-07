@@ -3,17 +3,9 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{
-        ws::{Message, WebSocket},
-        State, WebSocketUpgrade,
-    },
-    response::Response,
-    routing::{get, post},
-};
+use axum::routing::{get, post};
 use rspc::{alpha::Rspc, Router};
 use tauri::Manager;
-use tokio::sync::mpsc::UnboundedSender;
 
 mod fs;
 mod http;

@@ -1,4 +1,8 @@
-import { Interface, PlatformContext } from "@macrograph/interface";
+import {
+  ConnectionsDialog,
+  Interface,
+  PlatformContext,
+} from "@macrograph/interface";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import * as pkgs from "@macrograph/packages";
@@ -83,4 +87,8 @@ export default function Editor() {
       <Interface core={core} environment="custom" />
     </PlatformContext.Provider>
   );
+}
+
+export function MenuItems() {
+  return <ConnectionsDialog core={core} />;
 }

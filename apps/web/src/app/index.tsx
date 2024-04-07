@@ -14,7 +14,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 
 const Editor = clientOnly(() => import("../Editor"));
 
-export default function Index() {
+export default function () {
   return (
     <div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
       <ErrorBoundary fallback={<></>}>
@@ -78,14 +78,6 @@ const doDesktopAuth = action(async () => {
 
     return id;
   } catch (e) {
-    // if (auth())
-    //   toast.info(
-    //     <>
-    //       <b>MacroGraph Desktop</b> not detected. If this is unexpected,
-    //       make sure your browser's security hardening is disabled.
-    //     </>
-    //   );
-
     return undefined;
   }
 });
@@ -342,15 +334,25 @@ function LoginButton() {
         </As>
       </DialogTrigger>
       <DialogContent class="p-8">
-        <Show
-          keyed
-          when={mode() === "login"}
-          fallback={
-            <SignUpForm onLogin={() => setMode("login")} onSignup={onLogin} />
-          }
+        <div
+          onKeyDown={(e) => e.stopPropagation()}
+          onKeyUp={(e) => e.stopPropagation()}
         >
-          <LoginForm onSignup={() => setMode("signup")} onLogin={onLogin} />
-        </Show>
+          <Show
+            keyed
+            when={mode() === "login"}
+            fallback={
+              <div>
+                <SignUpForm
+                  onLogin={() => setMode("login")}
+                  onSignup={onLogin}
+                />
+              </div>
+            }
+          >
+            <LoginForm onSignup={() => setMode("signup")} onLogin={onLogin} />
+          </Show>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,14 +1,14 @@
 import { action, useAction, useSubmission } from "@solidjs/router";
-import { Input, Button } from "@macrograph/ui";
 import { appendResponseHeader, setCookie } from "vinxi/http";
+import { Input, Button } from "@macrograph/ui";
 import { Argon2id } from "oslo/password";
+import { generateId } from "lucia";
 import { eq } from "drizzle-orm";
 
 import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import { CREDENTIALS, IS_LOGGED_IN } from "./utils";
-import { generateId } from "lucia";
 
 async function createSession(userId: string) {
   "use server";
@@ -20,54 +20,74 @@ async function createSession(userId: string) {
   setCookie(IS_LOGGED_IN, "true", { httpOnly: false });
 }
 
-const signUp = action(async (form: FormData) => {
+const signUpAction = action(async (form: FormData) => {
   "use server";
 
-  const data = CREDENTIALS.parse({
-    email: form.get("email"),
-    password: form.get("password"),
-  });
+  try {
+    const result = CREDENTIALS.safeParse({
+      email: form.get("email"),
+      password: form.get("password"),
+    });
 
-  const hashedPassword = await new Argon2id().hash(data.password);
-  const userId = generateId(15);
+    if (!result.success) {
+      throw result.error.errors[0].message;
+    }
+    const { data } = result;
 
-  await db.insert(users).values({
-    id: userId,
-    email: data.email,
-    hashedPassword,
-  });
+    const hashedPassword = await new Argon2id().hash(data.password);
+    const userId = generateId(15);
 
-  await createSession(userId);
+    await db.insert(users).values({
+      id: userId,
+      email: data.email,
+      hashedPassword,
+    });
+
+    await createSession(userId);
+  } catch (e: any) {
+    return { success: false, error: e.toString() };
+  }
+
+  return { success: true } as const;
 });
 
-const doLoginWithCredentials = action(async (form: FormData) => {
+const loginWithCredentialsAction = action(async (form: FormData) => {
   "use server";
 
-  const data = CREDENTIALS.parse({
-    email: form.get("email"),
-    password: form.get("password"),
-  });
+  try {
+    const result = CREDENTIALS.safeParse({
+      email: form.get("email"),
+      password: form.get("password"),
+    });
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.email, data.email),
-  });
-  if (!user) return { success: false, error: "email-invalid" };
+    if (!result.success) throw "Invalid credentials";
+    const { data } = result;
 
-  const validPassword = await new Argon2id().verify(
-    user.hashedPassword,
-    data.password
-  );
-  if (!validPassword) return { success: false, error: "password-invalid" };
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, data.email),
+    });
+    if (!user) throw "Invalid credentials";
 
-  await createSession(user.id);
+    const validPassword = await new Argon2id().verify(
+      user.hashedPassword,
+      data.password
+    );
+    if (!validPassword) throw "Invalid credentials";
+
+    await createSession(user.id);
+  } catch (e: any) {
+    return { success: false, error: e.toString() };
+  }
+
+  return { success: true } as const;
 });
 
 export function LoginForm(props: {
   onSignup?: () => void;
   onLogin?: () => void;
 }) {
-  const loginWithCredentials = useAction(doLoginWithCredentials);
-  const loginSubmission = useSubmission(doLoginWithCredentials);
+  const loginWithCredentials = useAction(loginWithCredentialsAction);
+  const submission = useSubmission(loginWithCredentialsAction);
 
   return (
     <div class="text-white text-center space-y-4 flex flex-col items-center">
@@ -75,22 +95,29 @@ export function LoginForm(props: {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          loginWithCredentials(new FormData(e.currentTarget)).then(() =>
-            props.onLogin?.()
+          loginWithCredentials(new FormData(e.currentTarget)).then(
+            ({ success }) => success && props.onLogin?.()
           );
         }}
       >
         <fieldset
           class="space-y-2 max-w-[16rem] w-full"
-          disabled={loginSubmission.pending}
+          disabled={submission.pending}
         >
           <Input name="email" type="email" placeholder="Email Address" />
           <Input name="password" type="password" placeholder="Password" />
+          {!submission.result?.success && (
+            <span class="text-red-300">{submission.result?.error}</span>
+          )}
           <Button class="w-full">Log in</Button>
           <hr />
           <span>
             Don't have an account?{" "}
-            <button type="button" onClick={() => props.onSignup?.()}>
+            <button
+              class="underline"
+              type="button"
+              onClick={() => props.onSignup?.()}
+            >
               Sign Up
             </button>
           </span>
@@ -101,7 +128,8 @@ export function LoginForm(props: {
 }
 
 function SignUpForm(props: { onLogin?: () => void; onSignup?: () => void }) {
-  const submission = useSubmission(signUp);
+  const signUp = useAction(signUpAction);
+  const submission = useSubmission(signUpAction);
 
   return (
     <div class="text-white text-center space-y-4 flex flex-col items-center">
@@ -109,7 +137,9 @@ function SignUpForm(props: { onLogin?: () => void; onSignup?: () => void }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          signUp(new FormData(e.currentTarget)).then(() => props.onSignup?.());
+          signUp(new FormData(e.currentTarget)).then(
+            ({ success }) => success && props.onSignup?.()
+          );
         }}
       >
         <fieldset
@@ -118,11 +148,18 @@ function SignUpForm(props: { onLogin?: () => void; onSignup?: () => void }) {
         >
           <Input name="email" type="email" placeholder="Email Address" />
           <Input name="password" type="password" placeholder="Password" />
+          {!submission.result?.success && (
+            <span class="text-red-300">{submission.result?.error}</span>
+          )}
           <Button class="w-full">Create Account</Button>
           <hr />
           <span class="mt-2">
             Already have an account?{" "}
-            <button type="button" onClick={() => props.onLogin?.()}>
+            <button
+              class="underline"
+              type="button"
+              onClick={() => props.onLogin?.()}
+            >
               Log in
             </button>
           </span>
