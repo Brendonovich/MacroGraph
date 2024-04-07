@@ -1,7 +1,9 @@
 import { ConnectionsDialog, CoreProvider } from "@macrograph/interface";
-import { FileRoutes } from "@solidjs/start/router";
-import { Router, createAsync, useAction } from "@solidjs/router";
 import { ErrorBoundary, ParentProps, Show, Suspense } from "solid-js";
+import { Router, createAsync, useAction } from "@solidjs/router";
+import { open as openURL } from "@tauri-apps/api/shell";
+import { useQueryClient } from "@tanstack/solid-query";
+import { FileRoutes } from "@solidjs/start/router";
 import {
   As,
   Button,
@@ -22,10 +24,8 @@ import { core } from "./core";
 
 import "./app.css";
 import { env } from "./env";
-import { open as openURL } from "@tauri-apps/api/shell";
 import { createSignal } from "solid-js";
 import { rspc, client, queryClient } from "./rspc";
-import { useQueryClient } from "@tanstack/solid-query";
 import { api, logOutAction, sessionToken, setSessionToken } from "./api";
 import Editor from "./Editor";
 
@@ -53,9 +53,8 @@ function Root() {
             >
               <Show
                 when={(() => {
-                  const u = user.data;
                   if (sessionToken() === null) return false;
-                  return u?.body;
+                  return user.data?.body;
                 })()}
                 fallback={
                   <LogInDialog>
@@ -133,9 +132,10 @@ function LogInDialog(props: ParentProps) {
     });
 
     setSessionToken(sessionToken);
-    queryClient.invalidateQueries();
+    await queryClient.invalidateQueries();
     setOpen(false);
-    toast.success("Logged in successfully!");
+
+    toast.success("You are now logged in!");
 
     return sessionToken;
   });
