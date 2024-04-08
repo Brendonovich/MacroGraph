@@ -1,20 +1,20 @@
 import { infer } from "./base";
 import {
-  AnyType,
-  Enum,
-  EnumType,
-  ListType,
-  MapType,
-  OptionType,
-  Wildcard,
-  WildcardType,
+	AnyType,
+	Enum,
+	EnumType,
+	ListType,
+	MapType,
+	OptionType,
+	Wildcard,
+	WildcardType,
 } from ".";
 import {
-  BoolType,
-  FloatType,
-  IntType,
-  StringType,
-  BasePrimitiveType,
+	BoolType,
+	FloatType,
+	IntType,
+	StringType,
+	BasePrimitiveType,
 } from "./primitive";
 import { Struct, StructType } from "./struct";
 
@@ -35,30 +35,30 @@ const struct = <T extends Struct<any>>(s: T) => new StructType<T>(s);
 const wildcard = (w: Wildcard) => new WildcardType(w);
 
 export {
-  int,
-  float,
-  string,
-  bool,
-  list,
-  option,
-  enm as enum,
-  wildcard,
-  struct,
-  map,
+	int,
+	float,
+	string,
+	bool,
+	list,
+	option,
+	enm as enum,
+	wildcard,
+	struct,
+	map,
 };
 
 export {
-  ListType as List,
-  EnumType as Enum,
-  WildcardType as Wildcard,
-  OptionType as Option,
-  MapType as Map,
-  StringType as String,
-  IntType as Int,
-  FloatType as Float,
-  BoolType as Bool,
-  StructType as Struct,
-  BasePrimitiveType as Primitive,
+	ListType as List,
+	EnumType as Enum,
+	WildcardType as Wildcard,
+	OptionType as Option,
+	MapType as Map,
+	StringType as String,
+	IntType as Int,
+	FloatType as Float,
+	BoolType as Bool,
+	StructType as Struct,
+	BasePrimitiveType as Primitive,
 };
 
 export type { AnyType as Any, infer };

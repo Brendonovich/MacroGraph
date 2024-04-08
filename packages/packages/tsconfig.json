@@ -1,13 +1,13 @@
 {
-  "extends": "@macrograph/config/tsconfig",
-  "compilerOptions": {
-    "rootDir": "src",
-    "declarationDir": "dist"
-  },
-  "references": [
-    { "path": "../runtime" },
-    { "path": "../json" },
-    { "path": "../typesystem" },
-    { "path": "../ui" }
-  ]
+	"extends": "@macrograph/config/tsconfig",
+	"compilerOptions": {
+		"rootDir": "src",
+		"declarationDir": "dist"
+	},
+	"references": [
+		{ "path": "../runtime" },
+		{ "path": "../json" },
+		{ "path": "../typesystem" },
+		{ "path": "../ui" }
+	]
 }

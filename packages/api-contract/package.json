@@ -1,15 +1,15 @@
 {
-  "name": "@macrograph/api-contract",
-  "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "type": "module",
-  "dependencies": {
-    "@ts-rest/core": "^3.41.1",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "@macrograph/config": "workspace:*",
-    "@total-typescript/ts-reset": "^0.4.2"
-  }
+	"name": "@macrograph/api-contract",
+	"private": true,
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"type": "module",
+	"dependencies": {
+		"@ts-rest/core": "^3.41.1",
+		"zod": "^3.22.4"
+	},
+	"devDependencies": {
+		"@macrograph/config": "workspace:*",
+		"@total-typescript/ts-reset": "^0.4.2"
+	}
 }

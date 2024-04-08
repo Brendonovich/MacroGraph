@@ -8,16 +8,16 @@ import { Suspense } from "solid-js";
 import { Toaster } from "solid-sonner";
 
 export default function App() {
-  return (
-    <Router
-      root={(props) => (
-        <rspc.Provider client={client} queryClient={queryClient}>
-          <Suspense>{props.children}</Suspense>
-          <Toaster />
-        </rspc.Provider>
-      )}
-    >
-      <FileRoutes />
-    </Router>
-  );
+	return (
+		<Router
+			root={(props) => (
+				<rspc.Provider client={client} queryClient={queryClient}>
+					<Suspense>{props.children}</Suspense>
+					<Toaster />
+				</rspc.Provider>
+			)}
+		>
+			<FileRoutes />
+		</Router>
+	);
 }

@@ -1,10 +1,11 @@
 import type { Component, ComponentProps } from "solid-js";
-import { splitProps } from "solid-js";
+import { createSignal, splitProps } from "solid-js";
 
 import type { VariantProps } from "cva";
 import { cva } from "cva";
 
 import { cn } from "./lib/utils";
+import { JSX } from "solid-js/jsx-runtime";
 
 const buttonVariants = cva(
   "ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
@@ -51,5 +52,32 @@ const Button: Component<ButtonProps> = (props) => {
     />
   );
 };
+
+export function AsyncButton(
+  props: Omit<ButtonProps, "onClick"> & {
+    onClick?: (
+      ...p: Parameters<JSX.EventHandler<HTMLButtonElement, MouseEvent>>
+    ) => void | Promise<void>;
+    loadingChildren?: JSX.Element;
+  }
+) {
+  const [loading, setLoading] = createSignal(false);
+
+  return (
+    <Button
+      {...props}
+      disabled={loading() || props.disabled}
+      onClick={(e) => {
+        console.log(e);
+        const p = props.onClick?.(e);
+        if (!(p instanceof Promise)) return;
+        setLoading(true);
+        p.finally(() => setLoading(false));
+      }}
+    >
+      {loading() ? props.loadingChildren ?? props.children : props.children}
+    </Button>
+  );
+}
 
 export { Button, buttonVariants };

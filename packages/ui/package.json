@@ -1,32 +1,38 @@
 {
-  "name": "@macrograph/ui",
-  "type": "module",
-  "private": true,
-  "sideEffects": false,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./tailwind.preset.js": "./tailwind.preset.js",
-    "./vite": "./vite.ts",
-    "./global.css": "./src/global.css"
-  },
-  "devDependencies": {
-    "solid-js": "^1.8.16",
-    "storybook-solidjs": "1.0.0-beta.2",
-    "unplugin-auto-import": "^0.17.5",
-    "unplugin-icons": "^0.18.5",
-    "vite": "^5.2.7"
-  },
-  "peerDependencies": {
-    "solid-js": "^1.7.11"
-  },
-  "dependencies": {
-    "@kobalte/core": "^0.9.8",
-    "@macrograph/config": "workspace:*",
-    "clsx": "^1.2.1",
-    "cva": "npm:class-variance-authority@^0.7.0",
-    "i": "^0.3.7",
-    "tailwind-merge": "^2.2.2"
-  }
+	"name": "@macrograph/ui",
+	"type": "module",
+	"private": true,
+	"sideEffects": false,
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./tailwind.preset.js": "./tailwind.preset.js",
+		"./vite": "./vite.js",
+		"./global.css": "./src/global.css",
+		"./types": "./src/auto-imports.d.ts"
+	},
+	"typesVersions": {
+		"*": {
+			"types": ["./src/auto-imports.d.ts"]
+		}
+	},
+	"devDependencies": {
+		"solid-js": "^1.8.16",
+		"storybook-solidjs": "1.0.0-beta.2",
+		"unplugin-auto-import": "^0.17.5",
+		"unplugin-icons": "^0.18.5",
+		"vite": "^5.2.7"
+	},
+	"peerDependencies": {
+		"solid-js": "^1.7.11"
+	},
+	"dependencies": {
+		"@kobalte/core": "^0.9.8",
+		"@macrograph/config": "workspace:*",
+		"clsx": "^1.2.1",
+		"cva": "npm:class-variance-authority@^0.7.0",
+		"i": "^0.3.7",
+		"tailwind-merge": "^2.2.2"
+	}
 }

@@ -1,28 +1,32 @@
 {
-  "private": true,
-  "scripts": {
-    "desktop": "pnpm --filter @macrograph/desktop --",
-    "web": "pnpm --filter @macrograph/web --",
-    "runtime": "pnpm --filter @macrograph/runtime --",
-    "test": "vitest",
-    "typecheck": "tsc -b",
-    "lint": "turbo run lint",
-    "lint:fix": "turbo run lint -- --fix",
-    "dev:web": "pnpm web dev",
-    "dev:desktop": "pnpm desktop tauri dev"
-  },
-  "devDependencies": {
-    "@vitest/browser": "^0.32.4",
-    "@vitest/ui": "^1.4.0",
-    "jsdom": "^23.2.0",
-    "safaridriver": "^0.0.5",
-    "solid-js": "^1.8.16",
-    "turbo": "^1.13.0",
-    "turbo-ignore": "^1.13.0",
-    "typescript": "^5.4.3",
-    "vite-plugin-solid": "^2.10.2",
-    "vitest": "^0.32.4",
-    "vitest-github-actions-reporter": "^0.11.1",
-    "webdriverio": "^8.35.1"
-  }
+	"private": true,
+	"scripts": {
+		"desktop": "pnpm --filter @macrograph/desktop --",
+		"web": "pnpm --filter @macrograph/web --",
+		"runtime": "pnpm --filter @macrograph/runtime --",
+		"test": "vitest",
+		"typecheck": "tsc -b",
+		"lint": "turbo run lint",
+		"lint:fix": "turbo run lint -- --fix",
+		"dev:web": "pnpm web dev",
+		"dev:desktop": "pnpm desktop tauri dev",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@vitest/browser": "^0.32.4",
+		"@vitest/ui": "^1.4.0",
+		"jsdom": "^23.2.0",
+		"safaridriver": "^0.0.5",
+		"solid-js": "^1.8.16",
+		"turbo": "^1.13.0",
+		"turbo-ignore": "^1.13.0",
+		"typescript": "^5.4.3",
+		"vite-plugin-solid": "^2.10.2",
+		"vitest": "^0.32.4",
+		"vitest-github-actions-reporter": "^0.11.1",
+		"webdriverio": "^8.35.1"
+	},
+	"dependencies": {
+		"@biomejs/biome": "^1.6.4"
+	}
 }

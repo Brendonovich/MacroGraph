@@ -7,15 +7,15 @@ import { createCtx } from "./ctx";
 export type Pkg = ReturnType<typeof pkg>;
 
 export function pkg() {
-  const ctx = createCtx();
+	const ctx = createCtx();
 
-  const pkg = new Package<Event>({
-    name: "OpenAi",
-    ctx,
-    SettingsUI: () => import("./Settings"),
-  });
+	const pkg = new Package<Event>({
+		name: "OpenAi",
+		ctx,
+		SettingsUI: () => import("./Settings"),
+	});
 
-  sends.register(pkg, ctx);
+	sends.register(pkg, ctx);
 
-  return pkg;
+	return pkg;
 }

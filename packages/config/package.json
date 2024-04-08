@@ -1,8 +1,8 @@
 {
-  "name": "@macrograph/config",
-  "type": "module",
-  "private": true,
-  "exports": {
-    "./tsconfig": "./tsconfig.json"
-  }
+	"name": "@macrograph/config",
+	"type": "module",
+	"private": true,
+	"exports": {
+		"./tsconfig": "./tsconfig.json"
+	}
 }

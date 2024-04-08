@@ -9,29 +9,29 @@ import * as requests from "./requests";
 export type Pkg = Package<{}, Ctx>;
 
 export const STATUS_BYTES = {
-  noteOff: 0x8,
-  noteOn: 0x9,
-  polyphonicAftertouch: 0xa,
-  controlChange: 0xb,
-  programChange: 0xc,
-  channelAftertouch: 0xd,
-  pitchBend: 0xe,
+	noteOff: 0x8,
+	noteOn: 0x9,
+	polyphonicAftertouch: 0xa,
+	controlChange: 0xb,
+	programChange: 0xc,
+	channelAftertouch: 0xd,
+	pitchBend: 0xe,
 };
 
 export function pkg(): Pkg {
-  const ctx = createCtx();
+	const ctx = createCtx();
 
-  const pkg = new Package<{}, Ctx>({
-    name: "MIDI",
-    ctx,
-    SettingsUI: () => import("./Settings"),
-  });
+	const pkg = new Package<{}, Ctx>({
+		name: "MIDI",
+		ctx,
+		SettingsUI: () => import("./Settings"),
+	});
 
-  pkg.registerResourceType(resources.MIDIInput);
-  pkg.registerResourceType(resources.MIDIOutput);
+	pkg.registerResourceType(resources.MIDIInput);
+	pkg.registerResourceType(resources.MIDIOutput);
 
-  events.register(pkg);
-  requests.register(pkg);
+	events.register(pkg);
+	requests.register(pkg);
 
-  return pkg;
+	return pkg;
 }

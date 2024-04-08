@@ -8,17 +8,17 @@ import { Toaster } from "solid-sonner";
 import "@macrograph/ui/global.css";
 
 export default function App() {
-  return (
-    <Router
-      root={(props) => (
-        <MetaProvider>
-          <Title>MacroGraph</Title>
-          <Suspense>{props.children}</Suspense>
-          <Toaster />
-        </MetaProvider>
-      )}
-    >
-      <FileRoutes />
-    </Router>
-  );
+	return (
+		<Router
+			root={(props) => (
+				<MetaProvider>
+					<Title>MacroGraph</Title>
+					<Suspense>{props.children}</Suspense>
+					<Toaster />
+				</MetaProvider>
+			)}
+		>
+			<FileRoutes />
+		</Router>
+	);
 }

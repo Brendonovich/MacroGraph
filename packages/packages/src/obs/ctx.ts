@@ -4,8 +4,8 @@ import { Maybe } from "@macrograph/option";
 import { z } from "zod";
 
 type InstanceState = { password: string | null } & (
-  | { state: "disconnected" | "connecting" }
-  | { state: "connected"; obs: OBS }
+	| { state: "disconnected" | "connecting" }
+	| { state: "connected"; obs: OBS }
 );
 
 // old localstorage key
@@ -13,113 +13,113 @@ const OBS_WS = "obsWs";
 
 const OBS_INSTANCES = "obs-instances";
 const INSTANCE_SCHEMA = z.object({
-  url: z.string(),
-  password: z.string().optional(),
+	url: z.string(),
+	password: z.string().optional(),
 });
 
 export function createCtx() {
-  const instances = new ReactiveMap<string, InstanceState>();
+	const instances = new ReactiveMap<string, InstanceState>();
 
-  async function addInstance(ip: string, password?: string) {
-    await disconnectInstance(ip);
+	async function addInstance(ip: string, password?: string) {
+		await disconnectInstance(ip);
 
-    instances.set(ip, { state: "connecting", password: password ?? null });
-    persistInstances();
+		instances.set(ip, { state: "connecting", password: password ?? null });
+		persistInstances();
 
-    await connectInstance(ip);
-  }
+		await connectInstance(ip);
+	}
 
-  async function connectInstance(ip: string) {
-    const maybeInstance = instances.get(ip);
-    if (!maybeInstance) return;
+	async function connectInstance(ip: string) {
+		const maybeInstance = instances.get(ip);
+		if (!maybeInstance) return;
 
-    const instance = maybeInstance;
-    function setDisconnected() {
-      instances.set(ip, {
-        state: "disconnected",
-        password: instance.password,
-      });
+		const instance = maybeInstance;
+		function setDisconnected() {
+			instances.set(ip, {
+				state: "disconnected",
+				password: instance.password,
+			});
 
-      setTimeout(() => {
-        console.log("disconnect running");
-        connectInstance(ip);
-      }, 10000);
-    }
+			setTimeout(() => {
+				console.log("disconnect running");
+				connectInstance(ip);
+			}, 10000);
+		}
 
-    const obs = new OBS();
+		const obs = new OBS();
 
-    try {
-      await obs.connect(ip, instance.password ?? undefined, {
-        eventSubscriptions:
-          EventSubscription.All |
-          EventSubscription.SceneItemTransformChanged |
-          EventSubscription.InputActiveStateChanged |
-          EventSubscription.InputShowStateChanged,
-      });
-    } catch {
-      setDisconnected();
-      return;
-    }
+		try {
+			await obs.connect(ip, instance.password ?? undefined, {
+				eventSubscriptions:
+					EventSubscription.All |
+					EventSubscription.SceneItemTransformChanged |
+					EventSubscription.InputActiveStateChanged |
+					EventSubscription.InputShowStateChanged,
+			});
+		} catch {
+			setDisconnected();
+			return;
+		}
 
-    obs.on("ConnectionClosed", setDisconnected);
-    obs.on("ConnectionError", setDisconnected);
+		obs.on("ConnectionClosed", setDisconnected);
+		obs.on("ConnectionError", setDisconnected);
 
-    instances.set(ip, { state: "connected", obs, password: instance.password });
-    persistInstances();
-  }
+		instances.set(ip, { state: "connected", obs, password: instance.password });
+		persistInstances();
+	}
 
-  async function disconnectInstance(ip: string) {
-    const instance = instances.get(ip);
-    if (!instance) return;
-    if (instance.state !== "connected") return;
+	async function disconnectInstance(ip: string) {
+		const instance = instances.get(ip);
+		if (!instance) return;
+		if (instance.state !== "connected") return;
 
-    instances.set(ip, { state: "disconnected", password: instance.password });
-    await instance.obs.disconnect();
-  }
+		instances.set(ip, { state: "disconnected", password: instance.password });
+		await instance.obs.disconnect();
+	}
 
-  async function removeInstance(ip: string) {
-    instances.delete(ip);
-    persistInstances();
-    await disconnectInstance(ip);
-  }
+	async function removeInstance(ip: string) {
+		instances.delete(ip);
+		persistInstances();
+		await disconnectInstance(ip);
+	}
 
-  // convert old localstorage data to new system
-  Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
-    const { url, password } = INSTANCE_SCHEMA.parse(JSON.parse(jstr));
+	// convert old localstorage data to new system
+	Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
+		const { url, password } = INSTANCE_SCHEMA.parse(JSON.parse(jstr));
 
-    try {
-      await addInstance(url, password);
-    } catch {
-    } finally {
-      localStorage.removeItem(OBS_WS);
-    }
-  });
+		try {
+			await addInstance(url, password);
+		} catch {
+		} finally {
+			localStorage.removeItem(OBS_WS);
+		}
+	});
 
-  Maybe(localStorage.getItem(OBS_INSTANCES)).mapAsync(async (jstr) => {
-    const instances = z.array(INSTANCE_SCHEMA).parse(JSON.parse(jstr));
+	Maybe(localStorage.getItem(OBS_INSTANCES)).mapAsync(async (jstr) => {
+		const instances = z.array(INSTANCE_SCHEMA).parse(JSON.parse(jstr));
 
-    instances.forEach((i) => addInstance(i.url, i.password));
-  });
+		instances.forEach((i) => addInstance(i.url, i.password));
+	});
 
-  function persistInstances() {
-    localStorage.setItem(
-      OBS_INSTANCES,
-      JSON.stringify(
-        [...instances].map(([url, instance]) => ({
-          url,
-          password: instance.password,
-        }))
-      )
-    );
-  }
+	function persistInstances() {
+		localStorage.setItem(
+			OBS_INSTANCES,
+			JSON.stringify(
+				[...instances].map(([url, instance]) => ({
+					url,
+					password: instance.password,
+				})),
+			),
+		);
+	}
 
-  return {
-    instances,
-    addInstance,
-    connectInstance,
-    disconnectInstance,
-    removeInstance,
-  };
+	return {
+		instances,
+		addInstance,
+		connectInstance,
+		disconnectInstance,
+		removeInstance,
+	};
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

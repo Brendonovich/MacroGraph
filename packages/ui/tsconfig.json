@@ -1,7 +1,7 @@
 {
-  "extends": "@macrograph/config/tsconfig",
-  "compilerOptions": {
-    "rootDir": "src",
-    "declarationDir": "dist"
-  }
+	"extends": "@macrograph/config/tsconfig",
+	"compilerOptions": {
+		"rootDir": "src",
+		"declarationDir": "dist"
+	}
 }

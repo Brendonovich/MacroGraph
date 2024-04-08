@@ -6,43 +6,43 @@ const SPEAKER_BOT_PORT = "SpeakerBotPort";
 export type Ctx = ReturnType<typeof createCtx>;
 
 export function createCtx() {
-  const [state, setState] = createSignal<
-    | {
-        type: "disconnected";
-      }
-    | { type: "connecting" | "connected"; ws: WebSocket }
-  >({ type: "disconnected" });
+	const [state, setState] = createSignal<
+		| {
+				type: "disconnected";
+		  }
+		| { type: "connecting" | "connected"; ws: WebSocket }
+	>({ type: "disconnected" });
 
-  const [url, setUrl] = makePersistedOption<string>(
-    createSignal(None),
-    SPEAKER_BOT_PORT
-  );
+	const [url, setUrl] = makePersistedOption<string>(
+		createSignal(None),
+		SPEAKER_BOT_PORT,
+	);
 
-  createEffect(
-    on(
-      () => url(),
-      (url) => {
-        url.map((url) => {
-          const ws = new WebSocket(url);
+	createEffect(
+		on(
+			() => url(),
+			(url) => {
+				url.map((url) => {
+					const ws = new WebSocket(url);
 
-          ws.addEventListener("open", () => {
-            setState({ type: "connected", ws });
-          });
+					ws.addEventListener("open", () => {
+						setState({ type: "connected", ws });
+					});
 
-          ws.addEventListener("message", (msg) => {
-            console.log(msg);
-          });
+					ws.addEventListener("message", (msg) => {
+						console.log(msg);
+					});
 
-          setState({ type: "connecting", ws });
+					setState({ type: "connecting", ws });
 
-          onCleanup(() => {
-            ws.close();
-            setState({ type: "disconnected" });
-          });
-        });
-      }
-    )
-  );
+					onCleanup(() => {
+						ws.close();
+						setState({ type: "disconnected" });
+					});
+				});
+			},
+		),
+	);
 
-  return { url, setUrl, state, setState };
+	return { url, setUrl, state, setState };
 }

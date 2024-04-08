@@ -12,51 +12,51 @@ import { createEventSub } from "./eventSub";
 export const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 const PERSISTED_SCHEMA = z.record(
-  z.string(),
-  // auto connect on setup
-  z.object({
-    eventsub: z.boolean().optional(),
-    chat: z.boolean().optional(),
-  })
+	z.string(),
+	// auto connect on setup
+	z.object({
+		eventsub: z.boolean().optional(),
+		chat: z.boolean().optional(),
+	}),
 );
 
 export type Persisted = z.infer<typeof PERSISTED_SCHEMA>;
 export type PersistedStore = ReturnType<typeof createStore<Persisted>>;
 
 export function createCtx(core: Core) {
-  const persisted = makePersisted(
-    createStore<z.infer<typeof PERSISTED_SCHEMA>>({}),
-    { name: "twitchTokens" }
-  );
+	const persisted = makePersisted(
+		createStore<z.infer<typeof PERSISTED_SCHEMA>>({}),
+		{ name: "twitchTokens" },
+	);
 
-  const helixClient = createHelix(core);
-  const auth = createAuth(CLIENT_ID, core, helixClient, persisted);
-  const eventSub = createEventSub(helixClient);
-  const chat = createChat();
+	const helixClient = createHelix(core);
+	const auth = createAuth(CLIENT_ID, core, helixClient, persisted);
+	const eventSub = createEventSub(helixClient);
+	const chat = createChat();
 
-  const setup = createResource(async () => {
-    await Promise.allSettled(Object.keys(persisted[0]).map(auth.enableAccount));
+	const setup = createResource(async () => {
+		await Promise.allSettled(Object.keys(persisted[0]).map(auth.enableAccount));
 
-    Object.entries(persisted[0]).forEach(([id, data]) => {
-      const account = auth.accounts.get(id)?.();
+		Object.entries(persisted[0]).forEach(([id, data]) => {
+			const account = auth.accounts.get(id)?.();
 
-      console.log({ ...data }, account);
-      if (!account) return;
+			console.log({ ...data }, account);
+			if (!account) return;
 
-      if (data.chat) chat.connectClient(account);
-      if (data.eventsub) eventSub.connectSocket(account);
-    });
-  });
+			if (data.chat) chat.connectClient(account);
+			if (data.eventsub) eventSub.connectSocket(account);
+		});
+	});
 
-  return {
-    core,
-    auth,
-    helixClient,
-    chat,
-    eventSub,
-    persisted,
-    setup,
-  };
+	return {
+		core,
+		auth,
+		helixClient,
+		chat,
+		eventSub,
+		persisted,
+		setup,
+	};
 }
 
 export type Ctx = Awaited<ReturnType<typeof createCtx>>;

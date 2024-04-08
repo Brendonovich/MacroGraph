@@ -1,20 +1,20 @@
 export abstract class Disposable {
-  disposeListeners: Set<() => void> = new Set();
+	disposeListeners: Set<() => void> = new Set();
 
-  private disposed = false;
-  dispose() {
-    if (this.disposed) return;
+	private disposed = false;
+	dispose() {
+		if (this.disposed) return;
 
-    for (const cb of this.disposeListeners) {
-      cb();
-    }
+		for (const cb of this.disposeListeners) {
+			cb();
+		}
 
-    this.disposed = true;
-  }
+		this.disposed = true;
+	}
 
-  addDisposeListener(cb: () => void): () => void {
-    this.disposeListeners.add(cb);
+	addDisposeListener(cb: () => void): () => void {
+		this.disposeListeners.add(cb);
 
-    return () => this.disposeListeners.delete(cb);
-  }
+		return () => this.disposeListeners.delete(cb);
+	}
 }

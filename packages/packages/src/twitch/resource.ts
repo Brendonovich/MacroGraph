@@ -3,33 +3,33 @@ import { t } from "@macrograph/typesystem";
 import { Pkg } from ".";
 
 export const TwitchAccount = createResourceType({
-  name: "Twitch Account",
-  sources: (pkg: Pkg) => {
-    const allAccounts = [...pkg.ctx!.auth.accounts];
+	name: "Twitch Account",
+	sources: (pkg: Pkg) => {
+		const allAccounts = [...pkg.ctx!.auth.accounts];
 
-    return allAccounts
-      .map(([id, data]) => {
-        const d = data();
-        if (!d) return;
-        return [id, d] as const;
-      })
-      .filter(Boolean)
-      .map(([userId, account]) => ({
-        id: userId,
-        display: account.data.display_name,
-        value: account,
-      }));
-  },
+		return allAccounts
+			.map(([id, data]) => {
+				const d = data();
+				if (!d) return;
+				return [id, d] as const;
+			})
+			.filter(Boolean)
+			.map(([userId, account]) => ({
+				id: userId,
+				display: account.data.display_name,
+				value: account,
+			}));
+	},
 });
 
 export const accountProperty = {
-  name: "Twitch Account",
-  resource: TwitchAccount,
+	name: "Twitch Account",
+	resource: TwitchAccount,
 } satisfies PropertyDef;
 
 export const defaultProperties = { account: accountProperty };
 
 export const TwitchChannel = createResourceType({
-  name: "Twitch Channel",
-  type: t.string(),
+	name: "Twitch Channel",
+	type: t.string(),
 });

@@ -1,7 +1,6 @@
-import { createSignal, For, Match, Show, Switch } from "solid-js";
-import { makeTimer } from "@solid-primitives/timer";
+import { For, Match, Show, Suspense, Switch } from "solid-js";
 import { createAsync } from "@solidjs/router";
-import { Button } from "@macrograph/ui";
+import { AsyncButton, Button } from "@macrograph/ui";
 import { Tooltip } from "@kobalte/core";
 
 import { Ctx } from "./ctx";
@@ -16,14 +15,9 @@ export default ({
   const credentials = createAsync(() => core.getCredentials());
 
   return (
-    <>
+    <Suspense>
       <ul class="flex flex-col mb-2 space-y-2">
-        <Show
-          when={(() => {
-            const c = credentials();
-            return c?.status === 200 && c.body;
-          })()}
-        >
+        <Show when={credentials()}>
           {(creds) => (
             <For each={creds().filter((cred) => cred.provider === "twitch")}>
               {(cred) => {
@@ -53,13 +47,12 @@ export default ({
                           </Button>
                         }
                         fallback={
-                          <Button
-                            onClick={() => (
-                              console.log(cred), auth.enableAccount(cred.id)
-                            )}
+                          <AsyncButton
+                            onClick={() => auth.enableAccount(cred.id)}
+                            loadingChildren="Enabling..."
                           >
                             Enable
-                          </Button>
+                          </AsyncButton>
                         }
                       />
                     </div>
@@ -76,16 +69,17 @@ export default ({
                               <Switch fallback="EventSub Connecting...">
                                 <Match when={!eventSubSocket()}>
                                   <span>EventSub Disconnected</span>
-                                  <Button
+                                  <AsyncButton
+                                    loadingChildren="Connecting..."
                                     onClick={() => {
-                                      eventSub.connectSocket(account());
                                       setPersisted(account().data.id, {
                                         eventsub: true,
                                       });
+                                      return eventSub.connectSocket(account());
                                     }}
                                   >
                                     Connect
-                                  </Button>
+                                  </AsyncButton>
                                 </Match>
                                 <Match when={eventSubSocket()}>
                                   <span>EventSub Connected</span>
@@ -110,16 +104,17 @@ export default ({
                                   when={chatClient()?.status === "connected"}
                                 >
                                   <span>Chat Connected</span>
-                                  <Button
+                                  <AsyncButton
                                     onClick={() => {
-                                      chat.disconnectClient(account());
                                       setPersisted(account().data.id, {
                                         chat: false,
                                       });
+                                      return chat.disconnectClient(account());
                                     }}
+                                    loadingChildren="Disconnecting..."
                                   >
                                     Disconnect
-                                  </Button>
+                                  </AsyncButton>
                                 </Match>
                                 <Match
                                   when={
@@ -128,16 +123,17 @@ export default ({
                                   }
                                 >
                                   <span>Chat Disconnected</span>
-                                  <Button
+                                  <AsyncButton
                                     onClick={() => {
-                                      chat.connectClient(account());
                                       setPersisted(account().data.id, {
                                         chat: true,
                                       });
+                                      return chat.connectClient(account());
                                     }}
+                                    loadingChildren="Connecting..."
                                   >
                                     Connect
-                                  </Button>
+                                  </AsyncButton>
                                 </Match>
                               </Switch>
                             </div>
@@ -158,6 +154,6 @@ export default ({
           adding credentials
         </a>
       </span>
-    </>
+    </Suspense>
   );
 };
