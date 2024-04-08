@@ -46,10 +46,13 @@ export async function loginURLForProvider(provider: AuthProvider) {
 
 	const requestOrigin = `https://${getRequestHost()}`;
 
-	const targetOrigin =
-		requestOrigin === serverEnv.AUTH_REDIRECT_PROXY_URL
-			? requestOrigin
-			: serverEnv.VERCEL_URL;
+	const targetOrigin = [
+		serverEnv.AUTH_REDIRECT_PROXY_URL,
+		serverEnv.VERCEL_URL,
+		serverEnv.VERCEL_BRANCH_URL,
+	].includes(requestOrigin)
+		? requestOrigin
+		: serverEnv.VERCEL_URL;
 
 	return await getOAuthLoginURL(provider, {
 		env: "credentials",

@@ -7,6 +7,9 @@ export const serverEnv = createEnv({
 		VERCEL_URL: z
 			.string()
 			.transform((d) => (d ? `https://${d}` : "http://localhost:4321")),
+		VERCEL_BRANCH_URL: z
+			.string()
+			.transform((d) => (d ? `https://${d}` : "http://localhost:4321")),
 		AUTH_REDIRECT_PROXY_URL: z.string(),
 		AUTH_SECRET: z.string(),
 		TWITCH_CLIENT_ID: z.string(),
