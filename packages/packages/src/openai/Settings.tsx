@@ -1,57 +1,54 @@
+import { z } from "zod";
+import { createForm, zodForm } from "@modular-forms/solid";
+import { Match, Switch, createSignal } from "solid-js";
 import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
-import { Match, Switch } from "solid-js";
 
-import { createForm } from "@tanstack/solid-form";
-import type { Ctx } from "./ctx";
+import { Ctx } from "./ctx";
+
+const Schema = z.object({
+  key: z.string(),
+});
 
 export default function ({ state, setKey, key }: Ctx) {
+  let [update, setUpdate] = createSignal("");
+
+  const [, { Form, Field }] = createForm({
+    initialValues: {
+      key: key().unwrapOr(""),
+    },
+    validate: zodForm(Schema),
+  });
+
   return (
     <div class="flex flex-col space-y-2">
       <span class="text-neutral-400 font-medium">Open AI API</span>
-      <Switch fallback="Loading...">
-        <Match when={state().isNone()}>
-          {(_) => {
-            const form = createForm(() => ({
-              defaultValues: { key: key().unwrapOr("") },
-              onSubmit: ({ value }) => {
-                setKey(Some(value.key));
-              },
-            }));
-
-            return (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  form.handleSubmit();
-                }}
-                class="flex flex-row space-x-4"
-              >
-                <form.Field name="key">
-                  {(field) => (
-                    <Input
-                      onInput={(e) =>
-                        field().handleChange(e.currentTarget.value)
-                      }
-                      onBlur={() => field().handleBlur()}
-                      value={field().state.value}
-                      type="password"
-                      placeholder="Open AI Key"
-                    />
-                  )}
-                </form.Field>
-                <Button type="submit" class="shrink-0" size="md">
-                  Submit
-                </Button>
-              </form>
-            );
-          }}
-        </Match>
-        <Match when={state().isSome()}>
-          <div class="flex flex-row items-center space-x-4">
-            <Button onClick={() => setKey(None)}>Disconnect</Button>
-          </div>
+      <Form
+        onSubmit={(d) => {
+          setUpdate("hello");
+          setKey(Some(d.key));
+          setTimeout(() => {
+            setUpdate("");
+          }, 1000);
+        }}
+        class="flex flex-row space-x-4"
+      >
+        <Field name="key">
+          {(field, props) => (
+            <Input
+              {...props}
+              type="password"
+              placeholder="Open AI Key"
+              value={field.value}
+            />
+          )}
+        </Field>
+        <Button type="submit">Submit</Button>
+      </Form>
+      <Switch>
+        {" "}
+        <Match when={update() === "hello"}>
+          <span>Key Saved!</span>
         </Match>
       </Switch>
     </div>
