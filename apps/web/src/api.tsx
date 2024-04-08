@@ -123,6 +123,7 @@ export const addCredential = action(async (provider: AuthProvider) => {
 		w.addEventListener("beforeunload", onBeforeUnload);
 
 		window.addEventListener("message", (e) => {
+			console.log(e);
 			if (e.source !== w) return;
 
 			w.removeEventListener("beforeunload", onBeforeUnload);
