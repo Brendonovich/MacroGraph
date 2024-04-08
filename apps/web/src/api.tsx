@@ -129,8 +129,6 @@ export const addCredential = action(async (provider: AuthProvider) => {
     });
   });
 
-  console.log({ searchParams });
-
   async function inner(provider: string, searchParams: string) {
     "use server";
 
