@@ -124,13 +124,12 @@ export const addCredential = action(async (provider: AuthProvider) => {
 
     window.addEventListener("message", (e) => {
       if (e.source !== w) return;
-      console.log(e.data);
-
-      w.removeEventListener("beforeunload", onBeforeUnload);
 
       res(e.data);
     });
   });
+
+  console.log({ searchParams });
 
   async function inner(provider: string, searchParams: string) {
     "use server";
