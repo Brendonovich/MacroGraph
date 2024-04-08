@@ -296,7 +296,11 @@ function UserDropdown(
 				<DropdownMenuSeparator />
 				<DropdownMenuItem
 					onSelect={() =>
-						logOut().then(() => toast.success("Logged out successfully"))
+						toast.promise(logOut(), {
+							loading: "Logging out...",
+							success: "Logged out successfully",
+							error: "Failed to log out",
+						})
 					}
 				>
 					Log Out
