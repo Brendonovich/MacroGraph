@@ -2,7 +2,6 @@ import { ErrorBoundary, ParentProps, Show, Suspense } from "solid-js";
 import { createAsync, useAction } from "@solidjs/router";
 import { open as openURL } from "@tauri-apps/api/shell";
 import { useQueryClient } from "@tanstack/solid-query";
-import { clientOnly } from "@solidjs/start";
 import { createSignal } from "solid-js";
 import {
 	As,
@@ -26,8 +25,6 @@ import { core } from "../core";
 import { rspc } from "../rspc";
 import { env } from "../env";
 
-const Editor = clientOnly(() => import("../Editor"));
-
 export default function () {
 	return (
 		<div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
@@ -39,16 +36,12 @@ export default function () {
 	);
 }
 
-const MenuItems = clientOnly(() =>
-	import("../Editor").then((i) => ({ default: i.MenuItems })),
-);
-
 function Header() {
 	const user = api.getUser.createQuery(() => ["getUser"], {});
 
 	return (
 		<header class="w-full flex flex-row px-4 py-2 justify-left items-center h-14">
-			<div class="flex-1">
+			<div class="flex-1 flex flex-row gap-2">
 				<MenuItems />
 			</div>
 			<div>
@@ -86,6 +79,7 @@ function Header() {
 }
 
 import IconRadixIconsExternalLink from "~icons/radix-icons/external-link";
+import Editor, { MenuItems } from "../Editor";
 
 function UserDropdown(props: ParentProps<{ user: { email: string } }>) {
 	const logOut = useAction(logOutAction);

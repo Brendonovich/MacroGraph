@@ -2112,63 +2112,61 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 	createEventSubEventSchema({
 		name: "Channel Chat Notification",
 		event: "channel.chat.notification",
-		createIO: ({ io }) => {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				broadcaster: io.dataOutput({
-					id: "broadcaster",
-					name: "Broadcaster",
-					type: t.struct(BroadcasterInfoStruct),
-				}),
-				chatter: io.dataOutput({
-					id: "chatter",
-					name: "Chatter",
-					type: t.struct(ChatterStruct),
-				}),
-				chatterIsAnonymous: io.dataOutput({
-					id: "chatterAnonymous",
-					name: "Chatter is Anonymous",
-					type: t.bool(),
-				}),
-				color: io.dataOutput({
-					id: "color",
-					name: "Color",
-					type: t.string(),
-				}),
-				badges: io.dataOutput({
-					id: "badges",
-					name: "Badges",
-					type: t.list(t.struct(BadgesStruct)),
-				}),
-				systemMessage: io.dataOutput({
-					id: "systemMessage",
-					name: "System Message",
-					type: t.string(),
-				}),
-				message_id: io.dataOutput({
-					id: "messageid",
-					name: "Message ID",
-					type: t.string(),
-				}),
-				message: io.dataOutput({
-					id: "message",
-					name: "Message",
-					type: t.struct(MessageStruct),
-				}),
-				noticeType: io.dataOutput({
-					id: "noticeType",
-					name: "Notice Type",
-					type: t.string(),
-				}),
-				notice: io.dataOutput({
-					id: "notice",
-					name: "Notice",
-					type: t.enum(ChannelChatNotificationEnum),
-				}),
-			};
-		},
+		createIO: ({ io }) => ({
+			exec: io.execOutput({
+				id: "exec",
+			}),
+			broadcaster: io.dataOutput({
+				id: "broadcaster",
+				name: "Broadcaster",
+				type: t.struct(BroadcasterInfoStruct),
+			}),
+			chatter: io.dataOutput({
+				id: "chatter",
+				name: "Chatter",
+				type: t.struct(ChatterStruct),
+			}),
+			chatterIsAnonymous: io.dataOutput({
+				id: "chatterAnonymous",
+				name: "Chatter is Anonymous",
+				type: t.bool(),
+			}),
+			color: io.dataOutput({
+				id: "color",
+				name: "Color",
+				type: t.string(),
+			}),
+			badges: io.dataOutput({
+				id: "badges",
+				name: "Badges",
+				type: t.list(t.struct(BadgesStruct)),
+			}),
+			systemMessage: io.dataOutput({
+				id: "systemMessage",
+				name: "System Message",
+				type: t.string(),
+			}),
+			message_id: io.dataOutput({
+				id: "messageid",
+				name: "Message ID",
+				type: t.string(),
+			}),
+			message: io.dataOutput({
+				id: "message",
+				name: "Message",
+				type: t.struct(MessageStruct),
+			}),
+			noticeType: io.dataOutput({
+				id: "noticeType",
+				name: "Notice Type",
+				type: t.string(),
+			}),
+			notice: io.dataOutput({
+				id: "notice",
+				name: "Notice",
+				type: t.enum(ChannelChatNotificationEnum),
+			}),
+		}),
 		run({ ctx, io, data }) {
 			console.log(data);
 			ctx.setOutput(io.chatterIsAnonymous, data.chatter_is_anonymous);

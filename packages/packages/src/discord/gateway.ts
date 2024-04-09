@@ -1,181 +1,180 @@
-import { createEffect, createSignal, on, onCleanup } from "solid-js";
-import { OnEvent, Package } from "@macrograph/runtime";
-import { Maybe, None, Option, Some } from "@macrograph/option";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createEventBus } from "@solid-primitives/event-bus";
+import { ReactiveMap } from "@solid-primitives/map";
+import { Package } from "@macrograph/runtime";
+import { Maybe } from "@macrograph/option";
 import { t } from "@macrograph/typesystem";
 import { z } from "zod";
 
 import { GUILD_MEMBER_SCHEMA } from "./schemas";
-import { Auth } from "./auth";
+import { botProperty } from "./resource";
+import { Ctx, PersistedStore } from ".";
+import { BotAccount } from "./auth";
 
-export function create({ botToken }: Auth, onEvent: OnEvent) {
-	const [ws, setWs] = createSignal<Option<WebSocket>>(None);
-	const [enabled, setEnabled] = createSignal(true);
+export function createGateway([, setPersisted]: PersistedStore) {
+  const sockets = new ReactiveMap<string, WebSocket>();
 
-	const createGateway = (token: string) => {
-		setEnabled(true);
+  const connectSocket = async (account: BotAccount) => {
+    const botId = account.data.id;
+    if (sockets.has(botId)) return;
 
-		const ws = new WebSocket("wss://gateway.discord.gg/?v=6&encoding=json");
-		let state: "AwaitingHello" | "AwaitingHeartbeatAck" | "Connected" =
-			"AwaitingHello";
+    await new Promise<void>((res) => {
+      const ws = new WebSocket("wss://gateway.discord.gg/?v=6&encoding=json");
+      let state: "AwaitingHello" | "AwaitingHeartbeatAck" | "Connected" =
+        "AwaitingHello";
+      let seq: any;
 
-		let seq: any;
+      ws.onmessage = ({ data }) => {
+        let payload = JSON.parse(data);
 
-		let res: () => void;
-		const promise = new Promise<void>((r) => {
-			res = r;
-		});
+        const { op, d, s } = payload as any;
+        seq = s;
 
-		ws.addEventListener("message", ({ data }) => {
-			let payload = JSON.parse(data);
+        switch (op) {
+          // OPCODE 10 GIVES the HEARTBEAT INTERVAL, SO YOU CAN KEEP THE CONNECTION ALIVE
+          case 10:
+            if (state !== "AwaitingHello") return;
 
-			const { t, op, d, s } = payload as any;
-			seq = s;
+            const { heartbeat_interval } = d;
+            ws.send(JSON.stringify({ op: 1, d: null }));
 
-			switch (op) {
-				// OPCODE 10 GIVES the HEARTBEAT INTERVAL, SO YOU CAN KEEP THE CONNECTION ALIVE
-				case 10:
-					if (state !== "AwaitingHello") return;
+            setInterval(() => {
+              ws.send(JSON.stringify({ op: 1, d: seq }));
+            }, heartbeat_interval);
 
-					const { heartbeat_interval } = d;
-					ws.send(JSON.stringify({ op: 1, d: null }));
+            state = "AwaitingHeartbeatAck";
 
-					setInterval(() => {
-						ws.send(JSON.stringify({ op: 1, d: seq }));
-					}, heartbeat_interval);
+            break;
+          case 11:
+            if (state !== "AwaitingHeartbeatAck") return;
 
-					state = "AwaitingHeartbeatAck";
+            ws.send(
+              JSON.stringify({
+                op: 2,
+                d: {
+                  token: account.token,
+                  intents: (1 << 9) + (1 << 15),
+                  properties: {
+                    os: "linux",
+                    browser: "Macrograph",
+                    device: "Macrograph",
+                  },
+                },
+              })
+            );
 
-					break;
-				case 11:
-					if (state !== "AwaitingHeartbeatAck") return;
+            state = "Connected";
+            sockets.set(botId, ws);
+            res();
+            break;
+        }
+      };
+      ws.onclose = () => {
+        sockets.delete(botId);
+      };
+    });
 
-					ws.send(
-						JSON.stringify({
-							op: 2,
-							d: {
-								token: token,
-								intents: (1 << 9) + (1 << 15),
-								properties: {
-									os: "linux",
-									browser: "Macrograph",
-									device: "Macrograph",
-								},
-							},
-						}),
-					);
+    setPersisted("bots", botId, { gateway: true });
+  };
 
-					state = "Connected";
-					setWs(Some(ws));
-					res();
-					break;
-			}
+  const disconnectSocket = (botId: string) => {
+    const ws = sockets.get(botId);
+    if (!ws) return;
 
-			switch (t) {
-				// IF MESSAGE IS CREATED, IT WILL LOG IN THE CONSOLE
-				case "MESSAGE_CREATE":
-					if (d.type !== 0) return;
+    setPersisted("bots", botId, { gateway: false });
 
-					onEvent({
-						name: "discordMessage",
-						data: d,
-					});
-			}
-		});
+    ws.close();
+  };
 
-		return promise;
-	};
-
-	const disconnect = () => {
-		setWs(None);
-		setEnabled(false);
-	};
-
-	const connect = () =>
-		botToken().mapAsync((token) => {
-			setEnabled(true);
-			return createGateway(token);
-		});
-
-	createEffect(
-		on(botToken, (token) => {
-			token
-				.andThen((token) => Maybe(enabled() ? createGateway(token) : null))
-				.unwrapOrElse(async () => {
-					setWs(None);
-				});
-		}),
-	);
-
-	createEffect(() => {
-		const w = ws();
-
-		onCleanup(() => w.peek((w) => w.close()));
-	});
-
-	return { ws, connect, disconnect };
+  return {
+    sockets,
+    connectSocket,
+    disconnectSocket,
+  };
 }
 
-export function register(pkg: Package) {
-	pkg.createEventSchema({
-		name: "Discord Message",
-		event: "discordMessage",
-		createIO: ({ io }) => {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				message: io.dataOutput({
-					id: "message",
-					name: "Message",
-					type: t.string(),
-				}),
-				channelId: io.dataOutput({
-					id: "channelId",
-					name: "Channel ID",
-					type: t.string(),
-				}),
-				username: io.dataOutput({
-					id: "username",
-					name: "Username",
-					type: t.string(),
-				}),
-				userId: io.dataOutput({
-					id: "userId",
-					name: "User ID",
-					type: t.string(),
-				}),
-				nickname: io.dataOutput({
-					id: "nickname",
-					name: "Nickname",
-					type: t.option(t.string()),
-				}),
-				guildId: io.dataOutput({
-					id: "guildId",
-					name: "Guild ID",
-					type: t.option(t.string()),
-				}),
-				roles: io.dataOutput({
-					id: "roles",
-					name: "Roles",
-					type: t.list(t.string()),
-				}),
-			};
-		},
-		run({ ctx, data, io }) {
-			ctx.setOutput(io.message, data.content);
-			ctx.setOutput(io.channelId, data.channel_id);
-			ctx.setOutput(io.username, data.author.username);
-			ctx.setOutput(io.userId, data.author.id);
-			ctx.setOutput(
-				io.nickname,
-				Maybe(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen((v) =>
-					Maybe(v.nick),
-				),
-			);
-			ctx.setOutput(io.guildId, Maybe(data.guild_id as string | null));
-			ctx.setOutput(io.roles, data.member.roles);
+export function register(pkg: Package, { gateway }: Ctx) {
+  pkg.createSchema({
+    name: "Discord Message",
+    type: "event",
+    properties: { bot: botProperty },
+    createListener: ({ ctx, properties }) => {
+      const bot = ctx.getProperty(properties.bot).expect("No bot available");
+      const socket = Maybe(gateway.sockets.get(bot.data.id)).expect(
+        "Gateway not conneted"
+      );
 
-			ctx.exec(io.exec);
-		},
-	});
+      const bus = createEventBus<any>();
+
+      createEventListener(socket, "message", (msg: MessageEvent) => {
+        const { t, d } = JSON.parse(msg.data) as any;
+
+        switch (t) {
+          // IF MESSAGE IS CREATED, IT WILL LOG IN THE CONSOLE
+          case "MESSAGE_CREATE":
+            if (d.type !== 0) return;
+
+            bus.emit(d);
+        }
+      });
+
+      return bus;
+    },
+    createIO: ({ io }) => ({
+      exec: io.execOutput({
+        id: "exec",
+      }),
+      message: io.dataOutput({
+        id: "message",
+        name: "Message",
+        type: t.string(),
+      }),
+      channelId: io.dataOutput({
+        id: "channelId",
+        name: "Channel ID",
+        type: t.string(),
+      }),
+      username: io.dataOutput({
+        id: "username",
+        name: "Username",
+        type: t.string(),
+      }),
+      userId: io.dataOutput({
+        id: "userId",
+        name: "User ID",
+        type: t.string(),
+      }),
+      nickname: io.dataOutput({
+        id: "nickname",
+        name: "Nickname",
+        type: t.option(t.string()),
+      }),
+      guildId: io.dataOutput({
+        id: "guildId",
+        name: "Guild ID",
+        type: t.option(t.string()),
+      }),
+      roles: io.dataOutput({
+        id: "roles",
+        name: "Roles",
+        type: t.list(t.string()),
+      }),
+    }),
+    run({ ctx, data, io }) {
+      ctx.setOutput(io.message, data.content);
+      ctx.setOutput(io.channelId, data.channel_id);
+      ctx.setOutput(io.username, data.author.username);
+      ctx.setOutput(io.userId, data.author.id);
+      ctx.setOutput(
+        io.nickname,
+        Maybe(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen((v) =>
+          Maybe(v.nick)
+        )
+      );
+      ctx.setOutput(io.guildId, Maybe(data.guild_id as string | null));
+      ctx.setOutput(io.roles, data.member.roles);
+
+      ctx.exec(io.exec);
+    },
+  });
 }

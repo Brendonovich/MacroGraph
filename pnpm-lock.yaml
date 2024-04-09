@@ -557,6 +557,9 @@ importers:
       '@macrograph/ui':
         specifier: workspace:*
         version: link:../ui
+      '@macrograph/utils':
+        specifier: workspace:^
+        version: link:../utils
       '@modular-forms/solid':
         specifier: ^0.12.2
         version: 0.12.2(solid-js@1.8.16)
@@ -801,6 +804,15 @@ importers:
       vite:
         specifier: ^5.2.7
         version: 5.2.7
+
+  packages/utils:
+    devDependencies:
+      '@macrograph/config':
+        specifier: workspace:*
+        version: link:../config
+      solid-js:
+        specifier: ^1.8.16
+        version: 1.8.16
 
 packages:
 

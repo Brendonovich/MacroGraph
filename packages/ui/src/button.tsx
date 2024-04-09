@@ -57,7 +57,7 @@ export function AsyncButton(
 	props: Omit<ButtonProps, "onClick"> & {
 		onClick?: (
 			...p: Parameters<JSX.EventHandler<HTMLButtonElement, MouseEvent>>
-		) => void | Promise<void>;
+		) => any | Promise<any>;
 		loadingChildren?: JSX.Element;
 	},
 ) {
@@ -66,6 +66,7 @@ export function AsyncButton(
 	return (
 		<Button
 			{...props}
+			class={cn(props.class, "transition-color")}
 			disabled={loading() || props.disabled}
 			onClick={(e) => {
 				console.log(e);

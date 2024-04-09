@@ -1,8 +1,8 @@
-import { Core } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createStore } from "solid-js/store";
-import { z } from "zod";
+import { Core } from "@macrograph/runtime";
 import { createResource } from "solid-js";
+import { z } from "zod";
 
 import { createAuth } from "./auth";
 import { createChat } from "./chat";
@@ -26,7 +26,7 @@ export type PersistedStore = ReturnType<typeof createStore<Persisted>>;
 export function createCtx(core: Core) {
 	const persisted = makePersisted(
 		createStore<z.infer<typeof PERSISTED_SCHEMA>>({}),
-		{ name: "twitchTokens" },
+		{ name: "packages.twitch" },
 	);
 
 	const helixClient = createHelix(core);
@@ -39,8 +39,6 @@ export function createCtx(core: Core) {
 
 		Object.entries(persisted[0]).forEach(([id, data]) => {
 			const account = auth.accounts.get(id)?.();
-
-			console.log({ ...data }, account);
 			if (!account) return;
 
 			if (data.chat) chat.connectClient(account);

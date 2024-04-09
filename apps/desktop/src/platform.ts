@@ -9,7 +9,7 @@ export function createPlatform(props: {
 	projectUrl: Accessor<string | null>;
 	setProjectUrl: Setter<string | null>;
 	core: Core;
-}): Platform {
+}) {
 	return {
 		projectPersistence: {
 			async saveProject(saveAs = false) {
@@ -23,6 +23,9 @@ export function createPlatform(props: {
 				}
 
 				if (url === null) return;
+
+				const name = url.split("/").pop()?.split(".")[0];
+				if (name) props.core.project.name = name;
 
 				await writeTextFile(
 					url,
@@ -54,5 +57,5 @@ export function createPlatform(props: {
 				return props.projectUrl();
 			},
 		},
-	};
+	} satisfies Platform;
 }

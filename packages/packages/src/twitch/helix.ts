@@ -15,8 +15,8 @@ import { Option, Maybe } from "@macrograph/option";
 import { CREDENTIAL, Credential } from "@macrograph/api-contract";
 
 import { createHTTPClient } from "../httpEndpoint";
-import { Account } from "./auth";
 import { defaultProperties } from "./resource";
+import { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";
 import { z } from "zod";
 

@@ -1,27 +1,103 @@
-import { createSignal } from "solid-js";
-import { OAuthToken } from "@macrograph/runtime";
 import { None, Option, makePersistedOption } from "@macrograph/option";
+import { ReactiveMap } from "@solid-primitives/map";
+import { Credential } from "@macrograph/api-contract";
+import { Accessor } from "solid-js";
+import { makeCache } from "@macrograph/utils";
+import { createAsync } from "@solidjs/router";
+import { Core } from "@macrograph/runtime";
+import { z } from "zod";
 
-const BOT_TOKEN_LOCALSTORAGE = "discordBotToken";
-const USER_TOKEN_LOCALSTORAGE = "discordToken";
+import { USER_SCHEMA } from "./schemas";
+import { Api } from "./api";
+import { PersistedStore } from ".";
 
-export function createAuth() {
-	const [botToken, setBotToken] = makePersistedOption(
-		createSignal<Option<string>>(None),
-		BOT_TOKEN_LOCALSTORAGE,
-	);
+export interface Account {
+  credential: Credential;
+  data: z.infer<typeof USER_SCHEMA>;
+}
 
-	const [authToken, setAuthToken] = makePersistedOption(
-		createSignal<Option<OAuthToken>>(None),
-		USER_TOKEN_LOCALSTORAGE,
-	);
+export interface BotAccount {
+  token: string;
+  data: z.infer<typeof USER_SCHEMA>;
+}
 
-	return {
-		authToken,
-		setAuthToken,
-		botToken,
-		setBotToken,
-	};
+export function createAuth(
+  core: Core,
+  api: Api,
+  [, setPersisted]: PersistedStore
+) {
+  const accounts = new ReactiveMap<string, Accessor<Account | undefined>>();
+
+  async function enableAccount(userId: string) {
+    console.log("enableAccount", userId);
+    const getAccount = makeCache(async () => {
+      const cred = await core.getCredential("discord", userId);
+      if (!cred) return undefined;
+
+      const data = await api.call("GET /users/@me", { type: "cred", cred });
+
+      return {
+        data,
+        credential: cred,
+      };
+    });
+
+    await getAccount();
+
+    accounts.set(
+      userId,
+      createAsync(() => getAccount())
+    );
+
+    setPersisted("users", (u) => [...new Set([...u, userId])]);
+  }
+
+  function disableAccount(id: string) {
+    accounts.delete(id);
+
+    setPersisted("users", (u) => u.filter((x) => x !== id));
+  }
+
+  const bots = new ReactiveMap<string, Accessor<BotAccount | undefined>>();
+
+  async function addBot(token: string) {
+    if (bots.has(token)) return;
+
+    const getAccount = makeCache(async () => {
+      const data = await api.call("GET /users/@me", { type: "bot", token });
+      if (!data) return;
+
+      return { token, data };
+    });
+
+    const acc = await getAccount();
+    if (!acc) return;
+
+    bots.set(
+      token,
+      createAsync(() => getAccount())
+    );
+
+    setPersisted("bots", (b) => ({ ...b, [acc.data.id]: { token } }));
+  }
+
+  async function removeBot(token: string) {
+    bots.delete(token);
+
+    setPersisted("bots", (b) => {
+      const { [token]: _, ...rest } = b;
+      return rest;
+    });
+  }
+
+  return {
+    accounts,
+    enableAccount,
+    disableAccount,
+    bots,
+    addBot,
+    removeBot,
+  };
 }
 
 export type Auth = ReturnType<typeof createAuth>;

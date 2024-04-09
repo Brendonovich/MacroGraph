@@ -1,8 +1,9 @@
-import { Core } from "@macrograph/runtime";
 import { ReactiveMap } from "@solid-primitives/map";
-import { Accessor } from "solid-js";
 import { Credential } from "@macrograph/api-contract";
+import { makeCache } from "@macrograph/utils";
 import { createAsync } from "@solidjs/router";
+import { Core } from "@macrograph/runtime";
+import { Accessor } from "solid-js";
 import { z } from "zod";
 
 import { Helix } from "./helix";
@@ -17,15 +18,6 @@ const USER_DATA = z.object({
 export interface Account {
 	credential: Credential;
 	data: z.infer<typeof USER_DATA>;
-}
-
-function makeCache<T extends () => any>(fn: T) {
-	let value: ReturnType<T> | undefined;
-
-	return (): ReturnType<T> => {
-		if (value) return value;
-		return fn();
-	};
 }
 
 export function createAuth(
