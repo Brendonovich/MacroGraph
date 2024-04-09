@@ -74,13 +74,11 @@ export class Core {
   oauth: OAuth;
   api: InitClientReturn<typeof contract, any>;
 
-  getCredentials = () => {
-    console.trace();
-    return this.api.getCredentials().then((r) => {
+  getCredentials = () =>
+    this.api.getCredentials().then((r) => {
       if (r.status !== 200) throw new Error("Failed to get credentials");
       return r.body;
     });
-  };
 
   getCredential = (provider: string, id: string | number) =>
     this.getCredentials().then(async (creds) => {
