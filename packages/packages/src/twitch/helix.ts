@@ -793,7 +793,7 @@ export function register(pkg: Package, helix: Helix) {
         }),
         globalCooldownEnabled: io.dataInput({
           name: "Global Cooldown Enabled",
-          id: "globalCooldown",
+          id: "globalCooldownEnabled",
           type: t.option(t.bool()),
         }),
         globalCooldown: io.dataInput({
@@ -1024,7 +1024,7 @@ export function register(pkg: Package, helix: Helix) {
         }),
         globalCooldownEnabled: io.dataInput({
           name: "Global Cooldown Enabled",
-          id: "globalCooldown",
+          id: "globalCooldownEnabled",
           type: t.option(t.bool()),
         }),
         globalCooldown: io.dataInput({
