@@ -847,7 +847,7 @@ export function register(pkg: Package, helix: Helix) {
           .getInput(io.autoFulfill)
           .unwrap();
 
-      const response = await helix.call(
+      const data = await helix.call(
         "POST /channel_points/custom_rewards",
         account,
         {
@@ -859,6 +859,8 @@ export function register(pkg: Package, helix: Helix) {
           }),
         }
       );
+
+      let response = data.data[0];
 
       ctx.setOutput(
         io.out,
@@ -1105,7 +1107,7 @@ export function register(pkg: Package, helix: Helix) {
         }
       );
 
-      const data = response;
+      const data = response.data[0];
 
       ctx.setOutput(
         io.out,
