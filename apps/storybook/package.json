@@ -1,29 +1,29 @@
 {
-  "name": "@macrograph/storybook",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
-  },
-  "dependencies": {
-    "solid-js": "^1.8.16"
-  },
-  "devDependencies": {
-    "@macrograph/interface": "workspace:*",
-    "@storybook/addon-essentials": "^7.6.17",
-    "@storybook/addon-interactions": "^7.6.17",
-    "@storybook/addon-links": "^7.6.17",
-    "@storybook/blocks": "^7.6.17",
-    "@storybook/testing-library": "^0.2.2",
-    "postcss-pseudo-companion-classes": "^0.1.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "storybook": "^7.6.17",
-    "storybook-solidjs": "1.0.0-beta.2",
-    "storybook-solidjs-vite": "1.0.0-beta.2",
-    "typescript": "^5.4.3",
-    "vite": "^5.2.7",
-    "vite-plugin-solid": "^2.10.2"
-  }
+	"name": "@macrograph/storybook",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "storybook dev -p 6006",
+		"build-storybook": "storybook build"
+	},
+	"dependencies": {
+		"solid-js": "^1.8.16"
+	},
+	"devDependencies": {
+		"@macrograph/interface": "workspace:*",
+		"@storybook/addon-essentials": "^7.6.17",
+		"@storybook/addon-interactions": "^7.6.17",
+		"@storybook/addon-links": "^7.6.17",
+		"@storybook/blocks": "^7.6.17",
+		"@storybook/testing-library": "^0.2.2",
+		"postcss-pseudo-companion-classes": "^0.1.1",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"storybook": "^7.6.17",
+		"storybook-solidjs": "1.0.0-beta.2",
+		"storybook-solidjs-vite": "1.0.0-beta.2",
+		"typescript": "^5.4.3",
+		"vite": "^5.2.7",
+		"vite-plugin-solid": "^2.10.2"
+	}
 }

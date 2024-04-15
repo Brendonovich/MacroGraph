@@ -40,7 +40,9 @@ export default (ctx: Ctx) => {
                     />
                   )}
                 </Field>
-                <Button type="submit">Submit</Button>
+                <Button type="submit" class="shrink-0" size="md">
+                  Submit
+                </Button>
               </Form>
             );
           }}

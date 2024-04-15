@@ -1,141 +1,127 @@
-import { z } from "zod";
+import { AsyncButton, Button, Input } from "@macrograph/ui";
 import { createForm, zodForm } from "@modular-forms/solid";
-import { createSignal, Match, Show, Suspense, Switch } from "solid-js";
-import { None, Some } from "@macrograph/option";
-import { Button, Input } from "@macrograph/ui";
+import { For, Show, Suspense, Switch } from "solid-js";
+import { createAsync } from "@solidjs/router";
+import { z } from "zod";
 
 import { type Ctx } from ".";
+import { Match } from "solid-js";
 
-const Schema = z.object({
-  botToken: z.string(),
-});
+export default function ({ core, auth, gateway }: Ctx) {
+  const credentials = createAsync(() => core.getCredentials());
 
-export default function ({
-  core,
-  auth: { authToken, setAuthToken, ...auth },
-  user,
-  gateway,
-  bot,
-}: Ctx) {
-  const [loggingIn, setLoggingIn] = createSignal(false);
+  const [form, { Form, Field }] = createForm({
+    validate: zodForm(z.object({ botToken: z.string() })),
+  });
 
   return (
     <div class="flex flex-col items-start space-y-2">
       <span class="text-neutral-400 font-medium">Bot</span>
-      <Switch fallback="Loading...">
-        <Match when={auth.botToken().isNone()}>
-          {(_) => {
-            const [, { Form, Field }] = createForm({
-              initialValues: {
-                botToken: auth.botToken().unwrapOr(""),
-              },
-              validate: zodForm(Schema),
-            });
+      <Form onSubmit={(d) => auth.addBot(d.botToken)}>
+        <fieldset class="flex flex-row space-x-4" disabled={form.submitting}>
+          <Field name="botToken">
+            {(field, props) => (
+              <Input
+                {...props}
+                type="password"
+                placeholder="Bot Token"
+                value={field.value}
+              />
+            )}
+          </Field>
+          <Button type="submit" size="md">
+            Submit
+          </Button>
+        </fieldset>
+      </Form>
 
-            return (
-              <Form
-                onSubmit={(d) => auth.setBotToken(Some(d.botToken))}
-                class="flex flex-row space-x-4"
-              >
-                <Field name="botToken">
-                  {(field, props) => (
-                    <Input
-                      {...props}
-                      type="password"
-                      placeholder="Bot Token"
-                      value={field.value}
-                    />
-                  )}
-                </Field>
-                <Button type="submit">Submit</Button>
-              </Form>
-            );
-          }}
-        </Match>
-        <Match when={bot()}>
-          {(bot) => (
-            <>
-              <div class="flex flex-row items-center space-x-4">
-                <p>{bot().username}</p>
-                <Button onClick={() => auth.setBotToken(None)}>Log Out</Button>
-              </div>
-              <div class="flex flex-row items-center space-x-4">
-                <p>
-                  {`Gateway
-                    ${gateway
-                      .ws()
-                      .and(Some("Connected"))
-                      .unwrapOr("Disconnected")}`}
-                </p>
-                <Show
-                  when={!gateway.ws()}
-                  fallback={
-                    <Button onClick={gateway.disconnect}>Disconnect</Button>
-                  }
-                >
-                  {(_) => {
-                    const [loading, setLoading] = createSignal(false);
+      <ul class="flex flex-col mb-2 space-y-2 w-full mt-4">
+        <For each={[...auth.bots.entries()]}>
+          {([token, bot]) => (
+            <Show when={bot()}>
+              {(bot) => {
+                const gatewaySocket = () => gateway.sockets.get(bot().data.id);
 
-                    return (
+                return (
+                  <li class="flex flex-col items-stretch 1-full space-y-1">
+                    <div class="flex flex-row justify-between items-center">
+                      <span class="text-lg font-medium">
+                        {bot().data.username}
+                      </span>
                       <Button
-                        disabled={loading()}
-                        onClick={async () => {
-                          setLoading(true);
-
-                          gateway.connect().finally(() => setLoading(false));
-                        }}
+                        class="ml-auto"
+                        onClick={() => auth.removeBot(token)}
                       >
-                        {loading() ? "Connecting..." : "Connect"}
+                        Log Out
                       </Button>
-                    );
-                  }}
-                </Show>
-              </div>
-            </>
+                    </div>
+                    <div class="flex flex-row items-center space-x-4">
+                      <Switch>
+                        <Match when={gatewaySocket()}>
+                          <p>Gateway Connected</p>
+                          <Button
+                            onClick={() =>
+                              gateway.disconnectSocket(bot().data.id)
+                            }
+                          >
+                            Disconnect
+                          </Button>
+                        </Match>
+                        <Match when={!gatewaySocket()}>
+                          <p>Gateway Disconnected</p>
+                          <AsyncButton
+                            onClick={() => gateway.connectSocket(bot())}
+                            loadingChildren="Connecting..."
+                          >
+                            Connect
+                          </AsyncButton>
+                        </Match>
+                      </Switch>
+                    </div>
+                  </li>
+                );
+              }}
+            </Show>
           )}
-        </Match>
-      </Switch>
+        </For>
+      </ul>
 
       <span class="text-neutral-400 font-medium">OAuth</span>
-      <Switch>
-        <Match when={authToken().isSome() && authToken().unwrap()}>
-          <Suspense fallback="Authenticating...">
-            <Show when={user()}>
-              {(user) => (
-                <div class="flex flex-row items-center gap-2">
-                  <p>Logged in as {user().username}</p>
-                  <Button onClick={() => setAuthToken(None)}>Log Out</Button>
-                </div>
-              )}
-            </Show>
-          </Suspense>
-        </Match>
-        <Match when={loggingIn()}>
-          <div class="flex space-x-4 items-center">
-            <p>Logging in...</p>
-            <Button onClick={() => setLoggingIn(false)}>Cancel</Button>
-          </div>
-        </Match>
-        <Match when={!loggingIn()}>
-          <Button
-            onClick={async () => {
-              setLoggingIn(true);
+      <ul class="flex flex-col mb-2 space-y-2 w-full">
+        <Suspense>
+          <Show when={credentials()}>
+            {(creds) => (
+              <For each={creds().filter((cred) => cred.provider === "discord")}>
+                {(cred) => {
+                  const account = () => auth.accounts.get(cred.id);
 
-              try {
-                const token = await core.oauth.authorize("discord");
-
-                if (!loggingIn()) return;
-
-                setAuthToken(Some(token));
-              } finally {
-                setLoggingIn(false);
-              }
-            }}
-          >
-            Login
-          </Button>
-        </Match>
-      </Switch>
+                  return (
+                    <li class="flex flex-row items-center justify-between 1-full">
+                      <span>{cred.displayName}</span>
+                      <Show
+                        when={account()}
+                        children={
+                          <Button onClick={() => auth.disableAccount(cred.id)}>
+                            Disable
+                          </Button>
+                        }
+                        fallback={
+                          <AsyncButton
+                            onClick={() => auth.enableAccount(cred.id)}
+                            loadingChildren="Enabling..."
+                          >
+                            Enable
+                          </AsyncButton>
+                        }
+                      />
+                    </li>
+                  );
+                }}
+              </For>
+            )}
+          </Show>
+        </Suspense>
+      </ul>
     </div>
   );
 }

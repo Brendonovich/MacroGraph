@@ -41,7 +41,7 @@ export default function (ctx: Ctx) {
                     <Input {...props} value={field.value} type="number" />
                   )}
                 </Field>
-                <Button type="submit">
+                <Button type="submit" class="shrink-0" size="md">
                   {state().type === "Stopped"
                     ? "Start Server"
                     : "Starting Server..."}

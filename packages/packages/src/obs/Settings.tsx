@@ -83,10 +83,10 @@ export default function (ctx: Ctx) {
                 />
               )}
             </Field>
+            <Button type="submit" class="shrink-0" size="md">
+              {!form.submitting ? "Connect" : "Connecting..."}
+            </Button>
           </div>
-          <Button type="submit">
-            {!form.submitting ? "Connect" : "Connecting..."}
-          </Button>
         </fieldset>
       </Form>
     </>

@@ -1,6 +1,8 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 import { Maybe, Option } from "@macrograph/option";
+import { contract } from "@macrograph/api-contract";
+import { InitClientReturn } from "@ts-rest/core";
 
 import { Package } from "./Package";
 import { Node } from "./Node";
@@ -9,6 +11,7 @@ import { EventsMap, RunCtx } from "./NodeSchema";
 import { Project } from "./Project";
 import { SerializedProject } from "./serialized";
 import { Enum, Struct } from "@macrograph/typesystem";
+import { cache } from "@solidjs/router";
 
 class NodeEmit {
   listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -69,10 +72,48 @@ export class Core {
 
   fetch: typeof fetch;
   oauth: OAuth;
+  api: InitClientReturn<typeof contract, any>;
 
-  constructor(args: { fetch: typeof fetch; oauth: OAuth }) {
+  getCredentials = () =>
+    this.api.getCredentials().then((r) => {
+      if (r.status !== 200) throw new Error("Failed to get credentials");
+      return r.body;
+    });
+
+  getCredential = (provider: string, id: string | number) =>
+    this.getCredentials().then(async (creds) => {
+      const cred = creds.find((c) => c.provider === provider && c.id === id);
+      if (!cred) return null;
+      if (
+        cred.token.issuedAt + cred.token.expires_in * 1000 >
+        Date.now() - 1000 * 60 * 60 * 5
+      )
+        return cred;
+
+      return await this.refreshCredential(provider, cred.id);
+    });
+  refreshCredential = async (provider: string, id: string) => {
+    const resp = await this.api.refreshCredential({
+      params: {
+        providerId: provider,
+        providerUserId: id,
+      },
+    });
+
+    if (resp.status !== 200)
+      throw new Error(`Failed to refresh credential ${provider}:${id}`);
+
+    return resp.body;
+  };
+
+  constructor(args: {
+    fetch: typeof fetch;
+    oauth: OAuth;
+    api: InitClientReturn<typeof contract, any>;
+  }) {
     this.fetch = args.fetch;
     this.oauth = args.oauth;
+    this.api = args.api;
 
     return createMutable(this);
   }

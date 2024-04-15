@@ -6,6 +6,7 @@ export type Procedures = {
     mutations: 
         { key: "websocket.send", input: { port: number; client: number | null; data: string }, result: null },
     subscriptions: 
+        { key: "loginListen", input: never, result: string | null } | 
         { key: "oauth.authorize", input: string, result: any | null } | 
         { key: "websocket.server", input: number, result: [number, Message] }
 };

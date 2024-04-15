@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use axum::routing::{get, post};
 use rspc::{alpha::Rspc, Router};
 use tauri::Manager;
 
@@ -63,6 +64,48 @@ pub fn router() -> Router<Ctx> {
         .merge("fs.", fs::router())
         .merge("oauth.", oauth::router())
         .merge("websocket.", websocket::router())
+        .procedure(
+            "loginListen",
+            R.subscription(|_, _: ()| async move {
+                use axum::*;
+
+                let id = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs_f64();
+
+                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+
+                let app = axum::Router::new()
+                    .route(
+                        "/session",
+                        post(move |Json(session): Json<String>| async move {
+                            tx.send(session).ok();
+                        }),
+                    )
+                    .route("/", get(move || async move { id.to_string() }))
+                    .layer(tower_http::cors::CorsLayer::very_permissive());
+
+                let addr = ([127, 0, 0, 1], 25000).into();
+
+                let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+
+                tokio::spawn(
+                    axum::Server::bind(&addr)
+                        .serve(app.into_make_service())
+                        .with_graceful_shutdown(async {
+                            shutdown_rx.await.ok();
+                        }),
+                );
+
+                let res = rx.recv().await;
+                shutdown_tx.send(()).ok();
+
+                async_stream::stream! {
+                    yield res
+                }
+            }),
+        )
         .build(rspc::Config::new().export_ts_bindings(
             std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../src/rspc/types.ts"),
         ))

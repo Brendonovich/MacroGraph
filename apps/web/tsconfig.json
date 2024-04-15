@@ -1,26 +1,25 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "allowJs": true,
-    "strict": true,
-    "noEmit": true,
-    "types": ["vinxi/client", "vite/client", "unplugin-icons/types/solid"],
-    "isolatedModules": true,
-    "skipLibCheck": true,
-    "paths": {
-      "~/*": ["./src/*"]
-    }
-  },
-  "references": [
-    { "path": "../../interface" },
-    { "path": "../../packages/runtime" },
-    { "path": "../../packages/packages" }
-  ],
-  "include": ["src/**/*"]
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "node",
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js",
+		"allowJs": true,
+		"strict": true,
+		"noEmit": true,
+		"types": ["vinxi/client", "vite/client", "unplugin-icons/types/solid"],
+		"isolatedModules": true,
+		"skipLibCheck": true,
+		"paths": {
+			"~/*": ["./src/*"]
+		}
+	},
+	"references": [
+		{ "path": "../../interface" },
+		{ "path": "../../packages/runtime" },
+		{ "path": "../../packages/packages" }
+	]
 }

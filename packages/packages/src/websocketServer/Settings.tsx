@@ -57,7 +57,9 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
             />
           )}
         </Field>
-        <Button type="submit">Start Server</Button>
+        <Button type="submit" class="shrink-0" size="md">
+          Start Server
+        </Button>
       </Form>
     </>
   );

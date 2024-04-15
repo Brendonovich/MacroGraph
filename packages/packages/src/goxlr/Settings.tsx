@@ -37,7 +37,9 @@ export default function ({ state, setUrl }: Ctx) {
                     />
                   )}
                 </Field>
-                <Button type="submit">Submit</Button>
+                <Button type="submit" class="shrink-0" size="md">
+                  Submit
+                </Button>
               </Form>
             );
           }}

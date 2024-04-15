@@ -6,9 +6,7 @@ import { createForm } from "@modular-forms/solid";
 
 export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
   const [, { Form, Field }] = createForm({
-    initialValues: {
-      ip: "",
-    },
+    initialValues: { ip: "" },
   });
 
   return (
@@ -62,7 +60,9 @@ export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
             <Input {...props} placeholder="WebSocket URL" value={field.value} />
           )}
         </Field>
-        <Button type="submit">Add WebSocket</Button>
+        <Button type="submit" class="shrink-0" size="md">
+          Add WebSocket
+        </Button>
       </Form>
     </>
   );

@@ -1,17 +1,19 @@
 import { defineConfig } from "@solidjs/start/config";
 import dotenv from "dotenv";
-import interfacePlugin from "../../interface/vite";
+import interfacePlugin from "../../packages/ui/vite";
 
 dotenv.config({ path: ".env.local" });
 
 export default defineConfig({
-  vite: {
-    plugins: [interfacePlugin],
-  },
-  server: {
-    preset: "vercel",
-    prerender: {
-      crawlLinks: true,
-    },
-  },
+	ssr: false,
+	routeDir: "app",
+	vite: {
+		plugins: [interfacePlugin],
+	},
+	server: {
+		preset: "vercel",
+		prerender: {
+			crawlLinks: true,
+		},
+	},
 });

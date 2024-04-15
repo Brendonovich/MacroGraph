@@ -7,20 +7,20 @@ import { Resources } from "./Resources";
 import { Variables } from "./Variables";
 
 export function Sidebar(props: {
-  project: Project;
-  currentGraph?: Graph;
-  onGraphClicked(graph: Graph): void;
+	project: Project;
+	currentGraph?: Graph;
+	onGraphClicked(graph: Graph): void;
 }) {
-  return (
-    <>
-      <Graphs
-        currentGraph={props.currentGraph?.id}
-        onGraphClicked={props.onGraphClicked}
-      />
-      <PrintOutput />
-      <Variables project={props.project} />
-      <CustomEvents />
-      <Resources />
-    </>
-  );
+	return (
+		<>
+			<Graphs
+				currentGraph={props.currentGraph?.id}
+				onGraphClicked={props.onGraphClicked}
+			/>
+			<PrintOutput />
+			<Variables project={props.project} />
+			<CustomEvents />
+			<Resources />
+		</>
+	);
 }

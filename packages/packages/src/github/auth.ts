@@ -2,9 +2,9 @@ import * as OctokitTypes from "@octokit/types";
 
 export type AnyResponse = OctokitTypes.OctokitResponse<any>;
 export type StrategyInterface = OctokitTypes.StrategyInterface<
-  [StrategyOption],
-  [],
-  Authentication
+	[StrategyOption],
+	[],
+	Authentication
 >;
 export type EndpointDefaults = OctokitTypes.EndpointDefaults;
 export type EndpointOptions = OctokitTypes.EndpointOptions;
@@ -15,126 +15,126 @@ export type Route = OctokitTypes.Route;
 export type Token = string;
 export type Callback = () => Token | undefined;
 export type StrategyOption = {
-  callback: Callback;
-  refresh: () => void | Promise<void>;
+	callback: Callback;
+	refresh: () => void | Promise<void>;
 };
 
 export type UnauthenticatedAuthentication = {
-  type: "unauthenticated";
+	type: "unauthenticated";
 };
 export type OAuthTokenAuthentication = {
-  type: "token";
-  tokenType: "oauth";
-  token: Token;
+	type: "token";
+	tokenType: "oauth";
+	token: Token;
 };
 export type InstallationTokenAuthentication = {
-  type: "token";
-  tokenType: "installation";
-  token: Token;
+	type: "token";
+	tokenType: "installation";
+	token: Token;
 };
 export type AppAuthentication = {
-  type: "token";
-  tokenType: "app";
-  token: Token;
+	type: "token";
+	tokenType: "app";
+	token: Token;
 };
 export type Authentication =
-  | UnauthenticatedAuthentication
-  | OAuthTokenAuthentication
-  | InstallationTokenAuthentication
-  | AppAuthentication;
+	| UnauthenticatedAuthentication
+	| OAuthTokenAuthentication
+	| InstallationTokenAuthentication
+	| AppAuthentication;
 
 export type Types = {
-  StrategyOptions: StrategyOption;
-  AuthOptions: never;
-  Authentication: Authentication;
+	StrategyOptions: StrategyOption;
+	AuthOptions: never;
+	Authentication: Authentication;
 };
 
 export async function auth({
-  callback,
+	callback,
 }: StrategyOption): Promise<Authentication> {
-  const result = callback();
+	const result = callback();
 
-  if (!result) {
-    return {
-      type: "unauthenticated",
-    };
-  }
+	if (!result) {
+		return {
+			type: "unauthenticated",
+		};
+	}
 
-  const token = result.replace(/^(token|bearer) +/i, "");
+	const token = result.replace(/^(token|bearer) +/i, "");
 
-  const tokenType =
-    token.split(/\./).length === 3
-      ? "app"
-      : /^v\d+\./.test(token)
-      ? "installation"
-      : "oauth";
+	const tokenType =
+		token.split(/\./).length === 3
+			? "app"
+			: /^v\d+\./.test(token)
+				? "installation"
+				: "oauth";
 
-  return {
-    type: "token",
-    token: token,
-    tokenType,
-  };
+	return {
+		type: "token",
+		token: token,
+		tokenType,
+	};
 }
 
 export const createCallbackAuth: StrategyInterface =
-  function createCallbackAuth(options: StrategyOption) {
-    if (!options || !options.callback) {
-      throw new Error(
-        "[@octokit/auth-callback] No options.callback passed to createCallbackAuth"
-      );
-    }
+	function createCallbackAuth(options: StrategyOption) {
+		if (!options || !options.callback) {
+			throw new Error(
+				"[@octokit/auth-callback] No options.callback passed to createCallbackAuth",
+			);
+		}
 
-    if (typeof options.callback !== "function") {
-      throw new Error(
-        "[@octokit/auth-callback] options.callback passed to createCallbackAuth is not a function"
-      );
-    }
+		if (typeof options.callback !== "function") {
+			throw new Error(
+				"[@octokit/auth-callback] options.callback passed to createCallbackAuth is not a function",
+			);
+		}
 
-    return Object.assign(auth.bind(null, options), {
-      hook: hook.bind(null, options),
-    });
-  };
+		return Object.assign(auth.bind(null, options), {
+			hook: hook.bind(null, options),
+		});
+	};
 
 export async function hook(
-  { callback, refresh }: StrategyOption,
-  request: RequestInterface,
-  route: Route | EndpointOptions,
-  parameters?: RequestParameters
+	{ callback, refresh }: StrategyOption,
+	request: RequestInterface,
+	route: Route | EndpointOptions,
+	parameters?: RequestParameters,
 ): Promise<AnyResponse> {
-  const endpoint: EndpointDefaults = request.endpoint.merge(
-    route as string,
-    parameters
-  );
+	const endpoint: EndpointDefaults = request.endpoint.merge(
+		route as string,
+		parameters,
+	);
 
-  try {
-    const result = callback();
-    if (!result) {
-      return request(endpoint as EndpointOptions);
-    }
+	try {
+		const result = callback();
+		if (!result) {
+			return request(endpoint as EndpointOptions);
+		}
 
-    const token = result.replace(/^(token|bearer) +/i, "");
-    endpoint.headers.authorization = withAuthorizationPrefix(token);
+		const token = result.replace(/^(token|bearer) +/i, "");
+		endpoint.headers.authorization = withAuthorizationPrefix(token);
 
-    return await request(endpoint as EndpointOptions);
-  } catch {
-    await refresh();
+		return await request(endpoint as EndpointOptions);
+	} catch {
+		await refresh();
 
-    const result = callback();
-    if (!result) {
-      return request(endpoint as EndpointOptions);
-    }
+		const result = callback();
+		if (!result) {
+			return request(endpoint as EndpointOptions);
+		}
 
-    const token = result.replace(/^(token|bearer) +/i, "");
-    endpoint.headers.authorization = withAuthorizationPrefix(token);
+		const token = result.replace(/^(token|bearer) +/i, "");
+		endpoint.headers.authorization = withAuthorizationPrefix(token);
 
-    return await request(endpoint as EndpointOptions);
-  }
+		return await request(endpoint as EndpointOptions);
+	}
 }
 
 export function withAuthorizationPrefix(token: string) {
-  if (token.split(/\./).length === 3) {
-    return `bearer ${token}`;
-  }
+	if (token.split(/\./).length === 3) {
+		return `bearer ${token}`;
+	}
 
-  return `token ${token}`;
+	return `token ${token}`;
 }

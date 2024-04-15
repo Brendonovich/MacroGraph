@@ -4,68 +4,68 @@ import { t } from "@macrograph/typesystem";
 import { createCtx } from "./ctx";
 
 export function pkg() {
-  const sockets = createCtx((data) => pkg.emitEvent({ name: "wsEvent", data }));
+	const sockets = createCtx((data) => pkg.emitEvent({ name: "wsEvent", data }));
 
-  const getWebSocket = (ip: string) => {
-    const ws = sockets.websockets.get(ip);
-    if (ws?.state !== "connected") throw new Error();
-    return ws.socket;
-  };
+	const getWebSocket = (ip: string) => {
+		const ws = sockets.websockets.get(ip);
+		if (ws?.state !== "connected") throw new Error();
+		return ws.socket;
+	};
 
-  const pkg = new Package({
-    name: "Websocket",
-    ctx: sockets,
-    SettingsUI: () => import("./settings"),
-  });
+	const pkg = new Package({
+		name: "Websocket",
+		ctx: sockets,
+		SettingsUI: () => import("./settings"),
+	});
 
-  pkg.createNonEventSchema({
-    name: "WS Emit",
-    variant: "Exec",
-    createIO({ io }) {
-      return {
-        ip: io.dataInput({
-          id: "ip",
-          name: "WS IP",
-          type: t.string(),
-        }),
-        data: io.dataInput({
-          id: "data",
-          name: "Data",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, io }) {
-      getWebSocket(ctx.getInput(io.ip)).send(ctx.getInput(io.data));
-    },
-  });
+	pkg.createNonEventSchema({
+		name: "WS Emit",
+		variant: "Exec",
+		createIO({ io }) {
+			return {
+				ip: io.dataInput({
+					id: "ip",
+					name: "WS IP",
+					type: t.string(),
+				}),
+				data: io.dataInput({
+					id: "data",
+					name: "Data",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			getWebSocket(ctx.getInput(io.ip)).send(ctx.getInput(io.data));
+		},
+	});
 
-  pkg.createEventSchema({
-    event: "wsEvent",
-    name: "WS Event",
-    createIO({ io }) {
-      return {
-        exec: io.execOutput({
-          id: "exec",
-        }),
-        ip: io.dataOutput({
-          id: "ip",
-          name: "WS IP",
-          type: t.string(),
-        }),
-        data: io.dataOutput({
-          id: "data",
-          name: "Data",
-          type: t.string(),
-        }),
-      };
-    },
-    run({ ctx, data, io }) {
-      ctx.setOutput(io.ip, data.ip);
-      ctx.setOutput(io.data, data.data);
-      ctx.exec(io.exec);
-    },
-  });
+	pkg.createEventSchema({
+		event: "wsEvent",
+		name: "WS Event",
+		createIO({ io }) {
+			return {
+				exec: io.execOutput({
+					id: "exec",
+				}),
+				ip: io.dataOutput({
+					id: "ip",
+					name: "WS IP",
+					type: t.string(),
+				}),
+				data: io.dataOutput({
+					id: "data",
+					name: "Data",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.ip, data.ip);
+			ctx.setOutput(io.data, data.data);
+			ctx.exec(io.exec);
+		},
+	});
 
-  return pkg;
+	return pkg;
 }

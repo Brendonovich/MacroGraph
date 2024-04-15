@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@biomejs/biome':
+        specifier: ^1.6.4
+        version: 1.6.4
     devDependencies:
       '@vitest/browser':
         specifier: ^0.32.4
@@ -50,6 +54,12 @@ importers:
       '@iconify/json':
         specifier: ^2.2.196
         version: 2.2.196
+      '@kobalte/core':
+        specifier: ^0.9.8
+        version: 0.9.8(solid-js@1.8.16)
+      '@macrograph/api-contract':
+        specifier: workspace:^
+        version: link:../../packages/api-contract
       '@macrograph/interface':
         specifier: workspace:*
         version: link:../../interface
@@ -59,6 +69,9 @@ importers:
       '@macrograph/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
+      '@macrograph/ui':
+        specifier: workspace:^
+        version: link:../../packages/ui
       '@modular-forms/solid':
         specifier: ^0.12.2
         version: 0.12.2(solid-js@1.8.16)
@@ -74,6 +87,9 @@ importers:
       '@solid-primitives/storage':
         specifier: ^2.1.4
         version: 2.1.4(solid-js@1.8.16)
+      '@solidjs/router':
+        specifier: ^0.12.5
+        version: 0.12.5(solid-js@1.8.16)
       '@solidjs/start':
         specifier: 1.0.0-rc.0
         version: 1.0.0-rc.0(rollup@2.79.1)(solid-js@1.8.16)(vinxi@0.3.11)(vite@5.2.7)
@@ -86,9 +102,18 @@ importers:
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
+      '@ts-rest/core':
+        specifier: ^3.41.1
+        version: 3.41.1(zod@3.22.4)
+      '@ts-rest/solid-query':
+        specifier: ^3.41.1
+        version: 3.41.1(@tanstack/solid-query@4.36.1)(zod@3.22.4)
       solid-js:
         specifier: ^1.8.16
         version: 1.8.16
+      solid-sonner:
+        specifier: ^0.2.5
+        version: 0.2.5(solid-js@1.8.16)
       tauri-plugin-midi:
         specifier: workspace:*
         version: link:../../crates/tauri-plugin-midi
@@ -193,6 +218,9 @@ importers:
       '@lucia-auth/adapter-drizzle':
         specifier: ^1.0.7
         version: 1.0.7(lucia@3.1.1)
+      '@macrograph/api-contract':
+        specifier: workspace:^
+        version: link:../../packages/api-contract
       '@macrograph/http-client':
         specifier: workspace:^
         version: link:../../packages/http-client
@@ -205,9 +233,15 @@ importers:
       '@macrograph/runtime':
         specifier: workspace:^
         version: link:../../packages/runtime
+      '@macrograph/ui':
+        specifier: workspace:^
+        version: link:../../packages/ui
       '@planetscale/database':
         specifier: ^1.16.0
         version: 1.16.0
+      '@solid-primitives/event-listener':
+        specifier: ^2.3.3
+        version: 2.3.3(solid-js@1.8.16)
       '@solidjs/meta':
         specifier: ^0.29.3
         version: 0.29.3(solid-js@1.8.16)
@@ -220,18 +254,27 @@ importers:
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.4.3)(zod@3.22.4)
+      '@ts-rest/core':
+        specifier: ^3.41.1
+        version: 3.41.1(zod@3.22.4)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
+      cookie-es:
+        specifier: ^1.1.0
+        version: 1.1.0
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
       drizzle-orm:
         specifier: ^0.29.5
         version: 0.29.5(@planetscale/database@1.16.0)(pg@8.11.5)(postgres@3.4.4)
+      hono:
+        specifier: ^3.12.12
+        version: 3.12.12
       jose:
         specifier: ^4.15.5
         version: 4.15.5
@@ -253,9 +296,15 @@ importers:
       solid-js:
         specifier: ^1.8.16
         version: 1.8.16
+      solid-sonner:
+        specifier: ^0.2.5
+        version: 0.2.5(solid-js@1.8.16)
       tailwind-merge:
         specifier: ^2.2.2
         version: 2.2.2
+      ts-rest-hono:
+        specifier: ^0.5.0
+        version: 0.5.0(hono@3.12.12)(zod@3.22.4)
       unplugin-auto-import:
         specifier: ^0.17.5
         version: 0.17.5(rollup@2.79.1)
@@ -308,6 +357,9 @@ importers:
       '@kobalte/core':
         specifier: ^0.9.8
         version: 0.9.8(solid-js@1.8.16)
+      '@macrograph/api-contract':
+        specifier: workspace:^
+        version: link:../packages/api-contract
       '@macrograph/option':
         specifier: workspace:^
         version: link:../packages/option
@@ -353,6 +405,15 @@ importers:
       '@solid-primitives/storage':
         specifier: ^2.1.4
         version: 2.1.4(solid-js@1.8.16)
+      '@solidjs/router':
+        specifier: ^0.12.5
+        version: 0.12.5(solid-js@1.8.16)
+      '@ts-rest/core':
+        specifier: ^3.41.1
+        version: 3.41.1(zod@3.22.4)
+      '@ts-rest/solid-query':
+        specifier: ^3.41.1
+        version: 3.41.1(@tanstack/solid-query@4.36.1)(zod@3.22.4)
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
@@ -396,6 +457,22 @@ importers:
       vite:
         specifier: ^5.2.7
         version: 5.2.7
+
+  packages/api-contract:
+    dependencies:
+      '@ts-rest/core':
+        specifier: ^3.41.1
+        version: 3.41.1(zod@3.22.4)
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+    devDependencies:
+      '@macrograph/config':
+        specifier: workspace:*
+        version: link:../config
+      '@total-typescript/ts-reset':
+        specifier: ^0.4.2
+        version: 0.4.2
 
   packages/config: {}
 
@@ -462,6 +539,9 @@ importers:
       '@kobalte/core':
         specifier: ^0.9.8
         version: 0.9.8(solid-js@1.8.16)
+      '@macrograph/api-contract':
+        specifier: workspace:^
+        version: link:../api-contract
       '@macrograph/json':
         specifier: workspace:^
         version: link:../json
@@ -477,6 +557,9 @@ importers:
       '@macrograph/ui':
         specifier: workspace:*
         version: link:../ui
+      '@macrograph/utils':
+        specifier: workspace:^
+        version: link:../utils
       '@modular-forms/solid':
         specifier: ^0.12.2
         version: 0.12.2(solid-js@1.8.16)
@@ -501,6 +584,9 @@ importers:
       '@solid-primitives/memo':
         specifier: ^1.3.8
         version: 1.3.8(solid-js@1.8.16)
+      '@solid-primitives/resource':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.8.16)
       '@solid-primitives/set':
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.8.16)
@@ -510,6 +596,9 @@ importers:
       '@solid-primitives/timer':
         specifier: ^1.3.9
         version: 1.3.9(solid-js@1.8.16)
+      '@solidjs/router':
+        specifier: ^0.12.5
+        version: 0.12.5(solid-js@1.8.16)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -574,6 +663,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@macrograph/api-contract':
+        specifier: workspace:^
+        version: link:../api-contract
       '@macrograph/option':
         specifier: workspace:^
         version: link:../option
@@ -601,9 +693,18 @@ importers:
       '@solid-primitives/set':
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.8.16)
+      '@solidjs/router':
+        specifier: ^0.12.5
+        version: 0.12.5(solid-js@1.8.16)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
+      '@ts-rest/core':
+        specifier: ^3.41.1
+        version: 3.41.1(zod@3.22.4)
+      '@ts-rest/solid-query':
+        specifier: ^3.41.1
+        version: 3.41.1(@tanstack/solid-query@4.36.1)(zod@3.22.4)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -678,6 +779,15 @@ importers:
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
+      cva:
+        specifier: npm:class-variance-authority@^0.7.0
+        version: /class-variance-authority@0.7.0
+      i:
+        specifier: ^0.3.7
+        version: 0.3.7
+      tailwind-merge:
+        specifier: ^2.2.2
+        version: 2.2.2
     devDependencies:
       solid-js:
         specifier: ^1.8.16
@@ -685,6 +795,24 @@ importers:
       storybook-solidjs:
         specifier: 1.0.0-beta.2
         version: 1.0.0-beta.2(babel-preset-solid@1.8.16)(solid-js@1.8.16)
+      unplugin-auto-import:
+        specifier: ^0.17.5
+        version: 0.17.5(rollup@2.79.1)
+      unplugin-icons:
+        specifier: ^0.18.5
+        version: 0.18.5
+      vite:
+        specifier: ^5.2.7
+        version: 5.2.7
+
+  packages/utils:
+    devDependencies:
+      '@macrograph/config':
+        specifier: workspace:*
+        version: link:../config
+      solid-js:
+        specifier: ^1.8.16
+        version: 1.8.16
 
 packages:
 
@@ -1982,6 +2110,94 @@ packages:
       '@babel/helper-string-parser': 7.24.1
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
+
+  /@biomejs/biome@1.6.4:
+    resolution: {integrity: sha512-3groVd2oWsLC0ZU+XXgHSNbq31lUcOCBkCcA7sAQGBopHcmL+jmmdoWlY3S61zIh+f2mqQTQte1g6PZKb3JJjA==}
+    engines: {node: '>=14.21.3'}
+    hasBin: true
+    requiresBuild: true
+    optionalDependencies:
+      '@biomejs/cli-darwin-arm64': 1.6.4
+      '@biomejs/cli-darwin-x64': 1.6.4
+      '@biomejs/cli-linux-arm64': 1.6.4
+      '@biomejs/cli-linux-arm64-musl': 1.6.4
+      '@biomejs/cli-linux-x64': 1.6.4
+      '@biomejs/cli-linux-x64-musl': 1.6.4
+      '@biomejs/cli-win32-arm64': 1.6.4
+      '@biomejs/cli-win32-x64': 1.6.4
+    dev: false
+
+  /@biomejs/cli-darwin-arm64@1.6.4:
+    resolution: {integrity: sha512-2WZef8byI9NRzGajGj5RTrroW9BxtfbP9etigW1QGAtwu/6+cLkdPOWRAs7uFtaxBNiKFYA8j/BxV5zeAo5QOQ==}
+    engines: {node: '>=14.21.3'}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@biomejs/cli-darwin-x64@1.6.4:
+    resolution: {integrity: sha512-uo1zgM7jvzcoDpF6dbGizejDLCqNpUIRkCj/oEK0PB0NUw8re/cn1EnxuOLZqDpn+8G75COLQTOx8UQIBBN/Kg==}
+    engines: {node: '>=14.21.3'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@biomejs/cli-linux-arm64-musl@1.6.4:
+    resolution: {integrity: sha512-Hp8Jwt6rjj0wCcYAEN6/cfwrrPLLlGOXZ56Lei4Pt4jy39+UuPeAVFPeclrrCfxyL1wQ2xPrhd/saTHSL6DoJg==}
+    engines: {node: '>=14.21.3'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@biomejs/cli-linux-arm64@1.6.4:
+    resolution: {integrity: sha512-wAOieaMNIpLrxGc2/xNvM//CIZg7ueWy3V5A4T7gDZ3OL/Go27EKE59a+vMKsBCYmTt7jFl4yHz0TUkUbodA/w==}
+    engines: {node: '>=14.21.3'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@biomejs/cli-linux-x64-musl@1.6.4:
+    resolution: {integrity: sha512-wqi0hr8KAx5kBO0B+m5u8QqiYFFBJOSJVSuRqTeGWW+GYLVUtXNidykNqf1JsW6jJDpbkSp2xHKE/bTlVaG2Kg==}
+    engines: {node: '>=14.21.3'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@biomejs/cli-linux-x64@1.6.4:
+    resolution: {integrity: sha512-qTWhuIw+/ePvOkjE9Zxf5OqSCYxtAvcTJtVmZT8YQnmY2I62JKNV2m7tf6O5ViKZUOP0mOQ6NgqHKcHH1eT8jw==}
+    engines: {node: '>=14.21.3'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@biomejs/cli-win32-arm64@1.6.4:
+    resolution: {integrity: sha512-Wp3FiEeF6v6C5qMfLkHwf4YsoNHr/n0efvoC8jCKO/kX05OXaVExj+1uVQ1eGT7Pvx0XVm/TLprRO0vq/V6UzA==}
+    engines: {node: '>=14.21.3'}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@biomejs/cli-win32-x64@1.6.4:
+    resolution: {integrity: sha512-mz183Di5hTSGP7KjNWEhivcP1wnHLGmOxEROvoFsIxMYtDhzJDad4k5gI/1JbmA0xe4n52vsgqo09tBhrMT/Zg==}
+    engines: {node: '>=14.21.3'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
 
   /@cloudflare/kv-asset-handler@0.3.1:
     resolution: {integrity: sha512-lKN2XCfKCmpKb86a1tl4GIwsJYDy9TGuwjhDELLmpKygQhw8X2xR4dusgpC5Tg7q1pB96Eb0rBo81kxSILQMwA==}
@@ -5150,6 +5366,14 @@ packages:
       solid-js: 1.8.16
     dev: false
 
+  /@solid-primitives/resource@0.1.2(solid-js@1.8.16):
+    resolution: {integrity: sha512-jeXWy1khbrCMRja4yxXPwmUxRrRUrm/U47lRh2qO2jSkvVPg9Vyf0Dx3flGzykqnTFgJ5pPVjFlQmYvjtnj0Zw==}
+    peerDependencies:
+      solid-js: ^1.6.0
+    dependencies:
+      solid-js: 1.8.16
+    dev: false
+
   /@solid-primitives/rootless@1.4.5(solid-js@1.8.16):
     resolution: {integrity: sha512-GFJE9GC3ojx0aUKqAUZmQPyU8fOVMtnVNrkdk2yS4kd17WqVSpXpoTmo9CnOwA+PG7FTzdIkogvfLQSLs4lrww==}
     peerDependencies:
@@ -5489,8 +5713,8 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/builder-vite@8.1.0-alpha.5(typescript@5.4.3)(vite@5.2.7):
-    resolution: {integrity: sha512-YHxJrguI4d5FCz1u7ksEOvaPWlZIka8+1KEMiPRwMpVGUxLQEO5kIE6bNzUMyZLsF3wyY2dPNiUUKwg6KxPJ6w==}
+  /@storybook/builder-vite@8.1.0-alpha.6(typescript@5.4.3)(vite@5.2.7):
+    resolution: {integrity: sha512-RVPe6boT77KIGLjiBQrPFJdY7p7Km2uXCUPMsTTWB25V6Nc/0xQ5+tw1HT6TRuIAEZgc1we3oIAy0FlUuE3sPQ==}
     peerDependencies:
       '@preact/preset-vite': '*'
       typescript: '>= 4.3.x'
@@ -5504,18 +5728,18 @@ packages:
       vite-plugin-glimmerx:
         optional: true
     dependencies:
-      '@storybook/channels': 8.1.0-alpha.5
-      '@storybook/client-logger': 8.1.0-alpha.5
-      '@storybook/core-common': 8.1.0-alpha.5
-      '@storybook/core-events': 8.1.0-alpha.5
-      '@storybook/csf-plugin': 8.1.0-alpha.5
-      '@storybook/node-logger': 8.1.0-alpha.5
-      '@storybook/preview': 8.1.0-alpha.5
-      '@storybook/preview-api': 8.1.0-alpha.5
-      '@storybook/types': 8.1.0-alpha.5
+      '@storybook/channels': 8.1.0-alpha.6
+      '@storybook/client-logger': 8.1.0-alpha.6
+      '@storybook/core-common': 8.1.0-alpha.6
+      '@storybook/core-events': 8.1.0-alpha.6
+      '@storybook/csf-plugin': 8.1.0-alpha.6
+      '@storybook/node-logger': 8.1.0-alpha.6
+      '@storybook/preview': 8.1.0-alpha.6
+      '@storybook/preview-api': 8.1.0-alpha.6
+      '@storybook/types': 8.1.0-alpha.6
       '@types/find-cache-dir': 3.2.1
       browser-assert: 1.2.1
-      es-module-lexer: 0.9.3
+      es-module-lexer: 1.5.0
       express: 4.19.2
       find-cache-dir: 3.3.2
       fs-extra: 11.2.0
@@ -5539,11 +5763,11 @@ packages:
       tiny-invariant: 1.3.3
     dev: true
 
-  /@storybook/channels@8.1.0-alpha.5:
-    resolution: {integrity: sha512-CGe3rgUMKTVpXidKCyydisJ8rjR1HTp9JfmTU9fxT0CNAy8rhsvpLKcNEDS+ZAss+qVcbQryJ0+c7ajHPSabdw==}
+  /@storybook/channels@8.1.0-alpha.6:
+    resolution: {integrity: sha512-9cJ7kGaazXSh/nxlJ51nd7FsrpKStmpWMaKT90HHWGRKQ1SPUE/ZBZbn7vSWQgUKyU1klfD6ZCeUXKoc0VNzcw==}
     dependencies:
-      '@storybook/client-logger': 8.1.0-alpha.5
-      '@storybook/core-events': 8.1.0-alpha.5
+      '@storybook/client-logger': 8.1.0-alpha.6
+      '@storybook/core-events': 8.1.0-alpha.6
       '@storybook/global': 5.0.0
       telejson: 7.2.0
       tiny-invariant: 1.3.3
@@ -5606,8 +5830,8 @@ packages:
       '@storybook/global': 5.0.0
     dev: true
 
-  /@storybook/client-logger@8.1.0-alpha.5:
-    resolution: {integrity: sha512-a25qxid/HTCUZwrRTX2FZz4HoJBEw/Xtkyt/X6ohxBfkr/9bcfe4WLplPfU3AizhaQZkXem+GcXpjwurVuUNTg==}
+  /@storybook/client-logger@8.1.0-alpha.6:
+    resolution: {integrity: sha512-dmyJHINVeUlcLDGSM7qXxsiI9HGuQ3HDjXeseoNzccKPIw1RZzwa6s9Iv7NPPcTr8YC86Oh+Y5vkT2m8NwWfLg==}
     dependencies:
       '@storybook/global': 5.0.0
     dev: true
@@ -5687,13 +5911,13 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/core-common@8.1.0-alpha.5:
-    resolution: {integrity: sha512-NdlL4B7+Q+RUqGpnu5wO3O0+my0G0rKhXdRadbSPFzm7PIVv0s8/GxCTbhWr3MrXDRIHX50d5kQl8En3dPHPiw==}
+  /@storybook/core-common@8.1.0-alpha.6:
+    resolution: {integrity: sha512-WQmfkfBicTvEtGPHX+cUPj/qUEAwnYK4bCQKbXuZIzjFAchSqv/7JmkJNREUSW0HYHnZLqjvPtM/whJEufHsyQ==}
     dependencies:
-      '@storybook/core-events': 8.1.0-alpha.5
-      '@storybook/csf-tools': 8.1.0-alpha.5
-      '@storybook/node-logger': 8.1.0-alpha.5
-      '@storybook/types': 8.1.0-alpha.5
+      '@storybook/core-events': 8.1.0-alpha.6
+      '@storybook/csf-tools': 8.1.0-alpha.6
+      '@storybook/node-logger': 8.1.0-alpha.6
+      '@storybook/types': 8.1.0-alpha.6
       '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/libzip': 2.3.0
       chalk: 4.1.2
@@ -5729,8 +5953,8 @@ packages:
       ts-dedent: 2.2.0
     dev: true
 
-  /@storybook/core-events@8.1.0-alpha.5:
-    resolution: {integrity: sha512-TThma0iJAnFX0WjJTv6UeGCKkrhKb+mpQDslLTgSjQPVHtz3hzZkdvqL1ZIgNPIsykMMIlSdUwawGmmXXE0oDA==}
+  /@storybook/core-events@8.1.0-alpha.6:
+    resolution: {integrity: sha512-xG3boVgT1lanEu8Q/USjEvC04vStYP5VSl3UFSFqdSPUDydNcViV75+sS+bq1e7uBfFJ8LDhCZw3GDfdVF3k/w==}
     dependencies:
       ts-dedent: 2.2.0
     dev: true
@@ -5795,10 +6019,10 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/csf-plugin@8.1.0-alpha.5:
-    resolution: {integrity: sha512-51tyDO4cWbznhyv51SjLUHuRRpUxGiModqGQbEKvx5psOZln+tnxaWhWBIQ9hs0Fcs0SC22WnQwQ/XPnVA5+yA==}
+  /@storybook/csf-plugin@8.1.0-alpha.6:
+    resolution: {integrity: sha512-AZDPQrAs1I3fHQ+3/RFilhyGBuoQzKyHXq2WiU2G2CwzZPe4+7EsMttJVJ4J+2ycnEfEPWToLHo3QIGSyEY/2A==}
     dependencies:
-      '@storybook/csf-tools': 8.1.0-alpha.5
+      '@storybook/csf-tools': 8.1.0-alpha.6
       unplugin: 1.10.1
     transitivePeerDependencies:
       - supports-color
@@ -5820,15 +6044,15 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/csf-tools@8.1.0-alpha.5:
-    resolution: {integrity: sha512-/6ZtMA+Utyc5h5Ha/Xmth40GYXDukQi6u6k1KaStphjOGRB58aZ045y1DYruA0nmMeCzPaFylyRM23YbL+eB5Q==}
+  /@storybook/csf-tools@8.1.0-alpha.6:
+    resolution: {integrity: sha512-qGFuj58i6U/di2lMLplTchBweA83+05M+kCXb8k4J9Zzf0pC6ixLAm/+kZI0nXlqwZXuiKowUmuNFbLi3j/d3Q==}
     dependencies:
       '@babel/generator': 7.24.1
       '@babel/parser': 7.24.1
       '@babel/traverse': 7.24.1
       '@babel/types': 7.24.0
       '@storybook/csf': 0.1.3
-      '@storybook/types': 8.1.0-alpha.5
+      '@storybook/types': 8.1.0-alpha.6
       fs-extra: 11.2.0
       recast: 0.23.6
       ts-dedent: 2.2.0
@@ -5899,8 +6123,8 @@ packages:
     resolution: {integrity: sha512-w59MQuXhhUNrUVmVkXhMwIg2nvFWjdDczLTwYLorhfsE36CWeUOY5QCZWQy0Qf/h+jz8Uo7Evy64qn18v9C4wA==}
     dev: true
 
-  /@storybook/node-logger@8.1.0-alpha.5:
-    resolution: {integrity: sha512-yP+WmnVuv3J1xpqldSoLBxkAmDG6xCF0/T62ac6M5rB3Febtu5ITmeWGAGsp5d9rzGchKJswt1UcFT87wLngyg==}
+  /@storybook/node-logger@8.1.0-alpha.6:
+    resolution: {integrity: sha512-xxVmXHk8IaJi3dmnPfIPRm1zx7FcawukCLl11Bs5c4x9EZHaMvFQ2ACWUy+xpGXGkLIbkLZitDQZNE5NpGc6dA==}
     dev: true
 
   /@storybook/postinstall@7.6.17:
@@ -5926,15 +6150,15 @@ packages:
       util-deprecate: 1.0.2
     dev: true
 
-  /@storybook/preview-api@8.1.0-alpha.5:
-    resolution: {integrity: sha512-Y3TMGrufhwfUBCPY7FDRsDoVLnJrwr5AJagVHG8WENP4L8eYV25VnzUoHaoJksK1x1EADAucj7nmzLN36lGRIQ==}
+  /@storybook/preview-api@8.1.0-alpha.6:
+    resolution: {integrity: sha512-GyuJDERGbT73yIryS9Ribh3J4KEoPP3x9Y89cNlIhFeG9C4TNCY/CC0nTh/NL7+lBDQXHb9rjVNWiNufJegXgw==}
     dependencies:
-      '@storybook/channels': 8.1.0-alpha.5
-      '@storybook/client-logger': 8.1.0-alpha.5
-      '@storybook/core-events': 8.1.0-alpha.5
+      '@storybook/channels': 8.1.0-alpha.6
+      '@storybook/client-logger': 8.1.0-alpha.6
+      '@storybook/core-events': 8.1.0-alpha.6
       '@storybook/csf': 0.1.3
       '@storybook/global': 5.0.0
-      '@storybook/types': 8.1.0-alpha.5
+      '@storybook/types': 8.1.0-alpha.6
       '@types/qs': 6.9.14
       dequal: 2.0.3
       lodash: 4.17.21
@@ -5945,8 +6169,8 @@ packages:
       util-deprecate: 1.0.2
     dev: true
 
-  /@storybook/preview@8.1.0-alpha.5:
-    resolution: {integrity: sha512-TVxyTQIqMeckIrN9NVWw8mg0lmMyLbz+fgseGpc6PW4v/QtBhBAzqJjxhAuNeNbCmVlkPjZFX2H0U+mU/ubChQ==}
+  /@storybook/preview@8.1.0-alpha.6:
+    resolution: {integrity: sha512-jvOS2Kn3scFMajIDBonYhXY0nnH7Rydnl7AazNXcqVPXkW/N+no8k6MF+pIZ45T7IEwXWgpruq/gZjrKlBZo7w==}
     dev: true
 
   /@storybook/react-dom-shim@7.6.17(react-dom@18.2.0)(react@18.2.0):
@@ -6014,10 +6238,10 @@ packages:
       file-system-cache: 2.3.0
     dev: true
 
-  /@storybook/types@8.1.0-alpha.5:
-    resolution: {integrity: sha512-YYkH0nRhgTnOCpncVqwqnjpsuzE2SodNDXBk83osY6W4hlSnBQ7cL556Tus+wqIDo7YyKMhOZ69GZlrdIgA6QQ==}
+  /@storybook/types@8.1.0-alpha.6:
+    resolution: {integrity: sha512-9/I4q8vlPcMdjIhTyrKfbslfv4mOKqOx5FYggtKM3y78GRKXtnFZ65O0jy2+b9711gn1pL7O1hTpFog31OXptA==}
     dependencies:
-      '@storybook/channels': 8.1.0-alpha.5
+      '@storybook/channels': 8.1.0-alpha.6
       '@types/express': 4.17.21
       file-system-cache: 2.3.0
     dev: true
@@ -6209,6 +6433,30 @@ packages:
   /@total-typescript/ts-reset@0.4.2:
     resolution: {integrity: sha512-vqd7ZUDSrXFVT1n8b2kc3LnklncDQFPvR58yUS1kEP23/nHPAO9l1lMjUfnPrXYYk4Hj54rrLKMW5ipwk7k09A==}
     dev: true
+
+  /@ts-rest/core@3.41.1(zod@3.22.4):
+    resolution: {integrity: sha512-hn5K1+YtaHaHjlbW7HYShtamEDtP+Ho0MirigrBxwtaVi5lwZz5L6VwhA9eqO4xNPd3rUJsuHOX9sH4m7icukw==}
+    peerDependencies:
+      zod: ^3.22.3
+    peerDependenciesMeta:
+      zod:
+        optional: true
+    dependencies:
+      zod: 3.22.4
+    dev: false
+
+  /@ts-rest/solid-query@3.41.1(@tanstack/solid-query@4.36.1)(zod@3.22.4):
+    resolution: {integrity: sha512-fA/DVt3518u49ncxS//5+I0pLse5Xz9scg0J9cZdfXthc96obGZCioeQMZZmSp/CEEdJ83eAn4f0kIh5LXQtIw==}
+    peerDependencies:
+      '@tanstack/solid-query': ^4.0.0
+      zod: ^3.22.3
+    peerDependenciesMeta:
+      zod:
+        optional: true
+    dependencies:
+      '@tanstack/solid-query': 4.36.1(solid-js@1.8.16)
+      zod: 3.22.4
+    dev: false
 
   /@twurple/api-call@6.2.1:
     resolution: {integrity: sha512-w5SdEKbb6O7tScEo2FymlHMJ0hMYic9PJ8Gy43XzuNa7fbBpR06Um6aG9FUY7OmxnP7pWqhB3p1wSBV3+19b0Q==}
@@ -8653,13 +8901,8 @@ packages:
       stop-iteration-iterator: 1.0.0
     dev: true
 
-  /es-module-lexer@0.9.3:
-    resolution: {integrity: sha512-1HQ2M2sPtxwnvOvT1ZClHyQDiggdNjURWpY2we6aMKCQiUVxTmVs2UYPLIrD84sS+kMdUwfBSylbJPwNnBrnHQ==}
-    dev: true
-
   /es-module-lexer@1.5.0:
     resolution: {integrity: sha512-pqrTKmwEIgafsYZAGw9kszYzmagcE/n4dbgwGWLEXg7J4QFJVQRBld8j3Q3GNez79jzxZshq0bcT962QHOghjw==}
-    dev: false
 
   /es5-ext@0.10.64:
     resolution: {integrity: sha512-p2snDhiLaXe6dahss1LddxqEm+SkuDvV8dnIQG0MWjyHpcMNfXKPE+/Cc0y+PhxJX3A4xGNeFCj5oc0BUh6deg==}
@@ -9868,6 +10111,11 @@ packages:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
     dev: true
 
+  /hono@3.12.12:
+    resolution: {integrity: sha512-5IAMJOXfpA5nT+K0MNjClchzz0IhBHs2Szl7WFAhrFOsbtQsYmNynFyJRg/a3IPsmCfxcrf8txUGiNShXpK5Rg==}
+    engines: {node: '>=16.0.0'}
+    dev: false
+
   /hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
     dev: false
@@ -9989,6 +10237,11 @@ packages:
     resolution: {integrity: sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==}
     dependencies:
       ms: 2.1.3
+    dev: false
+
+  /i@0.3.7:
+    resolution: {integrity: sha512-FYz4wlXgkQwIPqhzC5TdNMLSE5+GS1IIDJZY/1ZiEPCT2S3COUVZeT5OW4BmW4r5LHLQuOosSwsvnroG9GR59Q==}
+    engines: {node: '>=0.4'}
     dev: false
 
   /iconv-lite@0.4.24:
@@ -13029,6 +13282,14 @@ packages:
       '@babel/types': 7.24.0
       solid-js: 1.8.16
 
+  /solid-sonner@0.2.5(solid-js@1.8.16):
+    resolution: {integrity: sha512-IMMwKm92VT/2uDwIEOrOnqbSHkj6uGLR6KM6NxjFXe5gHKnWDsr61N2elUHpsZpdG0/UhwQ2kd6s7hRSAT3SVw==}
+    peerDependencies:
+      solid-js: ^1.6.0
+    dependencies:
+      solid-js: 1.8.16
+    dev: false
+
   /solid-use@0.6.2(solid-js@1.8.16):
     resolution: {integrity: sha512-0ShJ5s+4PIN0pJB/BtsQucsZB+xnUeeTGaxErQDu6USn5jygZWXicAtOEvFbI8gv40xE751uY1Tz7Aib9lxL/Q==}
     engines: {node: '>=10'}
@@ -13138,7 +13399,7 @@ packages:
     resolution: {integrity: sha512-dD+VMYC5fBBQNesVb+mjB0LOkZIf100SQFbjAt9/sDstNUvc5ce3yZwLYXzgcOc7jcSMkrBu/cZNRzEM4YIAyw==}
     engines: {node: ^14.18 || >=16}
     dependencies:
-      '@storybook/builder-vite': 8.1.0-alpha.5(typescript@5.4.3)(vite@5.2.7)
+      '@storybook/builder-vite': 8.1.0-alpha.6(typescript@5.4.3)(vite@5.2.7)
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - encoding
@@ -13593,6 +13854,20 @@ packages:
 
   /ts-mixer@6.0.4:
     resolution: {integrity: sha512-ufKpbmrugz5Aou4wcr5Wc1UUFWOLhq+Fm6qa6P0w0K5Qw2yhaUoiWszhCVuNQyNwrlGiscHOmqYoAox1PtvgjA==}
+    dev: false
+
+  /ts-rest-hono@0.5.0(hono@3.12.12)(zod@3.22.4):
+    resolution: {integrity: sha512-jPPiiwAt+0DG+AWEYjDZTt27GpQdwoPgZD08LjmgDMnWRuvHc5zUluZAYEXPZHH+4h/se9MFPwj9dQq5xMtoDg==}
+    engines: {node: '>=16.0.0'}
+    peerDependencies:
+      hono: ^3.4.0
+      zod: ^3.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+    dependencies:
+      hono: 3.12.12
+      zod: 3.22.4
     dev: false
 
   /tslib@1.14.1:

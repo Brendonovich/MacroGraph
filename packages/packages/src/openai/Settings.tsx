@@ -39,7 +39,9 @@ export default function ({ state, setKey, key }: Ctx) {
                     />
                   )}
                 </Field>
-                <Button type="submit">Submit</Button>
+                <Button type="submit" class="shrink-0" size="md">
+                  Submit
+                </Button>
               </Form>
             );
           }}
