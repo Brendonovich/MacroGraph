@@ -33,6 +33,19 @@ export const getAuthState = cache(async () => {
   }
   // cookie auth
   else {
+    if (requestEvent.request.method !== "GET") {
+      const originHeader = getHeader("Origin") ?? null;
+      // NOTE: You may need to use `X-Forwarded-Host` instead
+      const hostHeader = getHeader("Host") ?? null;
+      if (
+        !originHeader ||
+        !hostHeader ||
+        !verifyRequestOrigin(originHeader, [hostHeader])
+      ) {
+        throw event.node.res.writeHead(403).end();
+      }
+    }
+
     const sessionId = getCookie(event, lucia.sessionCookieName) ?? null;
     if (!sessionId) return;
 
