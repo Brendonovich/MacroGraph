@@ -25,7 +25,7 @@ macro_rules! tauri_handlers {
 async fn main() {
     let ctx: Ctx = Default::default();
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(rspc::integrations::tauri::plugin(
             std::sync::Arc::new(router()),
             move || ctx.clone(),
@@ -44,7 +44,12 @@ async fn main() {
             http::fetch_cancel,
             http::fetch_send,
             http::fetch_read_body
-        ])
+        ]);
+
+    #[cfg(debug_assertions)]
+    let builder = builder.plugin(devtools::init());
+
+    builder
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
