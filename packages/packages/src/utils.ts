@@ -2322,7 +2322,7 @@ export function pkg(core: Core) {
 
 	setTimeout(() => {
 		pkg.emitEvent({ name: "MGLoaded", data: {} });
-	}, 1);
+	}, 5000);
 
 	return pkg;
 }

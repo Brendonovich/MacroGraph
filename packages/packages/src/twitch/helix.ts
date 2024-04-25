@@ -145,6 +145,10 @@ export function createHelix(core: Core) {
         resp = await run(newCredential.token.access_token);
       }
 
+      if(resp.status === 204) {
+       return;
+      }
+
       return resp.json();
     },
   });
@@ -1845,7 +1849,7 @@ export type Requests = {
   "GET /channel_points/custom_rewards": any;
   "POST /channel_points/custom_rewards": any;
   "PATCH /channel_points/custom_rewards": any;
-  "DELETE /channel_points/custom_rewards": any;
+  "DELETE /channel_points/custom_rewards": undefined;
   "PATCH /channel_points/custom_rewards/redemptions": any;
 
   "PATCH /chat/settings": any;
