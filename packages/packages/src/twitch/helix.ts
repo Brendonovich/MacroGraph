@@ -67,6 +67,12 @@ export const User = createStruct("User", (s) => ({
   createdAt: s.field("Created At", t.string()),
 }));
 
+export const chatter = createStruct("Chatter", (s) => ({
+  user_id: s.field("ID", t.string()),
+  user_login: s.field("Login", t.string()),
+  user_name: s.field("Name", t.string()),
+}));
+
 export const Reward = createStruct("Reward", (s) => ({
   id: s.field("ID", t.string()),
   title: s.field("Title", t.string()),
@@ -145,8 +151,8 @@ export function createHelix(core: Core) {
         resp = await run(newCredential.token.access_token);
       }
 
-      if(resp.status === 204) {
-       return;
+      if (resp.status === 204) {
+        return;
       }
 
       return resp.json();
@@ -1563,6 +1569,55 @@ export function register(pkg: Package, helix: Helix) {
   });
 
   createHelixExecSchema({
+    name: "Get Chatters",
+    createIO: ({ io }) => {
+      return {
+        first: io.dataInput({
+          id: "first",
+          name: "First",
+          type: t.option(t.int()),
+        }),
+        after: io.dataInput({
+          id: "after",
+          name: "After",
+          type: t.option(t.string()),
+        }),
+        chatters: io.dataOutput({
+          id: "chatters",
+          name: "Chatters",
+          type: t.list(t.struct(chatter)),
+        }),
+      };
+    },
+    async run({ ctx, io, account }) {
+      const user = account.data.id;
+      let data = await helix.call("GET /chat/chatters", account.credential, {
+        body: new URLSearchParams({
+          broadcaster_id: user,
+          moderator_id: user,
+          first: ctx.getInput(io.first).unwrapOr(100).toString(),
+          after: ctx.getInput(io.after).unwrapOr(""),
+        }),
+      });
+
+      let array = [];
+
+      data.data.forEach((user: any) => {
+        let chat = chatter.create({
+          user_id: user.user_id,
+          user_login: user.user_login,
+          user_name: user.user_name,
+        });
+        array.push(chat);
+      });
+
+      ctx.setOutput(io.chatters, array);
+
+      console.log(array);
+    },
+  });
+
+  createHelixExecSchema({
     name: "Get User Chat Color By ID",
     createIO: ({ io }) => {
       return {
@@ -1845,6 +1900,8 @@ export type Requests = {
   "GET /subscriptions": any;
   "GET /channels/followers": any;
   "GET /channels/vips": any;
+  "GET /eventsub/subscriptions": any;
+  "DELETE /eventsub/subscriptions": any;
 
   "GET /channel_points/custom_rewards": any;
   "POST /channel_points/custom_rewards": any;
@@ -1854,6 +1911,7 @@ export type Requests = {
 
   "PATCH /chat/settings": any;
   "GET /chat/color": any;
+  "GET /chat/chatters": any;
   "POST /chat/shoutouts": any;
   "POST /chat/announcements": any;
   "POST /channels/commercial": any;
