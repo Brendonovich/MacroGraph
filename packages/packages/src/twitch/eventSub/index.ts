@@ -1,78 +1,76 @@
+import { Maybe } from "@macrograph/option";
 import {
+  type Core,
+  type CreateEventSchema,
+  type Package,
+  type PropertyDef,
+  type SchemaProperties,
   createEnum,
-  CreateEventSchema,
   createStruct,
-  Package,
-  PropertyDef,
-  SchemaProperties,
 } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { Maybe } from "@macrograph/option";
 import { createEventBus } from "@solid-primitives/event-bus";
-import { ReactiveMap } from "@solid-primitives/map";
 import { createEventListener } from "@solid-primitives/event-listener";
+import { ReactiveMap } from "@solid-primitives/map";
 
-import { Helix } from "../helix";
+import type { Ctx } from "../ctx";
+import type { Helix } from "../helix";
 import { defaultProperties } from "../resource";
-import { Ctx } from "../ctx";
-import { Events } from "./types";
 import {
-  PollChoice,
   OutcomesBegin,
-  PredictionStatus,
   OutcomesProgress,
+  PollChoice,
+  PredictionStatus,
   TopPredictors,
 } from "./structs";
-import { Account } from "../auth";
+import type { Events } from "./types";
 
-export function createEventSub(helixClient: Helix) {
+export function createEventSub(core: Core, helixClient: Helix) {
   const sockets = new ReactiveMap<string, WebSocket>();
 
-  function connectSocket(account: Account) {
-    const userId = account.data.id;
+  async function connectSocket(userId: string, shouldRetry = true) {
+    let retry = shouldRetry;
+    const credential = await core.getCredential("twitch", userId);
+    if (!credential || sockets.has(userId)) return;
 
-    if (sockets.has(userId)) return;
-
-    return new Promise<void>((res) => {
-      const ws = new WebSocket(`wss://eventsub.wss.twitch.tv/ws`);
+    await new Promise<void>((res) => {
+      const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
 
       ws.onmessage = async (data) => {
-        let info: any = JSON.parse(data.data);
+        const info: any = JSON.parse(data.data);
 
         if (info.metadata.message_type === "session_welcome") {
           sockets.set(userId, ws);
+          retry = true;
 
           await Promise.allSettled(
             SubTypes.map((type) =>
-              helixClient.call(
-                "POST /eventsub/subscriptions",
-                account.credential,
-                {
-                  body: JSON.stringify({
-                    type,
-                    version: type == "channel.follow" ? "2" : "1",
-                    condition: {
-                      broadcaster_user_id: userId,
-                      moderator_user_id: userId,
-                      to_broadcaster_user_id: userId,
-                      user_id: userId,
-                    },
-                    transport: {
-                      method: "websocket",
-                      session_id: info.payload.session.id,
-                    },
-                  }),
-                }
-              )
-            )
+              helixClient.call("POST /eventsub/subscriptions", credential, {
+                body: JSON.stringify({
+                  type,
+                  version: type === "channel.follow" ? "2" : "1",
+                  condition: {
+                    broadcaster_user_id: userId,
+                    moderator_user_id: userId,
+                    to_broadcaster_user_id: userId,
+                    user_id: userId,
+                  },
+                  transport: {
+                    method: "websocket",
+                    session_id: info.payload.session.id,
+                  },
+                }),
+              }),
+            ),
           );
 
           res();
         }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (e) => {
         sockets.delete(userId);
+        if (!retry && e.code !== 1000) connectSocket(userId, false);
       };
     });
   }
@@ -90,8 +88,8 @@ export function createEventSub(helixClient: Helix) {
 export function register(pkg: Package, { eventSub }: Ctx) {
   function createEventSubEventSchema<
     TEvent extends keyof Events,
-    TProperties extends Record<string, PropertyDef> = {},
-    TIO = void
+    TProperties extends Record<string, PropertyDef> = never,
+    TIO = void,
   >({
     event,
     ...s
@@ -115,7 +113,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           .getProperty(
             properties.account as SchemaProperties<
               typeof defaultProperties
-            >["account"]
+            >["account"],
           )
           .andThen((account) => Maybe(eventSub.sockets.get(account.data.id)))
           .expect("No account available");
@@ -387,12 +385,12 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.cooldownExpire, Maybe(data.cooldown_expires_at));
       ctx.setOutput(
         io.redemptTotalStream,
-        Maybe(data.redemptions_redeemed_current_stream)
+        Maybe(data.redemptions_redeemed_current_stream),
       );
       ctx.setOutput(io.maxPerStream, Maybe(data.max_per_stream.value));
       ctx.setOutput(
         io.maxUserPerStream,
-        Maybe(data.max_per_user_per_stream.value)
+        Maybe(data.max_per_user_per_stream.value),
       );
       ctx.setOutput(io.globalCooldown, Maybe(data.global_cooldown.seconds));
       ctx.setOutput(io.backgroundColor, data.background_color);
@@ -496,12 +494,12 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.cooldownExpire, Maybe(data.cooldown_expires_at));
       ctx.setOutput(
         io.redemptTotalStream,
-        Maybe(data.redemptions_redeemed_current_stream)
+        Maybe(data.redemptions_redeemed_current_stream),
       );
       ctx.setOutput(io.maxPerStream, Maybe(data.max_per_stream.value));
       ctx.setOutput(
         io.maxUserPerStream,
-        Maybe(data.max_per_user_per_stream.value)
+        Maybe(data.max_per_user_per_stream.value),
       );
       ctx.setOutput(io.globalCooldown, Maybe(data.global_cooldown.seconds));
       ctx.setOutput(io.backgroundColor, data.background_color);
@@ -605,12 +603,12 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.cooldownExpire, Maybe(data.cooldown_expires_at));
       ctx.setOutput(
         io.redemptTotalStream,
-        Maybe(data.redemptions_redeemed_current_stream)
+        Maybe(data.redemptions_redeemed_current_stream),
       );
       ctx.setOutput(io.maxPerStream, Maybe(data.max_per_stream.value));
       ctx.setOutput(
         io.maxUserPerStream,
-        Maybe(data.max_per_user_per_stream.value)
+        Maybe(data.max_per_user_per_stream.value),
       );
       ctx.setOutput(io.globalCooldown, Maybe(data.global_cooldown.seconds));
       ctx.setOutput(io.backgroundColor, data.background_color);
@@ -728,15 +726,15 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.title, data.title);
       ctx.setOutput(
         io.choices,
-        data.choices.map((choice) => PollBeginChoice.create(choice))
+        data.choices.map((choice) => PollBeginChoice.create(choice)),
       );
       ctx.setOutput(
         io.channelPointVotingEnabled,
-        data.channel_points_voting.is_enabled
+        data.channel_points_voting.is_enabled,
       );
       ctx.setOutput(
         io.channelPointVotingCost,
-        data.channel_points_voting.amount_per_vote
+        data.channel_points_voting.amount_per_vote,
       );
       return ctx.exec(io.exec);
     },
@@ -777,11 +775,11 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.choices, data.choices);
       ctx.setOutput(
         io.channelPointVotingEnabled,
-        data.channel_points_voting.is_enabled
+        data.channel_points_voting.is_enabled,
       );
       ctx.setOutput(
         io.channelPointVotingCost,
-        data.channel_points_voting.amount_per_vote
+        data.channel_points_voting.amount_per_vote,
       );
       ctx.exec(io.exec);
     },
@@ -822,11 +820,11 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.choices, data.choices);
       ctx.setOutput(
         io.channelPointVotingEnabled,
-        data.channel_points_voting.is_enabled
+        data.channel_points_voting.is_enabled,
       );
       ctx.setOutput(
         io.channelPointVotingCost,
-        data.channel_points_voting.amount_per_vote
+        data.channel_points_voting.amount_per_vote,
       );
       ctx.exec(io.exec);
     },
@@ -890,10 +888,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
               TopPredictors.create({
                 ...predictor,
                 channel_points_won: Maybe(predictor.channel_points_won),
-              })
+              }),
             ),
-          })
-        )
+          }),
+        ),
       );
       ctx.exec(io.exec);
     },
@@ -928,10 +926,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
               TopPredictors.create({
                 ...predictor,
                 channel_points_won: Maybe(predictor.channel_points_won),
-              })
+              }),
             ),
-          })
-        )
+          }),
+        ),
       );
       ctx.exec(io.exec);
     },
@@ -978,10 +976,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
               TopPredictors.create({
                 ...predictor,
                 channel_points_won: Maybe(predictor.channel_points_won),
-              })
+              }),
             ),
-          })
-        )
+          }),
+        ),
       );
       ctx.setOutput(io.winningOutcomeId, Maybe(data.winning_outcome_id));
       ctx.setOutput(io.status, PredictionStatus.variant(data.status));
@@ -991,7 +989,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 
   const HypeTrainContributionTypeEnum = createEnum(
     "Hype Train Contribution Type",
-    (e) => [e.variant("bits"), e.variant("subscription"), e.variant("other")]
+    (e) => [e.variant("bits"), e.variant("subscription"), e.variant("other")],
   );
 
   const TopContribution = createStruct("Contribution", (s) => ({
@@ -1051,14 +1049,14 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
-      let topContributions = data.top_contributions.map((contribution) =>
+      const topContributions = data.top_contributions.map((contribution) =>
         TopContribution.create({
           user_id: contribution.user_id,
           user_login: contribution.user_login,
           user_name: contribution.user_name,
           total: contribution.total,
           type: HypeTrainContributionTypeEnum.variant(contribution.type),
-        })
+        }),
       );
       ctx.setOutput(io.total, data.total);
       ctx.setOutput(io.progress, data.progress);
@@ -1073,9 +1071,9 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           user_name: data.last_contribution.user_name,
           total: data.last_contribution.total,
           type: HypeTrainContributionTypeEnum.variant(
-            data.last_contribution.type
+            data.last_contribution.type,
           ),
-        })
+        }),
       );
       ctx.exec(io.exec);
     },
@@ -1122,14 +1120,14 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
-      let topContributions = data.top_contributions.map((contribution) =>
+      const topContributions = data.top_contributions.map((contribution) =>
         TopContribution.create({
           user_id: contribution.user_id,
           user_login: contribution.user_login,
           user_name: contribution.user_name,
           total: contribution.total,
           type: HypeTrainContributionTypeEnum.variant(contribution.type),
-        })
+        }),
       );
 
       ctx.setOutput(io.total, data.total);
@@ -1145,9 +1143,9 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           user_name: data.last_contribution.user_name,
           total: data.last_contribution.total,
           type: HypeTrainContributionTypeEnum.variant(
-            data.last_contribution.type
+            data.last_contribution.type,
           ),
-        })
+        }),
       );
       ctx.exec(io.exec);
     },
@@ -1184,14 +1182,14 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       };
     },
     run({ ctx, data, io }) {
-      let topContributions = data.top_contributions.map((contribution) =>
+      const topContributions = data.top_contributions.map((contribution) =>
         TopContribution.create({
           user_id: contribution.user_id,
           user_login: contribution.user_login,
           user_name: contribution.user_name,
           total: contribution.total,
           type: HypeTrainContributionTypeEnum.variant(contribution.type),
-        })
+        }),
       );
 
       ctx.setOutput(io.total, data.total);
@@ -1250,7 +1248,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       ctx.setOutput(io.categoryName, data.category_name);
       ctx.setOutput(
         io.contentClassificationLabels,
-        data.content_classification_labels
+        data.content_classification_labels,
       );
       ctx.exec(io.exec);
     },
@@ -2152,7 +2150,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
       e.variant("Bits Badge Tier", {
         value: t.int(),
       }),
-    ]
+    ],
   );
 
   createEventSubEventSchema({
@@ -2225,7 +2223,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           broadcaster_user_id: data.broadcaster_user_id,
           broadcaster_user_name: data.broadcaster_user_name,
           broadcaster_user_login: data.broadcaster_user_login,
-        })
+        }),
       );
       ctx.setOutput(
         io.chatter,
@@ -2233,7 +2231,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
           chatter_user_id: data.chatter_user_id,
           chatter_user_name: data.chatter_user_name,
           chatter_user_login: data.chatter_user_login,
-        })
+        }),
       );
       ctx.setOutput(
         io.badges,
@@ -2242,8 +2240,8 @@ export function register(pkg: Package, { eventSub }: Ctx) {
             set_id: badge.set_id,
             id: badge.id,
             info: badge.info,
-          })
-        )
+          }),
+        ),
       );
 
       ctx.setOutput(
@@ -2259,7 +2257,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                   prefix: cheermote.prefix,
                   bits: cheermote.bits,
                   tier: cheermote.tier,
-                })
+                }),
               ),
               emote: Maybe(fragment.emote).map((emote) =>
                 EmoteStruct.create({
@@ -2267,18 +2265,18 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                   emote_set_id: emote.emote_set_id,
                   owner_id: emote.owner_id,
                   format: emote.format,
-                })
+                }),
               ),
               mention: Maybe(fragment.mention).map((mention) =>
                 MentionStruct.create({
                   user_id: mention.user_id,
                   user_name: mention.user_name,
                   user_login: mention.user_login,
-                })
+                }),
               ),
-            })
+            }),
           ),
-        })
+        }),
       );
 
       ctx.setOutput(
@@ -2341,7 +2339,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                     total: data.community_sub_gift!.total,
                     sub_tier: data.community_sub_gift!.sub_tier,
                     cumulative_total: Maybe(
-                      data.community_sub_gift!.cumulative_total
+                      data.community_sub_gift!.cumulative_total,
                     ),
                   },
                 },
@@ -2355,13 +2353,13 @@ export function register(pkg: Package, { eventSub }: Ctx) {
                     gifter_is_anonymous:
                       data.gift_paid_upgrade!.gifter_is_anonymous,
                     gifter_user_id: Maybe(
-                      data.gift_paid_upgrade!.gifter_user_id
+                      data.gift_paid_upgrade!.gifter_user_id,
                     ),
                     gifter_user_name: Maybe(
-                      data.gift_paid_upgrade!.gifter_user_name
+                      data.gift_paid_upgrade!.gifter_user_name,
                     ),
                     gifter_user_login: Maybe(
-                      data.gift_paid_upgrade!.gifter_user_login
+                      data.gift_paid_upgrade!.gifter_user_login,
                     ),
                   },
                 },
@@ -2423,7 +2421,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
               throw new Error(`Unknown notice type "${data.notice_type}"`);
             }
           }
-        })()
+        })(),
       );
       ctx.exec(io.exec);
     },

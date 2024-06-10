@@ -1,4 +1,4 @@
-import { Core, OnEvent, Package } from "@macrograph/runtime";
+import { type Core, OnEvent, Package } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createStore } from "solid-js/store";
 import { createResource } from "solid-js";
@@ -20,7 +20,7 @@ const PERSISTED_SCHEMA = z.object({
     z.object({
       token: z.string(),
       gateway: z.boolean().optional(),
-    })
+    }),
   ),
   users: z.array(z.string()),
 });
@@ -31,7 +31,7 @@ export type PersistedStore = ReturnType<typeof createStore<Persisted>>;
 function createCtx(core: Core) {
   const persisted = makePersisted(
     createStore<z.infer<typeof PERSISTED_SCHEMA>>({ bots: {}, users: [] }),
-    { name: "packages.discord" }
+    { name: "packages.discord" },
   );
 
   const api = createApi(core);
@@ -43,7 +43,7 @@ function createCtx(core: Core) {
   };
   const setupBots = async () => {
     await Promise.allSettled(
-      Object.values(persisted[0].bots).map(({ token }) => auth.addBot(token))
+      Object.values(persisted[0].bots).map(({ token }) => auth.addBot(token)),
     );
 
     Object.entries(persisted[0].bots).forEach(([id, data]) => {
