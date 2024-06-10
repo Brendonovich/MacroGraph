@@ -1,23 +1,23 @@
-import * as Solid from "solid-js";
-import {
+import type {
   Graph as GraphModel,
-  Pin,
-  XY,
   Node as NodeModel,
+  Pin,
   Size,
+  XY,
 } from "@macrograph/runtime";
-import { createStore } from "solid-js/store";
-import { createResizeObserver } from "@solid-primitives/resize-observer";
-import { ReactiveWeakMap } from "@solid-primitives/map";
+import { createBodyCursor } from "@solid-primitives/cursor";
 import {
   createEventListener,
   createEventListenerMap,
 } from "@solid-primitives/event-listener";
-import { createBodyCursor } from "@solid-primitives/cursor";
+import { ReactiveWeakMap } from "@solid-primitives/map";
+import { createResizeObserver } from "@solid-primitives/resize-observer";
+import * as Solid from "solid-js";
+import { createStore } from "solid-js/store";
 
-import { Node } from "./Node";
 import { ConnectionRender } from "../Graph";
 import { CommentBox } from "./CommentBox";
+import { Node } from "./Node";
 
 type PanState = "none" | "waiting" | "active";
 
@@ -187,6 +187,47 @@ export const Graph = (props: Props) => {
       });
   });
 
+  createEventListener(window, "keydown", (e) => {
+    switch (e.code) {
+      case "BracketLeft": {
+        const fold = (e.metaKey || e.shiftKey) && e.altKey;
+
+        if (fold) {
+          const { selectedItemId } = props.state;
+          if (selectedItemId === null) return;
+          if (selectedItemId.type !== "node") return;
+
+          const node = model().nodes.get(selectedItemId.id);
+          if (!node) return;
+
+          node.state.foldPins = true;
+          model().project.save();
+        }
+
+        return;
+      }
+      case "BracketRight": {
+        const fold = (e.metaKey || e.shiftKey) && e.altKey;
+
+        if (fold) {
+          const { selectedItemId } = props.state;
+          if (selectedItemId === null) return;
+          if (selectedItemId.type !== "node") return;
+
+          const node = model().nodes.get(selectedItemId.id);
+          if (!node) return;
+
+          node.state.foldPins = false;
+          model().project.save();
+        }
+
+        return;
+      }
+      default:
+        return;
+    }
+  });
+
   return (
     <GraphContext.Provider
       value={{
@@ -214,7 +255,7 @@ export const Graph = (props: Props) => {
         }}
         onMouseDown={(e) => {
           switch (e.button) {
-            case 2:
+            case 2: {
               setPan("waiting");
 
               const oldTranslate = { ...props.state.translate };
@@ -259,6 +300,7 @@ export const Graph = (props: Props) => {
               });
 
               break;
+            }
           }
 
           props.onMouseDown?.(e);
