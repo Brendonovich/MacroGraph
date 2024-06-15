@@ -21,6 +21,12 @@ interface PollChoice extends BeginPollChoice {
   votes: number;
 }
 
+interface emotes {
+  id: string;
+  begin: number;
+  end: number;
+}
+
 interface VoteTypeSettings {
   is_enabled: boolean;
   amount_per_vote: number;
@@ -325,6 +331,20 @@ export interface Events {
     channel_points_voting: VoteTypeSettings;
     started_at: string;
     ends_at: string;
+  };
+  "channel.channel_points_automatic_reward_redemption.add": {
+    user_id: string;
+    user_login: string;
+    user_name: string;
+    reward: {
+      type: string;
+      cost: number;
+      unlocked_emote: null;
+    };
+    message: {
+      text: string;
+      emotes: emotes[];
+    };
   };
   "channel.poll.end": {
     id: string;
