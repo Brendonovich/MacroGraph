@@ -1640,7 +1640,12 @@ export function register(pkg: Package, helix: Helix) {
         }),
       });
 
-      ctx.setOutput(io.color, Maybe(color.color !== "" ? color.color : null));
+      console.log(color);
+
+      ctx.setOutput(
+        io.color,
+        Maybe(color.data[0].color !== "" ? color.data[0].color : null)
+      );
     },
   });
 
