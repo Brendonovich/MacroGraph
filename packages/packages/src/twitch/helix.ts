@@ -215,6 +215,8 @@ export function register(pkg: Package, helix: Helix) {
     });
   }
 
+  pkg.registerType(Reward);
+
   createHelixExecSchema({
     name: "Ban User",
     createIO: ({ io }) => ({
