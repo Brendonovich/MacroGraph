@@ -15,16 +15,17 @@ export function pinsCanConnect(
 ) {
 	if (output instanceof DataOutput && input instanceof DataInput) {
 		return typesCanConnect(output.type, input.type);
-	} else if (output instanceof ExecOutput && input instanceof ExecInput) {
+	}
+	if (output instanceof ExecOutput && input instanceof ExecInput) {
 		if (input.connections.size < 1) return true;
 
 		const outputAnc = output.node.ancestor();
 		const inputAnc = input.node.ancestor();
 
 		return outputAnc.eq(inputAnc);
-	} else if (output instanceof ScopeOutput && input instanceof ScopeInput)
-		return true;
-	else return false;
+	}
+	if (output instanceof ScopeOutput && input instanceof ScopeInput) return true;
+	return false;
 }
 
 export function pinIsOutput(
