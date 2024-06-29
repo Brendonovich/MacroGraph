@@ -34,16 +34,17 @@ export function typesCanConnect(aRaw: t.Any, bRaw: t.Any): boolean {
 		bRaw instanceof t.Wildcard ? bRaw.wildcard.value().unwrapOr(bRaw) : bRaw;
 
 	if (a instanceof t.Wildcard || b instanceof t.Wildcard) return true;
-	else if (a instanceof BasePrimitiveType && b instanceof BasePrimitiveType)
+	if (a instanceof BasePrimitiveType && b instanceof BasePrimitiveType)
 		return a.primitiveVariant() === b.primitiveVariant();
-	else if (a instanceof t.List && b instanceof t.List)
+	if (a instanceof t.List && b instanceof t.List)
 		return typesCanConnect(a.item, b.item);
-	else if (a instanceof t.Map && b instanceof t.Map)
+	if (a instanceof t.Map && b instanceof t.Map)
 		return typesCanConnect(a.value, b.value);
-	else if (a instanceof t.Option && b instanceof t.Option)
+	if (a instanceof t.Option && b instanceof t.Option)
 		return typesCanConnect(a.inner, b.inner);
-	else if (a instanceof t.Enum && b instanceof t.Enum)
-		return a.inner === b.inner;
+	if (a instanceof t.Struct && b instanceof t.Struct)
+		return a.struct === b.struct;
+	if (a instanceof t.Enum && b instanceof t.Enum) return a.inner === b.inner;
 
 	return false;
 }
