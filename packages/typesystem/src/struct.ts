@@ -92,10 +92,7 @@ export class StructType<TStruct extends Struct> extends BaseType<
 
 	default(): InferStruct<TStruct> {
 		return Object.entries(this.struct.fields).reduce(
-			(acc, [key, value]) => ({
-				...acc,
-				[key]: value.default(),
-			}),
+			(acc, [key, value]) => Object.assign(acc, { [key]: value.default() }),
 			{},
 		) as any;
 	}
@@ -146,16 +143,16 @@ export class StructType<TStruct extends Struct> extends BaseType<
 	}
 }
 
-export type InferStruct<S> = S extends Struct<infer Fields>
-	? InferStructFields<Fields>
-	: never;
+export type InferStruct<S> =
+	S extends Struct<infer Fields> ? InferStructFields<Fields> : never;
 
 export type InferStructFields<F> = F extends StructFields
 	? { [K in keyof F]: InferStructField<F[K]> }
 	: never;
 
-export type InferStructField<F> = F extends StructField<infer Type>
-	? Type extends BaseType<infer TOut>
-		? TOut
-		: never
-	: never;
+export type InferStructField<F> =
+	F extends StructField<infer Type>
+		? Type extends BaseType<infer TOut>
+			? TOut
+			: never
+		: never;

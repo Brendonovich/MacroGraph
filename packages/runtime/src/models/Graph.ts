@@ -130,8 +130,9 @@ export class Graph extends Disposable {
 		const index = this.variables.findIndex((v) => v.id === id);
 		if (index === -1) return;
 
-		const v = this.variables.splice(index, 1);
-		v.forEach((v) => v.dispose());
+		for (const v of this.variables.splice(index, 1)) {
+			v.dispose();
+		}
 	}
 
 	connectPins(
