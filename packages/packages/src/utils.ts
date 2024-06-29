@@ -1799,35 +1799,34 @@ export function pkg(core: Core) {
 				type: t.wildcard(w),
 			});
 
-			const inputs = w.value().map((wt) => {
+			return w.value().map((wt) => {
 				if (!(wt instanceof t.Struct)) return null;
 
-				const dataOutputs = Object.entries(
-					wt.struct.fields as StructFields,
-				).map(([id, field]) =>
-					io.dataInput({
-						id,
-						name: field.name,
-						type: field.type,
-					}),
+				const dataInputs = Object.entries(wt.struct.fields as StructFields).map(
+					([id, field]) =>
+						io.dataInput({
+							id,
+							name: field.name,
+							type: field.type,
+						}),
 				);
 
 				return {
 					wildcard: wt,
 					output: output as unknown as DataOutput<t.Struct<Struct>>,
-					inputs: dataOutputs,
+					inputs: dataInputs,
 				};
 			});
-
-			return inputs;
 		},
 		run({ ctx, io }) {
 			io.map((io) => {
-				const data = io.inputs.reduce((acc, input) => {
-					acc[input.id] = ctx.getInput(input);
-				}, {} as any);
+				const data = io.inputs.reduce(
+					(acc, input) =>
+						Object.assign(acc, { [input.id]: ctx.getInput(input) }),
+					{} as any,
+				);
 
-				let struct = io.output.type.struct.create(data);
+				const struct = io.wildcard.struct.create(data);
 
 				ctx.setOutput(io.output, struct);
 			});

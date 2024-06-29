@@ -30,7 +30,8 @@ export default function () {
 
 const doDesktopAuth = action(async () => {
 	try {
-		const id = await fetch("http://localhost:25000");
+		const id = await fetch("http://localhost:25000").catch(() => {});
+		if (!id) return;
 
 		const auth = await getAuthState();
 
