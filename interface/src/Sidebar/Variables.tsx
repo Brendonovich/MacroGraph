@@ -103,7 +103,7 @@ export function Variables(props: {
 									}}
 								/>
 
-								<div class="flex flex-row items-start gap-2 text-sm">
+								<div class="flex flex-row items-end gap-2 text-sm">
 									<Switch>
 										<Match
 											when={
@@ -163,6 +163,17 @@ export function Variables(props: {
 													4,
 												)}
 											</div>
+											<button
+												type="button"
+												onClick={() => {
+													if (variable.type instanceof t.List)
+														variable.value = [];
+													else if (variable.type instanceof t.Map)
+														variable.value = new Map();
+												}}
+											>
+												<IconSystemUiconsReset class="size-4" />
+											</button>
 										</Match>
 									</Switch>
 								</div>
