@@ -141,8 +141,8 @@ export class Graph extends Disposable {
 		const status = (() => {
 			if (!pinsCanConnect(output, input)) return false;
 
-			const outRef = makeIORef(output),
-				inRef = makeIORef(input);
+			const outRef = makeIORef(output);
+			const inRef = makeIORef(input);
 
 			if (output instanceof DataOutput && input instanceof DataInput) {
 				this.disconnectPin(input);
@@ -157,6 +157,8 @@ export class Graph extends Disposable {
 				outputConnections.push(inRef);
 			} else if (output instanceof ExecOutput && input instanceof ExecInput) {
 				this.disconnectPin(output);
+
+				console.log(output, input);
 
 				const outputConnections =
 					this.connections.get(outRef) ??
