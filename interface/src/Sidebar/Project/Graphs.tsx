@@ -1,17 +1,27 @@
-import { For, Show, createSignal, onMount } from "solid-js";
-import { Graph } from "@macrograph/runtime";
 import { Dialog } from "@kobalte/core";
+import { Graph } from "@macrograph/runtime";
+import {
+	For,
+	Match,
+	Show,
+	Switch,
+	batch,
+	createMemo,
+	createSignal,
+	onMount,
+} from "solid-js";
 
-import { useCore, useCoreContext } from "../../contexts";
+import clsx from "clsx";
 import {
 	deserializeClipboardItem,
 	graphToClipboardItem,
 	readFromClipboard,
 	writeClipboardItemToClipboard,
 } from "../../clipboard";
-import clsx from "clsx";
-import { Button } from "../../settings/ui";
 import { SidebarSection } from "../../components/Sidebar";
+import { useCore, useCoreContext } from "../../contexts";
+import { Button } from "../../settings/ui";
+import { tokeniseString } from "../../util";
 
 // React component to show a list of projects
 interface Props {
@@ -22,45 +32,87 @@ interface Props {
 export function Graphs(props: Props) {
 	const ctx = useCoreContext();
 
-	return (
-		<SidebarSection
-			title="Graphs"
-			right={
-				<div class="flex flex-row items-center text-xl font-bold space-x-1">
-					<button
-						onClick={async (e) => {
-							e.stopPropagation();
-							const item = deserializeClipboardItem(await readFromClipboard());
-							if (item.type !== "graph") return;
+	const [search, setSearch] = createSignal("");
 
-							item.graph.id = ctx.core.project.generateGraphId();
-							const graph = Graph.deserialize(ctx.core.project, item.graph);
-							ctx.core.project.graphs.set(graph.id, graph);
-						}}
-					>
-						<IconGgImport />
-					</button>
-					<button
-						onClick={(e) => {
-							e.stopPropagation();
-							const graph = ctx.core.project.createGraph();
-							props.onGraphClicked(graph);
-						}}
-					>
-						<IconMaterialSymbolsAddRounded class="w-6 h-6" />
-					</button>
-				</div>
-			}
-		>
-			<For each={[...ctx.core.project.graphs.values()]}>
-				{(graph) => (
-					<GraphItem
-						graph={graph}
-						onClick={() => props.onGraphClicked(graph)}
-						isCurrentGraph={graph.id === props.currentGraph}
-					/>
-				)}
-			</For>
+	const tokenisedSearch = createMemo(() => tokeniseString(search()));
+
+	const graphs = createMemo(() => [...ctx.core.project.graphs.values()]);
+
+	const tokenisedFilters = createMemo(() =>
+		graphs().map((g) => [tokeniseString(g.name), g] as const),
+	);
+
+	const filteredGraphs = createMemo(() => {
+		const ret: Array<Graph> = [];
+
+		for (const [tokens, variable] of tokenisedFilters()) {
+			if (
+				tokenisedSearch().every((token) =>
+					tokens.some((t) => t.includes(token)),
+				)
+			)
+				ret.push(variable);
+		}
+
+		return ret;
+	});
+
+	return (
+		<SidebarSection title="Graphs" class="overflow-y-hidden flex flex-col">
+			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
+				<input
+					value={search()}
+					onInput={(e) => {
+						e.stopPropagation();
+						setSearch(e.currentTarget.value);
+					}}
+					onKeyDown={(e) => e.stopPropagation()}
+					type="text"
+					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-primary-500 focus:ring-opacity-50 transition-colors"
+					placeholder="Search"
+				/>
+				<button
+					type="button"
+					title="Import graph from clipboard"
+					class="hover:bg-white/10 rounded transition-colors p-0.5"
+					onClick={async (e) => {
+						e.stopPropagation();
+						const item = deserializeClipboardItem(await readFromClipboard());
+						if (item.type !== "graph") return;
+
+						item.graph.id = ctx.core.project.generateGraphId();
+						const graph = Graph.deserialize(ctx.core.project, item.graph);
+						ctx.core.project.graphs.set(graph.id, graph);
+					}}
+				>
+					<IconGgImport class="size-4" />
+				</button>
+				<button
+					type="button"
+					title="Create graph"
+					class="hover:bg-white/10 rounded transition-colors"
+					onClick={(e) => {
+						e.stopPropagation();
+						const graph = ctx.core.project.createGraph();
+						props.onGraphClicked(graph);
+					}}
+				>
+					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+				</button>
+			</div>
+			<div class="flex-1 overflow-y-auto">
+				<ul class="flex flex-col p-1 space-y-0.5">
+					<For each={filteredGraphs()}>
+						{(graph) => (
+							<GraphItem
+								graph={graph}
+								onClick={() => props.onGraphClicked(graph)}
+								isCurrentGraph={graph.id === props.currentGraph}
+							/>
+						)}
+					</For>
+				</ul>
+			</div>
 		</SidebarSection>
 	);
 }
@@ -71,71 +123,98 @@ interface GraphItemProps {
 	isCurrentGraph: boolean;
 }
 
-const buttonClasses = "hover:bg-white/20 p-1 rounded";
-
 function GraphItem(props: GraphItemProps) {
 	const [editing, setEditing] = createSignal(false);
 
 	return (
-		<div
-			class={clsx(
-				"cursor-pointer text-white",
-				props.isCurrentGraph ? "bg-neutral-700" : "hover:bg-neutral-500",
-			)}
-		>
-			<Show
-				when={editing()}
-				fallback={
-					<div
-						class="flex flex-row items-center px-2 py-1 w-full border-2 border-transparent justify-between group"
-						onClick={props.onClick}
-						onDblClick={() => setEditing(true)}
+		<li class="flex flex-row group/item items-center gap-1">
+			<Switch>
+				<Match when={editing()}>
+					{(_) => {
+						const [value, setValue] = createSignal(props.graph.name);
+						let ref: HTMLInputElement;
+
+						let focused = false;
+
+						onMount(() => {
+							setTimeout(() => {
+								ref.focus();
+								ref.focus();
+								focused = true;
+							});
+						});
+
+						return (
+							<>
+								<input
+									ref={ref!}
+									class="flex-1 bg-neutral-900 rounded text-sm border-none py-0.5 px-1.5"
+									value={value()}
+									onInput={(e) => {
+										setValue(e.target.value);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") {
+											e.preventDefault();
+											e.stopPropagation();
+
+											if (!focused) return;
+											batch(() => {
+												props.graph.rename(value());
+												setEditing(false);
+											});
+										} else if (e.key === "Escape") {
+											e.preventDefault();
+											e.stopPropagation();
+
+											setEditing(false);
+										}
+										e.stopPropagation();
+									}}
+									onFocusOut={() => {
+										if (!focused) return;
+										batch(() => {
+											props.graph.rename(value());
+											setEditing(false);
+										});
+									}}
+								/>
+							</>
+						);
+					}}
+				</Match>
+				<Match when={!editing()}>
+					<span
+						class="flex-1 hover:bg-white/10 transition-colors rounded flex flex-row items-center justify-between"
+						onDblClick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+
+							setEditing(true);
+						}}
 					>
-						<span>{props.graph.name}</span>
-						<div class="flex-row flex space-x-1 opacity-0 group-hover:opacity-100">
-							<DeleteButton graph={props.graph} />
-							<button
-								class={buttonClasses}
-								onClick={(e) => {
-									e.stopPropagation();
-									writeClipboardItemToClipboard(
-										graphToClipboardItem(props.graph),
-									);
-								}}
-							>
-								<IconTablerCopy />
-							</button>
-						</div>
-					</div>
-				}
-			>
-				{(_) => {
-					const [name, setName] = createSignal(props.graph.name);
-
-					let ref: HTMLInputElement | undefined;
-
-					onMount(() => ref?.focus());
-
-					return (
-						<input
-							ref={ref}
-							class={clsx(
-								"px-2 py-1 w-full outline-none box-border border-2 border-sky-600",
-								props.isCurrentGraph
-									? "bg-neutral-700"
-									: "hover:bg-neutral-500",
-							)}
-							value={name()}
-							onChange={(e) => setName(e.target.value)}
-							onBlur={() => {
-								props.graph.rename(name());
-								setEditing(false);
+						<button
+							type="button"
+							class="py-0.5 px-1.5 w-full text-left"
+							onClick={() => props.onClick()}
+						>
+							{props.graph.name}
+						</button>
+						<button
+							type="button"
+							class="pointer-events-none opacity-0 focus:opacity-100 transition-opacity"
+							onClick={() => {
+								setEditing(true);
 							}}
-						/>
-					);
-				}}
-			</Show>
-		</div>
+						>
+							<IconAntDesignEditOutlined class="size-4" />
+						</button>
+					</span>
+
+					<DeleteButton graph={props.graph} />
+				</Match>
+			</Switch>
+		</li>
 	);
 }
 
@@ -151,7 +230,7 @@ const DeleteButton = (props: { graph: Graph }) => {
 	return (
 		<Dialog.Root>
 			<Dialog.Trigger
-				class={buttonClasses}
+				class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-[opacity,colors] hover:bg-white/10 rounded p-0.5"
 				onClick={(e) => {
 					if (!e.shiftKey) return;
 
@@ -162,9 +241,9 @@ const DeleteButton = (props: { graph: Graph }) => {
 
 					deleteGraph();
 				}}
-				as="div"
+				as="button"
 			>
-				<IconAntDesignDeleteOutlined />
+				<IconAntDesignDeleteOutlined class="size-4" />
 			</Dialog.Trigger>
 			<Dialog.Portal>
 				<Dialog.Overlay class="absolute inset-0 bg-black/40" />
