@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import {
-	JSX,
-	ParentProps,
+	type JSX,
+	type ParentProps,
 	Show,
 	createRoot,
 	createSignal,
@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
+import { Accordion } from "@kobalte/core";
 
 export type Side = "left" | "right";
 
@@ -17,23 +18,28 @@ export const SNAP_CLOSE_PCT = 0.65;
 
 export interface SidebarProps extends ParentProps {
 	width: number;
+	class?: string;
 }
 
 export function Sidebar(props: SidebarProps) {
 	return (
-		<div
-			class="relative flex flex-col bg-neutral-600 shadow-2xl"
+		<Accordion.Root
+			class={clsx(
+				"relative flex flex-col border-neutral-700 bg-neutral-400/5",
+				props.class,
+			)}
 			style={{ width: `${props.width}px` }}
+			multiple
 		>
 			{props.children}
-		</div>
+		</Accordion.Root>
 	);
 }
 
 const MIN_HEIGHT = 250;
 
 export function SidebarSection(
-	props: ParentProps<{ title: string; right?: JSX.Element; class?: string }>,
+	props: ParentProps<{ title: string; class?: string }>,
 ) {
 	const [open, setOpen] = makePersisted(createSignal(!false), {
 		name: `sidebar-section-${props.title}-open`,
@@ -43,28 +49,25 @@ export function SidebarSection(
 	});
 
 	return (
-		<div class="flex flex-col h-auto relative">
-			<button
-				onClick={() => setOpen((o) => !o)}
-				class="flex flex-row justify-between items-center bg-neutral-900 text-white font-medium shadow p-1 pl-2"
-			>
-				<span class="flex flex-row items-center gap-1.5">
-					<IconFa6SolidChevronRight
-						class="w-3 h-3"
-						classList={{ "rotate-90": open() }}
-					/>
-					{props.title}
-				</span>
-				<div
-					onClick={(e) => e.stopPropagation()}
-					class="flex flex-row items-center"
+		<Accordion.Item class="relative" value={props.title} forceMount>
+			<Accordion.Header class="w-full">
+				<Accordion.Trigger
+					type="button"
+					onClick={() => setOpen((o) => !o)}
+					class="flex flex-row justify-between items-center text-sm text-white p-1 pl-2 bg-neutral-300/5 w-full shadow"
 				>
-					{props.right}
-				</div>
-			</button>
-			<Show when={open()}>
+					<span class="flex flex-row items-center gap-1 font-semibold">
+						{/* <IconMaterialSymbolsArrowRightRounded
+						class="size-7"
+						classList={{ "rotate-90": open() }}
+					/> */}
+						{props.title}
+					</span>
+				</Accordion.Trigger>
+			</Accordion.Header>
+			<Accordion.Content class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden">
 				<div
-					class={clsx("overflow-y-auto", props.class)}
+					class={clsx("overflow-y-auto text-sm", props.class)}
 					style={{ height: `${height()}px` }}
 				>
 					{props.children}
@@ -93,11 +96,11 @@ export function SidebarSection(
 							});
 						});
 					}}
-					class="h-0.5 w-full relative cursor-ns-resize bg-neutral-700 overflow-visible"
+					class="h-px w-full relative cursor-ns-resize bg-neutral-700 overflow-visible"
 				>
 					<div class="-top-0.5 -bottom-0.5 w-full absolute z-10" />
 				</div>
-			</Show>
-		</div>
+			</Accordion.Content>
+		</Accordion.Item>
 	);
 }

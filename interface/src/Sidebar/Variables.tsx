@@ -1,11 +1,11 @@
-import { Variable } from "@macrograph/runtime";
-import { Card } from "@macrograph/ui";
+import type { Variable } from "@macrograph/runtime";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
-import { For, Match, Switch, batch, createSignal } from "solid-js";
+import { For, Match, Switch, batch, createSignal, onMount } from "solid-js";
 
 import { SidebarSection } from "../components/Sidebar";
 import { TypeEditor } from "../components/TypeEditor";
 import { CheckBox, FloatInput, IntInput, TextInput } from "../components/ui";
+import { Accordion } from "@kobalte/core";
 
 export function Variables(props: {
 	titlePrefix: string;
@@ -14,96 +14,159 @@ export function Variables(props: {
 	onRemoveVariable(id: number): void;
 	onSetVariableValue(id: number, value: any): void;
 }) {
+	const [search, setSearch] = createSignal("");
+
+	const filteredVariables = props.variables.filter((v) =>
+		v.name.toLowerCase().includes(search().toLowerCase()),
+	);
+
 	return (
 		<SidebarSection
 			title={`${props.titlePrefix} Variables`}
-			right={
+			class="p-1 space-y-1"
+		>
+			<div class="flex flex-row items-center w-full gap-1">
+				<input
+					value={search()}
+					onInput={(e) => setSearch(e.currentTarget.value)}
+					type="text"
+					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-primary-500 focus:ring-opacity-50 transition-colors"
+					placeholder="Search"
+				/>
 				<button
+					type="button"
+					class="hover:bg-white/10 rounded transition-colors"
 					onClick={(e) => {
 						e.stopPropagation();
 
 						props.onCreateVariable();
 					}}
 				>
-					<IconMaterialSymbolsAddRounded class="w-6 h-6" />
+					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
 				</button>
-			}
-		>
-			<ul class="p-2 gap-2 flex flex-col">
+			</div>
+			<Accordion.Root
+				as="ul"
+				class="flex flex-col gap-0.5"
+				multiple
+				// value={props.variables.map((v) => v.id.toString())}
+			>
 				<For each={props.variables}>
 					{(variable) => {
 						const [editingName, setEditingName] = createSignal(false);
 
 						return (
-							<Card as="li" class="p-2 space-y-2">
-								<div class="flex flex-row gap-2 justify-between items-center">
+							<Accordion.Item
+								as="li"
+								class="!border-none flex flex-col gap-1 flex-1 group/item"
+								value={variable.id.toString()}
+							>
+								<Accordion.Header class="flex flex-row justify-between items-center pr-1 group">
+									<Accordion.Trigger class="group relative size-4">
+										<IconMaterialSymbolsArrowRightRounded class="size-6 text-neutral-300 ui-group-expanded:rotate-90 transition-transform rounded-full -inset-1 absolute" />
+									</Accordion.Trigger>
 									<Switch>
 										<Match when={editingName()}>
 											{(_) => {
 												const [value, setValue] = createSignal(variable.name);
+												let ref: HTMLInputElement;
+
+												let focused = false;
+
+												onMount(() => {
+													setTimeout(() => {
+														ref.focus();
+														ref.focus();
+														focused = true;
+													});
+												});
 
 												return (
 													<>
 														<input
-															class="flex-1 text-black -ml-1 pl-1"
+															ref={ref!}
+															class="flex-1 bg-neutral-900 rounded text-sm border-none py-0.5 px-1.5"
 															value={value()}
-															onChange={(e) => setValue(e.target.value)}
-														/>
-														<div class="flex flex-row space-x-1">
-															<button
-																onClick={() => {
+															onInput={(e) => {
+																setValue(e.target.value);
+															}}
+															onKeyDown={(e) => {
+																if (e.key === "Enter") {
+																	e.preventDefault();
+																	e.stopPropagation();
+
+																	if (!focused) return;
+																	batch(() => {
+																		variable.name = value();
+																		setEditingName(false);
+																	});
+																} else if (e.key === "Escape") {
+																	e.preventDefault();
+																	e.stopPropagation();
+
+																	setEditingName(false);
+																}
+																e.stopPropagation();
+															}}
+															onFocusOut={() => {
+																if (!focused) return;
+																batch(() => {
 																	variable.name = value();
 																	setEditingName(false);
-																}}
-															>
-																<IconAntDesignCheckOutlined class="w-4 h-4" />
-															</button>
-															<button onClick={() => setEditingName(false)}>
-																<IconAntDesignCloseOutlined class="w-4 h-4" />
-															</button>
-														</div>
+																});
+															}}
+														/>
 													</>
 												);
 											}}
 										</Match>
 										<Match when={!editingName()}>
-											<span class="shrink-0">{variable.name}</span>
-											<div class="gap-2 flex flex-row">
-												<button
-													onClick={(e) => {
-														e.stopPropagation();
+											<span
+												class="flex-1 hover:bg-white/10 transition-colors rounded flex flex-row items-center justify-between py-0.5 px-1.5"
+												onDblClick={(e) => {
+													e.preventDefault();
+													e.stopPropagation();
 
+													setEditingName(true);
+												}}
+											>
+												{variable.name}
+												<button
+													type="button"
+													class="pointer-events-none opacity-0 focus:opacity-100 transition-opacity"
+													onClick={() => {
 														setEditingName(true);
 													}}
 												>
-													<IconAntDesignEditOutlined class="w-4 h-4" />
+													<IconAntDesignEditOutlined class="size-4" />
 												</button>
+											</span>
 
-												<button
-													onClick={(e) => {
-														e.stopPropagation();
+											<button
+												type="button"
+												class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-opacity ml-1"
+												onClick={(e) => {
+													e.stopPropagation();
 
-														props.onRemoveVariable(variable.id);
-													}}
-												>
-													<IconAntDesignDeleteOutlined class="w-4 h-4" />
-												</button>
-											</div>
+													props.onRemoveVariable(variable.id);
+												}}
+											>
+												<IconAntDesignDeleteOutlined class="size-4" />
+											</button>
 										</Match>
 									</Switch>
-								</div>
+								</Accordion.Header>
+								<Accordion.Content class="mx-2 ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-1">
+									<TypeEditor
+										type={variable.type}
+										onChange={(type) => {
+											batch(() => {
+												variable.type = type;
+												variable.value = type.default();
+											});
+										}}
+									/>
 
-								<TypeEditor
-									type={variable.type}
-									onChange={(type) => {
-										batch(() => {
-											variable.type = type;
-											variable.value = type.default();
-										});
-									}}
-								/>
-
-								<div class="flex flex-row items-end gap-2 text-sm">
 									<Switch>
 										<Match
 											when={
@@ -156,32 +219,38 @@ export function Variables(props: {
 												variable.type instanceof t.Map
 											}
 										>
-											<div class="flex-1 whitespace-pre-wrap max-w-full">
-												{JSON.stringify(
-													serializeValue(variable.value, variable.type),
-													null,
-													4,
+											<div class="flex flex-row items-end gap-1 rounded p-1 bg-black/30">
+												<pre class="flex-1 whitespace-pre-wrap max-w-full text-xs">
+													{JSON.stringify(
+														serializeValue(variable.value, variable.type),
+														null,
+														2,
+													)}
+												</pre>
+												{(variable.type instanceof t.List
+													? variable.value.length > 0
+													: variable.value.size > 0) && (
+													<button
+														type="button"
+														onClick={() => {
+															if (variable.type instanceof t.List)
+																variable.value = [];
+															else if (variable.type instanceof t.Map)
+																variable.value = new Map();
+														}}
+													>
+														<IconSystemUiconsReset class="size-4" />
+													</button>
 												)}
 											</div>
-											<button
-												type="button"
-												onClick={() => {
-													if (variable.type instanceof t.List)
-														variable.value = [];
-													else if (variable.type instanceof t.Map)
-														variable.value = new Map();
-												}}
-											>
-												<IconSystemUiconsReset class="size-4" />
-											</button>
 										</Match>
 									</Switch>
-								</div>
-							</Card>
+								</Accordion.Content>
+							</Accordion.Item>
 						);
 					}}
 				</For>
-			</ul>
+			</Accordion.Root>
 		</SidebarSection>
 	);
 }
