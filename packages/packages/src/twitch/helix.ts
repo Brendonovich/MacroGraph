@@ -73,6 +73,26 @@ export const chatter = createStruct("Chatter", (s) => ({
   user_name: s.field("Name", t.string()),
 }));
 
+export const RewardNoId = createStruct("Reward Without ID", (s) => ({
+  title: s.field("Title", t.string()),
+  prompt: s.field("Prompt", t.string()),
+  cost: s.field("Cost", t.int()),
+  bgColor: s.field("Background Color", t.string()),
+  enabled: s.field("Enabled", t.bool()),
+  userInputRequired: s.field("User Input Required", t.bool()),
+  maxRedemptionsPerStream: s.field("Max Redemptions/Stream", t.option(t.int())),
+  maxRedemptionsPerUserPerStream: s.field(
+    "Max Redemptions/User/Stream",
+    t.option(t.int())
+  ),
+  globalCooldown: s.field("Global Cooldown (s)", t.option(t.int())),
+  paused: s.field("Paused", t.bool()),
+  inStock: s.field("In Stock", t.bool()),
+  skipRequestQueue: s.field("Skip Request Queue", t.bool()),
+  redemptionsThisStream: s.field("Redemptions This Stream", t.option(t.int())),
+  cooldownExpire: s.field("Cooldown Expires In", t.option(t.string())),
+}));
+
 export const Reward = createStruct("Reward", (s) => ({
   id: s.field("ID", t.string()),
   title: s.field("Title", t.string()),
@@ -86,7 +106,7 @@ export const Reward = createStruct("Reward", (s) => ({
     "Max Redemptions/User/Stream",
     t.option(t.int())
   ),
-  globalCooldown: s.field("Global Cooldown", t.option(t.bool())),
+  globalCooldown: s.field("Global Cooldown (s)", t.option(t.int())),
   paused: s.field("Paused", t.bool()),
   inStock: s.field("In Stock", t.bool()),
   skipRequestQueue: s.field("Skip Request Queue", t.bool()),
@@ -216,6 +236,35 @@ export function register(pkg: Package, helix: Helix) {
   }
 
   pkg.registerType(Reward);
+  pkg.registerType(RewardNoId);
+
+  createHelixExecSchema({
+    name: "Warn User",
+    createIO: ({ io }) => ({
+      userId: io.dataInput({
+        name: "User ID",
+        id: "userId",
+        type: t.string(),
+      }),
+      reason: io.dataInput({
+        name: "Reason",
+        id: "reason",
+        type: t.string(),
+      }),
+    }),
+    run({ ctx, io, account }) {
+      return helix.call("POST /moderation/warnings", account.credential, {
+        body: JSON.stringify({
+          broadcaster_id: account.data.id,
+          moderator_id: account.data.id,
+          data: {
+            user_id: ctx.getInput(io.userId),
+            reason: ctx.getInput(io.reason),
+          },
+        }),
+      });
+    },
+  });
 
   createHelixExecSchema({
     name: "Ban User",
@@ -762,70 +811,74 @@ export function register(pkg: Package, helix: Helix) {
     name: "Create Custom Reward",
     createIO: ({ io }) => {
       return {
-        title: io.dataInput({
-          name: "Title",
-          id: "title",
-          type: t.string(),
-        }),
-        cost: io.dataInput({
-          name: "Cost",
-          id: "cost",
-          type: t.int(),
-        }),
-        prompt: io.dataInput({
-          name: "Prompt",
-          id: "prompt",
-          type: t.option(t.string()),
-        }),
-        isEnabled: io.dataInput({
-          name: "Enabled",
-          id: "isEnabled",
-          type: t.option(t.bool()),
-        }),
-        backgroundColor: io.dataInput({
-          name: "Background Color",
-          id: "backgroundColor",
-          type: t.option(t.string()),
-        }),
-        userInputRequired: io.dataInput({
-          name: "User Input Required",
-          id: "userInputRequired",
-          type: t.option(t.bool()),
-        }),
-        maxRedemptionsPerStreamEnabled: io.dataInput({
-          name: "Max Redemptions Per Stream Enabled",
-          id: "maxRedemptionsPerStreamEnabled",
-          type: t.option(t.bool()),
-        }),
-        maxRedemptionsPerStream: io.dataInput({
-          name: "Max Redemptions Per Stream",
-          id: "maxRedemptionsPerStream",
-          type: t.option(t.int()),
-        }),
-        maxRedemptionsPerUserPerStreamEnabled: io.dataInput({
-          name: "Max Redemptions Per User Per Stream Enabled",
-          id: "maxRedemptionsPerUserPerStreamEnabled",
-          type: t.option(t.bool()),
-        }),
-        maxRedemptionsPerUserPerStream: io.dataInput({
-          name: "Max Redemptions Per User Per Stream",
-          id: "maxRedemptionsPerUserPerStream",
-          type: t.option(t.int()),
-        }),
-        globalCooldownEnabled: io.dataInput({
-          name: "Global Cooldown Enabled",
-          id: "globalCooldownEnabled",
-          type: t.option(t.bool()),
-        }),
-        globalCooldown: io.dataInput({
-          name: "Global Cooldown",
-          id: "globalCooldown",
-          type: t.option(t.int()),
-        }),
-        autoFulfill: io.dataInput({
-          name: "Skip Redemption Queue",
-          id: "autoFulfill",
-          type: t.option(t.bool()),
+        // title: io.dataInput({
+        //   name: "Title",
+        //   id: "title",
+        //   type: t.string(),
+        // }),
+        // cost: io.dataInput({
+        //   name: "Cost",
+        //   id: "cost",
+        //   type: t.int(),
+        // }),
+        // prompt: io.dataInput({
+        //   name: "Prompt",
+        //   id: "prompt",
+        //   type: t.option(t.string()),
+        // }),
+        // isEnabled: io.dataInput({
+        //   name: "Enabled",
+        //   id: "isEnabled",
+        //   type: t.option(t.bool()),
+        // }),
+        // backgroundColor: io.dataInput({
+        //   name: "Background Color",
+        //   id: "backgroundColor",
+        //   type: t.option(t.string()),
+        // }),
+        // userInputRequired: io.dataInput({
+        //   name: "User Input Required",
+        //   id: "userInputRequired",
+        //   type: t.option(t.bool()),
+        // }),
+        // maxRedemptionsPerStreamEnabled: io.dataInput({
+        //   name: "Max Redemptions Per Stream Enabled",
+        //   id: "maxRedemptionsPerStreamEnabled",
+        //   type: t.option(t.bool()),
+        // }),
+        // maxRedemptionsPerStream: io.dataInput({
+        //   name: "Max Redemptions Per Stream",
+        //   id: "maxRedemptionsPerStream",
+        //   type: t.option(t.int()),
+        // }),
+        // maxRedemptionsPerUserPerStreamEnabled: io.dataInput({
+        //   name: "Max Redemptions Per User Per Stream Enabled",
+        //   id: "maxRedemptionsPerUserPerStreamEnabled",
+        //   type: t.option(t.bool()),
+        // }),
+        // maxRedemptionsPerUserPerStream: io.dataInput({
+        //   name: "Max Redemptions Per User Per Stream",
+        //   id: "maxRedemptionsPerUserPerStream",
+        //   type: t.option(t.int()),
+        // }),
+        // globalCooldownEnabled: io.dataInput({
+        //   name: "Global Cooldown Enabled",
+        //   id: "globalCooldownEnabled",
+        //   type: t.option(t.bool()),
+        // }),
+        // globalCooldown: io.dataInput({
+        //   name: "Global Cooldown",
+        //   id: "globalCooldown",
+        //   type: t.option(t.int()),
+        // }),
+        // autoFulfill: io.dataInput({
+        //   name: "Skip Redemption Queue",
+        //   id: "autoFulfill",
+        //   type: t.option(t.bool()),
+        // }),
+        in: io.dataInput({
+          id: "in",
+          type: t.struct(RewardNoId),
         }),
         out: io.dataOutput({
           id: "out",
@@ -837,36 +890,32 @@ export function register(pkg: Package, helix: Helix) {
       const user = account.data.id;
       let body: Record<string, any> = {};
 
-      ctx.getInput(io.prompt).peek((v) => (body.prompt = v));
-      ctx.getInput(io.isEnabled).peek((v) => (body.is_enabled = v));
-      ctx.getInput(io.backgroundColor).peek((v) => (body.background_color = v));
-      ctx
-        .getInput(io.userInputRequired)
-        .peek((v) => (body.is_user_input_required = v));
-      ctx
-        .getInput(io.maxRedemptionsPerStreamEnabled)
-        .peek((v) => (body.is_max_per_stream_enabled = v));
-      ctx
-        .getInput(io.maxRedemptionsPerStream)
-        .peek((v) => (body.max_per_stream = v));
-      ctx
-        .getInput(io.maxRedemptionsPerUserPerStream)
-        .peek((v) => (body.maxRedemptionsPerUserPerStream = v));
-
-      if (ctx.getInput(io.maxRedemptionsPerUserPerStream).isSome())
+      body.prompt = ctx.getInput(io.in).prompt;
+      body.is_enabled = ctx.getInput(io.in).enabled;
+      body.background_color = ctx.getInput(io.in).bgColor;
+      body.is_user_input_required = ctx.getInput(io.in).userInputRequired;
+      body.is_paused = ctx.getInput(io.in).paused;
+      body.should_redemptions_skip_request_queue = ctx.getInput(
+        io.in
+      ).skipRequestQueue;
+      if (ctx.getInput(io.in).maxRedemptionsPerStream.isSome()) {
+        body.is_max_per_stream_enabled = true;
+        body.max_per_stream = ctx
+          .getInput(io.in)
+          .maxRedemptionsPerStream.unwrap();
+      }
+      if (ctx.getInput(io.in).maxRedemptionsPerUserPerStream.isSome()) {
+        body.is_max_per_user_per_stream_enabled = true;
         body.max_per_user_per_stream = ctx
-          .getInput(io.maxRedemptionsPerUserPerStream)
-          .unwrap();
-      if (ctx.getInput(io.globalCooldownEnabled).isSome())
-        body.is_global_cooldown_enabled = ctx
-          .getInput(io.globalCooldownEnabled)
-          .unwrap();
-      if (ctx.getInput(io.globalCooldown).isSome())
-        body.global_cooldown_seconds = ctx.getInput(io.globalCooldown).unwrap();
-      if (ctx.getInput(io.autoFulfill).isSome())
-        body.should_redemptions_skip_request_queue = ctx
-          .getInput(io.autoFulfill)
-          .unwrap();
+          .getInput(io.in)
+          .maxRedemptionsPerUserPerStream.unwrap();
+      }
+      if (ctx.getInput(io.in).globalCooldown.isSome()) {
+        body.is_global_cooldown_enabled = true;
+        body.global_cooldown_seconds = ctx
+          .getInput(io.in)
+          .globalCooldown.unwrap();
+      }
 
       const data = await helix.call(
         "POST /channel_points/custom_rewards",
@@ -874,8 +923,8 @@ export function register(pkg: Package, helix: Helix) {
         {
           body: JSON.stringify({
             broadcaster_id: user,
-            title: ctx.getInput(io.title),
-            cost: ctx.getInput(io.cost),
+            title: ctx.getInput(io.in).title,
+            cost: ctx.getInput(io.in).cost,
             ...body,
           }),
         }
@@ -1862,6 +1911,7 @@ type PaginatedData<T> = {
 export type Requests = {
   "POST /whispers": any;
   "POST /moderation/bans": any;
+  "POST /moderation/warnings": any;
   "DELETE /moderation/bans": any;
   "GET /moderation/moderators": PaginatedData<{
     user_id: string;

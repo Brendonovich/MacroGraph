@@ -496,12 +496,24 @@ export function register(pkg: Package, { eventSub }: Ctx) {
         io.redemptTotalStream,
         Maybe(data.redemptions_redeemed_current_stream)
       );
-      ctx.setOutput(io.maxPerStream, Maybe(data.max_per_stream.value));
+      ctx.setOutput(
+        io.maxPerStream,
+        Maybe(data.max_per_stream.is_enabled ? data.max_per_stream.value : null)
+      );
       ctx.setOutput(
         io.maxUserPerStream,
-        Maybe(data.max_per_user_per_stream.value)
+        Maybe(
+          data.max_per_user_per_stream.is_enabled
+            ? data.max_per_user_per_stream.value
+            : null
+        )
       );
-      ctx.setOutput(io.globalCooldown, Maybe(data.global_cooldown.seconds));
+      ctx.setOutput(
+        io.globalCooldown,
+        Maybe(
+          data.global_cooldown.is_enabled ? data.global_cooldown.seconds : null
+        )
+      );
       ctx.setOutput(io.backgroundColor, data.background_color);
       ctx.exec(io.exec);
     },
