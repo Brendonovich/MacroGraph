@@ -17,22 +17,32 @@ export const MIN_WIDTH = 300;
 export const SNAP_CLOSE_PCT = 0.65;
 
 export interface SidebarProps extends ParentProps {
+	name: string;
 	width: number;
 	class?: string;
+	initialValue?: Array<string>;
 }
 
 export function Sidebar(props: SidebarProps) {
+	const [value, setValue] = makePersisted(
+		createSignal<Array<string>>(props.initialValue ?? []),
+		{ name: `sidebar-${props.name}` },
+	);
+
 	return (
-		<Accordion.Root
-			class={clsx(
-				"relative flex flex-col border-neutral-700 bg-neutral-400/5",
-				props.class,
-			)}
+		<div
+			class={clsx("relative flex flex-col bg-neutral-400/5", props.class)}
 			style={{ width: `${props.width}px` }}
-			multiple
 		>
-			{props.children}
-		</Accordion.Root>
+			<Accordion.Root
+				class="overflow-y-auto outer-scroll flex-1"
+				multiple
+				value={value()}
+				onChange={(v) => setValue(v)}
+			>
+				{props.children}
+			</Accordion.Root>
+		</div>
 	);
 }
 
@@ -49,7 +59,7 @@ export function SidebarSection(
 	});
 
 	return (
-		<Accordion.Item class="relative" value={props.title} forceMount>
+		<Accordion.Item class="relative" value={props.title}>
 			<Accordion.Header class="w-full">
 				<Accordion.Trigger
 					type="button"

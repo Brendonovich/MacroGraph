@@ -440,23 +440,22 @@ function ProjectInterface(props: {
 					<Solid.Show when={leftSidebar.state.open}>
 						<Sidebar
 							width={Math.max(leftSidebar.state.width, MIN_WIDTH)}
-							class="border-r"
+							name="Project"
+							initialValue={["Graphs"]}
 						>
-							<div class="overflow-y-auto outer-scroll flex-1">
-								<Sidebars.Project
-									project={props.core.project}
-									onGraphClicked={(graph) => {
-										const currentIndex = graphStates.findIndex(
-											(s) => s.id === graph.id,
-										);
+							<Sidebars.Project
+								project={props.core.project}
+								onGraphClicked={(graph) => {
+									const currentIndex = graphStates.findIndex(
+										(s) => s.id === graph.id,
+									);
 
-										if (currentIndex === -1) {
-											setGraphStates((s) => [...s, createGraphState(graph)]);
-											setCurrentGraphIndex(graphStates.length - 1);
-										} else setCurrentGraphIndex(currentIndex);
-									}}
-								/>
-							</div>
+									if (currentIndex === -1) {
+										setGraphStates((s) => [...s, createGraphState(graph)]);
+										setCurrentGraphIndex(graphStates.length - 1);
+									} else setCurrentGraphIndex(currentIndex);
+								}}
+							/>
 						</Sidebar>
 
 						<ResizeHandle
@@ -595,34 +594,45 @@ function ProjectInterface(props: {
 							}
 						/>
 
-						<Sidebar
-							width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-							class="border-l"
-						>
-							<Solid.Show when={currentGraph()}>
-								{(graph) => (
-									<Solid.Switch
-										fallback={<Sidebars.Graph graph={graph().model} />}
-									>
-										<Solid.Match
-											when={(() => {
-												const {
-													model,
-													state: { selectedItemId },
-												} = graph();
-
-												if (!selectedItemId || selectedItemId.type !== "node")
-													return;
-
-												return model.nodes.get(selectedItemId.id);
-											})()}
+						<Solid.Show when={currentGraph()}>
+							{(graph) => (
+								<Solid.Switch
+									fallback={
+										<Sidebar
+											width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+											name="Graph"
+											initialValue={["Graph Variables"]}
 										>
-											{(node) => <Sidebars.Node node={node()} />}
-										</Solid.Match>
-									</Solid.Switch>
-								)}
-							</Solid.Show>
-						</Sidebar>
+											<Sidebars.Graph graph={graph().model} />
+										</Sidebar>
+									}
+								>
+									<Solid.Match
+										when={(() => {
+											const {
+												model,
+												state: { selectedItemId },
+											} = graph();
+
+											if (!selectedItemId || selectedItemId.type !== "node")
+												return;
+
+											return model.nodes.get(selectedItemId.id);
+										})()}
+									>
+										{(node) => (
+											<Sidebar
+												width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+												name="Node"
+												initialValue={["Node Info"]}
+											>
+												<Sidebars.Node node={node()} />
+											</Sidebar>
+										)}
+									</Solid.Match>
+								</Solid.Switch>
+							)}
+						</Solid.Show>
 					</Solid.Show>
 
 					<Solid.Show
@@ -715,7 +725,7 @@ function ResizeHandle(props: {
 	onResizeEnd?(width: number): void;
 }) {
 	return (
-		<div class="relative w-0">
+		<div class="relative w-px bg-neutral-700">
 			<div
 				class="cursor-ew-resize absolute inset-y-0 -inset-x-1 z-10"
 				onMouseDown={(e) => {

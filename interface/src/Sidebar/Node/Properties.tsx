@@ -21,7 +21,14 @@ export function Properties(props: {
 }) {
 	return (
 		<SidebarSection title="Node Properties">
-			<For each={Object.values(props.properties)}>
+			<For
+				each={Object.values(props.properties)}
+				fallback={
+					<div class="text-center pt-6 w-full text-neutral-400">
+						Node has no properties
+					</div>
+				}
+			>
 				{(property) => {
 					const properties = createMemo(() => props.node.state.properties);
 

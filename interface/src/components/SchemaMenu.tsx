@@ -59,7 +59,7 @@ export function SchemaMenu(props: Props) {
 					ref={searchRef!}
 					onInput={(e) => setSearch(e.target.value)}
 					value={search()}
-					class="text-black w-full px-2 py-0.5 rounded"
+					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-primary-500 focus:ring-opacity-50 transition-colors"
 					placeholder="Search Nodes..."
 					autocomplete="false"
 					autoCapitalize="off"
@@ -111,7 +111,8 @@ export function SchemaMenu(props: Props) {
 								<Show when={filteredSchemas().length !== 0}>
 									<div>
 										<button
-											class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
+											type="button"
+											class="px-1 py-0.5 flex flex-row items-center space-x-1 hover:bg-neutral-700 min-w-full text-left rounded-md"
 											onClick={() =>
 												setOpenPackages((s) => {
 													if (s.has(p)) s.delete(p);
@@ -121,8 +122,8 @@ export function SchemaMenu(props: Props) {
 												})
 											}
 										>
-											<IconFa6SolidChevronRight
-												class="w-3 h-3"
+											<IconMaterialSymbolsArrowRightRounded
+												class="size-4 scale-125 transform transition-transform"
 												classList={{ "rotate-90": open() }}
 											/>
 											<span>{p.name}</span>
