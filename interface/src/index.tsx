@@ -476,9 +476,9 @@ function ProjectInterface(props: {
 								class="overflow-x-auto w-full scrollbar scrollbar-none"
 								value={currentGraphIndex().toString()}
 							>
-								<Tabs.List class="h-9 flex flex-row relative text-sm px-1">
-									<Tabs.Indicator class="absolute inset-0 transition-transform py-1">
-										<div class="bg-white/20 w-full h-full rounded" />
+								<Tabs.List class="h-9 flex flex-row relative text-sm">
+									<Tabs.Indicator class="absolute inset-0 transition-transform">
+										<div class="bg-white/20 w-full h-full" />
 									</Tabs.Indicator>
 									<Solid.For
 										each={graphStates

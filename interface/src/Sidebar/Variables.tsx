@@ -140,7 +140,7 @@ export function Variables(props: {
 											</Match>
 											<Match when={!editingName()}>
 												<span
-													class="flex-1 hover:bg-white/10 transition-colors rounded flex flex-row items-center justify-between py-0.5 px-1.5"
+													class="flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between py-0.5 px-1.5"
 													onDblClick={(e) => {
 														e.preventDefault();
 														e.stopPropagation();
@@ -151,7 +151,7 @@ export function Variables(props: {
 													{variable.name}
 													<button
 														type="button"
-														class="pointer-events-none opacity-0 focus:opacity-100 transition-opacity"
+														class="pointer-events-none opacity-0 focus:opacity-100"
 														onClick={() => {
 															setEditingName(true);
 														}}
@@ -162,7 +162,7 @@ export function Variables(props: {
 
 												<button
 													type="button"
-													class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-[opacity,colors] hover:bg-white/10 rounded p-0.5"
+													class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
 													onClick={(e) => {
 														e.stopPropagation();
 
