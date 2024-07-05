@@ -594,7 +594,15 @@ function ProjectInterface(props: {
 							}
 						/>
 
-						<Solid.Show when={currentGraph()}>
+						<Solid.Show
+							when={currentGraph()}
+							fallback={
+								<Sidebar
+									width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+									name="Blank"
+								/>
+							}
+						>
 							{(graph) => (
 								<Solid.Switch
 									fallback={
