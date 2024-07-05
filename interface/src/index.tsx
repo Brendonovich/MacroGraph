@@ -370,8 +370,6 @@ function ProjectInterface(props: {
 		e.preventDefault();
 	});
 
-	Solid.createEffect(() => console.log(currentGraph()));
-
 	return (
 		<CoreProvider core={props.core} rootRef={rootRef}>
 			<UIStoreProvider store={UI}>
