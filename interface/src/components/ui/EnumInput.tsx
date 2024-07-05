@@ -59,13 +59,17 @@ export function SelectInput<TOption>(props: SelectInputProps<TOption>) {
 				</Select.Item>
 			)}
 		>
-			<Select.Trigger class="w-full h-full text-left pl-1 border border-neutral-500 rounded bg-black ui-expanded:border-yellow-500 focus:outline-none appearance-none">
+			<Select.Trigger class="w-full h-full text-left pl-1 rounded bg-neutral-700 ui-expanded:border-yellow-500 focus:outline-none appearance-none flex flex-row items-center justify-between">
 				<Select.Value<TOption>>
 					{(state) => props.getLabel(state.selectedOption())}
 				</Select.Value>
+				<Select.Icon
+					as={IconMaterialSymbolsArrowRightRounded}
+					class="size-4 ui-closed:rotate-90 mr-1 ui-expanded:-rotate-90 transition-transform"
+				/>
 			</Select.Trigger>
 			<Select.Portal>
-				<Select.Content>
+				<Select.Content class="ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100">
 					<Select.Listbox class="bg-black border border-neutral-300 text-white rounded text-xs overflow-hidden" />
 				</Select.Content>
 			</Select.Portal>
