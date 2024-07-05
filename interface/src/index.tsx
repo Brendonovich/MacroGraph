@@ -476,7 +476,7 @@ function ProjectInterface(props: {
 								class="overflow-x-auto w-full scrollbar scrollbar-none"
 								value={currentGraphIndex().toString()}
 							>
-								<Tabs.List class="h-9 flex flex-row relative text-sm">
+								<Tabs.List class="h-8 flex flex-row relative text-sm">
 									<Tabs.Indicator class="absolute inset-0 transition-transform">
 										<div class="bg-white/20 w-full h-full" />
 									</Tabs.Indicator>
