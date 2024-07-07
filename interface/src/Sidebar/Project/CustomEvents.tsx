@@ -1,14 +1,42 @@
-import { For, createSignal } from "solid-js";
+import { For, createMemo, createSignal } from "solid-js";
+import type { CustomEvent } from "@macrograph/runtime";
 
 import { useCoreContext } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
+import { tokeniseString } from "../../util";
 
 export function CustomEvents() {
 	const ctx = useCoreContext();
 	const [search, setSearch] = createSignal("");
+
+	const tokenisedSearch = createMemo(() => tokeniseString(search()));
+
+	const events = createMemo(() => [...ctx.core.project.customEvents]);
+
+	const tokenisedEvents = createMemo(() =>
+		events().map(([id, event]) => {
+			return [tokeniseString(event.name), [id, event]] as const;
+		}),
+	);
+
+	const filteredEvents = createMemo(() => {
+		const ret: Array<[number, CustomEvent]> = [];
+
+		for (const [tokens, [id, event]] of tokenisedEvents()) {
+			if (
+				tokenisedSearch().every((token) =>
+					tokens.some((t) => t.includes(token)),
+				)
+			) {
+				ret.push([id, event]);
+			}
+		}
+
+		return ret;
+	});
 
 	return (
 		<SidebarSection
@@ -36,7 +64,7 @@ export function CustomEvents() {
 			</div>
 			<div class="flex-1 overflow-y-auto">
 				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
-					<For each={[...ctx.core.project.customEvents]}>
+					<For each={filteredEvents()}>
 						{([id, event]) => (
 							<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
 								<InlineTextEditor

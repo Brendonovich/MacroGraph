@@ -6,12 +6,53 @@ import { SidebarSection } from "../../components/Sidebar";
 import { SelectInput, TextInput } from "../../components/ui";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
+import { tokeniseString } from "../../util";
+import type {
+	ResourceType,
+	ResourceTypeEntry,
+	ResourceTypeItem,
+} from "@macrograph/runtime";
 
 export function Resources() {
 	const [search, setSearch] = createSignal("");
 	const core = useCore();
 
-	const resources = createMemo(() => [...core.project.resources]);
+	const tokenisedSearch = createMemo(() => tokeniseString(search()));
+
+	const tokenisedResources = createMemo(() =>
+		[...core.project.resources].map(([type, entry]) => {
+			const tokenisedItems = entry.items.map(
+				(item) => [tokeniseString(item.name), item] as const,
+			);
+
+			return [type, { ...entry, items: tokenisedItems }] as const;
+		}),
+	);
+
+	const filteredResources = createMemo(() => {
+		const ret: Array<[ResourceType<any, any>, ResourceTypeEntry]> = [];
+
+		for (const [
+			type,
+			{ items: tokenisedItems, ...entry },
+		] of tokenisedResources()) {
+			const items: ResourceTypeItem[] = [];
+
+			for (const [tokens, item] of tokenisedItems) {
+				if (
+					tokenisedSearch().every((token) =>
+						tokens.some((t) => t.includes(token)),
+					)
+				) {
+					items.push(item);
+				}
+			}
+
+			if (items.length > 0) ret.push([type, { ...entry, items }]);
+		}
+
+		return ret;
+	});
 
 	return (
 		<SidebarSection title="Resources" class="overflow-y-hidden flex flex-col">
@@ -27,7 +68,7 @@ export function Resources() {
 			</div>
 			<div class="flex-1 overflow-y-auto">
 				<ul class="flex flex-col px-2 divide-y divide-neutral-700">
-					<For each={resources()}>
+					<For each={filteredResources()}>
 						{([type, data]) => {
 							return (
 								<li class="space-y-1.5 py-2">
