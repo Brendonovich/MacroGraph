@@ -15,7 +15,7 @@ export const CheckBox = (props: Props) => {
 				checked={props.value}
 				class={clsx("absolute opacity-0 w-0 h-0 peer")}
 			/>
-			<span class="absolute inset-0 peer-checked:bg-[#0075FF] peer-checked:border-[#0075FF] bg-white border-neutral-500 rounded border peer-focus-visible:ring-2 ring-yellow-500" />
+			<span class="absolute inset-0 peer-checked:bg-[#0075FF] peer-checked:border-[#0075FF] bg-white border-white rounded border peer-focus-visible:ring-2 ring-yellow-500" />
 			<svg
 				viewBox="0 0 13 10"
 				fill="transparent"

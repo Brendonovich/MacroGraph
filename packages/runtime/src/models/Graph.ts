@@ -342,7 +342,7 @@ export class Graph extends Disposable {
 			for (const i of node.state.inputs) {
 				const defaultValue = nodeData.defaultValues[i.id];
 
-				if (defaultValue === undefined || !(i instanceof DataInput)) return;
+				if (defaultValue === undefined || !(i instanceof DataInput)) continue;
 
 				i.defaultValue = defaultValue;
 			}

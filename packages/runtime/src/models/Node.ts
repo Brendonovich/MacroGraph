@@ -261,7 +261,7 @@ export class Node extends Disposable {
 
 		const allInputs = new Set([...io.inputs]);
 		for (const i of io.inputs) {
-			if (allInputs.has(i)) return;
+			if (allInputs.has(i)) continue;
 
 			this.graph.disconnectPin(i);
 
@@ -271,7 +271,7 @@ export class Node extends Disposable {
 
 		const allOutputs = new Set([...io.outputs]);
 		for (const o of io.outputs) {
-			if (allOutputs.has(o)) return;
+			if (allOutputs.has(o)) continue;
 
 			this.graph.disconnectPin(o);
 
