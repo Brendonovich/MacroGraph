@@ -188,7 +188,8 @@ function __makeEvents__<T extends Record<string, any>>(
 ) {
 	return new Proxy(
 		{} as unknown as {
-			[K in keyof T]: __EventObj__<T[K]> & (handle: __WebviewWindowHandle__) => __EventObj__<T[K]>;
+			[K in keyof T]: __EventObj__<T[K]> &
+				((handle: __WebviewWindowHandle__) => __EventObj__<T[K]>);
 		},
 		{
 			get: (_, event) => {
