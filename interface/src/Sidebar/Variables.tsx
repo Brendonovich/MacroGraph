@@ -30,7 +30,7 @@ export function Variables(props: {
 	return (
 		<SidebarSection
 			title={`${props.titlePrefix} Variables`}
-			class="overflow-y-hidden flex flex-col"
+			class="flex flex-col"
 		>
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
 				<SearchInput

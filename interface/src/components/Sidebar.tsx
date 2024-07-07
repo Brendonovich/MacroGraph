@@ -70,7 +70,7 @@ export function SidebarSection(
 			</Accordion.Header>
 			<Accordion.Content class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden">
 				<div
-					class={clsx("overflow-y-auto text-sm", props.class)}
+					class={clsx("flex flex-col text-sm", props.class)}
 					style={{ height: `${height()}px` }}
 				>
 					{props.children}

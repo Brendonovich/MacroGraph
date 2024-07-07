@@ -58,20 +58,22 @@ export function PrintOutput() {
 				</button>
 			</div>
 
-			<ul class="p-1 gap-y-2 flex flex-col flex-1 overflow-y-auto ">
-				<For each={filteredItems()}>
-					{(e) => (
-						<li class="px-2 py-2 rounded-md bg-black/30">
-							<p class="text-neutral-400 text-xs">
-								{e.timestamp.toLocaleTimeString()}
-							</p>
-							<p class="text-neutral-100 text-sm break-words">
-								{highlight(e.value, searchRegex())}
-							</p>
-						</li>
-					)}
-				</For>
-			</ul>
+			<div class="flex-1 overflow-y-auto">
+				<ul class="p-1 gap-y-2 flex flex-col">
+					<For each={filteredItems()}>
+						{(e) => (
+							<li class="px-2 py-2 rounded-md bg-black/30">
+								<p class="text-neutral-400 text-xs">
+									{e.timestamp.toLocaleTimeString()}
+								</p>
+								<p class="text-neutral-100 text-sm break-words">
+									{highlight(e.value, searchRegex())}
+								</p>
+							</li>
+						)}
+					</For>
+				</ul>
+			</div>
 		</SidebarSection>
 	);
 }
