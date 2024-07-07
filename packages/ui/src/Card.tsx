@@ -1,17 +1,6 @@
-import { ComponentProps } from "solid-js";
 import clsx from "clsx";
-import { AsChildProp, Polymorphic } from "@kobalte/core";
+import { ComponentProps } from "solid-js";
 
-export interface CardProps
-	extends Omit<ComponentProps<"div">, "classList">,
-		AsChildProp {}
-
-export function Card(props: CardProps) {
-	return (
-		<Polymorphic
-			as="div"
-			{...props}
-			class={clsx("border border-black bg-neutral-800 rounded ", props.class)}
-		/>
-	);
+export function Card(props: ComponentProps<"div">) {
+	return <div {...props} class={clsx("", props.class)} />;
 }

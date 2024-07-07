@@ -1,129 +1,129 @@
-import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
-import { Card } from "@macrograph/ui";
+import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 import { DropdownMenu } from "@kobalte/core";
 
 import { useCore } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
 import { SelectInput, TextInput } from "../../components/ui";
+import { InlineTextEditor } from "../InlineTextEditor";
+import { SearchInput } from "../SearchInput";
+import { tokeniseString } from "../../util";
+import type {
+	ResourceType,
+	ResourceTypeEntry,
+	ResourceTypeItem,
+} from "@macrograph/runtime";
 
 export function Resources() {
+	const [search, setSearch] = createSignal("");
 	const core = useCore();
 
-	const resources = createMemo(() => [...core.project.resources]);
+	const tokenisedSearch = createMemo(() => tokeniseString(search()));
+
+	const tokenisedResources = createMemo(() =>
+		[...core.project.resources].map(([type, entry]) => {
+			const tokenisedItems = entry.items.map(
+				(item) => [tokeniseString(item.name), item] as const,
+			);
+
+			return [type, { ...entry, items: tokenisedItems }] as const;
+		}),
+	);
+
+	const filteredResources = createMemo(() => {
+		const ret: Array<[ResourceType<any, any>, ResourceTypeEntry]> = [];
+
+		for (const [
+			type,
+			{ items: tokenisedItems, ...entry },
+		] of tokenisedResources()) {
+			const items: ResourceTypeItem[] = [];
+
+			for (const [tokens, item] of tokenisedItems) {
+				if (
+					tokenisedSearch().every((token) =>
+						tokens.some((t) => t.includes(token)),
+					)
+				) {
+					items.push(item);
+				}
+			}
+
+			if (items.length > 0) ret.push([type, { ...entry, items }]);
+		}
+
+		return ret;
+	});
 
 	return (
-		<SidebarSection title="Resources" right={<AddResourceButton />}>
-			<ul class="p-2 space-y-2">
-				<For each={resources()}>
-					{([type, data]) => {
-						const [open, setOpen] = createSignal(true);
-
-						return (
-							<Card as="li" class="divide-y divide-black">
-								<div class="p-2 space-y-1">
-									<button onClick={() => setOpen((o) => !o)}>
+		<SidebarSection title="Resources" class="overflow-y-hidden flex flex-col">
+			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
+				<SearchInput
+					value={search()}
+					onInput={(e) => {
+						e.stopPropagation();
+						setSearch(e.currentTarget.value);
+					}}
+				/>
+				<AddResourceButton />
+			</div>
+			<div class="flex-1 overflow-y-auto">
+				<ul class="flex flex-col px-2 divide-y divide-neutral-700">
+					<For each={filteredResources()}>
+						{([type, data]) => {
+							return (
+								<li class="space-y-1.5 py-2">
+									<div class="space-y-1 pl-1">
 										<div class="flex flex-row items-center gap-2">
-											<IconFa6SolidChevronRight
-												class="w-3 h-3"
-												classList={{ "rotate-90": open() }}
-											/>
 											<span class="font-medium">{type.name}</span>
+											<span class="opacity-50 text-xs">
+												{type.package.name}
+											</span>
 										</div>
-									</button>
-									<Show when={open()}>
 										<div class="flex flex-row items-center gap-2">
-											Default
+											<span class="text-xs font-medium">Default</span>
 											<div class="flex-1">
 												<SelectInput
 													options={data.items}
 													optionValue="id"
 													optionTextValue="name"
 													getLabel={(i) => i.name}
-													onChange={(source) => (data.default = source.id)}
+													onChange={(source) => {
+														data.default = source.id;
+													}}
 													value={data.items.find((s) => s.id === data.default)}
 												/>
 											</div>
 										</div>
-									</Show>
-								</div>
-								<Show when={open()}>
-									<ul class="space-y-2">
+									</div>
+									<ul class="bg-black/30 rounded divide-y divide-neutral-700 px-2">
 										<For each={data.items}>
 											{(item, index) => {
-												const [editingName, setEditingName] =
-													createSignal(false);
-
 												return (
-													<li class="space-y-1 p-2">
-														<div class="space-y-1 flex flex-row gap-2 justify-between items-center">
-															<Switch>
-																<Match when={editingName()}>
-																	{(_) => {
-																		const [value, setValue] = createSignal(
-																			item.name,
-																		);
+													<li class="space-y-1 pt-1 pb-2 group/item">
+														<InlineTextEditor
+															class="-mx-1"
+															value={item.name}
+															onChange={(value) => {
+																item.name = value;
+																core.project.save();
+															}}
+														>
+															<button
+																type="button"
+																class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+																onClick={(e) => {
+																	e.stopPropagation();
 
-																		return (
-																			<>
-																				<input
-																					class="flex-1 text-black"
-																					value={value()}
-																					onChange={(e) =>
-																						setValue(e.target.value)
-																					}
-																				/>
-																				<div class="flex flex-row">
-																					<button
-																						onClick={() => {
-																							item.name = value();
-																							setEditingName(false);
-																							core.project.save();
-																						}}
-																					>
-																						<IconAntDesignCheckOutlined class="w-5 h-5" />
-																					</button>
-																					<button
-																						onClick={() =>
-																							setEditingName(false)
-																						}
-																					>
-																						<IconBiX class="w-6 h-6" />
-																					</button>
-																				</div>
-																			</>
-																		);
-																	}}
-																</Match>
-																<Match when={!editingName()}>
-																	<span class="shrink-0">{item.name}</span>
-																	<div class="gap-2 flex flex-row">
-																		<button
-																			onClick={(e) => {
-																				e.stopPropagation();
+																	data.items.splice(index(), 1);
+																	if (data.items.length < 1)
+																		core.project.resources.delete(type);
 
-																				setEditingName(true);
-																			}}
-																		>
-																			<IconAntDesignEditOutlined />
-																		</button>
-
-																		<button
-																			onClick={(e) => {
-																				e.stopPropagation();
-
-																				data.items.splice(index(), 1);
-																				if (data.items.length < 1)
-																					core.project.resources.delete(type);
-
-																				core.project.save();
-																			}}
-																		>
-																			<IconAntDesignDeleteOutlined />
-																		</button>
-																	</div>
-																</Match>
-															</Switch>
-														</div>
+																	core.project.save();
+																}}
+															>
+																<IconAntDesignDeleteOutlined class="size-4" />
+															</button>
+														</InlineTextEditor>
 														<Switch>
 															<Match
 																when={
@@ -171,12 +171,12 @@ export function Resources() {
 											}}
 										</For>
 									</ul>
-								</Show>
-							</Card>
-						);
-					}}
-				</For>
-			</ul>
+								</li>
+							);
+						}}
+					</For>
+				</ul>
+			</div>
 		</SidebarSection>
 	);
 }
@@ -194,8 +194,11 @@ function AddResourceButton() {
 
 	return (
 		<DropdownMenu.Root placement="bottom-end">
-			<DropdownMenu.Trigger onClick={(e) => e.stopPropagation()}>
-				<IconMaterialSymbolsAddRounded class="w-6 h-6" />
+			<DropdownMenu.Trigger
+				class="hover:bg-white/10 rounded transition-colors"
+				onClick={(e) => e.stopPropagation()}
+			>
+				<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
 				<DropdownMenu.Content class="bg-neutral-900 border border-black p-2 rounded w-52 max-h-48 flex flex-col overflow-y-auto text-white">

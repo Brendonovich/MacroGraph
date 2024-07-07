@@ -28,5 +28,11 @@
 	},
 	"dependencies": {
 		"@biomejs/biome": "^1.6.4"
+	},
+	"pnpm": {
+		"patchedDependencies": {
+			"@kobalte/core@0.9.8": "patches/@kobalte__core@0.9.8.patch",
+			"@kobalte/utils@0.7.2": "patches/@kobalte__utils@0.7.2.patch"
+		}
 	}
 }

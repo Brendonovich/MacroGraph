@@ -1,11 +1,13 @@
-import { Variable } from "@macrograph/runtime";
-import { Card } from "@macrograph/ui";
+import type { Variable } from "@macrograph/runtime";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
-import { For, Match, Switch, batch, createSignal } from "solid-js";
+import { For, Match, Switch, batch, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../components/Sidebar";
 import { TypeEditor } from "../components/TypeEditor";
 import { CheckBox, FloatInput, IntInput, TextInput } from "../components/ui";
+import { tokeniseString } from "../util";
+import { InlineTextEditor } from "./InlineTextEditor";
+import { SearchInput } from "./SearchInput";
 
 export function Variables(props: {
 	titlePrefix: string;
@@ -14,96 +16,88 @@ export function Variables(props: {
 	onRemoveVariable(id: number): void;
 	onSetVariableValue(id: number, value: any): void;
 }) {
+	const [search, setSearch] = createSignal("");
+
+	const tokenisedSearch = createMemo(() => tokeniseString(search()));
+
+	const tokenisedFilters = createMemo(() =>
+		props.variables.map((v) => [tokeniseString(v.name), v] as const),
+	);
+
+	const filteredVariables = createMemo(() => {
+		const ret: Array<Variable> = [];
+
+		for (const [tokens, variable] of tokenisedFilters()) {
+			if (
+				tokenisedSearch().every((token) =>
+					tokens.some((t) => t.includes(token)),
+				)
+			)
+				ret.push(variable);
+		}
+
+		return ret;
+	});
+
 	return (
 		<SidebarSection
 			title={`${props.titlePrefix} Variables`}
-			right={
+			class="overflow-y-hidden flex flex-col"
+		>
+			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
+				<SearchInput
+					value={search()}
+					onInput={(e) => {
+						e.stopPropagation();
+						setSearch(e.currentTarget.value);
+					}}
+				/>
 				<button
+					type="button"
+					class="hover:bg-white/10 rounded transition-colors"
 					onClick={(e) => {
 						e.stopPropagation();
 
 						props.onCreateVariable();
 					}}
 				>
-					<IconMaterialSymbolsAddRounded class="w-6 h-6" />
+					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
 				</button>
-			}
-		>
-			<ul class="p-2 gap-2 flex flex-col">
-				<For each={props.variables}>
-					{(variable) => {
-						const [editingName, setEditingName] = createSignal(false);
-
-						return (
-							<Card as="li" class="p-2 space-y-2">
-								<div class="flex flex-row gap-2 justify-between items-center">
-									<Switch>
-										<Match when={editingName()}>
-											{(_) => {
-												const [value, setValue] = createSignal(variable.name);
-
-												return (
-													<>
-														<input
-															class="flex-1 text-black -ml-1 pl-1"
-															value={value()}
-															onChange={(e) => setValue(e.target.value)}
-														/>
-														<div class="flex flex-row space-x-1">
-															<button
-																onClick={() => {
-																	variable.name = value();
-																	setEditingName(false);
-																}}
-															>
-																<IconAntDesignCheckOutlined class="w-4 h-4" />
-															</button>
-															<button onClick={() => setEditingName(false)}>
-																<IconAntDesignCloseOutlined class="w-4 h-4" />
-															</button>
-														</div>
-													</>
-												);
-											}}
-										</Match>
-										<Match when={!editingName()}>
-											<span class="shrink-0">{variable.name}</span>
-											<div class="gap-2 flex flex-row">
-												<button
-													onClick={(e) => {
-														e.stopPropagation();
-
-														setEditingName(true);
-													}}
-												>
-													<IconAntDesignEditOutlined class="w-4 h-4" />
-												</button>
-
-												<button
-													onClick={(e) => {
-														e.stopPropagation();
-
-														props.onRemoveVariable(variable.id);
-													}}
-												>
-													<IconAntDesignDeleteOutlined class="w-4 h-4" />
-												</button>
-											</div>
-										</Match>
-									</Switch>
-								</div>
-
-								<TypeEditor
-									type={variable.type}
-									onChange={(type) => {
-										batch(() => {
-											variable.type = type;
-											variable.value = type.default();
-										});
+			</div>
+			<div class="flex-1 overflow-y-auto">
+				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
+					<For each={filteredVariables()}>
+						{(variable) => (
+							<li class="flex flex-col gap-1 flex-1 group/item py-2 pt-1">
+								<InlineTextEditor
+									value={variable.name}
+									onChange={(value) => {
+										variable.name = value;
 									}}
-								/>
+								>
+									<button
+										type="button"
+										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+										onClick={(e) => {
+											e.stopPropagation();
 
-								<div class="flex flex-row items-end gap-2 text-sm">
+											props.onRemoveVariable(variable.id);
+										}}
+									>
+										<IconAntDesignDeleteOutlined class="size-4" />
+									</button>
+								</InlineTextEditor>
+								<div class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-2 bg-black/20 p-2 rounded-md">
+									<TypeEditor
+										type={variable.type}
+										onChange={(type) => {
+											batch(() => {
+												variable.type = type;
+												variable.value = type.default();
+											});
+										}}
+									/>
+
 									<Switch>
 										<Match
 											when={
@@ -156,32 +150,38 @@ export function Variables(props: {
 												variable.type instanceof t.Map
 											}
 										>
-											<div class="flex-1 whitespace-pre-wrap max-w-full">
-												{JSON.stringify(
-													serializeValue(variable.value, variable.type),
-													null,
-													4,
+											<div class="flex flex-row items-end gap-1 rounded p-1 bg-black/30">
+												<pre class="flex-1 whitespace-pre-wrap max-w-full text-xs">
+													{JSON.stringify(
+														serializeValue(variable.value, variable.type),
+														null,
+														2,
+													)}
+												</pre>
+												{(variable.type instanceof t.List
+													? variable.value.length > 0
+													: variable.value.size > 0) && (
+													<button
+														type="button"
+														onClick={() => {
+															if (variable.type instanceof t.List)
+																variable.value = [];
+															else if (variable.type instanceof t.Map)
+																variable.value = new Map();
+														}}
+													>
+														<IconSystemUiconsReset class="size-4" />
+													</button>
 												)}
 											</div>
-											<button
-												type="button"
-												onClick={() => {
-													if (variable.type instanceof t.List)
-														variable.value = [];
-													else if (variable.type instanceof t.Map)
-														variable.value = new Map();
-												}}
-											>
-												<IconSystemUiconsReset class="size-4" />
-											</button>
 										</Match>
 									</Switch>
 								</div>
-							</Card>
-						);
-					}}
-				</For>
-			</ul>
+							</li>
+						)}
+					</For>
+				</ul>
+			</div>
 		</SidebarSection>
 	);
 }

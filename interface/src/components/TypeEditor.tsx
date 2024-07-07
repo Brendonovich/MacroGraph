@@ -55,7 +55,7 @@ export function TypeEditor(props: {
 				open={ctx.typeDialogState() !== null}
 				onOpenChange={() => ctx.setTypeDialogState(null)}
 			>
-				<DropdownMenu.Trigger class="py-px overflow-x-auto overflow-y-hidden no-scrollbar font-mono flex flex-row">
+				<DropdownMenu.Trigger class="py-px overflow-x-auto overflow-y-hidden no-scrollbar font-mono flex flex-row text-sm bg-black rounded-lg">
 					<TypeEditorSegment
 						type={props.type}
 						onChange={(type) => props.onChange?.(type)}
@@ -67,6 +67,7 @@ export function TypeEditor(props: {
 						<div class="flex flex-col pl-1 text-sm">
 							{PRIMITIVES.map((p) => (
 								<button
+									type="button"
 									class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 									onClick={() => {
 										ctx.typeDialogState()?.onTypeSelected(p);
@@ -284,8 +285,10 @@ function Span(
 	return (
 		<div
 			class={clsx(
-				"cursor-pointer border border-white/30 rounded-lg bg-black flex flex-row flex-nowrap shrink-0 -my-px",
-				ctx.hovered() && "bg-cyan-600/50",
+				"cursor-pointer border rounded-lg px-1 flex flex-row flex-nowrap shrink-0 -my-px",
+				ctx.hovered()
+					? "border-yellow-500 bg-yellow-500/20"
+					: "border-neutral-700 bg-black",
 				resolved.toArray().length > 1 && "pr-2",
 			)}
 			onMouseMove={(e) => {
