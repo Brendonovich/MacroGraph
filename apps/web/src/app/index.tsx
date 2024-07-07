@@ -15,6 +15,14 @@ import { clientOnly } from "@solidjs/start";
 const Editor = clientOnly(() => import("../Editor"));
 
 export default function () {
+	useBeforeLeave((e) => {
+		if (e.defaultPrevented) return;
+		e.preventDefault();
+
+		if (!window.confirm("Are you sure you want to close MacroGraph?")) return;
+		e.retry(true);
+	});
+
 	return (
 		<div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
 			<ErrorBoundary fallback={null}>
@@ -102,6 +110,7 @@ import {
 	cache,
 	createAsync,
 	useAction,
+	useBeforeLeave,
 	useSearchParams,
 } from "@solidjs/router";
 import {

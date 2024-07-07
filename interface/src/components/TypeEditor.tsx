@@ -13,7 +13,9 @@ import {
 	createSignal,
 	useContext,
 } from "solid-js";
+
 import { useCore } from "../contexts";
+import { tw } from "../util";
 
 type TypeDialogState = {
 	currentType: t.Any;
@@ -42,6 +44,9 @@ const TypeEditorContext = createContext<ReturnType<typeof createContextValue>>(
 	null!,
 );
 
+const CategoryLabel = tw.span`font-medium text-xs text-neutral-300 mb-0.5`;
+const TypeItem = tw.button`text-left hover:bg-white/10 px-1 py-0.5 rounded`;
+
 export function TypeEditor(props: {
 	type: t.Any;
 	onChange?: (type: t.Any) => void;
@@ -62,28 +67,26 @@ export function TypeEditor(props: {
 					/>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Portal>
-					<DropdownMenu.Content class="p-2 bg-black border border-black w-64 max-h-52 flex flex-col overflow-y-auto text-white">
-						<span>Primitives</span>
-						<div class="flex flex-col pl-1 text-sm">
+					<DropdownMenu.Content class="text-sm mt-1 p-2 bg-neutral-900 rounded w-64 max-h-52 flex flex-col overflow-y-auto text-white ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 shadow">
+						<CategoryLabel>Primitives</CategoryLabel>
+						<div class="flex flex-col mb-1">
 							{PRIMITIVES.map((p) => (
-								<button
+								<TypeItem
 									type="button"
-									class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 									onClick={() => {
 										ctx.typeDialogState()?.onTypeSelected(p);
 										ctx.setTypeDialogState(null);
 									}}
 								>
 									{p.toString()}
-								</button>
+								</TypeItem>
 							))}
 						</div>
-						<span>Containers</span>
-						<div class="flex flex-col pl-1 text-sm">
+						<CategoryLabel>Containers</CategoryLabel>
+						<div class="flex flex-col mb-1">
 							{CONTAINERS.map(([name, apply]) => (
-								<button
+								<TypeItem
 									type="button"
-									class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 									onClick={() => {
 										ctx
 											.typeDialogState()
@@ -94,22 +97,21 @@ export function TypeEditor(props: {
 									}}
 								>
 									{name.toString()}
-								</button>
+								</TypeItem>
 							))}
 						</div>
-						<span>Structs</span>
-						<div class="flex flex-col pl-1 text-sm">
+						<CategoryLabel>Structs</CategoryLabel>
+						<div class="flex flex-col pl-2 mb-1">
 							<For each={core.packages}>
 								{(pkg) => (
 									<Show when={pkg.structs.size > 0}>
-										<span class="text-neutral-300 text-xs py-1">
+										<span class="text-neutral-300 text-xs mt-0.5">
 											{pkg.name}
 										</span>
 										<For each={[...pkg.structs.values()]}>
 											{(struct) => (
-												<button
+												<TypeItem
 													type="button"
-													class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 													onClick={() => {
 														ctx
 															.typeDialogState()
@@ -118,33 +120,32 @@ export function TypeEditor(props: {
 													}}
 												>
 													{struct.name}
-												</button>
+												</TypeItem>
 											)}
 										</For>
 									</Show>
 								)}
 							</For>
 						</div>
-						<span>Enums</span>
-						<div class="flex flex-col pl-1 text-sm">
+						<CategoryLabel>Enums</CategoryLabel>
+						<div class="flex flex-col pl-2">
 							<For each={core.packages}>
 								{(pkg) => (
 									<Show when={pkg.enums.size > 0}>
-										<span class="text-neutral-300 text-xs py-1">
+										<span class="text-neutral-300 text-xs mt-0.5">
 											{pkg.name}
 										</span>
 										<For each={[...pkg.enums.values()]}>
 											{(enm) => (
-												<button
+												<TypeItem
 													type="button"
-													class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 													onClick={() => {
 														ctx.typeDialogState()?.onTypeSelected(t.enum(enm));
 														ctx.setTypeDialogState(null);
 													}}
 												>
 													{enm.name}
-												</button>
+												</TypeItem>
 											)}
 										</For>
 									</Show>

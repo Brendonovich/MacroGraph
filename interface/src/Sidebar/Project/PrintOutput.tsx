@@ -1,10 +1,10 @@
-import { For, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
+import { For, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { useCore } from "../../contexts";
-import { SearchInput } from "../SearchInput";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
+import { SearchInput } from "../SearchInput";
 
 export function PrintOutput() {
 	const [items, setItems] = createSignal<{ value: string; timestamp: Date }[]>(

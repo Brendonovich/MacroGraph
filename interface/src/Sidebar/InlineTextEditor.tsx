@@ -7,12 +7,18 @@ import {
 	createSignal,
 	onMount,
 	splitProps,
+	type JSX,
 } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
-export function InlineTextEditor(
-	props: Omit<ComponentProps<"div">, "onChange"> & {
+export function InlineTextEditor<
+	T extends keyof JSX.IntrinsicElements = "span",
+>(
+	props: Omit<ComponentProps<T>, "onChange"> & {
 		value: string;
 		onChange?(value: string): void;
+		as?: T;
+		class?: string;
 	},
 ) {
 	const [editing, setEditing] = createSignal(false);
@@ -24,7 +30,6 @@ export function InlineTextEditor(
 				"flex flex-row gap-1 justify-between items-center",
 				local.class,
 			)}
-			{...others}
 		>
 			<Switch>
 				<Match when={editing()}>
@@ -80,26 +85,29 @@ export function InlineTextEditor(
 					}}
 				</Match>
 				<Match when={!editing()}>
-					<span
+					<Dynamic
+						component={(props.as ?? "span") as any}
 						class="flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between py-0.5 px-1.5"
-						onDblClick={(e) => {
+						onDblClick={(e: MouseEvent) => {
 							e.preventDefault();
 							e.stopPropagation();
 
 							setEditing(true);
 						}}
+						{...others}
 					>
 						{props.value}
 						<button
 							type="button"
 							class="pointer-events-none opacity-0 focus:opacity-100"
-							onClick={() => {
+							onClick={(e) => {
+								e.stopPropagation();
 								setEditing(true);
 							}}
 						>
 							<IconAntDesignEditOutlined class="size-4" />
 						</button>
-					</span>
+					</Dynamic>
 					{props.children}
 				</Match>
 			</Switch>

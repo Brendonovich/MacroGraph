@@ -16,6 +16,7 @@ import { useCore, useCoreContext } from "../../contexts";
 import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { SearchInput } from "../SearchInput";
+import { InlineTextEditor } from "../InlineTextEditor";
 
 // React component to show a list of projects
 interface Props {
@@ -79,117 +80,22 @@ export function Graphs(props: Props) {
 				<ul class="flex flex-col p-1 space-y-0.5">
 					<For each={filteredGraphs()}>
 						{(graph) => (
-							<GraphItem
-								graph={graph}
-								onClick={() => props.onGraphClicked(graph)}
-								isCurrentGraph={graph.id === props.currentGraph}
-							/>
+							<li class="group/item gap-1">
+								<InlineTextEditor
+									as="button"
+									type="button"
+									onClick={() => props.onGraphClicked(graph)}
+									value={graph.name}
+									onChange={(value) => graph.rename(value)}
+								>
+									<DeleteButton graph={graph} />
+								</InlineTextEditor>
+							</li>
 						)}
 					</For>
 				</ul>
 			</div>
 		</SidebarSection>
-	);
-}
-
-interface GraphItemProps {
-	graph: Graph;
-	onClick: () => void;
-	isCurrentGraph: boolean;
-}
-
-function GraphItem(props: GraphItemProps) {
-	const [editing, setEditing] = createSignal(false);
-
-	return (
-		<li class="flex flex-row group/item items-center gap-1">
-			<Switch>
-				<Match when={editing()}>
-					{(_) => {
-						const [value, setValue] = createSignal(props.graph.name);
-						let ref: HTMLInputElement;
-
-						let focused = false;
-
-						onMount(() => {
-							setTimeout(() => {
-								ref.focus();
-								ref.focus();
-								focused = true;
-							});
-						});
-
-						return (
-							<>
-								<input
-									ref={ref!}
-									class="flex-1 bg-neutral-900 rounded text-sm border-none py-0.5 px-1.5"
-									value={value()}
-									onInput={(e) => {
-										setValue(e.target.value);
-									}}
-									onKeyDown={(e) => {
-										if (e.key === "Enter") {
-											e.preventDefault();
-											e.stopPropagation();
-
-											if (!focused) return;
-											batch(() => {
-												props.graph.rename(value());
-												setEditing(false);
-											});
-										} else if (e.key === "Escape") {
-											e.preventDefault();
-											e.stopPropagation();
-
-											setEditing(false);
-										}
-										e.stopPropagation();
-									}}
-									onFocusOut={() => {
-										if (!focused) return;
-										batch(() => {
-											props.graph.rename(value());
-											setEditing(false);
-										});
-									}}
-								/>
-							</>
-						);
-					}}
-				</Match>
-				<Match when={!editing()}>
-					<span
-						class="flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between"
-						onDblClick={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-
-							setEditing(true);
-						}}
-					>
-						<button
-							type="button"
-							class="py-0.5 px-1.5 w-full text-left"
-							onClick={() => props.onClick()}
-						>
-							{props.graph.name}
-						</button>
-						<button
-							type="button"
-							class="pointer-events-none opacity-0 focus:opacity-100"
-							onClick={() => {
-								setEditing(true);
-							}}
-						>
-							<IconAntDesignEditOutlined class="size-4" />
-						</button>
-					</span>
-
-					<DeleteButton graph={props.graph} />
-				</Match>
-			</Switch>
-		</li>
 	);
 }
 

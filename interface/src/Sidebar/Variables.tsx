@@ -28,10 +28,7 @@ export function Variables(props: {
 	);
 
 	return (
-		<SidebarSection
-			title={`${props.titlePrefix} Variables`}
-			class="flex flex-col"
-		>
+		<SidebarSection title={`${props.titlePrefix} Variables`}>
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
 				<SearchInput
 					value={search()}
@@ -75,7 +72,7 @@ export function Variables(props: {
 										<IconAntDesignDeleteOutlined class="size-4" />
 									</button>
 								</InlineTextEditor>
-								<div class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-2 bg-black/20 p-2 rounded-md">
+								<div class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-2 bg-black/30 p-2 rounded-md">
 									<TypeEditor
 										type={variable.type}
 										onChange={(type) => {

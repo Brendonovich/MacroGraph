@@ -1,15 +1,11 @@
 import { DropdownMenu } from "@kobalte/core";
 import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 
-import type {
-	ResourceType,
-	ResourceTypeEntry,
-	ResourceTypeItem,
-} from "@macrograph/runtime";
+import type { ResourceType, ResourceTypeEntry } from "@macrograph/runtime";
 import { SidebarSection } from "../../components/Sidebar";
 import { SelectInput, TextInput } from "../../components/ui";
 import { useCore } from "../../contexts";
-import { tokeniseString, filterWithTokenisedSearch } from "../../util";
+import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
@@ -84,80 +80,78 @@ export function Resources() {
 								</div>
 								<ul class="bg-black/30 rounded divide-y divide-neutral-700 px-2">
 									<For each={data.items}>
-										{(item, index) => {
-											return (
-												<li class="space-y-1 pt-1 pb-2 group/item">
-													<InlineTextEditor
-														class="-mx-1"
-														value={item.name}
-														onChange={(value) => {
-															item.name = value;
+										{(item, index) => (
+											<li class="space-y-1 pt-1 pb-2 group/item">
+												<InlineTextEditor
+													class="-mx-1"
+													value={item.name}
+													onChange={(value) => {
+														item.name = value;
+														core.project.save();
+													}}
+												>
+													<button
+														type="button"
+														class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+														onClick={(e) => {
+															e.stopPropagation();
+
+															data.items.splice(index(), 1);
+															if (data.items.length < 1)
+																core.project.resources.delete(type);
+
 															core.project.save();
 														}}
 													>
-														<button
-															type="button"
-															class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
-															onClick={(e) => {
-																e.stopPropagation();
+														<IconAntDesignDeleteOutlined class="size-4" />
+													</button>
+												</InlineTextEditor>
+												<Switch>
+													<Match
+														when={
+															"sources" in type &&
+															"sourceId" in item &&
+															([type, item] as const)
+														}
+														keyed
+													>
+														{([type, item]) => {
+															const sources = createMemo(() =>
+																type.sources(type.package),
+															);
 
-																data.items.splice(index(), 1);
-																if (data.items.length < 1)
-																	core.project.resources.delete(type);
-
-																core.project.save();
-															}}
-														>
-															<IconAntDesignDeleteOutlined class="size-4" />
-														</button>
-													</InlineTextEditor>
-													<Switch>
-														<Match
-															when={
-																"sources" in type &&
-																"sourceId" in item &&
-																([type, item] as const)
-															}
-															keyed
-														>
-															{([type, item]) => {
-																const sources = createMemo(() =>
-																	type.sources(type.package),
-																);
-
-																return (
-																	<SelectInput
-																		options={sources()}
-																		optionValue="id"
-																		optionTextValue="display"
-																		getLabel={(i) => i.display}
-																		onChange={(source) => {
-																			item.sourceId = source.id;
-																		}}
-																		value={sources().find(
-																			(s) => s.id === item.sourceId,
-																		)}
-																	/>
-																);
-															}}
-														</Match>
-														<Match
-															when={"type" in type && "value" in item && item}
-															keyed
-														>
-															{(item) => (
-																<TextInput
-																	value={item.value}
-																	onChange={(n) => {
-																		item.value = n;
+															return (
+																<SelectInput
+																	options={sources()}
+																	optionValue="id"
+																	optionTextValue="display"
+																	getLabel={(i) => i.display}
+																	onChange={(source) => {
+																		item.sourceId = source.id;
 																	}}
+																	value={sources().find(
+																		(s) => s.id === item.sourceId,
+																	)}
 																/>
-															)}
-														</Match>
-													</Switch>
-												</li>
-											);
-										}}
+															);
+														}}
+													</Match>
+													<Match
+														when={"type" in type && "value" in item && item}
+														keyed
+													>
+														{(item) => (
+															<TextInput
+																value={item.value}
+																onChange={(n) => {
+																	item.value = n;
+																}}
+															/>
+														)}
+													</Match>
+												</Switch>
+											</li>
+										)}
 									</For>
 								</ul>
 							</li>
@@ -189,16 +183,16 @@ function AddResourceButton() {
 				<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
-				<DropdownMenu.Content class="bg-neutral-900 border border-black p-2 rounded w-52 max-h-48 flex flex-col overflow-y-auto text-white">
+				<DropdownMenu.Content class="mt-1 gap-2 bg-neutral-900 p-2 rounded w-40 max-h-48 flex flex-col overflow-y-auto text-white ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-expanded:slide-in-from-right-0.5 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 ui-closed:slide-out-to-right-0.5 duration-100 shadow">
 					<For each={resourceTypes()}>
 						{([pkg, types]) => (
-							<>
-								<span class="p-1">{pkg.name}</span>
+							<div class="flex flex-col">
+								<span class="text-xs text-neutral-400 mb-0.5">{pkg.name}</span>
 								<For each={types}>
 									{(type) => (
 										<DropdownMenu.Item
 											as="button"
-											class="flex flex-row items-center w-full px-2 py-0.5 text-left hover:bg-white/20 rounded text-sm"
+											class="flex flex-row items-center px-1 py-0.5 w-full text-sm text-left hover:bg-white/10 rounded"
 											onSelect={() => {
 												core.project.createResource({
 													type,
@@ -210,7 +204,7 @@ function AddResourceButton() {
 										</DropdownMenu.Item>
 									)}
 								</For>
-							</>
+							</div>
 						)}
 					</For>
 				</DropdownMenu.Content>
