@@ -1,5 +1,13 @@
-import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
-import { Card } from "@macrograph/ui";
+import {
+	For,
+	Match,
+	Show,
+	Switch,
+	batch,
+	createMemo,
+	createSignal,
+	onMount,
+} from "solid-js";
 import { DropdownMenu } from "@kobalte/core";
 
 import { useCore } from "../../contexts";
@@ -29,170 +37,188 @@ export function Resources() {
 				<AddResourceButton />
 			</div>
 			<div class="flex-1 overflow-y-auto">
-				<ul class="flex flex-col divide-y divide-neutral-700 px-2.5">
+				<ul class="flex flex-col px-2 divide-y divide-neutral-700">
 					<For each={resources()}>
 						{([type, data]) => {
-							const [open, setOpen] = createSignal(true);
-
 							return (
-								<Card as="li" class="divide-y divide-black">
-									<div class="p-2 space-y-1">
-										<button onClick={() => setOpen((o) => !o)}>
-											<div class="flex flex-row items-center gap-2">
-												<IconFa6SolidChevronRight
-													class="w-3 h-3"
-													classList={{ "rotate-90": open() }}
+								<li class="space-y-1.5 py-2">
+									<div class="space-y-1 pl-1">
+										<div class="flex flex-row items-center gap-2">
+											<span class="font-medium">{type.name}</span>
+											<span class="opacity-50 text-xs">
+												{type.package.name}
+											</span>
+										</div>
+										<div class="flex flex-row items-center gap-2">
+											<span class="text-xs font-medium">Default</span>
+											<div class="flex-1">
+												<SelectInput
+													options={data.items}
+													optionValue="id"
+													optionTextValue="name"
+													getLabel={(i) => i.name}
+													onChange={(source) => {
+														data.default = source.id;
+													}}
+													value={data.items.find((s) => s.id === data.default)}
 												/>
-												<span class="font-medium">{type.name}</span>
 											</div>
-										</button>
-										<Show when={open()}>
-											<div class="flex flex-row items-center gap-2">
-												Default
-												<div class="flex-1">
-													<SelectInput
-														options={data.items}
-														optionValue="id"
-														optionTextValue="name"
-														getLabel={(i) => i.name}
-														onChange={(source) => (data.default = source.id)}
-														value={data.items.find(
-															(s) => s.id === data.default,
-														)}
-													/>
-												</div>
-											</div>
-										</Show>
+										</div>
 									</div>
-									<Show when={open()}>
-										<ul class="space-y-2">
-											<For each={data.items}>
-												{(item, index) => {
-													const [editingName, setEditingName] =
-														createSignal(false);
+									<ul class="bg-black/30 rounded divide-y divide-neutral-700 px-2">
+										<For each={data.items}>
+											{(item, index) => {
+												const [editingName, setEditingName] =
+													createSignal(false);
 
-													return (
-														<li class="space-y-1 p-2">
-															<div class="space-y-1 flex flex-row gap-2 justify-between items-center">
-																<Switch>
-																	<Match when={editingName()}>
-																		{(_) => {
-																			const [value, setValue] = createSignal(
-																				item.name,
-																			);
-
-																			return (
-																				<>
-																					<input
-																						class="flex-1 text-black"
-																						value={value()}
-																						onChange={(e) =>
-																							setValue(e.target.value)
-																						}
-																					/>
-																					<div class="flex flex-row">
-																						<button
-																							onClick={() => {
-																								item.name = value();
-																								setEditingName(false);
-																								core.project.save();
-																							}}
-																						>
-																							<IconAntDesignCheckOutlined class="w-5 h-5" />
-																						</button>
-																						<button
-																							onClick={() =>
-																								setEditingName(false)
-																							}
-																						>
-																							<IconBiX class="w-6 h-6" />
-																						</button>
-																					</div>
-																				</>
-																			);
-																		}}
-																	</Match>
-																	<Match when={!editingName()}>
-																		<span class="shrink-0">{item.name}</span>
-																		<div class="gap-2 flex flex-row">
-																			<button
-																				onClick={(e) => {
-																					e.stopPropagation();
-
-																					setEditingName(true);
-																				}}
-																			>
-																				<IconAntDesignEditOutlined />
-																			</button>
-
-																			<button
-																				onClick={(e) => {
-																					e.stopPropagation();
-
-																					data.items.splice(index(), 1);
-																					if (data.items.length < 1)
-																						core.project.resources.delete(type);
-
-																					core.project.save();
-																				}}
-																			>
-																				<IconAntDesignDeleteOutlined />
-																			</button>
-																		</div>
-																	</Match>
-																</Switch>
-															</div>
+												return (
+													<li class="space-y-1 pt-1 pb-2 group/item">
+														<h3 class="flex flex-row gap-1 justify-between items-center -mx-1">
 															<Switch>
-																<Match
-																	when={
-																		"sources" in type &&
-																		"sourceId" in item &&
-																		([type, item] as const)
-																	}
-																	keyed
-																>
-																	{([type, item]) => {
-																		const sources = createMemo(() =>
-																			type.sources(type.package),
+																<Match when={editingName()}>
+																	{(_) => {
+																		const [value, setValue] = createSignal(
+																			item.name,
 																		);
+																		let ref: HTMLInputElement;
+
+																		let focused = false;
+
+																		onMount(() => {
+																			setTimeout(() => {
+																				ref.focus();
+																				ref.focus();
+																				focused = true;
+																			});
+																		});
 
 																		return (
-																			<SelectInput
-																				options={sources()}
-																				optionValue="id"
-																				optionTextValue="display"
-																				getLabel={(i) => i.display}
-																				onChange={(source) =>
-																					(item.sourceId = source.id)
-																				}
-																				value={sources().find(
-																					(s) => s.id === item.sourceId,
-																				)}
+																			<input
+																				ref={ref!}
+																				class="flex-1 bg-neutral-900 rounded text-sm border-none py-0.5 px-1.5"
+																				value={value()}
+																				onInput={(e) => {
+																					setValue(e.target.value);
+																				}}
+																				onKeyDown={(e) => {
+																					if (e.key === "Enter") {
+																						e.preventDefault();
+																						e.stopPropagation();
+
+																						if (!focused) return;
+																						batch(() => {
+																							item.name = value();
+																							core.project.save();
+																							setEditingName(false);
+																						});
+																					} else if (e.key === "Escape") {
+																						e.preventDefault();
+																						e.stopPropagation();
+
+																						setEditingName(false);
+																					}
+																					e.stopPropagation();
+																				}}
+																				onFocusOut={() => {
+																					if (!focused) return;
+																					batch(() => {
+																						item.name = value();
+																						core.project.save();
+																						setEditingName(false);
+																					});
+																				}}
 																			/>
 																		);
 																	}}
 																</Match>
-																<Match
-																	when={
-																		"type" in type && "value" in item && item
-																	}
-																	keyed
-																>
-																	{(item) => (
-																		<TextInput
-																			value={item.value}
-																			onChange={(n) => (item.value = n)}
-																		/>
-																	)}
+																<Match when={!editingName()}>
+																	<span
+																		class="flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between py-0.5 px-1.5"
+																		onDblClick={(e) => {
+																			e.preventDefault();
+																			e.stopPropagation();
+
+																			setEditingName(true);
+																		}}
+																	>
+																		{item.name}
+																		<button
+																			type="button"
+																			class="pointer-events-none opacity-0 focus:opacity-100"
+																			onClick={() => {
+																				setEditingName(true);
+																			}}
+																		>
+																			<IconAntDesignEditOutlined class="size-4" />
+																		</button>
+																	</span>
+
+																	<button
+																		type="button"
+																		class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+																		onClick={(e) => {
+																			e.stopPropagation();
+
+																			data.items.splice(index(), 1);
+																			if (data.items.length < 1)
+																				core.project.resources.delete(type);
+
+																			core.project.save();
+																		}}
+																	>
+																		<IconAntDesignDeleteOutlined class="size-4" />
+																	</button>
 																</Match>
 															</Switch>
-														</li>
-													);
-												}}
-											</For>
-										</ul>
-									</Show>
-								</Card>
+														</h3>
+														<Switch>
+															<Match
+																when={
+																	"sources" in type &&
+																	"sourceId" in item &&
+																	([type, item] as const)
+																}
+																keyed
+															>
+																{([type, item]) => {
+																	const sources = createMemo(() =>
+																		type.sources(type.package),
+																	);
+
+																	return (
+																		<SelectInput
+																			options={sources()}
+																			optionValue="id"
+																			optionTextValue="display"
+																			getLabel={(i) => i.display}
+																			onChange={(source) =>
+																				(item.sourceId = source.id)
+																			}
+																			value={sources().find(
+																				(s) => s.id === item.sourceId,
+																			)}
+																		/>
+																	);
+																}}
+															</Match>
+															<Match
+																when={"type" in type && "value" in item && item}
+																keyed
+															>
+																{(item) => (
+																	<TextInput
+																		value={item.value}
+																		onChange={(n) => (item.value = n)}
+																	/>
+																)}
+															</Match>
+														</Switch>
+													</li>
+												);
+											}}
+										</For>
+									</ul>
+								</li>
 							);
 						}}
 					</For>
