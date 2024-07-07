@@ -4,7 +4,13 @@ import { For, Match, Switch, batch, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../components/Sidebar";
 import { TypeEditor } from "../components/TypeEditor";
-import { CheckBox, FloatInput, IntInput, TextInput } from "../components/ui";
+import {
+	CheckBox,
+	FloatInput,
+	IconButton,
+	IntInput,
+	TextInput,
+} from "../components/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../util";
 import { InlineTextEditor } from "./InlineTextEditor";
 import { SearchInput } from "./SearchInput";
@@ -37,9 +43,8 @@ export function Variables(props: {
 						setSearch(e.currentTarget.value);
 					}}
 				/>
-				<button
+				<IconButton
 					type="button"
-					class="hover:bg-white/10 rounded transition-colors"
 					onClick={(e) => {
 						e.stopPropagation();
 
@@ -47,7 +52,7 @@ export function Variables(props: {
 					}}
 				>
 					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-				</button>
+				</IconButton>
 			</div>
 			<div class="flex-1 overflow-y-auto">
 				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
@@ -60,9 +65,9 @@ export function Variables(props: {
 										variable.name = value;
 									}}
 								>
-									<button
+									<IconButton
 										type="button"
-										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-0.5"
 										onClick={(e) => {
 											e.stopPropagation();
 
@@ -70,7 +75,7 @@ export function Variables(props: {
 										}}
 									>
 										<IconAntDesignDeleteOutlined class="size-4" />
-									</button>
+									</IconButton>
 								</InlineTextEditor>
 								<div class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-2 bg-black/30 p-2 rounded-md">
 									<TypeEditor

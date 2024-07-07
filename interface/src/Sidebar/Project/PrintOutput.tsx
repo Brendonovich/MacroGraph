@@ -5,6 +5,7 @@ import { SidebarSection } from "../../components/Sidebar";
 import { useCore } from "../../contexts";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 import { SearchInput } from "../SearchInput";
+import { IconButton } from "../../components/ui";
 
 export function PrintOutput() {
 	const [items, setItems] = createSignal<{ value: string; timestamp: Date }[]>(
@@ -46,16 +47,16 @@ export function PrintOutput() {
 						setSearch(e.currentTarget.value);
 					}}
 				/>
-				<button
+				<IconButton
 					type="button"
-					class="hover:bg-white/10 rounded transition-colors p-0.5"
+					class="p-0.5"
 					onClick={(e) => {
 						e.stopPropagation();
 						setItems([]);
 					}}
 				>
 					<IconAntDesignDeleteOutlined class="size-4" />
-				</button>
+				</IconButton>
 			</div>
 
 			<div class="flex-1 overflow-y-auto">

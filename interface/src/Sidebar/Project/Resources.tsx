@@ -3,7 +3,7 @@ import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 
 import type { ResourceType, ResourceTypeEntry } from "@macrograph/runtime";
 import { SidebarSection } from "../../components/Sidebar";
-import { SelectInput, TextInput } from "../../components/ui";
+import { IconButton, SelectInput, TextInput } from "../../components/ui";
 import { useCore } from "../../contexts";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
@@ -90,9 +90,9 @@ export function Resources() {
 														core.project.save();
 													}}
 												>
-													<button
+													<IconButton
 														type="button"
-														class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+														class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-0.5"
 														onClick={(e) => {
 															e.stopPropagation();
 
@@ -104,7 +104,7 @@ export function Resources() {
 														}}
 													>
 														<IconAntDesignDeleteOutlined class="size-4" />
-													</button>
+													</IconButton>
 												</InlineTextEditor>
 												<Switch>
 													<Match
@@ -177,7 +177,7 @@ function AddResourceButton() {
 	return (
 		<DropdownMenu.Root placement="bottom-end">
 			<DropdownMenu.Trigger
-				class="hover:bg-white/10 rounded transition-colors"
+				as={IconButton}
 				onClick={(e) => e.stopPropagation()}
 			>
 				<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />

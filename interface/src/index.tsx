@@ -18,12 +18,11 @@ import {
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import "@total-typescript/ts-reset";
-import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
+import { Tabs } from "@kobalte/core";
 
 export { CoreProvider } from "./contexts";
-import { Tabs } from "@kobalte/core";
 import * as Sidebars from "./Sidebar";
 import { UIStoreProvider, createUIStore } from "./UIStore";
 import {

@@ -13,7 +13,7 @@ import {
 
 export type Side = "left" | "right";
 
-export const MIN_WIDTH = 300;
+export const MIN_WIDTH = 250;
 export const SNAP_CLOSE_PCT = 0.65;
 
 export interface SidebarProps extends ParentProps {

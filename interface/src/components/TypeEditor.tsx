@@ -67,7 +67,7 @@ export function TypeEditor(props: {
 					/>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Portal>
-					<DropdownMenu.Content class="text-sm mt-1 p-2 bg-neutral-900 rounded w-64 max-h-52 flex flex-col overflow-y-auto text-white ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 shadow">
+					<DropdownMenu.Content class="text-sm mt-1 p-2 bg-neutral-900 rounded w-48 max-h-52 flex flex-col overflow-y-auto text-white ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 shadow">
 						<CategoryLabel>Primitives</CategoryLabel>
 						<div class="flex flex-col mb-1">
 							{PRIMITIVES.map((p) => (

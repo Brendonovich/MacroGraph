@@ -6,6 +6,7 @@ import { useCoreContext } from "../../contexts";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
+import { IconButton } from "../../components/ui";
 
 export function CustomEvents() {
 	const [search, setSearch] = createSignal("");
@@ -32,16 +33,15 @@ export function CustomEvents() {
 						setSearch(e.currentTarget.value);
 					}}
 				/>
-				<button
+				<IconButton
 					type="button"
-					class="hover:bg-white/10 rounded transition-colors"
 					onClick={(e) => {
 						e.stopPropagation();
 						ctx.core.project.createCustomEvent();
 					}}
 				>
 					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-				</button>
+				</IconButton>
 			</div>
 			<div class="flex-1 overflow-y-auto">
 				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
@@ -54,9 +54,9 @@ export function CustomEvents() {
 										event.name = value;
 									}}
 								>
-									<button
+									<IconButton
 										type="button"
-										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded"
+										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100"
 										onClick={(e) => {
 											e.stopPropagation();
 
@@ -65,11 +65,11 @@ export function CustomEvents() {
 										}}
 									>
 										<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-									</button>
+									</IconButton>
 
-									<button
+									<IconButton
 										type="button"
-										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-0.5"
 										onClick={(e) => {
 											e.stopPropagation();
 
@@ -78,7 +78,7 @@ export function CustomEvents() {
 										}}
 									>
 										<IconAntDesignDeleteOutlined class="size-4" />
-									</button>
+									</IconButton>
 								</InlineTextEditor>
 								<ul class="divide-y divide-neutral-700 flex-1 px-2 bg-black/30 rounded-md">
 									<For each={[...event.fields]}>
@@ -92,9 +92,9 @@ export function CustomEvents() {
 													}}
 													class="-mx-1"
 												>
-													<button
+													<IconButton
 														type="button"
-														class="opacity-0 focus:opacity-100 group-hover/field:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+														class="opacity-0 focus:opacity-100 group-hover/field:opacity-100 p-0.5"
 														onClick={(e) => {
 															e.stopPropagation();
 
@@ -103,7 +103,7 @@ export function CustomEvents() {
 														}}
 													>
 														<IconAntDesignDeleteOutlined class="size-4" />
-													</button>
+													</IconButton>
 												</InlineTextEditor>
 
 												<div class="flex flex-row justify-start">

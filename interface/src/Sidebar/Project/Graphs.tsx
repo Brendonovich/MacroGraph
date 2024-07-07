@@ -15,8 +15,9 @@ import { SidebarSection } from "../../components/Sidebar";
 import { useCore, useCoreContext } from "../../contexts";
 import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
-import { SearchInput } from "../SearchInput";
 import { InlineTextEditor } from "../InlineTextEditor";
+import { SearchInput } from "../SearchInput";
+import { IconButton } from "../../components/ui";
 
 // React component to show a list of projects
 interface Props {
@@ -47,10 +48,10 @@ export function Graphs(props: Props) {
 						setSearch(e.currentTarget.value);
 					}}
 				/>
-				<button
+				<IconButton
 					type="button"
 					title="Import graph from clipboard"
-					class="hover:bg-white/10 rounded transition-colors p-0.5"
+					class="p-0.5"
 					onClick={async (e) => {
 						e.stopPropagation();
 						const item = deserializeClipboardItem(await readFromClipboard());
@@ -62,11 +63,10 @@ export function Graphs(props: Props) {
 					}}
 				>
 					<IconGgImport class="size-4" />
-				</button>
-				<button
+				</IconButton>
+				<IconButton
 					type="button"
 					title="Create graph"
-					class="hover:bg-white/10 rounded transition-colors"
 					onClick={(e) => {
 						e.stopPropagation();
 						const graph = ctx.core.project.createGraph();
@@ -74,7 +74,7 @@ export function Graphs(props: Props) {
 					}}
 				>
 					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-				</button>
+				</IconButton>
 			</div>
 			<div class="flex-1 overflow-y-auto">
 				<ul class="flex flex-col p-1 space-y-0.5">
@@ -111,7 +111,8 @@ const DeleteButton = (props: { graph: Graph }) => {
 	return (
 		<Dialog.Root>
 			<Dialog.Trigger
-				class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 hover:bg-white/10 rounded p-0.5"
+				as={IconButton}
+				class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-0.5"
 				onClick={(e) => {
 					if (!e.shiftKey) return;
 
@@ -122,7 +123,6 @@ const DeleteButton = (props: { graph: Graph }) => {
 
 					deleteGraph();
 				}}
-				as="button"
 			>
 				<IconAntDesignDeleteOutlined class="size-4" />
 			</Dialog.Trigger>
