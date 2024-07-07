@@ -398,6 +398,9 @@ importers:
       '@solid-primitives/map':
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.8.16)
+      '@solid-primitives/marker':
+        specifier: ^0.0.3
+        version: 0.0.3(solid-js@1.8.16)
       '@solid-primitives/mouse':
         specifier: ^2.0.19
         version: 2.0.19(solid-js@1.8.16)
@@ -3334,6 +3337,11 @@ packages:
 
   '@solid-primitives/map@0.4.11':
     resolution: {integrity: sha512-OAD65RPxMDYv41oAvadPCqedZfDX92BbWLUC+Qwh9okVMDAF/5UM+t1916OAfGV01Cr30d/fxIT1x86P+gFgSQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/marker@0.0.3':
+    resolution: {integrity: sha512-HxWbG1uAHjymmEBdrrAz2fdxPWfTRmy/+n+MR10gZi+6iCvX1Io/gwQURI7Iz+BP0G6QUllctuIiXw4qztMI4w==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -10985,6 +10993,10 @@ snapshots:
   '@solid-primitives/map@0.4.11(solid-js@1.8.16)':
     dependencies:
       '@solid-primitives/trigger': 1.0.11(solid-js@1.8.16)
+      solid-js: 1.8.16
+
+  '@solid-primitives/marker@0.0.3(solid-js@1.8.16)':
+    dependencies:
       solid-js: 1.8.16
 
   '@solid-primitives/media@2.2.8(solid-js@1.8.16)':

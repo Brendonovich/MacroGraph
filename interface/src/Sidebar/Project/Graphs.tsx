@@ -3,7 +3,6 @@ import { Graph } from "@macrograph/runtime";
 import {
 	For,
 	Match,
-	Show,
 	Switch,
 	batch,
 	createMemo,
@@ -11,17 +10,11 @@ import {
 	onMount,
 } from "solid-js";
 
-import clsx from "clsx";
-import {
-	deserializeClipboardItem,
-	graphToClipboardItem,
-	readFromClipboard,
-	writeClipboardItemToClipboard,
-} from "../../clipboard";
+import { deserializeClipboardItem, readFromClipboard } from "../../clipboard";
 import { SidebarSection } from "../../components/Sidebar";
 import { useCore, useCoreContext } from "../../contexts";
 import { Button } from "../../settings/ui";
-import { tokeniseString } from "../../util";
+import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { SearchInput } from "../SearchInput";
 
 // React component to show a list of projects
@@ -35,28 +28,13 @@ export function Graphs(props: Props) {
 
 	const [search, setSearch] = createSignal("");
 
-	const tokenisedSearch = createMemo(() => tokeniseString(search()));
-
-	const graphs = createMemo(() => [...ctx.core.project.graphs.values()]);
-
 	const tokenisedFilters = createMemo(() =>
-		graphs().map((g) => [tokeniseString(g.name), g] as const),
+		[...ctx.core.project.graphs.values()].map(
+			(g) => [tokeniseString(g.name), g] as const,
+		),
 	);
 
-	const filteredGraphs = createMemo(() => {
-		const ret: Array<Graph> = [];
-
-		for (const [tokens, variable] of tokenisedFilters()) {
-			if (
-				tokenisedSearch().every((token) =>
-					tokens.some((t) => t.includes(token)),
-				)
-			)
-				ret.push(variable);
-		}
-
-		return ret;
-	});
+	const filteredGraphs = createTokenisedSearchFilter(search, tokenisedFilters);
 
 	return (
 		<SidebarSection title="Graphs" class="overflow-y-hidden flex flex-col">

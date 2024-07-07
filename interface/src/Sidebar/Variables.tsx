@@ -5,7 +5,7 @@ import { For, Match, Switch, batch, createMemo, createSignal } from "solid-js";
 import { SidebarSection } from "../components/Sidebar";
 import { TypeEditor } from "../components/TypeEditor";
 import { CheckBox, FloatInput, IntInput, TextInput } from "../components/ui";
-import { tokeniseString } from "../util";
+import { createTokenisedSearchFilter, tokeniseString } from "../util";
 import { InlineTextEditor } from "./InlineTextEditor";
 import { SearchInput } from "./SearchInput";
 
@@ -18,26 +18,14 @@ export function Variables(props: {
 }) {
 	const [search, setSearch] = createSignal("");
 
-	const tokenisedSearch = createMemo(() => tokeniseString(search()));
-
 	const tokenisedFilters = createMemo(() =>
 		props.variables.map((v) => [tokeniseString(v.name), v] as const),
 	);
 
-	const filteredVariables = createMemo(() => {
-		const ret: Array<Variable> = [];
-
-		for (const [tokens, variable] of tokenisedFilters()) {
-			if (
-				tokenisedSearch().every((token) =>
-					tokens.some((t) => t.includes(token)),
-				)
-			)
-				ret.push(variable);
-		}
-
-		return ret;
-	});
+	const filteredVariables = createTokenisedSearchFilter(
+		search,
+		tokenisedFilters,
+	);
 
 	return (
 		<SidebarSection

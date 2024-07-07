@@ -20,6 +20,7 @@
 		"@solid-primitives/cursor": "^0.0.112",
 		"@solid-primitives/event-listener": "^2.3.3",
 		"@solid-primitives/map": "^0.4.11",
+		"@solid-primitives/marker": "^0.0.3",
 		"@solid-primitives/mouse": "^2.0.19",
 		"@solid-primitives/refs": "^1.0.8",
 		"@solid-primitives/resize-observer": "^2.0.25",

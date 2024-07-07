@@ -1,42 +1,23 @@
-import type { CustomEvent } from "@macrograph/runtime";
 import { For, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
 import { useCoreContext } from "../../contexts";
-import { tokeniseString } from "../../util";
+import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
 export function CustomEvents() {
-	const ctx = useCoreContext();
 	const [search, setSearch] = createSignal("");
-
-	const tokenisedSearch = createMemo(() => tokeniseString(search()));
-
-	const events = createMemo(() => [...ctx.core.project.customEvents]);
+	const ctx = useCoreContext();
 
 	const tokenisedEvents = createMemo(() =>
-		events().map(([id, event]) => {
-			return [tokeniseString(event.name), [id, event]] as const;
-		}),
+		[...ctx.core.project.customEvents].map(
+			([id, event]) => [tokeniseString(event.name), [id, event]] as const,
+		),
 	);
 
-	const filteredEvents = createMemo(() => {
-		const ret: Array<[number, CustomEvent]> = [];
-
-		for (const [tokens, [id, event]] of tokenisedEvents()) {
-			if (
-				tokenisedSearch().every((token) =>
-					tokens.some((t) => t.includes(token)),
-				)
-			) {
-				ret.push([id, event]);
-			}
-		}
-
-		return ret;
-	});
+	const filteredEvents = createTokenisedSearchFilter(search, tokenisedEvents);
 
 	return (
 		<SidebarSection
