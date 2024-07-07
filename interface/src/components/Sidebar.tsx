@@ -51,9 +51,6 @@ const MIN_HEIGHT = 250;
 export function SidebarSection(
 	props: ParentProps<{ title: string; class?: string }>,
 ) {
-	const [open, setOpen] = makePersisted(createSignal(!false), {
-		name: `sidebar-section-${props.title}-open`,
-	});
 	const [height, setHeight] = makePersisted(createSignal(MIN_HEIGHT), {
 		name: `sidebar-section-${props.title}-height`,
 	});
@@ -63,14 +60,10 @@ export function SidebarSection(
 			<Accordion.Header class="w-full">
 				<Accordion.Trigger
 					type="button"
-					onClick={() => setOpen((o) => !o)}
-					class="flex flex-row justify-between items-center text-sm text-white p-1 pl-2 bg-neutral-300/5 w-full shadow"
+					class="flex flex-row justify-between items-center text-sm text-white p-1 pl-1.5 bg-neutral-300/5 w-full shadow group"
 				>
-					<span class="flex flex-row items-center gap-1 font-semibold">
-						{/* <IconMaterialSymbolsArrowRightRounded
-						class="size-7"
-						classList={{ "rotate-90": open() }}
-					/> */}
+					<span class="flex flex-row items-center gap-1.5 font-semibold">
+						<IconMaterialSymbolsArrowRightRounded class="size-3 scale-150 ui-group-expanded:rotate-90 transition-transform" />
 						{props.title}
 					</span>
 				</Accordion.Trigger>
