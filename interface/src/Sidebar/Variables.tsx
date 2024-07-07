@@ -75,14 +75,14 @@ export function Variables(props: {
 				</button>
 			</div>
 			<div class="flex-1 overflow-y-auto">
-				<ul class="flex flex-col divide-y divide-neutral-700 px-2.5">
+				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
 					<For each={filteredVariables()}>
 						{(variable) => {
 							const [editingName, setEditingName] = createSignal(false);
 
 							return (
 								<li class="flex flex-col gap-1 flex-1 group/item py-2 pt-1">
-									<h3 class="flex flex-row justify-between items-center -mx-1.5 group gap-1">
+									<h3 class="flex flex-row justify-between items-center group gap-1">
 										<Switch>
 											<Match when={editingName()}>
 												{(_) => {
