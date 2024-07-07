@@ -174,7 +174,7 @@ export function Variables(props: {
 											</Match>
 										</Switch>
 									</h3>
-									<div class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-1">
+									<div class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-2 bg-black/20 p-2 rounded-md">
 										<TypeEditor
 											type={variable.type}
 											onChange={(type) => {
