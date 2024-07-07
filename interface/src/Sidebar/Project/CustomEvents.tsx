@@ -1,5 +1,14 @@
-import { For, Match, Show, Switch, createSignal } from "solid-js";
+import {
+	For,
+	Match,
+	Show,
+	Switch,
+	batch,
+	createSignal,
+	onMount,
+} from "solid-js";
 import { Card } from "@macrograph/ui";
+
 import { useCoreContext } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
@@ -37,193 +46,244 @@ export function CustomEvents() {
 				</button>
 			</div>
 			<div class="flex-1 overflow-y-auto">
-				<ul class="flex flex-col divide-y divide-neutral-700 px-2.5">
+				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
 					<For each={[...ctx.core.project.customEvents]}>
 						{([id, event]) => {
 							const [editingName, setEditingName] = createSignal(false);
-							const [fieldsHidden, setFieldsHidden] = createSignal(false);
 
 							return (
-								<Card class="divide-y divide-black">
-									<div class="p-2 flex flex-row gap-2 justify-between items-center">
-										<button
-											type="button"
-											onClick={() => setFieldsHidden((h) => !h)}
-										>
-											<IconFa6SolidChevronRight
-												class="w-3 h-3"
-												classList={{ "rotate-90": !fieldsHidden() }}
-											/>
-										</button>
+								<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
+									<h3 class="flex flex-row gap-1 justify-between items-center">
 										<Switch>
 											<Match when={editingName()}>
 												{(_) => {
 													const [value, setValue] = createSignal(event.name);
+													let ref: HTMLInputElement;
+
+													let focused = false;
+
+													onMount(() => {
+														setTimeout(() => {
+															ref.focus();
+															ref.focus();
+															focused = true;
+														});
+													});
 
 													return (
 														<>
 															<input
-																class="flex-1 text-black -ml-1 pl-1"
+																ref={ref!}
+																class="flex-1 bg-neutral-900 rounded text-sm border-none py-0.5 px-1.5"
 																value={value()}
-																onChange={(e) => setValue(e.target.value)}
-															/>
-															<div class="flex flex-row space-x-1">
-																<button
-																	type="button"
-																	onClick={() => {
+																onInput={(e) => {
+																	setValue(e.target.value);
+																}}
+																onKeyDown={(e) => {
+																	if (e.key === "Enter") {
+																		e.preventDefault();
+																		e.stopPropagation();
+
+																		if (!focused) return;
+																		batch(() => {
+																			event.name = value();
+																			setEditingName(false);
+																		});
+																	} else if (e.key === "Escape") {
+																		e.preventDefault();
+																		e.stopPropagation();
+
+																		setEditingName(false);
+																	}
+																	e.stopPropagation();
+																}}
+																onFocusOut={() => {
+																	if (!focused) return;
+																	batch(() => {
 																		event.name = value();
 																		setEditingName(false);
-																	}}
-																>
-																	<IconAntDesignCheckOutlined class="w-4 h-4" />
-																</button>
-																<button
-																	type="button"
-																	onClick={() => setEditingName(false)}
-																>
-																	<IconAntDesignCloseOutlined class="w-4 h-4" />
-																</button>
-															</div>
+																	});
+																}}
+															/>
 														</>
 													);
 												}}
 											</Match>
 											<Match when={!editingName()}>
-												<span class="shrink-0">{event.name}</span>
-												<div class="flex-1 gap-2 flex flex-row justify-end">
+												<span
+													class="flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between py-0.5 px-1.5"
+													onDblClick={(e) => {
+														e.preventDefault();
+														e.stopPropagation();
+
+														setEditingName(true);
+													}}
+												>
+													{event.name}
 													<button
 														type="button"
-														onClick={(e) => {
-															e.stopPropagation();
-
+														class="pointer-events-none opacity-0 focus:opacity-100"
+														onClick={() => {
 															setEditingName(true);
 														}}
 													>
-														<IconAntDesignEditOutlined class="w-4 h-4" />
+														<IconAntDesignEditOutlined class="size-4" />
 													</button>
-													<button
-														type="button"
-														onClick={(e) => {
-															e.stopPropagation();
-															event.createField();
-														}}
-													>
-														<IconMaterialSymbolsAddRounded class="w-4 h-4" />
-													</button>
-													<button
-														type="button"
-														onClick={(e) => {
-															e.stopPropagation();
+												</span>
 
-															ctx.core.project.customEvents.delete(id);
-															ctx.core.project.save();
-														}}
-													>
-														<IconAntDesignDeleteOutlined class="w-4 h-4" />
-													</button>
-												</div>
+												<button
+													type="button"
+													class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded"
+													onClick={(e) => {
+														e.stopPropagation();
+
+														event.createField();
+														ctx.core.project.save();
+													}}
+												>
+													<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+												</button>
+
+												<button
+													type="button"
+													class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+													onClick={(e) => {
+														e.stopPropagation();
+
+														ctx.core.project.customEvents.delete(id);
+														ctx.core.project.save();
+													}}
+												>
+													<IconAntDesignDeleteOutlined class="size-4" />
+												</button>
 											</Match>
 										</Switch>
-									</div>
+									</h3>
 
-									<Show when={!fieldsHidden()}>
-										<ul class="divide-y divide-black">
-											<For each={[...event.fields]}>
-												{(field) => {
-													const [editingPinName, setEditingPinName] =
-														createSignal(false);
+									<ul class="divide-y divide-neutral-700 flex-1 px-2 bg-black/30 rounded-md">
+										<For each={[...event.fields]}>
+											{(field) => {
+												const [editingName, setEditingName] =
+													createSignal(false);
 
-													return (
-														<li class="flex flex-col gap-2 p-2">
-															<div class="flex flex-row gap-2 justify-between items-center">
-																<Switch>
-																	<Match when={editingPinName()}>
-																		{(_) => {
-																			const [value, setValue] = createSignal(
-																				field.name,
-																			);
+												return (
+													<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
+														<div class="flex flex-row gap-1 justify-between items-center -mx-1">
+															<Switch>
+																<Match when={editingName()}>
+																	{(_) => {
+																		const [value, setValue] = createSignal(
+																			field.name,
+																		);
+																		let ref: HTMLInputElement;
 
-																			return (
-																				<>
-																					<input
-																						class="flex-1 text-black  -ml-1 pl-1"
-																						value={value()}
-																						onChange={(e) =>
-																							setValue(e.target.value)
-																						}
-																					/>
-																					<div class="flex flex-row space-x-1">
-																						<button
-																							type="button"
-																							onClick={() => {
-																								event.editFieldName(
-																									field.id,
-																									value(),
-																								);
-																								ctx.core.project.save();
-																								setEditingPinName(false);
-																							}}
-																						>
-																							<IconAntDesignCheckOutlined class="w-4 h-4" />
-																						</button>
-																						<button
-																							type="button"
-																							onClick={() =>
-																								setEditingPinName(false)
-																							}
-																						>
-																							<IconAntDesignCloseOutlined class="w-4 h-4" />
-																						</button>
-																					</div>
-																				</>
-																			);
-																		}}
-																	</Match>
-																	<Match when={!editingPinName()}>
-																		<span class="shrink-0">{field.name}</span>
-																		<div class="gap-2 flex flex-row">
-																			<button
-																				type="button"
-																				onClick={(e) => {
-																					e.stopPropagation();
+																		let focused = false;
 
-																					setEditingPinName(true);
+																		onMount(() => {
+																			setTimeout(() => {
+																				ref.focus();
+																				ref.focus();
+																				focused = true;
+																			});
+																		});
+
+																		return (
+																			<input
+																				ref={ref!}
+																				class="flex-1 bg-neutral-900 rounded text-sm border-none py-0.5 px-1.5"
+																				value={value()}
+																				onInput={(e) => {
+																					setValue(e.target.value);
 																				}}
-																			>
-																				<IconAntDesignEditOutlined class="w-4 h-4" />
-																			</button>
+																				onKeyDown={(e) => {
+																					if (e.key === "Enter") {
+																						e.preventDefault();
+																						e.stopPropagation();
 
-																			<button
-																				type="button"
-																				onClick={(e) => {
+																						if (!focused) return;
+																						batch(() => {
+																							event.editFieldName(
+																								field.id,
+																								value(),
+																							);
+																							ctx.core.project.save();
+																							setEditingName(false);
+																						});
+																					} else if (e.key === "Escape") {
+																						e.preventDefault();
+																						e.stopPropagation();
+
+																						setEditingName(false);
+																					}
 																					e.stopPropagation();
-
-																					event.deletePin(field.id);
-																					ctx.core.project.save();
 																				}}
-																			>
-																				<IconAntDesignDeleteOutlined class="w-4 h-4" />
-																			</button>
-																		</div>
-																	</Match>
-																</Switch>
-															</div>
-
-															<div class="flex flex-row justify-start">
-																<TypeEditor
-																	type={field.type}
-																	onChange={(type) => {
-																		event.editFieldType(field.id, type as any);
+																				onFocusOut={() => {
+																					if (!focused) return;
+																					batch(() => {
+																						event.editFieldName(
+																							field.id,
+																							value(),
+																						);
+																						ctx.core.project.save();
+																						setEditingName(false);
+																					});
+																				}}
+																			/>
+																		);
 																	}}
-																/>
-															</div>
-														</li>
-													);
-												}}
-											</For>
-										</ul>
-									</Show>
-								</Card>
+																</Match>
+																<Match when={!editingName()}>
+																	<span
+																		class="flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between py-0.5 px-1.5"
+																		onDblClick={(e) => {
+																			e.preventDefault();
+																			e.stopPropagation();
+
+																			setEditingName(true);
+																		}}
+																	>
+																		{field.name}
+																		<button
+																			type="button"
+																			class="pointer-events-none opacity-0 focus:opacity-100"
+																			onClick={() => {
+																				setEditingName(true);
+																			}}
+																		>
+																			<IconAntDesignEditOutlined class="size-4" />
+																		</button>
+																	</span>
+
+																	<button
+																		type="button"
+																		class="opacity-0 focus:opacity-100 group-hover/field:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+																		onClick={(e) => {
+																			e.stopPropagation();
+
+																			ctx.core.project.customEvents.delete(id);
+																			ctx.core.project.save();
+																		}}
+																	>
+																		<IconAntDesignDeleteOutlined class="size-4" />
+																	</button>
+																</Match>
+															</Switch>
+														</div>
+
+														<div class="flex flex-row justify-start">
+															<TypeEditor
+																type={field.type}
+																onChange={(type) => {
+																	event.editFieldType(field.id, type as any);
+																}}
+															/>
+														</div>
+													</li>
+												);
+											}}
+										</For>
+									</ul>
+								</li>
 							);
 						}}
 					</For>
