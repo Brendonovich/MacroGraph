@@ -22,6 +22,7 @@ import { SidebarSection } from "../../components/Sidebar";
 import { useCore, useCoreContext } from "../../contexts";
 import { Button } from "../../settings/ui";
 import { tokeniseString } from "../../util";
+import { SearchInput } from "../SearchInput";
 
 // React component to show a list of projects
 interface Props {
