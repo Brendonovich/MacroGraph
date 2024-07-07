@@ -1,8 +1,8 @@
-import { Core, Package } from "@macrograph/runtime";
+import { type Core, Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 import { createCtx } from "./ctx";
-import { Event } from "./events";
+import type { Event } from "./events";
 
 export type Events = {
 	donation: Event["donation"];

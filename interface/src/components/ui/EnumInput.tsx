@@ -1,7 +1,7 @@
-import { Enum, EnumVariants } from "@macrograph/typesystem";
 import { Select } from "@kobalte/core";
+import type { Enum, EnumVariants } from "@macrograph/typesystem";
 import clsx from "clsx";
-import { ComponentProps } from "solid-js";
+import type { ComponentProps } from "solid-js";
 
 interface Props<T extends Enum<EnumVariants>>
 	extends Omit<

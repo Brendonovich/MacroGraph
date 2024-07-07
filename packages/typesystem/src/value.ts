@@ -1,7 +1,13 @@
+import { Maybe, type Option } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
-import { Option, Maybe } from "@macrograph/option";
 
-import { t, Enum, EnumVariants, StructFields, Struct } from ".";
+import {
+	type Enum,
+	type EnumVariants,
+	type Struct,
+	type StructFields,
+	t,
+} from ".";
 
 export function serializeValue(rawValue: any, type: t.Any): any {
 	const typeOfValue = typeof rawValue;

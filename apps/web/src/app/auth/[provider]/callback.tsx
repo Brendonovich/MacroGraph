@@ -1,10 +1,10 @@
-import { APIHandler } from "@solidjs/start/server";
+import type { APIHandler } from "@solidjs/start/server";
 import { renderToString } from "solid-js/web";
 
-import { AuthProviders } from "../providers";
-import responderScript from "../responderScript.js?raw";
-import responderScriptWeb from "../responderScript-web?raw";
 import { exchangeOAuthToken, validateCallbackSearchParams } from "../actions";
+import { AuthProviders } from "../providers";
+import responderScriptWeb from "../responderScript-web?raw";
+import responderScript from "../responderScript.js?raw";
 
 export const GET: APIHandler = async (event) => {
 	const { provider } = event.params as { provider: string };

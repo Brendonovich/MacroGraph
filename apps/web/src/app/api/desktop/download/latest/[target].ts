@@ -1,7 +1,7 @@
 import { redirect } from "@solidjs/router";
-import { APIEvent } from "@solidjs/start/server";
+import type { APIEvent } from "@solidjs/start/server";
 import { appendResponseHeader } from "vinxi/http";
-import { DownloadTarget, getDownloadURL } from "~/lib/releases";
+import { type DownloadTarget, getDownloadURL } from "~/lib/releases";
 
 export async function GET({ params }: APIEvent) {
 	appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 24}`);

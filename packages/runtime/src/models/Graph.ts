@@ -1,25 +1,29 @@
+import type { Option } from "@macrograph/option";
+import { Disposable } from "@macrograph/typesystem";
+import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
-import { ReactiveMap } from "@solid-primitives/map";
 import { z } from "zod";
-import { Option } from "@macrograph/option";
-import { Disposable } from "@macrograph/typesystem";
 
+import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
+import {
+	CommentBox,
+	type CommentBoxArgs,
+	type GetNodeSize,
+} from "./CommentBox";
 import {
 	DataInput,
 	DataOutput,
 	ExecInput,
 	ExecOutput,
-	Pin,
-	ScopeInput,
-	ScopeOutput,
+	type Pin,
+	type ScopeInput,
+	type ScopeOutput,
 } from "./IO";
-import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
-import { Node, NodeArgs } from "./Node";
-import { CommentBox, CommentBoxArgs, GetNodeSize } from "./CommentBox";
-import { Project } from "./Project";
-import { Variable, VariableArgs } from "./Variable";
-import { SerializedConnection, SerializedGraph } from "./serialized";
+import { Node, type NodeArgs } from "./Node";
+import type { Project } from "./Project";
+import { Variable, type VariableArgs } from "./Variable";
+import type { SerializedConnection, SerializedGraph } from "./serialized";
 
 export interface GraphArgs {
 	id: number;
@@ -192,9 +196,9 @@ export class Graph extends Disposable {
 		} else {
 			if (pin instanceof ExecInput) {
 				batch(() => {
-					pin.connections.forEach((conn) => {
+					for (const conn of pin.connections) {
 						this.connections.delete(makeIORef(conn));
-					});
+					}
 				});
 			} else {
 				(
@@ -215,8 +219,12 @@ export class Graph extends Disposable {
 	}
 
 	deleteNode(node: Node, save = true) {
-		node.state.inputs.forEach((i) => this.disconnectPin(i));
-		node.state.outputs.forEach((o) => this.disconnectPin(o));
+		for (const i of node.state.inputs) {
+			this.disconnectPin(i);
+		}
+		for (const o of node.state.outputs) {
+			this.disconnectPin(o);
+		}
 
 		this.nodes.delete(node.id);
 		node.dispose();
@@ -270,7 +278,7 @@ export class Graph extends Disposable {
 
 					if (ref.type === "i") continue;
 
-					conns.forEach((conn) => {
+					for (const conn of conns) {
 						const connRef = splitIORef(conn);
 
 						serialized.push({
@@ -283,7 +291,7 @@ export class Graph extends Disposable {
 								input: connRef.ioId,
 							},
 						});
-					});
+					}
 				}
 
 				return serialized;
@@ -331,13 +339,13 @@ export class Graph extends Disposable {
 		for (const node of graph.nodes.values()) {
 			const nodeData = data.nodes[node.id]!;
 
-			node.state.inputs.forEach((i) => {
+			for (const i of node.state.inputs) {
 				const defaultValue = nodeData.defaultValues[i.id];
 
 				if (defaultValue === undefined || !(i instanceof DataInput)) return;
 
 				i.defaultValue = defaultValue;
-			});
+			}
 		}
 
 		return graph;
@@ -349,12 +357,12 @@ export function deserializeConnections(
 	target: Connections,
 	nodeIdMap?: Map<number, number>,
 ) {
-	connections.forEach((conn) => {
+	for (const conn of connections) {
 		const fromNode = nodeIdMap?.get(conn.from.node) ?? conn.from.node;
 		const toNode = nodeIdMap?.get(conn.to.node) ?? conn.to.node;
 
-		const outRef: IORef = `${fromNode}:o:${conn.from.output}`,
-			inRef: IORef = `${toNode}:i:${conn.to.input}`;
+		const outRef: IORef = `${fromNode}:o:${conn.from.output}`;
+		const inRef: IORef = `${toNode}:i:${conn.to.input}`;
 
 		const outConns =
 			target.get(outRef) ??
@@ -365,5 +373,5 @@ export function deserializeConnections(
 			})();
 
 		outConns.push(inRef);
-	});
+	}
 }

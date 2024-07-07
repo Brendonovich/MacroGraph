@@ -1,7 +1,7 @@
 import {
-	EffectFunction,
-	MemoOptions,
-	SignalOptions,
+	type EffectFunction,
+	type MemoOptions,
+	type SignalOptions,
 	createMemo,
 	createSignal,
 } from "solid-js";
@@ -450,12 +450,12 @@ class Option<T> {
 	}
 }
 
-const None = new Option(null) as None;
+export const None = new Option(null) as Option<any>;
 
 /**
  * Some value of type `T`.
  */
-function Some<T extends {} | unknown>(value: SomeValue<T>): Some<T> {
+function Some<T extends object | unknown>(value: SomeValue<T>): Some<T> {
 	if (value === null || typeof value === "undefined") {
 		throw new Error("Tried to create Some() with a null or undefined value.");
 	}
@@ -492,7 +492,7 @@ function Maybe<T>(value: T | null | undefined): Option<T> {
 	return Some(value as any);
 }
 
-export { Option, Some, Maybe, None };
+export { Option, Some, Maybe };
 
 type CreateSignal<T> = ReturnType<typeof createSignal<Option<T>>>;
 

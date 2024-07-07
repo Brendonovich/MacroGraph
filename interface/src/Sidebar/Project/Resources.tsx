@@ -1,17 +1,17 @@
-import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 import { DropdownMenu } from "@kobalte/core";
+import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 
-import { useCore } from "../../contexts";
-import { SidebarSection } from "../../components/Sidebar";
-import { SelectInput, TextInput } from "../../components/ui";
-import { InlineTextEditor } from "../InlineTextEditor";
-import { SearchInput } from "../SearchInput";
-import { tokeniseString } from "../../util";
 import type {
 	ResourceType,
 	ResourceTypeEntry,
 	ResourceTypeItem,
 } from "@macrograph/runtime";
+import { SidebarSection } from "../../components/Sidebar";
+import { SelectInput, TextInput } from "../../components/ui";
+import { useCore } from "../../contexts";
+import { tokeniseString } from "../../util";
+import { InlineTextEditor } from "../InlineTextEditor";
+import { SearchInput } from "../SearchInput";
 
 export function Resources() {
 	const [search, setSearch] = createSignal("");
@@ -144,9 +144,9 @@ export function Resources() {
 																			optionValue="id"
 																			optionTextValue="display"
 																			getLabel={(i) => i.display}
-																			onChange={(source) =>
-																				(item.sourceId = source.id)
-																			}
+																			onChange={(source) => {
+																				item.sourceId = source.id;
+																			}}
 																			value={sources().find(
 																				(s) => s.id === item.sourceId,
 																			)}
@@ -161,7 +161,9 @@ export function Resources() {
 																{(item) => (
 																	<TextInput
 																		value={item.value}
-																		onChange={(n) => (item.value = n)}
+																		onChange={(n) => {
+																			item.value = n;
+																		}}
 																	/>
 																)}
 															</Match>

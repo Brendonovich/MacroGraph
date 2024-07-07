@@ -12,10 +12,10 @@ export const DaemonStatus = z.object({
 	mixers: z.record(z.string(), MixerStatus),
 });
 
-function op<K extends string, T extends Record<string, z.ZodSchema> = {}>(
-	op: K,
-	schema: T,
-) {
+function op<
+	K extends string,
+	T extends Record<string, z.ZodSchema> = Record<string, never>,
+>(op: K, schema: T) {
 	return z.object({
 		op: z.literal(op),
 		path: z.string(),

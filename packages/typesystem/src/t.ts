@@ -1,22 +1,22 @@
-import { infer } from "./base";
 import {
-	AnyType,
-	Enum,
+	type AnyType,
+	type Enum,
 	EnumType,
 	ListType,
 	MapType,
 	OptionType,
-	Wildcard,
+	type Wildcard,
 	WildcardType,
 } from ".";
+import type { infer } from "./base";
 import {
+	BasePrimitiveType,
 	BoolType,
 	FloatType,
 	IntType,
 	StringType,
-	BasePrimitiveType,
 } from "./primitive";
-import { Struct, StructType } from "./struct";
+import { type Struct, StructType } from "./struct";
 
 const INT = new IntType();
 const FLOAT = new FloatType();

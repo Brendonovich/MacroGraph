@@ -1,7 +1,7 @@
 import { For, createSignal, onCleanup, onMount } from "solid-js";
 
-import { useCore } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
+import { useCore } from "../../contexts";
 
 export function PrintOutput() {
 	const [items, setItems] = createSignal<{ value: string; timestamp: Date }[]>(
@@ -23,6 +23,7 @@ export function PrintOutput() {
 			title="Print Output"
 			right={
 				<button
+					type="button"
 					class="w-6 h-6 flex justify-center items-center"
 					onClick={(e) => {
 						e.stopPropagation();

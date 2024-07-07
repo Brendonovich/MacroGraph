@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { AnyType, TypeVariant } from ".";
+import type { AnyType, TypeVariant } from ".";
 import { BaseType } from "./base";
-import { Wildcard, WildcardType } from "./wildcard";
+import type { Wildcard, WildcardType } from "./wildcard";
 
 export type PrimitiveVariant = "int" | "float" | "string" | "bool";
 

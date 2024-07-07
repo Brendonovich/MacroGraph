@@ -1,10 +1,10 @@
-import { ComponentProps, ParentProps, Show } from "solid-js";
+import { type ComponentProps, type ParentProps, Show } from "solid-js";
 
-import { useCore } from "../contexts";
 import {
 	projectToClipboardItem,
 	writeClipboardItemToClipboard,
 } from "../clipboard";
+import { useCore } from "../contexts";
 import { usePlatform } from "../platform";
 
 function IconContainer(props: ParentProps<ComponentProps<"div">>) {
@@ -30,6 +30,7 @@ export default () => {
 					{(projectPersistence) => (
 						<>
 							<button
+								type="button"
 								title="Save Project"
 								onClick={(e) => projectPersistence.saveProject(e.shiftKey)}
 							>
@@ -38,6 +39,7 @@ export default () => {
 								</IconContainer>
 							</button>
 							<button
+								type="button"
 								title="Load Project"
 								onClick={() => projectPersistence.loadProject()}
 							>
@@ -70,6 +72,7 @@ function CopyProjectButton() {
 
 	return (
 		<button
+			type="button"
 			title="Copy Project"
 			onClick={() =>
 				writeClipboardItemToClipboard(projectToClipboardItem(core.project))

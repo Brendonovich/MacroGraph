@@ -23,6 +23,7 @@ import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
 
 export { CoreProvider } from "./contexts";
+import { Tabs } from "@kobalte/core";
 import * as Sidebars from "./Sidebar";
 import { UIStoreProvider, createUIStore } from "./UIStore";
 import {
@@ -47,7 +48,6 @@ import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import { CoreProvider } from "./contexts";
 import "./global.css";
-import { Tabs } from "@kobalte/core";
 export { useCore } from "./contexts";
 
 export * from "./platform";
@@ -750,11 +750,11 @@ function ResizeHandle(props: {
 						createEventListenerMap(window, {
 							mouseup: dispose,
 							mousemove: (e) => {
-								props.onResize?.(
-									(currentWidth =
-										startWidth +
-										(e.clientX - startX) * (props.side === "right" ? 1 : -1)),
-								);
+								currentWidth =
+									startWidth +
+									(e.clientX - startX) * (props.side === "right" ? 1 : -1);
+
+								props.onResize?.(currentWidth);
 							},
 						});
 					});

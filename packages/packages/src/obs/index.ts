@@ -1,10 +1,10 @@
-import { EventTypes } from "obs-websocket-js";
 import { Package } from "@macrograph/runtime";
+import type { EventTypes } from "obs-websocket-js";
 
 import * as events from "./events";
 import * as requests from "./requests";
 
-import { createCtx, Ctx } from "./ctx";
+import { type Ctx, createCtx } from "./ctx";
 import { OBSInstance } from "./resource";
 
 export type Pkg = Package<EventTypes, Ctx>;

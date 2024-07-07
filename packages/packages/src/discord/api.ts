@@ -1,4 +1,6 @@
-import {
+import type { Credential } from "@macrograph/api-contract";
+import { Maybe, type Option } from "@macrograph/option";
+import type {
 	Core,
 	CreateIOFn,
 	CreateNonEventSchema,
@@ -8,16 +10,14 @@ import {
 	RunProps,
 	SchemaProperties,
 } from "@macrograph/runtime";
-import { Credential } from "@macrograph/api-contract";
-import { Maybe, Option } from "@macrograph/option";
 import { t } from "@macrograph/typesystem";
-import { z } from "zod";
+import type { z } from "zod";
 
-import { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
+import type { Ctx } from ".";
 import { createHTTPClient } from "../httpEndpoint";
+import type { Account, BotAccount } from "./auth";
 import { botProperty, defaultProperties } from "./resource";
-import { Account, BotAccount } from "./auth";
-import { Ctx } from ".";
+import type { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
 
 export type Requests = {
 	[_: `POST /channels/${string}/messages`]: any;
@@ -70,7 +70,7 @@ export type Api = ReturnType<typeof createApi>;
 
 export function register(pkg: Package, { api }: Ctx, core: Core) {
 	function createUserExecSchema<
-		TProperties extends Record<string, PropertyDef> = {},
+		TProperties extends Record<string, PropertyDef> = Record<string, never>,
 		TIO = void,
 	>(
 		s: Omit<
@@ -122,7 +122,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 	}
 
 	function createBotExecSchema<
-		TProperties extends Record<string, PropertyDef> = {},
+		TProperties extends Record<string, PropertyDef> = Record<string, never>,
 		TIO = void,
 	>(
 		s: Omit<
@@ -343,7 +343,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 			}),
 		}),
 		async run({ ctx, io, account }) {
-			let roleId = ctx.getInput(io.roleIdIn);
+			const roleId = ctx.getInput(io.roleIdIn);
 
 			const roles = await api.call(
 				`GET /guilds/${ctx.getInput(io.guildId)}/roles`,
@@ -429,7 +429,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				formData.set(key, value);
 			}
 
-			let response = await core.fetch(ctx.getInput(io.webhookUrl), {
+			const response = await core.fetch(ctx.getInput(io.webhookUrl), {
 				method: "POST",
 				body: formData,
 			});

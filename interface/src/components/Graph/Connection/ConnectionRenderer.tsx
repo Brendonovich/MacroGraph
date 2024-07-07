@@ -1,20 +1,20 @@
+import { Maybe } from "@macrograph/option";
 import {
 	DataInput,
 	ExecInput,
 	ExecOutput,
 	ScopeInput,
 	ScopeOutput,
-	XY,
+	type XY,
 	pinIsOutput,
 	splitIORef,
 } from "@macrograph/runtime";
-import { Maybe } from "@macrograph/option";
 import { createEffect } from "solid-js";
 
+import type { GraphBounds } from "../../..";
 import { useUIStore } from "../../../UIStore";
 import { useGraphContext } from "../Graph";
 import { colour } from "../util";
-import { GraphBounds } from "../../..";
 
 export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
 	const ctx = useGraphContext();

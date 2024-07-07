@@ -1,4 +1,4 @@
-import { OnEvent, WsProvider } from "@macrograph/runtime";
+import type { OnEvent, WsProvider } from "@macrograph/runtime";
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { z } from "zod";

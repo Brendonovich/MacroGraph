@@ -1,10 +1,10 @@
-import { Core, Package } from "@macrograph/runtime";
+import { type Core, Package } from "@macrograph/runtime";
 
-import * as helix from "./helix";
-import * as eventsub from "./eventSub";
 import * as chat from "./chat";
+import * as eventsub from "./eventSub";
+import * as helix from "./helix";
 
-import { Ctx, createCtx } from "./ctx";
+import { type Ctx, createCtx } from "./ctx";
 import { TwitchAccount, TwitchChannel } from "./resource";
 
 export type Pkg = Package<any, Ctx>;

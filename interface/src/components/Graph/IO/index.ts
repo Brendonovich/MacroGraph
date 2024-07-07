@@ -7,13 +7,14 @@ export * from "./ScopeInput";
 export * from "./ScopeOutput";
 
 import {
-	Pin,
+	type Pin,
 	pinIsInput,
 	pinIsOutput,
 	pinsCanConnect,
 } from "@macrograph/runtime";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
 import {
-	Accessor,
+	type Accessor,
 	batch,
 	createEffect,
 	createMemo,
@@ -21,7 +22,6 @@ import {
 	createSignal,
 	onCleanup,
 } from "solid-js";
-import { createEventListenerMap } from "@solid-primitives/event-listener";
 
 import { useUIStore } from "../../../UIStore";
 import { useGraphContext } from "../Graph";
@@ -69,7 +69,9 @@ export function usePin(pin: Accessor<Pin>) {
 				batch(() => {
 					// Necessary since safari fires 'mouseleave' just after mouseup. i hate this.
 					justMouseUpped = true;
-					setTimeout(() => (justMouseUpped = false), 1);
+					setTimeout(() => {
+						justMouseUpped = false;
+					}, 1);
 
 					UI.setHoveringPin(thisPin);
 
@@ -123,7 +125,7 @@ export function usePin(pin: Accessor<Pin>) {
 		const ref = getRef();
 		if (!ref) return;
 
-		let rect = ref.getBoundingClientRect();
+		const rect = ref.getBoundingClientRect();
 
 		if (rect)
 			graph.pinPositions.set(pin(), {

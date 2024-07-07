@@ -1,3 +1,6 @@
+import { Accordion } from "@kobalte/core";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
+import { makePersisted } from "@solid-primitives/storage";
 import clsx from "clsx";
 import {
 	type JSX,
@@ -7,9 +10,6 @@ import {
 	createSignal,
 	onCleanup,
 } from "solid-js";
-import { makePersisted } from "@solid-primitives/storage";
-import { createEventListenerMap } from "@solid-primitives/event-listener";
-import { Accordion } from "@kobalte/core";
 
 export type Side = "left" | "right";
 
@@ -82,7 +82,9 @@ export function SidebarSection(
 
 						createRoot((dispose) => {
 							document.body.style.cursor = "ns-resize";
-							onCleanup(() => (document.body.style.cursor = "auto"));
+							onCleanup(() => {
+								document.body.style.cursor = "auto";
+							});
 
 							const startHeight = height();
 

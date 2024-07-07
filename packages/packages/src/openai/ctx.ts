@@ -1,6 +1,11 @@
-import { None, Option, Some, makePersistedOption } from "@macrograph/option";
-import { createEffect, createSignal, on } from "solid-js";
+import {
+	None,
+	type Option,
+	Some,
+	makePersistedOption,
+} from "@macrograph/option";
 import OpenAI from "openai";
+import { createEffect, createSignal, on } from "solid-js";
 
 const GPT_KEY = "ChatGptKey";
 
@@ -19,7 +24,7 @@ export function createCtx() {
 			() => key(),
 			(key) => {
 				key.map((key) => {
-					let api = new OpenAI({
+					const api = new OpenAI({
 						apiKey: key,
 						dangerouslyAllowBrowser: true,
 					});

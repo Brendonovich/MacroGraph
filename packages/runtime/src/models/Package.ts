@@ -1,34 +1,34 @@
-import { ReactiveSet } from "@solid-primitives/set";
-import { createLazyMemo } from "@solid-primitives/memo";
-import { Component, lazy } from "solid-js";
 import {
-	BaseType,
+	type BaseType,
 	Enum,
 	EnumBuilder,
-	EnumVariants,
-	LazyEnumVariants,
-	LazyStructFields,
+	type EnumVariants,
+	type LazyEnumVariants,
+	type LazyStructFields,
 	PrimitiveType,
 	Struct,
 	StructBuilder,
-	StructFields,
-	t,
+	type StructFields,
+	type t,
 } from "@macrograph/typesystem";
-import { Simplify } from "type-fest";
+import { createLazyMemo } from "@solid-primitives/memo";
+import { ReactiveSet } from "@solid-primitives/set";
+import { type Component, lazy } from "solid-js";
+import type { Simplify } from "type-fest";
 
-import { Core } from "./Core";
-import {
+import type { Core } from "./Core";
+import type { ExecInput, ExecOutput } from "./IO";
+import type {
+	CreateSchema,
 	EventNodeSchema,
 	EventsMap,
 	NodeSchema,
 	NonEventNodeSchema,
 	PropertyDef,
-	SchemaProperties,
-	CreateSchema,
-	Schema,
 	RunProps,
+	Schema,
+	SchemaProperties,
 } from "./NodeSchema";
-import { ExecInput, ExecOutput } from "./IO";
 
 export interface PackageArgs<TCtx> {
 	name: string;
@@ -78,16 +78,12 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 				{} as SchemaProperties<TProperties>,
 			),
 			createIO: (ctx) => {
-				let defaultIO;
+				let defaultIO: any;
 
 				if (schema.variant === "Exec") {
 					defaultIO = {
-						in: ctx.io.execInput({
-							id: "exec",
-						}),
-						out: ctx.io.execOutput({
-							id: "exec",
-						}),
+						in: ctx.io.execInput({ id: "exec" }),
+						out: ctx.io.execOutput({ id: "exec" }),
 					};
 				}
 
@@ -164,7 +160,7 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 				{} as SchemaProperties<any>,
 			),
 			createIO: (ctx) => {
-				let defaultIO;
+				let defaultIO: any;
 
 				if (schema.type === "exec") {
 					defaultIO = {

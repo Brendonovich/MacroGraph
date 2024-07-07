@@ -1,5 +1,5 @@
-import { Package } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/option";
+import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 export function pkg() {
@@ -37,9 +37,9 @@ export function pkg() {
 		},
 		run({ ctx, io }) {
 			const array = new Array<any>();
-			io.inputs.forEach((input) => {
+			for (const input of io.inputs) {
 				array.push(ctx.getInput(input.value));
-			});
+			}
 
 			ctx.setOutput(io.out, array);
 		},

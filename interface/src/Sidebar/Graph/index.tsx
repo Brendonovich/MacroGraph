@@ -1,4 +1,4 @@
-import { Graph } from "@macrograph/runtime";
+import type { Graph } from "@macrograph/runtime";
 
 import { Variables } from "./Variables";
 

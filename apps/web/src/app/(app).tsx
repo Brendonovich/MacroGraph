@@ -1,4 +1,4 @@
-import { ParentProps } from "solid-js";
+import type { ParentProps } from "solid-js";
 
 export default function (props: ParentProps) {
 	return (

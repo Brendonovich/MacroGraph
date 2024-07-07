@@ -1,7 +1,7 @@
-import { z } from "zod";
 import { None, Option } from "@macrograph/option";
+import { z } from "zod";
 
-import { t, TypeVariant, Wildcard } from ".";
+import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
 
 export class OptionType<T extends BaseType<any>> extends BaseType<
@@ -20,9 +20,9 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
 	}
 
 	getInner(): T {
-		if (this.inner instanceof OptionType) {
-			return this.inner.getInner();
-		} else return this.inner;
+		if (this.inner instanceof OptionType) return this.inner.getInner();
+
+		return this.inner;
 	}
 
 	toString(): string {

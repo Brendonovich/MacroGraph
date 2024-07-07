@@ -1,7 +1,7 @@
 import {
-	AnyType,
+	type AnyType,
 	BasePrimitiveType,
-	PrimitiveVariant,
+	type PrimitiveVariant,
 	t,
 } from "@macrograph/typesystem";
 
@@ -27,7 +27,7 @@ export const colour = (type: AnyType): string => {
 		const value = type.wildcard.value();
 
 		if (value.isSome()) return colour(value.unwrap());
-		else return "white";
+		return "white";
 	}
 
 	throw new Error();

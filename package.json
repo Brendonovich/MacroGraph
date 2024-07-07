@@ -10,7 +10,8 @@
 		"lint:fix": "turbo run lint -- --fix",
 		"dev:web": "pnpm web dev",
 		"dev:desktop": "pnpm desktop tauri dev",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"fix": "biome lint --apply . && biome format --write . && biome check . --apply"
 	},
 	"devDependencies": {
 		"@vitest/browser": "^0.32.4",

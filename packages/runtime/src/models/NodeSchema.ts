@@ -1,13 +1,15 @@
+import { Maybe, type Option } from "@macrograph/option";
 import {
+	type AnyType,
+	type BaseType,
+	type PrimitiveType,
 	Wildcard,
-	AnyType,
-	BaseType,
-	PrimitiveType,
-	t,
+	type t,
 } from "@macrograph/typesystem";
-import { Maybe, Option } from "@macrograph/option";
-import { EventBus } from "@solid-primitives/event-bus";
+import type { EventBus } from "@solid-primitives/event-bus";
 
+import { batch } from "solid-js";
+import type { Graph } from "./Graph";
 import {
 	DataInput,
 	DataOutput,
@@ -18,10 +20,8 @@ import {
 	ScopeInput,
 	ScopeOutput,
 } from "./IO";
-import { Package, ResourceType, inferResourceTypeValue } from "./Package";
-import { Node } from "./Node";
-import { Graph } from "./Graph";
-import { batch } from "solid-js";
+import type { Node } from "./Node";
+import type { Package, ResourceType, inferResourceTypeValue } from "./Package";
 
 export type NodeSchemaVariant =
 	| "Base"

@@ -1,4 +1,4 @@
-import { t, TypeVariant, Wildcard } from ".";
+import type { TypeVariant, Wildcard, t } from ".";
 
 export abstract class BaseType<TOut = any> {
 	_type(): TOut {

@@ -1,4 +1,4 @@
-import { Preview } from "storybook-solidjs";
+import type { Preview } from "storybook-solidjs";
 
 import "./tailwind.css";
 

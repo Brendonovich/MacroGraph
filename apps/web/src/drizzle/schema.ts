@@ -1,14 +1,14 @@
+import type { OAUTH_TOKEN } from "@macrograph/api-contract";
 import {
-	varchar,
 	json,
-	primaryKey,
-	timestamp,
-	pgTable,
-	serial,
 	pgEnum,
+	pgTable,
+	primaryKey,
+	serial,
+	timestamp,
+	varchar,
 } from "drizzle-orm/pg-core";
-import { z } from "zod";
-import { OAUTH_TOKEN } from "@macrograph/api-contract";
+import type { z } from "zod";
 
 export const users = pgTable("user", {
 	id: varchar("id", { length: 255 }).primaryKey(),

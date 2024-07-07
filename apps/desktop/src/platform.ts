@@ -1,9 +1,9 @@
-import { Platform } from "@macrograph/interface";
+import type { Platform } from "@macrograph/interface";
+import { type Core, SerializedProject } from "@macrograph/runtime";
+import { ask, open, save } from "@tauri-apps/api/dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
-import { save, open, ask } from "@tauri-apps/api/dialog";
-import { Core, SerializedProject } from "@macrograph/runtime";
-import { Accessor } from "solid-js";
-import { Setter } from "solid-js";
+import type { Accessor } from "solid-js";
+import type { Setter } from "solid-js";
 
 export function createPlatform(props: {
 	projectUrl: Accessor<string | null>;

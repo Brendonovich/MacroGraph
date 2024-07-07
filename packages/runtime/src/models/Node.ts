@@ -1,37 +1,37 @@
+import { Maybe, None, type Option, Some } from "@macrograph/option";
+import { Disposable } from "@macrograph/typesystem";
+import {
+	type Accessor,
+	catchError,
+	createEffect,
+	createMemo,
+	createRenderEffect,
+	createRoot,
+	getOwner,
+	onCleanup,
+	runWithOwner,
+	untrack,
+} from "solid-js";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import {
-	untrack,
-	createRoot,
-	createRenderEffect,
-	getOwner,
-	runWithOwner,
-	createMemo,
-	Accessor,
-	onCleanup,
-	createEffect,
-	catchError,
-} from "solid-js";
-import { Maybe, None, Option, Some } from "@macrograph/option";
-import { Disposable } from "@macrograph/typesystem";
 
-import {
-	IOBuilder,
-	NodeSchema,
-	Property,
-	inferPropertyDef,
-} from "./NodeSchema";
+import type { XY } from "../utils";
+import { ExecutionContext } from "./Core";
+import type { Graph } from "./Graph";
 import {
 	DataInput,
-	DataOutput,
+	type DataOutput,
 	ExecInput,
-	ExecOutput,
+	type ExecOutput,
 	ScopeInput,
-	ScopeOutput,
+	type ScopeOutput,
 } from "./IO";
-import { XY } from "../utils";
-import type { Graph } from "./Graph";
-import { ExecutionContext } from "./Core";
+import {
+	IOBuilder,
+	type NodeSchema,
+	type Property,
+	type inferPropertyDef,
+} from "./NodeSchema";
 
 export const SerializedNode = z.object({
 	id: z.number(),
@@ -153,7 +153,9 @@ export class Node extends Disposable {
 				for (const input of this.state.inputs) {
 					if (input instanceof DataInput) {
 						input.connection.peek((c) => {
-							c.node.dataRoots().forEach((n) => roots.add(n));
+							for (const n of c.node.dataRoots()) {
+								roots.add(n);
+							}
 						});
 					}
 				}
@@ -169,15 +171,14 @@ export class Node extends Disposable {
 						const eventFactory = this.schema.event;
 
 						if (typeof eventFactory === "string") return eventFactory;
-						else {
-							return eventFactory({
-								properties: this.schema.properties ?? {},
-								ctx: {
-									getProperty: (p) => this.getProperty(p) as any,
-									graph: this.graph,
-								},
-							});
-						}
+
+						return eventFactory({
+							properties: this.schema.properties ?? {},
+							ctx: {
+								getProperty: (p) => this.getProperty(p) as any,
+								graph: this.graph,
+							},
+						});
 					})();
 
 					if (event === undefined) return;
@@ -254,28 +255,28 @@ export class Node extends Disposable {
 	}
 
 	updateIO(io: IOBuilder) {
-		this.io?.wildcards.forEach((w) => {
+		for (const w of this.io?.wildcards.values() ?? []) {
 			if (!io.wildcards.has(w.id)) w.dispose();
-		});
+		}
 
 		const allInputs = new Set([...io.inputs]);
-		io.inputs.forEach((i) => {
+		for (const i of io.inputs) {
 			if (allInputs.has(i)) return;
 
 			this.graph.disconnectPin(i);
 
 			if ("dispose" in i) i.dispose();
-		});
+		}
 		this.state.inputs.splice(0, this.state.inputs.length, ...io.inputs);
 
 		const allOutputs = new Set([...io.outputs]);
-		io.outputs.forEach((o) => {
+		for (const o of io.outputs) {
 			if (allOutputs.has(o)) return;
 
 			this.graph.disconnectPin(o);
 
 			if ("dispose" in o) o.dispose();
-		});
+		}
 
 		this.state.outputs.splice(0, this.state.outputs.length, ...io.outputs);
 	}

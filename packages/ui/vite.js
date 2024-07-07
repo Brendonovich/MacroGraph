@@ -1,7 +1,7 @@
-import Icons from "unplugin-icons/vite";
-import IconsResolver from "unplugin-icons/resolver";
-import AutoImport from "unplugin-auto-import/vite";
 import { fileURLToPath } from "node:url";
+import AutoImport from "unplugin-auto-import/vite";
+import IconsResolver from "unplugin-icons/resolver";
+import Icons from "unplugin-icons/vite";
 
 export default [
 	AutoImport({

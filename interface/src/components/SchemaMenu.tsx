@@ -1,15 +1,15 @@
-import clsx from "clsx";
-import { createMemo, createSignal, For, onMount, Show } from "solid-js";
-import {
-	XY,
-	Package,
+import type {
+	EventsMap,
 	NodeSchema,
 	NodeSchemaVariant,
-	EventsMap,
+	Package,
+	XY,
 } from "@macrograph/runtime";
+import clsx from "clsx";
+import { For, Show, createMemo, createSignal, onMount } from "solid-js";
 
 import { useCore } from "../contexts";
-import { GraphState } from "./Graph";
+import type { GraphState } from "./Graph";
 
 interface Props {
 	graph: GraphState;
@@ -72,6 +72,7 @@ export function SchemaMenu(props: Props) {
 				<div>
 					<Show when={search() === ""}>
 						<button
+							type="button"
 							class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
 							onClick={props.onCreateCommentBox}
 						>
@@ -94,7 +95,7 @@ export function SchemaMenu(props: Props) {
 								const ret: NodeSchema<EventsMap>[] = [];
 
 								for (const schema of p.schemas) {
-									let lowercaseSchemaName = schema.name.toLowerCase();
+									const lowercaseSchemaName = schema.name.toLowerCase();
 
 									if (
 										leftoverSearchTokens.every((t) =>
@@ -134,6 +135,7 @@ export function SchemaMenu(props: Props) {
 													{(s) => (
 														<div>
 															<button
+																type="button"
 																class="px-2 py-0.5 flex flex-row items-center space-x-2 whitespace-nowrap min-w-full text-left hover:bg-neutral-700 rounded-lg"
 																onClick={() => props.onSchemaClicked(s)}
 															>

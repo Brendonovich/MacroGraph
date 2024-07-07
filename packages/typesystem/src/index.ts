@@ -1,4 +1,4 @@
-import { BaseType } from "./base";
+import type { BaseType } from "./base";
 import { BasePrimitiveType } from "./primitive";
 import * as t from "./t";
 

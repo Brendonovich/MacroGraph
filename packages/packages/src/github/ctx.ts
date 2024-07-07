@@ -1,7 +1,7 @@
-import { Core, OAuthToken } from "@macrograph/runtime";
 import { None, Some, makePersistedOption } from "@macrograph/option";
-import { createResource, createSignal } from "solid-js";
+import type { Core, OAuthToken } from "@macrograph/runtime";
 import { Octokit } from "octokit";
+import { createResource, createSignal } from "solid-js";
 
 import { createCallbackAuth } from "./auth";
 

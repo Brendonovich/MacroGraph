@@ -1,19 +1,19 @@
+import { JSONEnum, jsonToJS } from "@macrograph/json";
+import { Maybe, None, type Option, Some } from "@macrograph/option";
 import {
-	DataInput,
-	ScopeOutput,
+	type Core,
+	type DataInput,
+	type DataOutput,
 	Package,
-	Core,
-	DataOutput,
+	ScopeOutput,
 } from "@macrograph/runtime";
 import {
+	type Enum,
+	type EnumVariants,
+	type Struct,
+	type StructFields,
 	t,
-	StructFields,
-	Enum,
-	EnumVariants,
-	Struct,
 } from "@macrograph/typesystem";
-import { Maybe, Option, Some, None } from "@macrograph/option";
-import { JSON, jsonToJS } from "@macrograph/json";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 
@@ -422,7 +422,10 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			const number = parseInt(ctx.getInput(io.string), ctx.getInput(io.base));
+			const number = Number.parseInt(
+				ctx.getInput(io.string),
+				ctx.getInput(io.base),
+			);
 			const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
 			ctx.setOutput(io.int, opt.map(Math.floor));
@@ -445,7 +448,7 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			const number = parseFloat(ctx.getInput(io.string));
+			const number = Number.parseFloat(ctx.getInput(io.string));
 			const opt: Option<number> = Number.isNaN(number) ? None : Some(number);
 
 			ctx.setOutput(io.float, opt);
@@ -975,12 +978,12 @@ export function pkg(core: Core) {
 					const secondLast = previousInputs[inputCount - 2];
 
 					if (last.connection.isSome()) return "addOne";
-					else if (
+					if (
 						!secondLast ||
 						(last.connection.isNone() && secondLast.connection.isSome())
 					)
 						return "fine";
-					else return "twoUnconnected";
+					return "twoUnconnected";
 				})();
 
 				let lastConnectedIndex: Option<number> = None;
@@ -1031,8 +1034,7 @@ export function pkg(core: Core) {
 			ctx.setOutput(
 				io.output,
 				io.inputs.reduce((acc, input) => {
-					acc += ctx.getInput(input);
-					return acc;
+					return acc + ctx.getInput(input);
 				}, ""),
 			);
 		},
@@ -1146,12 +1148,12 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			const input = ctx.getInput(io.input),
-				decimal = ctx.getInput(io.decimal);
+			const input = ctx.getInput(io.input);
+			const decimal = ctx.getInput(io.decimal);
 
 			ctx.setOutput(
 				io.output,
-				Math.round(input * Math.pow(10, decimal)) / Math.pow(10, decimal),
+				Math.round(input * 10 ** decimal) / 10 ** decimal,
 			);
 		},
 	});
@@ -1274,8 +1276,8 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			const min = ctx.getInput(io.min),
-				max = ctx.getInput(io.max);
+			const min = ctx.getInput(io.min);
+			const max = ctx.getInput(io.max);
 
 			ctx.setOutput(io.output, Math.random() * (max - min) + min);
 		},
@@ -1319,8 +1321,8 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			const min = ctx.getInput(io.min),
-				max = ctx.getInput(io.max);
+			const min = ctx.getInput(io.min);
+			const max = ctx.getInput(io.max);
 
 			// Use Math.floor to ensure even distribution
 			ctx.setOutput(
@@ -1363,8 +1365,8 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			const input = ctx.getInput(io.input),
-				compare = ctx.getInput(io.compare);
+			const input = ctx.getInput(io.input);
+			const compare = ctx.getInput(io.compare);
 
 			ctx.setOutput(io.equal, input === compare);
 			ctx.setOutput(io.greater, input > compare);
@@ -1405,8 +1407,8 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			const input = ctx.getInput(io.input),
-				compare = ctx.getInput(io.compare);
+			const input = ctx.getInput(io.input);
+			const compare = ctx.getInput(io.compare);
 
 			ctx.setOutput(io.equal, input === compare);
 			ctx.setOutput(io.greater, input > compare);
@@ -1628,7 +1630,7 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createNonEventSchema({
-		name: `Unwrap Option`,
+		name: "Unwrap Option",
 		variant: "Pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
@@ -1650,7 +1652,7 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createNonEventSchema({
-		name: `Unwrap Option Or`,
+		name: "Unwrap Option Or",
 		variant: "Pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
@@ -1679,7 +1681,7 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createNonEventSchema({
-		name: `Is Option Some`,
+		name: "Is Option Some",
 		variant: "Pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
@@ -1701,7 +1703,7 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createNonEventSchema({
-		name: `Is Option None`,
+		name: "Is Option None",
 		variant: "Pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
@@ -1723,7 +1725,7 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createNonEventSchema({
-		name: `Make Some`,
+		name: "Make Some",
 		variant: "Pure",
 		createIO({ io }) {
 			const type = io.wildcard("");
@@ -1781,9 +1783,9 @@ export function pkg(core: Core) {
 			io.map((io) => {
 				const data = ctx.getInput(io.input);
 
-				io.outputs.forEach((output) => {
+				for (const output of io.outputs) {
 					ctx.setOutput(output, data[output.id]);
-				});
+				}
 			});
 		},
 	});
@@ -1860,20 +1862,16 @@ export function pkg(core: Core) {
 								id: name,
 								name: name,
 							});
-						} else {
-							return io.scopeOutput({
-								id: name,
-								name: v.name,
-								scope: (s) => {
-									Object.entries(data).forEach(([id, type]) => {
-										s.output({
-											id,
-											type,
-										});
-									});
-								},
-							});
 						}
+						return io.scopeOutput({
+							id: name,
+							name: v.name,
+							scope: (s) => {
+								for (const [id, type] of Object.entries(data)) {
+									s.output({ id, type });
+								}
+							},
+						});
 					});
 
 					return {
@@ -1881,7 +1879,8 @@ export function pkg(core: Core) {
 						input: data as unknown as DataInput<t.Enum<Enum<EnumVariants>>>,
 						outputs: variantOutputs,
 					};
-				} else if (v instanceof t.Option) {
+				}
+				if (v instanceof t.Option) {
 					return {
 						type: "option" as const,
 						input: data as unknown as DataInput<t.Option<t.Any>>,
@@ -1963,7 +1962,9 @@ export function pkg(core: Core) {
 			const data = ctx.getInput(io.input);
 
 			await io.outputs.mapAsync((s) => {
-				s.outputs.forEach((o) => ctx.setOutput(o, data[o.id]));
+				for (const o of s.outputs) {
+					ctx.setOutput(o, data[o.id]);
+				}
 
 				return ctx.exec(s.exec);
 			});
@@ -2023,7 +2024,7 @@ export function pkg(core: Core) {
 				data: io.dataOutput({
 					id: "eventData",
 					name: "JSON Data",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -2076,7 +2077,7 @@ export function pkg(core: Core) {
 				data: io.dataOutput({
 					id: "eventData",
 					name: "JSON Data",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -2120,7 +2121,7 @@ export function pkg(core: Core) {
 				data: io.dataInput({
 					id: "eventData",
 					name: "JSON Data",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -2166,7 +2167,7 @@ export function pkg(core: Core) {
 				data: io.dataInput({
 					id: "eventData",
 					name: "JSON Data",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -2192,7 +2193,7 @@ export function pkg(core: Core) {
 				in: io.dataInput({
 					id: "in",
 					name: "Json",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				out: io.dataOutput({
 					id: "string",
@@ -2249,7 +2250,7 @@ export function pkg(core: Core) {
 			};
 		},
 		run({ ctx, io }) {
-			let data = ctx.getInput(io.in);
+			const data = ctx.getInput(io.in);
 
 			if (Array.isArray(data)) {
 				ctx.setOutput(io.out, [...data]);
@@ -2299,7 +2300,8 @@ export function pkg(core: Core) {
 							name: block.variable,
 							type: t.string(),
 						});
-					} else return block.text;
+					}
+					return block.text;
 				}),
 				output: io.dataOutput({
 					id: "",
@@ -2309,10 +2311,8 @@ export function pkg(core: Core) {
 		},
 		run({ ctx, io }) {
 			const out = io.blocks.reduce<string>((acc, input) => {
-				if (typeof input === "string") acc += input;
-				else acc += ctx.getInput(input);
-
-				return acc;
+				if (typeof input === "string") return acc + input;
+				return acc + ctx.getInput(input);
 			}, "");
 
 			ctx.setOutput(io.output, out);

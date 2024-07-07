@@ -1,14 +1,14 @@
-import { CommentBox as CommentBoxModel } from "@macrograph/runtime";
-import clsx from "clsx";
+import type { CommentBox as CommentBoxModel } from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
+import clsx from "clsx";
 import {
+	Show,
 	createEffect,
 	createMemo,
 	createRoot,
 	createSignal,
 	onCleanup,
 	onMount,
-	Show,
 	untrack,
 } from "solid-js";
 
@@ -87,12 +87,12 @@ export function CommentBox(props: Props) {
 														y: box().position.y + e.movementY / scale,
 													};
 
-													nodes().forEach((node) => {
+													for (const node of nodes()) {
 														node.state.position = {
 															x: node.state.position.x + e.movementX / scale,
 															y: node.state.position.y + e.movementY / scale,
 														};
-													});
+													}
 												},
 											});
 										});

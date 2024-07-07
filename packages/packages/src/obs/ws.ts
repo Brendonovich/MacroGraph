@@ -1,6 +1,6 @@
-import { createSignal } from "solid-js";
-import OBS, { EventSubscription } from "obs-websocket-js";
 import { Maybe } from "@macrograph/option";
+import OBS, { EventSubscription } from "obs-websocket-js";
+import { createSignal } from "solid-js";
 import { z } from "zod";
 
 const OBS_WS = "obsWs";

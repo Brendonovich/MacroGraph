@@ -1,10 +1,10 @@
+import { Maybe } from "@macrograph/option";
 import { createEnum, createStruct } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { Maybe } from "@macrograph/option";
-import { ChatCompletionAssistantMessageParam } from "openai/resources";
+import type { ChatCompletionAssistantMessageParam } from "openai/resources";
 
-import { Pkg } from ".";
-import { Ctx } from "./ctx";
+import type { Pkg } from ".";
+import type { Ctx } from "./ctx";
 
 type Message = {
 	role: string;
@@ -76,19 +76,18 @@ export function register(pkg: Pkg, state: Ctx) {
 			};
 		},
 		async run({ ctx, io }) {
-			let history = ctx.getInput(io.historyIn);
-			console.log(history);
-			let array = [] as ChatCompletionAssistantMessageParam[];
-			history.forEach((item) => {
-				// console.log(item);
-				array.push({
-					role: item.get("role") as any,
-					content: item.get("content") as any,
-				});
-			});
-			console.log(array);
+			const history = ctx.getInput(io.historyIn);
+
+			const array = history.map(
+				(item) =>
+					({
+						role: item.get("role"),
+						content: item.get("content"),
+					}) as ChatCompletionAssistantMessageParam,
+			);
+
 			let message = "";
-			let stream = await state
+			const stream = await state
 				.state()
 				.unwrap()
 				.chat.completions.create({
@@ -103,7 +102,7 @@ export function register(pkg: Pkg, state: Ctx) {
 			for await (const chunk of stream) {
 				console.log(chunk);
 				if (chunk.choices[0]?.finish_reason === "stop") {
-					let array = [];
+					const array = [];
 
 					ctx.execScope(io.complete, { response: message });
 					return;
@@ -137,7 +136,7 @@ export function register(pkg: Pkg, state: Ctx) {
 			};
 		},
 		async run({ ctx, io }) {
-			let stream = await state
+			const stream = await state
 				.state()
 				.unwrap()
 				.images.generate({

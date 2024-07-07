@@ -1,7 +1,7 @@
 import { Package } from "@macrograph/runtime";
 
-import * as sends from "./sends";
 import { createCtx } from "./ctx";
+import * as sends from "./sends";
 
 export type Pkg = ReturnType<typeof pkg>;
 

@@ -1,5 +1,5 @@
-import { Node } from "@macrograph/runtime";
-import { ParentProps } from "solid-js";
+import type { Node } from "@macrograph/runtime";
+import type { ParentProps } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 

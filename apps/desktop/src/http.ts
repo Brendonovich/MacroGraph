@@ -19,8 +19,8 @@ export async function fetch(
 
 	// Remove these fields before creating the request
 	if (init) {
-		delete init.maxRedirections;
-		delete init.connectTimeout;
+		init.maxRedirections = undefined;
+		init.connectTimeout = undefined;
 	}
 
 	const req = new Request(input, init);

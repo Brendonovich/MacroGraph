@@ -1,12 +1,12 @@
 import { typesCanConnect } from "@macrograph/typesystem";
 import {
-	DataOutput,
-	ExecOutput,
 	DataInput,
+	DataOutput,
 	ExecInput,
-	ScopeOutput,
+	ExecOutput,
+	type Pin,
 	ScopeInput,
-	Pin,
+	ScopeOutput,
 } from "../models";
 
 export function pinsCanConnect(

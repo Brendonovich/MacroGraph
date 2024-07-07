@@ -1,4 +1,4 @@
-import { Package, WsProvider } from "@macrograph/runtime";
+import { Package, type WsProvider } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 import { createCtx } from "./ctx";

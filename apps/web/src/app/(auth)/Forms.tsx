@@ -1,9 +1,9 @@
+import { Button, Input } from "@macrograph/ui";
 import { action, useAction, useSubmission } from "@solidjs/router";
-import { appendResponseHeader, setCookie } from "vinxi/http";
-import { Input, Button } from "@macrograph/ui";
-import { Argon2id } from "oslo/password";
-import { generateId } from "lucia";
 import { eq } from "drizzle-orm";
+import { generateId } from "lucia";
+import { Argon2id } from "oslo/password";
+import { appendResponseHeader, setCookie } from "vinxi/http";
 
 import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";

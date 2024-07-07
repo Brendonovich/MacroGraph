@@ -1,4 +1,4 @@
-import { Core, Package } from "@macrograph/runtime";
+import { type Core, Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 export function pkg(core: Core) {

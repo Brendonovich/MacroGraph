@@ -1,20 +1,20 @@
-import clsx from "clsx";
-import { DataInput as DataInputModel } from "@macrograph/runtime";
+import type { DataInput as DataInputModel } from "@macrograph/runtime";
 import {
-	AnyType,
+	type AnyType,
 	BasePrimitiveType,
-	BaseType,
-	Enum,
+	type BaseType,
+	type Enum,
 	EnumType,
-	EnumVariants,
-	PrimitiveType,
+	type EnumVariants,
+	type PrimitiveType,
 	WildcardType,
-	t,
+	type t,
 } from "@macrograph/typesystem";
-import { Show, Switch, Match } from "solid-js";
+import clsx from "clsx";
+import { Match, Show, Switch } from "solid-js";
 
-import { CheckBox, EnumInput, FloatInput, IntInput, TextInput } from "../../ui";
 import { DataPin } from ".";
+import { CheckBox, EnumInput, FloatInput, IntInput, TextInput } from "../../ui";
 
 type EnumValue = t.infer<t.Enum<Enum<EnumVariants>>>;
 
@@ -81,7 +81,7 @@ const Input = (props: InputProps) => {
 								<IntInput
 									class={className()}
 									initialValue={
-										props.value ? parseInt(props.value.toString()) : 0
+										props.value ? Number.parseInt(props.value.toString()) : 0
 									}
 									onChange={props.onChange}
 								/>
@@ -92,7 +92,7 @@ const Input = (props: InputProps) => {
 								<FloatInput
 									class={className()}
 									initialValue={
-										props.value ? parseFloat(props.value.toString()) : 0
+										props.value ? Number.parseFloat(props.value.toString()) : 0
 									}
 									onChange={props.onChange}
 								/>
@@ -107,13 +107,15 @@ const Input = (props: InputProps) => {
 						<EnumInput
 							class={className()}
 							enum={type().inner}
-							value={
-								(type().inner.variants as EnumVariants).find(
+							value={(() => {
+								const variant = (type().inner.variants as EnumVariants).find(
 									(v) => v.name === (props.value as EnumValue)?.variant,
-								) ??
-								(props.onChange(type().inner.variants[0].default()),
-								type().inner.variants[0])
-							}
+								);
+								if (variant) return variant;
+
+								props.onChange(type().inner.variants[0].default());
+								return type().inner.variants[0];
+							})()}
 							onChange={(v) => props.onChange(v.default())}
 						/>
 					</div>

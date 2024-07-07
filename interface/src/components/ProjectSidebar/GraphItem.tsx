@@ -1,15 +1,15 @@
-import clsx from "clsx";
-import { createSignal, onMount, Show } from "solid-js";
-import { Graph } from "@macrograph/runtime";
 import { Dialog } from "@kobalte/core";
+import type { Graph } from "@macrograph/runtime";
+import clsx from "clsx";
+import { Show, createSignal, onMount } from "solid-js";
 
-import { Button } from "../../settings/ui";
 import { useUIStore } from "../../UIStore";
-import { useCore } from "../../contexts";
 import {
 	graphToClipboardItem,
 	writeClipboardItemToClipboard,
 } from "../../clipboard";
+import { useCore } from "../../contexts";
+import { Button } from "../../settings/ui";
 
 interface Props {
 	graph: Graph;
@@ -21,8 +21,6 @@ const buttonClasses = "hover:bg-white/20 p-1 rounded";
 
 export const GraphItem = (props: Props) => {
 	const [editing, setEditing] = createSignal(false);
-
-	const UI = useUIStore();
 
 	return (
 		<div
@@ -37,12 +35,16 @@ export const GraphItem = (props: Props) => {
 					<div
 						class="flex flex-row items-center px-2 py-1 w-full border-2 border-transparent justify-between group"
 						onClick={props.onClick}
+						onKeyPress={(e) => {
+							if (e.key === "Enter") e.currentTarget.click();
+						}}
 						onDblClick={() => setEditing(true)}
 					>
 						<span>{props.graph.name}</span>
 						<div class="flex-row flex space-x-1 opacity-0 group-hover:opacity-100">
 							<DeleteButton graph={props.graph} />
 							<button
+								type="button"
 								title="Copy graph to clipboard"
 								class={buttonClasses}
 								onClick={(e) => {

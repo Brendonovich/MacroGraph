@@ -1,4 +1,4 @@
-import { ScopeOutput as ScopeOutputModel } from "@macrograph/runtime";
+import type { ScopeOutput as ScopeOutputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
 import { usePin } from ".";
 
@@ -14,9 +14,8 @@ export const ScopeOutput = (props: Props) => {
 			<Show when={props.output.name}>{(name) => <span>{name()}</span>}</Show>
 			<div ref={ref}>
 				<svg
-					style={{
-						"pointer-events": "all",
-					}}
+					aria-hidden="true"
+					style={{ "pointer-events": "all" }}
 					viewBox="0 0 16 13"
 					class="w-4 text-transparent hover:text-white pointer-events-[all]"
 					fill={

@@ -1,5 +1,5 @@
 import { t } from "@macrograph/typesystem";
-import { Pkg } from ".";
+import type { Pkg } from ".";
 
 export function register(pkg: Pkg) {
 	pkg.createEventSchema({

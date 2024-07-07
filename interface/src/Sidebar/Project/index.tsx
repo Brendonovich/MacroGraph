@@ -1,4 +1,4 @@
-import { Graph, Project } from "@macrograph/runtime";
+import type { Graph, Project } from "@macrograph/runtime";
 
 import { CustomEvents } from "./CustomEvents";
 import { Graphs } from "./Graphs";

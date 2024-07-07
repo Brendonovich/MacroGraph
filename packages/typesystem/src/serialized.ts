@@ -1,7 +1,7 @@
+import type { Option } from "@macrograph/option";
 import { z } from "zod";
-import { Option } from "@macrograph/option";
 
-import { Enum, Struct, t } from ".";
+import { type Enum, type Struct, t } from ".";
 
 const SerializedTypeBases = z.union([
 	z.literal("int"),

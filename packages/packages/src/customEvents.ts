@@ -1,4 +1,4 @@
-import { Package, PropertyDef } from "@macrograph/runtime";
+import { Package, type PropertyDef } from "@macrograph/runtime";
 
 export function pkg() {
 	const pkg = new Package({
@@ -88,7 +88,9 @@ export function pkg() {
 		run({ ctx, io, data }) {
 			if (!io) return;
 
-			io.outputs.forEach((o) => ctx.setOutput(o, data[o.id]));
+			for (const o of io.outputs) {
+				ctx.setOutput(o, data[o.id]);
+			}
 
 			ctx.exec(io.exec);
 		},

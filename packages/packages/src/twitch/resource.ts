@@ -1,6 +1,6 @@
-import { PropertyDef, createResourceType } from "@macrograph/runtime";
+import { type PropertyDef, createResourceType } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { Pkg } from ".";
+import type { Pkg } from ".";
 
 export const TwitchAccount = createResourceType({
 	name: "Twitch Account",

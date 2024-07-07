@@ -1,6 +1,6 @@
-import { Graph } from "@macrograph/runtime";
-import { Variables as VariablesRoot } from "../Variables";
+import type { Graph } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
+import { Variables as VariablesRoot } from "../Variables";
 
 export function Variables(props: { graph: Graph }) {
 	return (

@@ -1,54 +1,58 @@
-import { test, expect, describe } from "vitest";
-import { createEnum, createStruct } from "@macrograph/runtime";
-import { MapValue, serializeValue, t } from "@macrograph/typesystem";
 import { None, Some } from "@macrograph/option";
+import { createEnum, createStruct } from "@macrograph/runtime";
+import { type MapValue, serializeValue, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
+import { describe, expect, test } from "vitest";
 
-import { toJSON, JSON, jsonToJS, jsToJSON, JSONValue } from ".";
+import { JSONEnum, type JSONValue, jsToJSON, jsonToJS, toJSON } from ".";
 
 describe("toJSON", () => {
 	test("t.Option (None) -> Null", () => {
-		expect(toJSON(t.option(t.int()), None)).toEqual(JSON.variant("Null"));
+		expect(toJSON(t.option(t.int()), None)).toEqual(JSONEnum.variant("Null"));
 	});
 	test("t.Option<t.Int> (Some) -> Number", () => {
 		expect(toJSON(t.option(t.int()), Some(5))).toEqual(
-			JSON.variant(["Number", { value: 5 }]),
+			JSONEnum.variant(["Number", { value: 5 }]),
 		);
 	});
 	test("t.Int  -> Number", () => {
-		expect(toJSON(t.int(), 0)).toEqual(JSON.variant(["Number", { value: 0 }]));
+		expect(toJSON(t.int(), 0)).toEqual(
+			JSONEnum.variant(["Number", { value: 0 }]),
+		);
 	});
 	test("t.Float -> Number", () => {
-		expect(toJSON(t.int(), 0)).toEqual(JSON.variant(["Number", { value: 0 }]));
+		expect(toJSON(t.int(), 0)).toEqual(
+			JSONEnum.variant(["Number", { value: 0 }]),
+		);
 	});
 	test("t.String -> String", () => {
 		expect(toJSON(t.string(), "")).toEqual(
-			JSON.variant(["String", { value: "" }]),
+			JSONEnum.variant(["String", { value: "" }]),
 		);
 	});
 	test("t.Bool -> Bool", () => {
 		expect(toJSON(t.bool(), false)).toEqual(
-			JSON.variant(["Bool", { value: false }]),
+			JSONEnum.variant(["Bool", { value: false }]),
 		);
 	});
 	test("t.List<t.Bool> -> List<bool>", () => {
 		expect(toJSON(t.list(t.bool()), [])).toEqual(
-			JSON.variant(["List", { value: [] }]),
+			JSONEnum.variant(["List", { value: [] }]),
 		);
 	});
 	test("t.Map<t.Bool> -> Map<Bool>", () => {
 		const value = new Map();
 
 		const actual = toJSON(t.map(t.bool()), value);
-		const expected = JSON.variant(["Map", { value: new ReactiveMap() }]);
+		const expected = JSONEnum.variant(["Map", { value: new ReactiveMap() }]);
 
-		expect(serializeValue(actual, t.enum(JSON))).toEqual(
-			serializeValue(expected, t.enum(JSON)),
+		expect(serializeValue(actual, t.enum(JSONEnum))).toEqual(
+			serializeValue(expected, t.enum(JSONEnum)),
 		);
 	});
 	test("t.Enum<JSON> -> JSON", () => {
-		const value = JSON.variant(["String", { value: "" }]);
-		expect(toJSON(t.enum(JSON), value)).toEqual(value);
+		const value = JSONEnum.variant(["String", { value: "" }]);
+		expect(toJSON(t.enum(JSONEnum), value)).toEqual(value);
 	});
 	test("t.Enum<TestEnum> -> Map<JSONValue>", () => {
 		const TestEnum = createEnum("TestEnum", (e) => [
@@ -59,12 +63,12 @@ describe("toJSON", () => {
 		]);
 
 		expect(toJSON(t.enum(TestEnum), TestEnum.variant("Unit"))).toEqual(
-			JSON.variant([
+			JSONEnum.variant([
 				"Map",
 				{
 					value: new ReactiveMap(
 						Object.entries({
-							variant: JSON.variant(["String", { value: "Unit" }]),
+							variant: JSONEnum.variant(["String", { value: "Unit" }]),
 						}),
 					),
 				},
@@ -74,18 +78,18 @@ describe("toJSON", () => {
 		expect(
 			toJSON(t.enum(TestEnum), TestEnum.variant(["Named", { value: "" }])),
 		).toEqual(
-			JSON.variant([
+			JSONEnum.variant([
 				"Map",
 				{
 					value: new ReactiveMap(
 						Object.entries({
-							variant: JSON.variant(["String", { value: "Named" }]),
-							data: JSON.variant([
+							variant: JSONEnum.variant(["String", { value: "Named" }]),
+							data: JSONEnum.variant([
 								"Map",
 								{
 									value: new ReactiveMap(
 										Object.entries({
-											value: JSON.variant(["String", { value: "" }]),
+											value: JSONEnum.variant(["String", { value: "" }]),
 										}),
 									),
 								},
@@ -101,34 +105,34 @@ describe("toJSON", () => {
 			string: s.field("String", t.string()),
 			int: s.field("Int", t.int()),
 			bool: s.field("Bool", t.bool()),
-			json: s.field("JSON", t.enum(JSON)),
+			json: s.field("JSON", t.enum(JSONEnum)),
 		}));
 
 		const value = {
 			string: "",
 			int: 0,
 			bool: true,
-			json: JSON.variant("Null"),
+			json: JSONEnum.variant("Null"),
 		};
 
 		expect(
-			serializeValue(toJSON(t.struct(TestStruct), value), t.enum(JSON)),
+			serializeValue(toJSON(t.struct(TestStruct), value), t.enum(JSONEnum)),
 		).toEqual(
 			serializeValue(
-				JSON.variant([
+				JSONEnum.variant([
 					"Map",
 					{
 						value: new Map(
 							Object.entries({
-								string: JSON.variant(["String", { value: value.string }]),
-								int: JSON.variant(["Number", { value: value.int }]),
-								bool: JSON.variant(["Bool", { value: value.bool }]),
+								string: JSONEnum.variant(["String", { value: value.string }]),
+								int: JSONEnum.variant(["Number", { value: value.int }]),
+								bool: JSONEnum.variant(["Bool", { value: value.bool }]),
 								json: value.json,
 							}),
 						) as any,
 					},
 				]),
-				t.enum(JSON),
+				t.enum(JSONEnum),
 			),
 		);
 	});
@@ -136,27 +140,29 @@ describe("toJSON", () => {
 
 describe("jsonToJS", () => {
 	test("Null -> null", () => {
-		expect(jsonToJS(JSON.variant("Null"))).toBeNull();
+		expect(jsonToJS(JSONEnum.variant("Null"))).toBeNull();
 	});
 	test("Number -> number", () => {
 		const value = 4;
-		expect(jsonToJS(JSON.variant(["Number", { value }]))).toEqual(value);
+		expect(jsonToJS(JSONEnum.variant(["Number", { value }]))).toEqual(value);
 	});
 	test("String -> string", () => {
 		const value = "string";
-		expect(jsonToJS(JSON.variant(["String", { value }]))).toEqual(value);
+		expect(jsonToJS(JSONEnum.variant(["String", { value }]))).toEqual(value);
 	});
 	test("Bool -> boolean", () => {
 		const value = true;
-		expect(jsonToJS(JSON.variant(["Bool", { value }]))).toEqual(value);
+		expect(jsonToJS(JSONEnum.variant(["Bool", { value }]))).toEqual(value);
 	});
 	test("List -> Array<T>", () => {
 		const value: never[] = [];
-		expect(jsonToJS(JSON.variant(["List", { value }]))).toEqual(value);
+		expect(jsonToJS(JSONEnum.variant(["List", { value }]))).toEqual(value);
 	});
 	test("Map -> MapValue<T>", () => {
 		expect(
-			jsonToJS(JSON.variant(["Map", { value: new Map() as MapValue<never> }])),
+			jsonToJS(
+				JSONEnum.variant(["Map", { value: new Map() as MapValue<never> }]),
+			),
 		).toEqual({});
 		const value = {
 			number: 4,
@@ -164,13 +170,13 @@ describe("jsonToJS", () => {
 		};
 		expect(
 			jsonToJS(
-				JSON.variant([
+				JSONEnum.variant([
 					"Map",
 					{
 						value: new Map(
 							Object.entries({
-								number: JSON.variant(["Number", { value: value.number }]),
-								string: JSON.variant(["String", { value: value.string }]),
+								number: JSONEnum.variant(["Number", { value: value.number }]),
+								string: JSONEnum.variant(["String", { value: value.string }]),
 							}),
 						) as MapValue<never>,
 					},
@@ -182,26 +188,26 @@ describe("jsonToJS", () => {
 
 describe("jsToJSON", () => {
 	test("null -> Null", () => {
-		expect(jsToJSON(null)).toEqual(JSON.variant("Null"));
+		expect(jsToJSON(null)).toEqual(JSONEnum.variant("Null"));
 	});
 	test("number -> Number", () => {
 		const value = 4;
-		expect(jsToJSON(value)).toEqual(JSON.variant(["Number", { value }]));
+		expect(jsToJSON(value)).toEqual(JSONEnum.variant(["Number", { value }]));
 	});
 	test("string -> String", () => {
 		const value = "value";
-		expect(jsToJSON(value)).toEqual(JSON.variant(["String", { value }]));
+		expect(jsToJSON(value)).toEqual(JSONEnum.variant(["String", { value }]));
 	});
 	test("boolean -> Bool", () => {
 		const value = true;
-		expect(jsToJSON(value)).toEqual(JSON.variant(["Bool", { value }]));
+		expect(jsToJSON(value)).toEqual(JSONEnum.variant(["Bool", { value }]));
 	});
 	test("Array<T> -> List", () => {
-		expect(jsToJSON([])).toEqual(JSON.variant(["List", { value: [] }]));
+		expect(jsToJSON([])).toEqual(JSONEnum.variant(["List", { value: [] }]));
 	});
 	test("object -> Object", () => {
 		expect(jsToJSON({})).toEqual(
-			JSON.variant(["Map", { value: new ReactiveMap<string, never>() }]),
+			JSONEnum.variant(["Map", { value: new ReactiveMap<string, never>() }]),
 		);
 		const value = {
 			number: 4,
@@ -211,21 +217,24 @@ describe("jsToJSON", () => {
 			},
 		};
 		expect(jsToJSON(value)).toEqual(
-			JSON.variant([
+			JSONEnum.variant([
 				"Map",
 				{
 					value: new ReactiveMap<string, JSONValue>([
-						["number", JSON.variant(["Number", { value: value.number }])],
-						["string", JSON.variant(["String", { value: value.string }])],
+						["number", JSONEnum.variant(["Number", { value: value.number }])],
+						["string", JSONEnum.variant(["String", { value: value.string }])],
 						[
 							"object",
-							JSON.variant([
+							JSONEnum.variant([
 								"Map",
 								{
 									value: new ReactiveMap([
 										[
 											"nested",
-											JSON.variant(["Bool", { value: value.object.nested }]),
+											JSONEnum.variant([
+												"Bool",
+												{ value: value.object.nested },
+											]),
 										],
 									]),
 								},

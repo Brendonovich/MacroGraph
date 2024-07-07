@@ -1,14 +1,14 @@
 import { ReactiveMap } from "@solid-primitives/map";
 import { createMutable } from "solid-js/store";
-import { z } from "zod";
+import type { z } from "zod";
 
-import { Core } from "./Core";
-import { Graph } from "./Graph";
-import { CustomEvent } from "./CustomEvent";
-import { SerializedProject } from "./serialized";
-import { ResourceType } from "./Package";
 import { batch } from "solid-js";
-import { Variable, VariableArgs } from "./Variable";
+import type { Core } from "./Core";
+import { CustomEvent } from "./CustomEvent";
+import { Graph } from "./Graph";
+import type { ResourceType } from "./Package";
+import { Variable, type VariableArgs } from "./Variable";
+import type { SerializedProject } from "./serialized";
 
 export interface ProjectArgs {
 	core: Core;
@@ -30,7 +30,7 @@ export class Project {
 	customEvents = new ReactiveMap<number, CustomEvent>();
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
-	name: string = "New Project";
+	name = "New Project";
 
 	private disableSave = false;
 
@@ -139,8 +139,10 @@ export class Project {
 		const index = this.variables.findIndex((v) => v.id === id);
 		if (index === -1) return;
 
-		const v = this.variables.splice(index, 1);
-		v.forEach((v) => v.dispose());
+		const variables = this.variables.splice(index, 1);
+		for (const v of variables) {
+			v.dispose();
+		}
 	}
 
 	serialize(): z.infer<typeof SerializedProject> {

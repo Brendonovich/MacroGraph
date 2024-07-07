@@ -1,4 +1,4 @@
-import { ExecOutput as ExecOutputModel } from "@macrograph/runtime";
+import type { ExecOutput as ExecOutputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
 import { usePin } from ".";
 
@@ -14,9 +14,8 @@ export const ExecOutput = (props: Props) => {
 			<Show when={props.output.name}>{(name) => <span>{name()}</span>}</Show>
 			<div ref={ref}>
 				<svg
-					style={{
-						"pointer-events": "all",
-					}}
+					aria-hidden="true"
+					style={{ "pointer-events": "all" }}
 					viewBox="0 0 14 17.5"
 					class="w-3.5 text-transparent hover:text-white pointer-events-[all]"
 					fill={

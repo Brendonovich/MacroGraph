@@ -1,14 +1,14 @@
-import clsx from "clsx";
-import { DataInput, DataOutput } from "@macrograph/runtime";
-import {
-	AnyType,
-	BaseType,
-	ListType,
-	t,
-	WildcardType,
-} from "@macrograph/typesystem";
-import { Match, Switch } from "solid-js";
 import { Tooltip } from "@kobalte/core";
+import { DataInput, type DataOutput } from "@macrograph/runtime";
+import {
+	type AnyType,
+	type BaseType,
+	ListType,
+	WildcardType,
+	t,
+} from "@macrograph/typesystem";
+import clsx from "clsx";
+import { Match, Switch } from "solid-js";
 
 import { usePin } from ".";
 import { colour } from "../util";
@@ -51,7 +51,8 @@ export const DataPin = (props: Props) => {
 		get value() {
 			if (props.pin.type instanceof WildcardType) {
 				return props.pin.type.wildcard.value().unwrapOr(props.pin.type);
-			} else return props.pin.type;
+			}
+			return props.pin.type;
 		},
 	};
 
@@ -67,7 +68,8 @@ export const DataPin = (props: Props) => {
 
 									if (value instanceof t.Wildcard) {
 										return value.wildcard.value().unwrapOr(value);
-									} else return value;
+									}
+									return value;
 								},
 							};
 
@@ -106,7 +108,7 @@ export const DataPin = (props: Props) => {
 										<div
 											{...containerProps()}
 											class={clsx(
-												`w-3.5 h-3.5 flex justify-center items-center border-mg-current`,
+												"w-3.5 h-3.5 flex justify-center items-center border-mg-current",
 												rounding(type()),
 												connected() || active()
 													? "border-[2.5px]"
@@ -167,7 +169,7 @@ export const DataPin = (props: Props) => {
 							<div
 								{...containerProps()}
 								class={clsx(
-									`w-3.5 h-3.5 border-[2.5px]`,
+									"w-3.5 h-3.5 border-[2.5px]",
 									rounding(type()),
 									connected() || active()
 										? "border-mg-current bg-mg-current"

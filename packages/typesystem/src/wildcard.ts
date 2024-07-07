@@ -1,5 +1,14 @@
 import {
-	Accessor,
+	None,
+	type Option,
+	Some,
+	createOptionMemo,
+	createOptionSignal,
+} from "@macrograph/option";
+import { ReactiveMap } from "@solid-primitives/map";
+import { ReactiveSet } from "@solid-primitives/set";
+import {
+	type Accessor,
 	batch,
 	createEffect,
 	createMemo,
@@ -11,20 +20,11 @@ import {
 	runWithOwner,
 	untrack,
 } from "solid-js";
-import { ReactiveSet } from "@solid-primitives/set";
-import {
-	None,
-	Option,
-	Some,
-	createOptionMemo,
-	createOptionSignal,
-} from "@macrograph/option";
 import { createMutable } from "solid-js/store";
-import { ReactiveMap } from "@solid-primitives/map";
 
 import { BaseType } from "./base";
 
-import { t, TypeVariant } from ".";
+import { type TypeVariant, t } from ".";
 import { Disposable } from "./utils";
 
 /**
@@ -138,7 +138,8 @@ export class Wildcard {
 								)
 							)
 								return;
-							else wildcardConnection().unwrap().dispose();
+
+							wildcardConnection().unwrap().dispose();
 						}
 
 						let connections: Option<

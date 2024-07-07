@@ -1,10 +1,10 @@
 import {
-	Node,
 	DEFAULT,
-	PropertyValue,
-	SchemaProperties,
+	type Node,
+	type PropertyValue,
+	type SchemaProperties,
 } from "@macrograph/runtime";
-import { Switch, For, Match, Show, createMemo } from "solid-js";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { SidebarSection } from "../../components/Sidebar";
 import {
 	CheckBox,
@@ -144,7 +144,7 @@ export function Properties(props: {
 													id: DEFAULT,
 													name: dflt
 														? `Default (${dflt.name})`
-														: `No Items Available`,
+														: "No Items Available",
 												},
 												...resource.items,
 											];

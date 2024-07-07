@@ -1,5 +1,5 @@
-import { APIHandler } from "@solidjs/start/server";
 import { json } from "@solidjs/router";
+import type { APIHandler } from "@solidjs/start/server";
 import { z } from "zod";
 
 import { CORS_HEADERS } from "~/auth";

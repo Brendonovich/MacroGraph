@@ -1,4 +1,4 @@
-import { ExecInput as ExecInputModel } from "@macrograph/runtime";
+import type { ExecInput as ExecInputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
 import { usePin } from ".";
 
@@ -13,9 +13,8 @@ export const ExecInput = (props: Props) => {
 		<div class="flex flex-row items-center space-x-1.5 h-5">
 			<div ref={ref}>
 				<svg
-					style={{
-						"pointer-events": "all",
-					}}
+					aria-hidden="true"
+					style={{ "pointer-events": "all" }}
 					viewBox="0 0 14 17.5"
 					class="w-3.5 text-transparent hover:text-white pointer-events-[all]"
 					fill={

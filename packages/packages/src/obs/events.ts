@@ -1,18 +1,18 @@
+import { JSONEnum, jsToJSON } from "@macrograph/json";
+import { Maybe } from "@macrograph/option";
 import {
+	type CreateEventSchema,
+	type Package,
+	type PropertyDef,
+	type SchemaProperties,
 	createEnum,
 	createStruct,
-	Package,
-	PropertyDef,
-	SchemaProperties,
-	CreateEventSchema,
 } from "@macrograph/runtime";
-import { InferEnum, t } from "@macrograph/typesystem";
-import { Maybe } from "@macrograph/option";
-import { JSON, jsToJSON } from "@macrograph/json";
-import { EventTypes } from "obs-websocket-js";
-import { onCleanup } from "solid-js";
-import { EventEmitter } from "eventemitter3";
+import { type InferEnum, t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
+import type { EventEmitter } from "eventemitter3";
+import type { EventTypes } from "obs-websocket-js";
+import { onCleanup } from "solid-js";
 
 import { defaultProperties } from "./resource";
 
@@ -145,7 +145,7 @@ export function register(pkg: Package<EventTypes>) {
 
 	function createOBSEventSchema<
 		TEvent extends keyof EventTypes,
-		TProperties extends Record<string, PropertyDef> = {},
+		TProperties extends Record<string, PropertyDef> = Record<string, never>,
 		TIO = void,
 	>(
 		s: Omit<
@@ -224,7 +224,7 @@ export function register(pkg: Package<EventTypes>) {
 				eventData: io.dataOutput({
 					id: "eventData",
 					name: "Event Data",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -553,12 +553,12 @@ export function register(pkg: Package<EventTypes>) {
 				inputSettings: io.dataOutput({
 					id: "inputSettings",
 					name: "inputSettings",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				defaultInputSettings: io.dataOutput({
 					id: "defaultInputSettings",
 					name: "Default Input Settings",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},

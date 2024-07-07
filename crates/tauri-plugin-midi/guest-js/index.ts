@@ -1,4 +1,4 @@
-import { UnlistenFn } from "@tauri-apps/api/event";
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import { events, commands } from "./bindings";
 
 // https://webaudio.github.io/web-midi-api

@@ -1,10 +1,10 @@
 import { createEventBus } from "@solid-primitives/event-bus";
 import { createEventListener } from "@solid-primitives/event-listener";
 
-import { Pkg, STATUS_BYTES } from "./";
-import { midiInputProperty } from "./resource";
+import type { CreateEventSchema } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { CreateEventSchema } from "@macrograph/runtime";
+import { type Pkg, STATUS_BYTES } from "./";
+import { midiInputProperty } from "./resource";
 
 type Tuple<T, N extends number> = N extends N
 	? number extends N

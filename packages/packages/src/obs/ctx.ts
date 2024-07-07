@@ -1,6 +1,6 @@
+import { Maybe } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 import OBS, { EventSubscription } from "obs-websocket-js";
-import { Maybe } from "@macrograph/option";
 import { z } from "zod";
 
 type InstanceState = { password: string | null } & (
@@ -98,7 +98,9 @@ export function createCtx() {
 	Maybe(localStorage.getItem(OBS_INSTANCES)).mapAsync(async (jstr) => {
 		const instances = z.array(INSTANCE_SCHEMA).parse(JSON.parse(jstr));
 
-		instances.forEach((i) => addInstance(i.url, i.password));
+		for (const i of instances) {
+			addInstance(i.url, i.password);
+		}
 	});
 
 	function persistInstances() {

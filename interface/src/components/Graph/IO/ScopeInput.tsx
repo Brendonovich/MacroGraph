@@ -1,4 +1,4 @@
-import { ScopeInput as ScopeInputModel } from "@macrograph/runtime";
+import type { ScopeInput as ScopeInputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
 import { usePin } from ".";
 
@@ -13,9 +13,8 @@ export const ScopeInput = (props: Props) => {
 		<div class="flex flex-row items-center space-x-1.5 h-5">
 			<div ref={ref}>
 				<svg
-					style={{
-						"pointer-events": "all",
-					}}
+					aria-hidden="true"
+					style={{ "pointer-events": "all" }}
 					viewBox="0 0 16 13"
 					class="w-4 text-transparent hover:text-white pointer-events-[all]"
 					fill={

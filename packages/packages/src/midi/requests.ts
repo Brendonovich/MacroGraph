@@ -1,7 +1,7 @@
+import type { CreateNonEventSchema, RunProps } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { CreateNonEventSchema, RunProps } from "@macrograph/runtime";
 
-import { Pkg, STATUS_BYTES } from "./";
+import { type Pkg, STATUS_BYTES } from "./";
 import { MIDIOutput } from "./resource";
 
 const defaultProperties = {

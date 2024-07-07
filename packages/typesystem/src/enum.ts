@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 // import { z } from "zod";
-import { t, TypeVariant, Wildcard } from ".";
+import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
 
 type EnumVariantData = Record<string, BaseType<any>>;
@@ -20,13 +20,12 @@ export class EnumVariant<
 		const data = this.data;
 
 		return data === null
-			? {
-					variant: this.name,
-				}
+			? { variant: this.name }
 			: {
 					variant: this.name,
 					data: Object.entries(data).reduce(
-						(acc, [name, type]) => ({ ...acc, [name]: type.default() }),
+						(acc, [name, type]) =>
+							Object.assign(acc, { [name]: type.default() }),
 						{},
 					),
 				};
@@ -52,17 +51,9 @@ export class Enum<
 		public name: string,
 		variants: Variants | LazyEnumVariants<Variants>,
 	) {
-		if (variants instanceof LazyEnumVariants) {
-			this._variants = {
-				type: "lazy",
-				variants,
-			};
-		} else {
-			this._variants = {
-				type: "resolved",
-				variants,
-			};
-		}
+		if (variants instanceof LazyEnumVariants)
+			this._variants = { type: "lazy", variants };
+		else this._variants = { type: "resolved", variants };
 
 		return createMutable(this);
 	}
@@ -96,15 +87,9 @@ export class Enum<
 					>,
 				],
 	): InferEnumVariant<Extract<EnumVariantOfEnum<this>, { name: Name }>> {
-		if (Array.isArray(val)) {
-			return {
-				variant: val[0],
-				data: val[1],
-			} as any;
-		} else
-			return {
-				variant: val,
-			} as any;
+		if (Array.isArray(val)) return { variant: val[0], data: val[1] } as any;
+
+		return { variant: val } as any;
 	}
 }
 
@@ -198,17 +183,10 @@ export type InferEnum<E extends Enum<any>> = E extends Enum<any, infer Type>
 
 export type InferEnumVariant<V> = V extends EnumVariant<infer Name, infer Data>
 	? Data extends null
-		? {
-				variant: Name;
-			}
-		: {
-				variant: Name;
-				data: InferEnumVariantData<Data>;
-			}
+		? { variant: Name }
+		: { variant: Name; data: InferEnumVariantData<Data> }
 	: never;
 
 export type InferEnumVariantData<D> = D extends EnumVariantData
-	? {
-			[K in keyof D]: t.infer<D[K]>;
-		}
+	? { [K in keyof D]: t.infer<D[K]> }
 	: never;

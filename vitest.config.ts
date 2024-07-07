@@ -1,6 +1,6 @@
-import { defineConfig } from "vitest/config";
 import solid from "vite-plugin-solid";
 import GithubActionsReporter from "vitest-github-actions-reporter";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	plugins: [solid()],

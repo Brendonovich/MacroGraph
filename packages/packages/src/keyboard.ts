@@ -32,7 +32,7 @@ export function pkg() {
 		pkg.emitEvent({ name: `${key}-key`, data: { state: "released" } });
 	});
 
-	alphabet.forEach((a) => {
+	for (const a of alphabet) {
 		pkg.createEventSchema({
 			name: `${a} Key`,
 			event: `${toLowercase(a)}-key`,
@@ -52,9 +52,9 @@ export function pkg() {
 				ctx.exec(data.state === "pressed" ? io.pressed : io.released);
 			},
 		});
-	});
+	}
 
-	alphabet.forEach((a) => {
+	for (const a of alphabet) {
 		pkg.createNonEventSchema({
 			name: `${a} Key Pressed`,
 			variant: "Pure",
@@ -68,7 +68,7 @@ export function pkg() {
 				ctx.setOutput(io, pressedKeys.has(a.toLowerCase() as any));
 			},
 		});
-	});
+	}
 
 	return pkg;
 }

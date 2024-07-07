@@ -1,7 +1,7 @@
 import { createEnum } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { Pkg } from ".";
-import { Ctx } from "./ctx";
+import type { Pkg } from ".";
+import type { Ctx } from "./ctx";
 
 const Sliders = createEnum("Sliders", (e) => [
 	e.variant("A"),
@@ -49,7 +49,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 		const s = state();
 
 		if (s.type !== "connected") throw new Error("GoXLR is not connected");
-		else return s.ws;
+		return s.ws;
 	}
 
 	pkg.registerType(Sliders);

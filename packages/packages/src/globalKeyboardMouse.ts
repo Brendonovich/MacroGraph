@@ -1,6 +1,6 @@
-import { Key, commands } from "tauri-plugin-kb-mouse";
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
+import { type Key, commands } from "tauri-plugin-kb-mouse";
 
 export function pkg() {
 	const pkg = new Package({

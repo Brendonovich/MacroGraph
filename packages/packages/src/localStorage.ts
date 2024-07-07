@@ -1,7 +1,7 @@
+import { JSONEnum, jsToJSON, jsonToJS } from "@macrograph/json";
+import { Maybe } from "@macrograph/option";
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { Maybe } from "@macrograph/option";
-import { JSON, jsonToJS, jsToJSON } from "@macrograph/json";
 
 export function pkg() {
 	const pkg = new Package({
@@ -46,7 +46,7 @@ export function pkg() {
 				value: io.dataInput({
 					id: "value",
 					name: "Value",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -95,7 +95,7 @@ export function pkg() {
 				output: io.dataOutput({
 					id: "output",
 					name: "Data",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},

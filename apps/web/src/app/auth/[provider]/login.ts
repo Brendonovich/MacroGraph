@@ -1,8 +1,8 @@
-import { APIEvent } from "@solidjs/start/server";
 import { redirect } from "@solidjs/router";
+import type { APIEvent } from "@solidjs/start/server";
 
-import { AuthProviders } from "../providers";
 import { getOAuthLoginURL } from "../actions";
+import { AuthProviders } from "../providers";
 
 export const GET = async (event: APIEvent) => {
 	const { provider } = event.params as { provider: string };

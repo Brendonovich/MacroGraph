@@ -68,6 +68,7 @@ export function DialogCloseButton() {
 	return (
 		<DialogPrimitive.CloseButton class="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[expanded]:bg-accent data-[expanded]:text-muted-foreground">
 			<svg
+				aria-hidden="true"
 				xmlns="http://www.w3.org/2000/svg"
 				viewBox="0 0 24 24"
 				fill="none"

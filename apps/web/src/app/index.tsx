@@ -1,4 +1,3 @@
-import { clientOnly } from "@solidjs/start";
 import {
 	Badge,
 	Dialog,
@@ -11,13 +10,14 @@ import {
 	DropdownMenuTrigger,
 } from "@macrograph/ui";
 import { createEventListener } from "@solid-primitives/event-listener";
+import { clientOnly } from "@solidjs/start";
 
 const Editor = clientOnly(() => import("../Editor"));
 
 export default function () {
 	return (
 		<div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
-			<ErrorBoundary fallback={<></>}>
+			<ErrorBoundary fallback={null}>
 				<DesktopListener />
 			</ErrorBoundary>
 			<Header />
@@ -95,20 +95,8 @@ function DesktopListener() {
 	return null;
 }
 
-import IconIcBaselineDiscord from "~icons/ic/baseline-discord.jsx";
-import IconMdiGithub from "~icons/mdi/github.jsx";
-import { Button } from "@macrograph/ui";
-import {
-	ErrorBoundary,
-	For,
-	ParentProps,
-	Show,
-	Suspense,
-	createSignal,
-	onMount,
-} from "solid-js";
 import { As } from "@kobalte/core";
-import { appendResponseHeader } from "vinxi/http";
+import { Button } from "@macrograph/ui";
 import {
 	action,
 	cache,
@@ -116,7 +104,19 @@ import {
 	useAction,
 	useSearchParams,
 } from "@solidjs/router";
-import { DownloadTarget, getDownloadURL } from "~/lib/releases";
+import {
+	ErrorBoundary,
+	For,
+	type ParentProps,
+	Show,
+	Suspense,
+	createSignal,
+	onMount,
+} from "solid-js";
+import { appendResponseHeader } from "vinxi/http";
+import { type DownloadTarget, getDownloadURL } from "~/lib/releases";
+import IconIcBaselineDiscord from "~icons/ic/baseline-discord.jsx";
+import IconMdiGithub from "~icons/mdi/github.jsx";
 
 const getDownloadURL_cached = cache((target: DownloadTarget) => {
 	"use server";
@@ -136,9 +136,9 @@ const ExportButton = clientOnly(() =>
 	import("../Editor").then((i) => ({ default: i.ExportButton })),
 );
 
-import IconTablerDeviceDesktopDown from "~icons/tabler/device-desktop-down";
-import { getAuthState, getUser } from "~/api";
 import { toast } from "solid-sonner";
+import { getAuthState, getUser } from "~/api";
+import IconTablerDeviceDesktopDown from "~icons/tabler/device-desktop-down";
 
 function Header() {
 	return (
@@ -224,6 +224,7 @@ function Socials() {
 				class="hover:text-[#7289da]"
 				target="_blank"
 				href="https://discord.gg/FEyYaC8v53"
+				rel="noreferrer"
 			>
 				<IconIcBaselineDiscord class="w-7 h-7" />
 			</a>
@@ -231,6 +232,7 @@ function Socials() {
 				class="hover:text-[#4078c0]"
 				target="_blank"
 				href="https://github.com/brendonovich/macrograph"
+				rel="noreferrer"
 			>
 				<IconMdiGithub class="w-7 h-7" />
 			</a>
@@ -271,10 +273,10 @@ function AuthSection() {
 	);
 }
 
+import type { JSX } from "solid-js";
 import IconRadixIconsExternalLink from "~icons/radix-icons/external-link";
-import { IS_LOGGED_IN, logOutAction } from "./(auth)/utils";
 import { LoginForm, SignUpForm } from "./(auth)/Forms";
-import { JSX } from "solid-js";
+import { IS_LOGGED_IN, logOutAction } from "./(auth)/utils";
 
 function UserDropdown(
 	props: ParentProps<{ user: ReturnType<typeof getUser> }>,

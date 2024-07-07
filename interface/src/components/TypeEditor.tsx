@@ -1,18 +1,18 @@
+import { DropdownMenu } from "@kobalte/core";
+import { t } from "@macrograph/typesystem";
+import clsx from "clsx";
 import {
-	Accessor,
+	type Accessor,
+	For,
 	Match,
-	ParentProps,
+	type ParentProps,
+	Show,
 	Switch,
 	children,
+	createContext,
 	createSignal,
 	useContext,
-	createContext,
-	For,
-	Show,
 } from "solid-js";
-import { t } from "@macrograph/typesystem";
-import { DropdownMenu } from "@kobalte/core";
-import clsx from "clsx";
 import { useCore } from "../contexts";
 
 type TypeDialogState = {
@@ -82,6 +82,7 @@ export function TypeEditor(props: {
 						<div class="flex flex-col pl-1 text-sm">
 							{CONTAINERS.map(([name, apply]) => (
 								<button
+									type="button"
 									class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 									onClick={() => {
 										ctx
@@ -107,6 +108,7 @@ export function TypeEditor(props: {
 										<For each={[...pkg.structs.values()]}>
 											{(struct) => (
 												<button
+													type="button"
 													class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 													onClick={() => {
 														ctx
@@ -134,6 +136,7 @@ export function TypeEditor(props: {
 										<For each={[...pkg.enums.values()]}>
 											{(enm) => (
 												<button
+													type="button"
 													class="text-left hover:bg-white/20 px-1 py-0.5 rounded"
 													onClick={() => {
 														ctx.typeDialogState()?.onTypeSelected(t.enum(enm));
@@ -302,6 +305,9 @@ function Span(
 				editorCtx.setHoveredType(null);
 			}}
 			onClick={(e) => props.onClick?.(e)}
+			onKeyPress={(e) => {
+				if (e.key === "Enter") e.currentTarget.click();
+			}}
 		>
 			{props.children}
 		</div>

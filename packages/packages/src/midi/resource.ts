@@ -1,5 +1,5 @@
-import { PropertyDef, createResourceType } from "@macrograph/runtime";
-import { Pkg } from ".";
+import { type PropertyDef, createResourceType } from "@macrograph/runtime";
+import type { Pkg } from ".";
 
 export const MIDIInput = createResourceType({
 	name: "MIDI Input",

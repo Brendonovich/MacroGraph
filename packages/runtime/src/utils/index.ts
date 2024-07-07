@@ -5,7 +5,7 @@ export type Size = { width: number; height: number };
 
 export const map = <I, O>(value: I | null, cb: (v: I) => O): O | null => {
 	if (value === null) return null;
-	else return cb(value);
+	return cb(value);
 };
 
 export type WsMessage = "Connected" | "Disconnected" | { Text: string };
@@ -42,11 +42,9 @@ export function hashKey<T extends Array<any>>(args: T): string {
 	);
 }
 
-function isPlainObject(obj: object) {
-	let proto;
-	return (
-		obj != null &&
-		typeof obj === "object" &&
-		(!(proto = Object.getPrototypeOf(obj)) || proto === Object.prototype)
-	);
+function isPlainObject(obj: any): obj is Record<string, any> {
+	if (obj === null || typeof obj !== "object") return false;
+
+	const proto = Object.getPrototypeOf(obj);
+	return !proto || proto === Object.prototype;
 }

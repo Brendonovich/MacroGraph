@@ -1,10 +1,10 @@
-import { createMutable } from "solid-js/store";
-import { z } from "zod";
+import { type PrimitiveType, deserializeType, t } from "@macrograph/typesystem";
 import { batch } from "solid-js";
-import { t, PrimitiveType, deserializeType } from "@macrograph/typesystem";
+import { createMutable } from "solid-js/store";
+import type { z } from "zod";
 
-import { Project } from "./Project";
-import { SerializedEvent } from "./serialized";
+import type { Project } from "./Project";
+import type { SerializedEvent } from "./serialized";
 
 type CustomEventField = {
 	id: number;

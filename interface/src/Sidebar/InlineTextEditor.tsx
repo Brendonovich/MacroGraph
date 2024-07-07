@@ -1,11 +1,11 @@
 import clsx from "clsx";
 import {
+	type ComponentProps,
 	Match,
 	Switch,
 	batch,
 	createSignal,
 	onMount,
-	type ComponentProps,
 	splitProps,
 } from "solid-js";
 

@@ -1,9 +1,9 @@
-import { Package } from "@macrograph/runtime";
 import { Maybe, None, Some } from "@macrograph/option";
+import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
-import { JSON } from "./type";
 import { jsToJSON, jsonToJS, toJSON } from "./conversion";
+import { JSONEnum } from "./type";
 
 export function pkg() {
 	const pkg = new Package({
@@ -25,7 +25,7 @@ export function pkg() {
 				}),
 				out: io.dataOutput({
 					id: "out",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -49,7 +49,7 @@ export function pkg() {
 				}),
 				out: io.dataOutput({
 					id: "out",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 			};
 		},
@@ -72,11 +72,11 @@ export function pkg() {
 			return {
 				in: io.dataInput({
 					id: "in",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				out: io.dataOutput({
 					id: "out",
-					type: t.option(t.enum(JSON)),
+					type: t.option(t.enum(JSONEnum)),
 				}),
 			};
 		},
@@ -87,14 +87,14 @@ export function pkg() {
 			if (query[0] === ".") {
 				query = query.slice(1);
 				output = value;
-				let keys = query.split(".");
-				keys.forEach((key) => {
+				const keys = query.split(".");
+				for (const key of keys) {
 					if (output !== null && output[key] !== undefined) {
 						output = output[key];
 					} else {
 						output = null;
 					}
-				});
+				}
 			}
 
 			ctx.setOutput(io.out, Maybe(jsToJSON(output)));
@@ -108,7 +108,7 @@ export function pkg() {
 			return {
 				in: io.dataInput({
 					id: "in",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				out: io.dataOutput({
 					id: "out",
@@ -133,7 +133,7 @@ export function pkg() {
 			return {
 				in: io.dataInput({
 					id: "in",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				out: io.dataOutput({
 					id: "out",
@@ -158,7 +158,7 @@ export function pkg() {
 			return {
 				in: io.dataInput({
 					id: "in",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				out: io.dataOutput({
 					id: "out",
@@ -183,11 +183,11 @@ export function pkg() {
 			return {
 				in: io.dataInput({
 					id: "in",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				out: io.dataOutput({
 					id: "out",
-					type: t.option(t.list(t.enum(JSON))),
+					type: t.option(t.list(t.enum(JSONEnum))),
 				}),
 			};
 		},
@@ -208,11 +208,11 @@ export function pkg() {
 			return {
 				in: io.dataInput({
 					id: "in",
-					type: t.enum(JSON),
+					type: t.enum(JSONEnum),
 				}),
 				out: io.dataOutput({
 					id: "out",
-					type: t.option(t.map(t.enum(JSON))),
+					type: t.option(t.map(t.enum(JSONEnum))),
 				}),
 			};
 		},

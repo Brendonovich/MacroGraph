@@ -10,7 +10,9 @@ interface Props {
 
 export const IntInput = (props: Props) => {
 	// if NaN reset to 0
-	const initialValue = isNaN(props.initialValue) ? 0 : props.initialValue;
+	const initialValue = Number.isNaN(props.initialValue)
+		? 0
+		: props.initialValue;
 	props.onChange(initialValue);
 
 	createEffect(() => {
@@ -30,17 +32,17 @@ export const IntInput = (props: Props) => {
 
 				setValue(value);
 
-				const numValue = parseInt(value);
-				if (!isNaN(numValue)) props.onChange(parseInt(value));
+				const numValue = Number.parseInt(value);
+				if (!Number.isNaN(numValue)) props.onChange(Number.parseInt(value));
 			}}
 			onBlur={(e) => {
 				const s = e.target.value;
-				const num = parseInt(s);
+				const num = Number.parseInt(s);
 
 				if (s.length === 0) {
 					setValue("0");
 					props.onChange(0);
-				} else if (isNaN(num)) {
+				} else if (Number.isNaN(num)) {
 					setValue(props.initialValue.toString());
 				} else {
 					setValue(num.toString());

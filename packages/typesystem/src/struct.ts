@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
-import { t, TypeVariant, Wildcard } from ".";
+import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
 
 export class StructField<Type extends t.Any = t.Any> {
@@ -143,16 +143,16 @@ export class StructType<TStruct extends Struct> extends BaseType<
 	}
 }
 
-export type InferStruct<S> =
-	S extends Struct<infer Fields> ? InferStructFields<Fields> : never;
+export type InferStruct<S> = S extends Struct<infer Fields>
+	? InferStructFields<Fields>
+	: never;
 
 export type InferStructFields<F> = F extends StructFields
 	? { [K in keyof F]: InferStructField<F[K]> }
 	: never;
 
-export type InferStructField<F> =
-	F extends StructField<infer Type>
-		? Type extends BaseType<infer TOut>
-			? TOut
-			: never
-		: never;
+export type InferStructField<F> = F extends StructField<infer Type>
+	? Type extends BaseType<infer TOut>
+		? TOut
+		: never
+	: never;

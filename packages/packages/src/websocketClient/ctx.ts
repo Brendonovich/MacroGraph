@@ -4,17 +4,9 @@ import { ReactiveMap } from "@solid-primitives/map";
 export const WS_IPS_LOCALSTORAGE = "wsServers";
 
 type SocketState =
-	| {
-			state: "disconnected";
-			retried: boolean;
-	  }
-	| {
-			state: "connecting";
-	  }
-	| {
-			state: "connected";
-			socket: WebSocket;
-	  };
+	| { state: "disconnected"; retried: boolean }
+	| { state: "connecting" }
+	| { state: "connected"; socket: WebSocket };
 
 export function createCtx(callback: (data: any) => void) {
 	const websockets = new ReactiveMap<string, SocketState>();
@@ -22,7 +14,7 @@ export function createCtx(callback: (data: any) => void) {
 	function addWebsocket(ip: string, retryOnFail = true) {
 		websockets.set(ip, { state: "connecting" });
 
-		let ws = new WebSocket(ip);
+		const ws = new WebSocket(ip);
 
 		ws.onopen = () => {
 			websockets.set(ip, {
@@ -50,9 +42,9 @@ export function createCtx(callback: (data: any) => void) {
 	Maybe(localStorage.getItem(WS_IPS_LOCALSTORAGE))
 		.map((v) => JSON.parse(v) as string[])
 		.map((sockets) => {
-			sockets.forEach((key: string) => {
+			for (const key of sockets) {
 				addWebsocket(key);
-			});
+			}
 		});
 
 	function persistSockets() {

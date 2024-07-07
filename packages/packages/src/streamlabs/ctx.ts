@@ -1,6 +1,6 @@
-import { Core, OAuthToken, OnEvent } from "@macrograph/runtime";
 import { None, makePersistedOption } from "@macrograph/option";
-import { io, Socket } from "socket.io-client";
+import type { Core, OAuthToken, OnEvent } from "@macrograph/runtime";
+import { type Socket, io } from "socket.io-client";
 import {
 	createEffect,
 	createMemo,
@@ -11,7 +11,7 @@ import {
 } from "solid-js";
 import { z } from "zod";
 
-import { Events } from ".";
+import type { Events } from ".";
 import { createEndpoint } from "../httpEndpoint";
 import { EVENT } from "./events";
 

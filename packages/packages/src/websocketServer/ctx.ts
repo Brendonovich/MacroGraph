@@ -1,5 +1,5 @@
-import { OnEvent, WsProvider } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/option";
+import type { OnEvent, WsProvider } from "@macrograph/runtime";
 import { ReactiveMap } from "@solid-primitives/map";
 import { ReactiveSet } from "@solid-primitives/set";
 
@@ -18,9 +18,9 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
 	Maybe(localStorage.getItem(WS_PORTS_LOCALSTORAGE))
 		.map((v) => JSON.parse(v) as number[])
 		.map((ports) => {
-			ports.forEach((port: number) => {
+			for (const port of ports) {
 				startServer(port);
-			});
+			}
 		});
 
 	async function startServer(port: number) {

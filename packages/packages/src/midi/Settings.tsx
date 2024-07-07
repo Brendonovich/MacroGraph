@@ -1,7 +1,7 @@
-import { For, Match, Suspense, Switch } from "solid-js";
 import { Button } from "@macrograph/ui";
+import { For, Match, Suspense, Switch } from "solid-js";
 
-import { Ctx } from "./ctx";
+import type { Ctx } from "./ctx";
 
 export default ({ access, requestAccess, io }: Ctx) => {
 	return (

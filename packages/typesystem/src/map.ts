@@ -1,7 +1,7 @@
-import { z, ZodType } from "zod";
 import { ReactiveMap } from "@solid-primitives/map";
+import { ZodType, z } from "zod";
 
-import { t, TypeVariant, Wildcard } from ".";
+import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
 
 export type MapValue<T> = ReactiveMap<string, T>;

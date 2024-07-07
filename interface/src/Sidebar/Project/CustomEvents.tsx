@@ -1,12 +1,12 @@
-import { For, createMemo, createSignal } from "solid-js";
 import type { CustomEvent } from "@macrograph/runtime";
+import { For, createMemo, createSignal } from "solid-js";
 
-import { useCoreContext } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
+import { useCoreContext } from "../../contexts";
+import { tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
-import { tokeniseString } from "../../util";
 
 export function CustomEvents() {
 	const ctx = useCoreContext();

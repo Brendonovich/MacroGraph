@@ -1,6 +1,6 @@
-import { XY, Pin } from "@macrograph/runtime";
+import type { Pin, XY } from "@macrograph/runtime";
+import { type ParentProps, createContext, useContext } from "solid-js";
 import { createMutable } from "solid-js/store";
-import { createContext, useContext, ParentProps } from "solid-js";
 
 export function createUIStore() {
 	const state = createMutable({

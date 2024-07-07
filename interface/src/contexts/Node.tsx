@@ -1,5 +1,5 @@
-import { createContext, ParentProps, useContext } from "solid-js";
-import { Node } from "@macrograph/runtime";
+import type { Node } from "@macrograph/runtime";
+import { type ParentProps, createContext, useContext } from "solid-js";
 
 const NodeContext = createContext<Node>(null as any);
 

@@ -1,4 +1,4 @@
-import { Node } from "@macrograph/runtime";
+import type { Node } from "@macrograph/runtime";
 import { Show } from "solid-js";
 
 import { NodeInfo } from "./Info";

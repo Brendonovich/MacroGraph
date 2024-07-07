@@ -1,6 +1,6 @@
-import { JSON, toJSON } from "@macrograph/json";
-import { Package } from "@macrograph/runtime";
+import { JSONEnum, toJSON } from "@macrograph/json";
 import { Maybe } from "@macrograph/option";
+import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 
@@ -46,9 +46,9 @@ export function pkg() {
 		run({ ctx, io }) {
 			const map = ctx.getInput(io.mapIn);
 			ctx.setOutput(io.mapOut, map);
-			io.pins.forEach((input) => {
+			for (const input of io.pins) {
 				ctx.setOutput(input.value, Maybe(map.get(ctx.getInput(input.key))));
-			});
+			}
 		},
 	});
 
@@ -93,10 +93,10 @@ export function pkg() {
 		},
 		run({ ctx, io }) {
 			const map = ctx.getInput(io.mapIn);
-			io.pins.forEach((input) => {
+			for (const input of io.pins) {
 				map.set(ctx.getInput(input.key), ctx.getInput(input.value));
 				ctx.setOutput(input.current, Maybe(map.get(ctx.getInput(input.key))));
-			});
+			}
 			ctx.setOutput(io.mapOut, map);
 		},
 	});
@@ -136,9 +136,9 @@ export function pkg() {
 		run({ ctx, io }) {
 			const map = new ReactiveMap<string, any>();
 
-			io.inputs.forEach((input) => {
+			for (const input of io.inputs) {
 				map.set(ctx.getInput(input.key), ctx.getInput(input.value));
-			});
+			}
 
 			ctx.setOutput(io.out, map);
 		},
@@ -172,19 +172,19 @@ export function pkg() {
 				inputs,
 				out: io.dataOutput({
 					id: "",
-					type: t.map(t.enum(JSON)),
+					type: t.map(t.enum(JSONEnum)),
 				}),
 			};
 		},
 		run({ ctx, io }) {
 			const map = new ReactiveMap<string, any>();
 
-			io.inputs.forEach((input) => {
+			for (const input of io.inputs) {
 				map.set(
 					ctx.getInput(input.key),
 					toJSON(input.value.type, ctx.getInput(input.value)),
 				);
-			});
+			}
 
 			ctx.setOutput(io.out, map);
 		},

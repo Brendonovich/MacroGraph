@@ -10,7 +10,9 @@ interface Props {
 
 export const FloatInput = (props: Props) => {
 	// if NaN reset to 0
-	const initialValue = isNaN(props.initialValue) ? 0 : props.initialValue;
+	const initialValue = Number.isNaN(props.initialValue)
+		? 0
+		: props.initialValue;
 	props.onChange(initialValue);
 
 	const [value, setValue] = createSignal(props.initialValue.toString());
@@ -30,17 +32,17 @@ export const FloatInput = (props: Props) => {
 				const value = e.target.value;
 				setValue(value);
 
-				const numValue = parseFloat(value);
-				if (!isNaN(numValue)) props.onChange(numValue);
+				const numValue = Number.parseFloat(value);
+				if (!Number.isNaN(numValue)) props.onChange(numValue);
 			}}
 			onBlur={(e) => {
 				const s = e.target.value;
-				const num = parseFloat(s);
+				const num = Number.parseFloat(s);
 
 				if (s.length === 0) {
 					setValue("0");
 					props.onChange(0);
-				} else if (isNaN(num)) {
+				} else if (Number.isNaN(num)) {
 					setValue(props.initialValue.toString());
 				} else {
 					setValue(num.toString());

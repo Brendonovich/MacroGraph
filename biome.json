@@ -8,7 +8,7 @@
 			"packages/*/*",
 			"*"
 		],
-		"ignore": ["auto-imports.d.ts", "node_modules", "dist"]
+		"ignore": ["auto-imports.d.ts", "node_modules", "dist", "bindings.ts"]
 	},
 	"organizeImports": {
 		"enabled": true
@@ -22,6 +22,10 @@
 			},
 			"style": {
 				"noNonNullAssertion": "off"
+			},
+			"correctness": {
+				"noConstructorReturn": "off",
+				"noChildrenProp": "off"
 			}
 		}
 	},

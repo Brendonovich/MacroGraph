@@ -1,4 +1,4 @@
-import { Package, PropertyDef } from "@macrograph/runtime";
+import { Package, type PropertyDef } from "@macrograph/runtime";
 import { ReactiveSet } from "@solid-primitives/set";
 import { createEffect, createMemo, on, onCleanup, untrack } from "solid-js";
 

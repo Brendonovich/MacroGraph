@@ -31,14 +31,16 @@ export async function pbkdf2(password: string, iterations = 1e6) {
 
 	const saltArray = Array.from(new Uint8Array(saltUint8)); // salt as byte array
 
-	const iterHex = ("000000" + iterations.toString(16)).slice(-6); // iter’n count as hex
-	const iterArray = iterHex.match(/.{2}/g)!.map((byte) => parseInt(byte, 16)); // iter’ns as byte array
+	const iterHex = `000000${iterations.toString(16)}`.slice(-6); // iter’n count as hex
+	const iterArray = iterHex
+		.match(/.{2}/g)!
+		.map((byte) => Number.parseInt(byte, 16)); // iter’ns as byte array
 
 	const compositeArray = [...saltArray, ...iterArray, ...keyArray]; // combined array
 	const compositeStr = compositeArray
 		.map((byte) => String.fromCharCode(byte))
 		.join(""); // combined as string
-	const compositeBase64 = btoa("v01" + compositeStr); // encode as base64
+	const compositeBase64 = btoa(`v01${compositeStr}`); // encode as base64
 
 	return compositeBase64; // return composite key
 }
@@ -66,7 +68,7 @@ export async function pbkdf2Verify(key: string, password: string) {
 	const iterStr = compositeStr.slice(19, 22); //  3 bytes
 	const keyStr = compositeStr.slice(22, 54); // 32 bytes (256 bits)
 
-	if (version != "v01") throw new Error("Invalid key");
+	if (version !== "v01") throw new Error("Invalid key");
 
 	// -- recover salt & iterations from stored (composite) key
 
@@ -79,7 +81,7 @@ export async function pbkdf2Verify(key: string, password: string) {
 		.match(/./g)!
 		.map((ch) => ch.charCodeAt(0).toString(16))
 		.join(""); // iter’n count as hex
-	const iterations = parseInt(iterHex, 16); // iter’ns
+	const iterations = Number.parseInt(iterHex, 16); // iter’ns
 
 	// -- generate new key from stored salt & iterations and supplied password
 
@@ -98,5 +100,5 @@ export async function pbkdf2Verify(key: string, password: string) {
 	const keyArray = Array.from(new Uint8Array(keyBuffer)); // key as byte array
 	const keyStrNew = keyArray.map((byte) => String.fromCharCode(byte)).join(""); // key as string
 
-	return keyStrNew == keyStr; // test if newly generated key matches stored key
+	return keyStrNew === keyStr; // test if newly generated key matches stored key
 }

@@ -1,20 +1,20 @@
-import { z } from "zod";
+import type { Option } from "@macrograph/option";
 import {
-	Node,
-	SerializedNode,
-	SerializedCommentBox,
-	SerializedGraph,
-	SerializedProject,
-	SerializedConnection,
 	CommentBox,
-	Graph,
-	Project,
-	GetNodeSize,
+	type DataOutput,
 	ExecInput,
-	DataOutput,
-	ScopeOutput,
+	type GetNodeSize,
+	Graph,
+	Node,
+	Project,
+	type ScopeOutput,
+	SerializedCommentBox,
+	SerializedConnection,
+	SerializedGraph,
+	SerializedNode,
+	SerializedProject,
 } from "@macrograph/runtime";
-import { Option } from "@macrograph/option";
+import { z } from "zod";
 
 export const ClipboardItem = z.discriminatedUnion("type", [
 	z.object({
@@ -68,16 +68,16 @@ export function serializeConnections(nodes: Set<Node>) {
 	const connections: z.infer<typeof SerializedConnection>[] = [];
 
 	for (const node of nodes) {
-		node.state.inputs.forEach((i) => {
+		for (const i of node.state.inputs) {
 			if (i instanceof ExecInput) {
-				i.connections.forEach((conn) => {
+				for (const conn of i.connections) {
 					if (!nodes.has(conn.node)) return;
 
 					connections.push({
 						from: { node: conn.node.id, output: conn.id },
 						to: { node: i.node.id, input: i.id },
 					});
-				});
+				}
 			} else {
 				(i.connection as unknown as Option<DataOutput<any> | ScopeOutput>).peek(
 					(conn) => {
@@ -90,7 +90,7 @@ export function serializeConnections(nodes: Set<Node>) {
 					},
 				);
 			}
-		});
+		}
 	}
 
 	return connections;

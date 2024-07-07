@@ -1,14 +1,14 @@
 import {
-	BaseType,
-	Enum,
-	EnumVariants,
-	MapValue,
-	Struct,
+	type BaseType,
+	type Enum,
+	type EnumVariants,
+	type MapValue,
+	type Struct,
 	t,
 } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 
-import { JSONValue, JSON } from "./type";
+import { JSONEnum, type JSONValue } from "./type";
 
 /**
  * Runtime Value -> JSON
@@ -44,43 +44,47 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
 			type.wildcard.value().expect("Wildcard value not found!"),
 			value,
 		);
-	} else if (type instanceof t.Enum && type.inner === JSON) {
+	}
+	if (type instanceof t.Enum && type.inner === JSONEnum) {
 		return value;
-	} else if (type instanceof t.Option) {
-		if (value.isNone()) return JSON.variant("Null");
-		else return toJSON(type.inner, value.unwrap());
-	} else if (type instanceof t.Int || type instanceof t.Float)
-		return JSON.variant(["Number", { value }]);
-	else if (type instanceof t.String) return JSON.variant(["String", { value }]);
-	else if (type instanceof t.Bool) return JSON.variant(["Bool", { value }]);
-	else if (type instanceof t.List)
-		return JSON.variant([
+	}
+	if (type instanceof t.Option) {
+		if (value.isNone()) return JSONEnum.variant("Null");
+		return toJSON(type.inner, value.unwrap());
+	}
+	if (type instanceof t.Int || type instanceof t.Float)
+		return JSONEnum.variant(["Number", { value }]);
+	if (type instanceof t.String) return JSONEnum.variant(["String", { value }]);
+	if (type instanceof t.Bool) return JSONEnum.variant(["Bool", { value }]);
+	if (type instanceof t.List)
+		return JSONEnum.variant([
 			"List",
 			{ value: value.map((v: any) => toJSON(type.item, v)) },
 		]);
-	else if (type instanceof t.Map) {
+	if (type instanceof t.Map) {
 		const newValue: MapValue<any> = new ReactiveMap();
 
 		for (const [k, v] of value) {
 			newValue.set(k, toJSON(type.value, v));
 		}
 
-		return JSON.variant(["Map", { value: newValue }]);
-	} else if (type instanceof t.Enum) {
+		return JSONEnum.variant(["Map", { value: newValue }]);
+	}
+	if (type instanceof t.Enum) {
 		const enm: Enum = type.inner;
 		const variant = (enm.variants as EnumVariants).find(
 			(v) => v.name === value.variant,
 		)!;
 
-		return JSON.variant([
+		return JSONEnum.variant([
 			"Map",
 			{
 				value: new ReactiveMap(
 					Object.entries({
-						variant: JSON.variant(["String", { value: value.variant }]),
+						variant: JSONEnum.variant(["String", { value: value.variant }]),
 						...(value.data
 							? {
-									data: JSON.variant([
+									data: JSONEnum.variant([
 										"Map",
 										{
 											value: new ReactiveMap(
@@ -96,10 +100,11 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
 				),
 			},
 		]);
-	} else if (type instanceof t.Struct) {
+	}
+	if (type instanceof t.Struct) {
 		const struct: Struct = type.struct;
 
-		return JSON.variant([
+		return JSONEnum.variant([
 			"Map",
 			{
 				value: new ReactiveMap(
@@ -109,7 +114,8 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
 				),
 			},
 		]);
-	} else return null;
+	}
+	return null;
 }
 
 /**
@@ -117,7 +123,10 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
  */
 export function jsToJSON(value: any): JSONValue | null {
 	if (Array.isArray(value)) {
-		return JSON.variant(["List", { value: value.map((v) => jsToJSON(v)!) }]);
+		return JSONEnum.variant([
+			"List",
+			{ value: value.map((v) => jsToJSON(v)!) },
+		]);
 	}
 	// else if (value instanceof Map) {
 	//   return JSON.variant([
@@ -129,17 +138,17 @@ export function jsToJSON(value: any): JSONValue | null {
 	//     },
 	//   ]);
 	// }
-	else if (value === null) {
-		return JSON.variant("Null");
+	if (value === null) {
+		return JSONEnum.variant("Null");
 	}
 
 	switch (typeof value) {
 		case "number":
-			return JSON.variant(["Number", { value }]);
+			return JSONEnum.variant(["Number", { value }]);
 		case "string":
-			return JSON.variant(["String", { value }]);
+			return JSONEnum.variant(["String", { value }]);
 		case "object":
-			return JSON.variant([
+			return JSONEnum.variant([
 				"Map",
 				{
 					value: new ReactiveMap(
@@ -151,7 +160,7 @@ export function jsToJSON(value: any): JSONValue | null {
 				},
 			]);
 		case "boolean":
-			return JSON.variant(["Bool", { value }]);
+			return JSONEnum.variant(["Bool", { value }]);
 	}
 
 	return null;

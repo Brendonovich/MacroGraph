@@ -1,12 +1,12 @@
 import { Package } from "@macrograph/runtime";
 
-import { createCtx, Ctx } from "./ctx";
+import { type Ctx, createCtx } from "./ctx";
 
-import * as resources from "./resource";
 import * as events from "./events";
 import * as requests from "./requests";
+import * as resources from "./resource";
 
-export type Pkg = Package<{}, Ctx>;
+export type Pkg = Package<Record<string, never>, Ctx>;
 
 export const STATUS_BYTES = {
 	noteOff: 0x8,
@@ -21,7 +21,7 @@ export const STATUS_BYTES = {
 export function pkg(): Pkg {
 	const ctx = createCtx();
 
-	const pkg = new Package<{}, Ctx>({
+	const pkg: Pkg = new Package({
 		name: "MIDI",
 		ctx,
 		SettingsUI: () => import("./Settings"),

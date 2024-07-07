@@ -9,7 +9,7 @@ import {
 	createSignal,
 	on,
 } from "solid-js";
-import { Accessor } from "solid-js";
+import type { Accessor } from "solid-js";
 import { useCoreContext } from "../../contexts";
 
 export function createSection(args: {
@@ -91,7 +91,7 @@ function createControl() {
 			}
 			const index = all.indexOf(current);
 			const next = all[index + direction];
-			control.setActive(next ?? all[direction == 1 ? 0 : all.length - 1]);
+			control.setActive(next ?? all[direction === 1 ? 0 : all.length - 1]);
 		},
 		next() {
 			return control.move(1);
@@ -206,11 +206,15 @@ export function CommandDialog(props: { sections: Section[] }) {
 											{(source) => (
 												<li
 													class="px-4 py-2 rounded flex flex-row items-center gap-2 [&.active]:bg-neutral-900"
-													onMouseOver={(e) => {
+													onMouseOver={(e) => e.currentTarget.focus()}
+													onFocus={(e) => {
 														const target = e.currentTarget;
 														setTimeout(() => control.setActive(target), 0);
 													}}
 													onClick={() => source.run(control)}
+													onKeyPress={(e) => {
+														if (e.key === "Enter") e.currentTarget.click();
+													}}
 													data-element="action"
 												>
 													<span>{source.title}</span>

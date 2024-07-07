@@ -165,7 +165,7 @@ export type Key =
 
 import { invoke as TAURI_INVOKE } from "@tauri-apps/api";
 import * as TAURI_API_EVENT from "@tauri-apps/api/event";
-import { type WebviewWindowHandle as __WebviewWindowHandle__ } from "@tauri-apps/api/window";
+import type { WebviewWindowHandle as __WebviewWindowHandle__ } from "@tauri-apps/api/window";
 
 type __EventObj__<T> = {
 	listen: (
@@ -188,9 +188,7 @@ function __makeEvents__<T extends Record<string, any>>(
 ) {
 	return new Proxy(
 		{} as unknown as {
-			[K in keyof T]: __EventObj__<T[K]> & {
-				(handle: __WebviewWindowHandle__): __EventObj__<T[K]>;
-			};
+			[K in keyof T]: __EventObj__<T[K]> & (handle: __WebviewWindowHandle__) => __EventObj__<T[K]>;
 		},
 		{
 			get: (_, event) => {

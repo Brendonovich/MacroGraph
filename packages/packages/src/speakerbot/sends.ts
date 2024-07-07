@@ -1,7 +1,7 @@
 import { t } from "@macrograph/typesystem";
 
-import { Pkg } from ".";
-import { Ctx } from "./ctx";
+import type { Pkg } from ".";
+import type { Ctx } from "./ctx";
 
 export function register(pkg: Pkg, { state }: Ctx) {
 	const ws = () => {

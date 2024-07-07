@@ -166,7 +166,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			ctx.setOutput(io.value, ctx.getInput(io.one) != ctx.getInput(io.two));
+			ctx.setOutput(io.value, ctx.getInput(io.one) !== ctx.getInput(io.two));
 		},
 	});
 
@@ -191,7 +191,7 @@ export function pkg() {
 	});
 
 	pkg.createNonEventSchema({
-		name: `Conditional`,
+		name: "Conditional",
 		variant: "Pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
@@ -229,7 +229,7 @@ export function pkg() {
 	});
 
 	pkg.createNonEventSchema({
-		name: `For Each`,
+		name: "For Each",
 		variant: "Base",
 		createIO({ io }) {
 			const w = io.wildcard("");
@@ -275,7 +275,7 @@ export function pkg() {
 	});
 
 	pkg.createNonEventSchema({
-		name: `For Loop`,
+		name: "For Loop",
 		variant: "Base",
 		createIO({ io }) {
 			return {
@@ -314,7 +314,7 @@ export function pkg() {
 	});
 
 	pkg.createNonEventSchema({
-		name: `Switch`,
+		name: "Switch",
 		variant: "Base",
 		properties: {
 			number: {

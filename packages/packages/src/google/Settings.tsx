@@ -1,8 +1,8 @@
-import { Match, Switch, createSignal, Suspense, Show } from "solid-js";
-import { Button } from "@macrograph/ui";
 import { None, Some } from "@macrograph/option";
+import { Button } from "@macrograph/ui";
+import { Match, Show, Suspense, Switch, createSignal } from "solid-js";
 
-import { Ctx } from "./ctx";
+import type { Ctx } from "./ctx";
 
 export default function ({ core, setAuthToken, authToken, user }: Ctx) {
 	const [loggingIn, setLoggingIn] = createSignal(false);

@@ -1,8 +1,3 @@
-import { ErrorBoundary, ParentProps, Show, Suspense } from "solid-js";
-import { createAsync, useAction } from "@solidjs/router";
-import { open as openURL } from "@tauri-apps/api/shell";
-import { useQueryClient } from "@tanstack/solid-query";
-import { createSignal } from "solid-js";
 import {
 	As,
 	Button,
@@ -17,13 +12,18 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@macrograph/ui";
-import { toast } from "solid-sonner";
 import "@macrograph/ui/global.css";
+import { createAsync, useAction } from "@solidjs/router";
+import { useQueryClient } from "@tanstack/solid-query";
+import { open as openURL } from "@tauri-apps/api/shell";
+import { ErrorBoundary, type ParentProps, Show, Suspense } from "solid-js";
+import { createSignal } from "solid-js";
+import { toast } from "solid-sonner";
 
 import { api, logOutAction, sessionToken, setSessionToken } from "../api";
 import { core } from "../core";
-import { rspc } from "../rspc";
 import { env } from "../env";
+import { rspc } from "../rspc";
 
 export default function () {
 	return (

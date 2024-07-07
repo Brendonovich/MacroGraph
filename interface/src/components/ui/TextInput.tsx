@@ -1,6 +1,6 @@
 import { Popover } from "@kobalte/core";
 import clsx from "clsx";
-import { For, ResourceReturn, createMemo, on, onMount } from "solid-js";
+import { For, type ResourceReturn, createMemo, on, onMount } from "solid-js";
 import {
 	Show,
 	Suspense,
@@ -101,6 +101,9 @@ export const TextInput = (props: Props) => {
 														onClick={() => {
 															props.onChange(option);
 															setOpen();
+														}}
+														onKeyPress={(e) => {
+															if (e.key === "Enter") e.currentTarget.click();
 														}}
 														class="w-full px-2 py-1 hover:bg-white/20"
 													>

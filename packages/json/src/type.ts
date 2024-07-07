@@ -1,13 +1,13 @@
 import { createEnum } from "@macrograph/runtime";
 import {
-	Enum,
-	EnumBuilder,
-	EnumVariant,
-	EnumVariants,
-	InferEnumVariant,
+	type Enum,
+	type EnumBuilder,
+	type EnumVariant,
+	type EnumVariants,
+	type InferEnumVariant,
 	t,
 } from "@macrograph/typesystem";
-import { ReactiveMap } from "@solid-primitives/map";
+import type { ReactiveMap } from "@solid-primitives/map";
 
 const JSONLiteralVariants = (e: EnumBuilder) =>
 	[
@@ -40,14 +40,14 @@ type JSONVariantTypes = [
 	>,
 ];
 
-export const JSON = createEnum<JSONVariantTypes>("JSON", (e) =>
+export const JSONEnum = createEnum<JSONVariantTypes>("JSON", (e) =>
 	e.lazy(() => [
 		...JSONLiteralVariants(e),
 		e.variant("List", {
-			value: t.list(t.enum(JSON)),
+			value: t.list(t.enum(JSONEnum)),
 		}),
 		e.variant("Map", {
-			value: t.map(t.enum(JSON)),
+			value: t.map(t.enum(JSONEnum)),
 		}),
 	]),
 ) as Enum<JSONVariantTypes, JSONValue>;

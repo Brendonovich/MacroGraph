@@ -1,4 +1,4 @@
-import { DataOutput as DataOutputModel } from "@macrograph/runtime";
+import type { DataOutput as DataOutputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
 import { DataPin } from "./DataPin";
 

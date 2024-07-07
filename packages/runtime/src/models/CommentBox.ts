@@ -1,10 +1,10 @@
 import { createMutable } from "solid-js/store";
-import { z } from "zod";
+import type { z } from "zod";
 
-import { Node } from "./Node";
-import { Graph } from "./Graph";
-import { XY, Size } from "../utils";
-import { SerializedCommentBox } from "./serialized";
+import type { Size, XY } from "../utils";
+import type { Graph } from "./Graph";
+import type { Node } from "./Node";
+import type { SerializedCommentBox } from "./serialized";
 
 export interface CommentBoxArgs {
 	id: number;

@@ -1,9 +1,9 @@
-import { OnEvent } from "@macrograph/runtime";
 import { None, makePersistedOption } from "@macrograph/option";
+import type { OnEvent } from "@macrograph/runtime";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 
+import type { Event } from ".";
 import { WebSocketResponse } from "./types";
-import { Event } from ".";
 
 const URL_LOCALSTORAGE_KEY = "GoXLR_WS";
 
@@ -48,7 +48,8 @@ export function createCtx(onEvent: OnEvent<Event>) {
 						if ("Status" in data) {
 							mixerID = Object.keys(data.Status.mixers)[0];
 							return;
-						} else if ("Patch" in data) {
+						}
+						if ("Patch" in data) {
 							for (const op of data.Patch) {
 								const pathParts = op.path.substring(1).split("/");
 
