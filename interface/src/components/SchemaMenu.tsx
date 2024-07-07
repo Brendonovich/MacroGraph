@@ -59,7 +59,7 @@ export function SchemaMenu(props: Props) {
 					ref={searchRef!}
 					onInput={(e) => setSearch(e.target.value)}
 					value={search()}
-					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-primary-500 focus:ring-opacity-50 transition-colors"
+					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-yellow-500 transition-colors"
 					placeholder="Search Nodes..."
 					autocomplete="false"
 					autoCapitalize="off"

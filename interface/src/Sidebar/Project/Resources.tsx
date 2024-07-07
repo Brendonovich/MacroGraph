@@ -1,18 +1,11 @@
-import {
-	For,
-	Match,
-	Show,
-	Switch,
-	batch,
-	createMemo,
-	createSignal,
-	onMount,
-} from "solid-js";
+import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 import { DropdownMenu } from "@kobalte/core";
 
 import { useCore } from "../../contexts";
 import { SidebarSection } from "../../components/Sidebar";
 import { SelectInput, TextInput } from "../../components/ui";
+import { InlineTextEditor } from "../InlineTextEditor";
+import { SearchInput } from "../SearchInput";
 
 export function Resources() {
 	const [search, setSearch] = createSignal("");
@@ -23,16 +16,12 @@ export function Resources() {
 	return (
 		<SidebarSection title="Resources" class="overflow-y-hidden flex flex-col">
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
-				<input
+				<SearchInput
 					value={search()}
 					onInput={(e) => {
 						e.stopPropagation();
 						setSearch(e.currentTarget.value);
 					}}
-					onKeyDown={(e) => e.stopPropagation()}
-					type="text"
-					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-primary-500 focus:ring-opacity-50 transition-colors"
-					placeholder="Search"
 				/>
 				<AddResourceButton />
 			</div>
@@ -68,109 +57,32 @@ export function Resources() {
 									<ul class="bg-black/30 rounded divide-y divide-neutral-700 px-2">
 										<For each={data.items}>
 											{(item, index) => {
-												const [editingName, setEditingName] =
-													createSignal(false);
-
 												return (
 													<li class="space-y-1 pt-1 pb-2 group/item">
-														<h3 class="flex flex-row gap-1 justify-between items-center -mx-1">
-															<Switch>
-																<Match when={editingName()}>
-																	{(_) => {
-																		const [value, setValue] = createSignal(
-																			item.name,
-																		);
-																		let ref: HTMLInputElement;
+														<InlineTextEditor
+															class="-mx-1"
+															value={item.name}
+															onChange={(value) => {
+																item.name = value;
+																core.project.save();
+															}}
+														>
+															<button
+																type="button"
+																class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
+																onClick={(e) => {
+																	e.stopPropagation();
 
-																		let focused = false;
+																	data.items.splice(index(), 1);
+																	if (data.items.length < 1)
+																		core.project.resources.delete(type);
 
-																		onMount(() => {
-																			setTimeout(() => {
-																				ref.focus();
-																				ref.focus();
-																				focused = true;
-																			});
-																		});
-
-																		return (
-																			<input
-																				ref={ref!}
-																				class="flex-1 bg-neutral-900 rounded text-sm border-none py-0.5 px-1.5"
-																				value={value()}
-																				onInput={(e) => {
-																					setValue(e.target.value);
-																				}}
-																				onKeyDown={(e) => {
-																					if (e.key === "Enter") {
-																						e.preventDefault();
-																						e.stopPropagation();
-
-																						if (!focused) return;
-																						batch(() => {
-																							item.name = value();
-																							core.project.save();
-																							setEditingName(false);
-																						});
-																					} else if (e.key === "Escape") {
-																						e.preventDefault();
-																						e.stopPropagation();
-
-																						setEditingName(false);
-																					}
-																					e.stopPropagation();
-																				}}
-																				onFocusOut={() => {
-																					if (!focused) return;
-																					batch(() => {
-																						item.name = value();
-																						core.project.save();
-																						setEditingName(false);
-																					});
-																				}}
-																			/>
-																		);
-																	}}
-																</Match>
-																<Match when={!editingName()}>
-																	<span
-																		class="flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between py-0.5 px-1.5"
-																		onDblClick={(e) => {
-																			e.preventDefault();
-																			e.stopPropagation();
-
-																			setEditingName(true);
-																		}}
-																	>
-																		{item.name}
-																		<button
-																			type="button"
-																			class="pointer-events-none opacity-0 focus:opacity-100"
-																			onClick={() => {
-																				setEditingName(true);
-																			}}
-																		>
-																			<IconAntDesignEditOutlined class="size-4" />
-																		</button>
-																	</span>
-
-																	<button
-																		type="button"
-																		class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 transition-colors hover:bg-white/10 rounded p-0.5"
-																		onClick={(e) => {
-																			e.stopPropagation();
-
-																			data.items.splice(index(), 1);
-																			if (data.items.length < 1)
-																				core.project.resources.delete(type);
-
-																			core.project.save();
-																		}}
-																	>
-																		<IconAntDesignDeleteOutlined class="size-4" />
-																	</button>
-																</Match>
-															</Switch>
-														</h3>
+																	core.project.save();
+																}}
+															>
+																<IconAntDesignDeleteOutlined class="size-4" />
+															</button>
+														</InlineTextEditor>
 														<Switch>
 															<Match
 																when={

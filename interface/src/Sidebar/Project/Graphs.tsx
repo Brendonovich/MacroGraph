@@ -60,16 +60,12 @@ export function Graphs(props: Props) {
 	return (
 		<SidebarSection title="Graphs" class="overflow-y-hidden flex flex-col">
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
-				<input
+				<SearchInput
 					value={search()}
 					onInput={(e) => {
 						e.stopPropagation();
 						setSearch(e.currentTarget.value);
 					}}
-					onKeyDown={(e) => e.stopPropagation()}
-					type="text"
-					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-primary-500 focus:ring-opacity-50 transition-colors"
-					placeholder="Search"
 				/>
 				<button
 					type="button"
