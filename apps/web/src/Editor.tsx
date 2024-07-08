@@ -82,6 +82,7 @@ const core = new Core({
 	pkgs.variables.pkg,
 	pkgs.customEvents.pkg,
 	// pkgs.midi.pkg,
+	pkgs.vtubeStudio.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default () => {

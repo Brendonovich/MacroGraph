@@ -43,7 +43,7 @@ export type DataInputBuilder =
 			id: string;
 			name?: string;
 			type: t.String;
-			fetchSuggestions?(): Promise<any[]>;
+			fetchSuggestions?(): Promise<string[]>;
 	  };
 export type ExecInputBuilder = {
 	id: string;

@@ -41,11 +41,10 @@ export const TextInput = (props: Props) => {
 					onInput={(e) => props.onChange(e.target.value)}
 					onFocus={() => setTimeout(() => setOpen("inputFocused"), 1)}
 					onMouseDown={() => setOpen("inputFocused")}
-					class="h-6 w-full flex-1 bg-neutral-900 border-neutral-700 rounded-sm text-xs pl-1.5 appearance-none focus:ring-0 focus:border-yellow-500"
-					// class={clsx(
-					// 	"w-full text-xs h-5 px-1 border border-neutral-500 rounded bg-black focus:border-yellow-500 focus:ring-0",
-					// 	props.class,
-					// )}
+					class={clsx(
+						"h-6 w-full flex-1 bg-neutral-900 border-neutral-700 rounded-sm text-xs pl-1.5 appearance-none focus:ring-0 focus:border-yellow-500",
+						props.class,
+					)}
 				/>
 			</Popover.Anchor>
 			<Popover.Portal>

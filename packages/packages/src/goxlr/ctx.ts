@@ -11,9 +11,7 @@ export type Ctx = ReturnType<typeof createCtx>;
 
 export function createCtx(onEvent: OnEvent<Event>) {
 	const [state, setState] = createSignal<
-		| {
-				type: "disconnected";
-		  }
+		| { type: "disconnected" }
 		| { type: "connecting" | "connected"; ws: WebSocket }
 	>({ type: "disconnected" });
 
