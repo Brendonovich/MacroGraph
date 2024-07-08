@@ -345,7 +345,7 @@ export function pkg() {
 					type: t.wildcard(w),
 					name: "Data Out",
 				}),
-				pins: Array.from({ length: value }, (v, i) => ({
+				pins: Array.from({ length: value }, (_, i) => ({
 					case: io.dataInput({
 						id: `key-${i}`,
 						type: t.wildcard(w),

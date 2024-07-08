@@ -31,7 +31,7 @@ export function pkg() {
 					id: "map",
 					type: t.map(t.wildcard(w)),
 				}),
-				pins: Array.from({ length: value }, (v, i) => ({
+				pins: Array.from({ length: value }, (_, i) => ({
 					key: io.dataInput({
 						id: `key-${i}`,
 						type: t.string(),
@@ -75,7 +75,7 @@ export function pkg() {
 					id: "map",
 					type: t.map(t.wildcard(w)),
 				}),
-				pins: Array.from({ length: value }, (i) => ({
+				pins: Array.from({ length: value }, (_, i) => ({
 					key: io.dataInput({
 						id: `key-${i}`,
 						type: t.string(),
@@ -114,7 +114,7 @@ export function pkg() {
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 			const w = io.wildcard("");
-			const inputs = Array.from({ length: value }, (v, i) => ({
+			const inputs = Array.from({ length: value }, (_, i) => ({
 				key: io.dataInput({
 					id: `key-${i}`,
 					type: t.string(),
@@ -157,7 +157,7 @@ export function pkg() {
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 
-			const inputs = Array.from({ length: value }, (v, i) => ({
+			const inputs = Array.from({ length: value }, (_, i) => ({
 				key: io.dataInput({
 					id: `key-${i}`,
 					type: t.string(),

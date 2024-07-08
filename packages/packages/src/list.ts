@@ -20,7 +20,7 @@ export function pkg() {
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 			const w = io.wildcard("");
-			const inputs = Array.from({ length: value }, (v, i) => ({
+			const inputs = Array.from({ length: value }, (_, i) => ({
 				value: io.dataInput({
 					id: `value-${i}`,
 					type: t.wildcard(w),

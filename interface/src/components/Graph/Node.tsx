@@ -13,8 +13,8 @@ import {
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import * as Solid from "solid-js";
+import { createContext, useContext } from "solid-js";
 
-import { NodeProvider } from "../../contexts";
 import { useGraphContext } from "./Graph";
 import {
 	DataInput,
@@ -44,6 +44,15 @@ const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
 
 const GRID_SIZE = 25;
 const SHIFT_MULTIPLIER = 6;
+
+const NodeContext = createContext<NodeModel>(null as any);
+
+export const useNode = () => {
+	const ctx = useContext(NodeContext);
+	if (!ctx) throw new Error("NodeContext not found!");
+
+	return ctx;
+};
 
 export const Node = (props: Props) => {
 	const node = () => props.node;
@@ -95,7 +104,7 @@ export const Node = (props: Props) => {
 	});
 
 	return (
-		<NodeProvider node={node()}>
+		<NodeContext.Provider value={node()}>
 			<div
 				ref={ref}
 				class={clsx(
@@ -297,13 +306,13 @@ export const Node = (props: Props) => {
 						>
 							{(i) => (
 								<Solid.Switch>
-									<Solid.Match when={i instanceof DataInputModel ? i : null}>
+									<Solid.Match when={i instanceof DataInputModel && i}>
 										{(i) => <DataInput input={i()} />}
 									</Solid.Match>
-									<Solid.Match when={i instanceof ExecInputModel ? i : null}>
+									<Solid.Match when={i instanceof ExecInputModel && i}>
 										{(i) => <ExecInput input={i()} />}
 									</Solid.Match>
-									<Solid.Match when={i instanceof ScopeInputModel ? i : null}>
+									<Solid.Match when={i instanceof ScopeInputModel && i}>
 										{(i) => <ScopeInput input={i()} />}
 									</Solid.Match>
 								</Solid.Switch>
@@ -318,13 +327,13 @@ export const Node = (props: Props) => {
 						>
 							{(o) => (
 								<Solid.Switch>
-									<Solid.Match when={o instanceof DataOutputModel ? o : null}>
+									<Solid.Match when={o instanceof DataOutputModel && o}>
 										{(o) => <DataOutput output={o()} />}
 									</Solid.Match>
-									<Solid.Match when={o instanceof ExecOutputModel ? o : null}>
+									<Solid.Match when={o instanceof ExecOutputModel && o}>
 										{(o) => <ExecOutput output={o()} />}
 									</Solid.Match>
-									<Solid.Match when={o instanceof ScopeOutputModel ? o : null}>
+									<Solid.Match when={o instanceof ScopeOutputModel && o}>
 										{(o) => <ScopeOutput output={o()} />}
 									</Solid.Match>
 								</Solid.Switch>
@@ -333,6 +342,6 @@ export const Node = (props: Props) => {
 					</div>
 				</div>
 			</div>
-		</NodeProvider>
+		</NodeContext.Provider>
 	);
 };
