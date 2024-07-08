@@ -11,6 +11,8 @@ export function pkg() {
 		ctx: {},
 	});
 
+	pkg.registerType(JSONEnum);
+
 	pkg.createNonEventSchema({
 		name: "To JSON",
 		variant: "Pure",
