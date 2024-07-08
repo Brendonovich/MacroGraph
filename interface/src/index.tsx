@@ -1,3 +1,4 @@
+import { Tabs } from "@kobalte/core";
 import {
 	CommentBox,
 	type Core,
@@ -20,7 +21,6 @@ import { makePersisted } from "@solid-primitives/storage";
 import "@total-typescript/ts-reset";
 import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
-import { Tabs } from "@kobalte/core";
 
 export { CoreProvider } from "./contexts";
 import * as Sidebars from "./Sidebar";
@@ -65,20 +65,22 @@ export function Interface(props: {
 	core: Core;
 	environment: "custom" | "browser";
 }) {
-	const [loadedProject] = Solid.createResource(async () => {
+	const [loaded, setLoaded] = Solid.createSignal(false);
+
+	Solid.onMount(() => {
 		const savedProject = localStorage.getItem("project");
 
 		if (savedProject) {
-			await props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
-
-			return props.core.project;
+			// fixes #402, the project's reactivity needs to be entirely decoupled from the ui
+			queueMicrotask(() => {
+				props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
+				setLoaded(true);
+			});
 		}
-
-		return props.core.project;
 	});
 
 	return (
-		<Solid.Show when={loadedProject() && props.core.project} keyed>
+		<Solid.Show when={loaded() && props.core.project} keyed>
 			<ProjectInterface
 				core={props.core}
 				project={props.core.project}

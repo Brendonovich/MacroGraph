@@ -10,6 +10,7 @@ import { ReactiveSet } from "@solid-primitives/set";
 import {
 	type Accessor,
 	batch,
+	createComputed,
 	createEffect,
 	createMemo,
 	createRoot,
@@ -40,6 +41,7 @@ export class Wildcard {
 	wildcardConnections!: Accessor<Set<t.Wildcard>>;
 	directSourceConnection!: Accessor<Option<WildcardValueConnection>>;
 	wildcardConnection!: Accessor<Option<WildcardValueConnection>>;
+	value!: Accessor<Option<t.Any>>;
 
 	constructor(public id: string) {
 		const { dispose, owner } = createRoot((dispose) => ({
@@ -118,15 +120,19 @@ export class Wildcard {
 				createOptionSignal<WildcardValueConnection>(None);
 
 			// reset connection state when connection disposed externally
-			createEffect(
-				on(wildcardConnection, (conn) => {
-					conn.peek((c) => {
-						c.addDisposeListener(() => setWildcardConnection(None));
-					});
-				}),
+			createComputed(
+				on(
+					wildcardConnection,
+					(conn) => {
+						conn.peek((c) => {
+							c.addDisposeListener(() => setWildcardConnection(None));
+						});
+					},
+					{ defer: true },
+				),
 			);
 
-			createEffect(
+			createComputed(
 				on(
 					() => this.wildcardConnections(),
 					(wildcardConnections) => {
@@ -202,6 +208,7 @@ export class Wildcard {
 							setWildcardConnection(Some(valueConnection));
 						} else setWildcardConnection(None);
 					},
+					{ defer: true },
 				),
 			);
 
@@ -216,16 +223,18 @@ export class Wildcard {
 				return wildcardConnection();
 			});
 
-			this.valueConnection = createOptionMemo(() =>
-				this.directSourceConnection().orElse(() => this.wildcardConnection()),
+			this.valueConnection = createOptionMemo(() => {
+				return this.directSourceConnection().orElse(() =>
+					this.wildcardConnection(),
+				);
+			});
+
+			this.value = createMemo(() =>
+				this.valueConnection().map((c) => c.value()),
 			);
 		});
 
 		return self;
-	}
-
-	value() {
-		return this.valueConnection().map((c) => c.value());
 	}
 }
 
@@ -356,7 +365,7 @@ class WildcardTypeConnector extends Disposable {
 
 		const disposeRoot = createRoot((dispose) => {
 			if (a instanceof t.Wildcard && b instanceof t.Wildcard) {
-				createEffect(() => {
+				createComputed(() => {
 					const aValue = a.wildcard.value();
 					const bValue = b.wildcard.value();
 					aValue.zip(bValue).peek(([aValue, bValue]) => {
@@ -404,7 +413,7 @@ export function connectWildcards(a: t.Any, b: t.Any) {
 		},
 	);
 
-	createEffect(
+	createComputed(
 		on(valueConnection, (valueConnection) => {
 			valueConnection.peek(({ value, conn }) => {
 				// connects stuff like `Map<Wildcard>` and `Wildcard(Map<String>)` since

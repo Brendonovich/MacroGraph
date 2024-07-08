@@ -80,7 +80,9 @@ export function deserializeType(
 			);
 		case "enum":
 			return t.enum(
-				getType("enum", type.enum).expect("Enum not found!") as Enum,
+				getType("enum", type.enum).expect(
+					`Enum ${type.enum.name} not found!`,
+				) as Enum,
 			);
 	}
 }

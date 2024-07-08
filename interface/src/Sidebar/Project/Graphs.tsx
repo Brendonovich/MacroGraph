@@ -12,12 +12,12 @@ import {
 
 import { deserializeClipboardItem, readFromClipboard } from "../../clipboard";
 import { SidebarSection } from "../../components/Sidebar";
+import { IconButton } from "../../components/ui";
 import { useCore, useCoreContext } from "../../contexts";
 import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
-import { IconButton } from "../../components/ui";
 
 // React component to show a list of projects
 interface Props {

@@ -107,21 +107,21 @@ export class Core {
 		return resp.body;
 	};
 
-	constructor(args: {
-		fetch: typeof fetch;
-		oauth: OAuth;
-		api: InitClientReturn<typeof contract, any>;
+	constructor(args?: {
+		fetch?: typeof fetch;
+		oauth?: OAuth;
+		api?: InitClientReturn<typeof contract, any>;
 	}) {
-		this.fetch = args.fetch;
-		this.oauth = args.oauth;
-		this.api = args.api;
+		this.fetch = args?.fetch ?? fetch;
+		this.oauth = args?.oauth;
+		this.api = args?.api;
 
 		return createMutable(this);
 	}
 
-	async load(projectData: z.infer<typeof SerializedProject>) {
+	load(projectData: z.infer<typeof SerializedProject>) {
 		this.eventNodeMappings.clear();
-		this.project = await Project.deserialize(this, projectData);
+		this.project = Project.deserialize(this, projectData);
 	}
 
 	schema(pkg: string, name: string) {

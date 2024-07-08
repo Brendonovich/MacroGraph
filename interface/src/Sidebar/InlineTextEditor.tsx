@@ -1,13 +1,13 @@
 import clsx from "clsx";
 import {
 	type ComponentProps,
+	type JSX,
 	Match,
 	Switch,
 	batch,
 	createSignal,
 	onMount,
 	splitProps,
-	type JSX,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 

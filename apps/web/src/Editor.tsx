@@ -9,6 +9,7 @@ import * as pkgs from "@macrograph/packages";
 import { Core } from "@macrograph/runtime";
 import { As, Button } from "@macrograph/ui";
 import { initClient } from "@ts-rest/core";
+import { Show, createSignal, onMount } from "solid-js";
 
 import { clientEnv } from "~/env/client";
 

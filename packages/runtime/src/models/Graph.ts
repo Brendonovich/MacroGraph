@@ -336,17 +336,19 @@ export class Graph extends Disposable {
 			deserializeConnections(data.connections, graph.connections);
 		});
 
-		for (const node of graph.nodes.values()) {
-			const nodeData = data.nodes[node.id]!;
+		batch(() => {
+			for (const node of graph.nodes.values()) {
+				const nodeData = data.nodes[node.id]!;
 
-			for (const i of node.state.inputs) {
-				const defaultValue = nodeData.defaultValues[i.id];
+				for (const i of node.state.inputs) {
+					const defaultValue = nodeData.defaultValues[i.id];
 
-				if (defaultValue === undefined || !(i instanceof DataInput)) continue;
+					if (defaultValue === undefined || !(i instanceof DataInput)) continue;
 
-				i.defaultValue = defaultValue;
+					i.defaultValue = defaultValue;
+				}
 			}
-		}
+		});
 
 		return graph;
 	}

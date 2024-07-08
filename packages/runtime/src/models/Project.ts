@@ -2,7 +2,7 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { createMutable } from "solid-js/store";
 import type { z } from "zod";
 
-import { batch } from "solid-js";
+import { Owner, batch, createRoot, runWithOwner } from "solid-js";
 import type { Core } from "./Core";
 import { CustomEvent } from "./CustomEvent";
 import { Graph } from "./Graph";
@@ -164,75 +164,70 @@ export class Project {
 		};
 	}
 
-	static async deserialize(
-		core: Core,
-		data: z.infer<typeof SerializedProject>,
-	) {
+	static deserialize(core: Core, data: z.infer<typeof SerializedProject>) {
 		const project = new Project({
 			core,
 		});
 
 		project.disableSave = true;
 
-		batch(() => {
-			project.name = data.name ?? "New Project";
+		project.name = data.name ?? "New Project";
 
-			project.graphIdCounter = data.graphIdCounter;
+		project.graphIdCounter = data.graphIdCounter;
 
-			project.customEventIdCounter = data.customEventIdCounter;
+		project.customEventIdCounter = data.customEventIdCounter;
 
-			project.customEvents = new ReactiveMap(
-				data.customEvents
-					.map((SerializedEvent) => {
-						const event = CustomEvent.deserialize(project, SerializedEvent);
+		project.customEvents = new ReactiveMap(
+			data.customEvents
+				.map((SerializedEvent) => {
+					const event = CustomEvent.deserialize(project, SerializedEvent);
 
-						if (event === null) return null;
+					if (event === null) return null;
 
-						return [event.id, event] as [number, CustomEvent];
-					})
-					.filter(Boolean) as [number, CustomEvent][],
-			);
+					return [event.id, event] as [number, CustomEvent];
+				})
+				.filter(Boolean) as [number, CustomEvent][],
+		);
 
-			project.idCounter = data.counter;
+		project.idCounter = data.counter;
 
-			project.resources = new ReactiveMap(
-				data.resources
-					.map(({ type, entry }) => {
-						let resource: ResourceType<any, any> | undefined;
+		project.resources = new ReactiveMap(
+			data.resources
+				.map(({ type, entry }) => {
+					let resource: ResourceType<any, any> | undefined;
 
-						for (const r of core.packages.find((p) => p.name === type.pkg)
-							?.resources ?? []) {
-							if (r.name === type.name) {
-								resource = r;
-								break;
-							}
+					for (const r of core.packages.find((p) => p.name === type.pkg)
+						?.resources ?? []) {
+						if (r.name === type.name) {
+							resource = r;
+							break;
 						}
-						if (!resource) return;
+					}
+					if (!resource) return;
 
-						return [resource, createMutable(entry)] satisfies [
-							any,
-							ResourceTypeEntry,
-						];
-					})
-					.filter(Boolean),
-			);
+					return [resource, createMutable(entry)] satisfies [
+						any,
+						ResourceTypeEntry,
+					];
+				})
+				.filter(Boolean),
+		);
 
-			project.variables = data.variables.map((v) =>
-				Variable.deserialize(v, project),
-			);
+		project.variables = data.variables.map((v) =>
+			Variable.deserialize(v, project),
+		);
 
-			project.graphs = new ReactiveMap(
-				data.graphs
-					.map((serializedGraph) => {
-						const graph = Graph.deserialize(project, serializedGraph);
+		project.graphs = new ReactiveMap(
+			data.graphs
+				.map((serializedGraph) => {
+					const graph = Graph.deserialize(project, serializedGraph);
 
-						if (graph === null) return null;
+					if (graph === null) return null;
 
-						return [graph.id, graph] as [number, Graph];
-					})
-					.filter(Boolean) as [number, Graph][],
-			);
-		});
+					return [graph.id, graph] as [number, Graph];
+				})
+				.filter(Boolean) as [number, Graph][],
+		);
 
 		project.disableSave = false;
 

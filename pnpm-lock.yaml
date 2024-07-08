@@ -100,7 +100,7 @@ importers:
         version: 0.12.5(solid-js@1.8.16)
       '@solidjs/start':
         specifier: 1.0.0-rc.0
-        version: 1.0.0-rc.0(rollup@4.13.2)(solid-js@1.8.16)(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
+        version: 1.0.0-rc.0(rollup@4.13.2)(solid-js@1.8.16)(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.4.3)(zod@3.22.4)
@@ -258,7 +258,7 @@ importers:
         version: 0.12.5(solid-js@1.8.16)
       '@solidjs/start':
         specifier: 1.0.0-rc.0
-        version: 1.0.0-rc.0(rollup@4.13.2)(solid-js@1.8.16)(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
+        version: 1.0.0-rc.0(rollup@4.13.2)(solid-js@1.8.16)(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.4.3)(zod@3.22.4)
@@ -723,6 +723,9 @@ importers:
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
+      '@macrograph/packages':
+        specifier: workspace:*
+        version: link:../packages
       '@total-typescript/ts-reset':
         specifier: ^0.4.2
         version: 0.4.2
@@ -11093,11 +11096,11 @@ snapshots:
     dependencies:
       solid-js: 1.8.16
 
-  '@solidjs/start@1.0.0-rc.0(rollup@4.13.2)(solid-js@1.8.16)(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))':
+  '@solidjs/start@1.0.0-rc.0(rollup@4.13.2)(solid-js@1.8.16)(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))':
     dependencies:
-      '@vinxi/plugin-directives': 0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))
-      '@vinxi/server-components': 0.3.3(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))
-      '@vinxi/server-functions': 0.3.2(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))
+      '@vinxi/plugin-directives': 0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))
+      '@vinxi/server-components': 0.3.3(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))
+      '@vinxi/server-functions': 0.3.2(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       glob: 10.3.12
@@ -12047,7 +12050,7 @@ snapshots:
     transitivePeerDependencies:
       - uWebSockets.js
 
-  '@vinxi/plugin-directives@0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))':
+  '@vinxi/plugin-directives@0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))':
     dependencies:
       '@babel/parser': 7.24.1
       acorn: 8.11.3
@@ -12060,9 +12063,9 @@ snapshots:
       tslib: 2.6.2
       vinxi: 0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0)
 
-  '@vinxi/server-components@0.3.3(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))':
+  '@vinxi/server-components@0.3.3(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))':
     dependencies:
-      '@vinxi/plugin-directives': 0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))
+      '@vinxi/plugin-directives': 0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))
       acorn: 8.11.3
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.11.3)
@@ -12071,9 +12074,9 @@ snapshots:
       recast: 0.23.6
       vinxi: 0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0)
 
-  '@vinxi/server-functions@0.3.2(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))':
+  '@vinxi/server-functions@0.3.2(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))':
     dependencies:
-      '@vinxi/plugin-directives': 0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.3.2)(terser@5.30.0))
+      '@vinxi/plugin-directives': 0.3.1(vinxi@0.3.11(@planetscale/database@1.16.0)(@types/node@20.12.2)(ioredis@5.3.2)(terser@5.30.0))
       acorn: 8.11.3
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.11.3)

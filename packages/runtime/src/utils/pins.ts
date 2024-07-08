@@ -7,7 +7,7 @@ import {
 	type Pin,
 	ScopeInput,
 	ScopeOutput,
-} from "../models";
+} from "../models/IO";
 
 export function pinsCanConnect(
 	output: DataOutput<any> | ExecOutput | ScopeOutput,

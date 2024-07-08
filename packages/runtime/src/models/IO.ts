@@ -9,6 +9,7 @@ import {
 import { ReactiveSet } from "@solid-primitives/set";
 import {
 	type Accessor,
+	createComputed,
 	createEffect,
 	createMemo,
 	createRoot,
@@ -28,7 +29,7 @@ export function connectWildcardsInIO(
 	output: DataOutput<t.Any>,
 	input: DataInput<t.Any>,
 ) {
-	createEffect(
+	createMemo(
 		on(
 			() => {
 				const outType = output.type;
@@ -190,7 +191,7 @@ export class DataOutput<T extends BaseType> {
 				},
 			);
 
-			createEffect(
+			createMemo(
 				mapArray(self.connections, (conn) => {
 					conn.connection = Some(self as any);
 

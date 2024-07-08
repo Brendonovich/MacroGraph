@@ -29,7 +29,6 @@ export function createAuth(
 	const accounts = new ReactiveMap<string, Accessor<Account | undefined>>();
 
 	async function enableAccount(userId: string) {
-		console.log("enableAccount", userId);
 		const getAccount = makeCache(async () => {
 			const cred = await core.getCredential("discord", userId);
 			if (!cred) return undefined;

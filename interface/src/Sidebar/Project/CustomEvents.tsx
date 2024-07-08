@@ -2,11 +2,11 @@ import { For, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
+import { IconButton } from "../../components/ui";
 import { useCoreContext } from "../../contexts";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
-import { IconButton } from "../../components/ui";
 
 export function CustomEvents() {
 	const [search, setSearch] = createSignal("");
