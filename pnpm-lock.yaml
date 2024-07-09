@@ -726,9 +726,6 @@ importers:
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
-      '@macrograph/packages':
-        specifier: workspace:*
-        version: link:../packages
       '@total-typescript/ts-reset':
         specifier: ^0.4.2
         version: 0.4.2
