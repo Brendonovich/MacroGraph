@@ -47,7 +47,7 @@ jobs:
                   repo: context.repo.repo,
                 });
 
-                core.notice(`Tag '${tag}' already exists. Did you forget to bump your Cargo.toml version?`);
+                core.notice(`Release skipped as tag '${tag}' already exists. Did you forget to bump your Cargo.toml version?`);
               } catch (error) {
                 if ("status" in error && error.status === 404) tagExists = false;
                 else throw error;
