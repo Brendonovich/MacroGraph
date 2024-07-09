@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  CN_APP_SLUG: macrograph
   APP_CARGO_TOML: apps/desktop/src-tauri/Cargo.toml
 
 jobs:
@@ -75,12 +76,13 @@ jobs:
         if: ${{ steps.create_tag.outputs.tag_existed != 'true' }}
         uses: crabnebula-dev/cloud-release@v0.1.0
         with:
-          command: release draft ${{ vars.CN_APP_ID }} "${{ steps.read_version.outputs.value }}" --framework tauri
+          command: release draft ${{ env.CN_APP_SLUG }} "${{ steps.read_version.outputs.value }}" --framework tauri
           api-key: ${{ secrets.CN_API_KEY }}
 
   build:
     needs: draft
     if: ${{ needs.draft.outputs.needs_release == 'true' }}
+    runs-on: ${{ matrix.settings.host }}
     strategy:
       fail-fast: false
       matrix:
@@ -93,7 +95,6 @@ jobs:
             target: x86_64-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-    runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v3
 
@@ -127,7 +128,7 @@ jobs:
       - name: Upload assets to CrabNebula Cloud
         uses: crabnebula-dev/cloud-release@v0.1.0
         with:
-          command: release upload ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
+          command: release upload ${{ env.CN_APP_SLUG }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
           api-key: ${{ secrets.CN_API_KEY }}
 
   publish:
@@ -139,5 +140,5 @@ jobs:
       - name: Publish release
         uses: crabnebula-dev/cloud-release@v0.1.0
         with:
-          command: release publish ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
+          command: release publish ${{ env.CN_APP_SLUG }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
           api-key: ${{ secrets.CN_API_KEY }}
