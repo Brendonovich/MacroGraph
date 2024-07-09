@@ -31,7 +31,7 @@ jobs:
         id: create_tag
         uses: actions/github-script@v7
         with:
-          script: require("./createTag.js")
+          script: require("./.github/createTag.js")
 
       - name: Create draft release
         uses: crabnebula-dev/cloud-release@v0.1.0
