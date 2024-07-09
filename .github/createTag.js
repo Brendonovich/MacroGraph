@@ -1,15 +1,17 @@
-const tagRef = "tags/${{ steps.read_version.outputs.value }}";
+const tag = "${{ steps.read_version.outputs.value }}";
+const tagRef = `tags/${tag}`;
 
 async function main() {
-	let tagExists = false;
+	let tagExists = true;
 
 	try {
-		const tag = await github.rest.git.getRef({
+		await github.rest.git.getRef({
 			ref: tagRef,
 			owner: context.repo.owner,
 			repo: context.repo.repo,
 		});
-		if (tag) tagExists = true;
+
+		core.notice(`Tag '${tag}' already exists.`);
 	} catch (error) {
 		if ("status" in error && error.status === 404) tagExists = false;
 		else throw error;
