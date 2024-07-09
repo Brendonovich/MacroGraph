@@ -208,6 +208,8 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 		else this.structs.set(type.name, type);
 
 		type.source = { variant: "package", package: this.name };
+
+		return type;
 	}
 
 	registerResourceType<T extends ResourceType<any, any>>(resource: T) {

@@ -8,9 +8,6 @@ type InstanceState = { password: string | null } & (
 	| { state: "connected"; obs: OBS }
 );
 
-// old localstorage key
-const OBS_WS = "obsWs";
-
 const OBS_INSTANCES = "obs-instances";
 const INSTANCE_SCHEMA = z.object({
 	url: z.string(),
@@ -82,18 +79,6 @@ export function createCtx() {
 		persistInstances();
 		await disconnectInstance(ip);
 	}
-
-	// convert old localstorage data to new system
-	Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
-		const { url, password } = INSTANCE_SCHEMA.parse(JSON.parse(jstr));
-
-		try {
-			await addInstance(url, password);
-		} catch {
-		} finally {
-			localStorage.removeItem(OBS_WS);
-		}
-	});
 
 	Maybe(localStorage.getItem(OBS_INSTANCES)).mapAsync(async (jstr) => {
 		const instances = z.array(INSTANCE_SCHEMA).parse(JSON.parse(jstr));

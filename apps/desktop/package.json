@@ -16,7 +16,6 @@
 		"@macrograph/packages": "workspace:*",
 		"@macrograph/runtime": "workspace:*",
 		"@macrograph/ui": "workspace:^",
-		"@modular-forms/solid": "^0.12.2",
 		"@rspc/client": "0.0.0-main-6ed8cc98",
 		"@rspc/solid": "0.0.0-main-6ed8cc98",
 		"@rspc/tauri": "0.0.0-main-6ed8cc98",

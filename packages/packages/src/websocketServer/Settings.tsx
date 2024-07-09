@@ -1,15 +1,14 @@
+import { createForm } from "@tanstack/solid-form";
 import { Button, Input } from "@macrograph/ui";
-import { createForm } from "@modular-forms/solid";
 import { For, Match, Switch } from "solid-js";
 
 import type { Ctx } from "./ctx";
 
 export default ({ websockets, startServer, stopServer }: Ctx) => {
-	const [, { Form, Field }] = createForm({
-		initialValues: {
-			port: 1890,
-		},
-	});
+	const form = createForm(() => ({
+		defaultValues: { port: 1890 },
+		onSubmit: ({ value }) => startServer(value.port),
+	}));
 
 	return (
 		<>
@@ -42,25 +41,32 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
 					</table>
 				</Match>
 			</Switch>
-			<Form
-				onSubmit={(d) => startServer(d.port)}
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
 				class="flex flex-row space-x-4"
 			>
-				<Field name="port" type="number">
-					{(field, props) => (
+				<form.Field name="port">
+					{(field) => (
 						<Input
-							{...props}
-							value={field.value}
+							onInput={(e) =>
+								field().handleChange(e.currentTarget.valueAsNumber)
+							}
+							onBlur={() => field().handleBlur()}
+							value={field().state.value}
 							type="number"
 							min={0}
 							max={65535}
 						/>
 					)}
-				</Field>
+				</form.Field>
 				<Button type="submit" class="shrink-0" size="md">
 					Start Server
 				</Button>
-			</Form>
+			</form>
 		</>
 	);
 };

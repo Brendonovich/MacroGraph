@@ -183,7 +183,7 @@ function AddResourceButton() {
 				<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
-				<DropdownMenu.Content class="mt-1 gap-2 bg-neutral-900 p-2 rounded w-40 max-h-48 flex flex-col overflow-y-auto text-white ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-expanded:slide-in-from-right-0.5 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 ui-closed:slide-out-to-right-0.5 duration-100 shadow">
+				<DropdownMenu.Content class="mt-1 gap-2 bg-neutral-900 p-2 rounded w-48 max-h-52 flex flex-col overflow-y-auto text-white ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-expanded:slide-in-from-right-0.5 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 ui-closed:slide-out-to-right-0.5 duration-100 shadow">
 					<For each={resourceTypes()}>
 						{([pkg, types]) => (
 							<div class="flex flex-col">
@@ -192,7 +192,7 @@ function AddResourceButton() {
 									{(type) => (
 										<DropdownMenu.Item
 											as="button"
-											class="flex flex-row items-center px-1 py-0.5 w-full text-sm text-left hover:bg-white/10 rounded"
+											class="flex flex-row items-center px-1 py-0.5 w-full text-sm text-left hover:bg-white/10 rounded whitespace-nowrap text-ellipsis"
 											onSelect={() => {
 												core.project.createResource({
 													type,

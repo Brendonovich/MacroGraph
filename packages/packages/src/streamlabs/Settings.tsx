@@ -1,14 +1,10 @@
 import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
-import { createForm, zodForm } from "@modular-forms/solid";
 import { Match, Show, Suspense, Switch, createSignal } from "solid-js";
 import { z } from "zod";
 
 import type { Ctx } from "./ctx";
-
-const Schema = z.object({
-	socketToken: z.string(),
-});
+import { createForm } from "@tanstack/solid-form";
 
 export default (ctx: Ctx) => {
 	const { auth } = ctx;
@@ -19,31 +15,39 @@ export default (ctx: Ctx) => {
 			<Switch fallback="Loading...">
 				<Match when={auth.state().type === "disconnected"}>
 					{(_) => {
-						const [, { Form, Field }] = createForm({
-							validate: zodForm(Schema),
-						});
+						const form = createForm(() => ({
+							defaultValues: { socketToken: "" },
+							onSubmit: ({ value }) => {
+								auth.setToken(Some(value.socketToken));
+							},
+						}));
 
 						return (
-							<Form
-								onSubmit={(d) => {
-									auth.setToken(Some(d.socketToken));
+							<form
+								onSubmit={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									form.handleSubmit();
 								}}
 								class="flex flex-row space-x-4"
 							>
-								<Field name="socketToken">
-									{(field, props) => (
+								<form.Field name="socketToken">
+									{(field) => (
 										<Input
-											{...props}
+											onInput={(e) =>
+												field().handleChange(e.currentTarget.value)
+											}
+											onBlur={() => field().handleBlur()}
+											value={field().state.value}
 											type="password"
 											placeholder="Socket API Key"
-											value={field.value}
 										/>
 									)}
-								</Field>
+								</form.Field>
 								<Button type="submit" class="shrink-0" size="md">
 									Submit
 								</Button>
-							</Form>
+							</form>
 						);
 					}}
 				</Match>

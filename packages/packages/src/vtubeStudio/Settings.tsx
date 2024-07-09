@@ -1,24 +1,16 @@
 import { Button, Input } from "@macrograph/ui";
 import { For, Match, Switch } from "solid-js";
+import { createForm } from "@tanstack/solid-form";
 
 import type { Ctx } from "./ctx";
-import { AUTH_SCHEMA } from "./ws";
-import { createForm } from "@tanstack/solid-form";
-import { zodValidator } from "@tanstack/zod-form-adapter";
-import type { z } from "zod";
 
-export default function (ctx: Ctx) {
-	const form = createForm<
-		z.infer<typeof AUTH_SCHEMA>,
-		ReturnType<typeof zodValidator>
-	>(() => ({
-		validatorAdapter: zodValidator(),
-		validators: { onSubmit: AUTH_SCHEMA },
+export default (ctx: Ctx) => {
+	const form = createForm(() => ({
+		defaultValues: { url: "ws://localhost:8001" },
 		onSubmit: ({ value }) => {
-			ctx.addInstance(value.url, value.password);
+			ctx.addInstance(value.url);
 			form.reset();
 		},
-		defaultValues: { url: "ws://localhost:4455" },
 	}));
 
 	return (
@@ -33,14 +25,14 @@ export default function (ctx: Ctx) {
 							</tr>
 						</thead>
 						<For each={[...ctx.instances]}>
-							{([ip, instance]) => (
+							{([url, instance]) => (
 								<tr>
 									<td>
-										<span>{ip}</span>
+										<span>{url}</span>
 									</td>
 									<td>
 										<Switch>
-											<Match when={instance.state === "connected" && instance}>
+											<Match when={instance.state === "connected"}>
 												Connected
 											</Match>
 											<Match when={instance.state === "connecting"}>
@@ -48,14 +40,14 @@ export default function (ctx: Ctx) {
 											</Match>
 											<Match when={instance.state === "disconnected"}>
 												<span class="mr-4">Disconnected</span>
-												<Button onClick={() => ctx.connectInstance(ip)}>
+												<Button onClick={() => ctx.addInstance(url)}>
 													Connect
 												</Button>
 											</Match>
 										</Switch>
 									</td>
 									<td>
-										<Button onClick={() => ctx.removeInstance(ip)}>
+										<Button onClick={() => ctx.removeInstance(url)}>
 											Remove
 										</Button>
 									</td>
@@ -73,7 +65,7 @@ export default function (ctx: Ctx) {
 				}}
 			>
 				<fieldset disabled={form.state.isSubmitting} class="space-y-4">
-					<div class="space-x-4 flex flex-row">
+					<div class="space-x-4 flex flex-row items-center">
 						<form.Field name="url">
 							{(field) => (
 								<Input
@@ -85,17 +77,6 @@ export default function (ctx: Ctx) {
 								/>
 							)}
 						</form.Field>
-						<form.Field name="password">
-							{(field) => (
-								<Input
-									onInput={(e) => field().handleChange(e.currentTarget.value)}
-									onBlur={() => field().handleBlur()}
-									value={field().state.value}
-									placeholder="Password"
-									type="Password"
-								/>
-							)}
-						</form.Field>
 						<Button type="submit" class="shrink-0" size="md">
 							{!form.state.isSubmitting ? "Connect" : "Connecting..."}
 						</Button>
@@ -104,4 +85,4 @@ export default function (ctx: Ctx) {
 			</form>
 		</>
 	);
-}
+};
