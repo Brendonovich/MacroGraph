@@ -15,7 +15,7 @@ export function pkg() {
 	const pkg = new Package({
 		name: "Websocket",
 		ctx: sockets,
-		SettingsUI: () => import("./settings"),
+		SettingsUI: () => import("./Settings"),
 	});
 
 	pkg.createNonEventSchema({

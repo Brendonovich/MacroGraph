@@ -1,14 +1,10 @@
 import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
-import { createForm, zodForm } from "@modular-forms/solid";
 import { Match, Switch } from "solid-js";
 import { z } from "zod";
 
 import type { Ctx } from "./ctx";
-
-const Schema = z.object({
-	key: z.string(),
-});
+import { createForm } from "@tanstack/solid-form";
 
 export default function ({ state, setKey, key }: Ctx) {
 	return (
@@ -17,32 +13,39 @@ export default function ({ state, setKey, key }: Ctx) {
 			<Switch fallback="Loading...">
 				<Match when={state().isNone()}>
 					{(_) => {
-						const [, { Form, Field }] = createForm({
-							initialValues: {
-								key: key().unwrapOr(""),
+						const form = createForm(() => ({
+							defaultValues: { key: key().unwrapOr("") },
+							onSubmit: ({ value }) => {
+								setKey(Some(value.key));
 							},
-							validate: zodForm(Schema),
-						});
+						}));
 
 						return (
-							<Form
-								onSubmit={(d) => setKey(Some(d.key))}
+							<form
+								onSubmit={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									form.handleSubmit();
+								}}
 								class="flex flex-row space-x-4"
 							>
-								<Field name="key">
-									{(field, props) => (
+								<form.Field name="key">
+									{(field) => (
 										<Input
-											{...props}
+											onInput={(e) =>
+												field().handleChange(e.currentTarget.value)
+											}
+											onBlur={() => field().handleBlur()}
+											value={field().state.value}
 											type="password"
 											placeholder="Open AI Key"
-											value={field.value}
 										/>
 									)}
-								</Field>
+								</form.Field>
 								<Button type="submit" class="shrink-0" size="md">
 									Submit
 								</Button>
-							</Form>
+							</form>
 						);
 					}}
 				</Match>

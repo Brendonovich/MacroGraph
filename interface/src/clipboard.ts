@@ -71,7 +71,7 @@ export function serializeConnections(nodes: Set<Node>) {
 		for (const i of node.state.inputs) {
 			if (i instanceof ExecInput) {
 				for (const conn of i.connections) {
-					if (!nodes.has(conn.node)) return;
+					if (!nodes.has(conn.node)) continue;
 
 					connections.push({
 						from: { node: conn.node.id, output: conn.id },

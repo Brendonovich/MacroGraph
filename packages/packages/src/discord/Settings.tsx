@@ -1,39 +1,52 @@
 import { AsyncButton, Button, Input } from "@macrograph/ui";
-import { createForm, zodForm } from "@modular-forms/solid";
 import { createAsync } from "@solidjs/router";
 import { For, Show, Suspense, Switch } from "solid-js";
 import { z } from "zod";
 
 import { Match } from "solid-js";
 import type { Ctx } from ".";
+import { createForm } from "@tanstack/solid-form";
 
 export default function ({ core, auth, gateway }: Ctx) {
 	const credentials = createAsync(() => core.getCredentials());
 
-	const [form, { Form, Field }] = createForm({
-		validate: zodForm(z.object({ botToken: z.string() })),
-	});
+	const form = createForm(() => ({
+		defaultValues: { botToken: "" },
+		onSubmit: ({ value }) => {
+			auth.addBot(value.botToken);
+		},
+	}));
 
 	return (
 		<div class="flex flex-col items-start space-y-2">
 			<span class="text-neutral-400 font-medium">Bot</span>
-			<Form onSubmit={(d) => auth.addBot(d.botToken)}>
-				<fieldset class="flex flex-row space-x-4" disabled={form.submitting}>
-					<Field name="botToken">
-						{(field, props) => (
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
+			>
+				<fieldset
+					class="flex flex-row space-x-4"
+					disabled={form.state.isSubmitting}
+				>
+					<form.Field name="botToken">
+						{(field) => (
 							<Input
-								{...props}
+								onInput={(e) => field().handleChange(e.currentTarget.value)}
+								onBlur={() => field().handleBlur()}
+								value={field().state.value}
 								type="password"
 								placeholder="Bot Token"
-								value={field.value}
 							/>
 						)}
-					</Field>
+					</form.Field>
 					<Button type="submit" size="md">
 						Submit
 					</Button>
 				</fieldset>
-			</Form>
+			</form>
 
 			<ul class="flex flex-col mb-2 space-y-2 w-full mt-4">
 				<For each={[...auth.bots.entries()]}>

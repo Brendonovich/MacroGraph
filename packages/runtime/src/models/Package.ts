@@ -285,14 +285,16 @@ export type ResourceType<
 	| { type: BaseType<TValue> }
 );
 
-export type inferResourceTypeValue<T> =
-	T extends ResourceType<infer TValue, any>
-		? T extends { source: any }
-			? TValue
-			: T extends { type: BaseType }
-				? t.infer<T["type"]>
-				: never
-		: never;
+export type inferResourceTypeValue<T> = T extends ResourceType<
+	infer TValue,
+	any
+>
+	? T extends { source: any }
+		? TValue
+		: T extends { type: BaseType }
+			? t.infer<T["type"]>
+			: never
+	: never;
 
 type DistributiveOmit<T, K extends keyof any> = T extends any
 	? Omit<T, K>

@@ -1,13 +1,17 @@
+import { createForm } from "@tanstack/solid-form";
 import { Button, Input } from "@macrograph/ui";
 import { For, Match, Switch } from "solid-js";
 
-import { createForm } from "@modular-forms/solid";
 import type { Ctx } from "./ctx";
 
 export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
-	const [, { Form, Field }] = createForm({
-		initialValues: { ip: "" },
-	});
+	const form = createForm(() => ({
+		defaultValues: { ip: "" },
+		onSubmit: ({ value }) => {
+			addWebsocket(value.ip);
+			form.reset();
+		},
+	}));
 
 	return (
 		<>
@@ -51,19 +55,28 @@ export default ({ websockets, addWebsocket, removeWebsocket }: Ctx) => {
 					</table>
 				</Match>
 			</Switch>
-			<Form
-				onSubmit={(d) => addWebsocket(d.ip)}
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
 				class="flex flex-row space-x-4"
 			>
-				<Field name="ip">
-					{(field, props) => (
-						<Input {...props} placeholder="WebSocket URL" value={field.value} />
+				<form.Field name="ip">
+					{(field) => (
+						<Input
+							onInput={(e) => field().handleChange(e.currentTarget.value)}
+							onBlur={() => field().handleBlur()}
+							value={field().state.value}
+							placeholder="WebSocket URL"
+						/>
 					)}
-				</Field>
+				</form.Field>
 				<Button type="submit" class="shrink-0" size="md">
 					Add WebSocket
 				</Button>
-			</Form>
+			</form>
 		</>
 	);
 };

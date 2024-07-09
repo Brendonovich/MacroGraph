@@ -80,9 +80,6 @@ importers:
       '@macrograph/ui':
         specifier: workspace:^
         version: link:../../packages/ui
-      '@modular-forms/solid':
-        specifier: ^0.12.2
-        version: 0.12.2(solid-js@1.8.16)
       '@rspc/client':
         specifier: 0.0.0-main-6ed8cc98
         version: 0.0.0-main-6ed8cc98
@@ -383,9 +380,6 @@ importers:
       '@macrograph/ui':
         specifier: workspace:^
         version: link:../packages/ui
-      '@modular-forms/solid':
-        specifier: ^0.12.2
-        version: 0.12.2(solid-js@1.8.16)
       '@solid-primitives/bounds':
         specifier: ^0.0.118
         version: 0.0.118(solid-js@1.8.16)
@@ -571,9 +565,6 @@ importers:
       '@macrograph/utils':
         specifier: workspace:^
         version: link:../utils
-      '@modular-forms/solid':
-        specifier: ^0.12.2
-        version: 0.12.2(solid-js@1.8.16)
       '@octokit/auth-callback':
         specifier: ^4.0.0
         version: 4.0.0
@@ -610,6 +601,15 @@ importers:
       '@solidjs/router':
         specifier: ^0.12.5
         version: 0.12.5(solid-js@1.8.16)
+      '@tanstack/form-core':
+        specifier: ^0.25.3
+        version: 0.25.3
+      '@tanstack/solid-form':
+        specifier: ^0.26.2
+        version: 0.26.2(solid-js@1.8.16)
+      '@tanstack/zod-form-adapter':
+        specifier: ^0.25.3
+        version: 0.25.3(zod@3.22.4)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -2193,11 +2193,6 @@ packages:
     peerDependencies:
       react: '>=16'
 
-  '@modular-forms/solid@0.12.2':
-    resolution: {integrity: sha512-LO+mnVY5XfMyUhjoUvwiTGHctDbRxbhqFXglx3oow1Stsotp/NmX0YGL2mN556OILRqxgggsgaKYPpy/yp+qnA==}
-    peerDependencies:
-      solid-js: ^1.3.1
-
   '@msgpack/msgpack@2.8.0':
     resolution: {integrity: sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==}
     engines: {node: '>= 10'}
@@ -3504,11 +3499,11 @@ packages:
   '@storybook/builder-manager@7.6.17':
     resolution: {integrity: sha512-Sj8hcDYiPCCMfeLzus37czl0zdrAxAz4IyYam2jBjVymrIrcDAFyL1OCZvnq33ft179QYQWhUs9qwzVmlR/ZWg==}
 
-  '@storybook/builder-vite@8.2.0-beta.1':
-    resolution: {integrity: sha512-kPZA23Mnb6dNtu2KBGE3W7FP8UP9oQ8xDjx1k0NUM9V58CYt8NvLuzXuUT53bDXCOVF2HclLE/0T0zq//EIgoQ==}
+  '@storybook/builder-vite@8.2.0-beta.2':
+    resolution: {integrity: sha512-OrY3QhHBFUIbvM4d3msP981Y+P3EcOX/CiFjHDJvUeOK8cs30hXquJ5vwUmO4rMsiD1UcIPMiCE5MHlD70SbNA==}
     peerDependencies:
       '@preact/preset-vite': '*'
-      storybook: ^8.2.0-beta.1
+      storybook: ^8.2.0-beta.2
       typescript: '>= 4.3.x'
       vite: ^4.0.0 || ^5.0.0
       vite-plugin-glimmerx: '*'
@@ -3551,10 +3546,10 @@ packages:
   '@storybook/csf-plugin@7.6.17':
     resolution: {integrity: sha512-xTHv9BUh3bkDVCvcbmdfVF0/e96BdrEgqPJ3G3RmKbSzWLOkQ2U9yiPfHzT0KJWPhVwj12fjfZp0zunu+pcS6Q==}
 
-  '@storybook/csf-plugin@8.2.0-beta.1':
-    resolution: {integrity: sha512-2fmb/a3qV/GMy4f4QdB0/P92XrfBXeQcM0rAnR5LRrFauQ/k5oZl21uc/Q4SIf5snaTsfx4LvilsmAh85Jkfqw==}
+  '@storybook/csf-plugin@8.2.0-beta.2':
+    resolution: {integrity: sha512-iUnAqobJn3x4dyE7GBX6N94Jfle24AReuRwXgrIfInKDq6MwTG2JzK5GPcrE8btQWipTnXmfi/ZeFY7bBSeqnw==}
     peerDependencies:
-      storybook: ^8.2.0-beta.1
+      storybook: ^8.2.0-beta.2
 
   '@storybook/csf-tools@7.6.17':
     resolution: {integrity: sha512-dAQtam0EBPeTJYcQPLxXgz4L9JFqD+HWbLFG9CmNIhMMjticrB0mpk1EFIS6vPXk/VsVWpBgMLD7dZlD6YMKcQ==}
@@ -3631,13 +3626,34 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
 
+  '@tanstack/form-core@0.25.3':
+    resolution: {integrity: sha512-4ZPuzsCvqpdJGy/06+pBlgr6khvkwxyMFLcrlieD+8ilBRqCvNdojUvdDLz4EDP74vmxl3RWo7anqzJ3H6xkMw==}
+
   '@tanstack/query-core@4.36.1':
     resolution: {integrity: sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==}
+
+  '@tanstack/solid-form@0.26.2':
+    resolution: {integrity: sha512-6Wr/obGpSvoBmQQNUNyrq3TS8ERLw4xEfxvcUMvI2UW8nq23Qr4/xgfm1upqYeOhuARkkVtcus3pt0g6VVkqLw==}
+    peerDependencies:
+      solid-js: ^1.6.0
 
   '@tanstack/solid-query@4.36.1':
     resolution: {integrity: sha512-w8L6B12AsCyF7AB2Np4fj9qsOBfrzzxyIkdsniKo9HErdXdlGLyynYaDm4EGsH9ePPcdJSUX7ELGqmXllofn/Q==}
     peerDependencies:
       solid-js: ^1.5.7
+
+  '@tanstack/solid-store@0.5.4':
+    resolution: {integrity: sha512-PZi289dFudlI5N5eAXR+uHgY8jdu2rppfKuk44AEOt3qNdmrGpVPpmqrO2NR+9UDu/zq6Q8Q3GeTjQPhZ06vlQ==}
+    peerDependencies:
+      solid-js: ^1.6.0
+
+  '@tanstack/store@0.5.4':
+    resolution: {integrity: sha512-EG/aGAK/yUJz0JxPaY9wOr1Sjz9Uc//BX7uY9SAo5M0GkCEz7DOSxixBq2afn/reLMGqTIGYq7TkMGgyNQgdcA==}
+
+  '@tanstack/zod-form-adapter@0.25.3':
+    resolution: {integrity: sha512-8+TgBMvC3w7KkwykwX/NWkTqE68ZZeksZArzOvwSwpaYvEuFEiZ/zvVFPFjpo9IcW4vlc4LmWheyO7OpohZAsw==}
+    peerDependencies:
+      zod: ^3.x
 
   '@tauri-apps/api@1.5.3':
     resolution: {integrity: sha512-zxnDjHHKjOsrIzZm6nO5Xapb/BxqUq1tc7cGkFXsFkGTsSWgCPH1D8mm0XS9weJY2OaR73I3k3S+b7eSzJDfqA==}
@@ -4077,6 +4093,11 @@ packages:
 
   acorn@8.11.3:
     resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
+  acorn@8.12.1:
+    resolution: {integrity: sha512-tcpGyI9zbizT9JbV6oYE477V6mTlXvvi0T0G3SNIYE2apm/G5huBa1+K89VGeovbg+jycCrfhl3ADxErOuO6Jg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -5099,6 +5120,9 @@ packages:
 
   es-module-lexer@1.5.0:
     resolution: {integrity: sha512-pqrTKmwEIgafsYZAGw9kszYzmagcE/n4dbgwGWLEXg7J4QFJVQRBld8j3Q3GNez79jzxZshq0bcT962QHOghjw==}
+
+  es-module-lexer@1.5.4:
+    resolution: {integrity: sha512-MVNK56NiMrOwitFB7cqDwq0CQutbw+0BvLshJSse0MUNU+y1FC3bUS/AQg7oUng+/wKrrki7JfmwtVHkVfPLlw==}
 
   es5-ext@0.10.64:
     resolution: {integrity: sha512-p2snDhiLaXe6dahss1LddxqEm+SkuDvV8dnIQG0MWjyHpcMNfXKPE+/Cc0y+PhxJX3A4xGNeFCj5oc0BUh6deg==}
@@ -6342,6 +6366,9 @@ packages:
 
   magic-bytes.js@1.10.0:
     resolution: {integrity: sha512-/k20Lg2q8LE5xiaaSkMXk4sfvI+9EGEykFS4b0CHHGWqDYU0bGUFSwchNOMA56D7TCs9GwVTkqe9als1/ns8UQ==}
+
+  magic-string@0.30.10:
+    resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
 
   magic-string@0.30.8:
     resolution: {integrity: sha512-ISQTe55T2ao7XtlAStud6qwYPZjE4GK1S/BeVPus4jrq6JuOnQ00YKQC581RWhR122W7msZV263KzVeLoqidyQ==}
@@ -8060,6 +8087,10 @@ packages:
     resolution: {integrity: sha512-d6Mhq8RJeGA8UfKCu54Um4lFA0eSaRa3XxdAJg8tIdxbu1ubW0hBCZUL7yI2uGyYCRndvbK8FLHzqy2XKfeMsg==}
     engines: {node: '>=14.0.0'}
 
+  unplugin@1.11.0:
+    resolution: {integrity: sha512-3r7VWZ/webh0SGgJScpWl2/MRCZK5d3ZYFcNaeci/GQ7Teop7zf0Nl2pUuz7G21BwPd9pcUPOC5KmJ2L3WgC5g==}
+    engines: {node: '>=14.0.0'}
+
   unstorage@1.10.2:
     resolution: {integrity: sha512-cULBcwDqrS8UhlIysUJs2Dk0Mmt8h7B0E6mtR+relW9nZvsf/u4SkAYyNliPiPW7XtFNb5u3IUMkxGxFTTRTgQ==}
     peerDependencies:
@@ -8387,6 +8418,9 @@ packages:
 
   webpack-virtual-modules@0.6.1:
     resolution: {integrity: sha512-poXpCylU7ExuvZK8z+On3kX+S8o/2dQ/SVYueKA0D4WEMXROXgY8Ez50/bQEUmvoSMMrWcrJqCHuhAbsiwg7Dg==}
+
+  webpack-virtual-modules@0.6.2:
+    resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
@@ -9973,10 +10007,6 @@ snapshots:
       '@types/react': 18.2.73
       react: 18.2.0
 
-  '@modular-forms/solid@0.12.2(solid-js@1.8.16)':
-    dependencies:
-      solid-js: 1.8.16
-
   '@msgpack/msgpack@2.8.0': {}
 
   '@napi-rs/wasm-runtime@0.1.2':
@@ -11300,16 +11330,16 @@ snapshots:
       - encoding
       - supports-color
 
-  '@storybook/builder-vite@8.2.0-beta.1(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))':
+  '@storybook/builder-vite@8.2.0-beta.2(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))':
     dependencies:
-      '@storybook/csf-plugin': 8.2.0-beta.1(storybook@7.6.17)
+      '@storybook/csf-plugin': 8.2.0-beta.2(storybook@7.6.17)
       '@types/find-cache-dir': 3.2.1
       browser-assert: 1.2.1
-      es-module-lexer: 1.5.0
+      es-module-lexer: 1.5.4
       express: 4.19.2
       find-cache-dir: 3.3.2
       fs-extra: 11.2.0
-      magic-string: 0.30.8
+      magic-string: 0.30.10
       storybook: 7.6.17
       ts-dedent: 2.2.0
       vite: 5.2.7(@types/node@20.12.2)(terser@5.30.0)
@@ -11505,10 +11535,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@storybook/csf-plugin@8.2.0-beta.1(storybook@7.6.17)':
+  '@storybook/csf-plugin@8.2.0-beta.2(storybook@7.6.17)':
     dependencies:
       storybook: 7.6.17
-      unplugin: 1.10.1
+      unplugin: 1.11.0
 
   '@storybook/csf-tools@7.6.17':
     dependencies:
@@ -11655,12 +11685,34 @@ snapshots:
       mini-svg-data-uri: 1.4.4
       tailwindcss: 3.4.3
 
+  '@tanstack/form-core@0.25.3':
+    dependencies:
+      '@tanstack/store': 0.5.4
+
   '@tanstack/query-core@4.36.1': {}
+
+  '@tanstack/solid-form@0.26.2(solid-js@1.8.16)':
+    dependencies:
+      '@tanstack/form-core': 0.25.3
+      '@tanstack/solid-store': 0.5.4(solid-js@1.8.16)
+      solid-js: 1.8.16
 
   '@tanstack/solid-query@4.36.1(solid-js@1.8.16)':
     dependencies:
       '@tanstack/query-core': 4.36.1
       solid-js: 1.8.16
+
+  '@tanstack/solid-store@0.5.4(solid-js@1.8.16)':
+    dependencies:
+      '@tanstack/store': 0.5.4
+      solid-js: 1.8.16
+
+  '@tanstack/store@0.5.4': {}
+
+  '@tanstack/zod-form-adapter@0.25.3(zod@3.22.4)':
+    dependencies:
+      '@tanstack/form-core': 0.25.3
+      zod: 3.22.4
 
   '@tauri-apps/api@1.5.3': {}
 
@@ -12239,6 +12291,8 @@ snapshots:
   acorn-walk@8.3.2: {}
 
   acorn@8.11.3: {}
+
+  acorn@8.12.1: {}
 
   address@1.2.2: {}
 
@@ -13248,6 +13302,8 @@ snapshots:
       stop-iteration-iterator: 1.0.0
 
   es-module-lexer@1.5.0: {}
+
+  es-module-lexer@1.5.4: {}
 
   es5-ext@0.10.64:
     dependencies:
@@ -14657,6 +14713,10 @@ snapshots:
 
   magic-bytes.js@1.10.0: {}
 
+  magic-string@0.30.10:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.15
+
   magic-string@0.30.8:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
@@ -16026,7 +16086,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.2(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0)):
     dependencies:
-      '@storybook/builder-vite': 8.2.0-beta.1(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
+      '@storybook/builder-vite': 8.2.0-beta.2(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - storybook
@@ -16526,6 +16586,13 @@ snapshots:
       webpack-sources: 3.2.3
       webpack-virtual-modules: 0.6.1
 
+  unplugin@1.11.0:
+    dependencies:
+      acorn: 8.12.1
+      chokidar: 3.6.0
+      webpack-sources: 3.2.3
+      webpack-virtual-modules: 0.6.2
+
   unstorage@1.10.2(@planetscale/database@1.16.0)(ioredis@5.3.2):
     dependencies:
       anymatch: 3.1.3
@@ -16921,6 +16988,8 @@ snapshots:
   webpack-sources@3.2.3: {}
 
   webpack-virtual-modules@0.6.1: {}
+
+  webpack-virtual-modules@0.6.2: {}
 
   whatwg-encoding@3.1.1:
     dependencies:

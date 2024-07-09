@@ -1,10 +1,10 @@
 import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
-import { createForm, zodForm } from "@modular-forms/solid";
 import { Match, Switch } from "solid-js";
 import { z } from "zod";
 
 import type { Ctx } from "./ctx";
+import { createForm } from "@tanstack/solid-form";
 
 const Schema = z.object({
 	url: z.string(),
@@ -17,30 +17,38 @@ export default function ({ state, setUrl }: Ctx) {
 			<Switch fallback="Loading...">
 				<Match when={state().type === "disconnected"}>
 					{(_) => {
-						const [, { Form, Field }] = createForm({
-							validate: zodForm(Schema),
-						});
+						const form = createForm(() => ({
+							defaultValues: { url: "" },
+							onSubmit: ({ value }) => {
+								setUrl(Some(value.url));
+							},
+						}));
 
 						return (
-							<Form
-								onSubmit={(d) => {
-									setUrl(Some(d.url));
+							<form
+								onSubmit={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									form.handleSubmit();
 								}}
 								class="flex flex-row space-x-4"
 							>
-								<Field name="url">
-									{(field, props) => (
+								<form.Field name="url">
+									{(field) => (
 										<Input
-											{...props}
+											onInput={(e) =>
+												field().handleChange(e.currentTarget.value)
+											}
+											onBlur={() => field().handleBlur()}
+											value={field().state.value}
 											placeholder="Speakerbot WS URL"
-											value={field.value}
 										/>
 									)}
-								</Field>
+								</form.Field>
 								<Button type="submit" class="shrink-0" size="md">
 									Submit
 								</Button>
-							</Form>
+							</form>
 						);
 					}}
 				</Match>

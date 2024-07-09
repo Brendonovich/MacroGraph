@@ -101,8 +101,8 @@ export function register(pkg: Package<EventTypes>) {
 		TIO = void,
 	>(
 		s: Omit<
-			CreateNonEventSchema<TProperties & typeof defaultProperties, TIO>,
-			"type" | "createListener" | "run" | "createIO"
+			CreateNonEventSchema<TProperties, TIO>,
+			"type" | "run" | "createIO"
 		> & {
 			properties?: TProperties;
 			run(
@@ -121,39 +121,27 @@ export function register(pkg: Package<EventTypes>) {
 			type: "exec",
 			properties: { ...s.properties, ...defaultProperties } as any,
 			createIO(props) {
-				// const obs = createMemo(() =>
 				const obs = props.ctx
 					.getProperty(
-						props.properties.instance as SchemaProperties<
-							typeof defaultProperties
-						>["instance"],
+						(props.properties as SchemaProperties<typeof defaultProperties>)
+							.instance,
 					)
 					.andThen((instance) => {
 						if (instance.state !== "connected") return None;
 						return Some(instance.obs);
 					});
-				// );
 
-				return s.createIO({
-					...props,
-					obs() {
-						return obs;
-					},
-				});
+				return s.createIO({ ...props, obs: () => obs });
 			},
 			run(props) {
 				const instance = props.ctx
-					.getProperty(
-						props.properties.instance as SchemaProperties<
-							typeof defaultProperties
-						>["instance"],
-					)
+					.getProperty(props.properties.instance)
 					.expect("No OBS instance available!");
 
 				if (instance.state !== "connected")
 					throw new Error("OBS instance not connected!");
 
-				return s.run({ ...props, obs: instance.obs });
+				return s.run(Object.assign(props, { obs: instance.obs }));
 			},
 		});
 	}

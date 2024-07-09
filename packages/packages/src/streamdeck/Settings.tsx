@@ -1,13 +1,8 @@
+import { createForm } from "@tanstack/solid-form";
 import { Button, Input } from "@macrograph/ui";
-import { createForm, zodForm } from "@modular-forms/solid";
 import { Match, Switch } from "solid-js";
-import { z } from "zod";
 
 import type { Ctx } from "./ctx";
-
-const Schema = z.object({
-	port: z.number(),
-});
 
 export default function (ctx: Ctx) {
 	return (
@@ -19,35 +14,44 @@ export default function (ctx: Ctx) {
 				}
 			>
 				{(state) => {
-					const [, { Form, Field }] = createForm({
-						validate: zodForm(Schema),
-						initialValues: {
-							port: 1880,
+					const form = createForm(() => ({
+						defaultValues: { port: 1880 },
+						onSubmit: ({ value }) => {
+							ctx.startServer(value.port);
 						},
-					});
+					}));
 
 					return (
-						<Form
-							onSubmit={(d) => {
-								ctx.startServer(d.port);
+						<form
+							onSubmit={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								form.handleSubmit();
 							}}
 						>
 							<fieldset
 								class="flex flex-row space-x-4"
 								disabled={state().type === "Starting"}
 							>
-								<Field name="port" type="number">
-									{(field, props) => (
-										<Input {...props} value={field.value} type="number" />
+								<form.Field name="port">
+									{(field) => (
+										<Input
+											onInput={(e) =>
+												field().handleChange(e.currentTarget.valueAsNumber)
+											}
+											onBlur={() => field().handleBlur()}
+											value={field().state.value}
+											type="number"
+										/>
 									)}
-								</Field>
+								</form.Field>
 								<Button type="submit" class="shrink-0" size="md">
 									{state().type === "Stopped"
 										? "Start Server"
 										: "Starting Server..."}
 								</Button>
 							</fieldset>
-						</Form>
+						</form>
 					);
 				}}
 			</Match>
