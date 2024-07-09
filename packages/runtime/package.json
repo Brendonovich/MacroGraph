@@ -28,7 +28,6 @@
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",
-		"@macrograph/packages": "workspace:*",
 		"@total-typescript/ts-reset": "^0.4.2",
 		"@types/tmi.js": "^1.8.6",
 		"safaridriver": "^0.0.5",
