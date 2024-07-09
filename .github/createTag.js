@@ -1,16 +1,23 @@
 const tagRef = "tags/${{ steps.read_version.outputs.value }}";
 
 async function main() {
-	const tag = await github.rest.git.getTag({
-		ref: tagRef,
-		owner: context.repo.owner,
-		repo: context.repo.repo,
-	});
+	let tagExists = false;
 
-	const newTag = tag !== undefined;
-	core.setOutput("new_tag", newTag);
+	try {
+		const tag = await github.rest.git.getRef({
+			ref: tagRef,
+			owner: context.repo.owner,
+			repo: context.repo.repo,
+		});
+		if (tag) tagExists = true;
+	} catch (error) {
+		if ("status" in error && error.status === 404) tagExists = false;
+		else throw error;
+	}
 
-	if (!newTag)
+	core.setOutput("tag_exists", tagExists);
+
+	if (!tagExists)
 		await github.rest.git.createRef({
 			ref: "refs/${tagRef}",
 			owner: context.repo.owner,
