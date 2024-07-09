@@ -123,16 +123,28 @@ import {
 	onMount,
 } from "solid-js";
 import { appendResponseHeader } from "vinxi/http";
-import { type DownloadTarget, getDownloadURL } from "~/lib/releases";
+import {
+	type DownloadTarget,
+	getDownloadURL,
+	getLatestVersion,
+} from "~/lib/releases";
 import IconIcBaselineDiscord from "~icons/ic/baseline-discord.jsx";
 import IconMdiGithub from "~icons/mdi/github.jsx";
 
 const getDownloadURL_cached = cache((target: DownloadTarget) => {
 	"use server";
 
-	appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 24}`);
+	appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 5}`);
 
 	return getDownloadURL(target);
+}, "getLatestVersion");
+
+const getLatestVersion_cached = cache(() => {
+	"use server";
+
+	appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 5}`);
+
+	return getLatestVersion();
 }, "getLatestVersion");
 
 const MenuItems = clientOnly(() =>
@@ -180,6 +192,8 @@ function Logo() {
 }
 
 function DesktopDownloadButton() {
+	const latestVersion = createAsync(() => getLatestVersion_cached());
+
 	return (
 		<DropdownMenu placement="bottom-end">
 			<DropdownMenuTrigger asChild>
@@ -194,33 +208,43 @@ function DesktopDownloadButton() {
 				</As>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
-				<For
-					each={
-						[
-							["windows-x86_64", "Windows"],
-							[
-								"darwin-aarch64",
-								["macOS", <Badge class="ml-2">Apple Silicon</Badge>],
-							],
-							["darwin-x86_64", ["macOS", <Badge class="ml-2">Intel</Badge>]],
-							[
-								"linux-x86_64-AppImage",
-								["Linux", <Badge class="ml-2">AppImage</Badge>],
-							],
-							["linux-x86_64-deb", ["Linux", <Badge class="ml-2">deb</Badge>]],
-						] satisfies Array<[DownloadTarget, JSX.Element]>
+				<Suspense
+					fallback={
+						<div class="px-2 py-1 font-medium">Loading Versions...</div>
 					}
 				>
-					{([target, name]) => (
-						<DropdownMenuItem
-							onSelect={() =>
-								getDownloadURL_cached(target).then((url) => window.open(url))
-							}
-						>
-							{name}
-						</DropdownMenuItem>
-					)}
-				</For>
+					<div class="px-2 py-1 font-medium">Version {latestVersion()}</div>
+					<For
+						each={
+							[
+								["windows-x86_64", "Windows"],
+								[
+									"darwin-aarch64",
+									["macOS", <Badge class="ml-2">Apple Silicon</Badge>],
+								],
+								["darwin-x86_64", ["macOS", <Badge class="ml-2">Intel</Badge>]],
+								[
+									"linux-x86_64-AppImage",
+									["Linux", <Badge class="ml-2">AppImage</Badge>],
+								],
+								[
+									"linux-x86_64-deb",
+									["Linux", <Badge class="ml-2">deb</Badge>],
+								],
+							] satisfies Array<[DownloadTarget, JSX.Element]>
+						}
+					>
+						{([target, name]) => (
+							<DropdownMenuItem
+								onSelect={() =>
+									getDownloadURL_cached(target).then((url) => window.open(url))
+								}
+							>
+								{name}
+							</DropdownMenuItem>
+						)}
+					</For>
+				</Suspense>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

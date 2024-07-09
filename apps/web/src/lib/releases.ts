@@ -26,6 +26,18 @@ const AssetNames = {
 	"linux-x86_64-deb": (v) => `macro-graph_${v}_amd64.deb`,
 } satisfies Record<DownloadTarget, (version: string) => string>;
 
+export async function getLatestVersion() {
+	"use server";
+
+	const res = await fetch(
+		"https://cdn.crabnebula.app/update/macrograph/macrograph/darwin-aarch64/latest",
+	);
+
+	const { version } = (await res.json()) as { version: string };
+
+	return version;
+}
+
 export async function getDownloadURL(target: DownloadTarget) {
 	"use server";
 
