@@ -3,102 +3,97 @@ name: "Release Desktop"
 on: workflow_dispatch
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    draft:
-        runs-on: ubuntu-latest
-        outputs:
-            tag_name: ${{ steps.read_version.outputs.value }}
-        permissions:
-            contents: write
-        steps:
-            - uses: actions/checkout@v4
+  draft:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.read_version.outputs.value }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Read version number
-              uses: SebRollen/toml-action@v1.0.2
-              id: read_version
-              with:
-                  file: apps/desktop/src-tauri/Cargo.toml
-                  field: "package.version"
+      - name: Read version number
+        uses: SebRollen/toml-action@v1.0.2
+        id: read_version
+        with:
+          file: apps/desktop/src-tauri/Cargo.toml
+          field: "package.version"
 
-            - name: Create tag
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      github.rest.git.createRef({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        ref: 'refs/tags/${{ steps.read_version.outputs.value }}',
-                        sha: context.sha
-                      })
+      - name: Create tag
+        id: create_tag
+        uses: actions/github-script@v7
+        with:
+          script: require("./createTag.js")
 
-            - name: Create draft release
-              uses: crabnebula-dev/cloud-release@v0.1.0
-              with:
-                  command: release draft ${{ vars.CN_APP_ID }} "${{ steps.read_version.outputs.value }}" --framework tauri
-                  api-key: ${{ secrets.CN_API_KEY }}
+      - name: Create draft release
+        uses: crabnebula-dev/cloud-release@v0.1.0
+        with:
+          command: release draft ${{ vars.CN_APP_ID }} "${{ steps.read_version.outputs.value }}" --framework tauri
+          api-key: ${{ secrets.CN_API_KEY }}
 
-    build:
-        needs: draft
-        strategy:
-            fail-fast: false
-            matrix:
-                settings:
-                    - host: macos-latest
-                      target: x86_64-apple-darwin
-                    - host: macos-latest
-                      target: aarch64-apple-darwin
-                    - host: windows-latest
-                      target: x86_64-pc-windows-msvc
-                    - host: ubuntu-latest
-                      target: x86_64-unknown-linux-gnu
-        runs-on: ${{ matrix.settings.host }}
-        steps:
-            - uses: actions/checkout@v3
+  build:
+    needs: draft
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: macos-latest
+            target: x86_64-apple-darwin
+          - host: macos-latest
+            target: aarch64-apple-darwin
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.settings.host }}
+    steps:
+      - uses: actions/checkout@v3
 
-            - uses: apple-actions/import-codesign-certs@v2
-              if: ${{ runner.os == 'macOS' }}
-              with:
-                  p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
-                  p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      - uses: apple-actions/import-codesign-certs@v2
+        if: ${{ runner.os == 'macOS' }}
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-            - uses: ./.github/actions/setup-js
+      - uses: ./.github/actions/setup-js
 
-            - uses: ./.github/actions/setup-rust
-              with:
-                  target: ${{ matrix.settings.target }}
+      - uses: ./.github/actions/setup-rust
+        with:
+          target: ${{ matrix.settings.target }}
 
-            - uses: ./.github/actions/install-desktop-deps
+      - uses: ./.github/actions/install-desktop-deps
 
-            - name: Build Desktop
-              run: pnpm desktop tauri build --ci --target ${{ matrix.settings.target }}
-              env:
-                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-                  ENABLE_CODE_SIGNING: ${{ secrets.APPLE_CERTIFICATE }}
-                  APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-                  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-                  APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-                  APPLE_ID: ${{ secrets.APPLE_ID }}
-                  APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Build Desktop
+        run: pnpm desktop tauri build --ci --target ${{ matrix.settings.target }}
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          ENABLE_CODE_SIGNING: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-            - name: Upload assets to CrabNebula Cloud
-              uses: crabnebula-dev/cloud-release@v0.1.0
-              with:
-                  command: release upload ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
-                  api-key: ${{ secrets.CN_API_KEY }}
+      - name: Upload assets to CrabNebula Cloud
+        uses: crabnebula-dev/cloud-release@v0.1.0
+        with:
+          command: release upload ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
+          api-key: ${{ secrets.CN_API_KEY }}
 
-    publish:
-        runs-on: ubuntu-latest
-        needs: [draft, build]
-        steps:
-            - uses: actions/checkout@v4
+  publish:
+    runs-on: ubuntu-latest
+    needs: [draft, build]
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Publish release
-              uses: crabnebula-dev/cloud-release@v0.1.0
-              with:
-                  command: release publish ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
-                  api-key: ${{ secrets.CN_API_KEY }}
+      - name: Publish release
+        uses: crabnebula-dev/cloud-release@v0.1.0
+        with:
+          command: release publish ${{ vars.CN_APP_ID }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
+          api-key: ${{ secrets.CN_API_KEY }}
