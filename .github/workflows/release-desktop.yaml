@@ -77,7 +77,7 @@ jobs:
 
   build:
     needs: draft
-    if: ${{ needs.draft.outputs.needs_release == "true" }}
+    if: ${{ needs.draft.outputs.needs_release == 'true' }}
     strategy:
       fail-fast: false
       matrix:
