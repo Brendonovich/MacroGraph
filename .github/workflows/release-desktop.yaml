@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.read_version.outputs.value }}
-      needs-release: ${{ steps.create_tag.outputs.new_tag }}
+      needs-release: ${{ steps.create_tag.outputs.tag_existed == 'true' }}
     permissions:
       contents: write
     steps:
@@ -36,9 +36,10 @@ jobs:
             const tag = "${{ steps.read_version.outputs.value }}";
             const tagRef = `tags/${tag}`;
 
+            const TAG_EXISTED = "tag_existed";
+
             async function main() {
-              let tagExists = true;
-              core.setOutput("tag_exists", tagExists);
+              let tagExisted = true;
 
               try {
                 await github.rest.git.getRef({
@@ -47,15 +48,16 @@ jobs:
                   repo: context.repo.repo,
                 });
 
+                tagExisted = true;
                 core.notice(`Release skipped as tag '${tag}' already exists. Did you forget to bump your Cargo.toml version?`);
               } catch (error) {
-                if ("status" in error && error.status === 404) tagExists = false;
+                if ("status" in error && error.status === 404) tagExisted = false;
                 else throw error;
               }
 
-              core.setOutput("tag_exists", tagExists);
+            	core.setOutput(TAG_EXISTED, tagExisted);
 
-              if (!tagExists)
+              if (!tagExisted)
                 await github.rest.git.createRef({
                   ref: `refs/${tagRef}`,
                   owner: context.repo.owner,
@@ -67,7 +69,7 @@ jobs:
             main();
 
       - name: Create draft release
-        if: ${{ steps.create_tag.outputs.new_tag == 'true' }}
+        if: ${{ steps.create_tag.outputs.tag_existed != 'true' }}
         uses: crabnebula-dev/cloud-release@v0.1.0
         with:
           command: release draft ${{ vars.CN_APP_ID }} "${{ steps.read_version.outputs.value }}" --framework tauri
@@ -75,7 +77,7 @@ jobs:
 
   build:
     needs: draft
-    if: ${{ needs.draft.outputs.needs-release == 'true' }}
+    if: ${{ needs.draft.outputs.needs-release }}
     strategy:
       fail-fast: false
       matrix:
