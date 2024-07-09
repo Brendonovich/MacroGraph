@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  APP_CARGO_TOML: apps/desktop/src-tauri/Cargo.toml
+
 jobs:
   draft:
     runs-on: ubuntu-latest
@@ -25,7 +28,7 @@ jobs:
         uses: SebRollen/toml-action@v1.0.2
         id: read_version
         with:
-          file: apps/desktop/src-tauri/Cargo.toml
+          file: ${{ env.APP_CARGO_TOML }}
           field: "package.version"
 
       - name: Create tag
@@ -49,7 +52,7 @@ jobs:
                 });
 
                 tagExisted = true;
-                core.notice(`Release skipped as tag '${tag}' already exists. Did you forget to bump your Cargo.toml version?`);
+                core.notice(`Release skipped as tag '${tag}' already exists. Update the version in '${{ env.APP_CARGO_TOML }}' to perform a release.`);
               } catch (error) {
                 if ("status" in error && error.status === 404) tagExisted = false;
                 else throw error;
