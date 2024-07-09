@@ -34,6 +34,9 @@ export const TextInput = (props: Props) => {
 	return (
 		<Popover.Root
 			open={open() !== undefined}
+			onOpenChange={(o) => {
+				if (o === false) setOpen();
+			}}
 			placement="bottom-start"
 			gutter={4}
 		>
@@ -42,8 +45,6 @@ export const TextInput = (props: Props) => {
 					value={props.value}
 					onInput={(e) => props.onChange(e.target.value)}
 					onFocus={() => setTimeout(() => setOpen("inputFocused"), 1)}
-					onBlur={() => setTimeout(() => setOpen())}
-					onMouseDown={() => setOpen("inputFocused")}
 					class={clsx(
 						"h-6 w-full flex-1 bg-neutral-900 border-neutral-700 rounded-sm text-xs pl-1.5 appearance-none focus:ring-0 focus:border-yellow-500",
 						props.class,
