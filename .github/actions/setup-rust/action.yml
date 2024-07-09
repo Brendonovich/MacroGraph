@@ -23,5 +23,5 @@ runs:
         shared-key: ${{ inputs.target }}
 
     - name: Create desktop distDir
-      uses: bash
+      shell: bash
       run: mkdir -p apps/desktop/.output/public
