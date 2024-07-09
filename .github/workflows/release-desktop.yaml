@@ -57,7 +57,7 @@ jobs:
 
               if (!tagExists)
                 await github.rest.git.createRef({
-                  ref: "refs/${tagRef}",
+                  ref: `refs/${tagRef}`,
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   sha: context.sha,
