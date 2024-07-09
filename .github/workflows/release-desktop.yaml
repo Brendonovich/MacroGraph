@@ -38,6 +38,7 @@ jobs:
 
             async function main() {
               let tagExists = true;
+              core.setOutput("tag_exists", tagExists);
 
               try {
                 await github.rest.git.getRef({
