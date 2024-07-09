@@ -27,3 +27,5 @@ async function main() {
 			sha: context.sha,
 		});
 }
+
+main();
