@@ -1,23 +1,27 @@
 name: Setup Rust
 description: Sets up rust and caching
 inputs:
-    save-cache:
-        description: "Whether to save the cache"
-        required: false
-        default: "false"
-    target:
-        description: "Toolchain target triple"
-        required: true
+  save-cache:
+    description: "Whether to save the cache"
+    required: false
+    default: "false"
+  target:
+    description: "Toolchain target triple"
+    required: true
 runs:
-    using: "composite"
-    steps:
-        - name: Install Rust stable
-          uses: dtolnay/rust-toolchain@stable
-          with:
-              target: ${{ inputs.target }}
+  using: "composite"
+  steps:
+    - name: Install Rust stable
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        target: ${{ inputs.target }}
 
-        - name: Cache Rust Dependencies
-          uses: Swatinem/rust-cache@v2
-          with:
-              save-if: ${{ inputs.save-cache }}
-              shared-key: ${{ inputs.target }}
+    - name: Cache Rust Dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        save-if: ${{ inputs.save-cache }}
+        shared-key: ${{ inputs.target }}
+
+    - name: Create desktop distDir
+      uses: bash
+      run: mkdir -p apps/desktop/.output/public
