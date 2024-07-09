@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.read_version.outputs.value }}
-      needs-release: ${{ steps.create_tag.outputs.tag_existed == 'true' }}
+      needs-release: ${{ steps.create_tag.outputs.tag_existed != 'true' }}
     permissions:
       contents: write
     steps:
