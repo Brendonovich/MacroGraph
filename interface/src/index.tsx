@@ -76,6 +76,8 @@ export function Interface(props: {
 				props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
 				setLoaded(true);
 			});
+		} else {
+			setLoaded(true);
 		}
 	});
 
