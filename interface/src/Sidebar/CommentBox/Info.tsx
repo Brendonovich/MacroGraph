@@ -27,6 +27,7 @@ export function Info(props: { box: CommentBox }) {
 			<Field name="Tint">
 				<input
 					type="color"
+					value={props.box.tint}
 					onInput={(e) => {
 						props.box.tint = e.currentTarget.value;
 						save();
