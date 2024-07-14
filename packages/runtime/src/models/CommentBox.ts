@@ -12,6 +12,7 @@ export interface CommentBoxArgs {
 	position: XY;
 	size: XY;
 	text: string;
+	tint?: string;
 }
 
 export type GetNodeSize = (node: Node) => Size | undefined;
@@ -22,6 +23,7 @@ export class CommentBox {
 	position: XY;
 	size: XY;
 	text: string;
+	tint: string;
 
 	constructor(args: CommentBoxArgs) {
 		this.id = args.id;
@@ -29,6 +31,7 @@ export class CommentBox {
 		this.position = args.position;
 		this.size = args.size;
 		this.text = args.text;
+		this.tint = args.tint ?? "#FFF";
 
 		return createMutable(this);
 	}
@@ -64,6 +67,7 @@ export class CommentBox {
 			position: this.position,
 			size: this.size,
 			text: this.text,
+			tint: this.tint,
 		};
 	}
 
@@ -77,6 +81,7 @@ export class CommentBox {
 			position: data.position,
 			size: data.size,
 			text: data.text,
+			tint: data.tint,
 		});
 	}
 }

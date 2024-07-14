@@ -23,6 +23,7 @@
 		"@solid-primitives/mouse": "^2.0.19",
 		"@solid-primitives/refs": "^1.0.8",
 		"@solid-primitives/resize-observer": "^2.0.25",
+		"@solid-primitives/scheduled": "^1.4.3",
 		"@solid-primitives/set": "^0.4.11",
 		"@solid-primitives/storage": "^2.1.4",
 		"@solidjs/router": "^0.12.5",

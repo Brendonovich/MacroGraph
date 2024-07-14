@@ -48,7 +48,7 @@ export function SchemaMenu(props: Props) {
 
 	return (
 		<div
-			class="flex flex-col bg-neutral-900 border-black text-white border absolute z-10 w-80 h-[30rem] rounded-xl shadow-md overflow-hidden text-sm"
+			class="flex flex-col bg-neutral-900 border-black text-white border absolute z-10 w-80 h-[30rem] rounded-xl shadow-md overflow-hidden text-sm animate-in zoom-in-95 origin-top-left transition-none fade-in duration-100"
 			style={{
 				left: `${props.position.x}px`,
 				top: `${props.position.y}px`,

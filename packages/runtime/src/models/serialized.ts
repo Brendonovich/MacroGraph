@@ -44,6 +44,7 @@ export const SerializedCommentBox = z.object({
 		y: z.number(),
 	}),
 	text: z.string(),
+	tint: z.string().optional(),
 });
 
 export const SerializedGraph = z.object({

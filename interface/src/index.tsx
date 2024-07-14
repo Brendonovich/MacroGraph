@@ -639,6 +639,32 @@ function ProjectInterface(props: {
 											</Sidebar>
 										)}
 									</Solid.Match>
+									<Solid.Match
+										when={(() => {
+											const {
+												model,
+												state: { selectedItemId },
+											} = graph();
+
+											if (
+												!selectedItemId ||
+												selectedItemId.type !== "commentBox"
+											)
+												return;
+
+											return model.commentBoxes.get(selectedItemId.id);
+										})()}
+									>
+										{(box) => (
+											<Sidebar
+												width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+												name="Comment Box"
+												initialValue={["Comment Box Info"]}
+											>
+												<Sidebars.CommentBox box={box()} />
+											</Sidebar>
+										)}
+									</Solid.Match>
 								</Solid.Switch>
 							)}
 						</Solid.Show>

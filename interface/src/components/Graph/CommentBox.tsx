@@ -36,13 +36,14 @@ export function CommentBox(props: Props) {
 	return (
 		<div
 			class={clsx(
-				"bg-white/30 rounded border-black/75 border-2 absolute top-0 left-0",
+				"rounded overflow-hidden border-black/75 border absolute top-0 left-0",
 				isSelected() && "ring-2 ring-yellow-500",
 			)}
 			style={{
 				transform: `translate(${position().x}px, ${position().y}px)`,
 				width: `${size().x}px`,
 				height: `${size().y}px`,
+				"background-color": `rgb(from ${box().tint} r g b / 0.3`,
 			}}
 		>
 			<div class="truncate bg-white/50 text-black font-medium cursor-pointer outline-none">

@@ -404,6 +404,9 @@ importers:
       '@solid-primitives/resize-observer':
         specifier: ^2.0.25
         version: 2.0.25(solid-js@1.8.16)
+      '@solid-primitives/scheduled':
+        specifier: ^1.4.3
+        version: 1.4.3(solid-js@1.8.16)
       '@solid-primitives/set':
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.8.16)
@@ -3496,11 +3499,11 @@ packages:
   '@storybook/builder-manager@7.6.17':
     resolution: {integrity: sha512-Sj8hcDYiPCCMfeLzus37czl0zdrAxAz4IyYam2jBjVymrIrcDAFyL1OCZvnq33ft179QYQWhUs9qwzVmlR/ZWg==}
 
-  '@storybook/builder-vite@8.2.0-beta.2':
-    resolution: {integrity: sha512-OrY3QhHBFUIbvM4d3msP981Y+P3EcOX/CiFjHDJvUeOK8cs30hXquJ5vwUmO4rMsiD1UcIPMiCE5MHlD70SbNA==}
+  '@storybook/builder-vite@8.3.0-alpha.0':
+    resolution: {integrity: sha512-xUmmg/NfLvKhrFKs9tttjqIb8gz9UlLBTXw7LP8WR8XH1fSRE6uRR7q5U5hsjZufXSyD/Pj+5IXyxvP9Uel6PQ==}
     peerDependencies:
       '@preact/preset-vite': '*'
-      storybook: ^8.2.0-beta.2
+      storybook: ^8.3.0-alpha.0
       typescript: '>= 4.3.x'
       vite: ^4.0.0 || ^5.0.0
       vite-plugin-glimmerx: '*'
@@ -3543,10 +3546,10 @@ packages:
   '@storybook/csf-plugin@7.6.17':
     resolution: {integrity: sha512-xTHv9BUh3bkDVCvcbmdfVF0/e96BdrEgqPJ3G3RmKbSzWLOkQ2U9yiPfHzT0KJWPhVwj12fjfZp0zunu+pcS6Q==}
 
-  '@storybook/csf-plugin@8.2.0-beta.2':
-    resolution: {integrity: sha512-iUnAqobJn3x4dyE7GBX6N94Jfle24AReuRwXgrIfInKDq6MwTG2JzK5GPcrE8btQWipTnXmfi/ZeFY7bBSeqnw==}
+  '@storybook/csf-plugin@8.3.0-alpha.0':
+    resolution: {integrity: sha512-QFfRTCQm+ZF/AUYy/+VZ5lCS3oAYnL+f/SiLdT9P38AmYzU30Yzm0MsDGwZnO3F1LZHKmP1ggoS1FQJhiS0jYg==}
     peerDependencies:
-      storybook: ^8.2.0-beta.2
+      storybook: ^8.3.0-alpha.0
 
   '@storybook/csf-tools@7.6.17':
     resolution: {integrity: sha512-dAQtam0EBPeTJYcQPLxXgz4L9JFqD+HWbLFG9CmNIhMMjticrB0mpk1EFIS6vPXk/VsVWpBgMLD7dZlD6YMKcQ==}
@@ -11327,9 +11330,9 @@ snapshots:
       - encoding
       - supports-color
 
-  '@storybook/builder-vite@8.2.0-beta.2(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))':
+  '@storybook/builder-vite@8.3.0-alpha.0(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))':
     dependencies:
-      '@storybook/csf-plugin': 8.2.0-beta.2(storybook@7.6.17)
+      '@storybook/csf-plugin': 8.3.0-alpha.0(storybook@7.6.17)
       '@types/find-cache-dir': 3.2.1
       browser-assert: 1.2.1
       es-module-lexer: 1.5.4
@@ -11532,7 +11535,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@storybook/csf-plugin@8.2.0-beta.2(storybook@7.6.17)':
+  '@storybook/csf-plugin@8.3.0-alpha.0(storybook@7.6.17)':
     dependencies:
       storybook: 7.6.17
       unplugin: 1.11.0
@@ -16083,7 +16086,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.2(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0)):
     dependencies:
-      '@storybook/builder-vite': 8.2.0-beta.2(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
+      '@storybook/builder-vite': 8.3.0-alpha.0(storybook@7.6.17)(typescript@5.4.3)(vite@5.2.7(@types/node@20.12.2)(terser@5.30.0))
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - storybook
