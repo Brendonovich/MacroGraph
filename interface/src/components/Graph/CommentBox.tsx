@@ -34,6 +34,8 @@ export function CommentBox(props: Props) {
 		return selected?.type === "commentBox" && selected.id === props.box.id;
 	};
 
+	let disposeMoveListener: (() => void) | undefined;
+
 	return (
 		<div
 			class={clsx(
@@ -81,7 +83,12 @@ export function CommentBox(props: Props) {
 											});
 
 											createRoot((dispose) => {
-												onCleanup(() => graph.model().project.save());
+												onCleanup(() => {
+													disposeMoveListener = undefined;
+													graph.model().project.save();
+												});
+
+												disposeMoveListener = dispose;
 
 												createEventListenerMap(window, {
 													mouseup: dispose,
@@ -128,7 +135,10 @@ export function CommentBox(props: Props) {
 									}
 								}}
 								onDblClick={() => setEditing(true)}
-								onMouseUp={(e) => e.stopPropagation()}
+								onMouseUp={(e) => {
+									disposeMoveListener?.();
+									e.stopPropagation();
+								}}
 							>
 								{props.box.text}
 							</ContextMenu.Trigger>
