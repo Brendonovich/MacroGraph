@@ -103,6 +103,17 @@ export const Node = (props: Props) => {
 		return selectedItem?.type === "node" && selectedItem.id === node().id;
 	});
 
+	const filteredInputs = Solid.createMemo(() =>
+		node().state.inputs.filter(
+			(i) => !node().state.foldPins || hasConnection(i),
+		),
+	);
+	const filteredOutputs = Solid.createMemo(() =>
+		node().state.outputs.filter(
+			(o) => !node().state.foldPins || hasConnection(o),
+		),
+	);
+
 	return (
 		<NodeContext.Provider value={node()}>
 			<div
@@ -299,11 +310,7 @@ export const Node = (props: Props) => {
 				</div>
 				<div class="flex flex-row gap-2">
 					<div class="p-2 flex flex-col space-y-2.5">
-						<Solid.For
-							each={node().state.inputs.filter(
-								(i) => !node().state.foldPins || hasConnection(i),
-							)}
-						>
+						<Solid.For each={filteredInputs()}>
 							{(i) => (
 								<Solid.Switch>
 									<Solid.Match when={i instanceof DataInputModel && i}>
@@ -320,11 +327,7 @@ export const Node = (props: Props) => {
 						</Solid.For>
 					</div>
 					<div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
-						<Solid.For
-							each={node().state.outputs.filter(
-								(o) => !node().state.foldPins || hasConnection(o),
-							)}
-						>
+						<Solid.For each={filteredOutputs()}>
 							{(o) => (
 								<Solid.Switch>
 									<Solid.Match when={o instanceof DataOutputModel && o}>
@@ -341,6 +344,25 @@ export const Node = (props: Props) => {
 						</Solid.For>
 					</div>
 				</div>
+				<Solid.Show
+					when={
+						filteredInputs().length !== node().state.inputs.length ||
+						filteredOutputs().length !== node().state.outputs.length
+					}
+				>
+					<div class="text-center w-full h-4 flex flex-row items-center justify-center -mt-1">
+						<button
+							type="button"
+							class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
+							onClick={() => {
+								node().state.foldPins = false;
+								node().graph.project.save();
+							}}
+						>
+							<IconMdiDotsHorizontal class="size-4" />
+						</button>
+					</div>
+				</Solid.Show>
 			</div>
 		</NodeContext.Provider>
 	);

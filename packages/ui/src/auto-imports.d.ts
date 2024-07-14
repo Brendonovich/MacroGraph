@@ -20,6 +20,7 @@ declare global {
   const IconMaterialSymbolsArrowDownRounded: typeof import('~icons/material-symbols/arrow-down-rounded.jsx')['default']
   const IconMaterialSymbolsArrowRightRounded: typeof import('~icons/material-symbols/arrow-right-rounded.jsx')['default']
   const IconMaterialSymbolsExpandMoreRounded: typeof import('~icons/material-symbols/expand-more-rounded.jsx')['default']
+  const IconMdiDotsHorizontal: typeof import('~icons/mdi/dots-horizontal.jsx')['default']
   const IconPhExport: typeof import('~icons/ph/export.jsx')['default']
   const IconSystemUiconsReset: typeof import('~icons/system-uicons/reset.jsx')['default']
   const IconTablerCheck: typeof import('~icons/tabler/check.jsx')['default']
