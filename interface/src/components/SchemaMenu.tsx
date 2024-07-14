@@ -9,7 +9,7 @@ import clsx from "clsx";
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";
 
 import { useCore } from "../contexts";
-import type { GraphState } from "./Graph";
+import type { GraphState } from "./Graph/Context";
 
 interface Props {
 	graph: GraphState;

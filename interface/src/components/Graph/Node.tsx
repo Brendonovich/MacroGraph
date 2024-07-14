@@ -15,7 +15,6 @@ import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
 
-import { useGraphContext } from "./Graph";
 import {
 	DataInput,
 	DataOutput,
@@ -25,6 +24,9 @@ import {
 	ScopeOutput,
 } from "./IO";
 import "./Node.css";
+import { ContextMenu } from "@kobalte/core";
+import { tw } from "../../util";
+import { useGraphContext } from "./Context";
 
 interface Props {
 	node: NodeModel;
@@ -147,130 +149,173 @@ export const Node = (props: Props) => {
 					<Solid.Show
 						when={editingName()}
 						fallback={
-							<button
-								type="button"
-								class="px-2 pt-1 cursor-pointer outline-none w-full h-full text-left"
-								onDblClick={() => setEditingName(true)}
-								onClick={(e) => {
-									e.currentTarget.focus();
-									if (e.button === 0) {
-										props.onSelected();
-									} else return;
-
-									e.stopPropagation();
-									e.preventDefault();
-								}}
-								onKeyDown={(e) => {
-									switch (e.key) {
-										case "Backspace":
-										case "Delete": {
-											graph.model().deleteNode(node());
-											break;
-										}
-										case "ArrowLeft": {
-											node().setPosition({
-												x:
-													node().state.position.x -
-													GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-												y: node().state.position.y,
-											});
-											break;
-										}
-										case "ArrowRight": {
-											node().setPosition({
-												x:
-													node().state.position.x +
-													GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-												y: node().state.position.y,
-											});
-											break;
-										}
-										case "ArrowUp": {
-											node().setPosition({
-												x: node().state.position.x,
-												y:
-													node().state.position.y -
-													GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-											});
-											break;
-										}
-										case "ArrowDown": {
-											node().setPosition({
-												x: node().state.position.x,
-												y:
-													node().state.position.y +
-													GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-											});
-											break;
-										}
-									}
-								}}
-								onMouseDown={(e) => {
-									e.currentTarget.focus();
-									e.stopPropagation();
-									e.preventDefault();
-
-									const downPosition = graph.toGraphSpace({
-										x: e.clientX,
-										y: e.clientY,
-									});
-
-									const startPosition = node().state.position;
-
-									switch (e.button) {
-										case 0: {
-											props.onSelected();
-
-											Solid.createRoot((dispose) => {
-												createEventListenerMap(window, {
-													mouseup: dispose,
-													mousemove: (e) => {
-														const currentPosition = graph.toGraphSpace({
-															x: e.clientX,
-															y: e.clientY,
-														});
-
-														const newPosition = {
-															x:
-																startPosition.x +
-																currentPosition.x -
-																downPosition.x,
-															y:
-																startPosition.y +
-																currentPosition.y -
-																downPosition.y,
-														};
-
-														if (!e.shiftKey)
-															node().setPosition({
-																x:
-																	Math.round(newPosition.x / GRID_SIZE) *
-																	GRID_SIZE,
-																y:
-																	Math.round(newPosition.y / GRID_SIZE) *
-																	GRID_SIZE,
-															});
-														else node().setPosition(newPosition);
-													},
-												});
-											});
-
-											break;
-										}
-										default:
-											break;
-									}
-								}}
-								onMouseUp={() =>
-									node().setPosition(node().state.position, true)
-								}
-								onContextMenu={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
+							<ContextMenu.Root
+								onOpenChange={(o) => {
+									if (o) props.onSelected();
 								}}
 							>
-								{node().state.name}
-							</button>
+								<ContextMenu.Trigger
+									as="button"
+									class="px-2 pt-1 cursor-pointer outline-none w-full h-full text-left"
+									onDblClick={() => setEditingName(true)}
+									onClick={(e) => {
+										e.currentTarget.focus();
+										if (e.button === 0) {
+											props.onSelected();
+										} else return;
+
+										e.stopPropagation();
+										e.preventDefault();
+									}}
+									onKeyDown={(e) => {
+										switch (e.key) {
+											case "Backspace":
+											case "Delete": {
+												graph.model().deleteNode(node());
+												break;
+											}
+											case "ArrowLeft": {
+												node().setPosition({
+													x:
+														node().state.position.x -
+														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+													y: node().state.position.y,
+												});
+												break;
+											}
+											case "ArrowRight": {
+												node().setPosition({
+													x:
+														node().state.position.x +
+														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+													y: node().state.position.y,
+												});
+												break;
+											}
+											case "ArrowUp": {
+												node().setPosition({
+													x: node().state.position.x,
+													y:
+														node().state.position.y -
+														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+												});
+												break;
+											}
+											case "ArrowDown": {
+												node().setPosition({
+													x: node().state.position.x,
+													y:
+														node().state.position.y +
+														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
+												});
+												break;
+											}
+										}
+									}}
+									onMouseDown={(e) => {
+										e.currentTarget.focus();
+										e.stopPropagation();
+										e.preventDefault();
+
+										const downPosition = graph.toGraphSpace({
+											x: e.clientX,
+											y: e.clientY,
+										});
+
+										const startPosition = node().state.position;
+
+										switch (e.button) {
+											case 0: {
+												props.onSelected();
+
+												Solid.createRoot((dispose) => {
+													createEventListenerMap(window, {
+														mouseup: dispose,
+														mousemove: (e) => {
+															const currentPosition = graph.toGraphSpace({
+																x: e.clientX,
+																y: e.clientY,
+															});
+
+															const newPosition = {
+																x:
+																	startPosition.x +
+																	currentPosition.x -
+																	downPosition.x,
+																y:
+																	startPosition.y +
+																	currentPosition.y -
+																	downPosition.y,
+															};
+
+															if (!e.shiftKey)
+																node().setPosition({
+																	x:
+																		Math.round(newPosition.x / GRID_SIZE) *
+																		GRID_SIZE,
+																	y:
+																		Math.round(newPosition.y / GRID_SIZE) *
+																		GRID_SIZE,
+																});
+															else node().setPosition(newPosition);
+														},
+													});
+												});
+
+												break;
+											}
+											default:
+												break;
+										}
+									}}
+									onMouseUp={(e) => {
+										if (e.button === 0)
+											node().setPosition(node().state.position, true);
+										else if (e.button === 2) {
+											e.preventDefault();
+											e.stopPropagation();
+										}
+									}}
+								>
+									{node().state.name}
+								</ContextMenu.Trigger>
+								<ContextMenu.Portal>
+									<ContextMenu.Content class="border border-black rounded bg-neutral-900 min-w-28 text-sm ui-expanded:animate-in ui-expanded:fade-in ui-expanded:zoom-in-95 origin-top-left ui-closed:animate-out ui-closed:fade-out ui-closed:zoom-out-95 p-1 focus:outline-none">
+										<ContextMenuItem onSelect={() => setEditingName(true)}>
+											Rename
+										</ContextMenuItem>
+										<ContextMenuItem
+											onSelect={() => {
+												node().state.foldPins = !node().state.foldPins;
+												node().graph.project.save();
+											}}
+											class="flex flex-row gap-4 items-center justify-between"
+										>
+											{node().state.foldPins ? "Expand" : "Collapse"}
+											{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300 font-sans items-base">
+												<kbd class="font-sans">⌘</kbd>
+												<kbd class="font-sans">Ctrl</kbd>
+												{node().state.foldPins ? (
+													<kbd class="font-sans">]</kbd>
+												) : (
+													<kbd class="font-sans">]</kbd>
+												)}
+											</span> */}
+										</ContextMenuItem>
+										<ContextMenuItem
+											onSelect={() => {
+												graph.model().deleteNode(node());
+											}}
+											class="text-red-500 flex flex-row gap-2 items-center justify-between"
+										>
+											Delete
+											{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300">
+												<kbd class="font-sans">⌫</kbd>
+											</span> */}
+										</ContextMenuItem>
+									</ContextMenu.Content>
+								</ContextMenu.Portal>
+							</ContextMenu.Root>
 						}
 					>
 						{(_) => {
@@ -287,13 +332,19 @@ export const Node = (props: Props) => {
 										type="text"
 										ref={ref}
 										value={value()}
-										onInput={(e) =>
+										onKeyPress={(e) => {
+											if (e.key === "Enter") {
+												e.preventDefault();
+												ref?.blur();
+											}
+										}}
+										onInput={(e) => {
 											setValue(
 												e.target.value === ""
 													? node().schema.name
 													: e.target.value,
-											)
-										}
+											);
+										}}
 										onBlur={() => {
 											if (value() !== "") node().state.name = value();
 											node().graph.project.save();
@@ -311,16 +362,16 @@ export const Node = (props: Props) => {
 				<div class="flex flex-row gap-2">
 					<div class="p-2 flex flex-col space-y-2.5">
 						<Solid.For each={filteredInputs()}>
-							{(i) => (
+							{(input, index) => (
 								<Solid.Switch>
-									<Solid.Match when={i instanceof DataInputModel && i}>
-										{(i) => <DataInput input={i()} />}
+									<Solid.Match when={input instanceof DataInputModel && input}>
+										{(i) => <DataInput input={i()} index={index()} />}
 									</Solid.Match>
-									<Solid.Match when={i instanceof ExecInputModel && i}>
-										{(i) => <ExecInput input={i()} />}
+									<Solid.Match when={input instanceof ExecInputModel && input}>
+										{(i) => <ExecInput input={i()} index={index()} />}
 									</Solid.Match>
-									<Solid.Match when={i instanceof ScopeInputModel && i}>
-										{(i) => <ScopeInput input={i()} />}
+									<Solid.Match when={input instanceof ScopeInputModel && input}>
+										{(i) => <ScopeInput input={i()} index={index()} />}
 									</Solid.Match>
 								</Solid.Switch>
 							)}
@@ -328,16 +379,22 @@ export const Node = (props: Props) => {
 					</div>
 					<div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
 						<Solid.For each={filteredOutputs()}>
-							{(o) => (
+							{(output, index) => (
 								<Solid.Switch>
-									<Solid.Match when={o instanceof DataOutputModel && o}>
-										{(o) => <DataOutput output={o()} />}
+									<Solid.Match
+										when={output instanceof DataOutputModel && output}
+									>
+										{(o) => <DataOutput output={o()} index={index()} />}
 									</Solid.Match>
-									<Solid.Match when={o instanceof ExecOutputModel && o}>
-										{(o) => <ExecOutput output={o()} />}
+									<Solid.Match
+										when={output instanceof ExecOutputModel && output}
+									>
+										{(o) => <ExecOutput output={o()} index={index()} />}
 									</Solid.Match>
-									<Solid.Match when={o instanceof ScopeOutputModel && o}>
-										{(o) => <ScopeOutput output={o()} />}
+									<Solid.Match
+										when={output instanceof ScopeOutputModel && output}
+									>
+										{(o) => <ScopeOutput output={o()} index={index()} />}
 									</Solid.Match>
 								</Solid.Switch>
 							)}
@@ -353,6 +410,7 @@ export const Node = (props: Props) => {
 					<div class="text-center w-full h-4 flex flex-row items-center justify-center -mt-1">
 						<button
 							type="button"
+							title="Expand node IO"
 							class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
 							onClick={() => {
 								node().state.foldPins = false;
@@ -367,3 +425,7 @@ export const Node = (props: Props) => {
 		</NodeContext.Provider>
 	);
 };
+
+const ContextMenuItem = tw(
+	ContextMenu.Item,
+)`p-1 outline-none ui-highlighted:bg-white/10 rounded-sm`;

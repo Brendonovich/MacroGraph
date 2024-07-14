@@ -37,16 +37,16 @@ import {
 	type Control,
 	createSection,
 } from "./components/CommandDialog";
-import {
-	Graph,
-	type GraphState,
-	createGraphState,
-	toGraphSpace,
-} from "./components/Graph";
+import { Graph } from "./components/Graph";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import { CoreProvider } from "./contexts";
 import "./global.css";
+import {
+	createGraphState,
+	type GraphState,
+	toGraphSpace,
+} from "./components/Graph/Context";
 export { useCore } from "./contexts";
 
 export * from "./platform";

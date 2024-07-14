@@ -11,8 +11,7 @@ import {
 	onMount,
 	untrack,
 } from "solid-js";
-
-import { useGraphContext } from "./Graph";
+import { useGraphContext } from "./Context";
 
 interface Props {
 	box: CommentBoxModel;
@@ -135,22 +134,30 @@ export function CommentBox(props: Props) {
 
 						onMount(() => ref?.focus());
 
-						createEffect(() => setEditing(isSelected()));
-
-						onCleanup(() => {
-							if (value() !== "") props.box.text = value();
-						});
-
 						return (
-							<input
-								ref={ref}
-								class="m-2 p-0 pl-1 border-0 w-full"
-								type="text"
-								value={value()}
-								onInput={(e) => setValue(e.target.value)}
-								onContextMenu={(e) => e.stopPropagation()}
-								onMouseDown={(e) => e.stopPropagation()}
-							/>
+							<div class="flex flex-row">
+								<input
+									ref={ref}
+									class="m-2 p-0 pl-1 border-0 flex-1 rounded"
+									type="text"
+									value={value()}
+									onInput={(e) => setValue(e.target.value)}
+									onContextMenu={(e) => e.stopPropagation()}
+									onMouseDown={(e) => e.stopPropagation()}
+									onBlur={() => {
+										if (value() !== "") props.box.text = value();
+										props.box.graph.project.save();
+
+										setEditing(false);
+									}}
+									onKeyPress={(e) => {
+										if (e.key === "Enter") {
+											e.preventDefault();
+											ref?.blur();
+										}
+									}}
+								/>
+							</div>
 						);
 					}}
 				</Show>

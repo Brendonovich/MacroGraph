@@ -13,8 +13,8 @@ import { createEffect } from "solid-js";
 
 import type { GraphBounds } from "../../..";
 import { useUIStore } from "../../../UIStore";
-import { useGraphContext } from "../Graph";
 import { colour } from "../util";
+import { useGraphContext } from "../Context";
 
 export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
 	const ctx = useGraphContext();

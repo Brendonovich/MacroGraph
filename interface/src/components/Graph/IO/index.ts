@@ -24,7 +24,7 @@ import {
 } from "solid-js";
 
 import { useUIStore } from "../../../UIStore";
-import { useGraphContext } from "../Graph";
+import { useGraphContext } from "../Context";
 
 export function usePin(pin: Accessor<Pin>) {
 	const graph = useGraphContext();
@@ -115,6 +115,7 @@ export function usePin(pin: Accessor<Pin>) {
 	});
 
 	createEffect(() => {
+		pin().node.state.foldPins;
 		graph.state.translate.x;
 		graph.state.translate.y;
 		graph.state.scale;
