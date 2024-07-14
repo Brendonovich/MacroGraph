@@ -35,7 +35,7 @@ export function ConnectionsDialog(props: { core: Core }) {
 		<Dialog onOpenChange={setOpen} open={open()}>
 			<DialogTrigger asChild>
 				<As component={Button} size="icon" variant="ghost" title="Connections">
-					<IconGravityUiPlugConnection class="w-6 h-6" />
+					<IconGravityUiPlugConnection class="size-5" />
 				</As>
 			</DialogTrigger>
 			<DialogContent class="min-h-[25rem] flex flex-col">

@@ -111,7 +111,7 @@ export function ExportButton() {
 				saveTemplateAsFile("project.json", core.project.serialize())
 			}
 		>
-			<IconPhExport class="w-6 h-6" />
+			<IconPhExport class="size-5" />
 		</Button>
 	);
 }
