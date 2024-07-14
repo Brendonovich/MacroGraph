@@ -3,7 +3,6 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import {
 	Show,
-	createEffect,
 	createMemo,
 	createRoot,
 	createSignal,
@@ -11,7 +10,10 @@ import {
 	onMount,
 	untrack,
 } from "solid-js";
+import { ContextMenu } from "@kobalte/core";
+
 import { useGraphContext } from "./Context";
+import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 
 interface Props {
 	box: CommentBoxModel;
@@ -49,82 +51,121 @@ export function CommentBox(props: Props) {
 				<Show
 					when={editing()}
 					fallback={
-						<div
-							class="p-2 pl-3 outline-none"
-							onMouseDown={(e) => {
-								e.currentTarget.focus();
-								e.stopPropagation();
-
-								if (editing()) return;
-
-								switch (e.button) {
-									case 0: {
-										props.onSelected();
-
-										const [shift, setShift] = createSignal(e.shiftKey);
-
-										const nodes = createMemo(() => {
-											if (shift()) return [];
-
-											return untrack(() =>
-												box().getNodes(graph.model().nodes.values(), (node) =>
-													graph.nodeSizes.get(node),
-												),
-											);
-										});
-
-										createRoot((dispose) => {
-											onCleanup(() => graph.model().project.save());
-
-											createEventListenerMap(window, {
-												mouseup: dispose,
-												mousemove: (e) => {
-													setShift(e.shiftKey);
-													const scale = graph.state.scale;
-
-													box().position = {
-														x: box().position.x + e.movementX / scale,
-														y: box().position.y + e.movementY / scale,
-													};
-
-													for (const node of nodes()) {
-														node.state.position = {
-															x: node.state.position.x + e.movementX / scale,
-															y: node.state.position.y + e.movementY / scale,
-														};
-													}
-												},
-											});
-										});
-
-										break;
-									}
-									default:
-										break;
-								}
+						<ContextMenu.Root
+							onOpenChange={(o) => {
+								if (o) props.onSelected();
 							}}
-							tabIndex={-1}
-							onKeyDown={(e) => {
-								if (editing()) return;
+						>
+							<ContextMenu.Trigger
+								class="p-2 pl-3 outline-none"
+								onMouseDown={(e) => {
+									e.currentTarget.focus();
+									e.stopPropagation();
 
-								switch (e.key) {
-									case "Backspace":
-									case "Delete": {
+									if (editing()) return;
+
+									switch (e.button) {
+										case 0: {
+											props.onSelected();
+
+											const [shift, setShift] = createSignal(e.shiftKey);
+
+											const nodes = createMemo(() => {
+												if (shift()) return [];
+
+												return untrack(() =>
+													box().getNodes(graph.model().nodes.values(), (node) =>
+														graph.nodeSizes.get(node),
+													),
+												);
+											});
+
+											createRoot((dispose) => {
+												onCleanup(() => graph.model().project.save());
+
+												createEventListenerMap(window, {
+													mouseup: dispose,
+													mousemove: (e) => {
+														setShift(e.shiftKey);
+														const scale = graph.state.scale;
+
+														box().position = {
+															x: box().position.x + e.movementX / scale,
+															y: box().position.y + e.movementY / scale,
+														};
+
+														for (const node of nodes()) {
+															node.state.position = {
+																x: node.state.position.x + e.movementX / scale,
+																y: node.state.position.y + e.movementY / scale,
+															};
+														}
+													},
+												});
+											});
+
+											break;
+										}
+										default:
+											break;
+									}
+								}}
+								onKeyDown={(e) => {
+									if (editing()) return;
+
+									switch (e.key) {
+										case "Backspace":
+										case "Delete": {
+											graph
+												.model()
+												.deleteCommentbox(
+													box(),
+													(node) => graph.nodeSizes.get(node),
+													e.shiftKey,
+												);
+											break;
+										}
+									}
+								}}
+								onDblClick={() => setEditing(true)}
+								onMouseUp={(e) => e.stopPropagation()}
+							>
+								{props.box.text}
+							</ContextMenu.Trigger>
+							<ContextMenuContent>
+								<ContextMenuItem onSelect={() => setEditing(true)}>
+									Rename
+								</ContextMenuItem>
+								<ContextMenuItem
+									onSelect={() => {
 										graph
 											.model()
 											.deleteCommentbox(
 												box(),
 												(node) => graph.nodeSizes.get(node),
-												e.shiftKey,
+												false,
 											);
-										break;
-									}
-								}
-							}}
-							onDblClick={() => setEditing(true)}
-						>
-							{props.box.text}
-						</div>
+									}}
+									class="text-red-500 flex flex-row gap-2 items-center justify-between"
+								>
+									Delete
+								</ContextMenuItem>
+								<ContextMenuItem
+									onSelect={() => {
+										graph
+											.model()
+											.deleteCommentbox(
+												box(),
+												(node) => graph.nodeSizes.get(node),
+												true,
+											);
+									}}
+									class="text-red-500 flex flex-row gap-2 items-center justify-between"
+								>
+									Delete with nodes
+								</ContextMenuItem>
+							</ContextMenuContent>
+						</ContextMenu.Root>
 					}
 				>
 					{(_) => {

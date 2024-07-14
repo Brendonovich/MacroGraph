@@ -11,6 +11,7 @@ import {
 	hasConnection,
 } from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
+import { ContextMenu } from "@kobalte/core";
 import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
@@ -24,9 +25,8 @@ import {
 	ScopeOutput,
 } from "./IO";
 import "./Node.css";
-import { ContextMenu } from "@kobalte/core";
-import { tw } from "../../util";
 import { useGraphContext } from "./Context";
+import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 
 interface Props {
 	node: NodeModel;
@@ -279,20 +279,19 @@ export const Node = (props: Props) => {
 								>
 									{node().state.name}
 								</ContextMenu.Trigger>
-								<ContextMenu.Portal>
-									<ContextMenu.Content class="border border-black rounded bg-neutral-900 min-w-28 text-sm ui-expanded:animate-in ui-expanded:fade-in ui-expanded:zoom-in-95 origin-top-left ui-closed:animate-out ui-closed:fade-out ui-closed:zoom-out-95 p-1 focus:outline-none">
-										<ContextMenuItem onSelect={() => setEditingName(true)}>
-											Rename
-										</ContextMenuItem>
-										<ContextMenuItem
-											onSelect={() => {
-												node().state.foldPins = !node().state.foldPins;
-												node().graph.project.save();
-											}}
-											class="flex flex-row gap-4 items-center justify-between"
-										>
-											{node().state.foldPins ? "Expand" : "Collapse"}
-											{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300 font-sans items-base">
+								<ContextMenuContent>
+									<ContextMenuItem onSelect={() => setEditingName(true)}>
+										Rename
+									</ContextMenuItem>
+									<ContextMenuItem
+										onSelect={() => {
+											node().state.foldPins = !node().state.foldPins;
+											node().graph.project.save();
+										}}
+										class="flex flex-row gap-4 items-center justify-between"
+									>
+										{node().state.foldPins ? "Expand" : "Collapse"}
+										{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300 font-sans items-base">
 												<kbd class="font-sans">⌘</kbd>
 												<kbd class="font-sans">Ctrl</kbd>
 												{node().state.foldPins ? (
@@ -301,20 +300,19 @@ export const Node = (props: Props) => {
 													<kbd class="font-sans">]</kbd>
 												)}
 											</span> */}
-										</ContextMenuItem>
-										<ContextMenuItem
-											onSelect={() => {
-												graph.model().deleteNode(node());
-											}}
-											class="text-red-500 flex flex-row gap-2 items-center justify-between"
-										>
-											Delete
-											{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300">
+									</ContextMenuItem>
+									<ContextMenuItem
+										onSelect={() => {
+											graph.model().deleteNode(node());
+										}}
+										class="text-red-500 flex flex-row gap-2 items-center justify-between"
+									>
+										Delete
+										{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300">
 												<kbd class="font-sans">⌫</kbd>
 											</span> */}
-										</ContextMenuItem>
-									</ContextMenu.Content>
-								</ContextMenu.Portal>
+									</ContextMenuItem>
+								</ContextMenuContent>
 							</ContextMenu.Root>
 						}
 					>
@@ -365,13 +363,13 @@ export const Node = (props: Props) => {
 							{(input, index) => (
 								<Solid.Switch>
 									<Solid.Match when={input instanceof DataInputModel && input}>
-										{(i) => <DataInput input={i()} index={index()} />}
+										{(i) => <DataInput input={i()} />}
 									</Solid.Match>
 									<Solid.Match when={input instanceof ExecInputModel && input}>
-										{(i) => <ExecInput input={i()} index={index()} />}
+										{(i) => <ExecInput input={i()} />}
 									</Solid.Match>
 									<Solid.Match when={input instanceof ScopeInputModel && input}>
-										{(i) => <ScopeInput input={i()} index={index()} />}
+										{(i) => <ScopeInput input={i()} />}
 									</Solid.Match>
 								</Solid.Switch>
 							)}
@@ -384,17 +382,17 @@ export const Node = (props: Props) => {
 									<Solid.Match
 										when={output instanceof DataOutputModel && output}
 									>
-										{(o) => <DataOutput output={o()} index={index()} />}
+										{(o) => <DataOutput output={o()} />}
 									</Solid.Match>
 									<Solid.Match
 										when={output instanceof ExecOutputModel && output}
 									>
-										{(o) => <ExecOutput output={o()} index={index()} />}
+										{(o) => <ExecOutput output={o()} />}
 									</Solid.Match>
 									<Solid.Match
 										when={output instanceof ScopeOutputModel && output}
 									>
-										{(o) => <ScopeOutput output={o()} index={index()} />}
+										{(o) => <ScopeOutput output={o()} />}
 									</Solid.Match>
 								</Solid.Switch>
 							)}
@@ -425,7 +423,3 @@ export const Node = (props: Props) => {
 		</NodeContext.Provider>
 	);
 };
-
-const ContextMenuItem = tw(
-	ContextMenu.Item,
-)`p-1 outline-none ui-highlighted:bg-white/10 rounded-sm`;

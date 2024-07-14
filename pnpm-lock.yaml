@@ -425,9 +425,6 @@ importers:
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
-      solid-headless:
-        specifier: ^0.13.1
-        version: 0.13.1(solid-js@1.8.16)
       solid-js:
         specifier: ^1.8.16
         version: 1.8.16
@@ -7513,12 +7510,6 @@ packages:
     resolution: {integrity: sha512-B6w7tkwNid7ToxjZ08rQMT8M9BJAf8DKx8Ft4NivzH0zBUfd6jldGcisJn/RLgxcX3FPNDdNQCUEMMT79b+oCQ==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
-  solid-headless@0.13.1:
-    resolution: {integrity: sha512-FZJai49YmdBu6oEo8aJGPMQ1Qn8xiW0cnD6vNFDIQWMKJdXEUtDEwz0hTR9aZ7Epq3IkrZs+98E0vNiv1+pZpA==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      solid-js: ^1.2
-
   solid-js@1.8.16:
     resolution: {integrity: sha512-rja94MNU9flF3qQRLNsu60QHKBDKBkVE1DldJZPIfn2ypIn3NV2WpSbGTQIvsyGPBo+9E2IMjwqnqpbgfWuzeg==}
 
@@ -7531,12 +7522,6 @@ packages:
     resolution: {integrity: sha512-IMMwKm92VT/2uDwIEOrOnqbSHkj6uGLR6KM6NxjFXe5gHKnWDsr61N2elUHpsZpdG0/UhwQ2kd6s7hRSAT3SVw==}
     peerDependencies:
       solid-js: ^1.6.0
-
-  solid-use@0.6.2:
-    resolution: {integrity: sha512-0ShJ5s+4PIN0pJB/BtsQucsZB+xnUeeTGaxErQDu6USn5jygZWXicAtOEvFbI8gv40xE751uY1Tz7Aib9lxL/Q==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      solid-js: ^1.5
 
   solid-use@0.8.0:
     resolution: {integrity: sha512-YX+XmcKLvSx3bwMimMhFy40ZkDnShnUcEw6cW6fSscwKEgl1TG3GlgAvkBmQ3AeWjvQSd8+HGTr82ImsrjkkqA==}
@@ -16005,11 +15990,6 @@ snapshots:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
 
-  solid-headless@0.13.1(solid-js@1.8.16):
-    dependencies:
-      solid-js: 1.8.16
-      solid-use: 0.6.2(solid-js@1.8.16)
-
   solid-js@1.8.16:
     dependencies:
       csstype: 3.1.3
@@ -16024,10 +16004,6 @@ snapshots:
       solid-js: 1.8.16
 
   solid-sonner@0.2.5(solid-js@1.8.16):
-    dependencies:
-      solid-js: 1.8.16
-
-  solid-use@0.6.2(solid-js@1.8.16):
     dependencies:
       solid-js: 1.8.16
 

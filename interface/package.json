@@ -30,7 +30,6 @@
 		"@ts-rest/core": "^3.41.1",
 		"@ts-rest/solid-query": "^3.41.1",
 		"clsx": "^1.2.1",
-		"solid-headless": "^0.13.1",
 		"solid-js": "^1.8.16",
 		"zod": "^3.22.4"
 	},
