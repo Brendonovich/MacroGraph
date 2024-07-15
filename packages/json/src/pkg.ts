@@ -40,6 +40,29 @@ export function pkg() {
 		},
 	});
 
+	pkg.createSchema({
+		name: "From JSON",
+		type: "pure",
+		createIO({ io }) {
+			const w = io.wildcard("");
+			return {
+				w,
+				in: io.dataInput({
+					id: "in",
+					type: t.enum(JSONEnum),
+				}),
+				out: io.dataOutput({
+					id: "out",
+					type: t.wildcard(w),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const json = ctx.getInput(io.in);
+			ctx.setOutput(io.out, jsonToJS(json, io.w.value().unwrap()));
+		},
+	});
+
 	pkg.createNonEventSchema({
 		name: "Parse JSON",
 		variant: "Exec",
@@ -56,7 +79,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const value = jsToJSON(window.JSON.parse(ctx.getInput(io.in)));
+			const value = jsToJSON(JSON.parse(ctx.getInput(io.in)));
 			ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
 		},
 	});
@@ -83,6 +106,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io, properties }) {
+			// TODO: remove jsonToJS from this
 			const value = jsonToJS(ctx.getInput(io.in));
 			let query = ctx.getProperty(properties.query);
 			let output: { [x: string]: any } | null = null;

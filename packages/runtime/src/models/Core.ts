@@ -246,7 +246,10 @@ export class ExecutionContext {
 					const connectedNode = conn.node;
 					const schema = connectedNode.schema;
 
-					if ("variant" in schema && schema.variant === "Pure") {
+					if (
+						("variant" in schema && schema.variant === "Pure") ||
+						("type" in schema && schema.type === "pure")
+					) {
 						// Pure nodes recalculate each time
 
 						await this.execNode(connectedNode as any);

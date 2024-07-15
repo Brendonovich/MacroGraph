@@ -28,6 +28,7 @@ import {
 } from "./IO";
 import {
 	IOBuilder,
+	Schema,
 	type NodeSchema,
 	type Property,
 	type inferPropertyDef,

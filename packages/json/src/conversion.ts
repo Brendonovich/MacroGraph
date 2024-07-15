@@ -6,7 +6,7 @@ import {
 	type Struct,
 	t,
 } from "@macrograph/typesystem";
-import { ReactiveMap } from "@solid-primitives/map";
+import { ReactiveMap, ReactiveWeakMap } from "@solid-primitives/map";
 
 import { JSONEnum, type JSONValue } from "./type";
 
@@ -169,7 +169,7 @@ export function jsToJSON(value: any): JSONValue | null {
 /**
  * JSON -> JS Value
  */
-export function jsonToJS(value: JSONValue): any {
+export function jsonToJS(value: JSONValue, type?: t.Any): any {
 	switch (value.variant) {
 		case "Null":
 			return null;
@@ -179,10 +179,18 @@ export function jsonToJS(value: JSONValue): any {
 			return value.data.value;
 		case "List":
 			return value.data.value.map((v: any) => jsonToJS(v));
-		case "Map":
+		case "Map": {
+			if (type instanceof t.Map) {
+				return [...value.data.value.entries()].reduce((acc, [key, value]) => {
+					acc.set(key, jsonToJS(value as any, type.value));
+					return acc;
+				}, new ReactiveMap());
+			}
+
 			return [...value.data.value.entries()].reduce((acc, [key, value]) => {
 				acc[key] = jsonToJS(value as any);
 				return acc;
 			}, {} as any);
+		}
 	}
 }
