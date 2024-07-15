@@ -102,6 +102,22 @@ export function TypeEditor(props: {
 						</div>
 						<CategoryLabel>Structs</CategoryLabel>
 						<div class="flex flex-col pl-2 mb-1">
+							<Show when={core.project.customStructs.size > 0}>
+								<span class="text-neutral-300 text-xs mt-0.5">Custom</span>
+								<For each={[...core.project.customStructs.values()]}>
+									{(struct) => (
+										<TypeItem
+											type="button"
+											onClick={() => {
+												ctx.typeDialogState()?.onTypeSelected(t.struct(struct));
+												ctx.setTypeDialogState(null);
+											}}
+										>
+											{struct.name}
+										</TypeItem>
+									)}
+								</For>
+							</Show>
 							<For each={core.packages}>
 								{(pkg) => (
 									<Show when={pkg.structs.size > 0}>

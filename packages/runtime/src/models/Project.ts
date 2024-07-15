@@ -1,14 +1,16 @@
 import { ReactiveMap } from "@solid-primitives/map";
+import { Maybe, type Option } from "@macrograph/option";
+import type { Enum, SerializedType, StructBase } from "@macrograph/typesystem";
 import { createMutable } from "solid-js/store";
 import type { z } from "zod";
 
-import { Owner, batch, createRoot, runWithOwner } from "solid-js";
 import type { Core } from "./Core";
 import { CustomEvent } from "./CustomEvent";
 import { Graph } from "./Graph";
 import type { ResourceType } from "./Package";
 import { Variable, type VariableArgs } from "./Variable";
 import type { SerializedProject } from "./serialized";
+import { CustomStruct } from "./CustomStruct";
 
 export interface ProjectArgs {
 	core: Core;
@@ -28,6 +30,7 @@ export class Project {
 	core: Core;
 	graphs = new ReactiveMap<number, Graph>();
 	customEvents = new ReactiveMap<number, CustomEvent>();
+	customStructs = new ReactiveMap<number, CustomStruct>();
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
 	name = "New Project";
@@ -36,6 +39,7 @@ export class Project {
 
 	private graphIdCounter = 0;
 	private customEventIdCounter = 0;
+	private customTypeIdCounter = 0;
 	private idCounter = 0;
 
 	constructor(args: ProjectArgs) {
@@ -50,6 +54,41 @@ export class Project {
 
 	generateCustomEventId() {
 		return this.customEventIdCounter++;
+	}
+
+	generateCustomTypeId() {
+		return this.customTypeIdCounter++;
+	}
+
+	// getType(
+	// 	variant: "struct",
+	// 	data: Extract<
+	// 		z.infer<typeof SerializedType>,
+	// 		{ variant: "struct" }
+	// 	>["struct"],
+	// ): Option<Struct>;
+	// getType(
+	// 	variant: "enum",
+	// 	data: Extract<z.infer<typeof SerializedType>, { variant: "enum" }>["enum"],
+	// ): Option<Struct>;
+	getType<T extends "struct" | "enum">(
+		variant: T,
+		data:
+			| Extract<z.infer<typeof SerializedType>, { variant: "struct" }>["struct"]
+			| Extract<z.infer<typeof SerializedType>, { variant: "enum" }>["enum"],
+	): Option<StructBase | Enum> {
+		if (data.variant === "package") {
+			const pkg = Maybe(
+				this.core.packages.find((p) => p.name === data.package),
+			);
+
+			if (variant === "struct")
+				return pkg.andThen((pkg) => Maybe(pkg.structs.get(data.name)));
+			return pkg.andThen((pkg) => Maybe(pkg.enums.get(data.name)));
+		}
+
+		if (variant === "struct") return Maybe(this.customStructs.get(data.id));
+		throw new Error();
 	}
 
 	createGraph(args?: { name?: string }) {
@@ -81,6 +120,22 @@ export class Project {
 		this.core.project.save();
 
 		return event;
+	}
+
+	createCustomStruct() {
+		const id = this.generateCustomTypeId();
+
+		const struct = new CustomStruct({
+			id,
+			project: this,
+			name: `Struct ${id}`,
+		});
+
+		this.customStructs.set(id, struct);
+
+		this.core.project.save();
+
+		return struct;
 	}
 
 	generateId() {
@@ -152,6 +207,8 @@ export class Project {
 			graphs: [...this.graphs.values()].map((g) => g.serialize()),
 			customEventIdCounter: this.customEventIdCounter,
 			customEvents: [...this.customEvents.values()].map((e) => e.serialize()),
+			customTypeIdCounter: this.customTypeIdCounter,
+			customStructs: [...this.customStructs.values()].map((s) => s.serialize()),
 			counter: this.idCounter,
 			resources: [...this.resources].map(([type, entry]) => ({
 				type: {
@@ -174,6 +231,20 @@ export class Project {
 		project.name = data.name ?? "New Project";
 
 		project.graphIdCounter = data.graphIdCounter;
+
+		project.customTypeIdCounter = data.customTypeIdCounter;
+
+		project.customStructs = new ReactiveMap(
+			data.customStructs
+				.map((serializedStruct) => {
+					const struct = CustomStruct.deserialize(project, serializedStruct);
+
+					if (struct === null) return null;
+
+					return [struct.id, struct] as [number, CustomStruct];
+				})
+				.filter(Boolean) as [number, CustomStruct][],
+		);
 
 		project.customEventIdCounter = data.customEventIdCounter;
 

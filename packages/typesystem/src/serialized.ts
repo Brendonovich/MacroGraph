@@ -1,7 +1,7 @@
 import type { Option } from "@macrograph/option";
 import { z } from "zod";
 
-import { type Enum, type Struct, t } from ".";
+import { type Enum, type Struct, type StructBase, t } from ".";
 
 const SerializedTypeBases = z.union([
 	z.literal("int"),
@@ -10,21 +10,25 @@ const SerializedTypeBases = z.union([
 	z.literal("bool"),
 	z.object({
 		variant: z.literal("struct"),
-		struct: z
-			.discriminatedUnion("variant", [
-				z.object({ variant: z.literal("package"), package: z.string() }),
-				z.object({ variant: z.literal("custom") }),
-			])
-			.and(z.object({ name: z.string() })),
+		struct: z.discriminatedUnion("variant", [
+			z.object({
+				variant: z.literal("package"),
+				package: z.string(),
+				name: z.string(),
+			}),
+			z.object({ variant: z.literal("custom"), id: z.number() }),
+		]),
 	}),
 	z.object({
 		variant: z.literal("enum"),
-		enum: z
-			.discriminatedUnion("variant", [
-				z.object({ variant: z.literal("package"), package: z.string() }),
-				z.object({ variant: z.literal("custom") }),
-			])
-			.and(z.object({ name: z.string() })),
+		enum: z.discriminatedUnion("variant", [
+			z.object({
+				variant: z.literal("package"),
+				package: z.string(),
+				name: z.string(),
+			}),
+			z.object({ variant: z.literal("custom"), id: z.number() }),
+		]),
 	}),
 ]);
 
@@ -54,7 +58,7 @@ export const SerializedType: z.ZodType<SerializedFieldType> =
 
 export function deserializeType(
 	type: z.infer<typeof SerializedType>,
-	getType: (variant: "struct" | "enum", data: any) => Option<Struct | Enum>,
+	getType: (variant: "struct" | "enum", data: any) => Option<StructBase | Enum>,
 ): t.Any {
 	switch (type) {
 		case "string":

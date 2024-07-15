@@ -1,6 +1,11 @@
 import type { contract } from "@macrograph/api-contract";
 import { Maybe, type Option } from "@macrograph/option";
-import type { Enum, Struct } from "@macrograph/typesystem";
+import type {
+	Enum,
+	SerializedType,
+	Struct,
+	StructBase,
+} from "@macrograph/typesystem";
 import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
@@ -158,17 +163,6 @@ export class Core {
 	printSubscribe(cb: (msg: string) => void) {
 		this.printListeners.add(cb);
 		return () => this.printListeners.delete(cb);
-	}
-
-	getType<T extends "struct" | "enum">(
-		variant: T,
-		data: any,
-	): Option<Struct | Enum> {
-		const pkg = Maybe(this.packages.find((p) => p.name === data.package));
-
-		if (variant === "struct")
-			return pkg.andThen((pkg) => Maybe(pkg.structs.get(data.name)));
-		return pkg.andThen((pkg) => Maybe(pkg.enums.get(data.name)));
 	}
 }
 

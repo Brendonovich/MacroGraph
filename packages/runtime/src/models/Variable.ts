@@ -92,10 +92,8 @@ export class Variable extends Disposable {
 		data: z.infer<typeof SerializedVariable>,
 		owner: Graph | Project,
 	) {
-		const type = deserializeType(
-			data.type,
-			owner.core.getType.bind(owner.core),
-		);
+		const project = owner instanceof Graph ? owner.project : owner;
+		const type = deserializeType(data.type, project.getType.bind(project));
 
 		return new Variable({
 			id: data.id,

@@ -1800,6 +1800,7 @@ export function pkg(core: Core) {
 				id: "",
 				type: t.wildcard(w),
 			});
+			console.log(w.value());
 
 			return w.value().map((wt) => {
 				if (!(wt instanceof t.Struct)) return null;

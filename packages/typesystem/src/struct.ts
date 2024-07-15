@@ -22,13 +22,23 @@ export class LazyStructFields<Fields extends StructFields = StructFields> {
 	constructor(public build: () => Fields) {}
 }
 
-export class Struct<Fields extends StructFields = StructFields> {
-	source!: { variant: "package"; package: string } | { variant: "custom" };
+export abstract class StructBase {
+	source!:
+		| { variant: "package"; package: string }
+		| { variant: "custom"; id: number };
+	abstract name: string;
+	abstract fields: StructFields;
+}
 
+export class Struct<
+	Fields extends StructFields = StructFields,
+> extends StructBase {
 	constructor(
 		public name: string,
 		fields: Fields | LazyStructFields<Fields>,
 	) {
+		super();
+
 		if (fields instanceof LazyStructFields) {
 			this._fields = {
 				type: "lazy",
@@ -64,7 +74,7 @@ export class Struct<Fields extends StructFields = StructFields> {
 	}
 
 	static refSchema = z.union([
-		z.object({ source: z.literal("project"), name: z.string() }),
+		z.object({ source: z.literal("project"), id: z.number() }),
 		z.object({
 			source: z.literal("package"),
 			package: z.string(),
@@ -83,7 +93,7 @@ export class StructBuilder {
 	}
 }
 
-export class StructType<TStruct extends Struct> extends BaseType<
+export class StructType<TStruct extends StructBase> extends BaseType<
 	InferStruct<TStruct>
 > {
 	constructor(public struct: TStruct) {
@@ -143,16 +153,16 @@ export class StructType<TStruct extends Struct> extends BaseType<
 	}
 }
 
-export type InferStruct<S> = S extends Struct<infer Fields>
-	? InferStructFields<Fields>
-	: never;
+export type InferStruct<S> =
+	S extends Struct<infer Fields> ? InferStructFields<Fields> : never;
 
 export type InferStructFields<F> = F extends StructFields
 	? { [K in keyof F]: InferStructField<F[K]> }
 	: never;
 
-export type InferStructField<F> = F extends StructField<infer Type>
-	? Type extends BaseType<infer TOut>
-		? TOut
-		: never
-	: never;
+export type InferStructField<F> =
+	F extends StructField<infer Type>
+		? Type extends BaseType<infer TOut>
+			? TOut
+			: never
+		: never;

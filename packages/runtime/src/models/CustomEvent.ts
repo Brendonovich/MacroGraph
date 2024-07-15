@@ -4,7 +4,7 @@ import { createMutable } from "solid-js/store";
 import type { z } from "zod";
 
 import type { Project } from "./Project";
-import type { SerializedEvent } from "./serialized";
+import type { SerializedCustomEvent } from "./serialized";
 
 type CustomEventField = {
 	id: number;
@@ -49,7 +49,7 @@ export class CustomEvent {
 		const id = this.generateId();
 		this.fields.push({
 			id,
-			name: `Pin ${id}`,
+			name: `Field ${id}`,
 			type: t.string(),
 		});
 	}
@@ -73,7 +73,7 @@ export class CustomEvent {
 		this.fields.splice(index, 1);
 	}
 
-	serialize(): z.infer<typeof SerializedEvent> {
+	serialize(): z.infer<typeof SerializedCustomEvent> {
 		return {
 			id: this.id,
 			name: this.name,
@@ -85,7 +85,10 @@ export class CustomEvent {
 		};
 	}
 
-	static deserialize(project: Project, data: z.infer<typeof SerializedEvent>) {
+	static deserialize(
+		project: Project,
+		data: z.infer<typeof SerializedCustomEvent>,
+	) {
 		const event = new CustomEvent({
 			project,
 			id: data.id,
@@ -101,7 +104,7 @@ export class CustomEvent {
 					name: serializedField.name,
 					type: deserializeType(
 						serializedField.type,
-						project.core.getType.bind(project.core),
+						project.getType.bind(project),
 					),
 				};
 			});
