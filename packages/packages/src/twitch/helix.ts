@@ -995,51 +995,144 @@ export function register(pkg: Package, helix: Helix) {
     },
   });
 
-  // const periodtext = pkg.createEnum("period", (e) => [
-  //   e.variant("day"),
-  //   e.variant("week"),
-  //   e.variant("month"),
-  //   e.variant("year"),
-  //   e.variant("all"),
-  // ]);
+  //still to complete
+  createHelixExecSchema({
+    name: "Get Ad Schedule",
+    createIO: ({ io }) => {
+      return {
+        duration: io.dataInput({
+          name: "Duration (s)",
+          id: "duraton",
+          type: t.int(),
+        }),
+      };
+    },
+    async run({ ctx, io, account }) {
+      const response = await helix.call(
+        "GET /channels/ads",
+        account.credential,
+        {
+          body: JSON.stringify({
+            broadcaster_id: account.data.id,
+            length: ctx.getInput(io.duration),
+          }),
+        }
+      );
 
+      // ctx.setOutput(io.retryAfter, response.data[0].retry_after);
+      console.log(response);
+    },
+  });
+
+  //still to complete
+  createHelixExecSchema({
+    name: "Snooze Next Ad",
+    createIO: ({ io }) => {
+      return {
+        duration: io.dataInput({
+          name: "Duration (s)",
+          id: "duraton",
+          type: t.int(),
+        }),
+      };
+    },
+    async run({ ctx, io, account }) {
+      const response = await helix.call(
+        "POST /channels/ads/schedule/snooze",
+        account.credential,
+        {
+          body: JSON.stringify({
+            broadcaster_id: account.data.id,
+            length: ctx.getInput(io.duration),
+          }),
+        }
+      );
+
+      // ctx.setOutput(io.retryAfter, response.data[0].retry_after);
+      console.log(response);
+    },
+  });
+
+  const leaderboardPerson = createStruct("User", (s) => ({
+    user_id: s.field("ID", t.string()),
+    user_login: s.field("Login", t.string()),
+    user_name: s.field("Name", t.string()),
+    rank: s.field("Rank", t.int()),
+    score: s.field("Score", t.int()),
+  }));
+
+  const periodtext = pkg.createEnum("period", (e) => [
+    e.variant("day"),
+    e.variant("week"),
+    e.variant("month"),
+    e.variant("year"),
+    e.variant("all"),
+  ]);
+
+  //To be completed
   // createHelixExecSchema({
   //   name: "Get Bits Leaderboard",
-  //   variant: "Exec",
-  //   generateIO: ({io}) => {
-  //     io.dataInput({
-  //       name: "Count",
-  //       id: "count",
-  //       type: t.int(),
-  //     });
-  //     io.dataInput({
-  //       name: "Period",
-  //       id: "period",
-  //       type: t.enum(periodtext),
-  //     });
-  //     io.dataInput({
-  //       name: "Started At",
-  //       id: "startedAt",
-  //       type: t.string(),
-  //     });
-  //     io.dataInput({
-  //       name: "User ID",
-  //       id: "userId",
-  //       type: t.string() ,
-  //     });
-  //   },
-  //   async run({ ctx, io }) {
-  //     const periodtxt = ctx.getInput<InferEnum<typeof periodtext>>("period");
-
-  //     const response = await client.bits.leaderboard.get(z.any(), {
-  //       body: new URLSearchParams({
-  //         count: ctx.getInput(io.count"),
-  //         period: periodtxt.variant,
-  //         started_at: ctx.getInput(io.startedAt"),
-  //         user_id: ctx.getInput(io.user_id"),
+  //   createIO: ({ io }) => {
+  //     return {
+  //       count: io.dataInput({
+  //         name: "Count",
+  //         id: "count",
+  //         type: t.option(t.int()),
   //       }),
-  //     });
+  //       period: io.dataInput({
+  //         name: "Period",
+  //         id: "period",
+  //         type: t.option(t.enum(periodtext)),
+  //       }),
+  //       startedAt: io.dataInput({
+  //         name: "Started At",
+  //         id: "startedAt",
+  //         type: t.option(t.string()),
+  //       }),
+  //       userId: io.dataInput({
+  //         name: "User ID",
+  //         id: "userId",
+  //         type: t.option(t.string()),
+  //       }),
+  //       list: io.dataOutput({
+  //         name: "Leaderboard",
+  //         id: "leaderboard",
+  //         type: t.list(t.struct(leaderboardPerson)),
+  //       }),
+  //       startedAtOut: io.dataOutput({
+  //         id: "startedAtOut",
+  //         name: "Date Range Start",
+  //         type: t.string(),
+  //       }),
+  //       endedAt: io.dataOutput({
+  //         id: "endedAt",
+  //         name: "Date Range End",
+  //         type: t.string(),
+  //       }),
+  //       total: io.dataOutput({
+  //         id: "total",
+  //         name: "Total",
+  //         type: t.int(),
+  //       }),
+  //     };
+  //   },
+  //   async run({ ctx, io, account }) {
+  //     let body = {} as any;
 
+  //     ctx.getInput(io.count).peek((count) => (body.count = count));
+  //     ctx.getInput(io.period).peek((period) => (body.period = period));
+  //     ctx.getInput(io.startedAt).peek((startedAt) => (body.started_at = startedAt));
+  //     ctx.getInput(io.userId).peek((userId) => (body.user_id = userId));
+
+  //     const response = await helix.call(
+  //       "GET /bits/leaderboard",
+  //       account.credential,
+  //       {
+  //         body: JSON.stringify(body),
+  //       }
+  //     );
+  //     // ctx.setOutput(io.retryAfter, response.data[0].retry_after);
+  //     console.log(response);
   //   },
   // });
 
@@ -1862,6 +1955,85 @@ export function register(pkg: Package, helix: Helix) {
     },
   });
 
+  const choices = createStruct("Choices", (s) => ({
+    id: s.field("ID", t.string()),
+    title: s.field("Title", t.string()),
+    votes: s.field("Votes", t.int()),
+    channelPointsVotes: s.field("Channel Point Votes", t.int()),
+  }));
+
+  const pollStatus = createEnum("Poll Status", (e) => [
+    e.variant("ACTIVE"),
+    e.variant("COMPLETED"),
+    e.variant("TERMINATED"),
+    e.variant("ARCHIVED"),
+    e.variant("MODERATED"),
+    e.variant("INVALID"),
+  ]);
+
+  const poll = createStruct("Poll", (s) => ({
+    id: s.field("ID", t.string()),
+    title: s.field("Title", t.string()),
+    choices: s.field("Choices", t.struct(choices)),
+    channelPointsVotingEnabled: s.field(
+      "Channel Points Voting Enabled",
+      t.bool()
+    ),
+    channelPointsPerVote: s.field("Channel Points Per Vote", t.int()),
+    status: s.field("Status", t.enum(pollStatus)),
+    duration: s.field("Duration", t.int()),
+    startedAt: s.field("Started At", t.string()),
+    endedAt: s.field("Ended At", t.string()),
+  }));
+
+  createHelixExecSchema({
+    name: "Get Polls",
+    createIO: ({ io }) => {
+      return {
+        id: io.dataInput({
+          id: "id",
+          name: "Poll ID",
+          type: t.option(t.string()),
+        }),
+        first: io.dataInput({
+          id: "first",
+          name: "First",
+          type: t.option(t.string()),
+        }),
+        after: io.dataInput({
+          id: "after",
+          name: "After",
+          type: t.option(t.string()),
+        }),
+        polls: io.dataOutput({
+          id: "polls",
+          name: "Polls",
+          type: t.list(t.struct(poll)),
+        }),
+        pagination: io.dataOutput({
+          id: "pagination",
+          name: "Pagination",
+          type: t.option(t.string()),
+        }),
+      };
+    },
+    async run({ ctx, io, account }) {
+      let params = {
+        broadcaster_id: account.credential.id,
+      };
+
+      ctx.getInput(io.id).peek((id) => (params.id = id));
+      ctx.getInput(io.first).peek((first) => (params.first = first));
+      ctx.getInput(io.after).peek((after) => (params.after = after));
+
+      let data = await helix.call("GET /polls", account.credential, {
+        body: new URLSearchParams(params),
+      });
+
+      console.log(data);
+    },
+  });
+
   createHelixExecSchema({
     name: "Send Announcement",
     createIO: ({ io }) => {
@@ -1947,6 +2119,7 @@ export type Requests = {
       created_at: string;
     }>;
   };
+  "GET /bits/leaderboard": any;
   "GET /games": any;
   "GET /streams": any;
   "POST /clips": any;
@@ -1975,6 +2148,8 @@ export type Requests = {
   "POST /chat/shoutouts": any;
   "POST /chat/announcements": any;
   "POST /channels/commercial": any;
+  "GET /channels/ads": any;
+  "POST /channels/ads/schedule/snooze": any;
 
   "POST /eventsub/subscriptions": any;
 };
