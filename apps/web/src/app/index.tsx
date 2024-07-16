@@ -175,7 +175,7 @@ function Header() {
 				<div class="flex-1 pl-2">
 					<ExportButton />
 				</div>
-				<DesktopDownloadButton />
+				{/* <DesktopDownloadButton /> */}
 				<Socials />
 				<AuthSection />
 			</div>
@@ -213,7 +213,9 @@ function DesktopDownloadButton() {
 						<div class="px-2 py-1 font-medium">Loading Versions...</div>
 					}
 				>
-					<div class="px-2 py-1 font-medium">Version {latestVersion()}</div>
+					<ErrorBoundary fallback="">
+						<div class="px-2 py-1 font-medium">Version {latestVersion()}</div>
+					</ErrorBoundary>
 					<For
 						each={
 							[
