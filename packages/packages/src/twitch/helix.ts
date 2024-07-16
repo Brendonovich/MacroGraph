@@ -2022,6 +2022,8 @@ export function register(pkg: Package, helix: Helix) {
         broadcaster_id: account.credential.id,
       };
 
+      console.log(ctx.getInput(io.id));
+
       ctx.getInput(io.id).peek((id) => (params.id = id));
       ctx.getInput(io.first).peek((first) => (params.first = first));
       ctx.getInput(io.after).peek((after) => (params.after = after));
