@@ -175,7 +175,7 @@ function Header() {
 				<div class="flex-1 pl-2">
 					<ExportButton />
 				</div>
-				{/* <DesktopDownloadButton /> */}
+				<DesktopDownloadButton />
 				<Socials />
 				<AuthSection />
 			</div>
