@@ -8,7 +8,7 @@ use std::path::Path;
 // };
 
 #[tokio::main]
-async fn main() -> Result<(), AnyError> {
+async fn main() -> Result<(), ()> {
     let js_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("main.ts");
     // let main_module = ModuleSpecifier::from_file_path(js_path).unwrap();
 
