@@ -1,11 +1,13 @@
 import { Dialog } from "@kobalte/core";
+import {
+	deserializeClipboardItem,
+	graphToClipboardItem,
+	readFromClipboard,
+	writeClipboardItemToClipboard,
+} from "@macrograph/clipboard";
 import { Graph } from "@macrograph/runtime";
 import { For, createMemo, createSignal } from "solid-js";
 
-import {
-	deserializeClipboardItem,
-	readFromClipboard,
-} from "@macrograph/clipboard";
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useCore, useCoreContext } from "../../contexts";
@@ -84,6 +86,18 @@ export function Graphs(props: Props) {
 									onChange={(value) => graph.rename(value)}
 								>
 									<DeleteButton graph={graph} />
+									<IconButton
+										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-1"
+										title="Copy graph to clipboard"
+										onClick={(e) => {
+											e.stopPropagation();
+											writeClipboardItemToClipboard(
+												graphToClipboardItem(graph),
+											);
+										}}
+									>
+										<IconTablerCopy class="size-3.5" />
+									</IconButton>
 								</InlineTextEditor>
 							</li>
 						)}
