@@ -1,5 +1,5 @@
 import { ReactiveMap } from "@solid-primitives/map";
-import "@total-typescript/ts-reset/filter-boolean";
+import "@total-typescript/ts-reset";
 import { createMutable } from "solid-js/store";
 import type { z } from "zod";
 

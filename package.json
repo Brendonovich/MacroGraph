@@ -5,7 +5,7 @@
 		"web": "pnpm --filter @macrograph/web --",
 		"runtime": "pnpm --filter @macrograph/runtime --",
 		"test": "vitest",
-		"typecheck": "tsc -b",
+		"typecheck": "pnpm tsc -b",
 		"lint": "turbo run lint",
 		"lint:fix": "turbo run lint -- --fix",
 		"dev:web": "pnpm web dev",
