@@ -2,8 +2,6 @@ import { Dialog } from "@kobalte/core";
 import type { Graph } from "@macrograph/runtime";
 import clsx from "clsx";
 import { Show, createSignal, onMount } from "solid-js";
-
-import { useUIStore } from "../../UIStore";
 import {
 	graphToClipboardItem,
 	writeClipboardItemToClipboard,

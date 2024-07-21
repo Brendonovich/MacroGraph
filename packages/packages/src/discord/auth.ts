@@ -1,5 +1,4 @@
 import type { Credential } from "@macrograph/api-contract";
-import { None, Option, makePersistedOption } from "@macrograph/option";
 import type { Core } from "@macrograph/runtime";
 import { makeCache } from "@macrograph/utils";
 import { ReactiveMap } from "@solid-primitives/map";

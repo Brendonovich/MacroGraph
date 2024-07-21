@@ -93,8 +93,9 @@ export class Enum<
 	}
 }
 
-type EnumVariantOfEnum<E> =
-	E extends Enum<infer Variants> ? Variants[number] : never;
+type EnumVariantOfEnum<E> = E extends Enum<infer Variants>
+	? Variants[number]
+	: never;
 
 export class EnumBuilder {
 	variant<Name extends string>(name: Name): EnumVariant<Name, null>;
@@ -176,15 +177,15 @@ export class EnumType<TEnum extends Enum> extends BaseType<InferEnum<TEnum>> {
 	}
 }
 
-export type InferEnum<E extends Enum<any>> =
-	E extends Enum<any, infer Type> ? Type : never;
+export type InferEnum<E extends Enum<any>> = E extends Enum<any, infer Type>
+	? Type
+	: never;
 
-export type InferEnumVariant<V> =
-	V extends EnumVariant<infer Name, infer Data>
-		? Data extends null
-			? { variant: Name }
-			: { variant: Name; data: InferEnumVariantData<Data> }
-		: never;
+export type InferEnumVariant<V> = V extends EnumVariant<infer Name, infer Data>
+	? Data extends null
+		? { variant: Name }
+		: { variant: Name; data: InferEnumVariantData<Data> }
+	: never;
 
 export type InferEnumVariantData<D> = D extends EnumVariantData
 	? { [K in keyof D]: t.infer<D[K]> }

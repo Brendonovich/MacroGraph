@@ -1,14 +1,6 @@
 import { Dialog } from "@kobalte/core";
 import { Graph } from "@macrograph/runtime";
-import {
-	For,
-	Match,
-	Switch,
-	batch,
-	createMemo,
-	createSignal,
-	onMount,
-} from "solid-js";
+import { For, createMemo, createSignal } from "solid-js";
 
 import { deserializeClipboardItem, readFromClipboard } from "../../clipboard";
 import { SidebarSection } from "../../components/Sidebar";

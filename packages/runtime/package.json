@@ -13,6 +13,7 @@
 		"@macrograph/api-contract": "workspace:^",
 		"@macrograph/option": "workspace:^",
 		"@macrograph/typesystem": "workspace:*",
+		"@macrograph/schema-rendering": "workspace:*",
 		"@rspc/client": "0.0.0-main-6ed8cc98",
 		"@rspc/tauri": "0.0.0-main-6ed8cc98",
 		"@solid-primitives/deep": "^0.2.7",

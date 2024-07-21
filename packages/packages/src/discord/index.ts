@@ -1,4 +1,4 @@
-import { type Core, OnEvent, Package } from "@macrograph/runtime";
+import { type Core, Package } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createResource } from "solid-js";
 import { createStore } from "solid-js/store";

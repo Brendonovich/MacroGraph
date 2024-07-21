@@ -8,6 +8,7 @@ import {
 } from "@macrograph/typesystem";
 import type { EventBus } from "@solid-primitives/event-bus";
 
+import type { RenderedSchema } from "@macrograph/schema-rendering";
 import { batch } from "solid-js";
 import type { Graph } from "./Graph";
 import {
@@ -356,6 +357,7 @@ export type SchemaBase<TProperties, TIO> = {
 	properties: SchemaProperties<TProperties>;
 	createIO: CreateIOFn<TProperties, TIO>;
 	package: Package;
+	rendered?: RenderedSchema;
 };
 
 export type RunProps<TProperties, TIO> = {

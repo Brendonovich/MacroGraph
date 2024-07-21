@@ -2,20 +2,28 @@ import { Tabs } from "@kobalte/core";
 import {
 	CommentBox,
 	type Core,
+	DataInput,
+	DataOutput,
+	ExecInput,
+	ExecOutput,
 	Graph as GraphModel,
 	Node,
 	type Node as NodeModel,
+	type Pin,
 	Project,
 	SerializedProject,
 	type Size,
 	type XY,
 	deserializeConnections,
+	pinIsOutput,
 } from "@macrograph/runtime";
+import { renderType } from "@macrograph/schema-rendering";
 import { createElementBounds } from "@solid-primitives/bounds";
 import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
+import { ReactiveWeakMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import "@total-typescript/ts-reset";
@@ -38,15 +46,16 @@ import {
 	createSection,
 } from "./components/CommandDialog";
 import { Graph } from "./components/Graph";
-import { SchemaMenu } from "./components/SchemaMenu";
-import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
-import { CoreProvider } from "./contexts";
-import "./global.css";
 import {
-	createGraphState,
 	type GraphState,
+	createGraphState,
 	toGraphSpace,
 } from "./components/Graph/Context";
+import { SchemaMenu } from "./components/SchemaMenu";
+import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
+import { InterfaceContextProvider, useInterfaceContext } from "./context";
+import { CoreProvider } from "./contexts";
+import "./global.css";
 export { useCore } from "./contexts";
 
 export * from "./platform";
@@ -56,10 +65,6 @@ export type GraphBounds = XY & {
 	width: number;
 	height: number;
 };
-
-type SchemaMenuState =
-	| { status: "closed" }
-	| { status: "open"; position: XY; graph: GraphState };
 
 export function Interface(props: {
 	core: Core;
@@ -83,11 +88,13 @@ export function Interface(props: {
 
 	return (
 		<Solid.Show when={loaded() && props.core.project} keyed>
-			<ProjectInterface
-				core={props.core}
-				project={props.core.project}
-				environment={props.environment}
-			/>
+			<InterfaceContextProvider>
+				<ProjectInterface
+					core={props.core}
+					project={props.core.project}
+					environment={props.environment}
+				/>
+			</InterfaceContextProvider>
 		</Solid.Show>
 	);
 }
@@ -98,6 +105,7 @@ function ProjectInterface(props: {
 	environment: "custom" | "browser";
 }) {
 	const UI = createUIStore();
+	const ctx = useInterfaceContext();
 
 	const [rootRef, setRootRef] = Solid.createSignal<
 		HTMLDivElement | undefined
@@ -125,11 +133,8 @@ function ProjectInterface(props: {
 		{ name: "current-graph-index" },
 	);
 
-	const [schemaMenu, setSchemaMenu] = Solid.createSignal<SchemaMenuState>({
-		status: "closed",
-	});
-
 	const nodeSizes = new WeakMap<NodeModel, Size>();
+	const pinPositions = new ReactiveWeakMap<Pin, XY>();
 
 	const currentGraph = Solid.createMemo(() => {
 		const index = currentGraphIndex();
@@ -305,25 +310,25 @@ function ProjectInterface(props: {
 			case "KeyK": {
 				if (!((e.metaKey || e.ctrlKey) && e.shiftKey)) return;
 
-				const menuState = schemaMenu();
+				const state = ctx.state;
 
 				if (
-					menuState.status === "open" &&
-					menuState.position.x === mouse.x &&
-					menuState.position.y === mouse.y
+					state.status === "schemaMenuOpen" &&
+					state.position.x === mouse.x &&
+					state.position.y === mouse.y
 				)
-					setSchemaMenu({ status: "closed" });
+					ctx.setState({ status: "idle" });
 				else {
 					const graph = currentGraph();
 					if (!graph) return;
 
-					setSchemaMenu({
-						status: "open",
+					ctx.setState({
+						status: "schemaMenuOpen",
+						graph: graph.state,
 						position: {
 							x: mouse.x,
 							y: mouse.y,
 						},
-						graph: graph.state,
 					});
 				}
 
@@ -372,6 +377,8 @@ function ProjectInterface(props: {
 		e.stopPropagation();
 		e.preventDefault();
 	});
+
+	const [stuff, setStuff] = Solid.createSignal<{ pin: Pin; mousePos: XY }>();
 
 	return (
 		<CoreProvider core={props.core} rootRef={rootRef}>
@@ -532,24 +539,21 @@ function ProjectInterface(props: {
 								<Graph
 									graph={graph().model}
 									state={graph().state}
+									schemaMenuDrag={(() => {
+										const s = ctx.state;
+										if (
+											s.status !== "schemaMenuOpen" ||
+											s.graph.id !== graph().state.id
+										)
+											return;
+
+										return stuff();
+									})()}
 									nodeSizes={nodeSizes}
+									pinPositions={pinPositions}
 									onMouseEnter={() => setHoveredPane(true)}
 									onMouseMove={() => setHoveredPane(true)}
 									onMouseLeave={() => setHoveredPane(null)}
-									onMouseUp={(e) => {
-										if (e.button === 2)
-											setSchemaMenu({
-												status: "open",
-												graph: graph().state,
-												position: {
-													x: e.clientX,
-													y: e.clientY,
-												},
-											});
-									}}
-									onGraphDragStart={() => {
-										setSchemaMenu({ status: "closed" });
-									}}
 									onItemSelected={(id) => {
 										setGraphStates(graph().index, { selectedItemId: id });
 									}}
@@ -574,7 +578,7 @@ function ProjectInterface(props: {
 												setGraphStates(graph().index, {
 													selectedItemId: null,
 												});
-												setSchemaMenu({ status: "closed" });
+												ctx.setState({ status: "idle" });
 											});
 										}
 									}}
@@ -672,8 +676,8 @@ function ProjectInterface(props: {
 
 					<Solid.Show
 						when={(() => {
-							const state = schemaMenu();
-							return state.status === "open" && state;
+							const state = ctx.state;
+							return state.status === "schemaMenuOpen" && state;
 						})()}
 					>
 						{(data) => {
@@ -682,7 +686,8 @@ function ProjectInterface(props: {
 							});
 
 							Solid.createEffect(() => {
-								if (!graph()) setSchemaMenu({ status: "closed" });
+								if (!graph()) ctx.setState({ status: "idle" });
+								setStuff();
 							});
 
 							const graphPosition = () =>
@@ -692,6 +697,7 @@ function ProjectInterface(props: {
 								<Solid.Show when={graph()}>
 									{(graph) => (
 										<SchemaMenu
+											suggestion={data().suggestion}
 											graph={data().graph}
 											position={{
 												x: data().position.x - (rootBounds?.left ?? 0),
@@ -705,18 +711,97 @@ function ProjectInterface(props: {
 														text: "Comment",
 													});
 
-													setSchemaMenu({ status: "closed" });
+													ctx.setState({ status: "idle" });
 												});
 											}}
 											onSchemaClicked={(schema) => {
-												Solid.batch(() => {
-													graph().createNode({
+												const graphState = data().graph;
+
+												const pin = Solid.batch(() => {
+													const node = graph().createNode({
 														schema,
 														position: graphPosition(),
 													});
 
-													setSchemaMenu({ status: "closed" });
+													const { suggestion } = data();
+													ctx.setState({ status: "idle" });
+													if (
+														suggestion &&
+														"rendered" in schema &&
+														schema.rendered
+													) {
+														if (suggestion.pin instanceof ExecOutput) {
+															const execIn = node.state.inputs.find(
+																(input) => input instanceof ExecInput,
+															);
+															if (execIn) {
+																graph().connectPins(suggestion.pin, execIn);
+																return execIn;
+															}
+														} else if (suggestion.pin instanceof ExecInput) {
+															const execOut = node.state.outputs.find(
+																(input) => input instanceof ExecOutput,
+															);
+															if (execOut) {
+																graph().connectPins(execOut, suggestion.pin);
+																return execOut;
+															}
+														} else if (suggestion.pin instanceof DataOutput) {
+															const suggestionPin = suggestion.pin;
+															const dataIn = node.state.inputs.find(
+																(input): input is DataInput<any> =>
+																	input instanceof DataInput &&
+																	renderType(input.type) ===
+																		renderType(suggestionPin.type),
+															);
+															if (dataIn) {
+																graph().connectPins(suggestion.pin, dataIn);
+																return dataIn;
+															}
+														} else if (suggestion.pin instanceof DataInput) {
+															const suggestionPin = suggestion.pin;
+															const dataOut = node.state.outputs.find(
+																(output): output is DataOutput<any> =>
+																	output instanceof DataOutput &&
+																	renderType(output.type) ===
+																		renderType(suggestionPin.type),
+															);
+															if (dataOut) {
+																graph().connectPins(dataOut, suggestion.pin);
+																return dataOut;
+															}
+														}
+													}
 												});
+
+												if (pin) {
+													const _pinPosition = pinPositions.get(pin);
+													const nodeSize = nodeSizes.get(pin.node);
+													if (!_pinPosition || !nodeSize) return;
+
+													const pinPosition = toGraphSpace(
+														_pinPosition,
+														graphBounds,
+														graphState,
+													);
+
+													const nodeX = pin.node.state.position.x;
+
+													const xDelta = !pinIsOutput(pin)
+														? nodeX - pinPosition.x
+														: -nodeSize.width +
+															(nodeX + nodeSize.width - pinPosition.x);
+
+													pin.node.setPosition(
+														{
+															x: pin.node.state.position.x + xDelta,
+															y:
+																pin.node.state.position.y -
+																(pinPosition.y - pin.node.state.position.y),
+														},
+														true,
+													);
+												}
 											}}
 										/>
 									)}

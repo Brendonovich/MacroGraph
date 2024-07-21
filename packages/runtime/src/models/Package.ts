@@ -1,3 +1,4 @@
+import { renderSchema } from "@macrograph/schema-rendering";
 import {
 	type BaseType,
 	Enum,
@@ -5,14 +6,13 @@ import {
 	type EnumVariants,
 	type LazyEnumVariants,
 	type LazyStructFields,
-	PrimitiveType,
 	Struct,
 	StructBuilder,
 	type StructFields,
 	type t,
 } from "@macrograph/typesystem";
+import { ReactiveMap } from "@solid-primitives/map";
 import { createLazyMemo } from "@solid-primitives/memo";
-import { ReactiveSet } from "@solid-primitives/set";
 import { type Component, lazy } from "solid-js";
 import type { Simplify } from "type-fest";
 
@@ -38,7 +38,7 @@ export interface PackageArgs<TCtx> {
 
 export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 	name: string;
-	schemas = new ReactiveSet<NodeSchema<TEvents>>();
+	schemas = new ReactiveMap<string, NodeSchema<TEvents>>();
 	core?: Core;
 	ctx?: TCtx;
 	SettingsUI?: ReturnType<typeof lazy>;
@@ -103,7 +103,7 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 			package: this as any,
 		};
 
-		this.schemas.add(altered as any);
+		this.schemas.set(altered.name, altered as any);
 
 		return this;
 	}
@@ -136,7 +136,7 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 			package: this as any,
 		};
 
-		this.schemas.add(altered as any);
+		this.schemas.set(altered.name, altered as any);
 
 		return this;
 	}
@@ -185,13 +185,15 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 			package: this as any,
 		};
 
-		this.schemas.add(altered as any);
+		altered.rendered = renderSchema(altered);
+
+		this.schemas.set(altered.name, altered as any);
 
 		return this;
 	}
 
 	schema(name: string): NodeSchema<TEvents> | undefined {
-		for (const schema of this.schemas) {
+		for (const schema of this.schemas.values()) {
 			if (schema.name === name) return schema;
 		}
 	}

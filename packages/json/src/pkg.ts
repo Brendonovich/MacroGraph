@@ -13,9 +13,9 @@ export function pkg() {
 
 	pkg.registerType(JSONEnum);
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "To JSON",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -127,9 +127,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "JSON Get String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({

@@ -9,7 +9,6 @@ import {
 import { ReactiveSet } from "@solid-primitives/set";
 import {
 	type Accessor,
-	createComputed,
 	createEffect,
 	createMemo,
 	createRoot,

@@ -1,6 +1,7 @@
 import type { ScopeInput as ScopeInputModel } from "@macrograph/runtime";
 import { Show } from "solid-js";
-import { usePin } from ".";
+
+import { usePin } from "./usePin";
 
 interface Props {
 	input: ScopeInputModel;
