@@ -150,7 +150,8 @@ export function register(pkg: Package, { chat }: Ctx) {
 					state.channelListenerCounts[channelLowercase] += 1;
 
 					onCleanup(() => {
-						state.channelListenerCounts[channelLowercase] -= 1;
+						if (state.channelListenerCounts[channelLowercase] !== undefined)
+							state.channelListenerCounts[channelLowercase] -= 1;
 					});
 				}),
 			);

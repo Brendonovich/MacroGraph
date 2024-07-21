@@ -1,6 +1,6 @@
 import { Package, type PropertyDef } from "@macrograph/runtime";
-import { ReactiveSet } from "@solid-primitives/set";
-import { createEffect, createMemo, on, onCleanup, untrack } from "solid-js";
+import { createEventBus } from "@solid-primitives/event-bus";
+import { createEffect, on } from "solid-js";
 
 type Events = {
 	[key: `${number}:${number}`]: { variableId: number; value: any };
@@ -147,63 +147,45 @@ export function pkg() {
 		},
 	});
 
-	const listenedVariables = new ReactiveSet<`${number}:${number}`>();
-
-	pkg.createEventSchema({
-		event: ({ ctx, properties }) => {
-			const variableId = ctx.getProperty(properties.variable);
-			const variable = ctx.graph.variables.find((v) => v.id === variableId);
-			if (!variable) return;
-
-			return `${ctx.graph.id}:${variable.id}`;
-		},
+	pkg.createSchema({
 		name: "Graph Variable Changed",
+		type: "event",
 		properties: { variable: graphVariableProperty },
-		createIO({ io, ctx, properties, graph }) {
+		createListener: ({ ctx, properties }) => {
+			const bus = createEventBus<any>();
+
 			const variableId = ctx.getProperty(properties.variable);
 			const variable = ctx.graph.variables.find((v) => v.id === variableId);
-			if (!variable) return;
+			if (!variable) return bus;
 
-			const hasListener = createMemo(() =>
-				listenedVariables.has(`${graph.id}:${variable.id}`),
+			createEffect(
+				on(
+					() => variable.value,
+					(value) => bus.emit(value),
+					{ defer: true },
+				),
 			);
 
-			if (untrack(hasListener)) hasListener();
-			else {
-				listenedVariables.add(`${graph.id}:${variable.id}`);
+			return bus;
+		},
+		createIO({ io, ctx, properties }) {
+			const exec = io.execOutput({ id: "exec" });
 
-				let firstRun = false;
-
-				createEffect(
-					on(
-						() => variable.value,
-						(value) => {
-							if (!firstRun) {
-								firstRun = true;
-								return;
-							}
-
-							pkg.emitEvent({
-								name: `${graph.id}:${variable.id}`,
-								data: { variableId: variable.id, value },
-							});
-						},
-					),
-				);
-
-				onCleanup(() => {
-					listenedVariables.delete(`${graph.id}:${variable.id}`);
-				});
-			}
+			const variableId = ctx.getProperty(properties.variable);
+			const variable = ctx.graph.variables.find((v) => v.id === variableId);
+			if (!variable) return;
 
 			return {
+				exec,
 				variable,
-				exec: io.execOutput({
-					id: "exec",
-				}),
 				output: io.dataOutput({
 					id: "output",
 					name: variable.name,
+					type: variable.type,
+				}),
+				previousOutput: io.dataOutput({
+					id: "previousOutput",
+					name: "Previous Value",
 					type: variable.type,
 				}),
 			};

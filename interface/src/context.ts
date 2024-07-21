@@ -1,13 +1,16 @@
 import type { Pin, XY } from "@macrograph/runtime";
 import { createContextProvider } from "@solid-primitives/context";
-import { createStore } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
 
 import type { GraphState } from "./components/Graph/Context";
 
 export const [InterfaceContextProvider, useInterfaceContext] =
 	createContextProvider(() => {
 		const [state, setState] = createStore<InterfaceState>({ status: "idle" });
-		return { state, setState };
+		return {
+			state,
+			setState: (state: InterfaceState) => setState(reconcile(state)),
+		};
 	}, null!);
 
 export type InterfaceState =

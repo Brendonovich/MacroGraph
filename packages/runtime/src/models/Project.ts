@@ -1,6 +1,8 @@
 import { ReactiveMap } from "@solid-primitives/map";
+import "@total-typescript/ts-reset/filter-boolean";
 import { createMutable } from "solid-js/store";
 import type { z } from "zod";
+
 import type { Core } from "./Core";
 import { CustomEvent } from "./CustomEvent";
 import { Graph } from "./Graph";

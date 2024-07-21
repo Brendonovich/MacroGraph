@@ -180,7 +180,7 @@ export function register(pkg: Package<EventTypes>) {
 
 				const bus = createEventBus<OBSFire<TEvent>[0]>();
 
-				const fn = (...d: OBSFire<TEvent>) => bus.emit(d[0]);
+				const fn = (...d: any[]) => bus.emit(d[0]);
 				obs.on(s.event, fn);
 				onCleanup(() => obs.off(s.event, fn));
 

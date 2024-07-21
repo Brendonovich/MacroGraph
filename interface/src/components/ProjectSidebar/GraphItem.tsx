@@ -1,11 +1,11 @@
 import { Dialog } from "@kobalte/core";
-import type { Graph } from "@macrograph/runtime";
-import clsx from "clsx";
-import { Show, createSignal, onMount } from "solid-js";
 import {
 	graphToClipboardItem,
 	writeClipboardItemToClipboard,
-} from "../../clipboard";
+} from "@macrograph/clipboard";
+import type { Graph } from "@macrograph/runtime";
+import clsx from "clsx";
+import { Show, createSignal, onMount } from "solid-js";
 import { useCore } from "../../contexts";
 import { Button } from "../../settings/ui";
 

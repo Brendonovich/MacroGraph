@@ -7,6 +7,7 @@ import {
 	t,
 } from "@macrograph/typesystem";
 import { ReactiveSet } from "@solid-primitives/set";
+import "@total-typescript/ts-reset/filter-boolean";
 import {
 	type Accessor,
 	createEffect,

@@ -67,17 +67,18 @@ export function usePin(pin: Accessor<Pin>) {
 			},
 			mouseup: () => {
 				batch(() => {
-					interfaceCtx.setState({ status: "idle" });
-
 					// Necessary since safari fires 'mouseleave' just after mouseup. i hate this.
 					justMouseUpped = true;
 					setTimeout(() => {
 						justMouseUpped = false;
 					}, 1);
 
+					if (interfaceCtx.state.status !== "draggingPin") return;
+					interfaceCtx.setState({ status: "idle" });
+
 					UI.setHoveringPin(thisPin);
 
-					const draggingPin = schemaMenuPin();
+					const draggingPin = interfaceCtx.state.pin;
 
 					if (!draggingPin || draggingPin === thisPin) return;
 

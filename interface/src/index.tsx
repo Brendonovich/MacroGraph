@@ -31,15 +31,15 @@ import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
 
 export { CoreProvider } from "./contexts";
-import * as Sidebars from "./Sidebar";
-import { UIStoreProvider, createUIStore } from "./UIStore";
 import {
 	commentBoxToClipboardItem,
 	deserializeClipboardItem,
 	nodeToClipboardItem,
 	readFromClipboard,
 	writeClipboardItemToClipboard,
-} from "./clipboard";
+} from "@macrograph/clipboard";
+import * as Sidebars from "./Sidebar";
+import { UIStoreProvider, createUIStore } from "./UIStore";
 import {
 	CommandDialog,
 	type Control,
@@ -325,10 +325,7 @@ function ProjectInterface(props: {
 					ctx.setState({
 						status: "schemaMenuOpen",
 						graph: graph.state,
-						position: {
-							x: mouse.x,
-							y: mouse.y,
-						},
+						position: { x: mouse.x, y: mouse.y },
 					});
 				}
 

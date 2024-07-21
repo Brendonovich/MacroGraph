@@ -2,7 +2,10 @@ import { Dialog } from "@kobalte/core";
 import { Graph } from "@macrograph/runtime";
 import { For, createMemo, createSignal } from "solid-js";
 
-import { deserializeClipboardItem, readFromClipboard } from "../../clipboard";
+import {
+	deserializeClipboardItem,
+	readFromClipboard,
+} from "@macrograph/clipboard";
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useCore, useCoreContext } from "../../contexts";

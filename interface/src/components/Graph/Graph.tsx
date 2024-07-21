@@ -256,6 +256,8 @@ export const Graph = (props: Props) => {
 						e.button === 0 &&
 						interfaceCtx.state.status === "draggingPin"
 					) {
+						const pin = interfaceCtx.state.pin;
+
 						interfaceCtx.setState({
 							status: "schemaMenuOpen",
 							position: {
@@ -263,9 +265,7 @@ export const Graph = (props: Props) => {
 								y: e.clientY,
 							},
 							graph: props.state,
-							suggestion: {
-								pin: interfaceCtx.state.pin,
-							},
+							suggestion: { pin },
 						});
 					}
 				}}

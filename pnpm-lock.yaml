@@ -365,6 +365,9 @@ importers:
       '@macrograph/api-contract':
         specifier: workspace:^
         version: link:../packages/api-contract
+      '@macrograph/clipboard':
+        specifier: workspace:^
+        version: link:../packages/clipboard
       '@macrograph/option':
         specifier: workspace:^
         version: link:../packages/option
@@ -487,6 +490,22 @@ importers:
       '@total-typescript/ts-reset':
         specifier: ^0.4.2
         version: 0.4.2
+
+  packages/clipboard:
+    dependencies:
+      '@macrograph/option':
+        specifier: workspace:^
+        version: link:../option
+      '@macrograph/runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+    devDependencies:
+      '@macrograph/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/config: {}
 

@@ -60,7 +60,7 @@ export function renderSchema(
 		name: schema.name,
 		type: schema.type,
 		inputs: io.inputs.map(renderIO).filter((d) => d !== undefined),
-		outputs: io.inputs.map(renderIO).filter((d) => d !== undefined),
+		outputs: io.outputs.map(renderIO).filter((d) => d !== undefined),
 	};
 }
 
