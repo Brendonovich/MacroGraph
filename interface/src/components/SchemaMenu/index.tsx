@@ -12,7 +12,7 @@ import {
   createWsProvider,
   pinIsOutput,
 } from "@macrograph/runtime";
-import { renderType } from "@macrograph/schema-rendering";
+import { RenderedIO, renderType } from "@macrograph/schema-rendering";
 import { createWritableMemo } from "@solid-primitives/memo";
 import clsx from "clsx";
 import {
@@ -29,7 +29,10 @@ import type { GraphState } from "../Graph/Context";
 
 interface Props {
   graph: GraphState;
-  onSchemaClicked(s: NodeSchema): void | Promise<void>;
+  onSchemaClicked(
+    s: NodeSchema<any>,
+    suggestion?: { pin: number }
+  ): void | Promise<void>;
   onCreateCommentBox(): void;
   position: XY;
   suggestion?: { pin: Pin };
@@ -114,7 +117,10 @@ export function SchemaMenu(props: Props) {
                   (s) => !lowercasePackageName.startsWith(s)
                 );
 
-                const ret: NodeSchema<EventsMap>[] = [];
+                const ret: {
+                  schema: NodeSchema<any>;
+                  suggestion?: { pin: number };
+                }[] = [];
 
                 for (const schema of p.schemas.values()) {
                   const lowercaseSchemaName = schema.name.toLowerCase();
@@ -130,46 +136,54 @@ export function SchemaMenu(props: Props) {
 
                         if (pinIsOutput(pin)) {
                           if (pin instanceof ExecOutput) {
-                            if (
-                              schema.rendered.inputs.find(
-                                (i) => i.variant === "exec"
-                              )
-                            ) {
-                              ret.push(schema);
-                            }
+                            const index = schema.rendered.inputs.findIndex(
+                              (i) => i.variant === "exec"
+                            );
+                            if (index !== -1)
+                              ret.push({ schema, suggestion: { pin: index } });
                           } else if (pin instanceof DataOutput) {
-                            const input = schema.rendered.inputs.find(
+                            const index = schema.rendered.inputs.findIndex(
                               (i) => i.variant === "data"
                             );
-                            if (input && input.type === renderType(pin.type)) {
-                              ret.push(schema);
+                            const input = schema.rendered.inputs[
+                              index
+                            ] as Extract<RenderedIO, { variant: "data" }>;
+                            if (
+                              renderType(pin.type) === "wildcard" ||
+                              (input &&
+                                (input.type === renderType(pin.type) ||
+                                  input.type === "wildcard"))
+                            ) {
+                              ret.push({ schema, suggestion: { pin: index } });
                             }
                           }
                         } else {
                           if (pin instanceof ExecInput) {
-                            if (
-                              schema.rendered.outputs.find(
-                                (i) => i.variant === "exec"
-                              )
-                            ) {
-                              ret.push(schema);
-                            }
+                            const index = schema.rendered.outputs.findIndex(
+                              (i) => i.variant === "exec"
+                            );
+                            if (index !== -1)
+                              ret.push({ schema, suggestion: { pin: index } });
                           } else if (pin instanceof DataInput) {
-                            const output = schema.rendered.outputs.find(
+                            const index = schema.rendered.outputs.findIndex(
                               (o) => o.variant === "data"
                             );
+                            const output = schema.rendered.outputs[
+                              index
+                            ] as Extract<RenderedIO, { variant: "data" }>;
+                            if (schema.name === "From JSON")
+                              console.log({ output });
                             if (
-                              output &&
-                              output.type === renderType(pin.type)
-                            ) {
-                              ret.push(schema);
-                            }
+                              renderType(pin.type) === "wildcard" ||
+                              (output &&
+                                (output.type === "wildcard" ||
+                                  output.type === renderType(pin.type)))
+                            )
+                              ret.push({ schema, suggestion: { pin: index } });
                           }
                         }
                       }
-                    } else {
-                      ret.push(schema as any);
-                    }
+                    } else ret.push({ schema });
                   }
                 }
 
@@ -195,26 +209,28 @@ export function SchemaMenu(props: Props) {
                     <Show when={open()}>
                       <div class="pl-4">
                         <For each={filteredSchemas()}>
-                          {(s) => (
+                          {({ schema, suggestion }) => (
                             <div>
                               <button
                                 type="button"
                                 class="px-2 py-0.5 flex flex-row items-center space-x-2 whitespace-nowrap min-w-full text-left hover:bg-neutral-700 rounded-lg"
-                                onClick={() => props.onSchemaClicked(s)}
+                                onClick={() =>
+                                  props.onSchemaClicked(schema, suggestion)
+                                }
                               >
                                 <div
                                   class={clsx(
                                     "h-3 w-3 rounded-full",
                                     TypeIndicatorColours[
-                                      "variant" in s
-                                        ? s.variant
-                                        : "type" in s
-                                        ? s.type
+                                      "variant" in schema
+                                        ? schema.variant
+                                        : "type" in schema
+                                        ? schema.type
                                         : "Event"
                                     ]
                                   )}
                                 />
-                                <span>{s.name}</span>
+                                <span>{schema.name}</span>
                               </button>
                             </div>
                           )}

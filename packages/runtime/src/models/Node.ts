@@ -61,7 +61,7 @@ export interface NodeArgs {
   id: number;
   name?: string;
   graph: Graph;
-  schema: NodeSchema;
+  schema: NodeSchema<any>;
   position: XY;
   properties?: Record<string, string | typeof DEFAULT>;
   foldPins?: boolean;
