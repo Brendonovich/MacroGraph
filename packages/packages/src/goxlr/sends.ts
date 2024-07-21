@@ -56,9 +56,9 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 	pkg.registerType(MicType);
 	pkg.registerType(Presets);
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Mute Slider",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) => {
 			return {
 				slider: io.dataInput({
@@ -95,9 +95,9 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Microphone Type",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) =>
 			io.dataInput({
 				name: "Mic Type",
@@ -110,15 +110,17 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: { Command: [mixerID(), { SetMicrophoneType: type.variant }] },
+					data: {
+						Command: [mixerID(), { SetMicrophoneType: type.variant }],
+					},
 				}),
 			);
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Reverb Amount",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) =>
 			io.dataInput({
 				name: "Amount (%)",
@@ -129,15 +131,17 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: { Command: [mixerID(), { SetReverbAmount: ctx.getInput(io) }] },
+					data: {
+						Command: [mixerID(), { SetReverbAmount: ctx.getInput(io) }],
+					},
 				}),
 			);
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Echo Amount",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) =>
 			io.dataInput({
 				name: "Amount (%)",
@@ -148,15 +152,17 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: { Command: [mixerID(), { SetEchoAmount: ctx.getInput(io) }] },
+					data: {
+						Command: [mixerID(), { SetEchoAmount: ctx.getInput(io) }],
+					},
 				}),
 			);
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Pitch Amount",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) =>
 			io.dataInput({
 				name: "Amount (%)",
@@ -167,15 +173,17 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: { Command: [mixerID(), { SetPitchAmount: ctx.getInput(io) }] },
+					data: {
+						Command: [mixerID(), { SetPitchAmount: ctx.getInput(io) }],
+					},
 				}),
 			);
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Gender Amount",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) =>
 			io.dataInput({
 				name: "(%)",
@@ -199,9 +207,9 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set FX State",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) =>
 			io.dataInput({
 				name: "State",
@@ -225,9 +233,9 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set FX Preset",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) =>
 			io.dataInput({
 				name: "Preset",
@@ -248,9 +256,9 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Route State",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) => {
 			return {
 				input: io.dataInput({

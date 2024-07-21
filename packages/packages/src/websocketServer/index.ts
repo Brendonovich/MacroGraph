@@ -66,9 +66,9 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "WSS Emit",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				port: io.dataInput({

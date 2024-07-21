@@ -1,3 +1,4 @@
+import { Maybe } from "@macrograph/option";
 import { Package, type PropertyDef } from "@macrograph/runtime";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { createEffect, on } from "solid-js";
@@ -20,9 +21,9 @@ export function pkg() {
 			})),
 	} satisfies PropertyDef;
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Get Graph Variable",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			variable: graphVariableProperty,
 		},
@@ -37,21 +38,19 @@ export function pkg() {
 				type: variable.type,
 			});
 		},
-		run({ ctx, io, properties, graph }) {
+		run({ ctx, io, properties }) {
 			if (!io) return;
 
 			const variableId = ctx.getProperty(properties.variable);
-			const variable = graph.variables.find(
-				(v) => v.id === Number(variableId),
-			)!;
+			if (variableId === undefined) return;
 
-			ctx.setOutput(io, variable.value);
+			ctx.setOutput(io, ctx.getVariable("graph", variableId).value);
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Graph Variable",
-		variant: "Exec",
+		type: "exec",
 		properties: {
 			variable: graphVariableProperty,
 		},
@@ -66,14 +65,13 @@ export function pkg() {
 				type: variable.type,
 			});
 		},
-		run({ ctx, io, properties, graph }) {
+		run({ ctx, io, properties }) {
 			if (!io) return;
 
 			const variableId = ctx.getProperty(properties.variable);
-			const variable = graph.variables.find((v) => v.id === variableId);
-			if (!variable) return;
+			if (variableId === undefined) return;
 
-			variable.value = ctx.getInput(io);
+			ctx.setVariable("graph", variableId, ctx.getInput(io));
 		},
 	});
 
@@ -86,9 +84,9 @@ export function pkg() {
 			})),
 	} satisfies PropertyDef;
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Get Project Variable",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			variable: projectVariableProperty,
 		},
@@ -105,21 +103,18 @@ export function pkg() {
 				type: variable.type,
 			});
 		},
-		run({ ctx, io, properties, graph }) {
+		run({ ctx, io, properties }) {
 			if (!io) return;
 
-			const variableId = ctx.getProperty(properties.variable);
-			const variable = graph.project.variables.find(
-				(v) => v.id === Number(variableId),
-			)!;
-
-			ctx.setOutput(io, variable.value);
+			Maybe(ctx.getProperty(properties.variable))
+				.andThen((variableId) => ctx.getVariable("project", variableId))
+				.peek((variable) => ctx.setOutput(io, variable.value));
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Project Variable",
-		variant: "Exec",
+		type: "exec",
 		properties: {
 			variable: projectVariableProperty,
 		},
@@ -136,14 +131,12 @@ export function pkg() {
 				type: variable.type,
 			});
 		},
-		run({ ctx, io, properties, graph }) {
+		run({ ctx, io, properties }) {
 			if (!io) return;
 
-			const variableId = ctx.getProperty(properties.variable);
-			const variable = graph.project.variables.find((v) => v.id === variableId);
-			if (!variable) return;
-
-			variable.value = ctx.getInput(io);
+			Maybe(ctx.getProperty(properties.variable)).peek((variableId) =>
+				ctx.setVariable("project", variableId, ctx.getInput(io)),
+			);
 		},
 	});
 

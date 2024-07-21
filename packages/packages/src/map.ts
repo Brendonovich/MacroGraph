@@ -9,9 +9,9 @@ export function pkg() {
 		name: "Map",
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Get",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			number: {
 				name: "Keys",
@@ -52,9 +52,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Insert",
-		variant: "Exec",
+		type: "exec",
 		properties: {
 			number: {
 				name: "Entries",
@@ -101,9 +101,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Create",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			number: {
 				name: "Entries",
@@ -144,9 +144,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "JSON Map Create",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			number: {
 				name: "Entries",
@@ -190,9 +190,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Clear",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -206,9 +206,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Contains",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -235,9 +235,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Keys",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -259,9 +259,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Values",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -283,9 +283,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Size",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -307,9 +307,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Map Remove",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 

@@ -10,6 +10,7 @@ import type { Node } from "./Node";
 import type { EventsMap, RunCtx } from "./NodeSchema";
 import type { Package } from "./Package";
 import { Project } from "./Project";
+import type { Variable } from "./Variable";
 import type { SerializedProject } from "./serialized";
 
 class NodeEmit {
@@ -225,6 +226,27 @@ export class ExecutionContext {
 				);
 			},
 			getProperty: (p) => node.getProperty(p) as any,
+			getVariable(source, id) {
+				if (source === "graph") {
+					return Maybe(node.graph.variables.find((v) => v.id === id));
+				}
+
+				return Maybe(
+					node.graph.core.project.variables.find((v) => v.id === id),
+				);
+			},
+			setVariable: (source, id, value) => {
+				let variable: Variable | undefined;
+
+				if (source === "graph") {
+					variable = node.graph.variables.find((v) => v.id === id);
+				} else {
+					variable = node.graph.core.project.variables.find((v) => v.id === id);
+				}
+
+				if (!variable) return;
+				variable.value = value;
+			},
 		};
 	}
 

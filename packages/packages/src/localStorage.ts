@@ -8,9 +8,9 @@ export function pkg() {
 		name: "Localstorage",
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Data",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) => {
 			return {
 				key: io.dataInput({
@@ -33,9 +33,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set JSON Data",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) => {
 			return {
 				key: io.dataInput({
@@ -58,9 +58,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Get Data",
-		variant: "Pure",
+		type: "pure",
 		createIO: ({ io }) => {
 			return {
 				key: io.dataInput({
@@ -82,9 +82,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Get JSON Data",
-		variant: "Pure",
+		type: "pure",
 		createIO: ({ io }) => {
 			return {
 				key: io.dataInput({
@@ -110,9 +110,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Remove Data",
-		variant: "Exec",
+		type: "exec",
 		createIO: ({ io }) => {
 			return io.dataInput({
 				id: "key",

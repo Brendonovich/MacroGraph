@@ -4,9 +4,9 @@ import { t } from "@macrograph/typesystem";
 export function pkg(core: Core) {
 	const pkg = new Package({ name: "HTTP Requests" });
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "GET",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				url: io.dataInput({
@@ -37,9 +37,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "POST",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				url: io.dataInput({
@@ -79,9 +79,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "PUT",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				url: io.dataInput({
@@ -121,9 +121,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "DELETE",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				url: io.dataInput({

@@ -113,9 +113,9 @@ export function register(pkg: Pkg, state: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Dall E Image Generation",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				prompt: io.dataInput({

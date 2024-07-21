@@ -24,6 +24,7 @@ import {
 } from "./IO";
 import type { Node } from "./Node";
 import type { Package, ResourceType, inferResourceTypeValue } from "./Package";
+import type { Variable } from "./Variable";
 
 export type NodeSchemaVariant =
 	| "Base"
@@ -230,6 +231,8 @@ export type RunCtx = {
 	getProperty<TProperty extends PropertyDef & { id: string }>(
 		property: TProperty,
 	): inferPropertyDef<TProperty>;
+	getVariable(source: "graph" | "project", id: number): Option<Variable>;
+	setVariable(source: "graph" | "project", id: number, value: any): void;
 };
 
 export type EventsMap<T extends string = string> = Record<T, any>;

@@ -10,9 +10,9 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		return ws.ws;
 	};
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "SpeakerBot Speak",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				voice: io.dataInput({
@@ -39,9 +39,9 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "SpeakerBot Stop Current",
-		variant: "Exec",
+		type: "exec",
 		createIO() {},
 		run() {
 			ws().send(
@@ -53,9 +53,9 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "SpeakerBot Toggle TTS",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				state: io.dataInput({
@@ -75,9 +75,9 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "SpeakerBot Events Toggle",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				state: io.dataInput({
@@ -98,9 +98,9 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "SpeakerBot Queue Toggle",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				state: io.dataInput({
@@ -120,9 +120,9 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "SpeakerBot Queue Clear",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {},
 		run() {
 			ws().send(
