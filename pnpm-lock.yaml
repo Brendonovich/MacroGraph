@@ -714,9 +714,6 @@ importers:
       '@macrograph/option':
         specifier: workspace:^
         version: link:../option
-      '@macrograph/schema-rendering':
-        specifier: workspace:*
-        version: link:../schema-rendering
       '@macrograph/typesystem':
         specifier: workspace:*
         version: link:../typesystem
