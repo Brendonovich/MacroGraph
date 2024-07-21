@@ -67,7 +67,7 @@ export class Core {
 		core: this,
 	});
 
-	packages = [] as Package<any, any>[];
+	packages = [] as Package[];
 
 	eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
