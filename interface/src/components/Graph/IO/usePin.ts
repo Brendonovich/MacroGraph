@@ -74,11 +74,9 @@ export function usePin(pin: Accessor<Pin>) {
 					}, 1);
 
 					if (interfaceCtx.state.status !== "draggingPin") return;
-					interfaceCtx.setState({ status: "idle" });
+					const draggingPin = interfaceCtx.state.pin;
 
 					UI.setHoveringPin(thisPin);
-
-					const draggingPin = interfaceCtx.state.pin;
 
 					if (!draggingPin || draggingPin === thisPin) return;
 
@@ -86,6 +84,8 @@ export function usePin(pin: Accessor<Pin>) {
 						graph.model().connectPins(thisPin, draggingPin);
 					else if (pinIsInput(thisPin) && pinIsOutput(draggingPin))
 						graph.model().connectPins(draggingPin, thisPin);
+
+					interfaceCtx.setState({ status: "idle" });
 				});
 			},
 			mousedown: () => {
