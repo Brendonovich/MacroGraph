@@ -1,4 +1,3 @@
-import { renderSchema } from "@macrograph/schema-rendering";
 import {
 	type BaseType,
 	Enum,
@@ -15,6 +14,8 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { createLazyMemo } from "@solid-primitives/memo";
 import { type Component, lazy } from "solid-js";
 import type { Simplify } from "type-fest";
+// import { renderSchema } from "@macrograph/schema-rendering";
+import { renderSchema } from "../schemaRendering";
 
 import type { Core } from "./Core";
 import type { ExecInput, ExecOutput } from "./IO";

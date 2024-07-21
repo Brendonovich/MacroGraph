@@ -7,8 +7,9 @@ import {
 	type t,
 } from "@macrograph/typesystem";
 import type { EventBus } from "@solid-primitives/event-bus";
+// import type { RenderedSchema } from "@macrograph/schema-rendering";
+import type { RenderedSchema } from "../schemaRendering";
 
-import type { RenderedSchema } from "@macrograph/schema-rendering";
 import { batch } from "solid-js";
 import type { Graph } from "./Graph";
 import {
@@ -67,10 +68,7 @@ export type DataOutputBuilder = {
 	type: AnyType;
 };
 
-export type ExecOutputBuilder = {
-	id: string;
-	name?: string;
-};
+export type ExecOutputBuilder = { id: string; name?: string };
 
 export type ScopeOutputBuilder = {
 	id: string;
@@ -79,15 +77,9 @@ export type ScopeOutputBuilder = {
 };
 
 export type OutputBuilder =
-	| ({
-			variant: "Data";
-	  } & DataOutputBuilder)
-	| ({
-			variant: "Exec";
-	  } & ExecOutputBuilder)
-	| ({
-			variant: "Scope";
-	  } & ScopeOutputBuilder);
+	| ({ variant: "Data" } & DataOutputBuilder)
+	| ({ variant: "Exec" } & ExecOutputBuilder)
+	| ({ variant: "Scope" } & ScopeOutputBuilder);
 
 export class IOBuilder {
 	inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];

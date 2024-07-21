@@ -9,7 +9,8 @@ import {
 	type XY,
 	pinIsOutput,
 } from "@macrograph/runtime";
-import { type RenderedIO, renderType } from "@macrograph/schema-rendering";
+// import { type RenderedIO, renderType } from "@macrograph/schema-rendering";
+import { type RenderedIO, renderType } from "@macrograph/runtime";
 import { createWritableMemo } from "@solid-primitives/memo";
 import clsx from "clsx";
 import {
