@@ -37,16 +37,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm i
+      - uses: ./.github/actions/setup-js
 
       - name: Typecheck
         run: pnpm typecheck
@@ -58,16 +49,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm i
+      - uses: ./.github/actions/setup-js
 
       - name: Check formatting
         run: pnpm exec biome ci .
@@ -93,7 +75,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: ./.github/actions/setup-js
+
+      - uses: ./.github/actions/setup-rust
+        with:
+          target: x86_64-unknown-linux-gnu
+
+      - name: Install desktop deps
+        uses: ./.github/actions/install-desktop-deps
 
       - name: Run Clippy
         uses: actions-rs-plus/clippy-check@v2
