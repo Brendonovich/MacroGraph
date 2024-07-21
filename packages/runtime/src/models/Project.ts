@@ -1,8 +1,8 @@
 import { ReactiveMap } from "@solid-primitives/map";
+import "@total-typescript/ts-reset";
 import { createMutable } from "solid-js/store";
 import type { z } from "zod";
 
-import { Owner, batch, createRoot, runWithOwner } from "solid-js";
 import type { Core } from "./Core";
 import { CustomEvent } from "./CustomEvent";
 import { Graph } from "./Graph";

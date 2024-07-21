@@ -1,11 +1,11 @@
 import { Button, Input } from "@macrograph/ui";
 import { For, Match, Switch } from "solid-js";
 
-import type { Ctx } from "./ctx";
-import { AUTH_SCHEMA } from "./ws";
 import { createForm } from "@tanstack/solid-form";
 import { zodValidator } from "@tanstack/zod-form-adapter";
 import type { z } from "zod";
+import type { Ctx } from "./ctx";
+import { AUTH_SCHEMA } from "./ws";
 
 export default function (ctx: Ctx) {
 	const form = createForm<

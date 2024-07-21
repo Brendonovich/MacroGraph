@@ -1,11 +1,10 @@
 import { AsyncButton, Button, Input } from "@macrograph/ui";
 import { createAsync } from "@solidjs/router";
 import { For, Show, Suspense, Switch } from "solid-js";
-import { z } from "zod";
 
+import { createForm } from "@tanstack/solid-form";
 import { Match } from "solid-js";
 import type { Ctx } from ".";
-import { createForm } from "@tanstack/solid-form";
 
 export default function ({ core, auth, gateway }: Ctx) {
 	const credentials = createAsync(() => core.getCredentials());

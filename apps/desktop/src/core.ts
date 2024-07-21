@@ -1,7 +1,7 @@
 import { Core, type RefreshedOAuthToken } from "@macrograph/runtime";
 import "tauri-plugin-midi";
 
-import { api, rawApi } from "./api";
+import { rawApi } from "./api";
 import { env } from "./env";
 import { fetch } from "./http";
 import { client } from "./rspc";

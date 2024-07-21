@@ -11,7 +11,6 @@ import {
 	type Accessor,
 	batch,
 	createComputed,
-	createEffect,
 	createMemo,
 	createRoot,
 	createUniqueId,

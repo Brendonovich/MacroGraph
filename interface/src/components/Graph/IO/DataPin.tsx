@@ -10,8 +10,8 @@ import {
 import clsx from "clsx";
 import { Match, Switch } from "solid-js";
 
-import { usePin } from ".";
 import { colour } from "../util";
+import { usePin } from "./usePin";
 
 interface Props {
 	pin: DataInput<BaseType> | DataOutput<BaseType>;
