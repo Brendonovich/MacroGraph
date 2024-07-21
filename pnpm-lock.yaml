@@ -794,9 +794,6 @@ importers:
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
-      '@macrograph/json':
-        specifier: workspace:^
-        version: link:../json
 
   packages/typesystem:
     dependencies:
