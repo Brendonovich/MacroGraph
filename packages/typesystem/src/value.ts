@@ -60,11 +60,11 @@ export function serializeValue(rawValue: any, type: t.Any): any {
 		const fields = Object.values((type.struct as Struct<StructFields>).fields);
 
 		for (const field of fields) {
-			const value = rawValue[field.name];
+			const value = rawValue[field.id];
 			if (value === undefined)
-				throw new Error(`Field ${field.name} not found in data.`);
+				throw new Error(`Field ${field.id} not found in data.`);
 
-			val[field.name] = serializeValue(value, field.type);
+			val[field.id] = serializeValue(value, field.type);
 		}
 
 		return val;
@@ -113,11 +113,11 @@ export function deserializeValue(rawValue: any, type: t.Any): any {
 		const fields = Object.values((type.struct as Struct<StructFields>).fields);
 
 		for (const field of fields) {
-			const value = rawValue[field.name];
+			const value = rawValue[field.id];
 			if (value === undefined)
-				throw new Error(`Field ${field.name} not found in data.`);
+				throw new Error(`Field '${field.id}' not found in data.`);
 
-			val[field.name] = deserializeValue(value, field.type);
+			val[field.id] = deserializeValue(value, field.type);
 		}
 
 		return val;

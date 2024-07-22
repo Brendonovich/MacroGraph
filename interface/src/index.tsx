@@ -39,11 +39,6 @@ import {
 } from "@macrograph/clipboard";
 import * as Sidebars from "./Sidebar";
 import { UIStoreProvider, createUIStore } from "./UIStore";
-import {
-	CommandDialog,
-	type Control,
-	createSection,
-} from "./components/CommandDialog";
 import { Graph } from "./components/Graph";
 import {
 	type GraphState,
@@ -387,59 +382,59 @@ function ProjectInterface(props: {
 						e.stopPropagation();
 					}}
 				>
-					{((_) => {
-						const GraphSection = createSection({
-							title: "Graphs",
-							source: () => [
-								{
-									title: "Create New Graph",
-									run(control: Control) {
-										const graph = props.core.project.createGraph();
+					{/* {((_) => {
+            const GraphSection = createSection({
+              title: "Graphs",
+              source: () => [
+                {
+                  title: "Create New Graph",
+                  run(control: Control) {
+                    const graph = props.core.project.createGraph();
 
-										const currentIndex = graphStates.findIndex(
-											(s) => s.id === graph.id,
-										);
+                    const currentIndex = graphStates.findIndex(
+                      (s) => s.id === graph.id
+                    );
 
-										if (currentIndex === -1) {
-											setGraphStates((s) => [...s, createGraphState(graph)]);
-											setCurrentGraphIndex(graphStates.length - 1);
-										} else setCurrentGraphIndex(currentIndex);
+                    if (currentIndex === -1) {
+                      setGraphStates((s) => [...s, createGraphState(graph)]);
+                      setCurrentGraphIndex(graphStates.length - 1);
+                    } else setCurrentGraphIndex(currentIndex);
 
-										control.hide();
-									},
-								},
-								...[...props.core.project.graphs.values()].map((graph) => ({
-									title: graph.name,
-									run(control: Control) {
-										const currentIndex = graphStates.findIndex(
-											(s) => s.id === graph.id,
-										);
+                    control.hide();
+                  },
+                },
+                ...[...props.core.project.graphs.values()].map((graph) => ({
+                  title: graph.name,
+                  run(control: Control) {
+                    const currentIndex = graphStates.findIndex(
+                      (s) => s.id === graph.id
+                    );
 
-										if (currentIndex === -1) {
-											setGraphStates((s) => [...s, createGraphState(graph)]);
-											setCurrentGraphIndex(graphStates.length - 1);
-										} else setCurrentGraphIndex(currentIndex);
+                    if (currentIndex === -1) {
+                      setGraphStates((s) => [...s, createGraphState(graph)]);
+                      setCurrentGraphIndex(graphStates.length - 1);
+                    } else setCurrentGraphIndex(currentIndex);
 
-										control.hide();
-									},
-								})),
-							],
-						});
+                    control.hide();
+                  },
+                })),
+              ],
+            });
 
-						// const CustomEventsSection = createSection({
-						//   title: "Custom Events",
-						//   source: Solid.createMemo(() =>
-						//     [...props.core.project.customEvents.values()].map(
-						//       (customEvent) => ({
-						//         title: customEvent.name,
-						//         run() {},
-						//       })
-						//     )
-						//   ),
-						// });
+            const CustomEventsSection = createSection({
+              title: "Custom Events",
+              source: Solid.createMemo(() =>
+                [...props.core.project.customEvents.values()].map(
+                  (customEvent) => ({
+                    title: customEvent.name,
+                    run() {},
+                  })
+                )
+              ),
+            });
 
-						return <CommandDialog sections={[GraphSection]} />;
-					})()}
+            return <CommandDialog sections={[GraphSection]} />;
+          })()} */}
 
 					<Solid.Show when={leftSidebar.state.open}>
 						<Sidebar
@@ -530,7 +525,14 @@ function ProjectInterface(props: {
 								</Tabs.List>
 							</Tabs.Root>
 						</Solid.Show>
-						<Solid.Show when={currentGraph()} fallback="No graph selected">
+						<Solid.Show
+							when={currentGraph()}
+							fallback={
+								<span class="text-neutral-400 font-medium">
+									No graph selected
+								</span>
+							}
+						>
 							{(graph) => (
 								<Graph
 									graph={graph().model}

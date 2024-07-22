@@ -79,6 +79,7 @@ export class Project {
 			| Extract<z.infer<typeof SerializedType>, { variant: "enum" }>["enum"],
 	): Option<StructBase | Enum> {
 		if (data.variant === "package") {
+			console.log(this.core);
 			const pkg = Maybe(
 				this.core.packages.find((p) => p.name === data.package),
 			);

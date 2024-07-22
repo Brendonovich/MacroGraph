@@ -5,8 +5,9 @@ import { BaseType } from "./base";
 
 export class StructField<Type extends t.Any = t.Any> {
 	constructor(
-		public name: string,
+		public id: string,
 		public type: Type,
+		public name?: string,
 	) {
 		return createMutable(this);
 	}

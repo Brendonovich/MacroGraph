@@ -9,7 +9,7 @@ import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
-export function CustomEvents() {
+export function CustomTypes() {
 	const [search, setSearch] = createSignal("");
 	const ctx = useCoreContext();
 
@@ -206,7 +206,7 @@ export function CustomEvents() {
 												{(field) => (
 													<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
 														<InlineTextEditor
-															value={field.name}
+															value={field.name ?? field.id}
 															onChange={(value) => {
 																field.name = value;
 																ctx.core.project.save();
