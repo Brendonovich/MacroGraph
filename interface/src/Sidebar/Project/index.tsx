@@ -1,6 +1,6 @@
 import type { Graph, Project } from "@macrograph/runtime";
 
-import { CustomEvents } from "./CustomEvents";
+import { CustomTypes } from "./CustomTypes";
 import { Graphs } from "./Graphs";
 import { PrintOutput } from "./PrintOutput";
 import { Resources } from "./Resources";
@@ -19,7 +19,7 @@ export function Sidebar(props: {
 			/>
 			<PrintOutput />
 			<Variables project={props.project} />
-			<CustomEvents />
+			<CustomTypes />
 			<Resources />
 		</>
 	);

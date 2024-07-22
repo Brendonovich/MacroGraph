@@ -59,6 +59,7 @@ export function CommentBox(props: Props) {
 							}}
 						>
 							<ContextMenu.Trigger
+								as="button"
 								class="p-2 pl-3 outline-none"
 								onMouseDown={(e) => {
 									e.currentTarget.focus();

@@ -1765,7 +1765,7 @@ export function pkg(core: Core) {
 				).map(([id, field]) =>
 					io.dataOutput({
 						id,
-						name: field.name,
+						name: field.id,
 						type: field.type,
 					}),
 				);
@@ -1800,6 +1800,7 @@ export function pkg(core: Core) {
 				id: "",
 				type: t.wildcard(w),
 			});
+			console.log(w.value());
 
 			return w.value().map((wt) => {
 				if (!(wt instanceof t.Struct)) return null;
@@ -1808,7 +1809,7 @@ export function pkg(core: Core) {
 					([id, field]) =>
 						io.dataInput({
 							id,
-							name: field.name,
+							name: field.id,
 							type: field.type,
 						}),
 				);

@@ -267,10 +267,7 @@ export function createStruct<Fields extends StructFields>(
 
 export type Events<TEventsMap extends EventsMap = EventsMap> =
 	TEventsMap extends EventsMap<infer TName>
-		? {
-				name: TName;
-				data: EventsMap[TName];
-			}
+		? { name: TName; data: EventsMap[TName] }
 		: never;
 export type OnEvent<TEventsMap extends EventsMap = EventsMap> = (
 	_: Events<TEventsMap>,
