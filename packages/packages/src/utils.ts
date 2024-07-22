@@ -24,9 +24,9 @@ export function pkg(core: Core) {
 		name: "Utils",
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Print",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return io.dataInput({
 				id: "input",
@@ -39,9 +39,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String Includes",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				haystack: io.dataInput({
@@ -68,9 +68,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String Replace All",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -104,9 +104,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String Replace First",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -140,9 +140,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String Length",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -161,9 +161,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String Starts With",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -190,9 +190,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Substring",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -226,9 +226,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String To Uppercase",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -246,9 +246,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String To Lowercase",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -266,9 +266,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Reverse String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -286,9 +286,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Int to String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -306,9 +306,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Int to String (specify base)",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -334,9 +334,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Float to String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				float: io.dataInput({
@@ -354,9 +354,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Bool to String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				bool: io.dataInput({
@@ -374,9 +374,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String to Int",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				string: io.dataInput({
@@ -401,9 +401,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String to int (specify base)",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				string: io.dataInput({
@@ -432,9 +432,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "String to Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				string: io.dataInput({
@@ -455,9 +455,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Multiply Ints",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -480,9 +480,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Multiply Floats",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -505,9 +505,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Exponent Floats",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -532,9 +532,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Float to Int",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -552,9 +552,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Int to Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -572,9 +572,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Divide Ints Exact",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -597,9 +597,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Divide Ints",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -622,9 +622,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Divide Floats",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -647,9 +647,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Min Floats",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -672,9 +672,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Max Floats",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -697,9 +697,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Max ints",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -722,9 +722,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Min ints",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -747,9 +747,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Sin",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -768,9 +768,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Cos",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -789,9 +789,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Tan",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -810,9 +810,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Add Ints",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -835,9 +835,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Add Floats",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -859,9 +859,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Subtract Ints",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -884,9 +884,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Subtract Floats",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -909,9 +909,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Append String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -952,9 +952,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Create String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			let inputs: DataInput<t.String>[];
 
@@ -1040,9 +1040,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "UUID",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				output: io.dataOutput({
@@ -1057,9 +1057,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Date Now (ms)",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				time: io.dataOutput({
@@ -1074,9 +1074,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Date Parse",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				timeIn: io.dataInput({
@@ -1096,9 +1096,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Format Time",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			string: {
 				name: "String",
@@ -1127,9 +1127,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Round Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1158,9 +1158,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Floor Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1180,9 +1180,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Remainder Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				number: io.dataInput({
@@ -1210,9 +1210,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Remainder Int",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				number: io.dataInput({
@@ -1240,9 +1240,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Random Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return io.dataOutput({
 				id: "output",
@@ -1254,9 +1254,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Random Float In Range",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				min: io.dataInput({
@@ -1283,9 +1283,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Random Integer",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return io.dataOutput({
 				id: "output",
@@ -1299,9 +1299,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Random Integer In Range",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				min: io.dataInput({
@@ -1332,9 +1332,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Compare Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1374,9 +1374,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Compare Int",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1416,9 +1416,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Make Any",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1438,9 +1438,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Make String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1458,9 +1458,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Make Int",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1478,9 +1478,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Make Float",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1498,9 +1498,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Equal",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1524,9 +1524,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "List Includes",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1553,9 +1553,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "List Length",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				list: io.dataInput({
@@ -1573,9 +1573,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Split String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1600,9 +1600,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Nth Word",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -1629,9 +1629,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Unwrap Option",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1651,9 +1651,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Unwrap Option Or",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1680,9 +1680,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Is Option Some",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1702,9 +1702,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Is Option None",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1724,9 +1724,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Make Some",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const type = io.wildcard("");
 
@@ -1746,9 +1746,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Break Struct",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -1790,9 +1790,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Create Struct",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -2094,9 +2094,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Emit Custom Event",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				event: io.dataInput({
@@ -2140,9 +2140,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Emit Custom Return Event",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				event: io.dataInput({
@@ -2186,9 +2186,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Stringify JSON",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -2211,9 +2211,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Cache",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -2233,9 +2233,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Copy",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -2263,9 +2263,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Current Timestamp (ms)",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				out: io.dataOutput({
@@ -2280,9 +2280,9 @@ export function pkg(core: Core) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Format String",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			string: {
 				name: "String",

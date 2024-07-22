@@ -1,3 +1,4 @@
+import { ContextMenu } from "@kobalte/core";
 import {
 	DataInput as DataInputModel,
 	DataOutput as DataOutputModel,
@@ -11,11 +12,12 @@ import {
 	hasConnection,
 } from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
-import { ContextMenu } from "@kobalte/core";
 import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
 
+import { useGraphContext } from "./Context";
+import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import {
 	DataInput,
 	DataOutput,
@@ -25,8 +27,6 @@ import {
 	ScopeOutput,
 } from "./IO";
 import "./Node.css";
-import { useGraphContext } from "./Context";
-import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 
 interface Props {
 	node: NodeModel;
@@ -80,6 +80,13 @@ export const Node = (props: Props) => {
 
 	Solid.onMount(() => {
 		if (!ref) return;
+
+		const rect = ref.getBoundingClientRect();
+
+		graph.nodeSizes.set(node(), {
+			width: rect.width,
+			height: rect.height,
+		});
 
 		const obs = new ResizeObserver((resize) => {
 			const contentRect = resize[resize.length - 1]?.contentRect;
@@ -360,7 +367,7 @@ export const Node = (props: Props) => {
 				<div class="flex flex-row gap-2">
 					<div class="p-2 flex flex-col space-y-2.5">
 						<Solid.For each={filteredInputs()}>
-							{(input, index) => (
+							{(input) => (
 								<Solid.Switch>
 									<Solid.Match when={input instanceof DataInputModel && input}>
 										{(i) => <DataInput input={i()} />}
@@ -377,7 +384,7 @@ export const Node = (props: Props) => {
 					</div>
 					<div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
 						<Solid.For each={filteredOutputs()}>
-							{(output, index) => (
+							{(output) => (
 								<Solid.Switch>
 									<Solid.Match
 										when={output instanceof DataOutputModel && output}

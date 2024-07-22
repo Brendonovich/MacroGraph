@@ -213,7 +213,9 @@ function DesktopDownloadButton() {
 						<div class="px-2 py-1 font-medium">Loading Versions...</div>
 					}
 				>
-					<div class="px-2 py-1 font-medium">Version {latestVersion()}</div>
+					<ErrorBoundary fallback="">
+						<div class="px-2 py-1 font-medium">Version {latestVersion()}</div>
+					</ErrorBoundary>
 					<For
 						each={
 							[

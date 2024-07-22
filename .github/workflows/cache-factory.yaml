@@ -40,8 +40,11 @@ jobs:
 
       - run: mkdir apps/desktop/dist
 
+      - name: Clippy (debug)
+        run: cargo clippy --all --all-features --target ${{ matrix.settings.target }}
+
       - name: Compile (debug)
-        run: cargo test -p macrograph --all-features --no-run --target ${{ matrix.settings.target }}
+        run: cargo test --all --all-features --no-run --target ${{ matrix.settings.target }}
 
       - name: Compile (release)
-        run: cargo test -p macrograph --all-features --no-run --target ${{ matrix.settings.target }} --release
+        run: cargo test --all --all-features --no-run --target ${{ matrix.settings.target }} --release

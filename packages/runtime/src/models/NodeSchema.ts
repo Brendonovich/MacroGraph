@@ -7,6 +7,8 @@ import {
 	type t,
 } from "@macrograph/typesystem";
 import type { EventBus } from "@solid-primitives/event-bus";
+// import type { RenderedSchema } from "@macrograph/schema-rendering";
+import type { RenderedSchema } from "../schemaRendering";
 
 import { batch } from "solid-js";
 import type { Graph } from "./Graph";
@@ -22,6 +24,7 @@ import {
 } from "./IO";
 import type { Node } from "./Node";
 import type { Package, ResourceType, inferResourceTypeValue } from "./Package";
+import type { Variable } from "./Variable";
 
 export type NodeSchemaVariant =
 	| "Base"
@@ -66,10 +69,7 @@ export type DataOutputBuilder = {
 	type: AnyType;
 };
 
-export type ExecOutputBuilder = {
-	id: string;
-	name?: string;
-};
+export type ExecOutputBuilder = { id: string; name?: string };
 
 export type ScopeOutputBuilder = {
 	id: string;
@@ -78,15 +78,9 @@ export type ScopeOutputBuilder = {
 };
 
 export type OutputBuilder =
-	| ({
-			variant: "Data";
-	  } & DataOutputBuilder)
-	| ({
-			variant: "Exec";
-	  } & ExecOutputBuilder)
-	| ({
-			variant: "Scope";
-	  } & ScopeOutputBuilder);
+	| ({ variant: "Data" } & DataOutputBuilder)
+	| ({ variant: "Exec" } & ExecOutputBuilder)
+	| ({ variant: "Scope" } & ScopeOutputBuilder);
 
 export class IOBuilder {
 	inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];
@@ -237,6 +231,8 @@ export type RunCtx = {
 	getProperty<TProperty extends PropertyDef & { id: string }>(
 		property: TProperty,
 	): inferPropertyDef<TProperty>;
+	getVariable(source: "graph" | "project", id: number): Option<Variable>;
+	setVariable(source: "graph" | "project", id: number, value: any): void;
 };
 
 export type EventsMap<T extends string = string> = Record<T, any>;
@@ -356,6 +352,7 @@ export type SchemaBase<TProperties, TIO> = {
 	properties: SchemaProperties<TProperties>;
 	createIO: CreateIOFn<TProperties, TIO>;
 	package: Package;
+	rendered?: RenderedSchema;
 };
 
 export type RunProps<TProperties, TIO> = {

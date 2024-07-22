@@ -13,9 +13,9 @@ export function pkg() {
 
 	pkg.registerType(JSONEnum);
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "To JSON",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -63,9 +63,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Parse JSON",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -84,9 +84,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Query JSON",
-		variant: "Exec",
+		type: "exec",
 		properties: {
 			query: {
 				name: "Query",
@@ -127,9 +127,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "JSON Get String",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -152,9 +152,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "JSON Get Number",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -177,9 +177,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "JSON Get Boolean",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -202,9 +202,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "JSON Get List",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({
@@ -227,9 +227,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "JSON Get Map",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				in: io.dataInput({

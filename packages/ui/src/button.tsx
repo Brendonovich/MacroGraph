@@ -76,7 +76,7 @@ export function AsyncButton(
 				p.finally(() => setLoading(false));
 			}}
 		>
-			{loading() ? (props.loadingChildren ?? props.children) : props.children}
+			{loading() ? props.loadingChildren ?? props.children : props.children}
 		</Button>
 	);
 }

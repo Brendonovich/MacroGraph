@@ -1,6 +1,5 @@
 import { Maybe } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
-import { createMutable } from "solid-js/store";
 import { ApiClient } from "vtubestudio";
 import { z } from "zod";
 

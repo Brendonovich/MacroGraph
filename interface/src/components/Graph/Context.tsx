@@ -43,6 +43,7 @@ export type GraphState = ReturnType<typeof createGraphState>;
 export const GraphContext = Solid.createContext<{
 	model: Solid.Accessor<GraphModel>;
 	pinPositions: ReactiveWeakMap<Pin, XY>;
+	schemaMenuDrag: Solid.Accessor<{ pin: Pin; mousePos: XY } | null>;
 	nodeSizes: WeakMap<NodeModel, Size>;
 	state: GraphState;
 	offset: XY;

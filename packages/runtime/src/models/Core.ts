@@ -1,11 +1,5 @@
 import type { contract } from "@macrograph/api-contract";
 import { Maybe, type Option } from "@macrograph/option";
-import type {
-	Enum,
-	SerializedType,
-	Struct,
-	StructBase,
-} from "@macrograph/typesystem";
 import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
@@ -15,6 +9,7 @@ import type { Node } from "./Node";
 import type { EventsMap, RunCtx } from "./NodeSchema";
 import type { Package } from "./Package";
 import { Project } from "./Project";
+import type { Variable } from "./Variable";
 import type { SerializedProject } from "./serialized";
 
 class NodeEmit {
@@ -72,7 +67,7 @@ export class Core {
 		core: this,
 	});
 
-	packages = [] as Package<any, any>[];
+	packages = [] as Package[];
 
 	eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
@@ -219,6 +214,27 @@ export class ExecutionContext {
 				);
 			},
 			getProperty: (p) => node.getProperty(p) as any,
+			getVariable(source, id) {
+				if (source === "graph") {
+					return Maybe(node.graph.variables.find((v) => v.id === id));
+				}
+
+				return Maybe(
+					node.graph.core.project.variables.find((v) => v.id === id),
+				);
+			},
+			setVariable: (source, id, value) => {
+				let variable: Variable | undefined;
+
+				if (source === "graph") {
+					variable = node.graph.variables.find((v) => v.id === id);
+				} else {
+					variable = node.graph.core.project.variables.find((v) => v.id === id);
+				}
+
+				if (!variable) return;
+				variable.value = value;
+			},
 		};
 	}
 

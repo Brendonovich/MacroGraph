@@ -10,6 +10,7 @@
 		{ "path": "./packages/json" },
 		{ "path": "./packages/packages" },
 		{ "path": "./packages/api-contract" },
+		{ "path": "./packages/clipboard" },
 		{ "path": "./interface" },
 		{ "path": "./apps/desktop" },
 		{ "path": "./apps/web" }

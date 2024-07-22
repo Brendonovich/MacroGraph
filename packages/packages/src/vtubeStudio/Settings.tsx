@@ -1,6 +1,6 @@
 import { Button, Input } from "@macrograph/ui";
-import { For, Match, Switch } from "solid-js";
 import { createForm } from "@tanstack/solid-form";
+import { For, Match, Switch } from "solid-js";
 
 import type { Ctx } from "./ctx";
 

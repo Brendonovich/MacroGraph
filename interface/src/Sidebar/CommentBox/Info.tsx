@@ -1,9 +1,9 @@
 import type { CommentBox } from "@macrograph/runtime";
 import type { ParentProps } from "solid-js";
 
+import { debounce } from "@solid-primitives/scheduled";
 import { SidebarSection } from "../../components/Sidebar";
 import { useCore } from "../../contexts";
-import { debounce } from "@solid-primitives/scheduled";
 
 function Field(props: ParentProps<{ name: string }>) {
 	return (

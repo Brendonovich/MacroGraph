@@ -1,3 +1,4 @@
+import { ContextMenu } from "@kobalte/core";
 import type { CommentBox as CommentBoxModel } from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
@@ -10,7 +11,6 @@ import {
 	onMount,
 	untrack,
 } from "solid-js";
-import { ContextMenu } from "@kobalte/core";
 
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";

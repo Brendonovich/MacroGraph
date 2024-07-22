@@ -35,9 +35,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Wait",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return io.dataInput({
 				id: "delay",
@@ -50,9 +50,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "AND",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -74,9 +74,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "NAND",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -98,9 +98,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "OR",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -122,9 +122,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "NOR",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -146,9 +146,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "XOR",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				one: io.dataInput({
@@ -170,9 +170,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "NOT",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			return {
 				input: io.dataInput({
@@ -190,9 +190,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Conditional",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 

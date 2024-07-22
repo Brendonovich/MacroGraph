@@ -1,9 +1,9 @@
-import { type ComponentProps, type ParentProps, Show } from "solid-js";
-
 import {
 	projectToClipboardItem,
 	writeClipboardItemToClipboard,
-} from "../clipboard";
+} from "@macrograph/clipboard";
+import { type ComponentProps, type ParentProps, Show } from "solid-js";
+
 import { useCore } from "../contexts";
 import { usePlatform } from "../platform";
 

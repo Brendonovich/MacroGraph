@@ -1,14 +1,14 @@
 import {
-	deserializeType,
 	StructBase,
 	StructField,
+	deserializeType,
 	t,
 } from "@macrograph/typesystem";
 import { batch, createMemo } from "solid-js";
 import { createMutable } from "solid-js/store";
-import type { SerializedCustomStruct } from "./serialized";
 import type { z } from "zod";
 import type { Project } from "./Project";
+import type { SerializedCustomStruct } from "./serialized";
 
 export class CustomStruct extends StructBase {
 	id: number;

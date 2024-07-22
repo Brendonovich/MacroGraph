@@ -29,8 +29,6 @@ export const TextInput = (props: Props) => {
 			);
 	});
 
-	createEffect(() => console.log(open()));
-
 	return (
 		<Popover.Root
 			open={open() !== undefined}

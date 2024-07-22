@@ -16,7 +16,7 @@ import {
 	IntType,
 	StringType,
 } from "./primitive";
-import { type Struct, StructBase, StructType } from "./struct";
+import { type StructBase, StructType } from "./struct";
 
 const INT = new IntType();
 const FLOAT = new FloatType();

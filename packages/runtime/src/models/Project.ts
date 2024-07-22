@@ -1,16 +1,17 @@
-import { ReactiveMap } from "@solid-primitives/map";
 import { Maybe, type Option } from "@macrograph/option";
 import type { Enum, SerializedType, StructBase } from "@macrograph/typesystem";
+import { ReactiveMap } from "@solid-primitives/map";
+import "@total-typescript/ts-reset";
 import { createMutable } from "solid-js/store";
 import type { z } from "zod";
 
 import type { Core } from "./Core";
 import { CustomEvent } from "./CustomEvent";
+import { CustomStruct } from "./CustomStruct";
 import { Graph } from "./Graph";
 import type { ResourceType } from "./Package";
 import { Variable, type VariableArgs } from "./Variable";
 import type { SerializedProject } from "./serialized";
-import { CustomStruct } from "./CustomStruct";
 
 export interface ProjectArgs {
 	core: Core;

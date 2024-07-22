@@ -3,9 +3,7 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { makePersisted } from "@solid-primitives/storage";
 import clsx from "clsx";
 import {
-	type JSX,
 	type ParentProps,
-	Show,
 	createRoot,
 	createSignal,
 	onCleanup,

@@ -28,7 +28,6 @@ import {
 } from "./IO";
 import {
 	IOBuilder,
-	Schema,
 	type NodeSchema,
 	type Property,
 	type inferPropertyDef,
@@ -201,19 +200,23 @@ export class Node extends Disposable {
 				const s = this.schema;
 
 				createEffect(() => {
-					catchError(() => {
-						onCleanup(
-							s
-								.createListener({
-									properties: s.properties ?? {},
-									ctx: {
-										getProperty: (p) => this.getProperty(p) as any,
-										graph: this.graph,
-									},
-								})
-								.listen((data) => new ExecutionContext(this).run(data)),
-						);
-					}, console.error);
+					catchError(
+						() => {
+							onCleanup(
+								s
+									.createListener({
+										properties: s.properties ?? {},
+										ctx: {
+											getProperty: (p) => this.getProperty(p) as any,
+											graph: this.graph,
+										},
+									})
+									.listen((data) => new ExecutionContext(this).run(data)),
+							);
+						},
+						() => {},
+						// console.error
+					);
 				});
 			}
 		});

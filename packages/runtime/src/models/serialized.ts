@@ -102,3 +102,24 @@ export const SerializedProject = z.object({
 	resources: z.array(SerializedResource).default([]),
 	variables: z.array(SerializedVariable).default([]),
 });
+
+export const ClipboardItem = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("node"),
+		node: SerializedNode,
+	}),
+	z.object({
+		type: z.literal("commentBox"),
+		commentBox: SerializedCommentBox,
+		nodes: z.array(SerializedNode),
+		connections: z.array(SerializedConnection),
+	}),
+	z.object({
+		type: z.literal("graph"),
+		graph: SerializedGraph,
+	}),
+	z.object({
+		type: z.literal("project"),
+		project: SerializedProject,
+	}),
+]);

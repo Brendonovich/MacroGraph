@@ -1,6 +1,6 @@
 import { action, cache, redirect } from "@solidjs/router";
 import { and, eq } from "drizzle-orm";
-import { User, verifyRequestOrigin } from "lucia";
+import { verifyRequestOrigin } from "lucia";
 import { getRequestEvent } from "solid-js/web";
 import { appendResponseHeader, getCookie, getHeader } from "vinxi/server";
 

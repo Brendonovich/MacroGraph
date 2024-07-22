@@ -1,71 +1,90 @@
 name: "CI"
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-    workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-    build-desktop:
-        strategy:
-            fail-fast: false
-            matrix:
-                settings:
-                    - host: macos-latest
-                      target: x86_64-apple-darwin
-                    - host: macos-latest
-                      target: aarch64-apple-darwin
-                    - host: windows-latest
-                      target: x86_64-pc-windows-msvc
-                    - host: ubuntu-latest
-                      target: x86_64-unknown-linux-gnu
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-        runs-on: ${{ matrix.settings.host }}
-        steps:
-            - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-js
 
-            - uses: ./.github/actions/setup-js
+      - name: Run tests
+        run: pnpm test
 
-            - uses: ./.github/actions/setup-rust
-              with:
-                  target: ${{ matrix.settings.target }}
+  migrate-db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-            - name: Install desktop deps
-              uses: ./.github/actions/install-desktop-deps
+      - uses: ./.github/actions/setup-js
 
-            - run: mkdir apps/desktop/dist
+      - name: Migrate Database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: development
+        run: pnpm web db:deploy
 
-            - run: |
-                  pnpm desktop tauri build --ci
-              env:
-                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - uses: actions/upload-artifact@v3
-              with:
-                  name: artifacts-${{ matrix.settings.target }}
-                  path: ./target/release/bundle/*
+      - uses: ./.github/actions/setup-js
 
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v3
+      - name: Typecheck
+        run: pnpm typecheck
 
-            - uses: ./.github/actions/setup-js
+  format-lint-biome:
+    name: Format & Lint (Biome)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-            - name: Run tests
-              run: pnpm test
+      - uses: ./.github/actions/setup-js
 
-    migrate-db:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v3
+      - name: Check formatting
+        run: pnpm exec biome ci .
 
-            - uses: ./.github/actions/setup-js
+  format-rust:
+    name: Format (Cargo)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Migrate Database
-              env:
-                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
-                  NODE_ENV: development
-              run: pnpm web db:deploy
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-js
+
+      - uses: ./.github/actions/setup-rust
+        with:
+          target: x86_64-unknown-linux-gnu
+
+      - name: Install desktop deps
+        uses: ./.github/actions/install-desktop-deps
+
+      - name: Run Clippy
+        uses: actions-rs-plus/clippy-check@v2
+        with:
+          args: --workspace --all-features --locked

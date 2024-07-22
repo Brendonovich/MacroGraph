@@ -42,7 +42,7 @@ export function pkg() {
 				event,
 			};
 		},
-		run({ ctx, io, properties, graph }) {
+		run({ ctx, io }) {
 			if (!io) return;
 
 			pkg.emitEvent({

@@ -1,6 +1,6 @@
 import { ContextMenu } from "@kobalte/core";
-import { tw } from "../../util";
 import type { ParentProps } from "solid-js";
+import { tw } from "../../util";
 
 export const ContextMenuItem = tw(
 	ContextMenu.Item,
