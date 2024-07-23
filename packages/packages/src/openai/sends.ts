@@ -7,151 +7,148 @@ import type { Pkg } from ".";
 import type { Ctx } from "./ctx";
 
 type Message = {
-	role: string;
-	content: string;
+  role: string;
+  content: string;
 };
 
 type Choices = {
-	finish_reason: string;
-	index: number;
-	message: Message;
+  finish_reason: string;
+  index: number;
+  message: Message;
 };
 
-const message = createStruct("message", (s) => ({
-	role: s.field("role", t.string()),
-	content: s.field("content", t.string()),
-}));
-
-const model = createEnum("model", (e) => [
-	e.variant("gpt-3.5-turbo"),
-	e.variant("gpt-4"),
+const Model = createEnum("ChatGPT Model", (e) => [
+  e.variant("gpt-3.5-turbo"),
+  e.variant("gpt-4"),
 ]);
 
 export function register(pkg: Pkg, state: Ctx) {
-	pkg.createSchema({
-		name: "ChatGPT Message",
-		type: "base",
-		createIO({ io }) {
-			return {
-				exec: io.execInput({
-					id: "exec",
-				}),
-				message: io.dataInput({
-					id: "message",
-					name: "Message",
-					type: t.string(),
-				}),
-				model: io.dataInput({
-					id: "model",
-					name: "Model",
-					type: t.enum(model),
-				}),
-				historyIn: io.dataInput({
-					id: "historyIn",
-					name: "Chat History",
-					type: t.list(t.map(t.string())),
-				}),
-				stream: io.scopeOutput({
-					id: "stream",
-					name: "Stream",
-					scope: (s) => {
-						s.output({
-							id: "stream",
-							name: "Response Stream",
-							type: t.string(),
-						});
-					},
-				}),
-				complete: io.scopeOutput({
-					id: "complete",
-					name: "Completed",
-					scope: (s) => {
-						s.output({
-							id: "response",
-							name: "Response",
-							type: t.string(),
-						});
-					},
-				}),
-			};
-		},
-		async run({ ctx, io }) {
-			const history = ctx.getInput(io.historyIn);
+  pkg.registerType(Model);
 
-			const array = history.map(
-				(item) =>
-					(({
-                        role: item.get("role"),
-                        content: item.get("content")
-                    }) as ChatCompletionAssistantMessageParam),
-			);
+  pkg.createSchema({
+    name: "ChatGPT Message",
+    type: "base",
+    createIO({ io }) {
+      return {
+        exec: io.execInput({
+          id: "exec",
+        }),
+        message: io.dataInput({
+          id: "message",
+          name: "Message",
+          type: t.string(),
+        }),
+        model: io.dataInput({
+          id: "model",
+          name: "Model",
+          type: t.enum(Model),
+        }),
+        historyIn: io.dataInput({
+          id: "historyIn",
+          name: "Chat History",
+          type: t.list(t.map(t.string())),
+        }),
+        stream: io.scopeOutput({
+          id: "stream",
+          name: "Stream",
+          scope: (s) => {
+            s.output({
+              id: "stream",
+              name: "Response Stream",
+              type: t.string(),
+            });
+          },
+        }),
+        complete: io.scopeOutput({
+          id: "complete",
+          name: "Completed",
+          scope: (s) => {
+            s.output({
+              id: "response",
+              name: "Response",
+              type: t.string(),
+            });
+          },
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      const history = ctx.getInput(io.historyIn);
 
-			let message = "";
-			const stream = await state
-				.state()
-				.unwrap()
-				.chat.completions.create({
-					messages: [
-						...array,
-						{ role: "user", content: ctx.getInput(io.message) },
-					],
-					model: ctx.getInput(io.model).variant,
-					stream: true,
-				});
+      const array = history.map(
+        (item) =>
+          ({
+            role: item.get("role"),
+            content: item.get("content"),
+          } as ChatCompletionAssistantMessageParam)
+      );
 
-			for await (const chunk of stream) {
-				console.log(chunk);
-				if (chunk.choices[0]?.finish_reason === "stop") {
-					const array = [];
+      let message = "";
+      const stream = await state
+        .state()
+        .unwrap()
+        .chat.completions.create({
+          messages: [
+            ...array,
+            { role: "user", content: ctx.getInput(io.message) },
+          ],
+          model: ctx.getInput(io.model).variant,
+          stream: true,
+        });
 
-					ctx.execScope(io.complete, { response: message });
-					return;
-				}
-				message += chunk.choices[0]?.delta.content;
-				ctx.execScope(io.stream, { stream: message });
-			}
-		},
-	});
+      for await (const chunk of stream) {
+        console.log(chunk);
+        if (chunk.choices[0]?.finish_reason === "stop") {
+          const array = [];
 
-	pkg.createSchema({
-		name: "Dall E Image Generation",
-		type: "exec",
-		createIO({ io }) {
-			return {
-				prompt: io.dataInput({
-					id: "prompt",
-					name: "Prompt",
-					type: t.string(),
-				}),
-				url: io.dataOutput({
-					id: "url",
-					name: "Image URL",
-					type: t.string(),
-				}),
-				revised: io.dataOutput({
-					id: "revised",
-					name: "Revised Prompt",
-					type: t.option(t.string()),
-				}),
-			};
-		},
-		async run({ ctx, io }) {
-			const stream = await state
-				.state()
-				.unwrap()
-				.images.generate({
-					model: "dall-e-3",
-					prompt: ctx.getInput(io.prompt),
-					response_format: "url",
-					size: "1024x1024",
-					style: "vivid",
-				});
+          ctx.execScope(io.complete, { response: message });
+          return;
+        }
+        message += chunk.choices[0]?.delta.content;
+        ctx.execScope(io.stream, { stream: message });
+      }
+    },
+  });
 
-			const image = stream.data[0];
-			if (!image) return;
+  pkg.createSchema({
+    name: "Dall E Image Generation",
+    type: "exec",
+    createIO({ io }) {
+      return {
+        prompt: io.dataInput({
+          id: "prompt",
+          name: "Prompt",
+          type: t.string(),
+        }),
+        url: io.dataOutput({
+          id: "url",
+          name: "Image URL",
+          type: t.string(),
+        }),
+        revised: io.dataOutput({
+          id: "revised",
+          name: "Revised Prompt",
+          type: t.option(t.string()),
+        }),
+      };
+    },
+    async run({ ctx, io }) {
+      const stream = await state
+        .state()
+        .unwrap()
+        .images.generate({
+          model: "dall-e-3",
+          prompt: ctx.getInput(io.prompt),
+          response_format: "url",
+          size: "1024x1024",
+          style: "vivid",
+        });
 
-			ctx.setOutput(io.url, image.url!);
-			ctx.setOutput(io.revised, Maybe(image.revised_prompt));
-		},
-	});
+      const image = stream.data[0];
+      if (!image) return;
+
+      ctx.setOutput(io.url, image.url!);
+      ctx.setOutput(io.revised, Maybe(image.revised_prompt));
+    },
+  });
 }

@@ -10,8 +10,8 @@ import {
   ScopeOutput,
   type XY,
   pinIsOutput,
+  renderedTypesCompatible,
 } from "@macrograph/runtime";
-// import { type RenderedIO, renderType } from "@macrograph/schema-rendering";
 import { type RenderedIO, renderType } from "@macrograph/runtime";
 import { createWritableMemo } from "@solid-primitives/memo";
 import clsx from "clsx";
@@ -135,20 +135,26 @@ export function SchemaMenu(props: Props) {
                             if (index !== -1)
                               ret.push({ schema, suggestion: { pin: index } });
                           } else if (pin instanceof DataOutput) {
+                            const renderedType = renderType(pin.type);
+                            if (!renderedType) continue;
+
                             const index = schema.rendered.inputs.findIndex(
                               (i) => i.variant === "data"
                             );
-                            const input = schema.rendered.inputs[
-                              index
-                            ] as Extract<RenderedIO, { variant: "data" }>;
+                            const input = schema.rendered.inputs[index] as
+                              | Extract<RenderedIO, { variant: "data" }>
+                              | undefined;
+
                             if (
-                              renderType(pin.type) === "wildcard" ||
+                              renderedType === "wildcard" ||
                               (input &&
-                                (input.type === renderType(pin.type) ||
-                                  input.type === "wildcard"))
-                            ) {
+                                (input.type === "wildcard" ||
+                                  renderedTypesCompatible(
+                                    input.type,
+                                    renderedType
+                                  )))
+                            )
                               ret.push({ schema, suggestion: { pin: index } });
-                            }
                           } else if (pin instanceof ScopeOutput) {
                             const index = schema.rendered.inputs.findIndex(
                               (i) => i.variant === "scope"
@@ -164,17 +170,23 @@ export function SchemaMenu(props: Props) {
                             if (index !== -1)
                               ret.push({ schema, suggestion: { pin: index } });
                           } else if (pin instanceof DataInput) {
+                            const renderedType = renderType(pin.type);
+                            if (!renderedType) continue;
+
                             const index = schema.rendered.outputs.findIndex(
                               (o) => o.variant === "data"
                             );
-                            const output = schema.rendered.outputs[
-                              index
-                            ] as Extract<RenderedIO, { variant: "data" }>;
+                            const output = schema.rendered.outputs[index] as
+                              | Extract<RenderedIO, { variant: "data" }>
+                              | undefined;
                             if (
-                              renderType(pin.type) === "wildcard" ||
+                              renderedType === "wildcard" ||
                               (output &&
                                 (output.type === "wildcard" ||
-                                  output.type === renderType(pin.type)))
+                                  renderedTypesCompatible(
+                                    output.type,
+                                    renderedType
+                                  )))
                             )
                               ret.push({ schema, suggestion: { pin: index } });
                           } else if (pin instanceof ScopeInput) {

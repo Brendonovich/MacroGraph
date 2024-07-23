@@ -1,4 +1,9 @@
-import { type BaseType, t } from "@macrograph/typesystem";
+import {
+  type BaseType,
+  type Enum,
+  type StructBase,
+  t,
+} from "@macrograph/typesystem";
 import {
   Core,
   DataInput,
@@ -15,7 +20,14 @@ import {
   ScopeOutput,
 } from "./models";
 
-export type RenderedType = "string" | "int" | "float" | "bool" | "wildcard";
+export type RenderedType =
+  | "string"
+  | "int"
+  | "float"
+  | "bool"
+  | "wildcard"
+  | { type: "struct"; package: string; name: string }
+  | { type: "enum"; package: string; name: string };
 
 export type RenderedIO = { id: string; name?: string } & (
   | { variant: "exec" }
@@ -103,4 +115,40 @@ export function renderType(type: BaseType): RenderedType | undefined {
   if (type instanceof t.Float) return "float";
   if (type instanceof t.Bool) return "bool";
   if (type instanceof t.Wildcard) return "wildcard";
+  if (type instanceof t.Struct) {
+    const struct = type.struct as StructBase;
+    if (struct.source.variant === "package")
+      return {
+        type: "struct",
+        package: struct.source.package,
+        name: struct.name,
+      };
+  }
+  if (type instanceof t.Enum) {
+    const struct = type.inner as Enum;
+    if (struct.source.variant === "package")
+      return {
+        type: "enum",
+        package: struct.source.package,
+        name: struct.name,
+      };
+  }
+}
+
+export function renderedTypesCompatible(
+  a: RenderedType,
+  b: RenderedType
+): boolean {
+  if (a === "wildcard" || b === "wildcard") return true;
+  if (typeof a !== typeof b) return false;
+  if (typeof a === "string" && typeof b === "string") return a === b;
+
+  if (typeof a === "object" && typeof b === "object") {
+    if (a.type === "struct" && b.type === "struct")
+      return a.package === b.package && a.name === b.name;
+    if (a.type === "enum" && b.type === "enum")
+      return a.package === b.package && a.name === b.name;
+  }
+
+  return false;
 }
