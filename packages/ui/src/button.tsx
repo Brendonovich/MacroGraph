@@ -69,7 +69,6 @@ export function AsyncButton(
 			class={cn(props.class, "transition-color")}
 			disabled={loading() || props.disabled}
 			onClick={(e) => {
-				console.log(e);
 				const p = props.onClick?.(e);
 				if (!(p instanceof Promise)) return;
 				setLoading(true);

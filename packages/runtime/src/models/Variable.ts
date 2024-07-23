@@ -48,13 +48,6 @@ export class Variable extends Disposable {
 		this.addDisposeListener(dispose);
 
 		runWithOwner(owner, () => {
-			createEffect((prevType) => {
-				if (prevType && prevType !== self.type)
-					self.value = self.type.default();
-
-				return self.type;
-			});
-
 			createEffect(
 				on(
 					() => trackDeep(self.value),

@@ -19,6 +19,7 @@ import { createHTTPClient } from "../httpEndpoint";
 import type { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";
 import { defaultProperties } from "./resource";
+import { PredictionStatus } from "./eventSub/structs";
 
 export const HELIX_USER_ID = "helixUserId";
 
@@ -34,7 +35,7 @@ export const UserSubscription = createStruct("User Subscription", (s) => ({
   gifterId: s.field("Gifter ID", t.option(t.string())),
 }));
 
-export const AnnouncementColors = createEnum("Color", (e) => [
+export const AnnouncementColors = createEnum("Announcement Color", (e) => [
   e.variant("blue"),
   e.variant("green"),
   e.variant("orange"),
@@ -187,6 +188,12 @@ export function createHelix(core: Core) {
 export type Helix = ReturnType<typeof createHelix>;
 
 export function register(pkg: Package, helix: Helix) {
+  pkg.registerType(Redemption);
+  pkg.registerType(RedemptionStatus);
+  pkg.registerType(UserType);
+  pkg.registerType(BroadcasterType);
+  pkg.registerType(AnnouncementColors);
+
   function createHelixExecSchema<
     TProperties extends Record<string, PropertyDef> = Record<string, never>,
     TIO = void
@@ -563,7 +570,6 @@ export function register(pkg: Package, helix: Helix) {
         }),
       });
       const info = data;
-      console.log(info);
       ctx.setOutput(io.live, !Array.isArray(info));
       ctx.setOutput(io.broadcasterIdOut, ctx.getInput(io.broadcasterIdIn));
       ctx.setOutput(io.broadcasterLogin, info.user_login);
@@ -747,7 +753,6 @@ export function register(pkg: Package, helix: Helix) {
           }),
         }
       );
-      console.log(data);
       ctx.setOutput(io.following, !Array.isArray(data));
       ctx.setOutput(io.followedAt, Maybe(data.followed_at));
     },
@@ -1053,7 +1058,7 @@ export function register(pkg: Package, helix: Helix) {
     },
   });
 
-  const leaderboardPerson = createStruct("User", (s) => ({
+  const leaderboardPerson = createStruct("Leaderboard User", (s) => ({
     user_id: s.field("ID", t.string()),
     user_login: s.field("Login", t.string()),
     user_name: s.field("Name", t.string()),
@@ -1061,7 +1066,7 @@ export function register(pkg: Package, helix: Helix) {
     score: s.field("Score", t.int()),
   }));
 
-  const periodtext = pkg.createEnum("period", (e) => [
+  const periodtext = pkg.createEnum("Time Period", (e) => [
     e.variant("day"),
     e.variant("week"),
     e.variant("month"),
@@ -1753,8 +1758,6 @@ export function register(pkg: Package, helix: Helix) {
       );
 
       ctx.setOutput(io.chatters, array);
-
-      console.log(array);
     },
   });
 
@@ -1780,8 +1783,6 @@ export function register(pkg: Package, helix: Helix) {
           user_id: ctx.getInput(io.userId),
         }),
       });
-
-      console.log(color);
 
       ctx.setOutput(
         io.color,

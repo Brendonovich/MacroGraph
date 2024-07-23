@@ -6,9 +6,9 @@ export function pkg() {
 		name: "Logic",
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Branch",
-		variant: "Base",
+		type: "base",
 		createIO({ io }) {
 			io.execInput({
 				id: "exec",
@@ -228,9 +228,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "For Each",
-		variant: "Base",
+		type: "base",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -274,9 +274,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "For Loop",
-		variant: "Base",
+		type: "base",
 		createIO({ io }) {
 			return {
 				exec: io.execInput({
@@ -313,9 +313,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Switch",
-		variant: "Base",
+		type: "base",
 		properties: {
 			number: {
 				name: "Keys",

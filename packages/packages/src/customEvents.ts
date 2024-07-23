@@ -14,9 +14,9 @@ export function pkg() {
 			})),
 	} satisfies PropertyDef;
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Emit Custom Event",
-		variant: "Base",
+		type: "base",
 		properties: { event: eventProperty },
 		createIO({ io, ctx, properties }) {
 			const eventId = ctx.getProperty(properties.event);

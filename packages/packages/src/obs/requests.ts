@@ -18,7 +18,12 @@ import type OBSWebSocket from "obs-websocket-js";
 import type { EventTypes } from "obs-websocket-js";
 
 import type { Accessor } from "solid-js";
-import { BoundsType, SceneItemTransform, alignmentConversion } from "./events";
+import {
+  BoundsType,
+  MonitorType,
+  SceneItemTransform,
+  alignmentConversion,
+} from "./events";
 import { defaultProperties } from "./resource";
 
 //missing availableRequests & supportedImageForamts Array<string>
@@ -56,12 +61,6 @@ export const PropertyItem = createStruct("Property Item", (s) => ({
   itemName: s.field("Name", t.string()),
   itemValue: s.field("Value", t.string()),
 }));
-
-export const MonitorType = createEnum("Monitor Type", (e) => [
-  e.variant("MonitorOnly"),
-  e.variant("MonitorAndOutput"),
-  e.variant("None"),
-]);
 
 export const Scene = createStruct("Scenes", (s) => ({
   sceneName: s.field("Name", t.string()),
@@ -1480,14 +1479,21 @@ export function register(pkg: Package<EventTypes>) {
       monitorType: io.dataOutput({
         id: "monitorType",
         name: "Monitor Type",
-        type: t.string(),
+        type: t.enum(MonitorType),
       }),
     }),
     async run({ ctx, io, obs }) {
       const data = await obs.call("GetInputAudioMonitorType", {
         inputName: ctx.getInput(io.inputName),
       });
-      ctx.setOutput(io.monitorType, data.monitorType);
+      ctx.setOutput(
+        io.monitorType,
+        data.monitorType === "OBS_MONITORING_TYPE_MONITOR_ONLY"
+          ? MonitorType.variant("Monitor Only")
+          : data.monitorType === "OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT"
+          ? MonitorType.variant("Monitor and Output")
+          : MonitorType.variant("None")
+      );
     },
   });
 
@@ -1511,9 +1517,9 @@ export function register(pkg: Package<EventTypes>) {
       obs.call("SetInputAudioMonitorType", {
         inputName: ctx.getInput(io.inputName),
         monitorType:
-          data.variant === "MonitorOnly"
+          data.variant === "Monitor Only"
             ? "OBS_MONITORING_TYPE_MONITOR_ONLY"
-            : data.variant === "MonitorAndOutput"
+            : data.variant === "Monitor and Output"
             ? "OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT"
             : "OBS_MONITORING_TYPE_NONE",
       });
@@ -3103,13 +3109,12 @@ export function register(pkg: Package<EventTypes>) {
         type: t.option(t.string()),
       }),
     async run({ ctx, io, obs }) {
-      if (ctx.getInput(io) == "") {
-        await obs.call("CreateRecordChapter", {});
-      } else {
-        await obs.call("CreateRecordChapter", {
-          chapterName: ctx.getInput(io),
-        });
-      }
+      await obs.call("CreateRecordChapter", {
+        ...ctx
+          .getInput(io)
+          .map((n) => ({ chapterName: n }))
+          .toNullable(),
+      });
     },
   });
 

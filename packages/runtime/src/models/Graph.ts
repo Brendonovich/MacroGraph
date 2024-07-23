@@ -163,8 +163,6 @@ export class Graph extends Disposable {
 			} else if (output instanceof ExecOutput && input instanceof ExecInput) {
 				this.disconnectPin(output);
 
-				console.log(output, input);
-
 				const outputConnections =
 					this.connections.get(outRef) ??
 					(() => {

@@ -83,8 +83,8 @@ export type OutputBuilder =
 	| ({ variant: "Scope" } & ScopeOutputBuilder);
 
 export class IOBuilder {
-	inputs: (DataInput<any> | ExecInput | ScopeInput)[] = [];
-	outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[] = [];
+	inputs: (DataInput<BaseType> | ExecInput | ScopeInput)[] = [];
+	outputs: (DataOutput<BaseType> | ExecOutput | ScopeOutput)[] = [];
 
 	wildcards = new Map<string, Wildcard>();
 
@@ -107,14 +107,13 @@ export class IOBuilder {
 		const newInput = Maybe(
 			this.previous?.inputs.find(
 				(i): i is DataInput<T["type"]> =>
-					i.id === args.id && i instanceof DataInput,
+					i.id === args.id && i instanceof DataInput && i.type.eq(args.type),
 			),
 		).unwrapOrElse(() => new DataInput({ ...args, node: this.node }));
 
 		batch(() => {
 			newInput.name = args.name;
 			newInput.fetchSuggestions = (args as any).fetchSuggestions;
-			if (!newInput.type.eq(args.type)) newInput.type = args.type;
 
 			this.inputs.push(newInput);
 		});
@@ -126,13 +125,12 @@ export class IOBuilder {
 		const newOutput = Maybe(
 			this.previous?.outputs.find(
 				(o): o is DataOutput<T["type"]> =>
-					o.id === args.id && o instanceof DataOutput,
+					o.id === args.id && o instanceof DataOutput && o.type.eq(args.type),
 			),
 		).unwrapOrElse(() => new DataOutput({ ...args, node: this.node }));
 
 		batch(() => {
 			newOutput.name = args.name;
-			if (!newOutput.type.eq(args.type)) newOutput.type = args.type;
 
 			this.outputs.push(newOutput);
 		});

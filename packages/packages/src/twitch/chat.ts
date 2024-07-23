@@ -318,7 +318,6 @@ export function register(pkg: Package, { chat }: Ctx) {
 		}),
 		run({ ctx, data, io }) {
 			if (data.self) return;
-			console.log(data);
 			ctx.setOutput(io.username, data.userstate.username!);
 			ctx.setOutput(io.displayName, data.userstate["display-name"]!);
 			ctx.setOutput(io.userId, data.userstate["user-id"]!);

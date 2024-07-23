@@ -33,7 +33,6 @@ export function createCtx() {
 			authTokenSetter: async (p) => {
 				const i = getInstance();
 				if (!i) return;
-				console.log({ p });
 				i.password = p;
 				persistInstances();
 			},
