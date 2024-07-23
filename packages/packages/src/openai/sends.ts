@@ -28,9 +28,9 @@ const model = createEnum("model", (e) => [
 ]);
 
 export function register(pkg: Pkg, state: Ctx) {
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "ChatGPT Message",
-		variant: "Base",
+		type: "base",
 		createIO({ io }) {
 			return {
 				exec: io.execInput({
@@ -80,10 +80,10 @@ export function register(pkg: Pkg, state: Ctx) {
 
 			const array = history.map(
 				(item) =>
-					({
-						role: item.get("role"),
-						content: item.get("content"),
-					}) as ChatCompletionAssistantMessageParam,
+					(({
+                        role: item.get("role"),
+                        content: item.get("content")
+                    }) as ChatCompletionAssistantMessageParam),
 			);
 
 			let message = "";
