@@ -46,6 +46,10 @@ export class Struct<
 				fields,
 			};
 		} else {
+			for (const [id, field] of Object.entries(fields)) {
+				field.name = field.id;
+				field.id = id;
+			}
 			this._fields = {
 				type: "resolved",
 				fields,
@@ -61,9 +65,14 @@ export class Struct<
 		let val = this._fields;
 
 		if (val.type === "lazy") {
+			const fields = val.fields.build();
+			for (const [id, field] of Object.entries(fields)) {
+				field.name = field.id;
+				field.id = id;
+			}
 			this._fields = val = {
 				type: "resolved",
-				fields: val.fields.build(),
+				fields,
 			};
 		}
 
@@ -85,8 +94,8 @@ export class Struct<
 }
 
 export class StructBuilder {
-	field<Type extends t.Any>(name: string, type: Type) {
-		return new StructField(name, type);
+	field<Type extends t.Any>(id: string, type: Type) {
+		return new StructField(id, type);
 	}
 
 	lazy<T extends StructFields>(fn: () => T) {
