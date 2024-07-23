@@ -2,20 +2,27 @@ import { Tabs } from "@kobalte/core";
 import {
 	CommentBox,
 	type Core,
+	DataInput,
+	DataOutput,
+	ExecInput,
+	ExecOutput,
 	Graph as GraphModel,
 	Node,
 	type Node as NodeModel,
+	type Pin,
 	Project,
 	SerializedProject,
 	type Size,
 	type XY,
 	deserializeConnections,
+	pinIsOutput,
 } from "@macrograph/runtime";
 import { createElementBounds } from "@solid-primitives/bounds";
 import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
+import { ReactiveWeakMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import "@total-typescript/ts-reset";
@@ -23,28 +30,24 @@ import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
 
 export { CoreProvider } from "./contexts";
-import * as Sidebars from "./Sidebar";
-import { UIStoreProvider, createUIStore } from "./UIStore";
 import {
 	commentBoxToClipboardItem,
 	deserializeClipboardItem,
 	nodeToClipboardItem,
 	readFromClipboard,
 	writeClipboardItemToClipboard,
-} from "./clipboard";
+} from "@macrograph/clipboard";
+import * as Sidebars from "./Sidebar";
+import { UIStoreProvider, createUIStore } from "./UIStore";
+import { Graph } from "./components/Graph";
 import {
-	CommandDialog,
-	type Control,
-	createSection,
-} from "./components/CommandDialog";
-import {
-	Graph,
 	type GraphState,
 	createGraphState,
 	toGraphSpace,
-} from "./components/Graph";
+} from "./components/Graph/Context";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
+import { InterfaceContextProvider, useInterfaceContext } from "./context";
 import { CoreProvider } from "./contexts";
 import "./global.css";
 export { useCore } from "./contexts";
@@ -56,10 +59,6 @@ export type GraphBounds = XY & {
 	width: number;
 	height: number;
 };
-
-type SchemaMenuState =
-	| { status: "closed" }
-	| { status: "open"; position: XY; graph: GraphState };
 
 export function Interface(props: {
 	core: Core;
@@ -76,16 +75,20 @@ export function Interface(props: {
 				props.core.load(SerializedProject.parse(JSON.parse(savedProject)));
 				setLoaded(true);
 			});
+		} else {
+			setLoaded(true);
 		}
 	});
 
 	return (
 		<Solid.Show when={loaded() && props.core.project} keyed>
-			<ProjectInterface
-				core={props.core}
-				project={props.core.project}
-				environment={props.environment}
-			/>
+			<InterfaceContextProvider>
+				<ProjectInterface
+					core={props.core}
+					project={props.core.project}
+					environment={props.environment}
+				/>
+			</InterfaceContextProvider>
 		</Solid.Show>
 	);
 }
@@ -96,6 +99,7 @@ function ProjectInterface(props: {
 	environment: "custom" | "browser";
 }) {
 	const UI = createUIStore();
+	const ctx = useInterfaceContext();
 
 	const [rootRef, setRootRef] = Solid.createSignal<
 		HTMLDivElement | undefined
@@ -123,11 +127,8 @@ function ProjectInterface(props: {
 		{ name: "current-graph-index" },
 	);
 
-	const [schemaMenu, setSchemaMenu] = Solid.createSignal<SchemaMenuState>({
-		status: "closed",
-	});
-
 	const nodeSizes = new WeakMap<NodeModel, Size>();
+	const pinPositions = new ReactiveWeakMap<Pin, XY>();
 
 	const currentGraph = Solid.createMemo(() => {
 		const index = currentGraphIndex();
@@ -303,25 +304,22 @@ function ProjectInterface(props: {
 			case "KeyK": {
 				if (!((e.metaKey || e.ctrlKey) && e.shiftKey)) return;
 
-				const menuState = schemaMenu();
+				const state = ctx.state;
 
 				if (
-					menuState.status === "open" &&
-					menuState.position.x === mouse.x &&
-					menuState.position.y === mouse.y
+					state.status === "schemaMenuOpen" &&
+					state.position.x === mouse.x &&
+					state.position.y === mouse.y
 				)
-					setSchemaMenu({ status: "closed" });
+					ctx.setState({ status: "idle" });
 				else {
 					const graph = currentGraph();
 					if (!graph) return;
 
-					setSchemaMenu({
-						status: "open",
-						position: {
-							x: mouse.x,
-							y: mouse.y,
-						},
+					ctx.setState({
+						status: "schemaMenuOpen",
 						graph: graph.state,
+						position: { x: mouse.x, y: mouse.y },
 					});
 				}
 
@@ -371,6 +369,8 @@ function ProjectInterface(props: {
 		e.preventDefault();
 	});
 
+	const [stuff, setStuff] = Solid.createSignal<{ pin: Pin; mousePos: XY }>();
+
 	return (
 		<CoreProvider core={props.core} rootRef={rootRef}>
 			<UIStoreProvider store={UI}>
@@ -382,59 +382,59 @@ function ProjectInterface(props: {
 						e.stopPropagation();
 					}}
 				>
-					{((_) => {
-						const GraphSection = createSection({
-							title: "Graphs",
-							source: () => [
-								{
-									title: "Create New Graph",
-									run(control: Control) {
-										const graph = props.core.project.createGraph();
+					{/* {((_) => {
+            const GraphSection = createSection({
+              title: "Graphs",
+              source: () => [
+                {
+                  title: "Create New Graph",
+                  run(control: Control) {
+                    const graph = props.core.project.createGraph();
 
-										const currentIndex = graphStates.findIndex(
-											(s) => s.id === graph.id,
-										);
+                    const currentIndex = graphStates.findIndex(
+                      (s) => s.id === graph.id
+                    );
 
-										if (currentIndex === -1) {
-											setGraphStates((s) => [...s, createGraphState(graph)]);
-											setCurrentGraphIndex(graphStates.length - 1);
-										} else setCurrentGraphIndex(currentIndex);
+                    if (currentIndex === -1) {
+                      setGraphStates((s) => [...s, createGraphState(graph)]);
+                      setCurrentGraphIndex(graphStates.length - 1);
+                    } else setCurrentGraphIndex(currentIndex);
 
-										control.hide();
-									},
-								},
-								...[...props.core.project.graphs.values()].map((graph) => ({
-									title: graph.name,
-									run(control: Control) {
-										const currentIndex = graphStates.findIndex(
-											(s) => s.id === graph.id,
-										);
+                    control.hide();
+                  },
+                },
+                ...[...props.core.project.graphs.values()].map((graph) => ({
+                  title: graph.name,
+                  run(control: Control) {
+                    const currentIndex = graphStates.findIndex(
+                      (s) => s.id === graph.id
+                    );
 
-										if (currentIndex === -1) {
-											setGraphStates((s) => [...s, createGraphState(graph)]);
-											setCurrentGraphIndex(graphStates.length - 1);
-										} else setCurrentGraphIndex(currentIndex);
+                    if (currentIndex === -1) {
+                      setGraphStates((s) => [...s, createGraphState(graph)]);
+                      setCurrentGraphIndex(graphStates.length - 1);
+                    } else setCurrentGraphIndex(currentIndex);
 
-										control.hide();
-									},
-								})),
-							],
-						});
+                    control.hide();
+                  },
+                })),
+              ],
+            });
 
-						// const CustomEventsSection = createSection({
-						//   title: "Custom Events",
-						//   source: Solid.createMemo(() =>
-						//     [...props.core.project.customEvents.values()].map(
-						//       (customEvent) => ({
-						//         title: customEvent.name,
-						//         run() {},
-						//       })
-						//     )
-						//   ),
-						// });
+            const CustomEventsSection = createSection({
+              title: "Custom Events",
+              source: Solid.createMemo(() =>
+                [...props.core.project.customEvents.values()].map(
+                  (customEvent) => ({
+                    title: customEvent.name,
+                    run() {},
+                  })
+                )
+              ),
+            });
 
-						return <CommandDialog sections={[GraphSection]} />;
-					})()}
+            return <CommandDialog sections={[GraphSection]} />;
+          })()} */}
 
 					<Solid.Show when={leftSidebar.state.open}>
 						<Sidebar
@@ -525,29 +525,33 @@ function ProjectInterface(props: {
 								</Tabs.List>
 							</Tabs.Root>
 						</Solid.Show>
-						<Solid.Show when={currentGraph()} fallback="No graph selected">
+						<Solid.Show
+							when={currentGraph()}
+							fallback={
+								<span class="text-neutral-400 font-medium">
+									No graph selected
+								</span>
+							}
+						>
 							{(graph) => (
 								<Graph
 									graph={graph().model}
 									state={graph().state}
+									schemaMenuDrag={(() => {
+										const s = ctx.state;
+										if (
+											s.status !== "schemaMenuOpen" ||
+											s.graph.id !== graph().state.id
+										)
+											return;
+
+										return stuff();
+									})()}
 									nodeSizes={nodeSizes}
+									pinPositions={pinPositions}
 									onMouseEnter={() => setHoveredPane(true)}
 									onMouseMove={() => setHoveredPane(true)}
 									onMouseLeave={() => setHoveredPane(null)}
-									onMouseUp={(e) => {
-										if (e.button === 2)
-											setSchemaMenu({
-												status: "open",
-												graph: graph().state,
-												position: {
-													x: e.clientX,
-													y: e.clientY,
-												},
-											});
-									}}
-									onGraphDragStart={() => {
-										setSchemaMenu({ status: "closed" });
-									}}
 									onItemSelected={(id) => {
 										setGraphStates(graph().index, { selectedItemId: id });
 									}}
@@ -572,7 +576,7 @@ function ProjectInterface(props: {
 												setGraphStates(graph().index, {
 													selectedItemId: null,
 												});
-												setSchemaMenu({ status: "closed" });
+												ctx.setState({ status: "idle" });
 											});
 										}
 									}}
@@ -637,6 +641,32 @@ function ProjectInterface(props: {
 											</Sidebar>
 										)}
 									</Solid.Match>
+									<Solid.Match
+										when={(() => {
+											const {
+												model,
+												state: { selectedItemId },
+											} = graph();
+
+											if (
+												!selectedItemId ||
+												selectedItemId.type !== "commentBox"
+											)
+												return;
+
+											return model.commentBoxes.get(selectedItemId.id);
+										})()}
+									>
+										{(box) => (
+											<Sidebar
+												width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+												name="Comment Box"
+												initialValue={["Comment Box Info"]}
+											>
+												<Sidebars.CommentBox box={box()} />
+											</Sidebar>
+										)}
+									</Solid.Match>
 								</Solid.Switch>
 							)}
 						</Solid.Show>
@@ -644,8 +674,8 @@ function ProjectInterface(props: {
 
 					<Solid.Show
 						when={(() => {
-							const state = schemaMenu();
-							return state.status === "open" && state;
+							const state = ctx.state;
+							return state.status === "schemaMenuOpen" && state;
 						})()}
 					>
 						{(data) => {
@@ -654,7 +684,8 @@ function ProjectInterface(props: {
 							});
 
 							Solid.createEffect(() => {
-								if (!graph()) setSchemaMenu({ status: "closed" });
+								if (!graph()) ctx.setState({ status: "idle" });
+								setStuff();
 							});
 
 							const graphPosition = () =>
@@ -664,6 +695,7 @@ function ProjectInterface(props: {
 								<Solid.Show when={graph()}>
 									{(graph) => (
 										<SchemaMenu
+											suggestion={data().suggestion}
 											graph={data().graph}
 											position={{
 												x: data().position.x - (rootBounds?.left ?? 0),
@@ -677,18 +709,79 @@ function ProjectInterface(props: {
 														text: "Comment",
 													});
 
-													setSchemaMenu({ status: "closed" });
+													ctx.setState({ status: "idle" });
 												});
 											}}
-											onSchemaClicked={(schema) => {
-												Solid.batch(() => {
-													graph().createNode({
+											onSchemaClicked={(schema, targetSuggestion) => {
+												const graphState = data().graph;
+
+												const pin = Solid.batch(() => {
+													const node = graph().createNode({
 														schema,
 														position: graphPosition(),
 													});
 
-													setSchemaMenu({ status: "closed" });
+													const { suggestion: sourceSuggestion } = data();
+													ctx.setState({ status: "idle" });
+													if (sourceSuggestion && targetSuggestion) {
+														if (
+															sourceSuggestion.pin instanceof ExecOutput ||
+															sourceSuggestion.pin instanceof DataOutput
+														) {
+															const input =
+																node.state.inputs[targetSuggestion.pin];
+															if (input) {
+																graph().connectPins(
+																	sourceSuggestion.pin,
+																	input,
+																);
+																return input;
+															}
+														} else if (
+															sourceSuggestion.pin instanceof ExecInput ||
+															sourceSuggestion.pin instanceof DataInput
+														) {
+															const output =
+																node.state.outputs[targetSuggestion.pin];
+															if (output) {
+																graph().connectPins(
+																	output,
+																	sourceSuggestion.pin,
+																);
+																return output;
+															}
+														}
+													}
 												});
+
+												if (pin) {
+													const _pinPosition = pinPositions.get(pin);
+													const nodeSize = nodeSizes.get(pin.node);
+													if (!_pinPosition || !nodeSize) return;
+
+													const pinPosition = toGraphSpace(
+														_pinPosition,
+														graphBounds,
+														graphState,
+													);
+
+													const nodeX = pin.node.state.position.x;
+
+													const xDelta = !pinIsOutput(pin)
+														? nodeX - pinPosition.x
+														: -nodeSize.width +
+															(nodeX + nodeSize.width - pinPosition.x);
+
+													pin.node.setPosition(
+														{
+															x: pin.node.state.position.x + xDelta,
+															y:
+																pin.node.state.position.y -
+																(pinPosition.y - pin.node.state.position.y),
+														},
+														true,
+													);
+												}
 											}}
 										/>
 									)}

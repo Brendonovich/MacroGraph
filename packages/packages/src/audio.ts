@@ -8,9 +8,9 @@ export function pkg(args: { prepareURL(url: string): string }) {
 		name: "Audio",
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Play Audio File",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				file: io.dataInput({
@@ -77,9 +77,9 @@ export function pkg(args: { prepareURL(url: string): string }) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Stop Audio",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				id: io.dataInput({
@@ -99,9 +99,9 @@ export function pkg(args: { prepareURL(url: string): string }) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set Audio Volume",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				id: io.dataInput({
@@ -124,9 +124,9 @@ export function pkg(args: { prepareURL(url: string): string }) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Stop All Audio",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {};
 		},

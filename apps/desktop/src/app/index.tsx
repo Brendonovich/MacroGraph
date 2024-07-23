@@ -40,17 +40,17 @@ function Header() {
 	const user = api.getUser.createQuery(() => ["getUser"], {});
 
 	return (
-		<header class="w-full flex flex-row px-4 py-2 justify-left items-center h-14">
-			<div class="flex-1 flex flex-row gap-2">
+		<header class="w-full flex flex-row px-3 py-2 justify-left items-center h-12">
+			<div class="flex-1 flex flex-row gap-1">
 				<MenuItems />
 			</div>
 			<div>
-				<span>{core.project.name}</span>
+				<span class="text-sm font-medium">{core.project.name}</span>
 			</div>
 			<div class="flex-1 flex flex-row justify-end">
 				<Suspense
 					fallback={
-						<div class="w-8 h-8 bg-neutral-700 rounded-full mr-2 animate-pulse" />
+						<div class="w-8 h-8 bg-neutral-700 rounded-full animate-pulse" />
 					}
 				>
 					<Show
@@ -66,7 +66,7 @@ function Header() {
 					>
 						{(user) => (
 							<UserDropdown user={user()}>
-								<DropdownMenuTrigger class="w-8 h-8 bg-neutral-600 rounded-full mr-2 flex items-center justify-center">
+								<DropdownMenuTrigger class="w-8 h-8 bg-neutral-600 rounded-full flex items-center justify-center">
 									{user().email[0].toUpperCase()}
 								</DropdownMenuTrigger>
 							</UserDropdown>

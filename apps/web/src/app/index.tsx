@@ -163,15 +163,15 @@ import IconTablerDeviceDesktopDown from "~icons/tabler/device-desktop-down";
 
 function Header() {
 	return (
-		<header class="w-full flex flex-row p-2 justify-between items-center h-14">
+		<header class="w-full flex flex-row p-2 justify-between items-center h-12">
 			<div class="flex-1 flex flex-row gap-2 items-center">
 				<Logo />
 				<MenuItems />
 			</div>
-			<div class="flex flex-row items-center gap-2">
+			<div class="text-sm font-medium">
 				<ProjectName />
 			</div>
-			<div class="flex-1 flex flex-row justify-end items-center gap-3">
+			<div class="flex-1 flex flex-row justify-end items-center gap-1">
 				<div class="flex-1 pl-2">
 					<ExportButton />
 				</div>
@@ -185,7 +185,7 @@ function Header() {
 
 function Logo() {
 	return (
-		<h1 class="text-3xl font-black mx-2">
+		<h1 class="text-2xl font-black mx-1">
 			<a href="/">MacroGraph</a>
 		</h1>
 	);
@@ -204,7 +204,7 @@ function DesktopDownloadButton() {
 					variant="ghost"
 					title="Download Desktop App"
 				>
-					<IconTablerDeviceDesktopDown class="w-6 h-6" />
+					<IconTablerDeviceDesktopDown class="size-5" />
 				</As>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
@@ -213,7 +213,9 @@ function DesktopDownloadButton() {
 						<div class="px-2 py-1 font-medium">Loading Versions...</div>
 					}
 				>
-					<div class="px-2 py-1 font-medium">Version {latestVersion()}</div>
+					<ErrorBoundary fallback="">
+						<div class="px-2 py-1 font-medium">Version {latestVersion()}</div>
+					</ErrorBoundary>
 					<For
 						each={
 							[
@@ -254,20 +256,20 @@ function Socials() {
 	return (
 		<>
 			<a
-				class="hover:text-[#7289da]"
+				class="hover:text-[#7289da] p-1"
 				target="_blank"
 				href="https://discord.gg/FEyYaC8v53"
 				rel="noreferrer"
 			>
-				<IconIcBaselineDiscord class="w-7 h-7" />
+				<IconIcBaselineDiscord class="size-6" />
 			</a>
 			<a
-				class="hover:text-[#4078c0]"
+				class="hover:text-[#4078c0] p-1"
 				target="_blank"
 				href="https://github.com/brendonovich/macrograph"
 				rel="noreferrer"
 			>
-				<IconMdiGithub class="w-7 h-7" />
+				<IconMdiGithub class="size-6" />
 			</a>
 		</>
 	);
@@ -283,7 +285,7 @@ function AuthSection() {
 	return (
 		<Suspense
 			fallback={
-				<div class="w-8 h-8 bg-neutral-700 rounded-full mr-2 animate-pulse" />
+				<div class="size-7 bg-neutral-700 rounded-full animate-pulse mr-1" />
 			}
 		>
 			<Show
@@ -296,7 +298,7 @@ function AuthSection() {
 			>
 				{(user) => (
 					<UserDropdown user={user()}>
-						<DropdownMenuTrigger class="w-8 h-8 bg-neutral-600 rounded-full mr-2 flex items-center justify-center">
+						<DropdownMenuTrigger class="size-7 bg-neutral-600 rounded-full mr-1 flex items-center justify-center">
 							{user().email[0].toUpperCase()}
 						</DropdownMenuTrigger>
 					</UserDropdown>

@@ -4,12 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { createHonoEndpoints, initServer } from "ts-rest-hono";
 import type { z } from "zod";
-import {
-	ensureAuthedOrRedirect,
-	ensureAuthedOrThrow,
-	getCredentials,
-	getUser,
-} from "~/api";
+import { ensureAuthedOrThrow, getCredentials, getUser } from "~/api";
 import { db } from "~/drizzle";
 import { oauthCredentials } from "~/drizzle/schema";
 import { refreshToken } from "../auth/actions";

@@ -4,6 +4,7 @@
 		"include": [
 			"apps/*/src/**",
 			"apps/*/*",
+			"interface/**",
 			"packages/*/src/**",
 			"packages/*/*",
 			"*"
@@ -25,7 +26,8 @@
 			},
 			"correctness": {
 				"noConstructorReturn": "off",
-				"noChildrenProp": "off"
+				"noChildrenProp": "off",
+				"noUnusedImports": "warn"
 			}
 		}
 	},

@@ -1,7 +1,6 @@
 {
 	"extends": "@macrograph/config/tsconfig",
 	"compilerOptions": {
-		"rootDir": "src",
 		"outDir": "./dist",
 		"types": ["unplugin-icons/types/solid", "@macrograph/ui/types"]
 	},
@@ -9,6 +8,7 @@
 	"references": [
 		{ "path": "../packages/runtime" },
 		{ "path": "../packages/packages" },
-		{ "path": "../packages/typesystem" }
+		{ "path": "../packages/typesystem" },
+		{ "path": "../packages/clipboard" }
 	]
 }

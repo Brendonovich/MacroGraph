@@ -6,9 +6,9 @@ type Entry = { Dir: string } | { File: string };
 export function register(actions: { list(path: string): Promise<Entry[]> }) {
 	const pkg = new Package({ name: "FS" });
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "List Files",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				path: io.dataInput({
@@ -36,9 +36,9 @@ export function register(actions: { list(path: string): Promise<Entry[]> }) {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "List Folders",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				path: io.dataInput({

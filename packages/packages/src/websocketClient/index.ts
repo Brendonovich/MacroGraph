@@ -18,9 +18,9 @@ export function pkg() {
 		SettingsUI: () => import("./Settings"),
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "WS Emit",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			return {
 				ip: io.dataInput({

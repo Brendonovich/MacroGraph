@@ -1,14 +1,4 @@
-import { Dialog as KobalteDialog } from "@kobalte/core";
-import {
-	type ComponentProps,
-	JSXElement,
-	ParentProps,
-	createSignal,
-	splitProps,
-} from "solid-js";
-
-import clsx from "clsx";
-import { useCoreContext } from "../contexts";
+import type { ComponentProps } from "solid-js";
 
 export const Button = (props: ComponentProps<"button">) => (
 	<button

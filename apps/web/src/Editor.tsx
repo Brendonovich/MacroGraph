@@ -1,15 +1,13 @@
 import { contract } from "@macrograph/api-contract";
 import {
 	ConnectionsDialog,
-	CoreProvider,
 	Interface,
 	PlatformContext,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { Core } from "@macrograph/runtime";
-import { As, Button } from "@macrograph/ui";
+import { Button } from "@macrograph/ui";
 import { initClient } from "@ts-rest/core";
-import { Show, createSignal, onMount } from "solid-js";
 
 import { clientEnv } from "~/env/client";
 
@@ -111,7 +109,7 @@ export function ExportButton() {
 				saveTemplateAsFile("project.json", core.project.serialize())
 			}
 		>
-			<IconPhExport class="w-6 h-6" />
+			<IconPhExport class="size-5" />
 		</Button>
 	);
 }

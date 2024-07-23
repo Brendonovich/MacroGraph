@@ -7,9 +7,9 @@ export function pkg() {
 		name: "List",
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "List Create",
-		variant: "Pure",
+		type: "pure",
 		properties: {
 			number: {
 				name: "Entries",
@@ -45,9 +45,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Push List Value",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -67,9 +67,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Insert List Value",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -95,9 +95,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Set List Value",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -123,9 +123,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Remove List Value",
-		variant: "Exec",
+		type: "exec",
 		createIO({ io }) {
 			const w = io.wildcard("");
 
@@ -153,9 +153,9 @@ export function pkg() {
 		},
 	});
 
-	pkg.createNonEventSchema({
+	pkg.createSchema({
 		name: "Get List Value",
-		variant: "Pure",
+		type: "pure",
 		createIO({ io }) {
 			const w = io.wildcard("");
 

@@ -10,48 +10,24 @@ import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
-import { ReactiveWeakMap } from "@solid-primitives/map";
+import type { ReactiveWeakMap } from "@solid-primitives/map";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import * as Solid from "solid-js";
 import { createStore } from "solid-js/store";
 
-import { ConnectionRender } from "../Graph";
+import { useInterfaceContext } from "../../context";
+import { ConnectionRenderer } from "../Graph";
 import { CommentBox } from "./CommentBox";
+import {
+	GraphContext,
+	type GraphState,
+	type SelectedItemID,
+	toGraphSpace,
+	toScreenSpace,
+} from "./Context";
 import { Node } from "./Node";
 
 type PanState = "none" | "waiting" | "active";
-
-export type SelectedItemID =
-	| { type: "node"; id: number }
-	| { type: "commentBox"; id: number };
-
-export function createGraphState(model: GraphModel) {
-	return {
-		id: model.id,
-		translate: {
-			x: 0,
-			y: 0,
-		} as XY,
-		scale: 1,
-		selectedItemId: null as SelectedItemID | null,
-	};
-}
-
-export type GraphState = ReturnType<typeof createGraphState>;
-
-export function toGraphSpace(clientXY: XY, bounds: XY, state: GraphState) {
-	return {
-		x: (clientXY.x - bounds.x) / state.scale + state.translate.x,
-		y: (clientXY.y - bounds.y) / state.scale + state.translate.y,
-	};
-}
-
-export function toScreenSpace(graphXY: XY, bounds: XY, state: GraphState) {
-	return {
-		x: (graphXY.x - state.translate.x) * state.scale + bounds.x,
-		y: (graphXY.y - state.translate.y) * state.scale + bounds.y,
-	};
-}
 
 const MAX_ZOOM_IN = 2.5;
 const MAX_ZOOM_OUT = 5;
@@ -60,7 +36,7 @@ interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphState;
 	graph: GraphModel;
 	nodeSizes: WeakMap<NodeModel, Size>;
-	onGraphDragStart?(): void;
+	pinPositions: ReactiveWeakMap<Pin, XY>;
 	onGraphDrag?(): void;
 	onMouseDown?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
 	onMouseUp?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
@@ -69,17 +45,24 @@ interface Props extends Solid.ComponentProps<"div"> {
 	onSizeChange(size: { width: number; height: number }): void;
 	onBoundsChange(bounds: XY): void;
 	onItemSelected(id: SelectedItemID | null): void;
+	schemaMenuDrag?: { pin: Pin; mousePos: XY };
 }
+
+type State = {
+	size: Size;
+	bounds: XY;
+};
 
 export const Graph = (props: Props) => {
 	const [ref, setRef] = Solid.createSignal<HTMLDivElement | undefined>();
+	const interfaceCtx = useInterfaceContext();
 
 	const model = () => props.graph;
 
-	const pinPositions = new ReactiveWeakMap<Pin, XY>();
-
-	const [size, setSize] = Solid.createSignal({ width: 0, height: 0 });
-	const [bounds, setBounds] = createStore({ x: 0, y: 0 });
+	const [state, setState] = createStore<State>({
+		size: { width: 0, height: 0 },
+		bounds: { x: 0, y: 0 },
+	});
 
 	createResizeObserver(ref, (bounds) => {
 		const value = {
@@ -88,7 +71,7 @@ export const Graph = (props: Props) => {
 		};
 
 		props.onSizeChange(value);
-		setSize(value);
+		setState("size", value);
 	});
 
 	function onResize() {
@@ -100,11 +83,15 @@ export const Graph = (props: Props) => {
 		};
 
 		props.onBoundsChange(value);
-		setBounds(value);
+		setState("bounds", value);
 	}
 
 	function updateScale(delta: number, screenOrigin: XY) {
-		const startGraphOrigin = toGraphSpace(screenOrigin, bounds, props.state);
+		const startGraphOrigin = toGraphSpace(
+			screenOrigin,
+			state.bounds,
+			props.state,
+		);
 
 		props.onScaleChange(
 			Math.min(
@@ -113,7 +100,11 @@ export const Graph = (props: Props) => {
 			),
 		);
 
-		const endGraphOrigin = toScreenSpace(startGraphOrigin, bounds, props.state);
+		const endGraphOrigin = toScreenSpace(
+			startGraphOrigin,
+			state.bounds,
+			props.state,
+		);
 
 		const { translate, scale } = props.state;
 
@@ -232,16 +223,17 @@ export const Graph = (props: Props) => {
 		<GraphContext.Provider
 			value={{
 				model,
+				pinPositions: props.pinPositions,
 				get state() {
 					return props.state;
 				},
 				get nodeSizes() {
 					return props.nodeSizes;
 				},
-				offset: bounds,
-				pinPositions,
-				toGraphSpace: (xy) => toGraphSpace(xy, bounds, props.state),
-				toScreenSpace: (xy) => toScreenSpace(xy, bounds, props.state),
+				schemaMenuDrag: () => props.schemaMenuDrag ?? null,
+				offset: state.bounds,
+				toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, props.state),
+				toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, props.state),
 			}}
 		>
 			<div
@@ -249,12 +241,40 @@ export const Graph = (props: Props) => {
 				class="flex-1 w-full relative overflow-hidden bg-mg-graph"
 				ref={setRef}
 				onMouseUp={(e) => {
-					if (e.button === 2 && pan() === "active") return;
+					if (e.button === 2) {
+						if (pan() === "active") return;
 
-					props.onMouseUp?.(e);
+						interfaceCtx.setState({
+							status: "schemaMenuOpen",
+							graph: props.state,
+							position: {
+								x: e.clientX,
+								y: e.clientY,
+							},
+						});
+					} else if (
+						e.button === 0 &&
+						interfaceCtx.state.status === "draggingPin"
+					) {
+						const pin = interfaceCtx.state.pin;
+
+						interfaceCtx.setState({
+							status: "schemaMenuOpen",
+							position: {
+								x: e.clientX,
+								y: e.clientY,
+							},
+							graph: props.state,
+							suggestion: { pin },
+						});
+					}
 				}}
 				onMouseDown={(e) => {
 					switch (e.button) {
+						case 0: {
+							props.onMouseDown?.(e);
+							break;
+						}
 						case 2: {
 							setPan("waiting");
 
@@ -266,7 +286,8 @@ export const Graph = (props: Props) => {
 
 							Solid.createRoot((dispose) => {
 								Solid.createEffect(() => {
-									if (pan() === "active") props.onGraphDragStart?.();
+									if (pan() === "active")
+										interfaceCtx.setState({ status: "idle" });
 								});
 
 								createEventListenerMap(window, {
@@ -306,7 +327,22 @@ export const Graph = (props: Props) => {
 					props.onMouseDown?.(e);
 				}}
 			>
-				<ConnectionRender graphBounds={{ ...bounds, ...size() }} />
+				<ConnectionRenderer
+					graphBounds={{
+						get x() {
+							return state.bounds.x;
+						},
+						get y() {
+							return state.bounds.y;
+						},
+						get width() {
+							return state.size.width;
+						},
+						get height() {
+							return state.size.height;
+						},
+					}}
+				/>
 				<div
 					class="absolute inset-0 text-white origin-top-left overflow-hidden"
 					style={{
@@ -348,22 +384,4 @@ export const Graph = (props: Props) => {
 			</div>
 		</GraphContext.Provider>
 	);
-};
-
-const GraphContext = Solid.createContext<{
-	model: Solid.Accessor<GraphModel>;
-	pinPositions: ReactiveWeakMap<Pin, XY>;
-	nodeSizes: WeakMap<NodeModel, Size>;
-	state: GraphState;
-	offset: XY;
-	toGraphSpace(pos: XY): XY;
-	toScreenSpace(pos: XY): XY;
-} | null>(null);
-
-export const useGraphContext = () => {
-	const ctx = Solid.useContext(GraphContext);
-
-	if (!ctx) throw new Error("CurrentGraphContext is missing!");
-
-	return ctx;
 };

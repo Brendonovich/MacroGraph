@@ -12,22 +12,31 @@ import {
 import { createEffect } from "solid-js";
 
 import type { GraphBounds } from "../../..";
-import { useUIStore } from "../../../UIStore";
-import { useGraphContext } from "../Graph";
+import { useInterfaceContext } from "../../../context";
+import { useGraphContext } from "../Context";
 import { colour } from "../util";
 
-export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
+export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
+	const interfaceCtx = useInterfaceContext();
 	const ctx = useGraphContext();
 
-	const UI = useUIStore();
-
 	const getDragState = () => {
-		if (UI.state.mouseDragLocation && UI.state.draggingPin) {
+		if (interfaceCtx.state.status === "draggingPin") {
 			return {
-				mouseDragLocation: UI.state.mouseDragLocation,
-				draggingPin: UI.state.draggingPin,
+				mousePosition: interfaceCtx.state.mousePosition,
+				pin: interfaceCtx.state.pin,
 			};
 		}
+		if (
+			interfaceCtx.state.status === "schemaMenuOpen" &&
+			interfaceCtx.state.suggestion
+		) {
+			return {
+				mousePosition: interfaceCtx.state.position,
+				pin: interfaceCtx.state.suggestion.pin,
+			};
+		}
+
 		return null;
 	};
 
@@ -78,8 +87,14 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
 				inputPosition
 					.zip(outputPosition)
 					.map(([input, output]) => ({
-						input,
-						output,
+						input: {
+							x: input.x - props.graphBounds.x,
+							y: input.y - props.graphBounds.y,
+						},
+						output: {
+							x: output.x - props.graphBounds.x,
+							y: output.y - props.graphBounds.y,
+						},
 					}))
 					.peek((data) => {
 						const xDiff = data.input.x - data.output.x;
@@ -104,50 +119,98 @@ export const ConnectionRender = (props: { graphBounds: GraphBounds }) => {
 		}
 
 		const dragState = getDragState();
-		if (!dragState) return;
-		const pinPos = ctx.pinPositions.get(dragState.draggingPin);
+		if (dragState) {
+			const pinPos = Maybe(ctx.pinPositions.get(dragState.pin)).map((pos) => ({
+				x: pos.x - props.graphBounds.x,
+				y: pos.y - props.graphBounds.y,
+			}));
 
-		const diffs = {
-			x: dragState.mouseDragLocation.x - props.graphBounds.x,
-			y: dragState.mouseDragLocation.y - props.graphBounds.y,
-		};
+			const diffs = {
+				x: dragState.mousePosition.x - props.graphBounds.x,
+				y: dragState.mousePosition.y - props.graphBounds.y,
+			};
 
-		const colourClass = (() => {
-			const draggingPin = dragState.draggingPin;
+			const colourClass = (() => {
+				const draggingPin = dragState.pin;
 
-			if (
-				draggingPin instanceof ExecInput ||
-				draggingPin instanceof ExecOutput ||
-				draggingPin instanceof ScopeOutput ||
-				draggingPin instanceof ScopeInput
-			)
-				return "white";
+				if (
+					draggingPin instanceof ExecInput ||
+					draggingPin instanceof ExecOutput ||
+					draggingPin instanceof ScopeOutput ||
+					draggingPin instanceof ScopeInput
+				)
+					return "white";
 
-			return colour(draggingPin.type);
-		})();
+				return colour(draggingPin.type);
+			})();
 
-		if (!pinPos) return;
+			pinPos.peek((pinPos) => {
+				const xDiff = pinPos.x - diffs.x;
+				const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
 
-		const xDiff = pinPos.x - diffs.x;
-		const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
+				drawConnection(
+					canvas,
+					colourClass,
+					pinPos,
+					diffs,
+					{
+						x: pinPos.x + cpMagnitude * (+pinIsOutput(dragState.pin) * 2 - 1),
+						y: pinPos.y,
+					},
+					{
+						x: diffs.x - cpMagnitude * (+pinIsOutput(dragState.pin) * 2 - 1),
+						y: diffs.y,
+					},
+				);
+			});
+		}
 
-		drawConnection(
-			canvas,
-			colourClass,
-			pinPos,
-			diffs,
-			{
-				x:
-					pinPos.x +
-					cpMagnitude * (+pinIsOutput(dragState.draggingPin) * 2 - 1),
-				y: pinPos.y,
-			},
-			{
-				x:
-					diffs.x - cpMagnitude * (+pinIsOutput(dragState.draggingPin) * 2 - 1),
-				y: diffs.y,
-			},
-		);
+		const s = ctx.schemaMenuDrag();
+		if (s) {
+			const pinPos = Maybe(ctx.pinPositions.get(s.pin)).map((pos) => ({
+				x: pos.x - props.graphBounds.x,
+				y: pos.y - props.graphBounds.y,
+			}));
+
+			const diffs = {
+				x: s.mousePos.x - props.graphBounds.x,
+				y: s.mousePos.y - props.graphBounds.y,
+			};
+
+			const colourClass = (() => {
+				const draggingPin = s.pin;
+
+				if (
+					draggingPin instanceof ExecInput ||
+					draggingPin instanceof ExecOutput ||
+					draggingPin instanceof ScopeOutput ||
+					draggingPin instanceof ScopeInput
+				)
+					return "white";
+
+				return colour(draggingPin.type);
+			})();
+
+			pinPos.peek((pinPos) => {
+				const xDiff = pinPos.x - diffs.x;
+				const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
+
+				drawConnection(
+					canvas,
+					colourClass,
+					pinPos,
+					diffs,
+					{
+						x: pinPos.x + cpMagnitude * (+pinIsOutput(s.pin) * 2 - 1),
+						y: pinPos.y,
+					},
+					{
+						x: diffs.x - cpMagnitude * (+pinIsOutput(s.pin) * 2 - 1),
+						y: diffs.y,
+					},
+				);
+			});
+		}
 	});
 
 	return (

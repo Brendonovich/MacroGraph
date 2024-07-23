@@ -10,8 +10,6 @@ import {
 } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import type { ApiClient } from "vtubestudio";
-
-import { client } from "tmi.js";
 import type { Pkg } from ".";
 import { defaultProperties } from "./resource";
 

@@ -101,7 +101,7 @@ export function MenuItems() {
 				variant="ghost"
 				onClick={(e) => platform.projectPersistence.saveProject(e.shiftKey)}
 			>
-				<IconFaSolidSave class="w-6 h-6" />
+				<IconFaSolidSave class="size-5" />
 			</Button>
 			<Button
 				title="Load Project"
@@ -109,7 +109,7 @@ export function MenuItems() {
 				variant="ghost"
 				onClick={() => platform.projectPersistence.loadProject()}
 			>
-				<IconTdesignFolderImport class="w-6 h-6" />
+				<IconTdesignFolderImport class="size-5" />
 			</Button>
 		</>
 	);

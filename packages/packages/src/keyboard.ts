@@ -55,9 +55,9 @@ export function pkg() {
 	}
 
 	for (const a of alphabet) {
-		pkg.createNonEventSchema({
+		pkg.createSchema({
 			name: `${a} Key Pressed`,
-			variant: "Pure",
+			type: "pure",
 			createIO({ io }) {
 				return io.dataOutput({
 					id: "value",

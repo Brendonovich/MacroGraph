@@ -137,7 +137,8 @@ export function Variables(props: {
 										<Match
 											when={
 												variable.type instanceof t.List ||
-												variable.type instanceof t.Map
+												variable.type instanceof t.Map ||
+												variable.type instanceof t.Struct
 											}
 										>
 											<div class="flex flex-row items-end gap-1 rounded p-1 bg-black/30">

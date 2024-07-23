@@ -9,16 +9,29 @@ export const SerializedVariable = z.object({
 	type: SerializedType,
 });
 
-const SerializedField = z.object({
+const SerializedCustomEventField = z.object({
 	id: z.number(),
 	name: z.string(),
 	type: SerializedType,
 });
 
-export const SerializedEvent = z.object({
+export const SerializedCustomEvent = z.object({
 	id: z.coerce.number(),
 	name: z.string(),
-	fields: z.array(SerializedField).default([]),
+	fields: z.array(SerializedCustomEventField).default([]),
+	fieldIdCounter: z.number().default(0),
+});
+
+export const SerializedCustomStructField = z.object({
+	id: z.string(),
+	name: z.string().optional(),
+	type: SerializedType,
+});
+
+export const SerializedCustomStruct = z.object({
+	id: z.coerce.number(),
+	name: z.string().optional(),
+	fields: z.array(SerializedCustomStructField).default([]),
 	fieldIdCounter: z.number().default(0),
 });
 
@@ -44,6 +57,7 @@ export const SerializedCommentBox = z.object({
 		y: z.number(),
 	}),
 	text: z.string(),
+	tint: z.string().optional(),
 });
 
 export const SerializedGraph = z.object({
@@ -80,8 +94,10 @@ export const SerializedProject = z.object({
 	name: z.string().optional(),
 	graphs: z.array(SerializedGraph),
 	graphIdCounter: z.number().int(),
-	customEvents: z.array(SerializedEvent).default([]),
+	customEvents: z.array(SerializedCustomEvent).default([]),
 	customEventIdCounter: z.number().int().default(0),
+	customTypeIdCounter: z.number().int().default(0),
+	customStructs: z.array(SerializedCustomStruct).default([]),
 	counter: z.number().default(0),
 	resources: z.array(SerializedResource).default([]),
 	variables: z.array(SerializedVariable).default([]),
