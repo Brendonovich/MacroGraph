@@ -2018,17 +2018,23 @@ export function register(pkg: Package, helix: Helix) {
       };
     },
     async run({ ctx, io, account }) {
-      let params = {
+      const params: any = {
         broadcaster_id: account.credential.id,
       };
 
-      console.log(ctx.getInput(io.id));
+      console.log("id", ctx.getInput(io.id));
 
-      ctx.getInput(io.id).peek((id) => (params.id = id));
-      ctx.getInput(io.first).peek((first) => (params.first = first));
-      ctx.getInput(io.after).peek((after) => (params.after = after));
+      ctx.getInput(io.id).peek((id) => {
+        params.id = id;
+      });
+      ctx.getInput(io.first).peek((first) => {
+        params.first = first;
+      });
+      ctx.getInput(io.after).peek((after) => {
+        params.after = after;
+      });
 
-      let data = await helix.call("GET /polls", account.credential, {
+      const data = await helix.call("GET /polls", account.credential, {
         body: new URLSearchParams(params),
       });
 
