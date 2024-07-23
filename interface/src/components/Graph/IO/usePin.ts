@@ -1,4 +1,8 @@
 import {
+	DataInput,
+	DataOutput,
+	ExecInput,
+	ExecOutput,
 	type Pin,
 	pinIsInput,
 	pinIsOutput,
@@ -92,9 +96,20 @@ export function usePin(pin: Accessor<Pin>) {
 				interfaceCtx.setState({ status: "mouseDownOnPin", pin: thisPin });
 
 				createRoot((dispose) => {
+					let hasLeft = false;
+					createEventListenerMap(ref, {
+						mouseenter: () => {
+							hasLeft = false;
+							interfaceCtx.setState({ status: "mouseDownOnPin", pin: thisPin });
+						},
+						mouseleave: () => {
+							hasLeft = true;
+						},
+					});
 					createEventListenerMap(window, {
 						mouseup: () => dispose(),
 						mousemove: (e) => {
+							if (!hasLeft) return;
 							interfaceCtx.setState({
 								status: "draggingPin",
 								pin: thisPin,
@@ -134,11 +149,35 @@ export function usePin(pin: Accessor<Pin>) {
 			});
 	});
 
+	const dim = createMemo(() => {
+		const p = pin();
+
+		if (interfaceCtx.state.status !== "draggingPin") return false;
+		const draggingPin = interfaceCtx.state.pin;
+
+		if (p === draggingPin) return false;
+
+		if (p instanceof DataInput && draggingPin instanceof DataOutput)
+			return !pinsCanConnect(draggingPin, p);
+
+		if (draggingPin instanceof DataInput && p instanceof DataOutput)
+			return !pinsCanConnect(p, draggingPin);
+
+		if (
+			(p instanceof ExecOutput && draggingPin instanceof ExecInput) ||
+			(p instanceof ExecInput && draggingPin instanceof ExecOutput)
+		)
+			return false;
+
+		return true;
+	});
+
 	return {
 		ref,
 		active: () =>
 			mouseState().hovering ||
 			mouseState().dragging ||
 			schemaMenuPin() === pin(),
+		dim,
 	};
 }

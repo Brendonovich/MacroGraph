@@ -1765,7 +1765,7 @@ export function pkg(core: Core) {
 				).map(([id, field]) =>
 					io.dataOutput({
 						id,
-						name: field.id,
+						name: field.name ?? field.id,
 						type: field.type,
 					}),
 				);
