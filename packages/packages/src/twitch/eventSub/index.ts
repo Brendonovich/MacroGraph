@@ -1558,7 +1558,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			};
 		},
 		run({ ctx, io, data }) {
-			console.log(data);
 			ctx.setOutput(io.fromUserId, data.from_user_id);
 			ctx.setOutput(io.fromUserLogin, data.from_user_login);
 			ctx.setOutput(io.fromUserName, data.from_user_name);
@@ -1673,7 +1672,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			};
 		},
 		run({ ctx, data, io }) {
-			console.log(data);
 			ctx.setOutput(io.length, Number(data.duration_seconds));
 			ctx.setOutput(io.isAutomatic, data.is_automatic);
 			ctx.exec(io.exec);
@@ -2294,7 +2292,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			}),
 		}),
 		run({ ctx, io, data }) {
-			console.log(data);
 			ctx.setOutput(io.chatterIsAnonymous, data.chatter_is_anonymous);
 			ctx.setOutput(io.color, data.color);
 			ctx.setOutput(io.message_id, data.message_id);

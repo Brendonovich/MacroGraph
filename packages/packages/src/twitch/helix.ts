@@ -563,7 +563,6 @@ export function register(pkg: Package, helix: Helix) {
 				}),
 			});
 			const info = data;
-			console.log(info);
 			ctx.setOutput(io.live, !Array.isArray(info));
 			ctx.setOutput(io.broadcasterIdOut, ctx.getInput(io.broadcasterIdIn));
 			ctx.setOutput(io.broadcasterLogin, info.user_login);
@@ -747,7 +746,6 @@ export function register(pkg: Package, helix: Helix) {
 					}),
 				},
 			);
-			console.log(data);
 			ctx.setOutput(io.following, !Array.isArray(data));
 			ctx.setOutput(io.followedAt, Maybe(data.followed_at));
 		},
@@ -1660,8 +1658,6 @@ export function register(pkg: Package, helix: Helix) {
 			);
 
 			ctx.setOutput(io.chatters, array);
-
-			console.log(array);
 		},
 	});
 
@@ -1687,8 +1683,6 @@ export function register(pkg: Package, helix: Helix) {
 					user_id: ctx.getInput(io.userId),
 				}),
 			});
-
-			console.log(color);
 
 			ctx.setOutput(
 				io.color,
