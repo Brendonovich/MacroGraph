@@ -33,8 +33,9 @@ export const IntInput = (props: Props) => {
   });
 
   return (
-    <NumberField
-      class="relative"
+    <NumberField<"div">
+      onKeyDown={(e) => e.stopPropagation()}
+      class="relative group"
       value={value()}
       onChange={setValue}
       rawValue={rawValue()}
@@ -44,27 +45,21 @@ export const IntInput = (props: Props) => {
     >
       <NumberField.Input<typeof Input>
         ref={ref!}
-        as={(inputProps) => (
-          <Input
-            {...inputProps}
-            onBlur={() => {
-              batch(() => {
-                if (value() === "") {
-                  setValue("0");
-                  setRawValue(0);
-                } else if (Number.isNaN(rawValue())) {
-                  setValue(props.initialValue.toString());
-                  setRawValue(props.initialValue);
-                }
+        onBlur={() => {
+          batch(() => {
+            if (value() === "") {
+              setValue("0");
+              setRawValue(0);
+            } else if (Number.isNaN(rawValue())) {
+              setValue(props.initialValue.toString());
+              setRawValue(props.initialValue);
+            }
 
-                props.onChange(rawValue());
-              });
-            }}
-            onKeyDown={(e) => e.stopPropagation()}
-            onKeyUp={(e) => e.stopPropagation()}
-            class={clsx("pr-4", props.class)}
-          />
-        )}
+            props.onChange(rawValue());
+          });
+        }}
+        class={clsx("pr-4 group-focus-within:border-mg-focus", props.class)}
+        as={(inputProps) => <Input {...inputProps} />}
       />
       <div class="absolute right-0 top-0 flex flex-col justify-between bottom-0 p-1 gap-px">
         <NumberField.IncrementTrigger

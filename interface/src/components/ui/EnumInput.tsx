@@ -57,7 +57,7 @@ export function SelectInput<TOption>(props: SelectInputProps<TOption>) {
         </Select.Item>
       )}
     >
-      <Select.Trigger class="w-full text-left pl-1 py-0.5 gap-0.5 rounded bg-neutral-700 ui-expanded:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500 appearance-none flex flex-row items-center justify-between whitespace-nowrap">
+      <Select.Trigger class="w-full text-left pl-1 py-0.5 gap-0.5 rounded bg-neutral-700 ui-expanded:border-mg-focus focus:outline-none focus:ring-1 focus:ring-mg-focus appearance-none flex flex-row items-center justify-between whitespace-nowrap">
         <Select.Value<TOption> class="overflow-hidden">
           {(state) => props.getLabel(state.selectedOption())}
         </Select.Value>
