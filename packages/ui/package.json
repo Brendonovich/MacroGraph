@@ -28,7 +28,7 @@
 		"solid-js": "^1.7.11"
 	},
 	"dependencies": {
-		"@kobalte/core": "^0.9.8",
+		"@kobalte/core": "^0.13.4",
 		"@macrograph/config": "workspace:*",
 		"clsx": "^1.2.1",
 		"cva": "npm:class-variance-authority@^0.7.0",

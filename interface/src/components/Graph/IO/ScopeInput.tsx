@@ -15,7 +15,7 @@ export const ScopeInput = (props: Props) => {
       <div
         ref={ref}
         data-dim={dim()}
-        class="transition-opacity data-[dim=true]:opacity-40"
+        class="transition-opacity data-[dim=true]:opacity-20"
       >
         <svg
           aria-hidden="true"

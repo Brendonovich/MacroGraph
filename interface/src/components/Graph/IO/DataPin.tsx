@@ -55,7 +55,7 @@ export const DataPin = (props: Props) => {
     <Tooltip.Root>
       <Tooltip.Trigger
         data-dim={dim()}
-        class="cursor-auto rounded-full focus-visible:outline-transparent outline-offset-1 outline-[0.1px] transition-opacity duration-100 data-[dim=true]:opacity-40"
+        class="cursor-auto rounded-full focus-visible:outline-transparent outline-offset-1 outline-[0.1px] transition-opacity duration-100 data-[dim=true]:opacity-20"
       >
         <Switch>
           <Match when={innerType.value instanceof t.Option && innerType.value}>

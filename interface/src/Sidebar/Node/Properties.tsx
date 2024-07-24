@@ -33,7 +33,7 @@ export function Properties(props: {
 					const properties = createMemo(() => props.node.state.properties);
 
 					return (
-						<div class="p-2 flex flex-col gap-1">
+						<div class="p-2 space-y-1">
 							<span class="text-xs font-medium text-gray-200">
 								{property.name}
 							</span>

@@ -135,7 +135,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		});
 	}
 
-  pkg.registerType(PredictionStatus);
+	pkg.registerType(PredictionStatus);
 
 	createEventSubEventSchema({
 		name: "User Banned",
@@ -1083,7 +1083,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
 		total: s.field("Total", t.int()),
 	}));
-	pkg.registerType(TopContribution)
+	pkg.registerType(TopContribution);
 
 	const LastContribute = createStruct("Contribution", (s) => ({
 		user_id: s.field("User ID", t.string()),
@@ -1092,7 +1092,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
 		total: s.field("Total", t.int()),
 	}));
-	pkg.registerType(LastContribute)
+	pkg.registerType(LastContribute);
 
 	createEventSubEventSchema({
 		name: "Channel Hype Train Begin",
@@ -2051,7 +2051,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		is_prime: s.field("Is Prime", t.bool()),
 		duration_months: s.field("Duration Months", t.int()),
 	}));
-	pkg.registerType(SubStruct)
+	pkg.registerType(SubStruct);
 
 	const ReSubStruct = createStruct("Resub", (s) => ({
 		sub_tier: s.field("Sub Tier", t.string()),
@@ -2065,7 +2065,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
 		gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
 	}));
-	pkg.registerType(ReSubStruct)
+	pkg.registerType(ReSubStruct);
 
 	const SubGiftStruct = createStruct("Gift Sub", (s) => ({
 		sub_tier: s.field("Sub Tier", t.string()),
@@ -2076,7 +2076,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		recipient_user_login: s.field("Recipient User Login", t.string()),
 		community_gift_id: s.field("Community Gift ID", t.option(t.string())),
 	}));
-	pkg.registerType(SubGiftStruct)
+	pkg.registerType(SubGiftStruct);
 
 	const CommunitySubGiftStruct = createStruct("Community Gift Sub", (s) => ({
 		sub_tier: s.field("Sub Tier", t.string()),
@@ -2084,7 +2084,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		total: s.field("Total", t.int()),
 		cumulative_total: s.field("Cumulative Total", t.option(t.int())),
 	}));
-	pkg.registerType(CommunitySubGiftStruct)
+	pkg.registerType(CommunitySubGiftStruct);
 
 	const GiftPaidUpgradeStruct = createStruct("Gift Paid Upgrade", (s) => ({
 		gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
@@ -2092,7 +2092,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
 		gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
 	}));
-	pkg.registerType(GiftPaidUpgradeStruct)
+	pkg.registerType(GiftPaidUpgradeStruct);
 
 	const RaidStruct = createStruct("Raid", (s) => ({
 		user_id: s.field("User ID", t.string()),
@@ -2101,7 +2101,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		viewer_count: s.field("Viewer Count", t.int()),
 		profile_image_url: s.field("Profile Image URL", t.string()),
 	}));
-	pkg.registerType(RaidStruct)
+	pkg.registerType(RaidStruct);
 
 	const PayItForwardStruct = createStruct("Pay It Forward", (s) => ({
 		gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
@@ -2109,34 +2109,34 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
 		gifter_user_login: s.field("Gifter UserLogin", t.option(t.string())),
 	}));
-	pkg.registerType(PayItForwardStruct)
+	pkg.registerType(PayItForwardStruct);
 
 	const AmountStruct = createStruct("Amount", (s) => ({
 		value: s.field("Value", t.int()),
 		decimal_places: s.field("Decimal Places", t.int()),
 		currency: s.field("Currency", t.string()),
 	}));
-	pkg.registerType(AmountStruct)
+	pkg.registerType(AmountStruct);
 
 	const CharityDonationStruct = createStruct("Charity Donation", (s) => ({
 		charity_name: s.field("Charity Name", t.string()),
 		amount: s.field("Gifter User ID", t.struct(AmountStruct)),
 	}));
-	pkg.registerType(CharityDonationStruct)
+	pkg.registerType(CharityDonationStruct);
 
 	const BroadcasterInfoStruct = createStruct("Broadcaster", (s) => ({
 		broadcaster_user_id: s.field("User ID", t.string()),
 		broadcaster_user_name: s.field("UserName", t.string()),
 		broadcaster_user_login: s.field("User Login", t.string()),
 	}));
-	pkg.registerType(BroadcasterInfoStruct)
+	pkg.registerType(BroadcasterInfoStruct);
 
 	const ChatterStruct = createStruct("Chatter", (s) => ({
 		chatter_user_id: s.field("User ID", t.string()),
 		chatter_user_name: s.field("UserName", t.string()),
 		chatter_user_login: s.field("User Login", t.string()),
 	}));
-	pkg.registerType(ChatterStruct)
+	pkg.registerType(ChatterStruct);
 
 	const EmoteStruct = createStruct("Emote", (s) => ({
 		id: s.field("ID", t.string()),
@@ -2144,21 +2144,21 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		owner_id: s.field("Owner ID", t.string()),
 		format: s.field("Format", t.list(t.string())),
 	}));
-	pkg.registerType(EmoteStruct)
+	pkg.registerType(EmoteStruct);
 
 	const MentionStruct = createStruct("Mention", (s) => ({
 		user_id: s.field("User ID", t.string()),
 		user_name: s.field("UserName", t.string()),
 		user_login: s.field("User Login", t.string()),
 	}));
-	pkg.registerType(MentionStruct)
+	pkg.registerType(MentionStruct);
 
 	const CheermoteStruct = createStruct("Cheermote", (s) => ({
 		prefix: s.field("Prefix", t.string()),
 		bits: s.field("Bits", t.int()),
 		tier: s.field("Tier", t.int()),
 	}));
-	pkg.registerType(CheermoteStruct)
+	pkg.registerType(CheermoteStruct);
 
 	const FragmentsStruct = createStruct("MessageFragment", (s) => ({
 		type: s.field("Type", t.option(t.string())),
@@ -2167,20 +2167,20 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		emote: s.field("Emote", t.option(t.struct(EmoteStruct))),
 		mention: s.field("Mention", t.option(t.struct(MentionStruct))),
 	}));
-	pkg.registerType(FragmentsStruct)
+	pkg.registerType(FragmentsStruct);
 
 	const BadgesStruct = createStruct("Badges", (s) => ({
 		set_id: s.field("Set ID", t.string()),
 		id: s.field("ID", t.string()),
 		info: s.field("Info", t.string()),
 	}));
-	pkg.registerType(BadgesStruct)
+	pkg.registerType(BadgesStruct);
 
 	const MessageStruct = createStruct("Message", (s) => ({
 		text: s.field("Text", t.string()),
 		fragments: s.field("Fragments", t.list(t.struct(FragmentsStruct))),
 	}));
-	pkg.registerType(MessageStruct)
+	pkg.registerType(MessageStruct);
 
 	interface Badge {
 		set_id: string;

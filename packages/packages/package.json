@@ -12,7 +12,7 @@
 		"typecheck": "tsc -b"
 	},
 	"dependencies": {
-		"@kobalte/core": "^0.9.8",
+		"@kobalte/core": "^0.13.4",
 		"@macrograph/api-contract": "workspace:^",
 		"@macrograph/json": "workspace:^",
 		"@macrograph/option": "workspace:^",
