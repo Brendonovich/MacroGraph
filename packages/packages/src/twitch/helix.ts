@@ -73,37 +73,16 @@ export const chatter = createStruct("Chatter", (s) => ({
   user_name: s.field("Name", t.string()),
 }));
 
-export const RewardNoId = createStruct("Reward Without ID", (s) => ({
-  title: s.field("Title", t.string()),
-  prompt: s.field("Prompt", t.string()),
-  cost: s.field("Cost", t.int()),
-  bgColor: s.field("Background Color", t.string()),
-  enabled: s.field("Enabled", t.bool()),
-  userInputRequired: s.field("User Input Required", t.bool()),
-  maxRedemptionsPerStream: s.field("Max Redemptions/Stream", t.option(t.int())),
-  maxRedemptionsPerUserPerStream: s.field(
-    "Max Redemptions/User/Stream",
-    t.option(t.int())
-  ),
-  globalCooldown: s.field("Global Cooldown (s)", t.option(t.int())),
-  paused: s.field("Paused", t.bool()),
-  inStock: s.field("In Stock", t.bool()),
-  skipRequestQueue: s.field("Skip Request Queue", t.bool()),
-  redemptionsThisStream: s.field("Redemptions This Stream", t.option(t.int())),
-  cooldownExpire: s.field("Cooldown Expires In", t.option(t.string())),
-}));
-
 export const Reward = createStruct("Reward", (s) => ({
   id: s.field("ID", t.string()),
   title: s.field("Title", t.string()),
-  prompt: s.field("Prompt", t.string()),
   cost: s.field("Cost", t.int()),
-  bgColor: s.field("Background Color", t.string()),
+  prompt: s.field("Prompt", t.option(t.string())),
   enabled: s.field("Enabled", t.bool()),
-  userInputRequired: s.field("User Input Required", t.bool()),
-  maxRedemptionsPerStream: s.field("Max Redemptions/Stream", t.option(t.int())),
+  bgColor: s.field("Background Color", t.string()),
+  maxRedemptionsPerStream: s.field("Max Per Stream", t.option(t.int())),
   maxRedemptionsPerUserPerStream: s.field(
-    "Max Redemptions/User/Stream",
+    "Max Per User Per Stream",
     t.option(t.int())
   ),
   globalCooldown: s.field("Global Cooldown (s)", t.option(t.int())),
@@ -246,7 +225,6 @@ export function register(pkg: Package, helix: Helix) {
   }
 
   pkg.registerType(Reward);
-  pkg.registerType(RewardNoId);
 
   createHelixExecSchema({
     name: "Warn User",
@@ -262,8 +240,8 @@ export function register(pkg: Package, helix: Helix) {
         type: t.string(),
       }),
     }),
-    run({ ctx, io, account }) {
-      return helix.call("POST /moderation/warnings", account.credential, {
+    async run({ ctx, io, account }) {
+      await helix.call("POST /moderation/warnings", account.credential, {
         body: JSON.stringify({
           broadcaster_id: account.data.id,
           moderator_id: account.data.id,
@@ -819,74 +797,50 @@ export function register(pkg: Package, helix: Helix) {
     name: "Create Custom Reward",
     createIO: ({ io }) => {
       return {
-        // title: io.dataInput({
-        //   name: "Title",
-        //   id: "title",
-        //   type: t.string(),
-        // }),
-        // cost: io.dataInput({
-        //   name: "Cost",
-        //   id: "cost",
-        //   type: t.int(),
-        // }),
-        // prompt: io.dataInput({
-        //   name: "Prompt",
-        //   id: "prompt",
-        //   type: t.option(t.string()),
-        // }),
-        // isEnabled: io.dataInput({
-        //   name: "Enabled",
-        //   id: "isEnabled",
-        //   type: t.option(t.bool()),
-        // }),
-        // backgroundColor: io.dataInput({
-        //   name: "Background Color",
-        //   id: "backgroundColor",
-        //   type: t.option(t.string()),
-        // }),
-        // userInputRequired: io.dataInput({
-        //   name: "User Input Required",
-        //   id: "userInputRequired",
-        //   type: t.option(t.bool()),
-        // }),
-        // maxRedemptionsPerStreamEnabled: io.dataInput({
-        //   name: "Max Redemptions Per Stream Enabled",
-        //   id: "maxRedemptionsPerStreamEnabled",
-        //   type: t.option(t.bool()),
-        // }),
-        // maxRedemptionsPerStream: io.dataInput({
-        //   name: "Max Redemptions Per Stream",
-        //   id: "maxRedemptionsPerStream",
-        //   type: t.option(t.int()),
-        // }),
-        // maxRedemptionsPerUserPerStreamEnabled: io.dataInput({
-        //   name: "Max Redemptions Per User Per Stream Enabled",
-        //   id: "maxRedemptionsPerUserPerStreamEnabled",
-        //   type: t.option(t.bool()),
-        // }),
-        // maxRedemptionsPerUserPerStream: io.dataInput({
-        //   name: "Max Redemptions Per User Per Stream",
-        //   id: "maxRedemptionsPerUserPerStream",
-        //   type: t.option(t.int()),
-        // }),
-        // globalCooldownEnabled: io.dataInput({
-        //   name: "Global Cooldown Enabled",
-        //   id: "globalCooldownEnabled",
-        //   type: t.option(t.bool()),
-        // }),
-        // globalCooldown: io.dataInput({
-        //   name: "Global Cooldown",
-        //   id: "globalCooldown",
-        //   type: t.option(t.int()),
-        // }),
-        // autoFulfill: io.dataInput({
-        //   name: "Skip Redemption Queue",
-        //   id: "autoFulfill",
-        //   type: t.option(t.bool()),
-        // }),
-        in: io.dataInput({
-          id: "in",
-          type: t.struct(RewardNoId),
+        title: io.dataInput({
+          name: "Title",
+          id: "title",
+          type: t.string(),
+        }),
+        cost: io.dataInput({
+          name: "Cost",
+          id: "cost",
+          type: t.int(),
+        }),
+        prompt: io.dataInput({
+          name: "Prompt",
+          id: "prompt",
+          type: t.option(t.string()),
+        }),
+        enabled: io.dataInput({
+          name: "Enabled",
+          id: "enabled",
+          type: t.option(t.bool()),
+        }),
+        backgroundColor: io.dataInput({
+          name: "Background Color",
+          id: "backgroundColor",
+          type: t.option(t.string()),
+        }),
+        maxRedemptionsPerStream: io.dataInput({
+          name: "Max Per Stream",
+          id: "maxPerStream",
+          type: t.option(t.int()),
+        }),
+        maxRedemptionsPerUserPerStream: io.dataInput({
+          name: "Max Per User Per Stream",
+          id: "maxPerUserPerStream",
+          type: t.option(t.int()),
+        }),
+        globalCooldown: io.dataInput({
+          name: "Global Cooldown",
+          id: "globalCooldown",
+          type: t.option(t.int()),
+        }),
+        skipRequestQueue: io.dataInput({
+          name: "Skip Request Queue",
+          id: "skipRequestQueue",
+          type: t.option(t.bool()),
         }),
         out: io.dataOutput({
           id: "out",
@@ -895,47 +849,44 @@ export function register(pkg: Package, helix: Helix) {
       };
     },
     async run({ ctx, io, account }) {
-      const user = account.data.id;
-      const body: Record<string, any> = {};
+      const broadcaster_id = account.data.id;
+      const body: Record<string, any> = {
+        title: ctx.getInput(io.title),
+        cost: ctx.getInput(io.cost),
+      };
 
-      body.prompt = ctx.getInput(io.in).prompt;
-      body.is_enabled = ctx.getInput(io.in).enabled;
-      body.background_color = ctx.getInput(io.in).bgColor;
-      body.is_user_input_required = ctx.getInput(io.in).userInputRequired;
-      body.is_paused = ctx.getInput(io.in).paused;
-      body.should_redemptions_skip_request_queue = ctx.getInput(
-        io.in
-      ).skipRequestQueue;
-      if (ctx.getInput(io.in).maxRedemptionsPerStream.isSome()) {
+      ctx.getInput(io.prompt).peek((v) => {
+        body.prompt = v;
+        body.is_user_input_required = true;
+      });
+      ctx.getInput(io.enabled).peek((v) => {
+        body.is_enabled = v;
+      });
+      ctx.getInput(io.backgroundColor).peek((v) => {
+        body.background_color = v;
+      });
+      ctx.getInput(io.maxRedemptionsPerStream).peek((v) => {
         body.is_max_per_stream_enabled = true;
-        body.max_per_stream = ctx
-          .getInput(io.in)
-          .maxRedemptionsPerStream.unwrap();
-      }
-      if (ctx.getInput(io.in).maxRedemptionsPerUserPerStream.isSome()) {
+        body.max_per_stream = v;
+      });
+      ctx.getInput(io.maxRedemptionsPerUserPerStream).peek((v) => {
         body.is_max_per_user_per_stream_enabled = true;
-        body.max_per_user_per_stream = ctx
-          .getInput(io.in)
-          .maxRedemptionsPerUserPerStream.unwrap();
-      }
-      if (ctx.getInput(io.in).globalCooldown.isSome()) {
+        body.max_per_user_per_stream = v;
+      });
+      ctx.getInput(io.globalCooldown).peek((v) => {
         body.is_global_cooldown_enabled = true;
-        body.global_cooldown_seconds = ctx
-          .getInput(io.in)
-          .globalCooldown.unwrap();
-      }
+        body.global_cooldown_seconds = v;
+      });
+      ctx.getInput(io.skipRequestQueue).peek((v) => {
+        body.should_redemptions_skip_request_queue = v;
+      });
 
       const data = await helix.call(
-        "POST /channel_points/custom_rewards",
+        `POST /channel_points/custom_rewards?broadcaster_id=${encodeURIComponent(
+          broadcaster_id
+        )}`,
         account.credential,
-        {
-          body: JSON.stringify({
-            broadcaster_id: user,
-            title: ctx.getInput(io.in).title,
-            cost: ctx.getInput(io.in).cost,
-            ...body,
-          }),
-        }
+        { body: JSON.stringify(body) }
       );
 
       const response = data.data[0];
@@ -2145,7 +2096,7 @@ export type Requests = {
   "DELETE /eventsub/subscriptions": any;
 
   "GET /channel_points/custom_rewards": any;
-  "POST /channel_points/custom_rewards": any;
+  [key: `POST /channel_points/custom_rewards?${string}`]: any;
   "PATCH /channel_points/custom_rewards": any;
   "DELETE /channel_points/custom_rewards": undefined;
   "PATCH /channel_points/custom_rewards/redemptions": any;
