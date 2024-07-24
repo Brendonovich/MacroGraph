@@ -161,7 +161,7 @@ export const Node = (props: Props) => {
 									if (o) props.onSelected();
 								}}
 							>
-								<ContextMenu.Trigger
+								<ContextMenu.Trigger<"button">
 									as="button"
 									class="px-2 pt-1 cursor-pointer outline-none w-full h-full text-left"
 									onDblClick={() => setEditingName(true)}

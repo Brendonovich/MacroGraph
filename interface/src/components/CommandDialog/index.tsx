@@ -164,7 +164,7 @@ export function CommandDialog(props: { sections: Section[] }) {
 		<Dialog.Root open={control.open()} onOpenChange={control.setOpen}>
 			<Dialog.Portal mount={ctx.rootRef()}>
 				<div class="fixed inset-0 flex flex-col items-center overflow-hidden z-100 pt-48 px-8">
-					<Dialog.Content
+					<Dialog.Content<"div">
 						ref={control.setRoot}
 						style={{ "box-shadow": "rgba(0, 0, 0, 0.5) 0px 16px 70px" }}
 						class={clsx(

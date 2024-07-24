@@ -58,7 +58,7 @@ export function CommentBox(props: Props) {
 								if (o) props.onSelected();
 							}}
 						>
-							<ContextMenu.Trigger
+							<ContextMenu.Trigger<"button">
 								as="button"
 								class="p-2 pl-3 outline-none"
 								onMouseDown={(e) => {

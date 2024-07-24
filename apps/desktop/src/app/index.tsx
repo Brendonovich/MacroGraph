@@ -1,5 +1,4 @@
 import {
-	As,
 	Button,
 	Dialog,
 	DialogContent,
@@ -16,7 +15,13 @@ import "@macrograph/ui/global.css";
 import { createAsync, useAction } from "@solidjs/router";
 import { useQueryClient } from "@tanstack/solid-query";
 import { open as openURL } from "@tauri-apps/api/shell";
-import { ErrorBoundary, type ParentProps, Show, Suspense } from "solid-js";
+import {
+	ErrorBoundary,
+	type ParentProps,
+	Show,
+	Suspense,
+	type ValidComponent,
+} from "solid-js";
 import { createSignal } from "solid-js";
 import { toast } from "solid-sonner";
 
@@ -58,11 +63,7 @@ function Header() {
 							if (sessionToken() === null) return false;
 							return user.data?.body;
 						})()}
-						fallback={
-							<LogInDialog>
-								<As component={Button}>Log In</As>
-							</LogInDialog>
-						}
+						fallback={<LogInDialog />}
 					>
 						{(user) => (
 							<UserDropdown user={user()}>
@@ -92,16 +93,20 @@ function UserDropdown(props: ParentProps<{ user: { email: string } }>) {
 					<span class="text-sm font-bold">{props.user.email}</span>
 				</div>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem asChild class="gap-2" closeOnSelect={false}>
-					<As
-						component="button"
-						class="w-full"
-						onClick={() =>
-							openURL(`${env.VITE_MACROGRAPH_API_URL}/credentials`)
-						}
-					>
-						Credentials <IconRadixIconsExternalLink />
-					</As>
+				<DropdownMenuItem<ValidComponent>
+					class="gap-2"
+					closeOnSelect={false}
+					as={(props) => (
+						<button
+							{...props}
+							class="w-full"
+							onClick={() =>
+								openURL(`${env.VITE_MACROGRAPH_API_URL}/credentials`)
+							}
+						/>
+					)}
+				>
+					Credentials <IconRadixIconsExternalLink />
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem
@@ -147,7 +152,7 @@ function LogInDialog(props: ParentProps) {
 
 	return (
 		<Dialog open={open()} onOpenChange={setOpen}>
-			<DialogTrigger asChild>{props.children}</DialogTrigger>
+			<DialogTrigger as={Button}>Log In</DialogTrigger>
 			<DialogContent class="p-6">
 				<DialogTitle class="text-xl">Browser Log In</DialogTitle>
 				<DialogDescription class="max-w-sm mt-1">

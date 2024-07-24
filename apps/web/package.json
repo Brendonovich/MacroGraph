@@ -12,7 +12,7 @@
 	},
 	"dependencies": {
 		"@iconify/json": "^2.2.196",
-		"@kobalte/core": "^0.9.8",
+		"@kobalte/core": "^0.13.4",
 		"@lucia-auth/adapter-drizzle": "^1.0.7",
 		"@macrograph/api-contract": "workspace:^",
 		"@macrograph/http-client": "workspace:^",

@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { As, Tabs } from "@kobalte/core";
+import { Tabs } from "@kobalte/core";
 import type { Core } from "@macrograph/runtime";
 import {
 	Button,
@@ -33,10 +33,12 @@ export function ConnectionsDialog(props: { core: Core }) {
 
 	return (
 		<Dialog onOpenChange={setOpen} open={open()}>
-			<DialogTrigger asChild>
-				<As component={Button} size="icon" variant="ghost" title="Connections">
-					<IconGravityUiPlugConnection class="size-5" />
-				</As>
+			<DialogTrigger<typeof Button>
+				as={(props) => (
+					<Button size="icon" variant="ghost" title="Connections" {...props} />
+				)}
+			>
+				<IconGravityUiPlugConnection class="size-5" />
 			</DialogTrigger>
 			<DialogContent class="min-h-[25rem] flex flex-col">
 				<div class="p-4 border-b flex flex-row justify-between items-center">

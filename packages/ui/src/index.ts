@@ -1,5 +1,4 @@
 export * from "./Card";
-export { As } from "@kobalte/core";
 export * from "./button";
 export * from "./dropdown-menu";
 export * from "./input";

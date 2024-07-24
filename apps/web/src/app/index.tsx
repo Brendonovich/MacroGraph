@@ -103,7 +103,6 @@ function DesktopListener() {
 	return null;
 }
 
-import { As } from "@kobalte/core";
 import { Button } from "@macrograph/ui";
 import {
 	action,
@@ -196,16 +195,18 @@ function DesktopDownloadButton() {
 
 	return (
 		<DropdownMenu placement="bottom-end">
-			<DropdownMenuTrigger asChild>
-				<As
-					component={Button}
-					class="flex-row flex items-center"
-					size="icon"
-					variant="ghost"
-					title="Download Desktop App"
-				>
-					<IconTablerDeviceDesktopDown class="size-5" />
-				</As>
+			<DropdownMenuTrigger<ValidComponent>
+				as={(props) => (
+					<button
+						{...props}
+						class="flex-row flex items-center"
+						size="icon"
+						variant="ghost"
+						title="Download Desktop App"
+					/>
+				)}
+			>
+				<IconTablerDeviceDesktopDown class="size-5" />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				<Suspense
@@ -308,7 +309,7 @@ function AuthSection() {
 	);
 }
 
-import type { JSX } from "solid-js";
+import type { JSX, ValidComponent } from "solid-js";
 import IconRadixIconsExternalLink from "~icons/radix-icons/external-link";
 import { LoginForm, SignUpForm } from "./(auth)/Forms";
 import { IS_LOGGED_IN, logOutAction } from "./(auth)/utils";
@@ -326,10 +327,12 @@ function UserDropdown(
 					<span class="text-sm font-bold">{props.user.email}</span>
 				</div>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem asChild class="gap-2" closeOnSelect={false}>
-					<As component="a" href="/credentials" target="external">
-						Credentials <IconRadixIconsExternalLink />
-					</As>
+				<DropdownMenuItem<ValidComponent>
+					class="gap-2"
+					closeOnSelect={false}
+					as={(props) => <a {...props} href="/credentials" target="external" />}
+				>
+					Credentials <IconRadixIconsExternalLink />
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem
@@ -370,10 +373,10 @@ function LoginButton() {
 
 	return (
 		<Dialog open={open()} onOpenChange={setOpen}>
-			<DialogTrigger asChild>
-				<As component={Button} size="sm">
-					Login
-				</As>
+			<DialogTrigger<typeof Button>
+				as={(props) => <Button {...props} size="sm" />}
+			>
+				Login
 			</DialogTrigger>
 			<DialogContent class="p-8">
 				<div
