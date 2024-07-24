@@ -19,17 +19,22 @@ export const IntInput = (props: Props) => {
     : props.initialValue;
   props.onChange(initialValue);
 
-  // createEffect(() => {
-  //   if (props.value !== undefined) setValue(props.value.toString());
-  // });
-
   const [value, setValue] = createSignal(initialValue.toString());
   const [rawValue, setRawValue] = createSignal(initialValue);
+
+  createEffect(() => {
+    if (props.value !== undefined) {
+      setValue(Math.round(props.value).toString());
+      setRawValue(Math.round(props.value));
+    }
+  });
 
   let ref: HTMLInputElement;
 
   onMount(() => {
-    createEventListener(ref, "wheel", () => {});
+    createEventListener(ref, "wheel", (e) => {
+      if (e.target === document.activeElement) e.stopPropagation();
+    });
   });
 
   return (
@@ -39,7 +44,8 @@ export const IntInput = (props: Props) => {
       value={value()}
       onChange={setValue}
       rawValue={rawValue()}
-      onRawValueChange={setRawValue}
+      onRawValueChange={(v) => setRawValue(Math.round(v))}
+      allowedInput={/^[0-9]*$/}
       changeOnWheel
       step={1}
     >
