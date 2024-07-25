@@ -182,3 +182,43 @@ export const getCredentials = cache(async () => {
 
 	return c;
 }, "credentials");
+
+import { createStorage } from "unstorage";
+import cloudflareKVHTTPDriver from "unstorage/drivers/cloudflare-kv-http";
+
+const cloudflareKv = () => {
+	const apiToken = process.env.CLOUDFLARE_API_TOKEN!;
+
+	if (!apiToken) {
+		console.error("CLOUDFLARE_API_TOKEN not set");
+		return;
+	}
+
+	return createStorage({
+		driver: cloudflareKVHTTPDriver({
+			accountId: "3de2dd633194481d80f68f55257bdbaa",
+			namespaceId: "37a5c183f5b942408acae571b12206f1",
+			apiToken,
+		}),
+	});
+};
+
+export const savePlaygroundProject = action(async (project: string) => {
+	"use server";
+
+	const id = crypto.randomUUID();
+
+	await cloudflareKv()!.setItem(id, project);
+
+	return id;
+});
+
+export const fetchPlaygroundProject = cache(async (id: string) => {
+	"use server";
+
+	const item = await cloudflareKv()!.getItem(id);
+
+	if (item) return JSON.stringify(item);
+
+	return null;
+}, "fetchPlaygroundProject");

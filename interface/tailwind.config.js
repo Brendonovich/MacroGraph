@@ -28,7 +28,6 @@ module.exports = {
 	plugins: [
 		require("@tailwindcss/forms"),
 		require("@kobalte/tailwindcss"),
-		require("tailwindcss-animate"),
 		require("tailwind-scrollbar"),
 	],
 	presets: [require("@macrograph/ui/tailwind.preset.js")],

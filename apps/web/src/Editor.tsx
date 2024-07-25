@@ -7,13 +7,14 @@ import {
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { Core, SerializedProject } from "@macrograph/runtime";
-import { Button } from "@macrograph/ui";
+import { AsyncButton, Button } from "@macrograph/ui";
+import { useAction, useSearchParams } from "@solidjs/router";
 import { initClient } from "@ts-rest/core";
-
-import { useSearchParams } from "@solidjs/router";
 import { Show, createSignal, onMount } from "solid-js";
 import { toast } from "solid-sonner";
+
 import { clientEnv } from "~/env/client";
+import { fetchPlaygroundProject, savePlaygroundProject } from "./api";
 
 const AUTH_URL = `${clientEnv.VITE_VERCEL_URL}/auth`;
 
@@ -66,8 +67,8 @@ const core = new Core({
 });
 
 [
-	// pkgs.github.pkg,
-	// pkgs.google.pkg,
+	pkgs.github.pkg,
+	pkgs.google.pkg,
 	pkgs.goxlr.pkg,
 	pkgs.json.pkg,
 	pkgs.keyboard.pkg,
@@ -76,14 +77,14 @@ const core = new Core({
 	pkgs.logic.pkg,
 	pkgs.map.pkg,
 	pkgs.obs.pkg,
-	// pkgs.spotify.pkg,
+	pkgs.spotify.pkg,
 	pkgs.twitch.pkg,
 	pkgs.utils.pkg,
 	pkgs.openai.pkg,
 	pkgs.speakerbot.pkg,
 	pkgs.variables.pkg,
 	pkgs.customEvents.pkg,
-	// pkgs.midi.pkg,
+	pkgs.midi.pkg,
 	pkgs.vtubeStudio.pkg,
 ].map((p) => core.registerPackage(p));
 
@@ -92,28 +93,26 @@ export default () => {
 	const [params, setParams] = useSearchParams<{ project?: string }>();
 
 	onMount(() => {
-		let projectStr: string | undefined;
+		if (params.project) {
+			fetchPlaygroundProject(params.project)
+				.then((projectStr) => {
+					console.log({ projectStr });
+					if (projectStr)
+						core.load(SerializedProject.parse(JSON.parse(projectStr)));
+				})
+				.finally(() => {
+					setParams({ project: undefined });
+					setLoaded(true);
+				});
+		} else {
+			const savedProject = localStorage.getItem("project");
 
-		try {
-			if (params.project) {
-				projectStr = atob(params.project);
-				setParams({ project: undefined });
-			} else {
-				const savedProject = localStorage.getItem("project");
-				if (savedProject) projectStr = savedProject;
-			}
-
-			if (projectStr) {
+			if (savedProject)
 				core
-					.load(SerializedProject.parse(JSON.parse(projectStr)))
+					.load(SerializedProject.parse(JSON.parse(savedProject)))
 					.finally(() => {
 						setLoaded(true);
 					});
-			} else {
-				setLoaded(true);
-			}
-		} catch {
-			setLoaded(true);
 		}
 	});
 
@@ -150,24 +149,30 @@ export function ExportButton() {
 }
 
 export function ShareButton() {
+	const createProjectLink = useAction(savePlaygroundProject);
+
 	return (
-		<Button
+		<AsyncButton
 			size="icon"
 			variant="ghost"
 			title="Share Project"
-			onClick={() => {
-				const project = new URL(
-					`/?${new URLSearchParams({
-						project: btoa(JSON.stringify(core.project.serialize())),
-					})}`,
-					location.origin,
+			onClick={async () => {
+				const id = await createProjectLink(
+					JSON.stringify(core.project.serialize()),
 				);
-				writeToClipboard(project.toString());
+
+				writeToClipboard(
+					new URL(
+						`/?${new URLSearchParams({ project: id })}`,
+						location.origin,
+					).toString(),
+				);
+
 				toast("Project link copied to clipboard");
 			}}
 		>
 			<IconIcRoundShare class="size-5" />
-		</Button>
+		</AsyncButton>
 	);
 }
 
