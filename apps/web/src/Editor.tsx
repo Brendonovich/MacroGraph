@@ -90,18 +90,16 @@ const core = new Core({
 
 export default () => {
 	const [loaded, setLoaded] = createSignal(false);
-	const [params, setParams] = useSearchParams<{ project?: string }>();
+	const [params] = useSearchParams<{ shared?: string }>();
 
 	onMount(() => {
-		if (params.project) {
-			fetchPlaygroundProject(params.project)
+		if (params.shared) {
+			fetchPlaygroundProject(params.shared)
 				.then((projectStr) => {
-					console.log({ projectStr });
 					if (projectStr)
 						core.load(SerializedProject.parse(JSON.parse(projectStr)));
 				})
 				.finally(() => {
-					setParams({ project: undefined });
 					setLoaded(true);
 				});
 		} else {
@@ -117,7 +115,15 @@ export default () => {
 	});
 
 	return (
-		<Show when={loaded() && core.project} keyed>
+		<Show
+			when={loaded() && core.project}
+			keyed
+			fallback={
+				<div class="w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-4">
+					<span>Loading project</span> <IconSvgSpinners90Ring class="size-12" />
+				</div>
+			}
+		>
 			<PlatformContext.Provider value={{}}>
 				<Interface core={core} environment="browser" />
 			</PlatformContext.Provider>
@@ -163,7 +169,7 @@ export function ShareButton() {
 
 				writeToClipboard(
 					new URL(
-						`/?${new URLSearchParams({ project: id })}`,
+						`/?${new URLSearchParams({ shared: id })}`,
 						location.origin,
 					).toString(),
 				);

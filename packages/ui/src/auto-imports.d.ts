@@ -26,6 +26,7 @@ declare global {
   const IconMdiDotsHorizontal: typeof import('~icons/mdi/dots-horizontal.jsx')['default']
   const IconPhExport: typeof import('~icons/ph/export.jsx')['default']
   const IconPhShare: typeof import('~icons/ph/share.jsx')['default']
+  const IconSvgSpinners90Ring: typeof import('~icons/svg-spinners/90-ring.jsx')['default']
   const IconSystemUiconsReset: typeof import('~icons/system-uicons/reset.jsx')['default']
   const IconTablerCheck: typeof import('~icons/tabler/check.jsx')['default']
   const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx')['default']
