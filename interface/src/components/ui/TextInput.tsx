@@ -24,8 +24,8 @@ export const TextInput = (props: Props) => {
 
 		if (open() !== undefined)
 			return createResource(
-				() => props.fetchSuggestions?.(),
-				() => props.fetchSuggestions?.() ?? [],
+				() => props.fetchSuggestions?.().catch(() => []),
+				(p) => p ?? [],
 			);
 	});
 

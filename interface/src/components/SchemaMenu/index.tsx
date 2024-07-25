@@ -146,7 +146,7 @@ export function SchemaMenu(props: Props) {
 															| undefined;
 
 														if (
-															renderedType === "wildcard" ||
+															(renderedType === "wildcard" && input) ||
 															(input &&
 																(input.type === "wildcard" ||
 																	renderedTypesCompatible(
