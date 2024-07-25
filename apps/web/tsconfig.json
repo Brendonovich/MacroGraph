@@ -10,7 +10,12 @@
 		"allowJs": true,
 		"strict": true,
 		"noEmit": true,
-		"types": ["vinxi/client", "vite/client", "unplugin-icons/types/solid"],
+		"types": [
+			"vinxi/client",
+			"vite/client",
+			"unplugin-icons/types/solid",
+			"@macrograph/ui/types"
+		],
 		"isolatedModules": true,
 		"skipLibCheck": true,
 		"paths": {
@@ -18,8 +23,14 @@
 		}
 	},
 	"references": [
-		{ "path": "../../interface" },
-		{ "path": "../../packages/runtime" },
-		{ "path": "../../packages/packages" }
+		{
+			"path": "../../interface"
+		},
+		{
+			"path": "../../packages/runtime"
+		},
+		{
+			"path": "../../packages/packages"
+		}
 	]
 }

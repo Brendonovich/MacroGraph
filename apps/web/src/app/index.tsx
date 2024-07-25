@@ -15,14 +15,6 @@ import { clientOnly } from "@solidjs/start";
 const Editor = clientOnly(() => import("../Editor"));
 
 export default function () {
-	useBeforeLeave((e) => {
-		if (e.defaultPrevented) return;
-		e.preventDefault();
-
-		if (!window.confirm("Are you sure you want to close MacroGraph?")) return;
-		e.retry(true);
-	});
-
 	return (
 		<div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
 			<ErrorBoundary fallback={null}>
@@ -109,7 +101,6 @@ import {
 	cache,
 	createAsync,
 	useAction,
-	useBeforeLeave,
 	useSearchParams,
 } from "@solidjs/router";
 import {
@@ -155,6 +146,9 @@ const ProjectName = clientOnly(() =>
 const ExportButton = clientOnly(() =>
 	import("../Editor").then((i) => ({ default: i.ExportButton })),
 );
+const ShareButton = clientOnly(() =>
+	import("../Editor").then((i) => ({ default: i.ShareButton })),
+);
 
 import { toast } from "solid-sonner";
 import { getAuthState, getUser } from "~/api";
@@ -173,6 +167,7 @@ function Header() {
 			<div class="flex-1 flex flex-row justify-end items-center gap-1">
 				<div class="flex-1 pl-2">
 					<ExportButton />
+					<ShareButton />
 				</div>
 				<DesktopDownloadButton />
 				<Socials />

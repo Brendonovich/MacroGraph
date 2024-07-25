@@ -223,6 +223,9 @@ importers:
       '@macrograph/api-contract':
         specifier: workspace:^
         version: link:../../packages/api-contract
+      '@macrograph/clipboard':
+        specifier: workspace:^
+        version: link:../../packages/clipboard
       '@macrograph/http-client':
         specifier: workspace:^
         version: link:../../packages/http-client

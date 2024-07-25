@@ -15,6 +15,7 @@
 		"@kobalte/core": "^0.13.4",
 		"@lucia-auth/adapter-drizzle": "^1.0.7",
 		"@macrograph/api-contract": "workspace:^",
+		"@macrograph/clipboard": "workspace:^",
 		"@macrograph/http-client": "workspace:^",
 		"@macrograph/interface": "workspace:^",
 		"@macrograph/packages": "workspace:^",

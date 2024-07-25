@@ -4,6 +4,7 @@ import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
 import { z } from "zod";
 
+import { batch } from "solid-js";
 import { DataInput, type DataOutput, type ScopeOutput } from "./IO";
 import type { Node } from "./Node";
 import type { EventsMap, RunCtx } from "./NodeSchema";
@@ -119,9 +120,15 @@ export class Core {
 		return createMutable(this);
 	}
 
-	load(projectData: z.infer<typeof SerializedProject>) {
-		this.eventNodeMappings.clear();
-		this.project = Project.deserialize(this, projectData);
+	// async bc of #402, the project's reactivity needs to be entirely decoupled from the ui
+	async load(projectData: z.infer<typeof SerializedProject>) {
+		return new Promise<void>((res) => {
+			batch(() => {
+				this.eventNodeMappings.clear();
+				this.project = Project.deserialize(this, projectData);
+			});
+			res();
+		});
 	}
 
 	schema(pkg: string, name: string) {

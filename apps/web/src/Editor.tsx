@@ -1,14 +1,18 @@
 import { contract } from "@macrograph/api-contract";
+import { writeToClipboard } from "@macrograph/clipboard";
 import {
 	ConnectionsDialog,
 	Interface,
 	PlatformContext,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { Core } from "@macrograph/runtime";
+import { Core, SerializedProject } from "@macrograph/runtime";
 import { Button } from "@macrograph/ui";
 import { initClient } from "@ts-rest/core";
 
+import { useSearchParams } from "@solidjs/router";
+import { Show, createSignal, onMount } from "solid-js";
+import { toast } from "solid-sonner";
 import { clientEnv } from "~/env/client";
 
 const AUTH_URL = `${clientEnv.VITE_VERCEL_URL}/auth`;
@@ -84,10 +88,41 @@ const core = new Core({
 ].map((p) => core.registerPackage(p));
 
 export default () => {
+	const [loaded, setLoaded] = createSignal(false);
+	const [params, setParams] = useSearchParams<{ project?: string }>();
+
+	onMount(() => {
+		let projectStr: string | undefined;
+
+		try {
+			if (params.project) {
+				projectStr = atob(params.project);
+				setParams({ project: undefined });
+			} else {
+				const savedProject = localStorage.getItem("project");
+				if (savedProject) projectStr = savedProject;
+			}
+
+			if (projectStr) {
+				core
+					.load(SerializedProject.parse(JSON.parse(projectStr)))
+					.finally(() => {
+						setLoaded(true);
+					});
+			} else {
+				setLoaded(true);
+			}
+		} catch {
+			setLoaded(true);
+		}
+	});
+
 	return (
-		<PlatformContext.Provider value={{}}>
-			<Interface core={core} environment="browser" />
-		</PlatformContext.Provider>
+		<Show when={loaded() && core.project} keyed>
+			<PlatformContext.Provider value={{}}>
+				<Interface core={core} environment="browser" />
+			</PlatformContext.Provider>
+		</Show>
 	);
 };
 
@@ -110,6 +145,28 @@ export function ExportButton() {
 			}
 		>
 			<IconPhExport class="size-5" />
+		</Button>
+	);
+}
+
+export function ShareButton() {
+	return (
+		<Button
+			size="icon"
+			variant="ghost"
+			title="Share Project"
+			onClick={() => {
+				const project = new URL(
+					`/?${new URLSearchParams({
+						project: btoa(JSON.stringify(core.project.serialize())),
+					})}`,
+					location.origin,
+				);
+				writeToClipboard(project.toString());
+				toast("Project link copied to clipboard");
+			}}
+		>
+			<IconIcRoundShare class="size-5" />
 		</Button>
 	);
 }

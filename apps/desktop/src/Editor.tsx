@@ -4,10 +4,10 @@ import {
 	PlatformContext,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { createWsProvider } from "@macrograph/runtime";
+import { SerializedProject, createWsProvider } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { createSignal } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 import "tauri-plugin-midi";
 
 import { Button } from "@macrograph/ui";
@@ -84,10 +84,28 @@ const wsProvider = createWsProvider({
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {
+	const [loaded, setLoaded] = createSignal(false);
+
+	onMount(() => {
+		const savedProject = localStorage.getItem("project");
+
+		if (savedProject) {
+			core
+				.load(SerializedProject.parse(JSON.parse(savedProject)))
+				.finally(() => {
+					setLoaded(true);
+				});
+		} else {
+			setLoaded(true);
+		}
+	});
+
 	return (
-		<PlatformContext.Provider value={platform}>
-			<Interface core={core} environment="custom" />
-		</PlatformContext.Provider>
+		<Show when={loaded() && core.project} keyed>
+			<PlatformContext.Provider value={platform}>
+				<Interface core={core} environment="custom" />
+			</PlatformContext.Provider>
+		</Show>
 	);
 }
 
