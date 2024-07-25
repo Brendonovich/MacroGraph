@@ -3108,7 +3108,7 @@ export function register(pkg: Package<EventTypes>) {
 				type: t.option(t.string()),
 			}),
 		async run({ ctx, io, obs }) {
-			await obs.call("CreateRecordChapter", {
+			await obs.call("CreateRecordChapter" as any, {
 				...ctx
 					.getInput(io)
 					.map((n) => ({ chapterName: n }))

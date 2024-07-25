@@ -129,7 +129,7 @@ export function CommentBox(props: Props) {
 												.deleteCommentbox(
 													box(),
 													(node) => graph.nodeSizes.get(node),
-													e.shiftKey,
+													e.ctrlKey || e.metaKey,
 												);
 											break;
 										}
