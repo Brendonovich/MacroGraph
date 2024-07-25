@@ -146,13 +146,13 @@ export function SchemaMenu(props: Props) {
 															| undefined;
 
 														if (
-															(renderedType === "wildcard" && input) ||
-															(input &&
-																(input.type === "wildcard" ||
-																	renderedTypesCompatible(
-																		input.type,
-																		renderedType,
-																	)))
+															input &&
+															(renderedType === "wildcard" ||
+																input.type === "wildcard" ||
+																renderedTypesCompatible(
+																	input.type,
+																	renderedType,
+																))
 														)
 															ret.push({ schema, suggestion: { pin: index } });
 													} else if (pin instanceof ScopeOutput) {
@@ -180,13 +180,13 @@ export function SchemaMenu(props: Props) {
 															| Extract<RenderedIO, { variant: "data" }>
 															| undefined;
 														if (
-															renderedType === "wildcard" ||
-															(output &&
-																(output.type === "wildcard" ||
-																	renderedTypesCompatible(
-																		output.type,
-																		renderedType,
-																	)))
+															output &&
+															(renderedType === "wildcard" ||
+																output.type === "wildcard" ||
+																renderedTypesCompatible(
+																	output.type,
+																	renderedType,
+																))
 														)
 															ret.push({ schema, suggestion: { pin: index } });
 													} else if (pin instanceof ScopeInput) {
