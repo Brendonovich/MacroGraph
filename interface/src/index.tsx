@@ -760,15 +760,9 @@ function ProjectInterface(props: {
 												});
 
 												if (pin) {
-													const _pinPosition = pinPositions.get(pin);
+													const pinPosition = pinPositions.get(pin);
 													const nodeSize = nodeSizes.get(pin.node);
-													if (!_pinPosition || !nodeSize) return;
-
-													const pinPosition = toGraphSpace(
-														_pinPosition,
-														graphBounds,
-														graphState,
-													);
+													if (!pinPosition || !nodeSize) return;
 
 													const nodeX = pin.node.state.position.x;
 
