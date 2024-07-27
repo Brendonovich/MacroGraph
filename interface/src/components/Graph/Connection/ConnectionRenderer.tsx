@@ -45,18 +45,36 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 		const canvas = canvasRef.getContext("2d");
 		if (!canvas) return;
 
+		function fromGraphSpace(pos: XY) {
+			return {
+				x: (pos.x - ctx.state.translate.x) * ctx.state.scale,
+				y: (pos.y - ctx.state.translate.y) * ctx.state.scale,
+			};
+		}
+
 		function drawConnection(
 			canvas: CanvasRenderingContext2D,
 			colour: string,
-			from: XY,
-			to: XY,
-			cp1: XY,
-			cp2: XY,
+			_from: XY,
+			_to: XY,
 		) {
+			const from = fromGraphSpace(_from);
+			const to = fromGraphSpace(_to);
+
+			const xDiff = from.x - to.x;
+			const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
+
 			canvas.lineWidth = 3 * ctx.state.scale;
 			canvas.beginPath();
 			canvas.moveTo(from.x, from.y);
-			canvas.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, to.x, to.y);
+			canvas.bezierCurveTo(
+				from.x + cpMagnitude,
+				from.y,
+				to.x - cpMagnitude,
+				to.y,
+				to.x,
+				to.y,
+			);
 			canvas.strokeStyle = colour;
 			canvas.stroke();
 		}
@@ -86,32 +104,15 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 				inputPosition
 					.zip(outputPosition)
 					.map(([input, output]) => ({
-						input: {
-							x: input.x - props.graphBounds.x,
-							y: input.y - props.graphBounds.y,
-						},
-						output: {
-							x: output.x - props.graphBounds.x,
-							y: output.y - props.graphBounds.y,
-						},
+						input,
+						output,
 					}))
 					.peek((data) => {
-						const xDiff = data.input.x - data.output.x;
-						const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
-
 						drawConnection(
 							canvas,
 							input instanceof DataInput ? colour(input.type) : "white",
-							data.input,
 							data.output,
-							{
-								x: data.input.x - cpMagnitude,
-								y: data.input.y,
-							},
-							{
-								x: data.output.x + cpMagnitude,
-								y: data.output.y,
-							},
+							data.input,
 						);
 					});
 			}
@@ -120,14 +121,14 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 		const dragState = getDragState();
 		if (dragState) {
 			const pinPos = Maybe(ctx.pinPositions.get(dragState.pin)).map((pos) => ({
-				x: pos.x - props.graphBounds.x,
-				y: pos.y - props.graphBounds.y,
+				x: pos.x,
+				y: pos.y,
 			}));
 
-			const diffs = {
-				x: dragState.mousePosition.x - props.graphBounds.x,
-				y: dragState.mousePosition.y - props.graphBounds.y,
-			};
+			const diffs = ctx.toGraphSpace({
+				x: dragState.mousePosition.x,
+				y: dragState.mousePosition.y,
+			});
 
 			const colourClass = (() => {
 				const draggingPin = dragState.pin;
@@ -144,70 +145,9 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 			})();
 
 			pinPos.peek((pinPos) => {
-				const xDiff = pinPos.x - diffs.x;
-				const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
-
-				drawConnection(
-					canvas,
-					colourClass,
-					pinPos,
-					diffs,
-					{
-						x: pinPos.x + cpMagnitude * (+pinIsOutput(dragState.pin) * 2 - 1),
-						y: pinPos.y,
-					},
-					{
-						x: diffs.x - cpMagnitude * (+pinIsOutput(dragState.pin) * 2 - 1),
-						y: diffs.y,
-					},
-				);
-			});
-		}
-
-		const s = ctx.schemaMenuDrag();
-		if (s) {
-			const pinPos = Maybe(ctx.pinPositions.get(s.pin)).map((pos) => ({
-				x: pos.x - props.graphBounds.x,
-				y: pos.y - props.graphBounds.y,
-			}));
-
-			const diffs = {
-				x: s.mousePos.x - props.graphBounds.x,
-				y: s.mousePos.y - props.graphBounds.y,
-			};
-
-			const colourClass = (() => {
-				const draggingPin = s.pin;
-
-				if (
-					draggingPin instanceof ExecInput ||
-					draggingPin instanceof ExecOutput ||
-					draggingPin instanceof ScopeOutput ||
-					draggingPin instanceof ScopeInput
-				)
-					return "white";
-
-				return colour(draggingPin.type);
-			})();
-
-			pinPos.peek((pinPos) => {
-				const xDiff = pinPos.x - diffs.x;
-				const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
-
-				drawConnection(
-					canvas,
-					colourClass,
-					pinPos,
-					diffs,
-					{
-						x: pinPos.x + cpMagnitude * (+pinIsOutput(s.pin) * 2 - 1),
-						y: pinPos.y,
-					},
-					{
-						x: diffs.x - cpMagnitude * (+pinIsOutput(s.pin) * 2 - 1),
-						y: diffs.y,
-					},
-				);
+				if (pinIsOutput(dragState.pin))
+					drawConnection(canvas, colourClass, pinPos, diffs);
+				else drawConnection(canvas, colourClass, diffs, pinPos);
 			});
 		}
 	});

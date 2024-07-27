@@ -181,10 +181,6 @@ export function usePin(pin: Accessor<Pin>) {
 
 	createEffect(() => {
 		pin().node.state.foldPins;
-		graph.state.translate.x;
-		graph.state.translate.y;
-		graph.state.scale;
-
 		pin().node.state.position.x;
 		pin().node.state.position.y;
 
@@ -192,12 +188,15 @@ export function usePin(pin: Accessor<Pin>) {
 		if (!ref) return;
 
 		const rect = ref.getBoundingClientRect();
+		if (!rect) return;
 
-		if (rect)
-			graph.pinPositions.set(pin(), {
+		graph.pinPositions.set(
+			pin(),
+			graph.toGraphSpace({
 				x: rect.x + rect.width / 2,
 				y: rect.y + rect.height / 2,
-			});
+			}),
+		);
 	});
 
 	const dim = createMemo(() => {

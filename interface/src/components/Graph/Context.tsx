@@ -5,8 +5,9 @@ import type {
 	Size,
 	XY,
 } from "@macrograph/runtime";
+import { createContextProvider } from "@solid-primitives/context";
 import type { ReactiveWeakMap } from "@solid-primitives/map";
-import * as Solid from "solid-js";
+import type * as Solid from "solid-js";
 
 export type SelectedItemID =
 	| { type: "node"; id: number }
@@ -40,21 +41,17 @@ export function createGraphState(model: GraphModel) {
 
 export type GraphState = ReturnType<typeof createGraphState>;
 
-export const GraphContext = Solid.createContext<{
-	model: Solid.Accessor<GraphModel>;
-	pinPositions: ReactiveWeakMap<Pin, XY>;
-	schemaMenuDrag: Solid.Accessor<{ pin: Pin; mousePos: XY } | null>;
-	nodeSizes: WeakMap<NodeModel, Size>;
-	state: GraphState;
-	offset: XY;
-	toGraphSpace(pos: XY): XY;
-	toScreenSpace(pos: XY): XY;
-} | null>(null);
-
-export const useGraphContext = () => {
-	const ctx = Solid.useContext(GraphContext);
-
-	if (!ctx) throw new Error("CurrentGraphContext is missing!");
-
-	return ctx;
-};
+export const [GraphContextProvider, useGraphContext] = createContextProvider(
+	(props: {
+		value: {
+			model: Solid.Accessor<GraphModel>;
+			pinPositions: ReactiveWeakMap<Pin, XY>;
+			nodeSizes: WeakMap<NodeModel, Size>;
+			state: GraphState;
+			offset: XY;
+			toGraphSpace(pos: XY): XY;
+			toScreenSpace(pos: XY): XY;
+		};
+	}) => props.value,
+	null!,
+);

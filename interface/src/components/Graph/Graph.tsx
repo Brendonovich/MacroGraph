@@ -19,7 +19,7 @@ import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
 import { ConnectionRenderer } from "../Graph";
 import { CommentBox } from "./CommentBox";
 import {
-	GraphContext,
+	GraphContextProvider,
 	type GraphState,
 	type SelectedItemID,
 	toGraphSpace,
@@ -45,7 +45,6 @@ interface Props extends Solid.ComponentProps<"div"> {
 	onSizeChange(size: { width: number; height: number }): void;
 	onBoundsChange(bounds: XY): void;
 	onItemSelected(id: SelectedItemID | null): void;
-	schemaMenuDrag?: { pin: Pin; mousePos: XY };
 }
 
 type State = {
@@ -220,7 +219,7 @@ export const Graph = (props: Props) => {
 	});
 
 	return (
-		<GraphContext.Provider
+		<GraphContextProvider
 			value={{
 				model,
 				pinPositions: props.pinPositions,
@@ -230,7 +229,6 @@ export const Graph = (props: Props) => {
 				get nodeSizes() {
 					return props.nodeSizes;
 				},
-				schemaMenuDrag: () => props.schemaMenuDrag ?? null,
 				offset: state.bounds,
 				toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, props.state),
 				toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, props.state),
@@ -390,6 +388,6 @@ export const Graph = (props: Props) => {
 					</div>
 				</div>
 			</div>
-		</GraphContext.Provider>
+		</GraphContextProvider>
 	);
 };

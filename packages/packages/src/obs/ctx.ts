@@ -17,7 +17,7 @@ const INSTANCE_SCHEMA = z.object({
 export function createCtx() {
 	const instances = new ReactiveMap<string, InstanceState>();
 
-	async function addInstance(ip: string, password?: string) {
+	async function addInstance(ip: string, password?: string | null) {
 		await disconnectInstance(ip);
 
 		instances.set(ip, { state: "connecting", password: password ?? null });

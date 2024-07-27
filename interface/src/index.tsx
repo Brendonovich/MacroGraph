@@ -525,16 +525,6 @@ function ProjectInterface(props: {
 								<Graph
 									graph={graph().model}
 									state={graph().state}
-									schemaMenuDrag={(() => {
-										const s = ctx.state;
-										if (
-											s.status !== "schemaMenuOpen" ||
-											s.graph.id !== graph().state.id
-										)
-											return;
-
-										return stuff();
-									})()}
 									nodeSizes={nodeSizes}
 									pinPositions={pinPositions}
 									onMouseEnter={() => setHoveredPane(true)}
