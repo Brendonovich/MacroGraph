@@ -79,7 +79,7 @@ const wsProvider = createWsProvider({
 	pkgs.speakerbot.pkg,
 	() => pkgs.websocketServer.pkg(wsProvider),
 	pkgs.globalKeyboardMouse.pkg,
-	// pkgs.midi.pkg,
+	pkgs.midi.pkg,
 	pkgs.vtubeStudio.pkg,
 ].map((p) => core.registerPackage(p));
 

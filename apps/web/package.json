@@ -27,7 +27,7 @@
 		"@solidjs/router": "^0.12.5",
 		"@solidjs/start": "1.0.6",
 		"@t3-oss/env-core": "^0.6.1",
-		"@tanstack/solid-query": "^5.51.15",
+		"@tanstack/solid-query": "^4.36.1",
 		"@ts-rest/core": "^3.41.1",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^1.2.1",

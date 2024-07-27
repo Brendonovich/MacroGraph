@@ -152,25 +152,27 @@ class TauriMIDIInput extends TauriMIDIPort implements MIDIInput {
 		super(name, "input");
 	}
 
-	private stopListening?: UnlistenFn;
+	private stopListening?: Promise<UnlistenFn>;
 
-	async open() {
+	open() {
 		if (!this.stopListening)
-			this.stopListening = await events.midiMessage.listen((event) => {
+			this.stopListening = events.midiMessage.listen((event) => {
 				const [inputName, data] = event.payload;
 
 				if (inputName !== this.name) return;
 
-				this.onmidimessage?.(
-					new TauriMIDIMessageEvent("", { data: new Uint8Array(data) }),
+				this.dispatchEvent(
+					new TauriMIDIMessageEvent("midimessage", {
+						data: new Uint8Array(data),
+					}),
 				);
 			});
 
-		return await super.open();
+		return super.open();
 	}
 
 	close() {
-		this.stopListening?.();
+		this.stopListening?.then((cb) => cb());
 
 		return super.close();
 	}

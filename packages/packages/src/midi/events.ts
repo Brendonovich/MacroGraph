@@ -43,6 +43,7 @@ export function register(pkg: Pkg) {
 
 				const bus = createEventBus<TFire>();
 
+				input.open();
 				createEventListener(input, "midimessage", ((e: MIDIMessageEvent) => {
 					const data = Array.from(e.data!);
 

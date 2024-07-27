@@ -23,7 +23,7 @@
 		"@solidjs/router": "^0.12.5",
 		"@solidjs/start": "1.0.6",
 		"@t3-oss/env-core": "^0.6.1",
-		"@tanstack/solid-query": "^5.51.15",
+		"@tanstack/solid-query": "^4.36.1",
 		"@tauri-apps/api": "^1.5.3",
 		"@ts-rest/core": "^3.41.1",
 		"@ts-rest/solid-query": "^3.41.1",

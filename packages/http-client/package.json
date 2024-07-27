@@ -13,6 +13,6 @@
 		"@macrograph/config": "workspace:*"
 	},
 	"dependencies": {
-		"@tanstack/solid-query": "^5.51.15"
+		"@tanstack/solid-query": "^4.36.1"
 	}
 }

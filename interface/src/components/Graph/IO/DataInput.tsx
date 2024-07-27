@@ -10,7 +10,7 @@ import {
 	WildcardType,
 	type t,
 } from "@macrograph/typesystem";
-import { createQuery, keepPreviousData } from "@tanstack/solid-query";
+import { createQuery } from "@tanstack/solid-query";
 import { Match, Show, Switch } from "solid-js";
 
 import { DataPin } from ".";
@@ -68,8 +68,8 @@ const Input = (props: InputProps) => {
 							<div class="w-16">
 								<Show when={!props.connected}>
 									{(_) => {
-										const suggestionsQuery = createQuery(() => ({
-											queryKey: [
+										const suggestionsQuery = createQuery(
+											() => [
 												"inputSuggesions",
 												{
 													graph: props.input.node.graph.id,
@@ -77,15 +77,16 @@ const Input = (props: InputProps) => {
 													input: props.input.id,
 												},
 											],
-											queryFn: () =>
+											() =>
 												props.input
 													.fetchSuggestions?.()
 													.catch(() => [] as string[]) ?? [],
-											refetchOnMount: false,
-											refetchOnReconnect: false,
-											refetchOnWindowFocus: false,
-											placeholderData: keepPreviousData,
-										}));
+											{
+												refetchOnMount: false,
+												refetchOnReconnect: false,
+												refetchOnWindowFocus: false,
+											},
+										);
 
 										return (
 											<TextInput

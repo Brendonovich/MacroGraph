@@ -8,7 +8,7 @@
 		"build:types": "tsc"
 	},
 	"dependencies": {
-		"@tanstack/solid-query": "^5.51.15",
+		"@tanstack/solid-query": "^4.36.1",
 		"@tauri-apps/api": "^1.5.3"
 	}
 }
