@@ -31,12 +31,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: .github/actions/setup-rust
+      - uses: ./.github/actions/setup-rust
         with:
           save-cache: "true"
           target: ${{ matrix.settings.target }}
 
-      - uses: .github/actions/install-desktop-deps
+      - uses: ./.github/actions/install-desktop-deps
 
       - run: mkdir apps/desktop/dist
 
