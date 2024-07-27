@@ -14,6 +14,7 @@ runs:
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
       with:
+        toolchain: 1.80
         target: ${{ inputs.target }}
 
     - name: Cache Rust Dependencies
