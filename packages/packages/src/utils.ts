@@ -1987,6 +1987,10 @@ export function pkg(core: Core) {
 		},
 	});
 
+	setTimeout(() => {
+		pkg.emitEvent({ name: "MGLoaded", data: {} });
+	}, 5000);
+
 	pkg.createEventSchema({
 		event: "custom",
 		name: "Custom Event",
@@ -2319,9 +2323,61 @@ export function pkg(core: Core) {
 		},
 	});
 
-	setTimeout(() => {
-		pkg.emitEvent({ name: "MGLoaded", data: {} });
-	}, 5000);
+	pkg.createSchema({
+		name: "Execute Regex",
+		type: "exec",
+		properties: { regex: { name: "Regex", type: t.string() } },
+		createIO({ io, ctx, properties }) {
+			const base = {
+				input: io.dataInput({
+					id: "",
+					type: t.string(),
+				}),
+			};
+
+			try {
+				const groupOutputs: DataOutput<t.String>[] = [];
+				const regex = new RegExp(ctx.getProperty(properties.regex));
+				const { groups } = new RegExp(`${regex}|`).exec("")!;
+
+				for (const group of Object.keys(groups ?? {})) {
+					groupOutputs.push(
+						io.dataOutput({
+							id: `group-${group}`,
+							name: group,
+							type: t.string(),
+						}),
+					);
+				}
+
+				return {
+					...base,
+					regex,
+					groupOutputs,
+				};
+			} catch {
+				return base;
+			}
+		},
+		run({ ctx, io }) {
+			if ("regex" in io) {
+				const input = ctx.getInput(io.input);
+
+				const result = io.regex.exec(input);
+				if (!result?.groups) throw new Error("Input doesn't match regex");
+
+				for (const out of io.groupOutputs) {
+					const value = result.groups[out.name!];
+					if (value === undefined)
+						throw new Error(`Group ${out.id} not found in regex result`);
+
+					ctx.setOutput(out, value);
+				}
+			} else {
+				throw new Error("Invalid regex!");
+			}
+		},
+	});
 
 	return pkg;
 }

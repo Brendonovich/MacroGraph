@@ -44,7 +44,7 @@ export function pkg() {
 			const variableId = ctx.getProperty(properties.variable);
 			if (variableId === undefined) return;
 
-			ctx.setOutput(io, ctx.getVariable("graph", variableId).value);
+			ctx.setOutput(io, ctx.getVariable("graph", variableId).unwrap().value);
 		},
 	});
 
