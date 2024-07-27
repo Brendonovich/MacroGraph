@@ -26,6 +26,14 @@ export const commands = {
   },
 };
 
+export const events = __makeEvents__<{
+  keyUp: KeyUp;
+  keyDown: KeyDown;
+}>({
+  keyUp: "plugin:kb-mouse:key-up",
+  keyDown: "plugin:kb-mouse:key-down",
+});
+
 /** user-defined types **/
 
 /**
@@ -160,6 +168,8 @@ export type Key =
   | "KpDelete"
   | "Function"
   | { Unknown: number };
+export type KeyDown = { key: Key; appFocused: boolean };
+export type KeyUp = { key: Key; appFocused: boolean };
 
 /** tauri-specta globals **/
 

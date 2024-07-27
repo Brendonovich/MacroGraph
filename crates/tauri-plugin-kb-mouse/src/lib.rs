@@ -2,9 +2,27 @@ use std::time::Duration;
 
 use enigo::{Enigo, MouseControllable};
 use rdev::{Button, EventType, Key};
-use tauri::plugin::{Builder, TauriPlugin};
+use tauri::{
+    plugin::{Builder, TauriPlugin},
+    Manager,
+};
+use tauri_specta::Event;
 
 const PLUGIN_NAME: &str = "kb-mouse";
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type, tauri_specta::Event)]
+#[serde(rename_all = "camelCase")]
+pub struct KeyDown {
+    key: Key,
+    app_focused: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type, tauri_specta::Event)]
+#[serde(rename_all = "camelCase")]
+pub struct KeyUp {
+    key: Key,
+    app_focused: bool,
+}
 
 #[tauri::command]
 #[specta::specta]
@@ -43,12 +61,13 @@ async fn set_mouse_position(x: i32, y: i32, absolute: bool) {
 
 macro_rules! specta_builder {
     () => {
-        tauri_specta::ts::builder().commands(tauri_specta::collect_commands![
-            simulate_keys,
-            simulate_mouse,
-            set_mouse_position
-        ])
-        // .events(tauri_specta::collect_events![])
+        tauri_specta::ts::builder()
+            .commands(tauri_specta::collect_commands![
+                simulate_keys,
+                simulate_mouse,
+                set_mouse_position
+            ])
+            .events(tauri_specta::collect_events![KeyUp, KeyDown])
     };
 }
 
@@ -59,6 +78,23 @@ pub fn init<R: tauri::Runtime>() -> TauriPlugin<R> {
         .invoke_handler(plugin_utils.invoke_handler)
         .setup(move |app| {
             (plugin_utils.setup)(app);
+
+            let app = app.clone();
+
+            rdev::listen(move |e| {
+                let app_focused = app.get_focused_window().is_some();
+
+                match e.event_type {
+                    EventType::KeyPress(key) => {
+                        KeyDown { key, app_focused }.emit_all(&app).ok();
+                    }
+                    EventType::KeyRelease(key) => {
+                        KeyUp { key, app_focused }.emit_all(&app).ok();
+                    }
+                    _ => {}
+                }
+            })
+            .ok();
 
             Ok(())
         })
