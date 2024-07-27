@@ -80,7 +80,7 @@ const Input = (props: InputProps) => {
 											queryFn: () =>
 												props.input
 													.fetchSuggestions?.()
-													.catch(() => [] as string[]),
+													.catch(() => [] as string[]) ?? [],
 											refetchOnMount: false,
 											refetchOnReconnect: false,
 											refetchOnWindowFocus: false,

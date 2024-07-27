@@ -2356,6 +2356,8 @@ export function pkg(core: Core) {
 					groupOutputs,
 				};
 			} catch {
+				if (io.previous) return io.previous;
+
 				return base;
 			}
 		},
