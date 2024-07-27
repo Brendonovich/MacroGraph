@@ -16,6 +16,7 @@ import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
 
+import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import {
@@ -60,6 +61,7 @@ export const Node = (props: Props) => {
 	const node = () => props.node;
 
 	const graph = useGraphContext();
+	const interfaceCtx = useInterfaceContext();
 
 	const ACTIVE = NODE_EMIT.subscribe(node(), (data) => {
 		if (node().id === data.id && data.schema === node().schema) {
@@ -135,6 +137,15 @@ export const Node = (props: Props) => {
 					transform: `translate(${node().state.position.x}px, ${
 						node().state.position.y
 					}px)`,
+				}}
+				onMouseUp={(e) => {
+					// #418
+					if (
+						interfaceCtx.state.status === "pinDragMode" &&
+						interfaceCtx.state.state.status === "draggingPin"
+					) {
+						interfaceCtx.setState({ status: "idle" });
+					}
 				}}
 			>
 				<div
