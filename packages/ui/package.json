@@ -14,7 +14,9 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["./src/auto-imports.d.ts"]
+			"types": [
+				"./src/auto-imports.d.ts"
+			]
 		}
 	},
 	"devDependencies": {
@@ -30,6 +32,7 @@
 	"dependencies": {
 		"@kobalte/core": "^0.13.4",
 		"@macrograph/config": "workspace:*",
+		"@tanstack/solid-query": "^5.51.15",
 		"clsx": "^1.2.1",
 		"cva": "npm:class-variance-authority@^0.7.0",
 		"i": "^0.3.7",

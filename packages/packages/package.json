@@ -34,6 +34,7 @@
 		"@solidjs/router": "^0.12.5",
 		"@tanstack/form-core": "^0.25.3",
 		"@tanstack/solid-form": "^0.26.2",
+		"@tanstack/solid-query": "^5.51.15",
 		"@tanstack/zod-form-adapter": "^0.25.3",
 		"@tauri-apps/api": "^1.5.3",
 		"@twurple/auth": "^6.2.1",

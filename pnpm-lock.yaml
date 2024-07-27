@@ -82,7 +82,7 @@ importers:
         version: 0.0.0-main-6ed8cc98
       '@rspc/solid':
         specifier: 0.0.0-main-6ed8cc98
-        version: 0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@4.36.1(solid-js@1.8.16))(solid-js@1.8.16)
+        version: 0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@5.51.15(solid-js@1.8.16))(solid-js@1.8.16)
       '@rspc/tauri':
         specifier: 0.0.0-main-6ed8cc98
         version: 0.0.0-main-6ed8cc98(@tauri-apps/api@1.5.3)
@@ -94,13 +94,13 @@ importers:
         version: 0.12.5(solid-js@1.8.16)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.16)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.16)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.8.16)
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -109,7 +109,7 @@ importers:
         version: 3.41.1(zod@3.22.4)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.8.16))(zod@3.22.4)
+        version: 3.41.1(@tanstack/solid-query@5.51.15(solid-js@1.8.16))(zod@3.22.4)
       solid-js:
         specifier: ^1.8.16
         version: 1.8.16
@@ -159,6 +159,9 @@ importers:
 
   apps/storybook:
     dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       solid-js:
         specifier: ^1.8.16
         version: 1.8.16
@@ -255,10 +258,13 @@ importers:
         version: 0.12.5(solid-js@1.8.16)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.16)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.16)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@ts-rest/core':
         specifier: ^3.41.1
         version: 3.41.1(zod@3.22.4)
@@ -350,12 +356,18 @@ importers:
 
   crates/tauri-plugin-kb-mouse:
     dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
 
   crates/tauri-plugin-midi:
     dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -434,12 +446,15 @@ importers:
       '@solidjs/router':
         specifier: ^0.12.5
         version: 0.12.5(solid-js@1.8.16)
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@ts-rest/core':
         specifier: ^3.41.1
         version: 3.41.1(zod@3.22.4)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.8.16))(zod@3.22.4)
+        version: 3.41.1(@tanstack/solid-query@5.51.15(solid-js@1.8.16))(zod@3.22.4)
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
@@ -483,6 +498,9 @@ importers:
 
   packages/api-contract:
     dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@ts-rest/core':
         specifier: ^3.41.1
         version: 3.41.1(zod@3.22.4)
@@ -505,6 +523,9 @@ importers:
       '@macrograph/runtime':
         specifier: workspace:^
         version: link:../runtime
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -513,9 +534,17 @@ importers:
         specifier: workspace:*
         version: link:../config
 
-  packages/config: {}
+  packages/config:
+    dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
 
   packages/http-client:
+    dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -541,6 +570,9 @@ importers:
       '@solid-primitives/set':
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.8.16)
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -565,6 +597,10 @@ importers:
         version: 8.35.1(typescript@5.5.3)
 
   packages/option:
+    dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -641,6 +677,9 @@ importers:
       '@tanstack/solid-form':
         specifier: ^0.26.2
         version: 0.26.2(solid-js@1.8.16)
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@tanstack/zod-form-adapter':
         specifier: ^0.25.3
         version: 0.25.3(zod@3.22.4)
@@ -744,6 +783,9 @@ importers:
       '@solidjs/router':
         specifier: ^0.12.5
         version: 0.12.5(solid-js@1.8.16)
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -752,7 +794,7 @@ importers:
         version: 3.41.1(zod@3.22.4)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.8.16))(zod@3.22.4)
+        version: 3.41.1(@tanstack/solid-query@5.51.15(solid-js@1.8.16))(zod@3.22.4)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -790,6 +832,9 @@ importers:
       '@macrograph/typesystem':
         specifier: workspace:^
         version: link:../typesystem
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -809,6 +854,9 @@ importers:
       '@solid-primitives/set':
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.8.16)
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -840,6 +888,9 @@ importers:
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
@@ -870,6 +921,10 @@ importers:
         version: 5.2.7(@types/node@20.14.11)(terser@5.31.3)
 
   packages/utils:
+    dependencies:
+      '@tanstack/solid-query':
+        specifier: ^5.51.15
+        version: 5.51.15(solid-js@1.8.16)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -4010,18 +4065,18 @@ packages:
   '@tanstack/form-core@0.25.3':
     resolution: {integrity: sha512-4ZPuzsCvqpdJGy/06+pBlgr6khvkwxyMFLcrlieD+8ilBRqCvNdojUvdDLz4EDP74vmxl3RWo7anqzJ3H6xkMw==}
 
-  '@tanstack/query-core@4.36.1':
-    resolution: {integrity: sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==}
+  '@tanstack/query-core@5.51.15':
+    resolution: {integrity: sha512-xyobHDJ0yhPE3+UkSQ2/4X1fLSg7ICJI5J1JyU9yf7F3deQfEwSImCDrB1WSRrauJkMtXW7YIEcC0oA6ZZWt5A==}
 
   '@tanstack/solid-form@0.26.2':
     resolution: {integrity: sha512-6Wr/obGpSvoBmQQNUNyrq3TS8ERLw4xEfxvcUMvI2UW8nq23Qr4/xgfm1upqYeOhuARkkVtcus3pt0g6VVkqLw==}
     peerDependencies:
       solid-js: ^1.6.0
 
-  '@tanstack/solid-query@4.36.1':
-    resolution: {integrity: sha512-w8L6B12AsCyF7AB2Np4fj9qsOBfrzzxyIkdsniKo9HErdXdlGLyynYaDm4EGsH9ePPcdJSUX7ELGqmXllofn/Q==}
+  '@tanstack/solid-query@5.51.15':
+    resolution: {integrity: sha512-+o1D6InXDESoHW+PUaSe7cL4APdUIYpD757DJGwsuTVjjbbaOa+fw3N+A/e3Juz7QjsHCc/YWKlYtEV0B7MXKQ==}
     peerDependencies:
-      solid-js: ^1.5.7
+      solid-js: ^1.6.0
 
   '@tanstack/solid-store@0.5.4':
     resolution: {integrity: sha512-PZi289dFudlI5N5eAXR+uHgY8jdu2rppfKuk44AEOt3qNdmrGpVPpmqrO2NR+9UDu/zq6Q8Q3GeTjQPhZ06vlQ==}
@@ -11780,10 +11835,10 @@ snapshots:
 
   '@rspc/client@0.0.0-main-6ed8cc98': {}
 
-  '@rspc/solid@0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@4.36.1(solid-js@1.8.16))(solid-js@1.8.16)':
+  '@rspc/solid@0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@5.51.15(solid-js@1.8.16))(solid-js@1.8.16)':
     dependencies:
       '@rspc/client': 0.0.0-main-6ed8cc98
-      '@tanstack/solid-query': 4.36.1(solid-js@1.8.16)
+      '@tanstack/solid-query': 5.51.15(solid-js@1.8.16)
       solid-js: 1.8.16
 
   '@rspc/tauri@0.0.0-main-6ed8cc98(@tauri-apps/api@1.5.3)':
@@ -11951,11 +12006,11 @@ snapshots:
     dependencies:
       solid-js: 1.8.16
 
-  '@solidjs/start@1.0.6(rollup@4.18.1)(solid-js@1.8.16)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(rollup@4.18.1)(solid-js@1.8.16)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       glob: 10.4.5
@@ -12508,7 +12563,7 @@ snapshots:
     dependencies:
       '@tanstack/store': 0.5.4
 
-  '@tanstack/query-core@4.36.1': {}
+  '@tanstack/query-core@5.51.15': {}
 
   '@tanstack/solid-form@0.26.2(solid-js@1.8.16)':
     dependencies:
@@ -12516,9 +12571,9 @@ snapshots:
       '@tanstack/solid-store': 0.5.4(solid-js@1.8.16)
       solid-js: 1.8.16
 
-  '@tanstack/solid-query@4.36.1(solid-js@1.8.16)':
+  '@tanstack/solid-query@5.51.15(solid-js@1.8.16)':
     dependencies:
-      '@tanstack/query-core': 4.36.1
+      '@tanstack/query-core': 5.51.15
       solid-js: 1.8.16
 
   '@tanstack/solid-store@0.5.4(solid-js@1.8.16)':
@@ -12601,9 +12656,9 @@ snapshots:
     optionalDependencies:
       zod: 3.22.4
 
-  '@ts-rest/solid-query@3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.8.16))(zod@3.22.4)':
+  '@ts-rest/solid-query@3.41.1(@tanstack/solid-query@5.51.15(solid-js@1.8.16))(zod@3.22.4)':
     dependencies:
-      '@tanstack/solid-query': 4.36.1(solid-js@1.8.16)
+      '@tanstack/solid-query': 5.51.15(solid-js@1.8.16)
     optionalDependencies:
       zod: 3.22.4
 
@@ -12931,7 +12986,7 @@ snapshots:
     transitivePeerDependencies:
       - uWebSockets.js
 
-  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
       '@babel/parser': 7.24.8
       acorn: 8.12.1
@@ -12944,9 +12999,9 @@ snapshots:
       tslib: 2.6.3
       vinxi: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
 
-  '@vinxi/server-components@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-components@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)
@@ -12955,9 +13010,9 @@ snapshots:
       recast: 0.23.9
       vinxi: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
 
-  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)

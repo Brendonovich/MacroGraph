@@ -5,6 +5,7 @@
 	"types": "./src/index.ts",
 	"type": "module",
 	"dependencies": {
+		"@tanstack/solid-query": "^5.51.15",
 		"@ts-rest/core": "^3.41.1",
 		"zod": "^3.22.4"
 	},

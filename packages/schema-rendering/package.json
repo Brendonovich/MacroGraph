@@ -12,7 +12,8 @@
 	"dependencies": {
 		"@macrograph/option": "workspace:^",
 		"@macrograph/runtime": "workspace:^",
-		"@macrograph/typesystem": "workspace:^"
+		"@macrograph/typesystem": "workspace:^",
+		"@tanstack/solid-query": "^5.51.15"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*"

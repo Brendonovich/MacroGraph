@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@macrograph/option": "workspace:^",
 		"@macrograph/runtime": "workspace:^",
+		"@tanstack/solid-query": "^5.51.15",
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {

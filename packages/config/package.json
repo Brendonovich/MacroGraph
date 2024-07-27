@@ -4,5 +4,8 @@
 	"private": true,
 	"exports": {
 		"./tsconfig": "./tsconfig.json"
+	},
+	"dependencies": {
+		"@tanstack/solid-query": "^5.51.15"
 	}
 }
