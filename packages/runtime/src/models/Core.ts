@@ -122,13 +122,17 @@ export class Core {
 
 	// async bc of #402, the project's reactivity needs to be entirely decoupled from the ui
 	async load(projectData: z.infer<typeof SerializedProject>) {
-		return new Promise<void>((res) => {
+		await new Promise<void>((res) => {
 			batch(() => {
 				this.eventNodeMappings.clear();
 				this.project = Project.deserialize(this, projectData);
+				this.project.disableSave = true;
 			});
+
 			res();
 		});
+		this.project.disableSave = false;
+		console.log("project load end");
 	}
 
 	schema(pkg: string, name: string) {

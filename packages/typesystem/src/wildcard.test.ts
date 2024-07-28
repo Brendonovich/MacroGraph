@@ -158,7 +158,15 @@ describe("Connect Map<String> + Wildcard(A) + Map<Wildcard(B)>", () => {
 		connectWildcardsInTypes(node1.output, node2.input);
 
 		expect(node2.wildcard.value().unwrap()).toBe(node1.output);
-		expect(node3.wildcard.value().unwrap()).toBe(node1.output.value);
+
+		// console.log("node2 wildcard:", node2.wildcard.value().unwrap());
+		// console.log("node3 wildcard:", node3.wildcard.value());
+		// console.log(
+		//   "node3 wildcard wildcardConnections:",
+		//   node3.wildcard.wildcardConnections()
+		// );
+
+		expect(node3.wildcard.value().toNullable()).toBe(node1.output.value);
 	});
 
 	test("Disconnect Forward", () => {

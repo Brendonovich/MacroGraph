@@ -314,22 +314,17 @@ export class Graph extends Disposable {
 					.map(([idStr, serializedNode]) => {
 						const id = z.coerce.number().parse(idStr);
 						const node = Node.deserialize(graph, serializedNode);
-
 						if (node === null) return null;
-
 						return [id, node] as [number, Node];
 					})
 					.filter(Boolean) as [number, Node][],
 			);
-
 			graph.commentBoxes = new ReactiveMap(
 				data.commentBoxes.map((box) => {
 					const id = box.id ?? graph.generateId();
-
 					return [id, new CommentBox({ ...box, id, graph })];
 				}),
 			);
-
 			graph.connections = new ReactiveMap();
 			deserializeConnections(data.connections, graph.connections);
 		});

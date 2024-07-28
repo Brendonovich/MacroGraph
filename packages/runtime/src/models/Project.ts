@@ -36,7 +36,7 @@ export class Project {
 	variables: Array<Variable> = [];
 	name = "New Project";
 
-	private disableSave = false;
+	disableSave = false;
 
 	private graphIdCounter = 0;
 	private customEventIdCounter = 0;

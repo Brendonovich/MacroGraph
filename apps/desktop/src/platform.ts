@@ -35,7 +35,7 @@ export function createPlatform(props: {
 				props.setProjectUrl(url);
 			},
 			async loadProject() {
-				if (await ask("Woudl you like to save this project?"))
+				if (await ask("Would you like to save this project?"))
 					await this.saveProject();
 
 				const url = await open({

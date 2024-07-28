@@ -90,11 +90,12 @@ export default function Editor() {
 		const savedProject = localStorage.getItem("project");
 
 		if (savedProject) {
-			core
-				.load(SerializedProject.parse(JSON.parse(savedProject)))
-				.finally(() => {
-					setLoaded(true);
-				});
+			const serializedProject = SerializedProject.parse(
+				JSON.parse(savedProject),
+			);
+			core.load(serializedProject).finally(() => {
+				setLoaded(true);
+			});
 		} else {
 			setLoaded(true);
 		}

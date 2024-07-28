@@ -7,6 +7,6 @@ export default defineConfig({
 	test: {
 		reporters: process.env.GITHUB_ACTIONS
 			? ["default", new GithubActionsReporter()]
-			: undefined,
+			: [],
 	},
 });
