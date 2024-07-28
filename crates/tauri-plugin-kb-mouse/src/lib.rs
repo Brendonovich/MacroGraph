@@ -81,20 +81,32 @@ pub fn init<R: tauri::Runtime>() -> TauriPlugin<R> {
 
             let app = app.clone();
 
-            rdev::listen(move |e| {
-                let app_focused = app.get_focused_window().is_some();
+            let listen = || {
+                rdev::listen(move |e| {
+                    let app_focused = if cfg!(target_os = "windows") {
+                        false
+                    } else {
+                        app.get_focused_window().is_some()
+                    };
 
-                match e.event_type {
-                    EventType::KeyPress(key) => {
-                        KeyDown { key, app_focused }.emit_all(&app).ok();
+                    match e.event_type {
+                        EventType::KeyPress(key) => {
+                            KeyDown { key, app_focused }.emit_all(&app).ok();
+                        }
+                        EventType::KeyRelease(key) => {
+                            KeyUp { key, app_focused }.emit_all(&app).ok();
+                        }
+                        _ => {}
                     }
-                    EventType::KeyRelease(key) => {
-                        KeyUp { key, app_focused }.emit_all(&app).ok();
-                    }
-                    _ => {}
-                }
-            })
-            .ok();
+                })
+                .ok();
+            };
+
+            #[cfg(target_os = "macos")]
+            listen();
+
+            #[cfg(not(target_os = "macos"))]
+            std::thread::spawn(listen);
 
             Ok(())
         })
