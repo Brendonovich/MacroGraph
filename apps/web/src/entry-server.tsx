@@ -14,7 +14,10 @@ export default createHandler(
 						<link rel="icon" href="/favicon.png" />
 						{assets}
 					</head>
-					<body class="w-screen h-screen bg-neutral-900" id="app">
+					<body
+						class="w-screen h-screen bg-neutral-900 overflow-x-hidden"
+						id="app"
+					>
 						{children}
 						{scripts}
 					</body>
@@ -22,5 +25,5 @@ export default createHandler(
 			)}
 		/>
 	),
-	{ mode: "async" },
+	{ mode: "sync" },
 );

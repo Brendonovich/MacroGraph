@@ -32,8 +32,8 @@ export default function () {
 	// };
 
 	return (
-		<div class="min-w-screen min-h-screen flex flex-col items-center">
-			<div class="flex flex-col items-center justify-center p-8 max-w-6xl">
+		<div class="flex flex-col items-center overflow-x-hidden overflow-y-hidden">
+			<div class="flex flex-col items-center justify-center max-w-4xl">
 				<div class="flex flex-row justify-center items-center gap-4 mt-32">
 					<img src={Screenshot} class="w-40" alt="MacroGraph App Icon" />
 					<div class="space-y-1">
@@ -43,12 +43,12 @@ export default function () {
 						</p>
 					</div>
 				</div>
-				<p class="max-w-2xl text-neutral-300 text-center my-1">
-					MacroGraph provides a node-based programming environment for streamers
-					to create custom interactions and automations. It acts as glue between
-					your services and programs, taking care of connecting to them so you
-					can focus on creating.
-				</p>
+				{/* <p class="max-w-2xl text-neutral-300 text-center my-1">
+          MacroGraph provides a node-based programming environment for streamers
+          to create custom interactions and automations. It acts as glue between
+          your services and programs, taking care of connecting to them so you
+          can focus on creating.
+        </p> */}
 				{/* <div class="grid grid-cols-3 grid-rows-2 text-2xl font-medium my-4 gap-x-1 max-w-md w-full">
         <span class="text-right col-span-2">Receive events from </span>
         <div class="overflow-hidden col-span-1 font-bold">
