@@ -18,7 +18,7 @@
 		"@vitest/ui": "^1.4.0",
 		"jsdom": "^23.2.0",
 		"safaridriver": "^0.0.5",
-		"solid-js": "^1.8.16",
+		"solid-js": "^1.8.19",
 		"turbo": "^1.13.0",
 		"turbo-ignore": "^1.13.0",
 		"typescript": "^5.5.3",

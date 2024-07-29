@@ -27,7 +27,7 @@
 		"@tauri-apps/api": "^1.5.3",
 		"@ts-rest/core": "^3.41.1",
 		"@ts-rest/solid-query": "^3.41.1",
-		"solid-js": "^1.8.16",
+		"solid-js": "^1.8.19",
 		"solid-sonner": "^0.2.5",
 		"tauri-plugin-midi": "workspace:*",
 		"vinxi": "0.4.1",
