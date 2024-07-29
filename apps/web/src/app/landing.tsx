@@ -43,12 +43,12 @@ export default function () {
 						</p>
 					</div>
 				</div>
-				{/* <p class="max-w-2xl text-neutral-300 text-center my-1">
-          MacroGraph provides a node-based programming environment for streamers
-          to create custom interactions and automations. It acts as glue between
-          your services and programs, taking care of connecting to them so you
-          can focus on creating.
-        </p> */}
+				<p class="max-w-2xl text-neutral-300 text-center my-1">
+					MacroGraph provides a node-based programming environment for streamers
+					to create custom interactions and automations. It acts as glue between
+					your services and programs, taking care of connecting to them so you
+					can focus on creating.
+				</p>
 				{/* <div class="grid grid-cols-3 grid-rows-2 text-2xl font-medium my-4 gap-x-1 max-w-md w-full">
         <span class="text-right col-span-2">Receive events from </span>
         <div class="overflow-hidden col-span-1 font-bold">
