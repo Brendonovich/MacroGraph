@@ -63,7 +63,7 @@ importers:
         specifier: ^0.13.4
         version: 0.13.4(patch_hash=cd2luusa5ewzsvkvpihsk26cri)(solid-js@1.8.19)
       '@macrograph/api-contract':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/api-contract
       '@macrograph/interface':
         specifier: workspace:*
@@ -74,8 +74,11 @@ importers:
       '@macrograph/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
+      '@macrograph/runtime-serde':
+        specifier: workspace:*
+        version: link:../../packages/runtime-serde
       '@macrograph/ui':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/ui
       '@rspc/client':
         specifier: 0.0.0-main-6ed8cc98
@@ -94,7 +97,7 @@ importers:
         version: 0.12.5(solid-js@1.8.19)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -119,6 +122,9 @@ importers:
       tauri-plugin-midi:
         specifier: workspace:*
         version: link:../../crates/tauri-plugin-midi
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.5.3)
       vinxi:
         specifier: 0.4.1
         version: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
@@ -230,25 +236,28 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(lucia@3.1.1)
       '@macrograph/api-contract':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/api-contract
       '@macrograph/clipboard':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/clipboard
       '@macrograph/http-client':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/http-client
       '@macrograph/interface':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../interface
       '@macrograph/packages':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/packages
       '@macrograph/runtime':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/runtime
+      '@macrograph/runtime-serde':
+        specifier: workspace:*
+        version: link:../../packages/runtime-serde
       '@macrograph/ui':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/ui
       '@planetscale/database':
         specifier: ^1.16.0
@@ -267,7 +276,7 @@ importers:
         version: 0.12.5(solid-js@1.8.19)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -343,6 +352,9 @@ importers:
       unstorage:
         specifier: ^1.10.2
         version: 1.10.2(@planetscale/database@1.16.0)(ioredis@5.4.1)
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.5.3)
       vinxi:
         specifier: 0.4.1
         version: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
@@ -416,12 +428,12 @@ importers:
       '@macrograph/packages':
         specifier: workspace:*
         version: link:../packages/packages
+      '@macrograph/rendering':
+        specifier: workspace:^
+        version: link:../packages/rendering
       '@macrograph/runtime':
         specifier: workspace:*
         version: link:../packages/runtime
-      '@macrograph/schema-rendering':
-        specifier: workspace:^
-        version: link:../packages/schema-rendering
       '@macrograph/typesystem':
         specifier: workspace:^
         version: link:../packages/typesystem
@@ -545,17 +557,17 @@ importers:
   packages/clipboard:
     dependencies:
       '@macrograph/option':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../option
       '@macrograph/runtime':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../runtime
-      '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.8.19)
-      zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+      '@macrograph/runtime-serde':
+        specifier: workspace:*
+        version: link:../runtime-serde
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.5.3)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -775,6 +787,25 @@ importers:
         specifier: ^5.5.3
         version: 5.5.3
 
+  packages/rendering:
+    dependencies:
+      '@macrograph/option':
+        specifier: workspace:^
+        version: link:../option
+      '@macrograph/runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@macrograph/typesystem':
+        specifier: workspace:^
+        version: link:../typesystem
+    devDependencies:
+      '@macrograph/config':
+        specifier: workspace:*
+        version: link:../config
+      '@macrograph/json':
+        specifier: workspace:*
+        version: link:../json
+
   packages/runtime:
     dependencies:
       '@macrograph/api-contract':
@@ -783,6 +814,9 @@ importers:
       '@macrograph/option':
         specifier: workspace:^
         version: link:../option
+      '@macrograph/runtime-serde':
+        specifier: workspace:*
+        version: link:../runtime-serde
       '@macrograph/typesystem':
         specifier: workspace:*
         version: link:../typesystem
@@ -822,6 +856,9 @@ importers:
       '@ts-rest/solid-query':
         specifier: ^3.41.1
         version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.8.19))(zod@3.22.4)
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.5.3)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -848,7 +885,7 @@ importers:
         specifier: ^8.35.1
         version: 8.35.1(typescript@5.5.3)
 
-  packages/schema-rendering:
+  packages/runtime-serde:
     dependencies:
       '@macrograph/option':
         specifier: workspace:^
@@ -859,6 +896,9 @@ importers:
       '@macrograph/typesystem':
         specifier: workspace:^
         version: link:../typesystem
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.5.3)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -9322,6 +9362,14 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  valibot@0.37.0:
+    resolution: {integrity: sha512-FQz52I8RXgFgOHym3XHYSREbNtkgSjF9prvMFH1nBsRyfL6SfCzoT1GuSDTlbsuPubM7/6Kbw0ZMQb8A+V+VsQ==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   validate-html-nesting@1.2.2:
     resolution: {integrity: sha512-hGdgQozCsQJMyfK5urgFcWEqsSSrK63Awe0t/IMR0bZ0QMtnuaiHzThW81guu3qx9abLi99NEuiaN6P9gVYsNg==}
 
@@ -12642,11 +12690,11 @@ snapshots:
     dependencies:
       solid-js: 1.8.19
 
-  '@solidjs/start@1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       glob: 10.4.5
@@ -13654,7 +13702,7 @@ snapshots:
     transitivePeerDependencies:
       - uWebSockets.js
 
-  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
       '@babel/parser': 7.24.8
       acorn: 8.12.1
@@ -13676,9 +13724,9 @@ snapshots:
       unified: 9.2.2
       vfile: 5.3.7
 
-  '@vinxi/server-components@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-components@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)
@@ -13687,9 +13735,9 @@ snapshots:
       recast: 0.23.9
       vinxi: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
 
-  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)
@@ -19048,6 +19096,10 @@ snapshots:
       diff: 5.2.0
       kleur: 4.1.5
       sade: 1.8.1
+
+  valibot@0.37.0(typescript@5.5.3):
+    optionalDependencies:
+      typescript: 5.5.3
 
   validate-html-nesting@1.2.2: {}
 

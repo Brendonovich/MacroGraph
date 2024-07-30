@@ -1,3 +1,4 @@
+import type { serde } from "@macrograph/runtime-serde";
 import {
 	StructBase,
 	StructField,
@@ -6,9 +7,11 @@ import {
 } from "@macrograph/typesystem";
 import { batch, createMemo } from "solid-js";
 import { createMutable } from "solid-js/store";
-import type { z } from "zod";
+import type * as v from "valibot";
+
 import type { Project } from "./Project";
-import type { SerializedCustomStruct } from "./serialized";
+
+type Serialized = v.InferOutput<typeof serde.CustomStruct>;
 
 export class CustomStruct extends StructBase {
 	id: number;
@@ -76,7 +79,7 @@ export class CustomStruct extends StructBase {
 		field.type = type;
 	}
 
-	serialize(): z.infer<typeof SerializedCustomStruct> {
+	serialize(): Serialized {
 		return {
 			id: this.id,
 			name: this.name,
@@ -89,10 +92,7 @@ export class CustomStruct extends StructBase {
 		};
 	}
 
-	static deserialize(
-		project: Project,
-		data: z.infer<typeof SerializedCustomStruct>,
-	) {
+	static deserialize(project: Project, data: Serialized) {
 		const struct = new CustomStruct({
 			project,
 			id: data.id,

@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@macrograph/api-contract": "workspace:^",
 		"@macrograph/option": "workspace:^",
+		"@macrograph/runtime-serde": "workspace:*",
 		"@macrograph/typesystem": "workspace:*",
 		"@rspc/client": "0.0.0-main-6ed8cc98",
 		"@rspc/tauri": "0.0.0-main-6ed8cc98",
@@ -25,6 +26,7 @@
 		"@tauri-apps/api": "^1.5.3",
 		"@ts-rest/core": "^3.41.1",
 		"@ts-rest/solid-query": "^3.41.1",
+		"valibot": "^0.37.0",
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {

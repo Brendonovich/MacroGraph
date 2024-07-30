@@ -7,12 +7,12 @@ import {
 } from "@macrograph/typesystem";
 import { trackDeep } from "@solid-primitives/deep";
 import { createMutable } from "solid-js/store";
-import type { z } from "zod";
+import type * as v from "valibot";
 
+import type { serde } from "@macrograph/runtime-serde";
 import { createEffect, createRoot, getOwner, on, runWithOwner } from "solid-js";
 import { Graph } from "./Graph";
 import type { Project } from "./Project";
-import type { SerializedVariable } from "./serialized";
 
 export type VariableArgs = {
 	id: number;
@@ -21,6 +21,8 @@ export type VariableArgs = {
 	value: any;
 	owner: Graph | Project;
 };
+
+type Serialized = v.InferOutput<typeof serde.Variable>;
 
 export class Variable extends Disposable {
 	id: number;
@@ -72,7 +74,7 @@ export class Variable extends Disposable {
 		return self;
 	}
 
-	serialize(): z.infer<typeof SerializedVariable> {
+	serialize(): Serialized {
 		return {
 			id: this.id,
 			name: this.name,
@@ -81,10 +83,7 @@ export class Variable extends Disposable {
 		};
 	}
 
-	static deserialize(
-		data: z.infer<typeof SerializedVariable>,
-		owner: Graph | Project,
-	) {
+	static deserialize(data: Serialized, owner: Graph | Project) {
 		const project = owner instanceof Graph ? owner.project : owner;
 		const type = deserializeType(data.type, project.getType.bind(project));
 

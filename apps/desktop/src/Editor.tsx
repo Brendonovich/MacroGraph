@@ -4,11 +4,13 @@ import {
 	PlatformContext,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { SerializedProject, createWsProvider } from "@macrograph/runtime";
+import { createWsProvider } from "@macrograph/runtime";
+import { serde } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Show, createSignal, onMount } from "solid-js";
 import "tauri-plugin-midi";
+import * as v from "valibot";
 
 import { Button } from "@macrograph/ui";
 import "./app.css";
@@ -89,7 +91,8 @@ export default function Editor() {
 		const savedProject = localStorage.getItem("project");
 
 		if (savedProject) {
-			const serializedProject = SerializedProject.parse(
+			const serializedProject = v.parse(
+				serde.Project,
 				JSON.parse(savedProject),
 			);
 			core.load(serializedProject).finally(() => {

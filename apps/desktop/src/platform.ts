@@ -1,9 +1,10 @@
 import type { Platform } from "@macrograph/interface";
-import { type Core, SerializedProject } from "@macrograph/runtime";
+import type { Core } from "@macrograph/runtime";
+import { serde } from "@macrograph/runtime-serde";
 import { ask, open, save } from "@tauri-apps/api/dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
-import type { Accessor } from "solid-js";
-import type { Setter } from "solid-js";
+import type { Accessor, Setter } from "solid-js";
+import * as v from "valibot";
 
 export function createPlatform(props: {
 	projectUrl: Accessor<string | null>;
@@ -47,7 +48,7 @@ export function createPlatform(props: {
 
 				const data = await readTextFile(url);
 
-				const serializedProject = SerializedProject.parse(JSON.parse(data));
+				const serializedProject = v.parse(serde.Project, JSON.parse(data));
 
 				await props.core.load(serializedProject);
 

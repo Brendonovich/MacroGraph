@@ -1,5 +1,5 @@
 {
-	"name": "@macrograph/clipboard",
+	"name": "@macrograph/runtime-serde",
 	"private": true,
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -10,12 +10,13 @@
 		"typecheck": "tsc -b"
 	},
 	"dependencies": {
-		"@macrograph/option": "workspace:*",
-		"@macrograph/runtime": "workspace:*",
-		"@macrograph/runtime-serde": "workspace:*",
+		"@macrograph/option": "workspace:^",
+		"@macrograph/runtime": "workspace:^",
+		"@macrograph/typesystem": "workspace:^",
 		"valibot": "^0.37.0"
 	},
 	"devDependencies": {
-		"@macrograph/config": "workspace:*"
+		"@macrograph/config": "workspace:*",
+		"@macrograph/json": "workspace:*"
 	}
 }

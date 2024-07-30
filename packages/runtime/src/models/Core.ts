@@ -1,17 +1,17 @@
 import type { contract } from "@macrograph/api-contract";
 import { Maybe, type Option } from "@macrograph/option";
 import type { InitClientReturn } from "@ts-rest/core";
-import { createMutable } from "solid-js/store";
-import { z } from "zod";
-
 import { batch } from "solid-js";
+import { createMutable } from "solid-js/store";
+import * as v from "valibot";
+
+import type { serde } from "@macrograph/runtime-serde";
 import { DataInput, type DataOutput, type ScopeOutput } from "./IO";
 import type { Node } from "./Node";
 import type { EventsMap, RunCtx } from "./NodeSchema";
 import type { Package } from "./Package";
 import { Project } from "./Project";
 import type { Variable } from "./Variable";
-import type { SerializedProject } from "./serialized";
 
 class NodeEmit {
 	listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -45,12 +45,12 @@ export type OAuthToken = {
 	issued_at: number;
 };
 
-export const OAUTH_TOKEN = z.object({
-	access_token: z.string(),
-	refresh_token: z.string(),
-	expires_in: z.number(),
-	scope: z.array(z.string()).default([]),
-	issued_at: z.number(),
+export const OAUTH_TOKEN = v.object({
+	access_token: v.string(),
+	refresh_token: v.string(),
+	expires_in: v.number(),
+	scope: v.optional(v.array(v.string()), []),
+	issued_at: v.number(),
 });
 
 export type RefreshedOAuthToken = Omit<OAuthToken, "refresh_token">;
@@ -121,7 +121,7 @@ export class Core {
 	}
 
 	// async bc of #402, the project's reactivity needs to be entirely decoupled from the ui
-	async load(projectData: z.infer<typeof SerializedProject>) {
+	async load(projectData: v.InferOutput<typeof serde.Project>) {
 		await new Promise<void>((res) => {
 			batch(() => {
 				this.eventNodeMappings.clear();

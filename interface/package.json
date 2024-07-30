@@ -14,7 +14,7 @@
 		"@macrograph/option": "workspace:^",
 		"@macrograph/packages": "workspace:*",
 		"@macrograph/runtime": "workspace:*",
-		"@macrograph/schema-rendering": "workspace:^",
+		"@macrograph/rendering": "workspace:^",
 		"@macrograph/typesystem": "workspace:^",
 		"@macrograph/ui": "workspace:^",
 		"@solid-primitives/bounds": "^0.0.118",

@@ -6,12 +6,14 @@ import {
 	PlatformContext,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { Core, SerializedProject } from "@macrograph/runtime";
+import { Core } from "@macrograph/runtime";
+import { serde } from "@macrograph/runtime-serde";
 import { AsyncButton, Button } from "@macrograph/ui";
 import { useAction, useSearchParams } from "@solidjs/router";
 import { initClient } from "@ts-rest/core";
 import { Show, createSignal, onMount } from "solid-js";
 import { toast } from "solid-sonner";
+import * as v from "valibot";
 
 import { clientEnv } from "~/env/client";
 import { fetchPlaygroundProject, savePlaygroundProject } from "../api";
@@ -97,7 +99,7 @@ export default () => {
 			fetchPlaygroundProject(params.shared)
 				.then((projectStr) => {
 					if (projectStr)
-						core.load(SerializedProject.parse(JSON.parse(projectStr)));
+						core.load(v.parse(serde.Project, JSON.parse(projectStr)));
 				})
 				.finally(() => {
 					setLoaded(true);
@@ -106,11 +108,9 @@ export default () => {
 			const savedProject = localStorage.getItem("project");
 
 			if (savedProject)
-				core
-					.load(SerializedProject.parse(JSON.parse(savedProject)))
-					.finally(() => {
-						setLoaded(true);
-					});
+				core.load(v.parse(serde.Project, savedProject)).finally(() => {
+					setLoaded(true);
+				});
 		}
 	});
 

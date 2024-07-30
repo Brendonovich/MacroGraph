@@ -3,8 +3,10 @@ import { Disposable } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
+import type * as v from "valibot";
 import { z } from "zod";
 
+import type { serde } from "@macrograph/runtime-serde";
 import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import {
 	CommentBox,
@@ -23,7 +25,6 @@ import {
 import { Node, type NodeArgs } from "./Node";
 import type { Project } from "./Project";
 import { Variable, type VariableArgs } from "./Variable";
-import type { SerializedConnection, SerializedGraph } from "./serialized";
 
 export interface GraphArgs {
 	id: number;
@@ -52,6 +53,8 @@ export function makeIORef(io: Pin): IORef {
 }
 
 export type Connections = ReactiveMap<IORef, Array<IORef>>;
+
+type Serialized = v.InferOutput<typeof serde.Graph>;
 
 export class Graph extends Disposable {
 	id: number;
@@ -256,7 +259,7 @@ export class Graph extends Disposable {
 		this.project.save();
 	}
 
-	serialize(): z.infer<typeof SerializedGraph> {
+	serialize(): Serialized {
 		return {
 			id: this.id,
 			name: this.name,
@@ -269,7 +272,7 @@ export class Graph extends Disposable {
 			),
 			variables: this.variables.map((v) => v.serialize()),
 			connections: (() => {
-				const serialized: Array<z.infer<typeof SerializedConnection>> = [];
+				const serialized: Array<v.InferOutput<typeof serde.Connection>> = [];
 
 				for (const [refStr, conns] of this.connections) {
 					const ref = splitIORef(refStr);
@@ -297,7 +300,7 @@ export class Graph extends Disposable {
 		};
 	}
 
-	static deserialize(project: Project, data: z.infer<typeof SerializedGraph>) {
+	static deserialize(project: Project, data: Serialized) {
 		const graph = new Graph({
 			project,
 			id: data.id,
@@ -348,7 +351,7 @@ export class Graph extends Disposable {
 }
 
 export function deserializeConnections(
-	connections: Array<z.infer<typeof SerializedConnection>>,
+	connections: Array<v.InferOutput<typeof serde.Connection>>,
 	target: Connections,
 	nodeIdMap?: Map<number, number>,
 ) {

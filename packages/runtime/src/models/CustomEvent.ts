@@ -1,10 +1,10 @@
+import type { serde } from "@macrograph/runtime-serde";
 import { type PrimitiveType, deserializeType, t } from "@macrograph/typesystem";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
-import type { z } from "zod";
+import type * as v from "valibot";
 
 import type { Project } from "./Project";
-import type { SerializedCustomEvent } from "./serialized";
 
 type CustomEventField = {
 	id: number;
@@ -22,6 +22,8 @@ export interface EventArgs {
 //   z.object({ variant: z.literal("package"), package: z.string() }),
 //   z.object({ variant: z.literal("custom") }),
 // ]);
+
+export type Serialized = v.InferOutput<typeof serde.CustomEvent>;
 
 export class CustomEvent {
 	id: number;
@@ -73,7 +75,7 @@ export class CustomEvent {
 		this.fields.splice(index, 1);
 	}
 
-	serialize(): z.infer<typeof SerializedCustomEvent> {
+	serialize(): Serialized {
 		return {
 			id: this.id,
 			name: this.name,
@@ -85,10 +87,7 @@ export class CustomEvent {
 		};
 	}
 
-	static deserialize(
-		project: Project,
-		data: z.infer<typeof SerializedCustomEvent>,
-	) {
+	static deserialize(project: Project, data: Serialized) {
 		const event = new CustomEvent({
 			project,
 			id: data.id,

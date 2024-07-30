@@ -8,43 +8,39 @@ import {
 	Node,
 	Project,
 	type ScopeOutput,
-	SerializedCommentBox,
-	SerializedConnection,
-	SerializedGraph,
-	SerializedNode,
-	SerializedProject,
 } from "@macrograph/runtime";
-import { z } from "zod";
+import { serde } from "@macrograph/runtime-serde";
+import * as v from "valibot";
 
-export const ClipboardItem = z.discriminatedUnion("type", [
-	z.object({
-		type: z.literal("node"),
-		node: SerializedNode,
+export const ClipboardItem = v.variant("type", [
+	v.object({
+		type: v.literal("node"),
+		node: serde.Node,
 	}),
-	z.object({
-		type: z.literal("commentBox"),
-		commentBox: SerializedCommentBox,
-		nodes: z.array(SerializedNode),
-		connections: z.array(SerializedConnection),
+	v.object({
+		type: v.literal("commentBox"),
+		commentBox: serde.CommentBox,
+		nodes: v.array(serde.Node),
+		connections: v.array(serde.Connection),
 	}),
-	z.object({
-		type: z.literal("graph"),
-		graph: SerializedGraph,
+	v.object({
+		type: v.literal("graph"),
+		graph: serde.Graph,
 	}),
-	z.object({
-		type: z.literal("project"),
-		project: SerializedProject,
+	v.object({
+		type: v.literal("project"),
+		project: serde.Project,
 	}),
 ]);
 
-export type ClipboardItem = z.infer<typeof ClipboardItem>;
+export type ClipboardItem = v.InferOutput<typeof ClipboardItem>;
 
 export function serializeClipboardItem(item: ClipboardItem) {
 	return btoa(JSON.stringify(item));
 }
 
 export function deserializeClipboardItem(input: string) {
-	return ClipboardItem.parse(JSON.parse(atob(input)));
+	return v.parse(ClipboardItem, JSON.parse(atob(input)));
 }
 
 export async function readFromClipboard() {
@@ -65,7 +61,7 @@ export function nodeToClipboardItem(
 }
 
 export function serializeConnections(nodes: Set<Node>) {
-	const connections: z.infer<typeof SerializedConnection>[] = [];
+	const connections: v.InferOutput<typeof serde.Connection>[] = [];
 
 	for (const node of nodes) {
 		for (const i of node.state.inputs) {

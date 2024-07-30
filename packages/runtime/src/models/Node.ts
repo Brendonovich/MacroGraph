@@ -1,4 +1,5 @@
 import { Maybe, None, type Option, Some } from "@macrograph/option";
+import type { serde } from "@macrograph/runtime-serde";
 import { Disposable } from "@macrograph/typesystem";
 import {
 	type Accessor,
@@ -13,7 +14,7 @@ import {
 	untrack,
 } from "solid-js";
 import { createMutable } from "solid-js/store";
-import { z } from "zod";
+import type * as v from "valibot";
 
 import type { XY } from "../utils";
 import { ExecutionContext } from "./Core";
@@ -33,30 +34,6 @@ import {
 	type inferPropertyDef,
 } from "./NodeSchema";
 
-export const SerializedNode = z.object({
-	id: z.number(),
-	name: z.string(),
-	position: z.object({
-		x: z.number(),
-		y: z.number(),
-	}),
-	schema: z.object({
-		package: z.string(),
-		id: z.string(),
-	}),
-	defaultValues: z.record(z.string(), z.any()),
-	properties: z
-		.record(
-			z.string(),
-			z
-				.string()
-				.or(z.number())
-				.or(z.object({ default: z.literal(true) })),
-		)
-		.default({}),
-	foldPins: z.boolean().default(false),
-});
-
 export interface NodeArgs {
 	id: number;
 	name?: string;
@@ -66,6 +43,8 @@ export interface NodeArgs {
 	properties?: Record<string, string | typeof DEFAULT>;
 	foldPins?: boolean;
 }
+
+type Serialized = v.InferOutput<typeof serde.Node>;
 
 export const DEFAULT = Symbol("default");
 export class Node extends Disposable {
@@ -309,7 +288,7 @@ export class Node extends Disposable {
 		this.graph.project.save();
 	}
 
-	serialize(): z.infer<typeof SerializedNode> {
+	serialize(): Serialized {
 		return {
 			id: this.id,
 			name: this.state.name,
@@ -339,10 +318,7 @@ export class Node extends Disposable {
 		};
 	}
 
-	static deserialize(
-		graph: Graph,
-		data: z.infer<typeof SerializedNode>,
-	): Node | null {
+	static deserialize(graph: Graph, data: Serialized): Node | null {
 		const schema = graph.project.core.schema(
 			data.schema.package,
 			data.schema.id,

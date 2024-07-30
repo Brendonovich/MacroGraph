@@ -1,10 +1,10 @@
 import { createMutable } from "solid-js/store";
-import type { z } from "zod";
+import type * as v from "valibot";
 
+import type { serde } from "@macrograph/runtime-serde";
 import type { Size, XY } from "../utils";
 import type { Graph } from "./Graph";
 import type { Node } from "./Node";
-import type { SerializedCommentBox } from "./serialized";
 
 export interface CommentBoxArgs {
 	id: number;
@@ -16,6 +16,8 @@ export interface CommentBoxArgs {
 }
 
 export type GetNodeSize = (node: Node) => Size | undefined;
+
+type Serialized = v.InferOutput<typeof serde.CommentBox>;
 
 export class CommentBox {
 	id: number;
@@ -61,7 +63,7 @@ export class CommentBox {
 		return ret;
 	}
 
-	serialize(): z.infer<typeof SerializedCommentBox> {
+	serialize(): Serialized {
 		return {
 			id: this.id,
 			position: this.position,
@@ -71,10 +73,7 @@ export class CommentBox {
 		};
 	}
 
-	static deserialize(
-		graph: Graph,
-		data: z.infer<typeof SerializedCommentBox>,
-	): CommentBox | null {
+	static deserialize(graph: Graph, data: Serialized): CommentBox | null {
 		return new CommentBox({
 			graph,
 			id: data.id ?? graph.generateId(),

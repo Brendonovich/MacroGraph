@@ -11,11 +11,12 @@
 	"dependencies": {
 		"@iconify/json": "^2.2.196",
 		"@kobalte/core": "^0.13.4",
-		"@macrograph/api-contract": "workspace:^",
+		"@macrograph/api-contract": "workspace:*",
 		"@macrograph/interface": "workspace:*",
 		"@macrograph/packages": "workspace:*",
 		"@macrograph/runtime": "workspace:*",
-		"@macrograph/ui": "workspace:^",
+		"@macrograph/runtime-serde": "workspace:*",
+		"@macrograph/ui": "workspace:*",
 		"@rspc/client": "0.0.0-main-6ed8cc98",
 		"@rspc/solid": "0.0.0-main-6ed8cc98",
 		"@rspc/tauri": "0.0.0-main-6ed8cc98",
@@ -30,6 +31,7 @@
 		"solid-js": "^1.8.19",
 		"solid-sonner": "^0.2.5",
 		"tauri-plugin-midi": "workspace:*",
+		"valibot": "^0.37.0",
 		"vinxi": "0.4.1",
 		"zod": "^3.22.4"
 	},

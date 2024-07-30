@@ -1,17 +1,17 @@
 import { Maybe, type Option } from "@macrograph/option";
-import type { Enum, SerializedType, StructBase } from "@macrograph/typesystem";
+import type { Enum, StructBase } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import "@total-typescript/ts-reset";
 import { createMutable } from "solid-js/store";
-import type { z } from "zod";
+import type * as v from "valibot";
 
+import type { serde } from "@macrograph/runtime-serde";
 import type { Core } from "./Core";
 import { CustomEvent } from "./CustomEvent";
 import { CustomStruct } from "./CustomStruct";
 import { Graph } from "./Graph";
 import type { ResourceType } from "./Package";
 import { Variable, type VariableArgs } from "./Variable";
-import type { SerializedProject } from "./serialized";
 
 export interface ProjectArgs {
 	core: Core;
@@ -26,6 +26,8 @@ export type ResourceTypeEntry = {
 	items: Array<ResourceTypeItem>;
 	default: number | null;
 };
+
+type Serialized = v.InferOutput<typeof serde.Project>;
 
 export class Project {
 	core: Core;
@@ -75,8 +77,11 @@ export class Project {
 	getType<T extends "struct" | "enum">(
 		variant: T,
 		data:
-			| Extract<z.infer<typeof SerializedType>, { variant: "struct" }>["struct"]
-			| Extract<z.infer<typeof SerializedType>, { variant: "enum" }>["enum"],
+			| Extract<
+					v.InferOutput<typeof serde.Type>,
+					{ variant: "struct" }
+			  >["struct"]
+			| Extract<v.InferOutput<typeof serde.Type>, { variant: "enum" }>["enum"],
 	): Option<StructBase | Enum> {
 		if (data.variant === "package") {
 			const pkg = Maybe(
@@ -201,7 +206,7 @@ export class Project {
 		}
 	}
 
-	serialize(): z.infer<typeof SerializedProject> {
+	serialize(): Serialized {
 		return {
 			name: this.name,
 			graphIdCounter: this.graphIdCounter,
@@ -222,7 +227,7 @@ export class Project {
 		};
 	}
 
-	static deserialize(core: Core, data: z.infer<typeof SerializedProject>) {
+	static deserialize(core: Core, data: Serialized) {
 		const project = new Project({
 			core,
 		});

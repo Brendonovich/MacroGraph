@@ -1,5 +1,5 @@
 {
-	"name": "@macrograph/schema-rendering",
+	"name": "@macrograph/rendering",
 	"private": true,
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
