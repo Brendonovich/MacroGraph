@@ -10,9 +10,14 @@ import {
 	ScopeOutput,
 	type XY,
 	pinIsOutput,
-	renderedTypesCompatible,
 } from "@macrograph/runtime";
-import { type RenderedIO, renderType } from "@macrograph/runtime";
+import {
+	type RenderedIO,
+	type RenderedSchema,
+	renderSchema,
+	renderType,
+	renderedTypesCompatible,
+} from "@macrograph/schema-rendering";
 import { createWritableMemo } from "@solid-primitives/memo";
 import clsx from "clsx";
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";
@@ -61,6 +66,27 @@ export function SchemaMenu(props: Props) {
 	const sortedPackages = createMemo(() =>
 		interfaceCtx.core.packages.sort((a, b) => a.name.localeCompare(b.name)),
 	);
+
+	const renderedSchemas = createMemo(() => {
+		const p = new Map<string, Map<string, RenderedSchema>>();
+
+		for (const pkg of interfaceCtx.core.packages) {
+			const schemas = new Map<string, RenderedSchema>();
+
+			for (const schema of pkg.schemas.values()) {
+				if (!("type" in schema)) continue;
+				const renderedSchema = renderSchema(schema);
+
+				if (renderedSchema) {
+					schemas.set(schema.name, renderedSchema);
+				}
+			}
+
+			p.set(pkg.name, schemas);
+		}
+
+		return p;
+	});
 
 	return (
 		<div
@@ -124,12 +150,17 @@ export function SchemaMenu(props: Props) {
 
 									if (searchMatches) {
 										if (props.suggestion) {
-											if ("type" in schema && schema.rendered) {
+											const renderedSchema = renderedSchemas()
+												.get(p.name)
+												?.get(schema.name);
+											if (!renderedSchema) continue;
+
+											if ("type" in schema) {
 												const { pin } = props.suggestion;
 
 												if (pinIsOutput(pin)) {
 													if (pin instanceof ExecOutput) {
-														const index = schema.rendered.inputs.findIndex(
+														const index = renderedSchema.inputs.findIndex(
 															(i) => i.variant === "exec",
 														);
 														if (index !== -1)
@@ -138,10 +169,10 @@ export function SchemaMenu(props: Props) {
 														const renderedType = renderType(pin.type);
 														if (!renderedType) continue;
 
-														const index = schema.rendered.inputs.findIndex(
+														const index = renderedSchema.inputs.findIndex(
 															(i) => i.variant === "data",
 														);
-														const input = schema.rendered.inputs[index] as
+														const input = renderedSchema.inputs[index] as
 															| Extract<RenderedIO, { variant: "data" }>
 															| undefined;
 
@@ -156,7 +187,7 @@ export function SchemaMenu(props: Props) {
 														)
 															ret.push({ schema, suggestion: { pin: index } });
 													} else if (pin instanceof ScopeOutput) {
-														const index = schema.rendered.inputs.findIndex(
+														const index = renderedSchema.inputs.findIndex(
 															(i) => i.variant === "scope",
 														);
 														if (index !== -1)
@@ -164,7 +195,7 @@ export function SchemaMenu(props: Props) {
 													}
 												} else {
 													if (pin instanceof ExecInput) {
-														const index = schema.rendered.outputs.findIndex(
+														const index = renderedSchema.outputs.findIndex(
 															(i) => i.variant === "exec",
 														);
 														if (index !== -1)
@@ -173,10 +204,10 @@ export function SchemaMenu(props: Props) {
 														const renderedType = renderType(pin.type);
 														if (!renderedType) continue;
 
-														const index = schema.rendered.outputs.findIndex(
+														const index = renderedSchema.outputs.findIndex(
 															(o) => o.variant === "data",
 														);
-														const output = schema.rendered.outputs[index] as
+														const output = renderedSchema.outputs[index] as
 															| Extract<RenderedIO, { variant: "data" }>
 															| undefined;
 														if (
@@ -190,7 +221,7 @@ export function SchemaMenu(props: Props) {
 														)
 															ret.push({ schema, suggestion: { pin: index } });
 													} else if (pin instanceof ScopeInput) {
-														const index = schema.rendered.outputs.findIndex(
+														const index = renderedSchema.outputs.findIndex(
 															(i) => i.variant === "scope",
 														);
 														if (index !== -1)

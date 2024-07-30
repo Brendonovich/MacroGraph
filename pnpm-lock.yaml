@@ -859,13 +859,13 @@ importers:
       '@macrograph/typesystem':
         specifier: workspace:^
         version: link:../typesystem
-      '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.8.19)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
+      '@macrograph/json':
+        specifier: workspace:*
+        version: link:../json
 
   packages/typesystem:
     dependencies:

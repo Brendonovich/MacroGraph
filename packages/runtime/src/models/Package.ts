@@ -14,8 +14,6 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { createLazyMemo } from "@solid-primitives/memo";
 import { type Component, lazy } from "solid-js";
 import type { Simplify } from "type-fest";
-// import { renderSchema } from "@macrograph/schema-rendering";
-import { renderSchema } from "../schemaRendering";
 
 import type { Core } from "./Core";
 import type { ExecInput, ExecOutput } from "./IO";
@@ -185,8 +183,6 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 			},
 			package: this as any,
 		};
-
-		altered.rendered = renderSchema(altered);
 
 		this.schemas.set(altered.name, altered as any);
 

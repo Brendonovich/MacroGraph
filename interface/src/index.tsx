@@ -18,6 +18,7 @@ import {
 	deserializeConnections,
 	pinIsOutput,
 } from "@macrograph/runtime";
+import { createElementBounds } from "@solid-primitives/bounds";
 import {
 	createEventListener,
 	createEventListenerMap,
@@ -341,8 +342,14 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 		e.preventDefault();
 	});
 
+	const [rootRef, setRootRef] = Solid.createSignal<
+		HTMLDivElement | undefined
+	>();
+	const rootBounds = createElementBounds(rootRef);
+
 	return (
 		<div
+			ref={setRootRef}
 			class="relative w-full h-full flex flex-row select-none bg-neutral-800 text-white"
 			onContextMenu={(e) => {
 				e.preventDefault();
@@ -667,8 +674,8 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 									suggestion={data().suggestion}
 									graph={data().graph}
 									position={{
-										x: data().position.x,
-										y: data().position.y,
+										x: data().position.x - (rootBounds.left ?? 0),
+										y: data().position.y - (rootBounds.top ?? 0),
 									}}
 									onCreateCommentBox={() => {
 										Solid.batch(() => {
@@ -682,8 +689,6 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 										});
 									}}
 									onSchemaClicked={(schema, targetSuggestion) => {
-										const graphState = data().graph;
-
 										const pin = Solid.batch(() => {
 											const node = graph().createNode({
 												schema,
