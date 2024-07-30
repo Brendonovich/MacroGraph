@@ -119,8 +119,6 @@ export function CommentBox(props: Props) {
 									}
 								}}
 								onKeyDown={(e) => {
-									if (editing()) return;
-
 									switch (e.key) {
 										case "Backspace":
 										case "Delete": {

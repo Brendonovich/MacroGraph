@@ -19,7 +19,6 @@ import {
 	createSignal,
 } from "solid-js";
 
-import { useUIStore } from "../../../UIStore";
 import { useInterfaceContext } from "../../../context";
 import { useGraphContext } from "../Context";
 
@@ -29,10 +28,8 @@ export function usePin(pin: Accessor<Pin>) {
 
 	const [getRef, ref] = createSignal<HTMLDivElement | null>(null!);
 
-	const UI = useUIStore();
-
 	const mouseState = createMemo(() => ({
-		hovering: UI.state.hoveringPin === pin(),
+		hovering: interfaceCtx.hoveringPin() === pin(),
 		dragging:
 			interfaceCtx.state.status === "pinDragMode" &&
 			interfaceCtx.state.pin === pin(),
@@ -49,7 +46,7 @@ export function usePin(pin: Accessor<Pin>) {
 		createEventListenerMap(ref, {
 			mouseover: () => {
 				if (interfaceCtx.state.status !== "pinDragMode")
-					UI.setHoveringPin(thisPin);
+					interfaceCtx.setHoveringPin(thisPin);
 				else {
 					const draggingPin = interfaceCtx.state.pin;
 					if (
@@ -59,14 +56,15 @@ export function usePin(pin: Accessor<Pin>) {
 						(pinIsOutput(thisPin) &&
 							pinIsInput(draggingPin) &&
 							pinsCanConnect(thisPin, draggingPin))
-					)
-						UI.setHoveringPin(thisPin);
+					) {
+						interfaceCtx.setHoveringPin(thisPin);
+					}
 				}
 			},
 			mouseleave: () => {
 				if (justMouseUpped) return;
 
-				UI.setHoveringPin();
+				interfaceCtx.setHoveringPin(null);
 			},
 			mouseup: () => {
 				batch(() => {
@@ -79,7 +77,7 @@ export function usePin(pin: Accessor<Pin>) {
 					if (interfaceCtx.state.status !== "pinDragMode") return;
 					const draggingPin = interfaceCtx.state.pin;
 
-					UI.setHoveringPin(thisPin);
+					interfaceCtx.setHoveringPin(thisPin);
 
 					if (!draggingPin || draggingPin === thisPin) return;
 

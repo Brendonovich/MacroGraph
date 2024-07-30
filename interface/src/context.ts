@@ -1,17 +1,23 @@
 import type { Pin, XY } from "@macrograph/runtime";
 import { createContextProvider } from "@solid-primitives/context";
+import { createSignal } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
 import type { GraphState } from "./components/Graph/Context";
 
 export const [InterfaceContextProvider, useInterfaceContext] =
 	createContextProvider(() => {
-		const [state, setState] = createStore<MouseState>({ status: "idle" });
+		const [hoveringPin, setHoveringPin] = createSignal<Pin | null>(null);
+		const [state, setState] = createStore<MouseState>({
+			status: "idle",
+		});
 		return {
 			state,
-			setState: (state: MouseState) => {
-				setState(reconcile(state));
+			setState: (value: MouseState) => {
+				setState(reconcile(value));
 			},
+			hoveringPin,
+			setHoveringPin,
 		};
 	}, null!);
 

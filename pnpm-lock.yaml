@@ -8,6 +8,9 @@ patchedDependencies:
   '@kobalte/core@0.13.4':
     hash: cd2luusa5ewzsvkvpihsk26cri
     path: patches/@kobalte__core@0.13.4.patch
+  vinxi@0.4.1:
+    hash: hh7v4bmjosugete5skqri5icdm
+    path: patches/vinxi@0.4.1.patch
 
 importers:
 
@@ -94,7 +97,7 @@ importers:
         version: 0.12.5(solid-js@1.8.19)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -121,7 +124,7 @@ importers:
         version: link:../../crates/tauri-plugin-midi
       vinxi:
         specifier: 0.4.1
-        version: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
+        version: 0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -267,7 +270,7 @@ importers:
         version: 0.12.5(solid-js@1.8.19)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -345,7 +348,7 @@ importers:
         version: 1.10.2(@planetscale/database@1.16.0)(ioredis@5.4.1)
       vinxi:
         specifier: 0.4.1
-        version: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
+        version: 0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
       vite:
         specifier: ^5.2.7
         version: 5.2.7(@types/node@20.14.11)(terser@5.31.3)
@@ -12642,11 +12645,11 @@ snapshots:
     dependencies:
       solid-js: 1.8.19
 
-  '@solidjs/start@1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(rollup@4.18.1)(solid-js@1.8.19)(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.2.7(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       glob: 10.4.5
@@ -13654,7 +13657,7 @@ snapshots:
     transitivePeerDependencies:
       - uWebSockets.js
 
-  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
       '@babel/parser': 7.24.8
       acorn: 8.12.1
@@ -13665,7 +13668,7 @@ snapshots:
       magicast: 0.2.11
       recast: 0.23.9
       tslib: 2.6.3
-      vinxi: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
+      vinxi: 0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
 
   '@vinxi/plugin-mdx@3.7.1(@mdx-js/mdx@2.3.0)':
     dependencies:
@@ -13676,27 +13679,27 @@ snapshots:
       unified: 9.2.2
       vfile: 5.3.7
 
-  '@vinxi/server-components@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-components@0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)
       astring: 1.8.6
       magicast: 0.2.11
       recast: 0.23.9
-      vinxi: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
+      vinxi: 0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
 
-  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)
       astring: 1.8.6
       magicast: 0.2.11
       recast: 0.23.9
-      vinxi: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
+      vinxi: 0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
 
   '@vitest/browser@0.32.4(rollup@4.18.1)(vitest@0.32.4)':
     dependencies:
@@ -19082,7 +19085,7 @@ snapshots:
       unist-util-stringify-position: 3.0.3
       vfile-message: 3.1.4
 
-  vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3):
+  vinxi@0.4.1(patch_hash=hh7v4bmjosugete5skqri5icdm)(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3):
     dependencies:
       '@babel/core': 7.24.9
       '@babel/plugin-syntax-jsx': 7.24.7(@babel/core@7.24.9)
