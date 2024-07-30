@@ -4,7 +4,7 @@ import {
 } from "@macrograph/clipboard";
 import { type ComponentProps, type ParentProps, Show } from "solid-js";
 
-import { useCore } from "../contexts";
+import { useInterfaceContext } from "../context";
 import { usePlatform } from "../platform";
 
 function IconContainer(props: ParentProps<ComponentProps<"div">>) {
@@ -68,14 +68,16 @@ export default () => {
 };
 
 function CopyProjectButton() {
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 
 	return (
 		<button
 			type="button"
 			title="Copy Project"
 			onClick={() =>
-				writeClipboardItemToClipboard(projectToClipboardItem(core.project))
+				writeClipboardItemToClipboard(
+					projectToClipboardItem(interfaceCtx.core.project),
+				)
 			}
 		>
 			<IconContainer>

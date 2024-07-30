@@ -14,7 +14,7 @@ import {
 	useContext,
 } from "solid-js";
 
-import { useCore } from "../contexts";
+import { useInterfaceContext } from "../context";
 import { tw } from "../util";
 
 type TypeDialogState = {
@@ -51,7 +51,7 @@ export function TypeEditor(props: {
 	type: t.Any;
 	onChange?: (type: t.Any) => void;
 }) {
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 	const ctx = createContextValue();
 
 	return (
@@ -102,9 +102,11 @@ export function TypeEditor(props: {
 						</div>
 						<CategoryLabel>Structs</CategoryLabel>
 						<div class="flex flex-col pl-2 mb-1">
-							<Show when={core.project.customStructs.size > 0}>
+							<Show when={interfaceCtx.core.project.customStructs.size > 0}>
 								<span class="text-neutral-300 text-xs mt-0.5">Custom</span>
-								<For each={[...core.project.customStructs.values()]}>
+								<For
+									each={[...interfaceCtx.core.project.customStructs.values()]}
+								>
 									{(struct) => (
 										<TypeItem
 											type="button"
@@ -118,7 +120,7 @@ export function TypeEditor(props: {
 									)}
 								</For>
 							</Show>
-							<For each={core.packages}>
+							<For each={interfaceCtx.core.packages}>
 								{(pkg) => (
 									<Show when={pkg.structs.size > 0}>
 										<span class="text-neutral-300 text-xs mt-0.5">
@@ -145,7 +147,7 @@ export function TypeEditor(props: {
 						</div>
 						<CategoryLabel>Enums</CategoryLabel>
 						<div class="flex flex-col pl-2">
-							<For each={core.packages}>
+							<For each={interfaceCtx.core.packages}>
 								{(pkg) => (
 									<Show when={pkg.enums.size > 0}>
 										<span class="text-neutral-300 text-xs mt-0.5">

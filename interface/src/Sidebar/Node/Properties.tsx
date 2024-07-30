@@ -13,7 +13,7 @@ import {
 	SelectInput,
 	TextInput,
 } from "../../components/ui";
-import { useCore } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 
 export function Properties(props: {
 	node: Node;
@@ -127,10 +127,10 @@ export function Properties(props: {
 								</Match>
 								<Match when={"resource" in property && property}>
 									{(property) => {
-										const core = useCore();
+										const interfaceCtx = useInterfaceContext();
 
 										const items = () => {
-											const resource = core.project.resources.get(
+											const resource = interfaceCtx.core.project.resources.get(
 												property().resource,
 											);
 											if (!resource) return [];

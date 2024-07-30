@@ -10,7 +10,7 @@ import { For, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
-import { useCore, useCoreContext } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
@@ -23,12 +23,12 @@ interface Props {
 }
 
 export function Graphs(props: Props) {
-	const ctx = useCoreContext();
+	const interfaceCtx = useInterfaceContext();
 
 	const [search, setSearch] = createSignal("");
 
 	const tokenisedFilters = createMemo(() =>
-		[...ctx.core.project.graphs.values()].map(
+		[...interfaceCtx.core.project.graphs.values()].map(
 			(g) => [tokeniseString(g.name), g] as const,
 		),
 	);
@@ -54,9 +54,12 @@ export function Graphs(props: Props) {
 						const item = deserializeClipboardItem(await readFromClipboard());
 						if (item.type !== "graph") return;
 
-						item.graph.id = ctx.core.project.generateGraphId();
-						const graph = Graph.deserialize(ctx.core.project, item.graph);
-						ctx.core.project.graphs.set(graph.id, graph);
+						item.graph.id = interfaceCtx.core.project.generateGraphId();
+						const graph = Graph.deserialize(
+							interfaceCtx.core.project,
+							item.graph,
+						);
+						interfaceCtx.core.project.graphs.set(graph.id, graph);
 					}}
 				>
 					<IconGgImport class="size-4" />
@@ -66,7 +69,7 @@ export function Graphs(props: Props) {
 					title="Create graph"
 					onClick={(e) => {
 						e.stopPropagation();
-						const graph = ctx.core.project.createGraph();
+						const graph = interfaceCtx.core.project.createGraph();
 						props.onGraphClicked(graph);
 					}}
 				>
@@ -109,12 +112,12 @@ export function Graphs(props: Props) {
 }
 
 const DeleteButton = (props: { graph: Graph }) => {
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 
 	function deleteGraph() {
-		core.project.graphs.delete(props.graph.id);
+		interfaceCtx.core.project.graphs.delete(props.graph.id);
 		props.graph.dispose();
-		core.project.save();
+		interfaceCtx.core.project.save();
 	}
 
 	return (

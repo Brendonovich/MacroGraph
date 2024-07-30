@@ -17,7 +17,7 @@ import { createWritableMemo } from "@solid-primitives/memo";
 import clsx from "clsx";
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";
 
-import { useCore } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 import type { GraphState } from "../Graph/Context";
 
 interface Props {
@@ -43,7 +43,7 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 };
 
 export function SchemaMenu(props: Props) {
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 
 	const [search, setSearch] = createSignal("");
 
@@ -59,7 +59,7 @@ export function SchemaMenu(props: Props) {
 	onMount(() => searchRef.focus());
 
 	const sortedPackages = createMemo(() =>
-		core.packages.sort((a, b) => a.name.localeCompare(b.name)),
+		interfaceCtx.core.packages.sort((a, b) => a.name.localeCompare(b.name)),
 	);
 
 	return (

@@ -4,17 +4,17 @@ import { For, createMemo, createSignal } from "solid-js";
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
 import { IconButton } from "../../components/ui";
-import { useCoreContext } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
 export function CustomTypes() {
 	const [search, setSearch] = createSignal("");
-	const ctx = useCoreContext();
+	const interfaceCtx = useInterfaceContext();
 
 	const tokenisedEvents = createMemo(() =>
-		[...ctx.core.project.customEvents].map(
+		[...interfaceCtx.core.project.customEvents].map(
 			([id, event]) => [tokeniseString(event.name), [id, event]] as const,
 		),
 	);
@@ -22,7 +22,7 @@ export function CustomTypes() {
 	const filteredEvents = createTokenisedSearchFilter(search, tokenisedEvents);
 
 	const tokenisedStructs = createMemo(() =>
-		[...ctx.core.project.customStructs].map(
+		[...interfaceCtx.core.project.customStructs].map(
 			([id, struct]) => [tokeniseString(struct.name), [id, struct]] as const,
 		),
 	);
@@ -71,11 +71,11 @@ export function CustomTypes() {
 							e.stopPropagation();
 							switch (selected()) {
 								case "events": {
-									ctx.core.project.createCustomEvent();
+									interfaceCtx.core.project.createCustomEvent();
 									return;
 								}
 								case "structs": {
-									ctx.core.project.createCustomStruct();
+									interfaceCtx.core.project.createCustomStruct();
 									return;
 								}
 							}
@@ -103,7 +103,7 @@ export function CustomTypes() {
 													e.stopPropagation();
 
 													event.createField();
-													ctx.core.project.save();
+													interfaceCtx.core.project.save();
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -115,8 +115,8 @@ export function CustomTypes() {
 												onClick={(e) => {
 													e.stopPropagation();
 
-													ctx.core.project.customEvents.delete(id);
-													ctx.core.project.save();
+													interfaceCtx.core.project.customEvents.delete(id);
+													interfaceCtx.core.project.save();
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -130,7 +130,7 @@ export function CustomTypes() {
 															value={field.name}
 															onChange={(value) => {
 																event.editFieldName(field.id, value);
-																ctx.core.project.save();
+																interfaceCtx.core.project.save();
 															}}
 															class="-mx-1"
 														>
@@ -141,7 +141,7 @@ export function CustomTypes() {
 																	e.stopPropagation();
 
 																	event.deletePin(field.id);
-																	ctx.core.project.save();
+																	interfaceCtx.core.project.save();
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -172,7 +172,7 @@ export function CustomTypes() {
 											value={struct.name}
 											onChange={(value) => {
 												struct.name = value;
-												ctx.core.project.save();
+												interfaceCtx.core.project.save();
 											}}
 										>
 											<IconButton
@@ -182,7 +182,7 @@ export function CustomTypes() {
 													e.stopPropagation();
 
 													struct.addField();
-													ctx.core.project.save();
+													interfaceCtx.core.project.save();
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -194,8 +194,8 @@ export function CustomTypes() {
 												onClick={(e) => {
 													e.stopPropagation();
 
-													ctx.core.project.customStructs.delete(id);
-													ctx.core.project.save();
+													interfaceCtx.core.project.customStructs.delete(id);
+													interfaceCtx.core.project.save();
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -209,7 +209,7 @@ export function CustomTypes() {
 															value={field.name ?? field.id}
 															onChange={(value) => {
 																field.name = value;
-																ctx.core.project.save();
+																interfaceCtx.core.project.save();
 															}}
 															class="-mx-1"
 														>
@@ -220,7 +220,7 @@ export function CustomTypes() {
 																	e.stopPropagation();
 
 																	struct.removeField(field.id);
-																	ctx.core.project.save();
+																	interfaceCtx.core.project.save();
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -232,7 +232,7 @@ export function CustomTypes() {
 																type={field.type}
 																onChange={(type) => {
 																	struct.editFieldType(field.id, type as any);
-																	ctx.core.project.save();
+																	interfaceCtx.core.project.save();
 																}}
 															/>
 														</div>

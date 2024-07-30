@@ -1,9 +1,9 @@
 import type { CommentBox } from "@macrograph/runtime";
+import { debounce } from "@solid-primitives/scheduled";
 import type { ParentProps } from "solid-js";
 
-import { debounce } from "@solid-primitives/scheduled";
 import { SidebarSection } from "../../components/Sidebar";
-import { useCore } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 
 function Field(props: ParentProps<{ name: string }>) {
 	return (
@@ -15,10 +15,10 @@ function Field(props: ParentProps<{ name: string }>) {
 }
 
 export function Info(props: { box: CommentBox }) {
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 
 	const save = debounce(() => {
-		core.project.save();
+		interfaceCtx.core.project.save();
 	}, 200);
 
 	return (

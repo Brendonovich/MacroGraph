@@ -10,7 +10,7 @@ import {
 	on,
 } from "solid-js";
 import type { Accessor } from "solid-js";
-import { useCoreContext } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 
 export function createSection(args: {
 	title: string;
@@ -158,11 +158,11 @@ export function CommandDialog(props: { sections: Section[] }) {
 		}),
 	);
 
-	const ctx = useCoreContext();
+	const ctx = useInterfaceContext();
 
 	return (
 		<Dialog.Root open={control.open()} onOpenChange={control.setOpen}>
-			<Dialog.Portal mount={ctx.rootRef()}>
+			<Dialog.Portal>
 				<div class="fixed inset-0 flex flex-col items-center overflow-hidden z-100 pt-48 px-8">
 					<Dialog.Content<"div">
 						ref={control.setRoot}

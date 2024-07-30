@@ -4,19 +4,19 @@ import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton, SelectInput, TextInput } from "../../components/ui";
-import { useCore } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
 export function Resources() {
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 
 	const [search, setSearch] = createSignal("");
 	const tokenisedSearch = createMemo(() => tokeniseString(search()));
 
 	const tokenisedResources = createMemo(() =>
-		[...core.project.resources].map(([type, entry]) => {
+		[...interfaceCtx.core.project.resources].map(([type, entry]) => {
 			const tokenisedItems = entry.items.map(
 				(item) => [tokeniseString(item.name), item] as const,
 			);
@@ -87,7 +87,7 @@ export function Resources() {
 													value={item.name}
 													onChange={(value) => {
 														item.name = value;
-														core.project.save();
+														interfaceCtx.core.project.save();
 													}}
 												>
 													<IconButton
@@ -96,13 +96,15 @@ export function Resources() {
 														onClick={(e) => {
 															e.stopPropagation();
 
-															core.project.resources
+															interfaceCtx.core.project.resources
 																.get(type)
 																?.items.splice(index(), 1);
 															if (data.items.length < 1)
-																core.project.resources.delete(type);
+																interfaceCtx.core.project.resources.delete(
+																	type,
+																);
 
-															core.project.save();
+															interfaceCtx.core.project.save();
 														}}
 													>
 														<IconAntDesignDeleteOutlined class="size-4" />
@@ -166,10 +168,10 @@ export function Resources() {
 }
 
 function AddResourceButton() {
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 
 	const resourceTypes = createMemo(() =>
-		core.packages
+		interfaceCtx.core.packages
 			.map((p) => {
 				if (p.resources.size > 0) return [p, [...p.resources]] as const;
 			})
@@ -196,7 +198,7 @@ function AddResourceButton() {
 											as="button"
 											class="flex flex-row items-center px-1 py-0.5 w-full text-sm text-left hover:bg-white/10 rounded whitespace-nowrap text-ellipsis"
 											onSelect={() => {
-												core.project.createResource({
+												interfaceCtx.core.project.createResource({
 													type,
 													name: "New Resource",
 												});

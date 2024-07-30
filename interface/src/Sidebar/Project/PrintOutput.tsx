@@ -3,7 +3,7 @@ import { For, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
-import { useCore } from "../../contexts";
+import { useInterfaceContext } from "../../context";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 import { SearchInput } from "../SearchInput";
 
@@ -12,10 +12,10 @@ export function PrintOutput() {
 		[],
 	);
 	const [search, setSearch] = createSignal("");
-	const core = useCore();
+	const interfaceCtx = useInterfaceContext();
 
 	onMount(() => {
-		const unsub = core.printSubscribe((value) =>
+		const unsub = interfaceCtx.core.printSubscribe((value) =>
 			setItems((i) => [{ value, timestamp: new Date() }, ...i]),
 		);
 
