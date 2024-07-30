@@ -169,7 +169,7 @@ export function ShareButton() {
 
 				writeToClipboard(
 					new URL(
-						`/?${new URLSearchParams({ shared: id })}`,
+						`/playground?${new URLSearchParams({ shared: id })}`,
 						location.origin,
 					).toString(),
 				);
