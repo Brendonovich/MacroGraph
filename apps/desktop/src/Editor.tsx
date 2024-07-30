@@ -47,8 +47,7 @@ const wsProvider = createWsProvider({
 [
 	() =>
 		pkgs.audio.pkg({
-			prepareURL: (url: string) =>
-				convertFileSrc(url).replace("asset://", "https://asset."),
+			prepareURL: (url: string) => convertFileSrc(url),
 		}),
 	pkgs.discord.pkg,
 	() =>
