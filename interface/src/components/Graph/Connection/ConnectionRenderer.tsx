@@ -98,8 +98,8 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 
 				if (!input || !output) continue;
 
-				const inputPosition = Maybe(ctx.pinPositions.get(input));
-				const outputPosition = Maybe(ctx.pinPositions.get(output));
+				const inputPosition = Maybe(interfaceCtx.pinPositions.get(input));
+				const outputPosition = Maybe(interfaceCtx.pinPositions.get(output));
 
 				inputPosition
 					.zip(outputPosition)
@@ -120,10 +120,12 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 
 		const dragState = getDragState();
 		if (dragState) {
-			const pinPos = Maybe(ctx.pinPositions.get(dragState.pin)).map((pos) => ({
-				x: pos.x,
-				y: pos.y,
-			}));
+			const pinPos = Maybe(interfaceCtx.pinPositions.get(dragState.pin)).map(
+				(pos) => ({
+					x: pos.x,
+					y: pos.y,
+				}),
+			);
 
 			const diffs = ctx.toGraphSpace({
 				x: dragState.mousePosition.x,

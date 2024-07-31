@@ -200,7 +200,7 @@ export class Graph extends Disposable {
 				}
 			}
 
-			this.project.events.emit("modified");
+			this.project.emit("modified");
 		});
 	}
 
@@ -214,6 +214,8 @@ export class Graph extends Disposable {
 
 		this.nodes.delete(node.id);
 		node.dispose();
+
+		this.project.emit("modified");
 	}
 
 	deleteCommentbox(
@@ -232,6 +234,8 @@ export class Graph extends Disposable {
 				this.deleteNode(node);
 			}
 		});
+
+		this.project.emit("modified");
 	}
 
 	async rename(name: string) {

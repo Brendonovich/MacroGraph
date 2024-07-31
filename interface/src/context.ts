@@ -1,9 +1,10 @@
-import type { Core, Pin, XY } from "@macrograph/runtime";
+import type { Core, Node, Pin, Size, XY } from "@macrograph/runtime";
 import { serializeProject } from "@macrograph/runtime-serde";
 import { createContextProvider } from "@solid-primitives/context";
 import { createSignal, onCleanup } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
+import { ReactiveWeakMap } from "@solid-primitives/map";
 import { leading, throttle } from "@solid-primitives/scheduled";
 import type { GraphState } from "./components/Graph/Context";
 
@@ -27,7 +28,11 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			500,
 		);
 
-		onCleanup(props.core.project.events.listen(save));
+		onCleanup(
+			props.core.project.events.listen((e) => {
+				if (e === "modified") save();
+			}),
+		);
 
 		return {
 			state,
@@ -40,6 +45,8 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				return props.core;
 			},
 			save,
+			nodeSizes: new WeakMap<Node, Size>(),
+			pinPositions: new ReactiveWeakMap<Pin, XY>(),
 		};
 	}, null!);
 

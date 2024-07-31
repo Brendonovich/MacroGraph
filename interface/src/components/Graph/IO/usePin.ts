@@ -192,7 +192,7 @@ export function usePin(pin: Accessor<Pin>) {
 		const rect = ref.getBoundingClientRect();
 		if (!rect) return;
 
-		graph.pinPositions.set(
+		interfaceCtx.pinPositions.set(
 			pin(),
 			graph.toGraphSpace({
 				x: rect.x + rect.width / 2,

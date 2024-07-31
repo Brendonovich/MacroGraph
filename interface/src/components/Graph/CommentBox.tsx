@@ -80,7 +80,7 @@ export function CommentBox(props: Props) {
 
 												return untrack(() =>
 													box().getNodes(graph.model().nodes.values(), (node) =>
-														graph.nodeSizes.get(node),
+														interfaceCtx.nodeSizes.get(node),
 													),
 												);
 											});
@@ -128,10 +128,9 @@ export function CommentBox(props: Props) {
 												.model()
 												.deleteCommentbox(
 													box(),
-													(node) => graph.nodeSizes.get(node),
+													(node) => interfaceCtx.nodeSizes.get(node),
 													e.ctrlKey || e.metaKey,
 												);
-											interfaceCtx.save();
 											break;
 										}
 									}
@@ -154,7 +153,7 @@ export function CommentBox(props: Props) {
 											.model()
 											.deleteCommentbox(
 												box(),
-												(node) => graph.nodeSizes.get(node),
+												(node) => interfaceCtx.nodeSizes.get(node),
 												false,
 											);
 										interfaceCtx.save();
@@ -169,7 +168,7 @@ export function CommentBox(props: Props) {
 											.model()
 											.deleteCommentbox(
 												box(),
-												(node) => graph.nodeSizes.get(node),
+												(node) => interfaceCtx.nodeSizes.get(node),
 												true,
 											);
 										interfaceCtx.save();

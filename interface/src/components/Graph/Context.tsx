@@ -1,12 +1,5 @@
-import type {
-	Graph as GraphModel,
-	Node as NodeModel,
-	Pin,
-	Size,
-	XY,
-} from "@macrograph/runtime";
+import type { Graph as GraphModel, XY } from "@macrograph/runtime";
 import { createContextProvider } from "@solid-primitives/context";
-import type { ReactiveWeakMap } from "@solid-primitives/map";
 import type * as Solid from "solid-js";
 
 export type SelectedItemID =
@@ -45,8 +38,6 @@ export const [GraphContextProvider, useGraphContext] = createContextProvider(
 	(props: {
 		value: {
 			model: Solid.Accessor<GraphModel>;
-			pinPositions: ReactiveWeakMap<Pin, XY>;
-			nodeSizes: WeakMap<NodeModel, Size>;
 			state: GraphState;
 			offset: XY;
 			toGraphSpace(pos: XY): XY;

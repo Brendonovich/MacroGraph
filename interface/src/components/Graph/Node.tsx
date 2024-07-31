@@ -85,7 +85,7 @@ export const Node = (props: Props) => {
 
 		const rect = ref.getBoundingClientRect();
 
-		graph.nodeSizes.set(node(), {
+		interfaceCtx.nodeSizes.set(node(), {
 			width: rect.width,
 			height: rect.height,
 		});
@@ -95,7 +95,7 @@ export const Node = (props: Props) => {
 
 			if (!contentRect) return;
 
-			graph.nodeSizes.set(node(), {
+			interfaceCtx.nodeSizes.set(node(), {
 				width: contentRect.width,
 				height: contentRect.height,
 			});
@@ -105,7 +105,7 @@ export const Node = (props: Props) => {
 
 		Solid.onCleanup(() => {
 			obs.disconnect();
-			graph.nodeSizes.delete(node());
+			interfaceCtx.nodeSizes.delete(node());
 		});
 	});
 
@@ -187,12 +187,6 @@ export const Node = (props: Props) => {
 									}}
 									onKeyDown={(e) => {
 										switch (e.key) {
-											case "Backspace":
-											case "Delete": {
-												graph.model().deleteNode(node());
-												interfaceCtx.save();
-												break;
-											}
 											case "ArrowLeft": {
 												node().setPosition({
 													x:

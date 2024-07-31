@@ -5,11 +5,8 @@ import {
 	DataOutput,
 	ExecInput,
 	ExecOutput,
-	type Node as NodeModel,
-	type Pin,
 	ScopeInput,
 	ScopeOutput,
-	type Size,
 	type XY,
 	pinIsOutput,
 } from "@macrograph/runtime";
@@ -18,7 +15,6 @@ import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
-import { ReactiveWeakMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { makePersisted } from "@solid-primitives/storage";
 import "@total-typescript/ts-reset";
@@ -99,9 +95,6 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 		{ name: "current-graph-index" },
 	);
 
-	const nodeSizes = new WeakMap<NodeModel, Size>();
-	const pinPositions = new ReactiveWeakMap<Pin, XY>();
-
 	const currentGraph = Solid.createMemo(() => {
 		const index = currentGraphIndex();
 		if (index === null) return;
@@ -166,7 +159,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 					if (!box) break;
 
 					await writeClipboardItemToClipboard(
-						commentBoxToClipboardItem(box, (node) => nodeSizes.get(node)),
+						commentBoxToClipboardItem(box, (node) => ctx.nodeSizes.get(node)),
 					);
 				}
 
@@ -332,9 +325,32 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 				else
 					setCurrentGraphIndex((i) => Math.min(i + 1, graphStates.length - 1));
 			}
-			// case "Backspace":
-			// case "Delete": {
-			// }
+			case "Backspace":
+			case "Delete": {
+				const graph = currentGraph();
+				if (!graph || !graph.state.selectedItemId) return;
+
+				const { model } = graph;
+				const { selectedItemId } = graph.state;
+
+				if (selectedItemId.type === "node") {
+					const node = model.nodes.get(selectedItemId.id);
+					if (!node) break;
+
+					model.deleteNode(node);
+				} else if (selectedItemId.type === "commentBox") {
+					const box = model.commentBoxes.get(selectedItemId.id);
+					if (!box) break;
+
+					model.deleteCommentbox(
+						box,
+						(node) => ctx.nodeSizes.get(node),
+						e.ctrlKey || e.metaKey,
+					);
+				}
+
+				break;
+			}
 			default: {
 				return;
 			}
@@ -511,8 +527,6 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 						<Graph
 							graph={graph().model}
 							state={graph().state}
-							nodeSizes={nodeSizes}
-							pinPositions={pinPositions}
 							onMouseEnter={() => setHoveredPane(true)}
 							onMouseMove={() => setHoveredPane(true)}
 							onMouseLeave={() => setHoveredPane(null)}
@@ -736,8 +750,8 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 										});
 
 										if (pin) {
-											const pinPosition = pinPositions.get(pin);
-											const nodeSize = nodeSizes.get(pin.node);
+											const pinPosition = ctx.pinPositions.get(pin);
+											const nodeSize = ctx.nodeSizes.get(pin.node);
 											if (!pinPosition || !nodeSize) return;
 
 											const nodeX = pin.node.state.position.x;

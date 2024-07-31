@@ -1,16 +1,9 @@
-import type {
-	Graph as GraphModel,
-	Node as NodeModel,
-	Pin,
-	Size,
-	XY,
-} from "@macrograph/runtime";
+import type { Graph as GraphModel, Size, XY } from "@macrograph/runtime";
 import { createBodyCursor } from "@solid-primitives/cursor";
 import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
-import type { ReactiveWeakMap } from "@solid-primitives/map";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import * as Solid from "solid-js";
 import { createStore } from "solid-js/store";
@@ -35,8 +28,6 @@ const MAX_ZOOM_OUT = 5;
 interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphState;
 	graph: GraphModel;
-	nodeSizes: WeakMap<NodeModel, Size>;
-	pinPositions: ReactiveWeakMap<Pin, XY>;
 	onGraphDrag?(): void;
 	onMouseDown?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
 	onMouseUp?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
@@ -222,12 +213,8 @@ export const Graph = (props: Props) => {
 		<GraphContextProvider
 			value={{
 				model,
-				pinPositions: props.pinPositions,
 				get state() {
 					return props.state;
-				},
-				get nodeSizes() {
-					return props.nodeSizes;
 				},
 				offset: state.bounds,
 				toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, props.state),
