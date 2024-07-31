@@ -124,10 +124,7 @@ export type CommentBox = v.InferOutput<typeof CommentBox>;
 export const Node = v.object({
 	id: v.number(),
 	name: v.string(),
-	position: v.object({
-		x: v.number(),
-		y: v.number(),
-	}),
+	position: XY,
 	schema: v.object({
 		package: v.string(),
 		id: v.string(),
