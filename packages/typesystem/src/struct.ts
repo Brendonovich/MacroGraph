@@ -1,5 +1,5 @@
 import { createMutable } from "solid-js/store";
-import { z } from "zod";
+import * as v from "valibot";
 import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
 
@@ -83,12 +83,12 @@ export class Struct<
 		return data;
 	}
 
-	static refSchema = z.union([
-		z.object({ source: z.literal("project"), id: z.number() }),
-		z.object({
-			source: z.literal("package"),
-			package: z.string(),
-			name: z.string(),
+	static refSchema = v.union([
+		v.object({ source: v.literal("project"), id: v.number() }),
+		v.object({
+			source: v.literal("package"),
+			package: v.string(),
+			name: v.string(),
 		}),
 	]);
 }
@@ -125,8 +125,8 @@ export class StructType<
 		return `Struct(${this.struct.name})`;
 	}
 
-	// asZodType(): z.ZodType<InferStruct<TStruct>> {
-	//   return z.object(
+	// asZodType(): v.ZodType<InferStruct<TStruct>> {
+	//   return v.object(
 	//     Object.entries(this.struct.fields).reduce(
 	//       (acc, [key, value]) => ({
 	//         ...acc,

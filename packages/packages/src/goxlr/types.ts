@@ -1,53 +1,43 @@
-import { z } from "zod";
+import * as v from "valibot";
 
-export const Levels = z.object({
-	volumes: z.record(z.string(), z.number()),
+export const Levels = v.object({
+	volumes: v.record(v.string(), v.number()),
 });
 
-export const MixerStatus = z.object({
+export const MixerStatus = v.object({
 	levels: Levels,
 });
 
-export const DaemonStatus = z.object({
-	mixers: z.record(z.string(), MixerStatus),
+export const DaemonStatus = v.object({
+	mixers: v.record(v.string(), MixerStatus),
 });
 
 function op<
 	K extends string,
-	T extends Record<string, z.ZodSchema> = Record<string, never>,
+	T extends Record<string, v.BaseSchema<any, any, any>> = Record<string, never>,
 >(op: K, schema: T) {
-	return z.object({
-		op: z.literal(op),
-		path: z.string(),
-		...schema,
-	});
+	return v.object({ op: v.literal(op), path: v.string(), ...schema });
 }
 
-export const PatchOperation = z.union([
-	op("add", { value: z.any() }),
+export const PatchOperation = v.union([
+	op("add", { value: v.any() }),
 	op("remove", {}),
-	op("replace", { value: z.any() }),
-	op("move", { from: z.string() }),
-	op("copy", { from: z.string() }),
-	op("test", { value: z.any() }),
+	op("replace", { value: v.any() }),
+	op("move", { from: v.string() }),
+	op("copy", { from: v.string() }),
+	op("test", { value: v.any() }),
 ]);
 
-export const Patch = z.array(PatchOperation);
+export const Patch = v.array(PatchOperation);
 
-export const DaemonResponse = z.union([
-	z.literal("Ok"),
-	z.object({
-		Error: z.string(),
-	}),
-	z.object({
-		Status: DaemonStatus,
-	}),
-	z.object({
-		Patch,
-	}),
+export const DaemonResponse = v.union([
+	v.literal("Ok"),
+	v.object({ Error: v.string() }),
+	v.object({ Status: DaemonStatus }),
+	v.object({ Patch }),
 ]);
 
-export const WebSocketResponse = z.object({
-	id: z.number(),
+export const WebSocketResponse = v.object({
+	id: v.number(),
 	data: DaemonResponse,
 });

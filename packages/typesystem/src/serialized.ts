@@ -1,63 +1,62 @@
 import type { Option } from "@macrograph/option";
-import { z } from "zod";
+import * as v from "valibot";
 
 import { type Enum, type Struct, type StructBase, t } from ".";
 
-const SerializedTypeBases = z.union([
-	z.literal("int"),
-	z.literal("float"),
-	z.literal("string"),
-	z.literal("bool"),
-	z.object({
-		variant: z.literal("struct"),
-		struct: z.discriminatedUnion("variant", [
-			z.object({
-				variant: z.literal("package"),
-				package: z.string(),
-				name: z.string(),
+const SerializedTypeBases = v.union([
+	v.literal("int"),
+	v.literal("float"),
+	v.literal("string"),
+	v.literal("bool"),
+	v.object({
+		variant: v.literal("struct"),
+		struct: v.variant("variant", [
+			v.object({
+				variant: v.literal("package"),
+				package: v.string(),
+				name: v.string(),
 			}),
-			z.object({ variant: z.literal("custom"), id: z.number() }),
+			v.object({ variant: v.literal("custom"), id: v.number() }),
 		]),
 	}),
-	z.object({
-		variant: z.literal("enum"),
-		enum: z.discriminatedUnion("variant", [
-			z.object({
-				variant: z.literal("package"),
-				package: z.string(),
-				name: z.string(),
+	v.object({
+		variant: v.literal("enum"),
+		enum: v.variant("variant", [
+			v.object({
+				variant: v.literal("package"),
+				package: v.string(),
+				name: v.string(),
 			}),
-			z.object({ variant: z.literal("custom"), id: z.number() }),
+			v.object({ variant: v.literal("custom"), id: v.number() }),
 		]),
 	}),
 ]);
 
 type SerializedFieldType =
-	| z.infer<typeof SerializedTypeBases>
+	| v.InferOutput<typeof SerializedTypeBases>
 	| { variant: "option"; inner: SerializedFieldType }
 	| { variant: "list"; item: SerializedFieldType }
 	| { variant: "map"; value: SerializedFieldType };
 
-export const SerializedType: z.ZodType<SerializedFieldType> =
-	SerializedTypeBases.or(
-		z.union([
-			z.object({
-				variant: z.literal("option"),
-				inner: z.lazy(() => SerializedType),
-			}),
-			z.object({
-				variant: z.literal("list"),
-				item: z.lazy(() => SerializedType),
-			}),
-			z.object({
-				variant: z.literal("map"),
-				value: z.lazy(() => SerializedType),
-			}),
-		]),
-	);
+export const SerializedType: v.BaseSchema<any, SerializedFieldType, any> =
+	v.union([
+		SerializedTypeBases,
+		v.object({
+			variant: v.literal("option"),
+			inner: v.lazy(() => SerializedType),
+		}),
+		v.object({
+			variant: v.literal("list"),
+			item: v.lazy(() => SerializedType),
+		}),
+		v.object({
+			variant: v.literal("map"),
+			value: v.lazy(() => SerializedType),
+		}),
+	]);
 
 export function deserializeType(
-	type: z.infer<typeof SerializedType>,
+	type: v.InferOutput<typeof SerializedType>,
 	getType: (variant: "struct" | "enum", data: any) => Option<StructBase | Enum>,
 ): t.Any {
 	switch (type) {

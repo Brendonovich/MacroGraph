@@ -2,7 +2,7 @@ import type { Core } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createResource } from "solid-js";
 import { createStore } from "solid-js/store";
-import { z } from "zod";
+import * as v from "valibot";
 
 import { createAuth } from "./auth";
 import { createChat } from "./chat";
@@ -11,21 +11,21 @@ import { createHelix } from "./helix";
 
 export const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
-const PERSISTED_SCHEMA = z.record(
-	z.string(),
+const PERSISTED_SCHEMA = v.record(
+	v.string(),
 	// auto connect on setup
-	z.object({
-		eventsub: z.boolean().optional(),
-		chat: z.boolean().optional(),
+	v.object({
+		eventsub: v.optional(v.boolean()),
+		chat: v.optional(v.boolean()),
 	}),
 );
 
-export type Persisted = z.infer<typeof PERSISTED_SCHEMA>;
+export type Persisted = v.InferOutput<typeof PERSISTED_SCHEMA>;
 export type PersistedStore = ReturnType<typeof createStore<Persisted>>;
 
 export function createCtx(core: Core) {
 	const persisted = makePersisted(
-		createStore<z.infer<typeof PERSISTED_SCHEMA>>({}),
+		createStore<v.InferOutput<typeof PERSISTED_SCHEMA>>({}),
 		{ name: "packages.twitch" },
 	);
 

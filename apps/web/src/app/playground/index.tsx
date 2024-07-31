@@ -28,13 +28,15 @@ const ExportButton = clientOnly(() =>
 const ShareButton = clientOnly(() =>
 	import("./Editor").then((i) => ({ default: i.ShareButton })),
 );
-import { DesktopDownloadDropdown } from "./DesktopDownloadDropdown";
-import { HeaderAuthFallback } from "./HeaderAuthSection";
-import { Logo } from "./Logo";
-import { Socials } from "./Socials";
+import { DesktopDownloadDropdown } from "../DesktopDownloadDropdown";
+import { HeaderAuthFallback } from "../HeaderAuthSection";
+import { Logo } from "../Logo";
+import { Socials } from "../Socials";
 
 const AuthSection = clientOnly(() =>
-	import("./HeaderAuthSection").then((i) => ({ default: i.HeaderAuthSection })),
+	import("../HeaderAuthSection").then((i) => ({
+		default: i.HeaderAuthSection,
+	})),
 );
 
 function Header() {

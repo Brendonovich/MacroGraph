@@ -4,20 +4,20 @@ import { makeCache } from "@macrograph/utils";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createAsync } from "@solidjs/router";
 import type { Accessor } from "solid-js";
-import { z } from "zod";
+import * as v from "valibot";
 
 import type { PersistedStore } from "./ctx";
 import type { Helix } from "./helix";
 
-const USER_DATA = z.object({
-	id: z.string(),
-	login: z.string(),
-	display_name: z.string(),
+const USER_DATA = v.object({
+	id: v.string(),
+	login: v.string(),
+	display_name: v.string(),
 });
 
 export interface Account {
 	credential: Credential;
-	data: z.infer<typeof USER_DATA>;
+	data: v.InferOutput<typeof USER_DATA>;
 }
 
 export function createAuth(
@@ -35,7 +35,7 @@ export function createAuth(
 
 			const data = await helixClient
 				.call("GET /users", c, {})
-				.then(({ data }) => USER_DATA.parse(data[0]));
+				.then(({ data }) => v.parse(USER_DATA, data[0]));
 
 			return {
 				data,

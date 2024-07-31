@@ -6,7 +6,7 @@ import {
 } from "@macrograph/option";
 import type { Core, OAuthToken } from "@macrograph/runtime";
 import { createResource, createSignal } from "solid-js";
-import { z } from "zod";
+import * as v from "valibot";
 
 import { createEndpoint } from "../httpEndpoint";
 
@@ -77,12 +77,12 @@ export function createCtx(core: Core) {
 		() => authToken().toNullable(),
 		async () => {
 			const resp = await api.oauth.currentUser.get(
-				z.object({
-					data: z.object({
-						attributes: z.object({
-							email: z.string(),
-							full_name: z.string(),
-							thumb_url: z.string(),
+				v.object({
+					data: v.object({
+						attributes: v.object({
+							email: v.string(),
+							full_name: v.string(),
+							thumb_url: v.string(),
 						}),
 					}),
 				}),

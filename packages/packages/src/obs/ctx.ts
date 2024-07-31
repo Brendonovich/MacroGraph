@@ -1,7 +1,7 @@
 import { Maybe } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 import OBS, { EventSubscription } from "obs-websocket-js";
-import { z } from "zod";
+import * as v from "valibot";
 
 type InstanceState = { password: string | null } & (
 	| { state: "disconnected" | "connecting" }
@@ -9,9 +9,9 @@ type InstanceState = { password: string | null } & (
 );
 
 const OBS_INSTANCES = "obs-instances";
-const INSTANCE_SCHEMA = z.object({
-	url: z.string(),
-	password: z.string().nullable(),
+const INSTANCE_SCHEMA = v.object({
+	url: v.string(),
+	password: v.nullable(v.string()),
 });
 
 export function createCtx() {
@@ -81,7 +81,7 @@ export function createCtx() {
 	}
 
 	Maybe(localStorage.getItem(OBS_INSTANCES)).mapAsync(async (jstr) => {
-		const instances = z.array(INSTANCE_SCHEMA).parse(JSON.parse(jstr));
+		const instances = v.parse(v.array(INSTANCE_SCHEMA), JSON.parse(jstr));
 
 		for (const i of instances) {
 			addInstance(i.url, i.password);

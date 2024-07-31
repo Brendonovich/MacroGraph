@@ -19,8 +19,8 @@ import { Show, createSignal, onMount } from "solid-js";
 import { toast } from "solid-sonner";
 import * as v from "valibot";
 
+import { fetchPlaygroundProject, savePlaygroundProject } from "~/api";
 import { clientEnv } from "~/env/client";
-import { fetchPlaygroundProject, savePlaygroundProject } from "../api";
 
 const AUTH_URL = `${clientEnv.VITE_VERCEL_URL}/auth`;
 

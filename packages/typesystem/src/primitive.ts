@@ -1,4 +1,5 @@
-import { z } from "zod";
+import * as v from "valibot";
+
 import type { AnyType, TypeVariant } from ".";
 import { BaseType } from "./base";
 import type { Wildcard, WildcardType } from "./wildcard";
@@ -48,7 +49,7 @@ export class IntType extends BasePrimitiveType<number> {
 	}
 
 	asZodType() {
-		return z.number().int();
+		return v.pipe(v.number(), v.integer());
 	}
 }
 
@@ -65,8 +66,8 @@ export class FloatType extends BasePrimitiveType<number> {
 		return "Float";
 	}
 
-	asZodType(): z.ZodType<number, z.ZodTypeDef, number> {
-		return z.number();
+	asZodType() {
+		return v.number();
 	}
 }
 
@@ -84,7 +85,7 @@ export class StringType extends BasePrimitiveType<string> {
 	}
 
 	asZodType() {
-		return z.string();
+		return v.string();
 	}
 }
 
@@ -102,7 +103,7 @@ export class BoolType extends BasePrimitiveType<boolean> {
 	}
 
 	asZodType() {
-		return z.boolean();
+		return v.boolean();
 	}
 }
 

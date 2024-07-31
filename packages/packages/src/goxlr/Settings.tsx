@@ -1,14 +1,9 @@
 import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
-import { Match, Switch } from "solid-js";
-import { z } from "zod";
-
 import { createForm } from "@tanstack/solid-form";
-import type { Ctx } from "./ctx";
+import { Match, Switch } from "solid-js";
 
-const Schema = z.object({
-	url: z.string(),
-});
+import type { Ctx } from "./ctx";
 
 export default function ({ state, setUrl }: Ctx) {
 	return (

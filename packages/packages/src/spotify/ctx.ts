@@ -5,43 +5,44 @@ import type {
 	RefreshedOAuthToken,
 } from "@macrograph/runtime";
 import { createResource, createSignal } from "solid-js";
-import { z } from "zod";
+import * as v from "valibot";
 
 import { createEndpoint } from "../httpEndpoint";
 
 export const TOKEN_LOCALSTORAGE = "spotifyToken";
 
-const USER = z.object({
-	display_name: z.string().nullable(),
-	external_urls: z.object({ spotify: z.string() }),
-	followers: z.object({ href: z.string().nullable(), total: z.number() }),
-	href: z.string(),
-	id: z.string(),
-	images: z.array(
-		z.object({
-			url: z.string(),
-			height: z.number().nullable(),
-			width: z.number().nullable(),
+const USER = v.object({
+	display_name: v.nullable(v.string()),
+	external_urls: v.object({ spotify: v.string() }),
+	followers: v.object({ href: v.nullable(v.string()), total: v.number() }),
+	href: v.string(),
+	id: v.string(),
+	images: v.array(
+		v.object({
+			url: v.string(),
+			height: v.nullable(v.number()),
+			width: v.nullable(v.number()),
 		}),
 	),
-	type: z.string(),
-	uri: z.string(),
+	type: v.string(),
+	uri: v.string(),
 });
 
-const USER_PRIVATE = USER.and(
-	z.object({
-		product: z.string(),
-		explicit_content: z.object({
-			filter_enabled: z.boolean(),
-			filter_locked: z.boolean(),
+const USER_PRIVATE = v.intersect([
+	USER,
+	v.object({
+		product: v.string(),
+		explicit_content: v.object({
+			filter_enabled: v.boolean(),
+			filter_locked: v.boolean(),
 		}),
-		email: z.string(),
-		country: z.string(),
+		email: v.string(),
+		country: v.string(),
 	}),
-);
+]);
 
 export type Requests = {
-	"GET /me": z.infer<typeof USER_PRIVATE>;
+	"GET /me": v.InferOutput<typeof USER_PRIVATE>;
 };
 
 export function createCtx(core: Core) {

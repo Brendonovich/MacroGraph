@@ -4,7 +4,7 @@ import { makeCache } from "@macrograph/utils";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createAsync } from "@solidjs/router";
 import type { Accessor } from "solid-js";
-import type { z } from "zod";
+import type * as v from "valibot";
 
 import type { PersistedStore } from ".";
 import type { Api } from "./api";
@@ -12,12 +12,12 @@ import type { USER_SCHEMA } from "./schemas";
 
 export interface Account {
 	credential: Credential;
-	data: z.infer<typeof USER_SCHEMA>;
+	data: v.InferOutput<typeof USER_SCHEMA>;
 }
 
 export interface BotAccount {
 	token: string;
-	data: z.infer<typeof USER_SCHEMA>;
+	data: v.InferOutput<typeof USER_SCHEMA>;
 }
 
 export function createAuth(

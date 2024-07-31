@@ -13,8 +13,8 @@ import {
 	createStruct,
 } from "@macrograph/runtime";
 import { type InferEnum, t } from "@macrograph/typesystem";
-
 import type { z } from "zod";
+
 import { createHTTPClient } from "../httpEndpoint";
 import type { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";

@@ -15,7 +15,7 @@
 		"@solid-primitives/map": "^0.4.11",
 		"@solid-primitives/set": "^0.4.11",
 		"@tanstack/solid-query": "^4.36.1",
-		"zod": "^3.22.4"
+		"valibot": "^0.37.0"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",

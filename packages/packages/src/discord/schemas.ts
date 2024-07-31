@@ -1,38 +1,42 @@
-import { z } from "zod";
+import * as v from "valibot";
 
-export const USER_SCHEMA = z.object({
-	id: z.string(),
-	username: z.string(),
-	global_name: z.string().nullish(),
-	discriminator: z.string(),
-	avatar: z.string().nullish(),
-	bot: z.boolean().nullish(),
-	system: z.boolean().nullish(),
-	mfa_enabled: z.boolean().nullish(),
-	banner: z.string().nullish(),
-	accent_color: z.number().nullish(),
-	locale: z.string().nullish(),
-	verified: z.boolean().nullish(),
-	email: z.string().nullish(),
-	flags: z.number().nullish(),
-	premium_type: z.number().nullish(),
-	public_flags: z.number().nullish(),
+const NullishString = v.nullish(v.string());
+const NullishBoolean = v.nullish(v.boolean());
+const NullishNumber = v.nullish(v.number());
+
+export const USER_SCHEMA = v.object({
+	id: v.string(),
+	username: v.string(),
+	global_name: NullishString,
+	discriminator: v.string(),
+	avatar: NullishString,
+	bot: NullishBoolean,
+	system: NullishBoolean,
+	mfa_enabled: NullishBoolean,
+	banner: NullishString,
+	accent_color: NullishNumber,
+	locale: NullishString,
+	verified: NullishBoolean,
+	email: NullishString,
+	flags: NullishNumber,
+	premium_type: NullishNumber,
+	public_flags: NullishNumber,
 });
 
-export const GUILD_MEMBER_SCHEMA = z.object({
-	user: USER_SCHEMA.optional(),
-	nick: z.string().optional(),
-	roles: z.array(z.string()),
+export const GUILD_MEMBER_SCHEMA = v.object({
+	user: v.optional(USER_SCHEMA),
+	nick: v.optional(v.string()),
+	roles: v.array(v.string()),
 });
 
-export const ROLE_SCHEMA = z.object({
-	color: z.number(),
-	flags: z.number(),
-	hoist: z.boolean(),
-	id: z.string(),
-	managed: z.boolean(),
-	mentionable: z.boolean(),
-	permissions: z.string(),
-	position: z.number(),
-	name: z.string(),
+export const ROLE_SCHEMA = v.object({
+	color: v.number(),
+	flags: v.number(),
+	hoist: v.boolean(),
+	id: v.string(),
+	managed: v.boolean(),
+	mentionable: v.boolean(),
+	permissions: v.string(),
+	position: v.number(),
+	name: v.string(),
 });

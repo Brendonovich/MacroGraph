@@ -2,7 +2,7 @@ import { type Core, Package } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createResource } from "solid-js";
 import { createStore } from "solid-js/store";
-import { z } from "zod";
+import * as v from "valibot";
 
 import * as api from "./api";
 import * as gateway from "./gateway";
@@ -14,23 +14,26 @@ import { DiscordAccount, DiscordBot } from "./resource";
 
 export type Pkg = Package<any, Ctx>;
 
-const PERSISTED_SCHEMA = z.object({
-	bots: z.record(
-		z.string(),
-		z.object({
-			token: z.string(),
-			gateway: z.boolean().optional(),
+const PERSISTED_SCHEMA = v.object({
+	bots: v.record(
+		v.string(),
+		v.object({
+			token: v.string(),
+			gateway: v.optional(v.boolean()),
 		}),
 	),
-	users: z.array(z.string()),
+	users: v.array(v.string()),
 });
 
-export type Persisted = z.infer<typeof PERSISTED_SCHEMA>;
+export type Persisted = v.InferOutput<typeof PERSISTED_SCHEMA>;
 export type PersistedStore = ReturnType<typeof createStore<Persisted>>;
 
 function createCtx(core: Core) {
 	const persisted = makePersisted(
-		createStore<z.infer<typeof PERSISTED_SCHEMA>>({ bots: {}, users: [] }),
+		createStore<v.InferOutput<typeof PERSISTED_SCHEMA>>({
+			bots: {},
+			users: [],
+		}),
 		{ name: "packages.discord" },
 	);
 

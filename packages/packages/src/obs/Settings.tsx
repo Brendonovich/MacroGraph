@@ -1,18 +1,18 @@
 import { Button, Input } from "@macrograph/ui";
-import { For, Match, Switch } from "solid-js";
-
 import { createForm } from "@tanstack/solid-form";
-import { zodValidator } from "@tanstack/zod-form-adapter";
-import type { z } from "zod";
+import { valibotValidator } from "@tanstack/valibot-form-adapter";
+import { For, Match, Switch } from "solid-js";
+import type * as v from "valibot";
+
 import type { Ctx } from "./ctx";
 import { AUTH_SCHEMA } from "./ws";
 
 export default function (ctx: Ctx) {
 	const form = createForm<
-		z.infer<typeof AUTH_SCHEMA>,
-		ReturnType<typeof zodValidator>
+		v.InferOutput<typeof AUTH_SCHEMA>,
+		ReturnType<typeof valibotValidator>
 	>(() => ({
-		validatorAdapter: zodValidator(),
+		validatorAdapter: valibotValidator(),
 		validators: { onSubmit: AUTH_SCHEMA },
 		onSubmit: ({ value }) => {
 			ctx.addInstance(value.url, value.password);

@@ -725,6 +725,9 @@ importers:
       '@tanstack/solid-query':
         specifier: ^4.36.1
         version: 4.36.1(solid-js@1.8.19)
+      '@tanstack/valibot-form-adapter':
+        specifier: ^0.26.4
+        version: 0.26.4(valibot@0.37.0(typescript@5.5.3))
       '@tanstack/zod-form-adapter':
         specifier: ^0.25.3
         version: 0.25.3(zod@3.22.4)
@@ -761,6 +764,9 @@ importers:
       tmi.js:
         specifier: ^1.8.5
         version: 1.8.5
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.5.3)
       vtubestudio:
         specifier: ^3.10.1
         version: 3.10.1
@@ -927,9 +933,9 @@ importers:
       '@tanstack/solid-query':
         specifier: ^4.36.1
         version: 4.36.1(solid-js@1.8.19)
-      zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.5.3)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -4289,6 +4295,9 @@ packages:
   '@tanstack/form-core@0.25.3':
     resolution: {integrity: sha512-4ZPuzsCvqpdJGy/06+pBlgr6khvkwxyMFLcrlieD+8ilBRqCvNdojUvdDLz4EDP74vmxl3RWo7anqzJ3H6xkMw==}
 
+  '@tanstack/form-core@0.26.4':
+    resolution: {integrity: sha512-rQpwyjb82tWoC4eQHUq3R8ojFQ4M/6WxitTexiFEOQ0k8pfN1kLy9ktlyFH6QeAerl855orShpB1pkYzyZqw0w==}
+
   '@tanstack/query-core@4.36.1':
     resolution: {integrity: sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==}
 
@@ -4309,6 +4318,11 @@ packages:
 
   '@tanstack/store@0.5.4':
     resolution: {integrity: sha512-EG/aGAK/yUJz0JxPaY9wOr1Sjz9Uc//BX7uY9SAo5M0GkCEz7DOSxixBq2afn/reLMGqTIGYq7TkMGgyNQgdcA==}
+
+  '@tanstack/valibot-form-adapter@0.26.4':
+    resolution: {integrity: sha512-H6MOBIXIPpWm91TiWHSJsUT+0W961k6iNvdIx0El8zn+oyNYMqhOufgagT3hlHNWOkyYUxPvuMnpuQtiXg49Uw==}
+    peerDependencies:
+      valibot: '>=0.33.0 <1'
 
   '@tanstack/zod-form-adapter@0.25.3':
     resolution: {integrity: sha512-8+TgBMvC3w7KkwykwX/NWkTqE68ZZeksZArzOvwSwpaYvEuFEiZ/zvVFPFjpo9IcW4vlc4LmWheyO7OpohZAsw==}
@@ -13258,6 +13272,10 @@ snapshots:
     dependencies:
       '@tanstack/store': 0.5.4
 
+  '@tanstack/form-core@0.26.4':
+    dependencies:
+      '@tanstack/store': 0.5.4
+
   '@tanstack/query-core@4.36.1': {}
 
   '@tanstack/solid-form@0.26.2(solid-js@1.8.19)':
@@ -13277,6 +13295,11 @@ snapshots:
       solid-js: 1.8.19
 
   '@tanstack/store@0.5.4': {}
+
+  '@tanstack/valibot-form-adapter@0.26.4(valibot@0.37.0(typescript@5.5.3))':
+    dependencies:
+      '@tanstack/form-core': 0.26.4
+      valibot: 0.37.0(typescript@5.5.3)
 
   '@tanstack/zod-form-adapter@0.25.3(zod@3.22.4)':
     dependencies:

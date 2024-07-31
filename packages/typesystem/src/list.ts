@@ -1,4 +1,3 @@
-// import { z } from "zod";
 import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
 

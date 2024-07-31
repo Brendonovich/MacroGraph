@@ -1,6 +1,7 @@
 import { None, makePersistedOption } from "@macrograph/option";
 import type { OnEvent } from "@macrograph/runtime";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
+import * as v from "valibot";
 
 import type { Event } from ".";
 import { WebSocketResponse } from "./types";
@@ -40,7 +41,7 @@ export function createCtx(onEvent: OnEvent<Event>) {
 					});
 
 					ws.addEventListener("message", (msg) => {
-						const { data } = WebSocketResponse.parse(JSON.parse(msg.data));
+						const { data } = v.parse(WebSocketResponse, JSON.parse(msg.data));
 						if (data === "Ok") return;
 
 						if ("Status" in data) {

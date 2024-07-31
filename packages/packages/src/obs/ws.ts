@@ -1,13 +1,13 @@
 import { Maybe } from "@macrograph/option";
 import OBS, { EventSubscription } from "obs-websocket-js";
 import { createSignal } from "solid-js";
-import { z } from "zod";
+import * as v from "valibot";
 
 const OBS_WS = "obsWs";
 
-export const AUTH_SCHEMA = z.object({
-	url: z.string().url(),
-	password: z.string().optional(),
+export const AUTH_SCHEMA = v.object({
+	url: v.pipe(v.string(), v.url()),
+	password: v.optional(v.string()),
 });
 
 export function createWs() {
@@ -42,7 +42,7 @@ export function createWs() {
 	obs.on("ConnectionError", () => setState("disconnected"));
 
 	Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
-		const { url, password } = AUTH_SCHEMA.parse(JSON.parse(jstr));
+		const { url, password } = v.parse(AUTH_SCHEMA, JSON.parse(jstr));
 
 		try {
 			await connect(url, password);

@@ -4,7 +4,7 @@ import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { ReactiveMap } from "@solid-primitives/map";
-import type { z } from "zod";
+import type * as v from "valibot";
 
 import type { Ctx, PersistedStore } from ".";
 import type { BotAccount } from "./auth";
@@ -169,8 +169,8 @@ export function register(pkg: Package, { gateway }: Ctx) {
 			ctx.setOutput(io.userId, data.author.id);
 			ctx.setOutput(
 				io.nickname,
-				Maybe(data.member as z.infer<typeof GUILD_MEMBER_SCHEMA>).andThen((v) =>
-					Maybe(v.nick),
+				Maybe(data.member as v.InferOutput<typeof GUILD_MEMBER_SCHEMA>).andThen(
+					(v) => Maybe(v.nick),
 				),
 			);
 			ctx.setOutput(io.guildId, Maybe(data.guild_id as string | null));

@@ -9,7 +9,7 @@ import {
 	on,
 	onCleanup,
 } from "solid-js";
-import { z } from "zod";
+import * as v from "valibot";
 
 import type { Events } from ".";
 import { createEndpoint } from "../httpEndpoint";
@@ -73,9 +73,9 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 
 		const [user] = createResource(async () => {
 			const resp = await api.user.get(
-				z.object({
-					streamlabs: z.object({
-						display_name: z.string(),
+				v.object({
+					streamlabs: v.object({
+						display_name: v.string(),
 					}),
 				}),
 			);
@@ -101,19 +101,19 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 						});
 
 						socket.on("event", (eventData) => {
-							const parsed = EVENT.safeParse(eventData);
+							const parsed = v.safeParse(EVENT, eventData);
 
 							if (!parsed.success) return;
 
-							if ("giftMembershipsCount" in parsed.data.message[0])
+							if ("giftMembershipsCount" in parsed.output.message[0])
 								onEvent({
 									name: "membershipGiftStart",
-									data: parsed.data.message[0],
+									data: parsed.output.message[0],
 								});
 							else
 								onEvent({
-									name: parsed.data.type,
-									data: parsed.data.message[0],
+									name: parsed.output.type,
+									data: parsed.output.message[0],
 								});
 						});
 

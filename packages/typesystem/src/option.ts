@@ -1,5 +1,5 @@
 import { None, Option } from "@macrograph/option";
-import { z } from "zod";
+import * as v from "valibot";
 
 import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
@@ -29,10 +29,10 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
 		return `Option<${this.inner.toString()}>`;
 	}
 
-	asZodType(): z.ZodType<Option<t.infer<T>>> {
+	asZodType() {
 		// TODO: needs to validate inner
 
-		return z.instanceof(Option) as any;
+		return v.instance(Option<t.infer<T>>);
 	}
 
 	getWildcards(): Wildcard[] {

@@ -11,7 +11,7 @@ import type {
 	SchemaProperties,
 } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import type { z } from "zod";
+import type * as v from "valibot";
 
 import type { Ctx } from ".";
 import { createHTTPClient } from "../httpEndpoint";
@@ -21,13 +21,13 @@ import type { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
 
 export type Requests = {
 	[_: `POST /channels/${string}/messages`]: any;
-	"GET /users/@me": z.infer<typeof USER_SCHEMA>;
-	[_: `GET /users/${string}`]: z.infer<typeof USER_SCHEMA>;
+	"GET /users/@me": v.InferOutput<typeof USER_SCHEMA>;
+	[_: `GET /users/${string}`]: v.InferOutput<typeof USER_SCHEMA>;
 	[_: `GET /guilds/${string}/members`]: any;
-	[_: `GET /guilds/${string}/members/${string}`]: z.infer<
+	[_: `GET /guilds/${string}/members/${string}`]: v.InferOutput<
 		typeof GUILD_MEMBER_SCHEMA
 	>;
-	[_: `GET /guilds/${string}/roles`]: Array<z.infer<typeof ROLE_SCHEMA>>;
+	[_: `GET /guilds/${string}/roles`]: Array<v.InferOutput<typeof ROLE_SCHEMA>>;
 };
 
 type Auth = { type: "bot"; token: string } | { type: "cred"; cred: Credential };

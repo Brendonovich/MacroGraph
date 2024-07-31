@@ -3,6 +3,7 @@ import { action, useAction, useSubmission } from "@solidjs/router";
 import { eq } from "drizzle-orm";
 import { generateId } from "lucia";
 import { Argon2id } from "oslo/password";
+import * as v from "valibot";
 import { appendResponseHeader, setCookie } from "vinxi/http";
 
 import { db } from "~/drizzle";
@@ -24,15 +25,15 @@ const signUpAction = action(async (form: FormData) => {
 	"use server";
 
 	try {
-		const result = CREDENTIALS.safeParse({
+		const result = v.safeParse(CREDENTIALS, {
 			email: form.get("email"),
 			password: form.get("password"),
 		});
 
 		if (!result.success) {
-			throw result.error.errors[0].message;
+			throw result.issues[0].message;
 		}
-		const { data } = result;
+		const { output: data } = result;
 
 		const hashedPassword = await new Argon2id().hash(data.password);
 		const userId = generateId(15);
@@ -55,13 +56,13 @@ const loginWithCredentialsAction = action(async (form: FormData) => {
 	"use server";
 
 	try {
-		const result = CREDENTIALS.safeParse({
+		const result = v.safeParse(CREDENTIALS, {
 			email: form.get("email"),
 			password: form.get("password"),
 		});
 
 		if (!result.success) throw "Invalid credentials";
-		const { data } = result;
+		const { output: data } = result;
 
 		const user = await db.query.users.findFirst({
 			where: eq(users.email, data.email),

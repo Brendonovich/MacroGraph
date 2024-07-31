@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import * as v from "valibot";
 
 export type Endpoint = ReturnType<typeof createEndpoint>;
 
@@ -13,11 +13,12 @@ export function createEndpoint({ path, extend, fetch }: EndpointArgs) {
 
 	const createFetcher =
 		(method: string) =>
-		async <TSchema extends z.ZodType>(
+		async <TSchema extends v.BaseSchema<any, any, any>>(
 			schema: TSchema,
 			args?: Omit<RequestInit, "method">,
-		): Promise<z.infer<TSchema>> => {
-			return schema.parse(
+		): Promise<v.InferOutput<TSchema>> => {
+			return v.parse(
+				schema,
 				await fetch(path, {
 					method,
 					...args,

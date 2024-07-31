@@ -1,74 +1,79 @@
-import { z } from "zod";
+import * as v from "valibot";
 
-export const EVENT = z.discriminatedUnion("type", [
-	z.object({
-		type: z.literal("donation"),
-		message: z.tuple([
-			z.object({
-				name: z.string().nullable().optional(),
-				amount: z.coerce.number().nullable().optional(),
-				currency: z.string().nullable().optional(),
-				formattedAmount: z.string().nullable().optional(),
-				message: z.string().nullable().optional(),
-				from: z.string().nullable().optional(),
-				fromId: z.string().nullable().optional(),
+function maybe<T extends v.BaseSchema<any, any, any>>(t: T) {
+	return v.optional(v.nullable(t));
+}
+
+export const EVENT = v.variant("type", [
+	v.object({
+		type: v.literal("donation"),
+		message: v.tuple([
+			v.object({
+				name: maybe(v.string()),
+				amount: maybe(v.pipe(v.string(), v.transform(Number))),
+				currency: maybe(v.string()),
+				formattedAmount: maybe(v.string()),
+				message: maybe(v.string()),
+				from: maybe(v.string()),
+				fromId: maybe(v.string()),
 			}),
 		]),
 	}),
-	z.object({
-		for: z.literal("youtube_account"),
-		type: z.literal("subscription"),
-		message: z.tuple([
-			z.object({
-				name: z.string().nullable().optional(),
-				months: z.coerce.number().nullable().optional(),
-				message: z.string().nullable().optional(),
-				membershipLevelName: z.string().nullable().optional(),
+	v.object({
+		for: v.literal("youtube_account"),
+		type: v.literal("subscription"),
+		message: v.tuple([
+			v.object({
+				name: maybe(v.string()),
+				months: maybe(v.pipe(v.string(), v.transform(Number))),
+				message: maybe(v.string()),
+				membershipLevelName: maybe(v.string()),
 			}),
 		]),
 	}),
-	z.object({
-		for: z.literal("youtube_account"),
-		type: z.literal("superchat"),
-		message: z.tuple([
-			z.object({
-				name: z.string().nullable().optional(),
-				currency: z.string().nullable().optional(),
-				displayString: z.string().nullable().optional(),
-				amount: z.string().nullable().optional(),
-				comment: z.string().nullable().optional(),
+	v.object({
+		for: v.literal("youtube_account"),
+		type: v.literal("superchat"),
+		message: v.tuple([
+			v.object({
+				name: maybe(v.string()),
+				currency: maybe(v.string()),
+				displayString: maybe(v.string()),
+				amount: maybe(v.string()),
+				comment: maybe(v.string()),
 			}),
 		]),
 	}),
-	z.object({
-		for: z.literal("youtube_account"),
-		type: z.literal("membershipGift"),
-		message: z.tuple([
-			z
-				.object({
-					name: z.string().nullable().optional(),
-					channelUrl: z.string().nullable().optional(),
-				})
-				.and(
-					z.union([
-						z.object({
-							giftMembershipsLevelName: z.string().nullable().optional(),
-							giftMembershipsCount: z.coerce.number().nullable().optional(),
-							membershipMessageId: z.string().nullable().optional(),
-						}),
-						z.object({
-							membershipLevelName: z.string().nullable().optional(),
-							message: z.string().nullable().optional(),
-							youtubeMembershipGiftId: z.string().nullable().optional(),
-							membershipMessageId: z.string().nullable().optional(),
-						}),
-					]),
-				),
+	v.object({
+		for: v.literal("youtube_account"),
+		type: v.literal("membershipGift"),
+		message: v.tuple([
+			v.intersect([
+				v.object({
+					name: maybe(v.string()),
+					channelUrl: maybe(v.string()),
+				}),
+				v.union([
+					v.object({
+						giftMembershipsLevelName: maybe(v.string()),
+						giftMembershipsCount: maybe(
+							v.pipe(v.string(), v.transform(Number)),
+						),
+						membershipMessageId: maybe(v.string()),
+					}),
+					v.object({
+						membershipLevelName: maybe(v.string()),
+						message: maybe(v.string()),
+						youtubeMembershipGiftId: maybe(v.string()),
+						membershipMessageId: maybe(v.string()),
+					}),
+				]),
+			]),
 		]),
 	}),
 ]);
 
-export type Event = EventsToObject<z.infer<typeof EVENT>>;
+export type Event = EventsToObject<v.InferOutput<typeof EVENT>>;
 
 type EventsToObject<T extends { type: string; message: [any] }> = {
 	[K in T["type"]]: Extract<T, { type: K }>["message"][0];

@@ -1,14 +1,12 @@
 import type { OnEvent, WsProvider } from "@macrograph/runtime";
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-import { z } from "zod";
+import * as v from "valibot";
 
 export const SDWS = "SDWS_PORT";
 
 export type ConnectionState =
-	| {
-			type: "Stopped";
-	  }
+	| { type: "Stopped" }
 	| { type: "Starting" }
 	| {
 			type: "Running";
@@ -27,30 +25,27 @@ function createADTStore<T extends object>(init: T) {
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-const COORDINATES = z.object({
-	column: z.number(),
-	row: z.number(),
+const COORDINATES = v.object({
+	column: v.number(),
+	row: v.number(),
 });
 
 const keyEvent = <TEvent extends string>(event: TEvent) =>
-	z.object({
-		event: z.literal(event),
-		payload: z.object({
+	v.object({
+		event: v.literal(event),
+		payload: v.object({
 			coordinates: COORDINATES,
-			isInMultiAction: z.boolean(),
-			settings: z.object({
-				id: z.string(),
-				remoteServer: z.string(),
+			isInMultiAction: v.boolean(),
+			settings: v.object({
+				id: v.string(),
+				remoteServer: v.string(),
 			}),
 		}),
 	});
 
-const MESSAGE = z.discriminatedUnion("event", [
-	keyEvent("keyDown"),
-	keyEvent("keyUp"),
-]);
+const MESSAGE = v.variant("event", [keyEvent("keyDown"), keyEvent("keyUp")]);
 
-export type Message = z.infer<typeof MESSAGE>;
+export type Message = v.InferOutput<typeof MESSAGE>;
 
 export type Events = {
 	[Event in Message["event"]]: Extract<Message, { event: Event }>["payload"];
@@ -80,7 +75,7 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
 					"Text" in msg &&
 					client === connectedClient()
 				) {
-					const parsed = MESSAGE.parse(JSON.parse(msg.Text));
+					const parsed = v.parse(MESSAGE, JSON.parse(msg.Text));
 
 					onEvent({ name: parsed.event, data: parsed.payload });
 				}
