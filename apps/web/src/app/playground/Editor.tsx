@@ -98,7 +98,7 @@ export default () => {
 	const [loaded, setLoaded] = createSignal(false);
 	const [params] = useSearchParams<{ shared?: string }>();
 
-	onMount(() => {
+	onMount(async () => {
 		if (params.shared) {
 			fetchPlaygroundProject(params.shared)
 				.then((projectStr) => {
@@ -116,17 +116,20 @@ export default () => {
 		} else {
 			const savedProject = localStorage.getItem("project");
 
-			if (savedProject)
-				core
-					.load((c) =>
+			if (savedProject) {
+				try {
+					await core.load((c) =>
 						deserializeProject(
 							c,
 							v.parse(serde.Project, JSON.parse(savedProject)),
 						),
-					)
-					.finally(() => {
-						setLoaded(true);
-					});
+					);
+				} catch {}
+
+				// handling this case is IMPORTANT!!!
+			}
+
+			setLoaded(true);
 		}
 	});
 
