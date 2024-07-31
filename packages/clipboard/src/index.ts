@@ -9,7 +9,13 @@ import {
 	Project,
 	type ScopeOutput,
 } from "@macrograph/runtime";
-import { serde } from "@macrograph/runtime-serde";
+import {
+	serde,
+	serializeCommentBox,
+	serializeGraph,
+	serializeNode,
+	serializeProject,
+} from "@macrograph/runtime-serde";
 import * as v from "valibot";
 
 export const ClipboardItem = v.variant("type", [
@@ -56,7 +62,7 @@ export function nodeToClipboardItem(
 ): Extract<ClipboardItem, { type: "node" }> {
 	return {
 		type: "node",
-		node: node.serialize(),
+		node: serializeNode(node),
 	};
 }
 
@@ -100,8 +106,8 @@ export function commentBoxToClipboardItem(
 
 	return {
 		type: "commentBox",
-		commentBox: box.serialize(),
-		nodes: [...nodes].map((n) => n.serialize()),
+		commentBox: serializeCommentBox(box),
+		nodes: [...nodes].map(serializeNode),
 		connections: serializeConnections(nodes),
 	};
 }
@@ -111,7 +117,7 @@ export function graphToClipboardItem(
 ): Extract<ClipboardItem, { type: "graph" }> {
 	return {
 		type: "graph",
-		graph: graph.serialize(),
+		graph: serializeGraph(graph),
 	};
 }
 
@@ -120,7 +126,7 @@ export function projectToClipboardItem(
 ): Extract<ClipboardItem, { type: "project" }> {
 	return {
 		type: "project",
-		project: project.serialize(),
+		project: serializeProject(project),
 	};
 }
 

@@ -12,7 +12,6 @@
 	"dependencies": {
 		"@macrograph/api-contract": "workspace:^",
 		"@macrograph/option": "workspace:^",
-		"@macrograph/runtime-serde": "workspace:*",
 		"@macrograph/typesystem": "workspace:*",
 		"@rspc/client": "0.0.0-main-6ed8cc98",
 		"@rspc/tauri": "0.0.0-main-6ed8cc98",

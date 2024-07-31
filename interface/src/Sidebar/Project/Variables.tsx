@@ -1,8 +1,11 @@
 import type { Project } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
+import { useInterfaceContext } from "../../context";
 import { Variables as VariablesRoot } from "../Variables";
 
 export function Variables(props: { project: Project }) {
+	const interfaceCtx = useInterfaceContext();
+
 	return (
 		<VariablesRoot
 			titlePrefix="Project"
@@ -13,12 +16,15 @@ export function Variables(props: { project: Project }) {
 					value: "",
 					type: t.string(),
 				});
+				interfaceCtx.save();
 			}}
 			onRemoveVariable={(id) => {
 				props.project.removeVariable(id);
+				interfaceCtx.save();
 			}}
 			onSetVariableValue={(id, value) => {
 				props.project.setVariableValue(id, value);
+				interfaceCtx.save();
 			}}
 		/>
 	);

@@ -87,7 +87,7 @@ export function Resources() {
 													value={item.name}
 													onChange={(value) => {
 														item.name = value;
-														interfaceCtx.core.project.save();
+														interfaceCtx.save();
 													}}
 												>
 													<IconButton
@@ -104,7 +104,7 @@ export function Resources() {
 																	type,
 																);
 
-															interfaceCtx.core.project.save();
+															interfaceCtx.save();
 														}}
 													>
 														<IconAntDesignDeleteOutlined class="size-4" />

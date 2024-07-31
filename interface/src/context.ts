@@ -1,4 +1,5 @@
 import type { Core, Pin, XY } from "@macrograph/runtime";
+import { serializeProject } from "@macrograph/runtime-serde";
 import { createContextProvider } from "@solid-primitives/context";
 import { createSignal } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
@@ -20,6 +21,13 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			setHoveringPin,
 			get core() {
 				return props.core;
+			},
+			save() {
+				// disableSave
+				localStorage.setItem(
+					"project",
+					JSON.stringify(serializeProject(props.core.project)),
+				);
 			},
 		};
 	}, null!);

@@ -1,8 +1,5 @@
-import type { serde } from "@macrograph/runtime-serde";
-import { type PrimitiveType, deserializeType, t } from "@macrograph/typesystem";
-import { batch } from "solid-js";
+import { type PrimitiveType, t } from "@macrograph/typesystem";
 import { createMutable } from "solid-js/store";
-import type * as v from "valibot";
 
 import type { Project } from "./Project";
 
@@ -23,8 +20,6 @@ export interface EventArgs {
 //   z.object({ variant: z.literal("custom") }),
 // ]);
 
-export type Serialized = v.InferOutput<typeof serde.CustomEvent>;
-
 export class CustomEvent {
 	id: number;
 	name: string;
@@ -32,7 +27,7 @@ export class CustomEvent {
 
 	fields: Array<CustomEventField> = [];
 
-	private fieldIdCounter = 0;
+	fieldIdCounter = 0;
 
 	constructor(args: EventArgs) {
 		this.id = args.id;
@@ -66,49 +61,11 @@ export class CustomEvent {
 		const pin = this.fields.find((f) => f.id === id);
 		if (!pin) return;
 		pin.type = type;
-		this.project.save();
 	}
 
 	deletePin(id: number) {
 		const index = this.fields.findIndex((f) => f.id === id);
 		if (index === -1) return;
 		this.fields.splice(index, 1);
-	}
-
-	serialize(): Serialized {
-		return {
-			id: this.id,
-			name: this.name,
-			fields: this.fields.map((field) => ({
-				...field,
-				type: field.type.serialize(),
-			})),
-			fieldIdCounter: this.fieldIdCounter,
-		};
-	}
-
-	static deserialize(project: Project, data: Serialized) {
-		const event = new CustomEvent({
-			project,
-			id: data.id,
-			name: data.name,
-		});
-
-		event.fieldIdCounter = data.fieldIdCounter;
-
-		batch(() => {
-			event.fields = data.fields.map((serializedField) => {
-				return {
-					id: serializedField.id,
-					name: serializedField.name,
-					type: deserializeType(
-						serializedField.type,
-						project.getType.bind(project),
-					),
-				};
-			});
-		});
-
-		return event;
 	}
 }

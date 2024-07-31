@@ -40,13 +40,13 @@ const TypeBases = v.union([
 	}),
 ]);
 
-type FieldType =
+export type Type =
 	| v.InferOutput<typeof TypeBases>
-	| { variant: "option"; inner: FieldType }
-	| { variant: "list"; item: FieldType }
-	| { variant: "map"; value: FieldType };
+	| { variant: "option"; inner: Type }
+	| { variant: "list"; item: Type }
+	| { variant: "map"; value: Type };
 
-export const Type: v.BaseSchema<FieldType, any, any> = v.union([
+export const Type: v.BaseSchema<Type, any, any> = v.union([
 	TypeBases,
 	v.object({
 		variant: v.literal("option"),
@@ -68,12 +68,14 @@ export const Variable = v.object({
 	value: v.any(),
 	type: Type,
 });
+export type Variable = v.InferOutput<typeof Variable>;
 
 export const CustomEventField = v.object({
 	id: v.number(),
 	name: v.string(),
 	type: Type,
 });
+export type CustomEventField = v.InferOutput<typeof CustomEventField>;
 
 export const CustomEvent = v.object({
 	id: IntID,
@@ -81,12 +83,14 @@ export const CustomEvent = v.object({
 	fields: v.optional(v.array(CustomEventField), []),
 	fieldIdCounter: v.optional(v.number(), 0),
 });
+export type CustomEvent = v.InferOutput<typeof CustomEvent>;
 
 export const CustomStructField = v.object({
 	id: v.string(),
 	name: v.optional(v.string()),
 	type: Type,
 });
+export type CustomStructField = v.InferOutput<typeof CustomStructField>;
 
 export const CustomStruct = v.object({
 	id: IntID,
@@ -94,6 +98,7 @@ export const CustomStruct = v.object({
 	fields: v.optional(v.array(CustomStructField), []),
 	fieldIdCounter: v.optional(v.number(), 0),
 });
+export type CustomStruct = v.InferOutput<typeof CustomStruct>;
 
 export const Connection = v.object({
 	from: v.object({
@@ -105,6 +110,7 @@ export const Connection = v.object({
 		input: v.string(),
 	}),
 });
+export type Connection = v.InferOutput<typeof Connection>;
 
 export const CommentBox = v.object({
 	id: v.optional(v.number()),
@@ -113,6 +119,7 @@ export const CommentBox = v.object({
 	text: v.string(),
 	tint: v.optional(v.string()),
 });
+export type CommentBox = v.InferOutput<typeof CommentBox>;
 
 export const Node = v.object({
 	id: v.number(),
@@ -135,6 +142,7 @@ export const Node = v.object({
 	),
 	foldPins: v.optional(v.boolean(), false),
 });
+export type Node = v.InferOutput<typeof Node>;
 
 export const Graph = v.object({
 	id: IntID,
@@ -145,6 +153,7 @@ export const Graph = v.object({
 	nodeIdCounter: v.number(),
 	connections: v.optional(v.array(Connection), []),
 });
+export type Graph = v.InferOutput<typeof Graph>;
 
 export const ResourceItem = v.intersect([
 	v.object({
@@ -156,6 +165,7 @@ export const ResourceItem = v.intersect([
 		v.object({ sourceId: v.nullable(v.string()) }),
 	]),
 ]);
+export type ResourceItem = v.InferOutput<typeof ResourceItem>;
 
 export const Resource = v.object({
 	type: v.object({ pkg: v.string(), name: v.string() }),
@@ -164,6 +174,7 @@ export const Resource = v.object({
 		items: v.array(ResourceItem),
 	}),
 });
+export type Resource = v.InferOutput<typeof Resource>;
 
 export const Project = v.object({
 	name: v.optional(v.string()),
@@ -177,3 +188,4 @@ export const Project = v.object({
 	resources: v.optional(v.array(Resource), []),
 	variables: v.optional(v.array(Variable), []),
 });
+export type Project = v.InferOutput<typeof Project>;

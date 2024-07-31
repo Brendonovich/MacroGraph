@@ -3,9 +3,7 @@ import type { Enum, StructBase } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import "@total-typescript/ts-reset";
 import { createMutable } from "solid-js/store";
-import type * as v from "valibot";
 
-import type { serde } from "@macrograph/runtime-serde";
 import type { Core } from "./Core";
 import { CustomEvent } from "./CustomEvent";
 import { CustomStruct } from "./CustomStruct";
@@ -27,8 +25,6 @@ export type ResourceTypeEntry = {
 	default: number | null;
 };
 
-type Serialized = v.InferOutput<typeof serde.Project>;
-
 export class Project {
 	core: Core;
 	graphs = new ReactiveMap<number, Graph>();
@@ -40,10 +36,10 @@ export class Project {
 
 	disableSave = false;
 
-	private graphIdCounter = 0;
-	private customEventIdCounter = 0;
-	private customTypeIdCounter = 0;
-	private idCounter = 0;
+	graphIdCounter = 0;
+	customEventIdCounter = 0;
+	customTypeIdCounter = 0;
+	idCounter = 0;
 
 	constructor(args: ProjectArgs) {
 		this.core = args.core;
@@ -77,11 +73,8 @@ export class Project {
 	getType<T extends "struct" | "enum">(
 		variant: T,
 		data:
-			| Extract<
-					v.InferOutput<typeof serde.Type>,
-					{ variant: "struct" }
-			  >["struct"]
-			| Extract<v.InferOutput<typeof serde.Type>, { variant: "enum" }>["enum"],
+			| { variant: "package"; package: string; name: string }
+			| { variant: "custom"; id: number },
 	): Option<StructBase | Enum> {
 		if (data.variant === "package") {
 			const pkg = Maybe(
@@ -123,8 +116,6 @@ export class Project {
 
 		this.customEvents.set(id, event);
 
-		this.core.project.save();
-
 		return event;
 	}
 
@@ -138,8 +129,6 @@ export class Project {
 		});
 
 		this.customStructs.set(id, struct);
-
-		this.core.project.save();
 
 		return struct;
 	}
@@ -184,16 +173,12 @@ export class Project {
 
 		this.variables.push(new Variable({ ...args, id, owner: this }));
 
-		this.save();
-
 		return id;
 	}
 
 	setVariableValue(id: number, value: any) {
 		const variable = this.variables.find((v) => v.id === id);
 		if (variable) variable.value = value;
-
-		this.save();
 	}
 
 	removeVariable(id: number) {
@@ -204,115 +189,5 @@ export class Project {
 		for (const v of variables) {
 			v.dispose();
 		}
-	}
-
-	serialize(): Serialized {
-		return {
-			name: this.name,
-			graphIdCounter: this.graphIdCounter,
-			graphs: [...this.graphs.values()].map((g) => g.serialize()),
-			customEventIdCounter: this.customEventIdCounter,
-			customEvents: [...this.customEvents.values()].map((e) => e.serialize()),
-			customTypeIdCounter: this.customTypeIdCounter,
-			customStructs: [...this.customStructs.values()].map((s) => s.serialize()),
-			counter: this.idCounter,
-			resources: [...this.resources].map(([type, entry]) => ({
-				type: {
-					pkg: type.package.name,
-					name: type.name,
-				},
-				entry,
-			})),
-			variables: this.variables.map((v) => v.serialize()),
-		};
-	}
-
-	static deserialize(core: Core, data: Serialized) {
-		const project = new Project({
-			core,
-		});
-
-		project.disableSave = true;
-
-		project.name = data.name ?? "New Project";
-
-		project.graphIdCounter = data.graphIdCounter;
-
-		project.customTypeIdCounter = data.customTypeIdCounter;
-
-		project.customStructs = new ReactiveMap(
-			data.customStructs
-				.map((serializedStruct) => {
-					const struct = CustomStruct.deserialize(project, serializedStruct);
-
-					if (struct === null) return null;
-
-					return [struct.id, struct] as [number, CustomStruct];
-				})
-				.filter(Boolean) as [number, CustomStruct][],
-		);
-
-		project.customEventIdCounter = data.customEventIdCounter;
-
-		project.customEvents = new ReactiveMap(
-			data.customEvents
-				.map((SerializedEvent) => {
-					const event = CustomEvent.deserialize(project, SerializedEvent);
-
-					if (event === null) return null;
-
-					return [event.id, event] as [number, CustomEvent];
-				})
-				.filter(Boolean) as [number, CustomEvent][],
-		);
-
-		project.idCounter = data.counter;
-
-		project.resources = new ReactiveMap(
-			data.resources
-				.map(({ type, entry }) => {
-					let resource: ResourceType<any, any> | undefined;
-
-					for (const r of core.packages.find((p) => p.name === type.pkg)
-						?.resources ?? []) {
-						if (r.name === type.name) {
-							resource = r;
-							break;
-						}
-					}
-					if (!resource) return;
-
-					return [resource, createMutable(entry)] satisfies [
-						any,
-						ResourceTypeEntry,
-					];
-				})
-				.filter(Boolean),
-		);
-
-		project.variables = data.variables.map((v) =>
-			Variable.deserialize(v, project),
-		);
-
-		project.graphs = new ReactiveMap(
-			data.graphs
-				.map((serializedGraph) => {
-					const graph = Graph.deserialize(project, serializedGraph);
-
-					if (graph === null) return null;
-
-					return [graph.id, graph] as [number, Graph];
-				})
-				.filter(Boolean) as [number, Graph][],
-		);
-
-		project.disableSave = false;
-
-		return project;
-	}
-
-	save() {
-		if (!this.disableSave)
-			localStorage.setItem("project", JSON.stringify(this.serialize()));
 	}
 }

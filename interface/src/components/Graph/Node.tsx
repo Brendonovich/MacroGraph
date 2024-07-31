@@ -190,6 +190,7 @@ export const Node = (props: Props) => {
 											case "Backspace":
 											case "Delete": {
 												graph.model().deleteNode(node());
+												interfaceCtx.save();
 												break;
 											}
 											case "ArrowLeft": {
@@ -287,9 +288,10 @@ export const Node = (props: Props) => {
 										}
 									}}
 									onMouseUp={(e) => {
-										if (e.button === 0)
-											node().setPosition(node().state.position, true);
-										else if (e.button === 2) {
+										if (e.button === 0) {
+											node().setPosition(node().state.position);
+											interfaceCtx.save();
+										} else if (e.button === 2) {
 											e.preventDefault();
 											e.stopPropagation();
 										}
@@ -304,7 +306,7 @@ export const Node = (props: Props) => {
 									<ContextMenuItem
 										onSelect={() => {
 											node().state.foldPins = !node().state.foldPins;
-											node().graph.project.save();
+											interfaceCtx.save();
 										}}
 										class="flex flex-row gap-4 items-center justify-between"
 									>
@@ -322,6 +324,7 @@ export const Node = (props: Props) => {
 									<ContextMenuItem
 										onSelect={() => {
 											graph.model().deleteNode(node());
+											interfaceCtx.save();
 										}}
 										class="text-red-500 flex flex-row gap-2 items-center justify-between"
 									>
@@ -363,7 +366,7 @@ export const Node = (props: Props) => {
 										}}
 										onBlur={() => {
 											if (value() !== "") node().state.name = value();
-											node().graph.project.save();
+											interfaceCtx.save();
 
 											setEditingName(false);
 										}}
@@ -430,7 +433,7 @@ export const Node = (props: Props) => {
 							class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
 							onClick={() => {
 								node().state.foldPins = false;
-								node().graph.project.save();
+								interfaceCtx.save();
 							}}
 						>
 							<IconMdiDotsHorizontal class="size-4" />

@@ -3,10 +3,7 @@ import { Disposable } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
-import type * as v from "valibot";
-import { z } from "zod";
 
-import type { serde } from "@macrograph/runtime-serde";
 import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import {
 	CommentBox,
@@ -54,8 +51,6 @@ export function makeIORef(io: Pin): IORef {
 
 export type Connections = ReactiveMap<IORef, Array<IORef>>;
 
-type Serialized = v.InferOutput<typeof serde.Graph>;
-
 export class Graph extends Disposable {
 	id: number;
 	name: string;
@@ -66,7 +61,7 @@ export class Graph extends Disposable {
 	variables: Array<Variable> = [];
 	connections: Connections = new ReactiveMap();
 
-	private idCounter = 0;
+	idCounter = 0;
 
 	constructor(args: GraphArgs) {
 		super();
@@ -95,8 +90,6 @@ export class Graph extends Disposable {
 
 		this.addDisposeListener(() => node.dispose());
 
-		this.project.save();
-
 		return node;
 	}
 
@@ -111,8 +104,6 @@ export class Graph extends Disposable {
 
 		this.commentBoxes.set(id, box);
 
-		this.project.save();
-
 		return box;
 	}
 
@@ -121,16 +112,12 @@ export class Graph extends Disposable {
 
 		this.variables.push(new Variable({ ...args, id, owner: this }));
 
-		this.project.save();
-
 		return id;
 	}
 
 	setVariableValue(id: number, value: any) {
 		const variable = this.variables.find((v) => v.id === id);
 		if (variable) variable.value = value;
-
-		this.project.save();
 	}
 
 	removeVariable(id: number) {
@@ -184,8 +171,6 @@ export class Graph extends Disposable {
 			return true;
 		})();
 
-		this.project.save();
-
 		return status;
 	}
 
@@ -215,11 +200,9 @@ export class Graph extends Disposable {
 				});
 			}
 		}
-
-		this.project.save();
 	}
 
-	deleteNode(node: Node, save = true) {
+	deleteNode(node: Node) {
 		for (const i of node.state.inputs) {
 			this.disconnectPin(i);
 		}
@@ -229,8 +212,6 @@ export class Graph extends Disposable {
 
 		this.nodes.delete(node.id);
 		node.dispose();
-
-		if (save) this.project.save();
 	}
 
 	deleteCommentbox(
@@ -246,130 +227,12 @@ export class Graph extends Disposable {
 			const nodes = box.getNodes(this.nodes.values(), getNodeSize);
 
 			for (const node of nodes) {
-				this.deleteNode(node, false);
+				this.deleteNode(node);
 			}
 		});
-
-		this.project.save();
 	}
 
 	async rename(name: string) {
 		this.name = name;
-
-		this.project.save();
-	}
-
-	serialize(): Serialized {
-		return {
-			id: this.id,
-			name: this.name,
-			nodeIdCounter: this.idCounter,
-			nodes: Object.fromEntries(
-				[...this.nodes.entries()].map(([id, node]) => [id, node.serialize()]),
-			),
-			commentBoxes: [...this.commentBoxes.values()].map((box) =>
-				box.serialize(),
-			),
-			variables: this.variables.map((v) => v.serialize()),
-			connections: (() => {
-				const serialized: Array<v.InferOutput<typeof serde.Connection>> = [];
-
-				for (const [refStr, conns] of this.connections) {
-					const ref = splitIORef(refStr);
-
-					if (ref.type === "i") continue;
-
-					for (const conn of conns) {
-						const connRef = splitIORef(conn);
-
-						serialized.push({
-							from: {
-								node: ref.nodeId,
-								output: ref.ioId,
-							},
-							to: {
-								node: connRef.nodeId,
-								input: connRef.ioId,
-							},
-						});
-					}
-				}
-
-				return serialized;
-			})(),
-		};
-	}
-
-	static deserialize(project: Project, data: Serialized) {
-		const graph = new Graph({
-			project,
-			id: data.id,
-			name: data.name,
-		});
-
-		graph.idCounter = data.nodeIdCounter;
-
-		graph.variables = data.variables.map((v) => Variable.deserialize(v, graph));
-
-		batch(() => {
-			graph.nodes = new ReactiveMap(
-				Object.entries(data.nodes)
-					.map(([idStr, serializedNode]) => {
-						const id = z.coerce.number().parse(idStr);
-						const node = Node.deserialize(graph, serializedNode);
-						if (node === null) return null;
-						return [id, node] as [number, Node];
-					})
-					.filter(Boolean) as [number, Node][],
-			);
-			graph.commentBoxes = new ReactiveMap(
-				data.commentBoxes.map((box) => {
-					const id = box.id ?? graph.generateId();
-					return [id, new CommentBox({ ...box, id, graph })];
-				}),
-			);
-			graph.connections = new ReactiveMap();
-			deserializeConnections(data.connections, graph.connections);
-		});
-
-		batch(() => {
-			for (const node of graph.nodes.values()) {
-				const nodeData = data.nodes[node.id]!;
-
-				for (const i of node.state.inputs) {
-					const defaultValue = nodeData.defaultValues[i.id];
-
-					if (defaultValue === undefined || !(i instanceof DataInput)) continue;
-
-					i.defaultValue = defaultValue;
-				}
-			}
-		});
-
-		return graph;
-	}
-}
-
-export function deserializeConnections(
-	connections: Array<v.InferOutput<typeof serde.Connection>>,
-	target: Connections,
-	nodeIdMap?: Map<number, number>,
-) {
-	for (const conn of connections) {
-		const fromNode = nodeIdMap?.get(conn.from.node) ?? conn.from.node;
-		const toNode = nodeIdMap?.get(conn.to.node) ?? conn.to.node;
-
-		const outRef: IORef = `${fromNode}:o:${conn.from.output}`;
-		const inRef: IORef = `${toNode}:i:${conn.to.input}`;
-
-		const outConns =
-			target.get(outRef) ??
-			(() => {
-				const array: Array<IORef> = createMutable([]);
-				target.set(outRef, array);
-				return array;
-			})();
-
-		outConns.push(inRef);
 	}
 }

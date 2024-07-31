@@ -19,6 +19,8 @@ export function Properties(props: {
 	node: Node;
 	properties: SchemaProperties;
 }) {
+	const interfaceCtx = useInterfaceContext();
+
 	return (
 		<SidebarSection title="Node Properties">
 			<For
@@ -59,6 +61,7 @@ export function Properties(props: {
 												value={selectedOption()}
 												onChange={(v) => {
 													props.node.setProperty(property().id, v.id);
+													interfaceCtx.save();
 												}}
 											/>
 										);
@@ -72,6 +75,7 @@ export function Properties(props: {
 
 										const onChange = (v: any) => {
 											props.node.setProperty(property().id, v);
+											interfaceCtx.save();
 										};
 
 										return (
@@ -164,9 +168,10 @@ export function Properties(props: {
 													items().find((i) => i.id === valueId()) ??
 													items().find((i) => i.id === DEFAULT)
 												}
-												onChange={(v) =>
-													props.node.setProperty(property().id, v.id)
-												}
+												onChange={(v) => {
+													props.node.setProperty(property().id, v.id);
+													interfaceCtx.save();
+												}}
 											/>
 										);
 									}}

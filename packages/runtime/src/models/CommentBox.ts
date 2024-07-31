@@ -1,7 +1,5 @@
 import { createMutable } from "solid-js/store";
-import type * as v from "valibot";
 
-import type { serde } from "@macrograph/runtime-serde";
 import type { Size, XY } from "../utils";
 import type { Graph } from "./Graph";
 import type { Node } from "./Node";
@@ -16,8 +14,6 @@ export interface CommentBoxArgs {
 }
 
 export type GetNodeSize = (node: Node) => Size | undefined;
-
-type Serialized = v.InferOutput<typeof serde.CommentBox>;
 
 export class CommentBox {
 	id: number;
@@ -61,26 +57,5 @@ export class CommentBox {
 		}
 
 		return ret;
-	}
-
-	serialize(): Serialized {
-		return {
-			id: this.id,
-			position: this.position,
-			size: this.size,
-			text: this.text,
-			tint: this.tint,
-		};
-	}
-
-	static deserialize(graph: Graph, data: Serialized): CommentBox | null {
-		return new CommentBox({
-			graph,
-			id: data.id ?? graph.generateId(),
-			position: data.position,
-			size: data.size,
-			text: data.text,
-			tint: data.tint,
-		});
 	}
 }

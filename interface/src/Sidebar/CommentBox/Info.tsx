@@ -17,9 +17,7 @@ function Field(props: ParentProps<{ name: string }>) {
 export function Info(props: { box: CommentBox }) {
 	const interfaceCtx = useInterfaceContext();
 
-	const save = debounce(() => {
-		interfaceCtx.core.project.save();
-	}, 200);
+	const save = debounce(() => interfaceCtx.save(), 200);
 
 	return (
 		<SidebarSection title="Comment Box Info" class="p-2 space-y-2">

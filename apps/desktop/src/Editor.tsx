@@ -5,7 +5,7 @@ import {
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { createWsProvider } from "@macrograph/runtime";
-import { serde } from "@macrograph/runtime-serde";
+import { deserializeProject, serde } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Show, createSignal, onMount } from "solid-js";
@@ -95,9 +95,11 @@ export default function Editor() {
 				serde.Project,
 				JSON.parse(savedProject),
 			);
-			core.load(serializedProject).finally(() => {
-				setLoaded(true);
-			});
+			core
+				.load((c) => deserializeProject(c, serializedProject))
+				.finally(() => {
+					setLoaded(true);
+				});
 		} else {
 			setLoaded(true);
 		}

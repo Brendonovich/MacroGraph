@@ -1,11 +1,4 @@
 import {
-	type RenderedIO,
-	type RenderedSchema,
-	renderSchema,
-	renderType,
-	renderedTypesCompatible,
-} from "@macrograph/rendering";
-import {
 	DataInput,
 	DataOutput,
 	ExecInput,
@@ -18,6 +11,13 @@ import {
 	type XY,
 	pinIsOutput,
 } from "@macrograph/runtime";
+import {
+	type RenderedIO,
+	type RenderedSchema,
+	renderSchema,
+	renderType,
+	renderedTypesCompatible,
+} from "@macrograph/runtime-rendering";
 import { createWritableMemo } from "@solid-primitives/memo";
 import clsx from "clsx";
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";

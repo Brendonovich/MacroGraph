@@ -1,6 +1,10 @@
 import type { Platform } from "@macrograph/interface";
 import type { Core } from "@macrograph/runtime";
-import { serde } from "@macrograph/runtime-serde";
+import {
+	deserializeProject,
+	serde,
+	serializeProject,
+} from "@macrograph/runtime-serde";
 import { ask, open, save } from "@tauri-apps/api/dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
 import type { Accessor, Setter } from "solid-js";
@@ -30,7 +34,7 @@ export function createPlatform(props: {
 
 				await writeTextFile(
 					url,
-					JSON.stringify(props.core.project.serialize(), null, 4),
+					JSON.stringify(serializeProject(props.core.project), null, 4),
 				);
 
 				props.setProjectUrl(url);
@@ -50,7 +54,9 @@ export function createPlatform(props: {
 
 				const serializedProject = v.parse(serde.Project, JSON.parse(data));
 
-				await props.core.load(serializedProject);
+				await props.core.load((core) =>
+					deserializeProject(core, serializedProject),
+				);
 
 				props.setProjectUrl(url);
 			},

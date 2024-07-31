@@ -1,17 +1,8 @@
-import type { serde } from "@macrograph/runtime-serde";
-import {
-	StructBase,
-	StructField,
-	deserializeType,
-	t,
-} from "@macrograph/typesystem";
-import { batch, createMemo } from "solid-js";
+import { StructBase, StructField, t } from "@macrograph/typesystem";
+import { createMemo } from "solid-js";
 import { createMutable } from "solid-js/store";
-import type * as v from "valibot";
 
 import type { Project } from "./Project";
-
-type Serialized = v.InferOutput<typeof serde.CustomStruct>;
 
 export class CustomStruct extends StructBase {
 	id: number;
@@ -20,7 +11,7 @@ export class CustomStruct extends StructBase {
 
 	_fields: Record<string, StructField>;
 
-	private fieldIdCounter = 0;
+	fieldIdCounter = 0;
 
 	constructor(args: {
 		id: number;
@@ -77,48 +68,5 @@ export class CustomStruct extends StructBase {
 		const field = this.fields[id];
 		if (!field) return;
 		field.type = type;
-	}
-
-	serialize(): Serialized {
-		return {
-			id: this.id,
-			name: this.name,
-			fields: Object.values(this.fields).map((field) => ({
-				name: field.name,
-				id: field.id,
-				type: field.type.serialize(),
-			})),
-			fieldIdCounter: this.fieldIdCounter,
-		};
-	}
-
-	static deserialize(project: Project, data: Serialized) {
-		const struct = new CustomStruct({
-			project,
-			id: data.id,
-			name: data.name,
-		});
-
-		struct.fieldIdCounter = data.fieldIdCounter;
-
-		batch(() => {
-			struct._fields = data.fields.reduce((acc, serializedField) => {
-				return Object.assign(acc, {
-					[serializedField.id]: Object.assign(
-						new StructField(
-							serializedField.id,
-							deserializeType(
-								serializedField.type,
-								project.getType.bind(project),
-							),
-							serializedField.name,
-						),
-						{ id: serializedField.id },
-					),
-				});
-			}, {});
-		});
-
-		return struct;
 	}
 }

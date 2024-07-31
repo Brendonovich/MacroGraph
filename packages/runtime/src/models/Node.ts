@@ -1,5 +1,4 @@
 import { Maybe, None, type Option, Some } from "@macrograph/option";
-import type { serde } from "@macrograph/runtime-serde";
 import { Disposable } from "@macrograph/typesystem";
 import {
 	type Accessor,
@@ -14,7 +13,6 @@ import {
 	untrack,
 } from "solid-js";
 import { createMutable } from "solid-js/store";
-import type * as v from "valibot";
 
 import type { XY } from "../utils";
 import { ExecutionContext } from "./Core";
@@ -43,8 +41,6 @@ export interface NodeArgs {
 	properties?: Record<string, string | typeof DEFAULT>;
 	foldPins?: boolean;
 }
-
-type Serialized = v.InferOutput<typeof serde.Node>;
 
 export const DEFAULT = Symbol("default");
 export class Node extends Disposable {
@@ -276,80 +272,12 @@ export class Node extends Disposable {
 
 	// Setters
 
-	setPosition(position: XY, save = false) {
+	setPosition(position: XY) {
 		this.state.position = position;
-
-		if (save) this.graph.project.save();
 	}
 
 	setProperty(property: string, value: any) {
 		this.state.properties[property] = value;
-
-		this.graph.project.save();
-	}
-
-	serialize(): Serialized {
-		return {
-			id: this.id,
-			name: this.state.name,
-			position: this.state.position,
-			schema: {
-				package: this.schema.package.name,
-				id: this.schema.name,
-			},
-			defaultValues: this.state.inputs.reduce(
-				(acc, i) => {
-					if (!(i instanceof DataInput)) return acc;
-
-					acc[i.id] = i.defaultValue;
-					return acc;
-				},
-				{} as Record<string, any>,
-			),
-			properties: Object.entries(this.state.properties).reduce(
-				(acc, [k, v]) => {
-					acc[k] = v === DEFAULT ? { default: true } : v;
-
-					return acc;
-				},
-				{} as Record<string, any>,
-			),
-			foldPins: this.state.foldPins,
-		};
-	}
-
-	static deserialize(graph: Graph, data: Serialized): Node | null {
-		const schema = graph.project.core.schema(
-			data.schema.package,
-			data.schema.id,
-		);
-
-		if (!schema) return null;
-
-		const node = new Node({
-			id: data.id,
-			name: data.name,
-			position: data.position,
-			schema: schema as any,
-			graph,
-			properties: Object.entries(data.properties).reduce(
-				(acc, [k, v]) =>
-					Object.assign(acc, {
-						[k]: typeof v === "object" ? DEFAULT : v,
-					}),
-				{},
-			),
-			foldPins: data.foldPins,
-		});
-
-		for (const [key, value] of Object.entries(data.defaultValues)) {
-			for (const input of node.io.inputs) {
-				if (input.id === key && input instanceof DataInput)
-					input.defaultValue = value;
-			}
-		}
-
-		return node;
 	}
 
 	ancestor(): Option<Node> {

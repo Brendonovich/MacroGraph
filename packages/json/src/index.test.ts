@@ -1,6 +1,7 @@
 import { None, Some } from "@macrograph/option";
 import { createEnum, createStruct } from "@macrograph/runtime";
-import { type MapValue, serializeValue, t } from "@macrograph/typesystem";
+import { serializeValue } from "@macrograph/runtime-serde";
+import { type MapValue, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { describe, expect, test } from "vitest";
 

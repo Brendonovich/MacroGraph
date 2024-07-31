@@ -12,6 +12,7 @@ import {
 	untrack,
 } from "solid-js";
 
+import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function CommentBox(props: Props) {
+	const interfaceCtx = useInterfaceContext();
 	const graph = useGraphContext();
 
 	const box = () => props.box;
@@ -86,7 +88,7 @@ export function CommentBox(props: Props) {
 											createRoot((dispose) => {
 												onCleanup(() => {
 													disposeMoveListener = undefined;
-													graph.model().project.save();
+													interfaceCtx.save();
 												});
 
 												disposeMoveListener = dispose;
@@ -129,6 +131,7 @@ export function CommentBox(props: Props) {
 													(node) => graph.nodeSizes.get(node),
 													e.ctrlKey || e.metaKey,
 												);
+											interfaceCtx.save();
 											break;
 										}
 									}
@@ -154,6 +157,7 @@ export function CommentBox(props: Props) {
 												(node) => graph.nodeSizes.get(node),
 												false,
 											);
+										interfaceCtx.save();
 									}}
 									class="text-red-500 flex flex-row gap-2 items-center justify-between"
 								>
@@ -168,6 +172,7 @@ export function CommentBox(props: Props) {
 												(node) => graph.nodeSizes.get(node),
 												true,
 											);
+										interfaceCtx.save();
 									}}
 									class="text-red-500 flex flex-row gap-2 items-center justify-between"
 								>
@@ -196,7 +201,7 @@ export function CommentBox(props: Props) {
 									onMouseDown={(e) => e.stopPropagation()}
 									onBlur={() => {
 										if (value() !== "") props.box.text = value();
-										props.box.graph.project.save();
+										interfaceCtx.save();
 
 										setEditing(false);
 									}}
@@ -225,7 +230,7 @@ export function CommentBox(props: Props) {
 							props.onSelected();
 
 							createRoot((dispose) => {
-								onCleanup(() => graph.model().project.save());
+								onCleanup(() => interfaceCtx.save());
 
 								createEventListenerMap(window, {
 									mouseup: dispose,

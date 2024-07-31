@@ -5,7 +5,8 @@ import {
 	readFromClipboard,
 	writeClipboardItemToClipboard,
 } from "@macrograph/clipboard";
-import { Graph } from "@macrograph/runtime";
+import type { Graph } from "@macrograph/runtime";
+import { deserializeGraph } from "@macrograph/runtime-serde";
 import { For, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
@@ -55,7 +56,7 @@ export function Graphs(props: Props) {
 						if (item.type !== "graph") return;
 
 						item.graph.id = interfaceCtx.core.project.generateGraphId();
-						const graph = Graph.deserialize(
+						const graph = deserializeGraph(
 							interfaceCtx.core.project,
 							item.graph,
 						);
@@ -86,7 +87,10 @@ export function Graphs(props: Props) {
 									type="button"
 									onClick={() => props.onGraphClicked(graph)}
 									value={graph.name}
-									onChange={(value) => graph.rename(value)}
+									onChange={(value) => {
+										graph.rename(value);
+										interfaceCtx.save();
+									}}
 								>
 									<DeleteButton graph={graph} />
 									<IconButton
@@ -117,7 +121,7 @@ const DeleteButton = (props: { graph: Graph }) => {
 	function deleteGraph() {
 		interfaceCtx.core.project.graphs.delete(props.graph.id);
 		props.graph.dispose();
-		interfaceCtx.core.project.save();
+		interfaceCtx.save();
 	}
 
 	return (

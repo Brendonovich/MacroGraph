@@ -126,7 +126,7 @@ export class DataInput<T extends BaseType<any>> {
 	setDefaultValue(value: any) {
 		this.defaultValue = value;
 
-		this.node.graph.project.save();
+		// this.node.graph.project.save();
 	}
 
 	get variant() {

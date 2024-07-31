@@ -191,7 +191,7 @@ export const Graph = (props: Props) => {
 					if (!node) return;
 
 					node.state.foldPins = true;
-					model().project.save();
+					interfaceCtx.save();
 				}
 
 				return;
@@ -208,7 +208,7 @@ export const Graph = (props: Props) => {
 					if (!node) return;
 
 					node.state.foldPins = false;
-					model().project.save();
+					interfaceCtx.save();
 				}
 
 				return;

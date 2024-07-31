@@ -1,21 +1,16 @@
 import { Tabs } from "@kobalte/core";
 import {
-	CommentBox,
 	type Core,
 	DataInput,
 	DataOutput,
 	ExecInput,
 	ExecOutput,
-	Graph as GraphModel,
-	Node,
 	type Node as NodeModel,
 	type Pin,
-	Project,
 	ScopeInput,
 	ScopeOutput,
 	type Size,
 	type XY,
-	deserializeConnections,
 	pinIsOutput,
 } from "@macrograph/runtime";
 import { createElementBounds } from "@solid-primitives/bounds";
@@ -37,6 +32,13 @@ import {
 	readFromClipboard,
 	writeClipboardItemToClipboard,
 } from "@macrograph/clipboard";
+import {
+	deserializeCommentBox,
+	deserializeConnections,
+	deserializeGraph,
+	deserializeNode,
+	deserializeProject,
+} from "@macrograph/runtime-serde";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import * as Sidebars from "./Sidebar";
 import { Graph } from "./components/Graph";
@@ -185,7 +187,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 						const { model, state } = graph;
 
 						item.node.id = model.generateId();
-						const node = Node.deserialize(model, {
+						const node = deserializeNode(model, {
 							...item.node,
 							position: toGraphSpace(
 								{ x: mouse.x - 10, y: mouse.y - 10 },
@@ -206,7 +208,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 						const { model, state } = graph;
 
 						item.commentBox.id = model.generateId();
-						const commentBox = CommentBox.deserialize(model, {
+						const commentBox = deserializeCommentBox(model, {
 							...item.commentBox,
 							position: toGraphSpace(
 								{ x: mouse.x - 10, y: mouse.y - 10 },
@@ -226,7 +228,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 								const id = model.generateId();
 								nodeIdMap.set(nodeJson.id, id);
 								nodeJson.id = id;
-								const node = Node.deserialize(model, {
+								const node = deserializeNode(model, {
 									...nodeJson,
 									position: {
 										x:
@@ -256,13 +258,13 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 					}
 					case "graph": {
 						item.graph.id = project.generateGraphId();
-						const graph = GraphModel.deserialize(project, item.graph);
+						const graph = deserializeGraph(project, item.graph);
 						if (!graph) throw new Error("Failed to deserialize graph");
 						core.project.graphs.set(graph.id, graph);
 						break;
 					}
 					case "project": {
-						const project = await Project.deserialize(core, item.project);
+						const project = await deserializeProject(core, item.project);
 						if (!project) throw new Error("Failed to deserialize project");
 						core.project = project;
 						break;
@@ -685,6 +687,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 												text: "Comment",
 											});
 
+											ctx.save();
 											ctx.setState({ status: "idle" });
 										});
 									}}
@@ -744,16 +747,15 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 												: -nodeSize.width +
 													(nodeX + nodeSize.width - pinPosition.x);
 
-											pin.node.setPosition(
-												{
-													x: pin.node.state.position.x + xDelta,
-													y:
-														pin.node.state.position.y -
-														(pinPosition.y - pin.node.state.position.y),
-												},
-												true,
-											);
+											pin.node.setPosition({
+												x: pin.node.state.position.x + xDelta,
+												y:
+													pin.node.state.position.y -
+													(pinPosition.y - pin.node.state.position.y),
+											});
 										}
+
+										ctx.save();
 									}}
 								/>
 							)}

@@ -10,13 +10,13 @@
 		"typecheck": "tsc -b"
 	},
 	"dependencies": {
-		"@macrograph/option": "workspace:^",
-		"@macrograph/runtime": "workspace:^",
-		"@macrograph/typesystem": "workspace:^",
+		"@macrograph/option": "workspace:*",
+		"@macrograph/runtime": "workspace:*",
+		"@macrograph/typesystem": "workspace:*",
+		"@solid-primitives/map": "^0.4.11",
 		"valibot": "^0.37.0"
 	},
 	"devDependencies": {
-		"@macrograph/config": "workspace:*",
-		"@macrograph/json": "workspace:*"
+		"@macrograph/config": "workspace:*"
 	}
 }

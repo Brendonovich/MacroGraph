@@ -7,7 +7,11 @@ import {
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { Core } from "@macrograph/runtime";
-import { serde } from "@macrograph/runtime-serde";
+import {
+	deserializeProject,
+	serde,
+	serializeProject,
+} from "@macrograph/runtime-serde";
 import { AsyncButton, Button } from "@macrograph/ui";
 import { useAction, useSearchParams } from "@solidjs/router";
 import { initClient } from "@ts-rest/core";
@@ -99,7 +103,12 @@ export default () => {
 			fetchPlaygroundProject(params.shared)
 				.then((projectStr) => {
 					if (projectStr)
-						core.load(v.parse(serde.Project, JSON.parse(projectStr)));
+						core.load((c) =>
+							deserializeProject(
+								c,
+								v.parse(serde.Project, JSON.parse(projectStr)),
+							),
+						);
 				})
 				.finally(() => {
 					setLoaded(true);
@@ -108,9 +117,16 @@ export default () => {
 			const savedProject = localStorage.getItem("project");
 
 			if (savedProject)
-				core.load(v.parse(serde.Project, savedProject)).finally(() => {
-					setLoaded(true);
-				});
+				core
+					.load((c) =>
+						deserializeProject(
+							c,
+							v.parse(serde.Project, JSON.parse(savedProject)),
+						),
+					)
+					.finally(() => {
+						setLoaded(true);
+					});
 		}
 	});
 
@@ -146,7 +162,7 @@ export function ExportButton() {
 			variant="ghost"
 			title="Export Project"
 			onClick={() =>
-				saveTemplateAsFile("project.json", core.project.serialize())
+				saveJsonAsFile("project.json", serializeProject(core.project))
 			}
 		>
 			<IconPhExport class="size-5" />
@@ -164,7 +180,7 @@ export function ShareButton() {
 			title="Share Project"
 			onClick={async () => {
 				const id = await createProjectLink(
-					JSON.stringify(core.project.serialize()),
+					JSON.stringify(serializeProject(core.project)),
 				);
 
 				writeToClipboard(
@@ -183,7 +199,7 @@ export function ShareButton() {
 }
 
 // https://stackoverflow.com/a/65939108/5721736
-function saveTemplateAsFile(filename: string, dataObjToWrite: any) {
+function saveJsonAsFile(filename: string, dataObjToWrite: any) {
 	const blob = new Blob([JSON.stringify(dataObjToWrite)], {
 		type: "text/json",
 	});

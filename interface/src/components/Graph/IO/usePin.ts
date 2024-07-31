@@ -87,6 +87,7 @@ export function usePin(pin: Accessor<Pin>) {
 						graph.model().connectPins(draggingPin, thisPin);
 
 					interfaceCtx.setState({ status: "idle" });
+					interfaceCtx.save();
 				});
 			},
 			mousedown: (e) => {
@@ -99,6 +100,8 @@ export function usePin(pin: Accessor<Pin>) {
 						graph.model().connectPins(thisPin, mouseDown.pin);
 					else if (pinIsInput(thisPin) && pinIsOutput(mouseDown.pin))
 						graph.model().connectPins(mouseDown.pin, thisPin);
+
+					interfaceCtx.save();
 				} else if (mouseDown.status === "idle") {
 					if (
 						(e.ctrlKey || e.metaKey) &&
@@ -173,6 +176,7 @@ export function usePin(pin: Accessor<Pin>) {
 			},
 			dblclick: () => {
 				graph.model().disconnectPin(thisPin);
+				interfaceCtx.save();
 			},
 		});
 	});

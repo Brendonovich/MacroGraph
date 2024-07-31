@@ -72,10 +72,12 @@ export function CustomTypes() {
 							switch (selected()) {
 								case "events": {
 									interfaceCtx.core.project.createCustomEvent();
+									interfaceCtx.save();
 									return;
 								}
 								case "structs": {
 									interfaceCtx.core.project.createCustomStruct();
+									interfaceCtx.save();
 									return;
 								}
 							}
@@ -103,7 +105,7 @@ export function CustomTypes() {
 													e.stopPropagation();
 
 													event.createField();
-													interfaceCtx.core.project.save();
+													interfaceCtx.save();
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -116,7 +118,7 @@ export function CustomTypes() {
 													e.stopPropagation();
 
 													interfaceCtx.core.project.customEvents.delete(id);
-													interfaceCtx.core.project.save();
+													interfaceCtx.save();
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -130,7 +132,7 @@ export function CustomTypes() {
 															value={field.name}
 															onChange={(value) => {
 																event.editFieldName(field.id, value);
-																interfaceCtx.core.project.save();
+																interfaceCtx.save();
 															}}
 															class="-mx-1"
 														>
@@ -141,7 +143,7 @@ export function CustomTypes() {
 																	e.stopPropagation();
 
 																	event.deletePin(field.id);
-																	interfaceCtx.core.project.save();
+																	interfaceCtx.save();
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -153,6 +155,7 @@ export function CustomTypes() {
 																type={field.type}
 																onChange={(type) => {
 																	event.editFieldType(field.id, type as any);
+																	interfaceCtx.save();
 																}}
 															/>
 														</div>
@@ -172,7 +175,7 @@ export function CustomTypes() {
 											value={struct.name}
 											onChange={(value) => {
 												struct.name = value;
-												interfaceCtx.core.project.save();
+												interfaceCtx.save();
 											}}
 										>
 											<IconButton
@@ -182,7 +185,7 @@ export function CustomTypes() {
 													e.stopPropagation();
 
 													struct.addField();
-													interfaceCtx.core.project.save();
+													interfaceCtx.save();
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -195,7 +198,7 @@ export function CustomTypes() {
 													e.stopPropagation();
 
 													interfaceCtx.core.project.customStructs.delete(id);
-													interfaceCtx.core.project.save();
+													interfaceCtx.save();
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -209,7 +212,7 @@ export function CustomTypes() {
 															value={field.name ?? field.id}
 															onChange={(value) => {
 																field.name = value;
-																interfaceCtx.core.project.save();
+																interfaceCtx.save();
 															}}
 															class="-mx-1"
 														>
@@ -220,7 +223,7 @@ export function CustomTypes() {
 																	e.stopPropagation();
 
 																	struct.removeField(field.id);
-																	interfaceCtx.core.project.save();
+																	interfaceCtx.save();
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -232,7 +235,7 @@ export function CustomTypes() {
 																type={field.type}
 																onChange={(type) => {
 																	struct.editFieldType(field.id, type as any);
-																	interfaceCtx.core.project.save();
+																	interfaceCtx.save();
 																}}
 															/>
 														</div>

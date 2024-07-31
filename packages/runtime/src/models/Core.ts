@@ -5,7 +5,6 @@ import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 
-import type { serde } from "@macrograph/runtime-serde";
 import { DataInput, type DataOutput, type ScopeOutput } from "./IO";
 import type { Node } from "./Node";
 import type { EventsMap, RunCtx } from "./NodeSchema";
@@ -121,11 +120,11 @@ export class Core {
 	}
 
 	// async bc of #402, the project's reactivity needs to be entirely decoupled from the ui
-	async load(projectData: v.InferOutput<typeof serde.Project>) {
+	async load(getProject: (core: Core) => Project) {
 		await new Promise<void>((res) => {
 			batch(() => {
 				this.eventNodeMappings.clear();
-				this.project = Project.deserialize(this, projectData);
+				this.project = getProject(this);
 				this.project.disableSave = true;
 			});
 
