@@ -1,5 +1,6 @@
 import { Maybe, type Option } from "@macrograph/option";
 import type { Enum, StructBase } from "@macrograph/typesystem";
+import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
 import "@total-typescript/ts-reset";
 import { createMutable } from "solid-js/store";
@@ -25,6 +26,8 @@ export type ResourceTypeEntry = {
 	default: number | null;
 };
 
+export type ProjectEvent = "modified";
+
 export class Project {
 	core: Core;
 	graphs = new ReactiveMap<number, Graph>();
@@ -33,6 +36,7 @@ export class Project {
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
 	name = "New Project";
+	events = createEventBus<ProjectEvent>();
 
 	disableSave = false;
 
@@ -189,5 +193,9 @@ export class Project {
 		for (const v of variables) {
 			v.dispose();
 		}
+	}
+
+	emit(event: ProjectEvent) {
+		this.events.emit(event);
 	}
 }

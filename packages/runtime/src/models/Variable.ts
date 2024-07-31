@@ -1,8 +1,9 @@
 import { Disposable, type t } from "@macrograph/typesystem";
 import { createMutable } from "solid-js/store";
 
-import { createRoot, getOwner, runWithOwner } from "solid-js";
-import type { Graph } from "./Graph";
+import { trackDeep } from "@solid-primitives/deep";
+import { createEffect, createRoot, getOwner, on, runWithOwner } from "solid-js";
+import { Graph } from "./Graph";
 import type { Project } from "./Project";
 
 export type VariableArgs = {
@@ -39,24 +40,26 @@ export class Variable extends Disposable {
 		this.addDisposeListener(dispose);
 
 		runWithOwner(owner, () => {
-			// createEffect(
-			//   on(
-			//     () => trackDeep(self.value),
-			//     () => {
-			//       if (self.owner instanceof Graph) self.owner.project.save();
-			//       else self.owner.save();
-			//     }
-			//   )
-			// );
-			// createEffect(
-			//   on(
-			//     () => self.type,
-			//     () => {
-			//       if (self.owner instanceof Graph) self.owner.project.save();
-			//       else self.owner.save();
-			//     }
-			//   )
-			// );
+			createEffect(
+				on(
+					() => trackDeep(self.value),
+					() => {
+						if (self.owner instanceof Graph)
+							self.owner.project.emit("modified");
+						else self.owner.emit("modified");
+					},
+				),
+			);
+			createEffect(
+				on(
+					() => self.type,
+					() => {
+						if (self.owner instanceof Graph)
+							self.owner.project.emit("modified");
+						else self.owner.emit("modified");
+					},
+				),
+			);
 		});
 
 		return self;

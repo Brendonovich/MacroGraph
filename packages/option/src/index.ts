@@ -90,7 +90,7 @@ class Option<T> {
 		throw new Error(msg);
 	}
 
-	peek<F extends (x: T) => void>(f: F): Option<T> {
+	peek<F extends (x: T) => void>(f: F): this {
 		if (this.isSome()) {
 			f(this.value);
 		}

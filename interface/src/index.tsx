@@ -264,7 +264,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 						break;
 					}
 					case "project": {
-						const project = await deserializeProject(core, item.project);
+						const project = deserializeProject(core, item.project);
 						if (!project) throw new Error("Failed to deserialize project");
 						core.project = project;
 						break;

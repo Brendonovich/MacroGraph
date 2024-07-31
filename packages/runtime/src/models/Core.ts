@@ -131,7 +131,6 @@ export class Core {
 			res();
 		});
 		this.project.disableSave = false;
-		console.log("project load end");
 	}
 
 	schema(pkg: string, name: string) {

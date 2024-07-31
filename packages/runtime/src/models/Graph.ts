@@ -175,31 +175,33 @@ export class Graph extends Disposable {
 	}
 
 	disconnectPin(pin: Pin) {
-		const ref = makeIORef(pin);
+		batch(() => {
+			const ref = makeIORef(pin);
 
-		if (pinIsOutput(pin)) {
-			this.connections.delete(ref);
-		} else {
-			if (pin instanceof ExecInput) {
-				batch(() => {
+			if (pinIsOutput(pin)) {
+				this.connections.delete(ref);
+			} else {
+				if (pin instanceof ExecInput) {
 					for (const conn of pin.connections) {
 						this.connections.delete(makeIORef(conn));
 					}
-				});
-			} else {
-				(
-					pin.connection as unknown as Option<DataOutput<any> | ScopeOutput>
-				).peek((conn) => {
-					const connArray = this.connections.get(makeIORef(conn));
-					if (!connArray) return;
+				} else {
+					(
+						pin.connection as unknown as Option<DataOutput<any> | ScopeOutput>
+					).peek((conn) => {
+						const connArray = this.connections.get(makeIORef(conn));
+						if (!connArray) return;
 
-					const index = connArray.indexOf(ref);
-					if (index === -1) return;
+						const index = connArray.indexOf(ref);
+						if (index === -1) return;
 
-					connArray.splice(index, 1);
-				});
+						connArray.splice(index, 1);
+					});
+				}
 			}
-		}
+
+			this.project.events.emit("modified");
+		});
 	}
 
 	deleteNode(node: Node) {
