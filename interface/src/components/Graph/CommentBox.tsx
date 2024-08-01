@@ -4,10 +4,10 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import {
 	Show,
+	batch,
 	createMemo,
 	createRoot,
 	createSignal,
-	onCleanup,
 	onMount,
 } from "solid-js";
 
@@ -40,7 +40,7 @@ export function CommentBox(props: Props) {
 	return (
 		<div
 			class={clsx(
-				"rounded overflow-hidden border-black/75 border absolute top-0 left-0",
+				"rounded border-black/75 border absolute top-0 left-0",
 				isSelected() && "ring-2 ring-mg-focus",
 			)}
 			style={{
@@ -155,36 +155,147 @@ export function CommentBox(props: Props) {
 			<div
 				class="bg-transparent w-2 h-2 cursor-nwse-resize -right-1 -bottom-1 fixed"
 				onMouseDown={(e) => {
-					e.currentTarget.focus();
 					e.stopPropagation();
 
-					setEditing(false);
+					if (e.button !== 0) return;
+					props.onSelected();
 
-					switch (e.button) {
-						case 0: {
-							props.onSelected();
+					const size = { ...box().size };
+					const position = { ...box().position };
 
-							createRoot((dispose) => {
-								onCleanup(() => interfaceCtx.save());
-
-								createEventListenerMap(window, {
-									mouseup: dispose,
-									mousemove: (e) => {
-										const scale = graph.state.scale;
-
-										props.box.size = {
-											x: box().size.x + e.movementX / scale,
-											y: box().size.y + e.movementY / scale,
-										};
-									},
+					createRoot((dispose) => {
+						createEventListenerMap(window, {
+							mouseup: () => {
+								interfaceCtx.save();
+								dispose();
+							},
+							mousemove: (e) => {
+								const mousePosition = graph.toGraphSpace({
+									x: e.clientX,
+									y: e.clientY,
 								});
-							});
 
-							break;
-						}
-						default:
-							break;
-					}
+								props.box.size = {
+									x: size.x - (position.x + size.x - mousePosition.x),
+									y: size.y - (position.y + size.y - mousePosition.y),
+								};
+								props.box.position = {
+									x: position.x,
+									y: position.y,
+								};
+							},
+						});
+					});
+				}}
+			/>
+			<div
+				class="bg-transparent w-2 h-2 cursor-nesw-resize -left-1 -bottom-1 fixed"
+				onMouseDown={(e) => {
+					e.stopPropagation();
+
+					if (e.button !== 0) return;
+					props.onSelected();
+
+					const size = { ...box().size };
+					const position = { ...box().position };
+
+					createRoot((dispose) => {
+						createEventListenerMap(window, {
+							mouseup: () => {
+								interfaceCtx.save();
+								dispose();
+							},
+							mousemove: (e) => {
+								const mousePosition = graph.toGraphSpace({
+									x: e.clientX,
+									y: e.clientY,
+								});
+
+								batch(() => {
+									props.box.size = {
+										x: size.x - (mousePosition.x - position.x),
+										y: size.y - (position.y + size.y - mousePosition.y),
+									};
+									props.box.position = {
+										x: mousePosition.x,
+										y: position.y,
+									};
+								});
+							},
+						});
+					});
+				}}
+			/>
+			<div
+				class="bg-transparent w-2 h-2 cursor-nesw-resize -right-1 -top-1 fixed"
+				onMouseDown={(e) => {
+					e.stopPropagation();
+
+					if (e.button !== 0) return;
+					props.onSelected();
+
+					const size = { ...box().size };
+					const position = { ...box().position };
+
+					createRoot((dispose) => {
+						createEventListenerMap(window, {
+							mouseup: () => {
+								interfaceCtx.save();
+								dispose();
+							},
+							mousemove: (e) => {
+								const mousePosition = graph.toGraphSpace({
+									x: e.clientX,
+									y: e.clientY,
+								});
+
+								props.box.size = {
+									x: size.x - (position.x + size.x - mousePosition.x),
+									y: size.y - (mousePosition.y - position.y),
+								};
+								props.box.position = {
+									x: position.x,
+									y: mousePosition.y,
+								};
+							},
+						});
+					});
+				}}
+			/>
+			<div
+				class="bg-transparent w-2 h-2 cursor-nwse-resize -left-1 -top-1 fixed"
+				onMouseDown={(e) => {
+					e.stopPropagation();
+
+					if (e.button !== 0) return;
+					props.onSelected();
+
+					const size = { ...box().size };
+					const position = { ...box().position };
+
+					createRoot((dispose) => {
+						createEventListenerMap(window, {
+							mouseup: () => {
+								interfaceCtx.save();
+								dispose();
+							},
+							mousemove: (e) => {
+								const mousePosition = graph.toGraphSpace({
+									x: e.clientX,
+									y: e.clientY,
+								});
+
+								props.box.size = {
+									x: size.x - (mousePosition.x - position.x),
+									y: size.y - (mousePosition.y - position.y),
+								};
+								props.box.position = {
+									x: mousePosition.x,
+									y: mousePosition.y,
+								};
+							},
+						});
+					});
 				}}
 			/>
 		</div>

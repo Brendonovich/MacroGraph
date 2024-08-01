@@ -426,6 +426,17 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.For>
+						<Solid.For each={[...model().nodes.values()]}>
+							{(node) => (
+								<Node
+									node={node}
+									onSelected={() =>
+										props.onItemsSelected([{ type: "node", id: node.id }])
+									}
+									onDrag={() => {}}
+								/>
+							)}
+						</Solid.For>
 						<Solid.Show when={dragArea()}>
 							{(dragArea) => (
 								<div
@@ -440,17 +451,6 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.Show>
-						<Solid.For each={[...model().nodes.values()]}>
-							{(node) => (
-								<Node
-									node={node}
-									onSelected={() =>
-										props.onItemsSelected([{ type: "node", id: node.id }])
-									}
-									onDrag={() => {}}
-								/>
-							)}
-						</Solid.For>
 					</div>
 				</div>
 			</div>
