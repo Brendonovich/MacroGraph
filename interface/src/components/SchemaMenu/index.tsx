@@ -20,8 +20,16 @@ import {
 } from "@macrograph/runtime-rendering";
 import { createWritableMemo } from "@solid-primitives/memo";
 import clsx from "clsx";
-import { For, Show, createMemo, createSignal, onMount } from "solid-js";
+import {
+	type ComponentProps,
+	For,
+	Show,
+	createMemo,
+	createSignal,
+	onMount,
+} from "solid-js";
 
+import { createEventListener } from "@solid-primitives/event-listener";
 import { useInterfaceContext } from "../../context";
 import type { GraphState } from "../Graph/Context";
 
@@ -47,6 +55,8 @@ const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 	pure: "bg-mg-pure",
 };
 
+const CustomHandledKeys = ["ArrowUp", "ArrowDown", "Enter", "Tab"];
+
 export function SchemaMenu(props: Props) {
 	const interfaceCtx = useInterfaceContext();
 
@@ -61,7 +71,7 @@ export function SchemaMenu(props: Props) {
 
 	let searchRef: HTMLInputElement;
 
-	onMount(() => searchRef.focus());
+	onMount(() => (searchRef as any).focus());
 
 	const sortedPackages = createMemo(() =>
 		interfaceCtx.core.packages.sort((a, b) => a.name.localeCompare(b.name)),
@@ -88,8 +98,76 @@ export function SchemaMenu(props: Props) {
 		return p;
 	});
 
+	const getItems = () => [...root!.querySelectorAll("[data-item]")];
+	const getActive = (): HTMLElement | null =>
+		root.querySelector('[data-active="true"]');
+
+	function setActive(node: Element, disableScroll = false) {
+		const active = getActive();
+		if (active) active.removeAttribute("data-active");
+		node.setAttribute("data-active", "true");
+		if (!disableScroll)
+			node.scrollIntoView({
+				block: "center",
+			});
+	}
+
+	function move(direction: number) {
+		const items = getItems();
+		const active = getActive();
+
+		if (active) {
+			const index = items.indexOf(active);
+			const next = items.at((index + direction) % items.length);
+			if (!next) return;
+			setActive(next);
+		} else {
+			const last = items.at(direction < 0 ? direction : direction - 1);
+			if (!last) return;
+			setActive(last);
+		}
+	}
+
+	createEventListener(window, "keydown", (e) => {
+		switch (e.code) {
+			case "Tab": {
+				if (e.shiftKey) move(-1);
+				else move(1);
+
+				break;
+			}
+			case "ArrowUp": {
+				move(-1);
+				break;
+			}
+			case "ArrowDown": {
+				move(1);
+				break;
+			}
+			case "Enter": {
+				const active = getActive();
+				if (!active) return;
+				active.click();
+				break;
+			}
+			case "KeyF": {
+				if (!(e.ctrlKey || e.metaKey)) return;
+				(searchRef as any).focus();
+
+				break;
+			}
+			default:
+				break;
+		}
+
+		e.preventDefault();
+	});
+
+	let root: HTMLDivElement;
+
 	return (
 		<div
+			ref={root!}
 			class="flex flex-col bg-neutral-900 border-black text-white border absolute z-10 w-80 h-[30rem] rounded-xl shadow-md overflow-hidden text-sm animate-in zoom-in-95 origin-top-left transition-none fade-in duration-100"
 			style={{
 				left: `${props.position.x - 18}px`,
@@ -99,7 +177,14 @@ export function SchemaMenu(props: Props) {
 			<div class="p-2">
 				<input
 					ref={searchRef!}
-					onInput={(e) => setSearch(e.target.value)}
+					onInput={(e) => {
+						setSearch(e.target.value);
+					}}
+					onKeyDown={(e) => {
+						if (CustomHandledKeys.includes(e.code)) return;
+						e.stopPropagation();
+					}}
+					onKeyUp={(e) => e.stopPropagation()}
 					value={search()}
 					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-mg-focus transition-colors"
 					placeholder="Search Nodes..."
@@ -110,16 +195,16 @@ export function SchemaMenu(props: Props) {
 					tabindex={0}
 				/>
 			</div>
-			<div class="p-2 pt-0 flex-1 overflow-auto">
-				<div>
+			<div class="p-2 pt-0 flex-1 overflow-y-auto">
+				<div class="flex flex-col">
 					<Show when={search() === "" && !props.suggestion}>
-						<button
-							type="button"
-							class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
+						<Item
+							onPointerEnter={(e) => setActive(e.target, true)}
+							// class="px-2 py-0.5 flex flex-row items-center space-x-2 hover:bg-neutral-700 min-w-full text-left rounded-md"
 							onClick={props.onCreateCommentBox}
 						>
 							Add Comment Box
-						</button>
+						</Item>
 					</Show>
 					<For each={sortedPackages()}>
 						{(p) => {
@@ -238,50 +323,45 @@ export function SchemaMenu(props: Props) {
 
 							return (
 								<Show when={filteredSchemas().length !== 0}>
-									<div>
-										<button
-											type="button"
-											class="px-1 py-0.5 flex flex-row items-center space-x-1 hover:bg-neutral-700 min-w-full text-left rounded-md"
-											onClick={() => setOpen(!open())}
-										>
-											<IconMaterialSymbolsArrowRightRounded
-												class="size-4 scale-125 transform transition-transform"
-												classList={{ "rotate-90": open() }}
-											/>
-											<span>{p.name}</span>
-										</button>
-										<Show when={open()}>
-											<div class="pl-4">
-												<For each={filteredSchemas()}>
-													{({ schema, suggestion }) => (
-														<div>
-															<button
-																type="button"
-																class="px-2 py-0.5 flex flex-row items-center space-x-2 whitespace-nowrap min-w-full text-left hover:bg-neutral-700 rounded-lg"
-																onClick={() =>
-																	props.onSchemaClicked(schema, suggestion)
-																}
-															>
-																<div
-																	class={clsx(
-																		"h-3 w-3 rounded-full",
-																		TypeIndicatorColours[
-																			"variant" in schema
-																				? schema.variant
-																				: "type" in schema
-																					? schema.type
-																					: "Event"
-																		],
-																	)}
-																/>
-																<span>{schema.name}</span>
-															</button>
-														</div>
-													)}
-												</For>
-											</div>
-										</Show>
-									</div>
+									<Item
+										onPointerEnter={(e) => setActive(e.target, true)}
+										// class="px-1 py-0.5 flex flex-row items-center space-x-1 hover:bg-neutral-700 min-w-full text-left rounded-md"
+										onClick={() => setOpen(!open())}
+									>
+										<IconMaterialSymbolsArrowRightRounded
+											class="size-4 scale-125 transform transition-transform"
+											classList={{ "rotate-90": open() }}
+										/>
+										<span>{p.name}</span>
+									</Item>
+									<Show when={open()}>
+										<For each={filteredSchemas()}>
+											{({ schema, suggestion }) => (
+												<Item
+													class="ml-4"
+													onPointerEnter={(e) => setActive(e.target, true)}
+													// class="ml-4 px-2 py-0.5 flex flex-row items-center space-x-2 whitespace-nowrap min-w-full text-left hover:bg-neutral-700 rounded-lg"
+													onClick={() =>
+														props.onSchemaClicked(schema, suggestion)
+													}
+												>
+													<div
+														class={clsx(
+															"h-3 w-3 rounded-full",
+															TypeIndicatorColours[
+																"variant" in schema
+																	? schema.variant
+																	: "type" in schema
+																		? schema.type
+																		: "Event"
+															],
+														)}
+													/>
+													<span>{schema.name}</span>
+												</Item>
+											)}
+										</For>
+									</Show>
 								</Show>
 							);
 						}}
@@ -289,5 +369,19 @@ export function SchemaMenu(props: Props) {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+function Item(props: Omit<ComponentProps<"button">, "type">) {
+	return (
+		<button
+			{...props}
+			data-item
+			type="button"
+			class={clsx(
+				"px-2 py-0.5 flex flex-row items-center space-x-2 data-[active=true]:bg-neutral-700 flex-1 text-left rounded-md focus:outline-none",
+				props.class,
+			)}
+		/>
 	);
 }

@@ -693,6 +693,9 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 										x: data().position.x - (rootBounds.left ?? 0),
 										y: data().position.y - (rootBounds.top ?? 0),
 									}}
+									onClose={() => {
+										ctx.setState({ status: "idle" });
+									}}
 									onCreateCommentBox={() => {
 										Solid.batch(() => {
 											graph().createCommentBox({
