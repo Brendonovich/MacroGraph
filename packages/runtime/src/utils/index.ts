@@ -1,3 +1,6 @@
+import type { CommentBox } from "../models";
+import type { Node } from "../models/Node";
+
 export * from "./pins";
 
 export type XY = { x: number; y: number };
@@ -47,4 +50,56 @@ function isPlainObject(obj: any): obj is Record<string, any> {
 
 	const proto = Object.getPrototypeOf(obj);
 	return !proto || proto === Object.prototype;
+}
+
+export type GetNodeSize = (node: Node) => Size | undefined;
+
+export function getNodesInRect(
+	nodes: IterableIterator<Node>,
+	rect: DOMRect,
+	getNodeSize: GetNodeSize,
+) {
+	const ret = new Set<Node>();
+
+	for (const node of nodes) {
+		const nodePosition = node.state.position;
+
+		if (nodePosition.x < rect.x || nodePosition.y < rect.y) continue;
+
+		const nodeSize = getNodeSize(node);
+		if (!nodeSize) continue;
+
+		if (
+			nodePosition.x + nodeSize.width > rect.x + rect.width ||
+			nodePosition.y + nodeSize.height > rect.y + rect.height
+		)
+			continue;
+
+		ret.add(node);
+	}
+
+	return ret;
+}
+
+export function getCommentBoxesInRect(
+	boxes: IterableIterator<CommentBox>,
+	rect: DOMRect,
+) {
+	const ret = new Set<CommentBox>();
+
+	for (const box of boxes) {
+		const position = box.position;
+
+		if (position.x < rect.x || position.y < rect.y) continue;
+
+		if (
+			position.x + box.size.x > rect.x + rect.width ||
+			position.y + box.size.y > rect.y + rect.height
+		)
+			continue;
+
+		ret.add(box);
+	}
+
+	return ret;
 }

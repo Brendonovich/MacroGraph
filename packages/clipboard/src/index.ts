@@ -8,6 +8,7 @@ import {
 	Node,
 	Project,
 	type ScopeOutput,
+	getNodesInRect,
 } from "@macrograph/runtime";
 import {
 	serde,
@@ -102,7 +103,11 @@ export function commentBoxToClipboardItem(
 	box: CommentBox,
 	getNodeSize: GetNodeSize,
 ): Extract<ClipboardItem, { type: "commentBox" }> {
-	const nodes = box.getNodes(box.graph.nodes.values(), getNodeSize);
+	const nodes = getNodesInRect(
+		box.graph.nodes.values(),
+		new DOMRect(box.position.x, box.position.y, box.size.x, box.size.y),
+		getNodeSize,
+	);
 
 	return {
 		type: "commentBox",

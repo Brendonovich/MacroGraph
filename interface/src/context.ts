@@ -50,6 +50,8 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		};
 	}, null!);
 
+export type InterfaceContext = ReturnType<typeof useInterfaceContext>;
+
 export type SchemaMenuOpenState = {
 	status: "schemaMenuOpen";
 	position: XY;

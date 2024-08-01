@@ -4,12 +4,14 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 
-import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import {
-	CommentBox,
-	type CommentBoxArgs,
 	type GetNodeSize,
-} from "./CommentBox";
+	getNodesInRect,
+	pinIsInput,
+	pinIsOutput,
+	pinsCanConnect,
+} from "../utils";
+import { CommentBox, type CommentBoxArgs } from "./CommentBox";
 import {
 	DataInput,
 	DataOutput,
@@ -228,7 +230,11 @@ export class Graph extends Disposable {
 
 			if (!deleteNodes) return;
 
-			const nodes = box.getNodes(this.nodes.values(), getNodeSize);
+			const nodes = getNodesInRect(
+				this.nodes.values(),
+				new DOMRect(box.position.x, box.position.y, box.size.x, box.size.y),
+				getNodeSize,
+			);
 
 			for (const node of nodes) {
 				this.deleteNode(node);

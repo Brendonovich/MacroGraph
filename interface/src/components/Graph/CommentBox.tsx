@@ -9,12 +9,12 @@ import {
 	createSignal,
 	onCleanup,
 	onMount,
-	untrack,
 } from "solid-js";
 
 import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
+import { handleSelectableItemMouseDown } from "./util";
 
 interface Props {
 	box: CommentBoxModel;
@@ -31,12 +31,11 @@ export function CommentBox(props: Props) {
 
 	const [editing, setEditing] = createSignal(false);
 
-	const isSelected = () => {
-		const selected = graph.state.selectedItemId;
-		return selected?.type === "commentBox" && selected.id === props.box.id;
-	};
-
-	let disposeMoveListener: (() => void) | undefined;
+	const isSelected = createMemo(() =>
+		graph.state.selectedItemIds.some(
+			(item) => item?.type === "commentBox" && item.id === box().id,
+		),
+	);
 
 	return (
 		<div
@@ -63,83 +62,20 @@ export function CommentBox(props: Props) {
 							<ContextMenu.Trigger<"button">
 								as="button"
 								class="p-2 pl-3 outline-none w-full text-left"
-								onMouseDown={(e) => {
-									e.currentTarget.focus();
-									e.stopPropagation();
-
-									if (editing()) return;
-
-									switch (e.button) {
-										case 0: {
-											props.onSelected();
-
-											const [shift, setShift] = createSignal(e.shiftKey);
-
-											const nodes = createMemo(() => {
-												if (shift()) return [];
-
-												return untrack(() =>
-													box().getNodes(graph.model().nodes.values(), (node) =>
-														interfaceCtx.nodeSizes.get(node),
-													),
-												);
-											});
-
-											createRoot((dispose) => {
-												onCleanup(() => {
-													disposeMoveListener = undefined;
-													interfaceCtx.save();
-												});
-
-												disposeMoveListener = dispose;
-
-												createEventListenerMap(window, {
-													mouseup: dispose,
-													mousemove: (e) => {
-														setShift(e.shiftKey);
-														const scale = graph.state.scale;
-
-														box().position = {
-															x: box().position.x + e.movementX / scale,
-															y: box().position.y + e.movementY / scale,
-														};
-
-														for (const node of nodes()) {
-															node.state.position = {
-																x: node.state.position.x + e.movementX / scale,
-																y: node.state.position.y + e.movementY / scale,
-															};
-														}
-													},
-												});
-											});
-
-											break;
-										}
-										default:
-											break;
-									}
-								}}
-								onKeyDown={(e) => {
-									switch (e.key) {
-										case "Backspace":
-										case "Delete": {
-											graph
-												.model()
-												.deleteCommentbox(
-													box(),
-													(node) => interfaceCtx.nodeSizes.get(node),
-													e.ctrlKey || e.metaKey,
-												);
-											break;
-										}
-									}
-								}}
-								onDblClick={() => setEditing(true)}
-								onMouseUp={(e) => {
-									disposeMoveListener?.();
+								onClick={(e) => {
+									e.preventDefault();
 									e.stopPropagation();
 								}}
+								onMouseDown={(e) =>
+									handleSelectableItemMouseDown(
+										e,
+										graph,
+										interfaceCtx,
+										props.onSelected,
+										{ type: "commentBox", id: box().id },
+									)
+								}
+								onDblClick={(e) => !e.shiftKey && setEditing(true)}
 							>
 								{props.box.text}
 							</ContextMenu.Trigger>

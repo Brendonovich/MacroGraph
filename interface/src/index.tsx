@@ -40,9 +40,11 @@ import * as Sidebars from "./Sidebar";
 import { Graph } from "./components/Graph";
 import {
 	type GraphState,
+	type SelectedItemID,
 	createGraphState,
 	toGraphSpace,
 } from "./components/Graph/Context";
+import { GRID_SIZE, SHIFT_MULTIPLIER } from "./components/Graph/util";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import { InterfaceContextProvider, useInterfaceContext } from "./context";
@@ -88,7 +90,31 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 
 	const [graphStates, setGraphStates] = makePersisted(
 		createStore<GraphState[]>([]),
-		{ name: "graph-states" },
+		{
+			name: "graph-states",
+			deserialize: (data) => {
+				const json: Array<
+					GraphState & {
+						// old
+						selectedItemId?: SelectedItemID | null;
+					}
+				> = JSON.parse(data) as any;
+
+				for (const state of json) {
+					if ("selectedItemId" in state) {
+						if (state.selectedItemId === null) {
+							state.selectedItemIds = [];
+						} else if (typeof state.selectedItemId === "object") {
+							state.selectedItemIds = [state.selectedItemId];
+						}
+
+						state.selectedItemId = undefined;
+					}
+				}
+
+				return json;
+			},
+		},
 	);
 	const [currentGraphIndex, setCurrentGraphIndex] = makePersisted(
 		Solid.createSignal<number>(0),
@@ -146,7 +172,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 			case "KeyC": {
 				if (!e.metaKey && !e.ctrlKey) return;
 				const graph = currentGraph();
-				const selectedItemId = graph?.state?.selectedItemId;
+				const selectedItemId = graph?.state?.selectedItemIds[0];
 				if (!selectedItemId) return;
 
 				if (selectedItemId.type === "node") {
@@ -307,46 +333,123 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 				break;
 			}
 			case "ArrowLeft":
-			// biome-ignore lint/suspicious/noFallthroughSwitchClause: <explanation>
 			case "ArrowRight": {
 				if (
-					props.environment === "browser" &&
-					!(e.metaKey || (e.shiftKey && e.ctrlKey))
-				)
-					return;
-				if (
-					props.environment === "custom" &&
-					!(e.metaKey || (e.shiftKey && e.altKey))
-				)
-					return;
+					(props.environment === "browser" &&
+						(e.metaKey || (e.shiftKey && e.ctrlKey))) ||
+					(props.environment === "custom" &&
+						!(e.metaKey || (e.shiftKey && e.altKey)))
+				) {
+					if (e.code === "ArrowLeft")
+						setCurrentGraphIndex((i) => Math.max(i - 1, 0));
+					else
+						setCurrentGraphIndex((i) =>
+							Math.min(i + 1, graphStates.length - 1),
+						);
+				} else {
+					const graph = currentGraph();
+					if (!graph || graph.state.selectedItemIds.length < 1) return;
 
-				if (e.code === "ArrowLeft")
-					setCurrentGraphIndex((i) => Math.max(i - 1, 0));
-				else
-					setCurrentGraphIndex((i) => Math.min(i + 1, graphStates.length - 1));
+					const { model } = graph;
+					const { selectedItemIds } = graph.state;
+
+					const directionMultiplier = e.code === "ArrowLeft" ? -1 : 1;
+
+					for (const selectedItemId of selectedItemIds) {
+						if (selectedItemId.type === "node") {
+							const node = model.nodes.get(selectedItemId.id);
+							if (!node) break;
+							const position = node.state.position;
+
+							node.setPosition({
+								x:
+									position.x +
+									GRID_SIZE *
+										(e.shiftKey ? SHIFT_MULTIPLIER : 1) *
+										directionMultiplier,
+								y: position.y,
+							});
+						} else if (selectedItemId.type === "commentBox") {
+							const box = model.commentBoxes.get(selectedItemId.id);
+							if (!box) break;
+
+							const position = box.position;
+
+							box.position = {
+								x:
+									position.x +
+									GRID_SIZE *
+										(e.shiftKey ? SHIFT_MULTIPLIER : 1) *
+										directionMultiplier,
+								y: position.y,
+							};
+						}
+					}
+				}
+				break;
+			}
+			case "ArrowUp":
+			case "ArrowDown": {
+				const graph = currentGraph();
+				if (!graph || graph.state.selectedItemIds.length < 1) return;
+
+				const { model } = graph;
+				const { selectedItemIds } = graph.state;
+
+				const directionMultiplier = e.code === "ArrowUp" ? -1 : 1;
+
+				const delta =
+					GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1) * directionMultiplier;
+
+				for (const selectedItemId of selectedItemIds) {
+					if (selectedItemId.type === "node") {
+						const node = model.nodes.get(selectedItemId.id);
+						if (!node) break;
+						const position = node.state.position;
+
+						node.setPosition({
+							x: position.x,
+							y: position.y + delta,
+						});
+					} else if (selectedItemId.type === "commentBox") {
+						const box = model.commentBoxes.get(selectedItemId.id);
+						if (!box) break;
+
+						const position = box.position;
+
+						box.position = {
+							x: position.x,
+							y: position.y + delta,
+						};
+					}
+				}
+
+				break;
 			}
 			case "Backspace":
 			case "Delete": {
 				const graph = currentGraph();
-				if (!graph || !graph.state.selectedItemId) return;
+				if (!graph || graph.state.selectedItemIds.length < 1) return;
 
 				const { model } = graph;
-				const { selectedItemId } = graph.state;
+				const { selectedItemIds } = graph.state;
 
-				if (selectedItemId.type === "node") {
-					const node = model.nodes.get(selectedItemId.id);
-					if (!node) break;
+				for (const selectedItemId of selectedItemIds) {
+					if (selectedItemId.type === "node") {
+						const node = model.nodes.get(selectedItemId.id);
+						if (!node) break;
 
-					model.deleteNode(node);
-				} else if (selectedItemId.type === "commentBox") {
-					const box = model.commentBoxes.get(selectedItemId.id);
-					if (!box) break;
+						model.deleteNode(node);
+					} else if (selectedItemId.type === "commentBox") {
+						const box = model.commentBoxes.get(selectedItemId.id);
+						if (!box) break;
 
-					model.deleteCommentbox(
-						box,
-						(node) => ctx.nodeSizes.get(node),
-						e.ctrlKey || e.metaKey,
-					);
+						model.deleteCommentbox(
+							box,
+							(node) => ctx.nodeSizes.get(node),
+							e.ctrlKey || e.metaKey,
+						);
+					}
 				}
 
 				break;
@@ -368,7 +471,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 	return (
 		<div
 			ref={setRootRef}
-			class="relative w-full h-full flex flex-row select-none bg-neutral-800 text-white"
+			class="relative w-full h-full flex flex-row select-none bg-neutral-800 text-white animate-in fade-in"
 			onContextMenu={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
@@ -429,39 +532,41 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
           })()} */}
 
 			<Solid.Show when={leftSidebar.state.open}>
-				<Sidebar
-					width={Math.max(leftSidebar.state.width, MIN_WIDTH)}
-					name="Project"
-					initialValue={["Graphs"]}
-				>
-					<Sidebars.Project
-						project={ctx.core.project}
-						onGraphClicked={(graph) => {
-							const currentIndex = graphStates.findIndex(
-								(s) => s.id === graph.id,
-							);
+				<div class="animate-in slide-in-from-left-4 fade-in flex flex-row">
+					<Sidebar
+						width={Math.max(leftSidebar.state.width, MIN_WIDTH)}
+						name="Project"
+						initialValue={["Graphs"]}
+					>
+						<Sidebars.Project
+							project={ctx.core.project}
+							onGraphClicked={(graph) => {
+								const currentIndex = graphStates.findIndex(
+									(s) => s.id === graph.id,
+								);
 
-							if (currentIndex === -1) {
-								setGraphStates((s) => [...s, createGraphState(graph)]);
-								setCurrentGraphIndex(graphStates.length - 1);
-							} else setCurrentGraphIndex(currentIndex);
-						}}
+								if (currentIndex === -1) {
+									setGraphStates((s) => [...s, createGraphState(graph)]);
+									setCurrentGraphIndex(graphStates.length - 1);
+								} else setCurrentGraphIndex(currentIndex);
+							}}
+						/>
+					</Sidebar>
+
+					<ResizeHandle
+						width={leftSidebar.state.width}
+						side="right"
+						onResize={(width) => leftSidebar.setState({ width })}
+						onResizeEnd={(width) =>
+							leftSidebar.state.open &&
+							width < MIN_WIDTH &&
+							leftSidebar.setState({ width: MIN_WIDTH })
+						}
 					/>
-				</Sidebar>
-
-				<ResizeHandle
-					width={leftSidebar.state.width}
-					side="right"
-					onResize={(width) => leftSidebar.setState({ width })}
-					onResizeEnd={(width) =>
-						leftSidebar.state.open &&
-						width < MIN_WIDTH &&
-						leftSidebar.setState({ width: MIN_WIDTH })
-					}
-				/>
+				</div>
 			</Solid.Show>
 
-			<div class="flex-1 flex divide-y divide-neutral-700 flex-col h-full justify-center items-center text-white overflow-x-hidden">
+			<div class="flex-1 flex divide-y divide-neutral-700 flex-col h-full justify-center items-center text-white overflow-x-hidden animate-in origin-top">
 				<Solid.Show when={currentGraph() !== undefined}>
 					<Tabs.Root
 						class="overflow-x-auto w-full scrollbar scrollbar-none"
@@ -530,8 +635,8 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 							onMouseEnter={() => setHoveredPane(true)}
 							onMouseMove={() => setHoveredPane(true)}
 							onMouseLeave={() => setHoveredPane(null)}
-							onItemSelected={(id) => {
-								setGraphStates(graph().index, { selectedItemId: id });
+							onItemsSelected={(id) => {
+								setGraphStates(graph().index, { selectedItemIds: id });
 							}}
 							onBoundsChange={setGraphBounds}
 							onSizeChange={setGraphBounds}
@@ -552,7 +657,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 								if (e.button === 0) {
 									Solid.batch(() => {
 										setGraphStates(graph().index, {
-											selectedItemId: null,
+											selectedItemIds: [],
 										});
 										ctx.setState({ status: "idle" });
 									});
@@ -564,86 +669,102 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 			</div>
 
 			<Solid.Show when={rightSidebar.state.open}>
-				<ResizeHandle
-					width={rightSidebar.state.width}
-					side="left"
-					onResize={(width) => rightSidebar.setState({ width })}
-					onResizeEnd={(width) =>
-						rightSidebar.state.open &&
-						width < MIN_WIDTH &&
-						rightSidebar.setState({ width: MIN_WIDTH })
-					}
-				/>
+				<div class="animate-in slide-in-from-right-4 fade-in flex flex-row">
+					<ResizeHandle
+						width={rightSidebar.state.width}
+						side="left"
+						onResize={(width) => rightSidebar.setState({ width })}
+						onResizeEnd={(width) =>
+							rightSidebar.state.open &&
+							width < MIN_WIDTH &&
+							rightSidebar.setState({ width: MIN_WIDTH })
+						}
+					/>
 
-				<Solid.Show
-					when={currentGraph()}
-					fallback={
-						<Sidebar
-							width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-							name="Blank"
-						/>
-					}
-				>
-					{(graph) => (
-						<Solid.Switch
-							fallback={
-								<Sidebar
-									width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-									name="Graph"
-									initialValue={["Graph Variables"]}
+					<Solid.Show
+						when={currentGraph()}
+						fallback={
+							<Sidebar
+								width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+								name="Blank"
+							/>
+						}
+					>
+						{(graph) => (
+							<Solid.Switch
+								fallback={
+									<Sidebar
+										width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+										name="Graph"
+										initialValue={["Graph Variables"]}
+									>
+										<Solid.Show
+											when={graph().state.selectedItemIds.length === 0}
+											fallback={
+												<div class="pt-4 text-center w-full text-neutral-400 text-sm">
+													Multiple Items Selected
+												</div>
+											}
+										>
+											<Sidebars.Graph graph={graph().model} />
+										</Solid.Show>
+									</Sidebar>
+								}
+							>
+								<Solid.Match
+									when={(() => {
+										const {
+											model,
+											state: { selectedItemIds },
+										} = graph();
+										if (selectedItemIds.length > 1) return;
+
+										const selectedItemId = selectedItemIds[0];
+										if (!selectedItemId || selectedItemId.type !== "node")
+											return;
+
+										return model.nodes.get(selectedItemId.id);
+									})()}
 								>
-									<Sidebars.Graph graph={graph().model} />
-								</Sidebar>
-							}
-						>
-							<Solid.Match
-								when={(() => {
-									const {
-										model,
-										state: { selectedItemId },
-									} = graph();
+									{(node) => (
+										<Sidebar
+											width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+											name="Node"
+											initialValue={["Node Info"]}
+										>
+											<Sidebars.Node node={node()} />
+										</Sidebar>
+									)}
+								</Solid.Match>
+								<Solid.Match
+									when={(() => {
+										const {
+											model,
+											state: { selectedItemIds },
+										} = graph();
+										if (selectedItemIds.length > 1) return;
 
-									if (!selectedItemId || selectedItemId.type !== "node") return;
+										const selectedItemId = selectedItemIds[0];
+										if (!selectedItemId || selectedItemId.type !== "commentBox")
+											return;
 
-									return model.nodes.get(selectedItemId.id);
-								})()}
-							>
-								{(node) => (
-									<Sidebar
-										width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-										name="Node"
-										initialValue={["Node Info"]}
-									>
-										<Sidebars.Node node={node()} />
-									</Sidebar>
-								)}
-							</Solid.Match>
-							<Solid.Match
-								when={(() => {
-									const {
-										model,
-										state: { selectedItemId },
-									} = graph();
-
-									if (!selectedItemId || selectedItemId.type !== "commentBox")
-										return;
-
-									return model.commentBoxes.get(selectedItemId.id);
-								})()}
-							>
-								{(box) => (
-									<Sidebar
-										width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-										name="Comment Box"
-										initialValue={["Comment Box Info"]}
-									>
-										<Sidebars.CommentBox box={box()} />
-									</Sidebar>
-								)}
-							</Solid.Match>
-						</Solid.Switch>
-					)}
-				</Solid.Show>
+										return model.commentBoxes.get(selectedItemId.id);
+									})()}
+								>
+									{(box) => (
+										<Sidebar
+											width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+											name="Comment Box"
+											initialValue={["Comment Box Info"]}
+										>
+											<Sidebars.CommentBox box={box()} />
+										</Sidebar>
+									)}
+								</Solid.Match>
+							</Solid.Switch>
+						)}
+					</Solid.Show>
+				</div>
 			</Solid.Show>
 
 			<Solid.Show
@@ -698,11 +819,16 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 									}}
 									onCreateCommentBox={() => {
 										Solid.batch(() => {
-											graph().createCommentBox({
+											const box = graph().createCommentBox({
 												position: graphPosition(),
 												size: { x: 400, y: 200 },
 												text: "Comment",
 											});
+
+											const [_, set] = createStore(data().graph);
+											set("selectedItemIds", [
+												{ type: "commentBox", id: box.id },
+											]);
 
 											ctx.save();
 											ctx.setState({ status: "idle" });
@@ -714,6 +840,9 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 												schema,
 												position: graphPosition(),
 											});
+
+											const [_, set] = createStore(data().graph);
+											set("selectedItemIds", [{ type: "node", id: node.id }]);
 
 											const { suggestion: sourceSuggestion } = data();
 

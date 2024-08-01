@@ -9,9 +9,9 @@ import {
 	type NodeSchemaVariant,
 	ScopeInput as ScopeInputModel,
 	ScopeOutput as ScopeOutputModel,
+	type XY,
 	hasConnection,
 } from "@macrograph/runtime";
-import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
@@ -28,10 +28,12 @@ import {
 	ScopeOutput,
 } from "./IO";
 import "./Node.css";
+import { handleSelectableItemMouseDown } from "./util";
 
 interface Props {
 	node: NodeModel;
 	onSelected(): void;
+	onDrag(delta: XY): void;
 }
 
 const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
@@ -44,9 +46,6 @@ const SchemaVariantColours: Record<NodeSchemaVariant, string> = {
 	event: "bg-mg-event",
 	pure: "bg-mg-pure",
 };
-
-const GRID_SIZE = 25;
-const SHIFT_MULTIPLIER = 6;
 
 const NodeContext = createContext<NodeModel>(null as any);
 
@@ -109,10 +108,11 @@ export const Node = (props: Props) => {
 		});
 	});
 
-	const isSelected = Solid.createMemo(() => {
-		const selectedItem = graph.state.selectedItemId;
-		return selectedItem?.type === "node" && selectedItem.id === node().id;
-	});
+	const isSelected = Solid.createMemo(() =>
+		graph.state.selectedItemIds.some(
+			(item) => item?.type === "node" && item.id === node().id,
+		),
+	);
 
 	const filteredInputs = Solid.createMemo(() =>
 		node().state.inputs.filter(
@@ -175,121 +175,20 @@ export const Node = (props: Props) => {
 								<ContextMenu.Trigger<"button">
 									as="button"
 									class="px-2 pt-1 cursor-pointer outline-none w-full h-full text-left"
-									onDblClick={() => setEditingName(true)}
+									onDblClick={(e) => !e.shiftKey && setEditingName(true)}
 									onClick={(e) => {
-										e.currentTarget.focus();
-										if (e.button === 0) {
-											props.onSelected();
-										} else return;
-
 										e.stopPropagation();
 										e.preventDefault();
 									}}
-									onKeyDown={(e) => {
-										switch (e.key) {
-											case "ArrowLeft": {
-												node().setPosition({
-													x:
-														node().state.position.x -
-														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-													y: node().state.position.y,
-												});
-												break;
-											}
-											case "ArrowRight": {
-												node().setPosition({
-													x:
-														node().state.position.x +
-														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-													y: node().state.position.y,
-												});
-												break;
-											}
-											case "ArrowUp": {
-												node().setPosition({
-													x: node().state.position.x,
-													y:
-														node().state.position.y -
-														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-												});
-												break;
-											}
-											case "ArrowDown": {
-												node().setPosition({
-													x: node().state.position.x,
-													y:
-														node().state.position.y +
-														GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1),
-												});
-												break;
-											}
-										}
-									}}
-									onMouseDown={(e) => {
-										e.currentTarget.focus();
-										e.stopPropagation();
-										e.preventDefault();
-
-										const downPosition = graph.toGraphSpace({
-											x: e.clientX,
-											y: e.clientY,
-										});
-
-										const startPosition = node().state.position;
-
-										switch (e.button) {
-											case 0: {
-												props.onSelected();
-
-												Solid.createRoot((dispose) => {
-													createEventListenerMap(window, {
-														mouseup: dispose,
-														mousemove: (e) => {
-															const currentPosition = graph.toGraphSpace({
-																x: e.clientX,
-																y: e.clientY,
-															});
-
-															const newPosition = {
-																x:
-																	startPosition.x +
-																	currentPosition.x -
-																	downPosition.x,
-																y:
-																	startPosition.y +
-																	currentPosition.y -
-																	downPosition.y,
-															};
-
-															if (!e.shiftKey)
-																node().setPosition({
-																	x:
-																		Math.round(newPosition.x / GRID_SIZE) *
-																		GRID_SIZE,
-																	y:
-																		Math.round(newPosition.y / GRID_SIZE) *
-																		GRID_SIZE,
-																});
-															else node().setPosition(newPosition);
-														},
-													});
-												});
-
-												break;
-											}
-											default:
-												break;
-										}
-									}}
-									onMouseUp={(e) => {
-										if (e.button === 0) {
-											node().setPosition(node().state.position);
-											interfaceCtx.save();
-										} else if (e.button === 2) {
-											e.preventDefault();
-											e.stopPropagation();
-										}
-									}}
+									onMouseDown={(e) =>
+										handleSelectableItemMouseDown(
+											e,
+											graph,
+											interfaceCtx,
+											props.onSelected,
+											{ type: "node", id: node().id },
+										)
+									}
 								>
 									{node().state.name}
 								</ContextMenu.Trigger>

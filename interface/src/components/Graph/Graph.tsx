@@ -1,4 +1,10 @@
-import type { Graph as GraphModel, Size, XY } from "@macrograph/runtime";
+import {
+	type Graph as GraphModel,
+	type Size,
+	type XY,
+	getCommentBoxesInRect,
+	getNodesInRect,
+} from "@macrograph/runtime";
 import { createBodyCursor } from "@solid-primitives/cursor";
 import {
 	createEventListener,
@@ -8,10 +14,12 @@ import { createResizeObserver } from "@solid-primitives/resize-observer";
 import * as Solid from "solid-js";
 import { createStore } from "solid-js/store";
 
+import clsx from "clsx";
 import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
 import { ConnectionRenderer } from "../Graph";
 import { CommentBox } from "./CommentBox";
 import {
+	type GraphContext,
 	GraphContextProvider,
 	type GraphState,
 	type SelectedItemID,
@@ -35,7 +43,7 @@ interface Props extends Solid.ComponentProps<"div"> {
 	onTranslateChange(translate: XY): void;
 	onSizeChange(size: { width: number; height: number }): void;
 	onBoundsChange(bounds: XY): void;
-	onItemSelected(id: SelectedItemID | null): void;
+	onItemsSelected(id: Array<SelectedItemID>): void;
 }
 
 type State = {
@@ -174,14 +182,17 @@ export const Graph = (props: Props) => {
 				const fold = (e.metaKey || e.shiftKey) && e.altKey;
 
 				if (fold) {
-					const { selectedItemId } = props.state;
-					if (selectedItemId === null) return;
-					if (selectedItemId.type !== "node") return;
+					const { selectedItemIds } = props.state;
 
-					const node = model().nodes.get(selectedItemId.id);
-					if (!node) return;
+					for (const selectedItemId of selectedItemIds) {
+						if (selectedItemId.type !== "node") continue;
 
-					node.state.foldPins = true;
+						const node = model().nodes.get(selectedItemId.id);
+						if (!node) return;
+
+						node.state.foldPins = true;
+					}
+
 					interfaceCtx.save();
 				}
 
@@ -191,14 +202,17 @@ export const Graph = (props: Props) => {
 				const fold = (e.metaKey || e.shiftKey) && e.altKey;
 
 				if (fold) {
-					const { selectedItemId } = props.state;
-					if (selectedItemId === null) return;
-					if (selectedItemId.type !== "node") return;
+					const { selectedItemIds } = props.state;
 
-					const node = model().nodes.get(selectedItemId.id);
-					if (!node) return;
+					for (const selectedItemId of selectedItemIds) {
+						if (selectedItemId.type !== "node") continue;
 
-					node.state.foldPins = false;
+						const node = model().nodes.get(selectedItemId.id);
+						if (!node) return;
+
+						node.state.foldPins = false;
+					}
+
 					interfaceCtx.save();
 				}
 
@@ -209,21 +223,26 @@ export const Graph = (props: Props) => {
 		}
 	});
 
+	const [dragArea, setDragArea] = Solid.createSignal<DOMRect | null>(null);
+
+	const ctx: GraphContext = {
+		model,
+		get state() {
+			return props.state;
+		},
+		offset: state.bounds,
+		toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, props.state),
+		toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, props.state),
+	};
+
 	return (
-		<GraphContextProvider
-			value={{
-				model,
-				get state() {
-					return props.state;
-				},
-				offset: state.bounds,
-				toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, props.state),
-				toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, props.state),
-			}}
-		>
+		<GraphContextProvider value={ctx}>
 			<div
 				{...props}
-				class="flex-1 w-full relative overflow-hidden bg-mg-graph"
+				class={clsx(
+					"flex-1 w-full relative overflow-hidden bg-mg-graph",
+					props.class,
+				)}
 				ref={setRef}
 				onMouseUp={(e) => {
 					if (e.button === 2) {
@@ -265,7 +284,52 @@ export const Graph = (props: Props) => {
 				onMouseDown={(e) => {
 					switch (e.button) {
 						case 0: {
-							props.onMouseDown?.(e);
+							const start = ctx.toGraphSpace({
+								x: e.clientX,
+								y: e.clientY,
+							});
+							Solid.createRoot((dispose) => {
+								createEventListenerMap(window, {
+									mouseup: () => {
+										dispose();
+										setDragArea(null);
+									},
+									mousemove: (e) => {
+										const end = ctx.toGraphSpace({
+											x: e.clientX,
+											y: e.clientY,
+										});
+
+										const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
+										const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
+
+										const width = Math.abs(end.x - start.x);
+										const height = Math.abs(end.y - start.y);
+
+										const x = xSide === "r" ? start.x : start.x - width;
+										const y = ySide === "d" ? start.y : start.y - height;
+
+										const rect = new DOMRect(x, y, width, height);
+										setDragArea(rect);
+
+										props.onItemsSelected([
+											...[
+												...getNodesInRect(
+													model().nodes.values(),
+													rect,
+													(node) => interfaceCtx.nodeSizes.get(node),
+												),
+											].map((n) => ({ id: n.id, type: "node" as const })),
+											...[
+												...getCommentBoxesInRect(
+													model().commentBoxes.values(),
+													rect,
+												),
+											].map((b) => ({ id: b.id, type: "commentBox" as const })),
+										]);
+									},
+								});
+							});
 							break;
 						}
 						case 2: {
@@ -357,18 +421,33 @@ export const Graph = (props: Props) => {
 								<CommentBox
 									box={box}
 									onSelected={() =>
-										props.onItemSelected({ type: "commentBox", id: box.id })
+										props.onItemsSelected([{ type: "commentBox", id: box.id }])
 									}
 								/>
 							)}
 						</Solid.For>
+						<Solid.Show when={dragArea()}>
+							{(dragArea) => (
+								<div
+									class="absolute bg-yellow-500/10 border-yellow-500 border rounded"
+									style={{
+										transform: `translate(${dragArea().x}px, ${
+											dragArea().y
+										}px)`,
+										width: `${dragArea().width}px`,
+										height: `${dragArea().height}px`,
+									}}
+								/>
+							)}
+						</Solid.Show>
 						<Solid.For each={[...model().nodes.values()]}>
 							{(node) => (
 								<Node
 									node={node}
 									onSelected={() =>
-										props.onItemSelected({ type: "node", id: node.id })
+										props.onItemsSelected([{ type: "node", id: node.id }])
 									}
+									onDrag={() => {}}
 								/>
 							)}
 						</Solid.For>

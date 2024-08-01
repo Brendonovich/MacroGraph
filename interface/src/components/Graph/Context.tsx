@@ -28,21 +28,21 @@ export function createGraphState(model: GraphModel) {
 			y: 0,
 		} as XY,
 		scale: 1,
-		selectedItemId: null as SelectedItemID | null,
+		selectedItemIds: [] as SelectedItemID[],
 	};
 }
 
 export type GraphState = ReturnType<typeof createGraphState>;
 
+export type GraphContext = {
+	model: Solid.Accessor<GraphModel>;
+	state: GraphState;
+	offset: XY;
+	toGraphSpace(pos: XY): XY;
+	toScreenSpace(pos: XY): XY;
+};
+
 export const [GraphContextProvider, useGraphContext] = createContextProvider(
-	(props: {
-		value: {
-			model: Solid.Accessor<GraphModel>;
-			state: GraphState;
-			offset: XY;
-			toGraphSpace(pos: XY): XY;
-			toScreenSpace(pos: XY): XY;
-		};
-	}) => props.value,
+	(props: { value: GraphContext }) => props.value,
 	null!,
 );
