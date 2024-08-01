@@ -13,9 +13,6 @@ export default function () {
 	);
 }
 
-import { DropdownMenuTrigger } from "@macrograph/ui";
-import type { ValidComponent } from "solid-js";
-
 const MenuItems = clientOnly(() =>
 	import("./Editor").then((i) => ({ default: i.ConnectionsDialogButton })),
 );
@@ -28,10 +25,8 @@ const ExportButton = clientOnly(() =>
 const ShareButton = clientOnly(() =>
 	import("./Editor").then((i) => ({ default: i.ShareButton })),
 );
-import { DesktopDownloadDropdown } from "../DesktopDownloadDropdown";
 import { HeaderAuthFallback } from "../HeaderAuthSection";
 import { Logo } from "../Logo";
-import { Socials } from "../Socials";
 
 const AuthSection = clientOnly(() =>
 	import("../HeaderAuthSection").then((i) => ({
@@ -54,22 +49,6 @@ function Header() {
 					<ExportButton />
 					<ShareButton />
 				</div>
-				<DesktopDownloadDropdown>
-					<DropdownMenuTrigger<ValidComponent>
-						as={(props) => (
-							<button
-								{...props}
-								class="flex-row flex items-center"
-								size="icon"
-								variant="ghost"
-								title="Download Desktop App"
-							/>
-						)}
-					>
-						<IconTablerDeviceDesktopDown class="size-5" />
-					</DropdownMenuTrigger>
-				</DesktopDownloadDropdown>
-				<Socials iconClass="size-6" />
 				<AuthSection fallback={<HeaderAuthFallback />} />
 			</div>
 		</header>
