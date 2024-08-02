@@ -50,7 +50,7 @@ export function CommentBox(props: Props) {
 				"background-color": `rgb(from ${box().tint} r g b / 0.3`,
 			}}
 		>
-			<div class="truncate bg-white/50 text-black font-medium cursor-pointer outline-none">
+			<div class="truncate bg-white/50 text-black font-medium cursor-pointer outline-none rounded-t">
 				<Show
 					when={editing()}
 					fallback={
