@@ -58,3 +58,7 @@ export const tw = new Proxy((() => {}) as unknown as TailwindFactory, {
 	get: (_, property: string) => twFactory(property),
 	apply: (_, __, [c]: [Component]) => twFactory(c),
 });
+
+export function isCtrlClick(e: MouseEvent) {
+	return e.ctrlKey || e.metaKey;
+}

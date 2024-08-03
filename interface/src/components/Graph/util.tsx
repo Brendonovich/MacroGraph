@@ -10,6 +10,7 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createRoot } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import type { InterfaceContext } from "../../context";
+import { isCtrlClick } from "../../util";
 import type { GraphContext, SelectedItemID } from "./Context";
 
 export const GRID_SIZE = 25;
@@ -54,26 +55,27 @@ export function handleSelectableItemMouseDown(
 
 	if (e.button !== 0) return;
 
-	if (e.shiftKey) {
-		const [graphState, setGraphState] = createStore(graph.state);
-		const index = graphState.selectedItemIds.findIndex(
-			(s) => s.type === id.type && s.id === id.id,
-		);
-
-		setGraphState(
-			produce((state) => {
-				if (index === -1) {
-					state.selectedItemIds.push(id);
-				} else {
-					state.selectedItemIds.splice(index, 1);
-				}
-			}),
-		);
-
+	if (graph.state.selectedItemIds.length === 0) {
+		onSelected();
 		return;
 	}
 
-	if (graph.state.selectedItemIds.length <= 1) onSelected();
+	const [graphState, setGraphState] = createStore(graph.state);
+	const index = graphState.selectedItemIds.findIndex(
+		(s) => s.type === id.type && s.id === id.id,
+	);
+
+	const isSelected = index !== -1;
+
+	if (isCtrlClick(e)) {
+		if (!isSelected)
+			setGraphState(
+				produce((state) => {
+					state.selectedItemIds.push(id);
+				}),
+			);
+	} else if (!isSelected) onSelected();
+
 	const nodePositions = new Map<Node, XY>();
 
 	const downPosition = graph.toGraphSpace({
@@ -113,10 +115,27 @@ export function handleSelectableItemMouseDown(
 
 	createRoot((dispose) => {
 		createEventListenerMap(window, {
-			mouseup: () => {
+			mouseup: (e) => {
 				dispose();
 
-				if (!didDrag) onSelected();
+				if (!didDrag) {
+					if (isCtrlClick(e)) {
+						if (isSelected) {
+							const [graphState, setGraphState] = createStore(graph.state);
+							const index = graphState.selectedItemIds.findIndex(
+								(s) => s.type === id.type && s.id === id.id,
+							);
+
+							setGraphState(
+								produce((state) => {
+									if (index !== -1) {
+										state.selectedItemIds.splice(index, 1);
+									}
+								}),
+							);
+						}
+					} else onSelected();
+				}
 
 				interfaceCtx.save();
 			},
