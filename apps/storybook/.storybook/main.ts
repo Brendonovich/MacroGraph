@@ -11,28 +11,18 @@ function getAbsolutePath(value: string): any {
 }
 const config: StorybookConfig = {
 	stories: [
-		{
-			directory: "../../../packages/ui/src/**",
-			titlePrefix: "UI",
-			files: "*.stories.*",
-		},
-		{
-			directory: "../../../interface/src/**",
-			titlePrefix: "Interface",
-			files: "*.stories.*",
-		},
+		"../src/**/*.mdx",
+		"../../../packages/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
 	],
 	addons: [
 		getAbsolutePath("@storybook/addon-links"),
 		getAbsolutePath("@storybook/addon-essentials"),
+		getAbsolutePath("@chromatic-com/storybook"),
 		getAbsolutePath("@storybook/addon-interactions"),
 	],
 	framework: {
 		name: getAbsolutePath("storybook-solidjs-vite"),
 		options: {},
-	},
-	docs: {
-		autodocs: "tag",
 	},
 };
 export default config;

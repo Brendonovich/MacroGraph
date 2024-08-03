@@ -17,7 +17,7 @@ import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
 
 import { useInterfaceContext } from "../../context";
-import { isCtrlClick } from "../../util";
+import { isCtrlEvent } from "../../util";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import {
@@ -176,7 +176,7 @@ export const Node = (props: Props) => {
 								<ContextMenu.Trigger<"button">
 									as="button"
 									class="px-2 pt-1 cursor-pointer outline-none w-full h-full text-left"
-									onDblClick={(e) => !isCtrlClick(e) && setEditingName(true)}
+									onDblClick={(e) => !isCtrlEvent(e) && setEditingName(true)}
 									onClick={(e) => {
 										e.stopPropagation();
 										e.preventDefault();

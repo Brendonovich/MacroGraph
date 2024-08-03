@@ -122,11 +122,11 @@ export function SchemaMenu(props: Props) {
 
 		if (active) {
 			const index = items.indexOf(active);
-			const next = items.at((index + direction) % items.length);
+			const next = at(items, (index + direction) % items.length);
 			if (!next) return;
 			setActive(next);
 		} else {
-			const last = items.at(direction < 0 ? direction : direction - 1);
+			const last = at(items, direction < 0 ? direction : direction - 1);
 			if (!last) return;
 			setActive(last);
 		}
@@ -402,4 +402,10 @@ function Item(props: Omit<ComponentProps<"button">, "type">) {
 			)}
 		/>
 	);
+}
+
+function at<T>(array: Array<T>, index: number) {
+	const length = array.length;
+	const k = index >= 0 ? index : length + index;
+	return k >= 0 && k < length ? array[k] : undefined;
 }

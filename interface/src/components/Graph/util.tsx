@@ -10,7 +10,7 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createRoot } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import type { InterfaceContext } from "../../context";
-import { isCtrlClick } from "../../util";
+import { isCtrlEvent } from "../../util";
 import type { GraphContext, SelectedItemID } from "./Context";
 
 export const GRID_SIZE = 25;
@@ -67,7 +67,7 @@ export function handleSelectableItemMouseDown(
 
 	const isSelected = index !== -1;
 
-	if (isCtrlClick(e)) {
+	if (isCtrlEvent(e)) {
 		if (!isSelected)
 			setGraphState(
 				produce((state) => {
@@ -119,7 +119,7 @@ export function handleSelectableItemMouseDown(
 				dispose();
 
 				if (!didDrag) {
-					if (isCtrlClick(e)) {
+					if (isCtrlEvent(e)) {
 						if (isSelected) {
 							const [graphState, setGraphState] = createStore(graph.state);
 							const index = graphState.selectedItemIds.findIndex(

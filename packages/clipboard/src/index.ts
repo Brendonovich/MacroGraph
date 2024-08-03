@@ -38,11 +38,20 @@ export const ClipboardItem = v.variant("type", [
 		type: v.literal("project"),
 		project: serde.Project,
 	}),
+	v.object({
+		type: v.literal("selection"),
+		origin: serde.XY,
+		nodes: v.array(serde.Node),
+		commentBoxes: v.array(serde.CommentBox),
+		connections: v.array(serde.Connection),
+	}),
 ]);
 
-export type ClipboardItem = v.InferOutput<typeof ClipboardItem>;
+export type ClipboardItem = v.InferInput<typeof ClipboardItem>;
 
-export function serializeClipboardItem(item: ClipboardItem) {
+export function serializeClipboardItem(
+	item: v.InferInput<typeof ClipboardItem>,
+) {
 	return btoa(JSON.stringify(item));
 }
 
@@ -60,7 +69,7 @@ export function writeToClipboard(data: string) {
 
 export function nodeToClipboardItem(
 	node: Node,
-): Extract<ClipboardItem, { type: "node" }> {
+): Extract<v.InferInput<typeof ClipboardItem>, { type: "node" }> {
 	return {
 		type: "node",
 		node: serializeNode(node),
@@ -142,7 +151,9 @@ export interface ModelArgs {
 	getNodeSize: GetNodeSize;
 }
 
-export function modelToClipboardItem(args: ModelArgs): ClipboardItem {
+export function modelToClipboardItem(
+	args: ModelArgs,
+): v.InferInput<typeof ClipboardItem> {
 	const { model } = args;
 
 	if (model instanceof Node) return nodeToClipboardItem(model);
@@ -155,7 +166,9 @@ export function modelToClipboardItem(args: ModelArgs): ClipboardItem {
 	throw new Error("Invalid clipboard item");
 }
 
-export function writeClipboardItemToClipboard(item: ClipboardItem) {
+export function writeClipboardItemToClipboard(
+	item: v.InferInput<typeof ClipboardItem>,
+) {
 	return writeToClipboard(serializeClipboardItem(item));
 }
 

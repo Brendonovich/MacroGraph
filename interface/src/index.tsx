@@ -1,54 +1,65 @@
 import { Tabs } from "@kobalte/core";
 import {
+	type ClipboardItem,
+	deserializeClipboardItem,
+	readFromClipboard,
+	serializeConnections,
+	writeClipboardItemToClipboard,
+} from "@macrograph/clipboard";
+import {
 	type Core,
 	DataInput,
 	DataOutput,
 	ExecInput,
 	ExecOutput,
+	type Graph as GraphModel,
+	type Node,
 	ScopeInput,
 	ScopeOutput,
 	type XY,
+	getNodesInRect,
 	pinIsOutput,
 } from "@macrograph/runtime";
-import { createElementBounds } from "@solid-primitives/bounds";
-import {
-	createEventListener,
-	createEventListenerMap,
-} from "@solid-primitives/event-listener";
-import { createMousePosition } from "@solid-primitives/mouse";
-import { makePersisted } from "@solid-primitives/storage";
-import "@total-typescript/ts-reset";
-import * as Solid from "solid-js";
-import { createStore, produce } from "solid-js/store";
-
-import {
-	commentBoxToClipboardItem,
-	deserializeClipboardItem,
-	nodeToClipboardItem,
-	readFromClipboard,
-	writeClipboardItemToClipboard,
-} from "@macrograph/clipboard";
 import {
 	deserializeCommentBox,
 	deserializeConnections,
 	deserializeGraph,
 	deserializeNode,
 	deserializeProject,
+	type serde,
+	serializeCommentBox,
+	serializeNode,
 } from "@macrograph/runtime-serde";
+import { createElementBounds } from "@solid-primitives/bounds";
+import {
+	createEventListener,
+	createEventListenerMap,
+} from "@solid-primitives/event-listener";
+import { createMousePosition } from "@solid-primitives/mouse";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+import "@total-typescript/ts-reset";
+import * as Solid from "solid-js";
+import { createStore, produce } from "solid-js/store";
+import { toast } from "solid-sonner";
+import type * as v from "valibot";
+
 import * as Sidebars from "./Sidebar";
 import { Graph } from "./components/Graph";
 import {
 	type GraphState,
-	type SelectedItemID,
 	createGraphState,
 	toGraphSpace,
 } from "./components/Graph/Context";
 import { GRID_SIZE, SHIFT_MULTIPLIER } from "./components/Graph/util";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
-import { InterfaceContextProvider, useInterfaceContext } from "./context";
+import {
+	type Environment,
+	InterfaceContextProvider,
+	useInterfaceContext,
+} from "./context";
 import "./global.css";
+import { isCtrlEvent } from "./util";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -60,26 +71,32 @@ export type GraphBounds = XY & {
 
 const queryClient = new QueryClient();
 
-export function Interface(props: {
-	core: Core;
-	environment: "custom" | "browser";
-}) {
+export function Interface(props: { core: Core; environment: Environment }) {
 	return (
-		<InterfaceContextProvider core={props.core}>
+		<InterfaceContextProvider core={props.core} environment={props.environment}>
 			<QueryClientProvider client={queryClient}>
-				<ProjectInterface environment={props.environment} />
+				<ProjectInterface />
 			</QueryClientProvider>
 		</InterfaceContextProvider>
 	);
 }
 
-function ProjectInterface(props: { environment: "custom" | "browser" }) {
+type CurrentGraph = {
+	model: GraphModel;
+	state: GraphState;
+	index: number;
+};
+
+function ProjectInterface() {
 	const ctx = useInterfaceContext();
-
-	const mouse = createMousePosition(window);
-
-	const leftSidebar = createSidebarState("left-sidebar");
-	const rightSidebar = createSidebarState("right-sidebar");
+	const {
+		leftSidebar,
+		rightSidebar,
+		currentGraphIndex,
+		setCurrentGraphIndex,
+		graphStates,
+		setGraphStates,
+	} = useInterfaceContext();
 
 	const [graphBounds, setGraphBounds] = createStore<GraphBounds>({
 		x: 0,
@@ -88,41 +105,8 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 		height: 0,
 	});
 
-	const [graphStates, setGraphStates] = makePersisted(
-		createStore<GraphState[]>([]),
-		{
-			name: "graph-states",
-			deserialize: (data) => {
-				const json: Array<
-					GraphState & {
-						// old
-						selectedItemId?: SelectedItemID | null;
-					}
-				> = JSON.parse(data) as any;
-
-				for (const state of json) {
-					if ("selectedItemId" in state) {
-						if (state.selectedItemId === null) {
-							state.selectedItemIds = [];
-						} else if (typeof state.selectedItemId === "object") {
-							state.selectedItemIds = [state.selectedItemId];
-						}
-
-						state.selectedItemId = undefined;
-					}
-				}
-
-				return json;
-			},
-		},
-	);
-	const [currentGraphIndex, setCurrentGraphIndex] = makePersisted(
-		Solid.createSignal<number>(0),
-		{ name: "current-graph-index" },
-	);
-
 	const currentGraph = Solid.createMemo(() => {
-		const index = currentGraphIndex();
+		const index = ctx.currentGraphIndex();
 		if (index === null) return;
 
 		const state = graphStates[index];
@@ -131,11 +115,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 		const model = ctx.core.project.graphs.get(state.id);
 		if (!model) return;
 
-		return {
-			model,
-			state,
-			index,
-		};
+		return { model, state, index } as CurrentGraph;
 	});
 
 	// will account for multi-pane in future
@@ -145,6 +125,8 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 		if (hoveredPane()) return currentGraph();
 	});
 
+	createKeydownShortcuts(currentGraph, hoveredGraph, graphBounds);
+
 	const firstGraph = ctx.core.project.graphs.values().next().value;
 	if (graphStates.length === 0 && firstGraph)
 		setGraphStates([createGraphState(firstGraph)]);
@@ -153,7 +135,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 	// is the end graph and it gets deleted
 	Solid.createEffect(() => {
 		if (currentGraph()) return;
-		setCurrentGraphIndex(Math.max(0, currentGraphIndex() - 1));
+		ctx.setCurrentGraphIndex(Math.max(0, ctx.currentGraphIndex() - 1));
 	});
 
 	// removes graph states if graphs are deleted
@@ -162,305 +144,6 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 			const graph = ctx.core.project.graphs.get(state.id);
 			if (!graph) setGraphStates(graphStates.filter((s) => s.id !== state.id));
 		}
-	});
-
-	createEventListener(window, "keydown", async (e) => {
-		const { core } = ctx;
-		const { project } = core;
-
-		switch (e.code) {
-			case "KeyC": {
-				if (!e.metaKey && !e.ctrlKey) return;
-				const graph = currentGraph();
-				const selectedItemId = graph?.state?.selectedItemIds[0];
-				if (!selectedItemId) return;
-
-				if (selectedItemId.type === "node") {
-					const node = graph.model.nodes.get(selectedItemId.id);
-					if (!node) break;
-
-					await writeClipboardItemToClipboard(nodeToClipboardItem(node));
-				} else if (selectedItemId.type === "commentBox") {
-					const box = graph.model.commentBoxes.get(selectedItemId.id);
-					if (!box) break;
-
-					await writeClipboardItemToClipboard(
-						commentBoxToClipboardItem(box, (node) => ctx.nodeSizes.get(node)),
-					);
-				}
-
-				// TODO: toast
-
-				break;
-			}
-			case "KeyV": {
-				if (!e.metaKey && !e.ctrlKey) return;
-
-				const item = deserializeClipboardItem(await readFromClipboard());
-
-				switch (item.type) {
-					case "node": {
-						const graph = hoveredGraph();
-						if (!graph) return;
-
-						const { model, state } = graph;
-
-						item.node.id = model.generateId();
-						const node = deserializeNode(model, {
-							...item.node,
-							position: toGraphSpace(
-								{ x: mouse.x - 10, y: mouse.y - 10 },
-								graphBounds,
-								state,
-							),
-						});
-						if (!node) throw new Error("Failed to deserialize node");
-
-						model.nodes.set(item.node.id, node);
-
-						break;
-					}
-					case "commentBox": {
-						const graph = hoveredGraph();
-						if (!graph) return;
-
-						const { model, state } = graph;
-
-						item.commentBox.id = model.generateId();
-						const commentBox = deserializeCommentBox(model, {
-							...item.commentBox,
-							position: toGraphSpace(
-								{ x: mouse.x - 10, y: mouse.y - 10 },
-								graphBounds,
-								state,
-							),
-						});
-						if (!commentBox)
-							throw new Error("Failed to deserialize comment box");
-
-						model.commentBoxes.set(item.commentBox.id, commentBox);
-
-						const nodeIdMap = new Map<number, number>();
-
-						Solid.batch(() => {
-							for (const nodeJson of item.nodes) {
-								const id = model.generateId();
-								nodeIdMap.set(nodeJson.id, id);
-								nodeJson.id = id;
-								const node = deserializeNode(model, {
-									...nodeJson,
-									position: {
-										x:
-											commentBox.position.x +
-											nodeJson.position.x -
-											item.commentBox.position.x,
-										y:
-											commentBox.position.y +
-											nodeJson.position.y -
-											item.commentBox.position.y,
-									},
-								});
-
-								if (!node) throw new Error("Failed to deserialize node");
-
-								model.nodes.set(node.id, node);
-							}
-
-							deserializeConnections(
-								item.connections,
-								model.connections,
-								nodeIdMap,
-							);
-						});
-
-						break;
-					}
-					case "graph": {
-						item.graph.id = project.generateGraphId();
-						const graph = deserializeGraph(project, item.graph);
-						if (!graph) throw new Error("Failed to deserialize graph");
-						core.project.graphs.set(graph.id, graph);
-						break;
-					}
-					case "project": {
-						const project = deserializeProject(core, item.project);
-						if (!project) throw new Error("Failed to deserialize project");
-						core.project = project;
-						break;
-					}
-				}
-
-				break;
-			}
-			case "KeyK": {
-				if (!((e.metaKey || e.ctrlKey) && e.shiftKey)) return;
-
-				const state = ctx.state;
-
-				if (
-					state.status === "schemaMenuOpen" &&
-					state.position.x === mouse.x &&
-					state.position.y === mouse.y
-				)
-					ctx.setState({ status: "idle" });
-				else {
-					const graph = currentGraph();
-					if (!graph) return;
-
-					ctx.setState({
-						status: "schemaMenuOpen",
-						graph: graph.state,
-						position: { x: mouse.x, y: mouse.y },
-					});
-				}
-
-				e.stopPropagation();
-
-				break;
-			}
-			case "KeyB": {
-				if (!(e.metaKey || e.ctrlKey)) return;
-
-				leftSidebar.setState((s) => ({ open: !s.open }));
-
-				break;
-			}
-			case "KeyE": {
-				if (!(e.metaKey || e.ctrlKey)) return;
-
-				rightSidebar.setState((s) => ({ open: !s.open }));
-
-				break;
-			}
-			case "ArrowLeft":
-			case "ArrowRight": {
-				if (
-					(props.environment === "browser" &&
-						(e.metaKey || (e.shiftKey && e.ctrlKey))) ||
-					(props.environment === "custom" &&
-						!(e.metaKey || (e.shiftKey && e.altKey)))
-				) {
-					if (e.code === "ArrowLeft")
-						setCurrentGraphIndex((i) => Math.max(i - 1, 0));
-					else
-						setCurrentGraphIndex((i) =>
-							Math.min(i + 1, graphStates.length - 1),
-						);
-				} else {
-					const graph = currentGraph();
-					if (!graph || graph.state.selectedItemIds.length < 1) return;
-
-					const { model } = graph;
-					const { selectedItemIds } = graph.state;
-
-					const directionMultiplier = e.code === "ArrowLeft" ? -1 : 1;
-
-					for (const selectedItemId of selectedItemIds) {
-						if (selectedItemId.type === "node") {
-							const node = model.nodes.get(selectedItemId.id);
-							if (!node) break;
-							const position = node.state.position;
-
-							node.setPosition({
-								x:
-									position.x +
-									GRID_SIZE *
-										(e.shiftKey ? SHIFT_MULTIPLIER : 1) *
-										directionMultiplier,
-								y: position.y,
-							});
-						} else if (selectedItemId.type === "commentBox") {
-							const box = model.commentBoxes.get(selectedItemId.id);
-							if (!box) break;
-
-							const position = box.position;
-
-							box.position = {
-								x:
-									position.x +
-									GRID_SIZE *
-										(e.shiftKey ? SHIFT_MULTIPLIER : 1) *
-										directionMultiplier,
-								y: position.y,
-							};
-						}
-					}
-				}
-				break;
-			}
-			case "ArrowUp":
-			case "ArrowDown": {
-				const graph = currentGraph();
-				if (!graph || graph.state.selectedItemIds.length < 1) return;
-
-				const { model } = graph;
-				const { selectedItemIds } = graph.state;
-
-				const directionMultiplier = e.code === "ArrowUp" ? -1 : 1;
-
-				const delta =
-					GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1) * directionMultiplier;
-
-				for (const selectedItemId of selectedItemIds) {
-					if (selectedItemId.type === "node") {
-						const node = model.nodes.get(selectedItemId.id);
-						if (!node) break;
-						const position = node.state.position;
-
-						node.setPosition({
-							x: position.x,
-							y: position.y + delta,
-						});
-					} else if (selectedItemId.type === "commentBox") {
-						const box = model.commentBoxes.get(selectedItemId.id);
-						if (!box) break;
-
-						const position = box.position;
-
-						box.position = {
-							x: position.x,
-							y: position.y + delta,
-						};
-					}
-				}
-
-				break;
-			}
-			case "Backspace":
-			case "Delete": {
-				const graph = currentGraph();
-				if (!graph || graph.state.selectedItemIds.length < 1) return;
-
-				const { model } = graph;
-				const { selectedItemIds } = graph.state;
-
-				for (const selectedItemId of selectedItemIds) {
-					if (selectedItemId.type === "node") {
-						const node = model.nodes.get(selectedItemId.id);
-						if (!node) break;
-
-						model.deleteNode(node);
-					} else if (selectedItemId.type === "commentBox") {
-						const box = model.commentBoxes.get(selectedItemId.id);
-						if (!box) break;
-
-						model.deleteCommentbox(
-							box,
-							(node) => ctx.nodeSizes.get(node),
-							e.ctrlKey || e.metaKey,
-						);
-					}
-				}
-
-				break;
-			}
-			default: {
-				return;
-			}
-		}
-
-		e.stopPropagation();
-		e.preventDefault();
 	});
 
 	const [rootRef, setRootRef] = Solid.createSignal<
@@ -477,64 +160,10 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 				e.stopPropagation();
 			}}
 		>
-			{/* {((_) => {
-            const GraphSection = createSection({
-              title: "Graphs",
-              source: () => [
-                {
-                  title: "Create New Graph",
-                  run(control: Control) {
-                    const graph = props.core.project.createGraph();
-
-                    const currentIndex = graphStates.findIndex(
-                      (s) => s.id === graph.id
-                    );
-
-                    if (currentIndex === -1) {
-                      setGraphStates((s) => [...s, createGraphState(graph)]);
-                      setCurrentGraphIndex(graphStates.length - 1);
-                    } else setCurrentGraphIndex(currentIndex);
-
-                    control.hide();
-                  },
-                },
-                ...[...props.core.project.graphs.values()].map((graph) => ({
-                  title: graph.name,
-                  run(control: Control) {
-                    const currentIndex = graphStates.findIndex(
-                      (s) => s.id === graph.id
-                    );
-
-                    if (currentIndex === -1) {
-                      setGraphStates((s) => [...s, createGraphState(graph)]);
-                      setCurrentGraphIndex(graphStates.length - 1);
-                    } else setCurrentGraphIndex(currentIndex);
-
-                    control.hide();
-                  },
-                })),
-              ],
-            });
-
-            const CustomEventsSection = createSection({
-              title: "Custom Events",
-              source: Solid.createMemo(() =>
-                [...props.core.project.customEvents.values()].map(
-                  (customEvent) => ({
-                    title: customEvent.name,
-                    run() {},
-                  })
-                )
-              ),
-            });
-
-            return <CommandDialog sections={[GraphSection]} />;
-          })()} */}
-
-			<Solid.Show when={leftSidebar.state.open}>
+			<Solid.Show when={ctx.leftSidebar.state.open}>
 				<div class="animate-in slide-in-from-left-4 fade-in flex flex-row">
 					<Sidebar
-						width={Math.max(leftSidebar.state.width, MIN_WIDTH)}
+						width={Math.max(ctx.leftSidebar.state.width, MIN_WIDTH)}
 						name="Project"
 						initialValue={["Graphs"]}
 					>
@@ -573,7 +202,7 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 						value={currentGraphIndex().toString()}
 					>
 						<Tabs.List class="h-8 flex flex-row relative text-sm">
-							<Tabs.Indicator class="absolute inset-0 transition-transform">
+							<Tabs.Indicator class="absolute inset-0 transition-[transform,width]">
 								<div class="bg-white/20 w-full h-full" />
 							</Tabs.Indicator>
 							<Solid.For
@@ -913,29 +542,6 @@ function ProjectInterface(props: { environment: "custom" | "browser" }) {
 	);
 }
 
-function createSidebarState(name: string) {
-	const [state, setState] = makePersisted(
-		createStore({
-			width: MIN_WIDTH,
-			open: true,
-		}),
-		{ name },
-	);
-
-	// Solid.createEffect(
-	//   Solid.on(
-	//     () => state.width,
-	//     (width) => {
-	//       if (width < MIN_WIDTH * (1 - SNAP_CLOSE_PCT)) setState({ open: false });
-	//       else if (width > MIN_WIDTH * (1 - SNAP_CLOSE_PCT))
-	//         setState({ open: true });
-	//     }
-	//   )
-	// );
-
-	return { state, setState };
-}
-
 function ResizeHandle(props: {
 	width: number;
 	side: "left" | "right";
@@ -974,4 +580,370 @@ function ResizeHandle(props: {
 			/>
 		</div>
 	);
+}
+
+function createKeydownShortcuts(
+	currentGraph: Solid.Accessor<CurrentGraph | undefined>,
+	hoveredGraph: Solid.Accessor<CurrentGraph | undefined>,
+	graphBounds: GraphBounds,
+) {
+	const ctx = useInterfaceContext();
+	const mouse = createMousePosition(window);
+
+	createEventListener(window, "keydown", async (e) => {
+		const { core } = ctx;
+		const { project } = core;
+
+		switch (e.code) {
+			case "KeyC": {
+				if (!isCtrlEvent(e)) return;
+				const graph = currentGraph();
+				if (!graph?.state) return;
+
+				const clipboardItem = {
+					type: "selection",
+					origin: [Number.NaN, Number.NaN],
+					nodes: [] as Array<v.InferInput<typeof serde.Node>>,
+					commentBoxes: [] as Array<v.InferInput<typeof serde.CommentBox>>,
+					connections: [] as Array<v.InferInput<typeof serde.Connection>>,
+				} satisfies Extract<
+					v.InferInput<typeof ClipboardItem>,
+					{ type: "selection" }
+				>;
+
+				const includedNodes = new Set<Node>();
+
+				for (const item of graph.state.selectedItemIds) {
+					let itemPosition: XY;
+
+					if (item.type === "node") {
+						const node = graph.model.nodes.get(item.id);
+						if (!node || includedNodes.has(node)) continue;
+						includedNodes.add(node);
+
+						itemPosition = node.state.position;
+
+						clipboardItem.nodes.push(serializeNode(node));
+					} else {
+						const box = graph.model.commentBoxes.get(item.id);
+						if (!box) break;
+
+						itemPosition = box.position;
+
+						clipboardItem.commentBoxes.push(serializeCommentBox(box));
+
+						const nodes = getNodesInRect(
+							box.graph.nodes.values(),
+							new DOMRect(
+								box.position.x,
+								box.position.y,
+								box.size.x,
+								box.size.y,
+							),
+							(node) => ctx.nodeSizes.get(node),
+						);
+
+						for (const node of nodes) {
+							if (includedNodes.has(node)) continue;
+							includedNodes.add(node);
+
+							clipboardItem.nodes.push(serializeNode(node));
+						}
+					}
+
+					if (
+						Number.isNaN(clipboardItem.origin[0]) ||
+						clipboardItem.origin[0] > itemPosition.x
+					)
+						clipboardItem.origin[0] = itemPosition.x;
+					if (
+						Number.isNaN(clipboardItem.origin[1]) ||
+						clipboardItem.origin[1] > itemPosition.y
+					)
+						clipboardItem.origin[1] = itemPosition.y;
+				}
+
+				clipboardItem.connections = serializeConnections(includedNodes);
+
+				writeClipboardItemToClipboard(clipboardItem);
+
+				toast(
+					`${
+						clipboardItem.nodes.length + clipboardItem.commentBoxes.length
+					} items copied to clipboard`,
+				);
+
+				break;
+			}
+			case "KeyV": {
+				if (!isCtrlEvent(e)) return;
+
+				let item = deserializeClipboardItem(await readFromClipboard());
+
+				switch (item.type) {
+					case "node": {
+						item = {
+							type: "selection",
+							origin: item.node.position,
+							nodes: [item.node],
+							commentBoxes: [],
+							connections: [],
+						};
+
+						break;
+					}
+					case "commentBox": {
+						item = {
+							type: "selection",
+							origin: item.commentBox.position,
+							nodes: item.nodes,
+							commentBoxes: [item.commentBox],
+							connections: item.connections,
+						};
+
+						break;
+					}
+					default:
+						break;
+				}
+
+				switch (item.type) {
+					case "selection": {
+						const graph = hoveredGraph();
+						if (!graph) return;
+
+						const { model, state } = graph;
+
+						const mousePosition = toGraphSpace(
+							{ x: mouse.x - 10, y: mouse.y - 10 },
+							graphBounds,
+							state,
+						);
+
+						const nodeIdMap = new Map<number, number>();
+
+						Solid.batch(() => {
+							for (const nodeData of item.nodes) {
+								const id = model.generateId();
+								nodeIdMap.set(nodeData.id, id);
+								nodeData.id = id;
+								nodeData.position = {
+									x: mousePosition.x + nodeData.position.x - item.origin.x,
+									y: mousePosition.y + nodeData.position.y - item.origin.y,
+								};
+								const node = deserializeNode(model, nodeData);
+								if (!node) throw new Error("Failed to deserialize node");
+
+								model.nodes.set(node.id, node);
+							}
+
+							for (const box of item.commentBoxes) {
+								box.id = model.generateId();
+								box.position = {
+									x: mousePosition.x + box.position.x - item.origin.x,
+									y: mousePosition.y + box.position.y - item.origin.y,
+								};
+								const commentBox = deserializeCommentBox(model, box);
+								if (!commentBox)
+									throw new Error("Failed to deserialize comment box");
+
+								model.commentBoxes.set(commentBox.id, commentBox);
+							}
+
+							deserializeConnections(
+								item.connections,
+								model.connections,
+								nodeIdMap,
+							);
+						});
+
+						break;
+					}
+					case "graph": {
+						item.graph.id = project.generateGraphId();
+						const graph = deserializeGraph(project, item.graph);
+						if (!graph) throw new Error("Failed to deserialize graph");
+						core.project.graphs.set(graph.id, graph);
+						break;
+					}
+					case "project": {
+						const project = deserializeProject(core, item.project);
+						if (!project) throw new Error("Failed to deserialize project");
+						core.project = project;
+						break;
+					}
+				}
+
+				break;
+			}
+			case "KeyK": {
+				if (!(isCtrlEvent(e) && e.shiftKey)) return;
+
+				const state = ctx.state;
+
+				if (
+					state.status === "schemaMenuOpen" &&
+					state.position.x === mouse.x &&
+					state.position.y === mouse.y
+				)
+					ctx.setState({ status: "idle" });
+				else {
+					const graph = currentGraph();
+					if (!graph) return;
+
+					ctx.setState({
+						status: "schemaMenuOpen",
+						graph: graph.state,
+						position: { x: mouse.x, y: mouse.y },
+					});
+				}
+
+				e.stopPropagation();
+
+				break;
+			}
+			case "KeyB": {
+				if (!isCtrlEvent(e)) return;
+
+				ctx.leftSidebar.setState((s) => ({ open: !s.open }));
+
+				break;
+			}
+			case "KeyE": {
+				if (!isCtrlEvent(e)) return;
+
+				ctx.rightSidebar.setState((s) => ({ open: !s.open }));
+
+				break;
+			}
+			case "ArrowLeft":
+			case "ArrowRight": {
+				if (
+					(ctx.environment === "browser" &&
+						(e.metaKey || (e.shiftKey && e.ctrlKey))) ||
+					(ctx.environment === "custom" &&
+						!(e.metaKey || (e.shiftKey && e.altKey)))
+				) {
+					if (e.code === "ArrowLeft")
+						ctx.setCurrentGraphIndex((i) => Math.max(i - 1, 0));
+					else
+						ctx.setCurrentGraphIndex((i) =>
+							Math.min(i + 1, ctx.graphStates.length - 1),
+						);
+				} else {
+					const graph = currentGraph();
+					if (!graph || graph.state.selectedItemIds.length < 1) return;
+
+					const { model } = graph;
+					const { selectedItemIds } = graph.state;
+
+					const directionMultiplier = e.code === "ArrowLeft" ? -1 : 1;
+
+					for (const selectedItemId of selectedItemIds) {
+						if (selectedItemId.type === "node") {
+							const node = model.nodes.get(selectedItemId.id);
+							if (!node) break;
+							const position = node.state.position;
+
+							node.setPosition({
+								x:
+									position.x +
+									GRID_SIZE *
+										(e.shiftKey ? SHIFT_MULTIPLIER : 1) *
+										directionMultiplier,
+								y: position.y,
+							});
+						} else if (selectedItemId.type === "commentBox") {
+							const box = model.commentBoxes.get(selectedItemId.id);
+							if (!box) break;
+
+							const position = box.position;
+
+							box.position = {
+								x:
+									position.x +
+									GRID_SIZE *
+										(e.shiftKey ? SHIFT_MULTIPLIER : 1) *
+										directionMultiplier,
+								y: position.y,
+							};
+						}
+					}
+				}
+				break;
+			}
+			case "ArrowUp":
+			case "ArrowDown": {
+				const graph = currentGraph();
+				if (!graph || graph.state.selectedItemIds.length < 1) return;
+
+				const { model } = graph;
+				const { selectedItemIds } = graph.state;
+
+				const directionMultiplier = e.code === "ArrowUp" ? -1 : 1;
+
+				const delta =
+					GRID_SIZE * (e.shiftKey ? SHIFT_MULTIPLIER : 1) * directionMultiplier;
+
+				for (const selectedItemId of selectedItemIds) {
+					if (selectedItemId.type === "node") {
+						const node = model.nodes.get(selectedItemId.id);
+						if (!node) break;
+						const position = node.state.position;
+
+						node.setPosition({
+							x: position.x,
+							y: position.y + delta,
+						});
+					} else if (selectedItemId.type === "commentBox") {
+						const box = model.commentBoxes.get(selectedItemId.id);
+						if (!box) break;
+
+						const position = box.position;
+
+						box.position = {
+							x: position.x,
+							y: position.y + delta,
+						};
+					}
+				}
+
+				break;
+			}
+			case "Backspace":
+			case "Delete": {
+				const graph = currentGraph();
+				if (!graph || graph.state.selectedItemIds.length < 1) return;
+
+				const { model } = graph;
+				const { selectedItemIds } = graph.state;
+
+				for (const selectedItemId of selectedItemIds) {
+					if (selectedItemId.type === "node") {
+						const node = model.nodes.get(selectedItemId.id);
+						if (!node) break;
+
+						model.deleteNode(node);
+					} else if (selectedItemId.type === "commentBox") {
+						const box = model.commentBoxes.get(selectedItemId.id);
+						if (!box) break;
+
+						model.deleteCommentbox(
+							box,
+							(node) => ctx.nodeSizes.get(node),
+							e.ctrlKey || e.metaKey,
+						);
+					}
+				}
+
+				break;
+			}
+			default: {
+				return;
+			}
+		}
+
+		e.stopPropagation();
+		e.preventDefault();
+	});
 }

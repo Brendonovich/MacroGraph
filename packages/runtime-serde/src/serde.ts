@@ -6,10 +6,16 @@ const IntID = v.pipe(
 	v.integer(),
 );
 
-export const XY = v.object({
-	x: v.number(),
-	y: v.number(),
-});
+export const XY = v.pipe(
+	v.union([
+		v.object({ x: v.number(), y: v.number() }),
+		v.tuple([v.number(), v.number()]),
+	]),
+	v.transform((v) => {
+		if (Array.isArray(v)) return { x: v[0], y: v[1] };
+		return v;
+	}),
+);
 
 const TypeBases = v.union([
 	v.literal("int"),

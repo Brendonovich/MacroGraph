@@ -6,10 +6,14 @@ import { createStore, reconcile } from "solid-js/store";
 
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { leading, throttle } from "@solid-primitives/scheduled";
-import type { GraphState } from "./components/Graph/Context";
+import { makePersisted } from "@solid-primitives/storage";
+import type { GraphState, SelectedItemID } from "./components/Graph/Context";
+import { MIN_WIDTH } from "./components/Sidebar";
+
+export type Environment = "custom" | "browser";
 
 export const [InterfaceContextProvider, useInterfaceContext] =
-	createContextProvider((props: { core: Core }) => {
+	createContextProvider((props: { core: Core; environment: Environment }) => {
 		const [hoveringPin, setHoveringPin] = createSignal<Pin | null>(null);
 		const [state, setState] = createStore<MouseState>({
 			status: "idle",
@@ -34,6 +38,42 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			}),
 		);
 
+		const leftSidebar = createSidebarState("left-sidebar");
+		const rightSidebar = createSidebarState("right-sidebar");
+
+		const [currentGraphIndex, setCurrentGraphIndex] = makePersisted(
+			createSignal<number>(0),
+			{ name: "current-graph-index" },
+		);
+
+		const [graphStates, setGraphStates] = makePersisted(
+			createStore<GraphState[]>([]),
+			{
+				name: "graph-states",
+				deserialize: (data) => {
+					const json: Array<
+						GraphState & {
+							// old
+							selectedItemId?: SelectedItemID | null;
+						}
+					> = JSON.parse(data) as any;
+
+					for (const state of json) {
+						if ("selectedItemId" in state) {
+							if (state.selectedItemId === null) {
+								state.selectedItemIds = [];
+							} else if (typeof state.selectedItemId === "object") {
+								state.selectedItemIds = [state.selectedItemId];
+							}
+
+							state.selectedItemId = undefined;
+						}
+					}
+
+					return json;
+				},
+			},
+		);
 		return {
 			state,
 			setState: (value: MouseState) => {
@@ -47,6 +87,15 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			save,
 			nodeSizes: new WeakMap<Node, Size>(),
 			pinPositions: new ReactiveWeakMap<Pin, XY>(),
+			leftSidebar,
+			rightSidebar,
+			get environment() {
+				return props.environment;
+			},
+			currentGraphIndex,
+			setCurrentGraphIndex,
+			graphStates,
+			setGraphStates,
 		};
 	}, null!);
 
@@ -75,3 +124,23 @@ export type MouseState =
 				| { status: "draggingPin" }
 				| SchemaMenuOpenState;
 	  };
+
+function createSidebarState(name: string) {
+	const [state, setState] = makePersisted(
+		createStore({ width: MIN_WIDTH, open: true }),
+		{ name },
+	);
+
+	// Solid.createEffect(
+	//   Solid.on(
+	//     () => state.width,
+	//     (width) => {
+	//       if (width < MIN_WIDTH * (1 - SNAP_CLOSE_PCT)) setState({ open: false });
+	//       else if (width > MIN_WIDTH * (1 - SNAP_CLOSE_PCT))
+	//         setState({ open: true });
+	//     }
+	//   )
+	// );
+
+	return { state, setState };
+}

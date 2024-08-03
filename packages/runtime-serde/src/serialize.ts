@@ -11,7 +11,9 @@ import type * as v from "valibot";
 
 import type * as serde from "./serde";
 
-export function serializeProject(project: runtime.Project): serde.Project {
+export function serializeProject(
+	project: runtime.Project,
+): v.InferInput<typeof serde.Project> {
 	return {
 		name: project.name,
 		graphIdCounter: project.graphIdCounter,
@@ -34,7 +36,9 @@ export function serializeProject(project: runtime.Project): serde.Project {
 	};
 }
 
-export function serializeGraph(graph: runtime.Graph): serde.Graph {
+export function serializeGraph(
+	graph: runtime.Graph,
+): v.InferInput<typeof serde.Graph> {
 	return {
 		id: graph.id,
 		name: graph.name,
@@ -75,7 +79,7 @@ export function serializeGraph(graph: runtime.Graph): serde.Graph {
 
 export function serializeCustomEvent(
 	e: runtime.CustomEvent,
-): serde.CustomEvent {
+): v.InferInput<typeof serde.CustomEvent> {
 	return {
 		id: e.id,
 		name: e.name,
@@ -89,7 +93,7 @@ export function serializeCustomEvent(
 
 export function serializeCustomStruct(
 	s: runtime.CustomStruct,
-): serde.CustomStruct {
+): v.InferInput<typeof serde.CustomStruct> {
 	return {
 		id: s.id,
 		name: s.name,
@@ -102,7 +106,9 @@ export function serializeCustomStruct(
 	};
 }
 
-export function serializeVariable(v: runtime.Variable): serde.Variable {
+export function serializeVariable(
+	v: runtime.Variable,
+): v.InferInput<typeof serde.Variable> {
 	return {
 		id: v.id,
 		name: v.name,
@@ -111,11 +117,13 @@ export function serializeVariable(v: runtime.Variable): serde.Variable {
 	};
 }
 
-export function serializeNode(node: runtime.Node): serde.Node {
+export function serializeNode(
+	node: runtime.Node,
+): v.InferInput<typeof serde.Node> {
 	return {
 		id: node.id,
 		name: node.state.name,
-		position: node.state.position,
+		position: [node.state.position.x, node.state.position.y],
 		schema: {
 			package: node.schema.package.name,
 			id: node.schema.name,
@@ -141,10 +149,12 @@ export function serializeNode(node: runtime.Node): serde.Node {
 	};
 }
 
-export function serializeCommentBox(box: runtime.CommentBox): serde.CommentBox {
+export function serializeCommentBox(
+	box: runtime.CommentBox,
+): v.InferInput<typeof serde.CommentBox> {
 	return {
 		id: box.id,
-		position: box.position,
+		position: [box.position.x, box.position.y],
 		size: box.size,
 		text: box.text,
 		tint: box.tint,

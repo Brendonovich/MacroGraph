@@ -1,8 +1,8 @@
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 
-import interfacePlugin from "../../interface/vite";
+import macrographUI from "../../packages/ui/vite";
 
 export default defineConfig({
-	plugins: [solid(), interfacePlugin],
+	plugins: [solid(), macrographUI],
 });

@@ -4,7 +4,7 @@
 		"strict": true,
 		"target": "ESNext",
 		"module": "ESNext",
-		"lib": ["dom", "dom.iterable", "esnext"],
+		"lib": ["dom", "dom.iterable", "ESNext"],
 		"moduleResolution": "node",
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",

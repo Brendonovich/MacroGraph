@@ -1,7 +1,4 @@
 {
-	"compilerOptions": {
-		"skipLibCheck": true
-	},
 	"files": [],
 	"references": [
 		{ "path": "./packages/typesystem" },

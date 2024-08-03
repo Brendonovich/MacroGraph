@@ -38,6 +38,8 @@
 		"@ts-rest/solid-query": "^3.41.1",
 		"clsx": "^1.2.1",
 		"solid-js": "^1.8.19",
+		"solid-sonner": "^0.2.5",
+		"valibot": "^0.37.0",
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
