@@ -4,6 +4,7 @@ import { writeBinaryFile } from "@tauri-apps/api/fs";
 import type { Pkg } from ".";
 import type { Ctx } from "./ctx";
 import { createStruct } from "@macrograph/runtime";
+import { Maybe, None } from "@macrograph/option";
 
 type Message = {
   role: string;
@@ -28,6 +29,8 @@ async function TextToSpeech(
   filePath: string,
   ctx: Ctx
 ) {
+  let state: string | null;
+
   const response = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceID}`,
     {
@@ -40,9 +43,16 @@ async function TextToSpeech(
     }
   );
 
-  if (response.body) {
+  console.log(response);
+
+  if (response.body && response.status === 200) {
     await writeBinaryFile(filePath, await streamToArrayBuffer(response.body));
+    state = filePath;
+  } else {
+    state = null;
   }
+
+  return state;
 }
 
 const voiceSettings = createStruct("Voice Settings", (s) => ({
@@ -82,27 +92,28 @@ export function register(pkg: Pkg, state: Ctx) {
           name: "Voice ID",
           type: t.string(),
         }),
-        body: io.dataInput({
-          id: "body",
-          name: "Body",
-          type: t.option(t.struct(elevenBody)),
-        }),
+        // Waiting for bug to be fixed
+        // body: io.dataInput({
+        //   id: "body",
+        //   name: "Body",
+        //   type: t.option(t.struct(elevenBody)),
+        // }),
         filePathOut: io.dataOutput({
           id: "filePathOut",
           name: "File Path",
-          type: t.string(),
+          type: t.option(t.string()),
         }),
       };
     },
     async run({ ctx, io }) {
-      await TextToSpeech(
+      const response = await TextToSpeech(
         ctx.getInput(io.voiceId),
         { text: ctx.getInput(io.text) },
         ctx.getInput(io.filePath),
         state
       );
 
-      ctx.setOutput(io.filePathOut, ctx.getInput(io.filePath));
+      ctx.setOutput(io.filePathOut, Maybe(response));
     },
   });
 }
