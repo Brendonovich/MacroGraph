@@ -1,7 +1,10 @@
-import { Core, type RefreshedOAuthToken } from "@macrograph/runtime";
+import {
+	Core,
+	type RefreshedOAuthToken,
+	createWsProvider,
+} from "@macrograph/runtime";
 import "tauri-plugin-midi";
 
-import { rawApi } from "./api";
 import { env } from "./env";
 import { fetch } from "./http";
 import { client } from "./rspc";
@@ -35,5 +38,21 @@ export const core = new Core({
 			};
 		},
 	},
-	api: rawApi,
+});
+
+const wsProvider = createWsProvider({
+	async startServer(port, onData) {
+		return client.addSubscription(["websocket.server", port], {
+			onData: (d) => onData(d),
+		});
+	},
+	async stopServer(unsubscribe) {
+		unsubscribe();
+	},
+	async sendMessage(data) {
+		return client.mutation([
+			"websocket.send",
+			{ port: data.port, client: data.client, data: data.data },
+		]);
+	},
 });

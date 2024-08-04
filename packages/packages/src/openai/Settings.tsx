@@ -1,8 +1,8 @@
 import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
+import { createForm } from "@tanstack/solid-form";
 import { Match, Switch } from "solid-js";
 
-import { createForm } from "@tanstack/solid-form";
 import type { Ctx } from "./ctx";
 
 export default function ({ state, setKey, key }: Ctx) {
