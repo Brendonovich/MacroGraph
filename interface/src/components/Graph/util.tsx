@@ -1,4 +1,9 @@
-import { type Node, type XY, getNodesInRect } from "@macrograph/runtime";
+import {
+	type CommentBox,
+	type Node,
+	type XY,
+	getNodesInRect,
+} from "@macrograph/runtime";
 import {
 	type AnyType,
 	BasePrimitiveType,
@@ -74,11 +79,15 @@ export function handleSelectableItemMouseDown(
 	} else if (!isSelected) onSelected();
 
 	const nodePositions = new Map<Node, XY>();
+	const commentBoxPositions = new Map<CommentBox, XY>();
 
 	const downPosition = graph.toGraphSpace({
 		x: e.clientX,
 		y: e.clientY,
 	});
+
+	const nodes = new Set<Node>();
+	const commentBoxNodes = new Map<CommentBox, Set<Node>>();
 
 	const selectedItemPositions = new Map<SelectedItemID, XY>();
 	for (const selectedItemId of graph.state.selectedItemIds) {
@@ -89,6 +98,8 @@ export function handleSelectableItemMouseDown(
 			selectedItemPositions.set(selectedItemId, {
 				...node.state.position,
 			});
+			nodePositions.set(node, { ...node.state.position });
+			nodes.add(node);
 		} else {
 			const box = graph.model().commentBoxes.get(selectedItemId.id);
 			if (!box) continue;
@@ -96,15 +107,23 @@ export function handleSelectableItemMouseDown(
 			selectedItemPositions.set(selectedItemId, {
 				...box.position,
 			});
+			commentBoxPositions.set(box, { ...box.position });
 
 			const nodes = getNodesInRect(
 				graph.model().nodes.values(),
 				new DOMRect(box.position.x, box.position.y, box.size.x, box.size.y),
 				(node) => interfaceCtx.nodeSizes.get(node),
 			);
+			commentBoxNodes.set(box, nodes);
 			for (const node of nodes) {
 				nodePositions.set(node, { ...node.state.position });
 			}
+		}
+	}
+
+	for (const ns of commentBoxNodes.values()) {
+		for (const node of ns) {
+			nodes.delete(node);
 		}
 	}
 
@@ -149,45 +168,73 @@ export function handleSelectableItemMouseDown(
 					y: mousePosition.y - downPosition.y,
 				};
 
-				if (!e.shiftKey) {
-					delta.x = Math.round(delta.x / GRID_SIZE) * GRID_SIZE;
-					delta.y = Math.round(delta.y / GRID_SIZE) * GRID_SIZE;
-				}
-
-				for (const [node, startPosition] of nodePositions) {
-					node.setPosition({
-						x: startPosition.x + delta.x,
-						y: startPosition.y + delta.y,
-					});
-				}
-
-				for (const selectedItemId of graph.state.selectedItemIds) {
-					const startPosition = selectedItemPositions.get(selectedItemId);
+				for (const node of nodes) {
+					const startPosition = nodePositions.get(node);
 					if (!startPosition) continue;
 
-					if (selectedItemId.type === "node") {
-						const node = graph.model().nodes.get(selectedItemId.id);
-						if (!node) continue;
+					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
 
-						const newPosition = {
-							x: startPosition.x + delta.x,
-							y: startPosition.y + delta.y,
-						};
+					node.setPosition(newPosition);
+				}
 
-						node.setPosition(newPosition);
-					} else {
-						const box = graph.model().commentBoxes.get(selectedItemId.id);
-						if (!box) continue;
+				for (const [box, nodes] of commentBoxNodes) {
+					const startPosition = commentBoxPositions.get(box);
+					if (!startPosition) continue;
 
-						const newPosition = {
-							x: startPosition.x + delta.x,
-							y: startPosition.y + delta.y,
-						};
+					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
 
-						box.position = newPosition;
+					box.position = newPosition;
+
+					const boxDelta = {
+						x: newPosition.x - startPosition.x,
+						y: newPosition.y - startPosition.y,
+					};
+
+					for (const node of nodes) {
+						const startPosition = nodePositions.get(node);
+						if (!startPosition) continue;
+
+						node.setPosition({
+							x: startPosition.x + boxDelta.x,
+							y: startPosition.y + boxDelta.y,
+						});
 					}
 				}
 			},
 		});
 	});
+}
+
+function moveStandaloneItemOnGrid(e: MouseEvent, startPosition: XY, delta: XY) {
+	if (e.shiftKey)
+		return {
+			x: startPosition.x + delta.x,
+			y: startPosition.y + delta.y,
+		};
+
+	const ret: XY = {
+		x: snapToGrid(startPosition.x + delta.x),
+		y: snapToGrid(startPosition.y + delta.y),
+	};
+
+	snapToGridIfOutside("x", ret, startPosition, delta);
+	snapToGridIfOutside("y", ret, startPosition, delta);
+
+	return ret;
+}
+
+function snapToGrid(value: number) {
+	return Math.round(value / GRID_SIZE) * GRID_SIZE;
+}
+
+function snapToGridIfOutside(dir: "x" | "y", ret: XY, start: XY, delta: XY) {
+	const onGrid = start[dir] % GRID_SIZE === 0;
+	if (onGrid) return;
+
+	const leftGrid = Math.floor(start[dir] / GRID_SIZE) * GRID_SIZE;
+	const rightGrid = Math.ceil(start[dir] / GRID_SIZE) * GRID_SIZE;
+
+	if (leftGrid < start[dir] + delta[dir] && start[dir] + delta[dir] < rightGrid)
+		ret[dir] = start[dir];
+	else start[dir] = ret[dir];
 }
