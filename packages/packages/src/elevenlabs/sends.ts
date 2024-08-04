@@ -82,6 +82,11 @@ export function register(pkg: Pkg, state: Ctx) {
           name: "Voice ID",
           type: t.string(),
         }),
+        body: io.dataInput({
+          id: "body",
+          name: "Body",
+          type: t.option(t.struct(elevenBody)),
+        }),
         filePathOut: io.dataOutput({
           id: "filePathOut",
           name: "File Path",
