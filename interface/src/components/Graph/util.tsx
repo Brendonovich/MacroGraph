@@ -55,10 +55,7 @@ export function handleSelectableItemMouseDown(
 
 	if (e.button !== 0) return;
 
-	if (graph.state.selectedItemIds.length === 0) {
-		onSelected();
-		return;
-	}
+	if (graph.state.selectedItemIds.length === 0) onSelected();
 
 	const [graphState, setGraphState] = createStore(graph.state);
 	const index = graphState.selectedItemIds.findIndex(
