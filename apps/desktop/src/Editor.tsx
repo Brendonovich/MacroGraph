@@ -1,7 +1,7 @@
 import {
-  ConnectionsDialog,
-  Interface,
-  PlatformContext,
+	ConnectionsDialog,
+	Interface,
+	PlatformContext,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { createWsProvider } from "@macrograph/runtime";
@@ -19,122 +19,122 @@ import { createPlatform } from "./platform";
 import { client } from "./rspc";
 
 const [projectUrl, setProjectUrl] = makePersisted(
-  createSignal<string | null>(null),
-  { name: "currentProjectUrl" },
+	createSignal<string | null>(null),
+	{ name: "currentProjectUrl" },
 );
 
 const platform = createPlatform({
-  projectUrl,
-  setProjectUrl,
-  core,
+	projectUrl,
+	setProjectUrl,
+	core,
 });
 
 const wsProvider = createWsProvider({
-  async startServer(port, onData) {
-    return client.addSubscription(["websocket.server", port], {
-      onData: (d) => onData(d),
-    });
-  },
-  async stopServer(unsubscribe) {
-    unsubscribe();
-  },
-  async sendMessage(data) {
-    return client.mutation([
-      "websocket.send",
-      { port: data.port, client: data.client, data: data.data },
-    ]);
-  },
+	async startServer(port, onData) {
+		return client.addSubscription(["websocket.server", port], {
+			onData: (d) => onData(d),
+		});
+	},
+	async stopServer(unsubscribe) {
+		unsubscribe();
+	},
+	async sendMessage(data) {
+		return client.mutation([
+			"websocket.send",
+			{ port: data.port, client: data.client, data: data.data },
+		]);
+	},
 });
 
 [
-  () =>
-    pkgs.audio.pkg({
-      prepareURL: (url: string) => convertFileSrc(url),
-    }),
-  pkgs.discord.pkg,
-  () =>
-    pkgs.fs.register({
-      list: (path) => client.query(["fs.list", path]),
-    }),
-  // pkgs.github.pkg,
-  pkgs.goxlr.pkg,
-  // pkgs.google.pkg,
-  pkgs.http.pkg,
-  pkgs.json.pkg,
-  pkgs.keyboard.pkg,
-  pkgs.list.pkg,
-  pkgs.localStorage.pkg,
-  pkgs.logic.pkg,
-  pkgs.map.pkg,
-  pkgs.obs.pkg,
-  // pkgs.patreon.pkg,
-  // pkgs.spotify.pkg,
-  () => pkgs.streamdeck.pkg(wsProvider),
-  pkgs.streamlabs.pkg,
-  pkgs.twitch.pkg,
-  pkgs.utils.pkg,
-  pkgs.openai.pkg,
-  pkgs.websocket.pkg,
-  pkgs.variables.pkg,
-  pkgs.customEvents.pkg,
-  pkgs.speakerbot.pkg,
-  () => pkgs.websocketServer.pkg(wsProvider),
-  pkgs.globalKeyboardMouse.pkg,
-  pkgs.midi.pkg,
-  pkgs.elevenlabs.pkg,
-  pkgs.vtubeStudio.pkg,
+	() =>
+		pkgs.audio.pkg({
+			prepareURL: (url: string) => convertFileSrc(url),
+		}),
+	pkgs.discord.pkg,
+	() =>
+		pkgs.fs.register({
+			list: (path) => client.query(["fs.list", path]),
+		}),
+	// pkgs.github.pkg,
+	pkgs.goxlr.pkg,
+	// pkgs.google.pkg,
+	pkgs.http.pkg,
+	pkgs.json.pkg,
+	pkgs.keyboard.pkg,
+	pkgs.list.pkg,
+	pkgs.localStorage.pkg,
+	pkgs.logic.pkg,
+	pkgs.map.pkg,
+	pkgs.obs.pkg,
+	// pkgs.patreon.pkg,
+	// pkgs.spotify.pkg,
+	() => pkgs.streamdeck.pkg(wsProvider),
+	pkgs.streamlabs.pkg,
+	pkgs.twitch.pkg,
+	pkgs.utils.pkg,
+	pkgs.openai.pkg,
+	pkgs.websocket.pkg,
+	pkgs.variables.pkg,
+	pkgs.customEvents.pkg,
+	pkgs.speakerbot.pkg,
+	() => pkgs.websocketServer.pkg(wsProvider),
+	pkgs.globalKeyboardMouse.pkg,
+	pkgs.midi.pkg,
+	pkgs.elevenlabs.pkg,
+	pkgs.vtubeStudio.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {
-  const [loaded, setLoaded] = createSignal(false);
+	const [loaded, setLoaded] = createSignal(false);
 
-  onMount(() => {
-    const savedProject = localStorage.getItem("project");
+	onMount(() => {
+		const savedProject = localStorage.getItem("project");
 
-    if (savedProject) {
-      const serializedProject = v.parse(
-        serde.Project,
-        JSON.parse(savedProject),
-      );
-      core
-        .load((c) => deserializeProject(c, serializedProject))
-        .finally(() => {
-          setLoaded(true);
-        });
-    } else {
-      setLoaded(true);
-    }
-  });
+		if (savedProject) {
+			const serializedProject = v.parse(
+				serde.Project,
+				JSON.parse(savedProject),
+			);
+			core
+				.load((c) => deserializeProject(c, serializedProject))
+				.finally(() => {
+					setLoaded(true);
+				});
+		} else {
+			setLoaded(true);
+		}
+	});
 
-  return (
-    <Show when={loaded() && core.project} keyed>
-      <PlatformContext.Provider value={platform}>
-        <Interface core={core} environment="custom" />
-      </PlatformContext.Provider>
-    </Show>
-  );
+	return (
+		<Show when={loaded() && core.project} keyed>
+			<PlatformContext.Provider value={platform}>
+				<Interface core={core} environment="custom" />
+			</PlatformContext.Provider>
+		</Show>
+	);
 }
 
 export function MenuItems() {
-  return (
-    <>
-      <ConnectionsDialog core={core} />
-      <Button
-        title="Save Project"
-        size="icon"
-        variant="ghost"
-        onClick={(e) => platform.projectPersistence.saveProject(e.shiftKey)}
-      >
-        <IconFaSolidSave class="size-5" />
-      </Button>
-      <Button
-        title="Load Project"
-        size="icon"
-        variant="ghost"
-        onClick={() => platform.projectPersistence.loadProject()}
-      >
-        <IconTdesignFolderImport class="size-5" />
-      </Button>
-    </>
-  );
+	return (
+		<>
+			<ConnectionsDialog core={core} />
+			<Button
+				title="Save Project"
+				size="icon"
+				variant="ghost"
+				onClick={(e) => platform.projectPersistence.saveProject(e.shiftKey)}
+			>
+				<IconFaSolidSave class="size-5" />
+			</Button>
+			<Button
+				title="Load Project"
+				size="icon"
+				variant="ghost"
+				onClick={() => platform.projectPersistence.loadProject()}
+			>
+				<IconTdesignFolderImport class="size-5" />
+			</Button>
+		</>
+	);
 }

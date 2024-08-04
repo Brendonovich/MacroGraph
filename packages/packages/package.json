@@ -41,7 +41,6 @@
 		"@twurple/auth": "^6.2.1",
 		"dayjs": "^1.11.10",
 		"discord.js": "^14.14.1",
-		"elevenlabs": "^0.2.2",
 		"eventemitter3": "^5.0.1",
 		"obs-websocket-js": "^5.0.5",
 		"octokit": "^3.1.2",
