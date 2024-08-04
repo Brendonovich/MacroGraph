@@ -17,7 +17,7 @@ export default function ({ setKey, key }: Ctx) {
 
   return (
     <div class="flex flex-col space-y-2">
-      <span class="text-neutral-400 font-medium">Open AI API</span>
+      <span class="text-neutral-400 font-medium">Eleven Labs API</span>
       <form
         onSubmit={(e) => {
           e.preventDefault();

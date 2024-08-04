@@ -6,7 +6,7 @@ import {
 } from "@macrograph/option";
 import { createEffect, createSignal, on } from "solid-js";
 
-const GPT_KEY = "ChatGptKey";
+const ELEVEN_KEY = "ChatGptKey";
 
 export type Ctx = ReturnType<typeof createCtx>;
 
@@ -15,8 +15,8 @@ export function createCtx() {
 
   const [key, setKey] = makePersistedOption(
     createSignal<Option<string>>(None),
-    GPT_KEY
-  ); //
+    ELEVEN_KEY
+  );
 
   createEffect(
     on(

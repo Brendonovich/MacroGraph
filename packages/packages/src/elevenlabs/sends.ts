@@ -3,6 +3,7 @@ import { writeBinaryFile } from "@tauri-apps/api/fs";
 
 import type { Pkg } from ".";
 import type { Ctx } from "./ctx";
+import { createStruct } from "@macrograph/runtime";
 
 type Message = {
   role: string;
@@ -15,40 +16,88 @@ type Choices = {
   message: Message;
 };
 
-async function TextToSpeech(voiceID: string, body: any, directory: string) {
-  await writeBinaryFile(directory, new Uint8Array([]));
+export async function streamToArrayBuffer(
+  stream: ReadableStream<Uint8Array>
+): Promise<Uint8Array> {
+  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
+
+async function TextToSpeech(
+  voiceID: string,
+  body: any,
+  filePath: string,
+  ctx: Ctx
+) {
+  const response = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceID}`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "xi-api-key": ctx.key().unwrap(),
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (response.body) {
+    await writeBinaryFile(filePath, await streamToArrayBuffer(response.body));
+  }
+}
+
+const voiceSettings = createStruct("Voice Settings", (s) => ({
+  stability: s.field("Stability", t.float()),
+  similarityBoost: s.field("Similarity Boost", t.float()),
+  style: s.field("Style", t.option(t.float())),
+  useSpeakerBoost: s.field("Use Speaker Boost", t.option(t.bool())),
+}));
+
+const elevenBody = createStruct("Body", (s) => ({
+  modelId: s.field("Model ID", t.option(t.string())),
+  language_code: s.field("Language Code", t.option(t.string())),
+  voiceSettings: s.field("Voice Settings", t.option(t.struct(voiceSettings))),
+  seed: s.field("Seed", t.option(t.int())),
+  previousText: s.field("Previous Text", t.option(t.string())),
+  nextText: s.field("Next Text", t.option(t.string())),
+}));
 
 export function register(pkg: Pkg, state: Ctx) {
   pkg.createNonEventSchema({
     name: "ElevenLabs TTS",
-    variant: "Base",
+    variant: "Exec",
     createIO({ io }) {
       return {
-        exec: io.execInput({
-          id: "exec",
-        }),
-        voice: io.dataInput({
-          id: "voice",
-          name: "Voice",
+        text: io.dataInput({
+          id: "text",
+          name: "Text",
           type: t.string(),
         }),
-        directory: io.dataInput({
-          id: "directory",
-          name: "Directory",
+        filePath: io.dataInput({
+          id: "filePath",
+          name: "File Path",
+          type: t.string(),
+        }),
+        voiceId: io.dataInput({
+          id: "voiceId",
+          name: "Voice ID",
+          type: t.string(),
+        }),
+        filePathOut: io.dataOutput({
+          id: "filePathOut",
+          name: "File Path",
           type: t.string(),
         }),
       };
     },
     async run({ ctx, io }) {
-      await TextToSpeech("", "");
-      // const audio = await state.state().unwrap().generate({
-      // 	stream: true,
-      // 	voice: "IDEK",
-      // 	text: "testing this out to see what it returns",
-      // 	model_id: "eleven_multilingual_v2",
-      // });
-      // await play(audio);
+      await TextToSpeech(
+        ctx.getInput(io.voiceId),
+        { text: ctx.getInput(io.text) },
+        ctx.getInput(io.filePath),
+        state
+      );
+
+      ctx.setOutput(io.filePathOut, ctx.getInput(io.filePath));
     },
   });
 }
