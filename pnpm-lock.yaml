@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@kobalte/core@0.13.4':
-    hash: cd2luusa5ewzsvkvpihsk26cri
+    hash: 7n2fmm4aq7a47up5qsxbrvtcwy
     path: patches/@kobalte__core@0.13.4.patch
 
 importers:
@@ -61,7 +61,7 @@ importers:
         version: 2.2.196
       '@kobalte/core':
         specifier: ^0.13.4
-        version: 0.13.4(patch_hash=cd2luusa5ewzsvkvpihsk26cri)(solid-js@1.8.19)
+        version: 0.13.4(patch_hash=7n2fmm4aq7a47up5qsxbrvtcwy)(solid-js@1.8.19)
       '@macrograph/api-contract':
         specifier: workspace:*
         version: link:../../packages/api-contract
@@ -222,7 +222,7 @@ importers:
         version: 2.2.196
       '@kobalte/core':
         specifier: ^0.13.4
-        version: 0.13.4(patch_hash=cd2luusa5ewzsvkvpihsk26cri)(solid-js@1.8.19)
+        version: 0.13.4(patch_hash=7n2fmm4aq7a47up5qsxbrvtcwy)(solid-js@1.8.19)
       '@lucia-auth/adapter-drizzle':
         specifier: ^1.0.7
         version: 1.0.7(lucia@3.1.1)
@@ -406,7 +406,7 @@ importers:
     dependencies:
       '@kobalte/core':
         specifier: ^0.13.4
-        version: 0.13.4(patch_hash=cd2luusa5ewzsvkvpihsk26cri)(solid-js@1.8.19)
+        version: 0.13.4(patch_hash=7n2fmm4aq7a47up5qsxbrvtcwy)(solid-js@1.8.19)
       '@macrograph/api-contract':
         specifier: workspace:*
         version: link:../packages/api-contract
@@ -655,7 +655,7 @@ importers:
     dependencies:
       '@kobalte/core':
         specifier: ^0.13.4
-        version: 0.13.4(patch_hash=cd2luusa5ewzsvkvpihsk26cri)(solid-js@1.8.19)
+        version: 0.13.4(patch_hash=7n2fmm4aq7a47up5qsxbrvtcwy)(solid-js@1.8.19)
       '@macrograph/api-contract':
         specifier: workspace:^
         version: link:../api-contract
@@ -960,7 +960,7 @@ importers:
     dependencies:
       '@kobalte/core':
         specifier: ^0.13.4
-        version: 0.13.4(patch_hash=cd2luusa5ewzsvkvpihsk26cri)(solid-js@1.8.19)
+        version: 0.13.4(patch_hash=7n2fmm4aq7a47up5qsxbrvtcwy)(solid-js@1.8.19)
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
@@ -10752,7 +10752,7 @@ snapshots:
 
   '@jspm/core@2.0.0-beta.24': {}
 
-  '@kobalte/core@0.13.4(patch_hash=cd2luusa5ewzsvkvpihsk26cri)(solid-js@1.8.19)':
+  '@kobalte/core@0.13.4(patch_hash=7n2fmm4aq7a47up5qsxbrvtcwy)(solid-js@1.8.19)':
     dependencies:
       '@floating-ui/dom': 1.6.8
       '@internationalized/date': 3.5.5
