@@ -436,7 +436,7 @@ function ProjectInterface() {
 
           return (
             <Solid.Show when={graph()}>
-              {(graph) => (
+              {(_) => (
                 <SchemaMenu
                   suggestion={data().suggestion}
                   graph={data().graph}
@@ -449,11 +449,11 @@ function ProjectInterface() {
                   }}
                   onCreateCommentBox={() => {
                     Solid.batch(() => {
-                      const box = graph().createCommentBox({
+                      const box = ctx.execute("createCommentBox", {
+                        graphId: data().graph.id,
                         position: graphPosition(),
-                        size: { x: 400, y: 200 },
-                        text: "Comment",
                       });
+                      if (!box) return;
 
                       const [_, set] = createStore(data().graph);
                       set("selectedItemIds", [
@@ -465,11 +465,14 @@ function ProjectInterface() {
                     });
                   }}
                   onSchemaClicked={(schema, targetSuggestion) => {
+                    const graphId = data().graph.id;
                     const pin = Solid.batch(() => {
-                      const node = graph().createNode({
+                      const node = ctx.execute("createNode", {
+                        graphId,
                         schema,
                         position: graphPosition(),
                       });
+                      if (!node) return;
 
                       const [_, set] = createStore(data().graph);
                       set("selectedItemIds", [{ type: "node", id: node.id }]);
@@ -493,7 +496,14 @@ function ProjectInterface() {
                         ) {
                           const input = node.state.inputs[targetSuggestion.pin];
                           if (input) {
-                            graph().connectPins(sourceSuggestion.pin, input);
+                            ctx.execute("connectIO", {
+                              graphId,
+                              out: {
+                                nodeId: sourceSuggestion.pin.node.id,
+                                pinId: sourceSuggestion.pin.id,
+                              },
+                              in: { nodeId: input.node.id, pinId: input.id },
+                            });
                             return input;
                           }
                         } else if (
@@ -504,7 +514,18 @@ function ProjectInterface() {
                           const output =
                             node.state.outputs[targetSuggestion.pin];
                           if (output) {
-                            graph().connectPins(output, sourceSuggestion.pin);
+                            ctx.execute("connectIO", {
+                              graphId,
+                              out: {
+                                nodeId: output.node.id,
+                                pinId: output.id,
+                              },
+                              in: {
+                                nodeId: sourceSuggestion.pin.node.id,
+                                pinId: sourceSuggestion.pin.id,
+                              },
+                            });
+
                             return output;
                           }
                         }
@@ -523,11 +544,16 @@ function ProjectInterface() {
                         : -nodeSize.width +
                           (nodeX + nodeSize.width - pinPosition.x);
 
-                      pin.node.setPosition({
-                        x: pin.node.state.position.x + xDelta,
-                        y:
-                          pin.node.state.position.y -
-                          (pinPosition.y - pin.node.state.position.y),
+                      ctx.execute("setGraphItemPosition", {
+                        graphId,
+                        itemId: pin.node.id,
+                        itemVariant: "node",
+                        position: {
+                          x: pin.node.state.position.x + xDelta,
+                          y:
+                            pin.node.state.position.y -
+                            (pinPosition.y - pin.node.state.position.y),
+                        },
                       });
                     }
 
@@ -817,6 +843,14 @@ function createKeydownShortcuts(
 
         break;
       }
+      case "KeyZ": {
+        if (!isCtrlEvent(e)) return;
+
+        if (e.shiftKey) ctx.redo();
+        else ctx.undo();
+
+        break;
+      }
       case "ArrowLeft":
       case "ArrowRight": {
         if (
@@ -846,13 +880,18 @@ function createKeydownShortcuts(
               if (!node) break;
               const position = node.state.position;
 
-              node.setPosition({
-                x:
-                  position.x +
-                  GRID_SIZE *
-                    (e.shiftKey ? SHIFT_MULTIPLIER : 1) *
-                    directionMultiplier,
-                y: position.y,
+              ctx.execute("setGraphItemPosition", {
+                graphId: model.id,
+                itemId: selectedItemId.id,
+                itemVariant: "node",
+                position: {
+                  x:
+                    position.x +
+                    GRID_SIZE *
+                      (e.shiftKey ? SHIFT_MULTIPLIER : 1) *
+                      directionMultiplier,
+                  y: position.y,
+                },
               });
             } else if (selectedItemId.type === "commentBox") {
               const box = model.commentBoxes.get(selectedItemId.id);
@@ -860,14 +899,19 @@ function createKeydownShortcuts(
 
               const position = box.position;
 
-              box.position = {
-                x:
-                  position.x +
-                  GRID_SIZE *
-                    (e.shiftKey ? SHIFT_MULTIPLIER : 1) *
-                    directionMultiplier,
-                y: position.y,
-              };
+              ctx.execute("setGraphItemPosition", {
+                graphId: model.id,
+                itemId: selectedItemId.id,
+                itemVariant: "commentBox",
+                position: {
+                  x:
+                    position.x +
+                    GRID_SIZE *
+                      (e.shiftKey ? SHIFT_MULTIPLIER : 1) *
+                      directionMultiplier,
+                  y: position.y,
+                },
+              });
             }
           }
         }
@@ -892,9 +936,14 @@ function createKeydownShortcuts(
             if (!node) break;
             const position = node.state.position;
 
-            node.setPosition({
-              x: position.x,
-              y: position.y + delta,
+            ctx.execute("setGraphItemPosition", {
+              graphId: model.id,
+              itemId: selectedItemId.id,
+              itemVariant: "node",
+              position: {
+                x: position.x,
+                y: position.y + delta,
+              },
             });
           } else if (selectedItemId.type === "commentBox") {
             const box = model.commentBoxes.get(selectedItemId.id);
@@ -919,23 +968,38 @@ function createKeydownShortcuts(
         const { model } = graph;
         const { selectedItemIds } = graph.state;
 
-        for (const selectedItemId of selectedItemIds) {
-          if (selectedItemId.type === "node") {
-            const node = model.nodes.get(selectedItemId.id);
-            if (!node) break;
+        const items: Array<{ type: "node" | "commentBox"; id: number }> = [];
 
-            model.deleteNode(node);
-          } else if (selectedItemId.type === "commentBox") {
+        for (const selectedItemId of selectedItemIds) {
+          if (selectedItemId.type === "node")
+            items.push({ type: "node", id: selectedItemId.id });
+          else if (selectedItemId.type === "commentBox") {
             const box = model.commentBoxes.get(selectedItemId.id);
             if (!box) break;
 
-            model.deleteCommentbox(
-              box,
-              (node) => ctx.nodeSizes.get(node),
-              e.ctrlKey || e.metaKey,
-            );
+            items.push({ type: "commentBox", id: selectedItemId.id });
+
+            if (!(e.ctrlKey || e.metaKey)) {
+              const nodes = getNodesInRect(
+                model.nodes.values(),
+                new DOMRect(
+                  box.position.x,
+                  box.position.y,
+                  box.size.x,
+                  box.size.y,
+                ),
+                (node) => ctx.nodeSizes.get(node),
+              );
+
+              for (const node of nodes) {
+                items.push({ type: "node", id: node.id });
+              }
+            }
           }
         }
+
+        if (items.length > 0)
+          ctx.execute("deleteGraphSelection", { graphId: model.id, items });
 
         break;
       }

@@ -3,17 +3,15 @@ import { createContextProvider } from "@solid-primitives/context";
 import clsx from "clsx";
 import {
   type ComponentProps,
-  JSX,
+  type JSX,
   Match,
-  ParentProps,
   Switch,
-  ValidComponent,
+  type ValidComponent,
   batch,
   createSignal,
   onMount,
   splitProps,
 } from "solid-js";
-import { ContextMenuItem } from "../components/Graph/ContextMenu";
 
 export function InlineTextEditor<T extends ValidComponent = "span">(
   props: Omit<ComponentProps<T>, "onChange"> & {
@@ -63,10 +61,7 @@ export function InlineTextEditor<T extends ValidComponent = "span">(
                     e.stopPropagation();
 
                     if (!focused) return;
-                    batch(() => {
-                      ctx.setEditing(false);
-                      props.onChange?.(value());
-                    });
+                    ctx.setEditing(false);
                   } else if (e.key === "Escape") {
                     e.preventDefault();
                     e.stopPropagation();

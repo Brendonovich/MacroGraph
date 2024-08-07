@@ -1,5 +1,5 @@
-import { Dialog } from "@kobalte/core/dialog";
 import { ContextMenu } from "@kobalte/core/context-menu";
+import { Dialog } from "@kobalte/core/dialog";
 import {
   deserializeClipboardItem,
   graphToClipboardItem,
@@ -8,8 +8,12 @@ import {
 } from "@macrograph/clipboard";
 import type { Graph } from "@macrograph/runtime";
 import { deserializeGraph } from "@macrograph/runtime-serde";
-import { For, ValidComponent, createMemo, createSignal } from "solid-js";
+import { For, type ValidComponent, createMemo, createSignal } from "solid-js";
 
+import {
+  ContextMenuContent,
+  ContextMenuItem,
+} from "../../components/Graph/ContextMenu";
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
@@ -21,10 +25,6 @@ import {
   useInlineTextEditorCtx,
 } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
-import {
-  ContextMenuContent,
-  ContextMenuItem,
-} from "../../components/Graph/ContextMenu";
 
 interface Props {
   currentGraph?: number;
@@ -78,7 +78,7 @@ export function Graphs(props: Props) {
           title="Create graph"
           onClick={(e) => {
             e.stopPropagation();
-            const graph = interfaceCtx.core.project.createGraph();
+            const graph = interfaceCtx.execute("createGraph");
             props.onGraphClicked(graph);
           }}
         >
@@ -112,7 +112,10 @@ export function Graphs(props: Props) {
                               selected={props.currentGraph === graph.id}
                               value={graph.name}
                               onChange={(value) => {
-                                graph.rename(value);
+                                interfaceCtx.execute("setGraphName", {
+                                  graphId: graph.id,
+                                  name: value,
+                                });
                                 interfaceCtx.save();
                               }}
                             />
@@ -158,10 +161,9 @@ export function Graphs(props: Props) {
                           <div class="flex flex-row space-x-4 justify-center mb-4">
                             <Button
                               onClick={() => {
-                                interfaceCtx.core.project.graphs.delete(
-                                  graph.id,
-                                );
-                                graph.dispose();
+                                interfaceCtx.execute("deleteGraph", {
+                                  graphId: graph.id,
+                                });
                                 interfaceCtx.save();
                               }}
                             >
