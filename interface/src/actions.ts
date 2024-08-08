@@ -1,810 +1,1419 @@
-
 import {
-  makeIORef,
-  splitIORef,
-  type Core,
-  type XY,
+	DataInput,
+	DataOutput,
+	ExecInput,
+	ExecOutput,
+	InputPin,
+	IORef,
+	makeIORef,
+	NodeSchema,
+	OutputPin,
+	Pin,
+	pinConnections,
+	pinIsOutput,
+	ResourceType,
+	ScopeInput,
+	ScopeOutput,
+	splitIORef,
+	Variable,
+	type Core,
+	type XY,
 } from "@macrograph/runtime";
+import { Option } from "@macrograph/option";
 import {
-  deserializeCommentBox,
-  deserializeConnections,
-  deserializeGraph,
-  deserializeNode,
-  serde,
-  serializeCommentBox,
-  serializeGraph,
-  serializeNode,
+	deserializeCommentBox,
+	deserializeConnections,
+	deserializeCustomEvent,
+	deserializeCustomEventField,
+	deserializeCustomStruct,
+	deserializeCustomStructField,
+	deserializeGraph,
+	deserializeNode,
+	deserializeVariable,
+	serde,
+	serializeCommentBox,
+	serializeCustomEvent,
+	serializeCustomEventField,
+	serializeCustomStruct,
+	serializeCustomStructField,
+	serializeGraph,
+	serializeNode,
+	serializeVariable,
 } from "@macrograph/runtime-serde";
 import * as v from "valibot";
+import { PrimitiveType, t } from "@macrograph/typesystem";
+import { createMutable } from "solid-js/store";
 
 type HistoryEntry<T> = T extends object ? T : never;
+type PrepareOptions = { ephemeral?: boolean };
 type HistoryAction<R, P, I = void> = {
-  prepare(core: Core, input: I): R;
-  perform(core: Core, entry: HistoryEntry<R>): P;
-  rewind(core: Core, entry: HistoryEntry<R>): void;
+	prepare(core: Core, input: I, opts?: PrepareOptions): R;
+	perform(core: Core, entry: HistoryEntry<R>): P;
+	rewind(core: Core, entry: HistoryEntry<R>): void;
 };
 
 function historyAction<E, P, I = void>(args: HistoryAction<E, P, I>) {
-  return args;
+	return args;
 }
 
+export type VariableLocation =
+	| { location: "project" }
+	| { location: "graph"; graphId: number };
+
+export type SelectionItem = { type: "node" | "commentBox"; id: number };
+export type GraphItemPositionInput = {
+	itemId: number;
+	itemVariant: "node" | "commentBox";
+	position: XY;
+	from?: XY;
+};
+export type CreateNodeInput = {
+	graphId: number;
+	schema: NodeSchema;
+	position: XY;
+	connection?: {
+		fromPinId: string;
+		to: {
+			nodeId: number;
+			variant: "o" | "i";
+			pinId: string;
+		};
+	};
+};
+
 const historyActions = {
-  createGraph: historyAction({
-    prepare(core) {
-      return { id: core.project.generateGraphId() };
-    },
-    perform(core, entry) {
-      return core.project.createGraph({ id: entry.id });
-    },
-    rewind(core, entry) {
-      const graph = core.project.graphs.get(entry.id);
-      if (!graph) return;
+	createGraph: historyAction({
+		prepare(core) {
+			return { id: core.project.generateGraphId() };
+		},
+		perform(core, entry) {
+			return core.project.createGraph({ id: entry.id });
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.id);
+			if (!graph) return;
 
-      core.project.graphs.delete(entry.id);
-      graph.dispose();
-    },
-  }),
-  setGraphName: historyAction({
-    prepare(core, input: { graphId: number; name: string }) {
-      const graph = core.project.graphs.get(input.graphId);
-      if (!graph) return;
+			core.project.graphs.delete(entry.id);
+			graph.dispose();
+		},
+	}),
+	setGraphName: historyAction({
+		prepare(core, input: { graphId: number; name: string }) {
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
 
-      return {
-        ...input,
-        prev: graph.name,
-      };
-    },
-    perform(core, entry) {
-      const graph = core.project.graphs.get(entry.graphId);
-      if (!graph) return;
+			return {
+				...input,
+				prev: graph.name,
+			};
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-      graph.name = entry.name;
-    },
-    rewind(core, entry) {
-      const graph = core.project.graphs.get(entry.graphId);
-      if (!graph) return;
+			graph.name = entry.name;
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-      graph.name = entry.prev;
-    },
-  }),
-  deleteGraph: historyAction({
-    prepare(core, input: { graphId: number }) {
-      const graph = core.project.graphs.get(input.graphId);
-      if (!graph) return;
+			graph.name = entry.prev;
+		},
+	}),
+	deleteGraph: historyAction({
+		prepare(core, input: { graphId: number }) {
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
 
-      return {
-        graphId: input.graphId,
-        data: serializeGraph(graph),
-      };
-    },
-    perform(core, entry) {
-      const graph = core.project.graphs.get(entry.graphId);
-      if (!graph) return;
+			return {
+				graphId: input.graphId,
+				data: serializeGraph(graph),
+			};
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-      core.project.graphs.delete(entry.graphId);
-      graph.dispose();
-    },
-    rewind(core, entry) {
-      const graph = deserializeGraph(
-        core.project,
-        v.parse(serde.Graph, entry.data),
-      );
-      core.project.graphs.set(graph.id, graph);
-    },
-  }),
-  deleteGraphSelection: historyAction({
-    prepare(
-      core,
-      input: {
-        graphId: number;
-        items: Array<{ type: "node" | "commentBox"; id: number }>;
-      },
-    ) {
-      type Entry = {
-        graphId: number;
-        nodes: Array<v.InferInput<typeof serde.Node>>;
-        connections: Array<v.InferInput<typeof serde.Connection>>;
-        commentBoxes: Array<v.InferInput<typeof serde.CommentBox>>;
-      };
+			core.project.graphs.delete(entry.graphId);
+			graph.dispose();
+		},
+		rewind(core, entry) {
+			const graph = deserializeGraph(
+				core.project,
+				v.parse(serde.Graph, entry.data),
+			);
+			core.project.graphs.set(graph.id, graph);
+		},
+	}),
+	createNode: historyAction({
+		prepare(core, input: CreateNodeInput) {
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
 
-      const { graphId, items } = input;
-      const graph = core.project.graphs.get(graphId);
-      if (!graph) return;
+			return { ...input, nodeId: graph.generateId() };
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-      const entry: Entry = {
-        graphId,
-        nodes: [],
-        connections: [],
-        commentBoxes: [],
-      };
+			const node = graph.createNode({
+				id: entry.nodeId,
+				schema: entry.schema,
+				position: entry.position,
+			});
 
-      for (const { type, id } of items) {
-        if (type === "node") {
-          const node = graph.nodes.get(id);
-          if (!node) continue;
+			const { connection } = entry;
+			if (connection) {
+				let output: OutputPin | undefined;
+				let input: InputPin | undefined;
 
-          for (const output of node.io.outputs) {
-            const ref = makeIORef(output);
+				const connectionNode = graph.nodes.get(connection.to.nodeId);
+				if (connectionNode) {
+					if (connection.to.variant === "o") {
+						output = connectionNode.output(connection.to.pinId);
+						input = node.input(connection.fromPinId);
+					} else {
+						output = node.output(connection.fromPinId);
+						input = connectionNode.input(connection.to.pinId);
+					}
+				}
 
-            const connections = graph.connections.get(ref);
-            if (!connections) continue;
+				if (output && input) graph.connectPins(output, input);
+			}
 
-            for (const connectionRef of connections) {
-              const outputData = splitIORef(ref);
-              const inputData = splitIORef(connectionRef);
+			return node;
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-              entry.connections.push({
-                from: { node: outputData.nodeId, output: outputData.ioId },
-                to: { node: inputData.nodeId, input: inputData.ioId },
-              });
-            }
-          }
+			const node = graph.nodes.get(entry.nodeId);
+			if (!node) return;
 
-          for (const input of node.io.inputs) {
-            const ref = makeIORef(input);
+			graph.deleteNode(node);
+		},
+	}),
+	setNodeProperty: historyAction({
+		prepare(
+			core,
+			input: {
+				graphId: number;
+				nodeId: number;
+				propertyId: string;
+				value: any;
+			},
+		) {
+			const node = core.project.graphs
+				.get(input.graphId)
+				?.nodes.get(input.nodeId);
+			if (!node) return;
 
-            const connections = graph.connections.get(ref);
-            if (!connections) continue;
+			return {
+				graphId: input.graphId,
+				nodeId: input.nodeId,
+				propertyId: input.propertyId,
+				prev: node.state.properties[input.propertyId],
+				value: input.value,
+			};
+		},
+		perform(core, entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
 
-            for (const connectionRef of connections) {
-              const inputData = splitIORef(ref);
-              const outputData = splitIORef(connectionRef);
+			node.setProperty(entry.propertyId, entry.value);
+		},
+		rewind(core, entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
 
-              if (
-                items.some(
-                  (i) => i.type === "node" && i.id === outputData.nodeId,
-                )
-              )
-                continue;
+			node.setProperty(entry.propertyId, entry.prev);
+		},
+	}),
+	createCommentBox: historyAction({
+		prepare(core, input: { graphId: number; position: XY }) {
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
 
-              entry.connections.push({
-                from: { node: outputData.nodeId, output: outputData.ioId },
-                to: { node: inputData.nodeId, input: inputData.ioId },
-              });
-            }
-          }
+			return {
+				graphId: input.graphId,
+				commentBoxId: graph.generateId(),
+				position: input.position,
+			};
+		},
+		perform(core, entry) {
+			return core.project.graphs.get(entry.graphId)?.createCommentBox({
+				id: entry.commentBoxId,
+				position: entry.position,
+				size: { x: 400, y: 200 },
+				text: "Comment",
+			});
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-          entry.nodes.push(serializeNode(node));
-        } else {
-          const box = graph.commentBoxes.get(id);
-          if (!box) continue;
+			const box = graph.commentBoxes.get(entry.commentBoxId);
+			if (!box) return;
 
-          entry.commentBoxes.push(serializeCommentBox(box));
-        }
-      }
+			graph.deleteCommentbox(box);
+		},
+	}),
+	setCommentBoxTint: historyAction({
+		prepare(core, input: { graphId: number; boxId: number; tint: string }) {
+			const box = core.project.graphs
+				.get(input.graphId)
+				?.commentBoxes.get(input.boxId);
+			if (!box) return;
 
-      return entry;
-    },
-    perform(core, entry) {
-      const graph = core.project.graphs.get(entry.graphId);
-      if (!graph) return;
+			return {
+				...input,
+				prev: box.tint,
+			};
+		},
+		perform(core, entry) {
+			const box = core.project.graphs
+				.get(entry.graphId)
+				?.commentBoxes.get(entry.boxId);
+			if (!box) return;
 
-      for (const nodeData of entry.nodes) {
-        const node = graph.nodes.get(nodeData.id);
-        if (!node) continue;
+			box.tint = entry.tint;
+		},
+		rewind(core, entry) {
+			const box = core.project.graphs
+				.get(entry.graphId)
+				?.commentBoxes.get(entry.boxId);
+			if (!box) return;
 
-        graph.deleteNode(node);
-      }
+			box.tint = entry.prev;
+		},
+	}),
+	setCommentBoxBounds: historyAction({
+		prepare(
+			core,
+			input: {
+				graphId: number;
+				boxId: number;
+				position: XY;
+				size: XY;
+				prev?: { position: XY; size: XY };
+			},
+		) {
+			const box = core.project.graphs
+				.get(input.graphId)
+				?.commentBoxes.get(input.boxId);
+			if (!box) return;
 
-      for (const boxData of entry.commentBoxes) {
-        if (boxData.id === undefined) continue;
-        const box = graph.commentBoxes.get(boxData.id);
-        if (!box) continue;
+			return {
+				...input,
+				prev: input.prev ?? {
+					position: { ...box.position },
+					size: { ...box.size },
+				},
+			};
+		},
+		perform(core, entry) {
+			const box = core.project.graphs
+				.get(entry.graphId)
+				?.commentBoxes.get(entry.boxId);
+			if (!box) return;
 
-        graph.deleteCommentbox(box);
-      }
-    },
-    rewind(core, entry) {
-      const graph = core.project.graphs.get(entry.graphId);
-      if (!graph) return;
+			box.size = { ...entry.size };
+			box.position = { ...entry.position };
+		},
+		rewind(core, entry) {
+			const box = core.project.graphs
+				.get(entry.graphId)
+				?.commentBoxes.get(entry.boxId);
+			if (!box) return;
 
-      for (const nodeData of entry.nodes.reverse()) {
-        const node = deserializeNode(graph, v.parse(serde.Node, nodeData));
-        if (!node) continue;
+			box.size = { ...entry.prev.size };
+			box.position = { ...entry.prev.position };
+		},
+	}),
+	setGraphItemPositions: historyAction({
+		prepare(
+			_,
+			input: {
+				graphId: number;
+				items: Array<GraphItemPositionInput>;
+			},
+		) {
+			return input;
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-        graph.nodes.set(node.id, node);
-      }
+			for (const item of entry.items) {
+				if (item.itemVariant === "node") {
+					const node = graph.nodes.get(item.itemId);
+					if (!node) continue;
 
-      for (const boxData of entry.commentBoxes.reverse()) {
-        const box = deserializeCommentBox(
-          graph,
-          v.parse(serde.CommentBox, boxData),
-        );
-        if (!box) continue;
+					node.state.position = { ...item.position };
+				} else {
+					const box = graph.commentBoxes.get(item.itemId);
+					if (!box) continue;
 
-        graph.commentBoxes.set(box.id, box);
-      }
+					box.position = { ...item.position };
+				}
+			}
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
 
-      const connections = v.parse(v.array(serde.Connection), entry.connections);
-      deserializeConnections(connections, graph.connections);
-    },
-  }),
-  setGraphItemPosition: historyAction({
-    prepare(
-      core,
-      input: {
-        graphId: number;
-        itemId: number;
-        itemVariant: "node" | "commentBox";
-        position: XY;
-        from?: XY;
-      },
-    ) {
-      const graph = core.project.graphs.get(input.graphId);
-      if (!graph) return;
+			for (const item of entry.items) {
+				if (!item.from) continue;
 
-      let from = input.from;
-      if (!from) {
-        if (input.itemVariant === "node") {
-          const node = graph.nodes.get(input.itemId);
-          if (!node) return;
+				if (item.itemVariant === "node") {
+					const node = graph.nodes.get(item.itemId);
+					if (!node) continue;
 
-          from = node.state.position;
-        } else {
-          const box = graph.commentBoxes.get(input.itemId);
-          if (!box) return;
+					node.state.position = { ...item.from };
+				} else {
+					const box = graph.commentBoxes.get(item.itemId);
+					if (!box) continue;
 
-          from = box.position;
-        }
-      }
+					box.position = { ...item.from };
+				}
+			}
+		},
+	}),
+	deleteGraphSelection: historyAction({
+		prepare(
+			core,
+			input: {
+				graphId: number;
+				items: Array<SelectionItem>;
+			},
+		) {
+			type Entry = {
+				graphId: number;
+				nodes: Array<v.InferInput<typeof serde.Node>>;
+				connections: Array<v.InferInput<typeof serde.Connection>>;
+				commentBoxes: Array<v.InferInput<typeof serde.CommentBox>>;
+			};
 
-      return {
-        graphId: input.graphId,
-        itemId: input.itemId,
-        itemVariant: input.itemVariant,
-        from: { ...from },
-        to: { ...input.position },
-      };
-    },
-    perform(core, entry) {
-      const graph = core.project.graphs.get(entry.graphId);
-      if (!graph) return;
+			const { graphId, items } = input;
+			const graph = core.project.graphs.get(graphId);
+			if (!graph) return;
 
-      if (entry.itemVariant === "node") {
-        const node = graph.nodes.get(entry.itemId);
-        if (!node) return;
+			const entry: Entry = {
+				graphId,
+				nodes: [],
+				connections: [],
+				commentBoxes: [],
+			};
 
-        node.state.position = { ...entry.to };
-      } else {
-        const box = graph.commentBoxes.get(entry.itemId);
-        if (!box) return;
+			for (const { type, id } of items) {
+				if (type === "node") {
+					const node = graph.nodes.get(id);
+					if (!node) continue;
 
-        box.position = { ...entry.to };
-      }
-    },
-    rewind(core, entry) {
-      const graph = core.project.graphs.get(entry.graphId);
-      if (!graph) return;
+					for (const output of node.io.outputs) {
+						const ref = makeIORef(output);
 
-      if (entry.itemVariant === "node") {
-        const node = graph.nodes.get(entry.itemId);
-        if (!node) return;
+						const connections = graph.connections.get(ref);
+						if (!connections) continue;
 
-        node.state.position = { ...entry.from };
-      } else {
-        const box = graph.commentBoxes.get(entry.itemId);
-        if (!box) return;
+						for (const connectionRef of connections) {
+							const outputData = splitIORef(ref);
+							const inputData = splitIORef(connectionRef);
 
-        box.position = { ...entry.from };
-      }
-    },
-  }),
+							entry.connections.push({
+								from: { node: outputData.nodeId, output: outputData.ioId },
+								to: { node: inputData.nodeId, input: inputData.ioId },
+							});
+						}
+					}
+
+					for (const input of node.io.inputs) {
+						if (input instanceof ExecInput) {
+							for (const connOutput of input.connections) {
+								if (
+									items.some(
+										(i) => i.type === "node" && i.id === connOutput.node.id,
+									)
+								)
+									continue;
+
+								entry.connections.push({
+									from: { node: connOutput.node.id, output: connOutput.id },
+									to: { node: input.node.id, input: input.id },
+								});
+							}
+						} else if (
+							input instanceof DataInput ||
+							input instanceof ScopeInput
+						) {
+							(input.connection as Option<DataOutput<any> | ScopeOutput>).peek(
+								(connOutput) => {
+									if (
+										items.some(
+											(i) => i.type === "node" && i.id === connOutput.node.id,
+										)
+									)
+										return;
+
+									entry.connections.push({
+										from: { node: connOutput.node.id, output: connOutput.id },
+										to: { node: input.node.id, input: input.id },
+									});
+								},
+							);
+						}
+					}
+
+					entry.nodes.push(serializeNode(node));
+				} else {
+					const box = graph.commentBoxes.get(id);
+					if (!box) continue;
+
+					entry.commentBoxes.push(serializeCommentBox(box));
+				}
+			}
+
+			return entry;
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			for (const nodeData of entry.nodes) {
+				const node = graph.nodes.get(nodeData.id);
+				if (!node) continue;
+
+				graph.deleteNode(node);
+			}
+
+			for (const boxData of entry.commentBoxes) {
+				if (boxData.id === undefined) continue;
+				const box = graph.commentBoxes.get(boxData.id);
+				if (!box) continue;
+
+				graph.deleteCommentbox(box);
+			}
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			for (const nodeData of entry.nodes.reverse()) {
+				const node = deserializeNode(graph, v.parse(serde.Node, nodeData));
+				if (!node) continue;
+
+				graph.nodes.set(node.id, node);
+			}
+
+			for (const boxData of entry.commentBoxes.reverse()) {
+				const box = deserializeCommentBox(
+					graph,
+					v.parse(serde.CommentBox, boxData),
+				);
+				if (!box) continue;
+
+				graph.commentBoxes.set(box.id, box);
+			}
+
+			const connections = v.parse(v.array(serde.Connection), entry.connections);
+			deserializeConnections(connections, graph.connections);
+		},
+	}),
+	connectIO: historyAction({
+		prepare(
+			core,
+			input: {
+				graphId: number;
+				out: { nodeId: number; pinId: string };
+				in: { nodeId: number; pinId: string };
+			},
+		) {
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
+
+			const outPin = graph.nodes.get(input.out.nodeId)?.output(input.out.pinId);
+			const inPin = graph.nodes.get(input.in.nodeId)?.input(input.in.pinId);
+			if (!outPin || !inPin) return;
+
+			const prevConnections: Array<v.InferInput<typeof serde.Connection>> = [];
+
+			if (outPin instanceof DataOutput && inPin instanceof DataInput) {
+				inPin.connection.peek((out) => {
+					prevConnections.push({
+						from: { node: out.node.id, output: out.id },
+						to: { node: inPin.node.id, input: inPin.id },
+					});
+				});
+			} else if (outPin instanceof ExecOutput && inPin instanceof ExecInput) {
+				outPin.connection().peek((inPin) => {
+					prevConnections.push({
+						from: { node: outPin.node.id, output: outPin.id },
+						to: { node: inPin.node.id, input: inPin.id },
+					});
+				});
+			} else if (outPin instanceof ScopeOutput && inPin instanceof ScopeInput) {
+				outPin.connection().peek((inPin) => {
+					prevConnections.push({
+						from: { node: outPin.node.id, output: outPin.id },
+						to: { node: inPin.node.id, input: inPin.id },
+					});
+				});
+				inPin.connection.peek((out) => {
+					prevConnections.push({
+						from: { node: out.node.id, output: out.id },
+						to: { node: inPin.node.id, input: inPin.id },
+					});
+				});
+			} else return;
+
+			return { ...input, prevConnections };
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			const outNode = graph.nodes.get(entry.out.nodeId);
+			const inNode = graph.nodes.get(entry.in.nodeId);
+			if (!outNode || !inNode) return;
+
+			const outPin = outNode.output(entry.out.pinId);
+			const inPin = inNode.input(entry.in.pinId);
+			if (!outPin || !inPin) return;
+
+			graph.connectPins(outPin, inPin);
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			const outNode = graph.nodes.get(entry.out.nodeId);
+			const inNode = graph.nodes.get(entry.in.nodeId);
+			if (!outNode || !inNode) return;
+
+			const outPin = outNode.output(entry.out.pinId);
+			const inPin = inNode.input(entry.in.pinId);
+			if (!outPin || !inPin) return;
+
+			const outConnections = graph.connections.get(makeIORef(outPin));
+			if (!outConnections) return;
+
+			const index = outConnections.findIndex((ref) => ref === makeIORef(inPin));
+			outConnections.splice(index, 1);
+
+			const prevConnections = v.parse(
+				v.array(serde.Connection),
+				entry.prevConnections,
+			);
+			for (const prev of prevConnections) {
+				const fromNode = graph.nodes.get(prev.from.node);
+				const toNode = graph.nodes.get(prev.to.node);
+				if (!fromNode || !toNode) continue;
+
+				const fromPin = fromNode.output(prev.from.output);
+				const toPin = toNode.input(prev.to.input);
+				if (!fromPin || !toPin) continue;
+
+				graph.connectPins(fromPin, toPin);
+			}
+		},
+	}),
+	disconnectIO: historyAction({
+		prepare(
+			core,
+			input: {
+				graphId: number;
+				ioRef: IORef;
+			},
+		) {
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
+
+			const io = splitIORef(input.ioRef);
+
+			const node = graph.nodes.get(io.nodeId);
+			if (!node) return;
+
+			const pin = io.type === "i" ? node.input(io.ioId) : node.output(io.ioId);
+			if (!pin) return;
+
+			return { ...input, prevConnections: pinConnections(pin) };
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			const io = splitIORef(entry.ioRef);
+
+			const node = graph.nodes.get(io.nodeId);
+			if (!node) return;
+
+			const pin = io.type === "i" ? node.input(io.ioId) : node.output(io.ioId);
+			if (!pin) return;
+
+			graph.disconnectPin(pin);
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			const io = splitIORef(entry.ioRef);
+
+			const node = graph.nodes.get(io.nodeId);
+			if (!node) return;
+
+			const pin = io.type === "i" ? node.input(io.ioId) : node.output(io.ioId);
+			if (!pin) return;
+
+			if (pinIsOutput(pin)) {
+				for (const prev of entry.prevConnections) {
+					const input = graph.nodes
+						.get(prev.nodeId)
+						?.io.inputs.find((i) => i.id === prev.id);
+					if (!input) continue;
+
+					graph.connectPins(pin, input);
+				}
+			} else {
+				for (const prev of entry.prevConnections) {
+					const output = graph.nodes
+						.get(prev.nodeId)
+						?.io.outputs.find((o) => o.id === prev.id);
+					if (!output) continue;
+
+					graph.connectPins(output, pin);
+				}
+			}
+		},
+	}),
+	createCustomStruct: historyAction({
+		prepare(core) {
+			return { id: core.project.generateCustomTypeId() };
+		},
+		perform(core, entry) {
+			core.project.createCustomStruct(entry);
+		},
+		rewind(core, entry) {
+			core.project.customStructs.delete(entry.id);
+		},
+	}),
+	setCustomStructName: historyAction({
+		prepare(core, input: { structId: number; name: string }) {
+			const struct = core.project.customStructs.get(input.structId);
+			if (!struct) return;
+
+			return { ...input, prev: struct.name };
+		},
+		perform(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			struct.name = entry.name;
+		},
+		rewind(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			struct.name = entry.prev;
+		},
+	}),
+	deleteCustomStruct: historyAction({
+		prepare(core, input: { structId: number }) {
+			const struct = core.project.customStructs.get(input.structId);
+			if (!struct) return;
+
+			const data = serializeCustomStruct(struct);
+
+			return { ...input, data };
+		},
+		perform(core, entry) {
+			core.project.customStructs.delete(entry.structId);
+		},
+		rewind(core, entry) {
+			const struct = deserializeCustomStruct(
+				core.project,
+				v.parse(serde.CustomStruct, entry.data),
+			);
+
+			core.project.customStructs.set(entry.structId, struct);
+		},
+	}),
+	createCustomStructField: historyAction({
+		prepare(core, input: { structId: number }) {
+			const struct = core.project.customStructs.get(input.structId);
+			if (!struct) return;
+
+			return { ...input, id: struct.fieldIdCounter++ };
+		},
+		perform(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			return struct.createField({ id: entry.id });
+		},
+		rewind(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			struct.removeField(entry.id.toString());
+		},
+	}),
+	setCustomStructFieldName: historyAction({
+		prepare(core, input: { structId: number; fieldId: string; name: string }) {
+			const field = core.project.customStructs.get(input.structId)?.fields[
+				input.fieldId
+			];
+			if (!field) return;
+
+			return { ...input, prev: field.name };
+		},
+		perform(core, entry) {
+			const field = core.project.customStructs.get(entry.structId)?.fields[
+				entry.fieldId
+			];
+			if (!field) return;
+
+			field.name = entry.name;
+		},
+		rewind(core, entry) {
+			const field = core.project.customStructs.get(entry.structId)?.fields[
+				entry.fieldId
+			];
+			if (!field) return;
+
+			field.name = entry.prev;
+		},
+	}),
+	setCustomStructFieldType: historyAction({
+		prepare(core, input: { structId: number; fieldId: string; type: t.Any }) {
+			const field = core.project.customStructs.get(input.structId)?.fields[
+				input.fieldId
+			];
+			if (!field) return;
+
+			return { ...input, prev: field.type };
+		},
+		perform(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			struct.editFieldType(entry.fieldId, entry.type);
+		},
+		rewind(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			struct.editFieldType(entry.fieldId, entry.prev);
+		},
+	}),
+	deleteCustomStructField: historyAction({
+		prepare(core, input: { structId: number; fieldId: string }) {
+			const field = core.project.customStructs.get(input.structId)?.fields[
+				input.fieldId
+			];
+			if (!field) return;
+
+			return { ...input, data: serializeCustomStructField(field) };
+		},
+		perform(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			struct.removeField(entry.fieldId);
+		},
+		rewind(core, entry) {
+			const struct = core.project.customStructs.get(entry.structId);
+			if (!struct) return;
+
+			deserializeCustomStructField(
+				struct,
+				v.parse(serde.CustomStructField, entry.data),
+			);
+		},
+	}),
+	createCustomEvent: historyAction({
+		prepare(core) {
+			return { id: core.project.customEventIdCounter++ };
+		},
+		perform(core, entry) {
+			core.project.createCustomEvent({ id: entry.id });
+		},
+		rewind(core, entry) {
+			core.project.customEvents.delete(entry.id);
+		},
+	}),
+	setCustomEventName: historyAction({
+		prepare(core, input: { eventId: number; name: string }) {
+			const event = core.project.customEvents.get(input.eventId);
+			if (!event) return;
+
+			return { ...input, prev: event.name };
+		},
+		perform(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			event.name = entry.name;
+		},
+		rewind(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			event.name = entry.prev;
+		},
+	}),
+	deleteCustomEvent: historyAction({
+		prepare(core, input: { eventId: number }) {
+			const event = core.project.customEvents.get(input.eventId);
+			if (!event) return;
+
+			const data = serializeCustomEvent(event);
+
+			return { ...input, data };
+		},
+		perform(core, entry) {
+			core.project.customEvents.delete(entry.eventId);
+		},
+		rewind(core, entry) {
+			const struct = deserializeCustomEvent(
+				core.project,
+				v.parse(serde.CustomEvent, entry.data),
+			);
+
+			core.project.customEvents.set(entry.eventId, struct);
+		},
+	}),
+	createCustomEventField: historyAction({
+		prepare(core, input: { eventId: number }) {
+			const event = core.project.customEvents.get(input.eventId);
+			if (!event) return;
+
+			return { ...input, id: event.fieldIdCounter++ };
+		},
+		perform(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			return event.createField({ id: entry.id });
+		},
+		rewind(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			event.deleteField(entry.id);
+		},
+	}),
+	setCustomEventFieldName: historyAction({
+		prepare(core, input: { eventId: number; fieldId: number; name: string }) {
+			const field = core.project.customEvents
+				.get(input.eventId)
+				?.field(input.fieldId);
+			if (!field) return;
+
+			return { ...input, prev: field.name };
+		},
+		perform(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			event.editFieldName(entry.fieldId, entry.name);
+		},
+		rewind(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			event.editFieldName(entry.fieldId, entry.prev);
+		},
+	}),
+	setCustomEventFieldType: historyAction({
+		prepare(
+			core,
+			input: { eventId: number; fieldId: number; type: PrimitiveType },
+		) {
+			const field = core.project.customEvents
+				.get(input.eventId)
+				?.field(input.fieldId);
+			if (!field) return;
+
+			return { ...input, prev: field.type };
+		},
+		perform(core, entry) {
+			const struct = core.project.customEvents.get(entry.eventId);
+			if (!struct) return;
+
+			struct.editFieldType(entry.fieldId, entry.type);
+		},
+		rewind(core, entry) {
+			const struct = core.project.customEvents.get(entry.eventId);
+			if (!struct) return;
+
+			struct.editFieldType(entry.fieldId, entry.prev as any);
+		},
+	}),
+	deleteCustomEventField: historyAction({
+		prepare(core, input: { eventId: number; fieldId: number }) {
+			const field = core.project.customEvents
+				.get(input.eventId)
+				?.fields.find((f) => f.id === input.fieldId);
+			if (!field) return;
+
+			return { ...input, data: serializeCustomEventField(field) };
+		},
+		perform(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			event.deleteField(entry.fieldId);
+		},
+		rewind(core, entry) {
+			const event = core.project.customEvents.get(entry.eventId);
+			if (!event) return;
+
+			deserializeCustomEventField(
+				event,
+				v.parse(serde.CustomEventField, entry.data),
+			);
+		},
+	}),
+	createVariable: historyAction({
+		prepare(core, input: VariableLocation) {
+			if (input.location === "project")
+				return {
+					...input,
+					id: core.project.generateId(),
+				};
+
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
+
+			return {
+				...input,
+				id: graph.generateId(),
+			};
+		},
+		perform(core, entry) {
+			if (entry.location === "project") {
+				core.project.createVariable({
+					id: entry.id,
+					name: `Variable ${core.project.variables.length + 1}`,
+					value: "",
+					type: t.string(),
+				});
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				graph.createVariable({
+					id: entry.id,
+					name: `Variable ${graph.variables.length + 1}`,
+					value: "",
+					type: t.string(),
+				});
+			}
+		},
+		rewind(core, entry) {
+			if (entry.location === "project") core.project.removeVariable(entry.id);
+			else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				graph.removeVariable(entry.id);
+			}
+		},
+	}),
+	setVariableName: historyAction({
+		prepare(
+			core,
+			input: VariableLocation & { variableId: number; name: string },
+		) {
+			let variable: Variable | undefined;
+
+			if (input.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === input.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(input.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === input.variableId);
+			}
+
+			if (!variable) return;
+
+			return { ...input, prev: variable.name };
+		},
+		perform(core, entry) {
+			let variable: Variable | undefined;
+
+			if (entry.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === entry.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === entry.variableId);
+			}
+
+			if (!variable) return;
+
+			variable.name = entry.name;
+		},
+		rewind(core, entry) {
+			let variable: Variable | undefined;
+
+			if (entry.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === entry.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === entry.variableId);
+			}
+
+			if (!variable) return;
+
+			variable.name = entry.prev;
+		},
+	}),
+	setVariableValue: historyAction({
+		prepare(
+			core,
+			input: VariableLocation & { variableId: number; value: any },
+		) {
+			let variable: Variable | undefined;
+
+			if (input.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === input.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(input.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === input.variableId);
+			}
+
+			if (!variable) return;
+
+			return { ...input, prev: variable.value };
+		},
+		perform(core, entry) {
+			let variable: Variable | undefined;
+
+			if (entry.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === entry.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === entry.variableId);
+			}
+
+			if (!variable) return;
+
+			variable.value = entry.value;
+		},
+		rewind(core, entry) {
+			let variable: Variable | undefined;
+
+			if (entry.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === entry.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === entry.variableId);
+			}
+
+			if (!variable) return;
+
+			variable.value = entry.value;
+		},
+	}),
+	deleteVariable: historyAction({
+		prepare(core, input: VariableLocation & { variableId: number }) {
+			let variable: Variable | undefined;
+			let index: number | undefined;
+
+			if (input.location === "project") {
+				const i = core.project.variables.findIndex(
+					(v) => v.id === input.variableId,
+				);
+				if (i === -1) return;
+				index = i;
+				variable = core.project.variables[i]!;
+			} else {
+				const graph = core.project.graphs.get(input.graphId);
+				if (!graph) return;
+
+				const i = graph.variables.findIndex((v) => v.id === input.variableId);
+				if (i === -1) return;
+				index = i;
+				variable = graph.variables[i]!;
+			}
+
+			if (!variable) return;
+
+			return { ...input, index, data: serializeVariable(variable) };
+		},
+		perform(core, entry) {
+			if (entry.location === "project")
+				core.project.removeVariable(entry.variableId);
+			else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				graph.removeVariable(entry.variableId);
+			}
+		},
+		rewind(core, entry) {
+			if (entry.location === "project") {
+				const variable = deserializeVariable(
+					v.parse(serde.Variable, entry.data),
+					core.project,
+				);
+
+				core.project.variables.splice(entry.index, 0, variable);
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				const variable = deserializeVariable(
+					v.parse(serde.Variable, entry.data),
+					graph,
+				);
+
+				graph.variables.splice(entry.index, 0, variable);
+			}
+		},
+	}),
+	createResource: historyAction({
+		prepare(core, input: { type: ResourceType<any, any> }) {
+			return { ...input, id: core.project.idCounter++ };
+		},
+		perform(core, entry) {
+			return core.project.createResource({
+				id: entry.id,
+				type: entry.type,
+				name: "New Resource",
+			});
+		},
+		rewind(core, entry) {
+			const resource = core.project.resources.get(entry.type);
+			if (!resource) return;
+
+			const itemIndex = resource.items.findIndex((i) => i.id === entry.id);
+			if (itemIndex === -1) return;
+
+			resource.items.splice(itemIndex, 1);
+
+			if (resource.items.length) core.project.resources.delete(entry.type);
+		},
+	}),
+	setResourceTypeDefault: historyAction({
+		prepare(core, input: { defaultId: number; type: ResourceType<any, any> }) {
+			const resource = core.project.resources.get(input.type);
+			if (!resource) return;
+
+			return { ...input, prev: resource.default };
+		},
+		perform(core, entry) {
+			const resource = core.project.resources.get(entry.type);
+			if (!resource) return;
+
+			resource.default = entry.defaultId;
+		},
+		rewind(core, entry) {
+			const resource = core.project.resources.get(entry.type);
+			if (!resource) return;
+
+			resource.default = entry.prev;
+		},
+	}),
+	setResourceName: historyAction({
+		prepare(
+			core,
+			input: {
+				type: ResourceType<any, any>;
+				resourceId: number;
+				name: string;
+			},
+		) {
+			const item = core.project.resources
+				.get(input.type)
+				?.items.find((i) => i.id === input.resourceId);
+			if (!item) return;
+
+			return { ...input, prev: item.name };
+		},
+		perform(core, entry) {
+			const item = core.project.resources
+				.get(entry.type)
+				?.items.find((i) => i.id === entry.resourceId);
+			if (!item) return;
+
+			item.name = entry.name;
+		},
+		rewind(core, entry) {
+			const item = core.project.resources
+				.get(entry.type)
+				?.items.find((i) => i.id === entry.resourceId);
+			if (!item) return;
+
+			item.name = entry.prev;
+		},
+	}),
+	setResourceValue: historyAction({
+		prepare(
+			core,
+			input: { type: ResourceType<any, any>; resourceId: number } & (
+				| { sourceId: string }
+				| { value: string }
+			),
+		) {
+			const item = core.project.resources
+				.get(input.type)
+				?.items.find((i) => i.id === input.resourceId);
+			if (!item) return;
+
+			if ("value" in input && "value" in item)
+				return { ...input, prevValue: item.value };
+			else if ("sourceId" in item && "sourceId" in input)
+				return { ...input, prevSourceId: input.sourceId };
+		},
+		perform(core, entry) {
+			const item = core.project.resources
+				.get(entry.type)
+				?.items.find((i) => i.id === entry.resourceId);
+			if (!item) return;
+
+			if ("value" in entry && "value" in item) item.value = entry.value;
+			else if ("sourceId" in item && "sourceId" in entry)
+				item.sourceId = entry.sourceId;
+		},
+		rewind(core, entry) {
+			const item = core.project.resources
+				.get(entry.type)
+				?.items.find((i) => i.id === entry.resourceId);
+			if (!item) return;
+
+			if ("value" in entry && "value" in item) item.value = entry.prevValue;
+			else if ("sourceId" in item && "sourceId" in entry)
+				item.sourceId = entry.prevSourceId;
+		},
+	}),
+	deleteResource: historyAction({
+		prepare(core, input: { type: ResourceType<any, any>; resourceId: number }) {
+			const resource = core.project.resources.get(input.type);
+			if (!resource) return;
+
+			const itemIndex = resource?.items.findIndex(
+				(i) => i.id === input.resourceId,
+			);
+			if (itemIndex === -1) return;
+			const item = resource.items[itemIndex]!;
+
+			return {
+				...input,
+				index: itemIndex,
+				data: { ...item },
+				default: resource.default,
+			};
+		},
+		perform(core, entry) {
+			const resource = core.project.resources.get(entry.type);
+			if (!resource) return;
+
+			resource.items.splice(entry.index, 1);
+
+			if (!resource.items.length) core.project.resources.delete(entry.type);
+		},
+		rewind(core, entry) {
+			if (!core.project.resources.has(entry.type)) {
+				core.project.resources.set(
+					entry.type,
+					createMutable({
+						default: entry.default,
+						items: [],
+					}),
+				);
+			}
+
+			const resource = core.project.resources.get(entry.type)!;
+
+			resource.items.splice(entry.index, 0, { ...entry.data });
+		},
+	}),
 };
 
 type HistoryActions = typeof historyActions;
 type HistoryActionKey = keyof HistoryActions;
 type HistoryEntryData<T extends HistoryActionKey = HistoryActionKey> = {
-  type: T;
-  entry: (typeof historyActions)[T] extends HistoryAction<infer E, any, any>
-    ? HistoryEntry<E>
-    : never;
+	type: T;
+	entry: HistoryActionEntry<T>;
 };
+export type HistoryActionEntry<T extends HistoryActionKey = HistoryActionKey> =
+	(typeof historyActions)[T] extends HistoryAction<infer E, any, any>
+		? HistoryEntry<E>
+		: never;
 
 export function createActionsExecutor(core: Core) {
-  const history: Array<HistoryEntryData> = [];
-
-  let nextHistoryIndex = 0;
-
-  function addHistoryEntry(entry: HistoryEntryData) {
-    history.splice(nextHistoryIndex, history.length - nextHistoryIndex, entry);
-    nextHistoryIndex++;
-  }
-
-  // const actions = {
-  //   createNode: coreAction(
-  //     (
-  //       core,
-  //       input: {
-  //         graphId: number;
-  //         schema: NodeSchema;
-  //         position: XY;
-  //       },
-  //     ) => {
-  //       const { graphId, schema, position } = input;
-  //       const graph = core.project.graphs.get(graphId);
-  //       if (!graph) return;
-
-  //       const node = graph.createNode({ schema, position });
-  //       return [{ id: node.id, graphId: graph.id }, node];
-  //     },
-  //   ),
-  //   setNodeProperty: coreAction(
-  //     (
-  //       core,
-  //       input: {
-  //         graphId: number;
-  //         nodeId: number;
-  //         property: string;
-  //         value: any;
-  //       },
-  //     ) => {
-  //       const graph = core.project.graphs.get(input.graphId);
-  //       if (!graph) return;
-
-  //       const node = graph.nodes.get(input.nodeId);
-  //       if (!node) return;
-
-  //       node.setProperty(input.property, input.value);
-  //     },
-  //   ),
-  //   createCommentBox: coreAction(
-  //     (core, input: { graphId: number; position: XY }) => {
-  //       const graph = core.project.graphs.get(input.graphId);
-  //       if (!graph) return;
-
-  //       return graph.createCommentBox({
-  //         position: input.position,
-  //         size: { x: 400, y: 200 },
-  //         text: "Comment",
-  //       });
-  //     },
-  //   ),
-  //   setCommentBoxTint: coreAction(
-  //     (core, input: { graphId: number; boxId: number; tint: string }) => {
-  //       const graph = core.project.graphs.get(input.graphId);
-  //       if (!graph) return;
-
-  //       const box = graph.commentBoxes.get(input.boxId);
-  //       if (!box) return;
-
-  //       box.tint = input.tint;
-  //     },
-  //   ),
-  //   setGraphItemPosition: coreAction(
-  //     (
-  //       core,
-  //       input: {
-  //         graphId: number;
-  //         itemId: number;
-  //         itemVariant: "node" | "commentBox";
-  //         position: XY;
-  //       },
-  //     ) => {
-  //       const { graphId, itemId, itemVariant, position } = input;
-
-  //       const graph = core.project.graphs.get(graphId);
-  //       if (!graph) return;
-
-  //       if (itemVariant === "node") {
-  //         const node = graph.nodes.get(itemId);
-  //         if (!node) return;
-
-  //         node.state.position = position;
-  //       } else {
-  //         const box = graph.commentBoxes.get(itemId);
-  //         if (!box) return;
-
-  //         box.position = position;
-  //       }
-  //     },
-  //   ),
-  //   deleteGraphItems: coreAction(
-  //     (
-  //       core,
-  //       input: {
-  //         graphId: number;
-  //         items: Array<{ type: "node" | "commentBox"; id: number }>;
-  //       },
-  //     ) => {
-  //       const { graphId, items } = input;
-  //       const graph = core.project.graphs.get(graphId);
-  //       if (!graph) return;
-
-  //       const entry: DeleteGraphSelectionHistoryEntry = {
-  //         type: "deleteGraphSelection",
-  //         graphId,
-  //         nodes: [],
-  //         connections: [],
-  //         commentBoxes: [],
-  //       };
-
-  //       for (const { type, id } of items) {
-  //         if (type === "node") {
-  //           const node = graph.nodes.get(id);
-  //           if (!node) continue;
-
-  //           for (const output of node.io.outputs) {
-  //             const ref = makeIORef(output);
-
-  //             const connections = graph.connections.get(ref);
-  //             if (!connections) continue;
-
-  //             for (const connectionRef of connections) {
-  //               const outputData = splitIORef(ref);
-  //               const inputData = splitIORef(connectionRef);
-
-  //               entry.connections.push({
-  //                 from: { node: outputData.nodeId, output: outputData.ioId },
-  //                 to: { node: inputData.nodeId, input: inputData.ioId },
-  //               });
-  //             }
-  //           }
-
-  //           for (const input of node.io.inputs) {
-  //             const ref = makeIORef(input);
-
-  //             const connections = graph.connections.get(ref);
-  //             if (!connections) continue;
-
-  //             for (const connectionRef of connections) {
-  //               const inputData = splitIORef(ref);
-  //               const outputData = splitIORef(connectionRef);
-
-  //               if (
-  //                 items.some(
-  //                   (i) => i.type === "node" && i.id === outputData.nodeId,
-  //                 )
-  //               )
-  //                 continue;
-
-  //               entry.connections.push({
-  //                 from: { node: outputData.nodeId, output: outputData.ioId },
-  //                 to: { node: inputData.nodeId, input: inputData.ioId },
-  //               });
-  //             }
-  //           }
-
-  //           entry.nodes.push(serializeNode(node));
-  //         } else {
-  //           const box = graph.commentBoxes.get(id);
-  //           if (!box) continue;
-
-  //           entry.commentBoxes.push(serializeCommentBox(box));
-  //         }
-  //       }
-
-  //       for (const { type, id } of items) {
-  //         if (type === "node") {
-  //           const node = graph.nodes.get(id);
-  //           if (!node) return;
-
-  //           graph.deleteNode(node);
-  //         } else {
-  //           const box = graph.commentBoxes.get(id);
-  //           if (!box) return;
-
-  //           graph.deleteCommentbox(box);
-  //         }
-  //       }
-
-  //       addHistoryEntry(entry);
-  //     },
-  //   ),
-  //   connectIO: coreAction(
-  //     (
-  //       core,
-  //       input: {
-  //         graphId: number;
-  //         out: {
-  //           nodeId: number;
-  //           pinId: string;
-  //         };
-  //         in: {
-  //           nodeId: number;
-  //           pinId: string;
-  //         };
-  //       },
-  //     ) => {
-  //       const { graphId, out, in: _in } = input;
-
-  //       const graph = core.project.graphs.get(graphId);
-  //       if (!graph) return;
-
-  //       const outNode = graph.nodes.get(out.nodeId);
-  //       const inNode = graph.nodes.get(_in.nodeId);
-  //       if (!outNode || !inNode) return;
-
-  //       const outPin = outNode.output(out.pinId);
-  //       const inPin = inNode.input(_in.pinId);
-  //       if (!outPin || !inPin) return;
-
-  //       graph.connectPins(outPin, inPin);
-
-  //       return;
-  //     },
-  //   ),
-  //   createCustomStruct: coreAction((core) => {
-  //     core.project.createCustomStruct();
-  //   }),
-  //   setCustomStructName: coreAction(
-  //     (core, input: { structId: number; name: string }) => {
-  //       const struct = core.project.customStructs.get(input.structId);
-  //       if (!struct) return;
-
-  //       struct.name = input.name;
-  //     },
-  //   ),
-  //   deleteCustomStruct: coreAction((core, input: { structId: number }) => {
-  //     core.project.customStructs.delete(input.structId);
-  //   }),
-  //   createCustomStructField: coreAction((core, input: { structId: number }) => {
-  //     const struct = core.project.customStructs.get(input.structId);
-  //     if (!struct) return;
-
-  //     struct.createField();
-  //   }),
-  //   setCustomStructFieldName: coreAction(
-  //     (core, input: { structId: number; fieldId: string; name: string }) => {
-  //       const struct = core.project.customStructs.get(input.structId);
-  //       if (!struct) return;
-
-  //       const field = struct.fields[input.fieldId];
-  //       if (!field) return;
-
-  //       field.name = input.name;
-  //     },
-  //   ),
-  //   setCustomStructFieldType: coreAction(
-  //     (core, input: { structId: number; fieldId: string; type: t.Any }) => {
-  //       const struct = core.project.customStructs.get(input.structId);
-  //       if (!struct) return;
-
-  //       struct.editFieldType(input.fieldId, input.type);
-  //     },
-  //   ),
-  //   deleteCustomStructField: coreAction(
-  //     (core, input: { structId: number; fieldId: string }) => {
-  //       const struct = core.project.customStructs.get(input.structId);
-  //       if (!struct) return;
-
-  //       struct.removeField(input.fieldId);
-  //     },
-  //   ),
-  //   createCustomEvent: coreAction((core) => {
-  //     core.project.createCustomEvent();
-  //   }),
-  //   setCustomEventName: coreAction(
-  //     (core, input: { eventId: number; name: string }) => {
-  //       const event = core.project.customEvents.get(input.eventId);
-  //       if (!event) return;
-
-  //       event.name = input.name;
-  //     },
-  //   ),
-  //   deleteCustomEvent: coreAction((core, input: { eventId: number }) => {
-  //     const event = core.project.customEvents.get(input.eventId);
-  //     if (!event) return;
-
-  //     core.project.customEvents.delete(input.eventId);
-  //   }),
-  //   createCustomEventField: coreAction((core, input: { eventId: number }) => {
-  //     const event = core.project.customEvents.get(input.eventId);
-  //     if (!event) return;
-
-  //     event.createField();
-  //   }),
-  //   deleteCustomEventField: coreAction(
-  //     (core, input: { eventId: number; fieldId: number }) => {
-  //       const event = core.project.customEvents.get(input.eventId);
-  //       if (!event) return;
-
-  //       event.deleteField(input.fieldId);
-  //     },
-  //   ),
-  //   setCustomEventFieldName: coreAction(
-  //     (core, input: { eventId: number; fieldId: number; name: string }) => {
-  //       const event = core.project.customEvents.get(input.eventId);
-  //       if (!event) return;
-
-  //       event.editFieldName(input.fieldId, input.name);
-  //     },
-  //   ),
-  //   setCustomEventFieldType: coreAction(
-  //     (
-  //       core,
-  //       input: { eventId: number; fieldId: number; type: PrimitiveType },
-  //     ) => {
-  //       const event = core.project.customEvents.get(input.eventId);
-  //       if (!event) return;
-
-  //       event.editFieldType(input.fieldId, input.type);
-  //     },
-  //   ),
-  //   createVariable: coreAction(
-  //     (
-  //       core,
-  //       input: { location: "project" } | { location: "graph"; graphId: number },
-  //     ) => {
-  //       if (input.location === "project") {
-  //         core.project.createVariable({
-  //           name: `Variable ${core.project.variables.length + 1}`,
-  //           value: "",
-  //           type: t.string(),
-  //         });
-  //       } else {
-  //         const graph = core.project.graphs.get(input.graphId);
-  //         if (!graph) return;
-
-  //         graph.createVariable({
-  //           name: `Variable ${graph.variables.length + 1}`,
-  //           value: "",
-  //           type: t.string(),
-  //         });
-  //       }
-  //     },
-  //   ),
-  //   setVariableName: coreAction(
-  //     (
-  //       core,
-  //       input: (
-  //         | { location: "project" }
-  //         | { location: "graph"; graphId: number }
-  //       ) & { variableId: number; name: string },
-  //     ) => {
-  //       let variable: Variable;
-
-  //       if (input.location === "project") {
-  //         const projectVariable = core.project.variables.find(
-  //           (v) => v.id === input.variableId,
-  //         );
-  //         if (!projectVariable) return;
-  //         variable = projectVariable;
-  //       } else {
-  //         const graph = core.project.graphs.get(input.graphId);
-  //         if (!graph) return;
-
-  //         const graphVariable = graph.variables.find(
-  //           (v) => v.id === input.variableId,
-  //         );
-  //         if (!graphVariable) return;
-  //         variable = graphVariable;
-  //       }
-
-  //       variable.name = input.name;
-  //     },
-  //   ),
-  //   setVariableValue: coreAction(
-  //     (
-  //       core,
-  //       input: (
-  //         | { location: "project" }
-  //         | { location: "graph"; graphId: number }
-  //       ) & { variableId: number; value: any },
-  //     ) => {
-  //       if (input.location === "project") {
-  //         core.project.setVariableValue(input.variableId, input.value);
-  //       } else {
-  //       }
-  //     },
-  //   ),
-  //   deleteVariable: coreAction(
-  //     (
-  //       core,
-  //       input: (
-  //         | { location: "project" }
-  //         | { location: "graph"; graphId: number }
-  //       ) & { variableId: number },
-  //     ) => {
-  //       if (input.location === "project") {
-  //         core.project.removeVariable(input.variableId);
-  //       } else {
-  //         const graph = core.project.graphs.get(input.graphId);
-  //         if (!graph) return;
-
-  //         graph.removeVariable(input.variableId);
-  //       }
-  //     },
-  //   ),
-  //   setResourceTypeDefault: coreAction(
-  //     (core, input: { defaultId: number; type: ResourceType<any, any> }) => {
-  //       const resource = core.project.resources.get(input.type);
-  //       if (!resource) return;
-
-  //       resource.default = input.defaultId;
-  //     },
-  //   ),
-  //   createResource: coreAction(
-  //     (core, input: { type: ResourceType<any, any> }) => {
-  //       core.project.createResource({ type: input.type, name: "New Resource" });
-  //     },
-  //   ),
-  //   setResourceName: coreAction(
-  //     (
-  //       core,
-  //       input: {
-  //         type: ResourceType<any, any>;
-  //         resourceId: number;
-  //         name: string;
-  //       },
-  //     ) => {
-  //       const resource = core.project.resources.get(input.type);
-  //       if (!resource) return;
-
-  //       const item = resource.items.find((i) => i.id === input.resourceId);
-  //       if (!item) return;
-
-  //       item.name = input.name;
-  //     },
-  //   ),
-  //   setResourceValue: coreAction(
-  //     (
-  //       core,
-  //       input: { type: ResourceType<any, any>; resourceId: number } & (
-  //         | { sourceId: string }
-  //         | { value: string }
-  //       ),
-  //     ) => {
-  //       const resource = core.project.resources.get(input.type);
-  //       if (!resource) return;
-
-  //       const item = resource.items.find((i) => i.id === input.resourceId);
-  //       if (!item) return;
-
-  //       if ("sourceId" in input && "sourceId" in item)
-  //         item.sourceId = input.sourceId;
-  //       else if ("value" in input && "value" in item) item.value = input.value;
-  //     },
-  //   ),
-  //   deleteResource: coreAction(
-  //     (core, input: { type: ResourceType<any, any>; resourceId: number }) => {
-  //       const resource = core.project.resources.get(input.type);
-  //       if (!resource) return;
-
-  //       const itemIndex = resource.items.findIndex(
-  //         (i) => i.id === input.resourceId,
-  //       );
-  //       if (itemIndex === -1) return;
-
-  //       resource.items.splice(itemIndex, 1);
-
-  //       if (resource.items.length) core.project.resources.delete(input.type);
-  //     },
-  //   ),
-  // };
-
-  function undo() {
-    nextHistoryIndex = Math.max(0, nextHistoryIndex - 1);
-    const entry = history[nextHistoryIndex];
-    if (!entry) return;
-
-    historyActions[entry.type].rewind(core, entry.entry as any);
-  }
-
-  function redo() {
-    nextHistoryIndex = Math.min(history.length, nextHistoryIndex + 1);
-    const entry = history[nextHistoryIndex];
-    if (!entry) return;
-
-    historyActions[entry.type].perform(core, entry.entry as any);
-  }
-
-  function execute<T extends HistoryActionKey>(
-    type: T,
-    ...args: HistoryActions[T] extends HistoryAction<any, any, infer I>
-      ? I extends void
-        ? []
-        : [I, void | { ephemeral: boolean }]
-      : []
-  ): HistoryActions[T] extends HistoryAction<any, infer P, any> ? P : never {
-    const action = historyActions[type];
-
-    const entry = action.prepare(core, args[0] as any);
-    if (!entry) return undefined as any;
-
-    if (!args[1]?.ephemeral) addHistoryEntry({ type, entry });
-
-    return action.perform(core, entry as any) as any;
-  }
-
-  return { undo, redo, execute };
+	const history: Array<HistoryEntryData> = [];
+
+	let nextHistoryIndex = 0;
+
+	function addHistoryEntry(entry: HistoryEntryData) {
+		history.splice(nextHistoryIndex, history.length - nextHistoryIndex, entry);
+		nextHistoryIndex++;
+	}
+
+	function undo() {
+		nextHistoryIndex = Math.max(0, nextHistoryIndex - 1);
+		const entry = history[nextHistoryIndex];
+		console.log({ nextHistoryIndex, entry });
+		if (!entry) return;
+
+		historyActions[entry.type].rewind(core, entry.entry as any);
+	}
+
+	function redo() {
+		const entry = history[nextHistoryIndex];
+		nextHistoryIndex = Math.min(history.length, nextHistoryIndex + 1);
+		console.log({ nextHistoryIndex, entry });
+		if (!entry) return;
+
+		historyActions[entry.type].perform(core, entry.entry as any);
+	}
+
+	function execute<T extends HistoryActionKey>(
+		type: T,
+		...args: HistoryActions[T] extends HistoryAction<any, any, infer I>
+			? I extends void
+				? []
+				: [I] | [I, { ephemeral?: boolean }]
+			: []
+	): HistoryActions[T] extends HistoryAction<any, infer P, any> ? P : never {
+		const action = historyActions[type];
+
+		const entry = action.prepare(core, args[0] as any, args[1]);
+		if (!entry) return undefined as any;
+
+		if (!args[1]?.ephemeral) addHistoryEntry({ type, entry });
+
+		return action.perform(core, entry as any) as any;
+	}
+
+	return { undo, redo, execute, history };
 }

@@ -3,16 +3,16 @@ import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";
 
-type CustomEventField = {
-  id: number;
-  name: string;
-  type: t.Any;
+export type CustomEventField = {
+	id: number;
+	name: string;
+	type: t.Any;
 };
 
 export interface EventArgs {
-  id: number;
-  name: string;
-  project: Project;
+	id: number;
+	name: string;
+	project: Project;
 }
 
 // const Source = z.discriminatedUnion("variant", [
@@ -21,51 +21,55 @@ export interface EventArgs {
 // ]);
 
 export class CustomEvent {
-  id: number;
-  name: string;
-  project: Project;
+	id: number;
+	name: string;
+	project: Project;
 
-  fields: Array<CustomEventField> = [];
+	fields: Array<CustomEventField> = [];
 
-  fieldIdCounter = 0;
+	fieldIdCounter = 0;
 
-  constructor(args: EventArgs) {
-    this.id = args.id;
-    this.name = args.name;
-    this.project = args.project;
+	constructor(args: EventArgs) {
+		this.id = args.id;
+		this.name = args.name;
+		this.project = args.project;
 
-    this.createField();
-    return createMutable(this);
-  }
+		this.createField();
+		return createMutable(this);
+	}
 
-  generateId() {
-    return this.fieldIdCounter++;
-  }
+	generateId() {
+		return this.fieldIdCounter++;
+	}
 
-  createField() {
-    const id = this.generateId();
-    this.fields.push({
-      id,
-      name: `Field ${id}`,
-      type: t.string(),
-    });
-  }
+	createField(args?: { id?: number }) {
+		const id = args?.id ?? this.generateId();
+		this.fields.push({
+			id,
+			name: `Field ${id}`,
+			type: t.string(),
+		});
+	}
 
-  editFieldName(id: number, name: string) {
-    const pin = this.fields.find((f) => f.id === id);
-    if (!pin) return;
-    pin.name = name;
-  }
+	field(id: number) {
+		return this.fields.find((f) => f.id === id);
+	}
 
-  editFieldType(id: number, type: PrimitiveType) {
-    const pin = this.fields.find((f) => f.id === id);
-    if (!pin) return;
-    pin.type = type;
-  }
+	editFieldName(id: number, name: string) {
+		const pin = this.fields.find((f) => f.id === id);
+		if (!pin) return;
+		pin.name = name;
+	}
 
-  deleteField(id: number) {
-    const index = this.fields.findIndex((f) => f.id === id);
-    if (index === -1) return;
-    this.fields.splice(index, 1);
-  }
+	editFieldType(id: number, type: PrimitiveType) {
+		const pin = this.fields.find((f) => f.id === id);
+		if (!pin) return;
+		pin.type = type;
+	}
+
+	deleteField(id: number) {
+		const index = this.fields.findIndex((f) => f.id === id);
+		if (index === -1) return;
+		this.fields.splice(index, 1);
+	}
 }

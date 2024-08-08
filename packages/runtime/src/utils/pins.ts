@@ -1,18 +1,18 @@
 import { typesCanConnect } from "@macrograph/typesystem";
+import { Option } from "@macrograph/option";
 import {
 	DataInput,
 	DataOutput,
 	ExecInput,
 	ExecOutput,
+	InputPin,
+	OutputPin,
 	type Pin,
 	ScopeInput,
 	ScopeOutput,
 } from "../models/IO";
 
-export function pinsCanConnect(
-	output: DataOutput<any> | ExecOutput | ScopeOutput,
-	input: DataInput<any> | ExecInput | ScopeInput,
-) {
+export function pinsCanConnect(output: OutputPin, input: InputPin) {
 	if (output instanceof DataOutput && input instanceof DataInput) {
 		return typesCanConnect(output.type, input.type);
 	}
@@ -28,9 +28,7 @@ export function pinsCanConnect(
 	return false;
 }
 
-export function pinIsOutput(
-	pin: Pin,
-): pin is DataOutput<any> | ExecOutput | ScopeOutput {
+export function pinIsOutput(pin: Pin): pin is OutputPin {
 	return (
 		pin instanceof DataOutput ||
 		pin instanceof ExecOutput ||
@@ -38,12 +36,34 @@ export function pinIsOutput(
 	);
 }
 
-export function pinIsInput(
-	pin: Pin,
-): pin is DataInput<any> | ExecInput | ScopeInput {
+export function pinIsInput(pin: Pin): pin is InputPin {
 	return (
 		pin instanceof DataInput ||
 		pin instanceof ExecInput ||
 		pin instanceof ScopeInput
 	);
+}
+
+export function pinConnections(pin: Pin) {
+	const connections: Array<{ nodeId: number; id: string }> = [];
+
+	if (pin instanceof ExecOutput || pin instanceof ScopeOutput)
+		(pin.connection() as Option<ExecInput | ScopeInput>).peek((connInput) => {
+			connections.push({ nodeId: connInput.node.id, id: connInput.id });
+		});
+	else if (pin instanceof DataOutput)
+		pin.connections().forEach((connInput) => {
+			connections.push({ nodeId: connInput.node.id, id: connInput.id });
+		});
+	else if (pin instanceof DataInput || pin instanceof ScopeInput)
+		(pin.connection as Option<DataOutput<any> | ScopeOutput>).peek(
+			(connOutput) => {
+				connections.push({ nodeId: connOutput.node.id, id: connOutput.id });
+			},
+		);
+	else if (pin instanceof ExecInput)
+		for (const connection of pin.connections)
+			connections.push({ nodeId: connection.node.id, id: connection.id });
+
+	return connections;
 }

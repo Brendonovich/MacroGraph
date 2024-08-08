@@ -37,7 +37,7 @@ interface Props {
 	graph: GraphState;
 	onSchemaClicked(
 		s: NodeSchema,
-		suggestion?: { pin: number },
+		suggestion?: { pin: string },
 	): void | Promise<void>;
 	onCreateCommentBox(): void;
 	position: XY;
@@ -243,7 +243,7 @@ export function SchemaMenu(props: Props) {
 
 								const ret: {
 									schema: NodeSchema;
-									suggestion?: { pin: number };
+									suggestion?: { pin: string };
 								}[] = [];
 
 								for (const schema of p.schemas.values()) {
@@ -265,72 +265,60 @@ export function SchemaMenu(props: Props) {
 
 												if (pinIsOutput(pin)) {
 													if (pin instanceof ExecOutput) {
-														const index = renderedSchema.inputs.findIndex(
+														const io = renderedSchema.inputs.find(
 															(i) => i.variant === "exec",
 														);
-														if (index !== -1)
-															ret.push({ schema, suggestion: { pin: index } });
+														if (io)
+															ret.push({ schema, suggestion: { pin: io.id } });
 													} else if (pin instanceof DataOutput) {
 														const renderedType = renderType(pin.type);
 														if (!renderedType) continue;
 
-														const index = renderedSchema.inputs.findIndex(
+														const io = renderedSchema.inputs.find(
 															(i) => i.variant === "data",
 														);
-														const input = renderedSchema.inputs[index] as
-															| Extract<RenderedIO, { variant: "data" }>
-															| undefined;
 
 														if (
-															input &&
+															io &&
 															(renderedType === "wildcard" ||
-																input.type === "wildcard" ||
-																renderedTypesCompatible(
-																	input.type,
-																	renderedType,
-																))
+																io.type === "wildcard" ||
+																renderedTypesCompatible(io.type, renderedType))
 														)
-															ret.push({ schema, suggestion: { pin: index } });
+															ret.push({ schema, suggestion: { pin: io.id } });
 													} else if (pin instanceof ScopeOutput) {
-														const index = renderedSchema.inputs.findIndex(
+														const io = renderedSchema.inputs.find(
 															(i) => i.variant === "scope",
 														);
-														if (index !== -1)
-															ret.push({ schema, suggestion: { pin: index } });
+														if (io)
+															ret.push({ schema, suggestion: { pin: io.id } });
 													}
 												} else {
 													if (pin instanceof ExecInput) {
-														const index = renderedSchema.outputs.findIndex(
+														const io = renderedSchema.outputs.find(
 															(i) => i.variant === "exec",
 														);
-														if (index !== -1)
-															ret.push({ schema, suggestion: { pin: index } });
+														if (io)
+															ret.push({ schema, suggestion: { pin: io.id } });
 													} else if (pin instanceof DataInput) {
 														const renderedType = renderType(pin.type);
 														if (!renderedType) continue;
 
-														const index = renderedSchema.outputs.findIndex(
+														const io = renderedSchema.outputs.find(
 															(o) => o.variant === "data",
 														);
-														const output = renderedSchema.outputs[index] as
-															| Extract<RenderedIO, { variant: "data" }>
-															| undefined;
 														if (
-															output &&
+															io &&
 															(renderedType === "wildcard" ||
-																output.type === "wildcard" ||
-																renderedTypesCompatible(
-																	output.type,
-																	renderedType,
-																))
+																io.type === "wildcard" ||
+																renderedTypesCompatible(io.type, renderedType))
 														)
-															ret.push({ schema, suggestion: { pin: index } });
+															ret.push({ schema, suggestion: { pin: io.id } });
 													} else if (pin instanceof ScopeInput) {
-														const index = renderedSchema.outputs.findIndex(
+														const io = renderedSchema.outputs.find(
 															(i) => i.variant === "scope",
 														);
-														if (index !== -1)
-															ret.push({ schema, suggestion: { pin: index } });
+														if (io)
+															ret.push({ schema, suggestion: { pin: io.id } });
 													}
 												}
 											}
