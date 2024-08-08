@@ -88,7 +88,7 @@ export function InlineTextEditor<T extends ValidComponent = "span">(
         </Match>
         <Match when={!ctx.editing()}>
           <Polymorphic
-            component={(props.as ?? "span") as any}
+            as={(props.as ?? "span") as any}
             class={clsx(
               "flex-1 hover:bg-white/10 rounded flex flex-row items-center justify-between py-0.5 px-1.5",
               props.selected && "bg-white/10",
