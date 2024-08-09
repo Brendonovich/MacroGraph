@@ -199,8 +199,11 @@ export const Node = (props: Props) => {
 									</ContextMenuItem>
 									<ContextMenuItem
 										onSelect={() => {
-											node().state.foldPins = !node().state.foldPins;
-											interfaceCtx.save();
+											interfaceCtx.execute("setNodeFoldPins", {
+												graphId: graph.model().id,
+												nodeId: node().id,
+												foldPins: !node().state.foldPins,
+											});
 										}}
 										class="flex flex-row gap-4 items-center justify-between"
 									>
@@ -217,8 +220,10 @@ export const Node = (props: Props) => {
 									</ContextMenuItem>
 									<ContextMenuItem
 										onSelect={() => {
-											graph.model().deleteNode(node());
-											interfaceCtx.save();
+											interfaceCtx.execute("deleteGraphItems", {
+												graphId: graph.model().id,
+												items: [{ type: "node", id: node().id }],
+											});
 										}}
 										class="text-red-500 flex flex-row gap-2 items-center justify-between"
 									>
@@ -259,8 +264,12 @@ export const Node = (props: Props) => {
 											);
 										}}
 										onBlur={() => {
-											if (value() !== "") node().state.name = value();
-											interfaceCtx.save();
+											if (value() !== "")
+												interfaceCtx.execute("setNodeName", {
+													graphId: graph.model().id,
+													nodeId: node().id,
+													name: value(),
+												});
 
 											setEditingName(false);
 										}}
@@ -326,8 +335,11 @@ export const Node = (props: Props) => {
 							title="Expand node IO"
 							class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
 							onClick={() => {
-								node().state.foldPins = false;
-								interfaceCtx.save();
+								interfaceCtx.execute("setNodeFoldPins", {
+									graphId: graph.model().id,
+									nodeId: node().id,
+									foldPins: false,
+								});
 							}}
 						>
 							<IconMdiDotsHorizontal class="size-4" />

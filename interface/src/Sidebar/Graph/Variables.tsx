@@ -15,7 +15,6 @@ export function Variables(props: { graph: Graph }) {
 					location: "graph",
 					graphId: props.graph.id,
 				});
-				interfaceCtx.save();
 			}}
 			onRemoveVariable={(id) => {
 				interfaceCtx.execute("deleteVariable", {
@@ -23,7 +22,6 @@ export function Variables(props: { graph: Graph }) {
 					graphId: props.graph.id,
 					variableId: id,
 				});
-				interfaceCtx.save();
 			}}
 			onSetVariableValue={(id, value) => {
 				interfaceCtx.execute("setVariableValue", {
@@ -32,7 +30,14 @@ export function Variables(props: { graph: Graph }) {
 					variableId: id,
 					value,
 				});
-				interfaceCtx.save();
+			}}
+			onSetVariableType={(id, type) => {
+				interfaceCtx.execute("setVariableType", {
+					location: "graph",
+					graphId: props.graph.id,
+					variableId: id,
+					type,
+				});
 			}}
 			onVariableNameChanged={(id, name) => {
 				interfaceCtx.execute("setVariableName", {
@@ -41,7 +46,6 @@ export function Variables(props: { graph: Graph }) {
 					variableId: id,
 					name,
 				});
-				interfaceCtx.save();
 			}}
 		/>
 	);

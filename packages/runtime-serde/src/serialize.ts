@@ -4,7 +4,7 @@ import {
 	type Enum,
 	type EnumVariants,
 	type Struct,
-	StructField,
+	type StructField,
 	type StructFields,
 	t,
 } from "@macrograph/typesystem";

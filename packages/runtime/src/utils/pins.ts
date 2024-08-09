@@ -1,12 +1,12 @@
+import type { Option } from "@macrograph/option";
 import { typesCanConnect } from "@macrograph/typesystem";
-import { Option } from "@macrograph/option";
 import {
 	DataInput,
 	DataOutput,
 	ExecInput,
 	ExecOutput,
-	InputPin,
-	OutputPin,
+	type InputPin,
+	type OutputPin,
 	type Pin,
 	ScopeInput,
 	ScopeOutput,
@@ -51,11 +51,11 @@ export function pinConnections(pin: Pin) {
 		(pin.connection() as Option<ExecInput | ScopeInput>).peek((connInput) => {
 			connections.push({ nodeId: connInput.node.id, id: connInput.id });
 		});
-	else if (pin instanceof DataOutput)
-		pin.connections().forEach((connInput) => {
+	else if (pin instanceof DataOutput) {
+		for (const connInput of pin.connections()) {
 			connections.push({ nodeId: connInput.node.id, id: connInput.id });
-		});
-	else if (pin instanceof DataInput || pin instanceof ScopeInput)
+		}
+	} else if (pin instanceof DataInput || pin instanceof ScopeInput)
 		(pin.connection as Option<DataOutput<any> | ScopeOutput>).peek(
 			(connOutput) => {
 				connections.push({ nodeId: connOutput.node.id, id: connOutput.id });

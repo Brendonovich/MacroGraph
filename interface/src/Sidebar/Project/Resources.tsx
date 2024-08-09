@@ -83,7 +83,7 @@ export function Resources() {
 								</div>
 								<ul class="bg-black/30 rounded divide-y divide-neutral-700 px-2">
 									<For each={data.items}>
-										{(item, index) => (
+										{(item) => (
 											<li class="space-y-1 pt-1 pb-2 group/item">
 												<InlineTextEditor
 													class="-mx-1"
@@ -94,7 +94,6 @@ export function Resources() {
 															resourceId: item.id,
 															name,
 														});
-														interfaceCtx.save();
 													}}
 												>
 													<IconButton
@@ -107,7 +106,6 @@ export function Resources() {
 																type,
 																resourceId: item.id,
 															});
-															interfaceCtx.save();
 														}}
 													>
 														<IconAntDesignDeleteOutlined class="size-4" />
@@ -139,7 +137,6 @@ export function Resources() {
 																			resourceId: item.id,
 																			sourceId: source.id,
 																		});
-																		interfaceCtx.save();
 																	}}
 																	value={sources().find(
 																		(s) => s.id === item.sourceId,
@@ -161,7 +158,6 @@ export function Resources() {
 																		resourceId: item.id,
 																		value: n,
 																	});
-																	interfaceCtx.save();
 																}}
 															/>
 														)}

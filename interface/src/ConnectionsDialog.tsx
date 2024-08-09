@@ -61,7 +61,7 @@ export function ConnectionsDialog(props: { core: Core }) {
 									</Tabs.Trigger>
 								)}
 							</For>
-							<Tabs.Indicator class="bg-white w-[2px] absolute -right-[1.5px] transition-transform rounded-full" />
+							<Tabs.Indicator class="bg-white w-[2px] absolute -right-[1.5px] data-[resizing='false']:transition-transform rounded-full" />
 						</Tabs.List>
 					</Tabs.Root>
 					<div class="flex flex-col p-4 text-white min-w-[32rem]">

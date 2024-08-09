@@ -190,10 +190,12 @@ export const Graph = (props: Props) => {
 						const node = model().nodes.get(selectedItemId.id);
 						if (!node) return;
 
-						node.state.foldPins = true;
+						interfaceCtx.execute("setNodeFoldPins", {
+							graphId: model().id,
+							nodeId: node.id,
+							foldPins: true,
+						});
 					}
-
-					interfaceCtx.save();
 				}
 
 				return;
@@ -210,10 +212,12 @@ export const Graph = (props: Props) => {
 						const node = model().nodes.get(selectedItemId.id);
 						if (!node) return;
 
-						node.state.foldPins = false;
+						interfaceCtx.execute("setNodeFoldPins", {
+							graphId: model().id,
+							nodeId: node.id,
+							foldPins: false,
+						});
 					}
-
-					interfaceCtx.save();
 				}
 
 				return;

@@ -24,13 +24,14 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			throttle,
 			() => {
 				if (props.core.project.disableSave) return;
+				console.log(serializeProject(props.core.project));
 
 				localStorage.setItem(
 					"project",
 					JSON.stringify(serializeProject(props.core.project)),
 				);
 			},
-			500,
+			100,
 		);
 
 		onCleanup(
@@ -77,7 +78,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		);
 
 		return {
-			...createActionsExecutor(props.core),
+			...createActionsExecutor(props.core, save),
 			state,
 			setState: (value: MouseState) => {
 				setState(reconcile(value));

@@ -14,10 +14,10 @@ import {
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createRoot } from "solid-js";
 import { createStore, produce } from "solid-js/store";
+import type { GraphItemPositionInput } from "../../actions";
 import type { InterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import type { GraphContext, SelectedItemID } from "./Context";
-import { GraphItemPositionInput } from "../../actions";
 
 export const GRID_SIZE = 25;
 export const SHIFT_MULTIPLIER = 6;
@@ -196,8 +196,6 @@ export function handleSelectableItemMouseDown(
 						items,
 					});
 				}
-
-				interfaceCtx.save();
 			},
 			mousemove: (e) => {
 				didDrag = true;
@@ -220,11 +218,15 @@ export function handleSelectableItemMouseDown(
 
 					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
 
-					items.push({
-						itemVariant: "node",
-						itemId: node.id,
-						position: newPosition,
-					});
+					if (
+						newPosition.x !== startPosition.x ||
+						newPosition.y !== startPosition.y
+					)
+						items.push({
+							itemVariant: "node",
+							itemId: node.id,
+							position: newPosition,
+						});
 				}
 
 				for (const [box, nodes] of commentBoxNodes) {
@@ -232,38 +234,45 @@ export function handleSelectableItemMouseDown(
 					if (!startPosition) continue;
 
 					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
-
-					items.push({
-						itemVariant: "commentBox",
-						itemId: box.id,
-						position: newPosition,
-					});
+					if (
+						newPosition.x !== startPosition.x ||
+						newPosition.y !== startPosition.y
+					)
+						items.push({
+							itemVariant: "commentBox",
+							itemId: box.id,
+							position: newPosition,
+						});
 
 					const boxDelta = {
 						x: newPosition.x - startPosition.x,
 						y: newPosition.y - startPosition.y,
 					};
 
-					for (const node of nodes) {
-						const startPosition = nodePositions.get(node);
-						if (!startPosition) continue;
+					if (boxDelta.x !== 0 || boxDelta.y !== 0)
+						for (const node of nodes) {
+							const startPosition = nodePositions.get(node);
+							if (!startPosition) continue;
 
-						items.push({
-							itemVariant: "node",
-							itemId: node.id,
-							position: {
-								x: startPosition.x + boxDelta.x,
-								y: startPosition.y + boxDelta.y,
-							},
-						});
-					}
+							items.push({
+								itemVariant: "node",
+								itemId: node.id,
+								position: {
+									x: startPosition.x + boxDelta.x,
+									y: startPosition.y + boxDelta.y,
+								},
+							});
+						}
 				}
 
-				interfaceCtx.execute(
-					"setGraphItemPositions",
-					{ graphId: graph.model().id, items },
-					{ ephemeral: true },
-				);
+				didDrag = items.length > 0;
+
+				if (items.length > 0)
+					interfaceCtx.execute(
+						"setGraphItemPositions",
+						{ graphId: graph.model().id, items },
+						{ ephemeral: true },
+					);
 			},
 		});
 	});

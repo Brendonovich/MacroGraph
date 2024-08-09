@@ -116,7 +116,6 @@ export function Graphs(props: Props) {
 																	graphId: graph.id,
 																	name: value,
 																});
-																interfaceCtx.save();
 															}}
 														/>
 														<ContextMenuContent>
@@ -164,7 +163,6 @@ export function Graphs(props: Props) {
 																interfaceCtx.execute("deleteGraph", {
 																	graphId: graph.id,
 																});
-																interfaceCtx.save();
 															}}
 														>
 															Delete

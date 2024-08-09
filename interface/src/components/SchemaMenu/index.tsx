@@ -12,7 +12,6 @@ import {
 	pinIsOutput,
 } from "@macrograph/runtime";
 import {
-	type RenderedIO,
 	type RenderedSchema,
 	renderSchema,
 	renderType,
@@ -135,6 +134,8 @@ export function SchemaMenu(props: Props) {
 	let ignorePointerEnter = false;
 
 	function handleKeyDown(e: KeyboardEvent) {
+		e.stopPropagation();
+
 		switch (e.code) {
 			case "Tab": {
 				if (e.shiftKey) move(-1);
@@ -171,8 +172,6 @@ export function SchemaMenu(props: Props) {
 		}
 
 		e.preventDefault();
-
-		return true;
 	}
 
 	createEventListener(window, "keydown", handleKeyDown);
@@ -199,12 +198,7 @@ export function SchemaMenu(props: Props) {
 					onInput={(e) => {
 						setSearch(e.target.value);
 					}}
-					onKeyDown={(e) => {
-						if (e.ctrlKey || e.metaKey) return;
-						if (handleKeyDown(e)) return;
-
-						e.stopPropagation();
-					}}
+					onKeyDown={handleKeyDown}
 					onKeyUp={(e) => e.stopPropagation()}
 					value={search()}
 					class="h-6 w-full flex-1 bg-neutral-900 border-none rounded-sm text-xs !pl-1.5 focus-visible:outline-none focus:ring-1 focus:ring-mg-focus transition-colors"

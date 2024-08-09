@@ -16,7 +16,7 @@ import { createMutable } from "solid-js/store";
 
 import type { XY } from "../utils";
 import { ExecutionContext } from "./Core";
-import { splitIORef, type Graph, type IORef } from "./Graph";
+import type { Graph } from "./Graph";
 import {
 	DataInput,
 	type DataOutput,

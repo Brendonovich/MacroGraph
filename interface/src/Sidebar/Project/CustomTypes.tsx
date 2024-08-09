@@ -72,12 +72,10 @@ export function CustomTypes() {
 							switch (selected()) {
 								case "events": {
 									interfaceCtx.execute("createCustomEvent");
-									interfaceCtx.save();
 									return;
 								}
 								case "structs": {
 									interfaceCtx.execute("createCustomStruct");
-									interfaceCtx.save();
 									return;
 								}
 							}
@@ -110,7 +108,6 @@ export function CustomTypes() {
 													interfaceCtx.execute("createCustomEventField", {
 														eventId: id,
 													});
-													interfaceCtx.save();
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -125,7 +122,6 @@ export function CustomTypes() {
 													interfaceCtx.execute("deleteCustomEvent", {
 														eventId: id,
 													});
-													interfaceCtx.save();
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -146,7 +142,6 @@ export function CustomTypes() {
 																		name: value,
 																	},
 																);
-																interfaceCtx.save();
 															}}
 															class="-mx-1"
 														>
@@ -160,7 +155,6 @@ export function CustomTypes() {
 																		"deleteCustomEventField",
 																		{ eventId: id, fieldId: field.id },
 																	);
-																	interfaceCtx.save();
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -179,7 +173,6 @@ export function CustomTypes() {
 																			type: type as any,
 																		},
 																	);
-																	interfaceCtx.save();
 																}}
 															/>
 														</div>
@@ -202,7 +195,6 @@ export function CustomTypes() {
 													structId: id,
 													name: value,
 												});
-												interfaceCtx.save();
 											}}
 										>
 											<IconButton
@@ -214,7 +206,6 @@ export function CustomTypes() {
 													interfaceCtx.execute("createCustomStructField", {
 														structId: id,
 													});
-													interfaceCtx.save();
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -229,7 +220,6 @@ export function CustomTypes() {
 													interfaceCtx.execute("deleteCustomStruct", {
 														structId: id,
 													});
-													interfaceCtx.save();
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -250,7 +240,6 @@ export function CustomTypes() {
 																		name: value,
 																	},
 																);
-																interfaceCtx.save();
 															}}
 															class="-mx-1"
 														>
@@ -264,7 +253,6 @@ export function CustomTypes() {
 																		"deleteCustomStructField",
 																		{ structId: id, fieldId: field.id },
 																	);
-																	interfaceCtx.save();
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -279,7 +267,6 @@ export function CustomTypes() {
 																		"setCustomStructFieldType",
 																		{ structId: id, fieldId: field.id, type },
 																	);
-																	interfaceCtx.save();
 																}}
 															/>
 														</div>

@@ -8,24 +8,13 @@ import {
 } from "@macrograph/clipboard";
 import {
 	type Core,
-	DataInput,
-	DataOutput,
-	ExecInput,
-	ExecOutput,
 	type Graph as GraphModel,
 	type Node,
-	ScopeInput,
-	ScopeOutput,
 	type XY,
 	getNodesInRect,
 	pinIsOutput,
 } from "@macrograph/runtime";
 import {
-	deserializeCommentBox,
-	deserializeConnections,
-	deserializeGraph,
-	deserializeNode,
-	deserializeProject,
 	type serde,
 	serializeCommentBox,
 	serializeNode,
@@ -44,6 +33,11 @@ import { toast } from "solid-sonner";
 import type * as v from "valibot";
 
 import * as Sidebars from "./Sidebar";
+import type {
+	CreateNodeInput,
+	GraphItemPositionInput,
+	HistoryActionEntry,
+} from "./actions";
 import { Graph } from "./components/Graph";
 import {
 	type GraphState,
@@ -60,11 +54,6 @@ import {
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
-import {
-	CreateNodeInput,
-	GraphItemPositionInput,
-	HistoryActionEntry,
-} from "./actions";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -208,7 +197,7 @@ function ProjectInterface() {
 						value={currentGraphIndex().toString()}
 					>
 						<Tabs.List class="h-8 flex flex-row relative text-sm">
-							<Tabs.Indicator class="absolute inset-0 transition-[transform,width]">
+							<Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-[transform,width]">
 								<div class="bg-white/20 w-full h-full" />
 							</Tabs.Indicator>
 							<Solid.For
@@ -465,7 +454,6 @@ function ProjectInterface() {
 												{ type: "commentBox", id: box.id },
 											]);
 
-											ctx.save();
 											ctx.setState({ status: "idle" });
 										});
 									}}
@@ -511,7 +499,7 @@ function ProjectInterface() {
 											if (sourceSuggestion && targetSuggestion) {
 												if (pinIsOutput(sourceSuggestion.pin))
 													return node.input(targetSuggestion.pin);
-												else return node.output(targetSuggestion.pin);
+												return node.output(targetSuggestion.pin);
 											}
 										});
 
@@ -547,6 +535,7 @@ function ProjectInterface() {
 												},
 												{ ephemeral: true },
 											);
+											ctx.save();
 
 											const historyEntry = ctx.history[ctx.history.length - 1];
 											if (historyEntry?.type === "createNode") {
@@ -556,8 +545,6 @@ function ProjectInterface() {
 												entry.position = { ...position };
 											}
 										}
-
-										ctx.save();
 									}}
 								/>
 							)}
@@ -619,7 +606,6 @@ function createKeydownShortcuts(
 
 	createEventListener(window, "keydown", async (e) => {
 		const { core } = ctx;
-		const { project } = core;
 
 		switch (e.code) {
 			case "KeyC": {
@@ -747,56 +733,17 @@ function createKeydownShortcuts(
 							state,
 						);
 
-						const nodeIdMap = new Map<number, number>();
-
-						Solid.batch(() => {
-							for (const nodeData of item.nodes) {
-								const id = model.generateId();
-								nodeIdMap.set(nodeData.id, id);
-								nodeData.id = id;
-								nodeData.position = {
-									x: mousePosition.x + nodeData.position.x - item.origin.x,
-									y: mousePosition.y + nodeData.position.y - item.origin.y,
-								};
-								const node = deserializeNode(model, nodeData);
-								if (!node) throw new Error("Failed to deserialize node");
-
-								model.nodes.set(node.id, node);
-							}
-
-							for (const box of item.commentBoxes) {
-								box.id = model.generateId();
-								box.position = {
-									x: mousePosition.x + box.position.x - item.origin.x,
-									y: mousePosition.y + box.position.y - item.origin.y,
-								};
-								const commentBox = deserializeCommentBox(model, box);
-								if (!commentBox)
-									throw new Error("Failed to deserialize comment box");
-
-								model.commentBoxes.set(commentBox.id, commentBox);
-							}
-
-							deserializeConnections(
-								item.connections,
-								model.connections,
-								nodeIdMap,
-							);
+						ctx.execute("pasteGraphSelection", {
+							graphId: model.id,
+							mousePosition,
+							selection: item,
 						});
 
 						break;
 					}
 					case "graph": {
-						item.graph.id = project.generateGraphId();
-						const graph = deserializeGraph(project, item.graph);
-						if (!graph) throw new Error("Failed to deserialize graph");
-						core.project.graphs.set(graph.id, graph);
-						break;
-					}
-					case "project": {
-						const project = deserializeProject(core, item.project);
-						if (!project) throw new Error("Failed to deserialize project");
-						core.project = project;
+						ctx.execute("pasteGraph", item.graph);
+
 						break;
 					}
 				}
@@ -1012,7 +959,7 @@ function createKeydownShortcuts(
 				}
 
 				if (items.length > 0)
-					ctx.execute("deleteGraphSelection", { graphId: model.id, items });
+					ctx.execute("deleteGraphItems", { graphId: model.id, items });
 
 				break;
 			}

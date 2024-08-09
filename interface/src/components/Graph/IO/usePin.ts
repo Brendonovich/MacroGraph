@@ -1,8 +1,8 @@
 import {
 	DataOutput,
 	ExecInput,
-	makeIORef,
 	type Pin,
+	makeIORef,
 	pinIsInput,
 	pinIsOutput,
 	pinsCanConnect,
@@ -96,7 +96,6 @@ export function usePin(pin: Accessor<Pin>) {
 						});
 
 					interfaceCtx.setState({ status: "idle" });
-					interfaceCtx.save();
 				});
 			},
 			mousedown: (e) => {
@@ -117,8 +116,6 @@ export function usePin(pin: Accessor<Pin>) {
 							out: { nodeId: mouseDown.pin.node.id, pinId: mouseDown.pin.id },
 							in: { nodeId: thisPin.node.id, pinId: thisPin.id },
 						});
-
-					interfaceCtx.save();
 				} else if (mouseDown.status === "idle") {
 					if (
 						(e.ctrlKey || e.metaKey) &&
@@ -196,7 +193,6 @@ export function usePin(pin: Accessor<Pin>) {
 					graphId: graph.model().id,
 					ioRef: makeIORef(thisPin),
 				});
-				interfaceCtx.save();
 			},
 		});
 	});

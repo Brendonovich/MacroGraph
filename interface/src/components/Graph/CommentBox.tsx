@@ -1,24 +1,17 @@
 import { ContextMenu } from "@kobalte/core";
 import {
-	getNodesInRect,
 	type CommentBox as CommentBoxModel,
+	getNodesInRect,
 } from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
-import {
-	Show,
-	batch,
-	createMemo,
-	createRoot,
-	createSignal,
-	onMount,
-} from "solid-js";
+import { Show, createMemo, createRoot, createSignal, onMount } from "solid-js";
 
+import type { SelectionItem } from "../../actions";
 import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import { handleSelectableItemMouseDown } from "./util";
-import { SelectionItem } from "../../actions";
 
 interface Props {
 	box: CommentBoxModel;
@@ -82,8 +75,6 @@ export function CommentBox(props: Props) {
 							},
 							prev: { size, position },
 						});
-
-						interfaceCtx.save();
 					},
 					mousemove: (e) => {
 						const mousePosition = graph.toGraphSpace({
@@ -169,11 +160,10 @@ export function CommentBox(props: Props) {
 								</ContextMenuItem>
 								<ContextMenuItem
 									onSelect={() => {
-										interfaceCtx.execute("deleteGraphSelection", {
+										interfaceCtx.execute("deleteGraphItems", {
 											graphId: graph.model().id,
 											items: [{ type: "commentBox", id: box().id }],
 										});
-										interfaceCtx.save();
 									}}
 									class="text-red-500 flex flex-row gap-2 items-center justify-between"
 								>
@@ -200,12 +190,10 @@ export function CommentBox(props: Props) {
 											items.push({ type: "node", id: node.id });
 										}
 
-										interfaceCtx.execute("deleteGraphSelection", {
+										interfaceCtx.execute("deleteGraphItems", {
 											graphId: graph.model().id,
 											items,
 										});
-
-										interfaceCtx.save();
 									}}
 									class="text-red-500 flex flex-row gap-2 items-center justify-between"
 								>
@@ -233,8 +221,13 @@ export function CommentBox(props: Props) {
 									onContextMenu={(e) => e.stopPropagation()}
 									onMouseDown={(e) => e.stopPropagation()}
 									onBlur={() => {
-										if (value() !== "") props.box.text = value();
-										interfaceCtx.save();
+										if (value() !== "") {
+											interfaceCtx.execute("setCommentBoxText", {
+												graphId: graph.model().id,
+												boxId: box().id,
+												text: value(),
+											});
+										}
 
 										setEditing(false);
 									}}

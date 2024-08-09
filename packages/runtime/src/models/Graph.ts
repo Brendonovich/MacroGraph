@@ -199,8 +199,6 @@ export class Graph extends Disposable {
 					});
 				}
 			}
-
-			this.project.emit("modified");
 		});
 	}
 
@@ -214,13 +212,9 @@ export class Graph extends Disposable {
 
 		this.nodes.delete(node.id);
 		node.dispose();
-
-		this.project.emit("modified");
 	}
 
 	deleteCommentbox(box: CommentBox) {
 		this.commentBoxes.delete(box.id);
-
-		this.project.emit("modified");
 	}
 }

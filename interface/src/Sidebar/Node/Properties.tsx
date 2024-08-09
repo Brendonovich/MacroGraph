@@ -5,6 +5,7 @@ import {
 	type SchemaProperties,
 } from "@macrograph/runtime";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
+
 import { SidebarSection } from "../../components/Sidebar";
 import {
 	CheckBox,
@@ -66,7 +67,6 @@ export function Properties(props: {
 														propertyId: property().id,
 														value: v.id,
 													});
-													interfaceCtx.save();
 												}}
 											/>
 										);
@@ -85,7 +85,6 @@ export function Properties(props: {
 												propertyId: property().id,
 												value: v,
 											});
-											interfaceCtx.save();
 										};
 
 										return (
@@ -185,7 +184,6 @@ export function Properties(props: {
 														propertyId: property().id,
 														value: v.id,
 													});
-													interfaceCtx.save();
 												}}
 											/>
 										);

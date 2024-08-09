@@ -1,25 +1,25 @@
+import type { ClipboardItem } from "@macrograph/clipboard";
+import type { Option } from "@macrograph/option";
 import {
+	type Core,
 	DataInput,
 	DataOutput,
 	ExecInput,
 	ExecOutput,
-	InputPin,
-	IORef,
-	makeIORef,
-	NodeSchema,
-	OutputPin,
-	Pin,
-	pinConnections,
-	pinIsOutput,
-	ResourceType,
+	type IORef,
+	type InputPin,
+	type NodeSchema,
+	type OutputPin,
+	type ResourceType,
 	ScopeInput,
 	ScopeOutput,
-	splitIORef,
-	Variable,
-	type Core,
+	type Variable,
 	type XY,
+	makeIORef,
+	pinConnections,
+	pinIsOutput,
+	splitIORef,
 } from "@macrograph/runtime";
-import { Option } from "@macrograph/option";
 import {
 	deserializeCommentBox,
 	deserializeConnections,
@@ -40,9 +40,10 @@ import {
 	serializeNode,
 	serializeVariable,
 } from "@macrograph/runtime-serde";
-import * as v from "valibot";
-import { PrimitiveType, t } from "@macrograph/typesystem";
+import { type PrimitiveType, t } from "@macrograph/typesystem";
+import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
+import * as v from "valibot";
 
 type HistoryEntry<T> = T extends object ? T : never;
 type PrepareOptions = { ephemeral?: boolean };
@@ -233,6 +234,72 @@ const historyActions = {
 			node.setProperty(entry.propertyId, entry.prev);
 		},
 	}),
+	setNodeName: historyAction({
+		prepare(
+			core,
+			input: {
+				graphId: number;
+				nodeId: number;
+				name: string;
+			},
+		) {
+			const node = core.project.graphs
+				.get(input.graphId)
+				?.nodes.get(input.nodeId);
+			if (!node) return;
+
+			return { ...input, prev: node.state.name };
+		},
+		perform(core, entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
+
+			node.state.name = entry.name;
+		},
+		rewind(core, entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
+
+			node.state.name = entry.prev;
+		},
+	}),
+	setNodeFoldPins: historyAction({
+		prepare(
+			core,
+			input: {
+				graphId: number;
+				nodeId: number;
+				foldPins: boolean;
+			},
+		) {
+			const node = core.project.graphs
+				.get(input.graphId)
+				?.nodes.get(input.nodeId);
+			if (!node) return;
+
+			return { ...input, prev: node.state.foldPins };
+		},
+		perform(core, entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
+
+			node.state.foldPins = entry.foldPins;
+		},
+		rewind(core, entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
+
+			node.state.foldPins = entry.prev;
+		},
+	}),
 	createCommentBox: historyAction({
 		prepare(core, input: { graphId: number; position: XY }) {
 			const graph = core.project.graphs.get(input.graphId);
@@ -263,7 +330,10 @@ const historyActions = {
 		},
 	}),
 	setCommentBoxTint: historyAction({
-		prepare(core, input: { graphId: number; boxId: number; tint: string }) {
+		prepare(
+			core,
+			input: { graphId: number; boxId: number; tint: string; prev?: string },
+		) {
 			const box = core.project.graphs
 				.get(input.graphId)
 				?.commentBoxes.get(input.boxId);
@@ -271,7 +341,7 @@ const historyActions = {
 
 			return {
 				...input,
-				prev: box.tint,
+				prev: input.prev ?? box.tint,
 			};
 		},
 		perform(core, entry) {
@@ -289,6 +359,35 @@ const historyActions = {
 			if (!box) return;
 
 			box.tint = entry.prev;
+		},
+	}),
+	setCommentBoxText: historyAction({
+		prepare(core, input: { graphId: number; boxId: number; text: string }) {
+			const box = core.project.graphs
+				.get(input.graphId)
+				?.commentBoxes.get(input.boxId);
+			if (!box) return;
+
+			return {
+				...input,
+				prev: box.text,
+			};
+		},
+		perform(core, entry) {
+			const box = core.project.graphs
+				.get(entry.graphId)
+				?.commentBoxes.get(entry.boxId);
+			if (!box) return;
+
+			box.text = entry.text;
+		},
+		rewind(core, entry) {
+			const box = core.project.graphs
+				.get(entry.graphId)
+				?.commentBoxes.get(entry.boxId);
+			if (!box) return;
+
+			box.text = entry.prev;
 		},
 	}),
 	setCommentBoxBounds: historyAction({
@@ -383,7 +482,7 @@ const historyActions = {
 			}
 		},
 	}),
-	deleteGraphSelection: historyAction({
+	deleteGraphItems: historyAction({
 		prepare(
 			core,
 			input: {
@@ -497,6 +596,7 @@ const historyActions = {
 
 				graph.deleteCommentbox(box);
 			}
+			console.log("delete");
 		},
 		rewind(core, entry) {
 			const graph = core.project.graphs.get(entry.graphId);
@@ -1142,6 +1242,67 @@ const historyActions = {
 			variable.value = entry.value;
 		},
 	}),
+	setVariableType: historyAction({
+		prepare(
+			core,
+			input: VariableLocation & { variableId: number; type: t.Any },
+		) {
+			let variable: Variable | undefined;
+
+			if (input.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === input.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(input.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === input.variableId);
+			}
+
+			if (!variable) return;
+
+			return { ...input, prev: variable.type, prevValue: variable.value };
+		},
+		perform(core, entry) {
+			let variable: Variable | undefined;
+
+			if (entry.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === entry.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === entry.variableId);
+			}
+
+			if (!variable) return;
+
+			variable.type = entry.type;
+			variable.value = entry.type.default();
+		},
+		rewind(core, entry) {
+			let variable: Variable | undefined;
+
+			if (entry.location === "project") {
+				variable = core.project.variables.find(
+					(v) => v.id === entry.variableId,
+				);
+			} else {
+				const graph = core.project.graphs.get(entry.graphId);
+				if (!graph) return;
+
+				variable = graph.variables.find((v) => v.id === entry.variableId);
+			}
+
+			if (!variable) return;
+
+			variable.type = entry.prev;
+			variable.value = entry.prevValue;
+		},
+	}),
 	deleteVariable: historyAction({
 		prepare(core, input: VariableLocation & { variableId: number }) {
 			let variable: Variable | undefined;
@@ -1290,7 +1451,7 @@ const historyActions = {
 
 			if ("value" in input && "value" in item)
 				return { ...input, prevValue: item.value };
-			else if ("sourceId" in item && "sourceId" in input)
+			if ("sourceId" in item && "sourceId" in input)
 				return { ...input, prevSourceId: input.sourceId };
 		},
 		perform(core, entry) {
@@ -1356,6 +1517,114 @@ const historyActions = {
 			resource.items.splice(entry.index, 0, { ...entry.data });
 		},
 	}),
+	pasteGraphSelection: historyAction({
+		prepare(
+			core,
+			{
+				selection,
+				...input
+			}: {
+				graphId: number;
+				mousePosition: XY;
+				selection: Extract<
+					v.InferOutput<typeof ClipboardItem>,
+					{ type: "selection" }
+				>;
+			},
+		) {
+			const graph = core.project.graphs.get(input.graphId);
+			if (!graph) return;
+
+			const nodeIdMap = new Map<number, number>();
+
+			for (const nodeData of selection.nodes) {
+				const id = graph.generateId();
+				nodeIdMap.set(nodeData.id, id);
+				nodeData.id = id;
+				nodeData.position = {
+					x: input.mousePosition.x + nodeData.position.x - selection.origin.x,
+					y: input.mousePosition.y + nodeData.position.y - selection.origin.y,
+				};
+			}
+
+			for (const box of selection.commentBoxes) {
+				box.id = graph.generateId();
+				box.position = {
+					x: input.mousePosition.x + box.position.x - selection.origin.x,
+					y: input.mousePosition.y + box.position.y - selection.origin.y,
+				};
+			}
+
+			return { ...input, ...selection, nodeIdMap };
+		},
+		perform(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			batch(() => {
+				for (const nodeData of entry.nodes) {
+					const node = deserializeNode(graph, nodeData);
+					if (!node) throw new Error("Failed to deserialize node");
+
+					graph.nodes.set(node.id, node);
+				}
+
+				for (const box of entry.commentBoxes) {
+					const commentBox = deserializeCommentBox(graph, box);
+					if (!commentBox) throw new Error("Failed to deserialize comment box");
+
+					graph.commentBoxes.set(commentBox.id, commentBox);
+				}
+
+				deserializeConnections(
+					entry.connections,
+					graph.connections,
+					entry.nodeIdMap,
+				);
+			});
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			for (const nodeData of entry.nodes) {
+				const node = graph.nodes.get(nodeData.id);
+				if (!node) continue;
+
+				graph.deleteNode(node);
+			}
+
+			for (const boxData of entry.commentBoxes) {
+				if (boxData.id === undefined) continue;
+				const box = graph.commentBoxes.get(boxData.id);
+				if (!box) continue;
+
+				graph.deleteCommentbox(box);
+			}
+		},
+	}),
+	pasteGraph: historyAction({
+		prepare(core, data: v.InferOutput<typeof serde.Graph>) {
+			const graphId = core.project.generateGraphId();
+
+			data.id = graphId;
+
+			return { data, graphId };
+		},
+		perform(core, entry) {
+			const graph = deserializeGraph(core.project, entry.data);
+			if (!graph) return;
+
+			core.project.graphs.set(graph.id, graph);
+		},
+		rewind(core, entry) {
+			const graph = core.project.graphs.get(entry.data.id);
+			if (!graph) return;
+
+			core.project.graphs.delete(entry.data.id);
+			graph.dispose();
+		},
+	}),
 };
 
 type HistoryActions = typeof historyActions;
@@ -1369,7 +1638,7 @@ export type HistoryActionEntry<T extends HistoryActionKey = HistoryActionKey> =
 		? HistoryEntry<E>
 		: never;
 
-export function createActionsExecutor(core: Core) {
+export function createActionsExecutor(core: Core, save: () => void) {
 	const history: Array<HistoryEntryData> = [];
 
 	let nextHistoryIndex = 0;
@@ -1382,19 +1651,21 @@ export function createActionsExecutor(core: Core) {
 	function undo() {
 		nextHistoryIndex = Math.max(0, nextHistoryIndex - 1);
 		const entry = history[nextHistoryIndex];
-		console.log({ nextHistoryIndex, entry });
 		if (!entry) return;
 
 		historyActions[entry.type].rewind(core, entry.entry as any);
+
+		save();
 	}
 
 	function redo() {
 		const entry = history[nextHistoryIndex];
 		nextHistoryIndex = Math.min(history.length, nextHistoryIndex + 1);
-		console.log({ nextHistoryIndex, entry });
 		if (!entry) return;
 
 		historyActions[entry.type].perform(core, entry.entry as any);
+
+		save();
 	}
 
 	function execute<T extends HistoryActionKey>(
@@ -1410,9 +1681,14 @@ export function createActionsExecutor(core: Core) {
 		const entry = action.prepare(core, args[0] as any, args[1]);
 		if (!entry) return undefined as any;
 
-		if (!args[1]?.ephemeral) addHistoryEntry({ type, entry });
+		const result = action.perform(core, entry as any) as any;
 
-		return action.perform(core, entry as any) as any;
+		if (!args[1]?.ephemeral) {
+			addHistoryEntry({ type, entry });
+			save();
+		}
+
+		return result;
 	}
 
 	return { undo, redo, execute, history };

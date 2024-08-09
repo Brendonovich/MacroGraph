@@ -11,14 +11,12 @@ export function Variables(props: { project: Project }) {
 			variables={props.project.variables}
 			onCreateVariable={() => {
 				interfaceCtx.execute("createVariable", { location: "project" });
-				interfaceCtx.save();
 			}}
 			onRemoveVariable={(id) => {
 				interfaceCtx.execute("deleteVariable", {
 					location: "project",
 					variableId: id,
 				});
-				interfaceCtx.save();
 			}}
 			onSetVariableValue={(id, value) => {
 				interfaceCtx.execute("setVariableValue", {
@@ -26,7 +24,13 @@ export function Variables(props: { project: Project }) {
 					variableId: id,
 					value,
 				});
-				interfaceCtx.save();
+			}}
+			onSetVariableType={(id, type) => {
+				interfaceCtx.execute("setVariableType", {
+					location: "project",
+					variableId: id,
+					type,
+				});
 			}}
 			onVariableNameChanged={(id, name) => {
 				interfaceCtx.execute("setVariableName", {
@@ -34,7 +38,6 @@ export function Variables(props: { project: Project }) {
 					variableId: id,
 					name,
 				});
-				interfaceCtx.save();
 			}}
 		/>
 	);
