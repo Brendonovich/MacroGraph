@@ -28,7 +28,9 @@
 		"webdriverio": "^8.35.1"
 	},
 	"dependencies": {
-		"@biomejs/biome": "^1.6.4"
+		"@biomejs/biome": "^1.6.4",
+		"mespeak": "^2.0.2",
+		"speak-tts": "^2.0.8"
 	},
 	"pnpm": {
 		"patchedDependencies": {

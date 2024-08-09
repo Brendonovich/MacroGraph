@@ -30,3 +30,4 @@ export * as vtubeStudio from "./vtubeStudio";
 export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
 export * as variables from "./variables";
+export * as tts from "./tts";
