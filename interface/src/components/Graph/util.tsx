@@ -13,7 +13,6 @@ import {
 
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createRoot } from "solid-js";
-import { createStore, produce } from "solid-js/store";
 import type { GraphItemPositionInput } from "../../actions";
 import type { InterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
@@ -62,14 +61,6 @@ export function handleSelectableItemMouseDown(
 
 	const prevSelection = [...graph.state.selectedItemIds];
 
-	if (graph.state.selectedItemIds.length === 0) {
-		interfaceCtx.execute(
-			"setGraphSelection",
-			{ graphId: graph.model().id, selection: [id] },
-			{ ephemeral: true },
-		);
-	}
-
 	const index = graph.state.selectedItemIds.findIndex(
 		(s) => s.type === id.type && s.id === id.id,
 	);
@@ -85,6 +76,12 @@ export function handleSelectableItemMouseDown(
 			});
 		}
 	} else if (!isSelected) {
+		interfaceCtx.execute(
+			"setGraphSelection",
+			{ graphId: graph.model().id, selection: [id] },
+			{ ephemeral: true },
+		);
+	} else {
 		interfaceCtx.execute(
 			"setGraphSelection",
 			{ graphId: graph.model().id, selection: [id] },
@@ -150,19 +147,15 @@ export function handleSelectableItemMouseDown(
 
 				if (!didDrag) {
 					if (isCtrlEvent(e)) {
+						console.log({ isSelected });
 						if (isSelected) {
-							const [graphState, setGraphState] = createStore(graph.state);
-							const index = graphState.selectedItemIds.findIndex(
-								(s) => s.type === id.type && s.id === id.id,
-							);
-
-							setGraphState(
-								produce((state) => {
-									if (index !== -1) {
-										state.selectedItemIds.splice(index, 1);
-									}
-								}),
-							);
+							interfaceCtx.execute("setGraphSelection", {
+								graphId: graph.model().id,
+								selection: graph.state.selectedItemIds.filter(
+									(s) => s.type !== id.type || s.id !== id.id,
+								),
+								prev: prevSelection,
+							});
 						}
 					} else {
 						interfaceCtx.execute("setGraphSelection", {

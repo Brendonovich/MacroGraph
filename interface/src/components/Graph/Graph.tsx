@@ -262,10 +262,7 @@ export const Graph = (props: Props) => {
 						};
 
 						if (interfaceCtx.state.status === "connectionAssignMode")
-							interfaceCtx.setState({
-								...interfaceCtx.state,
-								state,
-							});
+							interfaceCtx.setState({ ...interfaceCtx.state, state });
 						else interfaceCtx.setState(state);
 					} else if (
 						e.button === 0 &&
@@ -276,10 +273,7 @@ export const Graph = (props: Props) => {
 							status: "pinDragMode",
 							state: {
 								status: "schemaMenuOpen",
-								position: {
-									x: e.clientX,
-									y: e.clientY,
-								},
+								position: { x: e.clientX, y: e.clientY },
 								graph: props.state,
 							},
 						});
@@ -288,10 +282,9 @@ export const Graph = (props: Props) => {
 				onMouseDown={(e) => {
 					switch (e.button) {
 						case 0: {
-							const start = ctx.toGraphSpace({
-								x: e.clientX,
-								y: e.clientY,
-							});
+							const start = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
+							const prevSelection = [...props.state.selectedItemIds];
+
 							Solid.createRoot((dispose) => {
 								const getItems = (e: MouseEvent) => {
 									const end = ctx.toGraphSpace({
@@ -343,16 +336,25 @@ export const Graph = (props: Props) => {
 												interfaceCtx.execute("setGraphSelection", {
 													graphId: model().id,
 													selection: [],
+													prev: prevSelection,
 												});
 										} else {
-											props.onItemsSelected(items, false);
+											interfaceCtx.execute("setGraphSelection", {
+												graphId: model().id,
+												selection: items,
+												prev: prevSelection,
+											});
 										}
 									},
 									mousemove: (e) => {
 										const [items, rect] = getItems(e);
 										setDragArea(rect);
 
-										props.onItemsSelected(items, true);
+										interfaceCtx.execute(
+											"setGraphSelection",
+											{ graphId: model().id, selection: items },
+											{ ephemeral: true },
+										);
 									},
 								});
 							});
@@ -445,9 +447,13 @@ export const Graph = (props: Props) => {
 								<CommentBox
 									box={box}
 									onSelected={(ephemeral) =>
-										props.onItemsSelected(
-											[{ type: "commentBox", id: box.id }],
-											ephemeral,
+										interfaceCtx.execute(
+											"setGraphSelection",
+											{
+												graphId: model().id,
+												selection: [{ type: "commentBox", id: box.id }],
+											},
+											{ ephemeral },
 										)
 									}
 								/>
@@ -458,12 +464,15 @@ export const Graph = (props: Props) => {
 								<Node
 									node={node}
 									onSelected={(ephemeral) =>
-										props.onItemsSelected(
-											[{ type: "node", id: node.id }],
-											ephemeral,
+										interfaceCtx.execute(
+											"setGraphSelection",
+											{
+												graphId: model().id,
+												selection: [{ type: "node", id: node.id }],
+											},
+											{ ephemeral },
 										)
 									}
-									onDrag={() => {}}
 								/>
 							)}
 						</Solid.For>

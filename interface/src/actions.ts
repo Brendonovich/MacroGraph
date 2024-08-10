@@ -45,8 +45,11 @@ import { type PrimitiveType, t } from "@macrograph/typesystem";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
-import { EditorState as EditorState } from "./context";
-import { createGraphState, SelectedItemID } from "./components/Graph/Context";
+import {
+	type SelectedItemID,
+	createGraphState,
+} from "./components/Graph/Context";
+import type { EditorState } from "./context";
 
 export type VariableLocation =
 	| { location: "project" }

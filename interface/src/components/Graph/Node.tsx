@@ -9,7 +9,6 @@ import {
 	type NodeSchemaVariant,
 	ScopeInput as ScopeInputModel,
 	ScopeOutput as ScopeOutputModel,
-	type XY,
 	hasConnection,
 } from "@macrograph/runtime";
 import clsx from "clsx";
@@ -34,7 +33,6 @@ import { handleSelectableItemMouseDown } from "./util";
 interface Props {
 	node: NodeModel;
 	onSelected(ephemeral?: boolean): void;
-	onDrag(delta: XY): void;
 }
 
 const SchemaVariantColours: Record<NodeSchemaVariant, string> = {

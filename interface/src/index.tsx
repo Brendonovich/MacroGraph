@@ -32,6 +32,7 @@ import { createStore, produce } from "solid-js/store";
 import { toast } from "solid-sonner";
 import type * as v from "valibot";
 
+import type { HistoryItemEntry } from "@macrograph/action-history";
 import * as Sidebars from "./Sidebar";
 import type {
 	CreateNodeInput,
@@ -54,7 +55,6 @@ import {
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
-import { HistoryItemEntry } from "@macrograph/action-history";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
