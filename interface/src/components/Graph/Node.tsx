@@ -33,7 +33,7 @@ import { handleSelectableItemMouseDown } from "./util";
 
 interface Props {
 	node: NodeModel;
-	onSelected(): void;
+	onSelected(ephemeral?: boolean): void;
 	onDrag(delta: XY): void;
 }
 
@@ -182,13 +182,10 @@ export const Node = (props: Props) => {
 										e.preventDefault();
 									}}
 									onMouseDown={(e) =>
-										handleSelectableItemMouseDown(
-											e,
-											graph,
-											interfaceCtx,
-											props.onSelected,
-											{ type: "node", id: node().id },
-										)
+										handleSelectableItemMouseDown(e, graph, interfaceCtx, {
+											type: "node",
+											id: node().id,
+										})
 									}
 								>
 									{node().state.name}

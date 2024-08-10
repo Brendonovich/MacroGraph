@@ -43,7 +43,7 @@ interface Props extends Solid.ComponentProps<"div"> {
 	onTranslateChange(translate: XY): void;
 	onSizeChange(size: { width: number; height: number }): void;
 	onBoundsChange(bounds: XY): void;
-	onItemsSelected(id: Array<SelectedItemID>): void;
+	onItemsSelected(id: Array<SelectedItemID>, ephemeral?: boolean): void;
 }
 
 type State = {
@@ -293,44 +293,66 @@ export const Graph = (props: Props) => {
 								y: e.clientY,
 							});
 							Solid.createRoot((dispose) => {
+								const getItems = (e: MouseEvent) => {
+									const end = ctx.toGraphSpace({
+										x: e.clientX,
+										y: e.clientY,
+									});
+
+									const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
+									const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
+
+									const width = Math.abs(end.x - start.x);
+									const height = Math.abs(end.y - start.y);
+
+									const x = xSide === "r" ? start.x : start.x - width;
+									const y = ySide === "d" ? start.y : start.y - height;
+
+									const rect = new DOMRect(x, y, width, height);
+
+									const items = [
+										...[
+											...getNodesInRect(model().nodes.values(), rect, (node) =>
+												interfaceCtx.nodeSizes.get(node),
+											),
+										].map((n) => ({ id: n.id, type: "node" as const })),
+										...[
+											...getCommentBoxesInRect(
+												model().commentBoxes.values(),
+												rect,
+											),
+										].map((b) => ({
+											id: b.id,
+											type: "commentBox" as const,
+										})),
+									];
+
+									return [items, rect] as const;
+								};
+
 								createEventListenerMap(window, {
-									mouseup: () => {
+									mouseup: (e) => {
 										dispose();
+
+										const [items] = getItems(e);
 										setDragArea(null);
+
+										if (items.length === 0) {
+											interfaceCtx.setState({ status: "idle" });
+											if (props.state.selectedItemIds.length > 0)
+												interfaceCtx.execute("setGraphSelection", {
+													graphId: model().id,
+													selection: [],
+												});
+										} else {
+											props.onItemsSelected(items, false);
+										}
 									},
 									mousemove: (e) => {
-										const end = ctx.toGraphSpace({
-											x: e.clientX,
-											y: e.clientY,
-										});
-
-										const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
-										const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
-
-										const width = Math.abs(end.x - start.x);
-										const height = Math.abs(end.y - start.y);
-
-										const x = xSide === "r" ? start.x : start.x - width;
-										const y = ySide === "d" ? start.y : start.y - height;
-
-										const rect = new DOMRect(x, y, width, height);
+										const [items, rect] = getItems(e);
 										setDragArea(rect);
 
-										props.onItemsSelected([
-											...[
-												...getNodesInRect(
-													model().nodes.values(),
-													rect,
-													(node) => interfaceCtx.nodeSizes.get(node),
-												),
-											].map((n) => ({ id: n.id, type: "node" as const })),
-											...[
-												...getCommentBoxesInRect(
-													model().commentBoxes.values(),
-													rect,
-												),
-											].map((b) => ({ id: b.id, type: "commentBox" as const })),
-										]);
+										props.onItemsSelected(items, true);
 									},
 								});
 							});
@@ -384,8 +406,6 @@ export const Graph = (props: Props) => {
 							break;
 						}
 					}
-
-					props.onMouseDown?.(e);
 				}}
 			>
 				<ConnectionRenderer
@@ -424,8 +444,11 @@ export const Graph = (props: Props) => {
 							{(box) => (
 								<CommentBox
 									box={box}
-									onSelected={() =>
-										props.onItemsSelected([{ type: "commentBox", id: box.id }])
+									onSelected={(ephemeral) =>
+										props.onItemsSelected(
+											[{ type: "commentBox", id: box.id }],
+											ephemeral,
+										)
 									}
 								/>
 							)}
@@ -434,8 +457,11 @@ export const Graph = (props: Props) => {
 							{(node) => (
 								<Node
 									node={node}
-									onSelected={() =>
-										props.onItemsSelected([{ type: "node", id: node.id }])
+									onSelected={(ephemeral) =>
+										props.onItemsSelected(
+											[{ type: "node", id: node.id }],
+											ephemeral,
+										)
 									}
 									onDrag={() => {}}
 								/>

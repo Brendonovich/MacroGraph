@@ -36,7 +36,7 @@ import * as Sidebars from "./Sidebar";
 import type {
 	CreateNodeInput,
 	GraphItemPositionInput,
-	HistoryActionEntry,
+	HistoryActions,
 } from "./actions";
 import { Graph } from "./components/Graph";
 import {
@@ -54,6 +54,7 @@ import {
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
+import { HistoryItemEntry } from "@macrograph/action-history";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -87,7 +88,7 @@ function ProjectInterface() {
 		leftSidebar,
 		rightSidebar,
 		currentGraphIndex,
-		setCurrentGraphIndex,
+		setCurrentGraphId,
 		graphStates,
 		setGraphStates,
 	} = useInterfaceContext();
@@ -127,10 +128,10 @@ function ProjectInterface() {
 
 	// reduces the current graph index if the current graph
 	// is the end graph and it gets deleted
-	Solid.createEffect(() => {
-		if (currentGraph()) return;
-		ctx.setCurrentGraphIndex(Math.max(0, ctx.currentGraphIndex() - 1));
-	});
+	// Solid.createEffect(() => {
+	//   if (currentGraph()) return;
+	//   ctx.setCurrentGraphIndex(Math.max(0, ctx.currentGraphIndex() - 1));
+	// });
 
 	// removes graph states if graphs are deleted
 	Solid.createEffect(() => {
@@ -171,8 +172,8 @@ function ProjectInterface() {
 
 								if (currentIndex === -1) {
 									setGraphStates((s) => [...s, createGraphState(graph)]);
-									setCurrentGraphIndex(graphStates.length - 1);
-								} else setCurrentGraphIndex(currentIndex);
+									setCurrentGraphId(graph.id);
+								} else setCurrentGraphId(graph.id);
 							}}
 						/>
 					</Sidebar>
@@ -190,106 +191,131 @@ function ProjectInterface() {
 				</div>
 			</Solid.Show>
 
-			<div class="flex-1 flex divide-y divide-neutral-700 flex-col h-full justify-center items-center text-white overflow-x-hidden animate-in origin-top">
-				<Solid.Show when={currentGraph() !== undefined}>
-					<Tabs.Root
-						class="overflow-x-auto w-full scrollbar scrollbar-none"
-						value={currentGraphIndex().toString()}
-					>
-						<Tabs.List class="h-8 flex flex-row relative text-sm">
-							<Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-[transform,width]">
-								<div class="bg-white/20 w-full h-full" />
-							</Tabs.Indicator>
-							<Solid.For
-								each={graphStates
-									.map((state) => {
-										const graph = ctx.core.project.graphs.get(state.id);
-										if (!graph) return;
-
-										return [state, graph] as const;
-									})
-									.filter(Boolean)}
-							>
-								{([_state, graph], index) => (
-									<Tabs.Trigger
-										value={index().toString()}
-										type="button"
-										class="py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors"
-										onClick={() => setCurrentGraphIndex(index)}
-									>
-										<span class="font-medium">{graph.name}</span>
-										<button
-											type="button"
-											class="absolute right-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100"
-										>
-											<IconHeroiconsXMarkSolid
-												class="size-2"
-												stroke-width={1}
-												onClick={(e) => {
-													e.stopPropagation();
-
-													Solid.batch(() => {
-														setGraphStates(
-															produce((states) => {
-																states.splice(index(), 1);
-																return states;
-															}),
-														);
-													});
-												}}
-											/>
-										</button>
-									</Tabs.Trigger>
-								)}
-							</Solid.For>
-							<div class="flex-1" />
-						</Tabs.List>
-					</Tabs.Root>
-				</Solid.Show>
+			<div class="flex-1 flex divide-y divide-neutral-700 flex-col h-full justify-center items-center text-white overflow-x-hidden animate-in origin-top relative">
 				<Solid.Show
 					when={currentGraph()}
 					fallback={
 						<span class="text-neutral-400 font-medium">No graph selected</span>
 					}
 				>
-					{(graph) => (
-						<Graph
-							graph={graph().model}
-							state={graph().state}
-							onMouseEnter={() => setHoveredPane(true)}
-							onMouseMove={() => setHoveredPane(true)}
-							onMouseLeave={() => setHoveredPane(null)}
-							onItemsSelected={(id) => {
-								setGraphStates(graph().index, { selectedItemIds: id });
-							}}
-							onBoundsChange={setGraphBounds}
-							onSizeChange={setGraphBounds}
-							onScaleChange={(scale) => {
-								setGraphStates(graph().index, {
-									scale,
-								});
-							}}
-							onTranslateChange={(translate) => {
-								setGraphStates(
-									produce((states) => {
-										states[graph().index]!.translate = translate;
-										return states;
-									}),
-								);
-							}}
-							onMouseDown={(e) => {
-								if (e.button === 0) {
-									Solid.batch(() => {
-										setGraphStates(graph().index, {
-											selectedItemIds: [],
-										});
-										ctx.setState({ status: "idle" });
-									});
-								}
-							}}
-						/>
+					{(currentGraph) => (
+						<>
+							<Tabs.Root
+								class="overflow-x-auto w-full scrollbar scrollbar-none"
+								value={currentGraph().model.id.toString()}
+							>
+								<Tabs.List class="h-8 flex flex-row relative text-sm">
+									<Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-[transform,width]">
+										<div class="bg-white/20 w-full h-full" />
+									</Tabs.Indicator>
+									<Solid.For
+										each={graphStates
+											.map((state) => {
+												const graph = ctx.core.project.graphs.get(state.id);
+												if (!graph) return;
+
+												return [state, graph] as const;
+											})
+											.filter(Boolean)}
+									>
+										{([_state, graph], index) => (
+											<Tabs.Trigger
+												value={graph.id.toString()}
+												type="button"
+												class="py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors"
+												onClick={() => setCurrentGraphId(graph.id)}
+											>
+												<span class="font-medium">{graph.name}</span>
+												<button
+													type="button"
+													class="absolute right-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100"
+												>
+													<IconHeroiconsXMarkSolid
+														class="size-2"
+														stroke-width={1}
+														onClick={(e) => {
+															e.stopPropagation();
+
+															Solid.batch(() => {
+																setGraphStates(
+																	produce((states) => {
+																		const currentIndex = currentGraphIndex();
+																		states.splice(index(), 1);
+																		if (currentIndex !== null) {
+																			const state =
+																				states[
+																					Math.min(
+																						currentIndex,
+																						states.length - 1,
+																					)
+																				];
+																			if (state) setCurrentGraphId(state.id);
+																		}
+
+																		return states;
+																	}),
+																);
+															});
+														}}
+													/>
+												</button>
+											</Tabs.Trigger>
+										)}
+									</Solid.For>
+									<div class="flex-1" />
+								</Tabs.List>
+							</Tabs.Root>
+							<Graph
+								graph={currentGraph().model}
+								state={currentGraph().state}
+								onMouseEnter={() => setHoveredPane(true)}
+								onMouseMove={() => setHoveredPane(true)}
+								onMouseLeave={() => setHoveredPane(null)}
+								onItemsSelected={(ids, ephemeral) => {
+									ctx.execute(
+										"setGraphSelection",
+										{ graphId: currentGraph().model.id, selection: ids },
+										{ ephemeral },
+									);
+								}}
+								onBoundsChange={setGraphBounds}
+								onSizeChange={setGraphBounds}
+								onScaleChange={(scale) => {
+									setGraphStates(currentGraph().index, { scale });
+								}}
+								onTranslateChange={(translate) => {
+									setGraphStates(
+										produce((states) => {
+											states[currentGraph().index]!.translate = translate;
+											return states;
+										}),
+									);
+								}}
+							/>
+						</>
 					)}
 				</Solid.Show>
+				<ul class="absolute rounded top-4 right-4 bg-neutral-900 max-w-64 w-full p-2 flex flex-col">
+					<Solid.For
+						each={ctx.history}
+						fallback={
+							<span class="w-full text-center text-neutral-300 text-sm">
+								No History
+							</span>
+						}
+					>
+						{(entry, i) => (
+							<li class="flex flex-row items-center">
+								<div class="w-4 h-4">
+									<Solid.Show when={ctx.nextHistoryIndex() - 1 === i()}>
+										<IconMaterialSymbolsArrowRightRounded class="w-6 h-6 -m-1" />
+									</Solid.Show>
+								</div>
+								{entry.type}
+							</li>
+						)}
+					</Solid.For>
+				</ul>
 			</div>
 
 			<Solid.Show when={rightSidebar.state.open}>
@@ -540,7 +566,9 @@ function ProjectInterface() {
 											const historyEntry = ctx.history[ctx.history.length - 1];
 											if (historyEntry?.type === "createNode") {
 												const entry =
-													historyEntry.entry as unknown as HistoryActionEntry<"createNode">;
+													historyEntry.entry as unknown as HistoryItemEntry<
+														HistoryActions["createNode"]
+													>;
 
 												entry.position = { ...position };
 											}
@@ -619,6 +647,10 @@ function createKeydownShortcuts(
 					nodes: [] as Array<v.InferInput<typeof serde.Node>>,
 					commentBoxes: [] as Array<v.InferInput<typeof serde.CommentBox>>,
 					connections: [] as Array<v.InferInput<typeof serde.Connection>>,
+					selected: {
+						nodes: [] as Array<number>,
+						commentBoxes: [] as Array<number>,
+					},
 				} satisfies Extract<
 					v.InferInput<typeof ClipboardItem>,
 					{ type: "selection" }
@@ -674,6 +706,9 @@ function createKeydownShortcuts(
 						clipboardItem.origin[1] > itemPosition.y
 					)
 						clipboardItem.origin[1] = itemPosition.y;
+
+					if (item.type === "node") clipboardItem.selected.nodes.push(item.id);
+					else clipboardItem.selected.commentBoxes.push(item.id);
 				}
 
 				clipboardItem.connections = serializeConnections(includedNodes);
@@ -806,12 +841,24 @@ function createKeydownShortcuts(
 					(ctx.environment === "custom" &&
 						!(e.metaKey || (e.shiftKey && e.altKey)))
 				) {
-					if (e.code === "ArrowLeft")
-						ctx.setCurrentGraphIndex((i) => Math.max(i - 1, 0));
-					else
-						ctx.setCurrentGraphIndex((i) =>
-							Math.min(i + 1, ctx.graphStates.length - 1),
-						);
+					if (e.code === "ArrowLeft") {
+						const index = ctx.currentGraphIndex();
+						if (!index) break;
+
+						const state = ctx.graphStates[Math.max(0, index - 1)];
+						if (!state) break;
+
+						ctx.setCurrentGraphId(state.id);
+					} else {
+						const index = ctx.currentGraphIndex();
+						if (!index) break;
+
+						const state =
+							ctx.graphStates[Math.min(index + 1, ctx.graphStates.length - 1)];
+						if (!state) break;
+
+						ctx.setCurrentGraphId(state.id);
+					}
 				} else {
 					const graph = currentGraph();
 					if (!graph || graph.state.selectedItemIds.length < 1) return;

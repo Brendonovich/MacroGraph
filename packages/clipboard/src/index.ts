@@ -46,6 +46,12 @@ export const ClipboardItem = v.variant("type", [
 		nodes: v.array(serde.Node),
 		commentBoxes: v.array(serde.CommentBox),
 		connections: v.array(serde.Connection),
+		selected: v.optional(
+			v.object({
+				nodes: v.array(v.number()),
+				commentBoxes: v.array(v.number()),
+			}),
+		),
 	}),
 ]);
 

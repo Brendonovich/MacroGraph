@@ -15,7 +15,7 @@ import { handleSelectableItemMouseDown } from "./util";
 
 interface Props {
 	box: CommentBoxModel;
-	onSelected(): void;
+	onSelected(ephemeral?: boolean): void;
 }
 
 export function CommentBox(props: Props) {
@@ -142,13 +142,10 @@ export function CommentBox(props: Props) {
 									e.stopPropagation();
 								}}
 								onMouseDown={(e) =>
-									handleSelectableItemMouseDown(
-										e,
-										graph,
-										interfaceCtx,
-										props.onSelected,
-										{ type: "commentBox", id: box().id },
-									)
+									handleSelectableItemMouseDown(e, graph, interfaceCtx, {
+										type: "commentBox",
+										id: box().id,
+									})
 								}
 								onDblClick={(e) => !e.shiftKey && setEditing(true)}
 							>

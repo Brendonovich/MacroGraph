@@ -47,6 +47,14 @@ export function InlineTextEditor<T extends ValidComponent = "span">(
 							}, 1);
 						});
 
+						function onEdit() {
+							if (!ctx.editing()) return;
+							batch(() => {
+								props.onChange?.(value());
+								ctx.setEditing(false);
+							});
+						}
+
 						return (
 							<input
 								ref={ref!}
@@ -56,27 +64,21 @@ export function InlineTextEditor<T extends ValidComponent = "span">(
 									setValue(e.target.value);
 								}}
 								onKeyDown={(e) => {
+									e.stopPropagation();
+
 									if (e.key === "Enter") {
 										e.preventDefault();
-										e.stopPropagation();
 
 										if (!focused) return;
+										onEdit();
 										ctx.setEditing(false);
 									} else if (e.key === "Escape") {
 										e.preventDefault();
-										e.stopPropagation();
 
 										ctx.setEditing(false);
 									}
-									e.stopPropagation();
 								}}
-								onFocusOut={() => {
-									if (!focused) return;
-									batch(() => {
-										props.onChange?.(value());
-										ctx.setEditing(false);
-									});
-								}}
+								onBlur={onEdit}
 							/>
 						);
 					}}

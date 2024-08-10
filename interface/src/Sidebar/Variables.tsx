@@ -156,9 +156,12 @@ export function Variables(props: {
 														type="button"
 														onClick={() => {
 															if (variable.type instanceof t.List)
-																variable.value = [];
+																props.onSetVariableValue(variable.id, []);
 															else if (variable.type instanceof t.Map)
-																variable.value = new Map();
+																props.onSetVariableValue(
+																	variable.id,
+																	new Map(),
+																);
 														}}
 													>
 														<IconSystemUiconsReset class="size-4" />

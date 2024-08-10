@@ -9,6 +9,7 @@
 	},
 	"dependencies": {
 		"@kobalte/core": "^0.13.4",
+		"@macrograph/action-history": "workspace:*",
 		"@macrograph/api-contract": "workspace:*",
 		"@macrograph/clipboard": "workspace:*",
 		"@macrograph/option": "workspace:*",

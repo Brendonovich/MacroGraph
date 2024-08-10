@@ -54,30 +54,43 @@ export function handleSelectableItemMouseDown(
 	e: MouseEvent,
 	graph: GraphContext,
 	interfaceCtx: InterfaceContext,
-	onSelected: () => void,
 	id: SelectedItemID,
 ) {
 	e.stopPropagation();
 
 	if (e.button !== 0) return;
 
-	if (graph.state.selectedItemIds.length === 0) onSelected();
+	const prevSelection = [...graph.state.selectedItemIds];
 
-	const [graphState, setGraphState] = createStore(graph.state);
-	const index = graphState.selectedItemIds.findIndex(
+	if (graph.state.selectedItemIds.length === 0) {
+		interfaceCtx.execute(
+			"setGraphSelection",
+			{ graphId: graph.model().id, selection: [id] },
+			{ ephemeral: true },
+		);
+	}
+
+	const index = graph.state.selectedItemIds.findIndex(
 		(s) => s.type === id.type && s.id === id.id,
 	);
 
 	const isSelected = index !== -1;
 
 	if (isCtrlEvent(e)) {
-		if (!isSelected)
-			setGraphState(
-				produce((state) => {
-					state.selectedItemIds.push(id);
-				}),
-			);
-	} else if (!isSelected) onSelected();
+		if (!isSelected) {
+			interfaceCtx.execute("setGraphSelection", {
+				graphId: graph.model().id,
+				selection: [...graph.state.selectedItemIds, id],
+				prev: prevSelection,
+			});
+		}
+	} else if (!isSelected) {
+		interfaceCtx.execute(
+			"setGraphSelection",
+			{ graphId: graph.model().id, selection: [id] },
+			{ ephemeral: true },
+		);
+	}
 
 	const nodePositions = new Map<Node, XY>();
 	const commentBoxPositions = new Map<CommentBox, XY>();
@@ -151,7 +164,13 @@ export function handleSelectableItemMouseDown(
 								}),
 							);
 						}
-					} else onSelected();
+					} else {
+						interfaceCtx.execute("setGraphSelection", {
+							graphId: graph.model().id,
+							selection: [id],
+							prev: prevSelection,
+						});
+					}
 				} else {
 					const items: Array<GraphItemPositionInput> = [];
 
@@ -194,6 +213,8 @@ export function handleSelectableItemMouseDown(
 					interfaceCtx.execute("setGraphItemPositions", {
 						graphId: graph.model().id,
 						items,
+						selection: [...graph.state.selectedItemIds],
+						prevSelection,
 					});
 				}
 			},
