@@ -332,7 +332,7 @@ export const Graph = (props: Props) => {
 
 										if (items.length === 0) {
 											interfaceCtx.setState({ status: "idle" });
-											if (props.state.selectedItemIds.length > 0)
+											if (prevSelection.length > 0)
 												interfaceCtx.execute("setGraphSelection", {
 													graphId: model().id,
 													selection: [],

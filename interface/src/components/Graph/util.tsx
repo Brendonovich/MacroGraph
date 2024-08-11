@@ -67,27 +67,21 @@ export function handleSelectableItemMouseDown(
 
 	const isSelected = index !== -1;
 
-	if (isCtrlEvent(e)) {
-		if (!isSelected) {
-			interfaceCtx.execute("setGraphSelection", {
+	if (isCtrlEvent(e) && !isSelected)
+		interfaceCtx.execute(
+			"setGraphSelection",
+			{
 				graphId: graph.model().id,
 				selection: [...graph.state.selectedItemIds, id],
-				prev: prevSelection,
-			});
-		}
-	} else if (!isSelected) {
+			},
+			{ ephemeral: true },
+		);
+	else if (prevSelection.length === 0 || !isSelected)
 		interfaceCtx.execute(
 			"setGraphSelection",
 			{ graphId: graph.model().id, selection: [id] },
 			{ ephemeral: true },
 		);
-	} else {
-		interfaceCtx.execute(
-			"setGraphSelection",
-			{ graphId: graph.model().id, selection: [id] },
-			{ ephemeral: true },
-		);
-	}
 
 	const nodePositions = new Map<Node, XY>();
 	const commentBoxPositions = new Map<CommentBox, XY>();
@@ -147,7 +141,6 @@ export function handleSelectableItemMouseDown(
 
 				if (!didDrag) {
 					if (isCtrlEvent(e)) {
-						console.log({ isSelected });
 						if (isSelected) {
 							interfaceCtx.execute("setGraphSelection", {
 								graphId: graph.model().id,
@@ -171,44 +164,57 @@ export function handleSelectableItemMouseDown(
 						const startPosition = nodePositions.get(node);
 						if (!startPosition) continue;
 
-						items.push({
-							itemVariant: "node",
-							itemId: node.id,
-							position: node.state.position,
-							from: startPosition,
-						});
-					}
-
-					for (const [box, nodes] of commentBoxNodes) {
-						const startPosition = commentBoxPositions.get(box);
-						if (startPosition) {
-							items.push({
-								itemVariant: "commentBox",
-								itemId: box.id,
-								position: box.position,
-								from: startPosition,
-							});
-						}
-
-						for (const node of nodes) {
-							const startPosition = nodePositions.get(node);
-							if (!startPosition) continue;
-
+						if (
+							node.state.position.x !== startPosition.x ||
+							node.state.position.y !== startPosition.y
+						)
 							items.push({
 								itemVariant: "node",
 								itemId: node.id,
 								position: node.state.position,
 								from: startPosition,
 							});
+					}
+
+					for (const [box, nodes] of commentBoxNodes) {
+						const startPosition = commentBoxPositions.get(box);
+						if (startPosition) {
+							if (
+								box.position.x !== startPosition.x ||
+								box.position.y !== startPosition.y
+							)
+								items.push({
+									itemVariant: "commentBox",
+									itemId: box.id,
+									position: box.position,
+									from: startPosition,
+								});
+						}
+
+						for (const node of nodes) {
+							const startPosition = nodePositions.get(node);
+							if (!startPosition) continue;
+
+							if (
+								node.state.position.x !== startPosition.x ||
+								node.state.position.y !== startPosition.y
+							)
+								items.push({
+									itemVariant: "node",
+									itemId: node.id,
+									position: node.state.position,
+									from: startPosition,
+								});
 						}
 					}
 
-					interfaceCtx.execute("setGraphItemPositions", {
-						graphId: graph.model().id,
-						items,
-						selection: [...graph.state.selectedItemIds],
-						prevSelection,
-					});
+					if (items.length > 0)
+						interfaceCtx.execute("setGraphItemPositions", {
+							graphId: graph.model().id,
+							items,
+							selection: [...graph.state.selectedItemIds],
+							prevSelection,
+						});
 				}
 			},
 			mousemove: (e) => {
@@ -232,15 +238,11 @@ export function handleSelectableItemMouseDown(
 
 					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
 
-					if (
-						newPosition.x !== startPosition.x ||
-						newPosition.y !== startPosition.y
-					)
-						items.push({
-							itemVariant: "node",
-							itemId: node.id,
-							position: newPosition,
-						});
+					items.push({
+						itemVariant: "node",
+						itemId: node.id,
+						position: newPosition,
+					});
 				}
 
 				for (const [box, nodes] of commentBoxNodes) {
@@ -248,15 +250,11 @@ export function handleSelectableItemMouseDown(
 					if (!startPosition) continue;
 
 					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
-					if (
-						newPosition.x !== startPosition.x ||
-						newPosition.y !== startPosition.y
-					)
-						items.push({
-							itemVariant: "commentBox",
-							itemId: box.id,
-							position: newPosition,
-						});
+					items.push({
+						itemVariant: "commentBox",
+						itemId: box.id,
+						position: newPosition,
+					});
 
 					const boxDelta = {
 						x: newPosition.x - startPosition.x,
