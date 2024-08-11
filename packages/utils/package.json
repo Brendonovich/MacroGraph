@@ -11,7 +11,7 @@
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",
-		"solid-js": "^1.8.19"
+		"solid-js": "^1.8.20"
 	},
 	"dependencies": {
 		"@tanstack/solid-query": "^4.36.1"
