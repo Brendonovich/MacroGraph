@@ -55,7 +55,7 @@ import {
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
-import { ActionHistory } from "./ActionHistory";
+// import { ActionHistory } from "./ActionHistory";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -281,7 +281,7 @@ function ProjectInterface() {
             </>
           )}
         </Solid.Show>
-        <ActionHistory />
+        {/* <ActionHistory /> */}
       </div>
 
       <Solid.Show when={rightSidebar.state.open}>
