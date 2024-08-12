@@ -15,15 +15,15 @@
 	},
 	"devDependencies": {
 		"@vitest/browser": "^0.32.4",
-		"@vitest/ui": "^1.4.0",
-		"jsdom": "^23.2.0",
+		"@vitest/ui": "^2.0.5",
+		"jsdom": "^24.1.1",
 		"safaridriver": "^0.0.5",
 		"solid-js": "^1.8.20",
 		"turbo": "^1.13.0",
 		"turbo-ignore": "^1.13.0",
 		"typescript": "^5.5.3",
 		"vite-plugin-solid": "^2.10.2",
-		"vitest": "^0.32.4",
+		"vitest": "^2.0.5",
 		"vitest-github-actions-reporter": "^0.11.1",
 		"webdriverio": "^8.35.1"
 	},

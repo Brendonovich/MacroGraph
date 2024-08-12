@@ -119,97 +119,97 @@ export class Wildcard {
 				createOptionSignal<WildcardValueConnection>(None);
 
 			// reset connection state when connection disposed externally
-			// createComputed(
-			//   on(
-			//     wildcardConnection,
-			//     (conn) => {
-			//       conn.peek((c) => {
-			//         c.addDisposeListener(() => setWildcardConnection(None));
-			//       });
-			//     },
-			//     { defer: true }
-			//   )
-			// );
+			createComputed(
+				on(
+					wildcardConnection,
+					(conn) => {
+						conn.peek((c) => {
+							c.addDisposeListener(() => setWildcardConnection(None));
+						});
+					},
+					{ defer: true },
+				),
+			);
 
-			// createComputed(
-			//   on(
-			//     () => this.wildcardConnections(),
-			//     (wildcardConnections) => {
-			//       // use previous connection if possible
-			//       if (wildcardConnection().isSome()) {
-			//         if (
-			//           wildcardConnections.has(
-			//             wildcardConnection().unwrap().parent as any
-			//           )
-			//         )
-			//           return;
+			createComputed(
+				on(
+					() => this.wildcardConnections(),
+					(wildcardConnections) => {
+						// use previous connection if possible
+						if (wildcardConnection().isSome()) {
+							if (
+								wildcardConnections.has(
+									wildcardConnection().unwrap().parent as any,
+								)
+							)
+								return;
 
-			//         wildcardConnection().unwrap().dispose();
-			//       }
+							wildcardConnection().unwrap().dispose();
+						}
 
-			//       let connections: Option<
-			//         [WildcardValueConnection, WildcardValueConnection]
-			//       > = None;
+						let connections: Option<
+							[WildcardValueConnection, WildcardValueConnection]
+						> = None;
 
-			//       for (const conn of wildcardConnections) {
-			//         const directConnection = conn.wildcard.directSourceConnection();
+						for (const conn of wildcardConnections) {
+							const directConnection = conn.wildcard.directSourceConnection();
 
-			//         if (directConnection.isSome()) {
-			//           const parentValueConnection = directConnection.unwrap();
+							if (directConnection.isSome()) {
+								const parentValueConnection = directConnection.unwrap();
 
-			//           const valueConnection = new WildcardValueConnection(
-			//             conn,
-			//             parentValueConnection.value
-			//           );
+								const valueConnection = new WildcardValueConnection(
+									conn,
+									parentValueConnection.value,
+								);
 
-			//           connections = Some([parentValueConnection, valueConnection]);
-			//           break;
-			//         }
+								connections = Some([parentValueConnection, valueConnection]);
+								break;
+							}
 
-			//         const wildcardConnection = conn.wildcard.wildcardConnection();
+							const wildcardConnection = conn.wildcard.wildcardConnection();
 
-			//         if (wildcardConnection.isSome()) {
-			//           const parentValueConnection = wildcardConnection.unwrap();
+							if (wildcardConnection.isSome()) {
+								const parentValueConnection = wildcardConnection.unwrap();
 
-			//           const valueConnection = new WildcardValueConnection(conn, () =>
-			//             parentValueConnection.value()
-			//           );
+								const valueConnection = new WildcardValueConnection(conn, () =>
+									parentValueConnection.value(),
+								);
 
-			//           if (
-			//             conn.hasUnconnectedWildcard() &&
-			//             !connections
-			//               .map(([, valueConnection]) =>
-			//                 valueConnection.value().hasUnconnectedWildcard()
-			//               )
-			//               .unwrapOr(false)
-			//           ) {
-			//             continue;
-			//           }
+								if (
+									conn.hasUnconnectedWildcard() &&
+									!connections
+										.map(([, valueConnection]) =>
+											valueConnection.value().hasUnconnectedWildcard(),
+										)
+										.unwrapOr(false)
+								) {
+									continue;
+								}
 
-			//           connections = Some([parentValueConnection, valueConnection]);
-			//           break;
-			//         }
-			//       }
+								connections = Some([parentValueConnection, valueConnection]);
+								break;
+							}
+						}
 
-			//       if (connections.isSome()) {
-			//         const [parentValueConnection, valueConnection] =
-			//           connections.unwrap();
+						if (connections.isSome()) {
+							const [parentValueConnection, valueConnection] =
+								connections.unwrap();
 
-			//         const unsub = parentValueConnection.addDisposeListener(() => {
-			//           valueConnection.dispose();
-			//         });
+							const unsub = parentValueConnection.addDisposeListener(() => {
+								valueConnection.dispose();
+							});
 
-			//         valueConnection.addDisposeListener(() => {
-			//           unsub();
-			//           setWildcardConnection(None);
-			//         });
+							valueConnection.addDisposeListener(() => {
+								unsub();
+								setWildcardConnection(None);
+							});
 
-			//         setWildcardConnection(Some(valueConnection));
-			//       } else setWildcardConnection(None);
-			//     },
-			//     { defer: true }
-			//   )
-			// );
+							setWildcardConnection(Some(valueConnection));
+						} else setWildcardConnection(None);
+					},
+					{ defer: true },
+				),
+			);
 
 			this.wildcardConnection = createOptionMemo(() => {
 				// no need for wildcard connection if we've got a direct connection
