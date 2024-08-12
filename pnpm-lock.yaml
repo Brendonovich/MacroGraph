@@ -17,6 +17,9 @@ importers:
         specifier: ^1.6.4
         version: 1.6.4
     devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.4.8
+        version: 6.4.8
       '@vitest/browser':
         specifier: ^0.32.4
         version: 0.32.4(rollup@4.20.0)(vitest@2.0.5)
@@ -43,7 +46,7 @@ importers:
         version: 5.5.3
       vite-plugin-solid:
         specifier: ^2.10.2
-        version: 2.10.2(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)))(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+        version: 2.10.2(@testing-library/jest-dom@6.4.8)(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
       vitest:
         specifier: ^2.0.5
         version: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)
@@ -97,7 +100,7 @@ importers:
         version: 0.12.5(solid-js@1.8.20)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)))(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -207,7 +210,7 @@ importers:
         version: 5.4.0(@types/node@20.14.11)(terser@5.31.3)
       vite-plugin-solid:
         specifier: ^2.10.2
-        version: 2.10.2(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)))(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+        version: 2.10.2(@testing-library/jest-dom@6.4.8)(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
 
   apps/web:
     dependencies:
@@ -267,7 +270,7 @@ importers:
         version: 0.12.5(solid-js@1.8.20)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)))(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -4017,6 +4020,10 @@ packages:
         optional: true
       vitest:
         optional: true
+
+  '@testing-library/jest-dom@6.4.8':
+    resolution: {integrity: sha512-JD0G+Zc38f5MBHA4NgxQMR5XtO5Jx9g86jqturNTt2WUfRmLDIY7iKkWHDCCTiDuFMre6nxAD5wHw9W5kI4rGw==}
+    engines: {node: '>=14', npm: '>=6', yarn: '>=1'}
 
   '@testing-library/user-event@14.5.2':
     resolution: {integrity: sha512-YAh82Wh4TIrxYLmfGcixwD18oIjyC1pFQC2Y01F2lzV2HTMiYrI0nze0FD0ocB//CKS/7jIUgae+adPqxK5yCQ==}
@@ -11499,7 +11506,7 @@ snapshots:
     dependencies:
       solid-js: 1.8.20
 
-  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)))(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
       '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
@@ -11515,7 +11522,7 @@ snapshots:
       source-map-js: 1.2.0
       terracotta: 1.0.5(solid-js@1.8.20)
       vite-plugin-inspect: 0.7.42(rollup@4.18.1)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
-      vite-plugin-solid: 2.10.2(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)))(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+      vite-plugin-solid: 2.10.2(@testing-library/jest-dom@6.4.8)(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
     transitivePeerDependencies:
       - '@nuxt/kit'
       - '@testing-library/jest-dom'
@@ -11525,7 +11532,7 @@ snapshots:
       - vinxi
       - vite
 
-  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)))(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
       '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
@@ -11541,7 +11548,7 @@ snapshots:
       source-map-js: 1.2.0
       terracotta: 1.0.5(solid-js@1.8.20)
       vite-plugin-inspect: 0.7.42(rollup@4.20.0)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
-      vite-plugin-solid: 2.10.2(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)))(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+      vite-plugin-solid: 2.10.2(@testing-library/jest-dom@6.4.8)(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
     transitivePeerDependencies:
       - '@nuxt/kit'
       - '@testing-library/jest-dom'
@@ -11941,6 +11948,17 @@ snapshots:
       redent: 3.0.0
     optionalDependencies:
       vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)
+
+  '@testing-library/jest-dom@6.4.8':
+    dependencies:
+      '@adobe/css-tools': 4.4.0
+      '@babel/runtime': 7.24.1
+      aria-query: 5.3.0
+      chalk: 3.0.0
+      css.escape: 1.5.1
+      dom-accessibility-api: 0.6.3
+      lodash: 4.17.21
+      redent: 3.0.0
 
   '@testing-library/user-event@14.5.2(@testing-library/dom@10.1.0)':
     dependencies:
@@ -17434,7 +17452,7 @@ snapshots:
       - rollup
       - supports-color
 
-  vite-plugin-solid@2.10.2(@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)))(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3)):
+  vite-plugin-solid@2.10.2(@testing-library/jest-dom@6.4.8)(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3)):
     dependencies:
       '@babel/core': 7.25.2
       '@types/babel__core': 7.20.5
@@ -17445,7 +17463,7 @@ snapshots:
       vite: 5.4.0(@types/node@20.14.11)(terser@5.31.3)
       vitefu: 0.2.5(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
     optionalDependencies:
-      '@testing-library/jest-dom': 6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3))
+      '@testing-library/jest-dom': 6.4.8
     transitivePeerDependencies:
       - supports-color
 
