@@ -100,7 +100,7 @@ importers:
         version: 0.12.5(solid-js@1.8.20)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -158,7 +158,7 @@ importers:
         version: 3.4.3
       unplugin-auto-import:
         specifier: ^0.17.5
-        version: 0.17.5(rollup@4.18.1)
+        version: 0.17.5(rollup@4.20.0)
       unplugin-icons:
         specifier: ^0.18.5
         version: 0.18.5
@@ -270,7 +270,7 @@ importers:
         version: 0.12.5(solid-js@1.8.20)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -339,7 +339,7 @@ importers:
         version: 0.5.0(hono@3.12.12)(zod@3.22.4)
       unplugin-auto-import:
         specifier: ^0.17.5
-        version: 0.17.5(rollup@4.20.0)
+        version: 0.17.5(rollup@4.18.1)
       unplugin-icons:
         specifier: ^0.18.5
         version: 0.18.5
@@ -7747,21 +7747,11 @@ packages:
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
 
-  seroval-plugins@1.1.0:
-    resolution: {integrity: sha512-KtcJg590L3X3dd7ixs6am4UGVcV69TyjYhHtanIdQJq4dy2OceWXmmvWrYx7oFDNe+LNdxdWd0I5BQXuV5fBhA==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      seroval: ^1.0
-
   seroval-plugins@1.1.1:
     resolution: {integrity: sha512-qNSy1+nUj7hsCOon7AO4wdAIo9P0jrzAMp18XhiOzA6/uO5TKtP7ScozVJ8T293oRIvi5wyCHSM4TrJo/c/GJA==}
     engines: {node: '>=10'}
     peerDependencies:
       seroval: ^1.0
-
-  seroval@1.1.0:
-    resolution: {integrity: sha512-74Wpe+hhPx4V8NFe00I2Fu9gTJopKoH5vE7nCqFzVgKOXV8AnN23T58K79QLYQotzGpH93UZ+UN2Y11j9huZJg==}
-    engines: {node: '>=10'}
 
   seroval@1.1.1:
     resolution: {integrity: sha512-rqEO6FZk8mv7Hyv4UCj3FD3b6Waqft605TLfsCe/BiaylRpyyMC0b+uA5TJKawX3KzMrdi3wsLbCaLplrQmBvQ==}
@@ -11506,18 +11496,18 @@ snapshots:
     dependencies:
       solid-js: 1.8.20
 
-  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       glob: 10.4.5
       html-to-image: 1.11.11
       radix3: 1.1.2
-      seroval: 1.1.0
-      seroval-plugins: 1.1.0(seroval@1.1.0)
+      seroval: 1.1.1
+      seroval-plugins: 1.1.1(seroval@1.1.1)
       shikiji: 0.9.19
       source-map-js: 1.2.0
       terracotta: 1.0.5(solid-js@1.8.20)
@@ -11532,18 +11522,18 @@ snapshots:
       - vinxi
       - vite
 
-  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.20.0)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
-      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/server-functions': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       glob: 10.4.5
       html-to-image: 1.11.11
       radix3: 1.1.2
-      seroval: 1.1.0
-      seroval-plugins: 1.1.0(seroval@1.1.0)
+      seroval: 1.1.1
+      seroval-plugins: 1.1.1(seroval@1.1.1)
       shikiji: 0.9.19
       source-map-js: 1.2.0
       terracotta: 1.0.5(solid-js@1.8.20)
@@ -12290,9 +12280,9 @@ snapshots:
     transitivePeerDependencies:
       - uWebSockets.js
 
-  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/plugin-directives@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@babel/parser': 7.24.8
+      '@babel/parser': 7.25.3
       acorn: 8.12.1
       acorn-jsx: 5.3.2(acorn@8.12.1)
       acorn-loose: 8.4.0
@@ -12312,9 +12302,9 @@ snapshots:
       unified: 9.2.2
       vfile: 5.3.7
 
-  '@vinxi/server-components@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-components@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)
@@ -12323,9 +12313,9 @@ snapshots:
       recast: 0.23.9
       vinxi: 0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3)
 
-  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))':
+  '@vinxi/server-functions@0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
+      '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(ioredis@5.4.1)(terser@5.31.3))
       acorn: 8.12.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.12.1)
@@ -14890,8 +14880,8 @@ snapshots:
 
   magicast@0.2.11:
     dependencies:
-      '@babel/parser': 7.24.8
-      '@babel/types': 7.24.9
+      '@babel/parser': 7.25.3
+      '@babel/types': 7.25.2
       recast: 0.23.9
 
   make-dir@2.1.0:
@@ -16357,15 +16347,9 @@ snapshots:
     dependencies:
       randombytes: 2.1.0
 
-  seroval-plugins@1.1.0(seroval@1.1.0):
-    dependencies:
-      seroval: 1.1.0
-
   seroval-plugins@1.1.1(seroval@1.1.1):
     dependencies:
       seroval: 1.1.1
-
-  seroval@1.1.0: {}
 
   seroval@1.1.1: {}
 
@@ -17426,7 +17410,7 @@ snapshots:
     dependencies:
       '@antfu/utils': 0.7.10
       '@rollup/pluginutils': 5.1.0(rollup@4.18.1)
-      debug: 4.3.5
+      debug: 4.3.6
       error-stack-parser-es: 0.1.5
       fs-extra: 11.2.0
       open: 9.1.0
@@ -17441,7 +17425,7 @@ snapshots:
     dependencies:
       '@antfu/utils': 0.7.10
       '@rollup/pluginutils': 5.1.0(rollup@4.20.0)
-      debug: 4.3.5
+      debug: 4.3.6
       error-stack-parser-es: 0.1.5
       fs-extra: 11.2.0
       open: 9.1.0
