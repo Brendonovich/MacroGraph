@@ -14,6 +14,7 @@
 		"fix": "biome lint --apply . && biome format --write . && biome check . --apply"
 	},
 	"devDependencies": {
+		"@testing-library/jest-dom": "^6.4.8",
 		"@vitest/browser": "^0.32.4",
 		"@vitest/ui": "^1.4.0",
 		"jsdom": "^23.2.0",
