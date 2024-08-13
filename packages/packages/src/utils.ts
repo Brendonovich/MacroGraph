@@ -1808,7 +1808,7 @@ export function pkg(core: Core) {
 					([id, field]) =>
 						io.dataInput({
 							id,
-							name: field.id,
+							name: field.name ?? field.id,
 							type: field.type,
 						}),
 				);
@@ -1828,9 +1828,7 @@ export function pkg(core: Core) {
 					{} as any,
 				);
 
-				const struct = io.wildcard.struct.create(data);
-
-				ctx.setOutput(io.output, struct);
+				ctx.setOutput(io.output, data);
 			});
 		},
 	});

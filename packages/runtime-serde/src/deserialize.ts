@@ -122,19 +122,14 @@ export function deserializeCustomStructField(
 	struct: runtime.CustomStruct,
 	field: serde.CustomStructField,
 ) {
-	Object.assign(struct._fields, {
-		[field.id]: Object.assign(
-			new StructField(
-				field.id,
-				deserializeType(
-					field.type,
-					struct.project.getType.bind(struct.project),
-				),
-				field.name,
-			),
-			{ id: field.id },
+	struct.fields[field.id] = Object.assign(
+		new StructField(
+			field.id,
+			deserializeType(field.type, struct.project.getType.bind(struct.project)),
+			field.name,
 		),
-	});
+		{ id: field.id },
+	);
 }
 
 export function deserializeCustomEvent(
