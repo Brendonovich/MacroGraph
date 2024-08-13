@@ -967,7 +967,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const struct = core.project.customStructs.get(entry.structId);
 			if (!struct) return;
 
-			return struct.createField({ id: entry.id });
+			return struct.createField({ id: entry.id.toString() });
 		},
 		rewind(entry) {
 			const struct = core.project.customStructs.get(entry.structId);

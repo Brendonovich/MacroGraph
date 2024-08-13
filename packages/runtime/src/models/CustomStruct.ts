@@ -1,5 +1,9 @@
-import { StructBase, StructField, t } from "@macrograph/typesystem";
-import { createMemo } from "solid-js";
+import {
+	StructBase,
+	StructField,
+	type StructFields,
+	t,
+} from "@macrograph/typesystem";
 import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";
@@ -8,8 +12,7 @@ export class CustomStruct extends StructBase {
 	id: number;
 	name: string;
 	project: Project;
-
-	_fields: Record<string, StructField>;
+	fields: StructFields;
 
 	fieldIdCounter = 0;
 
@@ -24,44 +27,24 @@ export class CustomStruct extends StructBase {
 		this.id = args.id;
 		this.project = args.project;
 		this.name = args?.name ?? "";
-		this._fields = createMutable(args?.fields ?? {});
+		this.fields = createMutable(args?.fields ?? {});
 		this.source = { variant: "custom", id: this.id };
 
 		this.createField();
 
-		const self = createMutable(this);
-
-		this._fieldsMemo = createMemo(() => {
-			return Object.values(self._fields).reduce(
-				(acc, field) =>
-					Object.assign(acc, {
-						[field.id]: field,
-					}),
-				{} as Record<number, StructField & { id: number }>,
-			);
-		});
-
-		return self;
+		return createMutable(this);
 	}
 
-	private _fieldsMemo: () => Record<number, StructField>;
+	createField(args?: { id?: string }) {
+		const id = (args?.id ?? this.fieldIdCounter++).toString();
 
-	get fields() {
-		return this._fields;
-		// return this._fieldsMemo();
-	}
-
-	createField(args?: { id?: number }) {
-		const id = args?.id ?? this.fieldIdCounter++;
-
-		const name = `Field ${id}`;
-		this._fields[id] = new StructField(id.toString(), t.string(), name);
+		this.fields[id] = new StructField(id, t.string(), "New Field");
 
 		return id;
 	}
 
 	removeField(id: string) {
-		delete this._fields[id];
+		delete this.fields[id];
 	}
 
 	editFieldType(id: string, type: t.Any) {

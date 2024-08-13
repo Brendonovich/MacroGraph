@@ -231,7 +231,8 @@ export function CommentBox(props: Props) {
 
 										setEditing(false);
 									}}
-									onKeyPress={(e) => {
+									onKeyDown={(e) => {
+										e.stopPropagation();
 										if (e.key === "Enter") {
 											e.preventDefault();
 											ref?.blur();

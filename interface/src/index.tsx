@@ -33,7 +33,7 @@ import { toast } from "solid-sonner";
 import type * as v from "valibot";
 
 import type { HistoryItemEntry } from "@macrograph/action-history";
-import { ActionHistory } from "./ActionHistory";
+// import { ActionHistory } from "./ActionHistory";
 import * as Sidebars from "./Sidebar";
 import type {
 	CreateNodeInput,
@@ -281,7 +281,7 @@ function ProjectInterface() {
 						</>
 					)}
 				</Solid.Show>
-				<ActionHistory />
+				{/* <ActionHistory /> */}
 			</div>
 
 			<Solid.Show when={rightSidebar.state.open}>
