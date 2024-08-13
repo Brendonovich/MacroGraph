@@ -10,10 +10,9 @@ interface Props {
 
 export const FloatInput = (props: Props) => {
 	// if NaN reset to 0
-	const initialValue = Number.isNaN(props.initialValue)
-		? 0
-		: props.initialValue;
-	props.onChange(initialValue);
+	// const initialValue = Number.isNaN(props.initialValue)
+	//   ? 0
+	//   : props.initialValue;
 
 	const [value, setValue] = createSignal(props.initialValue.toString());
 	createEffect(() => {

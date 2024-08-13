@@ -17,7 +17,6 @@ export const IntInput = (props: Props) => {
 	const initialValue = Number.isNaN(props.initialValue)
 		? 0
 		: props.initialValue;
-	props.onChange(initialValue);
 
 	const [value, setValue] = createSignal(initialValue.toString());
 	const [rawValue, setRawValue] = createSignal(initialValue);
@@ -61,7 +60,8 @@ export const IntInput = (props: Props) => {
 							setRawValue(props.initialValue);
 						}
 
-						props.onChange(rawValue());
+						console.log("bruh");
+						// props.onChange(rawValue());
 					});
 				}}
 				class={clsx("pr-4 group-focus-within:border-mg-focus", props.class)}
@@ -72,7 +72,7 @@ export const IntInput = (props: Props) => {
 					type="button"
 					class="bg-white/20 flex items-center justify-center rounded-t-sm focus-visible:outline-yellow-400 focus-visible:outline"
 					onClick={() => {
-						queueMicrotask(() => props.onChange(rawValue()));
+						// queueMicrotask(() => props.onChange(rawValue()));
 					}}
 				>
 					<IconMaterialSymbolsArrowDropUpRounded class="h-4 -my-1" />
@@ -81,7 +81,7 @@ export const IntInput = (props: Props) => {
 					type="button"
 					class="bg-white/20 flex items-center justify-center rounded-b-sm focus-visible:outline-yellow-400 focus-visible:outline"
 					onClick={() => {
-						queueMicrotask(() => props.onChange(rawValue()));
+						// queueMicrotask(() => props.onChange(rawValue()));
 					}}
 				>
 					<IconMaterialSymbolsArrowDropDownRounded class="h-4 -my-1" />
