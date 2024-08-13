@@ -109,8 +109,8 @@ export class Project {
 		return graph;
 	}
 
-	createCustomEvent(arsg?: { id?: number }) {
-		const id = this.generateCustomEventId();
+	createCustomEvent(args?: { id?: number }) {
+		const id = args?.id ?? this.generateCustomEventId();
 
 		const event = new CustomEvent({
 			name: `Event ${id}`,

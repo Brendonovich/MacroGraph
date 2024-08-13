@@ -39,7 +39,10 @@ export function CommentBox(props: Props) {
 			e.stopPropagation();
 
 			if (e.button !== 0) return;
-			props.onSelected();
+
+			const prevSelection = [...graph.state.selectedItemIds];
+
+			props.onSelected(true);
 
 			const size = { ...box().size };
 			const position = { ...box().position };
@@ -73,7 +76,7 @@ export function CommentBox(props: Props) {
 								x: args.x === "l" ? mousePosition.x : position.x,
 								y: args.y === "t" ? mousePosition.y : position.y,
 							},
-							prev: { size, position },
+							prev: { size, position, selection: prevSelection },
 						});
 					},
 					mousemove: (e) => {

@@ -33,6 +33,7 @@ import { toast } from "solid-sonner";
 import type * as v from "valibot";
 
 import type { HistoryItemEntry } from "@macrograph/action-history";
+// import { ActionHistory } from "./ActionHistory";
 import * as Sidebars from "./Sidebar";
 import type {
 	CreateNodeInput,
@@ -55,7 +56,6 @@ import {
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
-// import { ActionHistory } from "./ActionHistory";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -513,6 +513,17 @@ function ProjectInterface() {
 													pin.node.state.position.y -
 													(pinPosition.y - pin.node.state.position.y),
 											};
+
+											const historyEntry = ctx.history[ctx.history.length - 1];
+											if (historyEntry?.type === "createNode") {
+												const entry =
+													historyEntry.entry as unknown as HistoryItemEntry<
+														HistoryActions["createNode"]
+													>;
+
+												entry.position = { ...position };
+											}
+
 											ctx.execute(
 												"setGraphItemPositions",
 												{
@@ -527,17 +538,6 @@ function ProjectInterface() {
 												},
 												{ ephemeral: true },
 											);
-											ctx.save();
-
-											const historyEntry = ctx.history[ctx.history.length - 1];
-											if (historyEntry?.type === "createNode") {
-												const entry =
-													historyEntry.entry as unknown as HistoryItemEntry<
-														HistoryActions["createNode"]
-													>;
-
-												entry.position = { ...position };
-											}
 										}
 									}}
 								/>
@@ -599,8 +599,6 @@ function createKeydownShortcuts(
 	const mouse = createMousePosition(window);
 
 	createEventListener(window, "keydown", async (e) => {
-		const { core } = ctx;
-
 		switch (e.code) {
 			case "KeyC": {
 				if (!isCtrlEvent(e)) return;

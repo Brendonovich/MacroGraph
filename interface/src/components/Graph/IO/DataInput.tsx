@@ -14,6 +14,7 @@ import { createQuery } from "@tanstack/solid-query";
 import { Match, Show, Switch } from "solid-js";
 
 import { DataPin } from ".";
+import { useInterfaceContext } from "../../../context";
 import { CheckBox, EnumInput, FloatInput, IntInput, TextInput } from "../../ui";
 
 type EnumValue = t.infer<t.Enum<Enum<EnumVariants>>>;
@@ -158,6 +159,8 @@ interface Props {
 }
 
 export const DataInput = (props: Props) => {
+	const interfaceCtx = useInterfaceContext();
+
 	return (
 		<div class="flex flex-row items-center space-x-1.5 h-5">
 			<DataPin pin={props.input} />
@@ -165,7 +168,14 @@ export const DataInput = (props: Props) => {
 			<Input
 				type={props.input.type}
 				value={props.input.defaultValue}
-				onChange={(v) => props.input.setDefaultValue(v)}
+				onChange={(v) => {
+					interfaceCtx.execute("setInputDefaultValue", {
+						graphId: props.input.node.graph.id,
+						nodeId: props.input.node.id,
+						inputId: props.input.id,
+						value: v,
+					});
+				}}
 				connected={props.input.connection.isSome()}
 				input={props.input}
 			/>

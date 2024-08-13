@@ -156,10 +156,12 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 
 				editor.setGraphStates((s) => s.filter((s) => s.id !== entry.graphId));
 				editor.setCurrentGraphId((id) => {
-					if (id === entry.graphId)
-						return editor.graphStates[
-							editor.currentGraphIndex() ?? editor.graphStates.length - 1
-						]!.id;
+					if (id === entry.graphId) {
+						const index =
+							editor.currentGraphIndex() ?? editor.graphStates.length - 1;
+						if (index === -1) return id;
+						return editor.graphStates[index]!.id;
+					}
 
 					return id;
 				});
@@ -464,7 +466,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			boxId: number;
 			position: XY;
 			size: XY;
-			prev?: { position: XY; size: XY };
+			prev?: { position: XY; size: XY; selection?: Array<SelectedItemID> };
 		}) {
 			const box = core.project.graphs
 				.get(input.graphId)
@@ -487,6 +489,10 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 
 			box.size = { ...entry.size };
 			box.position = { ...entry.position };
+
+			editor.setGraphStates((g) => g.id === entry.graphId, "selectedItemIds", [
+				{ type: "commentBox", id: box.id },
+			]);
 		},
 		rewind(entry) {
 			const box = core.project.graphs
@@ -496,6 +502,13 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 
 			box.size = { ...entry.prev.size };
 			box.position = { ...entry.prev.position };
+
+			if (entry.prev.selection)
+				editor.setGraphStates(
+					(g) => g.id === entry.graphId,
+					"selectedItemIds",
+					entry.prev.selection,
+				);
 		},
 	}),
 	setGraphItemPositions: historyAction({
@@ -849,6 +862,46 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 					graph.connectPins(output, pin);
 				}
 			}
+		},
+	}),
+	setInputDefaultValue: historyAction({
+		prepare(input: {
+			graphId: number;
+			nodeId: number;
+			inputId: string;
+			value: any;
+		}) {
+			const node = core.project.graphs
+				.get(input.graphId)
+				?.nodes.get(input.nodeId);
+			if (!node) return;
+
+			const io = node.input(input.inputId);
+			if (!(io && io instanceof DataInput)) return;
+
+			return { ...input, prev: io.defaultValue };
+		},
+		perform(entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
+
+			const input = node.input(entry.inputId);
+			if (!(input && input instanceof DataInput)) return;
+
+			input.setDefaultValue(entry.value);
+		},
+		rewind(entry) {
+			const node = core.project.graphs
+				.get(entry.graphId)
+				?.nodes.get(entry.nodeId);
+			if (!node) return;
+
+			const input = node.input(entry.inputId);
+			if (!(input && input instanceof DataInput)) return;
+
+			input.setDefaultValue(entry.prev);
 		},
 	}),
 	createCustomStruct: historyAction({
@@ -1440,7 +1493,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 
 			resource.items.splice(itemIndex, 1);
 
-			if (resource.items.length) core.project.resources.delete(type);
+			if (!resource.items.length) core.project.resources.delete(type);
 		},
 	}),
 	setResourceTypeDefault: historyAction({
@@ -1469,10 +1522,12 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			resourceId: number;
 			name: string;
 		}) {
-			const item = core.project.resources
-				.get(input.type)
-				?.items.find((i) => i.id === input.resourceId);
+			const resource = core.project.resources.get(input.type);
+			if (!resource) return;
+			const item = resource.items.find((i) => i.id === input.resourceId);
 			if (!item) return;
+
+			if (item.name === input.name) return;
 
 			return { ...input, prev: item.name };
 		},
