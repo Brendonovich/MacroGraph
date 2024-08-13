@@ -18,11 +18,11 @@
 		}
 	},
 	"devDependencies": {
-		"solid-js": "^1.8.19",
+		"solid-js": "^1.8.20",
 		"storybook-solidjs": "1.0.0-beta.2",
 		"unplugin-auto-import": "^0.17.5",
 		"unplugin-icons": "^0.18.5",
-		"vite": "^5.2.7"
+		"vite": "^5.4.0"
 	},
 	"peerDependencies": {
 		"solid-js": "^1.7.11"

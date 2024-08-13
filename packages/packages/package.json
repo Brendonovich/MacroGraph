@@ -58,7 +58,7 @@
 		"@total-typescript/ts-reset": "^0.4.2",
 		"@twurple/eventsub-base": "^7.1.0",
 		"@types/tmi.js": "^1.8.6",
-		"solid-js": "^1.8.19",
+		"solid-js": "^1.8.20",
 		"type-fest": "^2.19.0",
 		"typescript": "^5.5.3"
 	},

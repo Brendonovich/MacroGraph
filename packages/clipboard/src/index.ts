@@ -5,7 +5,9 @@ import {
 	ExecInput,
 	type GetNodeSize,
 	Graph,
+	type InputPin,
 	Node,
+	type OutputPin,
 	Project,
 	type ScopeOutput,
 	getNodesInRect,
@@ -44,6 +46,12 @@ export const ClipboardItem = v.variant("type", [
 		nodes: v.array(serde.Node),
 		commentBoxes: v.array(serde.CommentBox),
 		connections: v.array(serde.Connection),
+		selected: v.optional(
+			v.object({
+				nodes: v.array(v.number()),
+				commentBoxes: v.array(v.number()),
+			}),
+		),
 	}),
 ]);
 
@@ -77,7 +85,7 @@ export function nodeToClipboardItem(
 }
 
 export function serializeConnections(nodes: Set<Node>) {
-	const connections: v.InferOutput<typeof serde.Connection>[] = [];
+	const connections: v.InferInput<typeof serde.Connection>[] = [];
 
 	for (const node of nodes) {
 		for (const i of node.state.inputs) {
@@ -85,20 +93,14 @@ export function serializeConnections(nodes: Set<Node>) {
 				for (const conn of i.connections) {
 					if (!nodes.has(conn.node)) continue;
 
-					connections.push({
-						from: { node: conn.node.id, output: conn.id },
-						to: { node: i.node.id, input: i.id },
-					});
+					connections.push(serializeConnection(conn, i));
 				}
 			} else {
 				(i.connection as unknown as Option<DataOutput<any> | ScopeOutput>).peek(
 					(conn) => {
 						if (!nodes.has(conn.node)) return;
 
-						connections.push({
-							from: { node: conn.node.id, output: conn.id },
-							to: { node: i.node.id, input: i.id },
-						});
+						connections.push(serializeConnection(conn, i));
 					},
 				);
 			}
@@ -106,6 +108,16 @@ export function serializeConnections(nodes: Set<Node>) {
 	}
 
 	return connections;
+}
+
+export function serializeConnection(
+	from: OutputPin,
+	to: InputPin,
+): v.InferInput<typeof serde.Connection> {
+	return {
+		from: { node: from.node.id, output: from.id },
+		to: { node: to.node.id, input: to.id },
+	};
 }
 
 export function commentBoxToClipboardItem(

@@ -43,7 +43,7 @@ interface Props extends Solid.ComponentProps<"div"> {
 	onTranslateChange(translate: XY): void;
 	onSizeChange(size: { width: number; height: number }): void;
 	onBoundsChange(bounds: XY): void;
-	onItemsSelected(id: Array<SelectedItemID>): void;
+	onItemsSelected(id: Array<SelectedItemID>, ephemeral?: boolean): void;
 }
 
 type State = {
@@ -190,10 +190,12 @@ export const Graph = (props: Props) => {
 						const node = model().nodes.get(selectedItemId.id);
 						if (!node) return;
 
-						node.state.foldPins = true;
+						interfaceCtx.execute("setNodeFoldPins", {
+							graphId: model().id,
+							nodeId: node.id,
+							foldPins: true,
+						});
 					}
-
-					interfaceCtx.save();
 				}
 
 				return;
@@ -210,10 +212,12 @@ export const Graph = (props: Props) => {
 						const node = model().nodes.get(selectedItemId.id);
 						if (!node) return;
 
-						node.state.foldPins = false;
+						interfaceCtx.execute("setNodeFoldPins", {
+							graphId: model().id,
+							nodeId: node.id,
+							foldPins: false,
+						});
 					}
-
-					interfaceCtx.save();
 				}
 
 				return;
@@ -258,10 +262,7 @@ export const Graph = (props: Props) => {
 						};
 
 						if (interfaceCtx.state.status === "connectionAssignMode")
-							interfaceCtx.setState({
-								...interfaceCtx.state,
-								state,
-							});
+							interfaceCtx.setState({ ...interfaceCtx.state, state });
 						else interfaceCtx.setState(state);
 					} else if (
 						e.button === 0 &&
@@ -272,10 +273,7 @@ export const Graph = (props: Props) => {
 							status: "pinDragMode",
 							state: {
 								status: "schemaMenuOpen",
-								position: {
-									x: e.clientX,
-									y: e.clientY,
-								},
+								position: { x: e.clientX, y: e.clientY },
 								graph: props.state,
 							},
 						});
@@ -284,49 +282,98 @@ export const Graph = (props: Props) => {
 				onMouseDown={(e) => {
 					switch (e.button) {
 						case 0: {
-							const start = ctx.toGraphSpace({
-								x: e.clientX,
-								y: e.clientY,
-							});
+							const start = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
+							const prevSelection = [...props.state.selectedItemIds];
+
+							interfaceCtx.execute(
+								"setGraphSelection",
+								{ graphId: model().id, selection: [] },
+								{ ephemeral: true },
+							);
+
 							Solid.createRoot((dispose) => {
+								const getItems = (e: MouseEvent) => {
+									const end = ctx.toGraphSpace({
+										x: e.clientX,
+										y: e.clientY,
+									});
+
+									const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
+									const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
+
+									const width = Math.abs(end.x - start.x);
+									const height = Math.abs(end.y - start.y);
+
+									const x = xSide === "r" ? start.x : start.x - width;
+									const y = ySide === "d" ? start.y : start.y - height;
+
+									const rect = new DOMRect(x, y, width, height);
+
+									const items = [
+										...[
+											...getNodesInRect(model().nodes.values(), rect, (node) =>
+												interfaceCtx.nodeSizes.get(node),
+											),
+										].map((n) => ({ id: n.id, type: "node" as const })),
+										...[
+											...getCommentBoxesInRect(
+												model().commentBoxes.values(),
+												rect,
+											),
+										].map((b) => ({
+											id: b.id,
+											type: "commentBox" as const,
+										})),
+									];
+
+									return [items, rect] as const;
+								};
+
+								let didMove = false;
+
 								createEventListenerMap(window, {
-									mouseup: () => {
+									mouseup: (e) => {
 										dispose();
-										setDragArea(null);
+
+										if (!didMove) {
+											if (prevSelection.length !== 0)
+												interfaceCtx.execute("setGraphSelection", {
+													graphId: model().id,
+													selection: [],
+													prev: prevSelection,
+												});
+										} else {
+											const [items] = getItems(e);
+											setDragArea(null);
+
+											if (items.length === 0) {
+												interfaceCtx.setState({ status: "idle" });
+												if (prevSelection.length > 0)
+													interfaceCtx.execute("setGraphSelection", {
+														graphId: model().id,
+														selection: [],
+														prev: prevSelection,
+													});
+											} else {
+												interfaceCtx.execute("setGraphSelection", {
+													graphId: model().id,
+													selection: items,
+													prev: prevSelection,
+												});
+											}
+										}
 									},
 									mousemove: (e) => {
-										const end = ctx.toGraphSpace({
-											x: e.clientX,
-											y: e.clientY,
-										});
+										didMove = true;
 
-										const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
-										const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
-
-										const width = Math.abs(end.x - start.x);
-										const height = Math.abs(end.y - start.y);
-
-										const x = xSide === "r" ? start.x : start.x - width;
-										const y = ySide === "d" ? start.y : start.y - height;
-
-										const rect = new DOMRect(x, y, width, height);
+										const [items, rect] = getItems(e);
 										setDragArea(rect);
 
-										props.onItemsSelected([
-											...[
-												...getNodesInRect(
-													model().nodes.values(),
-													rect,
-													(node) => interfaceCtx.nodeSizes.get(node),
-												),
-											].map((n) => ({ id: n.id, type: "node" as const })),
-											...[
-												...getCommentBoxesInRect(
-													model().commentBoxes.values(),
-													rect,
-												),
-											].map((b) => ({ id: b.id, type: "commentBox" as const })),
-										]);
+										interfaceCtx.execute(
+											"setGraphSelection",
+											{ graphId: model().id, selection: items },
+											{ ephemeral: true },
+										);
 									},
 								});
 							});
@@ -380,8 +427,6 @@ export const Graph = (props: Props) => {
 							break;
 						}
 					}
-
-					props.onMouseDown?.(e);
 				}}
 			>
 				<ConnectionRenderer
@@ -420,8 +465,15 @@ export const Graph = (props: Props) => {
 							{(box) => (
 								<CommentBox
 									box={box}
-									onSelected={() =>
-										props.onItemsSelected([{ type: "commentBox", id: box.id }])
+									onSelected={(ephemeral) =>
+										interfaceCtx.execute(
+											"setGraphSelection",
+											{
+												graphId: model().id,
+												selection: [{ type: "commentBox", id: box.id }],
+											},
+											{ ephemeral },
+										)
 									}
 								/>
 							)}
@@ -430,10 +482,16 @@ export const Graph = (props: Props) => {
 							{(node) => (
 								<Node
 									node={node}
-									onSelected={() =>
-										props.onItemsSelected([{ type: "node", id: node.id }])
+									onSelected={(ephemeral) =>
+										interfaceCtx.execute(
+											"setGraphSelection",
+											{
+												graphId: model().id,
+												selection: [{ type: "node", id: node.id }],
+											},
+											{ ephemeral },
+										)
 									}
-									onDrag={() => {}}
 								/>
 							)}
 						</Solid.For>

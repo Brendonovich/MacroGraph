@@ -94,8 +94,8 @@ export class Project {
 		throw new Error();
 	}
 
-	createGraph(args?: { name?: string }) {
-		const id = this.generateGraphId();
+	createGraph(args?: { id?: number; name?: string }) {
+		const id = args?.id ?? this.generateGraphId();
 
 		const graph = new Graph({
 			name: `Graph ${id}`,
@@ -109,8 +109,8 @@ export class Project {
 		return graph;
 	}
 
-	createCustomEvent() {
-		const id = this.generateCustomEventId();
+	createCustomEvent(args?: { id?: number }) {
+		const id = args?.id ?? this.generateCustomEventId();
 
 		const event = new CustomEvent({
 			name: `Event ${id}`,
@@ -123,8 +123,8 @@ export class Project {
 		return event;
 	}
 
-	createCustomStruct() {
-		const id = this.generateCustomTypeId();
+	createCustomStruct(args?: { id?: number }) {
+		const id = args?.id ?? this.generateCustomTypeId();
 
 		const struct = new CustomStruct({
 			id,
@@ -141,8 +141,12 @@ export class Project {
 		return this.idCounter++;
 	}
 
-	createResource(args: { type: ResourceType<any, any>; name: string }) {
-		const id = this.idCounter++;
+	createResource(args: {
+		type: ResourceType<any, any>;
+		name: string;
+		id?: number;
+	}) {
+		const id = args.id ?? this.idCounter++;
 		const itemBase = {
 			id,
 			name: args.name,
@@ -172,8 +176,8 @@ export class Project {
 		}
 	}
 
-	createVariable(args: Omit<VariableArgs, "id" | "owner">) {
-		const id = this.generateId();
+	createVariable(args: Omit<VariableArgs, "id" | "owner"> & { id?: number }) {
+		const id = args.id ?? this.generateId();
 
 		this.variables.push(new Variable({ ...args, id, owner: this }));
 

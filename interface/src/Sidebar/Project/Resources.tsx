@@ -71,7 +71,10 @@ export function Resources() {
 												optionTextValue="name"
 												getLabel={(i) => i.name}
 												onChange={(source) => {
-													data.default = source.id;
+													interfaceCtx.execute("setResourceTypeDefault", {
+														type,
+														defaultId: source.id,
+													});
 												}}
 												value={data.items.find((s) => s.id === data.default)}
 											/>
@@ -80,14 +83,17 @@ export function Resources() {
 								</div>
 								<ul class="bg-black/30 rounded divide-y divide-neutral-700 px-2">
 									<For each={data.items}>
-										{(item, index) => (
+										{(item) => (
 											<li class="space-y-1 pt-1 pb-2 group/item">
 												<InlineTextEditor
 													class="-mx-1"
 													value={item.name}
-													onChange={(value) => {
-														item.name = value;
-														interfaceCtx.save();
+													onChange={(name) => {
+														interfaceCtx.execute("setResourceName", {
+															type,
+															resourceId: item.id,
+															name,
+														});
 													}}
 												>
 													<IconButton
@@ -96,15 +102,10 @@ export function Resources() {
 														onClick={(e) => {
 															e.stopPropagation();
 
-															interfaceCtx.core.project.resources
-																.get(type)
-																?.items.splice(index(), 1);
-															if (data.items.length < 1)
-																interfaceCtx.core.project.resources.delete(
-																	type,
-																);
-
-															interfaceCtx.save();
+															interfaceCtx.execute("deleteResource", {
+																type,
+																resourceId: item.id,
+															});
 														}}
 													>
 														<IconAntDesignDeleteOutlined class="size-4" />
@@ -131,8 +132,11 @@ export function Resources() {
 																	optionTextValue="display"
 																	getLabel={(i) => i.display}
 																	onChange={(source) => {
-																		item.sourceId = source.id;
-																		interfaceCtx.save();
+																		interfaceCtx.execute("setResourceValue", {
+																			type,
+																			resourceId: item.id,
+																			sourceId: source.id,
+																		});
 																	}}
 																	value={sources().find(
 																		(s) => s.id === item.sourceId,
@@ -149,8 +153,11 @@ export function Resources() {
 															<TextInput
 																value={item.value}
 																onChange={(n) => {
-																	item.value = n;
-																	interfaceCtx.save();
+																	interfaceCtx.execute("setResourceValue", {
+																		type,
+																		resourceId: item.id,
+																		value: n,
+																	});
 																}}
 															/>
 														)}
@@ -200,9 +207,9 @@ function AddResourceButton() {
 											as="button"
 											class="flex flex-row items-center px-1 py-0.5 w-full text-sm text-left hover:bg-white/10 rounded whitespace-nowrap text-ellipsis"
 											onSelect={() => {
-												interfaceCtx.core.project.createResource({
-													type,
-													name: "New Resource",
+												interfaceCtx.execute("createResource", {
+													package: type.package.name,
+													type: type.name,
 												});
 											}}
 										>

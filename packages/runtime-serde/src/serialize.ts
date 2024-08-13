@@ -4,6 +4,7 @@ import {
 	type Enum,
 	type EnumVariants,
 	type Struct,
+	type StructField,
 	type StructFields,
 	t,
 } from "@macrograph/typesystem";
@@ -25,14 +26,23 @@ export function serializeProject(
 			serializeCustomStruct,
 		),
 		counter: project.idCounter,
-		resources: [...project.resources].map(([type, entry]) => ({
-			type: {
-				pkg: type.package.name,
-				name: type.name,
-			},
-			entry,
-		})),
+		resources: [...project.resources].map(([type, entry]) =>
+			serializeResources(type, entry),
+		),
 		variables: project.variables.map(serializeVariable),
+	};
+}
+
+export function serializeResources(
+	type: runtime.ResourceType<any, any>,
+	entry: runtime.ResourceTypeEntry,
+): v.InferInput<typeof serde.Resource> {
+	return {
+		type: {
+			pkg: type.package.name,
+			name: type.name,
+		},
+		entry,
 	};
 }
 
@@ -83,11 +93,17 @@ export function serializeCustomEvent(
 	return {
 		id: e.id,
 		name: e.name,
-		fields: e.fields.map((field) => ({
-			...field,
-			type: field.type.serialize(),
-		})),
+		fields: e.fields.map(serializeCustomEventField),
 		fieldIdCounter: e.fieldIdCounter,
+	};
+}
+
+export function serializeCustomEventField(
+	field: runtime.CustomEventField,
+): v.InferInput<typeof serde.CustomEventField> {
+	return {
+		...field,
+		type: field.type.serialize(),
 	};
 }
 
@@ -97,12 +113,18 @@ export function serializeCustomStruct(
 	return {
 		id: s.id,
 		name: s.name,
-		fields: Object.values(s.fields).map((field) => ({
-			name: field.name,
-			id: field.id,
-			type: field.type.serialize(),
-		})),
+		fields: Object.values(s.fields).map(serializeCustomStructField),
 		fieldIdCounter: s.fieldIdCounter,
+	};
+}
+
+export function serializeCustomStructField(
+	field: StructField,
+): v.InferInput<typeof serde.CustomStructField> {
+	return {
+		name: field.name,
+		id: field.id,
+		type: field.type.serialize(),
 	};
 }
 

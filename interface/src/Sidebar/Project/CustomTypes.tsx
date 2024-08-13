@@ -44,7 +44,7 @@ export function CustomTypes() {
 				}}
 			>
 				<Tabs.List class="flex flex-row relative overflow-hidden bg-neutral-800 text-xs">
-					<Tabs.Trigger class="flex-1 py-2" value="events">
+					<Tabs.Trigger class="flex-1 px-1 py-2" value="events">
 						Events
 					</Tabs.Trigger>
 					<Tabs.Trigger class="flex-1 px-1 py-2" value="structs">
@@ -53,7 +53,7 @@ export function CustomTypes() {
 					{/* <Tabs.Trigger class="flex-1 px-1 py-2" value="enums">
 						Enums
 					</Tabs.Trigger> */}
-					<Tabs.Indicator class="absolute inset-0 transition-transform p-1">
+					<Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-transform p-1">
 						<div class="bg-white/20 w-full h-full rounded" />
 					</Tabs.Indicator>
 				</Tabs.List>
@@ -71,13 +71,11 @@ export function CustomTypes() {
 							e.stopPropagation();
 							switch (selected()) {
 								case "events": {
-									interfaceCtx.core.project.createCustomEvent();
-									interfaceCtx.save();
+									interfaceCtx.execute("createCustomEvent");
 									return;
 								}
 								case "structs": {
-									interfaceCtx.core.project.createCustomStruct();
-									interfaceCtx.save();
+									interfaceCtx.execute("createCustomStruct");
 									return;
 								}
 							}
@@ -95,7 +93,10 @@ export function CustomTypes() {
 										<InlineTextEditor
 											value={event.name}
 											onChange={(value) => {
-												event.name = value;
+												interfaceCtx.execute("setCustomEventName", {
+													eventId: id,
+													name: value,
+												});
 											}}
 										>
 											<IconButton
@@ -104,8 +105,9 @@ export function CustomTypes() {
 												onClick={(e) => {
 													e.stopPropagation();
 
-													event.createField();
-													interfaceCtx.save();
+													interfaceCtx.execute("createCustomEventField", {
+														eventId: id,
+													});
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -117,8 +119,9 @@ export function CustomTypes() {
 												onClick={(e) => {
 													e.stopPropagation();
 
-													interfaceCtx.core.project.customEvents.delete(id);
-													interfaceCtx.save();
+													interfaceCtx.execute("deleteCustomEvent", {
+														eventId: id,
+													});
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -131,8 +134,14 @@ export function CustomTypes() {
 														<InlineTextEditor
 															value={field.name}
 															onChange={(value) => {
-																event.editFieldName(field.id, value);
-																interfaceCtx.save();
+																interfaceCtx.execute(
+																	"setCustomEventFieldName",
+																	{
+																		eventId: id,
+																		fieldId: field.id,
+																		name: value,
+																	},
+																);
 															}}
 															class="-mx-1"
 														>
@@ -142,8 +151,10 @@ export function CustomTypes() {
 																onClick={(e) => {
 																	e.stopPropagation();
 
-																	event.deletePin(field.id);
-																	interfaceCtx.save();
+																	interfaceCtx.execute(
+																		"deleteCustomEventField",
+																		{ eventId: id, fieldId: field.id },
+																	);
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -154,8 +165,14 @@ export function CustomTypes() {
 															<TypeEditor
 																type={field.type}
 																onChange={(type) => {
-																	event.editFieldType(field.id, type as any);
-																	interfaceCtx.save();
+																	interfaceCtx.execute(
+																		"setCustomEventFieldType",
+																		{
+																			eventId: id,
+																			fieldId: field.id,
+																			type: type as any,
+																		},
+																	);
 																}}
 															/>
 														</div>
@@ -174,8 +191,10 @@ export function CustomTypes() {
 										<InlineTextEditor
 											value={struct.name}
 											onChange={(value) => {
-												struct.name = value;
-												interfaceCtx.save();
+												interfaceCtx.execute("setCustomStructName", {
+													structId: id,
+													name: value,
+												});
 											}}
 										>
 											<IconButton
@@ -184,8 +203,9 @@ export function CustomTypes() {
 												onClick={(e) => {
 													e.stopPropagation();
 
-													struct.addField();
-													interfaceCtx.save();
+													interfaceCtx.execute("createCustomStructField", {
+														structId: id,
+													});
 												}}
 											>
 												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -197,8 +217,9 @@ export function CustomTypes() {
 												onClick={(e) => {
 													e.stopPropagation();
 
-													interfaceCtx.core.project.customStructs.delete(id);
-													interfaceCtx.save();
+													interfaceCtx.execute("deleteCustomStruct", {
+														structId: id,
+													});
 												}}
 											>
 												<IconAntDesignDeleteOutlined class="size-4" />
@@ -211,8 +232,14 @@ export function CustomTypes() {
 														<InlineTextEditor
 															value={field.name ?? field.id}
 															onChange={(value) => {
-																field.name = value;
-																interfaceCtx.save();
+																interfaceCtx.execute(
+																	"setCustomStructFieldName",
+																	{
+																		structId: id,
+																		fieldId: field.id,
+																		name: value,
+																	},
+																);
 															}}
 															class="-mx-1"
 														>
@@ -222,8 +249,10 @@ export function CustomTypes() {
 																onClick={(e) => {
 																	e.stopPropagation();
 
-																	struct.removeField(field.id);
-																	interfaceCtx.save();
+																	interfaceCtx.execute(
+																		"deleteCustomStructField",
+																		{ structId: id, fieldId: field.id },
+																	);
 																}}
 															>
 																<IconAntDesignDeleteOutlined class="size-4" />
@@ -234,8 +263,10 @@ export function CustomTypes() {
 															<TypeEditor
 																type={field.type}
 																onChange={(type) => {
-																	struct.editFieldType(field.id, type as any);
-																	interfaceCtx.save();
+																	interfaceCtx.execute(
+																		"setCustomStructFieldType",
+																		{ structId: id, fieldId: field.id, type },
+																	);
 																}}
 															/>
 														</div>

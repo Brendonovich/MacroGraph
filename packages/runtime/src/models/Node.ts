@@ -272,10 +272,6 @@ export class Node extends Disposable {
 
 	// Setters
 
-	setPosition(position: XY) {
-		this.state.position = position;
-	}
-
 	setProperty(property: string, value: any) {
 		this.state.properties[property] = value;
 	}

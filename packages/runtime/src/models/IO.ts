@@ -127,7 +127,6 @@ export class DataInput<T extends BaseType<any>> {
 		if (this.defaultValue === value) return;
 
 		this.defaultValue = value;
-		this.node.graph.project.emit("modified");
 	}
 
 	get variant() {
@@ -438,6 +437,8 @@ export type ExecPin = ExecInput | ExecOutput;
 export type DataPin = DataInput<any> | DataOutput<any>;
 export type ScopePin = ScopeInput | ScopeOutput;
 export type Pin = ExecPin | DataPin | ScopePin;
+export type OutputPin = ExecOutput | DataOutput<any> | ScopeOutput;
+export type InputPin = ExecInput | DataInput<any> | ScopeInput;
 
 export interface Connection {
 	node: number;

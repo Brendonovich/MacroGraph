@@ -110,24 +110,31 @@ export function deserializeCustomStruct(
 	struct.fieldIdCounter = data.fieldIdCounter;
 
 	batch(() => {
-		struct._fields = data.fields.reduce((acc, serializedField) => {
-			return Object.assign(acc, {
-				[serializedField.id]: Object.assign(
-					new StructField(
-						serializedField.id,
-						deserializeType(
-							serializedField.type,
-							project.getType.bind(project),
-						),
-						serializedField.name,
-					),
-					{ id: serializedField.id },
-				),
-			});
-		}, {});
+		for (const field of data.fields) {
+			deserializeCustomStructField(struct, field);
+		}
 	});
 
 	return struct;
+}
+
+export function deserializeCustomStructField(
+	struct: runtime.CustomStruct,
+	field: serde.CustomStructField,
+) {
+	Object.assign(struct._fields, {
+		[field.id]: Object.assign(
+			new StructField(
+				field.id,
+				deserializeType(
+					field.type,
+					struct.project.getType.bind(struct.project),
+				),
+				field.name,
+			),
+			{ id: field.id },
+		),
+	});
 }
 
 export function deserializeCustomEvent(
@@ -143,19 +150,26 @@ export function deserializeCustomEvent(
 	event.fieldIdCounter = data.fieldIdCounter;
 
 	batch(() => {
-		event.fields = data.fields.map((serializedField) => {
-			return {
-				id: serializedField.id,
-				name: serializedField.name,
-				type: deserializeType(
-					serializedField.type,
-					project.getType.bind(project),
-				),
-			};
-		});
+		event.fields = data.fields.map((field) =>
+			deserializeCustomEventField(event, field),
+		);
 	});
 
 	return event;
+}
+
+export function deserializeCustomEventField(
+	event: runtime.CustomEvent,
+	field: serde.CustomEventField,
+) {
+	return {
+		id: field.id,
+		name: field.name,
+		type: deserializeType(
+			field.type,
+			event.project.getType.bind(event.project),
+		),
+	};
 }
 
 export function deserializeVariable(

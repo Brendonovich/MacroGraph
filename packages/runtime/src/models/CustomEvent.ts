@@ -3,7 +3,7 @@ import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";
 
-type CustomEventField = {
+export type CustomEventField = {
 	id: number;
 	name: string;
 	type: t.Any;
@@ -42,13 +42,17 @@ export class CustomEvent {
 		return this.fieldIdCounter++;
 	}
 
-	createField() {
-		const id = this.generateId();
+	createField(args?: { id?: number }) {
+		const id = args?.id ?? this.generateId();
 		this.fields.push({
 			id,
 			name: `Field ${id}`,
 			type: t.string(),
 		});
+	}
+
+	field(id: number) {
+		return this.fields.find((f) => f.id === id);
 	}
 
 	editFieldName(id: number, name: string) {
@@ -63,7 +67,7 @@ export class CustomEvent {
 		pin.type = type;
 	}
 
-	deletePin(id: number) {
+	deleteField(id: number) {
 		const index = this.fields.findIndex((f) => f.id === id);
 		if (index === -1) return;
 		this.fields.splice(index, 1);

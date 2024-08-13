@@ -195,6 +195,12 @@ export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
 		}
 	}
 
+	resource(name: string): ResourceType<any, any> | undefined {
+		for (const resource of this.resources) {
+			if (resource.name === name) return resource;
+		}
+	}
+
 	emitEvent<TEvent extends keyof TEvents>(event: {
 		name: TEvent;
 		data: TEvents[TEvent];

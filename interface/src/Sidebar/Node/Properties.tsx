@@ -5,6 +5,7 @@ import {
 	type SchemaProperties,
 } from "@macrograph/runtime";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
+
 import { SidebarSection } from "../../components/Sidebar";
 import {
 	CheckBox,
@@ -60,8 +61,12 @@ export function Properties(props: {
 												getLabel={(o) => o.display}
 												value={selectedOption()}
 												onChange={(v) => {
-													props.node.setProperty(property().id, v.id);
-													interfaceCtx.save();
+													interfaceCtx.execute("setNodeProperty", {
+														graphId: props.node.graph.id,
+														nodeId: props.node.id,
+														propertyId: property().id,
+														value: v.id,
+													});
 												}}
 											/>
 										);
@@ -74,8 +79,12 @@ export function Properties(props: {
 										);
 
 										const onChange = (v: any) => {
-											props.node.setProperty(property().id, v);
-											interfaceCtx.save();
+											interfaceCtx.execute("setNodeProperty", {
+												graphId: props.node.graph.id,
+												nodeId: props.node.id,
+												propertyId: property().id,
+												value: v,
+											});
 										};
 
 										return (
@@ -169,8 +178,12 @@ export function Properties(props: {
 													items().find((i) => i.id === DEFAULT)
 												}
 												onChange={(v) => {
-													props.node.setProperty(property().id, v.id);
-													interfaceCtx.save();
+													interfaceCtx.execute("setNodeProperty", {
+														graphId: props.node.graph.id,
+														nodeId: props.node.id,
+														propertyId: property().id,
+														value: v.id,
+													});
 												}}
 											/>
 										);

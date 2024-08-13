@@ -1,6 +1,6 @@
 import type { Variable } from "@macrograph/runtime";
 import { BasePrimitiveType, t } from "@macrograph/typesystem";
-import { For, Match, Switch, batch, createMemo, createSignal } from "solid-js";
+import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 
 import { serializeValue } from "@macrograph/runtime-serde";
 import { SidebarSection } from "../components/Sidebar";
@@ -22,6 +22,8 @@ export function Variables(props: {
 	onCreateVariable(): void;
 	onRemoveVariable(id: number): void;
 	onSetVariableValue(id: number, value: any): void;
+	onSetVariableType(id: number, type: t.Any): void;
+	onVariableNameChanged(id: number, name: string): void;
 }) {
 	const [search, setSearch] = createSignal("");
 
@@ -63,7 +65,7 @@ export function Variables(props: {
 								<InlineTextEditor
 									value={variable.name}
 									onChange={(value) => {
-										variable.name = value;
+										props.onVariableNameChanged(variable.id, value);
 									}}
 								>
 									<IconButton
@@ -82,10 +84,7 @@ export function Variables(props: {
 									<TypeEditor
 										type={variable.type}
 										onChange={(type) => {
-											batch(() => {
-												variable.type = type;
-												variable.value = type.default();
-											});
+											props.onSetVariableType(variable.id, type);
 										}}
 									/>
 
@@ -157,9 +156,12 @@ export function Variables(props: {
 														type="button"
 														onClick={() => {
 															if (variable.type instanceof t.List)
-																variable.value = [];
+																props.onSetVariableValue(variable.id, []);
 															else if (variable.type instanceof t.Map)
-																variable.value = new Map();
+																props.onSetVariableValue(
+																	variable.id,
+																	new Map(),
+																);
 														}}
 													>
 														<IconSystemUiconsReset class="size-4" />

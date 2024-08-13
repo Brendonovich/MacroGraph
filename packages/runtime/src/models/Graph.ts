@@ -4,13 +4,7 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 
-import {
-	type GetNodeSize,
-	getNodesInRect,
-	pinIsInput,
-	pinIsOutput,
-	pinsCanConnect,
-} from "../utils";
+import { pinIsInput, pinIsOutput, pinsCanConnect } from "../utils";
 import { CommentBox, type CommentBoxArgs } from "./CommentBox";
 import {
 	DataInput,
@@ -83,8 +77,8 @@ export class Graph extends Disposable {
 		return this.idCounter++;
 	}
 
-	createNode(args: Omit<NodeArgs, "graph" | "id">) {
-		const id = this.generateId();
+	createNode(args: Omit<NodeArgs, "graph" | "id"> & { id?: number }) {
+		const id = args.id ?? this.generateId();
 
 		const node = new Node({ ...args, id, graph: this });
 
@@ -95,8 +89,10 @@ export class Graph extends Disposable {
 		return node;
 	}
 
-	createCommentBox(args: Omit<CommentBoxArgs, "graph" | "id">) {
-		const id = this.generateId();
+	createCommentBox(
+		args: Omit<CommentBoxArgs, "graph" | "id"> & { id?: number },
+	) {
+		const id = args.id ?? this.generateId();
 
 		const box = new CommentBox({
 			...args,
@@ -109,8 +105,8 @@ export class Graph extends Disposable {
 		return box;
 	}
 
-	createVariable(args: Omit<VariableArgs, "id" | "owner">) {
-		const id = this.generateId();
+	createVariable(args: Omit<VariableArgs, "id" | "owner"> & { id?: number }) {
+		const id = args.id ?? this.generateId();
 
 		this.variables.push(new Variable({ ...args, id, owner: this }));
 
@@ -129,6 +125,8 @@ export class Graph extends Disposable {
 		for (const v of this.variables.splice(index, 1)) {
 			v.dispose();
 		}
+
+		return index;
 	}
 
 	connectPins(
@@ -201,8 +199,6 @@ export class Graph extends Disposable {
 					});
 				}
 			}
-
-			this.project.emit("modified");
 		});
 	}
 
@@ -216,35 +212,9 @@ export class Graph extends Disposable {
 
 		this.nodes.delete(node.id);
 		node.dispose();
-
-		this.project.emit("modified");
 	}
 
-	deleteCommentbox(
-		box: CommentBox,
-		getNodeSize: GetNodeSize,
-		deleteNodes = false,
-	) {
-		batch(() => {
-			this.commentBoxes.delete(box.id);
-
-			if (!deleteNodes) return;
-
-			const nodes = getNodesInRect(
-				this.nodes.values(),
-				new DOMRect(box.position.x, box.position.y, box.size.x, box.size.y),
-				getNodeSize,
-			);
-
-			for (const node of nodes) {
-				this.deleteNode(node);
-			}
-		});
-
-		this.project.emit("modified");
-	}
-
-	async rename(name: string) {
-		this.name = name;
+	deleteCommentbox(box: CommentBox) {
+		this.commentBoxes.delete(box.id);
 	}
 }

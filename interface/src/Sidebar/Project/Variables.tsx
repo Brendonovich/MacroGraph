@@ -1,5 +1,4 @@
 import type { Project } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
 import { useInterfaceContext } from "../../context";
 import { Variables as VariablesRoot } from "../Variables";
 
@@ -11,20 +10,34 @@ export function Variables(props: { project: Project }) {
 			titlePrefix="Project"
 			variables={props.project.variables}
 			onCreateVariable={() => {
-				props.project.createVariable({
-					name: `Variable ${props.project.variables.length + 1}`,
-					value: "",
-					type: t.string(),
-				});
-				interfaceCtx.save();
+				interfaceCtx.execute("createVariable", { location: "project" });
 			}}
 			onRemoveVariable={(id) => {
-				props.project.removeVariable(id);
-				interfaceCtx.save();
+				interfaceCtx.execute("deleteVariable", {
+					location: "project",
+					variableId: id,
+				});
 			}}
 			onSetVariableValue={(id, value) => {
-				props.project.setVariableValue(id, value);
-				interfaceCtx.save();
+				interfaceCtx.execute("setVariableValue", {
+					location: "project",
+					variableId: id,
+					value,
+				});
+			}}
+			onSetVariableType={(id, type) => {
+				interfaceCtx.execute("setVariableType", {
+					location: "project",
+					variableId: id,
+					type,
+				});
+			}}
+			onVariableNameChanged={(id, name) => {
+				interfaceCtx.execute("setVariableName", {
+					location: "project",
+					variableId: id,
+					name,
+				});
 			}}
 		/>
 	);

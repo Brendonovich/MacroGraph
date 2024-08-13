@@ -13,7 +13,7 @@ import {
 
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createRoot } from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import type { GraphItemPositionInput } from "../../actions";
 import type { InterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import type { GraphContext, SelectedItemID } from "./Context";
@@ -53,30 +53,35 @@ export function handleSelectableItemMouseDown(
 	e: MouseEvent,
 	graph: GraphContext,
 	interfaceCtx: InterfaceContext,
-	onSelected: () => void,
 	id: SelectedItemID,
 ) {
 	e.stopPropagation();
 
 	if (e.button !== 0) return;
 
-	if (graph.state.selectedItemIds.length === 0) onSelected();
+	const prevSelection = [...graph.state.selectedItemIds];
 
-	const [graphState, setGraphState] = createStore(graph.state);
-	const index = graphState.selectedItemIds.findIndex(
+	const index = graph.state.selectedItemIds.findIndex(
 		(s) => s.type === id.type && s.id === id.id,
 	);
 
 	const isSelected = index !== -1;
 
-	if (isCtrlEvent(e)) {
-		if (!isSelected)
-			setGraphState(
-				produce((state) => {
-					state.selectedItemIds.push(id);
-				}),
-			);
-	} else if (!isSelected) onSelected();
+	if (isCtrlEvent(e) && !isSelected)
+		interfaceCtx.execute(
+			"setGraphSelection",
+			{
+				graphId: graph.model().id,
+				selection: [...graph.state.selectedItemIds, id],
+			},
+			{ ephemeral: true },
+		);
+	else if (prevSelection.length === 0 || !isSelected)
+		interfaceCtx.execute(
+			"setGraphSelection",
+			{ graphId: graph.model().id, selection: [id] },
+			{ ephemeral: true },
+		);
 
 	const nodePositions = new Map<Node, XY>();
 	const commentBoxPositions = new Map<CommentBox, XY>();
@@ -137,23 +142,80 @@ export function handleSelectableItemMouseDown(
 				if (!didDrag) {
 					if (isCtrlEvent(e)) {
 						if (isSelected) {
-							const [graphState, setGraphState] = createStore(graph.state);
-							const index = graphState.selectedItemIds.findIndex(
-								(s) => s.type === id.type && s.id === id.id,
-							);
-
-							setGraphState(
-								produce((state) => {
-									if (index !== -1) {
-										state.selectedItemIds.splice(index, 1);
-									}
-								}),
-							);
+							interfaceCtx.execute("setGraphSelection", {
+								graphId: graph.model().id,
+								selection: graph.state.selectedItemIds.filter(
+									(s) => s.type !== id.type || s.id !== id.id,
+								),
+								prev: prevSelection,
+							});
 						}
-					} else onSelected();
-				}
+					} else {
+						interfaceCtx.execute("setGraphSelection", {
+							graphId: graph.model().id,
+							selection: [id],
+							prev: prevSelection,
+						});
+					}
+				} else {
+					const items: Array<GraphItemPositionInput> = [];
 
-				interfaceCtx.save();
+					for (const node of nodes) {
+						const startPosition = nodePositions.get(node);
+						if (!startPosition) continue;
+
+						if (
+							node.state.position.x !== startPosition.x ||
+							node.state.position.y !== startPosition.y
+						)
+							items.push({
+								itemVariant: "node",
+								itemId: node.id,
+								position: node.state.position,
+								from: startPosition,
+							});
+					}
+
+					for (const [box, nodes] of commentBoxNodes) {
+						const startPosition = commentBoxPositions.get(box);
+						if (startPosition) {
+							if (
+								box.position.x !== startPosition.x ||
+								box.position.y !== startPosition.y
+							)
+								items.push({
+									itemVariant: "commentBox",
+									itemId: box.id,
+									position: box.position,
+									from: startPosition,
+								});
+						}
+
+						for (const node of nodes) {
+							const startPosition = nodePositions.get(node);
+							if (!startPosition) continue;
+
+							if (
+								node.state.position.x !== startPosition.x ||
+								node.state.position.y !== startPosition.y
+							)
+								items.push({
+									itemVariant: "node",
+									itemId: node.id,
+									position: node.state.position,
+									from: startPosition,
+								});
+						}
+					}
+
+					if (items.length > 0)
+						interfaceCtx.execute("setGraphItemPositions", {
+							graphId: graph.model().id,
+							items,
+							selection: [...graph.state.selectedItemIds],
+							prevSelection,
+						});
+				}
 			},
 			mousemove: (e) => {
 				didDrag = true;
@@ -168,13 +230,19 @@ export function handleSelectableItemMouseDown(
 					y: mousePosition.y - downPosition.y,
 				};
 
+				const items: Array<GraphItemPositionInput> = [];
+
 				for (const node of nodes) {
 					const startPosition = nodePositions.get(node);
 					if (!startPosition) continue;
 
 					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
 
-					node.setPosition(newPosition);
+					items.push({
+						itemVariant: "node",
+						itemId: node.id,
+						position: newPosition,
+					});
 				}
 
 				for (const [box, nodes] of commentBoxNodes) {
@@ -182,24 +250,41 @@ export function handleSelectableItemMouseDown(
 					if (!startPosition) continue;
 
 					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
-
-					box.position = newPosition;
+					items.push({
+						itemVariant: "commentBox",
+						itemId: box.id,
+						position: newPosition,
+					});
 
 					const boxDelta = {
 						x: newPosition.x - startPosition.x,
 						y: newPosition.y - startPosition.y,
 					};
 
-					for (const node of nodes) {
-						const startPosition = nodePositions.get(node);
-						if (!startPosition) continue;
+					if (boxDelta.x !== 0 || boxDelta.y !== 0)
+						for (const node of nodes) {
+							const startPosition = nodePositions.get(node);
+							if (!startPosition) continue;
 
-						node.setPosition({
-							x: startPosition.x + boxDelta.x,
-							y: startPosition.y + boxDelta.y,
-						});
-					}
+							items.push({
+								itemVariant: "node",
+								itemId: node.id,
+								position: {
+									x: startPosition.x + boxDelta.x,
+									y: startPosition.y + boxDelta.y,
+								},
+							});
+						}
 				}
+
+				didDrag = items.length > 0;
+
+				if (items.length > 0)
+					interfaceCtx.execute(
+						"setGraphItemPositions",
+						{ graphId: graph.model().id, items },
+						{ ephemeral: true },
+					);
 			},
 		});
 	});

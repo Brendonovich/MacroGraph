@@ -46,7 +46,7 @@
 		"oslo": "^1.2.0",
 		"pg": "^8.11.5",
 		"postgres": "^3.4.4",
-		"solid-js": "^1.8.19",
+		"solid-js": "^1.8.20",
 		"solid-mdx": "^0.0.7",
 		"solid-sonner": "^0.2.5",
 		"solid-transition-group": "^0.2.3",
@@ -57,7 +57,7 @@
 		"unstorage": "^1.10.2",
 		"valibot": "^0.37.0",
 		"vinxi": "0.4.1",
-		"vite": "^5.2.7",
+		"vite": "^5.4.0",
 		"zod": "^3.22.4"
 	},
 	"engines": {

@@ -1,16 +1,13 @@
 import { ContextMenu } from "@kobalte/core";
-import type { CommentBox as CommentBoxModel } from "@macrograph/runtime";
+import {
+	type CommentBox as CommentBoxModel,
+	getNodesInRect,
+} from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
-import {
-	Show,
-	batch,
-	createMemo,
-	createRoot,
-	createSignal,
-	onMount,
-} from "solid-js";
+import { Show, createMemo, createRoot, createSignal, onMount } from "solid-js";
 
+import type { SelectionItem } from "../../actions";
 import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
@@ -18,7 +15,7 @@ import { handleSelectableItemMouseDown } from "./util";
 
 interface Props {
 	box: CommentBoxModel;
-	onSelected(): void;
+	onSelected(ephemeral?: boolean): void;
 }
 
 export function CommentBox(props: Props) {
@@ -36,6 +33,87 @@ export function CommentBox(props: Props) {
 			(item) => item?.type === "commentBox" && item.id === box().id,
 		),
 	);
+
+	function createOnMouseDown(args: { x: "l" | "r"; y: "t" | "b" }) {
+		return (e: MouseEvent) => {
+			e.stopPropagation();
+
+			if (e.button !== 0) return;
+
+			const prevSelection = [...graph.state.selectedItemIds];
+
+			props.onSelected(true);
+
+			const size = { ...box().size };
+			const position = { ...box().position };
+
+			createRoot((dispose) => {
+				createEventListenerMap(window, {
+					mouseup: (e) => {
+						dispose();
+
+						const mousePosition = graph.toGraphSpace({
+							x: e.clientX,
+							y: e.clientY,
+						});
+
+						interfaceCtx.execute("setCommentBoxBounds", {
+							graphId: graph.model().id,
+							boxId: box().id,
+							size: {
+								x:
+									size.x -
+									(args.x === "l"
+										? mousePosition.x - position.x
+										: position.x + size.x - mousePosition.x),
+								y:
+									size.y -
+									(args.y === "t"
+										? mousePosition.y - position.y
+										: position.y + size.y - mousePosition.y),
+							},
+							position: {
+								x: args.x === "l" ? mousePosition.x : position.x,
+								y: args.y === "t" ? mousePosition.y : position.y,
+							},
+							prev: { size, position, selection: prevSelection },
+						});
+					},
+					mousemove: (e) => {
+						const mousePosition = graph.toGraphSpace({
+							x: e.clientX,
+							y: e.clientY,
+						});
+
+						interfaceCtx.execute(
+							"setCommentBoxBounds",
+							{
+								graphId: graph.model().id,
+								boxId: box().id,
+								size: {
+									x:
+										size.x -
+										(args.x === "l"
+											? mousePosition.x - position.x
+											: position.x + size.x - mousePosition.x),
+									y:
+										size.y -
+										(args.y === "t"
+											? mousePosition.y - position.y
+											: position.y + size.y - mousePosition.y),
+								},
+								position: {
+									x: args.x === "l" ? mousePosition.x : position.x,
+									y: args.y === "t" ? mousePosition.y : position.y,
+								},
+							},
+							{ ephemeral: true },
+						);
+					},
+				});
+			});
+		};
+	}
 
 	return (
 		<div
@@ -67,13 +145,10 @@ export function CommentBox(props: Props) {
 									e.stopPropagation();
 								}}
 								onMouseDown={(e) =>
-									handleSelectableItemMouseDown(
-										e,
-										graph,
-										interfaceCtx,
-										props.onSelected,
-										{ type: "commentBox", id: box().id },
-									)
+									handleSelectableItemMouseDown(e, graph, interfaceCtx, {
+										type: "commentBox",
+										id: box().id,
+									})
 								}
 								onDblClick={(e) => !e.shiftKey && setEditing(true)}
 							>
@@ -85,14 +160,10 @@ export function CommentBox(props: Props) {
 								</ContextMenuItem>
 								<ContextMenuItem
 									onSelect={() => {
-										graph
-											.model()
-											.deleteCommentbox(
-												box(),
-												(node) => interfaceCtx.nodeSizes.get(node),
-												false,
-											);
-										interfaceCtx.save();
+										interfaceCtx.execute("deleteGraphItems", {
+											graphId: graph.model().id,
+											items: [{ type: "commentBox", id: box().id }],
+										});
 									}}
 									class="text-red-500 flex flex-row gap-2 items-center justify-between"
 								>
@@ -100,14 +171,29 @@ export function CommentBox(props: Props) {
 								</ContextMenuItem>
 								<ContextMenuItem
 									onSelect={() => {
-										graph
-											.model()
-											.deleteCommentbox(
-												box(),
-												(node) => interfaceCtx.nodeSizes.get(node),
-												true,
-											);
-										interfaceCtx.save();
+										const items: Array<SelectionItem> = [
+											{ type: "commentBox", id: box().id },
+										];
+
+										const nodes = getNodesInRect(
+											graph.model().nodes.values(),
+											new DOMRect(
+												box().position.x,
+												box().position.y,
+												box().size.x,
+												box().size.y,
+											),
+											(node) => interfaceCtx.nodeSizes.get(node),
+										);
+
+										for (const node of nodes) {
+											items.push({ type: "node", id: node.id });
+										}
+
+										interfaceCtx.execute("deleteGraphItems", {
+											graphId: graph.model().id,
+											items,
+										});
 									}}
 									class="text-red-500 flex flex-row gap-2 items-center justify-between"
 								>
@@ -135,8 +221,13 @@ export function CommentBox(props: Props) {
 									onContextMenu={(e) => e.stopPropagation()}
 									onMouseDown={(e) => e.stopPropagation()}
 									onBlur={() => {
-										if (value() !== "") props.box.text = value();
-										interfaceCtx.save();
+										if (value() !== "") {
+											interfaceCtx.execute("setCommentBoxText", {
+												graphId: graph.model().id,
+												boxId: box().id,
+												text: value(),
+											});
+										}
 
 										setEditing(false);
 									}}
@@ -154,149 +245,19 @@ export function CommentBox(props: Props) {
 			</div>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nwse-resize -right-1 -bottom-1 fixed"
-				onMouseDown={(e) => {
-					e.stopPropagation();
-
-					if (e.button !== 0) return;
-					props.onSelected();
-
-					const size = { ...box().size };
-					const position = { ...box().position };
-
-					createRoot((dispose) => {
-						createEventListenerMap(window, {
-							mouseup: () => {
-								interfaceCtx.save();
-								dispose();
-							},
-							mousemove: (e) => {
-								const mousePosition = graph.toGraphSpace({
-									x: e.clientX,
-									y: e.clientY,
-								});
-
-								props.box.size = {
-									x: size.x - (position.x + size.x - mousePosition.x),
-									y: size.y - (position.y + size.y - mousePosition.y),
-								};
-								props.box.position = {
-									x: position.x,
-									y: position.y,
-								};
-							},
-						});
-					});
-				}}
+				onMouseDown={createOnMouseDown({ x: "r", y: "b" })}
 			/>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nesw-resize -left-1 -bottom-1 fixed"
-				onMouseDown={(e) => {
-					e.stopPropagation();
-
-					if (e.button !== 0) return;
-					props.onSelected();
-
-					const size = { ...box().size };
-					const position = { ...box().position };
-
-					createRoot((dispose) => {
-						createEventListenerMap(window, {
-							mouseup: () => {
-								interfaceCtx.save();
-								dispose();
-							},
-							mousemove: (e) => {
-								const mousePosition = graph.toGraphSpace({
-									x: e.clientX,
-									y: e.clientY,
-								});
-
-								batch(() => {
-									props.box.size = {
-										x: size.x - (mousePosition.x - position.x),
-										y: size.y - (position.y + size.y - mousePosition.y),
-									};
-									props.box.position = {
-										x: mousePosition.x,
-										y: position.y,
-									};
-								});
-							},
-						});
-					});
-				}}
+				onMouseDown={createOnMouseDown({ x: "l", y: "b" })}
 			/>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nesw-resize -right-1 -top-1 fixed"
-				onMouseDown={(e) => {
-					e.stopPropagation();
-
-					if (e.button !== 0) return;
-					props.onSelected();
-
-					const size = { ...box().size };
-					const position = { ...box().position };
-
-					createRoot((dispose) => {
-						createEventListenerMap(window, {
-							mouseup: () => {
-								interfaceCtx.save();
-								dispose();
-							},
-							mousemove: (e) => {
-								const mousePosition = graph.toGraphSpace({
-									x: e.clientX,
-									y: e.clientY,
-								});
-
-								props.box.size = {
-									x: size.x - (position.x + size.x - mousePosition.x),
-									y: size.y - (mousePosition.y - position.y),
-								};
-								props.box.position = {
-									x: position.x,
-									y: mousePosition.y,
-								};
-							},
-						});
-					});
-				}}
+				onMouseDown={createOnMouseDown({ x: "r", y: "t" })}
 			/>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nwse-resize -left-1 -top-1 fixed"
-				onMouseDown={(e) => {
-					e.stopPropagation();
-
-					if (e.button !== 0) return;
-					props.onSelected();
-
-					const size = { ...box().size };
-					const position = { ...box().position };
-
-					createRoot((dispose) => {
-						createEventListenerMap(window, {
-							mouseup: () => {
-								interfaceCtx.save();
-								dispose();
-							},
-							mousemove: (e) => {
-								const mousePosition = graph.toGraphSpace({
-									x: e.clientX,
-									y: e.clientY,
-								});
-
-								props.box.size = {
-									x: size.x - (mousePosition.x - position.x),
-									y: size.y - (mousePosition.y - position.y),
-								};
-								props.box.position = {
-									x: mousePosition.x,
-									y: mousePosition.y,
-								};
-							},
-						});
-					});
-				}}
+				onMouseDown={createOnMouseDown({ x: "l", y: "t" })}
 			/>
 		</div>
 	);

@@ -2,6 +2,7 @@ import {
 	DataOutput,
 	ExecInput,
 	type Pin,
+	makeIORef,
 	pinIsInput,
 	pinIsOutput,
 	pinsCanConnect,
@@ -82,12 +83,19 @@ export function usePin(pin: Accessor<Pin>) {
 					if (!draggingPin || draggingPin === thisPin) return;
 
 					if (pinIsOutput(thisPin) && pinIsInput(draggingPin))
-						graph.model().connectPins(thisPin, draggingPin);
+						interfaceCtx.execute("connectIO", {
+							graphId: graph.model().id,
+							out: { nodeId: thisPin.node.id, pinId: thisPin.id },
+							in: { nodeId: draggingPin.node.id, pinId: draggingPin.id },
+						});
 					else if (pinIsInput(thisPin) && pinIsOutput(draggingPin))
-						graph.model().connectPins(draggingPin, thisPin);
+						interfaceCtx.execute("connectIO", {
+							graphId: graph.model().id,
+							out: { nodeId: draggingPin.node.id, pinId: draggingPin.id },
+							in: { nodeId: thisPin.node.id, pinId: thisPin.id },
+						});
 
 					interfaceCtx.setState({ status: "idle" });
-					interfaceCtx.save();
 				});
 			},
 			mousedown: (e) => {
@@ -97,11 +105,17 @@ export function usePin(pin: Accessor<Pin>) {
 
 				if (mouseDown.status === "connectionAssignMode") {
 					if (pinIsOutput(thisPin) && pinIsInput(mouseDown.pin))
-						graph.model().connectPins(thisPin, mouseDown.pin);
+						interfaceCtx.execute("connectIO", {
+							graphId: graph.model().id,
+							out: { nodeId: thisPin.node.id, pinId: thisPin.id },
+							in: { nodeId: mouseDown.pin.node.id, pinId: mouseDown.pin.id },
+						});
 					else if (pinIsInput(thisPin) && pinIsOutput(mouseDown.pin))
-						graph.model().connectPins(mouseDown.pin, thisPin);
-
-					interfaceCtx.save();
+						interfaceCtx.execute("connectIO", {
+							graphId: graph.model().id,
+							out: { nodeId: mouseDown.pin.node.id, pinId: mouseDown.pin.id },
+							in: { nodeId: thisPin.node.id, pinId: thisPin.id },
+						});
 				} else if (mouseDown.status === "idle") {
 					if (
 						(e.ctrlKey || e.metaKey) &&
@@ -175,8 +189,10 @@ export function usePin(pin: Accessor<Pin>) {
 				}
 			},
 			dblclick: () => {
-				graph.model().disconnectPin(thisPin);
-				interfaceCtx.save();
+				interfaceCtx.execute("disconnectIO", {
+					graphId: graph.model().id,
+					ioRef: makeIORef(thisPin),
+				});
 			},
 		});
 	});

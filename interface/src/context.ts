@@ -1,23 +1,92 @@
+import { createActionHistory } from "@macrograph/action-history";
 import type { Core, Node, Pin, Size, XY } from "@macrograph/runtime";
 import { serializeProject } from "@macrograph/runtime-serde";
 import { createContextProvider } from "@solid-primitives/context";
-import { createSignal, onCleanup } from "solid-js";
-import { createStore, reconcile } from "solid-js/store";
-
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { leading, throttle } from "@solid-primitives/scheduled";
 import { makePersisted } from "@solid-primitives/storage";
+import { createMemo, createSignal, onCleanup } from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
+
+import { historyActions } from "./actions";
 import type { GraphState, SelectedItemID } from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
 
 export type Environment = "custom" | "browser";
 
+function createEditorState() {
+	const [hoveringPin, setHoveringPin] = createSignal<Pin | null>(null);
+	const [state, setState] = createStore<MouseState>({
+		status: "idle",
+	});
+	const leftSidebar = createSidebarState("left-sidebar");
+	const rightSidebar = createSidebarState("right-sidebar");
+
+	const [graphStates, setGraphStates] = makePersisted(
+		createStore<GraphState[]>([]),
+		{
+			name: "graph-states",
+			deserialize: (data) => {
+				const json: Array<
+					GraphState & {
+						// old
+						selectedItemId?: SelectedItemID | null;
+					}
+				> = JSON.parse(data) as any;
+
+				for (const state of json) {
+					if ("selectedItemId" in state) {
+						if (state.selectedItemId === null) {
+							state.selectedItemIds = [];
+						} else if (typeof state.selectedItemId === "object") {
+							state.selectedItemIds = [state.selectedItemId];
+						}
+
+						state.selectedItemId = undefined;
+					}
+				}
+
+				return json;
+			},
+		},
+	);
+
+	const [currentGraphId, setCurrentGraphId] = makePersisted(
+		createSignal<number>(0),
+		{ name: "current-graph-id" },
+	);
+
+	const currentGraphIndex = createMemo(() => {
+		const index = graphStates.findIndex((g) => g.id === currentGraphId());
+
+		if (index < 0) return null;
+		return index;
+	});
+
+	return {
+		state,
+		setState: (value: MouseState) => {
+			setState(reconcile(value));
+		},
+		hoveringPin,
+		setHoveringPin,
+		nodeSizes: new WeakMap<Node, Size>(),
+		pinPositions: new ReactiveWeakMap<Pin, XY>(),
+		leftSidebar,
+		rightSidebar,
+		currentGraphId,
+		setCurrentGraphId,
+		currentGraphIndex,
+		graphStates,
+		setGraphStates,
+	};
+}
+
+export type EditorState = ReturnType<typeof createEditorState>;
+
 export const [InterfaceContextProvider, useInterfaceContext] =
 	createContextProvider((props: { core: Core; environment: Environment }) => {
-		const [hoveringPin, setHoveringPin] = createSignal<Pin | null>(null);
-		const [state, setState] = createStore<MouseState>({
-			status: "idle",
-		});
+		const state = createEditorState();
 
 		const save = leading(
 			throttle,
@@ -29,7 +98,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 					JSON.stringify(serializeProject(props.core.project)),
 				);
 			},
-			500,
+			100,
 		);
 
 		onCleanup(
@@ -38,64 +107,18 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			}),
 		);
 
-		const leftSidebar = createSidebarState("left-sidebar");
-		const rightSidebar = createSidebarState("right-sidebar");
-
-		const [currentGraphIndex, setCurrentGraphIndex] = makePersisted(
-			createSignal<number>(0),
-			{ name: "current-graph-index" },
-		);
-
-		const [graphStates, setGraphStates] = makePersisted(
-			createStore<GraphState[]>([]),
-			{
-				name: "graph-states",
-				deserialize: (data) => {
-					const json: Array<
-						GraphState & {
-							// old
-							selectedItemId?: SelectedItemID | null;
-						}
-					> = JSON.parse(data) as any;
-
-					for (const state of json) {
-						if ("selectedItemId" in state) {
-							if (state.selectedItemId === null) {
-								state.selectedItemIds = [];
-							} else if (typeof state.selectedItemId === "object") {
-								state.selectedItemIds = [state.selectedItemId];
-							}
-
-							state.selectedItemId = undefined;
-						}
-					}
-
-					return json;
-				},
-			},
-		);
 		return {
-			state,
-			setState: (value: MouseState) => {
-				setState(reconcile(value));
-			},
-			hoveringPin,
-			setHoveringPin,
+			...createActionHistory(historyActions(props.core, state), save),
+			...state,
 			get core() {
 				return props.core;
 			},
 			save,
 			nodeSizes: new WeakMap<Node, Size>(),
 			pinPositions: new ReactiveWeakMap<Pin, XY>(),
-			leftSidebar,
-			rightSidebar,
 			get environment() {
 				return props.environment;
 			},
-			currentGraphIndex,
-			setCurrentGraphIndex,
-			graphStates,
-			setGraphStates,
 		};
 	}, null!);
 

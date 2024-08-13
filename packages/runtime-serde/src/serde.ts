@@ -119,7 +119,7 @@ export const Connection = v.object({
 export type Connection = v.InferOutput<typeof Connection>;
 
 export const CommentBox = v.object({
-	id: v.optional(v.number()),
+	id: v.number(),
 	position: XY,
 	size: XY,
 	text: v.string(),

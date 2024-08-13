@@ -1,5 +1,4 @@
 import type { Graph } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
 
 import { useInterfaceContext } from "../../context";
 import { Variables as VariablesRoot } from "../Variables";
@@ -12,20 +11,41 @@ export function Variables(props: { graph: Graph }) {
 			titlePrefix="Graph"
 			variables={props.graph.variables}
 			onCreateVariable={() => {
-				props.graph.createVariable({
-					name: `Variable ${props.graph.variables.length + 1}`,
-					value: "",
-					type: t.string(),
+				interfaceCtx.execute("createVariable", {
+					location: "graph",
+					graphId: props.graph.id,
 				});
-				interfaceCtx.save();
 			}}
 			onRemoveVariable={(id) => {
-				props.graph.removeVariable(id);
-				interfaceCtx.save();
+				interfaceCtx.execute("deleteVariable", {
+					location: "graph",
+					graphId: props.graph.id,
+					variableId: id,
+				});
 			}}
 			onSetVariableValue={(id, value) => {
-				props.graph.setVariableValue(id, value);
-				interfaceCtx.save();
+				interfaceCtx.execute("setVariableValue", {
+					location: "graph",
+					graphId: props.graph.id,
+					variableId: id,
+					value,
+				});
+			}}
+			onSetVariableType={(id, type) => {
+				interfaceCtx.execute("setVariableType", {
+					location: "graph",
+					graphId: props.graph.id,
+					variableId: id,
+					type,
+				});
+			}}
+			onVariableNameChanged={(id, name) => {
+				interfaceCtx.execute("setVariableName", {
+					location: "graph",
+					graphId: props.graph.id,
+					variableId: id,
+					name,
+				});
 			}}
 		/>
 	);

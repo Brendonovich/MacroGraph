@@ -27,7 +27,7 @@ export class CustomStruct extends StructBase {
 		this._fields = createMutable(args?.fields ?? {});
 		this.source = { variant: "custom", id: this.id };
 
-		this.addField();
+		this.createField();
 
 		const self = createMutable(this);
 
@@ -51,8 +51,8 @@ export class CustomStruct extends StructBase {
 		// return this._fieldsMemo();
 	}
 
-	addField() {
-		const id = this.fieldIdCounter++;
+	createField(args?: { id?: number }) {
+		const id = args?.id ?? this.fieldIdCounter++;
 
 		const name = `Field ${id}`;
 		this._fields[id] = new StructField(id.toString(), t.string(), name);
