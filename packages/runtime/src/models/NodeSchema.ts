@@ -1,6 +1,7 @@
 import { Maybe, type Option } from "@macrograph/option";
 import {
 	type AnyType,
+	BasePrimitiveType,
 	type BaseType,
 	type PrimitiveType,
 	Wildcard,
@@ -39,11 +40,13 @@ export type DataInputBuilder =
 			id: string;
 			name?: string;
 			type: AnyType;
+			defaultValue?: any;
 	  }
 	| {
 			id: string;
 			name?: string;
 			type: t.String;
+			defaultValue?: string;
 			fetchSuggestions?(): Promise<string[]>;
 	  };
 export type ExecInputBuilder = {
@@ -111,6 +114,14 @@ export class IOBuilder {
 
 		batch(() => {
 			newInput.name = args.name;
+			console.log("test");
+			if (
+				args.defaultValue &&
+				args.type instanceof BasePrimitiveType &&
+				typeof args.defaultValue === typeof args.type.default()
+			) {
+				newInput.defaultValue = args.defaultValue;
+			}
 			newInput.fetchSuggestions = (args as any).fetchSuggestions;
 
 			this.inputs.push(newInput);

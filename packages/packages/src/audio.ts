@@ -27,6 +27,7 @@ export function pkg(args: { prepareURL(url: string): string }) {
 					id: "volume",
 					name: "Volume",
 					type: t.int(),
+					defaultValue: 100,
 				}),
 				idOut: io.dataOutput({
 					id: "idOut",
