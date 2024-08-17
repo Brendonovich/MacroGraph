@@ -38,7 +38,7 @@ export function CustomTypes() {
 	const filteredEnums = createTokenisedSearchFilter(search, tokenisedEnums);
 
 	const [selected, setSelected] = createSignal<"events" | "structs" | "enums">(
-		"enums",
+		"events",
 	);
 
 	return (
