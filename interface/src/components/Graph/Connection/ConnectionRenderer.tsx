@@ -6,10 +6,10 @@ import {
 	pinIsOutput,
 	splitIORef,
 } from "@macrograph/runtime";
+import type { t } from "@macrograph/typesystem";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { createEffect } from "solid-js";
 
-import type { t } from "@macrograph/typesystem";
 import type { GraphBounds } from "../../..";
 import { useInterfaceContext } from "../../../context";
 import { useGraphContext } from "../Context";
@@ -127,7 +127,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 				}),
 			);
 
-			const diffs = ctx.toGraphSpace({
+			const mousePosition = ctx.toGraphSpace({
 				x: dragState.mousePosition.x,
 				y: dragState.mousePosition.y,
 			});
@@ -138,13 +138,13 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 						canvas,
 						dragState.pin instanceof DataOutput ? dragState.pin.type : null,
 						pinPos,
-						diffs,
+						mousePosition,
 					);
 				else
 					drawConnection(
 						canvas,
 						dragState.pin instanceof DataInput ? dragState.pin.type : null,
-						diffs,
+						mousePosition,
 						pinPos,
 					);
 			});
@@ -165,26 +165,51 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 					pinPos
 						.zip(autoconnectIOPosition)
 						.peek(([pinPos, autoconnectIOPosition]) => {
-							if (pinIsOutput(autoconnectIO))
-								drawConnection(
-									canvas,
-									dragState.pin instanceof DataInput
-										? dragState.pin.type
-										: null,
-									autoconnectIOPosition,
-									pinPos,
-									0.5,
-								);
-							else
-								drawConnection(
-									canvas,
-									dragState.pin instanceof DataOutput
-										? dragState.pin.type
-										: null,
-									pinPos,
-									autoconnectIOPosition,
-									0.5,
-								);
+							if (AUTOCOMPLETE_MODE === "snap") {
+								if (pinIsOutput(autoconnectIO)) {
+									drawConnection(
+										canvas,
+										dragState.pin instanceof DataInput
+											? dragState.pin.type
+											: null,
+										autoconnectIOPosition,
+										pinPos,
+										0.5,
+									);
+								} else {
+									drawConnection(
+										canvas,
+										dragState.pin instanceof DataOutput
+											? dragState.pin.type
+											: null,
+										pinPos,
+										autoconnectIOPosition,
+										0.5,
+									);
+								}
+							} else {
+								if (pinIsOutput(autoconnectIO)) {
+									drawConnection(
+										canvas,
+										dragState.pin instanceof DataInput
+											? dragState.pin.type
+											: null,
+										autoconnectIOPosition,
+										mousePosition,
+										0.5,
+									);
+								} else {
+									drawConnection(
+										canvas,
+										dragState.pin instanceof DataOutput
+											? dragState.pin.type
+											: null,
+										mousePosition,
+										autoconnectIOPosition,
+										0.5,
+									);
+								}
+							}
 						});
 				}
 			}
@@ -200,3 +225,5 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 		/>
 	);
 };
+
+const AUTOCOMPLETE_MODE: "snap" | "smooth" = "snap";

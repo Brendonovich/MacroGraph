@@ -362,4 +362,4 @@ function getNearCompatibleIO(
 	return nearest ? nearest[1] : null;
 }
 
-const AUTOCONNECT_MAX_DISTANCE = 100;
+const AUTOCONNECT_MAX_DISTANCE = 150;
