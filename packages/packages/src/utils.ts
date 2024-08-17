@@ -1853,7 +1853,7 @@ export function pkg(core: Core) {
 					const variantOutputs = (
 						v as t.Enum<Enum<EnumVariants>>
 					).inner.variants.map((v) => {
-						const { name, data } = v;
+						const { id: name, fields: data } = v;
 
 						if (data === null) {
 							return io.execOutput({
@@ -1863,10 +1863,14 @@ export function pkg(core: Core) {
 						}
 						return io.scopeOutput({
 							id: name,
-							name: v.name,
+							name: v.name ?? v.id,
 							scope: (s) => {
-								for (const [id, type] of Object.entries(data)) {
-									s.output({ id, type });
+								for (const [id, field] of Object.entries(data)) {
+									s.output({
+										id,
+										name: field.name,
+										type: field.type,
+									});
 								}
 							},
 						});

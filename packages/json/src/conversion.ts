@@ -73,7 +73,7 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
 	if (type instanceof t.Enum) {
 		const enm: Enum = type.inner;
 		const variant = (enm.variants as EnumVariants).find(
-			(v) => v.name === value.variant,
+			(v) => v.id === value.variant,
 		)!;
 
 		return JSONEnum.variant([
@@ -89,7 +89,10 @@ export function toJSON(type: t.Any, value: any): JSONValue | null {
 										{
 											value: new ReactiveMap(
 												Object.entries(value.data).map(([name, value]) => {
-													return [name, toJSON(variant.data![name]!, value)!];
+													return [
+														name,
+														toJSON(variant.fields![name]!.type, value)!,
+													] as const;
 												}),
 											),
 										},

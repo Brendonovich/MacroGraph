@@ -137,7 +137,7 @@ const Input = (props: InputProps) => {
 								enum={type().inner}
 								value={(() => {
 									const variant = (type().inner.variants as EnumVariants).find(
-										(v) => v.name === (props.value as EnumValue)?.variant,
+										(v) => v.id === (props.value as EnumValue)?.variant,
 									);
 									if (variant) return variant;
 

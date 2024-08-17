@@ -1,11 +1,12 @@
 import { Maybe, type Option } from "@macrograph/option";
-import type { Enum, StructBase } from "@macrograph/typesystem";
+import type { EnumBase, StructBase } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
 import "@total-typescript/ts-reset";
 import { createMutable } from "solid-js/store";
 
 import type { Core } from "./Core";
+import { CustomEnum } from "./CustomEnum";
 import { CustomEvent } from "./CustomEvent";
 import { CustomStruct } from "./CustomStruct";
 import { Graph } from "./Graph";
@@ -33,6 +34,7 @@ export class Project {
 	graphs = new ReactiveMap<number, Graph>();
 	customEvents = new ReactiveMap<number, CustomEvent>();
 	customStructs = new ReactiveMap<number, CustomStruct>();
+	customEnums = new ReactiveMap<number, CustomEnum>();
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
 	name = "New Project";
@@ -79,7 +81,7 @@ export class Project {
 		data:
 			| { variant: "package"; package: string; name: string }
 			| { variant: "custom"; id: number },
-	): Option<StructBase | Enum> {
+	): Option<StructBase | EnumBase> {
 		if (data.variant === "package") {
 			const pkg = Maybe(
 				this.core.packages.find((p) => p.name === data.package),
@@ -91,7 +93,7 @@ export class Project {
 		}
 
 		if (variant === "struct") return Maybe(this.customStructs.get(data.id));
-		throw new Error();
+		return Maybe(this.customEnums.get(data.id));
 	}
 
 	createGraph(args?: { id?: number; name?: string }) {
@@ -135,6 +137,20 @@ export class Project {
 		this.customStructs.set(id, struct);
 
 		return struct;
+	}
+
+	createCustomEnum(args?: { id?: number }) {
+		const id = args?.id ?? this.generateCustomTypeId();
+
+		const enm = new CustomEnum({
+			id,
+			project: this,
+			name: "New Enum",
+		});
+
+		this.customEnums.set(id, enm);
+
+		return enm;
 	}
 
 	generateId() {

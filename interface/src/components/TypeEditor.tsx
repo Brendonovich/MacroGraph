@@ -147,6 +147,23 @@ export function TypeEditor(props: {
 						</div>
 						<CategoryLabel>Enums</CategoryLabel>
 						<div class="flex flex-col pl-2">
+							<Show when={interfaceCtx.core.project.customEnums.size > 0}>
+								<span class="text-neutral-300 text-xs mt-0.5">Custom</span>
+								<For each={[...interfaceCtx.core.project.customEnums.values()]}>
+									{(enm) => (
+										<TypeItem
+											type="button"
+											onClick={() => {
+												ctx.typeDialogState()?.onTypeSelected(t.enum(enm));
+												ctx.setTypeDialogState(null);
+											}}
+										>
+											{enm.name}
+										</TypeItem>
+									)}
+								</For>
+							</Show>
+
 							<For each={interfaceCtx.core.packages}>
 								{(pkg) => (
 									<Show when={pkg.enums.size > 0}>

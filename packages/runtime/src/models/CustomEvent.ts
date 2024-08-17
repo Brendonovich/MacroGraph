@@ -1,13 +1,7 @@
-import { type PrimitiveType, t } from "@macrograph/typesystem";
+import { Field, type PrimitiveType, t } from "@macrograph/typesystem";
 import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";
-
-export type CustomEventField = {
-	id: number;
-	name: string;
-	type: t.Any;
-};
 
 export interface EventArgs {
 	id: number;
@@ -25,7 +19,7 @@ export class CustomEvent {
 	name: string;
 	project: Project;
 
-	fields: Array<CustomEventField> = [];
+	fields: Array<Field> = [];
 
 	fieldIdCounter = 0;
 
@@ -42,33 +36,29 @@ export class CustomEvent {
 		return this.fieldIdCounter++;
 	}
 
-	createField(args?: { id?: number }) {
-		const id = args?.id ?? this.generateId();
-		this.fields.push({
-			id,
-			name: `Field ${id}`,
-			type: t.string(),
-		});
+	createField(args?: { id?: string }) {
+		const id = args?.id ?? this.generateId().toString();
+		this.fields.push(new Field(id, t.string(), "New Field"));
 	}
 
-	field(id: number) {
-		return this.fields.find((f) => f.id === id);
+	field(id: string) {
+		return this.fields.find((f) => f.id === id.toString());
 	}
 
-	editFieldName(id: number, name: string) {
-		const pin = this.fields.find((f) => f.id === id);
+	editFieldName(id: string, name?: string) {
+		const pin = this.fields.find((f) => f.id === id.toString());
 		if (!pin) return;
 		pin.name = name;
 	}
 
-	editFieldType(id: number, type: PrimitiveType) {
-		const pin = this.fields.find((f) => f.id === id);
+	editFieldType(id: string, type: PrimitiveType) {
+		const pin = this.fields.find((f) => f.id === id.toString());
 		if (!pin) return;
 		pin.type = type;
 	}
 
-	deleteField(id: number) {
-		const index = this.fields.findIndex((f) => f.id === id);
+	deleteField(id: string) {
+		const index = this.fields.findIndex((f) => f.id === id.toString());
 		if (index === -1) return;
 		this.fields.splice(index, 1);
 	}

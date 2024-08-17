@@ -36,10 +36,13 @@ export function deserializeValue(rawValue: any, type: t.Any): any {
 					data: Object.fromEntries(
 						Object.entries(rawValue.data).map(([key, dataValue]) => {
 							const variant = (type.inner as Enum<EnumVariants>).variants.find(
-								(v) => v.name === value.variant,
+								(v) => v.id === value.variant,
 							)!;
 
-							return [key, deserializeValue(dataValue, variant.data![key]!)];
+							return [
+								key,
+								deserializeValue(dataValue, variant.fields![key]!.type),
+							];
 						}),
 					),
 				}
@@ -97,10 +100,13 @@ export function serializeValue(rawValue: any, type: t.Any): any {
 					data: Object.fromEntries(
 						Object.entries(rawValue.data).map(([key, dataValue]) => {
 							const variant = (type.inner as Enum<EnumVariants>).variants.find(
-								(v) => v.name === value.variant,
+								(v) => v.id === value.variant,
 							)!;
 
-							return [key, serializeValue(dataValue, variant.data![key]!)];
+							return [
+								key,
+								serializeValue(dataValue, variant.fields![key]!.type),
+							];
 						}),
 					),
 				}

@@ -1,12 +1,14 @@
 import * as runtime from "@macrograph/runtime";
 import {
-	StructField,
+	type EnumVariantFields,
+	Field,
 	deserializeType,
 	deserializeValue,
 } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
+import type * as v from "valibot";
 
 import type * as serde from "./serde";
 
@@ -37,6 +39,18 @@ export async function deserializeProject(
 					return [struct.id, struct] as [number, runtime.CustomStruct];
 				})
 				.filter(Boolean) as [number, runtime.CustomStruct][],
+		);
+
+		project.customEnums = new ReactiveMap(
+			data.customEnums
+				.map((serializedEnum) => {
+					const enm = deserializeCustomEnum(project, serializedEnum);
+
+					if (enm === null) return null;
+
+					return [enm.id, enm] as [number, runtime.CustomEnum];
+				})
+				.filter(Boolean) as [number, runtime.CustomEnum][],
 		);
 
 		project.customEventIdCounter = data.customEventIdCounter;
@@ -113,26 +127,57 @@ export function deserializeCustomStruct(
 
 	struct.fieldIdCounter = data.fieldIdCounter;
 
-	batch(() => {
-		for (const field of data.fields) {
-			deserializeCustomStructField(struct, field);
-		}
-	});
+	for (const field of data.fields) {
+		struct.fields[field.id] = deserializeField(struct.project, field);
+	}
 
 	return struct;
 }
 
-export function deserializeCustomStructField(
-	struct: runtime.CustomStruct,
-	field: serde.CustomStructField,
+export function deserializeCustomEnum(
+	project: runtime.Project,
+	data: v.InferOutput<typeof serde.CustomEnum>,
+): runtime.CustomEnum {
+	const enm = new runtime.CustomEnum({
+		project,
+		id: data.id,
+		name: data.name,
+	});
+
+	enm.variantIdCounter = data.variantIdCounter;
+
+	enm.variants = [];
+	for (const variant of data.variants) {
+		enm.variants.push(deserializeCustomEnumVariant(enm, variant));
+	}
+
+	return enm;
+}
+
+export function deserializeCustomEnumVariant(
+	enm: runtime.CustomEnum,
+	data: serde.CustomEnumVariant,
 ) {
-	struct.fields[field.id] = Object.assign(
-		new StructField(
-			field.id,
-			deserializeType(field.type, struct.project.getType.bind(struct.project)),
-			field.name,
-		),
-		{ id: field.id },
+	const variant = new runtime.CustomEnumVariant<string, EnumVariantFields>(
+		data.id,
+		{},
+		data.display,
+	);
+
+	variant.fieldIdCounter = data.fieldIdCounter;
+
+	for (const field of data.fields) {
+		variant.fields[field.id] = deserializeField(enm.project, field);
+	}
+
+	return variant;
+}
+
+export function deserializeField(project: runtime.Project, field: serde.Field) {
+	return new Field(
+		field.id,
+		deserializeType(field.type, project.getType.bind(project)),
+		field.name,
 	);
 }
 
@@ -149,26 +194,10 @@ export function deserializeCustomEvent(
 	event.fieldIdCounter = data.fieldIdCounter;
 
 	batch(() => {
-		event.fields = data.fields.map((field) =>
-			deserializeCustomEventField(event, field),
-		);
+		event.fields = data.fields.map((field) => deserializeField(project, field));
 	});
 
 	return event;
-}
-
-export function deserializeCustomEventField(
-	event: runtime.CustomEvent,
-	field: serde.CustomEventField,
-) {
-	return {
-		id: field.id,
-		name: field.name,
-		type: deserializeType(
-			field.type,
-			event.project.getType.bind(event.project),
-		),
-	};
 }
 
 export function deserializeVariable(

@@ -1,5 +1,10 @@
 import * as runtime from "@macrograph/runtime";
-import { type StructField, serializeValue } from "@macrograph/typesystem";
+import {
+	type EnumVariant,
+	type EnumVariantFields,
+	type Field,
+	serializeValue,
+} from "@macrograph/typesystem";
 import type * as v from "valibot";
 
 import type * as serde from "./serde";
@@ -17,6 +22,7 @@ export function serializeProject(
 		customStructs: [...project.customStructs.values()].map(
 			serializeCustomStruct,
 		),
+		customEnums: [...project.customEnums.values()].map(serializeCustomEnum),
 		counter: project.idCounter,
 		resources: [...project.resources].map(([type, entry]) =>
 			serializeResources(type, entry),
@@ -91,8 +97,8 @@ export function serializeCustomEvent(
 }
 
 export function serializeCustomEventField(
-	field: runtime.CustomEventField,
-): v.InferInput<typeof serde.CustomEventField> {
+	field: Field,
+): v.InferInput<typeof serde.Field> {
 	return {
 		...field,
 		type: field.type.serialize(),
@@ -111,11 +117,41 @@ export function serializeCustomStruct(
 }
 
 export function serializeCustomStructField(
-	field: StructField,
+	field: Field,
 ): v.InferInput<typeof serde.CustomStructField> {
 	return {
 		name: field.name,
 		id: field.id,
+		type: field.type.serialize(),
+	};
+}
+
+export function serializeCustomEnum(
+	e: runtime.CustomEnum,
+): v.InferInput<typeof serde.CustomEnum> {
+	return {
+		id: e.id,
+		name: e.name,
+		variants: Object.values(e.variants).map(serializeCustomEnumVariant),
+		variantIdCounter: e.variantIdCounter,
+	};
+}
+
+export function serializeCustomEnumVariant(
+	v: EnumVariant<string, EnumVariantFields | null>,
+): v.InferInput<typeof serde.CustomEnumVariant> {
+	return {
+		id: v.id,
+		display: v.name,
+		fields: Object.values(v.fields ?? {}).map(serializeField),
+		fieldIdCounter: v.fieldIdCounter,
+	};
+}
+
+export function serializeField(field: Field): v.InferInput<typeof serde.Field> {
+	return {
+		id: field.id,
+		name: field.name,
 		type: field.type.serialize(),
 	};
 }

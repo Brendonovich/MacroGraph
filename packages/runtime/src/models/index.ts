@@ -1,4 +1,5 @@
 export * from "./IO";
+export * from "./CustomEnum";
 export * from "./CustomEvent";
 export * from "./CustomStruct";
 export * from "./NodeSchema";

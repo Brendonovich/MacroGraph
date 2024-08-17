@@ -1,5 +1,5 @@
 import { Tabs } from "@kobalte/core";
-import { For, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
@@ -29,8 +29,16 @@ export function CustomTypes() {
 
 	const filteredStructs = createTokenisedSearchFilter(search, tokenisedStructs);
 
+	const tokenisedEnums = createMemo(() =>
+		[...interfaceCtx.core.project.customEnums].map(
+			([id, enm]) => [tokeniseString(enm.name), [id, enm]] as const,
+		),
+	);
+
+	const filteredEnums = createTokenisedSearchFilter(search, tokenisedEnums);
+
 	const [selected, setSelected] = createSignal<"events" | "structs" | "enums">(
-		"events",
+		"enums",
 	);
 
 	return (
@@ -50,9 +58,9 @@ export function CustomTypes() {
 					<Tabs.Trigger class="flex-1 px-1 py-2" value="structs">
 						Structs
 					</Tabs.Trigger>
-					{/* <Tabs.Trigger class="flex-1 px-1 py-2" value="enums">
+					<Tabs.Trigger class="flex-1 px-1 py-2" value="enums">
 						Enums
-					</Tabs.Trigger> */}
+					</Tabs.Trigger>
 					<Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-transform p-1">
 						<div class="bg-white/20 w-full h-full rounded" />
 					</Tabs.Indicator>
@@ -78,6 +86,10 @@ export function CustomTypes() {
 									interfaceCtx.execute("createCustomStruct");
 									return;
 								}
+								case "enums": {
+									interfaceCtx.execute("createCustomEnum");
+									return;
+								}
 							}
 						}}
 					>
@@ -91,6 +103,7 @@ export function CustomTypes() {
 								{([id, event]) => (
 									<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
 										<InlineTextEditor
+											class="-mx-1"
 											value={event.name}
 											onChange={(value) => {
 												interfaceCtx.execute("setCustomEventName", {
@@ -101,7 +114,7 @@ export function CustomTypes() {
 										>
 											<IconButton
 												type="button"
-												class="opacity-0 focus:opacity-100 group-hover/item:opacity-100"
+												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
 												onClick={(e) => {
 													e.stopPropagation();
 
@@ -115,7 +128,7 @@ export function CustomTypes() {
 
 											<IconButton
 												type="button"
-												class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-0.5"
+												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
 												onClick={(e) => {
 													e.stopPropagation();
 
@@ -132,7 +145,8 @@ export function CustomTypes() {
 												{(field) => (
 													<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
 														<InlineTextEditor
-															value={field.name}
+															class="-mx-1"
+															value={field.name ?? field.id}
 															onChange={(value) => {
 																interfaceCtx.execute(
 																	"setCustomEventFieldName",
@@ -143,11 +157,10 @@ export function CustomTypes() {
 																	},
 																);
 															}}
-															class="-mx-1"
 														>
 															<IconButton
 																type="button"
-																class="opacity-0 focus:opacity-100 group-hover/field:opacity-100 p-0.5"
+																class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5"
 																onClick={(e) => {
 																	e.stopPropagation();
 
@@ -189,6 +202,7 @@ export function CustomTypes() {
 								{([id, struct]) => (
 									<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
 										<InlineTextEditor
+											class="-mx-1"
 											value={struct.name}
 											onChange={(value) => {
 												interfaceCtx.execute("setCustomStructName", {
@@ -199,7 +213,7 @@ export function CustomTypes() {
 										>
 											<IconButton
 												type="button"
-												class="opacity-0 focus:opacity-100 group-hover/item:opacity-100"
+												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
 												onClick={(e) => {
 													e.stopPropagation();
 
@@ -213,7 +227,7 @@ export function CustomTypes() {
 
 											<IconButton
 												type="button"
-												class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-0.5"
+												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
 												onClick={(e) => {
 													e.stopPropagation();
 
@@ -230,6 +244,7 @@ export function CustomTypes() {
 												{(field) => (
 													<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
 														<InlineTextEditor
+															class="-mx-1"
 															value={field.name ?? field.id}
 															onChange={(value) => {
 																interfaceCtx.execute(
@@ -241,11 +256,10 @@ export function CustomTypes() {
 																	},
 																);
 															}}
-															class="-mx-1"
 														>
 															<IconButton
 																type="button"
-																class="opacity-0 focus:opacity-100 group-hover/field:opacity-100 p-0.5"
+																class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5 mr-1"
 																onClick={(e) => {
 																	e.stopPropagation();
 
@@ -274,6 +288,170 @@ export function CustomTypes() {
 												)}
 											</For>
 										</ul>
+									</li>
+								)}
+							</For>
+						</Tabs.Content>
+						<Tabs.Content value="enums">
+							<For each={filteredEnums()}>
+								{([id, enm]) => (
+									<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
+										<InlineTextEditor
+											class="-mx-1"
+											value={enm.name}
+											onChange={(value) => {
+												interfaceCtx.execute("setCustomEnumName", {
+													enumId: id,
+													name: value,
+												});
+											}}
+										>
+											<IconButton
+												type="button"
+												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
+												onClick={(e) => {
+													e.stopPropagation();
+
+													interfaceCtx.execute("createCustomEnumVariant", {
+														enumId: id,
+													});
+												}}
+											>
+												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+											</IconButton>
+
+											<IconButton
+												type="button"
+												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
+												onClick={(e) => {
+													e.stopPropagation();
+
+													interfaceCtx.execute("deleteCustomEnum", {
+														enumId: id,
+													});
+												}}
+											>
+												<IconAntDesignDeleteOutlined class="size-4" />
+											</IconButton>
+										</InlineTextEditor>
+										<Show when={enm.variants.length}>
+											<ul class="px-2 bg-black/30 rounded-md divide-y divide-white/10">
+												<For each={enm.variants}>
+													{(variant) => (
+														<li class="flex flex-col flex-1 group/variant pb-1 pt-1 gap-1">
+															<InlineTextEditor
+																class="-mx-1"
+																value={variant.name ?? variant.id}
+																onChange={(value) => {
+																	interfaceCtx.execute(
+																		"setCustomEnumVariantName",
+																		{
+																			enumId: id,
+																			variantId: variant.id,
+																			name: value,
+																		},
+																	);
+																}}
+															>
+																<IconButton
+																	type="button"
+																	class="opacity-0 focus-visible:opacity-100 group-hover/variant:opacity-100"
+																	onClick={(e) => {
+																		e.stopPropagation();
+
+																		interfaceCtx.execute(
+																			"createCustomEnumVariantField",
+																			{ enumId: id, variantId: variant.id },
+																		);
+																	}}
+																>
+																	<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+																</IconButton>
+
+																<IconButton
+																	type="button"
+																	class="opacity-0 focus-visible:opacity-100 group-hover/variant:opacity-100 p-0.5 mr-1"
+																	onClick={(e) => {
+																		e.stopPropagation();
+
+																		interfaceCtx.execute(
+																			"deleteCustomEnumVariant",
+																			{ enumId: id, variantId: variant.id },
+																		);
+																	}}
+																>
+																	<IconAntDesignDeleteOutlined class="size-4" />
+																</IconButton>
+															</InlineTextEditor>
+
+															<Show when={Object.keys(variant.fields).length}>
+																<ul class="divide-y divide-white/10 flex-1 px-2 bg-black/30 rounded-md mb-1">
+																	<For
+																		each={[...Object.values(variant.fields)]}
+																	>
+																		{(field) => (
+																			<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
+																				<InlineTextEditor
+																					value={field.name ?? field.id}
+																					onChange={(value) => {
+																						interfaceCtx.execute(
+																							"setCustomEnumVariantFieldName",
+																							{
+																								enumId: enm.id,
+																								variantId: variant.id,
+																								fieldId: field.id,
+																								name: value,
+																							},
+																						);
+																					}}
+																					class="-mx-1"
+																				>
+																					<IconButton
+																						type="button"
+																						class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5 mr-0.5"
+																						onClick={(e) => {
+																							e.stopPropagation();
+
+																							interfaceCtx.execute(
+																								"deleteCustomEnumVariantField",
+																								{
+																									enumId: enm.id,
+																									variantId: variant.id,
+																									fieldId: field.id,
+																								},
+																							);
+																						}}
+																					>
+																						<IconAntDesignDeleteOutlined class="size-4" />
+																					</IconButton>
+																				</InlineTextEditor>
+
+																				<div class="flex flex-row justify-start">
+																					<TypeEditor
+																						type={field.type}
+																						onChange={(type) => {
+																							interfaceCtx.execute(
+																								"setCustomEnumVariantFieldType",
+																								{
+																									enumId: enm.id,
+																									variantId: variant.id,
+																									fieldId: field.id,
+																									type,
+																								},
+																							);
+																						}}
+																					/>
+																				</div>
+																			</li>
+																		)}
+																	</For>
+																</ul>
+															</Show>
+														</li>
+													)}
+												</For>
+											</ul>
+										</Show>
 									</li>
 								)}
 							</For>

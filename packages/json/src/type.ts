@@ -4,6 +4,7 @@ import {
 	type EnumBuilder,
 	type EnumVariant,
 	type EnumVariants,
+	type Field,
 	type InferEnumVariant,
 	t,
 } from "@macrograph/typesystem";
@@ -32,11 +33,11 @@ type JSONVariantTypes = [
 	...JSONLiteralVariantTypes,
 	EnumVariant<
 		"List",
-		{ value: t.List<t.Enum<Enum<JSONVariantTypes, JSONValue>>> }
+		{ value: Field<t.List<t.Enum<Enum<JSONVariantTypes, JSONValue>>>> }
 	>,
 	EnumVariant<
 		"Map",
-		{ value: t.Map<t.Enum<Enum<JSONVariantTypes, JSONValue>>> }
+		{ value: Field<t.Map<t.Enum<Enum<JSONVariantTypes, JSONValue>>>> }
 	>,
 ];
 

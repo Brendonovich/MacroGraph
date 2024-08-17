@@ -1,6 +1,6 @@
 import {
+	Field,
 	StructBase,
-	StructField,
 	type StructFields,
 	t,
 } from "@macrograph/typesystem";
@@ -20,7 +20,7 @@ export class CustomStruct extends StructBase {
 		id: number;
 		project: Project;
 		name?: string;
-		fields?: Record<string, StructField & { id: number }>;
+		fields?: Record<string, Field>;
 	}) {
 		super();
 
@@ -38,7 +38,7 @@ export class CustomStruct extends StructBase {
 	createField(args?: { id?: string }) {
 		const id = (args?.id ?? this.fieldIdCounter++).toString();
 
-		this.fields[id] = new StructField(id, t.string(), "New Field");
+		this.fields[id] = new Field(id, t.string(), "New Field");
 
 		return id;
 	}

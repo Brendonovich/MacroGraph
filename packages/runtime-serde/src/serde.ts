@@ -76,6 +76,13 @@ export const Variable = v.object({
 });
 export type Variable = v.InferOutput<typeof Variable>;
 
+export const Field = v.object({
+	id: v.string(),
+	name: v.optional(v.string()),
+	type: Type,
+});
+export type Field = v.InferOutput<typeof Field>;
+
 export const CustomEventField = v.object({
 	id: v.number(),
 	name: v.string(),
@@ -86,7 +93,7 @@ export type CustomEventField = v.InferOutput<typeof CustomEventField>;
 export const CustomEvent = v.object({
 	id: IntID,
 	name: v.string(),
-	fields: v.optional(v.array(CustomEventField), []),
+	fields: v.optional(v.array(Field), []),
 	fieldIdCounter: v.optional(v.number(), 0),
 });
 export type CustomEvent = v.InferOutput<typeof CustomEvent>;
@@ -105,6 +112,31 @@ export const CustomStruct = v.object({
 	fieldIdCounter: v.optional(v.number(), 0),
 });
 export type CustomStruct = v.InferOutput<typeof CustomStruct>;
+
+export const CustomEnumVariantField = v.object({
+	id: v.string(),
+	name: v.optional(v.string()),
+	type: Type,
+});
+export type CustomEnumVariantField = v.InferOutput<
+	typeof CustomEnumVariantField
+>;
+
+export const CustomEnumVariant = v.object({
+	id: v.string(),
+	display: v.optional(v.string()),
+	fields: v.optional(v.array(Field), []),
+	fieldIdCounter: v.optional(v.number(), 0),
+});
+export type CustomEnumVariant = v.InferOutput<typeof CustomEnumVariant>;
+
+export const CustomEnum = v.object({
+	id: IntID,
+	name: v.optional(v.string()),
+	variants: v.optional(v.array(CustomEnumVariant), []),
+	variantIdCounter: v.optional(v.number(), 0),
+});
+export type CustomEnum = v.InferOutput<typeof CustomEnum>;
 
 export const Connection = v.object({
 	from: v.object({
@@ -187,6 +219,7 @@ export const Project = v.object({
 	customEventIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customTypeIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customStructs: v.optional(v.array(CustomStruct), []),
+	customEnums: v.optional(v.array(CustomEnum), []),
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
 	variables: v.optional(v.array(Variable), []),

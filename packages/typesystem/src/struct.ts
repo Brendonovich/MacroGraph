@@ -1,23 +1,9 @@
-import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 import { type TypeVariant, type Wildcard, t } from ".";
 import { BaseType } from "./base";
+import { Field } from "./field";
 
-export class StructField<Type extends t.Any = t.Any> {
-	constructor(
-		public id: string,
-		public type: Type,
-		public name?: string,
-	) {
-		return createMutable(this);
-	}
-
-	default(): any {
-		return this.type.default();
-	}
-}
-
-export type StructFields = Record<string, StructField>;
+export type StructFields = Record<string, Field>;
 
 export class LazyStructFields<Fields extends StructFields = StructFields> {
 	constructor(public build: () => Fields) {}
@@ -41,19 +27,13 @@ export class Struct<
 		super();
 
 		if (fields instanceof LazyStructFields) {
-			this._fields = {
-				type: "lazy",
-				fields,
-			};
+			this._fields = { type: "lazy", fields };
 		} else {
 			for (const [id, field] of Object.entries(fields)) {
 				field.name = field.id;
 				field.id = id;
 			}
-			this._fields = {
-				type: "resolved",
-				fields,
-			};
+			this._fields = { type: "resolved", fields };
 		}
 	}
 
@@ -95,7 +75,7 @@ export class Struct<
 
 export class StructBuilder {
 	field<Type extends t.Any>(id: string, type: Type) {
-		return new StructField(id, type);
+		return new Field(id, type);
 	}
 
 	lazy<T extends StructFields>(fn: () => T) {
@@ -171,7 +151,7 @@ export type InferStructFields<F> = F extends StructFields
 	? { [K in keyof F]: InferStructField<F[K]> }
 	: never;
 
-export type InferStructField<F> = F extends StructField<infer Type>
+export type InferStructField<F> = F extends Field<infer Type>
 	? Type extends BaseType<infer TOut>
 		? TOut
 		: never

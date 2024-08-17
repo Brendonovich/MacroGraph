@@ -24,19 +24,23 @@ import {
 import {
 	deserializeCommentBox,
 	deserializeConnections,
+	deserializeCustomEnum,
+	deserializeCustomEnumVariant,
 	deserializeCustomEvent,
-	deserializeCustomEventField,
 	deserializeCustomStruct,
-	deserializeCustomStructField,
+	deserializeField,
 	deserializeGraph,
 	deserializeNode,
 	deserializeVariable,
 	serde,
 	serializeCommentBox,
+	serializeCustomEnum,
+	serializeCustomEnumVariant,
 	serializeCustomEvent,
 	serializeCustomEventField,
 	serializeCustomStruct,
 	serializeCustomStructField,
+	serializeField,
 	serializeGraph,
 	serializeNode,
 	serializeVariable,
@@ -1029,9 +1033,253 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const struct = core.project.customStructs.get(entry.structId);
 			if (!struct) return;
 
-			deserializeCustomStructField(
-				struct,
+			struct.fields[entry.fieldId] = deserializeField(
+				core.project,
 				v.parse(serde.CustomStructField, entry.data),
+			);
+		},
+	}),
+	createCustomEnum: historyAction({
+		prepare() {
+			return { id: core.project.generateCustomTypeId() };
+		},
+		perform(entry) {
+			core.project.createCustomEnum(entry);
+		},
+		rewind(entry) {
+			core.project.customEnums.delete(entry.id);
+		},
+	}),
+	setCustomEnumName: historyAction({
+		prepare(input: { enumId: number; name: string }) {
+			const struct = core.project.customEnums.get(input.enumId);
+			if (!struct) return;
+
+			return { ...input, prev: struct.name };
+		},
+		perform(entry) {
+			const enm = core.project.customEnums.get(entry.enumId);
+			if (!enm) return;
+
+			enm.name = entry.name;
+		},
+		rewind(entry) {
+			const enm = core.project.customEnums.get(entry.enumId);
+			if (!enm) return;
+
+			enm.name = entry.prev;
+		},
+	}),
+	deleteCustomEnum: historyAction({
+		prepare(input: { enumId: number }) {
+			const enm = core.project.customEnums.get(input.enumId);
+			if (!enm) return;
+
+			const data = serializeCustomEnum(enm);
+
+			return { ...input, data };
+		},
+		perform(entry) {
+			core.project.customEnums.delete(entry.enumId);
+		},
+		rewind(entry) {
+			const enm = deserializeCustomEnum(
+				core.project,
+				v.parse(serde.CustomEnum, entry.data),
+			);
+
+			core.project.customEnums.set(entry.enumId, enm);
+		},
+	}),
+	createCustomEnumVariant: historyAction({
+		prepare(input: { enumId: number }) {
+			const enm = core.project.customEnums.get(input.enumId);
+			if (!enm) return;
+
+			return { ...input, id: enm.variantIdCounter++ };
+		},
+		perform(entry) {
+			const enm = core.project.customEnums.get(entry.enumId);
+			if (!enm) return;
+
+			return enm.createVariant({ id: entry.id.toString() });
+		},
+		rewind(entry) {
+			const enm = core.project.customEnums.get(entry.enumId);
+			if (!enm) return;
+
+			enm.removeVariant(entry.id.toString());
+		},
+	}),
+	setCustomEnumVariantName: historyAction({
+		prepare(input: { enumId: number; variantId: string; name: string }) {
+			const variant = core.project.customEnums
+				.get(input.enumId)
+				?.variant(input.variantId);
+			if (!variant) return;
+			return { ...input, prev: variant.name };
+		},
+		perform(entry) {
+			const field = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId);
+			if (!field) return;
+			field.name = entry.name;
+		},
+		rewind(entry) {
+			const field = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId);
+			if (!field) return;
+			field.name = entry.prev;
+		},
+	}),
+	deleteCustomEnumVariant: historyAction({
+		prepare(input: { enumId: number; variantId: string }) {
+			const variant = core.project.customEnums
+				.get(input.enumId)
+				?.variant(input.variantId);
+			if (!variant) return;
+
+			return { ...input, data: serializeCustomEnumVariant(variant) };
+		},
+		perform(entry) {
+			const enm = core.project.customEnums.get(entry.enumId);
+			if (!enm) return;
+
+			enm.removeVariant(entry.variantId);
+		},
+		rewind(entry) {
+			const enm = core.project.customEnums.get(entry.enumId);
+			if (!enm) return;
+
+			deserializeCustomEnumVariant(
+				enm,
+				v.parse(serde.CustomEnumVariant, entry.data),
+			);
+		},
+	}),
+	createCustomEnumVariantField: historyAction({
+		prepare(input: { enumId: number; variantId: string }) {
+			const enm = core.project.customEnums.get(input.enumId);
+			if (!enm) return;
+
+			const variant = enm.variant(input.variantId);
+			if (!variant) return;
+
+			return { ...input, id: variant.fieldIdCounter++ };
+		},
+		perform(entry) {
+			const variant = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId);
+			if (!variant) return;
+
+			return variant.createField({ id: entry.id.toString() });
+		},
+		rewind(entry) {
+			const variant = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId);
+			if (!variant) return;
+
+			variant.removeField(entry.id.toString());
+		},
+	}),
+	setCustomEnumVariantFieldName: historyAction({
+		prepare(input: {
+			enumId: number;
+			variantId: string;
+			fieldId: string;
+			name: string;
+		}) {
+			const variant = core.project.customEnums
+				.get(input.enumId)
+				?.variant(input.variantId);
+			if (!variant) return;
+
+			return { ...input, prev: variant.name };
+		},
+		perform(entry) {
+			const field = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId)
+				?.field(entry.fieldId);
+			if (!field) return;
+
+			field.name = entry.name;
+		},
+		rewind(entry) {
+			const field = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId)
+				?.field(entry.fieldId);
+			if (!field) return;
+
+			field.name = entry.prev;
+		},
+	}),
+	setCustomEnumVariantFieldType: historyAction({
+		prepare(input: {
+			enumId: number;
+			variantId: string;
+			fieldId: string;
+			type: t.Any;
+		}) {
+			const field = core.project.customEnums
+				.get(input.enumId)
+				?.variant(input.variantId)
+				?.field(input.fieldId);
+			if (!field) return;
+
+			return { ...input, prev: field.type };
+		},
+		perform(entry) {
+			const field = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId)
+				?.field(entry.fieldId);
+			if (!field) return;
+
+			field.type = entry.type;
+		},
+		rewind(entry) {
+			const field = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId)
+				?.field(entry.fieldId);
+			if (!field) return;
+
+			field.type = entry.prev;
+		},
+	}),
+	deleteCustomEnumVariantField: historyAction({
+		prepare(input: { enumId: number; variantId: string; fieldId: string }) {
+			const field = core.project.customEnums
+				.get(input.enumId)
+				?.variant(input.variantId)
+				?.field(input.fieldId);
+			if (!field) return;
+
+			return { ...input, data: serializeField(field) };
+		},
+		perform(entry) {
+			const variant = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId);
+			if (!variant) return;
+
+			variant.removeField(entry.fieldId);
+		},
+		rewind(entry) {
+			const variant = core.project.customEnums
+				.get(entry.enumId)
+				?.variant(entry.variantId);
+			if (!variant) return;
+
+			variant.fields[entry.fieldId] = deserializeField(
+				core.project,
+				entry.data,
 			);
 		},
 	}),
@@ -1092,7 +1340,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const event = core.project.customEvents.get(input.eventId);
 			if (!event) return;
 
-			return { ...input, id: event.fieldIdCounter++ };
+			return { ...input, id: (event.fieldIdCounter++).toString() };
 		},
 		perform(entry) {
 			const event = core.project.customEvents.get(entry.eventId);
@@ -1108,7 +1356,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 		},
 	}),
 	setCustomEventFieldName: historyAction({
-		prepare(input: { eventId: number; fieldId: number; name: string }) {
+		prepare(input: { eventId: number; fieldId: string; name: string }) {
 			const field = core.project.customEvents
 				.get(input.eventId)
 				?.field(input.fieldId);
@@ -1130,7 +1378,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 		},
 	}),
 	setCustomEventFieldType: historyAction({
-		prepare(input: { eventId: number; fieldId: number; type: PrimitiveType }) {
+		prepare(input: { eventId: number; fieldId: string; type: PrimitiveType }) {
 			const field = core.project.customEvents
 				.get(input.eventId)
 				?.field(input.fieldId);
@@ -1152,7 +1400,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 		},
 	}),
 	deleteCustomEventField: historyAction({
-		prepare(input: { eventId: number; fieldId: number }) {
+		prepare(input: { eventId: number; fieldId: string }) {
 			const field = core.project.customEvents
 				.get(input.eventId)
 				?.fields.find((f) => f.id === input.fieldId);
@@ -1170,9 +1418,8 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const event = core.project.customEvents.get(entry.eventId);
 			if (!event) return;
 
-			deserializeCustomEventField(
-				event,
-				v.parse(serde.CustomEventField, entry.data),
+			event.fields.push(
+				deserializeField(core.project, v.parse(serde.Field, entry.data)),
 			);
 		},
 	}),
