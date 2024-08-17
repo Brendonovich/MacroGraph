@@ -33,7 +33,7 @@
 		"@solid-primitives/set": "^0.4.11",
 		"@solid-primitives/state-machine": "^0.0.3",
 		"@solid-primitives/storage": "^2.1.4",
-		"@solidjs/router": "^0.12.5",
+		"@solidjs/router": "^0.14.3",
 		"@tanstack/solid-query": "^4.36.1",
 		"@ts-rest/core": "^3.41.1",
 		"@ts-rest/solid-query": "^3.41.1",

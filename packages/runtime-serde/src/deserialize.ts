@@ -292,7 +292,6 @@ export function deserializeNode(
 	});
 
 	for (const [key, value] of Object.entries(data.defaultValues)) {
-		console.log({ key, value, inputs: node.io.inputs });
 		for (const input of node.io.inputs) {
 			if (input.id === key && input instanceof runtime.DataInput) {
 				input.defaultValue = value;

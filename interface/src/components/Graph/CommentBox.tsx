@@ -34,7 +34,7 @@ export function CommentBox(props: Props) {
 		),
 	);
 
-	function createOnMouseDown(args: { x: "l" | "r"; y: "t" | "b" }) {
+	function createResizerOnMouseDown(args: { x: "l" | "r"; y: "t" | "b" }) {
 		return (e: MouseEvent) => {
 			e.stopPropagation();
 
@@ -246,19 +246,19 @@ export function CommentBox(props: Props) {
 			</div>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nwse-resize -right-1 -bottom-1 fixed"
-				onMouseDown={createOnMouseDown({ x: "r", y: "b" })}
+				onMouseDown={createResizerOnMouseDown({ x: "r", y: "b" })}
 			/>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nesw-resize -left-1 -bottom-1 fixed"
-				onMouseDown={createOnMouseDown({ x: "l", y: "b" })}
+				onMouseDown={createResizerOnMouseDown({ x: "l", y: "b" })}
 			/>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nesw-resize -right-1 -top-1 fixed"
-				onMouseDown={createOnMouseDown({ x: "r", y: "t" })}
+				onMouseDown={createResizerOnMouseDown({ x: "r", y: "t" })}
 			/>
 			<div
 				class="bg-transparent w-2 h-2 cursor-nwse-resize -left-1 -top-1 fixed"
-				onMouseDown={createOnMouseDown({ x: "l", y: "t" })}
+				onMouseDown={createResizerOnMouseDown({ x: "l", y: "t" })}
 			/>
 		</div>
 	);

@@ -234,7 +234,8 @@ export function serializeValue(rawValue: any, type: t.Any): any {
 		const fields = Object.values((type.struct as Struct<StructFields>).fields);
 
 		for (const field of fields) {
-			const value = rawValue[field.id];
+			// https://github.com/Brendonovich/MacroGraph/issues/280#issuecomment-2294793954
+			const value = rawValue[field.id] ?? field.type.default();
 			if (value === undefined)
 				throw new Error(`Field ${field.id} not found in data.`);
 
