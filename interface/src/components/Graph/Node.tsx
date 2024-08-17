@@ -177,7 +177,9 @@ export const Node = (props: Props) => {
 									onDblClick={(e) => !isCtrlEvent(e) && setEditingName(true)}
 									onClick={(e) => e.stopPropagation()}
 									// https://github.com/Brendonovich/MacroGraph/issues/452
-									onMouseUp={(e) => e.stopPropagation()}
+									onMouseUp={(e) => {
+										if (e.button === 2) e.stopPropagation();
+									}}
 									onMouseDown={(e) =>
 										handleSelectableItemMouseDown(e, graph, interfaceCtx, {
 											type: "node",
