@@ -87,14 +87,16 @@ export function createActionHistory<TActions extends HistoryActions>(
 		const entry = action.prepare(args[0] as any, args[1]);
 		if (!entry) return undefined as any;
 
-		const result = action.perform(entry as any) as any;
+		return batch(() => {
+			const result = action.perform(entry as any) as any;
 
-		if (!args[1]?.ephemeral) {
-			addHistoryItem({ type, entry });
-			save();
-		}
+			if (!args[1]?.ephemeral) {
+				addHistoryItem({ type, entry });
+				save();
+			}
 
-		return result;
+			return result;
+		});
 	}
 
 	return { undo, redo, execute, history, nextHistoryIndex };

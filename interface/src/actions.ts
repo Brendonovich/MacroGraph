@@ -1371,6 +1371,7 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 
 			variable.type = entry.type;
 			variable.value = entry.type.default();
+			console.log({ type: variable.type, value: variable.value });
 		},
 		rewind(entry) {
 			let variable: Variable | undefined;
