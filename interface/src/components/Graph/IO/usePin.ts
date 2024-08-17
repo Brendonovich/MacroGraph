@@ -1,7 +1,9 @@
 import {
 	DataOutput,
 	ExecInput,
+	type Graph,
 	type Pin,
+	type XY,
 	makeIORef,
 	pinIsInput,
 	pinIsOutput,
@@ -20,7 +22,7 @@ import {
 	createSignal,
 } from "solid-js";
 
-import { useInterfaceContext } from "../../../context";
+import { type InterfaceContext, useInterfaceContext } from "../../../context";
 import { useGraphContext } from "../Context";
 
 export function usePin(pin: Accessor<Pin>) {
@@ -144,6 +146,7 @@ export function usePin(pin: Accessor<Pin>) {
 
 						createRoot((dispose) => {
 							let hasLeft = false;
+
 							createEventListenerMap(ref, {
 								mouseenter: () => {
 									hasLeft = false;
@@ -172,15 +175,73 @@ export function usePin(pin: Accessor<Pin>) {
 										e.stopPropagation();
 										dispose();
 										interfaceCtx.setState({ status: "idle" });
+									} else if (e.code === "Tab") {
+										e.preventDefault();
+										e.stopPropagation();
+
+										if (
+											!(
+												interfaceCtx.state.status === "pinDragMode" &&
+												interfaceCtx.state.state.status === "draggingPin" &&
+												interfaceCtx.state.state.autoconnectIO
+											)
+										)
+											return;
+										const autoconnectIORef =
+											interfaceCtx.state.state.autoconnectIO;
+
+										const autoconnectIO = graph
+											.model()
+											.pinFromRef(autoconnectIORef)
+											.toNullable();
+										if (!autoconnectIO) return;
+
+										if (pinIsOutput(thisPin) && pinIsInput(autoconnectIO))
+											interfaceCtx.execute("connectIO", {
+												graphId: graph.model().id,
+												out: { nodeId: thisPin.node.id, pinId: thisPin.id },
+												in: {
+													nodeId: autoconnectIO.node.id,
+													pinId: autoconnectIO.id,
+												},
+											});
+										else if (pinIsInput(thisPin) && pinIsOutput(autoconnectIO))
+											interfaceCtx.execute("connectIO", {
+												graphId: graph.model().id,
+												out: {
+													nodeId: autoconnectIO.node.id,
+													pinId: autoconnectIO.id,
+												},
+												in: { nodeId: thisPin.node.id, pinId: thisPin.id },
+											});
+
+										interfaceCtx.setState({ status: "idle" });
+										dispose();
 									}
 								},
 								mouseup: () => dispose(),
-								mousemove: () => {
+								mousemove: (e) => {
 									if (!hasLeft) return;
+
+									const autoconnectIO = getNearCompatibleIO(
+										graph.model(),
+										interfaceCtx,
+										pin(),
+										graph.toGraphSpace({
+											x: e.clientX,
+											y: e.clientY,
+										}),
+									);
+
 									interfaceCtx.setState({
 										status: "pinDragMode",
 										pin: thisPin,
-										state: { status: "draggingPin" },
+										state: {
+											status: "draggingPin",
+											autoconnectIO: autoconnectIO
+												? makeIORef(autoconnectIO)
+												: undefined,
+										},
 									});
 								},
 							});
@@ -251,3 +312,54 @@ export function usePin(pin: Accessor<Pin>) {
 		dim,
 	};
 }
+
+function getNearCompatibleIO(
+	graph: Graph,
+	interfaceCtx: InterfaceContext,
+	pin: Pin,
+	mousePosition: XY,
+): Pin | null {
+	let nearest: [number, Pin] | null = null;
+
+	for (const node of graph.nodes.values()) {
+		if (pinIsInput(pin)) {
+			for (const outputPin of node.state.outputs.values()) {
+				if (pinsCanConnect(outputPin, pin)) {
+					const outputPosition = interfaceCtx.pinPositions.get(outputPin);
+					if (!outputPosition) continue;
+
+					const distance = Math.hypot(
+						outputPosition.x - mousePosition.x,
+						outputPosition.y - mousePosition.y,
+					);
+
+					if (nearest) {
+						if (distance < nearest[0]) nearest = [distance, outputPin];
+					} else if (distance < AUTOCONNECT_MAX_DISTANCE)
+						nearest = [distance, outputPin];
+				}
+			}
+		} else {
+			for (const inputPin of node.state.inputs.values()) {
+				if (pinsCanConnect(pin, inputPin)) {
+					const inputPosition = interfaceCtx.pinPositions.get(inputPin);
+					if (!inputPosition) continue;
+
+					const distance = Math.hypot(
+						inputPosition.x - mousePosition.x,
+						inputPosition.y - mousePosition.y,
+					);
+
+					if (nearest) {
+						if (distance < nearest[0]) nearest = [distance, inputPin];
+					} else if (distance < AUTOCONNECT_MAX_DISTANCE)
+						nearest = [distance, inputPin];
+				}
+			}
+		}
+	}
+
+	return nearest ? nearest[1] : null;
+}
+
+const AUTOCONNECT_MAX_DISTANCE = 100;

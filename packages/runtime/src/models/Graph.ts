@@ -1,4 +1,4 @@
-import type { Option } from "@macrograph/option";
+import { Maybe, None, type Option } from "@macrograph/option";
 import { Disposable } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
@@ -216,5 +216,16 @@ export class Graph extends Disposable {
 
 	deleteCommentbox(box: CommentBox) {
 		this.commentBoxes.delete(box.id);
+	}
+
+	pinFromRef(ref: IORef): Option<Pin> {
+		const { nodeId, type, ioId } = splitIORef(ref);
+		const node = this.nodes.get(nodeId);
+		if (!node) return None;
+
+		if (type === "i")
+			return Maybe(node.state.inputs.find((i) => i.id === ioId));
+
+		return Maybe(node.state.outputs.find((o) => o.id === ioId));
 	}
 }

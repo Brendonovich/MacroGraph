@@ -1,5 +1,5 @@
 import { createActionHistory } from "@macrograph/action-history";
-import type { Core, Node, Pin, Size, XY } from "@macrograph/runtime";
+import type { Core, IORef, Node, Pin, Size, XY } from "@macrograph/runtime";
 import { serializeProject } from "@macrograph/runtime-serde";
 import { createContextProvider } from "@solid-primitives/context";
 import { ReactiveWeakMap } from "@solid-primitives/map";
@@ -144,7 +144,7 @@ export type MouseState =
 			pin: Pin;
 			state:
 				| { status: "awaitingDragConfirmation" }
-				| { status: "draggingPin" }
+				| { status: "draggingPin"; autoconnectIO?: IORef }
 				| SchemaMenuOpenState;
 	  };
 

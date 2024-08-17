@@ -1,10 +1,7 @@
 import { Maybe } from "@macrograph/option";
 import {
 	DataInput,
-	ExecInput,
-	ExecOutput,
-	ScopeInput,
-	ScopeOutput,
+	DataOutput,
 	type XY,
 	pinIsOutput,
 	splitIORef,
@@ -12,6 +9,7 @@ import {
 import { createMousePosition } from "@solid-primitives/mouse";
 import { createEffect } from "solid-js";
 
+import type { t } from "@macrograph/typesystem";
 import type { GraphBounds } from "../../..";
 import { useInterfaceContext } from "../../../context";
 import { useGraphContext } from "../Context";
@@ -54,9 +52,10 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 
 		function drawConnection(
 			canvas: CanvasRenderingContext2D,
-			colour: string,
+			type: t.Any | null,
 			_from: XY,
 			_to: XY,
+			alpha = 1,
 		) {
 			const from = fromGraphSpace(_from);
 			const to = fromGraphSpace(_to);
@@ -75,7 +74,8 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 				to.x,
 				to.y,
 			);
-			canvas.strokeStyle = colour;
+			canvas.strokeStyle = type ? colour(type) : "white";
+			canvas.globalAlpha = alpha;
 			canvas.stroke();
 		}
 
@@ -110,7 +110,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 					.peek((data) => {
 						drawConnection(
 							canvas,
-							input instanceof DataInput ? colour(input.type) : "white",
+							input instanceof DataInput ? input.type : null, // colour(input.type) : "white",
 							data.output,
 							data.input,
 						);
@@ -132,25 +132,62 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 				y: dragState.mousePosition.y,
 			});
 
-			const colourClass = (() => {
-				const draggingPin = dragState.pin;
-
-				if (
-					draggingPin instanceof ExecInput ||
-					draggingPin instanceof ExecOutput ||
-					draggingPin instanceof ScopeOutput ||
-					draggingPin instanceof ScopeInput
-				)
-					return "white";
-
-				return colour(draggingPin.type);
-			})();
-
 			pinPos.peek((pinPos) => {
 				if (pinIsOutput(dragState.pin))
-					drawConnection(canvas, colourClass, pinPos, diffs);
-				else drawConnection(canvas, colourClass, diffs, pinPos);
+					drawConnection(
+						canvas,
+						dragState.pin instanceof DataOutput ? dragState.pin.type : null,
+						pinPos,
+						diffs,
+					);
+				else
+					drawConnection(
+						canvas,
+						dragState.pin instanceof DataInput ? dragState.pin.type : null,
+						diffs,
+						pinPos,
+					);
 			});
+
+			if (
+				interfaceCtx.state.status === "pinDragMode" &&
+				interfaceCtx.state.state.status === "draggingPin" &&
+				interfaceCtx.state.state.autoconnectIO
+			) {
+				const autoconnectIORef = interfaceCtx.state.state.autoconnectIO;
+
+				const autoconnectIO = graph.pinFromRef(autoconnectIORef).toNullable();
+				if (autoconnectIO) {
+					const autoconnectIOPosition = Maybe(
+						interfaceCtx.pinPositions.get(autoconnectIO),
+					).map((pos) => ({ x: pos.x, y: pos.y }));
+
+					pinPos
+						.zip(autoconnectIOPosition)
+						.peek(([pinPos, autoconnectIOPosition]) => {
+							if (pinIsOutput(autoconnectIO))
+								drawConnection(
+									canvas,
+									dragState.pin instanceof DataInput
+										? dragState.pin.type
+										: null,
+									autoconnectIOPosition,
+									pinPos,
+									0.5,
+								);
+							else
+								drawConnection(
+									canvas,
+									dragState.pin instanceof DataOutput
+										? dragState.pin.type
+										: null,
+									pinPos,
+									autoconnectIOPosition,
+									0.5,
+								);
+						});
+				}
+			}
 		}
 	});
 
