@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { batch, createSignal } from "solid-js";
 import { createStore, produce, unwrap } from "solid-js/store";
 
 export type HistoryEntry<T> = T extends object ? T : never;
@@ -55,7 +55,9 @@ export function createActionHistory<TActions extends HistoryActions>(
 		const entry = history[nextHistoryIndex()];
 		if (!entry) return;
 
-		actions[entry.type]!.rewind(unwrap(entry.entry as any));
+		batch(() => {
+			actions[entry.type]!.rewind(unwrap(entry.entry as any));
+		});
 
 		save();
 	}
@@ -65,7 +67,9 @@ export function createActionHistory<TActions extends HistoryActions>(
 		setNextHistoryIndex(Math.min(history.length, nextHistoryIndex() + 1));
 		if (!entry) return;
 
-		actions[entry.type]!.perform(unwrap(entry.entry as any));
+		batch(() => {
+			actions[entry.type]!.perform(unwrap(entry.entry as any));
+		});
 
 		save();
 	}

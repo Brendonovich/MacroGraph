@@ -88,25 +88,23 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			};
 		},
 		perform(entry) {
-			return batch(() => {
-				const graph = core.project.createGraph({ id: entry.id });
-				const graphStates = [...editor.graphStates, createGraphState(graph)];
-				editor.setGraphStates(graphStates);
-				editor.setCurrentGraphId(entry.id);
-				return graph;
-			});
+			const graph = core.project.createGraph({ id: entry.id });
+			const graphStates = [...editor.graphStates, createGraphState(graph)];
+
+			editor.setGraphStates(graphStates);
+			editor.setCurrentGraphId(entry.id);
+
+			return graph;
 		},
 		rewind(entry) {
 			const graph = core.project.graphs.get(entry.id);
 			if (!graph) return;
 
-			batch(() => {
-				core.project.graphs.delete(entry.id);
-				graph.dispose();
+			core.project.graphs.delete(entry.id);
+			graph.dispose();
 
-				editor.setGraphStates(entry.prev.graphStates);
-				editor.setCurrentGraphId(entry.prev.currentGraphId);
-			});
+			editor.setGraphStates(entry.prev.graphStates);
+			editor.setCurrentGraphId(entry.prev.currentGraphId);
 		},
 	}),
 	setGraphName: historyAction({
@@ -150,31 +148,29 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const graph = core.project.graphs.get(entry.graphId);
 			if (!graph) return;
 
-			batch(() => {
-				core.project.graphs.delete(entry.graphId);
-				graph.dispose();
+			core.project.graphs.delete(entry.graphId);
+			graph.dispose();
 
-				editor.setGraphStates((s) => s.filter((s) => s.id !== entry.graphId));
-				editor.setCurrentGraphId((id) => {
-					if (id === entry.graphId) {
-						const index =
-							editor.currentGraphIndex() ?? editor.graphStates.length - 1;
-						if (index === -1) return id;
-						return editor.graphStates[index]!.id;
-					}
+			editor.setGraphStates((s) => s.filter((s) => s.id !== entry.graphId));
+			editor.setCurrentGraphId((id) => {
+				if (id === entry.graphId) {
+					const index =
+						editor.currentGraphIndex() ?? editor.graphStates.length - 1;
+					if (index === -1) return id;
+					return editor.graphStates[index]!.id;
+				}
 
-					return id;
-				});
+				return id;
 			});
 		},
-		rewind(entry) {
-			batch(async () => {
-				const graph = await deserializeGraph(
-					core.project,
-					v.parse(serde.Graph, entry.data),
-				);
-				core.project.graphs.set(graph.id, graph);
+		async rewind(entry) {
+			const graph = await deserializeGraph(
+				core.project,
+				v.parse(serde.Graph, entry.data),
+			);
+			core.project.graphs.set(graph.id, graph);
 
+			batch(() => {
 				editor.setGraphStates(entry.prev.graphStates);
 				editor.setCurrentGraphId(entry.prev.currentGraphId);
 			});
@@ -200,38 +196,36 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const graph = core.project.graphs.get(entry.graphId);
 			if (!graph) return;
 
-			return batch(() => {
-				const node = graph.createNode({
-					id: entry.nodeId,
-					schema: entry.schema,
-					position: entry.position,
-				});
+			const node = graph.createNode({
+				id: entry.nodeId,
+				schema: entry.schema,
+				position: entry.position,
+			});
 
-				const { connection } = entry;
-				if (connection) {
-					let output: OutputPin | undefined;
-					let input: InputPin | undefined;
+			const { connection } = entry;
+			if (connection) {
+				let output: OutputPin | undefined;
+				let input: InputPin | undefined;
 
-					const connectionNode = graph.nodes.get(connection.to.nodeId);
-					if (connectionNode) {
-						if (connection.to.variant === "o") {
-							output = connectionNode.output(connection.to.pinId);
-							input = node.input(connection.fromPinId);
-						} else {
-							output = node.output(connection.fromPinId);
-							input = connectionNode.input(connection.to.pinId);
-						}
+				const connectionNode = graph.nodes.get(connection.to.nodeId);
+				if (connectionNode) {
+					if (connection.to.variant === "o") {
+						output = connectionNode.output(connection.to.pinId);
+						input = node.input(connection.fromPinId);
+					} else {
+						output = node.output(connection.fromPinId);
+						input = connectionNode.input(connection.to.pinId);
 					}
-
-					if (output && input) graph.connectPins(output, input);
 				}
 
-				editor.setGraphStates(editor.currentGraphIndex()!, "selectedItemIds", [
-					{ type: "node", id: node.id },
-				]);
+				if (output && input) graph.connectPins(output, input);
+			}
 
-				return node;
-			});
+			editor.setGraphStates(editor.currentGraphIndex()!, "selectedItemIds", [
+				{ type: "node", id: node.id },
+			]);
+
+			return node;
 		},
 		rewind(entry) {
 			const graph = core.project.graphs.get(entry.graphId);
@@ -240,15 +234,13 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const node = graph.nodes.get(entry.nodeId);
 			if (!node) return;
 
-			batch(() => {
-				graph.deleteNode(node);
+			graph.deleteNode(node);
 
-				editor.setGraphStates(
-					editor.currentGraphIndex()!,
-					"selectedItemIds",
-					entry.prev.selection,
-				);
-			});
+			editor.setGraphStates(
+				editor.currentGraphIndex()!,
+				"selectedItemIds",
+				entry.prev.selection,
+			);
 		},
 	}),
 	setNodeProperty: historyAction({
@@ -362,23 +354,19 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			};
 		},
 		perform(entry) {
-			return batch(() => {
-				const box = core.project.graphs.get(entry.graphId)?.createCommentBox({
-					id: entry.commentBoxId,
-					position: entry.position,
-					size: { x: 400, y: 200 },
-					text: "Comment",
-				});
-
-				if (box)
-					editor.setGraphStates(
-						editor.currentGraphIndex()!,
-						"selectedItemIds",
-						[{ type: "commentBox", id: box.id }],
-					);
-
-				return box;
+			const box = core.project.graphs.get(entry.graphId)?.createCommentBox({
+				id: entry.commentBoxId,
+				position: entry.position,
+				size: { x: 400, y: 200 },
+				text: "Comment",
 			});
+
+			if (box)
+				editor.setGraphStates(editor.currentGraphIndex()!, "selectedItemIds", [
+					{ type: "commentBox", id: box.id },
+				]);
+
+			return box;
 		},
 		rewind(entry) {
 			const graph = core.project.graphs.get(entry.graphId);
@@ -387,14 +375,12 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const box = graph.commentBoxes.get(entry.commentBoxId);
 			if (!box) return;
 
-			batch(() => {
-				graph.deleteCommentbox(box);
-				editor.setGraphStates(
-					editor.currentGraphIndex()!,
-					"selectedItemIds",
-					entry.prev.selection,
-				);
-			});
+			graph.deleteCommentbox(box);
+			editor.setGraphStates(
+				editor.currentGraphIndex()!,
+				"selectedItemIds",
+				entry.prev.selection,
+			);
 		},
 	}),
 	setCommentBoxTint: historyAction({
@@ -1683,78 +1669,74 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			const graph = core.project.graphs.get(entry.graphId);
 			if (!graph) return;
 
-			batch(() => {
-				for (const nodeData of entry.nodes) {
-					const node = deserializeNode(graph, nodeData);
-					if (!node) throw new Error("Failed to deserialize node");
+			for (const nodeData of entry.nodes) {
+				const node = deserializeNode(graph, nodeData);
+				if (!node) throw new Error("Failed to deserialize node");
 
-					graph.nodes.set(node.id, node);
+				graph.nodes.set(node.id, node);
+			}
+
+			for (const box of entry.commentBoxes) {
+				const commentBox = deserializeCommentBox(graph, box);
+				if (!commentBox) throw new Error("Failed to deserialize comment box");
+
+				graph.commentBoxes.set(commentBox.id, commentBox);
+			}
+
+			deserializeConnections(
+				entry.connections,
+				graph.connections,
+				entry.nodeIdMap,
+			);
+
+			if (entry.selected) {
+				const selected: Array<SelectedItemID> = [];
+
+				for (const nodeId of entry.selected.nodes) {
+					const mappedId = entry.nodeIdMap.get(nodeId);
+
+					if (mappedId !== undefined)
+						selected.push({ type: "node", id: mappedId });
 				}
 
-				for (const box of entry.commentBoxes) {
-					const commentBox = deserializeCommentBox(graph, box);
-					if (!commentBox) throw new Error("Failed to deserialize comment box");
+				for (const boxId of entry.selected.commentBoxes) {
+					const mappedId = entry.boxIdMap.get(boxId);
 
-					graph.commentBoxes.set(commentBox.id, commentBox);
-				}
-
-				deserializeConnections(
-					entry.connections,
-					graph.connections,
-					entry.nodeIdMap,
-				);
-
-				if (entry.selected) {
-					const selected: Array<SelectedItemID> = [];
-
-					for (const nodeId of entry.selected.nodes) {
-						const mappedId = entry.nodeIdMap.get(nodeId);
-
-						if (mappedId !== undefined)
-							selected.push({ type: "node", id: mappedId });
-					}
-
-					for (const boxId of entry.selected.commentBoxes) {
-						const mappedId = entry.boxIdMap.get(boxId);
-
-						if (mappedId !== undefined)
-							selected.push({ type: "commentBox", id: mappedId });
-					}
-
-					editor.setGraphStates(
-						editor.currentGraphIndex()!,
-						"selectedItemIds",
-						selected,
-					);
-				}
-			});
-		},
-		rewind(entry) {
-			const graph = core.project.graphs.get(entry.graphId);
-			if (!graph) return;
-
-			batch(() => {
-				for (const nodeData of entry.nodes) {
-					const node = graph.nodes.get(nodeData.id);
-					if (!node) continue;
-
-					graph.deleteNode(node);
-				}
-
-				for (const boxData of entry.commentBoxes) {
-					if (boxData.id === undefined) continue;
-					const box = graph.commentBoxes.get(boxData.id);
-					if (!box) continue;
-
-					graph.deleteCommentbox(box);
+					if (mappedId !== undefined)
+						selected.push({ type: "commentBox", id: mappedId });
 				}
 
 				editor.setGraphStates(
 					editor.currentGraphIndex()!,
 					"selectedItemIds",
-					entry.prev.selection,
+					selected,
 				);
-			});
+			}
+		},
+		rewind(entry) {
+			const graph = core.project.graphs.get(entry.graphId);
+			if (!graph) return;
+
+			for (const nodeData of entry.nodes) {
+				const node = graph.nodes.get(nodeData.id);
+				if (!node) continue;
+
+				graph.deleteNode(node);
+			}
+
+			for (const boxData of entry.commentBoxes) {
+				if (boxData.id === undefined) continue;
+				const box = graph.commentBoxes.get(boxData.id);
+				if (!box) continue;
+
+				graph.deleteCommentbox(box);
+			}
+
+			editor.setGraphStates(
+				editor.currentGraphIndex()!,
+				"selectedItemIds",
+				entry.prev.selection,
+			);
 		},
 	}),
 	pasteGraph: historyAction({
