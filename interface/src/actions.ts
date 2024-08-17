@@ -168,8 +168,8 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 			});
 		},
 		rewind(entry) {
-			batch(() => {
-				const graph = deserializeGraph(
+			batch(async () => {
+				const graph = await deserializeGraph(
 					core.project,
 					v.parse(serde.Graph, entry.data),
 				);
@@ -1765,8 +1765,8 @@ export const historyActions = (core: Core, editor: EditorState) => ({
 
 			return { data, graphId };
 		},
-		perform(entry) {
-			const graph = deserializeGraph(core.project, entry.data);
+		async perform(entry) {
+			const graph = await deserializeGraph(core.project, entry.data);
 			if (!graph) return;
 
 			core.project.graphs.set(graph.id, graph);

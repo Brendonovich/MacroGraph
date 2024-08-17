@@ -1,8 +1,7 @@
 import type { Variable } from "@macrograph/runtime";
-import { BasePrimitiveType, t } from "@macrograph/typesystem";
+import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 
-import { serializeValue } from "@macrograph/runtime-serde";
 import { SidebarSection } from "../components/Sidebar";
 import { TypeEditor } from "../components/TypeEditor";
 import {
