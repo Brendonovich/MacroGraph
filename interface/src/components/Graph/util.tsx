@@ -246,10 +246,15 @@ export function handleSelectableItemMouseDown(
 				}
 
 				for (const [box, nodes] of commentBoxNodes) {
-					const startPosition = commentBoxPositions.get(box);
-					if (!startPosition) continue;
+					const boxStartPosition = commentBoxPositions.get(box);
+					if (!boxStartPosition) continue;
 
-					const newPosition = moveStandaloneItemOnGrid(e, startPosition, delta);
+					const clonedStartPosition = { ...boxStartPosition };
+					const newPosition = moveStandaloneItemOnGrid(
+						e,
+						boxStartPosition,
+						delta,
+					);
 					items.push({
 						itemVariant: "commentBox",
 						itemId: box.id,
@@ -257,24 +262,29 @@ export function handleSelectableItemMouseDown(
 					});
 
 					const boxDelta = {
-						x: newPosition.x - startPosition.x,
-						y: newPosition.y - startPosition.y,
+						x: newPosition.x - clonedStartPosition.x,
+						y: newPosition.y - clonedStartPosition.y,
 					};
 
-					if (boxDelta.x !== 0 || boxDelta.y !== 0)
-						for (const node of nodes) {
-							const startPosition = nodePositions.get(node);
-							if (!startPosition) continue;
+					for (const node of nodes) {
+						const nodeStartPosition = nodePositions.get(node);
+						if (!nodeStartPosition) continue;
 
-							items.push({
-								itemVariant: "node",
-								itemId: node.id,
-								position: {
-									x: startPosition.x + boxDelta.x,
-									y: startPosition.y + boxDelta.y,
-								},
-							});
-						}
+						if (boxStartPosition.x !== clonedStartPosition.x)
+							nodeStartPosition.x += boxDelta.x;
+
+						if (boxStartPosition.y !== clonedStartPosition.y)
+							nodeStartPosition.y += boxDelta.y;
+
+						items.push({
+							itemVariant: "node",
+							itemId: node.id,
+							position: {
+								x: nodeStartPosition.x + boxDelta.x,
+								y: nodeStartPosition.y + boxDelta.y,
+							},
+						});
+					}
 				}
 
 				didDrag = items.length > 0;
