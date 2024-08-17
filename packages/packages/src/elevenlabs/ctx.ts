@@ -6,7 +6,7 @@ import {
 } from "@macrograph/option";
 import { createEffect, createSignal, on } from "solid-js";
 
-const ELEVEN_KEY = "ChatGptKey";
+const ELEVEN_KEY = "ELEVENLABS_KEY";
 
 export type Ctx = ReturnType<typeof createCtx>;
 
