@@ -1,7 +1,6 @@
 import type { contract } from "@macrograph/api-contract";
 import { Maybe, type Option } from "@macrograph/option";
 import type { InitClientReturn } from "@ts-rest/core";
-import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 
@@ -120,15 +119,15 @@ export class Core {
 	}
 
 	// async bc of #402, the project's reactivity needs to be entirely decoupled from the ui
-	async load(getProject: (core: Core) => Project) {
+	async load(getProject: (core: Core) => Promise<Project>) {
 		await new Promise<void>((res) => {
-			batch(() => {
-				this.eventNodeMappings.clear();
-				this.project = getProject(this);
+			this.eventNodeMappings.clear();
+			getProject(this).then((project) => {
+				this.project = project;
 				this.project.disableSave = true;
-			});
 
-			res();
+				res();
+			});
 		});
 		this.project.disableSave = false;
 	}

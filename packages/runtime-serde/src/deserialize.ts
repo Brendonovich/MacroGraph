@@ -1,3 +1,4 @@
+import * as runtime from "@macrograph/runtime";
 import {
 	StructField,
 	deserializeType,
@@ -7,89 +8,92 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 
-import * as runtime from "@macrograph/runtime";
 import type * as serde from "./serde";
 
-export function deserializeProject(
+export async function deserializeProject(
 	core: runtime.Core,
 	data: serde.Project,
-): runtime.Project {
+): Promise<runtime.Project> {
 	const project = new runtime.Project({
 		core,
 	});
 
-	project.disableSave = true;
+	batch(() => {
+		project.disableSave = true;
 
-	project.name = data.name ?? "New Project";
+		project.name = data.name ?? "New Project";
 
-	project.graphIdCounter = data.graphIdCounter;
+		project.graphIdCounter = data.graphIdCounter;
 
-	project.customTypeIdCounter = data.customTypeIdCounter;
+		project.customTypeIdCounter = data.customTypeIdCounter;
 
-	project.customStructs = new ReactiveMap(
-		data.customStructs
-			.map((serializedStruct) => {
-				const struct = deserializeCustomStruct(project, serializedStruct);
+		project.customStructs = new ReactiveMap(
+			data.customStructs
+				.map((serializedStruct) => {
+					const struct = deserializeCustomStruct(project, serializedStruct);
 
-				if (struct === null) return null;
+					if (struct === null) return null;
 
-				return [struct.id, struct] as [number, runtime.CustomStruct];
-			})
-			.filter(Boolean) as [number, runtime.CustomStruct][],
-	);
+					return [struct.id, struct] as [number, runtime.CustomStruct];
+				})
+				.filter(Boolean) as [number, runtime.CustomStruct][],
+		);
 
-	project.customEventIdCounter = data.customEventIdCounter;
+		project.customEventIdCounter = data.customEventIdCounter;
 
-	project.customEvents = new ReactiveMap(
-		data.customEvents
-			.map((SerializedEvent) => {
-				const event = deserializeCustomEvent(project, SerializedEvent);
+		project.customEvents = new ReactiveMap(
+			data.customEvents
+				.map((SerializedEvent) => {
+					const event = deserializeCustomEvent(project, SerializedEvent);
 
-				if (event === null) return null;
+					if (event === null) return null;
 
-				return [event.id, event] as const;
-			})
-			.filter(Boolean),
-	);
+					return [event.id, event] as const;
+				})
+				.filter(Boolean),
+		);
 
-	project.idCounter = data.counter;
+		project.idCounter = data.counter;
 
-	project.resources = new ReactiveMap(
-		data.resources
-			.map(({ type, entry }) => {
-				let resource: runtime.ResourceType<any, any> | undefined;
+		project.resources = new ReactiveMap(
+			data.resources
+				.map(({ type, entry }) => {
+					let resource: runtime.ResourceType<any, any> | undefined;
 
-				for (const r of core.packages.find((p) => p.name === type.pkg)
-					?.resources ?? []) {
-					if (r.name === type.name) {
-						resource = r;
-						break;
+					for (const r of core.packages.find((p) => p.name === type.pkg)
+						?.resources ?? []) {
+						if (r.name === type.name) {
+							resource = r;
+							break;
+						}
 					}
-				}
-				if (!resource) return;
+					if (!resource) return;
 
-				return [resource, createMutable(entry)] satisfies [
-					any,
-					runtime.ResourceTypeEntry,
-				];
-			})
-			.filter(Boolean),
-	);
+					return [resource, createMutable(entry)] satisfies [
+						any,
+						runtime.ResourceTypeEntry,
+					];
+				})
+				.filter(Boolean),
+		);
 
-	project.variables = data.variables.map((v) =>
-		deserializeVariable(v, project),
-	);
+		project.variables = data.variables.map((v) =>
+			deserializeVariable(v, project),
+		);
+	});
 
 	project.graphs = new ReactiveMap(
-		data.graphs
-			.map((serializedGraph) => {
-				const graph = deserializeGraph(project, serializedGraph);
+		await Promise.all(
+			data.graphs
+				.map(async (serializedGraph) => {
+					const graph = await deserializeGraph(project, serializedGraph);
 
-				if (graph === null) return null;
+					if (graph === null) return null;
 
-				return [graph.id, graph] as [number, runtime.Graph];
-			})
-			.filter(Boolean),
+					return [graph.id, graph] as [number, runtime.Graph];
+				})
+				.filter(Boolean) as any,
+		),
 	);
 
 	project.disableSave = false;
@@ -183,10 +187,10 @@ export function deserializeVariable(
 	});
 }
 
-export function deserializeGraph(
+export async function deserializeGraph(
 	project: runtime.Project,
 	data: serde.Graph,
-): runtime.Graph {
+): Promise<runtime.Graph> {
 	const graph = new runtime.Graph({
 		project,
 		id: data.id,
@@ -218,11 +222,14 @@ export function deserializeGraph(
 		deserializeConnections(data.connections, graph.connections);
 	});
 
+	// https://github.com/Brendonovich/MacroGraph/issues/280#issuecomment-2294552323
+	await new Promise((res) => setTimeout(res, 1));
+
 	batch(() => {
 		for (const node of graph.nodes.values()) {
 			const nodeData = data.nodes[node.id]!;
 
-			for (const i of node.state.inputs) {
+			for (const i of [...node.state.inputs]) {
 				const defaultValue = nodeData.defaultValues[i.id];
 
 				if (defaultValue === undefined || !(i instanceof runtime.DataInput))
@@ -285,9 +292,11 @@ export function deserializeNode(
 	});
 
 	for (const [key, value] of Object.entries(data.defaultValues)) {
+		console.log({ key, value, inputs: node.io.inputs });
 		for (const input of node.io.inputs) {
-			if (input.id === key && input instanceof runtime.DataInput)
+			if (input.id === key && input instanceof runtime.DataInput) {
 				input.defaultValue = value;
+			}
 		}
 	}
 
