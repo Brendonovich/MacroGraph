@@ -27,6 +27,7 @@ export type RenderedType =
 	| "float"
 	| "bool"
 	| "wildcard"
+	| { type: "option"; inner: RenderedType }
 	| { type: "struct"; package: string; name: string }
 	| { type: "enum"; package: string; name: string };
 
@@ -137,6 +138,10 @@ export function renderType(type: BaseType): RenderedType | undefined {
 				name: struct.name,
 			};
 	}
+	if (type instanceof t.Option) {
+		const inner = renderType(type.inner);
+		if (inner) return { type: "option", inner };
+	}
 }
 
 export function renderedTypesCompatible(
@@ -152,6 +157,8 @@ export function renderedTypesCompatible(
 			return a.package === b.package && a.name === b.name;
 		if (a.type === "enum" && b.type === "enum")
 			return a.package === b.package && a.name === b.name;
+		if (a.type === "option" && b.type === "option")
+			return renderedTypesCompatible(a.inner, b.inner);
 	}
 
 	return false;

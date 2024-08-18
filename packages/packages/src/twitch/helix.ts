@@ -171,6 +171,8 @@ export function register(pkg: Package, helix: Helix) {
 	pkg.registerType(UserType);
 	pkg.registerType(BroadcasterType);
 	pkg.registerType(AnnouncementColors);
+	pkg.registerType(Reward);
+	pkg.registerType(UserSubscription);
 
 	function createHelixExecSchema<
 		TProperties extends Record<string, PropertyDef> = Record<string, never>,
@@ -223,9 +225,6 @@ export function register(pkg: Package, helix: Helix) {
 			},
 		});
 	}
-
-	pkg.registerType(Reward);
-
 	createHelixExecSchema({
 		name: "Warn User",
 		createIO: ({ io }) => ({

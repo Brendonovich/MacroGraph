@@ -274,9 +274,7 @@ export function SchemaMenu(props: Props) {
 
 														if (
 															io &&
-															(renderedType === "wildcard" ||
-																io.type === "wildcard" ||
-																renderedTypesCompatible(io.type, renderedType))
+															renderedTypesCompatible(io.type, renderedType)
 														)
 															ret.push({ schema, suggestion: { pin: io.id } });
 													} else if (pin instanceof ScopeOutput) {
@@ -302,9 +300,7 @@ export function SchemaMenu(props: Props) {
 														);
 														if (
 															io &&
-															(renderedType === "wildcard" ||
-																io.type === "wildcard" ||
-																renderedTypesCompatible(io.type, renderedType))
+															renderedTypesCompatible(io.type, renderedType)
 														)
 															ret.push({ schema, suggestion: { pin: io.id } });
 													} else if (pin instanceof ScopeInput) {

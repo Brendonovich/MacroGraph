@@ -144,6 +144,13 @@ export function register(pkg: Package<EventTypes>) {
 		});
 	}
 
+	pkg.registerType(SceneItem);
+	pkg.registerType(Filter);
+	pkg.registerType(Transition);
+	pkg.registerType(PropertyItem);
+	pkg.registerType(Scene);
+	pkg.registerType(InputInfo);
+
 	const versionOutputs = [
 		{
 			id: "obsVersion",
