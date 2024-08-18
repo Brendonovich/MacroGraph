@@ -285,6 +285,9 @@ export const Graph = (props: Props) => {
 							const start = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
 							const prevSelection = [...props.state.selectedItemIds];
 
+							if (interfaceCtx.state.status === "schemaMenuOpen")
+								interfaceCtx.setState({ status: "idle" });
+
 							interfaceCtx.execute(
 								"setGraphSelection",
 								{ graphId: model().id, selection: [] },
