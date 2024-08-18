@@ -67,7 +67,7 @@ export const User = createStruct("User", (s) => ({
 	createdAt: s.field("Created At", t.string()),
 }));
 
-export const chatter = createStruct("Chatter", (s) => ({
+export const Chatter = createStruct("Chatter", (s) => ({
 	user_id: s.field("ID", t.string()),
 	user_login: s.field("Login", t.string()),
 	user_name: s.field("Name", t.string()),
@@ -173,6 +173,7 @@ export function register(pkg: Package, helix: Helix) {
 	pkg.registerType(AnnouncementColors);
 	pkg.registerType(Reward);
 	pkg.registerType(UserSubscription);
+	pkg.registerType(Chatter);
 
 	function createHelixExecSchema<
 		TProperties extends Record<string, PropertyDef> = Record<string, never>,
@@ -1680,7 +1681,7 @@ export function register(pkg: Package, helix: Helix) {
 				chatters: io.dataOutput({
 					id: "chatters",
 					name: "Chatters",
-					type: t.list(t.struct(chatter)),
+					type: t.list(t.struct(Chatter)),
 				}),
 			};
 		},
@@ -1696,7 +1697,7 @@ export function register(pkg: Package, helix: Helix) {
 			});
 
 			const array = data.data.map((user: any) =>
-				chatter.create({
+				Chatter.create({
 					user_id: user.user_id,
 					user_login: user.user_login,
 					user_name: user.user_name,
@@ -1902,14 +1903,15 @@ export function register(pkg: Package, helix: Helix) {
 		},
 	});
 
-	const choices = createStruct("Choices", (s) => ({
+	const Choices = createStruct("Choices", (s) => ({
 		id: s.field("ID", t.string()),
 		title: s.field("Title", t.string()),
 		votes: s.field("Votes", t.int()),
 		channelPointsVotes: s.field("Channel Point Votes", t.int()),
 	}));
+	pkg.registerType(Choices);
 
-	const pollStatus = createEnum("Poll Status", (e) => [
+	const PollStatus = createEnum("Poll Status", (e) => [
 		e.variant("ACTIVE"),
 		e.variant("COMPLETED"),
 		e.variant("TERMINATED"),
@@ -1917,21 +1919,23 @@ export function register(pkg: Package, helix: Helix) {
 		e.variant("MODERATED"),
 		e.variant("INVALID"),
 	]);
+	pkg.registerType(PollStatus);
 
-	const poll = createStruct("Poll", (s) => ({
+	const Poll = createStruct("Poll", (s) => ({
 		id: s.field("ID", t.string()),
 		title: s.field("Title", t.string()),
-		choices: s.field("Choices", t.struct(choices)),
+		choices: s.field("Choices", t.struct(Choices)),
 		channelPointsVotingEnabled: s.field(
 			"Channel Points Voting Enabled",
 			t.bool(),
 		),
 		channelPointsPerVote: s.field("Channel Points Per Vote", t.int()),
-		status: s.field("Status", t.enum(pollStatus)),
+		status: s.field("Status", t.enum(PollStatus)),
 		duration: s.field("Duration", t.int()),
 		startedAt: s.field("Started At", t.string()),
 		endedAt: s.field("Ended At", t.string()),
 	}));
+	pkg.registerType(Poll);
 
 	createHelixExecSchema({
 		name: "Get Polls",
@@ -1955,7 +1959,7 @@ export function register(pkg: Package, helix: Helix) {
 				polls: io.dataOutput({
 					id: "polls",
 					name: "Polls",
-					type: t.list(t.struct(poll)),
+					type: t.list(t.struct(Poll)),
 				}),
 				pagination: io.dataOutput({
 					id: "pagination",

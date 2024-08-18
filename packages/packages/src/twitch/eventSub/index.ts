@@ -14,7 +14,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { ReactiveMap } from "@solid-primitives/map";
 
 import type { Ctx } from "../ctx";
-import type { Helix } from "../helix";
+import { Chatter, type Helix } from "../helix";
 import { defaultProperties } from "../resource";
 import {
 	OutcomesBegin,
@@ -86,6 +86,12 @@ export function createEventSub(core: Core, helixClient: Helix) {
 }
 
 export function register(pkg: Package, { eventSub }: Ctx) {
+	pkg.registerType(PollChoice);
+	pkg.registerType(OutcomesBegin);
+	pkg.registerType(OutcomesProgress);
+	pkg.registerType(TopPredictors);
+	pkg.registerType(PredictionStatus);
+
 	function createEventSubEventSchema<
 		TEvent extends keyof Events,
 		TProperties extends Record<string, PropertyDef> = never,
@@ -632,11 +638,12 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		},
 	});
 
-	const emotes = createStruct("Emotes", (s) => ({
+	const Emotes = createStruct("Emotes", (s) => ({
 		id: s.field("id", t.string()),
 		begin: s.field("begin", t.int()),
 		end: s.field("end", t.int()),
 	}));
+	pkg.registerType(Emotes);
 
 	createEventSubEventSchema({
 		name: "Channel Points Automatic Redemption Redeemed",
@@ -673,7 +680,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			emotes: io.dataOutput({
 				id: "emotes",
 				name: "emotes",
-				type: t.option(t.list(t.struct(emotes))),
+				type: t.option(t.list(t.struct(Emotes))),
 			}),
 		}),
 		run({ ctx, data, io }) {
@@ -687,7 +694,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				Maybe(
 					data.message.emotes
 						? data.message.emotes.map((emote) =>
-								emotes.create({
+								Emotes.create({
 									id: emote.id,
 									begin: emote.begin,
 									end: emote.end,
@@ -777,6 +784,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		id: s.field("id", t.string()),
 		title: s.field("title", t.string()),
 	}));
+	pkg.registerType(PollBeginChoice);
 
 	createEventSubEventSchema({
 		name: "Channel Poll Begin",
@@ -2131,13 +2139,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 	}));
 	pkg.registerType(BroadcasterInfoStruct);
 
-	const ChatterStruct = createStruct("Chatter", (s) => ({
-		chatter_user_id: s.field("User ID", t.string()),
-		chatter_user_name: s.field("UserName", t.string()),
-		chatter_user_login: s.field("User Login", t.string()),
-	}));
-	pkg.registerType(ChatterStruct);
-
 	const EmoteStruct = createStruct("Emote", (s) => ({
 		id: s.field("ID", t.string()),
 		emote_set_id: s.field("Emote Set ID", t.string()),
@@ -2270,7 +2271,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			chatter: io.dataOutput({
 				id: "chatter",
 				name: "Chatter",
-				type: t.struct(ChatterStruct),
+				type: t.struct(Chatter),
 			}),
 			chatterIsAnonymous: io.dataOutput({
 				id: "chatterAnonymous",
@@ -2328,10 +2329,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			);
 			ctx.setOutput(
 				io.chatter,
-				ChatterStruct.create({
-					chatter_user_id: data.chatter_user_id,
-					chatter_user_name: data.chatter_user_name,
-					chatter_user_login: data.chatter_user_login,
+				Chatter.create({
+					user_id: data.chatter_user_id,
+					user_name: data.chatter_user_name,
+					user_login: data.chatter_user_login,
 				}),
 			);
 			ctx.setOutput(

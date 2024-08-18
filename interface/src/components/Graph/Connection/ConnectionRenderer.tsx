@@ -55,7 +55,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 			type: t.Any | null,
 			_from: XY,
 			_to: XY,
-			alpha = 1,
+			alpha = 0.75,
 		) {
 			const from = fromGraphSpace(_from);
 			const to = fromGraphSpace(_to);
@@ -94,6 +94,12 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 			for (const conn of conns) {
 				const inRef = splitIORef(conn);
 
+				const isNodeSelected = ctx.state.selectedItemIds.find(
+					(item) =>
+						item.type === "node" &&
+						(item.id === outRef.nodeId || item.id === inRef.nodeId),
+				);
+
 				const input = graph.nodes.get(inRef.nodeId)?.input(inRef.ioId);
 
 				if (!input || !output) continue;
@@ -103,16 +109,18 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 
 				inputPosition
 					.zip(outputPosition)
-					.map(([input, output]) => ({
-						input,
-						output,
-					}))
+					.map(([input, output]) => ({ input, output }))
 					.peek((data) => {
 						drawConnection(
 							canvas,
 							input instanceof DataInput ? input.type : null, // colour(input.type) : "white",
 							data.output,
 							data.input,
+							ctx.state.selectedItemIds.length > 0
+								? isNodeSelected
+									? 0.75
+									: 0.25
+								: 0.75,
 						);
 					});
 			}

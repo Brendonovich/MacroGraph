@@ -29,7 +29,8 @@ export type RenderedType =
 	| "wildcard"
 	| { type: "option"; inner: RenderedType }
 	| { type: "struct"; package: string; name: string }
-	| { type: "enum"; package: string; name: string };
+	| { type: "enum"; package: string; name: string }
+	| { type: "list"; item: RenderedType };
 
 export type RenderedIO = { id: string; name?: string } & (
 	| { variant: "exec" }
@@ -122,6 +123,7 @@ export function renderType(type: BaseType): RenderedType | undefined {
 	if (type instanceof t.Wildcard) return "wildcard";
 	if (type instanceof t.Struct) {
 		const struct = type.struct as StructBase;
+		console.log(struct);
 		if (struct.source.variant === "package")
 			return {
 				type: "struct",
@@ -142,6 +144,10 @@ export function renderType(type: BaseType): RenderedType | undefined {
 		const inner = renderType(type.inner);
 		if (inner) return { type: "option", inner };
 	}
+	if (type instanceof t.List) {
+		const item = renderType(type.item);
+		if (item) return { type: "list", item };
+	}
 }
 
 export function renderedTypesCompatible(
@@ -159,6 +165,8 @@ export function renderedTypesCompatible(
 			return a.package === b.package && a.name === b.name;
 		if (a.type === "option" && b.type === "option")
 			return renderedTypesCompatible(a.inner, b.inner);
+		if (a.type === "list" && b.type === "list")
+			return renderedTypesCompatible(a.item, b.item);
 	}
 
 	return false;
