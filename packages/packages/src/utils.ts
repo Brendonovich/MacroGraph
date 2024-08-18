@@ -1877,7 +1877,7 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
-		name: "Make Enum",
+		name: "Make Custom Enum",
 		type: "pure",
 		properties: {
 			enum: {
