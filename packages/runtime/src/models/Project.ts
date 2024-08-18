@@ -96,6 +96,10 @@ export class Project {
 		return Maybe(this.customEnums.get(data.id));
 	}
 
+	graph(id: number) {
+		return this.graphs.get(id);
+	}
+
 	createGraph(args?: { id?: number; name?: string }) {
 		const id = args?.id ?? this.generateGraphId();
 

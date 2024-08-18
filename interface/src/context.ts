@@ -1,5 +1,13 @@
 import { createActionHistory } from "@macrograph/action-history";
-import type { Core, IORef, Node, Pin, Size, XY } from "@macrograph/runtime";
+import type {
+	Core,
+	Graph,
+	IORef,
+	Node,
+	Pin,
+	Size,
+	XY,
+} from "@macrograph/runtime";
 import { serializeProject } from "@macrograph/runtime-serde";
 import { createContextProvider } from "@solid-primitives/context";
 import { ReactiveWeakMap } from "@solid-primitives/map";
@@ -9,10 +17,19 @@ import { createMemo, createSignal, onCleanup } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
 import { historyActions } from "./actions";
-import type { GraphState, SelectedItemID } from "./components/Graph/Context";
+import {
+	type GraphState,
+	type SelectedItemID,
+	createGraphState,
+} from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
 
 export type Environment = "custom" | "browser";
+
+export type GraphBounds = XY & {
+	width: number;
+	height: number;
+};
 
 function createEditorState() {
 	const [hoveringPin, setHoveringPin] = createSignal<Pin | null>(null);
@@ -107,6 +124,13 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			}),
 		);
 
+		const [graphBounds, setGraphBounds] = createStore<GraphBounds>({
+			x: 0,
+			y: 0,
+			width: 0,
+			height: 0,
+		});
+
 		return {
 			...createActionHistory(historyActions(props.core, state), save),
 			...state,
@@ -119,6 +143,18 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			get environment() {
 				return props.environment;
 			},
+			selectGraph(graph: Graph) {
+				const currentIndex = state.graphStates.findIndex(
+					(s) => s.id === graph.id,
+				);
+
+				if (currentIndex === -1) {
+					state.setGraphStates((s) => [...s, createGraphState(graph)]);
+					state.setCurrentGraphId(graph.id);
+				} else state.setCurrentGraphId(graph.id);
+			},
+			graphBounds,
+			setGraphBounds,
 		};
 	}, null!);
 

@@ -52,6 +52,7 @@ import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import {
 	type Environment,
+	type GraphBounds,
 	InterfaceContextProvider,
 	useInterfaceContext,
 } from "./context";
@@ -60,11 +61,6 @@ import { isCtrlEvent } from "./util";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
-
-export type GraphBounds = XY & {
-	width: number;
-	height: number;
-};
 
 const queryClient = new QueryClient();
 
@@ -82,6 +78,7 @@ type CurrentGraph = {
 	model: GraphModel;
 	state: GraphState;
 	index: number;
+	size: GraphBounds;
 };
 
 function ProjectInterface() {
@@ -94,13 +91,6 @@ function ProjectInterface() {
 		graphStates,
 		setGraphStates,
 	} = useInterfaceContext();
-
-	const [graphBounds, setGraphBounds] = createStore<GraphBounds>({
-		x: 0,
-		y: 0,
-		width: 0,
-		height: 0,
-	});
 
 	const currentGraph = Solid.createMemo(() => {
 		const index = ctx.currentGraphIndex();
@@ -122,7 +112,7 @@ function ProjectInterface() {
 		if (hoveredPane()) return currentGraph();
 	});
 
-	createKeydownShortcuts(currentGraph, hoveredGraph, graphBounds);
+	createKeydownShortcuts(currentGraph, hoveredGraph, ctx.graphBounds);
 
 	const firstGraph = ctx.core.project.graphs.values().next().value;
 	if (graphStates.length === 0 && firstGraph)
@@ -152,16 +142,7 @@ function ProjectInterface() {
 						<Sidebars.Project
 							currentGraph={currentGraph()?.model}
 							project={ctx.core.project}
-							onGraphClicked={(graph) => {
-								const currentIndex = graphStates.findIndex(
-									(s) => s.id === graph.id,
-								);
-
-								if (currentIndex === -1) {
-									setGraphStates((s) => [...s, createGraphState(graph)]);
-									setCurrentGraphId(graph.id);
-								} else setCurrentGraphId(graph.id);
-							}}
+							onGraphClicked={(graph) => ctx.selectGraph(graph)}
 						/>
 					</Sidebar>
 
@@ -265,8 +246,8 @@ function ProjectInterface() {
 										{ ephemeral },
 									);
 								}}
-								onBoundsChange={setGraphBounds}
-								onSizeChange={setGraphBounds}
+								onBoundsChange={ctx.setGraphBounds}
+								onSizeChange={ctx.setGraphBounds}
 								onScaleChange={(scale) => {
 									setGraphStates(currentGraph().index, { scale });
 								}}
@@ -419,7 +400,7 @@ function ProjectInterface() {
 					});
 
 					const graphPosition = () =>
-						toGraphSpace(data().position, graphBounds, data().graph);
+						toGraphSpace(data().position, ctx.graphBounds, data().graph);
 
 					return (
 						<Solid.Show when={graph()}>

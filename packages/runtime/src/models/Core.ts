@@ -156,18 +156,30 @@ export class Core {
 		}
 	}
 
-	private printListeners = new Set<(msg: string) => void>();
+	private printListeners = new Set<(msg: PrintItem) => void>();
 
-	print(msg: string) {
+	print(msg: string, node: Node) {
 		for (const cb of this.printListeners) {
-			cb(msg);
+			cb({
+				value: msg,
+				timestamp: new Date(),
+				graph: { name: node.graph.name, id: node.graph.id },
+				node: { name: node.state.name, id: node.id },
+			});
 		}
 	}
 
-	printSubscribe(cb: (msg: string) => void) {
+	printSubscribe(cb: (i: PrintItem) => void) {
 		this.printListeners.add(cb);
 		return () => this.printListeners.delete(cb);
 	}
+}
+
+export interface PrintItem {
+	value: string;
+	timestamp: Date;
+	graph: { name: string; id: number };
+	node: { name: string; id: number };
 }
 
 export class ExecutionContext {

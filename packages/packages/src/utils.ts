@@ -35,7 +35,7 @@ export function pkg(core: Core) {
 			});
 		},
 		run({ ctx, io }) {
-			core.print(ctx.getInput(io));
+			core.print(ctx.getInput(io), io.node);
 		},
 	});
 

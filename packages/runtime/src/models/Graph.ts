@@ -77,6 +77,10 @@ export class Graph extends Disposable {
 		return this.idCounter++;
 	}
 
+	node(id: number) {
+		return this.nodes.get(id);
+	}
+
 	createNode(args: Omit<NodeArgs, "graph" | "id"> & { id?: number }) {
 		const id = args.id ?? this.generateId();
 

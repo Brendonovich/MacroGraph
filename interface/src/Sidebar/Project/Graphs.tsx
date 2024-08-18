@@ -64,7 +64,7 @@ export function Graphs(props: Props) {
 						if (item.type !== "graph") return;
 
 						item.graph.id = interfaceCtx.core.project.generateGraphId();
-						const graph = deserializeGraph(
+						const graph = await deserializeGraph(
 							interfaceCtx.core.project,
 							item.graph,
 						);
