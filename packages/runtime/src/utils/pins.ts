@@ -1,5 +1,5 @@
-import type { Option } from "@macrograph/option";
-import { typesCanConnect } from "@macrograph/typesystem";
+import { type Option, Some } from "@macrograph/option";
+import { getOptionDepth, t, typesCanConnect } from "@macrograph/typesystem";
 import {
 	DataInput,
 	DataOutput,
@@ -14,7 +14,11 @@ import {
 
 export function pinsCanConnect(output: OutputPin, input: InputPin) {
 	if (output instanceof DataOutput && input instanceof DataInput) {
-		return typesCanConnect(output.type, input.type);
+		const canConnect = typesCanConnect(output.type, input.type);
+
+		if (!canConnect) return pinsCanConnectWithImplicitConversion(output, input);
+
+		return canConnect;
 	}
 	if (output instanceof ExecOutput && input instanceof ExecInput) {
 		if (input.connections.size < 1) return true;
@@ -26,6 +30,45 @@ export function pinsCanConnect(output: OutputPin, input: InputPin) {
 	}
 	if (output instanceof ScopeOutput && input instanceof ScopeInput) return true;
 	return false;
+}
+
+export const implicitConversions = {
+	toSome: {
+		check: (output: t.Any, input: t.Any) => {
+			return (
+				input instanceof t.Option &&
+				getOptionDepth(output) + 1 === getOptionDepth(input) &&
+				typesCanConnect(input.inner, output)
+			);
+		},
+		apply: (value: any) => Some(value),
+	},
+	toInt: {
+		check: (output: t.Any, input: t.Any) =>
+			output instanceof t.Float && input instanceof t.Int,
+		apply: (value: any) => Math.floor(value),
+	},
+	toFloat: {
+		check: (output: t.Any, input: t.Any) =>
+			output instanceof t.Int && input instanceof t.Float,
+		apply: (value: any) => value,
+	},
+	toString: {
+		check: (output: t.Any, input: t.Any) =>
+			output instanceof t.Primitive && input instanceof t.String,
+		apply: (value: any) => value.toStrig(),
+	},
+};
+
+function pinsCanConnectWithImplicitConversion(
+	output: DataOutput<any>,
+	input: DataInput<any>,
+) {
+	for (const conversion of Object.values(implicitConversions)) {
+		if (conversion.check(output.type, input.type)) {
+			return true;
+		}
+	}
 }
 
 export function pinIsOutput(pin: Pin): pin is OutputPin {

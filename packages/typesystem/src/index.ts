@@ -49,3 +49,11 @@ export function typesCanConnect(aRaw: t.Any, bRaw: t.Any): boolean {
 
 	return false;
 }
+
+export function getOptionDepth(type: t.Any): number {
+	if (type instanceof t.Option) {
+		return 1 + getOptionDepth(type.inner);
+	}
+
+	return 0;
+}

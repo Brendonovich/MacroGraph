@@ -4,6 +4,7 @@ import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 
+import { implicitConversions } from "../utils";
 import { DataInput, type DataOutput, type ScopeOutput } from "./IO";
 import type { Node } from "./Node";
 import type { EventsMap, RunCtx } from "./NodeSchema";
@@ -217,6 +218,9 @@ export class ExecutionContext {
 						if (data === undefined)
 							throw new Error(`Data not found for input '${input.id}'!`);
 
+						if (input instanceof DataInput)
+							return applyImplicitConversion(data, input);
+
 						return data;
 					},
 				);
@@ -292,4 +296,14 @@ export class ExecutionContext {
 			graph: node.graph,
 		});
 	}
+}
+
+function applyImplicitConversion(value: any, input: DataInput<any>) {
+	const output = input.connection.toNullable();
+	if (!output) return value;
+
+	if (implicitConversions.toSome.check(output.type, input.type))
+		return implicitConversions.toSome.apply(value);
+
+	return value;
 }
