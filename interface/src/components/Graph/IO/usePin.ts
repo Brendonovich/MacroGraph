@@ -328,6 +328,8 @@ function getNearCompatibleIO(
 					const outputPosition = interfaceCtx.pinPositions.get(outputPin);
 					if (!outputPosition) continue;
 
+					if (mousePosition.x < outputPosition.x - 10) continue;
+
 					const distance = Math.hypot(
 						outputPosition.x - mousePosition.x,
 						outputPosition.y - mousePosition.y,
@@ -344,6 +346,8 @@ function getNearCompatibleIO(
 				if (pinsCanConnect(pin, inputPin)) {
 					const inputPosition = interfaceCtx.pinPositions.get(inputPin);
 					if (!inputPosition) continue;
+
+					if (mousePosition.x > inputPosition.x + 10) continue;
 
 					const distance = Math.hypot(
 						inputPosition.x - mousePosition.x,
@@ -362,4 +366,4 @@ function getNearCompatibleIO(
 	return nearest ? nearest[1] : null;
 }
 
-const AUTOCONNECT_MAX_DISTANCE = 150;
+const AUTOCONNECT_MAX_DISTANCE = 100;
