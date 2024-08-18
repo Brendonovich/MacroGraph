@@ -1877,6 +1877,59 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
+		name: "Update Struct",
+		type: "pure",
+		createIO({ io }) {
+			const w = io.wildcard("");
+
+			const input = io.dataInput({
+				id: "",
+				type: t.wildcard(w),
+			});
+
+			const output = io.dataOutput({
+				id: "",
+				type: t.wildcard(w),
+			});
+
+			return w.value().map((wt) => {
+				if (!(wt instanceof t.Struct)) return null;
+
+				const dataInputs = Object.entries(wt.struct.fields as StructFields).map(
+					([id, field]) =>
+						io.dataInput({
+							id,
+							name: field.name ?? field.id,
+							type: t.option(field.type),
+						}),
+				);
+
+				return {
+					wildcard: wt,
+					input,
+					output: output as unknown as DataOutput<t.Struct<Struct>>,
+					inputs: dataInputs,
+				};
+			});
+		},
+		run({ ctx, io }) {
+			io.map((io) => {
+				const data = io.inputs.reduce(
+					(acc, input) =>
+						Object.assign(acc, {
+							[input.id]: (ctx.getInput(input) as Option<any>).unwrapOr(
+								(ctx.getInput(io.input) as any)[input.id],
+							),
+						}),
+					{} as any,
+				);
+
+				ctx.setOutput(io.output, data);
+			});
+		},
+	});
+
+	pkg.createSchema({
 		name: "Make Custom Enum",
 		type: "pure",
 		properties: {

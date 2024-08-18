@@ -56,7 +56,7 @@ export const implicitConversions = {
 	toString: {
 		check: (output: t.Any, input: t.Any) =>
 			output instanceof t.Primitive && input instanceof t.String,
-		apply: (value: any) => value.toStrig(),
+		apply: (value: any) => value.toString(),
 	},
 };
 

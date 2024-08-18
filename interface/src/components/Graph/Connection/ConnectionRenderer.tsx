@@ -119,7 +119,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 							ctx.state.selectedItemIds.length > 0
 								? isNodeSelected
 									? 0.75
-									: 0.25
+									: 0.15
 								: 0.75,
 						);
 					});

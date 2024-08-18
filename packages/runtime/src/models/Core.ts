@@ -314,8 +314,10 @@ function applyImplicitConversion(value: any, input: DataInput<any>) {
 	const output = input.connection.toNullable();
 	if (!output) return value;
 
-	if (implicitConversions.toSome.check(output.type, input.type))
-		return implicitConversions.toSome.apply(value);
+	for (const conversion of Object.values(implicitConversions)) {
+		if (conversion.check(output.type, input.type))
+			return conversion.apply(value);
+	}
 
 	return value;
 }
