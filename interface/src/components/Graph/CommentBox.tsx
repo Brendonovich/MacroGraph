@@ -141,8 +141,10 @@ export function CommentBox(props: Props) {
 								as="button"
 								class="p-2 pl-3 outline-none w-full text-left"
 								onClick={(e) => {
-									e.preventDefault();
 									e.stopPropagation();
+								}}
+								onMouseUp={(e) => {
+									if (e.button === 2) e.stopPropagation();
 								}}
 								onMouseDown={(e) =>
 									handleSelectableItemMouseDown(e, graph, interfaceCtx, {
