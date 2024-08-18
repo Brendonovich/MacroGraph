@@ -44,7 +44,7 @@ export class LazyEnumVariants<Variants extends EnumVariants> {
 	constructor(public build: () => Variants) {}
 }
 
-export abstract class EnumBase {
+export abstract class EnumBase<T> {
 	source!:
 		| { variant: "package"; package: string }
 		| { variant: "custom"; id: number };
@@ -55,7 +55,7 @@ export abstract class EnumBase {
 export class Enum<
 	Variants extends EnumVariants = any,
 	_Type = InferEnumVariant<Variants[number]>,
-> extends EnumBase {
+> extends EnumBase<_Type> {
 	constructor(
 		public name: string,
 		variants: Variants | LazyEnumVariants<Variants>,
@@ -204,7 +204,7 @@ export class EnumType<TEnum extends EnumBase> extends BaseType<
 	}
 }
 
-export type InferEnum<E> = E extends Enum<any, infer Type> ? Type : never;
+export type InferEnum<E> = E extends EnumBase<infer Type> ? Type : never;
 
 export type InferEnumVariant<V> = V extends EnumVariant<infer Name, infer Data>
 	? Data extends null

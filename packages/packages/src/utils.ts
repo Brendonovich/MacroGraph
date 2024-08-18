@@ -1834,6 +1834,126 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
+		name: "Make Struct",
+		type: "pure",
+		createIO({ io }) {
+			const w = io.wildcard("");
+
+			const output = io.dataOutput({
+				id: "",
+				type: t.wildcard(w),
+			});
+
+			return w.value().map((wt) => {
+				if (!(wt instanceof t.Struct)) return null;
+
+				const dataInputs = Object.entries(wt.struct.fields as StructFields).map(
+					([id, field]) =>
+						io.dataInput({
+							id,
+							name: field.name ?? field.id,
+							type: field.type,
+						}),
+				);
+
+				return {
+					wildcard: wt,
+					output: output as unknown as DataOutput<t.Struct<Struct>>,
+					inputs: dataInputs,
+				};
+			});
+		},
+		run({ ctx, io }) {
+			io.map((io) => {
+				const data = io.inputs.reduce(
+					(acc, input) =>
+						Object.assign(acc, { [input.id]: ctx.getInput(input) }),
+					{} as any,
+				);
+
+				ctx.setOutput(io.output, data);
+			});
+		},
+	});
+
+	pkg.createSchema({
+		name: "Make Enum",
+		type: "pure",
+		properties: {
+			enum: {
+				name: "Enum",
+				source: ({ node }) => {
+					const enums = [...node.graph.project.customEnums.values()];
+					return enums.map((e) => ({
+						id: e.id,
+						display: e.name,
+					}));
+				},
+			},
+			variant: {
+				name: "Variant",
+				source: ({ node }) => {
+					const enumId = node.getProperty(node.schema.properties!.enum!) as
+						| number
+						| undefined;
+					if (!enumId) return [];
+
+					return (
+						node.graph.project.customEnums.get(enumId)?.variants.map((v) => ({
+							id: v.id,
+							display: v.name ?? v.id,
+						})) ?? []
+					);
+				},
+			},
+		},
+		createIO({ io, properties, ctx }) {
+			const enumId = ctx.getProperty(properties.enum);
+			if (!enumId) return;
+			const variantId = ctx.getProperty(properties.variant);
+			if (!variantId) return;
+
+			const enm = ctx.graph.project.customEnums.get(enumId);
+			if (!enm) return;
+			const variant = enm?.variant(variantId);
+			if (!variant) return;
+
+			const output = io.dataOutput({
+				id: "",
+				name: variant.name ?? variant.id,
+				type: t.enum(enm),
+			});
+
+			const dataInputs = Object.entries(variant.fields).map(([id, field]) =>
+				io.dataInput({ id, name: field.name ?? field.id, type: field.type }),
+			);
+
+			return {
+				output,
+				inputs: dataInputs,
+				enum: enm,
+				variant,
+			};
+		},
+		run({ ctx, io }) {
+			if (!io) return;
+
+			const data = {
+				variant: io.variant.id,
+				data: io.variant
+					? Object.values(io.inputs).reduce(
+							(acc, input) =>
+								Object.assign(acc, { [input.id]: ctx.getInput(input) }),
+							{} as any,
+						)
+					: undefined,
+			};
+
+			ctx.setOutput(io.output, data);
+		},
+	});
+
+	pkg.createSchema({
 		name: "Match",
 		type: "base",
 		createIO({ io }) {

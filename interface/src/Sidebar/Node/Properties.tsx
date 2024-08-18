@@ -58,7 +58,10 @@ export function Properties(props: {
 												options={options()}
 												optionValue="id"
 												optionTextValue="display"
-												getLabel={(o) => o.display}
+												getLabel={(o) =>
+													// Make Enum can be undefined temporarily
+													o?.display
+												}
 												value={selectedOption()}
 												onChange={(v) => {
 													interfaceCtx.execute("setNodeProperty", {

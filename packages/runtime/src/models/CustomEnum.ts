@@ -14,7 +14,7 @@ export type CustomEnumVariants = [
 	...variant: CustomEnumVariant<string, EnumVariantFields>[],
 ];
 
-export class CustomEnum extends EnumBase {
+export class CustomEnum extends EnumBase<Record<string, any>> {
 	id: number;
 	name: string;
 	project: Project;
