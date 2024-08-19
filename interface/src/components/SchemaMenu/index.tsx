@@ -42,6 +42,7 @@ interface Props {
 		extra?: { name?: string; defaultProperties?: Record<string, any> },
 	): void | Promise<void>;
 	onCreateCommentBox(): void;
+	onPasteClipboard(): void;
 	position: XY;
 	suggestion?: { pin: Pin };
 	onClose?(): void;
@@ -219,6 +220,12 @@ export function SchemaMenu(props: Props) {
 							onClick={props.onCreateCommentBox}
 						>
 							Add Comment Box
+						</Item>
+						<Item
+							onPointerEnter={onPointerEnter}
+							onClick={props.onPasteClipboard}
+						>
+							Paste from Clipboard
 						</Item>
 					</Show>
 					<For each={sortedPackages()}>

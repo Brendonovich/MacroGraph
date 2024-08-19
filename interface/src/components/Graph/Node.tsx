@@ -33,6 +33,11 @@ import {
 } from "./IO";
 import "./Node.css";
 import { GRID_SIZE, handleSelectableItemMouseDown } from "./util";
+import {
+	nodeToClipboardItem,
+	writeClipboardItemToClipboard,
+} from "@macrograph/clipboard";
+import { toast } from "solid-sonner";
 
 interface Props {
 	node: NodeModel;
@@ -311,6 +316,16 @@ export const Node = (props: Props) => {
 													<kbd class="font-sans">]</kbd>
 												)}
 											</span> */}
+									</ContextMenuItem>
+									<ContextMenuItem
+										onSelect={() => {
+											writeClipboardItemToClipboard(
+												nodeToClipboardItem(node()),
+											);
+											toast("Node copied to clipboard");
+										}}
+									>
+										Copy
 									</ContextMenuItem>
 									<ContextMenuItem
 										onSelect={() => {

@@ -12,6 +12,11 @@ import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import { handleSelectableItemMouseDown } from "./util";
+import {
+	commentBoxToClipboardItem,
+	writeClipboardItemToClipboard,
+} from "@macrograph/clipboard";
+import { toast } from "solid-sonner";
 
 interface Props {
 	box: CommentBoxModel;
@@ -159,6 +164,18 @@ export function CommentBox(props: Props) {
 							<ContextMenuContent>
 								<ContextMenuItem onSelect={() => setEditing(true)}>
 									Rename
+								</ContextMenuItem>
+								<ContextMenuItem
+									onSelect={() => {
+										writeClipboardItemToClipboard(
+											commentBoxToClipboardItem(box(), (node) =>
+												interfaceCtx.nodeSizes.get(node),
+											),
+										);
+										toast("Comment Box copied to clipboard");
+									}}
+								>
+									Copy
 								</ContextMenuItem>
 								<ContextMenuItem
 									onSelect={() => {
