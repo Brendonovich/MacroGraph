@@ -1,4 +1,4 @@
-import { Maybe, type Option } from "@macrograph/option";
+import { Maybe, None, type Option } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 
 import {
@@ -25,8 +25,10 @@ export function deserializeValue(rawValue: any, type: t.Any): any {
 
 		return val;
 	}
-	if (type instanceof t.Option)
+	if (type instanceof t.Option) {
+		if (rawValue === None) return None;
 		return Maybe(rawValue).map((v) => deserializeValue(v, type.inner));
+	}
 	if (type instanceof t.Enum) {
 		const value = rawValue as { variant: string; data?: any };
 
