@@ -20,6 +20,7 @@ export * as midi from "./midi";
 export * as obs from "./obs";
 export * as openai from "./openai";
 export * as patreon from "./patreon";
+export * as shell from "./shell";
 export * as speakerbot from "./speakerbot";
 export * as spotify from "./spotify";
 export * as streamdeck from "./streamdeck";

@@ -53,6 +53,10 @@ const platform = createPlatform({
 	// pkgs.spotify.pkg,
 	() => pkgs.streamdeck.pkg(wsProvider),
 	pkgs.streamlabs.pkg,
+	() =>
+		pkgs.shell.pkg(async (path) => {
+			await client.mutation(["shell.execute", path]);
+		}),
 	pkgs.twitch.pkg,
 	pkgs.utils.pkg,
 	pkgs.openai.pkg,

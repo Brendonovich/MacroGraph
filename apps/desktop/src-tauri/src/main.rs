@@ -10,6 +10,7 @@ use tauri::Manager;
 mod fs;
 mod http;
 mod oauth;
+mod shell;
 mod websocket;
 
 macro_rules! tauri_handlers {
@@ -69,6 +70,7 @@ pub fn router() -> Router<Ctx> {
         .merge("fs.", fs::router())
         .merge("oauth.", oauth::router())
         .merge("websocket.", websocket::router())
+        .merge("shell.", shell::router())
         .procedure(
             "loginListen",
             R.subscription(|_, _: ()| async move {
