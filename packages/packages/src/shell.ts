@@ -7,12 +7,15 @@ export function pkg(execute: (cmd: string) => Promise<void>) {
 	pkg.createSchema({
 		type: "exec",
 		name: "Execute Shell Command",
-		properties: {
-			command: { name: "Command", type: t.string() },
+		createIO: ({ io }) => {
+			return io.dataInput({
+				id: "command",
+				name: "Command",
+				type: t.string(),
+			});
 		},
-		createIO: () => {},
-		run: async ({ ctx, properties }) => {
-			await execute(ctx.getProperty(properties.command));
+		run: async ({ ctx, io }) => {
+			await execute(ctx.getInput(io));
 		},
 	});
 
