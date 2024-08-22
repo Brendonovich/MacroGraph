@@ -138,18 +138,24 @@ export function pkg() {
 					id: "index",
 					type: t.int(),
 				}),
-				return: io.dataOutput({
-					id: "return",
-					name: "Removed Value",
-					type: t.wildcard(w),
+				returnList: io.dataOutput({
+					id: "returnList",
+					type: t.list(t.wildcard(w)),
+				}),
+				returnValue: io.dataOutput({
+					id: "returnValue",
+					type: t.option(t.wildcard(w)),
 				}),
 			};
 		},
 		run({ ctx, io }) {
-			ctx.setOutput(
-				io.return,
-				ctx.getInput(io.list).splice(ctx.getInput(io.index), 1)[0],
-			);
+			const list = [...ctx.getInput(io.list)];
+
+			const value = list.splice(ctx.getInput(io.index), 1)[0];
+
+			ctx.setOutput(io.returnList, list);
+
+			ctx.setOutput(io.returnValue, Maybe(value));
 		},
 	});
 
