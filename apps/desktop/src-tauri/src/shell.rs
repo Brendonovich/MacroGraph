@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use rspc::alpha::AlphaRouter;
 use serde::Serialize;
@@ -7,12 +7,6 @@ use specta::Type;
 use crate::R;
 
 pub fn router() -> AlphaRouter<super::Ctx> {
-    #[derive(Type, Serialize)]
-    enum Entry {
-        Dir(String),
-        File(String),
-    }
-
     R.router().procedure(
         "execute",
         R.mutation(|_, cmd: String| async move {
@@ -22,7 +16,12 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 let command = segments.next().unwrap();
                 let args: Vec<_> = segments.collect();
 
-                Command::new(command).args(args).output().unwrap();
+                Command::new(command)
+                    .args(args)
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .output()
+                    .unwrap();
             })
             .await
             .unwrap();
