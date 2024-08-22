@@ -18,8 +18,8 @@ import type { InterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import type { GraphContext, SelectedItemID } from "./Context";
 
-export const GRID_SIZE = 25;
-export const SHIFT_MULTIPLIER = 6;
+export const GRID_SIZE = 30;
+export const SHIFT_MULTIPLIER = 5;
 
 const PrimitiveVariantColours: Record<PrimitiveVariant, string> = {
 	bool: "#DC2626",
