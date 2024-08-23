@@ -12,7 +12,10 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
 		clientSecret: serverEnv.TWITCH_CLIENT_SECRET,
 		authorize: {
 			url: "https://id.twitch.tv/oauth2/authorize",
-			searchParams: { force_verify: "true" },
+			searchParams: {
+				// https://discuss.dev.twitch.com/t/force-verify-true-causing-502-error-with-authorization-flow-when-not-logged-in/59964
+				force_verify: "true",
+			},
 		},
 		token: { url: "https://id.twitch.tv/oauth2/token" },
 		get scopes() {
