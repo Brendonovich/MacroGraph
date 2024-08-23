@@ -77,7 +77,7 @@ export const Variable = v.object({
 export type Variable = v.InferOutput<typeof Variable>;
 
 export const Field = v.object({
-	id: v.string(),
+	id: v.pipe(v.union([v.string(), v.number()]), v.transform(String)),
 	name: v.optional(v.string()),
 	type: Type,
 });
