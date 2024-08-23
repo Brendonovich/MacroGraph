@@ -47,7 +47,7 @@ export async function getOAuthLoginURL(
 
 const VALID_REDIRECT_ORIGINS = [
   "https://macrograph.brendonovich.dev",
-  "https://macrograph.app",
+  "https://www.macrograph.app",
   "http://localhost:4321",
   serverEnv.AUTH_REDIRECT_PROXY_URL,
   serverEnv.VERCEL_URL,
