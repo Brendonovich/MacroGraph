@@ -51,7 +51,7 @@ const DropdownMenuItem = <T extends ValidComponent = "div">(
 	return (
 		<DropdownMenuPrimitive.Item
 			class={cn(
-				"ui-highlighted:bg-accent ui-highlighted:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+				"ui-highlighted:bg-accent ui-highlighted:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors duration-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
 				props.class,
 			)}
 			{...rest}
@@ -165,7 +165,7 @@ const DropdownMenuCheckboxItem = <T extends ValidComponent = "div">(
 	return (
 		<DropdownMenuPrimitive.CheckboxItem
 			class={cn(
-				"focus:bg-accent focus:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+				"focus:bg-accent focus:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors duration-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
 				props.class,
 			)}
 			{...rest}
@@ -213,7 +213,7 @@ const DropdownMenuRadioItem = <T extends ValidComponent = "div">(
 	return (
 		<DropdownMenuPrimitive.RadioItem
 			class={cn(
-				"focus:bg-accent focus:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+				"focus:bg-accent focus:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors duration-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
 				props.class,
 			)}
 			{...rest}

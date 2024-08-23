@@ -28,7 +28,7 @@ import {
 	ScopeOutput,
 } from "./IO";
 import "./Node.css";
-import { handleSelectableItemMouseDown } from "./util";
+import { GRID_SIZE, handleSelectableItemMouseDown } from "./util";
 
 interface Props {
 	node: NodeModel;
@@ -124,6 +124,40 @@ export const Node = (props: Props) => {
 		),
 	);
 
+	const [minWidth, setMinWidth] = Solid.createSignal<number>();
+
+	Solid.onMount(() => {
+		calculateMinWidth();
+	});
+
+	function calculateMinWidth() {
+		setMinWidth(undefined);
+
+		// clientWidth doesn't update immediately and setTimeout causes flicker
+		queueMicrotask(() => {
+			if (ref) {
+				console.log("screen width", ref.clientWidth);
+				const desired = Math.ceil(ref.clientWidth / GRID_SIZE) * GRID_SIZE;
+				console.log("desired width:", desired);
+				setMinWidth(desired);
+			}
+		});
+	}
+
+	Solid.createEffect(
+		Solid.on(() => {
+			node().state.name;
+
+			for (const i of node().state.inputs) {
+				i.name ?? i.id;
+			}
+
+			for (const o of node().state.outputs) {
+				o.name ?? o.id;
+			}
+		}, calculateMinWidth),
+	);
+
 	return (
 		<NodeContext.Provider value={node()}>
 			<div
@@ -136,6 +170,7 @@ export const Node = (props: Props) => {
 					transform: `translate(${node().state.position.x}px, ${
 						node().state.position.y
 					}px)`,
+					"min-width": minWidth() !== undefined ? `${minWidth()}px` : "auto",
 				}}
 				onMouseUp={(e) => {
 					// #418
@@ -149,7 +184,7 @@ export const Node = (props: Props) => {
 			>
 				<div
 					class={clsx(
-						"h-6 duration-100 text-md font-medium",
+						"h-6 duration-100 text-md font-medium flex flex-col items-stretch",
 						active() === 1 && "opacity-50",
 						(() => {
 							const schema = node().schema;
@@ -173,7 +208,7 @@ export const Node = (props: Props) => {
 							>
 								<ContextMenu.Trigger<"button">
 									as="button"
-									class="px-2 pt-1 cursor-pointer outline-none w-full h-full text-left"
+									class="px-2 pt-1 cursor-pointer outline-none h-full text-left"
 									onDblClick={(e) => !isCtrlEvent(e) && setEditingName(true)}
 									onClick={(e) => e.stopPropagation()}
 									// https://github.com/Brendonovich/MacroGraph/issues/452
