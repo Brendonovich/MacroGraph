@@ -234,8 +234,8 @@ type OAuthFetchConfig = {
 };
 
 const TWITCH_SCOPES = [
-	"analytics:read:extensions",
-	"analytics:read:games",
+	// "analytics:read:extensions",
+	// "analytics:read:games",
 	"bits:read",
 	"channel:edit:commercial",
 	"channel:manage:broadcast",
@@ -290,6 +290,6 @@ const TWITCH_SCOPES = [
 	"user:read:follows",
 	"user:read:chat",
 	"user:read:subscriptions",
-	"whispers:read",
-	"whispers:edit",
+	// "whispers:read",
+	// "whispers:edit",
 ];

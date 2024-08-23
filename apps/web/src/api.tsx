@@ -126,6 +126,8 @@ export const addCredential = action(async (provider: AuthProvider) => {
 		window.addEventListener("message", (e) => {
 			if (e.source !== w) return;
 
+			if (typeof e.data !== "string" || !e.data.startsWith("?")) return;
+
 			res(e.data);
 		});
 	});

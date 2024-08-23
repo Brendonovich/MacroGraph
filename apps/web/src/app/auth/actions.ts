@@ -3,7 +3,7 @@
 import * as jose from "jose";
 
 import { OAUTH_TOKEN } from "@macrograph/api-contract";
-import { getRequestHost } from "vinxi/http";
+import { getRequestHost, getRequestProtocol } from "vinxi/http";
 import type { z } from "zod";
 import { serverEnv } from "~/env/server";
 import { CALLBACK_SEARCH_PARAMS, OAUTH_STATE } from "./[provider]/types";
@@ -44,17 +44,22 @@ export async function getOAuthLoginURL(
 	return `${providerConfig.authorize.url}?${params}`;
 }
 
+const VALID_REDIRECT_ORIGINS = [
+	"https://macrograph.brendonovich.dev",
+	"https://macrograph.app",
+	"http://localhost:4321",
+	serverEnv.AUTH_REDIRECT_PROXY_URL,
+	serverEnv.VERCEL_URL,
+	serverEnv.VERCEL_BRANCH_URL,
+];
+
 export async function loginURLForProvider(provider: AuthProvider) {
 	const providerConfig = AuthProviders[provider];
 	if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
-	const requestOrigin = `https://${getRequestHost()}`;
+	const requestOrigin = `${getRequestProtocol()}://${getRequestHost()}`;
 
-	const targetOrigin = [
-		serverEnv.AUTH_REDIRECT_PROXY_URL,
-		serverEnv.VERCEL_URL,
-		serverEnv.VERCEL_BRANCH_URL,
-	].includes(requestOrigin)
+	const targetOrigin = VALID_REDIRECT_ORIGINS.includes(requestOrigin)
 		? requestOrigin
 		: serverEnv.VERCEL_URL;
 
@@ -87,6 +92,7 @@ export async function exchangeOAuthToken(
 export async function validateCallbackSearchParams(
 	searchParams: URLSearchParams,
 ) {
+	console.trace(searchParams);
 	return CALLBACK_SEARCH_PARAMS.parse({
 		code: searchParams.get("code"),
 		state: (
