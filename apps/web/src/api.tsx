@@ -114,14 +114,15 @@ export const PROVIDER_DISPLAY_NAMES: Record<AuthProvider, string> = {
 };
 
 export const addCredential = action(async (provider: AuthProvider) => {
-	const w = window.open(await loginURLForProvider(provider));
-	if (!w) throw { error: "window-open-failed" };
+	const w = window.open(await loginURLForProvider(provider), "_blank");
+	if (!w) {
+		toast.error(
+			"Failed to open login window. Make sure your browser isn't blocking popups.",
+		);
+		throw { error: "window-open-failed" };
+	}
 
-	const searchParams = await new Promise<string>((res, rej) => {
-		const onBeforeUnload = () => rej();
-
-		w.addEventListener("beforeunload", onBeforeUnload);
-
+	const searchParams = await new Promise<string>((res) => {
 		window.addEventListener("message", (e) => {
 			if (e.source !== w) return;
 
@@ -183,6 +184,7 @@ export const getCredentials = cache(async () => {
 	return c;
 }, "credentials");
 
+import { toast } from "solid-sonner";
 import { createStorage } from "unstorage";
 import cloudflareKVHTTPDriver from "unstorage/drivers/cloudflare-kv-http";
 

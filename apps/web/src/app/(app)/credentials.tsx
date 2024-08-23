@@ -54,21 +54,21 @@ function AddCredentialButton() {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger as={Button}>Add Connection</DropdownMenuTrigger>
+			<DropdownMenuTrigger as={Button}>Add Credential</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				<For each={PROVIDER_LIST}>
 					{(provider) => (
 						<DropdownMenuItem
-							onSelect={() =>
-								doAddCredential(provider).then((cred) =>
+							onClick={() => {
+								doAddCredential(provider).then((cred) => {
 									toast.success(
 										<>
 											Credential <b>{cred.user.displayName}</b> added for{" "}
 											<b>{PROVIDER_DISPLAY_NAMES[provider]}</b>
 										</>,
-									),
-								)
-							}
+									);
+								});
+							}}
 						>
 							{PROVIDER_DISPLAY_NAMES[provider]}
 						</DropdownMenuItem>
@@ -85,7 +85,10 @@ function CredentialsList() {
 
 	return (
 		<ul class="border border-neutral-800 rounded-lg divide-y divide-neutral-800">
-			<For each={submissions.filter((s) => s.pending)}>
+			<Show when={credentials()?.length === 0 && submissions.length === 0}>
+				<p class="p-4 text-sm text-medium text-center">No connections found</p>
+			</Show>
+			<For each={[...submissions].filter((s) => s.pending)}>
 				{(submission) => (
 					<li class="p-4 flex flex-row items-center space-x-4 text-base">
 						<div>
@@ -101,14 +104,7 @@ function CredentialsList() {
 					</li>
 				)}
 			</For>
-			<For
-				each={credentials()}
-				fallback={
-					<p class="p-4 text-sm text-medium text-center">
-						No connections found
-					</p>
-				}
-			>
+			<For each={credentials()}>
 				{(connection) => {
 					const removeSubmission = useSubmission(
 						removeCredential,
