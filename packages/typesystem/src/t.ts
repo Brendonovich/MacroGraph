@@ -30,7 +30,7 @@ const bool = () => BOOL;
 const list = <T extends AnyType>(t: T) => new ListType<T>(t);
 const map = <TValue extends AnyType>(v: TValue) => new MapType(v);
 const option = <T extends AnyType>(t: T) => new OptionType<T>(t);
-const enm = <T extends EnumBase>(t: T) => new EnumType<T>(t);
+const enm = <T extends EnumBase<any>>(t: T) => new EnumType<T>(t);
 const struct = <T extends StructBase>(s: T) => new StructType<T>(s);
 const wildcard = (w: Wildcard) => new WildcardType(w);
 

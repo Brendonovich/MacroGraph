@@ -476,89 +476,58 @@ export function register(pkg: Package, helix: Helix) {
 		},
 	});
 
+	const StreamInfo = createStruct("Stream Info", (s) => ({
+		broadcasterId: s.field("Broadcaster ID", t.string()),
+		broadcasterLogin: s.field("Broadcaster Login Name", t.string()),
+		broadcasterDisplay: s.field("Broadcaster Display Name", t.string()),
+		broadcasterLanguage: s.field("Broadcaster Language", t.string()),
+		title: s.field("Title", t.string()),
+		catagory: s.field("Stream Catagory", t.string()),
+		catagoryId: s.field("Catagory ID", t.string()),
+		viewerCount: s.field("Viewer Count", t.int()),
+		startedAt: s.field("Started At", t.string()),
+		thumbnailUrl: s.field("Thumbnail URL", t.string()),
+	}));
+
 	createHelixExecSchema({
 		name: "Get Stream info",
 		createIO: ({ io }) => ({
-			broadcasterIdIn: io.dataInput({
+			broadcasterId: io.dataInput({
 				name: "Broadcaster ID",
 				id: "broadcasterId",
 				type: t.string(),
 			}),
-			live: io.dataOutput({
-				name: "Stream Live",
-				id: "live",
-				type: t.bool(),
-			}),
-			broadcasterIdOut: io.dataOutput({
-				name: "Broadcaster ID",
-				id: "broadcasterId",
-				type: t.string(),
-			}),
-			broadcasterLogin: io.dataOutput({
-				name: "Broadcaster Login Name",
-				id: "broadcasterLogin",
-				type: t.string(),
-			}),
-			broadcasterDisplay: io.dataOutput({
-				name: "Broadcaster Display Name",
-				id: "broadcasterDisplay",
-				type: t.string(),
-			}),
-			broadcasterLanguage: io.dataOutput({
-				name: "Broadcaster Language",
-				id: "broadcasterLanguage",
-				type: t.string(),
-			}),
-			title: io.dataOutput({
-				name: "Title",
-				id: "title",
-				type: t.string(),
-			}),
-			catagory: io.dataOutput({
-				name: "Stream Catagory",
-				id: "catagory",
-				type: t.string(),
-			}),
-			catagoryId: io.dataOutput({
-				name: "Catagory ID",
-				id: "catagoryId",
-				type: t.string(),
-			}),
-			viewerCount: io.dataOutput({
-				name: "Viewer Count",
-				id: "viewerCount",
-				type: t.int(),
-			}),
-			startedAt: io.dataOutput({
-				name: "Started At",
-				id: "startedAt",
-				type: t.string(),
-			}),
-			thumbnailUrl: io.dataOutput({
-				name: "Thumbnail URL",
-				id: "thumbnailUrl",
-				type: t.string(),
+			info: io.dataOutput({
+				name: "Stream Info",
+				id: "info",
+				type: t.option(t.struct(StreamInfo)),
 			}),
 		}),
 		async run({ ctx, io, account }) {
 			const data = await helix.call("GET /streams", account.credential, {
 				body: new URLSearchParams({
-					user_id: ctx.getInput(io.broadcasterIdIn),
+					user_id: ctx.getInput(io.broadcasterId),
 				}),
 			});
-			const info = data;
-			ctx.setOutput(io.live, !Array.isArray(info));
-			ctx.setOutput(io.broadcasterIdOut, ctx.getInput(io.broadcasterIdIn));
-			ctx.setOutput(io.broadcasterLogin, info.user_login);
-			ctx.setOutput(io.broadcasterDisplay, info.user_name);
-			ctx.setOutput(io.broadcasterLanguage, info.language);
-			ctx.setOutput(io.catagory, info.game_name);
-			ctx.setOutput(io.catagoryId, info.game_id);
-			ctx.setOutput(io.title, info.title);
-			ctx.setOutput(io.viewerCount, info.viewer_count);
-			ctx.setOutput(io.startedAt, info.started_at);
-			ctx.setOutput(io.broadcasterLanguage, info.language);
-			ctx.setOutput(io.thumbnailUrl, info.thumbnail_url);
+			const info = Maybe(data[0]);
+
+			ctx.setOutput(
+				io.info,
+				info.map((i) =>
+					StreamInfo.create({
+						broadcasterId: ctx.getInput(io.broadcasterId),
+						broadcasterLogin: i.user_login,
+						broadcasterDisplay: i.user_name,
+						broadcasterLanguage: i.language,
+						catagory: i.game_name,
+						catagoryId: i.game_id,
+						title: i.title,
+						viewerCount: i.viewer_count,
+						startedAt: i.started_at,
+						thumbnailUrl: i.thumbnail_url,
+					}),
+				),
+			);
 		},
 	});
 

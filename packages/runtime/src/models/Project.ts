@@ -81,7 +81,7 @@ export class Project {
 		data:
 			| { variant: "package"; package: string; name: string }
 			| { variant: "custom"; id: number },
-	): Option<StructBase | EnumBase> {
+	): Option<StructBase | EnumBase<any>> {
 		if (data.variant === "package") {
 			const pkg = Maybe(
 				this.core.packages.find((p) => p.name === data.package),

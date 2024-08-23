@@ -138,7 +138,7 @@ export class EnumBuilder {
 type VariantFieldFromTypes<T extends Record<string, BaseType> | null> =
 	T extends Record<string, BaseType> ? { [K in keyof T]: Field<T[K]> } : null;
 
-export class EnumType<TEnum extends EnumBase> extends BaseType<
+export class EnumType<TEnum extends EnumBase<any>> extends BaseType<
 	InferEnum<TEnum>
 > {
 	constructor(public inner: TEnum) {
