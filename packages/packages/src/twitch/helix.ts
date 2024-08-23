@@ -488,6 +488,7 @@ export function register(pkg: Package, helix: Helix) {
 		startedAt: s.field("Started At", t.string()),
 		thumbnailUrl: s.field("Thumbnail URL", t.string()),
 	}));
+	pkg.registerType(StreamInfo);
 
 	createHelixExecSchema({
 		name: "Get Stream info",
