@@ -14,7 +14,7 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
 			url: "https://id.twitch.tv/oauth2/authorize",
 			searchParams: {
 				// https://discuss.dev.twitch.com/t/force-verify-true-causing-502-error-with-authorization-flow-when-not-logged-in/59964
-				force_verify: "true",
+				// force_verify: "true",
 			},
 		},
 		token: { url: "https://id.twitch.tv/oauth2/token" },
