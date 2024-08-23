@@ -60,10 +60,16 @@ export function pkg() {
 					id: "value",
 					type: t.wildcard(w),
 				}),
+				outList: io.dataOutput({
+					id: "outList",
+					type: t.list(t.wildcard(w)),
+				}),
 			};
 		},
 		run({ ctx, io }) {
-			ctx.getInput(io.list).push(ctx.getInput(io.value));
+			const list = [...ctx.getInput(io.list)];
+			list.push(ctx.getInput(io.value));
+			ctx.setOutput(io.outList, list);
 		},
 	});
 

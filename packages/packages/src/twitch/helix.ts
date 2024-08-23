@@ -546,7 +546,7 @@ export function register(pkg: Package, helix: Helix) {
 					user_id: ctx.getInput(io.broadcasterIdIn),
 				}),
 			});
-			const info = data;
+			const info = data.data[0];
 			ctx.setOutput(io.live, !Array.isArray(info));
 			ctx.setOutput(io.broadcasterIdOut, ctx.getInput(io.broadcasterIdIn));
 			ctx.setOutput(io.broadcasterLogin, info.user_login);
@@ -730,8 +730,8 @@ export function register(pkg: Package, helix: Helix) {
 					}),
 				},
 			);
-			ctx.setOutput(io.following, !Array.isArray(data));
-			ctx.setOutput(io.followedAt, Maybe(data.followed_at));
+			ctx.setOutput(io.following, data.data.length === 1);
+			ctx.setOutput(io.followedAt, Maybe(data.data[0].followed_at));
 		},
 	});
 

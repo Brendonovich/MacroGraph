@@ -92,7 +92,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const map = ctx.getInput(io.mapIn);
+			const map = new ReactiveMap(ctx.getInput(io.mapIn));
 			for (const input of io.pins) {
 				map.set(ctx.getInput(input.key), ctx.getInput(input.value));
 				ctx.setOutput(input.current, Maybe(map.get(ctx.getInput(input.key))));
@@ -322,6 +322,10 @@ export function pkg() {
 					id: "key",
 					type: t.string(),
 				}),
+				outMap: io.dataOutput({
+					id: "outMap",
+					type: t.map(t.wildcard(w)),
+				}),
 				out: io.dataOutput({
 					id: "out",
 					type: t.option(t.wildcard(w)),
@@ -329,13 +333,13 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const map = ctx.getInput(io.map);
+			const map = new ReactiveMap(ctx.getInput(io.map));
 			const key = ctx.getInput(io.key);
 
 			const current = Maybe(map.get(key));
 
 			map.delete(key);
-
+			ctx.setOutput(io.outMap, map);
 			ctx.setOutput(io.out, current);
 		},
 	});
