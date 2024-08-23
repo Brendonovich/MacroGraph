@@ -16,6 +16,7 @@ import { toast } from "solid-sonner";
 
 import {
 	PROVIDER_DISPLAY_NAMES,
+	WINDOW_OPEN_FAILED,
 	addCredential,
 	getCredentials,
 	removeCredential,
@@ -60,14 +61,25 @@ function AddCredentialButton() {
 					{(provider) => (
 						<DropdownMenuItem
 							onClick={() => {
-								doAddCredential(provider).then((cred) => {
-									toast.success(
-										<>
-											Credential <b>{cred.user.displayName}</b> added for{" "}
-											<b>{PROVIDER_DISPLAY_NAMES[provider]}</b>
-										</>,
-									);
-								});
+								doAddCredential(provider)
+									.then((cred) => {
+										toast.success(
+											<>
+												Credential <b>{cred.user.displayName}</b> added for{" "}
+												<b>{PROVIDER_DISPLAY_NAMES[provider]}</b>
+											</>,
+										);
+									})
+									.catch((e) => {
+										if (
+											e instanceof Error &&
+											e.message === WINDOW_OPEN_FAILED
+										) {
+											toast.error(
+												"Failed to open login window. Make sure your browser isn't blocking popups.",
+											);
+										}
+									});
 							}}
 						>
 							{PROVIDER_DISPLAY_NAMES[provider]}
@@ -83,12 +95,16 @@ function CredentialsList() {
 	const credentials = createAsync(() => getCredentials());
 	const submissions = useSubmissions(addCredential);
 
+	const pendingsubmissions = () => [...submissions].filter((s) => s.pending);
+
 	return (
 		<ul class="border border-neutral-800 rounded-lg divide-y divide-neutral-800">
-			<Show when={credentials()?.length === 0 && submissions.length === 0}>
+			<Show
+				when={credentials()?.length === 0 && pendingsubmissions().length === 0}
+			>
 				<p class="p-4 text-sm text-medium text-center">No connections found</p>
 			</Show>
-			<For each={[...submissions].filter((s) => s.pending)}>
+			<For each={pendingsubmissions()}>
 				{(submission) => (
 					<li class="p-4 flex flex-row items-center space-x-4 text-base">
 						<div>
