@@ -175,49 +175,52 @@ export function usePin(pin: Accessor<Pin>) {
 										e.stopPropagation();
 										dispose();
 										interfaceCtx.setState({ status: "idle" });
-									} else if (e.code === "Tab") {
-										e.preventDefault();
-										e.stopPropagation();
-
-										if (
-											!(
-												interfaceCtx.state.status === "pinDragMode" &&
-												interfaceCtx.state.state.status === "draggingPin" &&
-												interfaceCtx.state.state.autoconnectIO
-											)
-										)
-											return;
-										const autoconnectIORef =
-											interfaceCtx.state.state.autoconnectIO;
-
-										const autoconnectIO = graph
-											.model()
-											.pinFromRef(autoconnectIORef)
-											.toNullable();
-										if (!autoconnectIO) return;
-
-										if (pinIsOutput(thisPin) && pinIsInput(autoconnectIO))
-											interfaceCtx.execute("connectIO", {
-												graphId: graph.model().id,
-												out: { nodeId: thisPin.node.id, pinId: thisPin.id },
-												in: {
-													nodeId: autoconnectIO.node.id,
-													pinId: autoconnectIO.id,
-												},
-											});
-										else if (pinIsInput(thisPin) && pinIsOutput(autoconnectIO))
-											interfaceCtx.execute("connectIO", {
-												graphId: graph.model().id,
-												out: {
-													nodeId: autoconnectIO.node.id,
-													pinId: autoconnectIO.id,
-												},
-												in: { nodeId: thisPin.node.id, pinId: thisPin.id },
-											});
-
-										interfaceCtx.setState({ status: "idle" });
-										dispose();
 									}
+									// replaced by https://github.com/Brendonovich/MacroGraph/issues/465
+									// it's configurable
+									// else if (e.code === "Tab") {
+									//   e.preventDefault();
+									//   e.stopPropagation();
+
+									//   if (
+									//     !(
+									//       interfaceCtx.state.status === "pinDragMode" &&
+									//       interfaceCtx.state.state.status === "draggingPin" &&
+									//       interfaceCtx.state.state.autoconnectIO
+									//     )
+									//   )
+									//     return;
+									//   const autoconnectIORef =
+									//     interfaceCtx.state.state.autoconnectIO;
+
+									//   const autoconnectIO = graph
+									//     .model()
+									//     .pinFromRef(autoconnectIORef)
+									//     .toNullable();
+									//   if (!autoconnectIO) return;
+
+									//   if (pinIsOutput(thisPin) && pinIsInput(autoconnectIO))
+									//     interfaceCtx.execute("connectIO", {
+									//       graphId: graph.model().id,
+									//       out: { nodeId: thisPin.node.id, pinId: thisPin.id },
+									//       in: {
+									//         nodeId: autoconnectIO.node.id,
+									//         pinId: autoconnectIO.id,
+									//       },
+									//     });
+									//   else if (pinIsInput(thisPin) && pinIsOutput(autoconnectIO))
+									//     interfaceCtx.execute("connectIO", {
+									//       graphId: graph.model().id,
+									//       out: {
+									//         nodeId: autoconnectIO.node.id,
+									//         pinId: autoconnectIO.id,
+									//       },
+									//       in: { nodeId: thisPin.node.id, pinId: thisPin.id },
+									//     });
+
+									//   interfaceCtx.setState({ status: "idle" });
+									//   dispose();
+									// }
 								},
 								mouseup: () => dispose(),
 								mousemove: (e) => {
@@ -366,4 +369,4 @@ function getNearCompatibleIO(
 	return nearest ? nearest[1] : null;
 }
 
-const AUTOCONNECT_MAX_DISTANCE = 100;
+const AUTOCONNECT_MAX_DISTANCE = 50;

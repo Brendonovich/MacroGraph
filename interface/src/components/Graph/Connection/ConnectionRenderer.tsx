@@ -140,22 +140,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 				y: dragState.mousePosition.y,
 			});
 
-			pinPos.peek((pinPos) => {
-				if (pinIsOutput(dragState.pin))
-					drawConnection(
-						canvas,
-						dragState.pin instanceof DataOutput ? dragState.pin.type : null,
-						pinPos,
-						mousePosition,
-					);
-				else
-					drawConnection(
-						canvas,
-						dragState.pin instanceof DataInput ? dragState.pin.type : null,
-						mousePosition,
-						pinPos,
-					);
-			});
+			let autoconnectSnapped = false;
 
 			if (
 				interfaceCtx.state.status === "pinDragMode" &&
@@ -173,6 +158,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 					pinPos
 						.zip(autoconnectIOPosition)
 						.peek(([pinPos, autoconnectIOPosition]) => {
+							autoconnectSnapped = true;
 							if (AUTOCOMPLETE_MODE === "snap") {
 								if (pinIsOutput(autoconnectIO)) {
 									drawConnection(
@@ -182,7 +168,6 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 											: null,
 										autoconnectIOPosition,
 										pinPos,
-										0.5,
 									);
 								} else {
 									drawConnection(
@@ -192,7 +177,6 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 											: null,
 										pinPos,
 										autoconnectIOPosition,
-										0.5,
 									);
 								}
 							} else {
@@ -221,6 +205,24 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 						});
 				}
 			}
+
+			if (!autoconnectSnapped)
+				pinPos.peek((pinPos) => {
+					if (pinIsOutput(dragState.pin))
+						drawConnection(
+							canvas,
+							dragState.pin instanceof DataOutput ? dragState.pin.type : null,
+							pinPos,
+							mousePosition,
+						);
+					else
+						drawConnection(
+							canvas,
+							dragState.pin instanceof DataInput ? dragState.pin.type : null,
+							mousePosition,
+							pinPos,
+						);
+				});
 		}
 	});
 

@@ -4,6 +4,8 @@ import {
 	type XY,
 	getCommentBoxesInRect,
 	getNodesInRect,
+	pinIsInput,
+	pinIsOutput,
 } from "@macrograph/runtime";
 import { createBodyCursor } from "@solid-primitives/cursor";
 import {
@@ -268,15 +270,49 @@ export const Graph = (props: Props) => {
 						e.button === 0 &&
 						interfaceCtx.state.status === "pinDragMode"
 					) {
-						interfaceCtx.setState({
-							...interfaceCtx.state,
-							status: "pinDragMode",
-							state: {
-								status: "schemaMenuOpen",
-								position: { x: e.clientX, y: e.clientY },
-								graph: props.state,
-							},
-						});
+						if (
+							interfaceCtx.state.state.status === "draggingPin" &&
+							interfaceCtx.state.state.autoconnectIO
+						) {
+							const autoconnectIORef = interfaceCtx.state.state.autoconnectIO;
+
+							const thisPin = interfaceCtx.state.pin;
+							const autoconnectIO = model()
+								.pinFromRef(autoconnectIORef)
+								.toNullable();
+							if (!autoconnectIO) return;
+
+							if (pinIsOutput(thisPin) && pinIsInput(autoconnectIO))
+								interfaceCtx.execute("connectIO", {
+									graphId: model().id,
+									out: { nodeId: thisPin.node.id, pinId: thisPin.id },
+									in: {
+										nodeId: autoconnectIO.node.id,
+										pinId: autoconnectIO.id,
+									},
+								});
+							else if (pinIsInput(thisPin) && pinIsOutput(autoconnectIO))
+								interfaceCtx.execute("connectIO", {
+									graphId: model().id,
+									out: {
+										nodeId: autoconnectIO.node.id,
+										pinId: autoconnectIO.id,
+									},
+									in: { nodeId: thisPin.node.id, pinId: thisPin.id },
+								});
+
+							interfaceCtx.setState({ status: "idle" });
+						} else {
+							interfaceCtx.setState({
+								...interfaceCtx.state,
+								status: "pinDragMode",
+								state: {
+									status: "schemaMenuOpen",
+									position: { x: e.clientX, y: e.clientY },
+									graph: props.state,
+								},
+							});
+						}
 					}
 				}}
 				onMouseDown={(e) => {
