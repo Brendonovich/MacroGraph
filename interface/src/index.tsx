@@ -61,6 +61,7 @@ import { isCtrlEvent } from "./util";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
+export * from "./ConfigDialog";
 
 const queryClient = new QueryClient();
 

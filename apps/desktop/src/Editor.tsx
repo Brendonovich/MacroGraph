@@ -1,4 +1,5 @@
 import {
+	ConfigDialog,
 	ConnectionsDialog,
 	Interface,
 	PlatformContext,
@@ -105,6 +106,7 @@ export function MenuItems() {
 	return (
 		<>
 			<ConnectionsDialog core={core} />
+			<ConfigDialog />
 			<Button
 				title="Save Project"
 				size="icon"
