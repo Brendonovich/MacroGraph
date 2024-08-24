@@ -1,4 +1,5 @@
 import { ContextMenu } from "@kobalte/core";
+import type { Option } from "@macrograph/option";
 import {
 	DataInput as DataInputModel,
 	DataOutput as DataOutputModel,
@@ -7,6 +8,7 @@ import {
 	NODE_EMIT,
 	type Node as NodeModel,
 	type NodeSchemaVariant,
+	type OutputPin,
 	ScopeInput as ScopeInputModel,
 	ScopeOutput as ScopeOutputModel,
 	hasConnection,
@@ -116,42 +118,60 @@ export const Node = (props: Props) => {
 	);
 
 	const connectionHighlight = Solid.createMemo(() => {
-		const configOpt = config().highlightConnectedNodes;
-		if (!configOpt || configOpt === "off" || isSelected()) return "";
-
-		let noneSelected = false;
-		let connectionSelected = false;
+		const indicateConnectedNodes = config.nodes.indicateConnectedNodes;
 		if (
-			graph.state.selectedItemIds.filter((item) => item.type === "node")
-				.length === 0
+			!indicateConnectedNodes ||
+			indicateConnectedNodes === "off" ||
+			isSelected()
 		)
-			noneSelected = true;
-		else {
-			for (const [refStr, conns] of graph.model().connections) {
-				const outRef = splitIORef(refStr);
-				if (outRef.type === "i") continue;
-				for (const conn of conns) {
-					const inRef = splitIORef(conn);
-					connectionSelected =
-						connectionSelected ||
-						graph.state.selectedItemIds.some(
-							(item) =>
-								item.type === "node" &&
-								((item.id === outRef.nodeId && node().id === inRef.nodeId) ||
-									(item.id === inRef.nodeId && node().id === outRef.nodeId)),
-						);
+			return;
+
+		const selectedNodes = graph.state.selectedItemIds.filter(
+			(item) => item.type === "node",
+		);
+		if (selectedNodes.length < 1) return;
+		if (selectedNodes.find((n) => n.id === node().id)) return;
+
+		let connectionSelected = false;
+
+		if (!connectionSelected)
+			exit: for (const output of node().state.outputs) {
+				const outputConnections = graph
+					.model()
+					.connections.get(`${node().id}:o:${output.id}`);
+				if (!outputConnections) continue;
+
+				for (const outputConnection of outputConnections) {
+					const { nodeId } = splitIORef(outputConnection);
+					if (selectedNodes.find((n) => n.id === nodeId) !== undefined) {
+						connectionSelected = true;
+						break exit;
+					}
 				}
 			}
 
-			if (configOpt === "highlightConnected") {
-				if (connectionSelected && !isSelected()) return "ring-2 ring-white";
-			} else if (configOpt === "dimUnconnected") {
-				if (!connectionSelected && !isSelected() && !noneSelected)
-					return "opacity-50";
-			}
-		}
+		if (!connectionSelected)
+			exit: for (const input of node().state.inputs) {
+				const conns: OutputPin[] = [];
 
-		return "";
+				if (input instanceof ExecInputModel) conns.push(...input.connections);
+				else (input.connection as Option<any>).peek((i) => conns.push(i));
+
+				for (const output of conns) {
+					if (
+						selectedNodes.find((n) => n.id === output.node.id) !== undefined
+					) {
+						connectionSelected = true;
+						break exit;
+					}
+				}
+			}
+
+		if (indicateConnectedNodes === "highlightConnected") {
+			if (connectionSelected && !isSelected()) return "ring-2 ring-white";
+		} else if (indicateConnectedNodes === "dimUnconnected") {
+			if (!connectionSelected && !isSelected()) return "opacity-50";
+		}
 	});
 
 	const filteredInputs = Solid.createMemo(() =>

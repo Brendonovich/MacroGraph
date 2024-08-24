@@ -8,7 +8,7 @@ import {
 } from "@macrograph/runtime";
 import type { t } from "@macrograph/typesystem";
 import { createMousePosition } from "@solid-primitives/mouse";
-import { createEffect, createMemo } from "solid-js";
+import { createEffect } from "solid-js";
 
 import { config } from "../../../ConfigDialog";
 import type { GraphBounds } from "../../../context";
@@ -39,10 +39,6 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 	};
 
 	let canvasRef: HTMLCanvasElement;
-
-	const shouldHighlight = createMemo(() => {
-		return config().highlightConnections ?? true;
-	});
 
 	createEffect(() => {
 		const canvas = canvasRef.getContext("2d");
@@ -122,7 +118,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 							data.output,
 							data.input,
 							ctx.state.selectedItemIds.length > 0
-								? isNodeSelected || !shouldHighlight()
+								? isNodeSelected || !config.nodes.dimUnselectedConnections
 									? 0.75
 									: 0.15
 								: 0.75,

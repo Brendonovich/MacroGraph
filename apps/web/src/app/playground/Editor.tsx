@@ -1,6 +1,7 @@
 import { contract } from "@macrograph/api-contract";
 import { writeToClipboard } from "@macrograph/clipboard";
 import {
+	ConfigDialog,
 	ConnectionsDialog,
 	Interface,
 	PlatformContext,
@@ -151,7 +152,12 @@ export default () => {
 };
 
 export function ConnectionsDialogButton() {
-	return <ConnectionsDialog core={core} />;
+	return (
+		<>
+			<ConnectionsDialog core={core} />
+			<ConfigDialog />
+		</>
+	);
 }
 
 export function ProjectName() {
