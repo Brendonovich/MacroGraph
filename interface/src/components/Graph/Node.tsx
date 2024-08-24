@@ -116,6 +116,9 @@ export const Node = (props: Props) => {
 	);
 
 	const connectionHighlight = Solid.createMemo(() => {
+		const configOpt = config().highlightConnectedNodes;
+		if (!configOpt || configOpt === "off" || isSelected()) return "";
+
 		let noneSelected = false;
 		let connectionSelected = false;
 		if (
@@ -140,11 +143,9 @@ export const Node = (props: Props) => {
 				}
 			}
 
-			const test = config().highlightConnectedNodes;
-			if (!test || test === "off") return "";
-			if (test === "highlightConnected") {
+			if (configOpt === "highlightConnected") {
 				if (connectionSelected && !isSelected()) return "ring-2 ring-white";
-			} else if (test === "dimUnconnected") {
+			} else if (configOpt === "dimUnconnected") {
 				if (!connectionSelected && !isSelected() && !noneSelected)
 					return "opacity-50";
 			}
