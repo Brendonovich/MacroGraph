@@ -87,7 +87,7 @@ export const Node = (props: Props) => {
 
 		const rect = ref.getBoundingClientRect();
 
-		interfaceCtx.nodeSizes.set(node(), {
+		interfaceCtx.itemSizes.set(node(), {
 			width: rect.width,
 			height: rect.height,
 		});
@@ -97,7 +97,7 @@ export const Node = (props: Props) => {
 
 			if (!contentRect) return;
 
-			interfaceCtx.nodeSizes.set(node(), {
+			interfaceCtx.itemSizes.set(node(), {
 				width: contentRect.width,
 				height: contentRect.height,
 			});
@@ -107,7 +107,7 @@ export const Node = (props: Props) => {
 
 		Solid.onCleanup(() => {
 			obs.disconnect();
-			interfaceCtx.nodeSizes.delete(node());
+			interfaceCtx.itemSizes.delete(node());
 		});
 	});
 

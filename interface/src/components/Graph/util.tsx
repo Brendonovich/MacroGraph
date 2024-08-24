@@ -117,7 +117,7 @@ export function handleSelectableItemMouseDown(
 			const nodes = getNodesInRect(
 				graph.model().nodes.values(),
 				new DOMRect(box.position.x, box.position.y, box.size.x, box.size.y),
-				(node) => interfaceCtx.nodeSizes.get(node),
+				(node) => interfaceCtx.itemSizes.get(node),
 			);
 			commentBoxNodes.set(box, nodes);
 			for (const node of nodes) {

@@ -354,7 +354,7 @@ export const Graph = (props: Props) => {
 											...getNodesInRect(
 												model().nodes.values(),
 												rect,
-												(node) => interfaceCtx.nodeSizes.get(node),
+												(node) => interfaceCtx.itemSizes.get(node),
 												GRID_SIZE * 2,
 											),
 										].map((n) => ({ id: n.id, type: "node" as const })),

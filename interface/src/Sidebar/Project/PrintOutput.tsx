@@ -90,7 +90,7 @@ export function PrintOutput() {
 													produce((states) => {
 														const state = states.find((s) => s.id === g.id);
 														if (!state) return;
-														const size = interfaceCtx.nodeSizes.get(n);
+														const size = interfaceCtx.itemSizes.get(n);
 														if (!size) return;
 
 														state.translate = {

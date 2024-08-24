@@ -480,7 +480,7 @@ function ProjectInterface() {
 
 										if (pin) {
 											const pinPosition = ctx.pinPositions.get(pin);
-											const nodeSize = ctx.nodeSizes.get(pin.node);
+											const nodeSize = ctx.itemSizes.get(pin.node);
 											if (!pinPosition || !nodeSize) return;
 
 											const nodeX = pin.node.state.position.x;
@@ -632,7 +632,7 @@ function createKeydownShortcuts(
 								box.size.x,
 								box.size.y,
 							),
-							(node) => ctx.nodeSizes.get(node),
+							(node) => ctx.itemSizes.get(node),
 						);
 
 						for (const node of nodes) {
@@ -942,7 +942,7 @@ function createKeydownShortcuts(
 									box.size.x,
 									box.size.y,
 								),
-								(node) => ctx.nodeSizes.get(node),
+								(node) => ctx.itemSizes.get(node),
 							);
 
 							for (const node of nodes) {

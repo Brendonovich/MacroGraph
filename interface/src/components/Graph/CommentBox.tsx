@@ -185,7 +185,7 @@ export function CommentBox(props: Props) {
 												box().size.x,
 												box().size.y,
 											),
-											(node) => interfaceCtx.nodeSizes.get(node),
+											(node) => interfaceCtx.itemSizes.get(node),
 										);
 
 										for (const node of nodes) {

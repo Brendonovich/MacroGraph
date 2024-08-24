@@ -1,5 +1,6 @@
 import { createActionHistory } from "@macrograph/action-history";
 import type {
+	CommentBox,
 	Core,
 	Graph,
 	IORef,
@@ -138,7 +139,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				return props.core;
 			},
 			save,
-			nodeSizes: new WeakMap<Node, Size>(),
+			itemSizes: new WeakMap<Node | CommentBox, Size>(),
 			pinPositions: new ReactiveWeakMap<Pin, XY>(),
 			get environment() {
 				return props.environment;
