@@ -10,11 +10,13 @@ import {
 	ScopeInput as ScopeInputModel,
 	ScopeOutput as ScopeOutputModel,
 	hasConnection,
+	splitIORef,
 } from "@macrograph/runtime";
 import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
 
+import { config } from "../../ConfigDialog";
 import { useInterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import { useGraphContext } from "./Context";
@@ -113,6 +115,44 @@ export const Node = (props: Props) => {
 		),
 	);
 
+	const connectionHighlight = Solid.createMemo(() => {
+		let noneSelected = false;
+		let connectionSelected = false;
+		if (
+			graph.state.selectedItemIds.filter((item) => item.type === "node")
+				.length === 0
+		)
+			noneSelected = true;
+		else {
+			for (const [refStr, conns] of graph.model().connections) {
+				const outRef = splitIORef(refStr);
+				if (outRef.type === "i") continue;
+				for (const conn of conns) {
+					const inRef = splitIORef(conn);
+					connectionSelected =
+						connectionSelected ||
+						graph.state.selectedItemIds.some(
+							(item) =>
+								item.type === "node" &&
+								((item.id === outRef.nodeId && node().id === inRef.nodeId) ||
+									(item.id === inRef.nodeId && node().id === outRef.nodeId)),
+						);
+				}
+			}
+
+			const test = config().highlightConnectedNodes;
+			if (!test || test === "off") return "";
+			if (test === "highlightConnected") {
+				if (connectionSelected && !isSelected()) return "ring-2 ring-white";
+			} else if (test === "dimUnconnected") {
+				if (!connectionSelected && !isSelected() && !noneSelected)
+					return "opacity-50";
+			}
+		}
+
+		return "";
+	});
+
 	const filteredInputs = Solid.createMemo(() =>
 		node().state.inputs.filter(
 			(i) => !node().state.foldPins || hasConnection(i),
@@ -164,7 +204,8 @@ export const Node = (props: Props) => {
 				ref={ref}
 				class={clsx(
 					"absolute top-0 left-0 text-[12px] overflow-hidden rounded-lg flex flex-col bg-black/75 border-black/75 border-2",
-					isSelected() && "ring-2 ring-mg-focus",
+					isSelected() && "ring-2 ring-mg-focus opacity-100",
+					connectionHighlight(),
 				)}
 				style={{
 					transform: `translate(${node().state.position.x}px, ${

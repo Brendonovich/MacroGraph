@@ -25,7 +25,7 @@ export function EnumInput<T extends Enum<EnumVariants>>(props: Props<T>) {
 interface SelectInputProps<TOption>
 	extends Pick<
 		ComponentProps<typeof Select.Root<TOption>>,
-		"optionValue" | "optionTextValue"
+		"optionValue" | "optionTextValue" | "placement"
 	> {
 	options: Array<TOption>;
 	getLabel(option: TOption): string;
@@ -67,7 +67,7 @@ export function SelectInput<TOption>(props: SelectInputProps<TOption>) {
 				/>
 			</Select.Trigger>
 			<Select.Portal>
-				<Select.Content class="ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-neutral-700 rounded space-y-1 p-1">
+				<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-neutral-700 rounded space-y-1 p-1">
 					<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
 				</Select.Content>
 			</Select.Portal>
