@@ -217,7 +217,9 @@ export const Node = (props: Props) => {
 					// #418
 					if (
 						interfaceCtx.state.status === "pinDragMode" &&
-						interfaceCtx.state.state.status === "draggingPin"
+						interfaceCtx.state.state.status === "draggingPin" &&
+						// #485
+						!interfaceCtx.state.state.autoconnectIO
 					) {
 						interfaceCtx.setState({ status: "idle" });
 					}
