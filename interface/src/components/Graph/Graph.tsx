@@ -29,6 +29,7 @@ import {
 	toScreenSpace,
 } from "./Context";
 import { Node } from "./Node";
+import { GRID_SIZE } from "./util";
 
 type PanState = "none" | "waiting" | "active";
 
@@ -350,14 +351,18 @@ export const Graph = (props: Props) => {
 
 									const items = [
 										...[
-											...getNodesInRect(model().nodes.values(), rect, (node) =>
-												interfaceCtx.nodeSizes.get(node),
+											...getNodesInRect(
+												model().nodes.values(),
+												rect,
+												(node) => interfaceCtx.nodeSizes.get(node),
+												GRID_SIZE * 2,
 											),
 										].map((n) => ({ id: n.id, type: "node" as const })),
 										...[
 											...getCommentBoxesInRect(
 												model().commentBoxes.values(),
 												rect,
+												GRID_SIZE * 2,
 											),
 										].map((b) => ({
 											id: b.id,

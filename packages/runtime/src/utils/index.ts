@@ -58,20 +58,22 @@ export function getNodesInRect(
 	nodes: IterableIterator<Node>,
 	rect: DOMRect,
 	getNodeSize: GetNodeSize,
+	padding = 0,
 ) {
 	const ret = new Set<Node>();
 
 	for (const node of nodes) {
 		const nodePosition = node.state.position;
 
-		if (nodePosition.x < rect.x || nodePosition.y < rect.y) continue;
+		if (nodePosition.x + padding < rect.x || nodePosition.y + padding < rect.y)
+			continue;
 
 		const nodeSize = getNodeSize(node);
 		if (!nodeSize) continue;
 
 		if (
-			nodePosition.x + nodeSize.width > rect.x + rect.width ||
-			nodePosition.y + nodeSize.height > rect.y + rect.height
+			nodePosition.x + nodeSize.width - padding > rect.x + rect.width ||
+			nodePosition.y + nodeSize.height - padding > rect.y + rect.height
 		)
 			continue;
 
@@ -84,17 +86,19 @@ export function getNodesInRect(
 export function getCommentBoxesInRect(
 	boxes: IterableIterator<CommentBox>,
 	rect: DOMRect,
+	padding = 0,
 ) {
 	const ret = new Set<CommentBox>();
 
 	for (const box of boxes) {
 		const position = box.position;
 
-		if (position.x < rect.x || position.y < rect.y) continue;
+		if (position.x + padding < rect.x || position.y + padding < rect.y)
+			continue;
 
 		if (
-			position.x + box.size.x > rect.x + rect.width ||
-			position.y + box.size.y > rect.y + rect.height
+			position.x + box.size.x - padding > rect.x + rect.width ||
+			position.y + box.size.y - padding > rect.y + rect.height
 		)
 			continue;
 
