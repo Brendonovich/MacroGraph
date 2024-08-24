@@ -10,11 +10,11 @@ import type { t } from "@macrograph/typesystem";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { createEffect, createMemo } from "solid-js";
 
+import { config } from "../../../ConfigDialog";
 import type { GraphBounds } from "../../../context";
 import { useInterfaceContext } from "../../../context";
 import { useGraphContext } from "../Context";
 import { colour } from "../util";
-import { config } from "../../../ConfigDialog";
 
 export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 	const interfaceCtx = useInterfaceContext();

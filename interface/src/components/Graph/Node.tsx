@@ -16,6 +16,7 @@ import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
 
+import { config } from "../../ConfigDialog";
 import { useInterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import { useGraphContext } from "./Context";
@@ -30,7 +31,6 @@ import {
 } from "./IO";
 import "./Node.css";
 import { GRID_SIZE, handleSelectableItemMouseDown } from "./util";
-import { config } from "../../ConfigDialog";
 
 interface Props {
 	node: NodeModel;

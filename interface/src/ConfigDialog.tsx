@@ -7,6 +7,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@macrograph/ui";
+import { makePersisted } from "@solid-primitives/storage";
 import {
 	For,
 	Match,
@@ -17,7 +18,6 @@ import {
 	startTransition,
 } from "solid-js";
 import { CheckBox, SelectInput } from "./components/ui";
-import { makePersisted } from "@solid-primitives/storage";
 
 const initConfig = new Map();
 

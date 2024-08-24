@@ -9,7 +9,14 @@
 			"packages/*/*",
 			"*"
 		],
-		"ignore": ["auto-imports.d.ts", "node_modules", "dist", "bindings.ts"]
+		"ignore": [
+			"auto-imports.d.ts",
+			"node_modules",
+			"dist",
+			"bindings.ts",
+			"rspc/types.ts",
+			"commands.ts"
+		]
 	},
 	"organizeImports": {
 		"enabled": true
