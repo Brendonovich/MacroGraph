@@ -36,13 +36,13 @@ export function ConfigDialog() {
 				configOptions: [
 					{
 						id: "highlightConnections",
-						name: "Highlight Connections",
+						name: "Dim connections of unselected nodes",
 						type: "checkbox",
 						default: true,
 					},
 					{
 						id: "highlightConnectedNodes",
-						name: "Highlight Connected Nodes",
+						name: "Indicate nodes connected to selected nodes",
 						type: "enum",
 						options: [
 							{ id: "off", name: "Off" },
@@ -93,7 +93,7 @@ export function ConfigDialog() {
 							<Tabs.Indicator class="bg-white w-[2px] absolute -right-[1.5px] data-[resizing='false']:transition-transform rounded-full" />
 						</Tabs.List>
 					</Tabs.Root>
-					<div class="flex flex-col p-4 text-white min-w-[32rem]">
+					<div class="flex flex-col p-4 text-white min-w-[32rem] gap-1">
 						<Suspense fallback="Loading">
 							<For each={selectedConfigSection()?.configOptions}>
 								{(configOption) => (
