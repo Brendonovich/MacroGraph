@@ -2,25 +2,34 @@
 /* eslint-disable */
 /**
 * @param {string} regex
-* @returns {(CaptureGroup)[]}
+* @returns {CaptureScope}
 */
-export function get_capture_groups(regex: string): (CaptureGroup)[];
+export function get_capture_groups(regex: string): CaptureScope;
 /**
 */
 export class CaptureGroup {
   free(): void;
 /**
-* @returns {string | undefined}
+* @returns {string}
 */
-  name(): string | undefined;
-/**
-* @returns {number | undefined}
-*/
-  index(): number | undefined;
+  name(): string;
 /**
 * @returns {boolean}
 */
   optional(): boolean;
+}
+/**
+*/
+export class CaptureScope {
+  free(): void;
+/**
+* @returns {(CaptureScope)[]}
+*/
+  scope(): (CaptureScope)[];
+/**
+* @returns {CaptureGroup | undefined}
+*/
+  capture(): CaptureGroup | undefined;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -28,9 +37,11 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly get_capture_groups: (a: number, b: number, c: number) => void;
+  readonly __wbg_capturescope_free: (a: number, b: number) => void;
+  readonly capturescope_scope: (a: number, b: number) => void;
+  readonly capturescope_capture: (a: number) => number;
   readonly __wbg_capturegroup_free: (a: number, b: number) => void;
   readonly capturegroup_name: (a: number, b: number) => void;
-  readonly capturegroup_index: (a: number, b: number) => void;
   readonly capturegroup_optional: (a: number) => number;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;

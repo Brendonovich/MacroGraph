@@ -16,7 +16,10 @@ import {
 } from "@macrograph/typesystem";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-import init, { get_capture_groups } from "@macrograph/regex-syntax-wasm";
+import init, {
+	type CaptureScope,
+	get_capture_groups,
+} from "@macrograph/regex-syntax-wasm";
 // @ts-expect-error
 import wasmUrl from "@macrograph/regex-syntax-wasm/regex_syntax_wasm_bg.wasm?url";
 
@@ -2508,22 +2511,6 @@ export function pkg(core: Core) {
 		type: "exec",
 		properties: { regex: { name: "Regex", type: t.string() } },
 		createIO({ io, ctx, properties }) {
-			// for (const group of result) {
-			// 	console.log("CAPTURE", group.name(), group.index(), group.optional());
-			// }
-
-			// // setTimeout(() => {
-			// // 	try {
-			// // 		console.log("BEFORE", ctx.getProperty(properties.regex));
-			// // 		console.log(
-			// // 			"HERE",
-			// // 			get_capture_groups(ctx.getProperty(properties.regex)),
-			// // 		);
-			// // 	} catch (err) {
-			// // 		console.log(err);
-			// // 	}
-			// // }, 1000);
-
 			const base = {
 				input: io.dataInput({
 					id: "",
@@ -2534,17 +2521,31 @@ export function pkg(core: Core) {
 			try {
 				const groupOutputs: DataOutput<t.String | t.Option<t.String>>[] = [];
 				const regex = new RegExp(ctx.getProperty(properties.regex));
-				const groups = get_capture_groups(ctx.getProperty(properties.regex));
+				const result = get_capture_groups(ctx.getProperty(properties.regex));
 
-				for (const group of groups) {
-					console.log(group.name(), group.optional()); // TODO
+				const captures: [string, t.String | t.Option<t.String>][] = [];
+				const collectCapture = (scope: CaptureScope) => {
+					const c = scope.capture();
+					if (c) {
+						const name = c.name();
+						captures.push([
+							name,
+							c.optional() ? t.option(t.string()) : t.string(),
+						]);
+					} else {
+						for (const group of scope.scope()) {
+							collectCapture(group);
+						}
+					}
+				};
+				collectCapture(result);
 
-					const identifier = group.name() ?? group.index()!.toString();
+				for (const [name, ty] of captures) {
 					groupOutputs.push(
 						io.dataOutput({
-							id: `group-${identifier}`,
-							name: identifier,
-							type: group.optional() ? t.option(t.string()) : t.string(),
+							id: `group-${name}`,
+							name: name,
+							type: ty,
 						}),
 					);
 				}
