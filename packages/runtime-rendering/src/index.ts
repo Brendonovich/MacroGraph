@@ -120,7 +120,8 @@ export function renderType(type: BaseType): RenderedType | undefined {
 	if (type instanceof t.Int) return "int";
 	if (type instanceof t.Float) return "float";
 	if (type instanceof t.Bool) return "bool";
-	if (type instanceof t.Wildcard) return "wildcard";
+	if (type instanceof t.Wildcard)
+		return type.wildcard.value().map(renderType).unwrapOr("wildcard");
 	if (type instanceof t.Struct) {
 		const struct = type.struct as StructBase;
 		console.log(struct);
