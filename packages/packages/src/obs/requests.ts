@@ -291,6 +291,32 @@ export function register(pkg: Package<EventTypes>) {
 
 	// Missing SetPersistentData as it has any type in request
 
+	pkg.createSchema({
+		name: "RGBA Hex to OBS Colour",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				input: io.dataInput({
+					id: "input",
+					type: t.string(),
+				}),
+				output: io.dataOutput({
+					id: "output",
+					type: t.int(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const input = ctx.getInput(io.input);
+			const r = Number.parseInt(input.slice(0, 2), 16);
+			const g = Number.parseInt(input.slice(2, 4), 16);
+			const b = Number.parseInt(input.slice(4, 6), 16);
+			const a = Number.parseInt(input.slice(6, 8), 16);
+
+			ctx.setOutput(io.output, (a << 24) + (b << 16) + (g << 8) + r);
+		},
+	});
+
 	createOBSExecSchema({
 		name: "Get Scene Collection List",
 		createIO: ({ io }) => ({
@@ -1147,11 +1173,12 @@ export function register(pkg: Package<EventTypes>) {
 
 	createOBSExecSchema({
 		name: "Get Input Default Settings",
-		createIO: ({ io }) => ({
+		createIO: ({ io, obs }) => ({
 			inputKind: io.dataInput({
 				id: "inputKind",
 				name: "Input Kind",
 				type: t.string(),
+				fetchSuggestions: inputKindSuggestionFactory(obs),
 			}),
 			defaultInputSettings: io.dataOutput({
 				id: "defaultInputSettings",

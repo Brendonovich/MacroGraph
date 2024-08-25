@@ -77,8 +77,9 @@ export const Reward = createStruct("Reward", (s) => ({
 	id: s.field("ID", t.string()),
 	title: s.field("Title", t.string()),
 	cost: s.field("Cost", t.int()),
-	prompt: s.field("Prompt", t.option(t.string())),
+	prompt: s.field("Prompt", t.string()),
 	enabled: s.field("Enabled", t.bool()),
+	input_required: s.field("User Input Required", t.bool()),
 	bgColor: s.field("Background Color", t.string()),
 	maxRedemptionsPerStream: s.field("Max Per Stream", t.option(t.int())),
 	maxRedemptionsPerUserPerStream: s.field(
@@ -787,6 +788,11 @@ export function register(pkg: Package, helix: Helix) {
 					id: "enabled",
 					type: t.option(t.bool()),
 				}),
+				userInput: io.dataInput({
+					name: "User Input Required",
+					id: "userInput",
+					type: t.option(t.bool()),
+				}),
 				backgroundColor: io.dataInput({
 					name: "Background Color",
 					id: "backgroundColor",
@@ -832,6 +838,9 @@ export function register(pkg: Package, helix: Helix) {
 			ctx.getInput(io.enabled).peek((v) => {
 				body.is_enabled = v;
 			});
+			ctx.getInput(io.userInput).peek((v) => {
+				body.is_user_input_required = v;
+			});
 			ctx.getInput(io.backgroundColor).peek((v) => {
 				body.background_color = v;
 			});
@@ -861,6 +870,8 @@ export function register(pkg: Package, helix: Helix) {
 
 			const response = data.data[0];
 
+			console.log(response);
+
 			ctx.setOutput(
 				io.out,
 				Reward.create({
@@ -868,17 +879,30 @@ export function register(pkg: Package, helix: Helix) {
 					title: response.title,
 					prompt: response.prompt,
 					cost: response.cost,
-					bgColor: response.backgroundColor,
-					enabled: response.isEnabled,
-					maxRedemptionsPerStream: Maybe(response.maxRedemptionsPerStream),
-					maxRedemptionsPerUserPerStream: Maybe(
-						response.maxRedemptionsPerUserPerStream,
+					bgColor: response.background_color,
+					enabled: response.is_enabled,
+					input_required: response.is_user_input_required,
+					maxRedemptionsPerStream: Maybe(
+						response.max_per_stream_setting.is_enabled
+							? response.max_per_stream_setting.max_per_stream
+							: null,
 					),
-					globalCooldown: Maybe(response.globalCooldown),
-					paused: response.isPaused,
-					inStock: response.isInStock,
-					skipRequestQueue: response.autoFulfill,
-					redemptionsThisStream: Maybe(response.redemptionsThisStream),
+					maxRedemptionsPerUserPerStream: Maybe(
+						response.max_per_user_per_stream_setting.is_enabled
+							? response.max_per_user_per_stream_setting.max_per_user_per_stream
+							: null,
+					),
+					globalCooldown: Maybe(
+						response.global_cooldown_setting.is_enabled
+							? response.global_cooldown_setting.global_cooldown_seconds
+							: null,
+					),
+					paused: response.is_paused,
+					inStock: response.is_in_stock,
+					skipRequestQueue: response.should_redemptions_skip_request_queue,
+					redemptionsThisStream: Maybe(
+						response.redemptions_redeemed_current_stream,
+					),
 					cooldownExpire: Maybe(response.cooldownExpiryDate).map(
 						JSON.stringify,
 					),
@@ -1089,54 +1113,39 @@ export function register(pkg: Package, helix: Helix) {
 					id: "isEnabled",
 					type: t.option(t.bool()),
 				}),
-				backgroundColor: io.dataInput({
-					name: "Background Color",
-					id: "backgroundColor",
-					type: t.option(t.string()),
-				}),
 				userInputRequired: io.dataInput({
 					name: "User Input Required",
 					id: "userInputRequired",
 					type: t.option(t.bool()),
 				}),
-				maxRedemptionsPerStreamEnabled: io.dataInput({
-					name: "Max Redemptions Per Stream Enabled",
-					id: "maxRedemptionsPerStreamEnabled",
-					type: t.option(t.bool()),
+				backgroundColor: io.dataInput({
+					name: "Background Color",
+					id: "backgroundColor",
+					type: t.option(t.string()),
 				}),
 				maxRedemptionsPerStream: io.dataInput({
 					name: "Max Redemptions Per Stream",
 					id: "maxRedemptionsPerStream",
 					type: t.option(t.int()),
 				}),
-				maxRedemptionsPerUserPerStreamEnabled: io.dataInput({
-					name: "Max Redemptions Per User Per Stream Enabled",
-					id: "maxRedemptionsPerUserPerStreamEnabled",
-					type: t.option(t.bool()),
-				}),
 				maxRedemptionsPerUserPerStream: io.dataInput({
 					name: "Max Redemptions Per User Per Stream",
 					id: "maxRedemptionsPerUserPerStream",
 					type: t.option(t.int()),
-				}),
-				globalCooldownEnabled: io.dataInput({
-					name: "Global Cooldown Enabled",
-					id: "globalCooldownEnabled",
-					type: t.option(t.bool()),
 				}),
 				globalCooldown: io.dataInput({
 					name: "Global Cooldown",
 					id: "globalCooldown",
 					type: t.option(t.int()),
 				}),
-				autoFulfill: io.dataInput({
-					name: "Skip Redemption Queue",
-					id: "autoFulfill",
-					type: t.option(t.bool()),
-				}),
 				paused: io.dataInput({
 					name: "Paused",
 					id: "paused",
+					type: t.option(t.bool()),
+				}),
+				skipRequestQueue: io.dataInput({
+					name: "Skip Redemption Queue",
+					id: "skipRequestQueue",
 					type: t.option(t.bool()),
 				}),
 				out: io.dataOutput({
@@ -1146,51 +1155,44 @@ export function register(pkg: Package, helix: Helix) {
 			};
 		},
 		async run({ ctx, io, account }) {
-			const body: Record<string, any> = {};
 			if (ctx.getInput(io.id) === "") return;
 
-			if (ctx.getInput(io.title).isSome())
-				body.title = ctx.getInput(io.title).unwrap();
-			if (ctx.getInput(io.cost).isSome())
-				body.cost = ctx.getInput(io.cost).unwrap();
-			if (ctx.getInput(io.prompt).isSome())
-				body.prompt = ctx.getInput(io.prompt).unwrap();
-			if (ctx.getInput(io.isEnabled).isSome())
-				body.is_enabled = ctx.getInput(io.isEnabled).unwrap();
-			if (ctx.getInput(io.backgroundColor).isSome())
-				body.background_Color = ctx.getInput(io.backgroundColor).unwrap();
-			if (ctx.getInput(io.userInputRequired).isSome())
-				body.is_user_Input_Required = ctx
-					.getInput(io.userInputRequired)
-					.unwrap();
-			if (ctx.getInput(io.maxRedemptionsPerStreamEnabled).isSome())
-				body.is_max_per_stream_enabled = ctx
-					.getInput(io.maxRedemptionsPerStreamEnabled)
-					.unwrap();
-			if (ctx.getInput(io.maxRedemptionsPerStream).isSome())
-				body.max_per_stream = ctx.getInput(io.maxRedemptionsPerStream).unwrap();
-			if (ctx.getInput(io.maxRedemptionsPerUserPerStream).isSome())
-				body.max_per_user_per_stream = ctx
-					.getInput(io.maxRedemptionsPerUserPerStream)
-					.unwrap();
-			if (ctx.getInput(io.maxRedemptionsPerUserPerStreamEnabled).isSome())
-				body.is_max_per_user_per_stream_enabled = ctx
-					.getInput(io.maxRedemptionsPerUserPerStreamEnabled)
-					.unwrap();
-			if (ctx.getInput(io.globalCooldownEnabled).isSome())
-				body.is_global_cooldown_enabled = ctx
-					.getInput(io.globalCooldownEnabled)
-					.unwrap();
-			if (ctx.getInput(io.globalCooldown).isSome())
-				body.global_cooldown_seconds = ctx.getInput(io.globalCooldown).unwrap();
-			if (ctx.getInput(io.autoFulfill).isSome())
-				body.should_redemptions_skip_request_queue = ctx
-					.getInput(io.autoFulfill)
-					.unwrap();
-			if (ctx.getInput(io.paused).isSome())
-				body.is_paused = ctx.getInput(io.paused).unwrap();
+			const body: Record<string, any> = {
+				title: ctx.getInput(io.title),
+			};
+			ctx.getInput(io.cost).peek((v) => {
+				body.cost = v;
+			});
+			ctx.getInput(io.prompt).peek((v) => {
+				body.prompt = v;
+				body.is_user_input_required = true;
+			});
+			ctx.getInput(io.isEnabled).peek((v) => {
+				body.is_enabled = v;
+			});
+			ctx.getInput(io.userInputRequired).peek((v) => {
+				body.is_user_input_required = v;
+			});
+			ctx.getInput(io.backgroundColor).peek((v) => {
+				body.background_color = v;
+			});
+			ctx.getInput(io.maxRedemptionsPerStream).peek((v) => {
+				body.is_max_per_stream_enabled = true;
+				body.max_per_stream = v;
+			});
+			ctx.getInput(io.maxRedemptionsPerUserPerStream).peek((v) => {
+				body.is_max_per_user_per_stream_enabled = true;
+				body.max_per_user_per_stream = v;
+			});
+			ctx.getInput(io.globalCooldown).peek((v) => {
+				body.is_global_cooldown_enabled = true;
+				body.global_cooldown_seconds = v;
+			});
+			ctx.getInput(io.skipRequestQueue).peek((v) => {
+				body.should_redemptions_skip_request_queue = v;
+			});
 
-			const response = await helix.call(
+			const data = await helix.call(
 				"PATCH /channel_points/custom_rewards",
 				account.credential,
 				{
@@ -1202,27 +1204,42 @@ export function register(pkg: Package, helix: Helix) {
 				},
 			);
 
-			const data = response.data[0];
+			const response = data.data[0];
 
 			ctx.setOutput(
 				io.out,
 				Reward.create({
-					id: data.id,
-					title: data.title,
-					prompt: data.prompt,
-					cost: data.cost,
-					bgColor: data.backgroundColor,
-					enabled: data.isEnabled,
-					maxRedemptionsPerStream: Maybe(data.maxRedemptionsPerStream),
-					maxRedemptionsPerUserPerStream: Maybe(
-						data.maxRedemptionsPerUserPerStream,
+					id: response.id,
+					title: response.title,
+					prompt: response.prompt,
+					cost: response.cost,
+					bgColor: response.background_color,
+					enabled: response.is_enabled,
+					input_required: response.is_user_input_required,
+					maxRedemptionsPerStream: Maybe(
+						response.max_per_stream_setting.is_enabled
+							? response.max_per_stream_setting.max_per_stream
+							: null,
 					),
-					globalCooldown: Maybe(data.globalCooldown),
-					paused: data.isPaused,
-					inStock: data.isInStock,
-					skipRequestQueue: data.autoFulfill,
-					redemptionsThisStream: Maybe(data.redemptionsThisStream),
-					cooldownExpire: Maybe(data.cooldownExpiryDate).map(JSON.stringify),
+					maxRedemptionsPerUserPerStream: Maybe(
+						response.max_per_user_per_stream_setting.is_enabled
+							? response.max_per_user_per_stream_setting.max_per_user_per_stream
+							: null,
+					),
+					globalCooldown: Maybe(
+						response.global_cooldown_setting.is_enabled
+							? response.global_cooldown_setting.global_cooldown_seconds
+							: null,
+					),
+					paused: response.is_paused,
+					inStock: response.is_in_stock,
+					skipRequestQueue: response.should_redemptions_skip_request_queue,
+					redemptionsThisStream: Maybe(
+						response.redemptions_redeemed_current_stream,
+					),
+					cooldownExpire: Maybe(response.cooldownExpiryDate).map(
+						JSON.stringify,
+					),
 				}),
 			);
 		},
