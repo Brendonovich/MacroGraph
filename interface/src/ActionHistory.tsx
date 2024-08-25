@@ -15,14 +15,26 @@ export function ActionHistory() {
 				}
 			>
 				{(entry, i) => (
-					<li class="flex flex-row items-center">
-						<div class="w-4 h-4">
+					<div class="pl-4 py-0.5 relative">
+						<div class="w-4 absolute inset-y-0 left-0 flex items-center justify-center">
 							<Show when={ctx.nextHistoryIndex() - 1 === i()}>
 								<IconMaterialSymbolsArrowRightRounded class="w-6 h-6 -m-1" />
 							</Show>
 						</div>
-						{entry.type}
-					</li>
+
+						<For each={entry}>
+							{(e) => (
+								<li
+									class="flex flex-row items-center"
+									classList={{
+										"border-l-2 border-neutral-800 pl-2": entry.length > 1,
+									}}
+								>
+									{e.type}
+								</li>
+							)}
+						</For>
+					</div>
 				)}
 			</For>
 		</ul>

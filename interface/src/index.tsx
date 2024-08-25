@@ -434,82 +434,71 @@ function ProjectInterface() {
 									}}
 									onSchemaClicked={(schema, targetSuggestion) => {
 										const graphId = data().graph.id;
-										const pin = Solid.batch(() => {
-											const input: CreateNodeInput = {
-												graphId,
-												schema,
-												position: graphPosition(),
-											};
-
-											const { suggestion: sourceSuggestion, graph } = data();
-
-											if (ctx.state.status === "connectionAssignMode") {
-												ctx.setState({
-													...ctx.state,
-													state: { status: "active" },
-												});
-											} else {
-												ctx.setState({ status: "idle" });
-											}
-
-											if (sourceSuggestion && targetSuggestion) {
-												input.connection = {
-													fromPinId: targetSuggestion.pin,
-													to: {
-														variant: pinIsOutput(sourceSuggestion.pin)
-															? "o"
-															: "i",
-														nodeId: sourceSuggestion.pin.node.id,
-														pinId: sourceSuggestion.pin.id,
-													},
+										ctx.batch(() => {
+											const pin = Solid.batch(() => {
+												const input: CreateNodeInput = {
+													graphId,
+													schema,
+													position: graphPosition(),
 												};
-											}
 
-											const node = ctx.execute("createNode", input);
-											if (!node) return;
+												const { suggestion: sourceSuggestion, graph } = data();
 
-											const [_, set] = createStore(graph);
-											set("selectedItemIds", [{ type: "node", id: node.id }]);
+												if (ctx.state.status === "connectionAssignMode") {
+													ctx.setState({
+														...ctx.state,
+														state: { status: "active" },
+													});
+												} else {
+													ctx.setState({ status: "idle" });
+												}
 
-											if (sourceSuggestion && targetSuggestion) {
-												if (pinIsOutput(sourceSuggestion.pin))
-													return node.input(targetSuggestion.pin);
-												return node.output(targetSuggestion.pin);
-											}
-										});
+												if (sourceSuggestion && targetSuggestion) {
+													input.connection = {
+														fromPinId: targetSuggestion.pin,
+														to: {
+															variant: pinIsOutput(sourceSuggestion.pin)
+																? "o"
+																: "i",
+															nodeId: sourceSuggestion.pin.node.id,
+															pinId: sourceSuggestion.pin.id,
+														},
+													};
+												}
 
-										if (pin) {
-											const pinPosition = ctx.pinPositions.get(pin);
-											const nodeSize = ctx.itemSizes.get(pin.node);
-											if (!pinPosition || !nodeSize) return;
+												const node = ctx.execute("createNode", input);
+												if (!node) return;
 
-											const nodeX = pin.node.state.position.x;
+												const [_, set] = createStore(graph);
+												set("selectedItemIds", [{ type: "node", id: node.id }]);
 
-											const xDelta = !pinIsOutput(pin)
-												? nodeX - pinPosition.x
-												: -nodeSize.width +
-													(nodeX + nodeSize.width - pinPosition.x);
+												if (sourceSuggestion && targetSuggestion) {
+													if (pinIsOutput(sourceSuggestion.pin))
+														return node.input(targetSuggestion.pin);
+													return node.output(targetSuggestion.pin);
+												}
+											});
 
-											const position = {
-												x: pin.node.state.position.x + xDelta,
-												y:
-													pin.node.state.position.y -
-													(pinPosition.y - pin.node.state.position.y),
-											};
+											if (pin) {
+												const pinPosition = ctx.pinPositions.get(pin);
+												const nodeSize = ctx.itemSizes.get(pin.node);
+												if (!pinPosition || !nodeSize) return;
 
-											const historyEntry = ctx.history[ctx.history.length - 1];
-											if (historyEntry?.type === "createNode") {
-												const entry =
-													historyEntry.entry as unknown as HistoryItemEntry<
-														HistoryActions["createNode"]
-													>;
+												const nodeX = pin.node.state.position.x;
 
-												entry.position = { ...position };
-											}
+												const xDelta = !pinIsOutput(pin)
+													? nodeX - pinPosition.x
+													: -nodeSize.width +
+														(nodeX + nodeSize.width - pinPosition.x);
 
-											ctx.execute(
-												"setGraphItemPositions",
-												{
+												const position = {
+													x: pin.node.state.position.x + xDelta,
+													y:
+														pin.node.state.position.y -
+														(pinPosition.y - pin.node.state.position.y),
+												};
+
+												ctx.execute("setGraphItemPositions", {
 													graphId,
 													items: [
 														{
@@ -518,10 +507,9 @@ function ProjectInterface() {
 															position,
 														},
 													],
-												},
-												{ ephemeral: true },
-											);
-										}
+												});
+											}
+										});
 									}}
 								/>
 							)}
