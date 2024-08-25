@@ -2060,10 +2060,6 @@ export function pkg(core: Core) {
 						type: "option" as const,
 						input: data as unknown as DataInput<t.Option<t.Any>>,
 						outputs: {
-							none: io.execOutput({
-								id: "none",
-								name: "None",
-							}),
 							some: io.scopeOutput({
 								id: "some",
 								name: "Some",
@@ -2073,6 +2069,10 @@ export function pkg(core: Core) {
 										type: v.inner,
 									});
 								},
+							}),
+							none: io.execOutput({
+								id: "none",
+								name: "None",
 							}),
 						},
 					};

@@ -322,6 +322,10 @@ export function pkg() {
 					id: "key",
 					type: t.string(),
 				}),
+				mapOut: io.dataOutput({
+					id: "mapOut",
+					type: t.map(t.wildcard(w)),
+				}),
 				out: io.dataOutput({
 					id: "out",
 					type: t.option(t.wildcard(w)),
@@ -329,13 +333,14 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const map = ctx.getInput(io.map);
+			const map = new ReactiveMap(ctx.getInput(io.map));
 			const key = ctx.getInput(io.key);
 
 			const current = Maybe(map.get(key));
 
 			map.delete(key);
 
+			ctx.setOutput(io.mapOut, map);
 			ctx.setOutput(io.out, current);
 		},
 	});
