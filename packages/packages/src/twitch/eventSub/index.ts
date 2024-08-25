@@ -418,21 +418,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				name: "ID",
 				type: t.string(),
 			}),
-			enabled: io.dataOutput({
-				id: "enabled",
-				name: "Enabled",
-				type: t.bool(),
-			}),
-			paused: io.dataOutput({
-				id: "paused",
-				name: "Paused",
-				type: t.bool(),
-			}),
-			inStock: io.dataOutput({
-				id: "inStock",
-				name: "In Stock",
-				type: t.bool(),
-			}),
 			title: io.dataOutput({
 				id: "title",
 				name: "Title",
@@ -448,25 +433,20 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				name: "Prompt",
 				type: t.string(),
 			}),
+			enabled: io.dataOutput({
+				id: "enabled",
+				name: "Enabled",
+				type: t.bool(),
+			}),
 			inputRequired: io.dataOutput({
 				id: "inputRequired",
 				name: "Input Required",
 				type: t.bool(),
 			}),
-			skipQueue: io.dataOutput({
-				id: "skipQueue",
-				name: "Skip Request Queue",
-				type: t.bool(),
-			}),
-			cooldownExpire: io.dataOutput({
-				id: "cooldownExpire",
-				name: "Cooldown Expire Timestamp",
-				type: t.option(t.string()),
-			}),
-			redemptTotalStream: io.dataOutput({
-				id: "redemptTotalStream",
-				name: "Current Stream Total Redemptions",
-				type: t.option(t.int()),
+			backgroundColor: io.dataOutput({
+				id: "backgroundColor",
+				name: "Background Color",
+				type: t.string(),
 			}),
 			maxPerStream: io.dataOutput({
 				id: "maxPerStreamValue",
@@ -483,10 +463,30 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				name: "Global Cooldown",
 				type: t.option(t.int()),
 			}),
-			backgroundColor: io.dataOutput({
-				id: "backgroundColor",
-				name: "Background Color",
-				type: t.string(),
+			paused: io.dataOutput({
+				id: "paused",
+				name: "Paused",
+				type: t.bool(),
+			}),
+			inStock: io.dataOutput({
+				id: "inStock",
+				name: "In Stock",
+				type: t.bool(),
+			}),
+			skipQueue: io.dataOutput({
+				id: "skipQueue",
+				name: "Skip Request Queue",
+				type: t.bool(),
+			}),
+			redemptTotalStream: io.dataOutput({
+				id: "redemptTotalStream",
+				name: "Current Stream Total Redemptions",
+				type: t.option(t.int()),
+			}),
+			cooldownExpire: io.dataOutput({
+				id: "cooldownExpire",
+				name: "Cooldown Expire Timestamp",
+				type: t.option(t.string()),
 			}),
 		}),
 		run({ ctx, data, io }) {
