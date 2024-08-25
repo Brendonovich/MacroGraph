@@ -16,6 +16,7 @@ import {
 } from "@macrograph/typesystem";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import { greet } from "@macrograph/regex-syntax-wasm";
 
 dayjs.extend(duration);
 
@@ -2503,6 +2504,8 @@ export function pkg(core: Core) {
 		type: "exec",
 		properties: { regex: { name: "Regex", type: t.string() } },
 		createIO({ io, ctx, properties }) {
+			console.log("HERE", greet("todo"));
+
 			const base = {
 				input: io.dataInput({
 					id: "",

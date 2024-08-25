@@ -31,3 +31,4 @@ gitignore
 Thumbs.db
 
 tsconfig.tsbuildinfo
+app.config.*.js

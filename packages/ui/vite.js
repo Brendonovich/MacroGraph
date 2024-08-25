@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import AutoImport from "unplugin-auto-import/vite";
 import IconsResolver from "unplugin-icons/resolver";
 import Icons from "unplugin-icons/vite";
+import wasm from "vite-plugin-wasm";
 
 // Workaround for https://github.com/solidjs/solid-start/issues/1374
 const VinxiAutoImport = (options) => {
@@ -34,4 +35,5 @@ export default [
 		],
 	}),
 	Icons({ compiler: "solid", scale: 1 }),
+	wasm(),
 ];
