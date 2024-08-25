@@ -2596,7 +2596,13 @@ export function pkg(core: Core) {
 					if (value === undefined)
 						throw new Error(`Group ${out.id} not found in regex result`);
 
-					ctx.setOutput(out, value);
+					if (out instanceof ScopeOutput) {
+						ctx.execScope(out, {
+							// TODO: We need to implement this!
+						});
+					} else {
+						ctx.setOutput(out, value);
+					}
 				}
 			} else {
 				throw new Error("Invalid regex!");
