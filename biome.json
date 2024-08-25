@@ -15,6 +15,7 @@
 			"dist",
 			"bindings.ts",
 			"rspc/types.ts",
+			"crates/regex-syntax-wasm/pkg",
 			"commands.ts"
 		]
 	},

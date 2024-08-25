@@ -1,5 +1,11 @@
 import { JSONEnum, jsonToJS } from "@macrograph/json";
 import { Maybe, None, type Option, Some } from "@macrograph/option";
+import init, {
+	type CaptureScope,
+	get_capture_groups,
+} from "@macrograph/regex-syntax-wasm";
+// @ts-expect-error
+import wasmUrl from "@macrograph/regex-syntax-wasm/regex_syntax_wasm_bg.wasm?url";
 import {
 	type Core,
 	type DataInput,
@@ -16,12 +22,6 @@ import {
 } from "@macrograph/typesystem";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-import init, {
-	type CaptureScope,
-	get_capture_groups,
-} from "@macrograph/regex-syntax-wasm";
-// @ts-expect-error
-import wasmUrl from "@macrograph/regex-syntax-wasm/regex_syntax_wasm_bg.wasm?url";
 
 init(wasmUrl);
 
