@@ -16,7 +16,7 @@ type Config = {
 	nodes: {
 		dimUnselectedConnections: boolean;
 		indicateConnectedNodes: "off" | "highlightConnected" | "dimUnconnected";
-		disableNumberGrouping: boolean;
+		enableNumberGrouping: boolean;
 	};
 };
 
@@ -34,7 +34,7 @@ export const [config, setConfig] = makePersisted(
 		nodes: {
 			dimUnselectedConnections: false,
 			indicateConnectedNodes: "off",
-			disableNumberGrouping: false,
+			enableNumberGrouping: true,
 		},
 	}),
 	{ name: "editor-config" },
@@ -147,11 +147,11 @@ export function ConfigDialog() {
 							<span>Disable number grouping (comma separator in numbers)</span>
 							<CheckBox
 								class="ml-auto"
-								value={config.nodes.disableNumberGrouping}
-								onChange={(v) => setConfig("nodes", "disableNumberGrouping", v)}
+								value={config.nodes.enableNumberGrouping}
+								onChange={(v) => setConfig("nodes", "enableNumberGrouping", v)}
 							/>
 						</div>
-						{config.nodes.disableNumberGrouping ? "a" : "b"}
+						{config.nodes.enableNumberGrouping ? "a" : "b"}
 					</div>
 				</div>
 			</DialogContent>

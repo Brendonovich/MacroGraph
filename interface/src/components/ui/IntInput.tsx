@@ -48,7 +48,7 @@ export const IntInput = (props: Props) => {
 			allowedInput={/^[0-9]*$/}
 			changeOnWheel
 			step={1}
-			formatOptions={{ useGrouping: !config.nodes.disableNumberGrouping }}
+			formatOptions={{ useGrouping: !config.nodes.enableNumberGrouping }}
 		>
 			<NumberField.Input<typeof Input>
 				ref={ref!}
