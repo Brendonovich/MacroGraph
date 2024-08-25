@@ -11,7 +11,17 @@
 	"module": "./pkg/regex_syntax_wasm.js",
 	"types": "./pkg/regex_syntax_wasm.d.ts",
 	"sideEffects": ["./pkg/regex_syntax_wasm.js"],
+	"exports": {
+		".": {
+			"import": "./pkg/regex_syntax_wasm.js",
+			"require": "./pkg/regex_syntax_wasm.js"
+		},
+		"./regex_syntax_wasm_bg.wasm": {
+			"import": "./pkg/regex_syntax_wasm_bg.wasm",
+			"require": "./pkg/regex_syntax_wasm_bg.wasm"
+		}
+	},
 	"scripts": {
-		"build": "wasm-pack build && rm ./pkg/.gitignore"
+		"build": "wasm-pack build --release --target web && rm ./pkg/.gitignore"
 	}
 }

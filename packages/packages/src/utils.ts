@@ -16,7 +16,11 @@ import {
 } from "@macrograph/typesystem";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-import { greet } from "@macrograph/regex-syntax-wasm";
+import init, { get_capture_groups } from "@macrograph/regex-syntax-wasm";
+// @ts-expect-error
+import wasmUrl from "@macrograph/regex-syntax-wasm/regex_syntax_wasm_bg.wasm?url";
+
+init(wasmUrl);
 
 dayjs.extend(duration);
 
@@ -2504,7 +2508,21 @@ export function pkg(core: Core) {
 		type: "exec",
 		properties: { regex: { name: "Regex", type: t.string() } },
 		createIO({ io, ctx, properties }) {
-			console.log("HERE", greet("todo"));
+			// for (const group of result) {
+			// 	console.log("CAPTURE", group.name(), group.index(), group.optional());
+			// }
+
+			// // setTimeout(() => {
+			// // 	try {
+			// // 		console.log("BEFORE", ctx.getProperty(properties.regex));
+			// // 		console.log(
+			// // 			"HERE",
+			// // 			get_capture_groups(ctx.getProperty(properties.regex)),
+			// // 		);
+			// // 	} catch (err) {
+			// // 		console.log(err);
+			// // 	}
+			// // }, 1000);
 
 			const base = {
 				input: io.dataInput({
@@ -2514,16 +2532,19 @@ export function pkg(core: Core) {
 			};
 
 			try {
-				const groupOutputs: DataOutput<t.String>[] = [];
+				const groupOutputs: DataOutput<t.String | t.Option<t.String>>[] = [];
 				const regex = new RegExp(ctx.getProperty(properties.regex));
-				const { groups } = new RegExp(`${regex}|`).exec("")!;
+				const groups = get_capture_groups(ctx.getProperty(properties.regex));
 
-				for (const group of Object.keys(groups ?? {})) {
+				for (const group of groups) {
+					console.log(group.name(), group.optional()); // TODO
+
+					const identifier = group.name() ?? group.index()!.toString();
 					groupOutputs.push(
 						io.dataOutput({
-							id: `group-${group}`,
-							name: group,
-							type: t.string(),
+							id: `group-${identifier}`,
+							name: identifier,
+							type: group.optional() ? t.option(t.string()) : t.string(),
 						}),
 					);
 				}
@@ -2533,7 +2554,8 @@ export function pkg(core: Core) {
 					regex,
 					groupOutputs,
 				};
-			} catch {
+			} catch (err) {
+				console.error("invalid regex", err);
 				if (io.previous) return io.previous;
 
 				return base;
