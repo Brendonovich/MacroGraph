@@ -29,7 +29,7 @@ export function Sidebar(props: SidebarProps) {
 
 	return (
 		<div
-			class={clsx("relative flex flex-col bg-neutral-400/5", props.class)}
+			class={clsx("relative flex flex-col bg-[#2c2c2c]", props.class)}
 			style={{ width: `${props.width}px` }}
 		>
 			<Accordion.Root
