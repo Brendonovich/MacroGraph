@@ -22,8 +22,7 @@ import {
 } from "@macrograph/typesystem";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-
-init(wasmUrl);
+import { createSignal } from "solid-js";
 
 dayjs.extend(duration);
 
@@ -2506,11 +2505,16 @@ export function pkg(core: Core) {
 		},
 	});
 
+	const [wasmLoaded, setWasmLoaded] = createSignal(false);
+	init(wasmUrl).then(() => setWasmLoaded(true));
+
 	pkg.createSchema({
 		name: "Execute Regex",
 		type: "exec",
 		properties: { regex: { name: "Regex", type: t.string() } },
 		createIO({ io, ctx, properties }) {
+			wasmLoaded();
+
 			const base = {
 				input: io.dataInput({
 					id: "",
@@ -2519,44 +2523,62 @@ export function pkg(core: Core) {
 			};
 
 			try {
-				const groupOutputs: DataOutput<t.String | t.Option<t.String>>[] = [];
 				const regex = new RegExp(ctx.getProperty(properties.regex));
 				const result = get_capture_groups(ctx.getProperty(properties.regex));
 
-				const captures: [string, t.String | t.Option<t.String>][] = [];
+				function flattenCaptures(
+					scope: CaptureScope,
+				): [string, t.String | t.Option<t.String>][] {
+					const c = scope.capture();
+					if (c) {
+						const name = c.name();
+						return [[name, c.optional() ? t.option(t.string()) : t.string()]];
+					}
+
+					return scope.scope().flatMap(flattenCaptures);
+				}
+
 				const collectCapture = (scope: CaptureScope) => {
 					const c = scope.capture();
 					if (c) {
 						const name = c.name();
-						captures.push([
-							name,
-							c.optional() ? t.option(t.string()) : t.string(),
-						]);
-					} else {
-						for (const group of scope.scope()) {
-							collectCapture(group);
-						}
+						return [
+							io.dataOutput({
+								id: `group-${name}`,
+								name: name,
+								type: c.optional() ? t.option(t.string()) : t.string(),
+							}),
+						];
 					}
-				};
-				collectCapture(result);
 
-				for (const [name, ty] of captures) {
-					groupOutputs.push(
-						io.dataOutput({
-							id: `group-${name}`,
-							name: name,
-							type: ty,
-						}),
-					);
-				}
+					let i = 0;
+					return scope.scope().map((scope) => {
+						i++;
+						const name = i.toString();
+
+						return io.scopeOutput({
+							id: i.toString(),
+							name: i.toString(),
+							scope(s) {
+								// TODO: We collapse all remaining nesting as we currently can't nest enums.
+								for (const [name, ty] of flattenCaptures(scope)) {
+									s.output({
+										id: name,
+										name,
+										type: ty,
+									});
+								}
+							},
+						});
+					});
+				};
 
 				return {
 					...base,
 					regex,
-					groupOutputs,
+					groupOutputs: collectCapture(result),
 				};
 			} catch (err) {
-				console.error("invalid regex", err);
 				if (io.previous) return io.previous;
 
 				return base;
