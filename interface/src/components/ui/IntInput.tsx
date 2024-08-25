@@ -3,6 +3,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import { batch, createEffect, createSignal, onMount } from "solid-js";
 
+import { config } from "../..";
 import { Input } from "./Input";
 
 interface Props {
@@ -47,6 +48,7 @@ export const IntInput = (props: Props) => {
 			allowedInput={/^[0-9]*$/}
 			changeOnWheel
 			step={1}
+			formatOptions={{ useGrouping: !config.nodes.enableNumberGrouping }}
 		>
 			<NumberField.Input<typeof Input>
 				ref={ref!}
