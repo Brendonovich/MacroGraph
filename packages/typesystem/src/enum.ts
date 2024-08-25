@@ -44,18 +44,17 @@ export class LazyEnumVariants<Variants extends EnumVariants> {
 	constructor(public build: () => Variants) {}
 }
 
-export abstract class EnumBase<T> {
+export abstract class EnumBase<Variants extends EnumVariants> {
 	source!:
 		| { variant: "package"; package: string }
 		| { variant: "custom"; id: number };
 	abstract name: string;
-	abstract variants: EnumVariants;
+	abstract variants: Variants;
 }
 
 export class Enum<
-	Variants extends EnumVariants = any,
-	_Type = InferEnumVariant<Variants[number]>,
-> extends EnumBase<_Type> {
+	Variants extends EnumVariants = EnumVariants,
+> extends EnumBase<Variants> {
 	constructor(
 		public name: string,
 		variants: Variants | LazyEnumVariants<Variants>,
@@ -86,27 +85,21 @@ export class Enum<
 		return val.variants;
 	}
 
-	variant<Id extends EnumVariantOfEnum<this>["id"]>(
+	variant<Id extends Variants[number]["id"]>(
 		val: InferEnumVariantData<
-			Extract<EnumVariantOfEnum<this>, { id: Id }>["fields"]
+			Extract<Variants[number], { id: Id }>["fields"]
 		> extends null
 			? Id
 			: [
 					Id,
-					InferEnumVariantData<
-						Extract<EnumVariantOfEnum<this>, { id: Id }>["fields"]
-					>,
+					InferEnumVariantData<Extract<Variants[number], { id: Id }>["fields"]>,
 				],
-	): InferEnumVariant<Extract<EnumVariantOfEnum<this>, { id: Id }>> {
+	): InferEnumVariant<Extract<Variants[number], { id: Id }>> {
 		if (Array.isArray(val)) return { variant: val[0], data: val[1] } as any;
 
 		return { variant: val } as any;
 	}
 }
-
-type EnumVariantOfEnum<E> = E extends Enum<infer Variants>
-	? Variants[number]
-	: never;
 
 export class EnumBuilder {
 	variant<Name extends string>(name: Name): EnumVariant<Name, null>;
@@ -204,14 +197,17 @@ export class EnumType<TEnum extends EnumBase<any>> extends BaseType<
 	}
 }
 
-export type InferEnum<E> = E extends EnumBase<infer Type> ? Type : never;
+export type InferEnum<E extends EnumBase<any>> = InferEnumVariant<
+	E["variants"][number]
+>;
 
-export type InferEnumVariant<V> = V extends EnumVariant<infer Name, infer Data>
-	? Data extends null
-		? { variant: Name }
-		: { variant: Name; data: InferEnumVariantData<Data> }
-	: never;
+export type InferEnumVariant<V extends EnumVariant<any, any>> =
+	V extends EnumVariant<infer Name, infer Data>
+		? Data extends null
+			? { variant: Name }
+			: { variant: Name; data: InferEnumVariantData<Data> }
+		: V;
 
 export type InferEnumVariantData<D> = D extends EnumVariantFields
-	? { [K in keyof D]: t.infer<D[K]["type"]> }
+	? { [K in keyof D]: D[K] extends Field<infer T> ? t.infer<T> : never }
 	: never;

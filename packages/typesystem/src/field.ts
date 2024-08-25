@@ -1,7 +1,7 @@
 import { createMutable } from "solid-js/store";
-import type { BaseType, t } from ".";
+import type { BaseType } from ".";
 
-export class Field<Type extends BaseType = t.Any> {
+export class Field<Type extends BaseType = BaseType> {
 	constructor(
 		public id: string,
 		public type: Type,
