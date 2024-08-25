@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { batch, createEffect, createSignal, onMount } from "solid-js";
 
 import { Input } from "./Input";
+import { config } from "../..";
 
 interface Props {
 	initialValue: number;
@@ -47,6 +48,7 @@ export const IntInput = (props: Props) => {
 			allowedInput={/^[0-9]*$/}
 			changeOnWheel
 			step={1}
+			formatOptions={{ useGrouping: !config.nodes.disableNumberGrouping }}
 		>
 			<NumberField.Input<typeof Input>
 				ref={ref!}
