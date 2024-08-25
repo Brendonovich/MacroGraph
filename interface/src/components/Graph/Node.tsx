@@ -197,9 +197,8 @@ export const Node = (props: Props) => {
 		// clientWidth doesn't update immediately and setTimeout causes flicker
 		queueMicrotask(() => {
 			if (ref) {
-				console.log("screen width", ref.clientWidth);
 				const desired = Math.ceil(ref.clientWidth / GRID_SIZE) * GRID_SIZE;
-				console.log("desired width:", desired);
+
 				setMinWidth(desired);
 			}
 		});
