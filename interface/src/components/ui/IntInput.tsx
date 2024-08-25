@@ -3,8 +3,8 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import { batch, createEffect, createSignal, onMount } from "solid-js";
 
-import { Input } from "./Input";
 import { config } from "../..";
+import { Input } from "./Input";
 
 interface Props {
 	initialValue: number;
