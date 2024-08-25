@@ -1,4 +1,4 @@
-import { batch, createSignal } from "solid-js";
+import * as Solid from "solid-js";
 import { createStore, produce, unwrap } from "solid-js/store";
 
 export type HistoryEntry<T> = T extends object ? T : never;
@@ -30,20 +30,22 @@ export function createActionHistory<TActions extends HistoryActions>(
 	save: () => void,
 ) {
 	const [history, setHistory] = createStore<
-		Array<HistoryItem<TActions, keyof TActions>>
+		Array<Array<HistoryItem<TActions, keyof TActions>>>
 	>([]);
 
-	const [nextHistoryIndex, setNextHistoryIndex] = createSignal(0);
+	const [nextHistoryIndex, setNextHistoryIndex] = Solid.createSignal(0);
+
+	let queued: HistoryItem<TActions, keyof TActions>[] | undefined = undefined;
 
 	function addHistoryItem<T extends keyof TActions>(
-		item: HistoryItem<TActions, T>,
+		item: HistoryItem<TActions, T> | HistoryItem<TActions, T>[],
 	) {
 		setHistory(
 			produce((history) => {
 				history.splice(
 					nextHistoryIndex(),
 					history.length - nextHistoryIndex(),
-					item,
+					Array.isArray(item) ? item : [item],
 				);
 			}),
 		);
@@ -55,8 +57,10 @@ export function createActionHistory<TActions extends HistoryActions>(
 		const entry = history[nextHistoryIndex()];
 		if (!entry) return;
 
-		batch(() => {
-			actions[entry.type]!.rewind(unwrap(entry.entry as any));
+		Solid.batch(() => {
+			for (const e of [...entry].reverse()) {
+				actions[e.type]!.rewind(unwrap(e.entry as any));
+			}
 		});
 
 		save();
@@ -67,8 +71,11 @@ export function createActionHistory<TActions extends HistoryActions>(
 		setNextHistoryIndex(Math.min(history.length, nextHistoryIndex() + 1));
 		if (!entry) return;
 
-		batch(() => {
-			actions[entry.type]!.perform(unwrap(entry.entry as any));
+		Solid.batch(() => {
+			console.log(entry);
+			for (const e of entry) {
+				actions[e.type]!.perform(unwrap(e.entry as any));
+			}
 		});
 
 		save();
@@ -87,17 +94,35 @@ export function createActionHistory<TActions extends HistoryActions>(
 		const entry = action.prepare(args[0] as any, args[1]);
 		if (!entry) return undefined as any;
 
-		return batch(() => {
+		return Solid.batch(() => {
 			const result = action.perform(entry as any) as any;
 
 			if (!args[1]?.ephemeral) {
-				addHistoryItem({ type, entry });
-				save();
+				if (queued !== undefined) {
+					queued.push({ type, entry });
+				} else {
+					addHistoryItem({ type, entry });
+					save();
+				}
 			}
 
 			return result;
 		});
 	}
 
-	return { undo, redo, execute, history, nextHistoryIndex };
+	function batch<T = void>(fn: () => T): T {
+		const isRootBatch = queued === undefined;
+		if (isRootBatch) queued = [];
+		const result = fn();
+
+		if (isRootBatch) {
+			addHistoryItem(queued!);
+			save();
+			queued = undefined;
+		}
+
+		return result;
+	}
+
+	return { undo, redo, execute, batch, history, nextHistoryIndex };
 }
