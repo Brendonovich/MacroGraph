@@ -305,13 +305,15 @@ export function usePin(pin: Accessor<Pin>) {
 
 	return {
 		ref,
-		active: () =>
+		highlight: () =>
 			mouseState().hovering ||
 			mouseState().dragging ||
 			(interfaceCtx.state.status === "connectionAssignMode" &&
 				interfaceCtx.state.pin === pin()) ||
 			(interfaceCtx.state.status === "pinDragMode" &&
-				interfaceCtx.state.pin === pin()),
+				(interfaceCtx.state.pin === pin() ||
+					(interfaceCtx.state.state.status === "draggingPin" &&
+						interfaceCtx.state.state.autoconnectIO === makeIORef(pin())))),
 		dim,
 	};
 }
@@ -369,4 +371,4 @@ function getNearCompatibleIO(
 	return nearest ? nearest[1] : null;
 }
 
-const AUTOCONNECT_MAX_DISTANCE = 50;
+const AUTOCONNECT_MAX_DISTANCE = 30;

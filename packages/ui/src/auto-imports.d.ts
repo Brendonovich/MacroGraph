@@ -28,6 +28,7 @@ declare global {
   const IconMdiDotsHorizontal: typeof import('~icons/mdi/dots-horizontal.jsx')['default']
   const IconMdiGithub: typeof import('~icons/mdi/github.jsx')['default']
   const IconMdiX: typeof import('~icons/mdi/x.jsx')['default']
+  const IconOcticonProjectSymlink16: typeof import('~icons/octicon/project-symlink16.jsx')['default']
   const IconPhExport: typeof import('~icons/ph/export.jsx')['default']
   const IconPhShare: typeof import('~icons/ph/share.jsx')['default']
   const IconRadixIconsExternalLink: typeof import('~icons/radix-icons/external-link.jsx')['default']

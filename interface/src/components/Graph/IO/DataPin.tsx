@@ -18,7 +18,7 @@ interface Props {
 }
 
 export const DataPin = (props: Props) => {
-	const { ref, active, dim } = usePin(() => props.pin);
+	const { ref, highlight, dim } = usePin(() => props.pin);
 
 	const connected = () =>
 		props.pin instanceof DataInput
@@ -91,7 +91,7 @@ export const DataPin = (props: Props) => {
 															<div
 																class={clsx(
 																	"h-full rounded-full bg-mg-current",
-																	connected() || active()
+																	connected() || highlight()
 																		? "flex-1"
 																		: "w-1.5 ml-auto",
 																)}
@@ -108,7 +108,7 @@ export const DataPin = (props: Props) => {
 											class={clsx(
 												"w-3.5 h-3.5 flex justify-center items-center border-mg-current",
 												rounding(type()),
-												connected() || active()
+												connected() || highlight()
 													? "border-[2.5px]"
 													: "border-[1.5px]",
 											)}
@@ -117,7 +117,7 @@ export const DataPin = (props: Props) => {
 											<div
 												class={clsx(
 													"border-[1.5px] border-mg-current",
-													connected() || active()
+													connected() || highlight()
 														? "w-1 h-1 bg-mg-current"
 														: "w-2 h-2",
 													!(type().getInner() instanceof ListType)
@@ -150,7 +150,7 @@ export const DataPin = (props: Props) => {
 												<div
 													class={clsx(
 														"h-full rounded-full bg-mg-current",
-														connected() || active()
+														connected() || highlight()
 															? "flex-1"
 															: "w-1.5 ml-auto",
 													)}
@@ -169,7 +169,7 @@ export const DataPin = (props: Props) => {
 								class={clsx(
 									"w-3.5 h-3.5 border-[2.5px]",
 									rounding(type()),
-									connected() || active()
+									connected() || highlight()
 										? "border-mg-current bg-mg-current"
 										: "border-mg-current",
 								)}

@@ -75,6 +75,57 @@ export function pkg() {
 		},
 	});
 
+	pkg.createSchema({
+		name: "Graph Variable Changed",
+		type: "event",
+		properties: { variable: graphVariableProperty },
+		createListener: ({ ctx, properties }) => {
+			const bus = createEventBus<any>();
+
+			const variableId = ctx.getProperty(properties.variable);
+			const variable = ctx.graph.variables.find((v) => v.id === variableId);
+			if (!variable) return bus;
+
+			createEffect(
+				on(
+					() => variable.value,
+					(value) => bus.emit(value),
+					{ defer: true },
+				),
+			);
+
+			return bus;
+		},
+		createIO({ io, ctx, properties }) {
+			const exec = io.execOutput({ id: "exec" });
+
+			const variableId = ctx.getProperty(properties.variable);
+			const variable = ctx.graph.variables.find((v) => v.id === variableId);
+			if (!variable) return;
+
+			return {
+				exec,
+				variable,
+				output: io.dataOutput({
+					id: "output",
+					name: variable.name,
+					type: variable.type,
+				}),
+				previousOutput: io.dataOutput({
+					id: "previousOutput",
+					name: "Previous Value",
+					type: variable.type,
+				}),
+			};
+		},
+		run({ ctx, data, io }) {
+			if (!io || data.variableId !== io.variable.id) return;
+
+			ctx.setOutput(io.output, data.value);
+			ctx.exec(io.exec);
+		},
+	});
+
 	const projectVariableProperty = {
 		name: "Variable",
 		source: ({ node }) =>
@@ -141,14 +192,16 @@ export function pkg() {
 	});
 
 	pkg.createSchema({
-		name: "Graph Variable Changed",
+		name: "Project Variable Changed",
 		type: "event",
-		properties: { variable: graphVariableProperty },
+		properties: { variable: projectVariableProperty },
 		createListener: ({ ctx, properties }) => {
 			const bus = createEventBus<any>();
 
 			const variableId = ctx.getProperty(properties.variable);
-			const variable = ctx.graph.variables.find((v) => v.id === variableId);
+			const variable = ctx.graph.project.variables.find(
+				(v) => v.id === variableId,
+			);
 			if (!variable) return bus;
 
 			createEffect(
@@ -165,7 +218,9 @@ export function pkg() {
 			const exec = io.execOutput({ id: "exec" });
 
 			const variableId = ctx.getProperty(properties.variable);
-			const variable = ctx.graph.variables.find((v) => v.id === variableId);
+			const variable = ctx.graph.project.variables.find(
+				(v) => v.id === variableId,
+			);
 			if (!variable) return;
 
 			return {

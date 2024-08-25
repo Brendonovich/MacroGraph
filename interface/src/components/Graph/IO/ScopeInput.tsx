@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const ScopeInput = (props: Props) => {
-	const { ref, active, dim } = usePin(() => props.input);
+	const { ref, highlight, dim } = usePin(() => props.input);
 
 	return (
 		<div class="flex flex-row items-center space-x-1.5 h-5">
@@ -23,7 +23,7 @@ export const ScopeInput = (props: Props) => {
 					viewBox="0 0 16 13"
 					class="w-4 text-transparent hover:text-white pointer-events-[all]"
 					fill={
-						props.input.connection.isSome() || active()
+						props.input.connection.isSome() || highlight()
 							? "white"
 							: "currentColor"
 					}

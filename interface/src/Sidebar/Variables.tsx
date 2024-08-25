@@ -1,7 +1,20 @@
 import type { Variable } from "@macrograph/runtime";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
-import { For, Match, Switch, createMemo, createSignal } from "solid-js";
+import {
+	For,
+	type JSX,
+	Match,
+	Switch,
+	type ValidComponent,
+	createMemo,
+	createSignal,
+} from "solid-js";
 
+import { ContextMenu } from "@kobalte/core/context-menu";
+import {
+	ContextMenuContent,
+	ContextMenuItem,
+} from "../components/Graph/ContextMenu";
 import { SidebarSection } from "../components/Sidebar";
 import { TypeEditor } from "../components/TypeEditor";
 import {
@@ -12,7 +25,11 @@ import {
 	TextInput,
 } from "../components/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../util";
-import { InlineTextEditor } from "./InlineTextEditor";
+import {
+	InlineTextEditor,
+	InlineTextEditorContext,
+	useInlineTextEditorCtx,
+} from "./InlineTextEditor";
 import { SearchInput } from "./SearchInput";
 
 export function Variables(props: {
@@ -23,6 +40,7 @@ export function Variables(props: {
 	onSetVariableValue(id: number, value: any): void;
 	onSetVariableType(id: number, type: t.Any): void;
 	onVariableNameChanged(id: number, name: string): void;
+	contextMenu?: (id: number) => JSX.Element;
 }) {
 	const [search, setSearch] = createSignal("");
 
@@ -61,24 +79,42 @@ export function Variables(props: {
 					<For each={filteredVariables()}>
 						{(variable) => (
 							<li class="flex flex-col gap-1 flex-1 group/item py-2 pt-1">
-								<InlineTextEditor
-									value={variable.name}
-									onChange={(value) => {
-										props.onVariableNameChanged(variable.id, value);
-									}}
-								>
-									<IconButton
-										type="button"
-										class="opacity-0 focus:opacity-100 group-hover/item:opacity-100 p-0.5"
-										onClick={(e) => {
-											e.stopPropagation();
+								<InlineTextEditorContext>
+									{() => {
+										const inlineEditorContext = useInlineTextEditorCtx()!;
 
-											props.onRemoveVariable(variable.id);
-										}}
-									>
-										<IconAntDesignDeleteOutlined class="size-4" />
-									</IconButton>
-								</InlineTextEditor>
+										return (
+											<ContextMenu>
+												<InlineTextEditor<ValidComponent>
+													as={(asProps) => <ContextMenu.Trigger {...asProps} />}
+													value={variable.name}
+													onChange={(value) => {
+														props.onVariableNameChanged(variable.id, value);
+													}}
+												/>
+												<ContextMenuContent>
+													<ContextMenuItem
+														onSelect={() =>
+															inlineEditorContext.setEditing(true)
+														}
+													>
+														<IconAntDesignEditOutlined /> Rename
+													</ContextMenuItem>
+													{props.contextMenu?.(variable.id)}
+													<ContextMenuItem
+														class="text-red-500"
+														onSelect={() => {
+															props.onRemoveVariable(variable.id);
+														}}
+													>
+														<IconAntDesignDeleteOutlined />
+														Delete
+													</ContextMenuItem>
+												</ContextMenuContent>
+											</ContextMenu>
+										);
+									}}
+								</InlineTextEditorContext>
 								<div class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden space-y-2 bg-black/30 p-2 rounded-md">
 									<TypeEditor
 										type={variable.type}
@@ -86,7 +122,6 @@ export function Variables(props: {
 											props.onSetVariableType(variable.id, type);
 										}}
 									/>
-
 									<Switch>
 										<Match
 											when={
