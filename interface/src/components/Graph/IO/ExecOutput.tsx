@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const ExecOutput = (props: Props) => {
-	const { ref, active, dim } = usePin(() => props.output);
+	const { ref, highlight, dim } = usePin(() => props.output);
 
 	return (
 		<div class="flex flex-row items-center space-x-1.5 h-5">
@@ -24,7 +24,7 @@ export const ExecOutput = (props: Props) => {
 					viewBox="0 0 14 17.5"
 					class="w-3.5 text-transparent hover:text-white pointer-events-[all]"
 					fill={
-						props.output.connection().isSome() || active()
+						props.output.connection().isSome() || highlight()
 							? "white"
 							: "currentColor"
 					}

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const ExecInput = (props: Props) => {
-	const { ref, active, dim } = usePin(() => props.input);
+	const { ref, highlight, dim } = usePin(() => props.input);
 
 	return (
 		<div class="flex flex-row items-center space-x-1.5 h-5">
@@ -23,7 +23,7 @@ export const ExecInput = (props: Props) => {
 					viewBox="0 0 14 17.5"
 					class="w-3.5 text-transparent hover:text-white pointer-events-[all]"
 					fill={
-						props.input.connections.size > 0 || active()
+						props.input.connections.size > 0 || highlight()
 							? "white"
 							: "currentColor"
 					}
