@@ -144,14 +144,13 @@ export function ConfigDialog() {
 							/>
 						</div>
 						<div class="flex items-center gap-4">
-							<span>Disable number grouping (comma separator in numbers)</span>
+							<span>Enable number grouping (comma separator in numbers)</span>
 							<CheckBox
 								class="ml-auto"
 								value={config.nodes.enableNumberGrouping}
 								onChange={(v) => setConfig("nodes", "enableNumberGrouping", v)}
 							/>
 						</div>
-						{config.nodes.enableNumberGrouping ? "a" : "b"}
 					</div>
 				</div>
 			</DialogContent>
