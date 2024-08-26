@@ -63,13 +63,27 @@ const voiceSettings = createStruct("Voice Settings", (s) => ({
 }));
 
 const elevenBody = createStruct("Body", (s) => ({
-	modelId: s.field("Model ID", t.option(t.string())),
 	language_code: s.field("Language Code", t.option(t.string())),
 	voiceSettings: s.field("Voice Settings", t.option(t.struct(voiceSettings))),
 	seed: s.field("Seed", t.option(t.int())),
 	previousText: s.field("Previous Text", t.option(t.string())),
 	nextText: s.field("Next Text", t.option(t.string())),
 }));
+
+type elevenBodyType = {
+	text: string;
+	model_id?: string;
+	language_code: string;
+	voice_settings?: {
+		stability: number;
+		similarity_boost: number;
+		style?: number;
+		use_speaker_boost?: boolean;
+	};
+	seed?: number;
+	previous_text: string;
+	next_text: string;
+};
 
 export function register(pkg: Pkg, state: Ctx) {
 	pkg.createNonEventSchema({
@@ -82,6 +96,18 @@ export function register(pkg: Pkg, state: Ctx) {
 					name: "Text",
 					type: t.string(),
 				}),
+				modelId: io.dataInput({
+					id: "modelId",
+					name: "Model Id",
+					type: t.string(),
+					fetchSuggestions: async () => [
+						"eleven_turbo_v2_5",
+						"eleven_multilingual_v2",
+						"eleven_turbo_v2",
+						"eleven_multilingual_v1",
+						"eleven_monolingual_v1",
+					],
+				}),
 				filePath: io.dataInput({
 					id: "filePath",
 					name: "File Path",
@@ -92,12 +118,11 @@ export function register(pkg: Pkg, state: Ctx) {
 					name: "Voice ID",
 					type: t.string(),
 				}),
-				// Waiting for bug to be fixed
-				// body: io.dataInput({
-				//   id: "body",
-				//   name: "Body",
-				//   type: t.option(t.struct(elevenBody)),
-				// }),
+				body: io.dataInput({
+					id: "body",
+					name: "Body",
+					type: t.option(t.struct(elevenBody)),
+				}),
 				filePathOut: io.dataOutput({
 					id: "filePathOut",
 					name: "File Path",
@@ -106,9 +131,39 @@ export function register(pkg: Pkg, state: Ctx) {
 			};
 		},
 		async run({ ctx, io }) {
+			const voiceSettings = {};
+			const body = {} as elevenBodyType;
+
+			if (ctx.getInput(io.body).isSome()) {
+				const data = ctx.getInput(io.body).unwrap();
+				if (data.language_code.isSome())
+					body.language_code = data.language_code.unwrap();
+				if (data.seed.isSome()) body.seed = data.seed.unwrap();
+				if (data.previousText.isSome())
+					body.previous_text = data.previousText.unwrap();
+				if (data.nextText.isSome()) body.next_text = data.nextText.unwrap();
+				if (data.voiceSettings.isSome()) {
+					const voice = data.voiceSettings.unwrap();
+					body.voice_settings = {
+						stability: voice.stability,
+						similarity_boost: voice.similarityBoost,
+					};
+					if (voice.style.isSome())
+						body.voice_settings.style = voice.style.unwrap();
+					if (voice.useSpeakerBoost.isSome())
+						body.voice_settings.use_speaker_boost =
+							voice.useSpeakerBoost.unwrap();
+				}
+			}
+
+			body.model_id = ctx.getInput(io.modelId);
+			body.text = ctx.getInput(io.text);
+
+			console.log(body);
+
 			const response = await TextToSpeech(
 				ctx.getInput(io.voiceId),
-				{ text: ctx.getInput(io.text) },
+				body,
 				ctx.getInput(io.filePath),
 				state,
 			);
