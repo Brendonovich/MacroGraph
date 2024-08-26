@@ -78,7 +78,7 @@ export const TextInput = (props: Props) => {
 
 									createEffect(
 										on(
-											() => props.value,
+											() => value(),
 											() => {
 												if (mounted()) setShouldFilter(true);
 											},
@@ -87,10 +87,11 @@ export const TextInput = (props: Props) => {
 									);
 
 									const filteredOptions = createMemo(() => {
+										console.log({ shouldFilter: shouldFilter() });
 										if (shouldFilter())
 											return (
 												suggestions().filter((o) =>
-													o.toLowerCase().includes(props.value.toLowerCase()),
+													o.toLowerCase().includes(value().toLowerCase()),
 												) ?? []
 											);
 
