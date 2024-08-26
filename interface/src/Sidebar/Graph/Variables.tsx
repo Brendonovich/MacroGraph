@@ -81,8 +81,11 @@ export function Variables(props: { graph: Graph }) {
 											"Set Graph Variable",
 											"Graph Variable Changed",
 										].includes(node.schema.name) &&
-										node.schema.properties?.variable
+										node.schema.properties?.variable &&
+										variable.id === node.state.properties.variable
 									) {
+										console.log(variable.id);
+										console.log(node.state.properties.variable);
 										const serialized = serializeNode(node);
 										serialized.properties!.variable = serializedVariable.id;
 										serialized.schema.id = serialized.schema.id.replace(
