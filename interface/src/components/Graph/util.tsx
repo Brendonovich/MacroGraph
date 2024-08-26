@@ -2,6 +2,7 @@ import {
 	type CommentBox,
 	type Node,
 	type XY,
+	getCommentBoxesInRect,
 	getNodesInRect,
 } from "@macrograph/runtime";
 import {
@@ -92,6 +93,7 @@ export function handleSelectableItemMouseDown(
 	});
 
 	const nodes = new Set<Node>();
+	const commentBoxes = new Set<CommentBox>();
 	const commentBoxNodes = new Map<CommentBox, Set<Node>>();
 
 	const selectedItemPositions = new Map<SelectedItemID, XY>();
@@ -108,6 +110,8 @@ export function handleSelectableItemMouseDown(
 		} else {
 			const box = graph.model().commentBoxes.get(selectedItemId.id);
 			if (!box) continue;
+
+			commentBoxes.add(box);
 
 			selectedItemPositions.set(selectedItemId, {
 				...box.position,
@@ -126,9 +130,29 @@ export function handleSelectableItemMouseDown(
 		}
 	}
 
-	for (const ns of commentBoxNodes.values()) {
+	for (const [box, ns] of commentBoxNodes) {
 		for (const node of ns) {
 			nodes.delete(node);
+		}
+	}
+
+	for (const box of commentBoxes) {
+		const nestedBoxes = getCommentBoxesInRect(
+			commentBoxNodes.keys(),
+			new DOMRect(box.position.x, box.position.y, box.size.x, box.size.y),
+		);
+
+		for (const nestedBox of nestedBoxes) {
+			commentBoxes.delete(nestedBox);
+			const nestedNodes = commentBoxNodes.get(nestedBox);
+			if (nestedNodes) {
+				let nodes = commentBoxNodes.get(box);
+				if (!nodes) nodes = new Set();
+
+				for (const node of nestedNodes) {
+					nodes.add(node);
+				}
+			}
 		}
 	}
 

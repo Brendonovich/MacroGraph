@@ -97,161 +97,262 @@ export function CustomTypes() {
 					</IconButton>
 				</div>
 				<div class="flex-1 overflow-y-auto">
-					<ul class="flex flex-col divide-y divide-neutral-700 px-2">
-						<Tabs.Content value="events">
-							<For each={filteredEvents()}>
-								{([id, event]) => (
-									<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
-										<InlineTextEditor
-											class="-mx-1"
-											value={event.name}
-											onChange={(value) => {
-												interfaceCtx.execute("setCustomEventName", {
+					<Tabs.Content
+						as="ul"
+						class="flex flex-col divide-y divide-neutral-700 px-2"
+						value="events"
+					>
+						<For each={filteredEvents()}>
+							{([id, event]) => (
+								<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
+									<InlineTextEditor
+										class="-mx-1"
+										value={event.name}
+										onChange={(value) => {
+											interfaceCtx.execute("setCustomEventName", {
+												eventId: id,
+												name: value,
+											});
+										}}
+									>
+										<IconButton
+											type="button"
+											class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
+											onClick={(e) => {
+												e.stopPropagation();
+
+												interfaceCtx.execute("createCustomEventField", {
 													eventId: id,
-													name: value,
 												});
 											}}
 										>
-											<IconButton
-												type="button"
-												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
-												onClick={(e) => {
-													e.stopPropagation();
+											<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+										</IconButton>
 
-													interfaceCtx.execute("createCustomEventField", {
-														eventId: id,
-													});
-												}}
-											>
-												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-											</IconButton>
+										<IconButton
+											type="button"
+											class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
+											onClick={(e) => {
+												e.stopPropagation();
 
-											<IconButton
-												type="button"
-												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
-												onClick={(e) => {
-													e.stopPropagation();
+												interfaceCtx.execute("deleteCustomEvent", {
+													eventId: id,
+												});
+											}}
+										>
+											<IconAntDesignDeleteOutlined class="size-4" />
+										</IconButton>
+									</InlineTextEditor>
+									<ul class="divide-y divide-neutral-700 flex-1 px-2 bg-black/30 rounded-md">
+										<For each={[...event.fields]}>
+											{(field) => (
+												<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
+													<InlineTextEditor
+														class="-mx-1"
+														value={field.name ?? field.id}
+														onChange={(value) => {
+															interfaceCtx.execute("setCustomEventFieldName", {
+																eventId: id,
+																fieldId: field.id,
+																name: value,
+															});
+														}}
+													>
+														<IconButton
+															type="button"
+															class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5"
+															onClick={(e) => {
+																e.stopPropagation();
 
-													interfaceCtx.execute("deleteCustomEvent", {
-														eventId: id,
-													});
-												}}
-											>
-												<IconAntDesignDeleteOutlined class="size-4" />
-											</IconButton>
-										</InlineTextEditor>
-										<ul class="divide-y divide-neutral-700 flex-1 px-2 bg-black/30 rounded-md">
-											<For each={[...event.fields]}>
-												{(field) => (
-													<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
-														<InlineTextEditor
-															class="-mx-1"
-															value={field.name ?? field.id}
-															onChange={(value) => {
+																interfaceCtx.execute("deleteCustomEventField", {
+																	eventId: id,
+																	fieldId: field.id,
+																});
+															}}
+														>
+															<IconAntDesignDeleteOutlined class="size-4" />
+														</IconButton>
+													</InlineTextEditor>
+
+													<div class="flex flex-row justify-start">
+														<TypeEditor
+															type={field.type}
+															onChange={(type) => {
 																interfaceCtx.execute(
-																	"setCustomEventFieldName",
+																	"setCustomEventFieldType",
 																	{
 																		eventId: id,
 																		fieldId: field.id,
-																		name: value,
+																		type: type as any,
 																	},
 																);
 															}}
-														>
-															<IconButton
-																type="button"
-																class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5"
-																onClick={(e) => {
-																	e.stopPropagation();
+														/>
+													</div>
+												</li>
+											)}
+										</For>
+									</ul>
+								</li>
+							)}
+						</For>
+					</Tabs.Content>
+					<Tabs.Content
+						as="ul"
+						class="flex flex-col divide-y divide-neutral-700 px-2"
+						value="structs"
+					>
+						<For each={filteredStructs()}>
+							{([id, struct]) => (
+								<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
+									<InlineTextEditor
+										class="-mx-1"
+										value={struct.name}
+										onChange={(value) => {
+											interfaceCtx.execute("setCustomStructName", {
+												structId: id,
+												name: value,
+											});
+										}}
+									>
+										<IconButton
+											type="button"
+											class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
+											onClick={(e) => {
+												e.stopPropagation();
 
-																	interfaceCtx.execute(
-																		"deleteCustomEventField",
-																		{ eventId: id, fieldId: field.id },
-																	);
-																}}
-															>
-																<IconAntDesignDeleteOutlined class="size-4" />
-															</IconButton>
-														</InlineTextEditor>
-
-														<div class="flex flex-row justify-start">
-															<TypeEditor
-																type={field.type}
-																onChange={(type) => {
-																	interfaceCtx.execute(
-																		"setCustomEventFieldType",
-																		{
-																			eventId: id,
-																			fieldId: field.id,
-																			type: type as any,
-																		},
-																	);
-																}}
-															/>
-														</div>
-													</li>
-												)}
-											</For>
-										</ul>
-									</li>
-								)}
-							</For>
-						</Tabs.Content>
-						<Tabs.Content value="structs">
-							<For each={filteredStructs()}>
-								{([id, struct]) => (
-									<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
-										<InlineTextEditor
-											class="-mx-1"
-											value={struct.name}
-											onChange={(value) => {
-												interfaceCtx.execute("setCustomStructName", {
+												interfaceCtx.execute("createCustomStructField", {
 													structId: id,
-													name: value,
 												});
 											}}
 										>
-											<IconButton
-												type="button"
-												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
-												onClick={(e) => {
-													e.stopPropagation();
+											<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+										</IconButton>
 
-													interfaceCtx.execute("createCustomStructField", {
-														structId: id,
-													});
-												}}
-											>
-												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-											</IconButton>
+										<IconButton
+											type="button"
+											class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
+											onClick={(e) => {
+												e.stopPropagation();
 
-											<IconButton
-												type="button"
-												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
-												onClick={(e) => {
-													e.stopPropagation();
+												interfaceCtx.execute("deleteCustomStruct", {
+													structId: id,
+												});
+											}}
+										>
+											<IconAntDesignDeleteOutlined class="size-4" />
+										</IconButton>
+									</InlineTextEditor>
+									<ul class="divide-y divide-neutral-700 flex-1 px-2 bg-black/30 rounded-md">
+										<For each={[...Object.values(struct.fields)]}>
+											{(field) => (
+												<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
+													<InlineTextEditor
+														class="-mx-1"
+														value={field.name ?? field.id}
+														onChange={(value) => {
+															interfaceCtx.execute("setCustomStructFieldName", {
+																structId: id,
+																fieldId: field.id,
+																name: value,
+															});
+														}}
+													>
+														<IconButton
+															type="button"
+															class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5 mr-1"
+															onClick={(e) => {
+																e.stopPropagation();
 
-													interfaceCtx.execute("deleteCustomStruct", {
-														structId: id,
-													});
-												}}
-											>
-												<IconAntDesignDeleteOutlined class="size-4" />
-											</IconButton>
-										</InlineTextEditor>
-										<ul class="divide-y divide-neutral-700 flex-1 px-2 bg-black/30 rounded-md">
-											<For each={[...Object.values(struct.fields)]}>
-												{(field) => (
-													<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
+																interfaceCtx.execute(
+																	"deleteCustomStructField",
+																	{ structId: id, fieldId: field.id },
+																);
+															}}
+														>
+															<IconAntDesignDeleteOutlined class="size-4" />
+														</IconButton>
+													</InlineTextEditor>
+
+													<div class="flex flex-row justify-start">
+														<TypeEditor
+															type={field.type}
+															onChange={(type) => {
+																interfaceCtx.execute(
+																	"setCustomStructFieldType",
+																	{ structId: id, fieldId: field.id, type },
+																);
+															}}
+														/>
+													</div>
+												</li>
+											)}
+										</For>
+									</ul>
+								</li>
+							)}
+						</For>
+					</Tabs.Content>
+					<Tabs.Content
+						as="ul"
+						class="flex flex-col divide-y divide-neutral-700 px-2"
+						value="enums"
+					>
+						<For each={filteredEnums()}>
+							{([id, enm]) => (
+								<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
+									<InlineTextEditor
+										class="-mx-1"
+										value={enm.name}
+										onChange={(value) => {
+											interfaceCtx.execute("setCustomEnumName", {
+												enumId: id,
+												name: value,
+											});
+										}}
+									>
+										<IconButton
+											type="button"
+											class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
+											onClick={(e) => {
+												e.stopPropagation();
+
+												interfaceCtx.execute("createCustomEnumVariant", {
+													enumId: id,
+												});
+											}}
+										>
+											<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+										</IconButton>
+
+										<IconButton
+											type="button"
+											class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
+											onClick={(e) => {
+												e.stopPropagation();
+
+												interfaceCtx.execute("deleteCustomEnum", {
+													enumId: id,
+												});
+											}}
+										>
+											<IconAntDesignDeleteOutlined class="size-4" />
+										</IconButton>
+									</InlineTextEditor>
+									<Show when={enm.variants.length}>
+										<ul class="px-2 bg-black/30 rounded-md divide-y divide-white/10">
+											<For each={enm.variants}>
+												{(variant) => (
+													<li class="flex flex-col flex-1 group/variant pb-1 pt-1 gap-1">
 														<InlineTextEditor
 															class="-mx-1"
-															value={field.name ?? field.id}
+															value={variant.name ?? variant.id}
 															onChange={(value) => {
 																interfaceCtx.execute(
-																	"setCustomStructFieldName",
+																	"setCustomEnumVariantName",
 																	{
-																		structId: id,
-																		fieldId: field.id,
+																		enumId: id,
+																		variantId: variant.id,
 																		name: value,
 																	},
 																);
@@ -259,13 +360,28 @@ export function CustomTypes() {
 														>
 															<IconButton
 																type="button"
-																class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5 mr-1"
+																class="opacity-0 focus-visible:opacity-100 group-hover/variant:opacity-100"
 																onClick={(e) => {
 																	e.stopPropagation();
 
 																	interfaceCtx.execute(
-																		"deleteCustomStructField",
-																		{ structId: id, fieldId: field.id },
+																		"createCustomEnumVariantField",
+																		{ enumId: id, variantId: variant.id },
+																	);
+																}}
+															>
+																<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+															</IconButton>
+
+															<IconButton
+																type="button"
+																class="opacity-0 focus-visible:opacity-100 group-hover/variant:opacity-100 p-0.5 mr-1"
+																onClick={(e) => {
+																	e.stopPropagation();
+
+																	interfaceCtx.execute(
+																		"deleteCustomEnumVariant",
+																		{ enumId: id, variantId: variant.id },
 																	);
 																}}
 															>
@@ -273,190 +389,76 @@ export function CustomTypes() {
 															</IconButton>
 														</InlineTextEditor>
 
-														<div class="flex flex-row justify-start">
-															<TypeEditor
-																type={field.type}
-																onChange={(type) => {
-																	interfaceCtx.execute(
-																		"setCustomStructFieldType",
-																		{ structId: id, fieldId: field.id, type },
-																	);
-																}}
-															/>
-														</div>
-													</li>
-												)}
-											</For>
-										</ul>
-									</li>
-								)}
-							</For>
-						</Tabs.Content>
-						<Tabs.Content value="enums">
-							<For each={filteredEnums()}>
-								{([id, enm]) => (
-									<li class="flex flex-col flex-1 group/item pb-2 pt-1 gap-1">
-										<InlineTextEditor
-											class="-mx-1"
-											value={enm.name}
-											onChange={(value) => {
-												interfaceCtx.execute("setCustomEnumName", {
-													enumId: id,
-													name: value,
-												});
-											}}
-										>
-											<IconButton
-												type="button"
-												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100"
-												onClick={(e) => {
-													e.stopPropagation();
+														<Show when={Object.keys(variant.fields).length}>
+															<ul class="divide-y divide-white/10 flex-1 px-2 bg-black/30 rounded-md mb-1">
+																<For each={[...Object.values(variant.fields)]}>
+																	{(field) => (
+																		<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
+																			<InlineTextEditor
+																				value={field.name ?? field.id}
+																				onChange={(value) => {
+																					interfaceCtx.execute(
+																						"setCustomEnumVariantFieldName",
+																						{
+																							enumId: enm.id,
+																							variantId: variant.id,
+																							fieldId: field.id,
+																							name: value,
+																						},
+																					);
+																				}}
+																				class="-mx-1"
+																			>
+																				<IconButton
+																					type="button"
+																					class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5 mr-0.5"
+																					onClick={(e) => {
+																						e.stopPropagation();
 
-													interfaceCtx.execute("createCustomEnumVariant", {
-														enumId: id,
-													});
-												}}
-											>
-												<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-											</IconButton>
-
-											<IconButton
-												type="button"
-												class="opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 p-0.5 mr-1"
-												onClick={(e) => {
-													e.stopPropagation();
-
-													interfaceCtx.execute("deleteCustomEnum", {
-														enumId: id,
-													});
-												}}
-											>
-												<IconAntDesignDeleteOutlined class="size-4" />
-											</IconButton>
-										</InlineTextEditor>
-										<Show when={enm.variants.length}>
-											<ul class="px-2 bg-black/30 rounded-md divide-y divide-white/10">
-												<For each={enm.variants}>
-													{(variant) => (
-														<li class="flex flex-col flex-1 group/variant pb-1 pt-1 gap-1">
-															<InlineTextEditor
-																class="-mx-1"
-																value={variant.name ?? variant.id}
-																onChange={(value) => {
-																	interfaceCtx.execute(
-																		"setCustomEnumVariantName",
-																		{
-																			enumId: id,
-																			variantId: variant.id,
-																			name: value,
-																		},
-																	);
-																}}
-															>
-																<IconButton
-																	type="button"
-																	class="opacity-0 focus-visible:opacity-100 group-hover/variant:opacity-100"
-																	onClick={(e) => {
-																		e.stopPropagation();
-
-																		interfaceCtx.execute(
-																			"createCustomEnumVariantField",
-																			{ enumId: id, variantId: variant.id },
-																		);
-																	}}
-																>
-																	<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
-																</IconButton>
-
-																<IconButton
-																	type="button"
-																	class="opacity-0 focus-visible:opacity-100 group-hover/variant:opacity-100 p-0.5 mr-1"
-																	onClick={(e) => {
-																		e.stopPropagation();
-
-																		interfaceCtx.execute(
-																			"deleteCustomEnumVariant",
-																			{ enumId: id, variantId: variant.id },
-																		);
-																	}}
-																>
-																	<IconAntDesignDeleteOutlined class="size-4" />
-																</IconButton>
-															</InlineTextEditor>
-
-															<Show when={Object.keys(variant.fields).length}>
-																<ul class="divide-y divide-white/10 flex-1 px-2 bg-black/30 rounded-md mb-1">
-																	<For
-																		each={[...Object.values(variant.fields)]}
-																	>
-																		{(field) => (
-																			<li class="flex flex-col gap-1.5 pt-1 pb-2 group/field">
-																				<InlineTextEditor
-																					value={field.name ?? field.id}
-																					onChange={(value) => {
 																						interfaceCtx.execute(
-																							"setCustomEnumVariantFieldName",
+																							"deleteCustomEnumVariantField",
 																							{
 																								enumId: enm.id,
 																								variantId: variant.id,
 																								fieldId: field.id,
-																								name: value,
 																							},
 																						);
 																					}}
-																					class="-mx-1"
 																				>
-																					<IconButton
-																						type="button"
-																						class="opacity-0 focus-visible:opacity-100 group-hover/field:opacity-100 p-0.5 mr-0.5"
-																						onClick={(e) => {
-																							e.stopPropagation();
+																					<IconAntDesignDeleteOutlined class="size-4" />
+																				</IconButton>
+																			</InlineTextEditor>
 
-																							interfaceCtx.execute(
-																								"deleteCustomEnumVariantField",
-																								{
-																									enumId: enm.id,
-																									variantId: variant.id,
-																									fieldId: field.id,
-																								},
-																							);
-																						}}
-																					>
-																						<IconAntDesignDeleteOutlined class="size-4" />
-																					</IconButton>
-																				</InlineTextEditor>
-
-																				<div class="flex flex-row justify-start">
-																					<TypeEditor
-																						type={field.type}
-																						onChange={(type) => {
-																							interfaceCtx.execute(
-																								"setCustomEnumVariantFieldType",
-																								{
-																									enumId: enm.id,
-																									variantId: variant.id,
-																									fieldId: field.id,
-																									type,
-																								},
-																							);
-																						}}
-																					/>
-																				</div>
-																			</li>
-																		)}
-																	</For>
-																</ul>
-															</Show>
-														</li>
-													)}
-												</For>
-											</ul>
-										</Show>
-									</li>
-								)}
-							</For>
-						</Tabs.Content>
-					</ul>
+																			<div class="flex flex-row justify-start">
+																				<TypeEditor
+																					type={field.type}
+																					onChange={(type) => {
+																						interfaceCtx.execute(
+																							"setCustomEnumVariantFieldType",
+																							{
+																								enumId: enm.id,
+																								variantId: variant.id,
+																								fieldId: field.id,
+																								type,
+																							},
+																						);
+																					}}
+																				/>
+																			</div>
+																		</li>
+																	)}
+																</For>
+															</ul>
+														</Show>
+													</li>
+												)}
+											</For>
+										</ul>
+									</Show>
+								</li>
+							)}
+						</For>
+					</Tabs.Content>
 				</div>
 			</Tabs.Root>
 		</SidebarSection>

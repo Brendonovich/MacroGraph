@@ -29,10 +29,16 @@ export async function deserializeProject(
 
 		project.customTypeIdCounter = data.customTypeIdCounter;
 
+		const deferrer = createDeferrer();
+
 		project.customStructs = new ReactiveMap(
 			data.customStructs
 				.map((serializedStruct) => {
-					const struct = deserializeCustomStruct(project, serializedStruct);
+					const struct = deserializeCustomStruct(
+						project,
+						serializedStruct,
+						deferrer,
+					);
 
 					if (struct === null) return null;
 
@@ -44,7 +50,7 @@ export async function deserializeProject(
 		project.customEnums = new ReactiveMap(
 			data.customEnums
 				.map((serializedEnum) => {
-					const enm = deserializeCustomEnum(project, serializedEnum);
+					const enm = deserializeCustomEnum(project, serializedEnum, deferrer);
 
 					if (enm === null) return null;
 
@@ -52,6 +58,8 @@ export async function deserializeProject(
 				})
 				.filter(Boolean) as [number, runtime.CustomEnum][],
 		);
+
+		deferrer.run();
 
 		project.customEventIdCounter = data.customEventIdCounter;
 
@@ -115,9 +123,25 @@ export async function deserializeProject(
 	return project;
 }
 
+export function createDeferrer() {
+	const fns: Array<() => void> = [];
+
+	return {
+		defer(fn: () => void) {
+			fns.push(fn);
+		},
+		run() {
+			for (const fn of fns) {
+				fn();
+			}
+		},
+	};
+}
+
 export function deserializeCustomStruct(
 	project: runtime.Project,
 	data: serde.CustomStruct,
+	deferrer: ReturnType<typeof createDeferrer>,
 ): runtime.CustomStruct {
 	const struct = new runtime.CustomStruct({
 		project,
@@ -127,9 +151,11 @@ export function deserializeCustomStruct(
 
 	struct.fieldIdCounter = data.fieldIdCounter;
 
-	for (const field of data.fields) {
-		struct.fields[field.id] = deserializeField(struct.project, field);
-	}
+	deferrer.defer(() => {
+		for (const field of data.fields) {
+			struct.fields[field.id] = deserializeField(struct.project, field);
+		}
+	});
 
 	return struct;
 }
@@ -137,6 +163,7 @@ export function deserializeCustomStruct(
 export function deserializeCustomEnum(
 	project: runtime.Project,
 	data: v.InferOutput<typeof serde.CustomEnum>,
+	deferrer: ReturnType<typeof createDeferrer>,
 ): runtime.CustomEnum {
 	const enm = new runtime.CustomEnum({
 		project,
@@ -146,10 +173,12 @@ export function deserializeCustomEnum(
 
 	enm.variantIdCounter = data.variantIdCounter;
 
-	enm.variants = [];
-	for (const variant of data.variants) {
-		enm.variants.push(deserializeCustomEnumVariant(enm, variant));
-	}
+	deferrer.defer(() => {
+		enm.variants = [];
+		for (const variant of data.variants) {
+			enm.variants.push(deserializeCustomEnumVariant(enm, variant));
+		}
+	});
 
 	return enm;
 }
