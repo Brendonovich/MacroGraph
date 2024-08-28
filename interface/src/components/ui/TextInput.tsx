@@ -87,7 +87,6 @@ export const TextInput = (props: Props) => {
 									);
 
 									const filteredOptions = createMemo(() => {
-										console.log({ shouldFilter: shouldFilter() });
 										if (shouldFilter())
 											return (
 												suggestions().filter((o) =>
