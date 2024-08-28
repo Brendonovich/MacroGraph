@@ -1574,6 +1574,46 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
+		name: "URL Encode",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				input: io.dataInput({
+					id: "input",
+					type: t.string(),
+				}),
+				output: io.dataOutput({
+					id: "output",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			ctx.setOutput(io.output, encodeURIComponent(ctx.getInput(io.input)));
+		},
+	});
+
+	pkg.createSchema({
+		name: "URL Decode",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				input: io.dataInput({
+					id: "input",
+					type: t.string(),
+				}),
+				output: io.dataOutput({
+					id: "output",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			ctx.setOutput(io.output, decodeURIComponent(ctx.getInput(io.input)));
+		},
+	});
+
+	pkg.createSchema({
 		name: "Split String",
 		type: "pure",
 		createIO({ io }) {
