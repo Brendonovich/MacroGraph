@@ -131,14 +131,14 @@ jobs:
           command: release upload ${{ env.CN_APP_SLUG }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
           api-key: ${{ secrets.CN_API_KEY }}
 
-  publish:
-    runs-on: ubuntu-latest
-    needs: [draft, build]
-    steps:
-      - uses: actions/checkout@v4
+  # publish:
+  #   runs-on: ubuntu-latest
+  #   needs: [draft, build]
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Publish release
-        uses: crabnebula-dev/cloud-release@v0.1.0
-        with:
-          command: release publish ${{ env.CN_APP_SLUG }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
-          api-key: ${{ secrets.CN_API_KEY }}
+  #     - name: Publish release
+  #       uses: crabnebula-dev/cloud-release@v0.1.0
+  #       with:
+  #         command: release publish ${{ env.CN_APP_SLUG }} "${{ needs.draft.outputs.tag_name }}" --framework tauri
+  #         api-key: ${{ secrets.CN_API_KEY }}
