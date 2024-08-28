@@ -11,6 +11,7 @@ export type VariableArgs = {
 	name: string;
 	type: t.Any;
 	value: any;
+	previous: any;
 	owner: Graph | Project;
 };
 
@@ -19,6 +20,7 @@ export class Variable extends Disposable {
 	name: string;
 	type: t.Any;
 	value: any;
+	previous: any;
 	owner: Graph | Project;
 
 	constructor(args: VariableArgs) {
@@ -28,6 +30,7 @@ export class Variable extends Disposable {
 		this.name = args.name;
 		this.type = args.type;
 		this.value = args.value;
+		this.previous = args.value;
 		this.owner = args.owner;
 
 		const self = createMutable(this);

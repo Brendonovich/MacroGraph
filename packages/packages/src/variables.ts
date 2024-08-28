@@ -89,7 +89,11 @@ export function pkg() {
 			createEffect(
 				on(
 					() => variable.value,
-					(value) => bus.emit(value),
+					(value, prev) =>
+						bus.emit({
+							value: value,
+							previousValue: prev ?? variable.previous,
+						}),
 					{ defer: true },
 				),
 			);
@@ -119,9 +123,12 @@ export function pkg() {
 			};
 		},
 		run({ ctx, data, io }) {
-			if (!io || data.variableId !== io.variable.id) return;
+			if (!io) return;
+
+			console.log("test");
 
 			ctx.setOutput(io.output, data.value);
+			ctx.setOutput(io.previousOutput, data.previousValue);
 			ctx.exec(io.exec);
 		},
 	});
@@ -207,7 +214,11 @@ export function pkg() {
 			createEffect(
 				on(
 					() => variable.value,
-					(value) => bus.emit(value),
+					(value, prev) =>
+						bus.emit({
+							value: value,
+							previousValue: prev ?? variable.previous,
+						}),
 					{ defer: true },
 				),
 			);
@@ -239,9 +250,10 @@ export function pkg() {
 			};
 		},
 		run({ ctx, data, io }) {
-			if (!io || data.variableId !== io.variable.id) return;
+			if (!io) return;
 
 			ctx.setOutput(io.output, data.value);
+			ctx.setOutput(io.previousOutput, data.previousValue);
 			ctx.exec(io.exec);
 		},
 	});
