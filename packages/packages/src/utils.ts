@@ -1641,6 +1641,49 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
+		name: "Split Lines",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				input: io.dataInput({
+					id: "input",
+					name: "String",
+					type: t.string(),
+				}),
+				output: io.dataOutput({
+					id: "output",
+					type: t.list(t.string()),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const array = ctx.getInput(io.input).split(/[\r\n]+/);
+			ctx.setOutput(io.output, array);
+		},
+	});
+
+	pkg.createSchema({
+		name: "Join Lines",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				input: io.dataInput({
+					id: "input",
+					name: "Lines",
+					type: t.list(t.string()),
+				}),
+				output: io.dataOutput({
+					id: "output",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			ctx.setOutput(io.output, ctx.getInput(io.input).join("\n"));
+		},
+	});
+
+	pkg.createSchema({
 		name: "Nth Word",
 		type: "pure",
 		createIO({ io }) {

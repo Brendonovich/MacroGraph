@@ -131,6 +131,11 @@ export function register(pkg: Package, { gateway }: Ctx) {
 				name: "Message",
 				type: t.string(),
 			}),
+			messageID: io.dataOutput({
+				id: "messageID",
+				name: "Message ID",
+				type: t.string(),
+			}),
 			channelId: io.dataOutput({
 				id: "channelId",
 				name: "Channel ID",
@@ -164,6 +169,7 @@ export function register(pkg: Package, { gateway }: Ctx) {
 		}),
 		run({ ctx, data, io }) {
 			ctx.setOutput(io.message, data.content);
+			ctx.setOutput(io.messageID, data.id);
 			ctx.setOutput(io.channelId, data.channel_id);
 			ctx.setOutput(io.username, data.author.username);
 			ctx.setOutput(io.userId, data.author.id);
