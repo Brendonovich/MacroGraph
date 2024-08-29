@@ -2316,6 +2316,38 @@ export function register(pkg: Package<EventTypes>) {
 	});
 
 	createOBSExecSchema({
+		name: "Get Scene Item Source",
+		createIO: ({ io, obs }) => {
+			return {
+				sceneName: io.dataInput({
+					id: "sceneName",
+					name: "Scene Name",
+					type: t.string(),
+					fetchSuggestions: sceneListSuggestionFactory(obs),
+				}),
+				sceneItemId: io.dataInput({
+					id: "sceneItemId",
+					name: "Scene Item Id",
+					type: t.int(),
+				}),
+
+				sourceName: io.dataOutput({
+					id: "sourceName",
+					name: "Source Name",
+					type: t.string(),
+				}),
+			};
+		},
+		async run({ ctx, io, obs }) {
+			const data = await obs.call("GetSceneItemSource", {
+				sceneName: ctx.getInput(io.sceneName),
+				sceneItemId: ctx.getInput(io.sceneItemId),
+			});
+			ctx.setOutput(io.sourceName, data.sourceName);
+		},
+	});
+
+	createOBSExecSchema({
 		name: "Create Scene Item",
 		createIO: ({ io, obs }) => ({
 			sceneName: io.dataInput({

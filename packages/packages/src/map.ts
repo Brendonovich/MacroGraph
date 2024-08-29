@@ -92,7 +92,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const map = ctx.getInput(io.mapIn);
+			const map = new ReactiveMap(ctx.getInput(io.mapIn));
 			for (const input of io.pins) {
 				map.set(ctx.getInput(input.key), ctx.getInput(input.value));
 				ctx.setOutput(input.current, Maybe(map.get(ctx.getInput(input.key))));

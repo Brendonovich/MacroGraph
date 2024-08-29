@@ -279,7 +279,7 @@ export function pkg(core: Core) {
 			}
 
 			let type: string;
-			let body: string | FormData | null;
+			let body: string | FormData | null = null;
 			const input = ctx.getInput(io.body);
 			switch (input.variant) {
 				case "Plaintext": {
@@ -582,8 +582,8 @@ export function pkg(core: Core) {
 		name: "Body Type",
 		source: () =>
 			BodyEnum.variants.map((value) => ({
-				id: value.name,
-				display: value.name,
+				id: value.id,
+				display: value.id,
 			})),
 	} satisfies PropertyDef;
 
