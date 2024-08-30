@@ -578,77 +578,23 @@ export function pkg(core: Core) {
 		},
 	});
 
-	const bodyTypeProperty = {
-		name: "Body Type",
-		source: () =>
-			BodyEnum.variants.map((value) => ({
-				id: value.id,
-				display: value.id,
-			})),
-	} satisfies PropertyDef;
-
 	pkg.createSchema({
-		name: "Create Body",
+		name: "URL Decode Component",
 		type: "pure",
-		properties: {
-			bodyType: bodyTypeProperty,
-		},
-		createIO({ ctx, io, properties }) {
-			const bodyTypeProp = ctx.getProperty(properties.bodyType)!;
-
-			const bodyType = () => {
-				switch (bodyTypeProp) {
-					case "Plaintext":
-					case "HTML":
-						return t.string();
-					case "FormData":
-						return t.map(t.string());
-					case "JSON":
-						return t.enum(JSONEnum);
-				}
-			};
+		createIO({ io }) {
 			return {
 				input: io.dataInput({
 					id: "input",
-					type: bodyType(),
+					type: t.string(),
 				}),
 				output: io.dataOutput({
 					id: "output",
-					type: t.enum(BodyEnum),
+					type: t.string(),
 				}),
 			};
 		},
-		run({ ctx, io, properties }) {
-			const output = () => {
-				const bodyType = ctx.getProperty(properties.bodyType)!;
-				switch (bodyType) {
-					case "Plaintext": {
-						return BodyEnum.variant([
-							"Plaintext",
-							{ value: ctx.getInput(io.input) as string },
-						]);
-					}
-					case "HTML": {
-						return BodyEnum.variant([
-							"HTML",
-							{ value: ctx.getInput(io.input) as string },
-						]);
-					}
-					case "JSON": {
-						return BodyEnum.variant([
-							"JSON",
-							{ value: ctx.getInput(io.input) as JSONValue },
-						]);
-					}
-					case "FormData": {
-						return BodyEnum.variant([
-							"FormData",
-							{ value: ctx.getInput(io.input) as MapValue<string> },
-						]);
-					}
-				}
-			};
-			ctx.setOutput(io.output, output());
+		run({ ctx, io }) {
+			ctx.setOutput(io.output, decodeURIComponent(ctx.getInput(io.input)));
 		},
 	});
 
