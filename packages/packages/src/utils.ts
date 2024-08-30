@@ -2090,6 +2090,123 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
+		name: "Make Package Enum",
+		type: "pure",
+		properties: {
+			package: {
+				name: "Package",
+				source: ({ node }) => {
+					const packages = [
+						...node.graph.project.core.packages.filter((p) => p.enums.size > 0),
+					];
+
+					return packages.map((p) => ({
+						id: p.name,
+						display: p.name,
+					}));
+				},
+			},
+			enum: {
+				name: "Enum",
+				source: ({ node }) => {
+					const pkgName = node.getProperty(node.schema.properties!.package!) as
+						| string
+						| undefined;
+					if (!pkgName) return [];
+
+					const pkgObj = node.graph.project.core.packages.find(
+						(p) => p.name === pkgName,
+					);
+					if (!pkgObj) return [];
+
+					const enums = [...pkgObj.enums.values()];
+					return enums.map((e) => ({
+						id: e.name,
+						display: e.name,
+					}));
+				},
+			},
+			variant: {
+				name: "Variant",
+				source: ({ node }) => {
+					const pkgName = node.getProperty(node.schema.properties!.package!) as
+						| string
+						| undefined;
+
+					const enumName = node.getProperty(node.schema.properties!.enum!) as
+						| string
+						| undefined;
+					if (!enumName) return [];
+
+					const pkgEnum = node.graph.project.core.packages
+						.find((p) => p.name === pkgName)!
+						.enums.get(enumName);
+					if (!pkgEnum) return [];
+
+					return (
+						pkgEnum.variants.map((v) => ({
+							id: v.id,
+							display: v.name ?? v.id,
+						})) ?? []
+					);
+				},
+			},
+		},
+		createIO({ io, properties, ctx }) {
+			const packageName = ctx.getProperty(properties.package);
+			if (!packageName) return;
+			const enumName = ctx.getProperty(properties.enum);
+			if (!enumName) return;
+			const variantId = ctx.getProperty(properties.variant);
+			if (!variantId) return;
+
+			const pkg = ctx.graph.project.core.packages.find(
+				(p) => p.name === packageName,
+			);
+			if (!pkg) return;
+
+			const enm = pkg.enums.get(enumName);
+			if (!enm) return;
+			const variant = enm?.variants.find((v) => v.id === variantId);
+			if (!variant) return;
+
+			const output = io.dataOutput({
+				id: "",
+				name: variant?.name ?? variant.id,
+				type: t.enum(enm),
+			});
+
+			const dataInputs = Object.entries(variant.fields ?? {}).map(
+				([id, field]) =>
+					io.dataInput({ id, name: field.name ?? field.id, type: field.type }),
+			);
+
+			return {
+				output,
+				inputs: dataInputs,
+				enum: enm,
+				variant,
+			};
+		},
+		run({ ctx, io }) {
+			if (!io) return;
+
+			const data = {
+				variant: io.variant.id,
+				data: io.variant
+					? Object.values(io.inputs).reduce(
+							(acc, input) =>
+								Object.assign(acc, { [input.id]: ctx.getInput(input) }),
+							{} as any,
+						)
+					: undefined,
+			};
+
+			ctx.setOutput(io.output, data);
+		},
+	});
+
+	pkg.createSchema({
 		name: "Match",
 		type: "base",
 		createIO({ io }) {
