@@ -49,7 +49,7 @@ importers:
         version: 2.10.2(@testing-library/jest-dom@6.4.8)(solid-js@1.8.20)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
       vitest:
         specifier: ^2.0.5
-        version: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)
+        version: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)
       vitest-github-actions-reporter:
         specifier: ^0.11.1
         version: 0.11.1(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3))
@@ -100,7 +100,7 @@ importers:
         version: 0.14.3(solid-js@1.8.20)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
@@ -183,7 +183,7 @@ importers:
         version: 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
       '@storybook/addon-interactions':
         specifier: ^8.2.7
-        version: 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3))
+        version: 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3))
       '@storybook/addon-links':
         specifier: ^8.2.7
         version: 8.2.7(react@18.2.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
@@ -386,6 +386,8 @@ importers:
       unplugin-fonts:
         specifier: ^1.1.1
         version: 1.1.1(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+
+  crates/regex-syntax-wasm: {}
 
   crates/tauri-plugin-kb-mouse:
     dependencies:
@@ -681,6 +683,9 @@ importers:
       '@macrograph/option':
         specifier: workspace:^
         version: link:../option
+      '@macrograph/regex-syntax-wasm':
+        specifier: workspace:^
+        version: link:../../crates/regex-syntax-wasm
       '@macrograph/runtime':
         specifier: workspace:*
         version: link:../runtime
@@ -3528,6 +3533,7 @@ packages:
 
   '@rspc/solid@0.0.0-main-6ed8cc98':
     resolution: {integrity: sha512-uh3iEmUDVZl3DzkSipr2XV8aWANuIGjAb5deg12bMPiGRpE8eyO4S8prxUkA+mqqX/zHYKbR4GVZQElN/gkTTA==}
+    deprecated: Please use @rspc/solid-query
     peerDependencies:
       '@rspc/client': 0.0.0-main-6ed8cc98
       '@tanstack/solid-query': ^4.6.0
@@ -3792,11 +3798,11 @@ packages:
       react-dom:
         optional: true
 
-  '@storybook/builder-vite@8.3.0-alpha.6':
-    resolution: {integrity: sha512-r8O+6hRBNCql6f5NykbDUr5U/clNeDRJoBF+FpWkpQT9dXFoYor54u6JMEJmseHPdmiJemhiIZ0xo54ktWUJLg==}
+  '@storybook/builder-vite@8.3.0-alpha.9':
+    resolution: {integrity: sha512-EMgTo77Ie74WORKDVMY6HMxSQTdsD12M114d+H6cTfDY8FO2vQgu/v2DccgvKKiSFhpdoNj1GfO3FhM8wCO/PQ==}
     peerDependencies:
       '@preact/preset-vite': '*'
-      storybook: ^8.3.0-alpha.6
+      storybook: ^8.3.0-alpha.9
       typescript: '>= 4.3.x'
       vite: ^4.0.0 || ^5.0.0
       vite-plugin-glimmerx: '*'
@@ -3819,10 +3825,10 @@ packages:
     peerDependencies:
       storybook: ^8.2.7
 
-  '@storybook/csf-plugin@8.3.0-alpha.6':
-    resolution: {integrity: sha512-zGJ3qaF/Zx1EQZr5blS611vBzR0U+EwFjs7qwl0gYYrV+TSTCCZpIP6v7jDtpJ8vF2QVeem7iXreERi0L5Y8sQ==}
+  '@storybook/csf-plugin@8.3.0-alpha.9':
+    resolution: {integrity: sha512-xSuLYTIRrPK2NkKxEIh7FUlEYZujVt350ybBZYvFYhKVsX8i1gBFX9saS5XXXLv3GN6jgeeGsS5UjswRbpE7yw==}
     peerDependencies:
-      storybook: ^8.3.0-alpha.6
+      storybook: ^8.3.0-alpha.9
 
   '@storybook/csf@0.1.11':
     resolution: {integrity: sha512-dHYFQH3mA+EtnCkHXzicbLgsvzYjcDJ1JWsogbItZogkPHgSJM/Wr71uMkcvw8v9mmCyP4NpXJuu6bPoVsOnzg==}
@@ -5827,6 +5833,7 @@ packages:
   fstream@1.0.12:
     resolution: {integrity: sha512-WvJ193OHa0GHPEL+AycEJgxvBEwyfRkN1vhjca23OaPVMCaLCXTd5qAu82AjTcgP1UJmytkOKb63Ypde7raDIg==}
     engines: {node: '>=0.6'}
+    deprecated: This package is no longer supported.
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
@@ -7798,6 +7805,7 @@ packages:
 
   shikiji-core@0.9.19:
     resolution: {integrity: sha512-AFJu/vcNT21t0e6YrfadZ+9q86gvPum6iywRyt1OtIPjPFe25RQnYJyxHQPMLKCCWA992TPxmEmbNcOZCAJclw==}
+    deprecated: Shikiji is merged back to Shiki v1.0, please migrate over to get the latest updates
 
   shikiji@0.9.19:
     resolution: {integrity: sha512-Kw2NHWktdcdypCj1GkKpXH4o6Vxz8B8TykPlPuLHOGSV8VkhoCLcFOH4k19K4LXAQYRQmxg+0X/eM+m2sLhAkg==}
@@ -11154,7 +11162,7 @@ snapshots:
       estree-walker: 2.0.2
       glob: 8.1.0
       is-reference: 1.2.1
-      magic-string: 0.30.10
+      magic-string: 0.30.11
     optionalDependencies:
       rollup: 4.18.1
 
@@ -11162,7 +11170,7 @@ snapshots:
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.18.1)
       estree-walker: 2.0.2
-      magic-string: 0.30.10
+      magic-string: 0.30.11
     optionalDependencies:
       rollup: 4.18.1
 
@@ -11186,7 +11194,7 @@ snapshots:
   '@rollup/plugin-replace@5.0.7(rollup@4.18.1)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.18.1)
-      magic-string: 0.30.10
+      magic-string: 0.30.11
     optionalDependencies:
       rollup: 4.18.1
 
@@ -11499,7 +11507,7 @@ snapshots:
     dependencies:
       solid-js: 1.8.20
 
-  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
+  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.18.1)(solid-js@1.8.20)(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
       '@vinxi/plugin-directives': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
       '@vinxi/server-components': 0.4.1(vinxi@0.4.1(@planetscale/database@1.16.0)(@types/node@20.14.11)(drizzle-orm@0.29.5(@planetscale/database@1.16.0)(@types/react@18.2.73)(pg@8.11.5)(postgres@3.4.4)(react@18.2.0))(ioredis@5.4.1)(terser@5.31.3))
@@ -11614,11 +11622,11 @@ snapshots:
       '@storybook/global': 5.0.0
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
 
-  '@storybook/addon-interactions@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3))':
+  '@storybook/addon-interactions@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3))':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/instrumenter': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
-      '@storybook/test': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3))
+      '@storybook/test': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3))
       polished: 4.3.1
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
       ts-dedent: 2.2.0
@@ -11680,9 +11688,9 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
 
-  '@storybook/builder-vite@8.3.0-alpha.6(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(typescript@5.5.3)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
+  '@storybook/builder-vite@8.3.0-alpha.9(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(typescript@5.5.3)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))':
     dependencies:
-      '@storybook/csf-plugin': 8.3.0-alpha.6(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
+      '@storybook/csf-plugin': 8.3.0-alpha.9(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
       '@types/find-cache-dir': 3.2.1
       browser-assert: 1.2.1
       es-module-lexer: 1.5.4
@@ -11741,7 +11749,7 @@ snapshots:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
       unplugin: 1.12.0
 
-  '@storybook/csf-plugin@8.3.0-alpha.6(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))':
+  '@storybook/csf-plugin@8.3.0-alpha.9(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))':
     dependencies:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
       unplugin: 1.12.2
@@ -11774,12 +11782,12 @@ snapshots:
       react-dom: 18.3.1(react@18.2.0)
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
 
-  '@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3))':
+  '@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3))':
     dependencies:
       '@storybook/csf': 0.1.11
       '@storybook/instrumenter': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
       '@testing-library/dom': 10.1.0
-      '@testing-library/jest-dom': 6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3))
+      '@testing-library/jest-dom': 6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3))
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.1.0)
       '@vitest/expect': 1.6.0
       '@vitest/spy': 1.6.0
@@ -11929,7 +11937,7 @@ snapshots:
       lz-string: 1.5.0
       pretty-format: 27.5.1
 
-  '@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3))':
+  '@testing-library/jest-dom@6.4.5(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3))':
     dependencies:
       '@adobe/css-tools': 4.4.0
       '@babel/runtime': 7.24.1
@@ -11940,7 +11948,7 @@ snapshots:
       lodash: 4.17.21
       redent: 3.0.0
     optionalDependencies:
-      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)
+      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)
 
   '@testing-library/jest-dom@6.4.8':
     dependencies:
@@ -12333,7 +12341,7 @@ snapshots:
     dependencies:
       modern-node-polyfills: 0.1.3(rollup@4.20.0)
       sirv: 2.0.4
-      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)
+      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)
     transitivePeerDependencies:
       - rollup
 
@@ -12382,7 +12390,7 @@ snapshots:
       pathe: 1.1.2
       sirv: 2.0.4
       tinyrainbow: 1.2.0
-      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)
+      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)
 
   '@vitest/utils@1.4.0':
     dependencies:
@@ -14325,7 +14333,7 @@ snapshots:
   https-proxy-agent@7.0.4:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.4
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
 
@@ -16546,7 +16554,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.2(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(typescript@5.5.3)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3)):
     dependencies:
-      '@storybook/builder-vite': 8.3.0-alpha.6(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(typescript@5.5.3)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
+      '@storybook/builder-vite': 8.3.0-alpha.9(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(typescript@5.5.3)(vite@5.4.0(@types/node@20.14.11)(terser@5.31.3))
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - storybook
@@ -17047,7 +17055,7 @@ snapshots:
       estree-walker: 3.0.3
       fast-glob: 3.3.2
       local-pkg: 0.5.0
-      magic-string: 0.30.10
+      magic-string: 0.30.11
       mlly: 1.7.1
       pathe: 1.1.2
       pkg-types: 1.1.3
@@ -17228,7 +17236,7 @@ snapshots:
   unwasm@0.3.9:
     dependencies:
       knitwork: 1.1.0
-      magic-string: 0.30.10
+      magic-string: 0.30.11
       mlly: 1.7.1
       pathe: 1.1.2
       pkg-types: 1.1.3
@@ -17473,9 +17481,9 @@ snapshots:
   vitest-github-actions-reporter@0.11.1(vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)):
     dependencies:
       '@actions/core': 1.10.1
-      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3)
+      vitest: 2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3)
 
-  vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jsdom@24.1.1)(terser@5.31.3):
+  vitest@2.0.5(@types/node@20.14.11)(@vitest/browser@0.32.4(rollup@4.20.0)(vitest@2.0.5))(@vitest/ui@2.0.5)(jsdom@24.1.1)(terser@5.31.3):
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@vitest/expect': 2.0.5

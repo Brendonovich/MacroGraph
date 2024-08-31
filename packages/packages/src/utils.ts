@@ -1,5 +1,11 @@
 import { JSONEnum, jsonToJS } from "@macrograph/json";
 import { Maybe, None, type Option, Some } from "@macrograph/option";
+import init, {
+	type CaptureScope,
+	get_capture_groups,
+} from "@macrograph/regex-syntax-wasm";
+// @ts-expect-error
+import wasmUrl from "@macrograph/regex-syntax-wasm/regex_syntax_wasm_bg.wasm?url";
 import {
 	type Core,
 	type DataInput,
@@ -16,6 +22,7 @@ import {
 } from "@macrograph/typesystem";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import { createSignal } from "solid-js";
 
 dayjs.extend(duration);
 
@@ -2658,11 +2665,16 @@ export function pkg(core: Core) {
 		},
 	});
 
+	const [wasmLoaded, setWasmLoaded] = createSignal(false);
+	init(wasmUrl).then(() => setWasmLoaded(true));
+
 	pkg.createSchema({
 		name: "Execute Regex",
 		type: "exec",
 		properties: { regex: { name: "Regex", type: t.string() } },
 		createIO({ io, ctx, properties }) {
+			wasmLoaded();
+
 			const base = {
 				input: io.dataInput({
 					id: "",
@@ -2671,26 +2683,62 @@ export function pkg(core: Core) {
 			};
 
 			try {
-				const groupOutputs: DataOutput<t.String>[] = [];
 				const regex = new RegExp(ctx.getProperty(properties.regex));
-				const { groups } = new RegExp(`${regex}|`).exec("")!;
+				const result = get_capture_groups(ctx.getProperty(properties.regex));
 
-				for (const group of Object.keys(groups ?? {})) {
-					groupOutputs.push(
-						io.dataOutput({
-							id: `group-${group}`,
-							name: group,
-							type: t.string(),
-						}),
-					);
+				function flattenCaptures(
+					scope: CaptureScope,
+				): [string, t.String | t.Option<t.String>][] {
+					const c = scope.capture();
+					if (c) {
+						const name = c.name();
+						return [[name, c.optional() ? t.option(t.string()) : t.string()]];
+					}
+
+					return scope.scope().flatMap(flattenCaptures);
 				}
+
+				const collectCapture = (scope: CaptureScope) => {
+					const c = scope.capture();
+					if (c) {
+						const name = c.name();
+						return [
+							io.dataOutput({
+								id: `group-${name}`,
+								name: name,
+								type: c.optional() ? t.option(t.string()) : t.string(),
+							}),
+						];
+					}
+
+					let i = 0;
+					return scope.scope().map((scope) => {
+						i++;
+						const name = i.toString();
+
+						return io.scopeOutput({
+							id: i.toString(),
+							name: i.toString(),
+							scope(s) {
+								// TODO: We collapse all remaining nesting as we currently can't nest enums.
+								for (const [name, ty] of flattenCaptures(scope)) {
+									s.output({
+										id: name,
+										name,
+										type: ty,
+									});
+								}
+							},
+						});
+					});
+				};
 
 				return {
 					...base,
 					regex,
-					groupOutputs,
+					groupOutputs: collectCapture(result),
 				};
-			} catch {
+			} catch (err) {
 				if (io.previous) return io.previous;
 
 				return base;
@@ -2708,7 +2756,13 @@ export function pkg(core: Core) {
 					if (value === undefined)
 						throw new Error(`Group ${out.id} not found in regex result`);
 
-					ctx.setOutput(out, value);
+					if (out instanceof ScopeOutput) {
+						ctx.execScope(out, {
+							// TODO: We need to implement this!
+						});
+					} else {
+						ctx.setOutput(out, value);
+					}
 				}
 			} else {
 				throw new Error("Invalid regex!");

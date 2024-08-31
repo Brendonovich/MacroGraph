@@ -1,0 +1,16 @@
+{
+  "name": "regex-syntax-wasm",
+  "type": "module",
+  "description": "A WebAssembly version of the regex-syntax crate",
+  "version": "0.0.0",
+  "files": [
+    "regex_syntax_wasm_bg.wasm",
+    "regex_syntax_wasm.js",
+    "regex_syntax_wasm.d.ts"
+  ],
+  "main": "regex_syntax_wasm.js",
+  "types": "regex_syntax_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

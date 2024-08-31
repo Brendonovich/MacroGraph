@@ -20,6 +20,7 @@
 		"@macrograph/typesystem": "workspace:*",
 		"@macrograph/ui": "workspace:*",
 		"@macrograph/utils": "workspace:^",
+		"@macrograph/regex-syntax-wasm": "workspace:^",
 		"@octokit/auth-callback": "^4.0.0",
 		"@rspc/client": "0.0.0-main-6ed8cc98",
 		"@rspc/tauri": "0.0.0-main-6ed8cc98",
