@@ -444,6 +444,35 @@ function ProjectInterface() {
 											ctx.setState({ status: "idle" });
 										});
 									}}
+									onPasteClipboard={async () => {
+										const item = deserializeClipboardItem(
+											await readFromClipboard(),
+										);
+
+										if (item.type === "selection") {
+											const graph = currentGraph();
+											if (!graph) return;
+
+											const { model, state } = graph;
+
+											const mousePosition = toGraphSpace(
+												{
+													x: data().position.x - (rootBounds.left ?? 0),
+													y: data().position.y - (rootBounds.top ?? 0) + 40,
+												},
+												ctx.graphBounds,
+												state,
+											);
+
+											ctx.execute("pasteGraphSelection", {
+												graphId: model.id,
+												mousePosition,
+												selection: item,
+											});
+
+											ctx.setState({ status: "idle" });
+										}
+									}}
 									onSchemaClicked={(schema, targetSuggestion, extra) => {
 										const graphId = data().graph.id;
 										ctx.batch(() => {
@@ -675,34 +704,7 @@ function createKeydownShortcuts(
 			case "KeyV": {
 				if (!isCtrlEvent(e)) return;
 
-				let item = deserializeClipboardItem(await readFromClipboard());
-
-				switch (item.type) {
-					case "node": {
-						item = {
-							type: "selection",
-							origin: item.node.position,
-							nodes: [item.node],
-							commentBoxes: [],
-							connections: [],
-						};
-
-						break;
-					}
-					case "commentBox": {
-						item = {
-							type: "selection",
-							origin: item.commentBox.position,
-							nodes: item.nodes,
-							commentBoxes: [item.commentBox],
-							connections: item.connections,
-						};
-
-						break;
-					}
-					default:
-						break;
-				}
+				const item = deserializeClipboardItem(await readFromClipboard());
 
 				switch (item.type) {
 					case "selection": {

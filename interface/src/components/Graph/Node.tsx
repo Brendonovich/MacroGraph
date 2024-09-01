@@ -18,6 +18,11 @@ import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
 
+import {
+	nodeToClipboardItem,
+	writeClipboardItemToClipboard,
+} from "@macrograph/clipboard";
+import { toast } from "solid-sonner";
 import { config } from "../../ConfigDialog";
 import { useInterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
@@ -311,6 +316,16 @@ export const Node = (props: Props) => {
 													<kbd class="font-sans">]</kbd>
 												)}
 											</span> */}
+									</ContextMenuItem>
+									<ContextMenuItem
+										onSelect={() => {
+											writeClipboardItemToClipboard(
+												nodeToClipboardItem(node()),
+											);
+											toast("Node copied to clipboard");
+										}}
+									>
+										Copy
 									</ContextMenuItem>
 									<ContextMenuItem
 										onSelect={() => {

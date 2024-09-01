@@ -7,6 +7,11 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import { Show, createMemo, createRoot, createSignal, onMount } from "solid-js";
 
+import {
+	commentBoxToClipboardItem,
+	writeClipboardItemToClipboard,
+} from "@macrograph/clipboard";
+import { toast } from "solid-sonner";
 import type { SelectionItem } from "../../actions";
 import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
@@ -159,6 +164,18 @@ export function CommentBox(props: Props) {
 							<ContextMenuContent>
 								<ContextMenuItem onSelect={() => setEditing(true)}>
 									Rename
+								</ContextMenuItem>
+								<ContextMenuItem
+									onSelect={() => {
+										writeClipboardItemToClipboard(
+											commentBoxToClipboardItem(box(), (node) =>
+												interfaceCtx.nodeSizes.get(node),
+											),
+										);
+										toast("Comment Box copied to clipboard");
+									}}
+								>
+									Copy
 								</ContextMenuItem>
 								<ContextMenuItem
 									onSelect={() => {
