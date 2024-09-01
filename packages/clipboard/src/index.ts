@@ -64,7 +64,36 @@ export function serializeClipboardItem(
 }
 
 export function deserializeClipboardItem(input: string) {
-	return v.parse(ClipboardItem, JSON.parse(atob(input)));
+	let item = v.parse(ClipboardItem, JSON.parse(atob(input)));
+
+	switch (item.type) {
+		case "node": {
+			item = {
+				type: "selection",
+				origin: item.node.position,
+				nodes: [item.node],
+				commentBoxes: [],
+				connections: [],
+			};
+
+			break;
+		}
+		case "commentBox": {
+			item = {
+				type: "selection",
+				origin: item.commentBox.position,
+				nodes: item.nodes,
+				commentBoxes: [item.commentBox],
+				connections: item.connections,
+			};
+
+			break;
+		}
+		default:
+			break;
+	}
+
+	return item;
 }
 
 export async function readFromClipboard() {

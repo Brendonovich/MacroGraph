@@ -445,41 +445,13 @@ function ProjectInterface() {
 										});
 									}}
 									onPasteClipboard={async () => {
-										let item = deserializeClipboardItem(
+										const item = deserializeClipboardItem(
 											await readFromClipboard(),
 										);
-
-										switch (item.type) {
-											case "node": {
-												item = {
-													type: "selection",
-													origin: item.node.position,
-													nodes: [item.node],
-													commentBoxes: [],
-													connections: [],
-												};
-
-												break;
-											}
-											case "commentBox": {
-												item = {
-													type: "selection",
-													origin: item.commentBox.position,
-													nodes: item.nodes,
-													commentBoxes: [item.commentBox],
-													connections: item.connections,
-												};
-
-												break;
-											}
-											default:
-												break;
-										}
 
 										if (item.type === "selection") {
 											const graph = currentGraph();
 											if (!graph) return;
-											console.log("ping");
 
 											const { model, state } = graph;
 
@@ -491,7 +463,6 @@ function ProjectInterface() {
 												ctx.graphBounds,
 												state,
 											);
-											console.log("executing");
 
 											ctx.execute("pasteGraphSelection", {
 												graphId: model.id,
@@ -733,34 +704,7 @@ function createKeydownShortcuts(
 			case "KeyV": {
 				if (!isCtrlEvent(e)) return;
 
-				let item = deserializeClipboardItem(await readFromClipboard());
-
-				switch (item.type) {
-					case "node": {
-						item = {
-							type: "selection",
-							origin: item.node.position,
-							nodes: [item.node],
-							commentBoxes: [],
-							connections: [],
-						};
-
-						break;
-					}
-					case "commentBox": {
-						item = {
-							type: "selection",
-							origin: item.commentBox.position,
-							nodes: item.nodes,
-							commentBoxes: [item.commentBox],
-							connections: item.connections,
-						};
-
-						break;
-					}
-					default:
-						break;
-				}
+				const item = deserializeClipboardItem(await readFromClipboard());
 
 				switch (item.type) {
 					case "selection": {

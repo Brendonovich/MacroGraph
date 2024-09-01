@@ -7,16 +7,16 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import { Show, createMemo, createRoot, createSignal, onMount } from "solid-js";
 
-import type { SelectionItem } from "../../actions";
-import { useInterfaceContext } from "../../context";
-import { useGraphContext } from "./Context";
-import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
-import { handleSelectableItemMouseDown } from "./util";
 import {
 	commentBoxToClipboardItem,
 	writeClipboardItemToClipboard,
 } from "@macrograph/clipboard";
 import { toast } from "solid-sonner";
+import type { SelectionItem } from "../../actions";
+import { useInterfaceContext } from "../../context";
+import { useGraphContext } from "./Context";
+import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
+import { handleSelectableItemMouseDown } from "./util";
 
 interface Props {
 	box: CommentBoxModel;

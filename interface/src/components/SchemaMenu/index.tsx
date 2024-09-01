@@ -221,12 +221,12 @@ export function SchemaMenu(props: Props) {
 						>
 							Add Comment Box
 						</Item>
-						<Item
-							onPointerEnter={onPointerEnter}
-							onClick={props.onPasteClipboard}
-						>
-							Paste from Clipboard
-						</Item>
+						{/*<Item
+              onPointerEnter={onPointerEnter}
+              onClick={props.onPasteClipboard}
+            >
+              Paste from Clipboard
+            </Item>*/}
 					</Show>
 					<For each={sortedPackages()}>
 						{(p) => {
