@@ -14,212 +14,215 @@ import type { ResourceType } from "./Package";
 import { Variable, type VariableArgs } from "./Variable";
 
 export interface ProjectArgs {
-	core: Core;
+  core: Core;
 }
 
 export type ResourceTypeItem = {
-	id: number;
-	name: string;
+  id: number;
+  name: string;
 } & ({ sourceId: string | null } | { value: string });
 
 export type ResourceTypeEntry = {
-	items: Array<ResourceTypeItem>;
-	default: number | null;
+  items: Array<ResourceTypeItem>;
+  default: number | null;
 };
 
 export type ProjectEvent = "modified";
 
 export class Project {
-	core: Core;
-	graphs = new ReactiveMap<number, Graph>();
-	customEvents = new ReactiveMap<number, CustomEvent>();
-	customStructs = new ReactiveMap<number, CustomStruct>();
-	customEnums = new ReactiveMap<number, CustomEnum>();
-	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
-	variables: Array<Variable> = [];
-	name = "New Project";
-	events = createEventBus<ProjectEvent>();
+  core: Core;
+  graphs = new ReactiveMap<number, Graph>();
+  customEvents = new ReactiveMap<number, CustomEvent>();
+  customStructs = new ReactiveMap<number, CustomStruct>();
+  customEnums = new ReactiveMap<number, CustomEnum>();
+  resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
+  variables: Array<Variable> = [];
+  name = "New Project";
+  events = createEventBus<ProjectEvent>();
 
-	disableSave = false;
+  disableSave = false;
 
-	graphIdCounter = 0;
-	customEventIdCounter = 0;
-	customTypeIdCounter = 0;
-	idCounter = 0;
+  graphIdCounter = 0;
+  customEventIdCounter = 0;
+  customTypeIdCounter = 0;
+  idCounter = 0;
 
-	constructor(args: ProjectArgs) {
-		this.core = args.core;
+  graphOrder: Array<number> = [];
 
-		return createMutable(this);
-	}
+  constructor(args: ProjectArgs) {
+    this.core = args.core;
 
-	generateGraphId() {
-		return this.graphIdCounter++;
-	}
+    return createMutable(this);
+  }
 
-	generateCustomEventId() {
-		return this.customEventIdCounter++;
-	}
+  generateGraphId() {
+    return this.graphIdCounter++;
+  }
 
-	generateCustomTypeId() {
-		return this.customTypeIdCounter++;
-	}
+  generateCustomEventId() {
+    return this.customEventIdCounter++;
+  }
 
-	// getType(
-	// 	variant: "struct",
-	// 	data: Extract<
-	// 		z.infer<typeof SerializedType>,
-	// 		{ variant: "struct" }
-	// 	>["struct"],
-	// ): Option<Struct>;
-	// getType(
-	// 	variant: "enum",
-	// 	data: Extract<z.infer<typeof SerializedType>, { variant: "enum" }>["enum"],
-	// ): Option<Struct>;
-	getType<T extends "struct" | "enum">(
-		variant: T,
-		data:
-			| { variant: "package"; package: string; name: string }
-			| { variant: "custom"; id: number },
-	): Option<StructBase | EnumBase<any>> {
-		if (data.variant === "package") {
-			const pkg = Maybe(
-				this.core.packages.find((p) => p.name === data.package),
-			);
+  generateCustomTypeId() {
+    return this.customTypeIdCounter++;
+  }
 
-			if (variant === "struct")
-				return pkg.andThen((pkg) => Maybe(pkg.structs.get(data.name)));
-			return pkg.andThen((pkg) => Maybe(pkg.enums.get(data.name)));
-		}
+  // getType(
+  // 	variant: "struct",
+  // 	data: Extract<
+  // 		z.infer<typeof SerializedType>,
+  // 		{ variant: "struct" }
+  // 	>["struct"],
+  // ): Option<Struct>;
+  // getType(
+  // 	variant: "enum",
+  // 	data: Extract<z.infer<typeof SerializedType>, { variant: "enum" }>["enum"],
+  // ): Option<Struct>;
+  getType<T extends "struct" | "enum">(
+    variant: T,
+    data:
+      | { variant: "package"; package: string; name: string }
+      | { variant: "custom"; id: number },
+  ): Option<StructBase | EnumBase<any>> {
+    if (data.variant === "package") {
+      const pkg = Maybe(
+        this.core.packages.find((p) => p.name === data.package),
+      );
 
-		if (variant === "struct") return Maybe(this.customStructs.get(data.id));
-		return Maybe(this.customEnums.get(data.id));
-	}
+      if (variant === "struct")
+        return pkg.andThen((pkg) => Maybe(pkg.structs.get(data.name)));
+      return pkg.andThen((pkg) => Maybe(pkg.enums.get(data.name)));
+    }
 
-	graph(id: number) {
-		return this.graphs.get(id);
-	}
+    if (variant === "struct") return Maybe(this.customStructs.get(data.id));
+    return Maybe(this.customEnums.get(data.id));
+  }
 
-	createGraph(args?: { id?: number; name?: string }) {
-		const id = args?.id ?? this.generateGraphId();
+  graph(id: number) {
+    return this.graphs.get(id);
+  }
 
-		const graph = new Graph({
-			name: `Graph ${id}`,
-			id,
-			project: this,
-			...args,
-		});
+  createGraph(args?: { id?: number; name?: string }) {
+    const id = args?.id ?? this.generateGraphId();
 
-		this.graphs.set(id, graph);
+    const graph = new Graph({
+      name: `Graph ${id}`,
+      id,
+      project: this,
+      ...args,
+    });
 
-		return graph;
-	}
+    this.graphs.set(id, graph);
+    this.graphOrder.push(id);
 
-	createCustomEvent(args?: { id?: number }) {
-		const id = args?.id ?? this.generateCustomEventId();
+    return graph;
+  }
 
-		const event = new CustomEvent({
-			name: `Event ${id}`,
-			id,
-			project: this,
-		});
+  createCustomEvent(args?: { id?: number }) {
+    const id = args?.id ?? this.generateCustomEventId();
 
-		this.customEvents.set(id, event);
+    const event = new CustomEvent({
+      name: `Event ${id}`,
+      id,
+      project: this,
+    });
 
-		return event;
-	}
+    this.customEvents.set(id, event);
 
-	createCustomStruct(args?: { id?: number }) {
-		const id = args?.id ?? this.generateCustomTypeId();
+    return event;
+  }
 
-		const struct = new CustomStruct({
-			id,
-			project: this,
-			name: `Struct ${id}`,
-		});
+  createCustomStruct(args?: { id?: number }) {
+    const id = args?.id ?? this.generateCustomTypeId();
 
-		this.customStructs.set(id, struct);
+    const struct = new CustomStruct({
+      id,
+      project: this,
+      name: `Struct ${id}`,
+    });
 
-		return struct;
-	}
+    this.customStructs.set(id, struct);
 
-	createCustomEnum(args?: { id?: number }) {
-		const id = args?.id ?? this.generateCustomTypeId();
+    return struct;
+  }
 
-		const enm = new CustomEnum({
-			id,
-			project: this,
-			name: "New Enum",
-		});
+  createCustomEnum(args?: { id?: number }) {
+    const id = args?.id ?? this.generateCustomTypeId();
 
-		this.customEnums.set(id, enm);
+    const enm = new CustomEnum({
+      id,
+      project: this,
+      name: "New Enum",
+    });
 
-		return enm;
-	}
+    this.customEnums.set(id, enm);
 
-	generateId() {
-		return this.idCounter++;
-	}
+    return enm;
+  }
 
-	createResource(args: {
-		type: ResourceType<any, any>;
-		name: string;
-		id?: number;
-	}) {
-		const id = args.id ?? this.idCounter++;
-		const itemBase = {
-			id,
-			name: args.name,
-		};
+  generateId() {
+    return this.idCounter++;
+  }
 
-		let item: ResourceTypeItem;
+  createResource(args: {
+    type: ResourceType<any, any>;
+    name: string;
+    id?: number;
+  }) {
+    const id = args.id ?? this.idCounter++;
+    const itemBase = {
+      id,
+      name: args.name,
+    };
 
-		if ("sources" in args.type) {
-			item = {
-				...itemBase,
-				sourceId: args.type.sources(args.type.package)[0]?.id ?? null,
-			};
-		} else {
-			item = { ...itemBase, value: args.type.type.default() };
-		}
+    let item: ResourceTypeItem;
 
-		if (!this.resources.has(args.type)) {
-			const entry: ResourceTypeEntry = createMutable({
-				items: [item],
-				default: item.id,
-			});
-			this.resources.set(args.type, entry);
-			entry.default = id;
-		} else {
-			const entry = this.resources.get(args.type)!;
-			entry.items.push(item);
-		}
-	}
+    if ("sources" in args.type) {
+      item = {
+        ...itemBase,
+        sourceId: args.type.sources(args.type.package)[0]?.id ?? null,
+      };
+    } else {
+      item = { ...itemBase, value: args.type.type.default() };
+    }
 
-	createVariable(args: Omit<VariableArgs, "id" | "owner"> & { id?: number }) {
-		const id = args.id ?? this.generateId();
+    if (!this.resources.has(args.type)) {
+      const entry: ResourceTypeEntry = createMutable({
+        items: [item],
+        default: item.id,
+      });
+      this.resources.set(args.type, entry);
+      entry.default = id;
+    } else {
+      const entry = this.resources.get(args.type)!;
+      entry.items.push(item);
+    }
+  }
 
-		this.variables.push(new Variable({ ...args, id, owner: this }));
+  createVariable(args: Omit<VariableArgs, "id" | "owner"> & { id?: number }) {
+    const id = args.id ?? this.generateId();
 
-		return id;
-	}
+    this.variables.push(new Variable({ ...args, id, owner: this }));
 
-	setVariableValue(id: number, value: any) {
-		const variable = this.variables.find((v) => v.id === id);
-		if (variable) variable.value = value;
-	}
+    return id;
+  }
 
-	removeVariable(id: number) {
-		const index = this.variables.findIndex((v) => v.id === id);
-		if (index === -1) return;
+  setVariableValue(id: number, value: any) {
+    const variable = this.variables.find((v) => v.id === id);
+    if (variable) variable.value = value;
+  }
 
-		const variables = this.variables.splice(index, 1);
-		for (const v of variables) {
-			v.dispose();
-		}
-	}
+  removeVariable(id: number) {
+    const index = this.variables.findIndex((v) => v.id === id);
+    if (index === -1) return;
 
-	emit(event: ProjectEvent) {
-		this.events.emit(event);
-	}
+    const variables = this.variables.splice(index, 1);
+    for (const v of variables) {
+      v.dispose();
+    }
+  }
+
+  emit(event: ProjectEvent) {
+    this.events.emit(event);
+  }
 }
