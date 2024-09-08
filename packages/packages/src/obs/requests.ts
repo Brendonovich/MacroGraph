@@ -1,15 +1,14 @@
 import { JSONEnum, jsToJSON, jsonToJS } from "@macrograph/json";
 import { Maybe, None, type Option, Some } from "@macrograph/option";
-import {
-	type CreateIOFn,
-	type CreateNonEventSchema,
-	type DataInput,
-	type MergeFnProps,
-	type Package,
-	type PropertyDef,
-	type RunProps,
-	type SchemaProperties,
-	createStruct,
+import type {
+	CreateIOFn,
+	CreateNonEventSchema,
+	DataInput,
+	MergeFnProps,
+	Package,
+	PropertyDef,
+	RunProps,
+	SchemaProperties,
 } from "@macrograph/runtime";
 import { type InferEnum, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -17,60 +16,9 @@ import type OBSWebSocket from "obs-websocket-js";
 import type { EventTypes } from "obs-websocket-js";
 
 import type { Accessor } from "solid-js";
-import {
-	BoundsType,
-	MonitorType,
-	SceneItemTransform,
-	alignmentConversion,
-} from "./events";
+import { alignmentConversion } from "./events";
 import { defaultProperties } from "./resource";
-
-//missing availableRequests & supportedImageForamts Array<string>
-
-export const SceneItem = createStruct("Scene Item", (s) => ({
-	sceneItemId: s.field("ID", t.int()),
-	inputKind: s.field("Input Kind", t.option(t.string())),
-	isGroup: s.field("Is Group", t.bool()),
-	sceneItemBlendMode: s.field("Blend Mode", t.string()),
-	sceneItemEnabled: s.field("Enabled", t.bool()),
-	sceneItemIndex: s.field("Index", t.int()),
-	sceneItemLocked: s.field("Locked", t.bool()),
-	sceneItemTransform: s.field("Transform", t.struct(SceneItemTransform)),
-	sourceName: s.field("Source Name", t.string()),
-	sourceType: s.field("Source Type", t.string()),
-}));
-
-export const Filter = createStruct("Filter", (s) => ({
-	filterEnabled: s.field("Enabled", t.bool()),
-	filterIndex: s.field("Index", t.int()),
-	filterKind: s.field("Kind", t.string()),
-	filterName: s.field("Name", t.string()),
-	filterSettings: s.field("Settings", t.enum(JSONEnum)),
-}));
-
-export const Transition = createStruct("Transition", (s) => ({
-	transitionConfigurable: s.field("Configurable", t.bool()),
-	transitionFixed: s.field("Fixed", t.bool()),
-	transitionKind: s.field("Kind", t.string()),
-	transitionName: s.field("Name", t.string()),
-}));
-
-export const PropertyItem = createStruct("Property Item", (s) => ({
-	itemEnabled: s.field("Enabled", t.bool()),
-	itemName: s.field("Name", t.string()),
-	itemValue: s.field("Value", t.string()),
-}));
-
-export const Scene = createStruct("Scenes", (s) => ({
-	sceneName: s.field("Name", t.string()),
-	sceneIndex: s.field("Index", t.int()),
-}));
-
-export const InputInfo = createStruct("Input Info", (s) => ({
-	inputName: s.field("Input name", t.string()),
-	inputKind: s.field("Input Kind", t.string()),
-	unversionedInputKind: s.field("Unversioned Input Kind", t.string()),
-}));
+import type { Types } from "./types";
 
 interface SceneItemTransformInterface {
 	alignment: number;
@@ -93,7 +41,7 @@ interface SceneItemTransformInterface {
 	height: number;
 }
 
-export function register(pkg: Package<EventTypes>) {
+export function register(pkg: Package<EventTypes>, types: Types) {
 	function createOBSExecSchema<
 		TProperties extends Record<string, PropertyDef> = Record<string, never>,
 		TIO = void,
@@ -143,13 +91,6 @@ export function register(pkg: Package<EventTypes>) {
 			},
 		});
 	}
-
-	pkg.registerType(SceneItem);
-	pkg.registerType(Filter);
-	pkg.registerType(Transition);
-	pkg.registerType(PropertyItem);
-	pkg.registerType(Scene);
-	pkg.registerType(InputInfo);
 
 	const versionOutputs = [
 		{
@@ -1111,7 +1052,7 @@ export function register(pkg: Package<EventTypes>) {
 			inputs: io.dataOutput({
 				id: "inputs",
 				name: "Inputs",
-				type: t.list(t.struct(InputInfo)),
+				type: t.list(t.struct(types.InputInfo)),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -1125,7 +1066,7 @@ export function register(pkg: Package<EventTypes>) {
 			);
 
 			const inputs = data.inputs.map((input) =>
-				InputInfo.create({
+				types.InputInfo.create({
 					inputKind: input.inputKind as string,
 					inputName: input.inputName as string,
 					unversionedInputKind: input.unversionedInputKind as string,
@@ -1152,14 +1093,14 @@ export function register(pkg: Package<EventTypes>) {
 			inputs: io.dataOutput({
 				id: "inputs",
 				name: "Inputs",
-				type: t.list(t.struct(Scene)),
+				type: t.list(t.struct(types.Scene)),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetSceneList");
 
 			const scene = data.scenes.map((input) =>
-				Scene.create({
+				types.Scene.create({
 					sceneIndex: input.sceneIndex as number,
 					sceneName: input.sceneName as string,
 				}),
@@ -1512,7 +1453,7 @@ export function register(pkg: Package<EventTypes>) {
 			monitorType: io.dataOutput({
 				id: "monitorType",
 				name: "Monitor Type",
-				type: t.enum(MonitorType),
+				type: t.enum(types.MonitorType),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -1522,10 +1463,10 @@ export function register(pkg: Package<EventTypes>) {
 			ctx.setOutput(
 				io.monitorType,
 				data.monitorType === "OBS_MONITORING_TYPE_MONITOR_ONLY"
-					? MonitorType.variant("Monitor Only")
+					? types.MonitorType.variant("Monitor Only")
 					: data.monitorType === "OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT"
-						? MonitorType.variant("Monitor and Output")
-						: MonitorType.variant("None"),
+						? types.MonitorType.variant("Monitor and Output")
+						: types.MonitorType.variant("None"),
 			);
 		},
 	});
@@ -1541,7 +1482,7 @@ export function register(pkg: Package<EventTypes>) {
 			monitorType: io.dataInput({
 				id: "monitorType",
 				name: "Monitor Type",
-				type: t.enum(MonitorType),
+				type: t.enum(types.MonitorType),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -1628,7 +1569,7 @@ export function register(pkg: Package<EventTypes>) {
 			propertyItems: io.dataOutput({
 				id: "propertyItems",
 				name: "Property Items",
-				type: t.list(t.struct(PropertyItem)),
+				type: t.list(t.struct(types.PropertyItem)),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -1638,7 +1579,7 @@ export function register(pkg: Package<EventTypes>) {
 			});
 
 			const propertyItems = data.propertyItems.map((data) =>
-				PropertyItem.create({
+				types.PropertyItem.create({
 					itemEnabled: data.itemEnabled as boolean,
 					itemName: data.itemName as string,
 					itemValue: data.itemValue as string,
@@ -1701,7 +1642,7 @@ export function register(pkg: Package<EventTypes>) {
 			transitions: io.dataOutput({
 				id: "transitions",
 				name: "Transitions",
-				type: t.list(t.struct(Transition)),
+				type: t.list(t.struct(types.Transition)),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -1718,7 +1659,7 @@ export function register(pkg: Package<EventTypes>) {
 			ctx.setOutput(
 				io.transitions,
 				data.transitions.map((data) =>
-					Transition.create({
+					types.Transition.create({
 						transitionConfigurable: data.transitionConfigurable as boolean,
 						transitionFixed: data.transitionFixed as boolean,
 						transitionKind: data.transitionKind as string,
@@ -1890,7 +1831,7 @@ export function register(pkg: Package<EventTypes>) {
 			filters: io.dataOutput({
 				id: "filters",
 				name: "Filters",
-				type: t.list(t.struct(Filter)),
+				type: t.list(t.struct(types.Filter)),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -1899,7 +1840,7 @@ export function register(pkg: Package<EventTypes>) {
 			});
 
 			const filter = data.filters.map((data) =>
-				Filter.create({
+				types.Filter.create({
 					filterEnabled: data.filterEnabled as boolean,
 					filterIndex: data.filterIndex as number,
 					filterKind: data.filterKind as string,
@@ -2064,7 +2005,7 @@ export function register(pkg: Package<EventTypes>) {
 				filter: io.dataOutput({
 					id: "filter",
 					name: "Filter",
-					type: t.option(t.struct(Filter)),
+					type: t.option(t.struct(types.Filter)),
 				}),
 			};
 		},
@@ -2079,7 +2020,7 @@ export function register(pkg: Package<EventTypes>) {
 			ctx.setOutput(
 				io.filter,
 				Maybe(data).map((data) =>
-					Filter.create({
+					types.Filter.create({
 						filterEnabled: data.filterEnabled,
 						filterIndex: data.filterIndex,
 						filterKind: data.filterKind,
@@ -2216,7 +2157,7 @@ export function register(pkg: Package<EventTypes>) {
 			sceneItems: io.dataOutput({
 				id: "sceneItems",
 				name: "Scene Items",
-				type: t.list(t.struct(SceneItem)),
+				type: t.list(t.struct(types.SceneItem)),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -2228,7 +2169,7 @@ export function register(pkg: Package<EventTypes>) {
 				const sceneItemTransformObj: SceneItemTransformInterface =
 					data.sceneItemTransform as any;
 
-				return SceneItem.create({
+				return types.SceneItem.create({
 					inputKind: Maybe(data.inputKind as string),
 					isGroup: data.isGroup as boolean,
 					sceneItemBlendMode: data.sceneItemBlendMode as string,
@@ -2236,17 +2177,19 @@ export function register(pkg: Package<EventTypes>) {
 					sceneItemId: data.sceneItemId as number,
 					sceneItemIndex: data.sceneItemIndex as number,
 					sceneItemLocked: data.sceneItemLocked as boolean,
-					sceneItemTransform: SceneItemTransform.create({
+					sceneItemTransform: types.SceneItemTransform.create({
 						alignment: alignmentConversion(
 							sceneItemTransformObj.alignment as number,
+							types
 						),
 						boundsAlignment: alignmentConversion(
 							sceneItemTransformObj.boundsAlignment as number,
+							types
 						),
 						boundsHeight: sceneItemTransformObj.boundsHeight as number,
-						boundsType: BoundsType.variant(
+						boundsType: types.BoundsType.variant(
 							sceneItemTransformObj.boundsType as InferEnum<
-								typeof BoundsType
+								typeof types.BoundsType
 							>["variant"],
 						),
 						boundsWidth: sceneItemTransformObj.boundsWidth,
@@ -2459,7 +2402,7 @@ export function register(pkg: Package<EventTypes>) {
 			sceneItemTransform: io.dataOutput({
 				id: "sceneItemTransform",
 				name: "Scene Item Transform",
-				type: t.struct(SceneItemTransform),
+				type: t.struct(types.SceneItemTransform),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
@@ -2471,17 +2414,19 @@ export function register(pkg: Package<EventTypes>) {
 			const sceneItemTransformObj: SceneItemTransformInterface =
 				data.sceneItemTransform as any;
 
-			const transform = SceneItemTransform.create({
+			const transform = types.SceneItemTransform.create({
 				alignment: alignmentConversion(
 					sceneItemTransformObj.alignment as number,
+					types
 				),
 				boundsAlignment: alignmentConversion(
 					sceneItemTransformObj.boundsAlignment as number,
+					types
 				),
 				boundsHeight: sceneItemTransformObj.boundsHeight as number,
-				boundsType: BoundsType.variant(
+				boundsType: types.BoundsType.variant(
 					sceneItemTransformObj.boundsType as InferEnum<
-						typeof BoundsType
+						typeof types.BoundsType
 					>["variant"],
 				),
 				boundsWidth: sceneItemTransformObj.boundsWidth,

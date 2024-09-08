@@ -6,22 +6,25 @@ import * as requests from "./requests";
 
 import { type Ctx, createCtx } from "./ctx";
 import { OBSInstance } from "./resource";
+import { createTypes } from "./types";
 
 export type Pkg = Package<EventTypes, Ctx>;
 
 export function pkg(): Pkg {
-	const ctx = createCtx();
+  const ctx = createCtx();
 
-	const pkg = new Package<EventTypes, Ctx>({
-		name: "OBS Websocket",
-		ctx,
-		SettingsUI: () => import("./Settings"),
-	});
+  const pkg = new Package<EventTypes, Ctx>({
+    name: "OBS Websocket",
+    ctx,
+    SettingsUI: () => import("./Settings"),
+  });
 
-	events.register(pkg);
-	requests.register(pkg);
+  const types = createTypes(pkg);
 
-	pkg.registerResourceType(OBSInstance);
+  events.register(pkg, types);
+  requests.register(pkg, types);
 
-	return pkg;
+  pkg.registerResourceType(OBSInstance);
+
+  return pkg;
 }

@@ -1,12 +1,10 @@
 import { Maybe } from "@macrograph/option";
-import {
-	type Core,
-	type CreateEventSchema,
-	type Package,
-	type PropertyDef,
-	type SchemaProperties,
-	createEnum,
-	createStruct,
+import type {
+	Core,
+	CreateEventSchema,
+	Package,
+	PropertyDef,
+	SchemaProperties,
 } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
@@ -16,14 +14,10 @@ import { ReactiveMap } from "@solid-primitives/map";
 import type { Ctx } from "../ctx";
 import { Chatter, type Helix } from "../helix";
 import { defaultProperties } from "../resource";
-import {
-	OutcomesBegin,
-	OutcomesProgress,
-	PollChoice,
-	PredictionStatus,
-	TopPredictors,
-} from "./structs";
 import type { Events } from "./types";
+import type { Types } from "../types";
+
+export * from "./types";
 
 export function createEventSub(core: Core, helixClient: Helix) {
 	const sockets = new ReactiveMap<string, WebSocket>();
@@ -85,13 +79,7 @@ export function createEventSub(core: Core, helixClient: Helix) {
 	return { sockets, connectSocket, disconnectSocket };
 }
 
-export function register(pkg: Package, { eventSub }: Ctx) {
-	pkg.registerType(PollChoice);
-	pkg.registerType(OutcomesBegin);
-	pkg.registerType(OutcomesProgress);
-	pkg.registerType(TopPredictors);
-	pkg.registerType(PredictionStatus);
-
+export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 	function createEventSubEventSchema<
 		TEvent extends keyof Events,
 		TProperties extends Record<string, PropertyDef> = never,
@@ -140,8 +128,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			},
 		});
 	}
-
-	pkg.registerType(PredictionStatus);
 
 	createEventSubEventSchema({
 		name: "User Banned",
@@ -638,13 +624,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		},
 	});
 
-	const Emotes = createStruct("Emotes", (s) => ({
-		id: s.field("id", t.string()),
-		begin: s.field("begin", t.int()),
-		end: s.field("end", t.int()),
-	}));
-	pkg.registerType(Emotes);
-
 	createEventSubEventSchema({
 		name: "Channel Points Automatic Redemption Redeemed",
 		event: "channel.channel_points_automatic_reward_redemption.add",
@@ -680,7 +659,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			emotes: io.dataOutput({
 				id: "emotes",
 				name: "emotes",
-				type: t.option(t.list(t.struct(Emotes))),
+				type: t.option(t.list(t.struct(types.Emotes))),
 			}),
 		}),
 		run({ ctx, data, io }) {
@@ -694,7 +673,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				Maybe(
 					data.message.emotes
 						? data.message.emotes.map((emote) =>
-								Emotes.create({
+								types.Emotes.create({
 									id: emote.id,
 									begin: emote.begin,
 									end: emote.end,
@@ -780,12 +759,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		},
 	});
 
-	const PollBeginChoice = createStruct("Poll Begin Choice", (s) => ({
-		id: s.field("id", t.string()),
-		title: s.field("title", t.string()),
-	}));
-	pkg.registerType(PollBeginChoice);
-
 	createEventSubEventSchema({
 		name: "Channel Poll Begin",
 		event: "channel.poll.begin",
@@ -801,7 +774,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			choices: io.dataOutput({
 				id: "choices",
 				name: "Choices",
-				type: t.list(t.struct(PollBeginChoice)),
+				type: t.list(t.struct(types.PollBeginChoice)),
 			}),
 			channelPointVotingEnabled: io.dataOutput({
 				id: "channelPointVotingEnabled",
@@ -818,7 +791,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			ctx.setOutput(io.title, data.title);
 			ctx.setOutput(
 				io.choices,
-				data.choices.map((choice) => PollBeginChoice.create(choice)),
+				data.choices.map((choice) => types.PollBeginChoice.create(choice)),
 			);
 			ctx.setOutput(
 				io.channelPointVotingEnabled,
@@ -848,7 +821,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				choices: io.dataOutput({
 					id: "choices",
 					name: "Choices",
-					type: t.list(t.struct(PollChoice)),
+					type: t.list(t.struct(types.PollChoice)),
 				}),
 				channelPointVotingEnabled: io.dataOutput({
 					id: "channelPointVotingEnabled",
@@ -893,7 +866,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				choices: io.dataOutput({
 					id: "choices",
 					name: "Choices",
-					type: t.list(t.struct(PollChoice)),
+					type: t.list(t.struct(types.PollChoice)),
 				}),
 				channelPointVotingEnabled: io.dataOutput({
 					id: "channelPointVotingEnabled",
@@ -938,7 +911,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				outcomes: io.dataOutput({
 					id: "outcomes",
 					name: "Outcomes",
-					type: t.list(t.struct(OutcomesBegin)),
+					type: t.list(t.struct(types.OutcomesBegin)),
 				}),
 			};
 		},
@@ -965,7 +938,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				outcomes: io.dataOutput({
 					id: "outcomes",
 					name: "Outcomes",
-					type: t.list(t.struct(OutcomesProgress)),
+					type: t.list(t.struct(types.OutcomesProgress)),
 				}),
 			};
 		},
@@ -974,10 +947,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			ctx.setOutput(
 				io.outcomes,
 				data.outcomes.map((outcome) =>
-					OutcomesProgress.create({
+					types.OutcomesProgress.create({
 						...outcome,
 						top_predictors: outcome.top_predictors.map((predictor) =>
-							TopPredictors.create({
+							types.TopPredictors.create({
 								...predictor,
 								channel_points_won: Maybe(predictor.channel_points_won),
 							}),
@@ -1004,7 +977,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			outcomes: io.dataOutput({
 				id: "outcomes",
 				name: "Outcomes",
-				type: t.list(t.struct(OutcomesProgress)),
+				type: t.list(t.struct(types.OutcomesProgress)),
 			}),
 		}),
 		run({ ctx, data, io }) {
@@ -1012,10 +985,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			ctx.setOutput(
 				io.outcomes,
 				data.outcomes.map((outcome) =>
-					OutcomesProgress.create({
+					types.OutcomesProgress.create({
 						...outcome,
 						top_predictors: outcome.top_predictors.map((predictor) =>
-							TopPredictors.create({
+							types.TopPredictors.create({
 								...predictor,
 								channel_points_won: Maybe(predictor.channel_points_won),
 							}),
@@ -1043,7 +1016,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				outcomes: io.dataOutput({
 					id: "outcomes",
 					name: "Outcomes",
-					type: t.list(t.struct(OutcomesProgress)),
+					type: t.list(t.struct(types.OutcomesProgress)),
 				}),
 				winningOutcomeId: io.dataOutput({
 					id: "winningOutcomeId",
@@ -1053,7 +1026,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				status: io.dataOutput({
 					id: "status",
 					name: "Status",
-					type: t.enum(PredictionStatus),
+					type: t.enum(types.PredictionStatus),
 				}),
 			};
 		},
@@ -1062,10 +1035,10 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			ctx.setOutput(
 				io.outcomes,
 				data.outcomes.map((outcome) =>
-					OutcomesProgress.create({
+					types.OutcomesProgress.create({
 						...outcome,
 						top_predictors: outcome.top_predictors.map((predictor) =>
-							TopPredictors.create({
+							types.TopPredictors.create({
 								...predictor,
 								channel_points_won: Maybe(predictor.channel_points_won),
 							}),
@@ -1074,33 +1047,31 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 				),
 			);
 			ctx.setOutput(io.winningOutcomeId, Maybe(data.winning_outcome_id));
-			ctx.setOutput(io.status, PredictionStatus.variant(data.status));
+			ctx.setOutput(io.status, types.PredictionStatus.variant(data.status));
 			ctx.exec(io.exec);
 		},
 	});
 
-	const HypeTrainContributionTypeEnum = createEnum(
+	const HypeTrainContributionTypeEnum = pkg.createEnum(
 		"Hype Train Contribution Type",
 		(e) => [e.variant("bits"), e.variant("subscription"), e.variant("other")],
 	);
 
-	const TopContribution = createStruct("Contribution", (s) => ({
+	const TopContribution = pkg.createStruct("Contribution", (s) => ({
 		user_id: s.field("User ID", t.string()),
 		user_login: s.field("User Login", t.string()),
 		user_name: s.field("User Name", t.string()),
 		type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
 		total: s.field("Total", t.int()),
 	}));
-	pkg.registerType(TopContribution);
 
-	const LastContribute = createStruct("Contribution", (s) => ({
+	const LastContribute = pkg.createStruct("Contribution", (s) => ({
 		user_id: s.field("User ID", t.string()),
 		user_login: s.field("User Login", t.string()),
 		user_name: s.field("User Name", t.string()),
 		type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
 		total: s.field("Total", t.int()),
 	}));
-	pkg.registerType(LastContribute);
 
 	createEventSubEventSchema({
 		name: "Channel Hype Train Begin",
@@ -2054,14 +2025,13 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		},
 	});
 
-	const SubStruct = createStruct("Sub", (s) => ({
+	const SubStruct = pkg.createStruct("Sub", (s) => ({
 		sub_Tier: s.field("Sub Tier", t.string()),
 		is_prime: s.field("Is Prime", t.bool()),
 		duration_months: s.field("Duration Months", t.int()),
 	}));
-	pkg.registerType(SubStruct);
 
-	const ReSubStruct = createStruct("Resub", (s) => ({
+	const ReSubStruct = pkg.createStruct("Resub", (s) => ({
 		sub_tier: s.field("Sub Tier", t.string()),
 		is_prime: s.field("Is Prime", t.bool()),
 		is_gift: s.field("Is Gift", t.bool()),
@@ -2073,9 +2043,8 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
 		gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
 	}));
-	pkg.registerType(ReSubStruct);
 
-	const SubGiftStruct = createStruct("Gift Sub", (s) => ({
+	const SubGiftStruct = pkg.createStruct("Gift Sub", (s) => ({
 		sub_tier: s.field("Sub Tier", t.string()),
 		cumulative_total: s.field("Cumulative Months", t.option(t.int())),
 		duration_months: s.field("Duration Months", t.int()),
@@ -2084,104 +2053,93 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		recipient_user_login: s.field("Recipient User Login", t.string()),
 		community_gift_id: s.field("Community Gift ID", t.option(t.string())),
 	}));
-	pkg.registerType(SubGiftStruct);
 
-	const CommunitySubGiftStruct = createStruct("Community Gift Sub", (s) => ({
-		sub_tier: s.field("Sub Tier", t.string()),
-		id: s.field("ID", t.string()),
-		total: s.field("Total", t.int()),
-		cumulative_total: s.field("Cumulative Total", t.option(t.int())),
-	}));
-	pkg.registerType(CommunitySubGiftStruct);
+	const CommunitySubGiftStruct = pkg.createStruct(
+		"Community Gift Sub",
+		(s) => ({
+			sub_tier: s.field("Sub Tier", t.string()),
+			id: s.field("ID", t.string()),
+			total: s.field("Total", t.int()),
+			cumulative_total: s.field("Cumulative Total", t.option(t.int())),
+		}),
+	);
 
-	const GiftPaidUpgradeStruct = createStruct("Gift Paid Upgrade", (s) => ({
+	const GiftPaidUpgradeStruct = pkg.createStruct("Gift Paid Upgrade", (s) => ({
 		gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
 		gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
 		gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
 		gifter_user_login: s.field("Gifter User Login", t.option(t.string())),
 	}));
-	pkg.registerType(GiftPaidUpgradeStruct);
 
-	const RaidStruct = createStruct("Raid", (s) => ({
+	const RaidStruct = pkg.createStruct("Raid", (s) => ({
 		user_id: s.field("User ID", t.string()),
 		user_name: s.field("UserName", t.string()),
 		user_login: s.field("User Login", t.string()),
 		viewer_count: s.field("Viewer Count", t.int()),
 		profile_image_url: s.field("Profile Image URL", t.string()),
 	}));
-	pkg.registerType(RaidStruct);
 
-	const PayItForwardStruct = createStruct("Pay It Forward", (s) => ({
+	const PayItForwardStruct = pkg.createStruct("Pay It Forward", (s) => ({
 		gifter_is_anonymous: s.field("Gifter Is Anonymous", t.bool()),
 		gifter_user_id: s.field("Gifter User ID", t.option(t.string())),
 		gifter_user_name: s.field("Gifter UserName", t.option(t.string())),
 		gifter_user_login: s.field("Gifter UserLogin", t.option(t.string())),
 	}));
-	pkg.registerType(PayItForwardStruct);
 
-	const AmountStruct = createStruct("Amount", (s) => ({
+	const AmountStruct = pkg.createStruct("Amount", (s) => ({
 		value: s.field("Value", t.int()),
 		decimal_places: s.field("Decimal Places", t.int()),
 		currency: s.field("Currency", t.string()),
 	}));
-	pkg.registerType(AmountStruct);
 
-	const CharityDonationStruct = createStruct("Charity Donation", (s) => ({
+	const CharityDonationStruct = pkg.createStruct("Charity Donation", (s) => ({
 		charity_name: s.field("Charity Name", t.string()),
 		amount: s.field("Gifter User ID", t.struct(AmountStruct)),
 	}));
-	pkg.registerType(CharityDonationStruct);
 
-	const BroadcasterInfoStruct = createStruct("Broadcaster", (s) => ({
+	const BroadcasterInfoStruct = pkg.createStruct("Broadcaster", (s) => ({
 		broadcaster_user_id: s.field("User ID", t.string()),
 		broadcaster_user_name: s.field("UserName", t.string()),
 		broadcaster_user_login: s.field("User Login", t.string()),
 	}));
-	pkg.registerType(BroadcasterInfoStruct);
 
-	const EmoteStruct = createStruct("Emote", (s) => ({
+	const EmoteStruct = pkg.createStruct("Emote", (s) => ({
 		id: s.field("ID", t.string()),
 		emote_set_id: s.field("Emote Set ID", t.string()),
 		owner_id: s.field("Owner ID", t.string()),
 		format: s.field("Format", t.list(t.string())),
 	}));
-	pkg.registerType(EmoteStruct);
 
-	const MentionStruct = createStruct("Mention", (s) => ({
+	const MentionStruct = pkg.createStruct("Mention", (s) => ({
 		user_id: s.field("User ID", t.string()),
 		user_name: s.field("UserName", t.string()),
 		user_login: s.field("User Login", t.string()),
 	}));
-	pkg.registerType(MentionStruct);
 
-	const CheermoteStruct = createStruct("Cheermote", (s) => ({
+	const CheermoteStruct = pkg.createStruct("Cheermote", (s) => ({
 		prefix: s.field("Prefix", t.string()),
 		bits: s.field("Bits", t.int()),
 		tier: s.field("Tier", t.int()),
 	}));
-	pkg.registerType(CheermoteStruct);
 
-	const FragmentsStruct = createStruct("MessageFragment", (s) => ({
+	const FragmentsStruct = pkg.createStruct("MessageFragment", (s) => ({
 		type: s.field("Type", t.option(t.string())),
 		text: s.field("Text", t.option(t.string())),
 		cheermote: s.field("Cheermote", t.option(t.struct(CheermoteStruct))),
 		emote: s.field("Emote", t.option(t.struct(EmoteStruct))),
 		mention: s.field("Mention", t.option(t.struct(MentionStruct))),
 	}));
-	pkg.registerType(FragmentsStruct);
 
-	const BadgesStruct = createStruct("Badges", (s) => ({
+	const BadgesStruct = pkg.createStruct("Badges", (s) => ({
 		set_id: s.field("Set ID", t.string()),
 		id: s.field("ID", t.string()),
 		info: s.field("Info", t.string()),
 	}));
-	pkg.registerType(BadgesStruct);
 
-	const MessageStruct = createStruct("Message", (s) => ({
+	const MessageStruct = pkg.createStruct("Message", (s) => ({
 		text: s.field("Text", t.string()),
 		fragments: s.field("Fragments", t.list(t.struct(FragmentsStruct))),
 	}));
-	pkg.registerType(MessageStruct);
 
 	interface Badge {
 		set_id: string;
@@ -2216,7 +2174,7 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 		user_login: string;
 	}
 
-	const ChannelChatNotificationEnum = createEnum(
+	const ChannelChatNotificationEnum = pkg.createEnum(
 		"Channel Chat Notification",
 		(e) => [
 			e.variant("Sub", {
@@ -2254,7 +2212,6 @@ export function register(pkg: Package, { eventSub }: Ctx) {
 			}),
 		],
 	);
-	pkg.registerType(ChannelChatNotificationEnum);
 
 	createEventSubEventSchema({
 		name: "Channel Chat Notification",

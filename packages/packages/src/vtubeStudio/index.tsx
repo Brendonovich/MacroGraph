@@ -3,20 +3,23 @@ import { Package } from "@macrograph/runtime";
 import { createCtx } from "./ctx";
 import { requests } from "./requests";
 import { VTubeStudioInstance } from "./resource";
+import { createTypes } from "./types";
 
 export type Pkg = ReturnType<typeof pkg>;
 export function pkg() {
-	const ctx = createCtx();
+  const ctx = createCtx();
 
-	const pkg = new Package({
-		name: "VTube Studio",
-		ctx,
-		SettingsUI: () => import("./Settings"),
-	});
+  const pkg = new Package({
+    name: "VTube Studio",
+    ctx,
+    SettingsUI: () => import("./Settings"),
+  });
 
-	pkg.registerResourceType(VTubeStudioInstance);
+  pkg.registerResourceType(VTubeStudioInstance);
 
-	requests(pkg);
+  const types = createTypes(pkg);
 
-	return pkg;
+  requests(pkg, types);
+
+  return pkg;
 }
