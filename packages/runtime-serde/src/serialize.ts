@@ -118,7 +118,14 @@ export function serializeCustomStruct(
   return {
     id: s.id,
     name: s.name,
-    fields: Object.values(s.fields).map(serializeCustomStructField),
+    fields: s.fieldOrder
+      .map((id) => {
+        const field = s.fields[id];
+        if (!field) return;
+
+        return serializeCustomStructField(field);
+      })
+      .filter(Boolean),
     fieldIdCounter: s.fieldIdCounter,
   };
 }
@@ -145,12 +152,19 @@ export function serializeCustomEnum(
 }
 
 export function serializeCustomEnumVariant(
-  v: EnumVariant<string, EnumVariantFields | null>,
+  v: runtime.CustomEnumVariant<string, EnumVariantFields>,
 ): v.InferInput<typeof serde.CustomEnumVariant> {
   return {
     id: v.id,
     display: v.name,
-    fields: Object.values(v.fields ?? {}).map(serializeField),
+    fields: v.fieldOrder
+      .map((id) => {
+        const field = v.fields[id];
+        if (!field) return;
+
+        return serializeField(field);
+      })
+      .filter(Boolean),
     fieldIdCounter: v.fieldIdCounter,
   };
 }

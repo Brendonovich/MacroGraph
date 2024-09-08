@@ -1,89 +1,98 @@
 import {
-	EnumBase,
-	EnumVariant,
-	type EnumVariantFields,
-	Field,
-	t,
+  EnumBase,
+  EnumVariant,
+  type EnumVariantFields,
+  Field,
+  t,
 } from "@macrograph/typesystem";
 import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";
 
 export type CustomEnumVariants = [
-	one: CustomEnumVariant<string, EnumVariantFields>,
-	...variant: CustomEnumVariant<string, EnumVariantFields>[],
+  one: CustomEnumVariant<string, EnumVariantFields>,
+  ...variant: CustomEnumVariant<string, EnumVariantFields>[],
 ];
 
 export class CustomEnum extends EnumBase<CustomEnumVariants> {
-	id: number;
-	name: string;
-	project: Project;
-	variants: CustomEnumVariants;
+  id: number;
+  name: string;
+  project: Project;
+  variants: CustomEnumVariants;
 
-	variantIdCounter = 0;
+  variantIdCounter = 0;
 
-	constructor(args: {
-		id: number;
-		project: Project;
-		name?: string;
-		variants?: CustomEnumVariants;
-	}) {
-		super();
+  constructor(args: {
+    id: number;
+    project: Project;
+    name?: string;
+    variants?: CustomEnumVariants;
+  }) {
+    super();
 
-		this.id = args.id;
-		this.project = args.project;
-		this.name = args?.name ?? "";
-		this.variants = createMutable(
-			args?.variants ?? [new CustomEnumVariant("New Variant", {})],
-		);
-		this.source = { variant: "custom", id: this.id };
+    this.id = args.id;
+    this.project = args.project;
+    this.name = args?.name ?? "";
+    this.variants = createMutable(
+      args?.variants ?? [new CustomEnumVariant("New Variant", {})],
+    );
+    this.source = { variant: "custom", id: this.id };
 
-		return createMutable(this);
-	}
+    return createMutable(this);
+  }
 
-	variant(id: string) {
-		return this.variants.find((variant) => variant.id === id);
-	}
+  variant(id: string) {
+    return this.variants.find((variant) => variant.id === id);
+  }
 
-	createVariant(args?: { id?: string }) {
-		const id = (args?.id ?? this.variantIdCounter++).toString();
+  createVariant(args?: { id?: string }) {
+    const id = (args?.id ?? this.variantIdCounter++).toString();
 
-		this.variants.push(new CustomEnumVariant(id, {}, "New Variant"));
+    this.variants.push(new CustomEnumVariant(id, {}, "New Variant"));
 
-		return id;
-	}
+    return id;
+  }
 
-	removeVariant(id: string) {
-		const index = this.variants.findIndex((variant) => variant.id === id);
-		if (index === -1) return;
+  removeVariant(id: string) {
+    const index = this.variants.findIndex((variant) => variant.id === id);
+    if (index === -1) return;
 
-		this.variants.splice(index, 1);
-	}
+    this.variants.splice(index, 1);
+  }
 }
 export class CustomEnumVariant<
-	Id extends string,
-	Fields extends EnumVariantFields,
+  Id extends string,
+  Fields extends EnumVariantFields,
 > extends EnumVariant<Id, Fields> {
-	field(id: string) {
-		return this.fields[id];
-	}
+  fieldOrder: Array<string> = [];
 
-	createField(args?: { id?: string }) {
-		const id = (args?.id ?? this.fieldIdCounter++).toString();
+  field(id: string) {
+    return this.fields[id];
+  }
 
-		if (this.fields)
-			(this.fields[id] as any) = new Field(id, t.string(), "New Field");
+  createField(args?: { id?: string }) {
+    const id = (args?.id ?? this.fieldIdCounter++).toString();
 
-		return id;
-	}
+    if (this.fields) {
+      (this.fields[id] as any) = new Field(id, t.string(), "New Field");
+      this.fieldOrder.push(id);
+    }
 
-	removeField(id: string) {
-		delete this.fields[id];
-	}
+    return id;
+  }
 
-	editFieldType(id: string, type: t.Any) {
-		const field = this.fields[id];
-		if (!field) return;
-		field.type = type;
-	}
+  removeField(id: string) {
+    delete this.fields[id];
+    const index = this.fieldOrder.indexOf(id);
+    if (index > -1) {
+      this.fieldOrder.splice(index, 1);
+      return index;
+    }
+  }
+
+  editFieldType(id: string, type: t.Any) {
+    const field = this.fields[id];
+    if (!field) return;
+    field.type = type;
+  }
 }

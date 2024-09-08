@@ -19,6 +19,7 @@ import {
 import {
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuRenameItem,
 } from "../../components/Graph/ContextMenu";
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
@@ -108,101 +109,78 @@ export function Graphs(props: Props) {
                 <li class="group/item gap-1">
                   <Dialog open={deleteOpen()} onOpenChange={setDeleteOpen}>
                     <InlineTextEditorContext>
-                      <Show when>
-                        {(_) => {
-                          const inlineEditorContext = useInlineTextEditorCtx()!;
-
-                          return (
-                            <ContextMenu placement="bottom-start">
-                              <InlineTextEditor<ValidComponent>
-                                as={(asProps) => (
-                                  <ContextMenu.Trigger<"button">
-                                    {...asProps}
-                                    as="button"
-                                    type="button"
-                                    onClick={() => props.onGraphClicked(graph)}
-                                  />
-                                )}
-                                selected={props.currentGraph === graph.id}
-                                value={graph.name}
-                                onChange={(value) => {
-                                  interfaceCtx.execute("setGraphName", {
+                      <ContextMenu placement="bottom-start">
+                        <InlineTextEditor<ValidComponent>
+                          as={(asProps) => (
+                            <ContextMenu.Trigger<"button">
+                              {...asProps}
+                              as="button"
+                              type="button"
+                              onClick={() => props.onGraphClicked(graph)}
+                            />
+                          )}
+                          selected={props.currentGraph === graph.id}
+                          value={graph.name}
+                          onChange={(value) => {
+                            interfaceCtx.execute("setGraphName", {
+                              graphId: graph.id,
+                              name: value,
+                            });
+                          }}
+                        />
+                        <ContextMenuContent>
+                          <ContextMenuRenameItem />
+                          <ContextMenuItem
+                            onSelect={() => {
+                              writeClipboardItemToClipboard(
+                                graphToClipboardItem(graph),
+                              );
+                            }}
+                          >
+                            <IconTablerCopy />
+                            Copy
+                          </ContextMenuItem>
+                          <Show when={!isSearching()}>
+                            <Show when={i() !== 0}>
+                              <ContextMenuItem
+                                onSelect={() =>
+                                  interfaceCtx.execute("moveGraphToIndex", {
                                     graphId: graph.id,
-                                    name: value,
-                                  });
-                                }}
-                              />
-                              <ContextMenuContent>
-                                <ContextMenuItem
-                                  onSelect={() =>
-                                    inlineEditorContext.setEditing(true)
-                                  }
-                                >
-                                  <IconAntDesignEditOutlined /> Rename
-                                </ContextMenuItem>
-                                <ContextMenuItem
-                                  onSelect={() => {
-                                    writeClipboardItemToClipboard(
-                                      graphToClipboardItem(graph),
-                                    );
-                                  }}
-                                >
-                                  <IconTablerCopy />
-                                  Copy
-                                </ContextMenuItem>
-                                <Show when={!isSearching()}>
-                                  <Show when={i() !== 0}>
-                                    <ContextMenuItem
-                                      onSelect={() =>
-                                        interfaceCtx.execute(
-                                          "moveGraphToIndex",
-                                          {
-                                            graphId: graph.id,
-                                            currentIndex: i(),
-                                            newIndex: i() - 1,
-                                          },
-                                        )
-                                      }
-                                    >
-                                      <IconMaterialSymbolsArrowDropUpRounded class="transform scale-150" />
-                                      Move Up
-                                    </ContextMenuItem>
-                                  </Show>
-                                  <Show
-                                    when={i() !== filteredGraphs().length - 1}
-                                  >
-                                    <ContextMenuItem
-                                      onSelect={() =>
-                                        interfaceCtx.execute(
-                                          "moveGraphToIndex",
-                                          {
-                                            graphId: graph.id,
-                                            currentIndex: i(),
-                                            newIndex: i() + 1,
-                                          },
-                                        )
-                                      }
-                                    >
-                                      <IconMaterialSymbolsArrowDropDownRounded class="transform scale-150" />
-                                      Move Down
-                                    </ContextMenuItem>
-                                  </Show>
-                                </Show>
-
-                                <ContextMenuItem
-                                  class="text-red-500"
-                                  onSelect={() => {
-                                    setDeleteOpen(true);
-                                  }}
-                                >
-                                  <IconAntDesignDeleteOutlined />
-                                  Delete
-                                </ContextMenuItem>
-                              </ContextMenuContent>
-                            </ContextMenu>
-                          );
-                        }}
-                      </Show>
+                                    currentIndex: i(),
+                                    newIndex: i() - 1,
+                                  })
+                                }
+                              >
+                                <IconMaterialSymbolsArrowDropUpRounded class="transform scale-150" />
+                                Move Up
+                              </ContextMenuItem>
+                            </Show>
+                            <Show when={i() !== filteredGraphs().length - 1}>
+                              <ContextMenuItem
+                                onSelect={() =>
+                                  interfaceCtx.execute("moveGraphToIndex", {
+                                    graphId: graph.id,
+                                    currentIndex: i(),
+                                    newIndex: i() + 1,
+                                  })
+                                }
+                              >
+                                <IconMaterialSymbolsArrowDropDownRounded class="transform scale-150" />
+                                Move Down
+                              </ContextMenuItem>
+                            </Show>
+                          </Show>
+                          <ContextMenuItem
+                            class="text-red-500"
+                            onSelect={() => {
+                              setDeleteOpen(true);
+                            }}
+                          >
+                            <IconAntDesignDeleteOutlined />
+                            Delete
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
                     </InlineTextEditorContext>
                     <Dialog.Portal>
                       <Dialog.Overlay class="absolute inset-0 bg-black/40" />

@@ -22,6 +22,7 @@ import {
   splitIORef,
 } from "@macrograph/runtime";
 import {
+  createDeferrer,
   deserializeCommentBox,
   deserializeConnections,
   deserializeCustomEnum,
@@ -942,10 +943,13 @@ export const historyActions = (core: Core, editor: EditorState) => ({
       core.project.customStructs.delete(entry.structId);
     },
     rewind(entry) {
+      const deferrer = createDeferrer();
       const struct = deserializeCustomStruct(
         core.project,
         v.parse(serde.CustomStruct, entry.data),
+        deferrer,
       );
+      deferrer.run();
 
       core.project.customStructs.set(entry.structId, struct);
     },
@@ -1087,9 +1091,11 @@ export const historyActions = (core: Core, editor: EditorState) => ({
       core.project.customEnums.delete(entry.enumId);
     },
     rewind(entry) {
+      const deferrer = createDeferrer();
       const enm = deserializeCustomEnum(
         core.project,
         v.parse(serde.CustomEnum, entry.data),
+        deferrer,
       );
 
       core.project.customEnums.set(entry.enumId, enm);
@@ -2055,23 +2061,152 @@ export const historyActions = (core: Core, editor: EditorState) => ({
       return input;
     },
     perform(entry) {
-      if (entry.newIndex < entry.currentIndex) {
-        core.project.graphOrder.splice(entry.currentIndex, 1);
-        core.project.graphOrder.splice(entry.newIndex, 0, entry.graphId);
-      } else {
-        console.log(entry);
-        core.project.graphOrder.splice(entry.currentIndex, 1);
-        core.project.graphOrder.splice(entry.newIndex, 0, entry.graphId);
-      }
+      core.project.graphOrder.splice(entry.currentIndex, 1);
+      core.project.graphOrder.splice(entry.newIndex, 0, entry.graphId);
     },
     rewind(entry) {
-      if (entry.newIndex < entry.currentIndex) {
-        core.project.graphOrder.splice(entry.newIndex, 0, entry.graphId);
-        core.project.graphOrder.splice(entry.currentIndex, 1);
-      } else {
-        core.project.graphOrder.splice(entry.currentIndex, 1);
-        core.project.graphOrder.splice(entry.newIndex, 0, entry.graphId);
-      }
+      core.project.graphOrder.splice(entry.newIndex, 1);
+      core.project.graphOrder.splice(entry.currentIndex, 0, entry.graphId);
+    },
+  }),
+  moveCustomEventFieldToIndex: historyAction({
+    prepare(input: {
+      eventId: number;
+      fieldId: string;
+      currentIndex: number;
+      newIndex: number;
+    }) {
+      const event = core.project.customEvents.get(input.eventId);
+      if (!event) return;
+
+      const field = event.field(input.fieldId);
+      if (!field) return;
+      if (event.fields[input.currentIndex] !== field) return;
+      if (input.currentIndex === input.newIndex) return;
+
+      return input;
+    },
+    perform(entry) {
+      const event = core.project.customEvents.get(entry.eventId);
+      if (!event) return;
+
+      const [field] = event.fields.splice(entry.currentIndex, 1);
+      event.fields.splice(entry.newIndex, 0, field!);
+    },
+    rewind(entry) {
+      const event = core.project.customEvents.get(entry.eventId);
+      if (!event) return;
+
+      const [field] = event.fields.splice(entry.currentIndex, 1);
+      event.fields.splice(entry.newIndex, 0, field!);
+    },
+  }),
+  moveCustomStructFieldToIndex: historyAction({
+    prepare(input: {
+      structId: number;
+      fieldId: string;
+      currentIndex: number;
+      newIndex: number;
+    }) {
+      const struct = core.project.customStructs.get(input.structId);
+      if (!struct) return;
+
+      const field = struct.fields[input.fieldId];
+      if (!field) return;
+      if (struct.fieldOrder[input.currentIndex] !== field.id) return;
+      if (input.currentIndex === input.newIndex) return;
+
+      return input;
+    },
+    perform(entry) {
+      const struct = core.project.customStructs.get(entry.structId);
+      if (!struct) return;
+
+      struct.fieldOrder.splice(entry.currentIndex, 1);
+      struct.fieldOrder.splice(entry.newIndex, 0, entry.fieldId);
+    },
+    rewind(entry) {
+      const struct = core.project.customStructs.get(entry.structId);
+      if (!struct) return;
+
+      struct.fieldOrder.splice(entry.newIndex, 1);
+      struct.fieldOrder.splice(entry.currentIndex, 0, entry.fieldId);
+    },
+  }),
+  moveCustomEnumVariantToIndex: historyAction({
+    prepare(input: {
+      enumId: number;
+      variantId: string;
+      currentIndex: number;
+      newIndex: number;
+    }) {
+      if (input.currentIndex === input.newIndex) return;
+
+      const enm = core.project.customEnums.get(input.enumId);
+      if (!enm) return;
+
+      const variant = enm.variants[input.currentIndex];
+      if (!variant) return;
+      if (variant.id !== input.variantId) return;
+
+      return input;
+    },
+    perform(entry) {
+      const enm = core.project.customEnums.get(entry.enumId);
+      if (!enm) return;
+
+      const [variant] = enm.variants.splice(entry.currentIndex, 1);
+      enm.variants.splice(entry.newIndex, 0, variant!);
+    },
+    rewind(entry) {
+      const enm = core.project.customEnums.get(entry.enumId);
+      if (!enm) return;
+
+      const [variant] = enm.variants.splice(entry.newIndex, 1);
+      enm.variants.splice(entry.currentIndex, 0, variant!);
+    },
+  }),
+  moveCustomEnumVariantFieldToIndex: historyAction({
+    prepare(input: {
+      enumId: number;
+      variantId: string;
+      fieldId: string;
+      currentIndex: number;
+      newIndex: number;
+    }) {
+      const enm = core.project.customEnums.get(input.enumId);
+      if (!enm) return;
+
+      const variant = enm.variant(input.variantId);
+      if (!variant) return;
+
+      const field = variant.fields[input.fieldId];
+      if (!field) return;
+
+      if (variant.fieldOrder[input.currentIndex] !== field.id) return;
+      if (input.currentIndex === input.newIndex) return;
+
+      return input;
+    },
+    perform(entry) {
+      const enm = core.project.customEnums.get(entry.enumId);
+      if (!enm) return;
+
+      const variant = enm.variant(entry.variantId);
+      if (!variant) return;
+
+      variant.fieldOrder.splice(entry.currentIndex, 1);
+      variant.fieldOrder.splice(entry.newIndex, 0, entry.fieldId);
+    },
+    rewind(entry) {
+      const enm = core.project.customEnums.get(entry.enumId);
+      if (!enm) return;
+
+      const variant = enm.variant(entry.variantId);
+      if (!variant) return;
+
+      variant.fieldOrder.splice(entry.newIndex, 1);
+      variant.fieldOrder.splice(entry.currentIndex, 0, entry.fieldId);
     },
   }),
 });

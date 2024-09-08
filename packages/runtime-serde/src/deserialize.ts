@@ -152,6 +152,7 @@ export function deserializeCustomStruct(
   });
 
   struct.fieldIdCounter = data.fieldIdCounter;
+  struct.fieldOrder = data.fields.map((f) => f.id);
 
   deferrer.defer(() => {
     for (const field of data.fields) {
@@ -196,6 +197,7 @@ export function deserializeCustomEnumVariant(
   );
 
   variant.fieldIdCounter = data.fieldIdCounter;
+  variant.fieldOrder = data.fields.map((f) => f.id);
 
   for (const field of data.fields) {
     variant.fields[field.id] = deserializeField(enm.project, field);

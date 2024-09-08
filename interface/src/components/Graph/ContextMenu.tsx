@@ -1,12 +1,23 @@
 import { ContextMenu } from "@kobalte/core";
 import type { ComponentProps } from "solid-js";
-
 import clsx from "clsx";
+
 import { tw } from "../../util";
+import { useInlineTextEditorCtx } from "../../Sidebar/InlineTextEditor";
 
 export const ContextMenuItem = tw(
   ContextMenu.Item,
 )`px-1.5 py-1.5 outline-none ui-highlighted:bg-white/10 rounded-sm flex flex-row items-center gap-2`;
+
+export function ContextMenuRenameItem() {
+  const inlineEditorContext = useInlineTextEditorCtx()!;
+
+  return (
+    <ContextMenuItem onSelect={() => inlineEditorContext.setEditing(true)}>
+      <IconAntDesignEditOutlined /> Rename
+    </ContextMenuItem>
+  );
+}
 
 export function ContextMenuContent(
   props: Omit<ComponentProps<typeof ContextMenu.Content<"div">>, "onKeyDown">,

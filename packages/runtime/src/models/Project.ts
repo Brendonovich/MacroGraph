@@ -31,7 +31,10 @@ export type ProjectEvent = "modified";
 
 export class Project {
   core: Core;
+
   graphs = new ReactiveMap<number, Graph>();
+  graphOrder: Array<number> = [];
+
   customEvents = new ReactiveMap<number, CustomEvent>();
   customStructs = new ReactiveMap<number, CustomStruct>();
   customEnums = new ReactiveMap<number, CustomEnum>();
@@ -46,8 +49,6 @@ export class Project {
   customEventIdCounter = 0;
   customTypeIdCounter = 0;
   idCounter = 0;
-
-  graphOrder: Array<number> = [];
 
   constructor(args: ProjectArgs) {
     this.core = args.core;
