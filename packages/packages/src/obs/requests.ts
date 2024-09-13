@@ -1,4 +1,4 @@
-import { JSONEnum, jsToJSON, jsonToJS } from "@macrograph/json";
+import { JSONEnum, jsToJSON, jsonToJS, toJSON } from "@macrograph/json";
 import { Maybe, None, type Option, Some } from "@macrograph/option";
 import type {
 	CreateIOFn,
@@ -600,8 +600,6 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 	//Missing GetSourceScreenshot as it has Base64-Encoded Screenshot data
 
-	//Missing SaveSourceScreenshot as it has Base64-Encoded Screenshot data
-
 	createOBSExecSchema({
 		name: "Get Group List",
 		createIO: ({ io }) =>
@@ -739,6 +737,63 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				})
 				.then((o) => o.unwrapOr([]));
 	}
+
+	function imageFormatListFactory(obs: Accessor<Option<OBSWebSocket>>) {
+		return async () => {
+			const o = await obs().mapAsync(async (obs) => {
+				const { supportedImageFormats } = await obs.call("GetVersion");
+
+				return supportedImageFormats;
+			});
+			return o.unwrapOr([]);
+		};
+	}
+
+	createOBSExecSchema({
+		name: "Save Source Screenshot",
+		createIO: ({ io, obs }) => ({
+			sourceName: io.dataInput({
+				id: "sourceName",
+				name: "Source Name",
+				type: t.string(),
+				fetchSuggestions: inputListSuggestionFactory(obs),
+			}),
+			imageFormat: io.dataInput({
+				id: "imageFormat",
+				name: "Image Format",
+				type: t.string(),
+				fetchSuggestions: imageFormatListFactory(obs),
+			}),
+			imageFilePath: io.dataInput({
+				id: "imageFilePath",
+				name: "Image File Path",
+				type: t.string(),
+			}),
+			imageWidth: io.dataInput({
+				id: "imageWidth",
+				name: "Image Width",
+				type: t.option(t.int()),
+			}),
+			imageHeight: io.dataInput({
+				id: "imageHeight",
+				name: "Image Height",
+				type: t.option(t.int()),
+			}),
+		}),
+		async run({ ctx, io, obs }) {
+			await obs.call("SaveSourceScreenshot", {
+				sourceName: ctx.getInput(io.sourceName),
+				imageFormat: ctx.getInput(io.imageFormat),
+				imageFilePath: ctx.getInput(io.imageFilePath),
+				imageWidth: ctx.getInput(io.imageWidth).isSome()
+					? ctx.getInput(io.imageWidth).unwrap()
+					: undefined,
+				imageHeight: ctx.getInput(io.imageHeight).isSome()
+					? ctx.getInput(io.imageHeight).unwrap()
+					: undefined,
+			});
+		},
+	});
 
 	createOBSExecSchema({
 		name: "Set Current Program Scene",
@@ -2180,11 +2235,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 					sceneItemTransform: types.SceneItemTransform.create({
 						alignment: alignmentConversion(
 							sceneItemTransformObj.alignment as number,
-							types
+							types,
 						),
 						boundsAlignment: alignmentConversion(
 							sceneItemTransformObj.boundsAlignment as number,
-							types
+							types,
 						),
 						boundsHeight: sceneItemTransformObj.boundsHeight as number,
 						boundsType: types.BoundsType.variant(
@@ -2417,11 +2472,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const transform = types.SceneItemTransform.create({
 				alignment: alignmentConversion(
 					sceneItemTransformObj.alignment as number,
-					types
+					types,
 				),
 				boundsAlignment: alignmentConversion(
 					sceneItemTransformObj.boundsAlignment as number,
-					types
+					types,
 				),
 				boundsHeight: sceneItemTransformObj.boundsHeight as number,
 				boundsType: types.BoundsType.variant(
@@ -2466,19 +2521,35 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			sceneItemTransform: io.dataInput({
 				id: "sceneItemTransform",
 				name: "Scene Item Transform",
-				type: t.map(t.enum(JSONEnum)),
+				type: t.struct(types.SceneItemTransformImport),
 			}),
 		}),
 		async run({ ctx, io, obs }) {
+			const data = ctx.getInput(io.sceneItemTransform);
+
+			const body = {} as any;
+
+			if (data.alignment.isSome())
+				body.alignment = alignmentConversion(
+					data.alignment.unwrap().variant,
+					types,
+				);
+			if (data.boundsAlignment.isSome())
+				body.boundsAlignment = alignmentConversion(
+					data.alignment.unwrap().variant,
+					types,
+				);
+
+			for (const [key, value] of Object.entries(data)) {
+				if (value.isSome()) {
+					if (!key.includes("alignment")) body[key] = value.unwrap();
+				}
+			}
+
 			await obs.call("SetSceneItemTransform", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
-				sceneItemTransform: jsonToJS({
-					variant: "Map",
-					data: {
-						value: ctx.getInput(io.sceneItemTransform),
-					},
-				}),
+				sceneItemTransform: body,
 			});
 		},
 	});

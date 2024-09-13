@@ -18,6 +18,7 @@ import { createHTTPClient } from "../httpEndpoint";
 import type { Account, BotAccount } from "./auth";
 import { botProperty, defaultProperties } from "./resource";
 import type { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
+import { readBinaryFile } from "@tauri-apps/api/fs";
 
 export type Requests = {
 	[_: `POST /channels/${string}/messages`]: any;
@@ -374,28 +375,28 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 			content: io.dataInput({
 				id: "content",
 				name: "Message",
-				type: t.string(),
+				type: t.option(t.string()),
 			}),
 			username: io.dataInput({
 				id: "username",
 				name: "Username",
-				type: t.string(),
+				type: t.option(t.string()),
 			}),
 			avatarUrl: io.dataInput({
 				id: "avatarUrl",
 				name: "Avatar URL",
-				type: t.string(),
+				type: t.option(t.string()),
 			}),
 			tts: io.dataInput({
 				id: "tts",
 				name: "TTS",
 				type: t.bool(),
 			}),
-			// fileLocation: io.dataInput({
-			//   id: "fileLocation",
-			//   name: "File Location",
-			//   type: types.option(types.string()),
-			// }),
+			fileLocation: io.dataInput({
+				id: "fileLocation",
+				name: "File Location",
+				type: t.option(t.string()),
+			}),
 			status: io.dataOutput({
 				id: "status",
 				name: "Status",
@@ -403,31 +404,26 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 			}),
 		}),
 		async run({ ctx, io }) {
-			const body: Record<string, string> = {};
-			if (ctx.getInput(io.content)) body.content = ctx.getInput(io.content);
-			if (ctx.getInput(io.avatarUrl))
-				body.avatar_url = ctx.getInput(io.avatarUrl);
-			if (ctx.getInput(io.username)) body.username = ctx.getInput(io.username);
-			if (ctx.getInput(io.tts)) body.tts = ctx.getInput(io.tts).toString();
-			// ctx.getInput<Option<string>>("content").map((v) => (body.content = v));
-			// ctx.getInput<Option<string>>("avatarUrl").map((v) => (body.avatar_url = v));
-			// ctx.getInput<Option<string>>("username").map((v) => (body.username = v));
-			// ctx.getInput<Option<boolean>>("tts").map((v) => (body.tts = v.toString()));
-			// await ctx.getInput<Option<string>>("fileLocation").mapAsync(async (v) => {
-			//   body["file[0]"] = JSON.stringify({
-			//     file: await fs.readBinaryFile(v),
-			//     fileName: ctx
-			//       .getInput<string>("fileLocation")
-			//       .split(/[\/\\]/)
-			//       .at(-1),
-			//   });
-			// });
-
 			const formData = new FormData();
 
-			for (const [key, value] of Object.entries(body)) {
-				formData.set(key, value);
-			}
+			ctx.getInput(io.content).peek((v) => {
+				formData.set("content", v);
+			});
+			ctx.getInput(io.avatarUrl).peek((v) => {
+				formData.set("avatar_url", v);
+			});
+			ctx.getInput(io.username).peek((v) => {
+				formData.set("username", v);
+			});
+			formData.set("tts", ctx.getInput(io.tts).toString());
+
+			await ctx.getInput(io.fileLocation).peekAsync(async (v) => {
+				formData.set(
+					"files[0]",
+					new Blob([await readBinaryFile(v)]),
+					v.split(/[\/\\]/).at(-1),
+				);
+			});
 
 			const response = await core.fetch(ctx.getInput(io.webhookUrl), {
 				method: "POST",
