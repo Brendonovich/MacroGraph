@@ -1,10 +1,10 @@
 import { Maybe } from "@macrograph/option";
 import type {
-	Core,
-	CreateEventSchema,
-	Package,
-	PropertyDef,
-	SchemaProperties,
+    Core,
+    CreateEventSchema,
+    Package,
+    PropertyDef,
+    SchemaProperties,
 } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
@@ -12,7 +12,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { ReactiveMap } from "@solid-primitives/map";
 
 import type { Ctx } from "../ctx";
-import { Chatter, type Helix } from "../helix";
+import type { Helix } from "../helix";
 import { defaultProperties } from "../resource";
 import type { Events } from "./types";
 import type { Types } from "../types";
@@ -2228,7 +2228,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 			chatter: io.dataOutput({
 				id: "chatter",
 				name: "Chatter",
-				type: t.struct(Chatter),
+				type: t.struct(types.Chatter),
 			}),
 			chatterIsAnonymous: io.dataOutput({
 				id: "chatterAnonymous",
@@ -2286,7 +2286,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 			);
 			ctx.setOutput(
 				io.chatter,
-				Chatter.create({
+				types.Chatter.create({
 					user_id: data.chatter_user_id,
 					user_name: data.chatter_user_name,
 					user_login: data.chatter_user_login,

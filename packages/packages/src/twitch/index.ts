@@ -6,24 +6,27 @@ import * as helix from "./helix";
 
 import { type Ctx, createCtx } from "./ctx";
 import { TwitchAccount, TwitchChannel } from "./resource";
+import { createTypes } from "./types";
 
 export type Pkg = Package<any, Ctx>;
 
 export function pkg(core: Core) {
-	const ctx = createCtx(core);
+  const ctx = createCtx(core);
 
-	const pkg = new Package({
-		name: "Twitch Events",
-		ctx,
-		SettingsUI: () => import("./Settings"),
-	});
+  const pkg = new Package({
+    name: "Twitch Events",
+    ctx,
+    SettingsUI: () => import("./Settings"),
+  });
 
-	helix.register(pkg, ctx.helixClient);
-	eventsub.register(pkg, ctx);
-	chat.register(pkg, ctx);
+  const types = createTypes(pkg);
 
-	pkg.registerResourceType(TwitchAccount);
-	pkg.registerResourceType(TwitchChannel);
+  helix.register(pkg, ctx.helixClient, types);
+  eventsub.register(pkg, ctx, types);
+  chat.register(pkg, ctx);
 
-	return pkg;
+  pkg.registerResourceType(TwitchAccount);
+  pkg.registerResourceType(TwitchChannel);
+
+  return pkg;
 }

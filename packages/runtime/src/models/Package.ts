@@ -295,3 +295,21 @@ export function createResourceType<
 
   return type;
 }
+
+export function createEnum<Variants extends EnumVariants>(
+  name: string,
+  builderFn: (t: EnumBuilder) => Variants | LazyEnumVariants<Variants>,
+) {
+  const builder = new EnumBuilder();
+
+  return new Enum(name, builderFn(builder));
+}
+
+export function createStruct<Fields extends StructFields>(
+  name: string,
+  builderFn: (t: StructBuilder) => Fields | LazyStructFields<Fields>,
+) {
+  const builder = new StructBuilder();
+
+  return new Struct(name, builderFn(builder));
+}
