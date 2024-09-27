@@ -1604,10 +1604,12 @@ export function pkg(core: Core) {
 		name: "Slice List",
 		type: "pure",
 		createIO({ io }) {
+			const w = io.wildcard("");
+
 			return {
 				list: io.dataInput({
 					id: "list",
-					type: t.list(t.wildcard(io.wildcard(""))),
+					type: t.list(t.wildcard(w)),
 				}),
 				start: io.dataInput({
 					id: "start",
@@ -1621,7 +1623,7 @@ export function pkg(core: Core) {
 				}),
 				output: io.dataOutput({
 					id: "output",
-					type: t.list(t.wildcard(io.wildcard(""))),
+					type: t.list(t.wildcard(w)),
 				}),
 			};
 		},
