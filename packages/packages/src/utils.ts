@@ -1601,6 +1601,41 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
+		name: "Slice List",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				list: io.dataInput({
+					id: "list",
+					type: t.list(t.wildcard(io.wildcard(""))),
+				}),
+				start: io.dataInput({
+					id: "start",
+					name: "Start",
+					type: t.int(),
+				}),
+				end: io.dataInput({
+					id: "end",
+					name: "End",
+					type: t.int(),
+				}),
+				output: io.dataOutput({
+					id: "output",
+					type: t.list(t.wildcard(io.wildcard(""))),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const start = ctx.getInput(io.start);
+			const end =
+				ctx.getInput(io.end) !== 0
+					? ctx.getInput(io.end)
+					: ctx.getInput(io.list).length;
+			ctx.setOutput(io.output, ctx.getInput(io.list).slice(start, end));
+		},
+	});
+
+	pkg.createSchema({
 		name: "Split Lines",
 		type: "pure",
 		createIO({ io }) {
