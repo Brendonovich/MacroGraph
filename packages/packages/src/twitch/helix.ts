@@ -1097,9 +1097,10 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		async run({ ctx, io, account }) {
 			if (ctx.getInput(io.id) === "") return;
 
-			const body: Record<string, any> = {
-				title: ctx.getInput(io.title),
-			};
+			const body: Record<string, any> = {};
+			ctx.getInput(io.title).peek((v) => {
+				body.title = v;
+			});
 			ctx.getInput(io.cost).peek((v) => {
 				body.cost = v;
 			});
@@ -1130,6 +1131,9 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			});
 			ctx.getInput(io.skipRequestQueue).peek((v) => {
 				body.should_redemptions_skip_request_queue = v;
+			});
+			ctx.getInput(io.paused).peek((v) => {
+				body.is_paused = v;
 			});
 
 			const data = await helix.call(
@@ -1282,7 +1286,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				},
 			);
 
-			const data = rewards.find(
+			const data = rewards.data.find(
 				(reward: any) => reward.title === ctx.getInput(io.title),
 			);
 
