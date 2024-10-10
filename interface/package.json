@@ -8,7 +8,7 @@
     "./tailwind.config.js": "./tailwind.config.js"
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.4",
+    "@kobalte/core": "^0.13.6",
     "@macrograph/action-history": "workspace:*",
     "@macrograph/api-contract": "workspace:*",
     "@macrograph/clipboard": "workspace:*",
@@ -38,7 +38,7 @@
     "@ts-rest/core": "^3.41.1",
     "@ts-rest/solid-query": "^3.41.1",
     "clsx": "^1.2.1",
-    "solid-js": "^1.8.20",
+    "solid-js": "^1.9.1",
     "solid-sonner": "^0.2.5",
     "valibot": "^0.37.0",
     "zod": "^3.22.4"

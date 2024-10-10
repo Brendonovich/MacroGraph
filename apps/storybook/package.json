@@ -9,7 +9,7 @@
 	},
 	"dependencies": {
 		"@storybook/docs-tools": "^8.2.7",
-		"solid-js": "^1.8.20"
+		"solid-js": "^1.9.1"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^1.6.1",

@@ -28,7 +28,7 @@ import { createMousePosition } from "@solid-primitives/mouse";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
 import * as Solid from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import { createMutable, createStore, produce } from "solid-js/store";
 import { isDev } from "solid-js/web";
 import { toast } from "solid-sonner";
 import type * as v from "valibot";
@@ -38,7 +38,7 @@ import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
 import { Graph } from "./components/Graph";
 import {
   type GraphState,
-  createGraphState,
+  makeGraphState,
   toGraphSpace,
 } from "./components/Graph/Context";
 import { GRID_SIZE, SHIFT_MULTIPLIER } from "./components/Graph/util";
@@ -47,11 +47,13 @@ import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import {
   type Environment,
   type GraphBounds,
+  GraphTabListState,
   InterfaceContextProvider,
   useInterfaceContext,
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
+import clsx from "clsx";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -76,6 +78,27 @@ type CurrentGraph = {
   size: GraphBounds;
 };
 
+// type MosaicItem = {
+//   type: "graph";
+//   data: GraphState;
+// };
+
+// function createMosaic<TItem>() {
+//   type State<TItem> = {
+//     type: "container";
+//     direction: "vertical" | "horizontal";
+//     items: Array<State<TItem> | { type: "item"; item: TItem }>;
+//   };
+
+//   const mosaic = createMutable<State<TItem>>({
+//     type: "container",
+//     direction: "horizontal",
+//     items: [],
+//   });
+
+//   return mosaic;
+// }
+
 function ProjectInterface() {
   const ctx = useInterfaceContext();
   const {
@@ -85,6 +108,8 @@ function ProjectInterface() {
     setCurrentGraphId,
     graphStates,
     setGraphStates,
+    mosaicState,
+    setMosaicState,
   } = useInterfaceContext();
 
   const currentGraph = Solid.createMemo(() => {
@@ -111,7 +136,7 @@ function ProjectInterface() {
 
   const firstGraph = ctx.core.project.graphs.values().next().value;
   if (graphStates.length === 0 && firstGraph)
-    setGraphStates([createGraphState(firstGraph)]);
+    setGraphStates([makeGraphState(firstGraph)]);
 
   const [rootRef, setRootRef] = Solid.createSignal<
     HTMLDivElement | undefined
@@ -137,113 +162,49 @@ function ProjectInterface() {
         e.stopPropagation();
       }}
     >
-      <div class="flex-1 flex divide-y divide-neutral-700 flex-col h-full justify-center items-center text-white overflow-x-hidden animate-in origin-top relative">
-        <Solid.Show
-          when={currentGraph()}
-          fallback={
-            <span class="text-neutral-400 font-medium">No graph selected</span>
-          }
-        >
-          {(currentGraph) => (
-            <>
-              <Tabs.Root
-                class="overflow-x-auto w-full scrollbar scrollbar-none"
-                style={{
-                  "padding-left": `${leftSidebarWidth()}px`,
-                }}
-                value={currentGraph().model.id.toString()}
-              >
-                <Tabs.List class="h-8 flex flex-row relative text-sm">
-                  <Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-[transform,width]">
-                    <div class="bg-white/20 w-full h-full" />
-                  </Tabs.Indicator>
-                  <Solid.For
-                    each={graphStates
-                      .map((state) => {
-                        const graph = ctx.core.project.graphs.get(state.id);
-                        if (!graph) return;
-
-                        return [state, graph] as const;
-                      })
-                      .filter(Boolean)}
-                  >
-                    {([_state, graph], index) => (
-                      <Tabs.Trigger
-                        value={graph.id.toString()}
-                        type="button"
-                        class="py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors"
-                        onClick={() => setCurrentGraphId(graph.id)}
-                      >
-                        <span class="font-medium">{graph.name}</span>
-                        <button
-                          type="button"
-                          class="absolute right-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100"
-                        >
-                          <IconHeroiconsXMarkSolid
-                            class="size-2"
-                            stroke-width={1}
-                            onClick={(e) => {
-                              e.stopPropagation();
-
-                              Solid.batch(() => {
-                                setGraphStates(
-                                  produce((states) => {
-                                    const currentIndex = currentGraphIndex();
-                                    states.splice(index(), 1);
-                                    if (currentIndex !== null) {
-                                      const state =
-                                        states[
-                                          Math.min(
-                                            currentIndex,
-                                            states.length - 1,
-                                          )
-                                        ];
-                                      if (state) setCurrentGraphId(state.id);
-                                    }
-
-                                    return states;
-                                  }),
-                                );
-                              });
-                            }}
-                          />
-                        </button>
-                      </Tabs.Trigger>
-                    )}
-                  </Solid.For>
-                  <div class="flex-1" />
-                </Tabs.List>
-              </Tabs.Root>
-              <Graph
-                graph={currentGraph().model}
-                state={currentGraph().state}
-                onMouseEnter={() => setHoveredPane(true)}
-                onMouseMove={() => setHoveredPane(true)}
-                onMouseLeave={() => setHoveredPane(null)}
-                onItemsSelected={(ids, ephemeral) => {
-                  ctx.execute(
-                    "setGraphSelection",
-                    { graphId: currentGraph().model.id, selection: ids },
-                    { ephemeral },
-                  );
-                }}
-                onBoundsChange={ctx.setGraphBounds}
-                onSizeChange={ctx.setGraphBounds}
-                onScaleChange={(scale) => {
-                  setGraphStates(currentGraph().index, { scale });
-                }}
-                onTranslateChange={(translate) => {
-                  setGraphStates(
-                    produce((states) => {
-                      states[currentGraph().index]!.translate = translate;
-                      return states;
-                    }),
-                  );
-                }}
-              />
-            </>
+      <div class="flex-1 flex divide-x divide-neutral-700 flex-row h-full justify-center items-center text-white overflow-x-hidden animate-in origin-top relative">
+        <Solid.For each={mosaicState.groups}>
+          {(mosaicItem, i) => (
+            <GraphTabList
+              focused={mosaicState.focusedIndex === i()}
+              leftPadding={i() === 0 ? leftSidebarWidth() : undefined}
+              state={mosaicItem}
+              onTabClose={(index) => {
+                setMosaicState(
+                  "groups",
+                  mosaicState.focusedIndex,
+                  produce((state) => {
+                    state.tabs.splice(index, 1);
+                    console.log(state.tabs.length);
+                    state.selectedIndex = Math.min(
+                      state.selectedIndex,
+                      state.tabs.length - 1,
+                    );
+                  }),
+                );
+              }}
+              onSelectedChanged={(i) => {
+                setMosaicState(
+                  "groups",
+                  mosaicState.focusedIndex,
+                  "selectedIndex",
+                  i,
+                );
+              }}
+              onFocus={() => {
+                ctx.setMosaicState("focusedIndex", i());
+              }}
+              onClose={() => {
+                ctx.setMosaicState(
+                  "groups",
+                  produce((groups) => {
+                    groups.splice(i(), 1);
+                  }),
+                );
+              }}
+            />
           )}
-        </Solid.Show>
+        </Solid.For>
       </div>
 
       <div class="absolute inset-0 pointer-events-none flex flex-row items-stretch">
@@ -273,7 +234,7 @@ function ProjectInterface() {
             />
           </div>
         </Solid.Show>
-        <div class="flex-1 relative">{isDev && <ActionHistory />}</div>
+        <div class="flex-1 relative">{/*{isDev && <ActionHistory />}*/}</div>
         <Solid.Show when={rightSidebar.state.open}>
           <div class="animate-in slide-in-from-right-4 fade-in flex flex-row pointer-events-auto">
             <ResizeHandle
@@ -379,48 +340,51 @@ function ProjectInterface() {
 
       <Solid.Show
         when={(() => {
+          const graph = currentGraph();
+          if (!graph) return;
+
           const state = ctx.state;
 
           return (
             (state.status === "schemaMenuOpen" && {
               ...state,
+              graph,
               suggestion: undefined,
             }) ||
             (state.status === "connectionAssignMode" &&
               state.state.status === "schemaMenuOpen" && {
                 ...state.state,
+                graph,
                 suggestion: { pin: state.pin },
               }) ||
             (state.status === "pinDragMode" &&
               state.state.status === "schemaMenuOpen" && {
                 ...state.state,
+                graph,
                 suggestion: { pin: state.pin },
               })
           );
         })()}
       >
         {(data) => {
-          const graph = Solid.createMemo(() => {
-            return ctx.core.project.graphs.get(data().graph.id);
-          });
+          const graph = currentGraph;
+          // Solid.createMemo(() => {
+          //   return ctx.core.project.graphs.get(data().graph.id);
+          // });
 
           Solid.createEffect(() => {
-            if (!graph())
-              ctx.setState({
-                status: "idle",
-              });
+            if (!graph()) ctx.setState({ status: "idle" });
           });
 
           const graphPosition = () =>
-            toGraphSpace(data().position, ctx.graphBounds, data().graph);
+            toGraphSpace(data().position, ctx.graphBounds, data().graph.state);
 
           return (
             <Solid.Show when={graph()}>
               {(graph) => (
                 <SchemaMenu
                   suggestion={data().suggestion}
-                  graph={data().graph}
-                  graphModel={graph()}
+                  graphModel={data().graph.model}
                   position={{
                     x: data().position.x - (rootBounds.left ?? 0),
                     y: data().position.y - (rootBounds.top ?? 0),
@@ -429,14 +393,15 @@ function ProjectInterface() {
                     ctx.setState({ status: "idle" });
                   }}
                   onCreateCommentBox={() => {
+                    const graph = data().graph.model;
                     Solid.batch(() => {
                       const box = ctx.execute("createCommentBox", {
-                        graphId: data().graph.id,
+                        graphId: graph.id,
                         position: graphPosition(),
                       });
                       if (!box) return;
 
-                      const [_, set] = createStore(data().graph);
+                      const [_, set] = createStore(data().graph.state);
                       set("selectedItemIds", [
                         { type: "commentBox", id: box.id },
                       ]);
@@ -474,7 +439,8 @@ function ProjectInterface() {
                     }
                   }}
                   onSchemaClicked={(schema, targetSuggestion, extra) => {
-                    const graphId = data().graph.id;
+                    const graph = data().graph.model;
+                    const graphId = graph.id;
                     ctx.batch(() => {
                       const pin = Solid.batch(() => {
                         const input: CreateNodeInput = {
@@ -512,7 +478,7 @@ function ProjectInterface() {
                         const node = ctx.execute("createNode", input);
                         if (!node) return;
 
-                        const [_, set] = createStore(graph);
+                        const [_, set] = createStore(graph.state);
                         set("selectedItemIds", [{ type: "node", id: node.id }]);
 
                         if (sourceSuggestion && targetSuggestion) {
@@ -753,7 +719,6 @@ function createKeydownShortcuts(
 
           ctx.setState({
             status: "schemaMenuOpen",
-            graph: graph.state,
             position: { x: mouse.x, y: mouse.y },
           });
         }
@@ -969,4 +934,156 @@ function createKeydownShortcuts(
     e.stopPropagation();
     e.preventDefault();
   });
+}
+
+function GraphTabList(props: {
+  focused: boolean;
+  state: GraphTabListState;
+  onSelectedChanged: (index: number) => void;
+  onTabClose: (index: number) => void;
+  leftPadding?: number;
+  onFocus: () => void;
+  onClose: () => void;
+}) {
+  const ctx = useInterfaceContext();
+
+  return (
+    <div
+      class="flex-1 flex flex-col justify-center items-center h-full relative"
+      onMouseDown={() => {
+        props.onFocus();
+      }}
+    >
+      <Solid.Show
+        when={(() => {
+          const state = props.state.tabs[props.state.selectedIndex];
+          if (!state) return;
+
+          const [_, setState] = createStore(state);
+
+          const graph = ctx.core.project.graphs.get(state.id);
+          if (!graph) return;
+
+          return { graph, state, setState };
+        })()}
+        fallback={
+          <>
+            <Solid.Show when={ctx.mosaicState.groups.length > 1}>
+              <button
+                type="button"
+                class={clsx(
+                  "absolute top-4 right-4 rounded hover:bg-white/10 transition-colors duration-50",
+                  props.focused ? "text-white" : "text-white/50",
+                )}
+                onClick={() => {
+                  props.onClose();
+                }}
+              >
+                <IconBiX class="size-5" />
+              </button>
+            </Solid.Show>
+            <span class="text-neutral-400 font-medium">No graph selected</span>
+          </>
+        }
+      >
+        {(selected) => (
+          <>
+            <Tabs.Root
+              class="overflow-x-auto w-full scrollbar scrollbar-none border-b border-neutral-700"
+              value={selected().graph.id.toString()}
+              style={
+                props.leftPadding
+                  ? { "padding-left": `${props.leftPadding}px` }
+                  : undefined
+              }
+            >
+              <Tabs.List class="h-8 flex flex-row relative text-sm">
+                <Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-[transform,width]">
+                  <div
+                    class={clsx(
+                      "w-full h-full",
+                      props.focused ? "bg-white/20" : "bg-white/10",
+                    )}
+                  />
+                </Tabs.Indicator>
+                <Solid.For each={props.state.tabs}>
+                  {(state, index) => (
+                    <Solid.Show when={ctx.core.project.graphs.get(state.id)}>
+                      {(graph) => (
+                        <Tabs.Trigger
+                          value={graph().id.toString()}
+                          type="button"
+                          class="py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors"
+                          onClick={
+                            () => props.onSelectedChanged(index())
+                            // setCurrentGraphId(graph.id)
+                          }
+                        >
+                          <span class="font-medium">{graph().name}</span>
+                          <button
+                            type="button"
+                            class="absolute right-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100"
+                          >
+                            <IconHeroiconsXMarkSolid
+                              class="size-2"
+                              stroke-width={1}
+                              onClick={(e) => {
+                                e.stopPropagation();
+
+                                props.onTabClose(index());
+                                // Solid.batch(() => {
+                                //   setGraphStates(
+                                //     produce((states) => {
+                                //       const currentIndex = currentGraphIndex();
+                                //       states.splice(index(), 1);
+                                //       if (currentIndex !== null) {
+                                //         const state =
+                                //           states[
+                                //             Math.min(currentIndex, states.length - 1)
+                                //           ];
+                                //         if (state) setCurrentGraphId(state.id);
+                                //       }
+
+                                //       return states;
+                                //     }),
+                                //   );
+                                // });
+                              }}
+                            />
+                          </button>
+                        </Tabs.Trigger>
+                      )}
+                    </Solid.Show>
+                  )}
+                </Solid.For>
+                <div class="flex-1" />
+              </Tabs.List>
+            </Tabs.Root>
+            <Graph
+              graph={selected().graph}
+              state={selected().state}
+              // onMouseEnter={() => setHoveredPane(true)}
+              // onMouseMove={() => setHoveredPane(true)}
+              // onMouseLeave={() => setHoveredPane(null)}
+              onItemsSelected={(ids, ephemeral) => {
+                ctx.execute(
+                  "setGraphSelection",
+                  { graphId: selected().graph.id, selection: ids },
+                  { ephemeral },
+                );
+              }}
+              onBoundsChange={ctx.setGraphBounds}
+              onSizeChange={ctx.setGraphBounds}
+              onScaleChange={(scale) => {
+                selected().setState("scale", scale);
+              }}
+              onTranslateChange={(translate) => {
+                selected().setState("translate", translate);
+              }}
+            />
+          </>
+        )}
+      </Solid.Show>
+    </div>
+  );
 }

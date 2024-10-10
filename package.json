@@ -1,39 +1,34 @@
 {
-	"private": true,
-	"scripts": {
-		"desktop": "pnpm --filter @macrograph/desktop --",
-		"web": "pnpm --filter @macrograph/web --",
-		"runtime": "pnpm --filter @macrograph/runtime --",
-		"test": "vitest",
-		"typecheck": "pnpm tsc -b",
-		"lint": "turbo run lint",
-		"lint:fix": "turbo run lint -- --fix",
-		"dev:web": "pnpm web dev",
-		"dev:desktop": "pnpm desktop tauri dev",
-		"format": "biome format --write .",
-		"fix": "biome lint --apply . && biome format --write . && biome check . --apply"
-	},
-	"devDependencies": {
-		"@testing-library/jest-dom": "^6.4.8",
-		"@vitest/browser": "^0.32.4",
-		"@vitest/ui": "^2.0.5",
-		"jsdom": "^24.1.1",
-		"safaridriver": "^0.0.5",
-		"solid-js": "^1.8.20",
-		"turbo": "^1.13.0",
-		"turbo-ignore": "^1.13.0",
-		"typescript": "^5.5.3",
-		"vite-plugin-solid": "^2.10.2",
-		"vitest": "^2.0.5",
-		"vitest-github-actions-reporter": "^0.11.1",
-		"webdriverio": "^8.35.1"
-	},
-	"dependencies": {
-		"@biomejs/biome": "^1.6.4"
-	},
-	"pnpm": {
-		"patchedDependencies": {
-			"@kobalte/core@0.13.4": "patches/@kobalte__core@0.13.4.patch"
-		}
-	}
+  "private": true,
+  "scripts": {
+    "desktop": "pnpm --filter @macrograph/desktop --",
+    "web": "pnpm --filter @macrograph/web --",
+    "runtime": "pnpm --filter @macrograph/runtime --",
+    "test": "vitest",
+    "typecheck": "pnpm tsc -b",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "dev:web": "pnpm web dev",
+    "dev:desktop": "pnpm desktop tauri dev",
+    "format": "biome format --write .",
+    "fix": "biome lint --apply . && biome format --write . && biome check . --apply"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@vitest/browser": "^0.32.4",
+    "@vitest/ui": "^2.0.5",
+    "jsdom": "^24.1.1",
+    "safaridriver": "^0.0.5",
+    "solid-js": "^1.9.1",
+    "turbo": "^1.13.0",
+    "turbo-ignore": "^1.13.0",
+    "typescript": "^5.5.3",
+    "vite-plugin-solid": "^2.10.2",
+    "vitest": "^2.0.5",
+    "vitest-github-actions-reporter": "^0.11.1",
+    "webdriverio": "^8.35.1"
+  },
+  "dependencies": {
+    "@biomejs/biome": "^1.6.4"
+  }
 }
