@@ -32,6 +32,7 @@ import { createStore, produce } from "solid-js/store";
 import { toast } from "solid-sonner";
 import type * as v from "valibot";
 import clsx from "clsx";
+import { isMobile } from "@solid-primitives/platform";
 
 import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
@@ -148,6 +149,8 @@ function ProjectInterface() {
       ? Math.max(ctx.rightSidebar.state.width, MIN_WIDTH)
       : 0;
 
+  const isTouchDevice = isMobile || navigator.maxTouchPoints > 0;
+
   return (
     <div
       ref={setRootRef}
@@ -229,7 +232,37 @@ function ProjectInterface() {
             />
           </div>
         </Solid.Show>
+        <Solid.Show when={isTouchDevice}>
+          <button
+            type="button"
+            class="mt-auto mb-auto rounded-r border-y border-r border-neutral-700 bg-neutral-800 h-12 w-4 flex items-center justify-center shadow pointer-events-auto"
+            onClick={() => {
+              ctx.leftSidebar.setState((s) => ({ open: !s.open }));
+            }}
+          >
+            <IconTablerChevronRight
+              class={clsx("size-4", ctx.leftSidebar.state.open && "rotate-180")}
+            />
+          </button>
+        </Solid.Show>
+
         <div class="flex-1 relative">{/*{isDev && <ActionHistory />}*/}</div>
+        <Solid.Show when={isTouchDevice}>
+          <button
+            type="button"
+            class="mt-auto mb-auto rounded-l border-y border-l border-neutral-700 bg-neutral-800 h-12 w-4 flex items-center justify-center shadow pointer-events-auto"
+            onClick={() => {
+              ctx.rightSidebar.setState((s) => ({ open: !s.open }));
+            }}
+          >
+            <IconTablerChevronRight
+              class={clsx(
+                "size-4",
+                !ctx.rightSidebar.state.open && "rotate-180",
+              )}
+            />
+          </button>
+        </Solid.Show>
         <Solid.Show when={rightSidebar.state.open}>
           <div class="animate-in slide-in-from-right-4 fade-in flex flex-row pointer-events-auto">
             <ResizeHandle
