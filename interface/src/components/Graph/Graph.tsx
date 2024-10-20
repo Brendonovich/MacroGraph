@@ -490,20 +490,20 @@ export const Graph = (props: Props) => {
           if (gesture.dragStarted) return;
           const { pointerId } = e;
 
-          if (e.pointerType === "touch") {
-            gesture.pointers.push({
-              pointerId: e.pointerId,
-              start: {
-                x: e.clientX,
-                y: e.clientY,
-              },
-              current: {
-                x: e.clientX,
-                y: e.clientY,
-              },
-              button: e.button,
-            });
+          gesture.pointers.push({
+            pointerId: e.pointerId,
+            start: {
+              x: e.clientX,
+              y: e.clientY,
+            },
+            current: {
+              x: e.clientX,
+              y: e.clientY,
+            },
+            button: e.button,
+          });
 
+          if (e.pointerType === "touch") {
             Solid.createRoot((dispose) => {
               const start = { x: e.clientX, y: e.clientY };
 
