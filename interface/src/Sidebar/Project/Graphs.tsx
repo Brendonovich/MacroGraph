@@ -26,11 +26,7 @@ import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
 import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
-import {
-  InlineTextEditor,
-  InlineTextEditorContext,
-  useInlineTextEditorCtx,
-} from "../InlineTextEditor";
+import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
 interface Props {

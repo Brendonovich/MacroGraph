@@ -20,7 +20,7 @@
     }
   },
   "devDependencies": {
-    "solid-js": "^1.8.20",
+    "solid-js": "^1.9.1",
     "storybook-solidjs": "1.0.0-beta.2",
     "tailwindcss": "^3.4.3",
     "tailwindcss-animate": "^1.0.7",
@@ -29,11 +29,11 @@
     "vite": "^5.4.0"
   },
   "peerDependencies": {
-    "tailwindcss": "^3.4.3",
-    "solid-js": "^1.7.11"
+    "solid-js": "^1.7.11",
+    "tailwindcss": "^3.4.3"
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.4",
+    "@kobalte/core": "^0.13.6",
     "@macrograph/config": "workspace:*",
     "@tanstack/solid-query": "^4.36.1",
     "clsx": "^1.2.1",

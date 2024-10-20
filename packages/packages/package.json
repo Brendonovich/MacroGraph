@@ -12,7 +12,7 @@
 		"typecheck": "tsc -b"
 	},
 	"dependencies": {
-		"@kobalte/core": "^0.13.4",
+		"@kobalte/core": "^0.13.6",
 		"@macrograph/api-contract": "workspace:^",
 		"@macrograph/json": "workspace:^",
 		"@macrograph/option": "workspace:^",
@@ -58,7 +58,7 @@
 		"@total-typescript/ts-reset": "^0.4.2",
 		"@twurple/eventsub-base": "^7.1.0",
 		"@types/tmi.js": "^1.8.6",
-		"solid-js": "^1.8.20",
+		"solid-js": "^1.9.1",
 		"type-fest": "^2.19.0",
 		"typescript": "^5.5.3"
 	},
