@@ -89,7 +89,7 @@ function createEditorState() {
   }>({
     groups: [
       { tabs: [], selectedIndex: 0 },
-      { tabs: [], selectedIndex: 0 },
+      // { tabs: [], selectedIndex: 0 },
     ],
     focusedIndex: 0,
   });
@@ -243,6 +243,7 @@ export type GraphMouseState =
 function createSidebarState(name: string) {
   const [state, setState] = makePersisted(
     createStore({ width: MIN_WIDTH, open: true }),
+
     { name },
   );
 

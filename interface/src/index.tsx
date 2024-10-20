@@ -28,11 +28,11 @@ import { createMousePosition } from "@solid-primitives/mouse";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
 import * as Solid from "solid-js";
-import { createMutable, createStore, produce } from "solid-js/store";
-import { isDev } from "solid-js/web";
+import { createStore, produce } from "solid-js/store";
 import { toast } from "solid-sonner";
 import type * as v from "valibot";
-import { ActionHistory } from "./ActionHistory";
+import clsx from "clsx";
+
 import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
 import { Graph } from "./components/Graph";
@@ -53,7 +53,6 @@ import {
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
-import clsx from "clsx";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -74,7 +73,6 @@ export function Interface(props: { core: Core; environment: Environment }) {
 type CurrentGraph = {
   model: GraphModel;
   state: GraphState;
-  index: number;
   size: GraphBounds;
 };
 
@@ -104,8 +102,6 @@ function ProjectInterface() {
   const {
     leftSidebar,
     rightSidebar,
-    currentGraphIndex,
-    setCurrentGraphId,
     graphStates,
     setGraphStates,
     mosaicState,
@@ -113,16 +109,15 @@ function ProjectInterface() {
   } = useInterfaceContext();
 
   const currentGraph = Solid.createMemo(() => {
-    const index = ctx.currentGraphIndex();
-    if (index === null) return;
+    const group = mosaicState.groups[mosaicState.focusedIndex];
 
-    const state = graphStates[index];
+    const state = group?.tabs[group?.selectedIndex ?? 0];
     if (!state) return;
 
     const model = ctx.core.project.graphs.get(state.id);
     if (!model) return;
 
-    return { model, state, index } as CurrentGraph;
+    return { model, state } as CurrentGraph;
   });
 
   // will account for multi-pane in future
@@ -530,17 +525,37 @@ function ProjectInterface() {
   );
 }
 
+// document.addEventListener(
+//   "touchmove",
+//   (e) => {
+//     e.preventDefault();
+//   },
+//   { passive: false },
+// );
+
 function ResizeHandle(props: {
   width: number;
   side: "left" | "right";
   onResize?(width: number): void;
   onResizeEnd?(width: number): void;
 }) {
+  const [dragging, setDragging] = Solid.createSignal(false);
+
   return (
-    <div class="relative w-px bg-neutral-700">
+    <div
+      class={clsx(
+        "relative w-px",
+        dragging() ? "bg-neutral-500" : "bg-neutral-700",
+      )}
+    >
       <div
+        ref={(ref) => {
+          ref.addEventListener("touchmove", (e) => e.preventDefault(), {
+            passive: false,
+          });
+        }}
         class="cursor-ew-resize absolute inset-y-0 -inset-x-1 z-10"
-        onMouseDown={(e) => {
+        onPointerDown={(e) => {
           e.stopPropagation();
 
           if (e.button !== 0) return;
@@ -548,14 +563,19 @@ function ResizeHandle(props: {
           const startX = e.clientX;
           const startWidth = props.width;
 
+          setDragging(true);
+
           Solid.createRoot((dispose) => {
             let currentWidth = startWidth;
 
-            Solid.onCleanup(() => props.onResizeEnd?.(currentWidth));
+            Solid.onCleanup(() => {
+              setDragging(false);
+              props.onResizeEnd?.(currentWidth);
+            });
 
             createEventListenerMap(window, {
-              mouseup: dispose,
-              mousemove: (e) => {
+              pointerup: dispose,
+              pointermove: (e) => {
                 currentWidth =
                   startWidth +
                   (e.clientX - startX) * (props.side === "right" ? 1 : -1);

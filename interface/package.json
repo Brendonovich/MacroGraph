@@ -27,6 +27,7 @@
     "@solid-primitives/marker": "^0.0.3",
     "@solid-primitives/memo": "^1.3.8",
     "@solid-primitives/mouse": "^2.0.19",
+    "@solid-primitives/platform": "^0.1.2",
     "@solid-primitives/refs": "^1.0.8",
     "@solid-primitives/resize-observer": "^2.0.25",
     "@solid-primitives/scheduled": "^1.4.3",

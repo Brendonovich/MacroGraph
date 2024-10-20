@@ -15,8 +15,9 @@ import {
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import * as Solid from "solid-js";
 import { createStore } from "solid-js/store";
-
+import { isMobile } from "@solid-primitives/platform";
 import clsx from "clsx";
+
 import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
 import { ConnectionRenderer } from "../Graph";
 import { CommentBox } from "./CommentBox";
@@ -119,32 +120,33 @@ export const Graph = (props: Props) => {
     createEventListener(window, "resize", onResize);
     createResizeObserver(ref, onResize);
 
-    createEventListener(ref, "gesturestart", () => {
-      let lastScale = 1;
+    if (!isMobile)
+      createEventListener(ref, "gesturestart", () => {
+        let lastScale = 1;
 
-      Solid.createRoot((dispose) => {
-        createEventListenerMap(() => ref() ?? [], {
-          gestureend: dispose,
-          gesturechange: (e: any) => {
-            let scale = e.scale;
-            let direction = 1;
+        Solid.createRoot((dispose) => {
+          createEventListenerMap(() => ref() ?? [], {
+            gestureend: dispose,
+            gesturechange: (e: any) => {
+              let scale = e.scale;
+              let direction = 1;
 
-            if (scale < 1) {
-              direction = -1;
-              scale = 1 / scale;
-              if (lastScale < 1) lastScale = 1 / lastScale;
-            }
+              if (scale < 1) {
+                direction = -1;
+                scale = 1 / scale;
+                if (lastScale < 1) lastScale = 1 / lastScale;
+              }
 
-            updateScale((scale - lastScale) * direction, {
-              x: e.clientX,
-              y: e.clientY,
-            });
+              updateScale((scale - lastScale) * direction, {
+                x: e.clientX,
+                y: e.clientY,
+              });
 
-            lastScale = e.scale;
-          },
+              lastScale = e.scale;
+            },
+          });
         });
       });
-    });
   });
 
   const [pan, setPan] = Solid.createSignal<PanState>("none");
@@ -152,32 +154,33 @@ export const Graph = (props: Props) => {
   createBodyCursor(() => pan() === "active" && "grabbing");
 
   // using onWheel directly was broken in a recent chromium update -_-
-  createEventListener(ref, "wheel", (e) => {
-    e.preventDefault();
+  if (!isMobile)
+    createEventListener(ref, "wheel", (e) => {
+      e.preventDefault();
 
-    let deltaX = e.deltaX;
-    let deltaY = e.deltaY;
-    let isTouchpad = false;
+      let deltaX = e.deltaX;
+      let deltaY = e.deltaY;
+      let isTouchpad = false;
 
-    if (Math.abs((e as any).wheelDeltaY) === Math.abs(e.deltaY) * 3) {
-      deltaX = -(e as any).wheelDeltaX / 3;
-      deltaY = -(e as any).wheelDeltaY / 3;
-      isTouchpad = true;
-    }
+      if (Math.abs((e as any).wheelDeltaY) === Math.abs(e.deltaY) * 3) {
+        deltaX = -(e as any).wheelDeltaX / 3;
+        deltaY = -(e as any).wheelDeltaY / 3;
+        isTouchpad = true;
+      }
 
-    if (e.ctrlKey) {
-      const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
+      if (e.ctrlKey) {
+        const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
 
-      updateScale(delta, {
-        x: e.clientX,
-        y: e.clientY,
-      });
-    } else
-      props.onTranslateChange({
-        x: props.state.translate.x + deltaX,
-        y: props.state.translate.y + deltaY,
-      });
-  });
+        updateScale(delta, {
+          x: e.clientX,
+          y: e.clientY,
+        });
+      } else
+        props.onTranslateChange({
+          x: props.state.translate.x + deltaX,
+          y: props.state.translate.y + deltaY,
+        });
+    });
 
   createEventListener(window, "keydown", (e) => {
     switch (e.code) {
@@ -242,6 +245,158 @@ export const Graph = (props: Props) => {
     toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, props.state),
   };
 
+  const gesture = {
+    dragStarted: false,
+    pointers: [] as Array<{
+      pointerId: number;
+      start: XY;
+      current: XY;
+      button: number;
+    }>,
+  };
+
+  function unselectAllEphemeral() {
+    interfaceCtx.execute(
+      "setGraphSelection",
+      { graphId: model().id, selection: [] },
+      { ephemeral: true },
+    );
+  }
+
+  function createTranslateSession(initialClientXY: XY) {
+    const oldTranslate = { ...props.state.translate };
+
+    return {
+      stop: () => {
+        setPan("none");
+      },
+      updateControlPoint: (clientXY: XY) => {
+        const MOVE_BUFFER = 3;
+
+        const diff = {
+          x: initialClientXY.x - clientXY.x,
+          y: initialClientXY.y - clientXY.y,
+        };
+
+        if (Math.abs(diff.x) < MOVE_BUFFER && Math.abs(diff.y) < MOVE_BUFFER)
+          return;
+
+        setPan("active");
+
+        const { scale } = props.state;
+
+        props.onTranslateChange({
+          x: (diff.x + oldTranslate.x * scale) / scale,
+          y: (diff.y + oldTranslate.y * scale) / scale,
+        });
+      },
+    };
+  }
+
+  function createDragAreaSession(initialClientXY: XY) {
+    const start = ctx.toGraphSpace({
+      x: initialClientXY.x,
+      y: initialClientXY.y,
+    });
+    const prevSelection = [...props.state.selectedItemIds];
+
+    if (interfaceCtx.state.status === "schemaMenuOpen")
+      interfaceCtx.setState({ status: "idle" });
+
+    unselectAllEphemeral();
+
+    Solid.createRoot((dispose) => {
+      const getItems = (e: MouseEvent) => {
+        const end = ctx.toGraphSpace({
+          x: e.clientX,
+          y: e.clientY,
+        });
+
+        const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
+        const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
+
+        const width = Math.abs(end.x - start.x);
+        const height = Math.abs(end.y - start.y);
+
+        const x = xSide === "r" ? start.x : start.x - width;
+        const y = ySide === "d" ? start.y : start.y - height;
+
+        const rect = new DOMRect(x, y, width, height);
+
+        const items = [
+          ...[
+            ...getNodesInRect(
+              model().nodes.values(),
+              rect,
+              (node) => interfaceCtx.itemSizes.get(node),
+              GRID_SIZE * 2,
+            ),
+          ].map((n) => ({ id: n.id, type: "node" as const })),
+          ...[
+            ...getCommentBoxesInRect(
+              model().commentBoxes.values(),
+              rect,
+              GRID_SIZE * 2,
+            ),
+          ].map((b) => ({
+            id: b.id,
+            type: "commentBox" as const,
+          })),
+        ];
+
+        return [items, rect] as const;
+      };
+
+      let didMove = false;
+
+      createEventListenerMap(window, {
+        pointerup: (e) => {
+          dispose();
+
+          if (!didMove) {
+            if (prevSelection.length !== 0)
+              interfaceCtx.execute("setGraphSelection", {
+                graphId: model().id,
+                selection: [],
+                prev: prevSelection,
+              });
+          } else {
+            const [items] = getItems(e);
+            setDragArea(null);
+
+            if (items.length === 0) {
+              interfaceCtx.setState({ status: "idle" });
+              if (prevSelection.length > 0)
+                interfaceCtx.execute("setGraphSelection", {
+                  graphId: model().id,
+                  selection: [],
+                  prev: prevSelection,
+                });
+            } else {
+              interfaceCtx.execute("setGraphSelection", {
+                graphId: model().id,
+                selection: items,
+                prev: prevSelection,
+              });
+            }
+          }
+        },
+        pointermove: (e) => {
+          didMove = true;
+
+          const [items, rect] = getItems(e);
+          setDragArea(rect);
+
+          interfaceCtx.execute(
+            "setGraphSelection",
+            { graphId: model().id, selection: items },
+            { ephemeral: true },
+          );
+        },
+      });
+    });
+  }
+
   return (
     <GraphContextProvider value={ctx}>
       <div
@@ -250,8 +405,23 @@ export const Graph = (props: Props) => {
           "flex-1 w-full relative overflow-hidden bg-mg-graph",
           props.class,
         )}
-        ref={setRef}
-        onMouseUp={(e) => {
+        ref={(ref) => {
+          ref.addEventListener("touchmove", (e) => e.preventDefault(), {
+            passive: false,
+          });
+
+          setRef(ref);
+        }}
+        onPointerUp={(e) => {
+          if (!gesture.pointers.find((p) => p.pointerId === e.pointerId))
+            return;
+
+          if (e.pointerType === "touch") {
+            gesture.pointers = gesture.pointers.filter(
+              (p) => p.pointerId !== e.pointerId,
+            );
+          }
+
           if (e.button === 2) {
             if (pan() === "active") return;
 
@@ -316,159 +486,179 @@ export const Graph = (props: Props) => {
             }
           }
         }}
-        onMouseDown={(e) => {
-          switch (e.button) {
-            case 0: {
-              const start = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
-              const prevSelection = [...props.state.selectedItemIds];
+        onPointerDown={(e) => {
+          if (gesture.dragStarted) return;
+          const { pointerId } = e;
 
-              if (interfaceCtx.state.status === "schemaMenuOpen")
-                interfaceCtx.setState({ status: "idle" });
-
-              interfaceCtx.execute(
-                "setGraphSelection",
-                { graphId: model().id, selection: [] },
-                { ephemeral: true },
-              );
-
-              Solid.createRoot((dispose) => {
-                const getItems = (e: MouseEvent) => {
-                  const end = ctx.toGraphSpace({
-                    x: e.clientX,
-                    y: e.clientY,
-                  });
-
-                  const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
-                  const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
-
-                  const width = Math.abs(end.x - start.x);
-                  const height = Math.abs(end.y - start.y);
-
-                  const x = xSide === "r" ? start.x : start.x - width;
-                  const y = ySide === "d" ? start.y : start.y - height;
-
-                  const rect = new DOMRect(x, y, width, height);
-
-                  const items = [
-                    ...[
-                      ...getNodesInRect(
-                        model().nodes.values(),
-                        rect,
-                        (node) => interfaceCtx.itemSizes.get(node),
-                        GRID_SIZE * 2,
-                      ),
-                    ].map((n) => ({ id: n.id, type: "node" as const })),
-                    ...[
-                      ...getCommentBoxesInRect(
-                        model().commentBoxes.values(),
-                        rect,
-                        GRID_SIZE * 2,
-                      ),
-                    ].map((b) => ({
-                      id: b.id,
-                      type: "commentBox" as const,
-                    })),
-                  ];
-
-                  return [items, rect] as const;
-                };
-
-                let didMove = false;
-
-                createEventListenerMap(window, {
-                  mouseup: (e) => {
-                    dispose();
-
-                    if (!didMove) {
-                      if (prevSelection.length !== 0)
-                        interfaceCtx.execute("setGraphSelection", {
-                          graphId: model().id,
-                          selection: [],
-                          prev: prevSelection,
-                        });
-                    } else {
-                      const [items] = getItems(e);
-                      setDragArea(null);
-
-                      if (items.length === 0) {
-                        interfaceCtx.setState({ status: "idle" });
-                        if (prevSelection.length > 0)
-                          interfaceCtx.execute("setGraphSelection", {
-                            graphId: model().id,
-                            selection: [],
-                            prev: prevSelection,
-                          });
-                      } else {
-                        interfaceCtx.execute("setGraphSelection", {
-                          graphId: model().id,
-                          selection: items,
-                          prev: prevSelection,
-                        });
-                      }
-                    }
-                  },
-                  mousemove: (e) => {
-                    didMove = true;
-
-                    const [items, rect] = getItems(e);
-                    setDragArea(rect);
-
-                    interfaceCtx.execute(
-                      "setGraphSelection",
-                      { graphId: model().id, selection: items },
-                      { ephemeral: true },
-                    );
-                  },
-                });
-              });
-              break;
-            }
-            case 2: {
-              setPan("waiting");
-
-              const oldTranslate = { ...props.state.translate };
-              const startPosition = {
+          if (e.pointerType === "touch") {
+            gesture.pointers.push({
+              pointerId: e.pointerId,
+              start: {
                 x: e.clientX,
                 y: e.clientY,
-              };
+              },
+              current: {
+                x: e.clientX,
+                y: e.clientY,
+              },
+              button: e.button,
+            });
 
-              Solid.createRoot((dispose) => {
-                Solid.createEffect(() => {
-                  if (pan() === "active")
-                    interfaceCtx.setState({ status: "idle" });
-                });
+            Solid.createRoot((dispose) => {
+              const start = { x: e.clientX, y: e.clientY };
 
-                createEventListenerMap(window, {
-                  mouseup: () => {
-                    dispose();
-                    setPan("none");
-                  },
-                  mousemove: (e) => {
-                    const MOVE_BUFFER = 3;
+              createEventListenerMap(window, {
+                pointerup: () => {
+                  if (gesture.pointers.length === 0) {
+                    unselectAllEphemeral();
+                  }
 
-                    if (
-                      Math.abs(startPosition.x - e.clientX) < MOVE_BUFFER &&
-                      Math.abs(startPosition.x - e.clientY) < MOVE_BUFFER
-                    )
-                      return;
+                  dispose();
+                },
+                pointermove: (e) => {
+                  if (gesture.dragStarted || e.pointerId !== pointerId) return;
 
-                    setPan("active");
+                  const diff = {
+                    x: start.x - e.clientX,
+                    y: start.y - e.clientY,
+                  };
 
-                    const { scale } = props.state;
+                  if (Math.abs(diff.x) > 3 || Math.abs(diff.y) > 3) {
+                    gesture.dragStarted = true;
 
-                    props.onTranslateChange({
-                      x:
-                        (startPosition.x - e.clientX + oldTranslate.x * scale) /
-                        scale,
-                      y:
-                        (startPosition.y - e.clientY + oldTranslate.y * scale) /
-                        scale,
+                    const pointers = [...gesture.pointers];
+
+                    Solid.createRoot((dispose) => {
+                      createEventListener(window, "pointerup", (e) => {
+                        if (pointers.find((p) => p.pointerId === e.pointerId)) {
+                          gesture.dragStarted = false;
+                          dispose();
+                        }
+                      });
                     });
-                  },
-                });
-              });
 
-              break;
+                    if (gesture.pointers.length === 1) {
+                      createDragAreaSession(start);
+                    } else if (gesture.pointers.length === 2) {
+                      const left = gesture.pointers[0]!;
+                      const right = gesture.pointers[1]!;
+
+                      const startCenter = {
+                        x: (left.start.x + right.start.x) / 2,
+                        y: (left.start.y + right.start.y) / 2,
+                      };
+
+                      const translateSession =
+                        createTranslateSession(startCenter);
+
+                      Solid.createRoot((dispose) => {
+                        createEventListenerMap(window, {
+                          pointerup: (e) => {
+                            if (
+                              left.pointerId !== e.pointerId &&
+                              right.pointerId !== e.pointerId
+                            )
+                              return;
+
+                            dispose();
+                            translateSession.stop();
+                          },
+                          pointermove: (e) => {
+                            const lastPointerDistance = Math.sqrt(
+                              (left.current.x - right.current.x) ** 2 +
+                                (left.current.y - right.current.y) ** 2,
+                            );
+                            const lastCenter = {
+                              x: (left.current.x + right.current.x) / 2,
+                              y: (left.current.y + right.current.y) / 2,
+                            };
+
+                            if (left.pointerId === e.pointerId) {
+                              left.current = { x: e.clientX, y: e.clientY };
+                            } else if (right.pointerId === e.pointerId) {
+                              right.current = { x: e.clientX, y: e.clientY };
+                            }
+
+                            const newCenter = {
+                              x: (left.current.x + right.current.x) / 2,
+                              y: (left.current.y + right.current.y) / 2,
+                            };
+
+                            const newPointerDistance = Math.sqrt(
+                              (left.current.x - right.current.x) ** 2 +
+                                (left.current.y - right.current.y) ** 2,
+                            );
+
+                            const newCenterGraphPosition =
+                              ctx.toGraphSpace(newCenter);
+
+                            updateScale(
+                              ((newPointerDistance - lastPointerDistance) /
+                                15) *
+                                props.state.scale,
+                              newCenter,
+                            );
+
+                            const newCenterAfterScaling = ctx.toScreenSpace(
+                              newCenterGraphPosition,
+                            );
+
+                            const { translate, scale } = props.state;
+                            props.onTranslateChange({
+                              x:
+                                translate.x +
+                                (lastCenter.x - newCenterAfterScaling.x) /
+                                  scale,
+                              y:
+                                translate.y +
+                                (lastCenter.y - newCenterAfterScaling.y) /
+                                  scale,
+                            });
+                          },
+                        });
+                      });
+                    }
+                  }
+                },
+              });
+            });
+          } else {
+            switch (e.button) {
+              case 0: {
+                createDragAreaSession({ x: e.clientX, y: e.clientY });
+
+                break;
+              }
+              case 2: {
+                setPan("waiting");
+
+                const translateSession = createTranslateSession({
+                  x: e.clientX,
+                  y: e.clientY,
+                });
+
+                Solid.createRoot((dispose) => {
+                  Solid.createEffect(() => {
+                    if (pan() === "active")
+                      interfaceCtx.setState({ status: "idle" });
+                  });
+
+                  createEventListenerMap(window, {
+                    pointerup: () => {
+                      dispose();
+                      translateSession.stop();
+                    },
+                    pointermove: (e) => {
+                      translateSession.updateControlPoint({
+                        x: e.clientX,
+                        y: e.clientY,
+                      });
+                    },
+                  });
+                });
+
+                break;
+              }
             }
           }
         }}
