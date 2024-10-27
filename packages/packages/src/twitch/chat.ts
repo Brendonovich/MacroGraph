@@ -172,64 +172,6 @@ export function register(pkg: Package, { chat }: Ctx) {
 		},
 	});
 
-	pkg.createSchema({
-		name: "Send Chat Reply",
-		type: "exec",
-		properties: defaultProperties,
-		createIO: ({ ctx, properties, io }) => {
-			const state = () =>
-				ctx
-					.getProperty(properties.sender as DefaultProperties["sender"])
-					.andThen((sender) => Maybe(chat.clients.get(sender.data.id)))
-					.filter((s) => s.status === "connected");
-
-			const data = () =>
-				[
-					state().expect("No chat client connected"),
-					ctx
-						.getProperty(properties.channel as DefaultProperties["channel"])
-						.expect("Channel not provided"),
-				] as const;
-
-			createEffect(
-				on(data, ([state, channel]) => {
-					const channelLowercase = channel.toLowerCase();
-
-					state.channelListenerCounts[channelLowercase] ??= 0;
-					state.channelListenerCounts[channelLowercase] += 1;
-
-					onCleanup(() => {
-						if (state.channelListenerCounts[channelLowercase] !== undefined)
-							state.channelListenerCounts[channelLowercase] -= 1;
-					});
-				}),
-			);
-
-			return {
-				message: io.dataInput({
-					id: "message",
-					name: "Message",
-					type: t.string(),
-				}),
-				parent_id: io.dataInput({
-					id: "parent_id",
-					name: "Parent Message ID",
-					type: t.string(),
-				}),
-				data,
-			};
-		},
-		run({ ctx, io }) {
-			const [state, channel] = io.data();
-
-			return state.client.reply(
-				channel,
-				ctx.getInput(io.message),
-				ctx.getInput(io.parent_id),
-			);
-		},
-	});
-
 	type ListenerType<T> = [T] extends [(...args: infer U) => any]
 		? U
 		: [T] extends [never]
