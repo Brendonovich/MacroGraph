@@ -413,9 +413,6 @@ export const Graph = (props: Props) => {
           setRef(ref);
         }}
         onPointerUp={(e) => {
-          if (!gesture.pointers.find((p) => p.pointerId === e.pointerId))
-            return;
-
           if (e.pointerType === "touch") {
             gesture.pointers = gesture.pointers.filter(
               (p) => p.pointerId !== e.pointerId,
@@ -438,7 +435,8 @@ export const Graph = (props: Props) => {
               interfaceCtx.setState({ ...interfaceCtx.state, state });
             else interfaceCtx.setState(state);
           } else if (
-            e.button === 0 &&
+            (e.button === 0 ||
+              (e.pointerType === "touch" && gesture.pointers.length === 0)) &&
             interfaceCtx.state.status === "pinDragMode"
           ) {
             if (
@@ -504,124 +502,131 @@ export const Graph = (props: Props) => {
           });
 
           if (e.pointerType === "touch") {
-            Solid.createRoot((dispose) => {
-              const start = { x: e.clientX, y: e.clientY };
+            if (interfaceCtx.state.status === "pinDragMode") {
+              interfaceCtx.setState({ status: "idle" });
+            } else {
+              Solid.createRoot((dispose) => {
+                const start = { x: e.clientX, y: e.clientY };
 
-              createEventListenerMap(window, {
-                pointerup: () => {
-                  if (gesture.pointers.length === 0) {
-                    unselectAllEphemeral();
-                  }
+                createEventListenerMap(window, {
+                  pointerup: () => {
+                    if (gesture.pointers.length === 0) {
+                      unselectAllEphemeral();
+                    }
 
-                  dispose();
-                },
-                pointermove: (e) => {
-                  if (gesture.dragStarted || e.pointerId !== pointerId) return;
+                    dispose();
+                  },
+                  pointermove: (e) => {
+                    if (gesture.dragStarted || e.pointerId !== pointerId)
+                      return;
 
-                  const diff = {
-                    x: start.x - e.clientX,
-                    y: start.y - e.clientY,
-                  };
+                    const diff = {
+                      x: start.x - e.clientX,
+                      y: start.y - e.clientY,
+                    };
 
-                  if (Math.abs(diff.x) > 3 || Math.abs(diff.y) > 3) {
-                    gesture.dragStarted = true;
+                    if (Math.abs(diff.x) > 3 || Math.abs(diff.y) > 3) {
+                      gesture.dragStarted = true;
 
-                    const pointers = [...gesture.pointers];
-
-                    Solid.createRoot((dispose) => {
-                      createEventListener(window, "pointerup", (e) => {
-                        if (pointers.find((p) => p.pointerId === e.pointerId)) {
-                          gesture.dragStarted = false;
-                          dispose();
-                        }
-                      });
-                    });
-
-                    if (gesture.pointers.length === 1) {
-                      createDragAreaSession(start);
-                    } else if (gesture.pointers.length === 2) {
-                      const left = gesture.pointers[0]!;
-                      const right = gesture.pointers[1]!;
-
-                      const startCenter = {
-                        x: (left.start.x + right.start.x) / 2,
-                        y: (left.start.y + right.start.y) / 2,
-                      };
-
-                      const translateSession =
-                        createTranslateSession(startCenter);
+                      const pointers = [...gesture.pointers];
 
                       Solid.createRoot((dispose) => {
-                        createEventListenerMap(window, {
-                          pointerup: (e) => {
-                            if (
-                              left.pointerId !== e.pointerId &&
-                              right.pointerId !== e.pointerId
-                            )
-                              return;
-
+                        createEventListener(window, "pointerup", (e) => {
+                          if (
+                            pointers.find((p) => p.pointerId === e.pointerId)
+                          ) {
+                            gesture.dragStarted = false;
                             dispose();
-                            translateSession.stop();
-                          },
-                          pointermove: (e) => {
-                            const lastPointerDistance = Math.sqrt(
-                              (left.current.x - right.current.x) ** 2 +
-                                (left.current.y - right.current.y) ** 2,
-                            );
-                            const lastCenter = {
-                              x: (left.current.x + right.current.x) / 2,
-                              y: (left.current.y + right.current.y) / 2,
-                            };
-
-                            if (left.pointerId === e.pointerId) {
-                              left.current = { x: e.clientX, y: e.clientY };
-                            } else if (right.pointerId === e.pointerId) {
-                              right.current = { x: e.clientX, y: e.clientY };
-                            }
-
-                            const newCenter = {
-                              x: (left.current.x + right.current.x) / 2,
-                              y: (left.current.y + right.current.y) / 2,
-                            };
-
-                            const newPointerDistance = Math.sqrt(
-                              (left.current.x - right.current.x) ** 2 +
-                                (left.current.y - right.current.y) ** 2,
-                            );
-
-                            const newCenterGraphPosition =
-                              ctx.toGraphSpace(newCenter);
-
-                            updateScale(
-                              ((newPointerDistance - lastPointerDistance) /
-                                15) *
-                                props.state.scale,
-                              newCenter,
-                            );
-
-                            const newCenterAfterScaling = ctx.toScreenSpace(
-                              newCenterGraphPosition,
-                            );
-
-                            const { translate, scale } = props.state;
-                            props.onTranslateChange({
-                              x:
-                                translate.x +
-                                (lastCenter.x - newCenterAfterScaling.x) /
-                                  scale,
-                              y:
-                                translate.y +
-                                (lastCenter.y - newCenterAfterScaling.y) /
-                                  scale,
-                            });
-                          },
+                          }
                         });
                       });
+
+                      if (gesture.pointers.length === 1) {
+                        createDragAreaSession(start);
+                      } else if (gesture.pointers.length === 2) {
+                        const left = gesture.pointers[0]!;
+                        const right = gesture.pointers[1]!;
+
+                        const startCenter = {
+                          x: (left.start.x + right.start.x) / 2,
+                          y: (left.start.y + right.start.y) / 2,
+                        };
+
+                        const translateSession =
+                          createTranslateSession(startCenter);
+
+                        Solid.createRoot((dispose) => {
+                          createEventListenerMap(window, {
+                            pointerup: (e) => {
+                              if (
+                                left.pointerId !== e.pointerId &&
+                                right.pointerId !== e.pointerId
+                              )
+                                return;
+
+                              dispose();
+                              translateSession.stop();
+                            },
+                            pointermove: (e) => {
+                              const lastPointerDistance = Math.sqrt(
+                                (left.current.x - right.current.x) ** 2 +
+                                  (left.current.y - right.current.y) ** 2,
+                              );
+                              const lastCenter = {
+                                x: (left.current.x + right.current.x) / 2,
+                                y: (left.current.y + right.current.y) / 2,
+                              };
+
+                              if (left.pointerId === e.pointerId) {
+                                left.current = { x: e.clientX, y: e.clientY };
+                              } else if (right.pointerId === e.pointerId) {
+                                right.current = { x: e.clientX, y: e.clientY };
+                              }
+
+                              const newCenter = {
+                                x: (left.current.x + right.current.x) / 2,
+                                y: (left.current.y + right.current.y) / 2,
+                              };
+
+                              const newPointerDistance = Math.sqrt(
+                                (left.current.x - right.current.x) ** 2 +
+                                  (left.current.y - right.current.y) ** 2,
+                              );
+
+                              const newCenterGraphPosition =
+                                ctx.toGraphSpace(newCenter);
+
+                              updateScale(
+                                ((newPointerDistance - lastPointerDistance) /
+                                  15) *
+                                  props.state.scale,
+                                newCenter,
+                              );
+
+                              const newCenterAfterScaling = ctx.toScreenSpace(
+                                newCenterGraphPosition,
+                              );
+
+                              const { translate, scale } = props.state;
+                              props.onTranslateChange({
+                                x:
+                                  translate.x +
+                                  (lastCenter.x - newCenterAfterScaling.x) /
+                                    scale,
+                                y:
+                                  translate.y +
+                                  (lastCenter.y - newCenterAfterScaling.y) /
+                                    scale,
+                              });
+                            },
+                          });
+                        });
+                      }
                     }
-                  }
-                },
+                  },
+                });
               });
-            });
+            }
           } else {
             switch (e.button) {
               case 0: {

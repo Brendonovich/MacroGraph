@@ -71,17 +71,18 @@ function createEditorState() {
   //   },
   // );
 
-  const [currentGraphId, setCurrentGraphId] = makePersisted(
-    createSignal<number>(0),
-    { name: "current-graph-id" },
-  );
+  // const [currentGraphId, setCurrentGraphId] = makePersisted(
+  //   createSignal<number>(0),
+  //   { name: "current-graph-id" },
+  // );
 
-  const currentGraphIndex = createMemo(() => {
-    const index = graphStates.findIndex((g) => g.id === currentGraphId());
+  // const currentGraphIndex = createMemo(() => {
+  // const index = graphStates.findIndex((g) => g.id === currentGraphId());
 
-    if (index < 0) return null;
-    return index;
-  });
+  // if (index < 0) return null;
+  // return index;
+  //   return null;
+  // });
 
   const [mosaicState, setMosaicState] = createStore<{
     groups: Array<GraphTabListState>;
@@ -105,11 +106,6 @@ function createEditorState() {
     pinPositions: new ReactiveWeakMap<Pin, XY>(),
     leftSidebar,
     rightSidebar,
-    currentGraphId,
-    setCurrentGraphId,
-    currentGraphIndex,
-    graphStates,
-    setGraphStates,
     mosaicState,
     setMosaicState,
   };

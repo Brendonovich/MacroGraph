@@ -23,7 +23,6 @@ export interface GraphArgs {
   id: number;
   name: string;
   project: Project;
-  index: number;
 }
 
 export type IORef = `${number}:${"i" | "o"}:${string}`;

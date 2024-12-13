@@ -103,8 +103,8 @@ function ProjectInterface() {
   const {
     leftSidebar,
     rightSidebar,
-    graphStates,
-    setGraphStates,
+    // graphStates,
+    // setGraphStates,
     mosaicState,
     setMosaicState,
   } = useInterfaceContext();
@@ -130,9 +130,9 @@ function ProjectInterface() {
 
   createKeydownShortcuts(currentGraph, hoveredGraph, ctx.graphBounds);
 
-  const firstGraph = ctx.core.project.graphs.values().next().value;
-  if (graphStates.length === 0 && firstGraph)
-    setGraphStates([makeGraphState(firstGraph)]);
+  // const firstGraph = ctx.core.project.graphs.values().next().value;
+  // if (graphStates.length === 0 && firstGraph)
+  //   setGraphStates([makeGraphState(firstGraph)]);
 
   const [rootRef, setRootRef] = Solid.createSignal<
     HTMLDivElement | undefined
@@ -811,22 +811,18 @@ function createKeydownShortcuts(
             !(e.metaKey || (e.shiftKey && e.altKey)))
         ) {
           if (e.code === "ArrowLeft") {
-            const index = ctx.currentGraphIndex();
-            if (!index) break;
-
-            const state = ctx.graphStates[Math.max(0, index - 1)];
-            if (!state) break;
-
-            ctx.setCurrentGraphId(state.id);
+            // const index = ctx.currentGraphIndex();
+            // if (!index) break;
+            // const state = ctx.graphStates[Math.max(0, index - 1)];
+            // if (!state) break;
+            // ctx.setCurrentGraphId(state.id);
           } else {
-            const index = ctx.currentGraphIndex();
-            if (!index) break;
-
-            const state =
-              ctx.graphStates[Math.min(index + 1, ctx.graphStates.length - 1)];
-            if (!state) break;
-
-            ctx.setCurrentGraphId(state.id);
+            // const index = ctx.currentGraphIndex();
+            // if (!index) break;
+            // const state =
+            //   ctx.graphStates[Math.min(index + 1, ctx.graphStates.length - 1)];
+            // if (!state) break;
+            // ctx.setCurrentGraphId(state.id);
           }
         } else {
           const graph = currentGraph();

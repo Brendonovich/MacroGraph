@@ -28,10 +28,10 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-
 import { createEventListener } from "@solid-primitives/event-listener";
+import { isMobile } from "@solid-primitives/platform";
+
 import { useInterfaceContext } from "../../context";
-import type { GraphState } from "../Graph/Context";
 
 interface Props {
   // graph: GraphState;
@@ -73,7 +73,9 @@ export function SchemaMenu(props: Props) {
 
   let searchRef: HTMLInputElement;
 
-  onMount(() => (searchRef as any).focus());
+  onMount(() => {
+    if (!isMobile) (searchRef as any).focus();
+  });
 
   const sortedPackages = createMemo(() =>
     interfaceCtx.core.packages.sort((a, b) => a.name.localeCompare(b.name)),

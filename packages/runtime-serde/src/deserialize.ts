@@ -177,7 +177,7 @@ export function deserializeCustomEnum(
   enm.variantIdCounter = data.variantIdCounter;
 
   deferrer.defer(() => {
-    enm.variants = [];
+    enm.variants = [] as any;
     for (const variant of data.variants) {
       enm.variants.push(deserializeCustomEnumVariant(enm, variant));
     }

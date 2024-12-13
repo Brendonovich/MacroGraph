@@ -1,5 +1,13 @@
-import { historyAction } from "@macrograph/action-history";
-import type { ClipboardItem } from "@macrograph/clipboard";
+import {
+  _historyAction,
+  abort,
+  historyAction,
+  PerformInput,
+} from "@macrograph/action-history";
+import {
+  serializeConnections,
+  type ClipboardItem,
+} from "@macrograph/clipboard";
 import type { Option } from "@macrograph/option";
 import {
   type Core,
@@ -52,7 +60,7 @@ import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 import {
   type SelectedItemID,
-  makeGraphState,
+  // makeGraphState,
 } from "./components/Graph/Context";
 import type { EditorState } from "./context";
 
@@ -67,8 +75,7 @@ export type GraphItemPositionInput = {
   position: XY;
   from?: XY;
 };
-export type CreateNodeInput = {
-  graphId: number;
+export type CreateNodeInput = GraphRef & {
   schema: NodeSchema;
   position: XY;
   connection?: {
@@ -83,6 +90,21 @@ export type CreateNodeInput = {
   properties?: Record<string, any>;
 };
 
+type GraphRef = { graphId: number };
+type NodeRef = GraphRef & { nodeId: number };
+type CommentBoxRef = GraphRef & { commentBoxId: number };
+type CustomStructRef = { structId: number };
+type CustomStructFieldRef = CustomStructRef & { fieldId: number };
+type CustomEnumRef = { enumId: number };
+type CustomEnumVariantRef = CustomEnumRef & {
+  variantId: string;
+};
+type CustomEnumVariantFieldRef = CustomEnumVariantRef & {
+  fieldId: string;
+};
+type CustomEventRef = { eventId: number };
+type CustomEventFieldRef = CustomEventRef & { fieldId: number };
+
 export const historyActions = (core: Core, editor: EditorState) => {
   function getFocusedGraphState(graphId?: number) {
     const tile = editor.mosaicState.groups[editor.mosaicState.focusedIndex];
@@ -93,23 +115,101 @@ export const historyActions = (core: Core, editor: EditorState) => {
     return tile.tabs[tile.selectedIndex];
   }
 
+  function getGraph(input: GraphRef) {
+    const graph = core.project.graphs.get(input.graphId);
+    if (!graph) abort();
+    return graph;
+  }
+  function getNode(input: NodeRef) {
+    const node = getGraph(input).nodes.get(input.nodeId);
+    if (!node) abort();
+    return node;
+  }
+  function getCommentBox(input: CommentBoxRef) {
+    const node = getGraph(input).commentBoxes.get(input.commentBoxId);
+    if (!node) abort();
+    return node;
+  }
+  function getCustomStruct(input: CustomStructRef) {
+    const struct = core.project.customStructs.get(input.structId);
+    if (!struct) abort();
+    return struct;
+  }
+  function getCustomStructField(input: CustomStructFieldRef) {
+    const struct = getCustomStruct(input);
+    const field = struct.fields[input.fieldId];
+    if (!field) abort();
+    return field;
+  }
+  function getCustomEnum(input: CustomEnumRef) {
+    const struct = core.project.customEnums.get(input.enumId);
+    if (!struct) abort();
+    return struct;
+  }
+  function getCustomEvent(input: CustomEventRef) {
+    const event = core.project.customEvents.get(input.eventId);
+    if (!event) abort();
+    return event;
+  }
+  function getCustomEventField(input: CustomEventFieldRef) {
+    const event = getCustomEvent(input);
+    const field = event.field(input.fieldId.toString());
+    if (!field) abort();
+    return field;
+  }
+
   return {
+    // _createGraph: _historyAction({
+    //   async perform(
+    //     input: PerformInput<void, ReturnType<typeof serializeGraph>>,
+    //   ) {
+    //     let graph;
+
+    //     if (input.type === "redo") {
+    //       graph = await deserializeGraph(
+    //         core.project,
+    //         v.parse(serde.Graph, input.data),
+    //       );
+    //       core.project.graphs.set(graph.id, graph);
+    //     } else graph = core.project.createGraph();
+
+    //     // const graphStates = [...editor.graphStates, makeGraphState(graph)];
+
+    //     // editor.setGraphStates(graphStates);
+    //     // editor.setCurrentGraphId(entry.id);
+
+    //     return [graph, { id: graph.id }];
+    //   },
+    //   rewind(performData) {
+    //     const graph = core.project.graphs.get(performData.id);
+    //     if (!graph) return;
+
+    //     const serialized = serializeGraph(graph);
+
+    //     core.project.graphs.delete(graph.id);
+    //     graph.dispose();
+
+    //     return serialized;
+    //     // editor.setGraphStates(entry.prev.graphStates);
+    //     // editor.setCurrentGraphId(entry.prev.currentGraphId);
+    //   },
+    // }),
     createGraph: historyAction({
       prepare() {
         return {
           id: core.project.generateGraphId(),
           prev: {
-            graphStates: [...editor.graphStates],
-            currentGraphId: editor.currentGraphId(),
+            // graphStates: [...editor.graphStates],
+            // currentGraphId: editor.currentGraphId(),
           },
         };
       },
       perform(entry) {
         const graph = core.project.createGraph({ id: entry.id });
-        const graphStates = [...editor.graphStates, makeGraphState(graph)];
+        // const graphStates = [...editor.graphStates, makeGraphState(graph)];
 
-        editor.setGraphStates(graphStates);
-        editor.setCurrentGraphId(entry.id);
+        // editor.setGraphStates(graphStates);
+        // editor.setCurrentGraphId(entry.id);
 
         return graph;
       },
@@ -120,10 +220,42 @@ export const historyActions = (core: Core, editor: EditorState) => {
         core.project.graphs.delete(entry.id);
         graph.dispose();
 
-        editor.setGraphStates(entry.prev.graphStates);
-        editor.setCurrentGraphId(entry.prev.currentGraphId);
+        // editor.setGraphStates(entry.prev.graphStates);
+        // editor.setCurrentGraphId(entry.prev.currentGraphId);
       },
     }),
+    // _setGraphName: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       GraphRef & { name: string },
+    //       GraphRef & { prev: string }
+    //     >,
+    //   ) {
+    //     let data;
+
+    //     if (input.type === "perform") {
+    //       data = input.data;
+    //     } else {
+    //       data = input.data;
+    //     }
+
+    //     const graph = getGraph(input.data);
+
+    //     const prev = graph.name;
+    //     graph.name =
+    //       input.type === "perform" ? input.data.name : input.data.prev;
+
+    //     return [graph, { graphId: data.graphId, prev }];
+    //   },
+    //   rewind(data) {
+    //     const graph = getGraph(data);
+
+    //     const prev = graph.name;
+    //     graph.name = data.prev;
+
+    //     return { graphId: data.graphId, prev };
+    //   },
+    // }),
     setGraphName: historyAction({
       prepare(input: { graphId: number; name: string }) {
         const graph = core.project.graphs.get(input.graphId);
@@ -147,6 +279,26 @@ export const historyActions = (core: Core, editor: EditorState) => {
         graph.name = entry.prev;
       },
     }),
+    // _deleteGraph: _historyAction({
+    //   perform(input: PerformInput<GraphRef, GraphRef>) {
+    //     const graph = getGraph(input.data);
+    //     const serialized = serializeGraph(graph);
+
+    //     core.project.graphs.delete(graph.id);
+    //     graph.dispose();
+
+    //     return [, serialized];
+    //   },
+    //   async rewind(data) {
+    //     const graph = await deserializeGraph(
+    //       core.project,
+    //       v.parse(serde.Graph, data),
+    //     );
+    //     core.project.graphs.set(graph.id, graph);
+
+    //     return { graphId: graph.id };
+    //   },
+    // }),
     deleteGraph: historyAction({
       prepare(input: { graphId: number }) {
         const graph = core.project.graphs.get(input.graphId);
@@ -156,8 +308,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
           graphId: input.graphId,
           data: serializeGraph(graph),
           prev: {
-            graphStates: [...editor.graphStates],
-            currentGraphId: editor.currentGraphId(),
+            // graphStates: [...editor.graphStates],
+            // currentGraphId: editor.currentGraphId(),
           },
         };
       },
@@ -168,17 +320,17 @@ export const historyActions = (core: Core, editor: EditorState) => {
         core.project.graphs.delete(entry.graphId);
         graph.dispose();
 
-        editor.setGraphStates((s) => s.filter((s) => s.id !== entry.graphId));
-        editor.setCurrentGraphId((id) => {
-          if (id === entry.graphId) {
-            const index =
-              editor.currentGraphIndex() ?? editor.graphStates.length - 1;
-            if (index === -1) return id;
-            return editor.graphStates[index]!.id;
-          }
+        // editor.setGraphStates((s) => s.filter((s) => s.id !== entry.graphId));
+        // editor.setCurrentGraphId((id) => {
+        //   if (id === entry.graphId) {
+        //     const index =
+        //       editor.currentGraphIndex() ?? editor.graphStates.length - 1;
+        //     if (index === -1) return id;
+        //     return editor.graphStates[index]!.id;
+        //   }
 
-          return id;
-        });
+        //   return id;
+        // });
       },
       async rewind(entry) {
         const graph = await deserializeGraph(
@@ -188,11 +340,82 @@ export const historyActions = (core: Core, editor: EditorState) => {
         core.project.graphs.set(graph.id, graph);
 
         batch(() => {
-          editor.setGraphStates(entry.prev.graphStates);
-          editor.setCurrentGraphId(entry.prev.currentGraphId);
+          // editor.setGraphStates(entry.prev.graphStates);
+          // editor.setCurrentGraphId(entry.prev.currentGraphId);
         });
       },
     }),
+    // _createNode: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CreateNodeInput,
+    //       GraphRef & {
+    //         node: serde.Node;
+    //         connections: ReturnType<typeof serializeConnections>;
+    //       }
+    //     >,
+    //   ) {
+    //     const graph = getGraph(input.data);
+
+    //     let node;
+
+    //     if (input.type === "redo") {
+    //       node = deserializeNode(graph, input.data.node);
+    //       if (!node) return;
+
+    //       const connections = v.parse(
+    //         v.array(serde.Connection),
+    //         input.data.connections,
+    //       );
+    //       deserializeConnections(connections, graph.connections);
+    //     } else {
+    //       const nodeId = graph.generateId();
+
+    //       node = graph.createNode({
+    //         id: nodeId,
+    //         schema: input.data.schema,
+    //         name: input.data.name,
+    //         position: input.data.position,
+    //         properties: input.data.properties,
+    //       });
+
+    //       const { connection } = input.data;
+    //       if (connection) {
+    //         let output: OutputPin | undefined;
+    //         let input: InputPin | undefined;
+
+    //         const connectionNode = graph.nodes.get(connection.to.nodeId);
+    //         if (connectionNode) {
+    //           if (connection.to.variant === "o") {
+    //             output = connectionNode.output(connection.to.pinId);
+    //             input = node.input(connection.fromPinId);
+    //           } else {
+    //             output = node.output(connection.fromPinId);
+    //             input = connectionNode.input(connection.to.pinId);
+    //           }
+    //         }
+
+    //         if (output && input) graph.connectPins(output, input);
+    //       }
+    //     }
+
+    //     return [node, { graphId: graph.id, nodeId: node.id }];
+    //   },
+    //   rewind(data) {
+    //     const graph = getGraph(data);
+    //     const node = getNode(data);
+
+    //     const serialized = {
+    //       graphId: graph.id,
+    //       node: v.parse(serde.Node, serializeNode(node)),
+    //       connections: serializeConnections(new Set([node])),
+    //     };
+
+    //     graph.deleteNode(node);
+
+    //     return serialized;
+    //   },
+    // }),
     createNode: historyAction({
       prepare(input: CreateNodeInput) {
         const graph = core.project.graphs.get(input.graphId);
@@ -202,10 +425,10 @@ export const historyActions = (core: Core, editor: EditorState) => {
           ...input,
           nodeId: graph.generateId(),
           prev: {
-            selection: [
-              ...(editor.graphStates[editor.currentGraphIndex()!]
-                ?.selectedItemIds ?? []),
-            ],
+            // selection: [
+            //   ...(editor.graphStates[editor.currentGraphIndex()!]
+            //     ?.selectedItemIds ?? []),
+            // ],
           },
         };
       },
@@ -240,9 +463,9 @@ export const historyActions = (core: Core, editor: EditorState) => {
           if (output && input) graph.connectPins(output, input);
         }
 
-        editor.setGraphStates(editor.currentGraphIndex()!, "selectedItemIds", [
-          { type: "node", id: node.id },
-        ]);
+        // editor.setGraphStates(editor.currentGraphIndex()!, "selectedItemIds", [
+        //   { type: "node", id: node.id },
+        // ]);
 
         return node;
       },
@@ -255,13 +478,49 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
         graph.deleteNode(node);
 
-        editor.setGraphStates(
-          editor.currentGraphIndex()!,
-          "selectedItemIds",
-          entry.prev.selection,
-        );
+        // editor.setGraphStates(
+        //   editor.currentGraphIndex()!,
+        //   "selectedItemIds",
+        //   entry.prev.selection,
+        // );
       },
     }),
+    // _setNodeProperty: _historyAction(() => {
+    //   type Data = NodeRef & {
+    //     propertyId: string;
+    //     value: any;
+    //   };
+    //   return {
+    //     perform(data: PerformInput<Data, Data>) {
+    //       let input;
+
+    //       if (data.type === "perform") {
+    //         input = data.data;
+    //       } else {
+    //         input = data.data;
+    //       }
+
+    //       const node = getNode(data.data);
+    //       const prev = node.state.properties[input.propertyId];
+
+    //       if (prev === input.value) return;
+
+    //       node.setProperty(input.propertyId, input.value);
+
+    //       return [, { ...input, value: prev }];
+    //     },
+    //     rewind(data) {
+    //       const node = getNode(data);
+    //       const prev = node.state.properties[data.propertyId];
+
+    //       if (prev === data.value) return;
+
+    //       node.setProperty(data.propertyId, data.value);
+
+    //       return { ...data, value: prev };
+    //     },
+    //   };
+    // }),
     setNodeProperty: historyAction({
       prepare(input: {
         graphId: number;
@@ -303,6 +562,35 @@ export const historyActions = (core: Core, editor: EditorState) => {
         node.setProperty(entry.propertyId, entry.prev);
       },
     }),
+    // _setNodeName: _historyAction(() => {
+    //   type Input = NodeRef & { name: string };
+    //   return {
+    //     perform(input: PerformInput<Input, Input>) {
+    //       let data;
+
+    //       if (input.type === "perform") {
+    //         data = input.data;
+    //       } else {
+    //         data = input.data;
+    //       }
+
+    //       const node = getNode(data);
+    //       const prev = node.state.name;
+
+    //       node.state.name = data.name;
+
+    //       return [, { ...data, name: prev }];
+    //     },
+    //     rewind(data) {
+    //       const node = getNode(data);
+    //       const prev = node.state.name;
+
+    //       node.state.name = data.name;
+
+    //       return { ...data, name: prev };
+    //     },
+    //   };
+    // }),
     setNodeName: historyAction({
       prepare(input: { graphId: number; nodeId: number; name: string }) {
         const node = core.project.graphs
@@ -329,6 +617,27 @@ export const historyActions = (core: Core, editor: EditorState) => {
         node.state.name = entry.prev;
       },
     }),
+    // _setNodeFoldPins: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       NodeRef & { foldPins: boolean },
+    //       NodeRef & { foldPins: boolean }
+    //     >,
+    //   ) {
+    //     const node = getNode(input.data);
+
+    //     node.state.foldPins = input.data.foldPins;
+
+    //     return [, input.data];
+    //   },
+    //   rewind(data) {
+    //     const node = getNode(data);
+
+    //     node.state.foldPins = !data.foldPins;
+
+    //     return data;
+    //   },
+    // }),
     setNodeFoldPins: historyAction({
       prepare(input: { graphId: number; nodeId: number; foldPins: boolean }) {
         const node = core.project.graphs
@@ -355,6 +664,47 @@ export const historyActions = (core: Core, editor: EditorState) => {
         node.state.foldPins = entry.prev;
       },
     }),
+    // _createCommentBox: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       { position: XY } & GraphRef,
+    //       GraphRef & { commentBox: serde.CommentBox }
+    //     >,
+    //   ) {
+    //     const graph = getGraph(input.data);
+
+    //     let id;
+    //     let box;
+    //     if (input.type === "perform") {
+    //       id = graph.generateId();
+
+    //       box = graph.createCommentBox({
+    //         id,
+    //         position: input.data.position,
+    //         size: { x: 400, y: 200 },
+    //         text: "Comment",
+    //       });
+    //     } else {
+    //       box = deserializeCommentBox(graph, input.data.commentBox);
+    //       id = box.id;
+    //     }
+
+    //     return [box, { graphId: graph.id, commentBoxId: box.id }];
+    //   },
+    //   rewind(data) {
+    //     const graph = getGraph(data);
+    //     const box = getCommentBox(data);
+
+    //     const serialized = {
+    //       graphId: graph.id,
+    //       commentBox: v.parse(serde.CommentBox, serializeCommentBox(box)),
+    //     };
+
+    //     graph.deleteCommentbox(box);
+
+    //     return serialized;
+    //   },
+    // }),
     createCommentBox: historyAction({
       prepare(input: { graphId: number; position: XY }) {
         const graph = core.project.graphs.get(input.graphId);
@@ -365,10 +715,10 @@ export const historyActions = (core: Core, editor: EditorState) => {
           commentBoxId: graph.generateId(),
           position: input.position,
           prev: {
-            selection: [
-              ...(editor.graphStates[editor.currentGraphIndex()!]
-                ?.selectedItemIds ?? []),
-            ],
+            // selection: [
+            //   ...(editor.graphStates[editor.currentGraphIndex()!]
+            //     ?.selectedItemIds ?? []),
+            // ],
           },
         };
       },
@@ -380,12 +730,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
           text: "Comment",
         });
 
-        if (box)
-          editor.setGraphStates(
-            editor.currentGraphIndex()!,
-            "selectedItemIds",
-            [{ type: "commentBox", id: box.id }],
-          );
+        // if (box)
+        //   editor.setGraphStates(
+        //     editor.currentGraphIndex()!,
+        //     "selectedItemIds",
+        //     [{ type: "commentBox", id: box.id }],
+        //   );
 
         return box;
       },
@@ -397,13 +747,35 @@ export const historyActions = (core: Core, editor: EditorState) => {
         if (!box) return;
 
         graph.deleteCommentbox(box);
-        editor.setGraphStates(
-          editor.currentGraphIndex()!,
-          "selectedItemIds",
-          entry.prev.selection,
-        );
+        // editor.setGraphStates(
+        //   editor.currentGraphIndex()!,
+        //   "selectedItemIds",
+        //   entry.prev.selection,
+        // );
       },
     }),
+    // _setCommentBoxTint: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CommentBoxRef & { tint: string },
+    //       CommentBoxRef & { tint: string }
+    //     >,
+    //   ) {
+    //     const box = getCommentBox(input.data);
+
+    //     const prev = box.tint;
+    //     if (input.data.tint === prev) return;
+
+    //     return [, { ...input.data, tint: prev }];
+    //   },
+    //   rewind(data) {
+    //     const box = getCommentBox(data);
+
+    //     const prev = box.tint;
+
+    //     return { ...data, tint: prev };
+    //   },
+    // }),
     setCommentBoxTint: historyAction({
       prepare(input: {
         graphId: number;
@@ -438,6 +810,28 @@ export const historyActions = (core: Core, editor: EditorState) => {
         box.tint = entry.prev;
       },
     }),
+    // _setCommentBoxText: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CommentBoxRef & { text: string },
+    //       CommentBoxRef & { text: string }
+    //     >,
+    //   ) {
+    //     const box = getCommentBox(input.data);
+
+    //     const prev = box.text;
+    //     if (input.data.text === prev) return;
+
+    //     return [, { ...input.data, text: prev }];
+    //   },
+    //   rewind(data) {
+    //     const box = getCommentBox(data);
+
+    //     const prev = box.text;
+
+    //     return { ...data, text: prev };
+    //   },
+    // }),
     setCommentBoxText: historyAction({
       prepare(input: { graphId: number; boxId: number; text: string }) {
         const box = core.project.graphs
@@ -467,6 +861,39 @@ export const historyActions = (core: Core, editor: EditorState) => {
         box.text = entry.prev;
       },
     }),
+    // _setCommentBoxBounds: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CommentBoxRef & { position: XY; size: XY },
+    //       CommentBoxRef & { position: XY; size: XY }
+    //     >,
+    //   ) {
+    //     const box = getCommentBox(input.data);
+
+    //     const prev = {
+    //       size: { ...box.size },
+    //       position: { ...box.position },
+    //     };
+
+    //     box.size = { ...input.data.size };
+    //     box.position = { ...input.data.position };
+
+    //     return [, { ...input.data, ...prev }];
+    //   },
+    //   rewind(data) {
+    //     const box = getCommentBox(data);
+
+    //     const prev = {
+    //       size: { ...box.size },
+    //       position: { ...box.position },
+    //     };
+
+    //     box.size = { ...data.size };
+    //     box.position = { ...data.position };
+
+    //     return { ...data, ...prev };
+    //   },
+    // }),
     setCommentBoxBounds: historyAction({
       prepare(input: {
         graphId: number;
@@ -497,11 +924,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
         box.size = { ...entry.size };
         box.position = { ...entry.position };
 
-        editor.setGraphStates(
-          (g) => g.id === entry.graphId,
-          "selectedItemIds",
-          [{ type: "commentBox", id: box.id }],
-        );
+        // editor.setGraphStates(
+        //   (g) => g.id === entry.graphId,
+        //   "selectedItemIds",
+        //   [{ type: "commentBox", id: box.id }],
+        // );
       },
       rewind(entry) {
         const box = core.project.graphs
@@ -512,14 +939,62 @@ export const historyActions = (core: Core, editor: EditorState) => {
         box.size = { ...entry.prev.size };
         box.position = { ...entry.prev.position };
 
-        if (entry.prev.selection)
-          editor.setGraphStates(
-            (g) => g.id === entry.graphId,
-            "selectedItemIds",
-            entry.prev.selection,
-          );
+        // if (entry.prev.selection)
+        // editor.setGraphStates(
+        //   (g) => g.id === entry.graphId,
+        //   "selectedItemIds",
+        //   entry.prev.selection,
+        // );
       },
     }),
+    // _setGraphItemPositions: _historyAction(() => {
+    //   type Input = GraphRef & { items: Array<GraphItemPositionInput> };
+
+    //   function action(data: Input) {
+    //     const graph = getGraph(data);
+
+    //     const prevItems: Array<GraphItemPositionInput> = [];
+
+    //     for (const item of data.items) {
+    //       if (item.itemVariant === "node") {
+    //         const node = graph.nodes.get(item.itemId);
+    //         if (!node) continue;
+
+    //         prevItems.push({
+    //           itemId: node.id,
+    //           itemVariant: "node",
+    //           position: { ...item.position },
+    //         });
+
+    //         node.state.position = { ...item.position };
+    //       } else {
+    //         const box = graph.commentBoxes.get(item.itemId);
+    //         if (!box) continue;
+
+    //         prevItems.push({
+    //           itemId: box.id,
+    //           itemVariant: "commentBox",
+    //           position: { ...item.position },
+    //         });
+
+    //         box.position = { ...item.position };
+    //       }
+    //     }
+
+    //     return { graphId: data.graphId, items: prevItems };
+    //   }
+
+    //   return {
+    //     perform(input: PerformInput<Input, Input>) {
+    //       const data = action(input.data);
+
+    //       return [, data];
+    //     },
+    //     rewind(data) {
+    //       return action(data);
+    //     },
+    //   };
+    // }),
     setGraphItemPositions: historyAction({
       prepare(input: {
         graphId: number;
@@ -547,12 +1022,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
           }
         }
 
-        if (entry.selection)
-          editor.setGraphStates(
-            (g) => g.id === entry.graphId,
-            "selectedItemIds",
-            [...entry.selection],
-          );
+        // if (entry.selection)
+        // editor.setGraphStates(
+        //   (g) => g.id === entry.graphId,
+        //   "selectedItemIds",
+        //   [...entry.selection],
+        // );
       },
       rewind(entry) {
         const graph = core.project.graphs.get(entry.graphId);
@@ -574,14 +1049,168 @@ export const historyActions = (core: Core, editor: EditorState) => {
           }
         }
 
-        if (entry.prevSelection)
-          editor.setGraphStates(
-            (g) => g.id === entry.graphId,
-            "selectedItemIds",
-            [...entry.prevSelection],
-          );
+        // if (entry.prevSelection)
+        // editor.setGraphStates(
+        //   (g) => g.id === entry.graphId,
+        //   "selectedItemIds",
+        //   [...entry.prevSelection],
+        // );
       },
     }),
+    // _deleteGraphItems: _historyAction(() => {
+    //   type Data = GraphRef & {
+    //     nodes: Array<v.InferInput<typeof serde.Node>>;
+    //     connections: Array<v.InferInput<typeof serde.Connection>>;
+    //     commentBoxes: Array<v.InferInput<typeof serde.CommentBox>>;
+    //   };
+
+    //   return {
+    //     perform(
+    //       input: PerformInput<GraphRef & { items: Array<SelectionItem> }, Data>,
+    //     ) {
+    //       const graph = getGraph(input.data);
+
+    //       let data: Data;
+
+    //       if (input.type === "perform") {
+    //         const { items } = input.data;
+
+    //         data = {
+    //           graphId: input.data.graphId,
+    //           nodes: [],
+    //           connections: [],
+    //           commentBoxes: [],
+    //         };
+
+    //         for (const { type, id } of items) {
+    //           if (type === "node") {
+    //             const node = graph.nodes.get(id);
+    //             if (!node) continue;
+
+    //             for (const output of node.io.outputs) {
+    //               const ref = makeIORef(output);
+
+    //               const connections = graph.connections.get(ref);
+    //               if (!connections) continue;
+
+    //               for (const connectionRef of connections) {
+    //                 const outputData = splitIORef(ref);
+    //                 const inputData = splitIORef(connectionRef);
+
+    //                 data.connections.push({
+    //                   from: {
+    //                     node: outputData.nodeId,
+    //                     output: outputData.ioId,
+    //                   },
+    //                   to: { node: inputData.nodeId, input: inputData.ioId },
+    //                 });
+    //               }
+    //             }
+
+    //             for (const input of node.io.inputs) {
+    //               if (input instanceof ExecInput) {
+    //                 for (const connOutput of input.connections) {
+    //                   if (
+    //                     items.some(
+    //                       (i) =>
+    //                         i.type === "node" && i.id === connOutput.node.id,
+    //                     )
+    //                   )
+    //                     continue;
+
+    //                   data.connections.push({
+    //                     from: {
+    //                       node: connOutput.node.id,
+    //                       output: connOutput.id,
+    //                     },
+    //                     to: { node: input.node.id, input: input.id },
+    //                   });
+    //                 }
+    //               } else if (
+    //                 input instanceof DataInput ||
+    //                 input instanceof ScopeInput
+    //               ) {
+    //                 (
+    //                   input.connection as Option<DataOutput<any> | ScopeOutput>
+    //                 ).peek((connOutput) => {
+    //                   if (
+    //                     items.some(
+    //                       (i) =>
+    //                         i.type === "node" && i.id === connOutput.node.id,
+    //                     )
+    //                   )
+    //                     return;
+
+    //                   data.connections.push({
+    //                     from: {
+    //                       node: connOutput.node.id,
+    //                       output: connOutput.id,
+    //                     },
+    //                     to: { node: input.node.id, input: input.id },
+    //                   });
+    //                 });
+    //               }
+    //             }
+
+    //             data.nodes.push(serializeNode(node));
+    //           } else {
+    //             const box = graph.commentBoxes.get(id);
+    //             if (!box) continue;
+
+    //             data.commentBoxes.push(serializeCommentBox(box));
+    //           }
+    //         }
+    //       } else {
+    //         data = input.data;
+    //       }
+
+    //       for (const nodeData of data.nodes) {
+    //         const node = graph.nodes.get(nodeData.id);
+    //         if (!node) continue;
+
+    //         graph.deleteNode(node);
+    //       }
+
+    //       for (const boxData of data.commentBoxes) {
+    //         if (boxData.id === undefined) continue;
+    //         const box = graph.commentBoxes.get(boxData.id);
+    //         if (!box) continue;
+
+    //         graph.deleteCommentbox(box);
+    //       }
+
+    //       return [, data];
+    //     },
+    //     rewind(data) {
+    //       const graph = getGraph(data);
+
+    //       for (const nodeData of data.nodes.reverse()) {
+    //         const node = deserializeNode(graph, v.parse(serde.Node, nodeData));
+    //         if (!node) continue;
+
+    //         graph.nodes.set(node.id, node);
+    //       }
+
+    //       for (const boxData of data.commentBoxes.reverse()) {
+    //         const box = deserializeCommentBox(
+    //           graph,
+    //           v.parse(serde.CommentBox, boxData),
+    //         );
+    //         if (!box) continue;
+
+    //         graph.commentBoxes.set(box.id, box);
+    //       }
+
+    //       const connections = v.parse(
+    //         v.array(serde.Connection),
+    //         data.connections,
+    //       );
+    //       deserializeConnections(connections, graph.connections);
+
+    //       return data;
+    //     },
+    //   };
+    // }),
     deleteGraphItems: historyAction({
       prepare(input: { graphId: number; items: Array<SelectionItem> }) {
         type Entry = {
@@ -719,6 +1348,117 @@ export const historyActions = (core: Core, editor: EditorState) => {
         deserializeConnections(connections, graph.connections);
       },
     }),
+    // _connectIO: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       GraphRef & {
+    //         out: { nodeId: number; pinId: string };
+    //         in: { nodeId: number; pinId: string };
+    //       },
+    //       GraphRef & {
+    //         out: { nodeId: number; pinId: string };
+    //         in: { nodeId: number; pinId: string };
+    //         prevConnections: Array<v.InferInput<typeof serde.Connection>>;
+    //       }
+    //     >,
+    //   ) {
+    //     const graph = getGraph(input.data);
+
+    //     let prevConnections: Array<v.InferInput<typeof serde.Connection>> = [];
+
+    //     const { data } = input;
+
+    //     const outPin = graph.nodes.get(data.out.nodeId)?.output(data.out.pinId);
+    //     const inPin = graph.nodes.get(data.in.nodeId)?.input(data.in.pinId);
+
+    //     if (input.type === "perform") {
+    //       if (outPin instanceof DataOutput && inPin instanceof DataInput) {
+    //         const to = { node: inPin.node.id, input: inPin.id };
+    //         inPin.connection.peek((out) => {
+    //           prevConnections.push({
+    //             from: { node: out.node.id, output: out.id },
+    //             to,
+    //           });
+    //         });
+    //       } else if (
+    //         outPin instanceof ExecOutput &&
+    //         inPin instanceof ExecInput
+    //       ) {
+    //         const from = { node: outPin.node.id, output: outPin.id };
+    //         outPin.connection().peek((inPin) => {
+    //           prevConnections.push({
+    //             from,
+    //             to: { node: inPin.node.id, input: inPin.id },
+    //           });
+    //         });
+    //       } else if (
+    //         outPin instanceof ScopeOutput &&
+    //         inPin instanceof ScopeInput
+    //       ) {
+    //         const from = { node: outPin.node.id, output: outPin.id };
+    //         outPin.connection().peek((inPin) => {
+    //           prevConnections.push({
+    //             from,
+    //             to: { node: inPin.node.id, input: inPin.id },
+    //           });
+    //         });
+    //         const to = { node: inPin.node.id, input: inPin.id };
+    //         inPin.connection.peek((out) => {
+    //           prevConnections.push({
+    //             from: { node: out.node.id, output: out.id },
+    //             to,
+    //           });
+    //         });
+    //       } else return;
+    //     } else {
+    //       prevConnections = input.data.prevConnections;
+    //     }
+
+    //     if (!outPin || !inPin) return;
+
+    //     graph.connectPins(outPin, inPin);
+
+    //     return [, { ...input.data, prevConnections }];
+    //   },
+    //   rewind(data) {
+    //     // TODO: remove prev connections that have been disconnected elsewhere
+
+    //     const graph = getGraph(data);
+
+    //     const outNode = graph.nodes.get(data.out.nodeId);
+    //     const inNode = graph.nodes.get(data.in.nodeId);
+    //     if (!outNode || !inNode) return;
+
+    //     const outPin = outNode.output(data.out.pinId);
+    //     const inPin = inNode.input(data.in.pinId);
+    //     if (!outPin || !inPin) return;
+
+    //     const outConnections = graph.connections.get(makeIORef(outPin));
+    //     if (!outConnections) return;
+
+    //     const index = outConnections.findIndex(
+    //       (ref) => ref === makeIORef(inPin),
+    //     );
+    //     outConnections.splice(index, 1);
+
+    //     const prevConnections = v.parse(
+    //       v.array(serde.Connection),
+    //       data.prevConnections,
+    //     );
+
+    //     for (const prev of prevConnections) {
+    //       const fromPin = graph.nodes
+    //         .get(prev.from.node)
+    //         ?.output(prev.from.output);
+    //       const toPin = graph.nodes.get(prev.to.node)?.input(prev.to.input);
+    //       if (!fromPin || !toPin) continue;
+
+    //       graph.connectPins(fromPin, toPin);
+    //     }
+
+    //     return data;
+    //   },
+    // }),
     connectIO: historyAction({
       prepare(input: {
         graphId: number;
@@ -822,6 +1562,65 @@ export const historyActions = (core: Core, editor: EditorState) => {
         }
       },
     }),
+    // _disconnectIO: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       GraphRef & { ioRef: IORef },
+    //       GraphRef & { ioRef: IORef }
+    //     >,
+    //   ) {
+    //     const graph = getGraph(input.data);
+
+    //     const io = splitIORef(input.data.ioRef);
+
+    //     const node = graph.nodes.get(io.nodeId);
+    //     if (!node) return;
+
+    //     const pin =
+    //       io.type === "i" ? node.input(io.ioId) : node.output(io.ioId);
+    //     if (!pin) return;
+
+    //     const prevConnections = pinConnections(pin);
+
+    //     graph.disconnectPin(pin);
+
+    //     return [, { ...input.data, prevConnections }];
+    //   },
+    //   rewind(data) {
+    //     const graph = getGraph(data);
+
+    //     const io = splitIORef(data.ioRef);
+
+    //     const node = graph.nodes.get(io.nodeId);
+    //     if (!node) return;
+
+    //     const pin =
+    //       io.type === "i" ? node.input(io.ioId) : node.output(io.ioId);
+    //     if (!pin) return;
+
+    //     if (pinIsOutput(pin)) {
+    //       for (const prev of data.prevConnections) {
+    //         const input = graph.nodes
+    //           .get(prev.nodeId)
+    //           ?.io.inputs.find((i) => i.id === prev.id);
+    //         if (!input) continue;
+
+    //         graph.connectPins(pin, input);
+    //       }
+    //     } else {
+    //       for (const prev of data.prevConnections) {
+    //         const output = graph.nodes
+    //           .get(prev.nodeId)
+    //           ?.io.outputs.find((o) => o.id === prev.id);
+    //         if (!output) continue;
+
+    //         graph.connectPins(output, pin);
+    //       }
+    //     }
+
+    //     return data;
+    //   },
+    // }),
     disconnectIO: historyAction({
       prepare(input: { graphId: number; ioRef: IORef }) {
         const graph = core.project.graphs.get(input.graphId);
@@ -887,6 +1686,37 @@ export const historyActions = (core: Core, editor: EditorState) => {
         }
       },
     }),
+    // _setInputDefaultValue: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       NodeRef & { inputId: string; value: any },
+    //       NodeRef & { inputId: string; value: any }
+    //     >,
+    //   ) {
+    //     const node = getNode(input.data);
+
+    //     const io = node.input(input.data.inputId);
+    //     if (!(io && io instanceof DataInput)) return;
+
+    //     const prev = io.defaultValue;
+
+    //     io.setDefaultValue(input.data.value);
+
+    //     return [, { ...input.data, value: prev }];
+    //   },
+    //   rewind(data) {
+    //     const node = getNode(data);
+
+    //     const io = node.input(data.inputId);
+    //     if (!(io && io instanceof DataInput)) return;
+
+    //     const prev = io.defaultValue;
+
+    //     io.setDefaultValue(data.value);
+
+    //     return { ...data, value: prev };
+    //   },
+    // }),
     setInputDefaultValue: historyAction({
       prepare(input: {
         graphId: number;
@@ -927,6 +1757,32 @@ export const historyActions = (core: Core, editor: EditorState) => {
         input.setDefaultValue(entry.prev);
       },
     }),
+    // _createCustomStruct: _historyAction({
+    //   perform(
+    //     input: PerformInput<void, v.InferInput<typeof serde.CustomStruct>>,
+    //   ) {
+    //     let struct;
+    //     if (input.type === "perform") {
+    //       struct = core.project.createCustomStruct();
+    //     } else {
+    //       const deferrer = createDeferrer();
+    //       struct = deserializeCustomStruct(
+    //         core.project,
+    //         v.parse(serde.CustomStruct, input.data),
+    //         deferrer,
+    //       );
+    //       deferrer.run();
+    //     }
+
+    //     return [struct, { id: struct.id }];
+    //   },
+    //   rewind(data) {
+    //     const struct = core.project.customStructs.get(data.id);
+    //     if (!struct) return;
+
+    //     return serializeCustomStruct(struct);
+    //   },
+    // }),
     createCustomStruct: historyAction({
       prepare() {
         return { id: core.project.generateCustomTypeId() };
@@ -938,6 +1794,31 @@ export const historyActions = (core: Core, editor: EditorState) => {
         core.project.customStructs.delete(entry.id);
       },
     }),
+    // _setCustomStructName: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       { structId: number; name: string },
+    //       { structId: number; name: string }
+    //     >,
+    //   ) {
+    //     const struct = core.project.customStructs.get(input.data.structId);
+    //     if (!struct) return;
+
+    //     const prev = struct.name;
+    //     struct.name = input.data.name;
+
+    //     return [, { ...input.data, name: prev }];
+    //   },
+    //   rewind(data) {
+    //     const struct = core.project.customStructs.get(data.structId);
+    //     if (!struct) return;
+
+    //     const prev = struct.name;
+    //     struct.name = data.name;
+
+    //     return { ...data, name: prev };
+    //   },
+    // }),
     setCustomStructName: historyAction({
       prepare(input: { structId: number; name: string }) {
         const struct = core.project.customStructs.get(input.structId);
@@ -958,6 +1839,31 @@ export const historyActions = (core: Core, editor: EditorState) => {
         struct.name = entry.prev;
       },
     }),
+    // _deleteCustomStruct: _historyAction({
+    //   perform(input: PerformInput<{ structId: number }, { structId: number }>) {
+    //     const struct = core.project.customStructs.get(input.data.structId);
+    //     if (!struct) return;
+
+    //     const data = serializeCustomStruct(struct);
+
+    //     core.project.customStructs.delete(struct.id);
+
+    //     return [, data];
+    //   },
+    //   rewind(data) {
+    //     const deferrer = createDeferrer();
+    //     const struct = deserializeCustomStruct(
+    //       core.project,
+    //       v.parse(serde.CustomStruct, data),
+    //       deferrer,
+    //     );
+    //     deferrer.run();
+
+    //     core.project.customStructs.set(struct.id, struct);
+
+    //     return { structId: struct.id };
+    //   },
+    // }),
     deleteCustomStruct: historyAction({
       prepare(input: { structId: number }) {
         const struct = core.project.customStructs.get(input.structId);
@@ -982,6 +1888,42 @@ export const historyActions = (core: Core, editor: EditorState) => {
         core.project.customStructs.set(entry.structId, struct);
       },
     }),
+    // _createCustomStructField: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CustomStructRef,
+    //       CustomStructRef & {
+    //         field: v.InferInput<typeof serde.CustomStructField>;
+    //       }
+    //     >,
+    //   ) {
+    //     const struct = getCustomStruct(input.data);
+
+    //     let field;
+    //     if (input.type === "perform") {
+    //       const id = struct.createField();
+    //       field = struct.fields[id]!;
+    //     } else {
+    //       const { data } = input;
+    //       struct.fields[data.field.id] = field = deserializeField(
+    //         core.project,
+    //         data.field,
+    //       );
+    //     }
+
+    //     return [field, { structId: input.data.structId, fieldId: field.id }];
+    //   },
+    //   rewind(data) {
+    //     const struct = getCustomStruct(data);
+    //     const field = struct.fields[data.fieldId];
+    //     if (!field) return;
+
+    //     const serialized = serializeField(field);
+    //     struct.removeField(field.id.toString());
+
+    //     return { structId: data.structId, field: serialized };
+    //   },
+    // }),
     createCustomStructField: historyAction({
       prepare(input: { structId: number }) {
         const struct = core.project.customStructs.get(input.structId);
@@ -1002,6 +1944,29 @@ export const historyActions = (core: Core, editor: EditorState) => {
         struct.removeField(entry.id.toString());
       },
     }),
+    // _setCustomStructFieldName: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CustomStructFieldRef & { name: string },
+    //       CustomStructFieldRef & { name: string }
+    //     >,
+    //   ) {
+    //     const field = getCustomStructField(input.data);
+
+    //     const prev = field.name;
+    //     field.name = input.data.name;
+
+    //     return [, { ...input.data, name: prev }];
+    //   },
+    //   rewind(data) {
+    //     const field = getCustomStructField(data);
+
+    //     const prev = field.name;
+    //     field.name = data.name;
+
+    //     return { ...data, name: prev };
+    //   },
+    // }),
     setCustomStructFieldName: historyAction({
       prepare(input: { structId: number; fieldId: string; name: string }) {
         const field = core.project.customStructs.get(input.structId)?.fields[
@@ -1028,6 +1993,29 @@ export const historyActions = (core: Core, editor: EditorState) => {
         field.name = entry.prev;
       },
     }),
+    // _setCustomStructFieldType: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CustomStructFieldRef & { type: t.Any },
+    //       CustomStructFieldRef & { type: t.Any }
+    //     >,
+    //   ) {
+    //     const field = getCustomStructField(input.data);
+
+    //     const prev = field.type;
+    //     field.type = input.data.type;
+
+    //     return [, { ...input.data, type: prev }];
+    //   },
+    //   rewind(data) {
+    //     const field = getCustomStructField(data);
+
+    //     const prev = field.type;
+    //     field.type = data.type;
+
+    //     return { ...data, type: prev };
+    //   },
+    // }),
     setCustomStructFieldType: historyAction({
       prepare(input: { structId: number; fieldId: string; type: t.Any }) {
         const field = core.project.customStructs.get(input.structId)?.fields[
@@ -1050,6 +2038,26 @@ export const historyActions = (core: Core, editor: EditorState) => {
         struct.editFieldType(entry.fieldId, entry.prev);
       },
     }),
+    // _deleteCustomStructField: _historyAction({
+    //   perform(input: PerformInput<CustomStructFieldRef, CustomStructFieldRef>) {
+    //     const field = getCustomStructField(input.data);
+
+    //     const serialized = serializeCustomStructField(field);
+
+    //     return [, { ...input.data, serialized }];
+    //   },
+    //   rewind(data) {
+    //     const struct = getCustomStruct(data);
+    //     if (!struct) return;
+
+    //     struct.fields[data.fieldId] = deserializeField(
+    //       core.project,
+    //       v.parse(serde.CustomStructField, data.serialized),
+    //     );
+
+    //     return data;
+    //   },
+    // }),
     deleteCustomStructField: historyAction({
       prepare(input: { structId: number; fieldId: string }) {
         const field = core.project.customStructs.get(input.structId)?.fields[
@@ -1075,6 +2083,37 @@ export const historyActions = (core: Core, editor: EditorState) => {
         );
       },
     }),
+    // _createCustomEnum: _historyAction({
+    //   perform(
+    //     input: PerformInput<void, v.InferInput<typeof serde.CustomEnum>>,
+    //   ) {
+    //     let enm;
+
+    //     if (input.type === "perform") {
+    //       enm = core.project.createCustomEnum();
+    //     } else {
+    //       const deferrer = createDeferrer();
+    //       enm = deserializeCustomEnum(
+    //         core.project,
+    //         v.parse(serde.CustomEnum, input.data),
+    //         deferrer,
+    //       );
+
+    //       core.project.customEnums.set(enm.id, enm);
+    //     }
+
+    //     return [enm, { enumId: enm.id }];
+    //   },
+    //   rewind(data) {
+    //     const enm = getCustomEnum(data);
+
+    //     const serialized = serializeCustomEnum(enm);
+
+    //     core.project.customEnums.delete(enm.id);
+
+    //     return serialized;
+    //   },
+    // }),
     createCustomEnum: historyAction({
       prepare() {
         return { id: core.project.generateCustomTypeId() };
@@ -1086,6 +2125,29 @@ export const historyActions = (core: Core, editor: EditorState) => {
         core.project.customEnums.delete(entry.id);
       },
     }),
+    // _setCustomEnumName: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       CustomEnumRef & { name: string },
+    //       CustomEnumRef & { name: string }
+    //     >,
+    //   ) {
+    //     const enm = getCustomEnum(input.data);
+
+    //     const prev = enm.name;
+    //     enm.name = input.data.name;
+
+    //     return [, { ...input.data, name: prev }];
+    //   },
+    //   rewind(data) {
+    //     const enm = getCustomEnum(data);
+
+    //     const prev = enm.name;
+    //     enm.name = data.name;
+
+    //     return { ...data, name: prev };
+    //   },
+    // }),
     setCustomEnumName: historyAction({
       prepare(input: { enumId: number; name: string }) {
         const struct = core.project.customEnums.get(input.enumId);
@@ -1106,6 +2168,28 @@ export const historyActions = (core: Core, editor: EditorState) => {
         enm.name = entry.prev;
       },
     }),
+    // _deleteCustomEnum: _historyAction({
+    //   perform(input: PerformInput<CustomEnumRef, CustomEnumRef>) {
+    //     const enm = getCustomEnum(input.data);
+
+    //     const serialized = serializeCustomEnum(enm);
+    //     core.project.customEnums.delete(enm.id);
+
+    //     return [, { ...input.data, serialized }];
+    //   },
+    //   rewind(data) {
+    //     const deferrer = createDeferrer();
+    //     const enm = deserializeCustomEnum(
+    //       core.project,
+    //       v.parse(serde.CustomEnum, data.serialized),
+    //       deferrer,
+    //     );
+
+    //     core.project.customEnums.set(data.enumId, enm);
+
+    //     return { enumId: data.enumId };
+    //   },
+    // }),
     deleteCustomEnum: historyAction({
       prepare(input: { enumId: number }) {
         const enm = core.project.customEnums.get(input.enumId);
@@ -1904,6 +2988,146 @@ export const historyActions = (core: Core, editor: EditorState) => {
         resource.items.splice(entry.index, 0, { ...entry.data });
       },
     }),
+    // _pasteGraphSelection: _historyAction({
+    //   perform(
+    //     input: PerformInput<
+    //       GraphRef & {
+    //         mousePosition: XY;
+    //         selection: Extract<
+    //           v.InferOutput<typeof ClipboardItem>,
+    //           { type: "selection" }
+    //         >;
+    //       },
+    //       GraphRef & {
+    //         nodes: Array<v.InferOutput<typeof serde.Node>>;
+    //         commentBoxes: Array<v.InferOutput<typeof serde.CommentBox>>;
+    //       }
+    //     >,
+    //   ) {
+    //     const graph = getGraph(input.data);
+
+    //     if (input.type === "perform") {
+    //       const nodeIdMap = new Map<number, number>();
+    //       const boxIdMap = new Map<number, number>();
+
+    //       const { selection, mousePosition } = input.data;
+
+    //       for (const nodeData of selection.nodes) {
+    //         const id = graph.generateId();
+    //         nodeIdMap.set(nodeData.id, id);
+    //         nodeData.id = id;
+    //         nodeData.position = {
+    //           x: mousePosition.x + nodeData.position.x - selection.origin.x,
+    //           y: mousePosition.y + nodeData.position.y - selection.origin.y,
+    //         };
+    //       }
+
+    //       for (const box of selection.commentBoxes) {
+    //         const id = graph.generateId();
+    //         boxIdMap.set(box.id, id);
+    //         box.id = id;
+    //         box.position = {
+    //           x: mousePosition.x + box.position.x - selection.origin.x,
+    //           y: mousePosition.y + box.position.y - selection.origin.y,
+    //         };
+    //       }
+
+    //       for (const nodeData of selection.nodes) {
+    //         const node = deserializeNode(graph, nodeData);
+    //         if (!node) {
+    //           console.error("Failed to deserialize node");
+    //           continue;
+    //         }
+
+    //         graph.nodes.set(node.id, node);
+    //       }
+
+    //       for (const box of selection.commentBoxes) {
+    //         const commentBox = deserializeCommentBox(graph, box);
+    //         if (!commentBox) {
+    //           console.error("Failed to deserialize comment box");
+    //           continue;
+    //         }
+
+    //         graph.commentBoxes.set(commentBox.id, commentBox);
+    //       }
+
+    //       deserializeConnections(
+    //         selection.connections,
+    //         graph.connections,
+    //         nodeIdMap,
+    //       );
+
+    //       if (selection.selected) {
+    //         const selected: Array<SelectedItemID> = [];
+
+    //         for (const nodeId of selection.selected.nodes) {
+    //           const mappedId = nodeIdMap.get(nodeId);
+
+    //           if (mappedId !== undefined)
+    //             selected.push({ type: "node", id: mappedId });
+    //         }
+
+    //         for (const boxId of selection.selected.commentBoxes) {
+    //           const mappedId = boxIdMap.get(boxId);
+
+    //           if (mappedId !== undefined)
+    //             selected.push({ type: "commentBox", id: mappedId });
+    //         }
+
+    //         // editor.setGraphStates(
+    //         //   editor.currentGraphIndex()!,
+    //         //   "selectedItemIds",
+    //         //   selected,
+    //         // );
+    //       }
+    //     }
+    //     return [
+    //       ,
+    //       {
+    //         input,
+    //         graphId: graph.id,
+    //         nodes: [...nodeIdMap.keys()],
+    //         commentBoxes: [...boxIdMap.keys()],
+    //       },
+    //     ];
+    //   },
+    //   rewind(data) {
+    //     const graph = core.project.graphs.get(data.graphId);
+    //     if (!graph) return;
+
+    //     const ret = {
+    //       graphId: data.graphId,
+    //       nodes: data.nodes.flatMap((id) => {
+    //         const node = graph.node(id);
+    //         if (!node) return [];
+    //         return [v.parse(serde.Node, serializeNode(node))];
+    //       }),
+    //       commentBoxes: data.commentBoxes.flatMap((id) => {
+    //         const box = graph.commentBoxes.get(id);
+    //         if (!box) return [];
+    //         return [v.parse(serde.CommentBox, serializeCommentBox(box))];
+    //       }),
+    //     };
+
+    //     for (const id of data.nodes) {
+    //       const node = graph.nodes.get(id);
+    //       if (!node) continue;
+
+    //       graph.deleteNode(node);
+    //     }
+
+    //     for (const id of data.commentBoxes) {
+    //       if (id === undefined) continue;
+    //       const box = graph.commentBoxes.get(id);
+    //       if (!box) continue;
+
+    //       graph.deleteCommentbox(box);
+    //     }
+
+    //     return ret;
+    //   },
+    // }),
     pasteGraphSelection: historyAction({
       prepare({
         selection,
@@ -1948,59 +3172,65 @@ export const historyActions = (core: Core, editor: EditorState) => {
           nodeIdMap,
           boxIdMap,
           prev: {
-            selection: [
-              ...(editor.graphStates[editor.currentGraphIndex()!]
-                ?.selectedItemIds ?? []),
-            ],
+            // selection: [
+            //   ...(editor.graphStates[editor.currentGraphIndex()!]
+            //     ?.selectedItemIds ?? []),
+            // ],
           },
         };
       },
-      perform(entry) {
-        const graph = core.project.graphs.get(entry.graphId);
+      perform(input) {
+        const graph = core.project.graphs.get(input.graphId);
         if (!graph) return;
 
-        for (const nodeData of entry.nodes) {
+        for (const nodeData of input.nodes) {
           const node = deserializeNode(graph, nodeData);
-          if (!node) throw new Error("Failed to deserialize node");
+          if (!node) {
+            console.error("Failed to deserialize node");
+            continue;
+          }
 
           graph.nodes.set(node.id, node);
         }
 
-        for (const box of entry.commentBoxes) {
+        for (const box of input.commentBoxes) {
           const commentBox = deserializeCommentBox(graph, box);
-          if (!commentBox) throw new Error("Failed to deserialize comment box");
+          if (!commentBox) {
+            console.error("Failed to deserialize comment box");
+            continue;
+          }
 
           graph.commentBoxes.set(commentBox.id, commentBox);
         }
 
         deserializeConnections(
-          entry.connections,
+          input.connections,
           graph.connections,
-          entry.nodeIdMap,
+          input.nodeIdMap,
         );
 
-        if (entry.selected) {
+        if (input.selected) {
           const selected: Array<SelectedItemID> = [];
 
-          for (const nodeId of entry.selected.nodes) {
-            const mappedId = entry.nodeIdMap.get(nodeId);
+          for (const nodeId of input.selected.nodes) {
+            const mappedId = input.nodeIdMap.get(nodeId);
 
             if (mappedId !== undefined)
               selected.push({ type: "node", id: mappedId });
           }
 
-          for (const boxId of entry.selected.commentBoxes) {
-            const mappedId = entry.boxIdMap.get(boxId);
+          for (const boxId of input.selected.commentBoxes) {
+            const mappedId = input.boxIdMap.get(boxId);
 
             if (mappedId !== undefined)
               selected.push({ type: "commentBox", id: mappedId });
           }
 
-          editor.setGraphStates(
-            editor.currentGraphIndex()!,
-            "selectedItemIds",
-            selected,
-          );
+          // editor.setGraphStates(
+          //   editor.currentGraphIndex()!,
+          //   "selectedItemIds",
+          //   selected,
+          // );
         }
       },
       rewind(entry) {
@@ -2022,13 +3252,37 @@ export const historyActions = (core: Core, editor: EditorState) => {
           graph.deleteCommentbox(box);
         }
 
-        editor.setGraphStates(
-          editor.currentGraphIndex()!,
-          "selectedItemIds",
-          entry.prev.selection,
-        );
+        // editor.setGraphStates(
+        //   editor.currentGraphIndex()!,
+        //   "selectedItemIds",
+        //   entry.prev.selection,
+        // );
       },
     }),
+    // _pasteGraph: _historyAction({
+    //   async perform(input: PerformInput<v.InferOutput<typeof serde.Graph>>) {
+    //     if (input.type === "perform") {
+    //       input.data.id = core.project.generateGraphId();
+    //     }
+
+    //     const graph = await deserializeGraph(core.project, input.data);
+    //     if (!graph) return;
+
+    //     core.project.graphs.set(graph.id, graph);
+
+    //     return [graph, { graphId: graph.id }];
+    //   },
+    //   rewind(data) {
+    //     const graph = getGraph(data);
+
+    //     const serialized = v.parse(serde.Graph, serializeGraph(graph));
+
+    //     core.project.graphs.delete(graph.id);
+    //     graph.dispose();
+
+    //     return serialized;
+    //   },
+    // }),
     pasteGraph: historyAction({
       prepare(data: v.InferOutput<typeof serde.Graph>) {
         const graphId = core.project.generateGraphId();
@@ -2094,6 +3348,33 @@ export const historyActions = (core: Core, editor: EditorState) => {
         );
       },
     }),
+    // _moveGraphToIndex: _historyAction(() => {
+    //   type Data = GraphRef & { index: number };
+
+    //   function action(data: Data) {
+    //     const graph = getGraph(data);
+
+    //     const prevIndex = core.project.graphOrder.findIndex(
+    //       (id) => id === graph.id,
+    //     );
+
+    //     if (prevIndex === -1 || prevIndex === data.index) return;
+
+    //     core.project.graphOrder.splice(prevIndex, 1);
+    //     core.project.graphOrder.splice(data.index, 0, graph.id);
+
+    //     return { ...data, index: prevIndex };
+    //   }
+
+    //   return {
+    //     perform(input: PerformInput<Data>) {
+    //       return [, action(input.data)];
+    //     },
+    //     rewind(data) {
+    //       return action(data);
+    //     },
+    //   };
+    // }),
     moveGraphToIndex: historyAction({
       prepare(input: {
         graphId: number;
@@ -2118,6 +3399,30 @@ export const historyActions = (core: Core, editor: EditorState) => {
         core.project.graphOrder.splice(entry.currentIndex, 0, entry.graphId);
       },
     }),
+    // _moveCustomEventFieldToIndex: _historyAction(() => {
+    //   type Data = CustomEventFieldRef & { index: number };
+
+    //   function action(data: Data) {
+    //     const event = getCustomEvent(data);
+
+    //     const prevIndex = event.fields.findIndex((f) => f === field);
+    //     if (prevIndex === -1 || prevIndex === data.index) abort();
+
+    //     const [field] = event.fields.splice(prevIndex, 1);
+    //     event.fields.splice(data.index, 0, field!);
+
+    //     return { ...data, index: prevIndex };
+    //   }
+
+    //   return {
+    //     perform(input: PerformInput<Data>) {
+    //       return [, action(input.data)];
+    //     },
+    //     rewind(data) {
+    //       return action(data);
+    //     },
+    //   };
+    // }),
     moveCustomEventFieldToIndex: historyAction({
       prepare(input: {
         eventId: number;
@@ -2150,6 +3455,31 @@ export const historyActions = (core: Core, editor: EditorState) => {
         event.fields.splice(entry.newIndex, 0, field!);
       },
     }),
+    // _moveCustomStructFieldToIndex: _historyAction(() => {
+    //   type Data = CustomStructFieldRef & { index: number };
+
+    //   function action(data: Data) {
+    //     const struct = getCustomStruct(data);
+    //     const field = getCustomStructField(data);
+
+    //     const prevIndex = struct.fieldOrder.findIndex((id) => id === field.id);
+    //     if (prevIndex === -1 || prevIndex === data.index) abort();
+
+    //     struct.fieldOrder.splice(prevIndex, 1);
+    //     struct.fieldOrder.splice(data.index, 0, field.id);
+
+    //     return { ...data, index: prevIndex };
+    //   }
+
+    //   return {
+    //     perform(input: PerformInput<Data>) {
+    //       return [, action(input.data)];
+    //     },
+    //     rewind(data) {
+    //       return action(data);
+    //     },
+    //   };
+    // }),
     moveCustomStructFieldToIndex: historyAction({
       prepare(input: {
         structId: number;
@@ -2182,6 +3512,32 @@ export const historyActions = (core: Core, editor: EditorState) => {
         struct.fieldOrder.splice(entry.currentIndex, 0, entry.fieldId);
       },
     }),
+    // _moveCustomEnumVariantToIndex: _historyAction(() => {
+    //   type Data = CustomEnumVariantRef & { index: number };
+
+    //   function action(data: Data) {
+    //     const enm = getCustomEnum(data);
+
+    //     const prevIndex = enm.variants.findIndex(
+    //       (v) => v.id === data.variantId,
+    //     );
+    //     if (prevIndex === -1 || prevIndex === data.index) abort();
+
+    //     const [variant] = enm.variants.splice(prevIndex, 1);
+    //     enm.variants.splice(data.index, 0, variant!);
+
+    //     return { ...data, index: prevIndex };
+    //   }
+
+    //   return {
+    //     perform(input: PerformInput<Data>) {
+    //       return [, action(input.data)];
+    //     },
+    //     rewind(data) {
+    //       return action(data);
+    //     },
+    //   };
+    // }),
     moveCustomEnumVariantToIndex: historyAction({
       prepare(input: {
         enumId: number;
@@ -2215,14 +3571,43 @@ export const historyActions = (core: Core, editor: EditorState) => {
         enm.variants.splice(entry.currentIndex, 0, variant!);
       },
     }),
+    // _moveCustomEnumVariantFieldToIndex: _historyAction(() => {
+    //   type Data = CustomEnumVariantFieldRef & { index: number };
+
+    //   function action(data: Data) {
+    //     const enm = getCustomEnum(data);
+
+    //     const variant = enm.variant(data.variantId);
+    //     if (!variant) abort();
+
+    //     const field = variant.fields[data.fieldId];
+    //     if (!field) abort();
+
+    //     const prevIndex = variant.fieldOrder.findIndex((f) => f === field.id);
+    //     if (prevIndex === -1 || prevIndex === data.index) abort();
+
+    //     variant.fieldOrder.splice(prevIndex, 1);
+    //     variant.fieldOrder.splice(data.index, 0, data.fieldId);
+
+    //     return { ...data, index: prevIndex };
+    //   }
+
+    //   return {
+    //     perform(input: PerformInput<Data>) {
+    //       return [, action(input.data)];
+    //     },
+    //     rewind(data) {
+    //       return action(data);
+    //     },
+    //   };
+    // }),
     moveCustomEnumVariantFieldToIndex: historyAction({
-      prepare(input: {
-        enumId: number;
-        variantId: string;
-        fieldId: string;
-        currentIndex: number;
-        newIndex: number;
-      }) {
+      prepare(
+        input: CustomEnumVariantFieldRef & {
+          currentIndex: number;
+          newIndex: number;
+        },
+      ) {
         const enm = core.project.customEnums.get(input.enumId);
         if (!enm) return;
 

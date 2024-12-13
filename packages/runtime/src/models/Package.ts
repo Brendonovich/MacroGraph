@@ -29,13 +29,16 @@ import type {
   SchemaProperties,
 } from "./NodeSchema";
 
-export interface PackageArgs<TCtx> {
+export interface PackageArgs<TCtx extends Record<string, any>> {
   name: string;
   ctx?: TCtx;
   SettingsUI?: Parameters<typeof lazy<Component<TCtx>>>[0];
 }
 
-export class Package<TEvents extends EventsMap = EventsMap, TCtx = any> {
+export class Package<
+  TEvents extends EventsMap = EventsMap,
+  TCtx extends Record<string, any> = any,
+> {
   name: string;
   schemas = new ReactiveMap<string, NodeSchema<TEvents>>();
   core?: Core;
