@@ -1,6 +1,9 @@
+import preset from "@macrograph/interface/tailwind.config.js";
+import typography from "@tailwindcss/typography";
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  presets: [require("@macrograph/interface/tailwind.config.js")],
-  plugins: [require("@tailwindcss/typography")],
+  presets: [preset],
+  plugins: [typography],
 };
