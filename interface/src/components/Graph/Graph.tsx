@@ -25,7 +25,6 @@ import {
   type GraphContext,
   GraphContextProvider,
   type GraphState,
-  type SelectedItemID,
   toGraphSpace,
   toScreenSpace,
 } from "./Context";
@@ -47,7 +46,6 @@ interface Props extends Solid.ComponentProps<"div"> {
   onTranslateChange(translate: XY): void;
   onSizeChange(size: { width: number; height: number }): void;
   onBoundsChange(bounds: XY): void;
-  onItemsSelected(id: Array<SelectedItemID>, ephemeral?: boolean): void;
 }
 
 type State = {
@@ -485,187 +483,192 @@ export const Graph = (props: Props) => {
           }
         }}
         onPointerDown={(e) => {
-          if (gesture.dragStarted) return;
-          const { pointerId } = e;
+          setTimeout(() => {
+            if (gesture.dragStarted) return;
+            const { pointerId } = e;
 
-          gesture.pointers.push({
-            pointerId: e.pointerId,
-            start: {
-              x: e.clientX,
-              y: e.clientY,
-            },
-            current: {
-              x: e.clientX,
-              y: e.clientY,
-            },
-            button: e.button,
-          });
+            gesture.pointers.push({
+              pointerId: e.pointerId,
+              start: {
+                x: e.clientX,
+                y: e.clientY,
+              },
+              current: {
+                x: e.clientX,
+                y: e.clientY,
+              },
+              button: e.button,
+            });
 
-          if (e.pointerType === "touch") {
-            if (interfaceCtx.state.status === "pinDragMode") {
-              interfaceCtx.setState({ status: "idle" });
-            } else {
-              Solid.createRoot((dispose) => {
-                const start = { x: e.clientX, y: e.clientY };
-
-                createEventListenerMap(window, {
-                  pointerup: () => {
-                    if (gesture.pointers.length === 0) {
-                      unselectAllEphemeral();
-                    }
-
-                    dispose();
-                  },
-                  pointermove: (e) => {
-                    if (gesture.dragStarted || e.pointerId !== pointerId)
-                      return;
-
-                    const diff = {
-                      x: start.x - e.clientX,
-                      y: start.y - e.clientY,
-                    };
-
-                    if (Math.abs(diff.x) > 3 || Math.abs(diff.y) > 3) {
-                      gesture.dragStarted = true;
-
-                      const pointers = [...gesture.pointers];
-
-                      Solid.createRoot((dispose) => {
-                        createEventListener(window, "pointerup", (e) => {
-                          if (
-                            pointers.find((p) => p.pointerId === e.pointerId)
-                          ) {
-                            gesture.dragStarted = false;
-                            dispose();
-                          }
-                        });
-                      });
-
-                      if (gesture.pointers.length === 1) {
-                        createDragAreaSession(start);
-                      } else if (gesture.pointers.length === 2) {
-                        const left = gesture.pointers[0]!;
-                        const right = gesture.pointers[1]!;
-
-                        const startCenter = {
-                          x: (left.start.x + right.start.x) / 2,
-                          y: (left.start.y + right.start.y) / 2,
-                        };
-
-                        const translateSession =
-                          createTranslateSession(startCenter);
-
-                        Solid.createRoot((dispose) => {
-                          createEventListenerMap(window, {
-                            pointerup: (e) => {
-                              if (
-                                left.pointerId !== e.pointerId &&
-                                right.pointerId !== e.pointerId
-                              )
-                                return;
-
-                              dispose();
-                              translateSession.stop();
-                            },
-                            pointermove: (e) => {
-                              const lastPointerDistance = Math.sqrt(
-                                (left.current.x - right.current.x) ** 2 +
-                                  (left.current.y - right.current.y) ** 2,
-                              );
-                              const lastCenter = {
-                                x: (left.current.x + right.current.x) / 2,
-                                y: (left.current.y + right.current.y) / 2,
-                              };
-
-                              if (left.pointerId === e.pointerId) {
-                                left.current = { x: e.clientX, y: e.clientY };
-                              } else if (right.pointerId === e.pointerId) {
-                                right.current = { x: e.clientX, y: e.clientY };
-                              }
-
-                              const newCenter = {
-                                x: (left.current.x + right.current.x) / 2,
-                                y: (left.current.y + right.current.y) / 2,
-                              };
-
-                              const newPointerDistance = Math.sqrt(
-                                (left.current.x - right.current.x) ** 2 +
-                                  (left.current.y - right.current.y) ** 2,
-                              );
-
-                              const newCenterGraphPosition =
-                                ctx.toGraphSpace(newCenter);
-
-                              updateScale(
-                                ((newPointerDistance - lastPointerDistance) /
-                                  15) *
-                                  props.state.scale,
-                                newCenter,
-                              );
-
-                              const newCenterAfterScaling = ctx.toScreenSpace(
-                                newCenterGraphPosition,
-                              );
-
-                              const { translate, scale } = props.state;
-                              props.onTranslateChange({
-                                x:
-                                  translate.x +
-                                  (lastCenter.x - newCenterAfterScaling.x) /
-                                    scale,
-                                y:
-                                  translate.y +
-                                  (lastCenter.y - newCenterAfterScaling.y) /
-                                    scale,
-                              });
-                            },
-                          });
-                        });
-                      }
-                    }
-                  },
-                });
-              });
-            }
-          } else {
-            switch (e.button) {
-              case 0: {
-                createDragAreaSession({ x: e.clientX, y: e.clientY });
-
-                break;
-              }
-              case 2: {
-                setPan("waiting");
-
-                const translateSession = createTranslateSession({
-                  x: e.clientX,
-                  y: e.clientY,
-                });
-
+            if (e.pointerType === "touch") {
+              if (interfaceCtx.state.status === "pinDragMode") {
+                interfaceCtx.setState({ status: "idle" });
+              } else {
                 Solid.createRoot((dispose) => {
-                  Solid.createEffect(() => {
-                    if (pan() === "active")
-                      interfaceCtx.setState({ status: "idle" });
-                  });
+                  const start = { x: e.clientX, y: e.clientY };
 
                   createEventListenerMap(window, {
                     pointerup: () => {
+                      if (gesture.pointers.length === 0) {
+                        unselectAllEphemeral();
+                      }
+
                       dispose();
-                      translateSession.stop();
                     },
                     pointermove: (e) => {
-                      translateSession.updateControlPoint({
-                        x: e.clientX,
-                        y: e.clientY,
-                      });
+                      if (gesture.dragStarted || e.pointerId !== pointerId)
+                        return;
+
+                      const diff = {
+                        x: start.x - e.clientX,
+                        y: start.y - e.clientY,
+                      };
+
+                      if (Math.abs(diff.x) > 3 || Math.abs(diff.y) > 3) {
+                        gesture.dragStarted = true;
+
+                        const pointers = [...gesture.pointers];
+
+                        Solid.createRoot((dispose) => {
+                          createEventListener(window, "pointerup", (e) => {
+                            if (
+                              pointers.find((p) => p.pointerId === e.pointerId)
+                            ) {
+                              gesture.dragStarted = false;
+                              dispose();
+                            }
+                          });
+                        });
+
+                        if (gesture.pointers.length === 1) {
+                          createDragAreaSession(start);
+                        } else if (gesture.pointers.length === 2) {
+                          const left = gesture.pointers[0]!;
+                          const right = gesture.pointers[1]!;
+
+                          const startCenter = {
+                            x: (left.start.x + right.start.x) / 2,
+                            y: (left.start.y + right.start.y) / 2,
+                          };
+
+                          const translateSession =
+                            createTranslateSession(startCenter);
+
+                          Solid.createRoot((dispose) => {
+                            createEventListenerMap(window, {
+                              pointerup: (e) => {
+                                if (
+                                  left.pointerId !== e.pointerId &&
+                                  right.pointerId !== e.pointerId
+                                )
+                                  return;
+
+                                dispose();
+                                translateSession.stop();
+                              },
+                              pointermove: (e) => {
+                                const lastPointerDistance = Math.sqrt(
+                                  (left.current.x - right.current.x) ** 2 +
+                                    (left.current.y - right.current.y) ** 2,
+                                );
+                                const lastCenter = {
+                                  x: (left.current.x + right.current.x) / 2,
+                                  y: (left.current.y + right.current.y) / 2,
+                                };
+
+                                if (left.pointerId === e.pointerId) {
+                                  left.current = { x: e.clientX, y: e.clientY };
+                                } else if (right.pointerId === e.pointerId) {
+                                  right.current = {
+                                    x: e.clientX,
+                                    y: e.clientY,
+                                  };
+                                }
+
+                                const newCenter = {
+                                  x: (left.current.x + right.current.x) / 2,
+                                  y: (left.current.y + right.current.y) / 2,
+                                };
+
+                                const newPointerDistance = Math.sqrt(
+                                  (left.current.x - right.current.x) ** 2 +
+                                    (left.current.y - right.current.y) ** 2,
+                                );
+
+                                const newCenterGraphPosition =
+                                  ctx.toGraphSpace(newCenter);
+
+                                updateScale(
+                                  ((newPointerDistance - lastPointerDistance) /
+                                    15) *
+                                    props.state.scale,
+                                  newCenter,
+                                );
+
+                                const newCenterAfterScaling = ctx.toScreenSpace(
+                                  newCenterGraphPosition,
+                                );
+
+                                const { translate, scale } = props.state;
+                                props.onTranslateChange({
+                                  x:
+                                    translate.x +
+                                    (lastCenter.x - newCenterAfterScaling.x) /
+                                      scale,
+                                  y:
+                                    translate.y +
+                                    (lastCenter.y - newCenterAfterScaling.y) /
+                                      scale,
+                                });
+                              },
+                            });
+                          });
+                        }
+                      }
                     },
                   });
                 });
+              }
+            } else {
+              switch (e.button) {
+                case 0: {
+                  createDragAreaSession({ x: e.clientX, y: e.clientY });
 
-                break;
+                  break;
+                }
+                case 2: {
+                  setPan("waiting");
+
+                  const translateSession = createTranslateSession({
+                    x: e.clientX,
+                    y: e.clientY,
+                  });
+
+                  Solid.createRoot((dispose) => {
+                    Solid.createEffect(() => {
+                      if (pan() === "active")
+                        interfaceCtx.setState({ status: "idle" });
+                    });
+
+                    createEventListenerMap(window, {
+                      pointerup: () => {
+                        dispose();
+                        translateSession.stop();
+                      },
+                      pointermove: (e) => {
+                        translateSession.updateControlPoint({
+                          x: e.clientX,
+                          y: e.clientY,
+                        });
+                      },
+                    });
+                  });
+
+                  break;
+                }
               }
             }
-          }
+          }, 1);
         }}
       >
         <ConnectionRenderer

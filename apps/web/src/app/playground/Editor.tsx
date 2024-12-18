@@ -1,5 +1,4 @@
 import { contract } from "@macrograph/api-contract";
-import { writeToClipboard } from "@macrograph/clipboard";
 import {
   ConfigDialog,
   ConnectionsDialog,
@@ -144,7 +143,14 @@ export default () => {
         </div>
       }
     >
-      <PlatformContext.Provider value={{}}>
+      <PlatformContext.Provider
+        value={{
+          clipboard: {
+            readText: () => navigator.clipboard.readText(),
+            writeText: (text) => navigator.clipboard.writeText(text),
+          },
+        }}
+      >
         <Interface core={core} environment="browser" />
       </PlatformContext.Provider>
     </Show>
@@ -192,7 +198,7 @@ export function ShareButton() {
           JSON.stringify(serializeProject(core.project)),
         );
 
-        writeToClipboard(
+        navigator.clipboard.writeText(
           new URL(
             `/playground?${new URLSearchParams({ shared: id })}`,
             location.origin,

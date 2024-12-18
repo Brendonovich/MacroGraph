@@ -20,7 +20,7 @@ import { createContext, useContext } from "solid-js";
 
 import {
   nodeToClipboardItem,
-  writeClipboardItemToClipboard,
+  serializeClipboardItem,
 } from "@macrograph/clipboard";
 import { toast } from "solid-sonner";
 import { config } from "../../ConfigDialog";
@@ -38,6 +38,7 @@ import {
 } from "./IO";
 import "./Node.css";
 import { GRID_SIZE, handleSelectableItemPointerDown } from "./util";
+import { usePlatform } from "../../platform";
 
 interface Props {
   node: NodeModel;
@@ -67,6 +68,7 @@ export const useNode = () => {
 export const Node = (props: Props) => {
   const node = () => props.node;
 
+  const platform = usePlatform();
   const graph = useGraphContext();
   const interfaceCtx = useInterfaceContext();
 
@@ -319,8 +321,8 @@ export const Node = (props: Props) => {
                   </ContextMenuItem>
                   <ContextMenuItem
                     onSelect={() => {
-                      writeClipboardItemToClipboard(
-                        nodeToClipboardItem(node()),
+                      platform.clipboard.writeText(
+                        serializeClipboardItem(nodeToClipboardItem(node())),
                       );
                       toast("Node copied to clipboard");
                     }}

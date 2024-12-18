@@ -3,8 +3,7 @@ import { Dialog } from "@kobalte/core/dialog";
 import {
   deserializeClipboardItem,
   graphToClipboardItem,
-  readFromClipboard,
-  writeClipboardItemToClipboard,
+  serializeClipboardItem,
 } from "@macrograph/clipboard";
 import type { Graph } from "@macrograph/runtime";
 import { deserializeGraph } from "@macrograph/runtime-serde";
@@ -28,6 +27,7 @@ import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
+import { usePlatform } from "../../platform";
 
 interface Props {
   currentGraph?: number;
@@ -35,6 +35,7 @@ interface Props {
 }
 
 export function Graphs(props: Props) {
+  const platform = usePlatform();
   const interfaceCtx = useInterfaceContext();
 
   const [search, setSearch] = createSignal("");
@@ -70,7 +71,9 @@ export function Graphs(props: Props) {
           class="p-0.5"
           onClick={async (e) => {
             e.stopPropagation();
-            const item = deserializeClipboardItem(await readFromClipboard());
+            const item = deserializeClipboardItem(
+              await platform.clipboard.readText(),
+            );
             if (item.type !== "graph") return;
 
             item.graph.id = interfaceCtx.core.project.generateGraphId();
@@ -128,8 +131,10 @@ export function Graphs(props: Props) {
                           <ContextMenuRenameItem />
                           <ContextMenuItem
                             onSelect={() => {
-                              writeClipboardItemToClipboard(
-                                graphToClipboardItem(graph),
+                              platform.clipboard.writeText(
+                                serializeClipboardItem(
+                                  graphToClipboardItem(graph),
+                                ),
                               );
                             }}
                           >

@@ -2,9 +2,8 @@ import { Tabs } from "@kobalte/core";
 import {
   type ClipboardItem,
   deserializeClipboardItem,
-  readFromClipboard,
+  serializeClipboardItem,
   serializeConnections,
-  writeClipboardItemToClipboard,
 } from "@macrograph/clipboard";
 import {
   type Core,
@@ -54,6 +53,7 @@ import {
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
+import { PlatformContext, usePlatform } from "./platform";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";
@@ -99,6 +99,7 @@ type CurrentGraph = {
 // }
 
 function ProjectInterface() {
+  const platform = usePlatform();
   const ctx = useInterfaceContext();
   const {
     leftSidebar,
@@ -122,7 +123,9 @@ function ProjectInterface() {
   });
 
   // will account for multi-pane in future
-  const [hoveredPane, setHoveredPane] = Solid.createSignal<null | true>(null);
+  const [hoveredPane, setHoveredPane] = Solid.createSignal<null | boolean>(
+    null,
+  );
 
   const hoveredGraph = Solid.createMemo(() => {
     if (hoveredPane()) return currentGraph();
@@ -200,6 +203,7 @@ function ProjectInterface() {
                   }),
                 );
               }}
+              setHoveredPane={setHoveredPane}
             />
           )}
         </Solid.For>
@@ -439,7 +443,7 @@ function ProjectInterface() {
                   }}
                   onPasteClipboard={async () => {
                     const item = deserializeClipboardItem(
-                      await readFromClipboard(),
+                      await platform.clipboard.readText(),
                     );
 
                     if (item.type === "selection") {
@@ -628,6 +632,7 @@ function createKeydownShortcuts(
   hoveredGraph: Solid.Accessor<CurrentGraph | undefined>,
   graphBounds: GraphBounds,
 ) {
+  const platform = usePlatform();
   const ctx = useInterfaceContext();
   const mouse = createMousePosition(window);
 
@@ -710,7 +715,7 @@ function createKeydownShortcuts(
 
         clipboardItem.connections = serializeConnections(includedNodes);
 
-        writeClipboardItemToClipboard(clipboardItem);
+        platform.clipboard.writeText(serializeClipboardItem(clipboardItem));
 
         toast(
           `${
@@ -723,7 +728,11 @@ function createKeydownShortcuts(
       case "KeyV": {
         if (!isCtrlEvent(e)) return;
 
-        const item = deserializeClipboardItem(await readFromClipboard());
+        e.preventDefault();
+
+        const item = deserializeClipboardItem(
+          await platform.clipboard.readText(),
+        );
 
         switch (item.type) {
           case "selection": {
@@ -737,6 +746,8 @@ function createKeydownShortcuts(
               graphBounds,
               state,
             );
+
+            console.log({ item, mousePosition });
 
             ctx.execute("pasteGraphSelection", {
               graphId: model.id,
@@ -993,6 +1004,7 @@ function GraphTabList(props: {
   leftPadding?: number;
   onFocus: () => void;
   onClose: () => void;
+  setHoveredPane: Solid.Setter<boolean | null>;
 }) {
   const ctx = useInterfaceContext();
 
@@ -1000,7 +1012,9 @@ function GraphTabList(props: {
     <div
       class="flex-1 flex flex-col justify-center items-center h-full relative"
       onMouseDown={() => {
-        props.onFocus();
+        setTimeout(() => {
+          props.onFocus();
+        }, 1);
       }}
     >
       <Solid.Show
@@ -1111,16 +1125,9 @@ function GraphTabList(props: {
             <Graph
               graph={selected().graph}
               state={selected().state}
-              // onMouseEnter={() => setHoveredPane(true)}
-              // onMouseMove={() => setHoveredPane(true)}
-              // onMouseLeave={() => setHoveredPane(null)}
-              onItemsSelected={(ids, ephemeral) => {
-                ctx.execute(
-                  "setGraphSelection",
-                  { graphId: selected().graph.id, selection: ids },
-                  { ephemeral },
-                );
-              }}
+              onMouseEnter={() => props.setHoveredPane(true)}
+              onMouseMove={() => props.setHoveredPane(true)}
+              onMouseLeave={() => props.setHoveredPane(null)}
               onBoundsChange={ctx.setGraphBounds}
               onSizeChange={ctx.setGraphBounds}
               onScaleChange={(scale) => {

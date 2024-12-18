@@ -53,8 +53,6 @@ export async function fetch(
           statusText,
         });
 
-  console.log(res);
-
   // url is read only but seems like we can do this
   Object.defineProperty(res, "url", { value: url });
 

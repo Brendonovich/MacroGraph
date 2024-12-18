@@ -6,17 +6,18 @@ import {
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import { Show, createMemo, createRoot, createSignal, onMount } from "solid-js";
-
 import {
   commentBoxToClipboardItem,
-  writeClipboardItemToClipboard,
+  serializeClipboardItem,
 } from "@macrograph/clipboard";
 import { toast } from "solid-sonner";
+
 import type { SelectionItem } from "../../actions";
 import { useInterfaceContext } from "../../context";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import { handleSelectableItemPointerDown } from "./util";
+import { usePlatform } from "../../platform";
 
 interface Props {
   box: CommentBoxModel;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function CommentBox(props: Props) {
+  const platform = usePlatform();
   const interfaceCtx = useInterfaceContext();
   const graph = useGraphContext();
 
@@ -167,9 +169,11 @@ export function CommentBox(props: Props) {
                 </ContextMenuItem>
                 <ContextMenuItem
                   onSelect={() => {
-                    writeClipboardItemToClipboard(
-                      commentBoxToClipboardItem(box(), (node) =>
-                        interfaceCtx.nodeSizes.get(node),
+                    platform.clipboard.writeText(
+                      serializeClipboardItem(
+                        commentBoxToClipboardItem(box(), (node) =>
+                          interfaceCtx.nodeSizes.get(node),
+                        ),
                       ),
                     );
                     toast("Comment Box copied to clipboard");
@@ -292,7 +296,6 @@ function hexToRgb(hex: string) {
       .map((hex: string) => hex + hex)
       .join("");
   }
-  console.log({ hex });
 
   // Parse the r, g, b values
   const bigint = parseInt(hex, 16);
