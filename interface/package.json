@@ -8,7 +8,7 @@
     "./tailwind.config.js": "./tailwind.config.js"
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.6",
+    "@kobalte/core": "^0.13.7",
     "@macrograph/action-history": "workspace:*",
     "@macrograph/api-contract": "workspace:*",
     "@macrograph/clipboard": "workspace:*",

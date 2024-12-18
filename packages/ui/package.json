@@ -33,7 +33,7 @@
     "tailwindcss": "^3.4.3"
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.6",
+    "@kobalte/core": "^0.13.7",
     "@macrograph/config": "workspace:*",
     "@tanstack/solid-query": "^4.36.1",
     "clsx": "^1.2.1",

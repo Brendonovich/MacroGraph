@@ -10,7 +10,7 @@
 	},
 	"dependencies": {
 		"@iconify/json": "^2.2.196",
-		"@kobalte/core": "^0.13.6",
+		"@kobalte/core": "^0.13.7",
 		"@macrograph/api-contract": "workspace:*",
 		"@macrograph/interface": "workspace:*",
 		"@macrograph/packages": "workspace:*",
@@ -39,7 +39,7 @@
 		"@kobalte/tailwindcss": "^0.6.5",
 		"@macrograph/config": "workspace:*",
 		"@tailwindcss/forms": "^0.5.7",
-		"@tauri-apps/cli": "^1.5.11",
+		"@tauri-apps/cli": "^1.6.3",
 		"autoprefixer": "^10.4.19",
 		"postcss": "^8.4.38",
 		"tailwindcss": "^3.4.3",

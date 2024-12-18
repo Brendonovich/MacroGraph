@@ -51,7 +51,10 @@
         "icons/icon.ico"
       ],
       "identifier": "macrograph.brendonovich.dev",
-      "targets": "all"
+      "targets": "all",
+      "dmg": {
+        "background": "./assets/dmg-background.png"
+      }
     },
     "security": {
       "csp": "asset: https://asset.localhost;"

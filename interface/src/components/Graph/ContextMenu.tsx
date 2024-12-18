@@ -13,7 +13,11 @@ export function ContextMenuRenameItem() {
   const inlineEditorContext = useInlineTextEditorCtx()!;
 
   return (
-    <ContextMenuItem onSelect={() => inlineEditorContext.setEditing(true)}>
+    <ContextMenuItem
+      onSelect={() => {
+        inlineEditorContext.setEditing(true);
+      }}
+    >
       <IconAntDesignEditOutlined /> Rename
     </ContextMenuItem>
   );

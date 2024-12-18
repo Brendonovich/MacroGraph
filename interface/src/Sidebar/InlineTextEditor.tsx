@@ -8,6 +8,7 @@ import {
   Switch,
   type ValidComponent,
   batch,
+  createEffect,
   createSignal,
   onMount,
   splitProps,
@@ -24,6 +25,8 @@ export function InlineTextEditor<T extends ValidComponent = "span">(
 ) {
   const [local, others] = splitProps(props, ["value", "onChange", "class"]);
   const ctx = useContext() ?? createContextValue();
+
+  createEffect(() => console.log({ editing: ctx.editing() }));
 
   return (
     <div

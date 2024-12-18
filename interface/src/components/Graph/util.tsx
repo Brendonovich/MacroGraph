@@ -290,25 +290,26 @@ export function handleSelectableItemPointerDown(
             y: newPosition.y - clonedStartPosition.y,
           };
 
-          for (const node of nodes) {
-            const nodeStartPosition = nodePositions.get(node);
-            if (!nodeStartPosition) continue;
+          if (!(e.ctrlKey || e.metaKey))
+            for (const node of nodes) {
+              const nodeStartPosition = nodePositions.get(node);
+              if (!nodeStartPosition) continue;
 
-            if (boxStartPosition.x !== clonedStartPosition.x)
-              nodeStartPosition.x += boxDelta.x;
+              if (boxStartPosition.x !== clonedStartPosition.x)
+                nodeStartPosition.x += boxDelta.x;
 
-            if (boxStartPosition.y !== clonedStartPosition.y)
-              nodeStartPosition.y += boxDelta.y;
+              if (boxStartPosition.y !== clonedStartPosition.y)
+                nodeStartPosition.y += boxDelta.y;
 
-            items.push({
-              itemVariant: "node",
-              itemId: node.id,
-              position: {
-                x: nodeStartPosition.x + boxDelta.x,
-                y: nodeStartPosition.y + boxDelta.y,
-              },
-            });
-          }
+              items.push({
+                itemVariant: "node",
+                itemId: node.id,
+                position: {
+                  x: nodeStartPosition.x + boxDelta.x,
+                  y: nodeStartPosition.y + boxDelta.y,
+                },
+              });
+            }
         }
 
         didDrag = items.length > 0;
