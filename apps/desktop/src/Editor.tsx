@@ -70,6 +70,7 @@ const platform = createPlatform({
   pkgs.midi.pkg,
   pkgs.elevenlabs.pkg,
   pkgs.vtubeStudio.pkg,
+  pkgs.voicemod.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {
