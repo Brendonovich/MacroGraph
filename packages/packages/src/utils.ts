@@ -1104,6 +1104,10 @@ export function pkg(core: Core) {
 				name: "String",
 				type: t.string(),
 			},
+			duration: {
+				name: "Duration",
+				type: t.bool(),
+			},
 		},
 		createIO({ io }) {
 			return {
@@ -1120,9 +1124,13 @@ export function pkg(core: Core) {
 		run({ ctx, io, properties }) {
 			ctx.setOutput(
 				io.timeOut,
-				dayjs
-					.duration(ctx.getInput(io.timeIn))
-					.format(ctx.getProperty(properties.string)),
+				ctx.getProperty(properties.duration)
+					? dayjs
+							.duration(ctx.getInput(io.timeIn))
+							.format(ctx.getProperty(properties.string))
+					: dayjs(ctx.getInput(io.timeIn)).format(
+							ctx.getProperty(properties.string),
+						),
 			);
 		},
 	});
