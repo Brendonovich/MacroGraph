@@ -289,6 +289,7 @@ const TWITCH_SCOPES = [
 	"user:read:email",
 	"user:read:follows",
 	"user:read:chat",
+	"user:write:chat",
 	"user:read:subscriptions",
 	// "whispers:read",
 	// "whispers:edit",
