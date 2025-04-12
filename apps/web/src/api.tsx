@@ -115,6 +115,28 @@ export const PROVIDER_DISPLAY_NAMES: Record<AuthProvider, string> = {
 
 export const WINDOW_OPEN_FAILED = "window-open-failed";
 
+async function addCredentialInner(provider: string, searchParams: string) {
+  "use server";
+
+  const [{ user }, oauth] = await Promise.all([
+    ensureAuthedOrRedirect(),
+    performOAuthExchange(provider, searchParams),
+  ]);
+
+  if (!user) throw { code: "forbidden" };
+
+  await db.insert(oauthCredentials).values({
+    providerId: provider,
+    providerUserId: oauth.user.id,
+    userId: user.id,
+    token: oauth.token,
+    displayName: oauth.user.displayName,
+    issuedAt: new Date(),
+  });
+
+  return oauth;
+}
+
 export const addCredential = action(async (provider: AuthProvider) => {
   const w = window.open(await loginURLForProvider(provider), "_blank");
   if (!w) {
@@ -131,29 +153,7 @@ export const addCredential = action(async (provider: AuthProvider) => {
     });
   });
 
-  async function inner(provider: string, searchParams: string) {
-    "use server";
-
-    const [{ user }, oauth] = await Promise.all([
-      ensureAuthedOrRedirect(),
-      performOAuthExchange(provider, searchParams),
-    ]);
-
-    if (!user) throw { code: "forbidden" };
-
-    await db.insert(oauthCredentials).values({
-      providerId: provider,
-      providerUserId: oauth.user.id,
-      userId: user.id,
-      token: oauth.token,
-      displayName: oauth.user.displayName,
-      issuedAt: new Date(),
-    });
-
-    return oauth;
-  }
-
-  return await inner(provider, searchParams);
+  return await addCredentialInner(provider, searchParams);
 });
 
 export const removeCredential = action(
