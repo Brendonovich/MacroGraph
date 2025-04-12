@@ -105,10 +105,7 @@ export class Core {
     });
   refreshCredential = async (provider: string, id: string) => {
     const resp = await this.api.refreshCredential({
-      params: {
-        providerId: provider,
-        providerUserId: id,
-      },
+      params: { providerId: provider },
     });
 
     if (resp.status !== 200)

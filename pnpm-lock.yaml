@@ -103,7 +103,7 @@ importers:
         version: 1.1.3(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(jiti@2.4.1)(solid-js@1.9.5)(terser@5.37.0)(tsx@4.19.2)(vinxi@0.4.1(@planetscale/database@1.19.0)(@types/node@22.10.2)(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.4.1)(magicast@0.3.5)(terser@5.37.0))(vite@5.4.0(@types/node@22.10.2)(terser@5.37.0))(yaml@2.6.1)
       '@t3-oss/env-core':
         specifier: ^0.6.1
-        version: 0.6.1(typescript@5.5.3)(zod@3.22.4)
+        version: 0.6.1(typescript@5.5.3)(zod@3.24.2)
       '@tanstack/solid-query':
         specifier: ^4.36.1
         version: 4.36.1(solid-js@1.9.5)
@@ -112,10 +112,10 @@ importers:
         version: 1.5.3
       '@ts-rest/core':
         specifier: ^3.41.1
-        version: 3.41.1(zod@3.22.4)
+        version: 3.41.1(zod@3.24.2)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.22.4)
+        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.24.2)
       solid-js:
         specifier: ^1.9.5
         version: 1.9.5
@@ -132,8 +132,8 @@ importers:
         specifier: 0.4.1
         version: 0.4.1(@planetscale/database@1.19.0)(@types/node@22.10.2)(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.4.1)(magicast@0.3.5)(terser@5.37.0)
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@kobalte/tailwindcss':
         specifier: ^0.6.5
@@ -273,13 +273,13 @@ importers:
         version: 1.1.3(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(jiti@2.4.1)(solid-js@1.9.5)(terser@5.37.0)(tsx@4.19.2)(vinxi@0.5.1(@planetscale/database@1.19.0)(@types/node@22.10.2)(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.4.1)(jiti@2.4.1)(terser@5.37.0)(tsx@4.19.2)(typescript@5.5.3)(yaml@2.6.1))(vite@6.0.3(@types/node@22.10.2)(jiti@2.4.1)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))(yaml@2.6.1)
       '@t3-oss/env-core':
         specifier: ^0.6.1
-        version: 0.6.1(typescript@5.5.3)(zod@3.24.1)
+        version: 0.6.1(typescript@5.5.3)(zod@3.24.2)
       '@tanstack/solid-query':
         specifier: ^4.36.1
         version: 4.36.1(solid-js@1.9.5)
       '@ts-rest/core':
         specifier: ^3.51.0
-        version: 3.51.0(@types/node@22.10.2)(zod@3.24.1)
+        version: 3.51.0(@types/node@22.10.2)(zod@3.24.2)
       '@vinxi/plugin-mdx':
         specifier: ^3.7.2
         version: 3.7.2(@mdx-js/mdx@2.3.0)
@@ -336,7 +336,7 @@ importers:
         version: 2.5.5
       ts-rest-hono:
         specifier: ^0.5.0
-        version: 0.5.0(hono@3.12.12)(zod@3.24.1)
+        version: 0.5.0(hono@3.12.12)(zod@3.24.2)
       unplugin-auto-import:
         specifier: ^0.17.8
         version: 0.17.8(rollup@4.28.1)
@@ -356,8 +356,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3(@types/node@22.10.2)(jiti@2.4.1)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1)
       zod:
-        specifier: ^3.24.1
-        version: 3.24.1
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@fontsource/roboto':
         specifier: ^5.1.0
@@ -493,10 +493,10 @@ importers:
         version: 4.36.1(solid-js@1.9.5)
       '@ts-rest/core':
         specifier: ^3.41.1
-        version: 3.41.1(zod@3.22.4)
+        version: 3.41.1(zod@3.24.2)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.22.4)
+        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.24.2)
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
@@ -510,8 +510,8 @@ importers:
         specifier: ^0.37.0
         version: 0.37.0(typescript@5.5.3)
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@iconify/json':
         specifier: ^2.2.196
@@ -561,10 +561,10 @@ importers:
         version: 4.36.1(solid-js@1.9.5)
       '@ts-rest/core':
         specifier: ^3.41.1
-        version: 3.41.1(zod@3.22.4)
+        version: 3.41.1(zod@3.24.2)
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -635,8 +635,8 @@ importers:
         specifier: ^4.36.1
         version: 4.36.1(solid-js@1.9.5)
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -746,7 +746,7 @@ importers:
         version: 0.26.4(valibot@0.37.0(typescript@5.5.3))
       '@tanstack/zod-form-adapter':
         specifier: ^0.25.3
-        version: 0.25.3(zod@3.22.4)
+        version: 0.25.3(zod@3.24.2)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -787,8 +787,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -858,16 +858,16 @@ importers:
         version: 1.5.3
       '@ts-rest/core':
         specifier: ^3.41.1
-        version: 3.41.1(zod@3.22.4)
+        version: 3.41.1(zod@3.24.2)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.22.4)
+        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.24.2)
       valibot:
         specifier: ^0.37.0
         version: 0.37.0(typescript@5.5.3)
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -10214,11 +10214,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zod@3.22.4:
-    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
-
-  zod@3.24.1:
-    resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -12167,10 +12164,10 @@ snapshots:
     dependencies:
       hono: 4.6.13
 
-  '@hono/zod-validator@0.2.2(hono@4.6.13)(zod@3.24.1)':
+  '@hono/zod-validator@0.2.2(hono@4.6.13)(zod@3.24.2)':
     dependencies:
       hono: 4.6.13
-      zod: 3.24.1
+      zod: 3.24.2
 
   '@iconify/json@2.2.196':
     dependencies:
@@ -13754,15 +13751,10 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
-  '@t3-oss/env-core@0.6.1(typescript@5.5.3)(zod@3.22.4)':
+  '@t3-oss/env-core@0.6.1(typescript@5.5.3)(zod@3.24.2)':
     dependencies:
       typescript: 5.5.3
-      zod: 3.22.4
-
-  '@t3-oss/env-core@0.6.1(typescript@5.5.3)(zod@3.24.1)':
-    dependencies:
-      typescript: 5.5.3
-      zod: 3.24.1
+      zod: 3.24.2
 
   '@tailwindcss/forms@0.5.7(tailwindcss@3.4.3)':
     dependencies:
@@ -13874,10 +13866,10 @@ snapshots:
       '@tanstack/form-core': 0.26.4
       valibot: 0.37.0(typescript@5.5.3)
 
-  '@tanstack/zod-form-adapter@0.25.3(zod@3.22.4)':
+  '@tanstack/zod-form-adapter@0.25.3(zod@3.24.2)':
     dependencies:
       '@tanstack/form-core': 0.25.3
-      zod: 3.22.4
+      zod: 3.24.2
 
   '@tauri-apps/api@1.5.3': {}
 
@@ -13984,20 +13976,20 @@ snapshots:
 
   '@total-typescript/ts-reset@0.4.2': {}
 
-  '@ts-rest/core@3.41.1(zod@3.22.4)':
+  '@ts-rest/core@3.41.1(zod@3.24.2)':
     optionalDependencies:
-      zod: 3.22.4
+      zod: 3.24.2
 
-  '@ts-rest/core@3.51.0(@types/node@22.10.2)(zod@3.24.1)':
+  '@ts-rest/core@3.51.0(@types/node@22.10.2)(zod@3.24.2)':
     optionalDependencies:
       '@types/node': 22.10.2
-      zod: 3.24.1
+      zod: 3.24.2
 
-  '@ts-rest/solid-query@3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.22.4)':
+  '@ts-rest/solid-query@3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.5))(zod@3.24.2)':
     dependencies:
       '@tanstack/solid-query': 4.36.1(solid-js@1.9.5)
     optionalDependencies:
-      zod: 3.22.4
+      zod: 3.24.2
 
   '@twurple/api-call@6.2.1':
     dependencies:
@@ -15509,7 +15501,7 @@ snapshots:
     dependencies:
       '@esbuild-kit/esm-loader': 2.6.5
       '@hono/node-server': 1.13.7(hono@4.6.13)
-      '@hono/zod-validator': 0.2.2(hono@4.6.13)(zod@3.24.1)
+      '@hono/zod-validator': 0.2.2(hono@4.6.13)(zod@3.24.2)
       camelcase: 7.0.1
       chalk: 5.3.0
       commander: 9.5.0
@@ -15523,7 +15515,7 @@ snapshots:
       minimatch: 7.4.6
       semver: 7.6.3
       superjson: 2.2.2
-      zod: 3.24.1
+      zod: 3.24.2
     transitivePeerDependencies:
       - supports-color
 
@@ -19486,11 +19478,11 @@ snapshots:
 
   ts-mixer@6.0.4: {}
 
-  ts-rest-hono@0.5.0(hono@3.12.12)(zod@3.24.1):
+  ts-rest-hono@0.5.0(hono@3.12.12)(zod@3.24.2):
     dependencies:
       hono: 3.12.12
     optionalDependencies:
-      zod: 3.24.1
+      zod: 3.24.2
 
   tslib@1.14.1: {}
 
@@ -20068,7 +20060,7 @@ snapshots:
       unenv: 1.10.0
       unstorage: 1.13.1(@planetscale/database@1.19.0)(ioredis@5.4.1)
       vite: 5.4.0(@types/node@22.10.2)(terser@5.37.0)
-      zod: 3.22.4
+      zod: 3.24.2
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -20136,7 +20128,7 @@ snapshots:
       unenv: 1.10.0
       unstorage: 1.13.1(@planetscale/database@1.19.0)(ioredis@5.4.1)
       vite: 6.0.3(@types/node@22.10.2)(jiti@2.4.1)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1)
-      zod: 3.24.1
+      zod: 3.24.2
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -20586,8 +20578,6 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.5.2
 
-  zod@3.22.4: {}
-
-  zod@3.24.1: {}
+  zod@3.24.2: {}
 
   zwitch@2.0.4: {}

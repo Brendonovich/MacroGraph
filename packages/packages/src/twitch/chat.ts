@@ -33,12 +33,13 @@ type ChatState = {
 export function createChat() {
   const clients = new ReactiveMap<string, ChatState>();
 
-  function createClient(account: Account) {
+  async function createClient(account: Account) {
+    const credential = await account.credential();
     const client = new tmi.Client({
       options: { skipUpdatingEmotesets: true },
       identity: {
         username: account.data.display_name,
-        password: account.credential.token.access_token,
+        password: credential.token.access_token,
       },
     });
 
@@ -90,7 +91,7 @@ export function createChat() {
 
   async function connectClient(account: Account) {
     if (!clients.has(account.data.id))
-      clients.set(account.data.id, createClient(account));
+      clients.set(account.data.id, await createClient(account));
 
     const chat = clients.get(account.data.id)!;
 
