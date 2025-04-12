@@ -105,11 +105,13 @@ export class Core {
     });
   refreshCredential = async (provider: string, id: string) => {
     const resp = await this.api.refreshCredential({
-      params: { providerId: provider },
+      params: { providerId: provider, providerUserId: id },
     });
 
     if (resp.status !== 200)
       throw new Error(`Failed to refresh credential ${provider}:${id}`);
+
+    await this.fetchCredentials();
 
     return resp.body;
   };
