@@ -35,7 +35,9 @@ export function pkg() {
       const val = Maybe(toJSON(io.in.type, ctx.getInput(io.in)));
       ctx.setOutput(
         io.out,
-        val.expect(`Type ${io.w.toString()} cannot be converted to JSON!`),
+        val.expect(
+          `Type ${io.w.toString()} cannot be converted to JSON!`,
+        ) as any,
       );
     },
   });

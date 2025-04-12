@@ -23,17 +23,17 @@
 		"@solidjs/router": "^0.14.3",
 		"@tanstack/solid-query": "^4.36.1",
 		"@tauri-apps/api": "^1.5.3",
-		"@ts-rest/core": "^3.41.1",
+		"@ts-rest/core": "^3.52.1",
 		"@ts-rest/solid-query": "^3.41.1",
 		"valibot": "^0.37.0",
-		"zod": "^3.22.4"
+		"zod": "^3.24.2"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",
 		"@total-typescript/ts-reset": "^0.4.2",
 		"@types/tmi.js": "^1.8.6",
 		"safaridriver": "^0.0.5",
-		"solid-js": "^1.9.3",
+		"solid-js": "^1.9.5",
 		"type-fest": "^2.19.0",
 		"webdriverio": "^8.35.1"
 	}

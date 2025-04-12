@@ -50,7 +50,7 @@
 		"tmi.js": "^1.8.5",
 		"valibot": "^0.37.0",
 		"vtubestudio": "^3.10.1",
-		"zod": "^3.22.4"
+		"zod": "^3.24.2"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",
@@ -58,7 +58,7 @@
 		"@total-typescript/ts-reset": "^0.4.2",
 		"@twurple/eventsub-base": "^7.1.0",
 		"@types/tmi.js": "^1.8.6",
-		"solid-js": "^1.9.3",
+		"solid-js": "^1.9.5",
 		"type-fest": "^2.19.0",
 		"typescript": "^5.5.3"
 	},

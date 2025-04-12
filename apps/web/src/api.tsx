@@ -16,7 +16,7 @@ function loginRedirect() {
   return redirect("/login");
 }
 
-export const getAuthState = cache(async () => {
+async function _getAuthState() {
   "use server";
 
   const requestEvent = getRequestEvent()!;
@@ -64,12 +64,12 @@ export const getAuthState = cache(async () => {
   }
 
   if (data.user) return data;
-}, "getAuthState");
+}
+
+export const getAuthState = cache(() => _getAuthState(), "getAuthState");
 
 export async function ensureAuthedOrThrow() {
-  "use server";
-
-  const state = await getAuthState();
+  const state = await _getAuthState();
   if (state) return state;
 
   throw { code: "forbidden" };
@@ -115,6 +115,28 @@ export const PROVIDER_DISPLAY_NAMES: Record<AuthProvider, string> = {
 
 export const WINDOW_OPEN_FAILED = "window-open-failed";
 
+async function addCredentialInner(provider: string, searchParams: string) {
+  "use server";
+
+  const [{ user }, oauth] = await Promise.all([
+    ensureAuthedOrRedirect(),
+    performOAuthExchange(provider, searchParams),
+  ]);
+
+  if (!user) throw { code: "forbidden" };
+
+  await db.insert(oauthCredentials).values({
+    providerId: provider,
+    providerUserId: oauth.user.id,
+    userId: user.id,
+    token: oauth.token,
+    displayName: oauth.user.displayName,
+    issuedAt: new Date(),
+  });
+
+  return oauth;
+}
+
 export const addCredential = action(async (provider: AuthProvider) => {
   const w = window.open(await loginURLForProvider(provider), "_blank");
   if (!w) {
@@ -131,29 +153,7 @@ export const addCredential = action(async (provider: AuthProvider) => {
     });
   });
 
-  async function inner(provider: string, searchParams: string) {
-    "use server";
-
-    const [{ user }, oauth] = await Promise.all([
-      ensureAuthedOrRedirect(),
-      performOAuthExchange(provider, searchParams),
-    ]);
-
-    if (!user) throw { code: "forbidden" };
-
-    await db.insert(oauthCredentials).values({
-      providerId: provider,
-      providerUserId: oauth.user.id,
-      userId: user.id,
-      token: oauth.token,
-      displayName: oauth.user.displayName,
-      issuedAt: new Date(),
-    });
-
-    return oauth;
-  }
-
-  return await inner(provider, searchParams);
+  return await addCredentialInner(provider, searchParams);
 });
 
 export const removeCredential = action(
