@@ -16,7 +16,7 @@ function loginRedirect() {
   return redirect("/login");
 }
 
-export const getAuthState = cache(async () => {
+async function _getAuthState() {
   "use server";
 
   const requestEvent = getRequestEvent()!;
@@ -64,12 +64,12 @@ export const getAuthState = cache(async () => {
   }
 
   if (data.user) return data;
-}, "getAuthState");
+}
+
+export const getAuthState = cache(() => _getAuthState(), "getAuthState");
 
 export async function ensureAuthedOrThrow() {
-  "use server";
-
-  const state = await getAuthState();
+  const state = await _getAuthState();
   if (state) return state;
 
   throw { code: "forbidden" };

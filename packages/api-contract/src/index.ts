@@ -30,9 +30,10 @@ export const contract = c.router({
   },
   refreshCredential: {
     method: "POST",
-    path: "/auth/:providerId/refresh",
+    path: "/credentials/:providerId/:providerUserId/refresh",
     pathParams: z.object({
       providerId: z.string(),
+      providerUserId: z.string(),
     }),
     responses: {
       200: CREDENTIAL,
