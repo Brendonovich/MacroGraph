@@ -4,7 +4,12 @@ import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { createHonoEndpoints, initServer } from "ts-rest-hono";
 import type { z } from "zod";
-import { ensureAuthedOrThrow, getCredentials, getUser } from "~/api";
+import {
+  ensureAuthedOrRedirect,
+  ensureAuthedOrThrow,
+  getCredentials,
+  getUser,
+} from "~/api";
 import { db } from "~/drizzle";
 import { oauthCredentials } from "~/drizzle/schema";
 import { refreshToken } from "../auth/actions";
@@ -13,75 +18,79 @@ import { AuthProviders } from "../auth/providers";
 const s = initServer();
 
 function marshalCredential(
-	c: Awaited<ReturnType<typeof getCredentials>>[number],
+  c: Awaited<ReturnType<typeof getCredentials>>[number],
 ): z.infer<typeof CREDENTIAL> {
-	return {
-		provider: c.providerId,
-		id: c.providerUserId,
-		displayName: c.displayName,
-		token: { ...c.token, issuedAt: +c.issuedAt },
-	};
+  return {
+    provider: c.providerId,
+    id: c.providerUserId,
+    displayName: c.displayName,
+    token: { ...c.token, issuedAt: +c.issuedAt },
+  };
 }
 
 const router = s.router(contract, {
-	getCredentials: async () => {
-		const c = await getCredentials();
+  getCredentials: async () => {
+    const { user } = await ensureAuthedOrRedirect();
 
-		return {
-			status: 200,
-			body: c.map(marshalCredential),
-		};
-	},
-	refreshCredential: async ({ params }) => {
-		const providerConfig = AuthProviders[params.providerId];
-		if (!providerConfig)
-			throw new Error(`Provider ${params.providerId} not found`);
+    const c = await db.query.oauthCredentials.findMany({
+      where: eq(oauthCredentials.userId, user.id),
+    });
 
-		const { user } = await ensureAuthedOrThrow();
+    return {
+      status: 200,
+      body: c.map(marshalCredential),
+    };
+  },
+  refreshCredential: async ({ params }) => {
+    const providerConfig = AuthProviders[params.providerId];
+    if (!providerConfig)
+      throw new Error(`Provider ${params.providerId} not found`);
 
-		const where = and(
-			eq(oauthCredentials.providerId, params.providerId),
-			eq(oauthCredentials.userId, user.id),
-			eq(oauthCredentials.providerUserId, params.providerUserId),
-		);
+    const { user } = await ensureAuthedOrThrow();
 
-		const credential = await db.transaction(async (db) => {
-			const credential = await db.query.oauthCredentials.findFirst({
-				where,
-			});
+    const where = and(
+      eq(oauthCredentials.providerId, params.providerId),
+      eq(oauthCredentials.userId, user.id),
+      eq(oauthCredentials.providerUserId, params.providerUserId),
+    );
 
-			// 404
-			if (!credential) throw new Error("credential not found");
-			// assume provider doesn't require refresh
-			if (
-				!credential.token.refresh_token ||
-				// only allow refresh of tokens >5min old
-				+credential.issuedAt + credential.token.expires_in * 1000 >
-					Date.now() - 5 * 60 * 1000
-			)
-				return credential;
+    const credential = await db.transaction(async (db) => {
+      const credential = await db.query.oauthCredentials.findFirst({
+        where,
+      });
 
-			const token = await refreshToken(
-				providerConfig,
-				credential.token.refresh_token,
-			);
+      // 404
+      if (!credential) throw new Error("credential not found");
+      // assume provider doesn't require refresh
+      if (
+        !credential.token.refresh_token ||
+        // only allow refresh of tokens >5min old
+        +credential.issuedAt + credential.token.expires_in * 1000 >
+          Date.now() - 5 * 60 * 1000
+      )
+        return credential;
 
-			// token refresh not necessary/possible
-			if (!token) return credential;
+      const token = await refreshToken(
+        providerConfig,
+        credential.token.refresh_token,
+      );
 
-			const issuedAt = new Date();
-			await db.update(oauthCredentials).set({ token, issuedAt }).where(where);
+      // token refresh not necessary/possible
+      if (!token) return credential;
 
-			return {
-				...credential,
-				issuedAt,
-				token,
-			};
-		});
+      const issuedAt = new Date();
+      await db.update(oauthCredentials).set({ token, issuedAt }).where(where);
 
-		return { status: 200, body: marshalCredential(credential) };
-	},
-	getUser: async () => ({ status: 200, body: await getUser() }),
+      return {
+        ...credential,
+        issuedAt,
+        token,
+      };
+    });
+
+    return { status: 200, body: marshalCredential(credential) };
+  },
+  getUser: async () => ({ status: 200, body: await getUser() }),
 });
 
 const app = new Hono().basePath("/api");
@@ -89,9 +98,9 @@ const app = new Hono().basePath("/api");
 createHonoEndpoints(contract, router, app);
 
 const createHandler = (): APIHandler => async (event) =>
-	app.fetch(event.request, {
-		h3Event: event.nativeEvent,
-	});
+  app.fetch(event.request, {
+    h3Event: event.nativeEvent,
+  });
 
 export const GET = createHandler();
 export const POST = createHandler();
