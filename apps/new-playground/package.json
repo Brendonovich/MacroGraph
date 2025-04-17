@@ -1,0 +1,24 @@
+{
+  "name": "new-playground",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@effect/vitest": "^0.20.2",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.80.2",
+    "@effect/platform-browser": "^0.59.2",
+    "@effect/rpc": "^0.55.3",
+    "@effect/rpc-http": "^0.52.4",
+    "effect": "^3.14.2",
+    "hono": "^4.7.5"
+  }
+}
