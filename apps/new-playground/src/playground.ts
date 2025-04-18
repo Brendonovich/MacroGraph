@@ -13,6 +13,7 @@ import { pipeArguments } from "effect/Pipeable";
 import { NoSuchElementException } from "effect/Cause";
 import { SchemaIdAnnotationId } from "effect/SchemaAST";
 import { log } from "effect/Console";
+import { YieldWrap } from "effect/Utils";
 
 const server = () => Effect.gen(function* () {});
 
@@ -62,49 +63,6 @@ type RunFunctionAvailableRequirements =
   | ExecutionContext
   | NodeExecutionContext;
 
-type SchemaConfig<TIO, TEventData extends Schema.Schema<any>> = {
-  name?: string;
-} & (
-  | {
-      type: "exec";
-      io: (ctx: IOFunctionContext) => TIO;
-      run: (
-        io: TIO,
-      ) => Effect.Effect<
-        ExecOutputRef | void,
-        NoSuchElementException | NotComputationNode,
-        RunFunctionAvailableRequirements
-      >;
-    }
-  | {
-      type: "pure";
-      io: (ctx: {
-        in: Extract<IOFunctionContext["in"], { data: any }>;
-        out: Extract<IOFunctionContext["out"], { data: any }>;
-      }) => TIO;
-      run: (
-        io: TIO,
-      ) => Effect.Effect<
-        void,
-        NoSuchElementException | NotComputationNode,
-        RunFunctionAvailableRequirements
-      >;
-    }
-  | {
-      type: "event";
-      event: EventRef<string, TEventData>;
-      io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
-      run: (
-        io: TIO,
-        data: TEventData["Encoded"],
-      ) => Effect.Effect<
-        ExecOutputRef | void,
-        never,
-        RunFunctionAvailableRequirements
-      >;
-    }
-);
-
 const getInput = <T extends Schema.Schema<any>>(ref: DataInputRef<T>) =>
   Effect.andThen(ExecutionContext, (ctx) => ctx.getInput(ref));
 
@@ -132,7 +90,7 @@ class EventRef<
 class Package {
   constructor(
     public readonly id: string,
-    public readonly schemas: Map<string, SchemaConfig<any, any>>,
+    public readonly schemas: Map<string, Schema>,
     private readonly events: Map<string, EventRef>,
     public engine?: PackageEngine.PackageEngine,
   ) {}
@@ -189,21 +147,104 @@ type PackageBuildReturn = {
   engine: PackageEngine.PackageEngine;
 };
 
+type EffectGenerator<
+  Eff extends Effect.Effect<any, any, any>,
+  Ret = void,
+> = Generator<YieldWrap<Eff>, Ret, never>;
+
+type SchemaRunGeneratorEffect = Effect.Effect<
+  any,
+  NoSuchElementException | NotComputationNode,
+  RunFunctionAvailableRequirements
+>;
+
+type PureSchemaDefinition<TIO = any> = {
+  type: "pure";
+  io: (ctx: {
+    in: Extract<IOFunctionContext["in"], { data: any }>;
+    out: Extract<IOFunctionContext["out"], { data: any }>;
+  }) => TIO;
+  run: (io: TIO) => EffectGenerator<SchemaRunGeneratorEffect>;
+};
+
+type PureSchema<TIO = any> = Omit<PureSchemaDefinition<TIO>, "run"> & {
+  run: ReturnType<PureSchemaDefinition<TIO>["run"]> extends EffectGenerator<
+    infer TEff
+  >
+    ? (...args: Parameters<PureSchemaDefinition<TIO>["run"]>) => TEff
+    : never;
+};
+
+type ExecSchemaDefinition<TIO = any> = {
+  type: "exec";
+  io: (ctx: IOFunctionContext) => TIO;
+  run: (
+    io: TIO,
+  ) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef | void>;
+};
+
+type ExecSchema<TIO = any> = Omit<ExecSchemaDefinition<TIO>, "run"> & {
+  run: ReturnType<ExecSchemaDefinition<TIO>["run"]> extends EffectGenerator<
+    infer TEff
+  >
+    ? (...args: Parameters<ExecSchemaDefinition<TIO>["run"]>) => TEff
+    : never;
+};
+
+type EventSchemaDefinition<
+  TIO = any,
+  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
+> = {
+  type: "event";
+  event: EventRef<string, TEventData>;
+  io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
+  run: (
+    io: TIO,
+    data: TEventData["Encoded"],
+  ) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef | void>;
+};
+
+type EventSchema<
+  TIO = any,
+  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
+> = Omit<EventSchemaDefinition<TIO, TEventData>, "run"> & {
+  run: ReturnType<
+    EventSchemaDefinition<TIO, TEventData>["run"]
+  > extends EffectGenerator<infer TEff, any>
+    ? (
+        ...args: Parameters<EventSchemaDefinition<TIO, TEventData>["run"]>
+      ) => TEff
+    : never;
+};
+
+type SchemaDefinition<
+  TIO = any,
+  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
+> =
+  | ExecSchemaDefinition<TIO>
+  | PureSchemaDefinition<TIO>
+  | EventSchemaDefinition<TIO, TEventData>;
+
+type Schema<
+  TIO = any,
+  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
+> = ExecSchema<TIO> | PureSchema<TIO> | EventSchema<TIO, TEventData>;
+
 class PackageBuilder {
-  private schemas = new Map<string, SchemaConfig<any, any>>();
+  private schemas = new Map<string, Schema>();
   private events = new Map<string, EventRef>();
 
   constructor(public readonly id: string) {}
 
-  schema = <TIO, TEvent extends Schema.Schema<any>>(
-    id: string,
-    schema: SchemaConfig<TIO, TEvent>,
-  ) => {
+  schema = <TIO>(id: string, schema: SchemaDefinition<TIO>) => {
     const self = this;
     return Effect.gen(function* () {
       if (self.schemas.has(id)) yield* new DuplicateSchemaId();
 
-      self.schemas.set(id, schema);
+      self.schemas.set(id, {
+        ...schema,
+        run: Effect.fn(schema.run as any),
+      } as Schema<TIO>);
     });
   };
 
@@ -246,13 +287,12 @@ const utilPackage = definePackage(
         execOut: c.out.exec("exec"),
         in: c.in.data("in", Schema.String),
       }),
-      run: (io) =>
-        Effect.gen(function* () {
-          const logger = yield* Logger;
-          yield* logger.print(yield* getInput(io.in));
+      run: function* (io) {
+        const logger = yield* Logger;
+        yield* logger.print(yield* getInput(io.in));
 
-          return io.execOut;
-        }),
+        return io.execOut;
+      },
     });
 
     yield* pkg.schema("ticker", {
@@ -262,12 +302,11 @@ const utilPackage = definePackage(
         execOut: c.out.exec("exec"),
         tick: c.out.data("tick", Schema.Int),
       }),
-      run: (io, data) =>
-        Effect.gen(function* () {
-          yield* setOutput(io.tick, data);
+      run: function* (io, data) {
+        yield* setOutput(io.tick, data);
 
-          return io.execOut;
-        }),
+        return io.execOut;
+      },
     });
 
     yield* pkg.schema("intToString", {
@@ -276,10 +315,9 @@ const utilPackage = definePackage(
         int: c.in.data("int", Schema.Int),
         str: c.out.data("str", Schema.String),
       }),
-      run: (io) =>
-        Effect.gen(function* () {
-          yield* setOutput(io.str, String(yield* getInput(io.int)));
-        }),
+      run: function* (io) {
+        yield* setOutput(io.str, String(yield* getInput(io.int)));
+      },
     });
 
     return {
@@ -488,7 +526,7 @@ const program = Effect.gen(function* () {
 
   const runEventNode = Effect.fn(function* (
     eventNode: Node,
-    schema: Extract<SchemaConfig<any, any>, { type: "event" }>,
+    schema: Extract<Schema, { type: "event" }>,
     data: any,
   ) {
     const io = schema.io({
@@ -698,6 +736,7 @@ const Rpcs = RpcGroup.make(
       output: IORef,
       input: IORef,
     }),
+    error: Schema.Union(NodeNotFound),
   }),
 );
 
