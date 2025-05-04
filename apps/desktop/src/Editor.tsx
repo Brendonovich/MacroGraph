@@ -71,6 +71,7 @@ const platform = createPlatform({
   pkgs.elevenlabs.pkg,
   pkgs.vtubeStudio.pkg,
   pkgs.voicemod.pkg,
+  // pkgs.firebase.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {
