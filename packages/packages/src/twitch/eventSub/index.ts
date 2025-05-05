@@ -2158,6 +2158,16 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Moderator",
 					type: t.bool(),
 				}),
+				vip: io.dataOutput({
+					id: "vip",
+					name: "VIP",
+					type: t.bool(),
+				}),
+				subscriber: io.dataOutput({
+					id: "subscriber",
+					name: "Subscriber",
+					type: t.bool(),
+				}),
 				badges: io.dataOutput({
 					id: "badges",
 					name: "Badges",
@@ -2359,6 +2369,14 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 			ctx.setOutput(
 				io.moderator,
 				data.badges.some((badge) => badge.set_id === "moderator"),
+			);
+			ctx.setOutput(
+				io.subscriber,
+				data.badges.some((badge) => badge.set_id === "subscriber"),
+			);
+			ctx.setOutput(
+				io.vip,
+				data.badges.some((badge) => badge.set_id === "vip"),
 			);
 			ctx.setOutput(io.isSourceOnly, Maybe(data.is_source_only));
 			ctx.exec(io.exec);
