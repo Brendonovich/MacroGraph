@@ -1755,11 +1755,16 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		},
 	});
 
-	createHelixExecSchema({
+	pkg.createNonEventSchema({
+		variant: "Exec",
 		name: "Send Chat Message (Helix)",
 		properties: {
 			chatAccount: {
-				name: "Chatters Account",
+				name: "Chatting Account",
+				resource: TwitchAccount,
+			},
+			chat: {
+				name: "Chat to send to",
 				resource: TwitchAccount,
 			},
 		},
@@ -1775,25 +1780,24 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		async run({ ctx, io, account, properties, credential }) {
-			const user = account.data.id;
+		async run({ ctx, io, properties }) {
+			const chat = await ctx
+				.getProperty(properties.chatAccount)
+				.expect("No Twitch account available for chat")
+				.credential();
+			const chatter = await ctx
+				.getProperty(properties.chatAccount)
+				.expect("No Twitch account available for chatter")
+				.credential();
 
-			await helix.call(
-				"POST /chat/messages",
-				ctx
-					.getProperty(properties.chatAccount)
-					.expect("No Twitch Chat Account Available").credential,
-				{
-					body: JSON.stringify({
-						broadcaster_id: user,
-						sender_id: ctx
-							.getProperty(properties.chatAccount)
-							.expect("No Twitch Chat Account Available").credential.id,
-						message: ctx.getInput(io.message),
-						reply_parent_message_id: ctx.getInput(io.parentId),
-					}),
-				},
-			);
+			await helix.call("POST /chat/messages", chatter, {
+				body: JSON.stringify({
+					broadcaster_id: chat.id,
+					sender_id: chatter.id,
+					message: ctx.getInput(io.message),
+					reply_parent_message_id: ctx.getInput(io.parentId),
+				}),
+			});
 		},
 	});
 
