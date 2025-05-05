@@ -1782,13 +1782,16 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		}),
 		async run({ ctx, io, properties }) {
 			const chat = await ctx
-				.getProperty(properties.chatAccount)
+				.getProperty(properties.chat)
 				.expect("No Twitch account available for chat")
 				.credential();
 			const chatter = await ctx
 				.getProperty(properties.chatAccount)
 				.expect("No Twitch account available for chatter")
 				.credential();
+
+			console.log(chat.displayName);
+			console.log(chatter.displayName);
 
 			await helix.call("POST /chat/messages", chatter, {
 				body: JSON.stringify({
