@@ -2226,7 +2226,6 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 			};
 		},
 		run({ ctx, data, io }) {
-			console.log(data);
 			ctx.setOutput(io.chatterUserId, data.chatter_user_id);
 			ctx.setOutput(io.chatterUserLogin, data.chatter_user_login);
 			ctx.setOutput(io.chatterUserName, data.chatter_user_name);
