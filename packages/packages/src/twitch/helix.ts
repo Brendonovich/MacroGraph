@@ -16,7 +16,7 @@ import type { z } from "zod";
 import { createHTTPClient } from "../httpEndpoint";
 import type { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";
-import { defaultProperties, TwitchAccount } from "./resource";
+import { defaultProperties, TwitchAccount, TwitchChannel } from "./resource";
 import type { Types } from "./types";
 
 export const HELIX_USER_ID = "helixUserId";
@@ -1765,7 +1765,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			},
 			chat: {
 				name: "Chat to send to",
-				resource: TwitchAccount,
+				resource: TwitchChannel,
 			},
 		},
 		createIO: ({ io }) => ({
@@ -1781,21 +1781,20 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			}),
 		}),
 		async run({ ctx, io, properties }) {
-			const chat = await ctx
+			const chat = ctx
 				.getProperty(properties.chat)
-				.expect("No Twitch account available for chat")
-				.credential();
+				.expect("No Twitch channel available");
 			const chatter = await ctx
 				.getProperty(properties.chatAccount)
 				.expect("No Twitch account available for chatter")
 				.credential();
 
-			console.log(chat.displayName);
+			console.log(chat);
 			console.log(chatter.displayName);
 
 			await helix.call("POST /chat/messages", chatter, {
 				body: JSON.stringify({
-					broadcaster_id: chat.id,
+					broadcaster_id: chat,
 					sender_id: chatter.id,
 					message: ctx.getInput(io.message),
 					reply_parent_message_id: ctx.getInput(io.parentId),
