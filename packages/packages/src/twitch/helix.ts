@@ -1873,6 +1873,43 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		},
 	});
 
+	createHelixExecSchema({
+		name: "Validate Token",
+		createIO: ({ io }) => {
+			return {
+				login: io.dataOutput({
+					id: "login",
+					name: "Login of Token",
+					type: t.string(),
+				}),
+				userId: io.dataOutput({
+					id: "userId",
+					name: "User ID of token",
+					type: t.string(),
+				}),
+				expiresIn: io.dataOutput({
+					id: "expiresIn",
+					name: "Token Expires in (s)",
+					type: t.int(),
+				}),
+			};
+		},
+		async run({ ctx, io, account, credential }) {
+			const user = account.data.id;
+
+			const data = await fetch("https://id.twitch.tv/oauth2/validate", {
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${credential.token.access_token}`,
+				},
+			}).then((resp) => resp.json());
+
+			ctx.setOutput(io.expiresIn, data.expires_in);
+			ctx.setOutput(io.login, data.login);
+			ctx.setOutput(io.userId, data.user_id);
+		},
+	});
+
 	const Choices = pkg.createStruct("Choices", (s) => ({
 		id: s.field("ID", t.string()),
 		title: s.field("Title", t.string()),
@@ -2046,6 +2083,7 @@ export type Requests = {
 		}>;
 	};
 	"GET /bits/leaderboard": any;
+	"GET /validate": any;
 	"GET /games": any;
 	"GET /streams": any;
 	"POST /clips": any;
