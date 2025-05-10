@@ -1,389 +1,40 @@
-import {
-  Rpc,
-  RpcClient,
-  RpcGroup,
-  RpcMessage,
-  RpcServer,
-  RpcTest,
-} from "@effect/rpc";
-import { Brand, Context, Data, Option, pipe, Schema } from "effect";
+import { Rpc, RpcClient, RpcGroup, RpcSchema, RpcTest } from "@effect/rpc";
+import { Brand, Context, Data, Layer, Option, pipe, Schema } from "effect";
 import * as Effect from "effect/Effect";
-import { Broadcast, CurrentProject, GraphRpcs, GraphRpcsLayer } from ".";
-import { pipeArguments } from "effect/Pipeable";
-import { NoSuchElementException } from "effect/Cause";
-import { SchemaIdAnnotationId } from "effect/SchemaAST";
-import { log } from "effect/Console";
-import { YieldWrap } from "effect/Utils";
+import { FetchHttpClient, HttpClient } from "@effect/platform";
 
-const server = () => Effect.gen(function* () {});
-
-// E.gen(function* () {
-//   const client = yield* RpcTest.makeClient(GraphRpcs);
-
-//   const graph = yield* client.CreateGraph();
-
-//   console.log("graph", graph);
-// }).pipe(E.scoped, E.runFork);
-
-class ExecInputRef {
-  constructor(public id: string) {}
-}
-
-class ExecOutputRef {
-  constructor(public id: IOId) {}
-}
-
-class DataInputRef<T> {
-  constructor(
-    public id: IOId,
-    public type: T,
-  ) {}
-}
-
-class DataOutputRef<T> {
-  constructor(
-    public id: string,
-    public type: T,
-  ) {}
-}
-
-interface IOFunctionContext {
-  in: {
-    exec: (id: string) => ExecInputRef;
-    data: <T extends Schema.Any>(id: string, type: T) => DataInputRef<T>;
-  };
-  out: {
-    exec: (id: string) => ExecOutputRef;
-    data: <T extends Schema.Any>(id: string, type: T) => DataOutputRef<T>;
-  };
-}
-
-type RunFunctionAvailableRequirements =
-  | Logger
-  | ExecutionContext
-  | NodeExecutionContext;
-
-const getInput = <T extends Schema.Schema<any>>(ref: DataInputRef<T>) =>
-  Effect.andThen(ExecutionContext, (ctx) => ctx.getInput(ref));
-
-const setOutput = <T extends Schema.Schema<any>>(
-  ref: DataOutputRef<T>,
-  data: T["Encoded"],
-) => Effect.andThen(ExecutionContext, (ctx) => ctx.setOutput(ref, data));
-
-// exported from core
-class Logger extends Context.Tag("Logger")<
+import type { NodeSchema } from "./schema";
+import { Node } from "./node";
+import {
+  definePackage,
+  EventRef,
+  PackageEngine,
+  Package,
+  PackageBuilder,
+} from "./package";
+import {
+  ExecutionContext,
   Logger,
-  { print: (value: string) => Effect.Effect<void> }
->() {}
-
-class EventRef<
-  TId extends string = string,
-  TData extends Schema.Schema<any> = any,
-> {
-  constructor(
-    public id: TId,
-    public data: TData,
-  ) {}
-}
-
-class Package {
-  constructor(
-    public readonly id: string,
-    public readonly schemas: Map<string, Schema>,
-    private readonly events: Map<string, EventRef>,
-    public engine?: PackageEngine.PackageEngine,
-  ) {}
-
-  getEvent(id: string) {
-    return Option.fromNullable(this.events.get(id));
-  }
-}
-
-class NodeRuntime extends Context.Tag("NodeRuntime")<
+  NodeExecutionContext,
   NodeRuntime,
-  {
-    emitEvent: (
-      packageId: string,
-      eventId: string,
-      data?: any,
-    ) => Effect.Effect<void, NoSuchElementException>;
-  }
->() {}
-
-namespace PackageEngine {
-  type Requirements = PackageEngineContext | NodeRuntime;
-
-  export class PackageEngineContext extends Context.Tag("PackageEngineContext")<
-    PackageEngineContext,
-    { packageId: string }
-  >() {}
-
-  export type PackageEngine = Effect.Effect<void, never, Requirements>;
-
-  export function emit(
-    event: EventRef<any, Schema.Schema<void>>,
-  ): Effect.Effect<void, never, Requirements>;
-  export function emit<TData extends Schema.Schema<any>>(
-    event: EventRef<any, TData>,
-    data: TData["Encoded"],
-  ): Effect.Effect<void, never, Requirements>;
-  export function emit<TData extends Schema.Schema<any>>(
-    event: EventRef<any, TData>,
-    data?: TData,
-  ) {
-    return Effect.gen(function* () {
-      const { packageId } = yield* PackageEngineContext;
-      const runtime = yield* NodeRuntime;
-
-      yield* runtime.emitEvent(packageId, event.id, data);
-    });
-  }
-}
-
-class DuplicateSchemaId extends Data.TaggedError("DuplicateSchemaId") {}
-
-type PackageBuildReturn = {
-  engine: PackageEngine.PackageEngine;
-};
-
-type EffectGenerator<
-  Eff extends Effect.Effect<any, any, any>,
-  Ret = void,
-> = Generator<YieldWrap<Eff>, Ret, never>;
-
-type SchemaRunGeneratorEffect = Effect.Effect<
-  any,
-  NoSuchElementException | NotComputationNode,
-  RunFunctionAvailableRequirements
->;
-
-type PureSchemaDefinition<TIO = any> = {
-  type: "pure";
-  io: (ctx: {
-    in: Extract<IOFunctionContext["in"], { data: any }>;
-    out: Extract<IOFunctionContext["out"], { data: any }>;
-  }) => TIO;
-  run: (io: TIO) => EffectGenerator<SchemaRunGeneratorEffect>;
-};
-
-type PureSchema<TIO = any> = Omit<PureSchemaDefinition<TIO>, "run"> & {
-  run: ReturnType<PureSchemaDefinition<TIO>["run"]> extends EffectGenerator<
-    infer TEff
-  >
-    ? (...args: Parameters<PureSchemaDefinition<TIO>["run"]>) => TEff
-    : never;
-};
-
-type ExecSchemaDefinition<TIO = any> = {
-  type: "exec";
-  io: (ctx: IOFunctionContext) => TIO;
-  run: (
-    io: TIO,
-  ) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef | void>;
-};
-
-type ExecSchema<TIO = any> = Omit<ExecSchemaDefinition<TIO>, "run"> & {
-  run: ReturnType<ExecSchemaDefinition<TIO>["run"]> extends EffectGenerator<
-    infer TEff
-  >
-    ? (...args: Parameters<ExecSchemaDefinition<TIO>["run"]>) => TEff
-    : never;
-};
-
-type EventSchemaDefinition<
-  TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> = {
-  type: "event";
-  event: EventRef<string, TEventData>;
-  io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
-  run: (
-    io: TIO,
-    data: TEventData["Encoded"],
-  ) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef | void>;
-};
-
-type EventSchema<
-  TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> = Omit<EventSchemaDefinition<TIO, TEventData>, "run"> & {
-  run: ReturnType<
-    EventSchemaDefinition<TIO, TEventData>["run"]
-  > extends EffectGenerator<infer TEff, any>
-    ? (
-        ...args: Parameters<EventSchemaDefinition<TIO, TEventData>["run"]>
-      ) => TEff
-    : never;
-};
-
-type SchemaDefinition<
-  TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> =
-  | ExecSchemaDefinition<TIO>
-  | PureSchemaDefinition<TIO>
-  | EventSchemaDefinition<TIO, TEventData>;
-
-type Schema<
-  TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> = ExecSchema<TIO> | PureSchema<TIO> | EventSchema<TIO, TEventData>;
-
-class PackageBuilder {
-  private schemas = new Map<string, Schema>();
-  private events = new Map<string, EventRef>();
-
-  constructor(public readonly id: string) {}
-
-  schema = <TIO>(id: string, schema: SchemaDefinition<TIO>) => {
-    const self = this;
-    return Effect.gen(function* () {
-      if (self.schemas.has(id)) yield* new DuplicateSchemaId();
-
-      self.schemas.set(id, {
-        ...schema,
-        run: Effect.fn(schema.run as any),
-      } as Schema<TIO>);
-    });
-  };
-
-  event<TId extends string>(id: TId): EventRef<TId, Schema.Schema<void>>;
-  event<TId extends string, TData extends Schema.Schema<any>>(
-    id: TId,
-    data: TData,
-  ): EventRef<TId, TData>;
-  event<TID extends string, TData extends Schema.Schema<any>>(
-    id: TID,
-    data?: TData,
-  ) {
-    const ref = new EventRef(id, data ?? Schema.Void);
-    this.events.set(id, ref);
-    return ref;
-  }
-
-  /** @internal */
-  toPackage(ret?: PackageBuildReturn): Package {
-    return new Package(this.id, this.schemas, this.events, ret?.engine);
-  }
-}
-
-function definePackage(
-  cb: (
-    pkg: PackageBuilder,
-  ) => Effect.Effect<void | PackageBuildReturn, DuplicateSchemaId>,
-) {
-  return cb;
-}
-
-const utilPackage = definePackage(
-  Effect.fn(function* (pkg) {
-    const tick = pkg.event("tick", Schema.Number);
-
-    yield* pkg.schema("print", {
-      type: "exec",
-      io: (c) => ({
-        execIn: c.in.exec("exec"),
-        execOut: c.out.exec("exec"),
-        in: c.in.data("in", Schema.String),
-      }),
-      run: function* (io) {
-        const logger = yield* Logger;
-        yield* logger.print(yield* getInput(io.in));
-
-        return io.execOut;
-      },
-    });
-
-    yield* pkg.schema("ticker", {
-      type: "event",
-      event: tick,
-      io: (c) => ({
-        execOut: c.out.exec("exec"),
-        tick: c.out.data("tick", Schema.Int),
-      }),
-      run: function* (io, data) {
-        yield* setOutput(io.tick, data);
-
-        return io.execOut;
-      },
-    });
-
-    yield* pkg.schema("intToString", {
-      type: "pure",
-      io: (c) => ({
-        int: c.in.data("int", Schema.Int),
-        str: c.out.data("str", Schema.String),
-      }),
-      run: function* (io) {
-        yield* setOutput(io.str, String(yield* getInput(io.int)));
-      },
-    });
-
-    return {
-      engine: Effect.gen(function* () {
-        let i = 0;
-        while (true) {
-          yield* PackageEngine.emit(tick, i++);
-          yield* Effect.sleep(1000);
-        }
-      }),
-    };
-  }),
-);
+} from "./runtime";
+import {
+  DataInputRef,
+  DataOutputRef,
+  ExecInputRef,
+  ExecOutputRef,
+  IOId,
+} from "./io";
+import {
+  NodeNotFound,
+  NotComputationNode,
+  NotEventNode,
+  SchemaNotFound,
+} from "./errors";
+import { NodeId } from "./node";
+import utilPackage from "./util-package";
 
 type OutputDataMap = Map<NodeId, Record<string, any>>;
-
-class ExecutionContext extends Context.Tag("ExecutionContext")<
-  ExecutionContext,
-  {
-    traceId: string;
-    getInput<T extends Schema.Schema<any>>(
-      input: DataInputRef<T>,
-    ): Effect.Effect<
-      T["Encoded"],
-      NoSuchElementException | NotComputationNode,
-      NodeExecutionContext | RunFunctionAvailableRequirements
-    >;
-    setOutput<T extends Schema.Schema<any>>(
-      output: DataOutputRef<T>,
-      data: T,
-    ): Effect.Effect<void, never, NodeExecutionContext>;
-  }
->() {}
-
-type NodeId = number & Brand.Brand<"NodeId">;
-type IOId = string & Brand.Brand<"IOId">;
-
-class NodeExecutionContext extends Context.Tag("NodeExecutionContext")<
-  NodeExecutionContext,
-  { node: Node }
->() {}
-
-class NotComputationNode extends Data.TaggedError("NotComputationNode") {}
-
-class NotEventNode extends Data.TaggedError("NotEventNode") {}
-
-class SchemaNotFound extends Schema.TaggedError<SchemaNotFound>(
-  "SchemaNotFound",
-)("SchemaNotFound", {
-  pkgId: Schema.String,
-  schemaId: Schema.String,
-}) {}
-
-class NodeNotFound extends Schema.TaggedError<NodeNotFound>("NodeNotFound")(
-  "NodeNotFound",
-  { nodeId: Schema.Int },
-) {}
-
-type Node = {
-  id: NodeId;
-  schema: {
-    pkgId: string;
-    schemaId: string;
-  };
-  io: any;
-};
 
 const program = Effect.gen(function* () {
   let nodeCounter = 69 as NodeId;
@@ -460,7 +111,7 @@ const program = Effect.gen(function* () {
 
   const addConnection = Effect.fn(function* (output: IORef, input: IORef) {
     if (Option.isNone(getNode(output.nodeId)))
-      return yield* Effect.fail(new NodeNotFound(output));
+      return yield* new NodeNotFound(output);
 
     let outputNodeConnections = upsertNodeConnections(output.nodeId);
 
@@ -475,7 +126,7 @@ const program = Effect.gen(function* () {
     outputNodeInputConnections.push(input);
 
     if (Option.isNone(getNode(input.nodeId)))
-      return yield* Effect.fail(new NodeNotFound(input));
+      return yield* new NodeNotFound(input);
 
     let inputNodeConnections = upsertNodeConnections(input.nodeId);
 
@@ -526,7 +177,7 @@ const program = Effect.gen(function* () {
 
   const runEventNode = Effect.fn(function* (
     eventNode: Node,
-    schema: Extract<Schema, { type: "event" }>,
+    schema: Extract<NodeSchema, { type: "event" }>,
     data: any,
   ) {
     const io = schema.io({
@@ -679,7 +330,22 @@ const program = Effect.gen(function* () {
     }),
   });
 
-  clientTest.pipe(Effect.provide(RpcsLayer), Effect.scoped, Effect.runFork);
+  const fetchClient = yield* HttpClient.HttpClient.pipe(
+    Effect.provide(FetchHttpClient.layer),
+    Effect.map(
+      HttpClient.mapRequest((a) => {
+        console.log(a);
+        return a;
+      }),
+    ),
+  );
+
+  clientTest.pipe(
+    Effect.provide(RpcsLayer),
+    Effect.scoped,
+    Effect.provide(Context.make(HttpClient.HttpClient, fetchClient)),
+    Effect.runFork,
+  );
 }).pipe(
   Effect.provide(
     Context.make(Logger, {
@@ -741,6 +407,47 @@ const Rpcs = RpcGroup.make(
 );
 
 const clientTest = Effect.gen(function* () {
+  // const HelixApi = HttpApi.make("Twitch Helix").add(
+  //   HttpApiGroup.make("requests", { topLevel: true })
+  //     .add(
+  //       HttpApiEndpoint.get("getChannels", "/channels")
+  //         .setUrlParams(Schema.Struct({ broadcaster_id: Schema.String }))
+  //         .addSuccess(
+  //           Schema.Struct({
+  //             data: Schema.Array(
+  //               Schema.Struct({ broadcaster_id: Schema.String }),
+  //             ),
+  //           }),
+  //         ),
+  //     )
+  //     .add(
+  //       HttpApiEndpoint.get("getUsers", "/users")
+  //         .setUrlParams(
+  //           Schema.Struct({
+  //             id: Schema.optional(Schema.Array(Schema.String)),
+  //             login: Schema.optional(Schema.Array(Schema.String)),
+  //           }),
+  //         )
+  //         .addSuccess(
+  //           Schema.Struct({
+  //             data: Schema.Array(
+  //               Schema.Struct({
+  //                 broadcaster_id: Schema.String,
+  //               }),
+  //             ),
+  //           }),
+  //         ),
+  //     ),
+  // );
+
+  // const helixClient = yield* HttpApiClient.make(HelixApi, {
+  //   baseUrl: "https://api.twitch.tv/helix",
+  // });
+
+  // const a = yield* helixClient.getChannels({
+  //   urlParams: { broadcaster_id: "123456" },
+  // });
+
   const client = yield* RpcTest.makeClient(Rpcs);
 
   const tickerNode = yield* client.CreateNode({
@@ -754,17 +461,6 @@ const clientTest = Effect.gen(function* () {
   const convertNode = yield* client.CreateNode({
     schema: { pkgId: "util", schemaId: "intToString" },
   });
-
-  yield* client
-    .CreateNode({ schema: { pkgId: "", schemaId: "" } })
-    .pipe(Effect.mapError(console.log), Effect.ignore);
-
-  yield* client
-    .ConnectIO({
-      output: { nodeId: -1, ioId: "" },
-      input: { nodeId: -1, ioId: "" },
-    })
-    .pipe(Effect.mapError(console.log), Effect.ignore);
 
   yield* client.ConnectIO({
     output: { nodeId: tickerNode.id, ioId: "tick" },

@@ -19,6 +19,7 @@
     "@effect/rpc": "^0.55.3",
     "@effect/rpc-http": "^0.52.4",
     "effect": "^3.14.2",
-    "hono": "^4.7.5"
+    "hono": "^4.7.5",
+    "obs-websocket-js": "^5.0.5"
   }
 }
