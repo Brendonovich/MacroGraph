@@ -1,7 +1,9 @@
-import { Context, Data, Effect, Option, Schema } from "effect";
+import { Context, Data, Effect, Layer, Option, PubSub, Schema } from "effect";
 
 import { NodeRuntime } from "./runtime";
 import { NodeSchema, SchemaDefinition } from "./schema";
+import { Rpc, RpcGroup } from "@effect/rpc";
+import { HandlersContext } from "@effect/rpc/RpcGroup";
 
 export namespace PackageEngine {
   type Requirements = PackageEngineContext | NodeRuntime;
@@ -45,14 +47,34 @@ export class EventRef<
 
 export class DuplicateSchemaId extends Data.TaggedError("DuplicateSchemaId") {}
 
-export type PackageBuildReturn = {
+export type PackageBuildReturn<
+  TRpcGroup extends RpcGroup.RpcGroup<any>,
+  TState extends Schema.Schema<any>,
+> = {
   engine: PackageEngine.PackageEngine;
+  rpc: {
+    group: TRpcGroup;
+    layer: Layer.Layer<Rpc.ToHandler<RpcGroup.Rpcs<TRpcGroup>>>;
+  };
+  state: {
+    schema: TState;
+    get: Effect.Effect<TState["Encoded"]>;
+  };
 };
 
-export function definePackage(
+export function definePackage<
+  TRpcGroup extends RpcGroup.RpcGroup<any>,
+  TState extends Schema.Schema<any>,
+>(
   cb: (
     pkg: PackageBuilder,
-  ) => Effect.Effect<void | PackageBuildReturn, DuplicateSchemaId>,
+    ctx: {
+      dirtyState: Effect.Effect<void>;
+    },
+  ) => Effect.Effect<
+    void | PackageBuildReturn<TRpcGroup, TState>,
+    DuplicateSchemaId
+  >,
 ) {
   return cb;
 }
@@ -90,7 +112,7 @@ export class PackageBuilder {
   }
 
   /** @internal */
-  toPackage(ret?: PackageBuildReturn): Package {
+  toPackage(ret?: PackageBuildReturn<any>): Package {
     return new Package(this.id, this.schemas, this.events, ret?.engine);
   }
 }

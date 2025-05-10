@@ -2,6 +2,11 @@ import { Rpc, RpcClient, RpcGroup, RpcSchema, RpcTest } from "@effect/rpc";
 import { Brand, Context, Data, Layer, Option, pipe, Schema } from "effect";
 import * as Effect from "effect/Effect";
 import { FetchHttpClient, HttpClient } from "@effect/platform";
+import { render } from "solid-js/web";
+
+import "virtual:uno.css";
+import "@unocss/reset/tailwind-compat.css";
+import "./style.css";
 
 import type { NodeSchema } from "./schema";
 import { Node } from "./node";
@@ -11,13 +16,14 @@ import {
   PackageEngine,
   Package,
   PackageBuilder,
+  PackageBuildReturn,
 } from "./package";
 import {
   ExecutionContext,
   Logger,
   NodeExecutionContext,
   NodeRuntime,
-} from "./runtime";
+} from "./Runtime";
 import {
   DataInputRef,
   DataOutputRef,
@@ -33,8 +39,17 @@ import {
 } from "./errors";
 import { NodeId } from "./node";
 import utilPackage from "./util-package";
+import obsPackage from "./obs-package";
+import { lazy, Suspense } from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
+import { STATE } from "./obs-package/rpc";
 
 type OutputDataMap = Map<NodeId, Record<string, any>>;
+
+let obsRpcClient: any = null!;
+const [obsPackageState, setObsPackageState] = createStore<
+  (typeof STATE)["Encoded"]
+>({ connections: [] });
 
 const program = Effect.gen(function* () {
   let nodeCounter = 69 as NodeId;
@@ -273,7 +288,9 @@ const program = Effect.gen(function* () {
   });
 
   const builder = new PackageBuilder("util");
-  const ret = yield* utilPackage(builder);
+  const ret = yield* utilPackage(builder, {
+    dirtyState: Effect.gen(function* () {}),
+  });
 
   const pkg = builder.toPackage(ret ?? undefined);
 
@@ -288,6 +305,42 @@ const program = Effect.gen(function* () {
     Effect.provide(engineContext),
     Effect.runFork,
   );
+
+  {
+    const builder = new PackageBuilder("obs");
+    const ret: PackageBuildReturn<any, any> | void = yield* obsPackage(
+      builder,
+      {
+        dirtyState: Effect.gen(function* () {
+          if (!ret) return;
+          ret.state.get.pipe(
+            Effect.tap(console.log),
+            Effect.tap((v) => setObsPackageState(reconcile(v))),
+            Effect.runFork,
+          );
+        }),
+      },
+    );
+
+    const pkg = builder.toPackage(ret ?? undefined);
+
+    packages.set(pkg.id, pkg);
+
+    const engineContext = Context.make(PackageEngine.PackageEngineContext, {
+      packageId: pkg.id,
+    });
+
+    pkg.engine?.pipe(
+      Effect.provide(nodeRuntime),
+      Effect.provide(engineContext),
+      Effect.runFork,
+    );
+
+    if (ret)
+      obsRpcClient = yield* RpcTest.makeClient(ret.rpc.group).pipe(
+        Effect.provide(ret.rpc.layer),
+      );
+  }
 
   const RpcsLayer = Rpcs.toLayer({
     CreateNode: Effect.fn(function* (payload) {
@@ -343,9 +396,13 @@ const program = Effect.gen(function* () {
   clientTest.pipe(
     Effect.provide(RpcsLayer),
     Effect.scoped,
-    Effect.provide(Context.make(HttpClient.HttpClient, fetchClient)),
+    // Effect.provide(Context.make(HttpClient.HttpClient, fetchClient)),
     Effect.runFork,
   );
+
+  while (true) {
+    yield* Effect.yieldNow();
+  }
 }).pipe(
   Effect.provide(
     Context.make(Logger, {
@@ -447,6 +504,7 @@ const clientTest = Effect.gen(function* () {
   // const a = yield* helixClient.getChannels({
   //   urlParams: { broadcaster_id: "123456" },
   // });
+  //
 
   const client = yield* RpcTest.makeClient(Rpcs);
 
@@ -482,6 +540,21 @@ const clientTest = Effect.gen(function* () {
       ioId: "exec",
     },
   });
+
+  const OBSPackageSettings = lazy(
+    () => import("macrograph:package-settings?package=obs"),
+  );
+
+  render(
+    () => (
+      <>
+        <Suspense>
+          <OBSPackageSettings rpc={obsRpcClient!} state={obsPackageState} />
+        </Suspense>
+      </>
+    ),
+    document.getElementById("app")!,
+  );
 });
 
-program.pipe(Effect.runPromise);
+program.pipe(Effect.scoped, Effect.runPromise);

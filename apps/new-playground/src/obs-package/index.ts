@@ -1,20 +1,14 @@
-import { Context, Option, Schema } from "effect";
+import { Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
 import OBSWebsocket from "obs-websocket-js";
+
 import { getInput } from "../package-utils";
 import { definePackage } from "../package";
-import { rpcGroup } from "./rpc";
+import { ConnectionFailed, RPCS, STATE } from "./rpc";
 
 export default definePackage(
-  Effect.fn(function* (pkg) {
-    // const obsInstance = pkg.resource({
-    //   name: "OBS Instance",
-    //   // source:
-    // });
-
+  Effect.fn(function* (pkg, ctx) {
     const obs = new OBSWebsocket();
-
-    obs.call("SetCurrentProgramScene");
 
     yield* pkg.schema("setCurrentProgramScene", {
       type: "exec",
@@ -37,68 +31,116 @@ export default definePackage(
       state: "disconnected" | "connecting" | "connected";
     };
 
-    class EngineContext extends Context.Tag("EngineContext")<
-      EngineContext,
-      { instances: Map<string, Instance> }
-    >() {}
+    const instances = new Map<string, Instance>();
 
-    const layer = group.toLayer({
-      AddConnection: Effect.fn(function* ({ address, password }) {
-        const { instances } = yield* EngineContext;
+    const layer = RPCS.toLayer({
+      AddSocket: Effect.fn(function* ({ address, password }) {
         if (instances.get(address)) return;
 
         const lock = Effect.unsafeMakeSemaphore(1);
-        yield* lock.take(1);
 
-        const ws = new OBSWebsocket();
+        const instance = yield* Effect.gen(function* () {
+          const ws = new OBSWebsocket();
 
-        ws.on("ConnectionError", () =>
-          Effect.gen(function* () {
-            yield* lock.take(1);
+          ws.on("ConnectionError", () =>
+            Effect.gen(function* () {
+              instance.state = "disconnected";
+              yield* ctx.dirtyState;
+            }).pipe(lock.withPermits(1), Effect.runFork),
+          );
 
-            instance.state = "disconnected";
-          }).pipe(Effect.runFork),
-        );
+          ws.on("ConnectionClosed", () =>
+            Effect.gen(function* () {
+              instance.state = "disconnected";
+              yield* ctx.dirtyState;
+            }).pipe(lock.withPermits(1), Effect.runFork),
+          );
 
-        ws.on("ConnectionClosed", () =>
-          Effect.gen(function* () {
-            yield* lock.take(1);
+          ws.on("ConnectionOpened", () =>
+            Effect.gen(function* () {
+              instance.state = "connected";
+              yield* ctx.dirtyState;
+            }).pipe(lock.withPermits(1), Effect.runFork),
+          );
 
-            instance.state = "disconnected";
-          }).pipe(Effect.runFork),
-        );
+          const instance: Instance = {
+            password: Option.fromNullable(password),
+            lock,
+            ws,
+            state: "disconnected",
+          };
 
-        ws.on("ConnectionOpened", () =>
-          Effect.gen(function* () {
-            yield* lock.take(1);
+          instance.state = "connecting";
 
-            instance.state = "connected";
-          }).pipe(Effect.runFork),
-        );
-
-        const instance: Instance = {
-          password: Option.fromNullable(password),
-          lock,
-          ws,
-          state: "disconnected",
-        };
-
-        instances.set(address, instance);
-
-        instance.state = "connecting";
+          return instance;
+        }).pipe(lock.withPermits(1));
 
         yield* Effect.tryPromise({
           try: () => instance.ws.connect(address, password),
           catch: () => new ConnectionFailed(),
         });
+
+        instances.set(address, instance);
+
+        yield* ctx.dirtyState;
+      }),
+      RemoveSocket: Effect.fn(function* ({ address }) {
+        const instance = instances.get(address);
+        if (!instance) return;
+
+        yield* Effect.gen(function* () {
+          yield* Effect.promise(() => instance.ws.disconnect()).pipe(
+            Effect.ignore,
+          );
+          instances.delete(address);
+        }).pipe(instance.lock.withPermits(1));
+
+        yield* ctx.dirtyState;
+      }),
+      DisconnectSocket: Effect.fn(function* ({ address }) {
+        const instance = instances.get(address);
+        if (!instance) return;
+
+        yield* Effect.promise(() => instance.ws.disconnect()).pipe(
+          Effect.ignore,
+        );
+      }),
+      ConnectSocket: Effect.fn(function* ({ address, password }) {
+        const instance = instances.get(address);
+        if (!instance) return;
+
+        yield* Effect.gen(function* () {
+          yield* Effect.tryPromise({
+            try: () => instance.ws.connect(address, password),
+            catch: () => new ConnectionFailed(),
+          });
+
+          instance.state = "connecting";
+        }).pipe(instance.lock.withPermits(1));
+        yield* ctx.dirtyState;
       }),
     });
 
     return {
       engine: Effect.gen(function* () {}),
-      engineRpcs: {
-        group: rpcGroup,
-        layer,
+      rpc: { group: RPCS, layer },
+      state: {
+        schema: STATE,
+        get: Effect.gen(function* () {
+          return {
+            connections: yield* Effect.all(
+              [...instances.entries()].map(([address, instance]) =>
+                Effect.gen(function* () {
+                  return {
+                    address,
+                    password: Option.getOrUndefined(instance.password),
+                    state: instance.state,
+                  };
+                }).pipe(instance.lock.withPermits(1)),
+              ),
+            ),
+          };
+        }),
       },
     };
   }),

@@ -49,14 +49,14 @@ export default definePackage(
       },
     });
 
-    return {
-      engine: Effect.gen(function* () {
-        let i = 0;
-        while (true) {
-          yield* PackageEngine.emit(tick, i++);
-          yield* Effect.sleep(1000);
-        }
-      }),
-    };
+    // return {
+    //   engine: Effect.gen(function* () {
+    //     let i = 0;
+    //     while (true) {
+    //       yield* PackageEngine.emit(tick, i++);
+    //       yield* Effect.sleep(1000);
+    //     }
+    //   }),
+    // };
   }),
 );
