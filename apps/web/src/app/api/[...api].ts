@@ -65,8 +65,7 @@ const router = s.router(contract, {
       if (
         !credential.token.refresh_token ||
         // only allow refresh of tokens >5min old
-        +credential.issuedAt + credential.token.expires_in * 1000 >
-          Date.now() - 5 * 60 * 1000
+        +credential.issuedAt + 5 * 60 * 1000 > Date.now()
       )
         return credential;
 
