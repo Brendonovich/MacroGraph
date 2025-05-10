@@ -9,16 +9,16 @@ import { client, queryClient, rspc } from "./rspc";
 import "./app.css";
 
 export default function App() {
-  return (
-    <Router
-      root={(props) => (
-        <rspc.Provider client={client} queryClient={queryClient}>
-          <Suspense>{props.children}</Suspense>
-          <Toaster />
-        </rspc.Provider>
-      )}
-    >
-      <FileRoutes />
-    </Router>
-  );
+	return (
+		<Router
+			root={(props) => (
+				<rspc.Provider client={client} queryClient={queryClient}>
+					<Suspense>{props.children}</Suspense>
+					<Toaster />
+				</rspc.Provider>
+			)}
+		>
+			<FileRoutes />
+		</Router>
+	);
 }

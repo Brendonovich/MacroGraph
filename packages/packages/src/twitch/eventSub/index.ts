@@ -1,10 +1,10 @@
 import { Maybe } from "@macrograph/option";
 import type {
-    Core,
-    CreateEventSchema,
-    Package,
-    PropertyDef,
-    SchemaProperties,
+	Core,
+	CreateEventSchema,
+	Package,
+	PropertyDef,
+	SchemaProperties,
 } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
@@ -755,6 +755,157 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 			ctx.setOutput(io.rewardTitle, data.reward.title);
 			ctx.setOutput(io.rewardCost, data.reward.cost);
 			ctx.setOutput(io.rewardPrompt, data.reward.prompt);
+			return ctx.exec(io.exec);
+		},
+	});
+
+	createEventSubEventSchema({
+		name: "Shared Chat Begin",
+		event: "channel.shared_chat.begin",
+		createIO: ({ io }) => ({
+			exec: io.execOutput({
+				id: "exec",
+			}),
+			session_id: io.dataOutput({
+				id: "sessionId",
+				name: "Session ID",
+				type: t.string(),
+			}),
+			hostBroadcasterId: io.dataOutput({
+				id: "hostBroadcasterId",
+				name: "Host Broadcaster ID",
+				type: t.string(),
+			}),
+			hostBroadcasterUserName: io.dataOutput({
+				id: "hostBroadcasterUserName",
+				name: "Host Broadcaster Username",
+				type: t.string(),
+			}),
+			hostBroadcasterUserLogin: io.dataOutput({
+				id: "hostBroadcasterUserLogin",
+				name: "Host Broadcaster User Login",
+				type: t.string(),
+			}),
+			participants: io.dataOutput({
+				id: "participants",
+				name: "Participants",
+				type: t.list(t.struct(types.Participants)),
+			}),
+		}),
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.hostBroadcasterId, data.host_broadcaster_user_id);
+			ctx.setOutput(
+				io.hostBroadcasterUserLogin,
+				data.host_broadcaster_user_login,
+			);
+			ctx.setOutput(
+				io.hostBroadcasterUserName,
+				data.host_broadcaster_user_name,
+			);
+			ctx.setOutput(
+				io.participants,
+				data.participants.map((participant) =>
+					types.Participants.create(participant),
+				),
+			);
+			ctx.setOutput(io.session_id, data.session_id);
+			return ctx.exec(io.exec);
+		},
+	});
+
+	createEventSubEventSchema({
+		name: "Shared Chat Update",
+		event: "channel.shared_chat.update",
+		createIO: ({ io }) => ({
+			exec: io.execOutput({
+				id: "exec",
+			}),
+			session_id: io.dataOutput({
+				id: "sessionId",
+				name: "Session ID",
+				type: t.string(),
+			}),
+			hostBroadcasterId: io.dataOutput({
+				id: "hostBroadcasterId",
+				name: "Host Broadcaster ID",
+				type: t.string(),
+			}),
+			hostBroadcasterUserName: io.dataOutput({
+				id: "hostBroadcasterUserName",
+				name: "Host Broadcaster Username",
+				type: t.string(),
+			}),
+			hostBroadcasterUserLogin: io.dataOutput({
+				id: "hostBroadcasterUserLogin",
+				name: "Host Broadcaster User Login",
+				type: t.string(),
+			}),
+			participants: io.dataOutput({
+				id: "participants",
+				name: "Participants",
+				type: t.list(t.struct(types.Participants)),
+			}),
+		}),
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.hostBroadcasterId, data.host_broadcaster_user_id);
+			ctx.setOutput(
+				io.hostBroadcasterUserLogin,
+				data.host_broadcaster_user_login,
+			);
+			ctx.setOutput(
+				io.hostBroadcasterUserName,
+				data.host_broadcaster_user_name,
+			);
+			ctx.setOutput(
+				io.participants,
+				data.participants.map((participant) =>
+					types.Participants.create(participant),
+				),
+			);
+			ctx.setOutput(io.session_id, data.session_id);
+			return ctx.exec(io.exec);
+		},
+	});
+
+	createEventSubEventSchema({
+		name: "Shared Chat End",
+		event: "channel.shared_chat.end",
+		createIO: ({ io }) => ({
+			exec: io.execOutput({
+				id: "exec",
+			}),
+			session_id: io.dataOutput({
+				id: "sessionId",
+				name: "Session ID",
+				type: t.string(),
+			}),
+			hostBroadcasterId: io.dataOutput({
+				id: "hostBroadcasterId",
+				name: "Host Broadcaster ID",
+				type: t.string(),
+			}),
+			hostBroadcasterUserName: io.dataOutput({
+				id: "hostBroadcasterUserName",
+				name: "Host Broadcaster Username",
+				type: t.string(),
+			}),
+			hostBroadcasterUserLogin: io.dataOutput({
+				id: "hostBroadcasterUserLogin",
+				name: "Host Broadcaster User Login",
+				type: t.string(),
+			}),
+		}),
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.hostBroadcasterId, data.host_broadcaster_user_id);
+			ctx.setOutput(
+				io.hostBroadcasterUserLogin,
+				data.host_broadcaster_user_login,
+			);
+			ctx.setOutput(
+				io.hostBroadcasterUserName,
+				data.host_broadcaster_user_name,
+			);
+			ctx.setOutput(io.session_id, data.session_id);
 			return ctx.exec(io.exec);
 		},
 	});
@@ -1938,6 +2089,299 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		},
 	});
 
+	const MessageType = pkg.createEnum("MessageType", (e) => [
+		e.variant("Text", { value: t.string() }),
+		e.variant("Channel Points Highlighted", { value: t.string() }),
+		e.variant("Channel Points Sub Only", { value: t.string() }),
+		e.variant("User Intro", { value: t.string() }),
+		e.variant("Power Ups Message Effect", { value: t.string() }),
+		e.variant("Power Ups Gigantified Emote", { value: t.string() }),
+	]);
+
+	const ReplyStruct = pkg.createStruct("Reply", (s) => ({
+		parent_message_id: s.field("Parent Message Id", t.string()),
+		parent_message_body: s.field("Parent Message Body", t.string()),
+		parent_user_id: s.field("Parent User Id", t.string()),
+		parent_user_name: s.field("Parent User Name", t.string()),
+		parent_user_login: s.field("Parent User Login", t.string()),
+		thread_message_id: s.field("Thread Message Id", t.string()),
+		thread_user_id: s.field("Thread User Id", t.string()),
+		thread_user_name: s.field("Thread User Name", t.string()),
+		thread_user_login: s.field("Thread User Login", t.string()),
+	}));
+
+	createEventSubEventSchema({
+		name: "Channel Chat Message",
+		event: "channel.chat.message",
+		createIO: ({ io }) => {
+			return {
+				exec: io.execOutput({
+					id: "exec",
+				}),
+				chatterUserId: io.dataOutput({
+					id: "chatterUserId",
+					name: "Chatter User Id",
+					type: t.string(),
+				}),
+				chatterUserName: io.dataOutput({
+					id: "chatterUserName",
+					name: "Chatter User Name",
+					type: t.string(),
+				}),
+				chatterUserLogin: io.dataOutput({
+					id: "chatterUserLogin",
+					name: "Chatter User Login",
+					type: t.string(),
+				}),
+				messageId: io.dataOutput({
+					id: "messageId",
+					name: "Message Id",
+					type: t.string(),
+				}),
+				message: io.dataOutput({
+					id: "message",
+					name: "Message",
+					type: t.struct(MessageStruct),
+				}),
+				messageType: io.dataOutput({
+					id: "messageType",
+					name: "Message Type",
+					type: t.enum(MessageType),
+				}),
+				broadcaster: io.dataOutput({
+					id: "broadcaster",
+					name: "Broadcaster",
+					type: t.bool(),
+				}),
+				moderator: io.dataOutput({
+					id: "moderator",
+					name: "Moderator",
+					type: t.bool(),
+				}),
+				vip: io.dataOutput({
+					id: "vip",
+					name: "VIP",
+					type: t.bool(),
+				}),
+				subscriber: io.dataOutput({
+					id: "subscriber",
+					name: "Subscriber",
+					type: t.bool(),
+				}),
+				badges: io.dataOutput({
+					id: "badges",
+					name: "Badges",
+					type: t.list(t.struct(BadgesStruct)),
+				}),
+				cheer: io.dataOutput({
+					id: "cheer",
+					name: "Cheer",
+					type: t.option(t.int()),
+				}),
+				color: io.dataOutput({
+					id: "color",
+					name: "Color",
+					type: t.string(),
+				}),
+				reply: io.dataOutput({
+					id: "reply",
+					name: "Reply",
+					type: t.option(t.struct(ReplyStruct)),
+				}),
+				channelPointsCustomRewardId: io.dataOutput({
+					id: "channelPointsCustomRewardId",
+					name: "Channel Points Custom Reward Id",
+					type: t.option(t.string()),
+				}),
+				sourceBroadcasterUserId: io.dataOutput({
+					id: "sourceBroadcasterUserId",
+					name: "Source Broadcaster User Id",
+					type: t.option(t.string()),
+				}),
+				sourceBroadcasterUserName: io.dataOutput({
+					id: "sourceBroadcasterUserName",
+					name: "Source Broadcaster User Name",
+					type: t.option(t.string()),
+				}),
+				sourceBroadcasterUserLogin: io.dataOutput({
+					id: "sourceBroadcasterUserLogin",
+					name: "Source Broadcaster User Login",
+					type: t.option(t.string()),
+				}),
+				sourceMessageId: io.dataOutput({
+					id: "sourceMessageId",
+					name: "Source Message Id",
+					type: t.option(t.string()),
+				}),
+				sourceBadges: io.dataOutput({
+					id: "sourceBadges",
+					name: "Source Badges",
+					type: t.option(t.list(t.struct(BadgesStruct))),
+				}),
+				isSourceOnly: io.dataOutput({
+					id: "isSourceOnly",
+					name: "Is Source Only",
+					type: t.option(t.bool()),
+				}),
+			};
+		},
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.chatterUserId, data.chatter_user_id);
+			ctx.setOutput(io.chatterUserLogin, data.chatter_user_login);
+			ctx.setOutput(io.chatterUserName, data.chatter_user_name);
+			ctx.setOutput(io.messageId, data.message_id);
+			ctx.setOutput(
+				io.message,
+				MessageStruct.create({
+					text: data.message.text,
+					fragments: data.message.fragments.map((fragment) =>
+						FragmentsStruct.create({
+							type: fragment.type,
+							text: fragment.text,
+							emote: Maybe(fragment.emote).map((emote) =>
+								EmoteStruct.create({
+									id: emote.id,
+									emote_set_id: emote.emote_set_id,
+									owner_id: emote.owner_id,
+									format: emote.format,
+								}),
+							),
+							cheermote: Maybe(fragment.cheermote).map((cheermote) =>
+								CheermoteStruct.create({
+									prefix: cheermote.prefix,
+									bits: cheermote.bits,
+									tier: cheermote.tier,
+								}),
+							),
+							mention: Maybe(fragment.mention).map((mention) =>
+								MentionStruct.create({
+									user_id: mention.user_id,
+									user_login: mention.user_login,
+									user_name: mention.user_name,
+								}),
+							),
+						}),
+					),
+				}),
+			);
+			ctx.setOutput(
+				io.messageType,
+				(() => {
+					switch (data.message_type) {
+						case "text": {
+							return MessageType.variant(["Text", { value: "text" }]);
+						}
+						case "channel_points_highlighted": {
+							return MessageType.variant([
+								"Channel Points Highlighted",
+								{ value: "channel_points_highlighted" },
+							]);
+						}
+						case "channel_points_sub_only": {
+							return MessageType.variant([
+								"Channel Points Sub Only",
+								{ value: "channel_points_sub_only" },
+							]);
+						}
+						case "power_ups_gigantified_emote": {
+							return MessageType.variant([
+								"Power Ups Gigantified Emote",
+								{ value: "power_ups_gigantified_emote" },
+							]);
+						}
+						case "power_ups_message_effect": {
+							return MessageType.variant([
+								"Power Ups Message Effect",
+								{ value: "power_ups_message_effect" },
+							]);
+						}
+						case "user_intro": {
+							return MessageType.variant([
+								"User Intro",
+								{ value: "user_intro" },
+							]);
+						}
+					}
+				})(),
+			);
+			ctx.setOutput(
+				io.badges,
+				data.badges.map((badge) =>
+					BadgesStruct.create({
+						set_id: badge.set_id,
+						id: badge.id,
+						info: badge.info,
+					}),
+				),
+			);
+			ctx.setOutput(
+				io.reply,
+				Maybe(data.reply).map((reply) =>
+					ReplyStruct.create({
+						parent_message_id: reply.parent_message_id,
+						parent_message_body: reply.parent_message_body,
+						parent_user_id: reply.parent_user_id,
+						parent_user_login: reply.parent_user_login,
+						parent_user_name: reply.parent_user_name,
+						thread_message_id: reply.thread_message_id,
+						thread_user_id: reply.thread_user_id,
+						thread_user_login: reply.thread_user_login,
+						thread_user_name: reply.thread_user_name,
+					}),
+				),
+			);
+			ctx.setOutput(io.cheer, Maybe(data.cheer?.bits));
+			ctx.setOutput(io.color, data.color);
+			ctx.setOutput(
+				io.channelPointsCustomRewardId,
+				Maybe(data.channel_points_custom_reward_id),
+			);
+			ctx.setOutput(
+				io.sourceBroadcasterUserId,
+				Maybe(data.source_broadcaster_user_id),
+			);
+			ctx.setOutput(
+				io.sourceBroadcasterUserLogin,
+				Maybe(data.source_broadcaster_user_login),
+			);
+			ctx.setOutput(
+				io.sourceBroadcasterUserName,
+				Maybe(data.source_broadcaster_user_name),
+			);
+			ctx.setOutput(io.sourceMessageId, Maybe(data.source_message_id));
+			ctx.setOutput(
+				io.sourceBadges,
+				Maybe(data.source_badges).map((badges) =>
+					badges.map((badge) =>
+						BadgesStruct.create({
+							set_id: badge.set_id,
+							id: badge.id,
+							info: badge.info,
+						}),
+					),
+				),
+			);
+			ctx.setOutput(
+				io.broadcaster,
+				data.badges.some((badge) => badge.set_id === "broadcaster"),
+			);
+			ctx.setOutput(
+				io.moderator,
+				data.badges.some((badge) => badge.set_id === "moderator"),
+			);
+			ctx.setOutput(
+				io.subscriber,
+				data.badges.some((badge) => badge.set_id === "subscriber"),
+			);
+			ctx.setOutput(
+				io.vip,
+				data.badges.some((badge) => badge.set_id === "vip"),
+			);
+			ctx.setOutput(io.isSourceOnly, Maybe(data.is_source_only));
+			ctx.exec(io.exec);
+		},
+	});
+
 	createEventSubEventSchema({
 		name: "Channel Chat Clear User Messages",
 		event: "channel.chat.clear_user_messages",
@@ -2123,8 +2567,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 	}));
 
 	const FragmentsStruct = pkg.createStruct("MessageFragment", (s) => ({
-		type: s.field("Type", t.option(t.string())),
-		text: s.field("Text", t.option(t.string())),
+		type: s.field("Type", t.string()),
+		text: s.field("Text", t.string()),
 		cheermote: s.field("Cheermote", t.option(t.struct(CheermoteStruct))),
 		emote: s.field("Emote", t.option(t.struct(EmoteStruct))),
 		mention: s.field("Mention", t.option(t.struct(MentionStruct))),
@@ -2494,7 +2938,11 @@ const SubTypes = [
 	"channel.chat.clear",
 	"channel.chat.notification",
 	"channel.chat.message_delete",
+	"channel.shared_chat.begin",
+	"channel.shared_chat.update",
+	"channel.shared_chat.end",
 	"channel.chat.clear_user_messages",
+	"channel.chat.message",
 	"channel.subscribe",
 	"channel.subscription.end",
 	"channel.subscription.gift",

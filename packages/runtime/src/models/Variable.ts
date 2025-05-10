@@ -7,63 +7,63 @@ import { Graph } from "./Graph";
 import type { Project } from "./Project";
 
 export type VariableArgs = {
-  id: number;
-  name: string;
-  type: t.Any;
-  value: any;
-  owner: Graph | Project;
+	id: number;
+	name: string;
+	type: t.Any;
+	value: any;
+	owner: Graph | Project;
 };
 
 export class Variable extends Disposable {
-  id: number;
-  name: string;
-  type: t.Any;
-  value: any;
-  previous: any;
-  owner: Graph | Project;
+	id: number;
+	name: string;
+	type: t.Any;
+	value: any;
+	previous: any;
+	owner: Graph | Project;
 
-  constructor(args: VariableArgs) {
-    super();
+	constructor(args: VariableArgs) {
+		super();
 
-    this.id = args.id;
-    this.name = args.name;
-    this.type = args.type;
-    this.value = args.value;
-    this.previous = args.value;
-    this.owner = args.owner;
+		this.id = args.id;
+		this.name = args.name;
+		this.type = args.type;
+		this.value = args.value;
+		this.previous = args.value;
+		this.owner = args.owner;
 
-    const self = createMutable(this);
+		const self = createMutable(this);
 
-    const { owner, dispose } = createRoot((dispose) => ({
-      owner: getOwner(),
-      dispose,
-    }));
+		const { owner, dispose } = createRoot((dispose) => ({
+			owner: getOwner(),
+			dispose,
+		}));
 
-    this.addDisposeListener(dispose);
+		this.addDisposeListener(dispose);
 
-    runWithOwner(owner, () => {
-      createEffect(
-        on(
-          () => trackDeep(self.value),
-          () => {
-            if (self.owner instanceof Graph)
-              self.owner.project.emit("modified");
-            else self.owner.emit("modified");
-          },
-        ),
-      );
-      createEffect(
-        on(
-          () => self.type,
-          () => {
-            if (self.owner instanceof Graph)
-              self.owner.project.emit("modified");
-            else self.owner.emit("modified");
-          },
-        ),
-      );
-    });
+		runWithOwner(owner, () => {
+			createEffect(
+				on(
+					() => trackDeep(self.value),
+					() => {
+						if (self.owner instanceof Graph)
+							self.owner.project.emit("modified");
+						else self.owner.emit("modified");
+					},
+				),
+			);
+			createEffect(
+				on(
+					() => self.type,
+					() => {
+						if (self.owner instanceof Graph)
+							self.owner.project.emit("modified");
+						else self.owner.emit("modified");
+					},
+				),
+			);
+		});
 
-    return self;
-  }
+		return self;
+	}
 }
