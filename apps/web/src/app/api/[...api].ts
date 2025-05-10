@@ -62,12 +62,7 @@ const router = s.router(contract, {
       // 404
       if (!credential) throw new Error("credential not found");
       // assume provider doesn't require refresh
-      if (
-        !credential.token.refresh_token ||
-        // only allow refresh of tokens >5min old
-        +credential.issuedAt + 5 * 60 * 1000 > Date.now()
-      )
-        return credential;
+      if (!credential.token.refresh_token) return credential;
 
       const token = await refreshToken(
         providerConfig,
