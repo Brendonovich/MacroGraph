@@ -11,22 +11,22 @@ import { createTypes } from "./types";
 export type Pkg = Package<any, Ctx>;
 
 export function pkg(core: Core) {
-  const ctx = createCtx(core);
+	const ctx = createCtx(core);
 
-  const pkg = new Package({
-    name: "Twitch Events",
-    ctx,
-    SettingsUI: () => import("./Settings"),
-  });
+	const pkg = new Package({
+		name: "Twitch Events",
+		ctx,
+		SettingsUI: () => import("./Settings"),
+	});
 
-  const types = createTypes(pkg);
+	const types = createTypes(pkg);
 
-  helix.register(pkg, ctx.helixClient, types);
-  eventsub.register(pkg, ctx, types);
-  chat.register(pkg, ctx);
+	helix.register(pkg, ctx.helixClient, types);
+	eventsub.register(pkg, ctx, types);
+	chat.register(pkg, ctx);
 
-  pkg.registerResourceType(TwitchAccount);
-  pkg.registerResourceType(TwitchChannel);
+	pkg.registerResourceType(TwitchAccount);
+	pkg.registerResourceType(TwitchChannel);
 
-  return pkg;
+	return pkg;
 }

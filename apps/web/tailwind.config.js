@@ -3,7 +3,7 @@ import typography from "@tailwindcss/typography";
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["class"],
-  presets: [preset],
-  plugins: [typography],
+	darkMode: ["class"],
+	presets: [preset],
+	plugins: [typography],
 };

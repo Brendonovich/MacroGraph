@@ -11,20 +11,20 @@ import { createTypes } from "./types";
 export type Pkg = Package<EventTypes, Ctx>;
 
 export function pkg(): Pkg {
-  const ctx = createCtx();
+	const ctx = createCtx();
 
-  const pkg = new Package<EventTypes, Ctx>({
-    name: "OBS Websocket",
-    ctx,
-    SettingsUI: () => import("./Settings"),
-  });
+	const pkg = new Package<EventTypes, Ctx>({
+		name: "OBS Websocket",
+		ctx,
+		SettingsUI: () => import("./Settings"),
+	});
 
-  const types = createTypes(pkg);
+	const types = createTypes(pkg);
 
-  events.register(pkg, types);
-  requests.register(pkg, types);
+	events.register(pkg, types);
+	requests.register(pkg, types);
 
-  pkg.registerResourceType(OBSInstance);
+	pkg.registerResourceType(OBSInstance);
 
-  return pkg;
+	return pkg;
 }
