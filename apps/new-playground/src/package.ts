@@ -4,6 +4,7 @@ import { NodeRuntime } from "./runtime";
 import { NodeSchema, SchemaDefinition } from "./schema";
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { HandlersContext } from "@effect/rpc/RpcGroup";
+import { CREDENTIAL } from "@macrograph/web-api";
 
 export namespace PackageEngine {
   type Requirements = PackageEngineContext | NodeRuntime;
@@ -62,20 +63,24 @@ export type PackageBuildReturn<
   };
 };
 
+export type PackageDefinition<
+  TRpcGroup extends RpcGroup.RpcGroup<any>,
+  TState extends Schema.Schema<any>,
+> = (
+  pkg: PackageBuilder,
+  ctx: {
+    dirtyState: Effect.Effect<void>;
+    credentials: Effect.Effect<ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>>;
+  },
+) => Effect.Effect<
+  void | PackageBuildReturn<TRpcGroup, TState>,
+  DuplicateSchemaId
+>;
+
 export function definePackage<
   TRpcGroup extends RpcGroup.RpcGroup<any>,
   TState extends Schema.Schema<any>,
->(
-  cb: (
-    pkg: PackageBuilder,
-    ctx: {
-      dirtyState: Effect.Effect<void>;
-    },
-  ) => Effect.Effect<
-    void | PackageBuildReturn<TRpcGroup, TState>,
-    DuplicateSchemaId
-  >,
-) {
+>(cb: PackageDefinition<TRpcGroup, TState>) {
   return cb;
 }
 
@@ -112,7 +117,7 @@ export class PackageBuilder {
   }
 
   /** @internal */
-  toPackage(ret?: PackageBuildReturn<any>): Package {
+  toPackage(ret?: PackageBuildReturn<any, any>): Package {
     return new Package(this.id, this.schemas, this.events, ret?.engine);
   }
 }

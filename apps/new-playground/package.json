@@ -14,14 +14,16 @@
     "typescript": "~5.7.2",
     "unocss": "^66.1.1",
     "unocss-preset-animations": "^1.2.1",
-    "vite": "^6.2.0"
+    "vite": "^6.3.5"
   },
   "dependencies": {
     "@effect/platform": "^0.80.2",
     "@effect/platform-browser": "^0.59.2",
     "@effect/rpc": "^0.55.3",
     "@effect/rpc-http": "^0.52.4",
+    "@macrograph/web-api": "workspace:*",
     "@radix-ui/colors": "^3.0.0",
+    "@tanstack/query-core": "^5.75.7",
     "@unocss/reset": "^66.1.1",
     "cva": "npm:class-variance-authority@^0.7.1",
     "effect": "^3.14.2",

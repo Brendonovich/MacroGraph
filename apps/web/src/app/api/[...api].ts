@@ -1,97 +1,223 @@
-import { type CREDENTIAL, contract } from "@macrograph/api-contract";
-import type { APIHandler } from "@solidjs/start/server";
-import { and, eq } from "drizzle-orm";
-import { Hono } from "hono";
-import { createHonoEndpoints, initServer } from "ts-rest-hono";
-import type { z } from "zod";
-import { ensureAuthedOrThrow, getCredentials, getUser } from "~/api";
-import { db } from "~/drizzle";
-import { oauthCredentials } from "~/drizzle/schema";
-import { refreshToken } from "../auth/actions";
-import { AuthProviders } from "../auth/providers";
+import {
+  Cookies,
+  HttpApiBuilder,
+  HttpApiError,
+  HttpApp,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "@effect/platform";
+import { NodeHttpServer } from "@effect/platform-node/index";
+import { APIHandler } from "@solidjs/start/server";
+import { and, eq, InferSelectModel } from "drizzle-orm";
+import { Effect, Layer, Option, pipe } from "effect";
+import * as S from "effect/Schema";
+import { verifyRequestOrigin } from "lucia";
+import {
+  CurrentSession,
+  Authentication,
+  Api,
+  CREDENTIAL,
+} from "@macrograph/web-api";
 
-const s = initServer();
+import { db } from "~/drizzle";
+import { oauthCredentials, users } from "~/drizzle/schema";
+import { lucia } from "~/lucia";
+import { AuthProviders } from "../auth/providers";
+import { refreshToken } from "../auth/actions";
+
+const IS_LOGGED_IN = "isLoggedIn";
+
+const getCurrentSession = Effect.gen(function* () {
+  const req = yield* HttpServerRequest.HttpServerRequest;
+
+  const headers = yield* HttpServerRequest.schemaHeaders(
+    S.Struct({ authorization: S.OptionFromUndefinedOr(S.String) }),
+  );
+  const sessionCookie = yield* HttpServerRequest.schemaCookies(
+    S.Struct({
+      [lucia.sessionCookieName]: S.OptionFromUndefinedOr(S.String),
+    }),
+  ).pipe(Effect.map((v) => v[lucia.sessionCookieName]));
+
+  let sessionId: string;
+
+  if (Option.isSome(headers.authorization)) {
+    const value = headers.authorization.value;
+    const BEARER = "Bearer ";
+    if (!value.startsWith(BEARER)) return yield* new HttpApiError.BadRequest();
+
+    sessionId = value.slice(BEARER.length);
+  } else if (Option.isSome(sessionCookie)) {
+    if (req.method !== "GET") {
+      const { origin, host } = yield* HttpServerRequest.schemaHeaders(
+        S.Struct({ origin: S.String, host: S.String }),
+      ).pipe(
+        Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()),
+      );
+
+      if (!verifyRequestOrigin(origin, [host]))
+        return yield* new HttpApiError.BadRequest();
+    }
+
+    sessionId = sessionCookie.value;
+  } else return Option.none();
+
+  const data = yield* Effect.tryPromise({
+    try: () => lucia.validateSession(sessionId),
+    catch: () => new HttpApiError.InternalServerError(),
+  });
+
+  if (data.user === null) return Option.none();
+
+  if (Option.isSome(sessionCookie))
+    yield* HttpApp.appendPreResponseHandler(
+      Effect.fn(function* (_, res) {
+        if (res.cookies.pipe(Cookies.get(IS_LOGGED_IN), Option.isNone))
+          return res;
+
+        if (data.session.fresh)
+          res = yield* res.pipe(
+            HttpServerResponse.setCookie(
+              lucia.sessionCookieName,
+              lucia.createSessionCookie(data.session.id).serialize(),
+            ),
+            Effect.orDie,
+          );
+
+        return res;
+      }),
+    );
+
+  return Option.some({
+    id: data.session.id,
+    userId: data.user.id,
+  });
+}).pipe(Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()));
+
+const AuthenticationLive = Layer.sync(Authentication, () =>
+  Effect.gen(function* () {
+    const session = yield* getCurrentSession;
+    return yield* session.pipe(
+      Effect.catchTag(
+        "NoSuchElementException",
+        () => new HttpApiError.Forbidden(),
+      ),
+    );
+  }),
+);
 
 function marshalCredential(
-	c: Awaited<ReturnType<typeof getCredentials>>[number],
-): z.infer<typeof CREDENTIAL> {
-	return {
-		provider: c.providerId,
-		id: c.providerUserId,
-		displayName: c.displayName,
-		token: { ...c.token, issuedAt: +c.issuedAt },
-	};
+  c: InferSelectModel<typeof oauthCredentials>,
+): (typeof CREDENTIAL)["Encoded"] {
+  return {
+    provider: c.providerId,
+    id: c.providerUserId,
+    displayName: c.displayName,
+    token: { ...c.token, issuedAt: +c.issuedAt },
+  };
 }
 
-const router = s.router(contract, {
-	getCredentials: async () => {
-		const c = await getCredentials();
+const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
+  handlers
+    .handle(
+      "getUser",
+      Effect.fn(function* () {
+        const session = yield* getCurrentSession;
 
-		return {
-			status: 200,
-			body: c.map(marshalCredential),
-		};
-	},
-	refreshCredential: async ({ params }) => {
-		const providerConfig = AuthProviders[params.providerId];
-		if (!providerConfig)
-			throw new Error(`Provider ${params.providerId} not found`);
+        if (Option.isNone(session)) return null;
 
-		const { user } = await ensureAuthedOrThrow();
+        const user = yield* Effect.tryPromise({
+          try: () =>
+            db.query.users.findFirst({
+              where: eq(users.id, session.value.userId),
+              columns: {
+                id: true,
+                email: true,
+              },
+            }),
+          catch: () => new HttpApiError.InternalServerError(),
+        });
 
-		const where = and(
-			eq(oauthCredentials.providerId, params.providerId),
-			eq(oauthCredentials.userId, user.id),
-			eq(oauthCredentials.providerUserId, params.providerUserId),
-		);
+        return user ?? null;
+      }),
+    )
+    .handle(
+      "getCredentials",
+      Effect.fn(function* () {
+        const session = yield* CurrentSession;
 
-		const credential = await db.transaction(async (db) => {
-			const credential = await db.query.oauthCredentials.findFirst({
-				where,
-			});
+        return yield* Effect.tryPromise({
+          try: () =>
+            db.query.oauthCredentials.findMany({
+              where: eq(oauthCredentials.userId, session.userId),
+            }),
+          catch: () => new HttpApiError.InternalServerError(),
+        }).pipe(Effect.map((c) => c.map(marshalCredential)));
+      }),
+    )
+    .handle(
+      "refreshCredential",
+      Effect.fn(function* ({ path }) {
+        const providerConfig = AuthProviders[path.providerId];
+        if (!providerConfig) yield* new HttpApiError.BadRequest();
 
-			// 404
-			if (!credential) throw new Error("credential not found");
-			// assume provider doesn't require refresh
-			if (
-				!credential.token.refresh_token ||
-				// only allow refresh of tokens >5min old
-				+credential.issuedAt + credential.token.expires_in * 1000 >
-					Date.now() - 5 * 60 * 1000
-			)
-				return credential;
+        const session = yield* CurrentSession;
 
-			const token = await refreshToken(
-				providerConfig,
-				credential.token.refresh_token,
-			);
+        const where = and(
+          eq(oauthCredentials.providerId, path.providerId),
+          eq(oauthCredentials.userId, session.userId),
+          eq(oauthCredentials.providerUserId, path.providerUserId),
+        );
 
-			// token refresh not necessary/possible
-			if (!token) return credential;
+        const credential = yield* Effect.tryPromise({
+          try: () =>
+            db.transaction(async (db) => {
+              const credential = await db.query.oauthCredentials.findFirst({
+                where,
+              });
 
-			const issuedAt = new Date();
-			await db.update(oauthCredentials).set({ token, issuedAt }).where(where);
+              // 404
+              if (!credential) throw new Error("credential not found");
+              // assume provider doesn't require refresh
+              if (!credential.token.refresh_token) return credential;
 
-			return {
-				...credential,
-				issuedAt,
-				token,
-			};
-		});
+              const token = await refreshToken(
+                providerConfig,
+                credential.token.refresh_token,
+              );
 
-		return { status: 200, body: marshalCredential(credential) };
-	},
-	getUser: async () => ({ status: 200, body: await getUser() }),
-});
+              // token refresh not necessary/possible
+              if (!token) return credential;
 
-const app = new Hono().basePath("/api");
+              const issuedAt = new Date();
+              await db
+                .update(oauthCredentials)
+                .set({ token, issuedAt })
+                .where(where);
 
-createHonoEndpoints(contract, router, app);
+              return {
+                ...credential,
+                issuedAt,
+                token,
+              };
+            }),
+          catch: () => new HttpApiError.InternalServerError(),
+        });
 
-const createHandler = (): APIHandler => async (event) =>
-	app.fetch(event.request, {
-		h3Event: event.nativeEvent,
-	});
+        return marshalCredential(credential);
+      }),
+    ),
+);
+
+const ApiLive = HttpApiBuilder.api(Api)
+  .pipe(Layer.provide(ApiLiveGroup))
+  .pipe(Layer.provide(AuthenticationLive));
+
+const { handler } = HttpApiBuilder.toWebHandler(
+  Layer.mergeAll(ApiLive, NodeHttpServer.layerContext),
+);
+
+const createHandler = (): APIHandler => (event) => handler(event.request);
 
 export const GET = createHandler();
 export const POST = createHandler();

@@ -4,7 +4,7 @@ import OBSWebsocket from "obs-websocket-js";
 
 import { getInput } from "../package-utils";
 import { definePackage } from "../package";
-import { ConnectionFailed, RPCS, STATE } from "./rpc";
+import { ConnectionFailed, RPCS, STATE } from "./shared";
 
 export default definePackage(
   Effect.fn(function* (pkg, ctx) {
@@ -67,10 +67,12 @@ export default definePackage(
             password: Option.fromNullable(password),
             lock,
             ws,
-            state: "disconnected",
+            state: "connecting",
           };
 
-          instance.state = "connecting";
+          instances.set(address, instance);
+
+          yield* ctx.dirtyState;
 
           return instance;
         }).pipe(lock.withPermits(1));
@@ -79,10 +81,6 @@ export default definePackage(
           try: () => instance.ws.connect(address, password),
           catch: () => new ConnectionFailed(),
         });
-
-        instances.set(address, instance);
-
-        yield* ctx.dirtyState;
       }),
       RemoveSocket: Effect.fn(function* ({ address }) {
         const instance = instances.get(address);

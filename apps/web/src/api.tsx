@@ -92,8 +92,6 @@ export const getUser = cache(async () => {
 
   const { user } = state;
 
-  await new Promise((res) => setTimeout(res, 1000));
-
   const res = await db.query.users.findFirst({
     where: eq(users.id, user.id),
     columns: {

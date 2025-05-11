@@ -1,8 +1,35 @@
-import { Rpc, RpcClient, RpcGroup, RpcSchema, RpcTest } from "@effect/rpc";
-import { Brand, Context, Data, Layer, Option, pipe, Schema } from "effect";
+import { Rpc, RpcClient, RpcGroup, RpcTest } from "@effect/rpc";
+import {
+  Cache,
+  Channel,
+  Context,
+  Layer,
+  Match,
+  Option,
+  pipe,
+  Queue,
+  Schema,
+  Sink,
+  Stream,
+} from "effect";
 import * as Effect from "effect/Effect";
-import { FetchHttpClient, HttpClient } from "@effect/platform";
+import {
+  FetchHttpClient,
+  HttpApiClient,
+  HttpClient,
+  HttpClientRequest,
+} from "@effect/platform";
 import { render } from "solid-js/web";
+import {
+  createSignal,
+  For,
+  lazy,
+  Show,
+  startTransition,
+  Suspense,
+} from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
+import { Api } from "@macrograph/web-api";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
@@ -11,19 +38,18 @@ import "./style.css";
 import type { NodeSchema } from "./schema";
 import { Node } from "./node";
 import {
-  definePackage,
   EventRef,
   PackageEngine,
   Package,
   PackageBuilder,
-  PackageBuildReturn,
+  PackageDefinition,
 } from "./package";
 import {
   ExecutionContext,
   Logger,
   NodeExecutionContext,
   NodeRuntime,
-} from "./Runtime";
+} from "./runtime";
 import {
   DataInputRef,
   DataOutputRef,
@@ -40,25 +66,60 @@ import {
 import { NodeId } from "./node";
 import utilPackage from "./util-package";
 import obsPackage from "./obs-package";
-import { lazy, Suspense } from "solid-js";
-import { createStore, reconcile } from "solid-js/store";
-import { STATE } from "./obs-package/rpc";
+import twitchPackage from "./twitch-package";
+import { GlobalAppState } from "./package-settings-utils";
 
 type OutputDataMap = Map<NodeId, Record<string, any>>;
 
-let obsRpcClient: any = null!;
-const [obsPackageState, setObsPackageState] = createStore<
-  (typeof STATE)["Encoded"]
->({ connections: [] });
+const API_BEARER_TOKEN = "stwubr3ijbp562jncfpfigb2hq4mkjls2ansjhqf";
+const API_URL = "http://localhost:4321";
+
+const [packageState, setPackageState] = createStore<Record<string, any>>({});
+const packageRpcClients = new Map<string, RpcClient.RpcClient<any>>();
+
+const packages = new Map<string, Package>();
+
+type EVENTS = {
+  type: "auth-changed";
+  data: null | { id: string };
+};
 
 const program = Effect.gen(function* () {
+  const apiClient = yield* HttpApiClient.make(Api, {
+    baseUrl: API_URL,
+    transformClient: HttpClient.mapRequest(
+      HttpClientRequest.bearerToken(API_BEARER_TOKEN),
+    ),
+  }).pipe(Effect.provide(FetchHttpClient.layer));
+
+  const eventQueue = yield* Queue.unbounded<EVENTS>();
+
+  const userCache = yield* Cache.make({
+    capacity: 1,
+    timeToLive: "5 minutes",
+    lookup: (_: void) => apiClient.getUser(),
+  });
+
+  Effect.gen(function* () {
+    const user = yield* userCache.get();
+
+    yield* Queue.offer(eventQueue, {
+      type: "auth-changed",
+      data: user ? { id: user.id } : null,
+    });
+  }).pipe(Effect.runFork);
+
+  const credentials = yield* Cache.make({
+    capacity: 1,
+    timeToLive: "1 minute",
+    lookup: (_: void) => apiClient.getCredentials(),
+  });
+
   let nodeCounter = 69 as NodeId;
 
   const nodes = new Map<number, Node>();
 
   const getNode = (id: NodeId) => Option.fromNullable(nodes.get(id));
-
-  const packages = new Map<string, Package>();
 
   const getPackage = (pkgId: string) =>
     Option.fromNullable(packages.get(pkgId));
@@ -287,40 +348,26 @@ const program = Effect.gen(function* () {
       }),
   });
 
-  const builder = new PackageBuilder("util");
-  const ret = yield* utilPackage(builder, {
-    dirtyState: Effect.gen(function* () {}),
-  });
+  const addPackage = Effect.fn(function* (
+    name: string,
+    def: PackageDefinition<any, any>,
+  ) {
+    const dirtyState = Effect.gen(function* () {
+      if (!ret) return;
+      ret.state.get.pipe(
+        Effect.tap((v) => setPackageState(name, reconcile(v))),
+        Effect.runFork,
+      );
+    });
 
-  const pkg = builder.toPackage(ret ?? undefined);
-
-  packages.set(pkg.id, pkg);
-
-  const engineContext = Context.make(PackageEngine.PackageEngineContext, {
-    packageId: pkg.id,
-  });
-
-  pkg.engine?.pipe(
-    Effect.provide(nodeRuntime),
-    Effect.provide(engineContext),
-    Effect.runFork,
-  );
-
-  {
-    const builder = new PackageBuilder("obs");
-    const ret: PackageBuildReturn<any, any> | void = yield* obsPackage(
-      builder,
-      {
-        dirtyState: Effect.gen(function* () {
-          if (!ret) return;
-          ret.state.get.pipe(
-            Effect.tap(console.log),
-            Effect.tap((v) => setObsPackageState(reconcile(v))),
-            Effect.runFork,
-          );
-        }),
-      },
-    );
+    const builder = new PackageBuilder(name);
+    const ret = yield* def(builder, {
+      dirtyState,
+      credentials: credentials.get().pipe(
+        Effect.catchAll(() => Effect.succeed([])),
+        Effect.map((c) => c.filter((c) => c.provider === name)),
+      ),
+    });
 
     const pkg = builder.toPackage(ret ?? undefined);
 
@@ -336,11 +383,19 @@ const program = Effect.gen(function* () {
       Effect.runFork,
     );
 
+    yield* dirtyState;
     if (ret)
-      obsRpcClient = yield* RpcTest.makeClient(ret.rpc.group).pipe(
-        Effect.provide(ret.rpc.layer),
+      packageRpcClients.set(
+        name,
+        yield* RpcTest.makeClient(ret.rpc.group).pipe(
+          Effect.provide(ret.rpc.layer),
+        ),
       );
-  }
+  });
+
+  yield* addPackage("util", utilPackage);
+  yield* addPackage("twitch", twitchPackage);
+  yield* addPackage("obs", obsPackage);
 
   const RpcsLayer = Rpcs.toLayer({
     CreateNode: Effect.fn(function* (payload) {
@@ -393,12 +448,90 @@ const program = Effect.gen(function* () {
     ),
   );
 
-  clientTest.pipe(
-    Effect.provide(RpcsLayer),
-    Effect.scoped,
-    // Effect.provide(Context.make(HttpClient.HttpClient, fetchClient)),
-    Effect.runFork,
-  );
+  const eventStream = Stream.fromQueue(eventQueue);
+
+  render(() => {
+    const [globalState, setGlobalState] = createStore<GlobalAppState>({
+      auth: {
+        state: "logged-out",
+        login: Effect.gen(function* () {
+          console.log("LOGIN");
+        }),
+      },
+    });
+
+    const [selected, setSelected] = createSignal<string | null>("twitch");
+
+    const tagType = Match.discriminator("type");
+    eventStream.pipe(
+      Stream.runForEach(
+        Effect.fn(function* (event) {
+          Match.value(event).pipe(
+            tagType("auth-changed", ({ data }) => {
+              setGlobalState(
+                "auth",
+                data
+                  ? { state: "logged-in", userId: data.id }
+                  : {
+                      state: "logged-out",
+                      login: Effect.gen(function* () {
+                        console.log("LOGIN");
+                      }),
+                    },
+              );
+            }),
+            Match.exhaustive,
+          );
+        }),
+      ),
+      Effect.runFork,
+    );
+
+    return (
+      <div class="flex flex-row divide-x divide-gray-5 flex-1">
+        <nav class="w-40 text-sm p-2 shrink-0">
+          <ul class="space-y-1">
+            <For
+              each={[...packages.entries()].filter(([_, pkg]) => !!pkg.engine)}
+            >
+              {([name, pkg]) => (
+                <li>
+                  <button
+                    data-selected={selected() === name}
+                    class="block text-left w-full px-2 py-1 outline-none data-[selected='true']:bg-gray-5 data-[selected='false']:hover:bg-gray-4 bg-transparent rounded focus-visible:(outline-(1 yellow-4 offset-0))"
+                    onClick={() => startTransition(() => setSelected(name))}
+                  >
+                    {name}
+                  </button>
+                </li>
+              )}
+            </For>
+          </ul>
+        </nav>
+        <div class="max-w-lg w-full flex flex-col items-stretch p-4 gap-4 text-sm">
+          <Suspense>
+            <Show when={selected()} keyed>
+              {(selected) => {
+                const PackageSettings = lazy(() =>
+                  import("macrograph:package-settings").then((s) =>
+                    s.default[selected](),
+                  ),
+                );
+
+                return (
+                  <PackageSettings
+                    rpc={packageRpcClients.get(selected)!}
+                    state={packageState[selected]}
+                    globalState={globalState}
+                  />
+                );
+              }}
+            </Show>
+          </Suspense>
+        </div>
+      </div>
+    );
+  }, document.getElementById("app")!);
 
   while (true) {
     yield* Effect.yieldNow();
@@ -462,99 +595,5 @@ const Rpcs = RpcGroup.make(
     error: Schema.Union(NodeNotFound),
   }),
 );
-
-const clientTest = Effect.gen(function* () {
-  // const HelixApi = HttpApi.make("Twitch Helix").add(
-  //   HttpApiGroup.make("requests", { topLevel: true })
-  //     .add(
-  //       HttpApiEndpoint.get("getChannels", "/channels")
-  //         .setUrlParams(Schema.Struct({ broadcaster_id: Schema.String }))
-  //         .addSuccess(
-  //           Schema.Struct({
-  //             data: Schema.Array(
-  //               Schema.Struct({ broadcaster_id: Schema.String }),
-  //             ),
-  //           }),
-  //         ),
-  //     )
-  //     .add(
-  //       HttpApiEndpoint.get("getUsers", "/users")
-  //         .setUrlParams(
-  //           Schema.Struct({
-  //             id: Schema.optional(Schema.Array(Schema.String)),
-  //             login: Schema.optional(Schema.Array(Schema.String)),
-  //           }),
-  //         )
-  //         .addSuccess(
-  //           Schema.Struct({
-  //             data: Schema.Array(
-  //               Schema.Struct({
-  //                 broadcaster_id: Schema.String,
-  //               }),
-  //             ),
-  //           }),
-  //         ),
-  //     ),
-  // );
-
-  // const helixClient = yield* HttpApiClient.make(HelixApi, {
-  //   baseUrl: "https://api.twitch.tv/helix",
-  // });
-
-  // const a = yield* helixClient.getChannels({
-  //   urlParams: { broadcaster_id: "123456" },
-  // });
-  //
-
-  const client = yield* RpcTest.makeClient(Rpcs);
-
-  const tickerNode = yield* client.CreateNode({
-    schema: { pkgId: "util", schemaId: "ticker" },
-  });
-
-  const printNode = yield* client.CreateNode({
-    schema: { pkgId: "util", schemaId: "print" },
-  });
-
-  const convertNode = yield* client.CreateNode({
-    schema: { pkgId: "util", schemaId: "intToString" },
-  });
-
-  yield* client.ConnectIO({
-    output: { nodeId: tickerNode.id, ioId: "tick" },
-    input: { nodeId: convertNode.id, ioId: "int" },
-  });
-
-  yield* client.ConnectIO({
-    output: { nodeId: convertNode.id, ioId: "str" },
-    input: { nodeId: printNode.id, ioId: "in" },
-  });
-
-  yield* client.ConnectIO({
-    output: {
-      nodeId: tickerNode.id,
-      ioId: "exec",
-    },
-    input: {
-      nodeId: printNode.id,
-      ioId: "exec",
-    },
-  });
-
-  const OBSPackageSettings = lazy(
-    () => import("macrograph:package-settings?package=obs"),
-  );
-
-  render(
-    () => (
-      <>
-        <Suspense>
-          <OBSPackageSettings rpc={obsRpcClient!} state={obsPackageState} />
-        </Suspense>
-      </>
-    ),
-    document.getElementById("app")!,
-  );
-});
 
 program.pipe(Effect.scoped, Effect.runPromise);

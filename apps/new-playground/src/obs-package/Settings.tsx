@@ -1,12 +1,10 @@
-import { ComponentProps, createSignal, For, Show, splitProps } from "solid-js";
+import { ComponentProps, createSignal, For, splitProps } from "solid-js";
 import { Effect } from "effect";
 import { cva, cx, VariantProps } from "cva";
-import SvgSpinners180Ring from "~icons/svg-spinners/180-ring";
-import createPresence from "solid-presence";
-
-import { RPCS, STATE } from "./rpc";
-import { SettingsProps } from "../package-settings-utils";
 import { createStore } from "solid-js/store";
+
+import { RPCS, STATE } from "./shared";
+import { Button, EffectButton, SettingsProps } from "../package-settings-utils";
 
 const CONNECTION_INDICATOR = {
   connected: {
@@ -27,7 +25,7 @@ export default function Settings(
   props: SettingsProps<typeof RPCS, typeof STATE>,
 ) {
   return (
-    <div class="p-4 gap-4 flex flex-col max-w-2xl text-sm">
+    <>
       <AddSocketForm {...props} />
       <ul class="rounded border border-gray-6 divide-y divide-gray-6">
         <For
@@ -39,7 +37,7 @@ export default function Settings(
           {(conn) => <SocketListItem {...props} conn={conn} />}
         </For>
       </ul>
-    </div>
+    </>
   );
 }
 
@@ -77,19 +75,17 @@ function SocketListItem(
   const conn = () => props.conn;
 
   return (
-    <li class="flex flex-row p-2 w-full">
-      <div class="flex flex-col space-y-0.5 pl-1">
-        <pre>{conn().address}</pre>
+    <li class="flex flex-row px-3 py-2 w-full">
+      <div class="flex flex-col gap-0.5">
+        <span class="font-medium">TODO Name</span>
         <div class="flex flex-row items-center gap-2">
           <div
             class={cx(
-              "size-1.5 rounded-full",
+              "size-2 rounded-full",
               CONNECTION_INDICATOR[conn().state].class,
             )}
           />
-          <span class="italic text-gray-11">
-            {CONNECTION_INDICATOR[conn().state].label}
-          </span>
+          <pre class="text-xs text-gray-11">{conn().address}</pre>
         </div>
       </div>
       <div class="flex-1 flex flex-row justify-end items-center gap-1">
@@ -125,75 +121,5 @@ function InputField(props: { label: string } & ComponentProps<"input">) {
         {...inputProps}
       />
     </div>
-  );
-}
-
-const buttonStyles = cva("focus-visible:outline-yellow-5 outline-none", {
-  variants: {
-    variant: {
-      primary:
-        "bg-gray-12 text-gray-1 hover:bg-gray-11 disabled:bg-gray-11 outline-offset-3 focus-visible:outline-2",
-      text: "bg-transparent text-gray-11 enabled:(hover:(text-gray-12 bg-gray-3) focus-visible:(text-gray-12 bg-gray-3 outline-offset-0 outline-1)) disabled:text-gray-10",
-      textDanger:
-        "bg-transparent text-red-10 enabled:(hover:bg-red-3 focus-visible:(bg-red-3 outline-offset-0 outline-1)) disabled:text-gray-10",
-    },
-    size: {
-      md: "h-8 rounded px-2.5 y-1 text-sm",
-    },
-  },
-  defaultVariants: {
-    variant: "primary",
-    size: "md",
-  },
-});
-
-function Button(
-  props: VariantProps<typeof buttonStyles> & ComponentProps<"button">,
-) {
-  const [cvaProps, restProps] = splitProps(props, ["variant", "size"]);
-
-  return (
-    <button
-      type="button"
-      {...restProps}
-      class={buttonStyles({ ...cvaProps, class: props.class })}
-    />
-  );
-}
-
-function EffectButton(
-  props: Omit<ComponentProps<typeof Button>, "onClick"> & {
-    onClick(e: MouseEvent): Effect.Effect<any, any>;
-  },
-) {
-  const [loading, setLoading] = createSignal(false);
-
-  // const [ref, setRef] = createSignal<HTMLButtonElement | null>(null);
-  // const { present } = createPresence({
-  //   show: loading,
-  //   element: ref,
-  // });
-
-  return (
-    <Button
-      {...props}
-      class={cx(props.class, "relative overflow-hidden")}
-      disabled={props.disabled ?? loading()}
-      onClick={(e) => {
-        setLoading(true);
-        Effect.runPromise(props.onClick(e)).finally(() => setLoading(false));
-      }}
-    >
-      {/* <Show when={present()}>
-        <div
-          ref={setRef}
-          data-visible={loading()}
-          class="absolute inset-0 bg-inherit data-[visible='true']:(animate-in fade-in) data-[visible='false']:(animate-out fade-out) duration-100"
-        >
-          <SvgSpinners180Ring class="absolute inset-1/2 -translate-1/2" />
-        </div>
-      </Show> */}
-      {props.children}
-    </Button>
   );
 }
