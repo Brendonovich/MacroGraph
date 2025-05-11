@@ -1308,6 +1308,39 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
+		name: "Random Integer In Range (exec)",
+		type: "exec",
+		createIO({ io }) {
+			return {
+				min: io.dataInput({
+					id: "min",
+					name: "Min",
+					type: t.int(),
+				}),
+				max: io.dataInput({
+					id: "max",
+					name: "Max",
+					type: t.int(),
+				}),
+				output: io.dataOutput({
+					id: "output",
+					type: t.int(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const min = ctx.getInput(io.min);
+			const max = ctx.getInput(io.max);
+
+			// Use Math.floor to ensure even distribution
+			ctx.setOutput(
+				io.output,
+				Math.floor(Math.random() * (max + 1 - min) + min),
+			);
+		},
+	});
+
+	pkg.createSchema({
 		name: "Random Integer In Range",
 		type: "pure",
 		createIO({ io }) {
@@ -1379,6 +1412,78 @@ export function pkg(core: Core) {
 			ctx.setOutput(io.equal, input === compare);
 			ctx.setOutput(io.greater, input > compare);
 			ctx.setOutput(io.less, input < compare);
+		},
+	});
+
+	pkg.createSchema({
+		name: "Int in range",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				input: io.dataInput({
+					id: "number",
+					name: "Number",
+					type: t.int(),
+				}),
+				upper: io.dataInput({
+					id: "upper",
+					name: "Upper Bound",
+					type: t.int(),
+				}),
+				lower: io.dataInput({
+					id: "lower",
+					name: "Lower Bound",
+					type: t.int(),
+				}),
+				inrange: io.dataOutput({
+					id: "inrange",
+					name: "In Range",
+					type: t.bool(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const input = ctx.getInput(io.input);
+			const upper = ctx.getInput(io.upper);
+			const lower = ctx.getInput(io.lower);
+
+			ctx.setOutput(io.inrange, input >= lower && input <= upper);
+		},
+	});
+
+	pkg.createSchema({
+		name: "Float in range",
+		type: "pure",
+		createIO({ io }) {
+			return {
+				input: io.dataInput({
+					id: "number",
+					name: "Number",
+					type: t.float(),
+				}),
+				upper: io.dataInput({
+					id: "upper",
+					name: "Upper Bound",
+					type: t.float(),
+				}),
+				lower: io.dataInput({
+					id: "lower",
+					name: "Lower Bound",
+					type: t.float(),
+				}),
+				inrange: io.dataOutput({
+					id: "inrange",
+					name: "In Range",
+					type: t.bool(),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const input = ctx.getInput(io.input);
+			const upper = ctx.getInput(io.upper);
+			const lower = ctx.getInput(io.lower);
+
+			ctx.setOutput(io.inrange, input >= lower && input <= upper);
 		},
 	});
 
@@ -1551,12 +1656,24 @@ export function pkg(core: Core) {
 					id: "output",
 					type: t.bool(),
 				}),
+				index: io.dataOutput({
+					id: "index",
+					type: t.option(t.int()),
+				}),
 			};
 		},
 		run({ ctx, io }) {
 			ctx.setOutput(
 				io.output,
 				ctx.getInput(io.list).includes(ctx.getInput(io.input)),
+			);
+			ctx.setOutput(
+				io.index,
+				Maybe(
+					ctx
+						.getInput(io.list)
+						.findIndex((element) => element === ctx.getInput(io.input)),
+				),
 			);
 		},
 	});
