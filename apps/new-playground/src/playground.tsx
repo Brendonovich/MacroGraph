@@ -43,6 +43,8 @@ import {
   Package,
   PackageBuilder,
   PackageDefinition,
+  ForceRetryError,
+  CredentialsFetchFailed,
 } from "./package";
 import {
   ExecutionContext,
@@ -68,6 +70,7 @@ import utilPackage from "./util-package";
 import obsPackage from "./obs-package";
 import twitchPackage from "./twitch-package";
 import { GlobalAppState } from "./package-settings-utils";
+import { makeLatch } from "effect/Effect";
 
 type OutputDataMap = Map<NodeId, Record<string, any>>;
 
@@ -360,13 +363,35 @@ const program = Effect.gen(function* () {
       );
     });
 
+    const credentialLatch = yield* makeLatch();
+    yield* credentialLatch.open;
+
+    const getCredentials = credentialLatch.whenOpen(credentials.get());
+
     const builder = new PackageBuilder(name);
     const ret = yield* def(builder, {
       dirtyState,
-      credentials: credentials.get().pipe(
-        Effect.catchAll(() => Effect.succeed([])),
-        Effect.map((c) => c.filter((c) => c.provider === name)),
+      credentials: getCredentials.pipe(
+        Effect.catchAll(
+          (e) => new CredentialsFetchFailed({ message: e.toString() }),
+        ),
       ),
+      refreshCredential: (id) =>
+        Effect.gen(function* () {
+          yield* credentialLatch.close;
+
+          yield* apiClient
+            .refreshCredential({
+              path: {
+                providerId: name,
+                providerUserId: id,
+              },
+            })
+            .pipe(Effect.catchAll(Effect.die));
+          yield* credentials.refresh().pipe(Effect.catchAll(Effect.die));
+
+          return yield* new ForceRetryError();
+        }).pipe(Effect.ensuring(credentialLatch.open)),
     });
 
     const pkg = builder.toPackage(ret ?? undefined);

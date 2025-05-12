@@ -3,8 +3,15 @@ import { Context, Data, Effect, Layer, Option, PubSub, Schema } from "effect";
 import { NodeRuntime } from "./runtime";
 import { NodeSchema, SchemaDefinition } from "./schema";
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { HandlersContext } from "@effect/rpc/RpcGroup";
 import { CREDENTIAL } from "@macrograph/web-api";
+import { HttpClientError } from "@effect/platform";
+import {
+  BadRequest,
+  Forbidden,
+  HttpApiDecodeError,
+  InternalServerError,
+} from "@effect/platform/HttpApiError";
+import { ParseError } from "effect/ParseResult";
 
 export namespace PackageEngine {
   type Requirements = PackageEngineContext | NodeRuntime;
@@ -48,6 +55,8 @@ export class EventRef<
 
 export class DuplicateSchemaId extends Data.TaggedError("DuplicateSchemaId") {}
 
+export class ForceRetryError extends Data.TaggedError("ForceRetryError") {}
+
 export type PackageBuildReturn<
   TRpcGroup extends RpcGroup.RpcGroup<any>,
   TState extends Schema.Schema<any>,
@@ -63,6 +72,11 @@ export type PackageBuildReturn<
   };
 };
 
+export class CredentialsFetchFailed extends Schema.TaggedError<CredentialsFetchFailed>()(
+  "CredentialsFetchFailed",
+  { message: Schema.String },
+) {}
+
 export type PackageDefinition<
   TRpcGroup extends RpcGroup.RpcGroup<any>,
   TState extends Schema.Schema<any>,
@@ -70,7 +84,11 @@ export type PackageDefinition<
   pkg: PackageBuilder,
   ctx: {
     dirtyState: Effect.Effect<void>;
-    credentials: Effect.Effect<ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>>;
+    credentials: Effect.Effect<
+      ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>,
+      CredentialsFetchFailed
+    >;
+    refreshCredential(id: string): Effect.Effect<never, ForceRetryError>;
   },
 ) => Effect.Effect<
   void | PackageBuildReturn<TRpcGroup, TState>,

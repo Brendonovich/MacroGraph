@@ -7,6 +7,11 @@ export const RPCS = RpcGroup.make().add(
       accountId: S.String,
     }),
   }),
+  Rpc.make("DisconnectEventSub", {
+    payload: S.Struct({
+      accountId: S.String,
+    }),
+  }),
 );
 
 export const STATE = S.Union(

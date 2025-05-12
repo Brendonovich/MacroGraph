@@ -94,7 +94,11 @@ export default function Settings(
               </div>
 
               <EffectButton
-                onClick={() => props.rpc.ConnectEventSub({ accountId: acc.id })}
+                onClick={() =>
+                  acc.eventSubSocket.state === "connected"
+                    ? props.rpc.DisconnectEventSub({ accountId: acc.id })
+                    : props.rpc.ConnectEventSub({ accountId: acc.id })
+                }
               >
                 {acc.eventSubSocket.state === "connected"
                   ? "Disconnect"

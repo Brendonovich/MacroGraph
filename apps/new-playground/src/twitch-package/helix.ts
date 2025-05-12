@@ -1,5 +1,6 @@
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
+import { EVENTSUB_REQUEST_BODY } from "./eventSub";
 
 export class HelixApi extends HttpApi.make("helix")
   .prefix("/helix")
@@ -8,23 +9,23 @@ export class HelixApi extends HttpApi.make("helix")
       .add(
         HttpApiEndpoint.post("createSubscription", "/subscriptions")
           .setPayload(
-            S.Struct({
-              type: S.String,
-              version: S.String,
-              condition: S.Any,
-              transport: S.Union(
-                S.Struct({
-                  method: S.Literal("websocket"),
-                  session_id: S.String,
-                }),
-                S.Struct({ method: S.Literal("conduit"), conduit: S.String }),
-                S.Struct({
-                  method: S.Literal("webhook"),
-                  callback: S.String,
-                  secret: S.String,
-                }),
-              ),
-            }),
+            S.extend(
+              EVENTSUB_REQUEST_BODY,
+              S.Struct({
+                transport: S.Union(
+                  S.Struct({
+                    method: S.Literal("websocket"),
+                    session_id: S.String,
+                  }),
+                  S.Struct({ method: S.Literal("conduit"), conduit: S.String }),
+                  S.Struct({
+                    method: S.Literal("webhook"),
+                    callback: S.String,
+                    secret: S.String,
+                  }),
+                ),
+              }),
+            ),
           )
           .addSuccess(
             S.Struct({
