@@ -1,10 +1,9 @@
-import { ComponentProps, createSignal, For, splitProps } from "solid-js";
-import { Effect } from "effect";
-import { cva, cx, VariantProps } from "cva";
+import { ComponentProps, For, splitProps } from "solid-js";
+import { cx } from "cva";
 import { createStore } from "solid-js/store";
 
 import { RPCS, STATE } from "./shared";
-import { Button, EffectButton, SettingsProps } from "../package-settings-utils";
+import { EffectButton, SettingsProps } from "../package-settings-utils";
 
 const CONNECTION_INDICATOR = {
   connected: {
@@ -91,7 +90,6 @@ function SocketListItem(
       <div class="flex-1 flex flex-row justify-end items-center gap-1">
         <EffectButton
           variant="text"
-          disabled={conn().state === "connecting"}
           onClick={() =>
             conn().state === "connected"
               ? props.rpc.DisconnectSocket({ address: conn().address })
@@ -114,12 +112,14 @@ function SocketListItem(
 function InputField(props: { label: string } & ComponentProps<"input">) {
   const [labelProps, inputProps] = splitProps(props, ["label"]);
   return (
-    <div class="flex flex-col gap-1 flex-1">
+    <div class="flex flex-col gap-1 flex-1 items-stretch">
       <label class="font-medium text-sm">{labelProps.label}</label>
       <input
-        class="bg-white/85 dark:bg-black/25 h-8 text-sm px-2 ring-1 rounded ring-gray-7 focus:ring-yellow-5 focus:ring-2 outline-none"
+        class="bg-white/85 dark:bg-black/25 w-full h-8 text-sm px-2 ring-1 rounded ring-gray-7 focus:ring-yellow-5 focus:ring-2 focus:outline-none"
         {...inputProps}
       />
     </div>
   );
 }
+
+export const Rpcs = RPCS;

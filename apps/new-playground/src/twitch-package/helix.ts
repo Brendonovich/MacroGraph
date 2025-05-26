@@ -1,6 +1,13 @@
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
-import { Schema as S } from "effect";
-import { EVENTSUB_REQUEST_BODY } from "./eventSub";
+import {
+  HttpApi,
+  HttpApiBuilder,
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpServerResponse,
+} from "@effect/platform";
+import { Effect, Schema as S, Stream } from "effect";
+
+import { EVENTSUB_CREATE_SUBSCRIPTION_BODY } from "./eventSub";
 
 export class HelixApi extends HttpApi.make("helix")
   .prefix("/helix")
@@ -10,7 +17,7 @@ export class HelixApi extends HttpApi.make("helix")
         HttpApiEndpoint.post("createSubscription", "/subscriptions")
           .setPayload(
             S.extend(
-              EVENTSUB_REQUEST_BODY,
+              EVENTSUB_CREATE_SUBSCRIPTION_BODY,
               S.Struct({
                 transport: S.Union(
                   S.Struct({

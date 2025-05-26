@@ -1,17 +1,9 @@
-import { Context, Data, Effect, Layer, Option, PubSub, Schema } from "effect";
+import { Context, Data, Effect, Layer, Option, Schema } from "effect";
+import { CREDENTIAL } from "@macrograph/web-api";
 
 import { NodeRuntime } from "./runtime";
 import { NodeSchema, SchemaDefinition } from "./schema";
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { CREDENTIAL } from "@macrograph/web-api";
-import { HttpClientError } from "@effect/platform";
-import {
-  BadRequest,
-  Forbidden,
-  HttpApiDecodeError,
-  InternalServerError,
-} from "@effect/platform/HttpApiError";
-import { ParseError } from "effect/ParseResult";
 
 export namespace PackageEngine {
   type Requirements = PackageEngineContext | NodeRuntime;
@@ -38,7 +30,7 @@ export namespace PackageEngine {
       const { packageId } = yield* PackageEngineContext;
       const runtime = yield* NodeRuntime;
 
-      yield* runtime.emitEvent(packageId, event.id, data);
+      yield* runtime.emitEvent(packageId, event.id, data).pipe(Effect.ignore);
     });
   }
 }
@@ -58,13 +50,13 @@ export class DuplicateSchemaId extends Data.TaggedError("DuplicateSchemaId") {}
 export class ForceRetryError extends Data.TaggedError("ForceRetryError") {}
 
 export type PackageBuildReturn<
-  TRpcGroup extends RpcGroup.RpcGroup<any>,
+  TRpcs extends Rpc.Any,
   TState extends Schema.Schema<any>,
 > = {
   engine: PackageEngine.PackageEngine;
   rpc: {
-    group: TRpcGroup;
-    layer: Layer.Layer<Rpc.ToHandler<RpcGroup.Rpcs<TRpcGroup>>>;
+    group: RpcGroup.RpcGroup<TRpcs>;
+    layer: Layer.Layer<Rpc.ToHandler<TRpcs>>;
   };
   state: {
     schema: TState;
@@ -78,7 +70,7 @@ export class CredentialsFetchFailed extends Schema.TaggedError<CredentialsFetchF
 ) {}
 
 export type PackageDefinition<
-  TRpcGroup extends RpcGroup.RpcGroup<any>,
+  TRpcs extends Rpc.Any,
   TState extends Schema.Schema<any>,
 > = (
   pkg: PackageBuilder,
@@ -90,15 +82,12 @@ export type PackageDefinition<
     >;
     refreshCredential(id: string): Effect.Effect<never, ForceRetryError>;
   },
-) => Effect.Effect<
-  void | PackageBuildReturn<TRpcGroup, TState>,
-  DuplicateSchemaId
->;
+) => Effect.Effect<void | PackageBuildReturn<TRpcs, TState>, DuplicateSchemaId>;
 
 export function definePackage<
-  TRpcGroup extends RpcGroup.RpcGroup<any>,
+  TRpcs extends Rpc.Any,
   TState extends Schema.Schema<any>,
->(cb: PackageDefinition<TRpcGroup, TState>) {
+>(cb: PackageDefinition<TRpcs, TState>) {
   return cb;
 }
 

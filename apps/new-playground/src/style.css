@@ -10,3 +10,11 @@ html {
 button:hover {
   cursor: initial;
 }
+
+a:hover {
+  cursor: initial;
+}
+
+a:hover[rel="external"] {
+  cursor: inherit;
+}

@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, isRunnableDevEnvironment } from "vite";
 import { fileURLToPath } from "node:url";
 import solid from "vite-plugin-solid";
 import UnoCSS from "unocss/vite";
@@ -8,7 +8,64 @@ import * as fs from "node:fs/promises";
 const mgPackageSettings = "macrograph:package-settings";
 
 export default defineConfig({
+  server: {
+    allowedHosts: ["5b6c-159-196-133-51.ngrok-free.app"],
+  },
+  environments: {
+    client: { consumer: "client" },
+    server: {
+      consumer: "server",
+      build: {
+        ssr: true,
+        // we don't write to the file system as the below 'capture-output' plugin will
+        // capture the output and write it to the virtual file system
+        write: true,
+        manifest: true,
+        copyPublicDir: false,
+        rollupOptions: {
+          input: "./src/entry-server.ts",
+          output: {
+            dir: "./server-out",
+            entryFileNames: "server.mjs",
+          },
+        },
+        commonjsOptions: {
+          include: [/node_modules/],
+        },
+      },
+    },
+  },
+  builder: {
+    sharedPlugins: true,
+    async buildApp(builder) {
+      const clientEnv = builder.environments["client"];
+      const serverEnv = builder.environments["server"];
+
+      if (!clientEnv) throw new Error("Client environment not found");
+      if (!serverEnv) throw new Error("SSR environment not found");
+
+      await builder.build(clientEnv);
+      await builder.build(serverEnv);
+    },
+  },
   plugins: [
+    {
+      name: "macrograph-dev-server",
+      enforce: "pre",
+      configureServer: async (server) => {
+        const serverEnv = server.environments.server;
+        if (!serverEnv) throw new Error("Server environment not found");
+        if (!isRunnableDevEnvironment(serverEnv))
+          throw new Error("Server environment is not runnable");
+
+        await serverEnv.runner.import("./src/entry-server.ts").catch((e) => {
+          console.error(e);
+        });
+      },
+      config() {
+        return {};
+      },
+    },
     UnoCSS(),
     Icons({ compiler: "solid" }),
     {

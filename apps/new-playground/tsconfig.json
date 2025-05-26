@@ -17,10 +17,11 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["unplugin-icons/types/solid"]
+    "types": ["unplugin-icons/types/solid"],
+    "plugins": [{ "name": "@effect/language-service" }]
   },
   "include": ["src"]
 }

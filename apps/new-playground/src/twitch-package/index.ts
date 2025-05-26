@@ -1,40 +1,30 @@
 import {
   Context,
+  Deferred,
   Effect,
   Exit,
-  FiberRef,
   Mailbox,
   Option,
-  pipe,
-  Queue,
   Schema,
   Stream,
 } from "effect";
-import { makeLatch } from "effect/Effect";
 
 import { definePackage } from "../package";
 import { RPCS, STATE } from "./shared";
 import {
   FetchHttpClient,
-  Headers,
   HttpApiClient,
   HttpClient,
   HttpClientRequest,
 } from "@effect/platform";
 import { HelixApi } from "./helix";
+import {
+  EVENTSUB_MESSAGE,
+  EventSubMessage,
+  isEventSubMessageType,
+} from "./eventSub";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
-
-const EVENTSUB_EVENT = Schema.Struct({
-  metadata: Schema.Struct({
-    message_type: Schema.Literal("session_welcome"),
-  }),
-  payload: Schema.Struct({
-    session: Schema.Struct({
-      id: Schema.String,
-    }),
-  }),
-});
 
 export default definePackage(
   Effect.fn(function* (pkg, ctx) {
@@ -42,6 +32,7 @@ export default definePackage(
       lock: Effect.Semaphore;
       ws: WebSocket;
       state: "connecting" | "connected";
+      events: Mailbox.ReadonlyMailbox<EventSubMessage>;
     };
 
     const sockets = new Map<string, Socket>();
@@ -57,8 +48,7 @@ export default definePackage(
           return;
 
         const lock = Effect.unsafeMakeSemaphore(1);
-
-        const latch = yield* makeLatch();
+        const responseDefer = yield* Deferred.make<void>();
 
         const CredentialRefresh = (c: HttpClient.HttpClient) =>
           c.pipe(
@@ -87,7 +77,6 @@ export default definePackage(
                   const credential = Option.fromNullable(
                     credentials.find((c) => c.id === accountId),
                   );
-
                   return Option.match(credential, {
                     onNone: () => req,
                     onSome: (credential) =>
@@ -120,27 +109,27 @@ export default definePackage(
         yield* Effect.gen(function* () {
           const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
 
-          const events = yield* Mailbox.make<(typeof EVENTSUB_EVENT)["Type"]>();
-
           ws.onmessage = (event) => {
             events.unsafeOffer(
-              Schema.decodeSync(EVENTSUB_EVENT)(JSON.parse(event.data)),
+              Schema.decodeSync(EVENTSUB_MESSAGE)(JSON.parse(event.data)),
             );
           };
 
           ws.onclose = () => {
-            console.log("onclose");
             events.unsafeDone(Exit.succeed(undefined));
           };
+
+          const events = yield* Mailbox.make<EventSubMessage>();
 
           events.pipe(
             Mailbox.toStream,
             Stream.runForEach(
               Effect.fn(function* (event) {
-                if (event.metadata.message_type === "session_welcome") {
+                if (isEventSubMessageType(event, "session_welcome")) {
                   yield* Effect.gen(function* () {
-                    const subs = yield* helixClient.eventSub.getSubscriptions();
+                    if (socket.state === "connected") return;
 
+                    const subs = yield* helixClient.eventSub.getSubscriptions();
                     for (const sub of subs.data) {
                       if (sub.status === "websocket_disconnected")
                         yield* helixClient.eventSub.deleteSubscription({
@@ -148,23 +137,54 @@ export default definePackage(
                         });
                     }
 
-                    // yield* helixClient.eventSub.createSubscription({
-                    //   payload: {
-                    //     type: "channel.follow",
-                    //     version: "2",
-                    //     condition: {
-                    //       broadcaster_user_id: accountId,
-                    //       moderator_user_id: accountId,
-                    //     },
-                    //     transport: {
-                    //       method: "websocket",
-                    //       session_id: event.payload.session.id,
-                    //     },
-                    //   },
-                    // });
-                  }).pipe(lock.withPermits(1), Effect.ensuring(latch.open));
+                    yield* helixClient.eventSub.createSubscription({
+                      payload: {
+                        type: "channel.follow",
+                        version: "2",
+                        condition: {
+                          broadcaster_user_id: accountId,
+                          moderator_user_id: accountId,
+                        },
+                        transport: {
+                          method: "websocket",
+                          session_id: event.payload.session.id,
+                        },
+                      },
+                    });
 
-                  socket.state = "connected";
+                    yield* helixClient.eventSub.createSubscription({
+                      payload: {
+                        type: "channel.ban",
+                        version: "1",
+                        condition: {
+                          broadcaster_user_id: accountId,
+                        },
+                        transport: {
+                          method: "websocket",
+                          session_id: event.payload.session.id,
+                        },
+                      },
+                    });
+
+                    yield* helixClient.eventSub.createSubscription({
+                      payload: {
+                        type: "channel.unban",
+                        version: "1",
+                        condition: {
+                          broadcaster_user_id: accountId,
+                        },
+                        transport: {
+                          method: "websocket",
+                          session_id: event.payload.session.id,
+                        },
+                      },
+                    });
+
+                    socket.state = "connected";
+                  }).pipe(
+                    lock.withPermits(1),
+                    Effect.ensuring(Deferred.succeed(responseDefer, void 0)),
+                  );
 
                   yield* ctx.dirtyState;
                 }
@@ -175,7 +195,7 @@ export default definePackage(
                 Effect.sync(() => sockets.delete(accountId)).pipe(
                   lock.withPermits(1),
                 ),
-                latch.open,
+                Deferred.succeed(responseDefer, void 0),
                 ctx.dirtyState,
               ]),
             ),
@@ -186,21 +206,23 @@ export default definePackage(
             lock,
             ws,
             state: "connecting",
+            events,
           };
 
           sockets.set(accountId, socket);
           yield* ctx.dirtyState;
-
           return socket;
         }).pipe(lock.withPermits(1));
 
-        yield* latch.await;
+        yield* Deferred.await(responseDefer);
       }),
       DisconnectEventSub: Effect.fn(function* ({ accountId }) {
         const socket = sockets.get(accountId);
         if (!socket) return;
 
         socket.ws.close();
+
+        yield* socket.events.await;
       }),
     });
 

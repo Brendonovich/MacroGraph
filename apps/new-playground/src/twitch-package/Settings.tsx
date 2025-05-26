@@ -1,7 +1,8 @@
 import { For, JSXElement, Match, ParentProps, Switch } from "solid-js";
+import { cx } from "cva";
+
 import { EffectButton, SettingsProps } from "../package-settings-utils";
 import { RPCS, STATE } from "./shared";
-import { cx } from "cva";
 
 const EVENTSUB_CONNECTION_INDICATOR = {
   connected: {
@@ -94,15 +95,18 @@ export default function Settings(
               </div>
 
               <EffectButton
+                class="relative"
                 onClick={() =>
                   acc.eventSubSocket.state === "connected"
                     ? props.rpc.DisconnectEventSub({ accountId: acc.id })
                     : props.rpc.ConnectEventSub({ accountId: acc.id })
                 }
               >
-                {acc.eventSubSocket.state === "connected"
-                  ? "Disconnect"
-                  : "Connect"}
+                <span>
+                  {acc.eventSubSocket.state === "connected"
+                    ? "Disconnect"
+                    : "Connect"}
+                </span>
               </EffectButton>
             </li>
           )}
@@ -111,3 +115,5 @@ export default function Settings(
     </RequireAuth>
   );
 }
+
+export const Rpcs = RPCS;
