@@ -1,0 +1,20 @@
+@import "@radix-ui/colors/gray.css";
+@import "@radix-ui/colors/gray-dark.css";
+@import "@radix-ui/colors/red.css";
+@import "@radix-ui/colors/red-dark.css";
+
+html {
+  user-select: none;
+}
+
+button:hover {
+  cursor: initial;
+}
+
+a:hover {
+  cursor: initial;
+}
+
+a:hover[rel="external"] {
+  cursor: inherit;
+}
