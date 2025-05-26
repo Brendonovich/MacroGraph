@@ -302,6 +302,7 @@ interface Message {
 }
 
 export interface Events {
+	"channel.bits.use": any;
 	"channel.ban": {
 		user_id: string;
 		user_login: string;

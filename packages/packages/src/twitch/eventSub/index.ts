@@ -1702,6 +1702,52 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 	});
 
 	createEventSubEventSchema({
+		name: "Channel Bits Use",
+		event: "channel.bits.use",
+		createIO: ({ io }) => {
+			return {
+				exec: io.execOutput({
+					id: "exec",
+				}),
+				userId: io.dataOutput({
+					id: "userId",
+					name: "userID",
+					type: t.string(),
+				}),
+				userLogin: io.dataOutput({
+					id: "userLogin",
+					name: "Username",
+					type: t.string(),
+				}),
+				displayName: io.dataOutput({
+					id: "displayName",
+					name: "Display Name",
+					type: t.string(),
+				}),
+				anonymous: io.dataOutput({
+					id: "anonymous",
+					name: "Anonymous",
+					type: t.bool(),
+				}),
+				message: io.dataOutput({
+					id: "message",
+					name: "Message",
+					type: t.string(),
+				}),
+				bits: io.dataOutput({
+					id: "bits",
+					name: "Bits",
+					type: t.int(),
+				}),
+			};
+		},
+		run({ ctx, data, io }) {
+			console.log(data);
+			ctx.exec(io.exec);
+		},
+	});
+
+	createEventSubEventSchema({
 		name: "Cheers",
 		event: "channel.cheer",
 		createIO: ({ io }) => {
@@ -2932,6 +2978,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 }
 
 const SubTypes = [
+	"channel.bits.use",
 	"channel.update",
 	"channel.follow",
 	"channel.ad_break.begin",
