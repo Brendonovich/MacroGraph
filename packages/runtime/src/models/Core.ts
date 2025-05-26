@@ -1,4 +1,4 @@
-import type { contract } from "@macrograph/api-contract";
+import type { contract, CREDENTIAL } from "@macrograph/api-contract";
 import { Maybe, type Option } from "@macrograph/option";
 import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
@@ -11,6 +11,7 @@ import type { EventsMap, RunCtx } from "./NodeSchema";
 import type { Package } from "./Package";
 import { Project } from "./Project";
 import type { Variable } from "./Variable";
+import { z } from "zod";
 
 class NodeEmit {
 	listeners = new Map<Node, Set<(d: Node) => any>>();
@@ -75,11 +76,20 @@ export class Core {
 	oauth: OAuth;
 	api: InitClientReturn<typeof contract, any>;
 
-	getCredentials = () =>
-		this.api.getCredentials().then((r) => {
-			if (r.status !== 200) throw new Error("Failed to get credentials");
-			return r.body;
-		});
+	private credentials?: Array<z.infer<typeof CREDENTIAL>>;
+
+	private fetchCredentials = async () => {
+		const creds = await this.api.getCredentials();
+		if (creds.status !== 200) throw new Error("Failed to get credentials");
+		this.credentials = creds.body;
+		return creds.body;
+	};
+
+	getCredentials = async () => {
+		if (this.credentials) return this.credentials;
+
+		return await this.fetchCredentials();
+	};
 
 	getCredential = (provider: string, id: string | number) =>
 		this.getCredentials().then(async (creds) => {
@@ -95,14 +105,13 @@ export class Core {
 		});
 	refreshCredential = async (provider: string, id: string) => {
 		const resp = await this.api.refreshCredential({
-			params: {
-				providerId: provider,
-				providerUserId: id,
-			},
+			params: { providerId: provider, providerUserId: id },
 		});
 
 		if (resp.status !== 200)
 			throw new Error(`Failed to refresh credential ${provider}:${id}`);
+
+		await this.fetchCredentials();
 
 		return resp.body;
 	};

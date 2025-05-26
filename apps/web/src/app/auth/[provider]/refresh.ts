@@ -18,7 +18,7 @@ export const POST: APIHandler = async ({ request, params }) => {
 
 	const body = BODY.parse(await request.json());
 
-	return json(refreshToken(providerConfig, body.refreshToken), {
+	return json(await refreshToken(providerConfig, body.refreshToken), {
 		headers: CORS_HEADERS,
 	});
 };

@@ -7,19 +7,19 @@ import { createTypes } from "./types";
 
 export type Pkg = ReturnType<typeof pkg>;
 export function pkg() {
-  const ctx = createCtx();
+	const ctx = createCtx();
 
-  const pkg = new Package({
-    name: "VTube Studio",
-    ctx,
-    SettingsUI: () => import("./Settings"),
-  });
+	const pkg = new Package({
+		name: "VTube Studio",
+		ctx,
+		SettingsUI: () => import("./Settings"),
+	});
 
-  pkg.registerResourceType(VTubeStudioInstance);
+	pkg.registerResourceType(VTubeStudioInstance);
 
-  const types = createTypes(pkg);
+	const types = createTypes(pkg);
 
-  requests(pkg, types);
+	requests(pkg, types);
 
-  return pkg;
+	return pkg;
 }

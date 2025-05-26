@@ -7,9 +7,8 @@ import {
   HttpServerResponse,
 } from "@effect/platform";
 import { NodeHttpServer } from "@effect/platform-node/index";
-import { APIHandler } from "@solidjs/start/server";
-import { and, eq, InferSelectModel } from "drizzle-orm";
-import { Effect, Layer, Option, pipe } from "effect";
+import { InferSelectModel } from "drizzle-orm";
+import { Effect, Layer, Option } from "effect";
 import * as S from "effect/Schema";
 import { verifyRequestOrigin } from "lucia";
 import {
@@ -18,6 +17,8 @@ import {
   Api,
   CREDENTIAL,
 } from "@macrograph/web-api";
+import type { APIHandler } from "@solidjs/start/server";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "~/drizzle";
 import { oauthCredentials, users } from "~/drizzle/schema";

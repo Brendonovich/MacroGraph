@@ -16,7 +16,7 @@ const USER_DATA = v.object({
 });
 
 export interface Account {
-	credential: Credential;
+	credential: () => Promise<Credential>;
 	data: v.InferOutput<typeof USER_DATA>;
 }
 
@@ -39,7 +39,11 @@ export function createAuth(
 
 			return {
 				data,
-				credential: c,
+				credential: async () => {
+					const c = await core.getCredential("twitch", userId);
+					if (!c) throw new Error("No credential");
+					return c;
+				},
 			};
 		});
 

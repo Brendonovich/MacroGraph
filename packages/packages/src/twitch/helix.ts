@@ -16,7 +16,7 @@ import type { z } from "zod";
 import { createHTTPClient } from "../httpEndpoint";
 import type { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";
-import { defaultProperties } from "./resource";
+import { defaultProperties, TwitchAccount, TwitchChannel } from "./resource";
 import type { Types } from "./types";
 
 export const HELIX_USER_ID = "helixUserId";
@@ -87,6 +87,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			run(
 				props: RunProps<TProperties, TIO> & {
 					account: Account;
+					credential: Credential;
 				},
 			): void | Promise<void>;
 			createIO: MergeFnProps<
@@ -113,7 +114,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 					},
 				});
 			},
-			run(props) {
+			async run(props) {
 				const account = props.ctx
 					.getProperty(
 						props.properties.account as SchemaProperties<
@@ -122,7 +123,11 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 					)
 					.expect("No Twitch account available!");
 
-				return s.run({ ...props, account });
+				return await s.run({
+					...props,
+					account,
+					credential: await account.credential(),
+				});
 			},
 		});
 	}
@@ -140,8 +145,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			await helix.call("POST /moderation/warnings", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			await helix.call("POST /moderation/warnings", credential, {
 				body: JSON.stringify({
 					broadcaster_id: account.data.id,
 					moderator_id: account.data.id,
@@ -173,8 +178,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		run({ ctx, io, account }) {
-			return helix.call("POST /moderation/bans", account.credential, {
+		run({ ctx, io, account, credential }) {
+			return helix.call("POST /moderation/bans", credential, {
 				body: JSON.stringify({
 					broadcaster_id: account.data.id,
 					moderator_id: account.data.id,
@@ -197,8 +202,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		run({ ctx, io, account }) {
-			return helix.call("DELETE /moderation/bans", account.credential, {
+		run({ ctx, io, account, credential }) {
+			return helix.call("DELETE /moderation/bans", credential, {
 				body: JSON.stringify({
 					broadcaster_id: account.data.id,
 					moderator_id: account.data.id,
@@ -217,8 +222,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		run({ ctx, io, account }) {
-			return helix.call("POST /moderation/moderators", account.credential, {
+		run({ ctx, io, account, credential }) {
+			return helix.call("POST /moderation/moderators", credential, {
 				body: JSON.stringify({
 					broadcaster_id: account.data.id,
 					user_id: ctx.getInput(io.userId),
@@ -236,8 +241,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		run({ ctx, io, account }) {
-			return helix.call("DELETE /moderation/moderators", account.credential, {
+		run({ ctx, io, account, credential }) {
+			return helix.call("DELETE /moderation/moderators", credential, {
 				body: JSON.stringify({
 					broadcaster_id: account.data.id,
 					user_id: ctx.getInput(io.userId),
@@ -300,8 +305,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.int(),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			const data = await helix.call("GET /channels", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const data = await helix.call("GET /channels", credential, {
 				body: new URLSearchParams({
 					broadcaster_id: ctx.getInput(io.broadcasterIdIn),
 				}),
@@ -348,7 +353,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.int(),
 			}),
 		}),
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const body = {} as any;
 
 			if (ctx.getInput(io.broadcasterLanguage))
@@ -358,7 +363,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			if (ctx.getInput(io.tags)) body.tags = ctx.getInput(io.tags);
 
 			if (ctx.getInput(io.catagoryName)) {
-				const data = await helix.call("GET /games", account.credential, {
+				const data = await helix.call("GET /games", credential, {
 					body: new URLSearchParams({
 						name: ctx.getInput(io.catagoryName),
 					}),
@@ -367,7 +372,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				body.game_id = data.data[0].id;
 			}
 
-			await helix.call("PATCH /channels", account.credential, {
+			await helix.call("PATCH /channels", credential, {
 				body: {
 					...body,
 					broadcaster_id: account.data.id,
@@ -403,8 +408,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.option(t.struct(StreamInfo)),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			const data = await helix.call("GET /streams", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const data = await helix.call("GET /streams", credential, {
 				body: new URLSearchParams({
 					user_id: ctx.getInput(io.broadcasterId),
 				}),
@@ -445,8 +450,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			const clipId = await helix.call("POST /clips", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const clipId = await helix.call("POST /clips", credential, {
 				body: new URLSearchParams({ broadcaster_id: account.data.id }),
 			});
 
@@ -469,8 +474,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			await helix.call("POST /whispers", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			await helix.call("POST /whispers", credential, {
 				body: new URLSearchParams({
 					from_user_id: account.data.id,
 					to_user_id: ctx.getInput(io.touserId),
@@ -509,14 +514,10 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.int(),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			const data = await helix.call(
-				"GET /hypetrain/events",
-				account.credential,
-				{
-					body: new URLSearchParams({ broadcaster_id: account.data.id }),
-				},
-			);
+		async run({ ctx, io, account, credential }) {
+			const data = await helix.call("GET /hypetrain/events", credential, {
+				body: new URLSearchParams({ broadcaster_id: account.data.id }),
+			});
 
 			ctx.setOutput(io.cooldownEndTime, data.event_data.cooldown_end_time);
 			ctx.setOutput(io.expires_at, data.event_data.expires_at);
@@ -539,8 +540,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.option(t.struct(types.UserSubscription)),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			const data = await helix.call("GET /subscriptions", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const data = await helix.call("GET /subscriptions", credential, {
 				body: new URLSearchParams({
 					user_id: ctx.getInput(io.userId),
 					broadcaster_id: account.data.id,
@@ -586,19 +587,15 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
 
-			const data = await helix.call(
-				"GET /channels/followers",
-				account.credential,
-				{
-					body: new URLSearchParams({
-						broadcaster_id: user,
-						user_id: ctx.getInput(io.userId),
-					}),
-				},
-			);
+			const data = await helix.call("GET /channels/followers", credential, {
+				body: new URLSearchParams({
+					broadcaster_id: user,
+					user_id: ctx.getInput(io.userId),
+				}),
+			});
 			ctx.setOutput(io.following, !Array.isArray(data));
 			ctx.setOutput(io.followedAt, Maybe(data.followed_at));
 		},
@@ -620,8 +617,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
-			const data = await helix.call("GET /channels/vips", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const data = await helix.call("GET /channels/vips", credential, {
 				body: new URLSearchParams({
 					broadcaster_id: account.data.id,
 					user_id: ctx.getInput(io.userId),
@@ -646,17 +643,13 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.bool(),
 			}),
 		}),
-		async run({ ctx, io, account }) {
-			const data = await helix.call(
-				"GET /moderation/moderators",
-				account.credential,
-				{
-					body: new URLSearchParams({
-						broadcaster_id: account.data.id,
-						user_id: ctx.getInput(io.userId),
-					}),
-				},
-			);
+		async run({ ctx, io, account, credential }) {
+			const data = await helix.call("GET /moderation/moderators", credential, {
+				body: new URLSearchParams({
+					broadcaster_id: account.data.id,
+					user_id: ctx.getInput(io.userId),
+				}),
+			});
 
 			ctx.setOutput(io.moderator, data.data[0] !== undefined);
 		},
@@ -673,8 +666,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
-			helix.call("POST /channels/vips", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			helix.call("POST /channels/vips", credential, {
 				body: new URLSearchParams({
 					broadcaster_id: account.data.id,
 					user_id: ctx.getInput(io.userId),
@@ -694,8 +687,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
-			helix.call("DELETE /channels/vips", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			helix.call("DELETE /channels/vips", credential, {
 				body: new URLSearchParams({
 					broadcaster_id: account.data.id,
 					user_id: ctx.getInput(io.userId),
@@ -764,7 +757,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const broadcaster_id = account.data.id;
 			const body: Record<string, any> = {
 				title: ctx.getInput(io.title),
@@ -804,7 +797,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				`POST /channel_points/custom_rewards?broadcaster_id=${encodeURIComponent(
 					broadcaster_id,
 				)}`,
-				account.credential,
+				credential,
 				{ body: JSON.stringify(body) },
 			);
 
@@ -867,10 +860,10 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const response = await helix.call(
 				"POST /channels/commercial",
-				account.credential,
+				credential,
 				{
 					body: JSON.stringify({
 						broadcaster_id: account.data.id,
@@ -895,17 +888,13 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
-			const response = await helix.call(
-				"GET /channels/ads",
-				account.credential,
-				{
-					body: JSON.stringify({
-						broadcaster_id: account.data.id,
-						length: ctx.getInput(io.duration),
-					}),
-				},
-			);
+		async run({ ctx, io, account, credential }) {
+			const response = await helix.call("GET /channels/ads", credential, {
+				body: JSON.stringify({
+					broadcaster_id: account.data.id,
+					length: ctx.getInput(io.duration),
+				}),
+			});
 
 			// ctx.setOutput(io.retryAfter, response.data[0].retry_after);
 			console.log(response);
@@ -924,10 +913,10 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const response = await helix.call(
 				"POST /channels/ads/schedule/snooze",
-				account.credential,
+				credential,
 				{
 					body: JSON.stringify({
 						broadcaster_id: account.data.id,
@@ -1094,7 +1083,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			if (ctx.getInput(io.id) === "") return;
 
 			const body: Record<string, any> = {};
@@ -1138,7 +1127,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 
 			const data = await helix.call(
 				"PATCH /channel_points/custom_rewards",
-				account.credential,
+				credential,
 				{
 					body: JSON.stringify({
 						broadcaster_id: account.data.id,
@@ -1215,14 +1204,14 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const status = ctx.getInput(io.status) as InferEnum<
 				typeof types.RedemptionStatus
 			>;
 
 			const response = await helix.call(
 				"PATCH /channel_points/custom_rewards/redemptions",
-				account.credential,
+				credential,
 				{
 					body: new URLSearchParams({
 						id: ctx.getInput(io.redemptionId),
@@ -1274,10 +1263,10 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const rewards = await helix.call(
 				"GET /channel_points/custom_rewards",
-				account.credential,
+				credential,
 				{
 					body: new URLSearchParams({
 						broadcaster_id: account.data.id,
@@ -1327,17 +1316,13 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		run({ ctx, io, account }) {
-			return helix.call(
-				"DELETE /channel_points/custom_rewards",
-				account.credential,
-				{
-					body: new URLSearchParams({
-						broadcaster_id: account.data.id,
-						id: ctx.getInput(io.id),
-					}),
-				},
-			);
+		run({ ctx, io, account, credential }) {
+			return helix.call("DELETE /channel_points/custom_rewards", credential, {
+				body: new URLSearchParams({
+					broadcaster_id: account.data.id,
+					id: ctx.getInput(io.id),
+				}),
+			});
 		},
 	});
 
@@ -1401,8 +1386,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				// }),
 			};
 		},
-		async run({ ctx, io, account }) {
-			const response = await helix.call("GET /users", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const response = await helix.call("GET /users", credential, {
 				body: new URLSearchParams({
 					login: ctx.getInput(io.userLoginIn),
 				}),
@@ -1516,8 +1501,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			//   type: t.option(t.struct(User)),
 			// }),
 		}),
-		async run({ ctx, io, account }) {
-			const resp = await helix.call("GET /users", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const resp = await helix.call("GET /users", credential, {
 				body: new URLSearchParams({
 					id: ctx.getInput(io.userIdIn),
 				}),
@@ -1588,9 +1573,9 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
-			await helix.call("PATCH /chat/settings", account.credential, {
+			await helix.call("PATCH /chat/settings", credential, {
 				body: JSON.stringify({
 					broadcaster_Id: user,
 					moderator_id: user,
@@ -1622,9 +1607,9 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
-			const data = await helix.call("GET /chat/chatters", account.credential, {
+			const data = await helix.call("GET /chat/chatters", credential, {
 				body: new URLSearchParams({
 					broadcaster_id: user,
 					moderator_id: user,
@@ -1661,8 +1646,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
-			const color = await helix.call("GET /chat/color", account.credential, {
+		async run({ ctx, io, account, credential }) {
+			const color = await helix.call("GET /chat/color", credential, {
 				body: new URLSearchParams({
 					user_id: ctx.getInput(io.userId),
 				}),
@@ -1690,9 +1675,9 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
-			await helix.call("PATCH /chat/settings", account.credential, {
+			await helix.call("PATCH /chat/settings", credential, {
 				body: JSON.stringify(
 					ctx.getInput(io.enabled)
 						? {
@@ -1726,9 +1711,9 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
-			await helix.call("PATCH /chat/settings", account.credential, {
+			await helix.call("PATCH /chat/settings", credential, {
 				body: JSON.stringify(
 					ctx.getInput(io.enabled)
 						? {
@@ -1757,14 +1742,62 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
 
-			await helix.call("PATCH /chat/settings", account.credential, {
+			await helix.call("PATCH /chat/settings", credential, {
 				body: JSON.stringify({
 					broadcaster_Id: user,
 					moderator_id: user,
 					subscriber_mode: ctx.getInput(io.enabled),
+				}),
+			});
+		},
+	});
+
+	pkg.createNonEventSchema({
+		variant: "Exec",
+		name: "Send Chat Message (Helix)",
+		properties: {
+			chatAccount: {
+				name: "Chatting Account",
+				resource: TwitchAccount,
+			},
+			chat: {
+				name: "Chat to send to",
+				resource: TwitchChannel,
+			},
+		},
+		createIO: ({ io }) => ({
+			message: io.dataInput({
+				id: "message",
+				name: "Message",
+				type: t.string(),
+			}),
+			parentId: io.dataInput({
+				id: "replyId",
+				name: "Reply Message ID",
+				type: t.string(),
+			}),
+		}),
+		async run({ ctx, io, properties }) {
+			const chat = ctx
+				.getProperty(properties.chat)
+				.expect("No Twitch channel available");
+			const chatter = await ctx
+				.getProperty(properties.chatAccount)
+				.expect("No Twitch account available for chatter")
+				.credential();
+
+			console.log(chat);
+			console.log(chatter.displayName);
+
+			await helix.call("POST /chat/messages", chatter, {
+				body: JSON.stringify({
+					broadcaster_id: chat,
+					sender_id: chatter.id,
+					message: ctx.getInput(io.message),
+					reply_parent_message_id: ctx.getInput(io.parentId),
 				}),
 			});
 		},
@@ -1780,10 +1813,10 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
 
-			await helix.call("PATCH /chat/settings", account.credential, {
+			await helix.call("PATCH /chat/settings", credential, {
 				body: JSON.stringify({
 					broadcaster_Id: user,
 					moderator_id: user,
@@ -1803,10 +1836,10 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
 
-			await helix.call("PATCH /chat/settings", account.credential, {
+			await helix.call("PATCH /chat/settings", credential, {
 				body: JSON.stringify({
 					broadcaster_Id: user,
 					moderator_id: user,
@@ -1827,16 +1860,53 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		run({ ctx, io, account }) {
+		run({ ctx, io, account, credential }) {
 			const user = account.data.id;
 
-			return helix.call("POST /chat/shoutouts", account.credential, {
+			return helix.call("POST /chat/shoutouts", credential, {
 				body: new URLSearchParams({
 					from_broadcaster_id: user,
 					moderator_id: user,
 					to_broadcaster_id: ctx.getInput(io.toId),
 				}),
 			});
+		},
+	});
+
+	createHelixExecSchema({
+		name: "Validate Token",
+		createIO: ({ io }) => {
+			return {
+				login: io.dataOutput({
+					id: "login",
+					name: "Login of Token",
+					type: t.string(),
+				}),
+				userId: io.dataOutput({
+					id: "userId",
+					name: "User ID of token",
+					type: t.string(),
+				}),
+				expiresIn: io.dataOutput({
+					id: "expiresIn",
+					name: "Token Expires in (s)",
+					type: t.int(),
+				}),
+			};
+		},
+		async run({ ctx, io, account, credential }) {
+			const user = account.data.id;
+
+			const data = await fetch("https://id.twitch.tv/oauth2/validate", {
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${credential.token.access_token}`,
+				},
+			}).then((resp) => resp.json());
+
+			ctx.setOutput(io.expiresIn, data.expires_in);
+			ctx.setOutput(io.login, data.login);
+			ctx.setOutput(io.userId, data.user_id);
 		},
 	});
 
@@ -1902,9 +1972,9 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account }) {
+		async run({ ctx, io, account, credential }) {
 			const params: any = {
-				broadcaster_id: account.credential.id,
+				broadcaster_id: credential.id,
 			};
 
 			console.log("id", ctx.getInput(io.id));
@@ -1919,7 +1989,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				params.after = after;
 			});
 
-			const data = await helix.call("GET /polls", account.credential, {
+			const data = await helix.call("GET /polls", credential, {
 				body: new URLSearchParams(params),
 			});
 
@@ -1944,13 +2014,13 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		run({ ctx, io, account }) {
+		run({ ctx, io, account, credential }) {
 			const color = ctx.getInput(io.color) as InferEnum<
 				typeof types.AnnouncementColors
 			>;
 			const user = account.data.id;
 
-			return helix.call("POST /chat/announcements", account.credential, {
+			return helix.call("POST /chat/announcements", credential, {
 				body: JSON.stringify({
 					broadcaster_id: user,
 					moderator_id: user,
@@ -2013,6 +2083,7 @@ export type Requests = {
 		}>;
 	};
 	"GET /bits/leaderboard": any;
+	"GET /validate": any;
 	"GET /games": any;
 	"GET /streams": any;
 	"POST /clips": any;
@@ -2030,21 +2101,19 @@ export type Requests = {
 	"POST /predictions": any;
 	"PATCH /predictions": any;
 	"DELETE /eventsub/subscriptions": any;
-
 	"GET /channel_points/custom_rewards": any;
 	[key: `POST /channel_points/custom_rewards?${string}`]: any;
 	"PATCH /channel_points/custom_rewards": any;
 	"DELETE /channel_points/custom_rewards": undefined;
 	"PATCH /channel_points/custom_rewards/redemptions": any;
-
 	"PATCH /chat/settings": any;
 	"GET /chat/color": any;
 	"GET /chat/chatters": any;
 	"POST /chat/shoutouts": any;
+	"POST /chat/messages": any;
 	"POST /chat/announcements": any;
 	"POST /channels/commercial": any;
 	"GET /channels/ads": any;
 	"POST /channels/ads/schedule/snooze": any;
-
 	"POST /eventsub/subscriptions": any;
 };

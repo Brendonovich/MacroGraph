@@ -56,7 +56,7 @@ const VALID_REDIRECT_ORIGINS = [
 	serverEnv.VERCEL_BRANCH_URL,
 ];
 
-export function getRedirectOrigin(desired: string) {
+function getRedirectOrigin(desired: string) {
 	return VALID_REDIRECT_ORIGINS.includes(desired)
 		? desired
 		: serverEnv.VERCEL_URL;
@@ -132,8 +132,6 @@ export async function refreshToken(
 	providerConfig: AuthProviderConfig,
 	refreshToken: string,
 ) {
-	"use server";
-
 	if (providerConfig.refresh === false) return null;
 
 	const res = await fetch(providerConfig.token.url, {
