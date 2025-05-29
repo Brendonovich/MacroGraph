@@ -13,12 +13,18 @@ const posthogServer = new PostHog(
 export type PostHogEvent = {
   "user signed up": undefined;
   "user logged in": undefined;
+  "credential connected": {
+    providerId: string;
+    providerUserId: string;
+  };
 };
 
 export function posthogCapture<T extends keyof PostHogEvent>(
   props: Omit<EventMessage, "event" | "properties"> & {
     event: T;
-  } & (PostHogEvent[T] extends undefined ? {} : PostHogEvent[T]),
+  } & (PostHogEvent[T] extends undefined
+      ? {}
+      : { properties: PostHogEvent[T] }),
 ) {
   return posthogServer.capture(props);
 }
