@@ -49,14 +49,14 @@ const signUpAction = action(async (form: FormData) => {
       distinctId: userId,
       event: "user signed up",
     });
-    await posthogServer.shutdown;
+    await posthogServer.shutdown();
 
     await createSession(userId);
-  } catch (e: any) {
-    return { success: false, error: e.toString() };
-  }
 
-  return { success: true } as const;
+    return { success: true, userId } as const;
+  } catch (e: any) {
+    return { success: false, error: e.toString() } as const;
+  }
 });
 
 const loginWithCredentialsAction = action(async (form: FormData) => {
@@ -88,16 +88,17 @@ const loginWithCredentialsAction = action(async (form: FormData) => {
       distinctId: user.id,
       event: "user logged in",
     });
-  } catch (e: any) {
-    return { success: false, error: e.toString() };
-  }
+    await posthogServer.shutdown();
 
-  return { success: true } as const;
+    return { success: true, userId: user.id } as const;
+  } catch (e: any) {
+    return { success: false, error: e.toString() } as const;
+  }
 });
 
 export function LoginForm(props: {
   onSignup?: () => void;
-  onLogin?: () => void;
+  onLogin?: (userId: string) => void;
 }) {
   const loginWithCredentials = useAction(loginWithCredentialsAction);
   const submission = useSubmission(loginWithCredentialsAction);
@@ -109,7 +110,7 @@ export function LoginForm(props: {
         onSubmit={(e) => {
           e.preventDefault();
           loginWithCredentials(new FormData(e.currentTarget)).then(
-            ({ success }) => success && props.onLogin?.(),
+            (data) => data.success && props.onLogin?.(data.userId),
           );
         }}
       >
@@ -140,7 +141,10 @@ export function LoginForm(props: {
   );
 }
 
-function SignUpForm(props: { onLogin?: () => void; onSignup?: () => void }) {
+function SignUpForm(props: {
+  onLogin?: () => void;
+  onSignup?: (id: string) => void;
+}) {
   const signUp = useAction(signUpAction);
   const submission = useSubmission(signUpAction);
 
@@ -151,7 +155,7 @@ function SignUpForm(props: { onLogin?: () => void; onSignup?: () => void }) {
         onSubmit={(e) => {
           e.preventDefault();
           signUp(new FormData(e.currentTarget)).then(
-            ({ success }) => success && props.onSignup?.(),
+            (data) => data.success && props.onSignup?.(data.userId),
           );
         }}
       >
