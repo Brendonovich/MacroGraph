@@ -49,6 +49,7 @@ const signUpAction = action(async (form: FormData) => {
       distinctId: userId,
       event: "user signed up",
     });
+    await posthogServer.shutdown;
 
     await createSession(userId);
   } catch (e: any) {
