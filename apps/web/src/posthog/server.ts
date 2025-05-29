@@ -1,6 +1,6 @@
-import { PostHog } from "posthog-node";
+import { EventMessage, PostHog } from "posthog-node";
 
-export const posthogServer = new PostHog(
+const posthogServer = new PostHog(
   "phc_7anSDyS3p1frzGL7bHWlkiNG8kJ9pxcHB8H7QjBMEMB",
   {
     host: "https://us.i.posthog.com",
@@ -9,3 +9,25 @@ export const posthogServer = new PostHog(
     flushInterval: 0,
   },
 );
+
+export type PostHogEvent = {
+  "user signed up": {
+    email: string;
+  };
+  "user logged in": {
+    email: string;
+  };
+};
+
+export function posthogCapture<T extends keyof PostHogEvent>(
+  props: Omit<EventMessage, "event" | "properties"> & {
+    event: T;
+    properties: PostHogEvent[T];
+  },
+) {
+  return posthogServer.capture(props);
+}
+
+export function posthogShutdown() {
+  return posthogServer.shutdown();
+}

@@ -146,7 +146,14 @@ export default () => {
         </div>
       }
     >
-      <PlatformContext.Provider value={{}}>
+      <PlatformContext.Provider
+        value={{
+          clipboard: {
+            readText: navigator.clipboard.readText,
+            writeText: navigator.clipboard.writeText,
+          },
+        }}
+      >
         <Interface core={core} environment="browser" />
       </PlatformContext.Provider>
     </Show>
@@ -194,7 +201,7 @@ export function ShareButton() {
           JSON.stringify(serializeProject(core.project)),
         );
 
-        writeToClipboard(
+        navigator.clipboard.writeText(
           new URL(
             `/playground?${new URLSearchParams({ shared: id })}`,
             location.origin,
