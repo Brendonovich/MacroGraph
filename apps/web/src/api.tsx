@@ -140,6 +140,7 @@ async function addCredentialInner(provider: string, searchParams: string) {
       providerUserId: oauth.user.id,
     },
   });
+  await posthogShutdown();
 
   return oauth;
 }
@@ -193,7 +194,7 @@ export const getCredentials = cache(async () => {
 }, "credentials");
 import { createStorage } from "unstorage";
 import cloudflareKVHTTPDriver from "unstorage/drivers/cloudflare-kv-http";
-import { posthogCapture } from "./posthog/server";
+import { posthogCapture, posthogShutdown } from "./posthog/server";
 
 const cloudflareKv = () => {
   const apiToken = process.env.CLOUDFLARE_API_TOKEN!;
