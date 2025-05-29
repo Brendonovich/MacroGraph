@@ -26,7 +26,7 @@
 		"@ts-rest/core": "^3.52.1",
 		"@ts-rest/solid-query": "^3.41.1",
 		"valibot": "^0.37.0",
-		"zod": "^3.24.2"
+		"zod": "^3.25.36"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",

@@ -1,0 +1,6 @@
+{
+  "extends": "@macrograph/config/tsconfig",
+  "compilerOptions": {
+    "outDir": "dist"
+  }
+}

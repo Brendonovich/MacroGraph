@@ -50,7 +50,7 @@
 		"tmi.js": "^1.8.5",
 		"valibot": "^0.37.0",
 		"vtubestudio": "^3.10.1",
-		"zod": "^3.24.2"
+		"zod": "^3.25.36"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",
