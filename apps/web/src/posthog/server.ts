@@ -11,19 +11,14 @@ const posthogServer = new PostHog(
 );
 
 export type PostHogEvent = {
-  "user signed up": {
-    email: string;
-  };
-  "user logged in": {
-    email: string;
-  };
+  "user signed up": undefined;
+  "user logged in": undefined;
 };
 
 export function posthogCapture<T extends keyof PostHogEvent>(
   props: Omit<EventMessage, "event" | "properties"> & {
     event: T;
-    properties: PostHogEvent[T];
-  },
+  } & (PostHogEvent[T] extends undefined ? {} : PostHogEvent[T]),
 ) {
   return posthogServer.capture(props);
 }

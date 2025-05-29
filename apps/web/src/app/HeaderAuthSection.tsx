@@ -39,9 +39,13 @@ export function HeaderAuthSection() {
 
   createEffect(
     on(
-      () => user()?.id,
-      (userId) => {
-        posthog.identify(userId);
+      () => user(),
+      (user) => {
+        if (user)
+          posthog.identify(user.id, {
+            email: user.email,
+          });
+        else posthog.reset();
       },
     ),
   );

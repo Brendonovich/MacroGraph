@@ -48,9 +48,6 @@ const signUpAction = action(async (form: FormData) => {
     posthogCapture({
       distinctId: userId,
       event: "user signed up",
-      properties: {
-        email: data.email,
-      },
     });
     await posthogShutdown();
 
@@ -90,9 +87,6 @@ const loginWithCredentialsAction = action(async (form: FormData) => {
     posthogCapture({
       distinctId: user.id,
       event: "user logged in",
-      properties: {
-        email: user.email,
-      },
     });
     await posthogShutdown();
 
