@@ -1,5 +1,4 @@
 import { StartClient, mount } from "@solidjs/start/client";
-import "./posthog/client";
 import posthog from "posthog-js";
 
 mount(() => <StartClient />, document.getElementById("app")!);

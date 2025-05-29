@@ -22,10 +22,11 @@ import {
   onMount,
 } from "solid-js";
 import { toast } from "solid-sonner";
+import posthog from "posthog-js";
+
 import { getUser } from "~/api";
 import { LoginForm, SignUpForm } from "./(auth)/Forms";
 import { IS_LOGGED_IN, logOutAction } from "./(auth)/utils";
-import { posthogClient } from "~/posthog/client";
 
 const isLoggedIn = () => parse(document.cookie)[IS_LOGGED_IN] === "true";
 
@@ -40,7 +41,7 @@ export function HeaderAuthSection() {
     on(
       () => user()?.id,
       (userId) => {
-        posthogClient.identify(userId);
+        posthog.identify(userId);
       },
     ),
   );
@@ -112,7 +113,7 @@ function LoginButton() {
   function onLogin(userId: string) {
     setOpen(false);
     toast.success("You are now logged in!");
-    posthogClient.identify(userId);
+    posthog.identify(userId);
   }
 
   const [search, setSearch] = useSearchParams();
