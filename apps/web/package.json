@@ -50,6 +50,7 @@
     "oslo": "^1.2.1",
     "pg": "^8.13.1",
     "postgres": "^3.4.5",
+    "posthog-js": "^1.248.1",
     "solid-js": "^1.9.3",
     "solid-mdx": "^0.0.7",
     "solid-sonner": "^0.2.8",
