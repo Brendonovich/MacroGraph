@@ -125,6 +125,8 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
       Effect.fn(function* () {
         const session = yield* getCurrentSession;
 
+        console.log("getUser session", session);
+
         if (Option.isNone(session)) return null;
 
         const user = yield* Effect.tryPromise({
@@ -138,6 +140,8 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
             }),
           catch: () => new HttpApiError.InternalServerError(),
         });
+
+        console.log("getUser session", user);
 
         return user ?? null;
       }),

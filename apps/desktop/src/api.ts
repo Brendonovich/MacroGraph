@@ -21,7 +21,7 @@ export const rawApi = initClient(contract, {
       body: await r.json(),
       headers: r.headers,
     })),
-  baseUrl: `${env.VITE_MACROGRAPH_API_URL}/new-api`,
+  baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
   get baseHeaders(): Record<string, string> {
     const token = sessionToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -30,12 +30,15 @@ export const rawApi = initClient(contract, {
 
 export const api = initQueryClient(contract, {
   api: (args) =>
-    fetch(args.path, args).then(async (r) => ({
-      status: r.status,
-      body: await r.json(),
-      headers: r.headers,
-    })),
-  baseUrl: `${env.VITE_MACROGRAPH_API_URL}/new-api`,
+    fetch(args.path, args).then(async (r) => {
+      const body = await r.json();
+      return {
+        status: r.status,
+        body,
+        headers: r.headers,
+      };
+    }),
+  baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
   get baseHeaders(): Record<string, string> {
     const token = sessionToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
