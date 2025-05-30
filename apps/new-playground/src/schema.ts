@@ -3,6 +3,7 @@ import { NoSuchElementException } from "effect/Cause";
 import { YieldWrap } from "effect/Utils";
 import { DataInputRef, DataOutputRef, ExecInputRef, ExecOutputRef } from "./io";
 import { SchemaRunGeneratorEffect } from "./runtime";
+import { EventRef } from "./package";
 
 export { Schema } from "effect";
 

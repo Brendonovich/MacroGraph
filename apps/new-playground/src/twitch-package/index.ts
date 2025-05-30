@@ -121,7 +121,7 @@ export default definePackage(
 
           const events = yield* Mailbox.make<EventSubMessage>();
 
-          events.pipe(
+          yield* events.pipe(
             Mailbox.toStream,
             Stream.runForEach(
               Effect.fn(function* (event) {
@@ -199,7 +199,7 @@ export default definePackage(
                 ctx.dirtyState,
               ]),
             ),
-            Effect.runFork,
+            Effect.fork,
           );
 
           const socket: Socket = {

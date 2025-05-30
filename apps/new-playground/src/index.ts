@@ -40,7 +40,7 @@ export const GraphRpcs = RpcGroup.make(
   Rpc.make("UpdateGraph", {
     payload: S.Struct({
       graphId: S.Int,
-      data: S.partial(S.Struct({ name: S.String })),
+      data: S.Struct({ name: S.String }),
     }),
     error: GraphNotFound,
   }),

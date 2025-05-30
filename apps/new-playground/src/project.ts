@@ -1,5 +1,6 @@
 import { Graph, GraphId } from "./domain/Graph/data";
 import { NodeId } from "./domain/Node/data";
+import { DeepWriteable } from "./types";
 
 export const project = {
   name: "",
@@ -12,11 +13,11 @@ export const project = {
           id: NodeId.make(0),
           name: "New Node",
           position: { x: 0, y: 0 },
-          variant: "exec",
           inputs: [],
           outputs: [],
+          schema: { pkgId: "bruh", schemaId: "lmao" },
         },
       ],
-    } satisfies (typeof Graph)["Type"],
+    } as DeepWriteable<(typeof Graph)["Type"]>,
   },
 };

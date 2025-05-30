@@ -1,9 +1,9 @@
 import { Context, Effect, Schema } from "effect";
 import { NoSuchElementException } from "effect/Cause";
 
-import { Node } from "./node";
 import { NotComputationNode } from "./errors";
 import { DataInputRef, DataOutputRef } from "./io";
+import { Node } from "./domain/Node/data";
 
 export class NodeRuntime extends Context.Tag("NodeRuntime")<
   NodeRuntime,

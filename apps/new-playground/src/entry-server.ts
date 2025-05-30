@@ -35,9 +35,16 @@ import {
   Fiber,
 } from "effect";
 import * as Effect from "effect/Effect";
+import { NodeSdk } from "@effect/opentelemetry";
+import {
+  ConsoleSpanExporter,
+  BatchSpanProcessor,
+  SimpleSpanProcessor,
+} from "@opentelemetry/sdk-trace-base";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
 import type { NodeSchema } from "./schema";
-import { Node } from "./node";
+// import { Node } from "./node";
 import {
   CredentialsFetchFailed,
   EventRef,
@@ -53,7 +60,7 @@ import {
   Logger,
   NodeExecutionContext,
   NodeRuntime,
-} from "./runtime";
+} from "./Runtime";
 import {
   DataInputRef,
   DataOutputRef,
@@ -67,7 +74,14 @@ import {
   NotEventNode,
   SchemaNotFound,
 } from "./errors";
-import { Rpcs, RpcsSerialization, ProjectEvent } from "./shared";
+import {
+  Rpcs,
+  RpcsSerialization,
+  ProjectEvent,
+  SchemaMeta,
+  PackageMeta,
+  NodeIO,
+} from "./shared";
 import utilPackage from "./util-package";
 import twitchPackage from "./twitch-package";
 import obsPackage from "./obs-package";
@@ -75,7 +89,7 @@ import { Route } from "@effect/platform/HttpRouter";
 import { getCurrentFiber } from "effect/Fiber";
 import { NodeRpcs, NodeRpcsLive } from "./domain/Node/rpc";
 import { Graphs } from "./domain/Graph/rpc";
-import { NodeId } from "./domain/Node/data";
+import { Node, NodeId } from "./domain/Node/data";
 import { project } from "./project";
 import {
   RealtimeConnection,
@@ -85,7 +99,9 @@ import { RealtimePubSub } from "./domain/Realtime/PubSub";
 import { CloudAPIClient } from "./domain/CloudApi/ApiClient";
 import { CloudApiAuthState } from "./domain/CloudApi/AuthState";
 import { RealtimePresence } from "./domain/Realtime/Presence";
-import { Middleware } from "./domain/Rpc/Middleware";
+import { RpcRealtimeMiddleware } from "./domain/Rpc/Middleware";
+import { GraphId } from "./domain/Graph/data";
+import { DeepWriteable } from "./types";
 
 type OutputDataMap = Map<NodeId, Record<string, any>>;
 
@@ -97,8 +113,9 @@ type PackageEntry = {
 };
 const packages = new Map<string, PackageEntry>();
 
-Effect.gen(function* () {
+const program = Effect.gen(function* () {
   const apiClient = yield* CloudAPIClient;
+  const realtime = yield* RealtimePubSub;
 
   const credentials = yield* Cache.make({
     capacity: 1,
@@ -108,9 +125,10 @@ Effect.gen(function* () {
 
   let nodeCounter = 69 as NodeId;
 
-  const nodes = new Map<number, Node>();
+  // const nodes = new Map<number, Node>();
 
-  const getNode = (id: NodeId) => Option.fromNullable(nodes.get(id));
+  const getNode = (id: NodeId) =>
+    Option.fromNullable(project.graphs[0].nodes.find((n) => n.id === id));
 
   const getPackage = (pkgId: string) =>
     Option.fromNullable(packages.get(pkgId));
@@ -133,9 +151,7 @@ Effect.gen(function* () {
   const createNode = (schemaRef: SchemaRef) =>
     Effect.gen(function* () {
       const schema = yield* getSchema(schemaRef);
-      const id = nodeCounter++ as NodeId;
-      const node = { id, schema: schemaRef, io: schema.io } satisfies Node;
-      nodes.set(id, node);
+      const id = NodeId.make(nodeCounter++);
 
       if (schema.type === "event") {
         let nodes = eventNodes.get(schema.event);
@@ -146,6 +162,54 @@ Effect.gen(function* () {
 
         nodes.add(id);
       }
+
+      const io = {
+        inputs: [] as Schema.Schema.Type<typeof NodeIO>["inputs"][number][],
+        outputs: [] as Schema.Schema.Type<typeof NodeIO>["outputs"][number][],
+      };
+
+      schema.io({
+        out: {
+          exec: (id) => {
+            io.outputs.push({ id, variant: "exec" });
+            return new ExecOutputRef(id as IOId);
+          },
+          data: (id, type) => {
+            io.outputs.push({ id, variant: "data" });
+            return new DataOutputRef(id, type);
+          },
+        },
+        in: {
+          exec: (id) => {
+            io.inputs.push({ id, variant: "exec" });
+            return new ExecInputRef(id);
+          },
+          data: (id, type) => {
+            io.inputs.push({ id, variant: "data" });
+            return new DataInputRef(id as IOId, type);
+          },
+        },
+      });
+
+      const node: DeepWriteable<Node> = {
+        schema: schemaRef,
+        id,
+        inputs: io.inputs,
+        outputs: io.outputs,
+        position: { x: 0, y: 0 },
+      };
+
+      project.graphs[0].nodes.push(node);
+
+      yield* realtime.publish({
+        type: "NodeCreated",
+        graphId: GraphId.make(0),
+        nodeId: node.id,
+        position: node.position,
+        schema: schemaRef,
+        inputs: node.inputs,
+        outputs: node.outputs,
+      });
 
       return node;
     });
@@ -343,14 +407,14 @@ Effect.gen(function* () {
     name: string,
     def: PackageDefinition<any, any>,
   ) {
-    const dirtyState = Effect.gen(function* () {
+    const dirtyState: Effect.Effect<void> = Effect.gen(function* () {
       if (Option.isNone(ret)) return;
       const state = packages.get(name)?.state;
       if (!state || Option.isNone(state)) return;
 
-      ret.value.state.get.pipe(
+      yield* ret.value.state.get.pipe(
         Effect.andThen((v) => state.value.pipe(SubscriptionRef.set(v))),
-        Effect.runFork,
+        Effect.fork,
       );
     });
 
@@ -388,13 +452,14 @@ Effect.gen(function* () {
 
     const pkg = builder.toPackage(Option.getOrUndefined(ret));
 
-    pkg.engine?.pipe(
-      Effect.provide(nodeRuntime),
-      Effect.provide(
-        PackageEngine.PackageEngineContext.context({ packageId: pkg.id }),
-      ),
-      Effect.runFork,
-    );
+    if (pkg.engine)
+      yield* pkg.engine.pipe(
+        Effect.provide(nodeRuntime),
+        Effect.provide(
+          PackageEngine.PackageEngineContext.context({ packageId: pkg.id }),
+        ),
+        Effect.fork,
+      );
 
     const state = yield* ret.pipe(
       Effect.andThen((ret) => ret.state.get),
@@ -428,47 +493,39 @@ Effect.gen(function* () {
   const RpcsLive = Rpcs.toLayer(
     Effect.gen(function* () {
       return {
-        // CreateNode: Effect.fn(function* (payload) {
-        //   const node = yield* createNode(payload.schema).pipe(
-        //     Effect.mapError(() => new SchemaNotFound(payload.schema)),
-        //   );
+        CreateNode: Effect.fn(function* (payload) {
+          const node = yield* createNode(payload.schema).pipe(
+            Effect.mapError(() => new SchemaNotFound(payload.schema)),
+          );
 
-        //   const io = {
-        //     inputs: [] as { id: string; variant: "exec" | "data" }[],
-        //     outputs: [] as { id: string; variant: "exec" | "data" }[],
-        //   };
-
-        //   node.io({
-        //     out: {
-        //       exec: (id) => {
-        //         io.outputs.push({ id, variant: "exec" });
-        //         return new ExecOutputRef(id as IOId);
-        //       },
-        //       data: (id, type) => {
-        //         io.outputs.push({ id, variant: "data" });
-        //         return new DataOutputRef(id, type);
-        //       },
-        //     },
-        //     in: {
-        //       exec: (id) => {
-        //         io.inputs.push({ id, variant: "exec" });
-        //         return new ExecInputRef(id);
-        //       },
-        //       data: (id, type) => {
-        //         io.inputs.push({ id, variant: "data" });
-        //         return new DataInputRef(id as IOId, type);
-        //       },
-        //     },
-        //   });
-
-        //   return { id: node.id, io };
-        // }),
+          return {
+            id: node.id,
+            io: { inputs: node.inputs, outputs: node.outputs },
+          };
+        }),
         // ConnectIO: Effect.fn(function* (payload) {
         //   yield* addConnection(payload.output as any, payload.input as any);
         // }),
         // Events: () =>
         GetProject: Effect.fn(function* () {
-          return project;
+          return {
+            ...project,
+            packages: [...packages.entries()].reduce(
+              (acc, [id, { pkg }]) => {
+                acc[id] = {
+                  schemas: [...pkg.schemas.entries()].reduce(
+                    (acc, [id, schema]) => {
+                      acc[id] = { id, type: schema.type };
+                      return acc;
+                    },
+                    {} as Record<string, SchemaMeta>,
+                  ),
+                };
+                return acc;
+              },
+              {} as Record<string, PackageMeta>,
+            ),
+          };
         }),
         GetPackageSettings: Effect.fn(function* (payload) {
           const pkg = packages.get(payload.package)!;
@@ -491,11 +548,13 @@ Effect.gen(function* () {
         Effect.provide(NodeRpcsLive),
         Effect.provide(RpcsSerialization),
         Effect.provideService(
-          Middleware,
-          Middleware.of((req) =>
+          RpcRealtimeMiddleware,
+          RpcRealtimeMiddleware.of((req) =>
             Effect.succeed(
               RealtimeConnection.of({
-                id: RealtimeConnectionId.make(+req.headers["x-mg-realtime-id"]),
+                id: RealtimeConnectionId.make(
+                  +req.headers["x-mg-realtime-id"]!,
+                ),
               }),
             ),
           ),
@@ -568,7 +627,15 @@ Effect.gen(function* () {
   return yield* Layer.launch(
     HttpAppLayer.pipe(Layer.provide(HMRAwareNodeHttpServerLayer)),
   );
-}).pipe(
+});
+
+const NodeSdkLive = NodeSdk.layer(() => ({
+  resource: { serviceName: "example" },
+  // Export span data to the console
+  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
+}));
+
+program.pipe(
   Effect.provide(
     Layer.mergeAll(
       Graphs.Default,
@@ -587,6 +654,7 @@ Effect.gen(function* () {
       },
     }),
   ),
+  Effect.provide(NodeSdkLive),
   EffectNodeRuntime.runMain,
 );
 

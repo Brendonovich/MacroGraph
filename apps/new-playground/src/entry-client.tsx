@@ -1,5 +1,5 @@
-import { RpcClient, RpcGroup, RpcSerialization } from "@effect/rpc";
-import { Brand, Context, Layer, Match, PubSub, Stream } from "effect";
+import { RpcClient, RpcSerialization } from "@effect/rpc";
+import { Brand, Layer, Match, PubSub, Schema, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import { render } from "solid-js/web";
 import {
@@ -8,7 +8,6 @@ import {
   createSignal,
   ErrorBoundary,
   For,
-  on,
   Show,
   Suspense,
 } from "solid-js";
@@ -24,25 +23,26 @@ import {
 import { HttpServerRequest } from "@effect/platform/HttpServerRequest";
 import { createDeepSignal } from "@solid-primitives/resource";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
+import { cx } from "cva";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
 import "./style.css";
 
 import { GlobalAppState } from "./package-settings-utils";
-import { ProjectEvent, Rpcs, RpcsSerialization } from "./shared";
+import { PackageMeta, ProjectEvent, Rpcs, RpcsSerialization } from "./shared";
 import { Node, NodeHeader } from "./components/Node";
 import { NodeRpcs } from "./domain/Node/rpc";
 import { NodeId, XY } from "./domain/Node/data";
 import { GraphId } from "./domain/Graph/data";
+import { SchemaRef } from "./domain/Package/data";
+import { DeepWriteable } from "./types";
 
-// const API_HOST = "raw-explanation-yacht-so.trycloudflare.com";
-// const API_HOST = "localhost:5678";
-const API_HOST = "192.168.20.23:5678";
+const API_HOST = "localhost:5678";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
 
-const SocketLayer = BrowserSocket.layerWebSocket(`ws:/${API_HOST}/realtime`);
+const SocketLayer = BrowserSocket.layerWebSocket(`ws://${API_HOST}/realtime`);
 
 let realtimeId: null | number = null;
 
@@ -84,7 +84,7 @@ class UI extends Effect.Service<UI>()("UI", {
             const client = yield* RpcClient.make(pkg.Rpcs).pipe(
               Effect.provide(
                 RpcClient.layerProtocolHttp({
-                  url: `${API_HOST}/package/${name}/rpc`,
+                  url: `http://${API_HOST}/package/${name}/rpc`,
                 }),
               ),
               Effect.provide(RpcSerialization.layerJson),
@@ -178,6 +178,29 @@ class UI extends Effect.Service<UI>()("UI", {
                   );
                 }),
               ),
+              tagType("NodeCreated", (data) =>
+                Effect.sync(() => {
+                  setData(
+                    produce((prev) => {
+                      const nodes = prev.graphs[data.graphId]?.nodes;
+                      if (!nodes) return;
+
+                      nodes.push({
+                        name: data.name,
+                        id: data.nodeId,
+                        inputs: data.inputs as DeepWriteable<
+                          typeof data.inputs
+                        >,
+                        outputs: data.outputs as DeepWriteable<
+                          typeof data.outputs
+                        >,
+                        position: data.position,
+                        schema: data.schema,
+                      });
+                    }),
+                  );
+                }),
+              ),
               Match.exhaustive,
             );
           }
@@ -208,12 +231,25 @@ class UI extends Effect.Service<UI>()("UI", {
           .pipe(Effect.runPromise);
         setData(
           produce((data) => {
-            const node = data.graphs[graphId].nodes.find(
+            const node = data.graphs[graphId]?.nodes.find(
               (n) => n.id === nodeId,
             );
             if (node) node.position = position;
           }),
         );
+      },
+      CreateNode: (schema: SchemaRef) => {
+        Effect.gen(function* () {
+          const resp = yield* rpcClient.CreateNode({ schema });
+
+          data.graphs[0]?.nodes.push({
+            schema,
+            id: resp.id,
+            position: { x: 0, y: 0 },
+            inputs: resp.io.inputs as DeepWriteable<typeof resp.io.inputs>,
+            outputs: resp.io.outputs as DeepWriteable<typeof resp.io.outputs>,
+          });
+        }).pipe(Effect.runPromise);
       },
     };
 
@@ -223,113 +259,146 @@ class UI extends Effect.Service<UI>()("UI", {
           path: "/",
           component: () => {
             return (
-              <div
-                class="relative flex-1 flex flex-col gap-4 items-start w-full touch-none"
-                onPointerMove={(e) => e.preventDefault()}
-              >
-                <pre class="text-sm">{JSON.stringify(data, null, 2)}</pre>
-                <Show when={data.graphs["0"]}>
-                  {(graph) => (
-                    <For each={graph().nodes}>
-                      {(node) => {
-                        const [position, setPosition] = createSignal<
-                          null | typeof node.position
-                        >(null);
+              <div class="flex flex-row">
+                <div
+                  class="relative flex-1 flex flex-col gap-4 items-start w-full touch-none"
+                  onPointerMove={(e) => e.preventDefault()}
+                >
+                  <Show when={data.graphs["0"]}>
+                    {(graph) => (
+                      <For each={graph().nodes}>
+                        {(node) => {
+                          const [position, setPosition] = createSignal<
+                            null | typeof node.position
+                          >(null);
 
-                        return (
-                          <Node
-                            {...node}
-                            position={position() ?? node.position}
-                            selected={selections().includes(node.id)}
-                          >
-                            <NodeHeader
-                              name={node.name}
-                              variant={node.variant}
-                              onPointerDown={(downEvent) => {
-                                if (downEvent.metaKey)
-                                  setSelections((s) => [...s, node.id]);
-                                else setSelections([node.id]);
+                          const schema = () =>
+                            data.packages[node.schema.pkgId]?.schemas[
+                              node.schema.schemaId
+                            ];
 
-                                const startPosition = {
-                                  x: node.position.x,
-                                  y: node.position.y,
-                                };
-                                const downPosition =
-                                  getGraphPosition(downEvent);
-                                setPosition(startPosition);
+                          return (
+                            <Show when={schema()}>
+                              {(schema) => (
+                                <Node
+                                  {...node}
+                                  position={position() ?? node.position}
+                                  selected={selections().includes(node.id)}
+                                >
+                                  <NodeHeader
+                                    name={node.name ?? schema().id}
+                                    variant={schema().type}
+                                    onPointerDown={(downEvent) => {
+                                      if (downEvent.metaKey)
+                                        setSelections((s) => [...s, node.id]);
+                                      else setSelections([node.id]);
 
-                                createRoot((dispose) => {
-                                  createEventListenerMap(window, {
-                                    pointermove: (moveEvent) => {
-                                      if (
-                                        downEvent.pointerId !==
-                                        moveEvent.pointerId
-                                      )
-                                        return;
-
-                                      moveEvent.preventDefault();
-
-                                      const movePosition =
-                                        getGraphPosition(moveEvent);
-
-                                      const position = {
-                                        x:
-                                          startPosition.x +
-                                          movePosition.x -
-                                          downPosition.x,
-                                        y:
-                                          startPosition.y +
-                                          movePosition.y -
-                                          downPosition.y,
+                                      const startPosition = {
+                                        x: node.position.x,
+                                        y: node.position.y,
                                       };
+                                      const downPosition =
+                                        getGraphPosition(downEvent);
+                                      setPosition(startPosition);
 
-                                      actions.SetNodePosition(
-                                        GraphId.make(0),
-                                        node.id,
-                                        position,
-                                      );
-                                      setPosition(position);
-                                    },
-                                    pointerup: (upEvent) => {
-                                      if (
-                                        downEvent.pointerId !==
-                                        upEvent.pointerId
-                                      )
-                                        return;
+                                      createRoot((dispose) => {
+                                        createEventListenerMap(window, {
+                                          pointermove: (moveEvent) => {
+                                            if (
+                                              downEvent.pointerId !==
+                                              moveEvent.pointerId
+                                            )
+                                              return;
 
-                                      const upPosition =
-                                        getGraphPosition(upEvent);
+                                            moveEvent.preventDefault();
 
-                                      const position = {
-                                        x:
-                                          startPosition.x +
-                                          upPosition.x -
-                                          downPosition.x,
-                                        y:
-                                          startPosition.y +
-                                          upPosition.y -
-                                          downPosition.y,
-                                      };
+                                            const movePosition =
+                                              getGraphPosition(moveEvent);
 
-                                      actions.SetNodePosition(
-                                        GraphId.make(0),
-                                        node.id,
-                                        position,
-                                      );
-                                      setPosition(null);
+                                            const position = {
+                                              x:
+                                                startPosition.x +
+                                                movePosition.x -
+                                                downPosition.x,
+                                              y:
+                                                startPosition.y +
+                                                movePosition.y -
+                                                downPosition.y,
+                                            };
 
-                                      dispose();
-                                    },
-                                  });
-                                });
-                              }}
-                            />
-                          </Node>
-                        );
-                      }}
-                    </For>
-                  )}
-                </Show>
+                                            actions.SetNodePosition(
+                                              GraphId.make(0),
+                                              node.id,
+                                              position,
+                                            );
+                                            setPosition(position);
+                                          },
+                                          pointerup: (upEvent) => {
+                                            if (
+                                              downEvent.pointerId !==
+                                              upEvent.pointerId
+                                            )
+                                              return;
+
+                                            const upPosition =
+                                              getGraphPosition(upEvent);
+
+                                            const position = {
+                                              x:
+                                                startPosition.x +
+                                                upPosition.x -
+                                                downPosition.x,
+                                              y:
+                                                startPosition.y +
+                                                upPosition.y -
+                                                downPosition.y,
+                                            };
+
+                                            actions.SetNodePosition(
+                                              GraphId.make(0),
+                                              node.id,
+                                              position,
+                                            );
+                                            setPosition(null);
+
+                                            dispose();
+                                          },
+                                        });
+                                      });
+                                    }}
+                                  />
+                                </Node>
+                              )}
+                            </Show>
+                          );
+                        }}
+                      </For>
+                    )}
+                  </Show>
+                </div>
+                <div class={cx("flex flex-col p-2")}>
+                  <For each={Object.entries(data.packages)}>
+                    {([pkgId, pkg]) => (
+                      <div class="py-1">
+                        <span class="font-bold">{pkgId}</span>
+                        <div>
+                          <For each={Object.entries(pkg.schemas)}>
+                            {([schemaId, schema]) => (
+                              <div
+                                class="px-1 py-0.5 rounded hover:bg-white/10"
+                                onClick={() => {
+                                  actions.CreateNode({ pkgId, schemaId });
+                                }}
+                              >
+                                {schemaId}
+                              </div>
+                            )}
+                          </For>
+                        </div>
+                      </div>
+                    )}
+                  </For>
+                </div>
               </div>
             );
           },
@@ -337,9 +406,7 @@ class UI extends Effect.Service<UI>()("UI", {
         {
           path: "/packages",
           children: [
-            {
-              path: "/",
-            },
+            { path: "/" },
             {
               path: "/:package",
               component: (props) => (
@@ -455,10 +522,3 @@ function sliceRequestUrl(request: HttpServerRequest, prefix: string) {
     url: request.url.length <= prefexLen ? "/" : request.url.slice(prefexLen),
   });
 }
-
-type DeepWriteable<T> =
-  T extends Brand.Brand<any>
-    ? T
-    : T extends object
-      ? { -readonly [P in keyof T]: DeepWriteable<T[P]> }
-      : T;

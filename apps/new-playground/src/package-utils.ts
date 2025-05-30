@@ -1,6 +1,7 @@
 import { Effect, Schema } from "effect";
+
 import { DataInputRef, DataOutputRef } from "./io";
-import { ExecutionContext } from "./runtime";
+import { ExecutionContext } from "./Runtime";
 
 export const getInput = <T extends Schema.Schema<any>>(ref: DataInputRef<T>) =>
   Effect.andThen(ExecutionContext, (ctx) => ctx.getInput(ref));

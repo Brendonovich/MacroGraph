@@ -5,7 +5,7 @@ import { GraphId } from "../Graph/data";
 import { XY } from "./data";
 import { Graphs } from "../Graph/rpc";
 import { RealtimePubSub } from "../Realtime/PubSub";
-import { Middleware } from "../Rpc/Middleware";
+import { RpcRealtimeMiddleware } from "../Rpc/Middleware";
 
 export const NodeRpcs = RpcGroup.make(
   Rpc.make("SetNodePosition", {
@@ -15,7 +15,7 @@ export const NodeRpcs = RpcGroup.make(
       position: XY,
     },
   }),
-).middleware(Middleware);
+).middleware(RpcRealtimeMiddleware);
 
 export const NodeRpcsLive = NodeRpcs.toLayer(
   Effect.gen(function* () {

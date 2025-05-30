@@ -100,7 +100,7 @@ importers:
         version: 0.14.3(solid-js@1.9.7)
       '@solidjs/start':
         specifier: 1.1.3
-        version: 1.1.3(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(jiti@2.4.2)(solid-js@1.9.7)(terser@5.39.0)(tsx@4.19.2)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(yaml@2.6.1)
+        version: 1.1.3(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(jiti@2.4.2)(solid-js@1.9.7)(terser@5.39.0)(tsx@4.19.2)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(yaml@2.6.1)
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.8.3)(zod@3.25.36)
@@ -130,7 +130,7 @@ importers:
         version: 0.37.0(typescript@5.8.3)
       vinxi:
         specifier: 0.5.6
-        version: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+        version: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       zod:
         specifier: ^3.25.36
         version: 3.25.36
@@ -171,6 +171,9 @@ importers:
       '@effect/experimental':
         specifier: ^0.46.1
         version: 0.46.1(@effect/platform@0.80.2(effect@3.14.2))(effect@3.14.2)(ioredis@5.6.1)
+      '@effect/opentelemetry':
+        specifier: ^0.50.3
+        version: 0.50.3(@effect/platform@0.80.2(effect@3.14.2))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.14.2)
       '@effect/platform':
         specifier: ^0.80.2
         version: 0.80.2(effect@3.14.2)
@@ -189,6 +192,24 @@ importers:
       '@macrograph/web-api':
         specifier: workspace:*
         version: link:../../packages/web-api
+      '@opentelemetry/exporter-trace-otlp-http':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-logs':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-web':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
       '@radix-ui/colors':
         specifier: ^3.0.0
         version: 3.0.0
@@ -328,7 +349,7 @@ importers:
         version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
       '@lucia-auth/adapter-drizzle':
         specifier: ^1.1.0
-        version: 1.1.0(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(lucia@3.2.2)
+        version: 1.1.0(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(lucia@3.2.2)
       '@macrograph/api-contract':
         specifier: workspace:*
         version: link:../../packages/api-contract
@@ -373,7 +394,7 @@ importers:
         version: 0.14.10(solid-js@1.9.7)
       '@solidjs/start':
         specifier: 1.0.6
-        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.40.2)(solid-js@1.9.7)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+        version: 1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.40.2)(solid-js@1.9.7)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.8.3)(zod@3.25.36)
@@ -400,7 +421,7 @@ importers:
         version: 16.4.7
       drizzle-orm:
         specifier: ^0.29.5
-        version: 0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)
+        version: 0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)
       effect:
         specifier: ^3.14.2
         version: 3.14.2
@@ -466,7 +487,7 @@ importers:
         version: 0.37.0(typescript@5.8.3)
       vinxi:
         specifier: 0.5.6
-        version: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+        version: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       vite:
         specifier: ^6.3.5
         version: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -2203,6 +2224,35 @@ packages:
   '@effect/language-service@0.17.1':
     resolution: {integrity: sha512-dA0DamelGlQtCppi8k4Bqq/Exr2L6anjtqzlj9Xf27eAyNdapvnqrwzDiQXMYD8zb4Xvul3gQuYBzvfFVz0baQ==}
 
+  '@effect/opentelemetry@0.50.3':
+    resolution: {integrity: sha512-5iB3feVG/okQkig5Nu/VMZ0bhdRBZ6CisILERQGYMWh/iIqNAEPbsqOq3Hxv0RmPUyNsbtTswTi9R0Xd51c01w==}
+    peerDependencies:
+      '@effect/platform': ^0.84.3
+      '@opentelemetry/api': ^1.9
+      '@opentelemetry/resources': ^2.0.0
+      '@opentelemetry/sdk-logs': '*'
+      '@opentelemetry/sdk-metrics': ^2.0.0
+      '@opentelemetry/sdk-trace-base': ^2.0.0
+      '@opentelemetry/sdk-trace-node': ^2.0.0
+      '@opentelemetry/sdk-trace-web': ^2.0.0
+      '@opentelemetry/semantic-conventions': ^1.33.0
+      effect: ^3.16.2
+    peerDependenciesMeta:
+      '@opentelemetry/api':
+        optional: true
+      '@opentelemetry/resources':
+        optional: true
+      '@opentelemetry/sdk-logs':
+        optional: true
+      '@opentelemetry/sdk-metrics':
+        optional: true
+      '@opentelemetry/sdk-trace-base':
+        optional: true
+      '@opentelemetry/sdk-trace-node':
+        optional: true
+      '@opentelemetry/sdk-trace-web':
+        optional: true
+
   '@effect/platform-browser@0.59.2':
     resolution: {integrity: sha512-oO1Qi6ZrIwh8MUbJrEA694ZyF6Y+zhbkOxPuOAFFTTMp7r7h/eHIo2j1LLDMRbycvyHMtyodYKme2Lx4VrdyLg==}
     peerDependencies:
@@ -3841,6 +3891,80 @@ packages:
     resolution: {integrity: sha512-BVwtWE3rRXB9IugmQTfKspqjNa8q+ab73ddkV9k1Zok3XbuOxJUi4lTYk5zBZDhfWb/Y2H+RO9Iggm25gsqeow==}
     engines: {node: '>= 18'}
 
+  '@opentelemetry/api-logs@0.201.1':
+    resolution: {integrity: sha512-IxcFDP1IGMDemVFG2by/AMK+/o6EuBQ8idUq3xZ6MxgQGeumYZuX5OwR0h9HuvcUc/JPjQGfU5OHKIKYDJcXeA==}
+    engines: {node: '>=8.0.0'}
+
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
+
+  '@opentelemetry/context-async-hooks@2.0.1':
+    resolution: {integrity: sha512-XuY23lSI3d4PEqKA+7SLtAgwqIfc6E/E9eAQWLN1vlpC53ybO3o6jW4BsXo1xvz9lYyyWItfQDDLzezER01mCw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/core@2.0.1':
+    resolution: {integrity: sha512-MaZk9SJIDgo1peKevlbhP6+IwIiNPNmswNL4AF0WaQJLbHXjr9SrZMgS12+iqr9ToV4ZVosCcc0f8Rg67LXjxw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/exporter-trace-otlp-http@0.201.1':
+    resolution: {integrity: sha512-Nw3pIqATC/9LfSGrMiQeeMQ7/z7W2D0wKPxtXwAcr7P64JW7KSH4YSX7Ji8Ti3MmB79NQg6imdagfegJDB0rng==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/otlp-exporter-base@0.201.1':
+    resolution: {integrity: sha512-FiS/mIWmZXyRxYGyXPHY+I/4+XrYVTD7Fz/zwOHkVPQsA1JTakAOP9fAi6trXMio0dIpzvQujLNiBqGM7ExrQw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/otlp-transformer@0.201.1':
+    resolution: {integrity: sha512-+q/8Yuhtu9QxCcjEAXEO8fXLjlSnrnVwfzi9jiWaMAppQp69MoagHHomQj02V2WnGjvBod5ajgkbK4IoWab50A==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/resources@2.0.1':
+    resolution: {integrity: sha512-dZOB3R6zvBwDKnHDTB4X1xtMArB/d324VsbiPkX/Yu0Q8T2xceRthoIVFhJdvgVM2QhGVUyX9tzwiNxGtoBJUw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.3.0 <1.10.0'
+
+  '@opentelemetry/sdk-logs@0.201.1':
+    resolution: {integrity: sha512-Ug8gtpssUNUnfpotB9ZhnSsPSGDu+7LngTMgKl31mmVJwLAKyl6jC8diZrMcGkSgBh0o5dbg9puvLyR25buZfw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.4.0 <1.10.0'
+
+  '@opentelemetry/sdk-metrics@2.0.1':
+    resolution: {integrity: sha512-wf8OaJoSnujMAHWR3g+/hGvNcsC16rf9s1So4JlMiFaFHiE4HpIA3oUh+uWZQ7CNuK8gVW/pQSkgoa5HkkOl0g==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.9.0 <1.10.0'
+
+  '@opentelemetry/sdk-trace-base@2.0.1':
+    resolution: {integrity: sha512-xYLlvk/xdScGx1aEqvxLwf6sXQLXCjk3/1SQT9X9AoN5rXRhkdvIFShuNNmtTEPRBqcsMbS4p/gJLNI2wXaDuQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.3.0 <1.10.0'
+
+  '@opentelemetry/sdk-trace-node@2.0.1':
+    resolution: {integrity: sha512-UhdbPF19pMpBtCWYP5lHbTogLWx9N0EBxtdagvkn5YtsAnCBZzL7SjktG+ZmupRgifsHMjwUaCCaVmqGfSADmA==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/sdk-trace-web@2.0.1':
+    resolution: {integrity: sha512-R4/i0rISvAujG4Zwk3s6ySyrWG+Db3SerZVM4jZ2lEzjrNylF7nRAy1hVvWe8gTbwIxX+6w6ZvZwdtl2C7UQHQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
   '@opentelemetry/semantic-conventions@1.34.0':
     resolution: {integrity: sha512-aKcOkyrorBGlajjRdVoJWHTxfxO1vCNHLJVlSDaRHDIdjU+pX8IYQPvPDkYiujKLbRnWU+1TBwEt0QRgSm4SGA==}
     engines: {node: '>=14'}
@@ -4054,6 +4178,36 @@ packages:
   '@poppinss/exception@1.2.1':
     resolution: {integrity: sha512-aQypoot0HPSJa6gDPEPTntc1GT6QINrSbgRlRhadGW2WaYqUK3tK4Bw9SBMZXhmxd3GeAlZjVcODHgiu+THY7A==}
     engines: {node: '>=18'}
+
+  '@protobufjs/aspromise@1.1.2':
+    resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
+
+  '@protobufjs/base64@1.1.2':
+    resolution: {integrity: sha512-AZkcAA5vnN/v4PDqKyMR5lx7hZttPDgClv83E//FMNhR2TMcLUhfRUBHCmSl0oi9zMgDDqRUJkSxO3wm85+XLg==}
+
+  '@protobufjs/codegen@2.0.4':
+    resolution: {integrity: sha512-YyFaikqM5sH0ziFZCN3xDC7zeGaB/d0IUb9CATugHWbd1FRFwWwt4ld4OYMPWu5a3Xe01mGAULCdqhMlPl29Jg==}
+
+  '@protobufjs/eventemitter@1.1.0':
+    resolution: {integrity: sha512-j9ednRT81vYJ9OfVuXG6ERSTdEL1xVsNgqpkxMsbIabzSo3goCjDIveeGv5d03om39ML71RdmrGNjG5SReBP/Q==}
+
+  '@protobufjs/fetch@1.1.0':
+    resolution: {integrity: sha512-lljVXpqXebpsijW71PZaCYeIcE5on1w5DlQy5WH6GLbFryLUrBD4932W/E2BSpfRJWseIL4v/KPgBFxDOIdKpQ==}
+
+  '@protobufjs/float@1.0.2':
+    resolution: {integrity: sha512-Ddb+kVXlXst9d+R9PfTIxh1EdNkgoRe5tOX6t01f1lYWOvJnSPDBlG241QLzcyPdoNTsblLUdujGSE4RzrTZGQ==}
+
+  '@protobufjs/inquire@1.1.0':
+    resolution: {integrity: sha512-kdSefcPdruJiFMVSbn801t4vFK7KB/5gd2fYvrxhuJYg8ILrmn9SKSX2tZdV6V+ksulWqS7aXjBcRXl3wHoD9Q==}
+
+  '@protobufjs/path@1.1.2':
+    resolution: {integrity: sha512-6JOcJ5Tm08dOHAbdR3GrvP+yUUfkjG5ePsHYczMFLq3ZmMkAD98cDgcT2iA1lJ9NVwFd4tH/iSSoe44YWkltEA==}
+
+  '@protobufjs/pool@1.1.0':
+    resolution: {integrity: sha512-0kELaGSIDBKvcgS4zkjz1PeddatrjYcmMWOlAuAPwAeccUrPHdUqo/J6LiymHHEiJT5NrF1UVwxY14f+fy4WQw==}
+
+  '@protobufjs/utf8@1.1.0':
+    resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
   '@puppeteer/browsers@1.4.6':
     resolution: {integrity: sha512-x4BEjr2SjOPowNeiguzjozQbsc6h437ovD/wu+JpaenxVLm3jkgzHY2xOslMTp50HoTvQreMjiexiGQw1sqZlQ==}
@@ -8210,6 +8364,9 @@ packages:
     resolution: {integrity: sha512-hP3I3kCrDIMuRwAwHltphhDM1r8i55H33GgqjXbrisuJhF4kRhW1dNuxsRklp4bXl8DSdLaNLuiL4A/LWRfxvg==}
     engines: {node: '>= 0.6.0'}
 
+  long@5.3.2:
+    resolution: {integrity: sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==}
+
   longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
 
@@ -9304,6 +9461,10 @@ packages:
 
   property-information@7.1.0:
     resolution: {integrity: sha512-TwEZ+X+yCJmYfL7TPUOcvBZ4QfoT5YenQiJuX//0th53DE6w0xxLEtfK3iyryQFddXuvkIk51EEgrJQ0WJkOmQ==}
+
+  protobufjs@7.5.3:
+    resolution: {integrity: sha512-sildjKwVqOI2kmFDiXQ6aEB0fjYTafpEvIBs8tOR8qI4spuL9OPROLVu2qZqi/xgCfsHIwVqlaF8JBjWFHnKbw==}
+    engines: {node: '>=12.0.0'}
 
   proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
@@ -12757,6 +12918,20 @@ snapshots:
 
   '@effect/language-service@0.17.1': {}
 
+  '@effect/opentelemetry@0.50.3(@effect/platform@0.80.2(effect@3.14.2))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.14.2)':
+    dependencies:
+      '@effect/platform': 0.80.2(effect@3.14.2)
+      '@opentelemetry/semantic-conventions': 1.34.0
+      effect: 3.14.2
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-logs': 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-web': 2.0.1(@opentelemetry/api@1.9.0)
+
   '@effect/platform-browser@0.59.2(@effect/platform@0.80.2(effect@3.14.2))(effect@3.14.2)':
     dependencies:
       '@effect/platform': 0.80.2(effect@3.14.2)
@@ -13509,9 +13684,9 @@ snapshots:
       '@solid-primitives/utils': 6.2.3(solid-js@1.9.7)
       solid-js: 1.9.7
 
-  '@lucia-auth/adapter-drizzle@1.1.0(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(lucia@3.2.2)':
+  '@lucia-auth/adapter-drizzle@1.1.0(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(lucia@3.2.2)':
     dependencies:
-      drizzle-orm: 0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)
+      drizzle-orm: 0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)
       lucia: 3.2.2
 
   '@mapbox/node-pre-gyp@1.0.11':
@@ -14076,6 +14251,86 @@ snapshots:
       '@octokit/webhooks-types': 7.6.1
       aggregate-error: 3.1.0
 
+  '@opentelemetry/api-logs@0.201.1':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+
+  '@opentelemetry/api@1.9.0': {}
+
+  '@opentelemetry/context-async-hooks@2.0.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+
+  '@opentelemetry/core@2.0.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/semantic-conventions': 1.34.0
+
+  '@opentelemetry/exporter-trace-otlp-http@0.201.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/otlp-exporter-base': 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/otlp-transformer': 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
+
+  '@opentelemetry/otlp-exporter-base@0.201.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/otlp-transformer': 0.201.1(@opentelemetry/api@1.9.0)
+
+  '@opentelemetry/otlp-transformer@0.201.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/api-logs': 0.201.1
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-logs': 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
+      protobufjs: 7.5.3
+
+  '@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/semantic-conventions': 1.34.0
+
+  '@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/api-logs': 0.201.1
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
+
+  '@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
+
+  '@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/semantic-conventions': 1.34.0
+
+  '@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/context-async-hooks': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
+
+  '@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
+
   '@opentelemetry/semantic-conventions@1.34.0': {}
 
   '@oslojs/asn1@1.0.0':
@@ -14239,6 +14494,29 @@ snapshots:
       supports-color: 10.0.0
 
   '@poppinss/exception@1.2.1': {}
+
+  '@protobufjs/aspromise@1.1.2': {}
+
+  '@protobufjs/base64@1.1.2': {}
+
+  '@protobufjs/codegen@2.0.4': {}
+
+  '@protobufjs/eventemitter@1.1.0': {}
+
+  '@protobufjs/fetch@1.1.0':
+    dependencies:
+      '@protobufjs/aspromise': 1.1.2
+      '@protobufjs/inquire': 1.1.0
+
+  '@protobufjs/float@1.0.2': {}
+
+  '@protobufjs/inquire@1.1.0': {}
+
+  '@protobufjs/path@1.1.2': {}
+
+  '@protobufjs/pool@1.1.0': {}
+
+  '@protobufjs/utf8@1.1.0': {}
 
   '@puppeteer/browsers@1.4.6(typescript@5.5.3)':
     dependencies:
@@ -14740,11 +15018,11 @@ snapshots:
     dependencies:
       solid-js: 1.9.7
 
-  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.40.2)(solid-js@1.9.7)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@solidjs/start@1.0.6(@testing-library/jest-dom@6.4.8)(rollup@4.40.2)(solid-js@1.9.7)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      '@vinxi/server-components': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      '@vinxi/server-functions': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/plugin-directives': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/server-components': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/server-functions': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       glob: 10.4.5
@@ -14766,11 +15044,11 @@ snapshots:
       - vinxi
       - vite
 
-  '@solidjs/start@1.1.3(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(jiti@2.4.2)(solid-js@1.9.7)(terser@5.39.0)(tsx@4.19.2)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(yaml@2.6.1)':
+  '@solidjs/start@1.1.3(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(jiti@2.4.2)(solid-js@1.9.7)(terser@5.39.0)(tsx@4.19.2)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(yaml@2.6.1)':
     dependencies:
       '@tanstack/server-functions-plugin': 1.119.2(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
-      '@vinxi/plugin-directives': 0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      '@vinxi/server-components': 0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/plugin-directives': 0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/server-components': 0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       defu: 6.1.4
       error-stack-parser: 2.1.4
       html-to-image: 1.11.11
@@ -14781,7 +15059,7 @@ snapshots:
       source-map-js: 1.2.1
       terracotta: 1.0.6(solid-js@1.9.7)
       tinyglobby: 0.2.13
-      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       vite-plugin-solid: 2.11.6(@testing-library/jest-dom@6.4.8)(solid-js@1.9.7)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
     transitivePeerDependencies:
       - '@testing-library/jest-dom'
@@ -15816,7 +16094,7 @@ snapshots:
       untun: 0.1.3
       uqr: 0.1.2
 
-  '@vinxi/plugin-directives@0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@vinxi/plugin-directives@0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       '@babel/parser': 7.26.3
       acorn: 8.14.0
@@ -15827,9 +16105,9 @@ snapshots:
       magicast: 0.2.11
       recast: 0.23.9
       tslib: 2.8.1
-      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
 
-  '@vinxi/plugin-directives@0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@vinxi/plugin-directives@0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       '@babel/parser': 7.27.2
       acorn: 8.14.1
@@ -15840,7 +16118,7 @@ snapshots:
       magicast: 0.2.11
       recast: 0.23.9
       tslib: 2.8.1
-      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
 
   '@vinxi/plugin-mdx@3.7.2(@mdx-js/mdx@2.3.0)':
     dependencies:
@@ -15851,38 +16129,38 @@ snapshots:
       unified: 9.2.2
       vfile: 5.3.7
 
-  '@vinxi/server-components@0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@vinxi/server-components@0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/plugin-directives': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       acorn: 8.14.0
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.14.0)
       astring: 1.9.0
       magicast: 0.2.11
       recast: 0.23.9
-      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
 
-  '@vinxi/server-components@0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@vinxi/server-components@0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@vinxi/plugin-directives': 0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/plugin-directives': 0.5.1(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       acorn: 8.14.1
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.14.1)
       astring: 1.9.0
       magicast: 0.2.11
       recast: 0.23.9
-      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
 
-  '@vinxi/server-functions@0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@vinxi/server-functions@0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@vinxi/plugin-directives': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@vinxi/plugin-directives': 0.4.3(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       acorn: 8.14.0
       acorn-loose: 8.4.0
       acorn-typescript: 1.4.13(acorn@8.14.0)
       astring: 1.9.0
       magicast: 0.2.11
       recast: 0.23.9
-      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vinxi: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
 
   '@vitest/browser@0.32.4(rollup@4.40.2)(vitest@2.0.5)':
     dependencies:
@@ -17010,9 +17288,9 @@ snapshots:
 
   dayjs@1.11.10: {}
 
-  db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)):
+  db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)):
     optionalDependencies:
-      drizzle-orm: 0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)
+      drizzle-orm: 0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)
 
   debug@2.6.9:
     dependencies:
@@ -17286,8 +17564,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0):
+  drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0):
     optionalDependencies:
+      '@opentelemetry/api': 1.9.0
       '@planetscale/database': 1.19.0
       '@types/react': 18.2.73
       pg: 8.13.1
@@ -19054,6 +19333,8 @@ snapshots:
 
   loglevel@1.9.1: {}
 
+  long@5.3.2: {}
+
   longest-streak@3.1.0: {}
 
   loose-envify@1.4.0:
@@ -19720,7 +20001,7 @@ snapshots:
 
   next-tick@1.1.0: {}
 
-  nitropack@2.11.11(@planetscale/database@1.19.0)(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)):
+  nitropack@2.11.11(@planetscale/database@1.19.0)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@netlify/functions': 3.1.8(rollup@4.40.2)
@@ -19742,7 +20023,7 @@ snapshots:
       cookie-es: 2.0.0
       croner: 9.0.0
       crossws: 0.3.5
-      db0: 0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))
+      db0: 0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))
       defu: 6.1.4
       destr: 2.0.5
       dot-prop: 9.0.0
@@ -19788,7 +20069,7 @@ snapshots:
       unenv: 2.0.0-rc.15
       unimport: 5.0.1
       unplugin-utils: 0.2.4
-      unstorage: 1.16.0(@planetscale/database@1.19.0)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(ioredis@5.6.1)
+      unstorage: 1.16.0(@planetscale/database@1.19.0)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(ioredis@5.6.1)
       untyped: 2.0.0
       unwasm: 0.3.9
       youch: 4.1.0-beta.7
@@ -20430,6 +20711,21 @@ snapshots:
   property-information@6.5.0: {}
 
   property-information@7.1.0: {}
+
+  protobufjs@7.5.3:
+    dependencies:
+      '@protobufjs/aspromise': 1.1.2
+      '@protobufjs/base64': 1.1.2
+      '@protobufjs/codegen': 2.0.4
+      '@protobufjs/eventemitter': 1.1.0
+      '@protobufjs/fetch': 1.1.0
+      '@protobufjs/float': 1.0.2
+      '@protobufjs/inquire': 1.1.0
+      '@protobufjs/path': 1.1.2
+      '@protobufjs/pool': 1.1.0
+      '@protobufjs/utf8': 1.1.0
+      '@types/node': 22.10.2
+      long: 5.3.2
 
   proxy-addr@2.0.7:
     dependencies:
@@ -22102,7 +22398,7 @@ snapshots:
       '@planetscale/database': 1.19.0
       ioredis: 5.6.1
 
-  unstorage@1.16.0(@planetscale/database@1.19.0)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(ioredis@5.6.1):
+  unstorage@1.16.0(@planetscale/database@1.19.0)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(ioredis@5.6.1):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
@@ -22114,7 +22410,7 @@ snapshots:
       ufo: 1.6.1
     optionalDependencies:
       '@planetscale/database': 1.19.0
-      db0: 0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))
+      db0: 0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))
       ioredis: 5.6.1
 
   untildify@4.0.0: {}
@@ -22262,7 +22558,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.2
 
-  vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
+  vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
     dependencies:
       '@babel/core': 7.27.1
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.27.1)
@@ -22284,7 +22580,7 @@ snapshots:
       hookable: 5.5.3
       http-proxy: 1.18.1
       micromatch: 4.0.8
-      nitropack: 2.11.11(@planetscale/database@1.19.0)(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))
+      nitropack: 2.11.11(@planetscale/database@1.19.0)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))
       node-fetch-native: 1.6.6
       path-to-regexp: 6.3.0
       pathe: 1.1.2
@@ -22295,7 +22591,7 @@ snapshots:
       ufo: 1.6.1
       unctx: 2.4.1
       unenv: 1.10.0
-      unstorage: 1.16.0(@planetscale/database@1.19.0)(db0@0.3.2(drizzle-orm@0.29.5(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(ioredis@5.6.1)
+      unstorage: 1.16.0(@planetscale/database@1.19.0)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(ioredis@5.6.1)
       vite: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       zod: 3.25.36
     transitivePeerDependencies:

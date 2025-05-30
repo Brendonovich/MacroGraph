@@ -7,10 +7,8 @@ type NodeVariant = "event" | "base" | "exec" | "pure";
 
 export function Node(
   props: ParentProps<{
-    name: string;
-    variant: NodeVariant;
-    inputs: Array<{ name: string; type: DataType }>;
-    outputs: Array<{ name: string; type: DataType }>;
+    // inputs: Array<{ name: string; type: DataType }>;
+    // outputs: Array<{ name: string; type: DataType }>;
     position: { x: number; y: number };
     selected?: boolean;
   }>,
@@ -28,7 +26,7 @@ export function Node(
     >
       {props.children}
       <div class="flex flex-row gap-2 text-xs text-sm">
-        <div class="px-1.5 py-2 flex flex-col gap-2.5 items-start">
+        {/* <div class="px-1.5 py-2 flex flex-col gap-2.5 items-start">
           <For each={props.inputs}>
             {(input) => (
               <div class="flex flex-row items-center space-x-1.5 h-4.5">
@@ -57,7 +55,7 @@ export function Node(
               </div>
             )}
           </For>
-        </div>
+        </div> */}
       </div>
     </div>
   );

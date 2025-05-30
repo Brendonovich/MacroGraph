@@ -1,13 +1,11 @@
 import { Rpc, RpcGroup, RpcSerialization } from "@effect/rpc";
 import { Schema as S } from "effect";
-import { NodeNotFound, SchemaNotFound } from "./errors";
-import { Graph, GraphId } from "./domain/Graph/data";
-import { NodeId } from "./domain/Node/data";
 
-export const SchemaRef = S.Struct({
-  pkgId: S.String,
-  schemaId: S.String,
-});
+import { SchemaNotFound } from "./errors";
+import { Graph, GraphId } from "./domain/Graph/data";
+import { NodeId, NodeVariant } from "./domain/Node/data";
+import { RpcRealtimeMiddleware } from "./domain/Rpc/Middleware";
+import { SchemaRef } from "./domain/Package/data";
 
 export const IORef = S.Struct({
   nodeId: S.Int,
@@ -64,19 +62,44 @@ export const ProjectEvent = S.Union(
     nodeId: NodeId,
     position: XY,
   }),
+  S.extend(
+    S.Struct({
+      type: S.Literal("NodeCreated"),
+      name: S.optional(S.String),
+      graphId: GraphId,
+      nodeId: NodeId,
+      schema: SchemaRef,
+      position: XY,
+    }),
+    NodeIO,
+  ),
 );
 
+const SchemaMeta = S.Struct({
+  id: S.String,
+  type: S.Union(S.Literal("exec"), S.Literal("pure"), S.Literal("event")),
+});
+export type SchemaMeta = S.Schema.Type<typeof SchemaMeta>;
+
+const PackageMeta = S.Struct({
+  schemas: S.Record({
+    key: S.String,
+    value: SchemaMeta,
+  }),
+});
+export type PackageMeta = S.Schema.Type<typeof PackageMeta>;
+
 export const Rpcs = RpcGroup.make(
-  // Rpc.make("CreateNode", {
-  //   payload: S.Struct({
-  //     schema: SchemaRef,
-  //   }),
-  //   success: S.Struct({
-  //     id: S.Int,
-  //     io: NodeIO,
-  //   }),
-  //   error: S.Union(SchemaNotFound),
-  // }),
+  Rpc.make("CreateNode", {
+    payload: S.Struct({
+      schema: SchemaRef,
+    }),
+    success: S.Struct({
+      id: NodeId,
+      io: NodeIO,
+    }),
+    error: S.Union(SchemaNotFound),
+  }),
   // Rpc.make("ConnectIO", {
   //   payload: S.Struct({
   //     output: IORef,
@@ -88,6 +111,7 @@ export const Rpcs = RpcGroup.make(
     success: S.Struct({
       name: S.String,
       graphs: S.Record({ key: S.String, value: Graph }),
+      packages: S.Record({ key: S.String, value: PackageMeta }),
     }),
   }),
   // Rpc.make("Events", {
@@ -98,6 +122,6 @@ export const Rpcs = RpcGroup.make(
     payload: S.Struct({ package: S.String }),
     success: S.Any,
   }),
-);
+).middleware(RpcRealtimeMiddleware);
 
 export const RpcsSerialization = RpcSerialization.layerJson;
