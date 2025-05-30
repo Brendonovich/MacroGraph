@@ -141,7 +141,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
           catch: () => new HttpApiError.InternalServerError(),
         });
 
-        console.log("getUser session", user);
+        console.log("getUser user", user);
 
         return user ?? null;
       }),
