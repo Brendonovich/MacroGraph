@@ -19,6 +19,10 @@ export type PostHogEvent = {
   };
 };
 
+export function posthogIdentify(userId: string, properties: { email: string }) {
+  return posthogServer.identify({ distinctId: userId, properties });
+}
+
 export function posthogCapture<T extends keyof PostHogEvent>(
   props: Omit<EventMessage, "event" | "properties"> & {
     event: T;

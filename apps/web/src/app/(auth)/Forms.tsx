@@ -10,7 +10,11 @@ import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import { CREDENTIALS, IS_LOGGED_IN } from "./utils";
-import { posthogCapture, posthogShutdown } from "~/posthog/server";
+import {
+  posthogCapture,
+  posthogIdentify,
+  posthogShutdown,
+} from "~/posthog/server";
 
 async function createSession(userId: string) {
   "use server";
@@ -45,6 +49,7 @@ const signUpAction = action(async (form: FormData) => {
       hashedPassword,
     });
 
+    posthogIdentify(userId, { email: data.email });
     posthogCapture({
       distinctId: userId,
       event: "user signed up",
