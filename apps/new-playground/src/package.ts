@@ -1,7 +1,7 @@
 import { Context, Data, Effect, Layer, Option, Schema } from "effect";
 import { CREDENTIAL } from "@macrograph/web-api";
 
-import { NodeRuntime } from "./runtime";
+import { NodeRuntime } from "./Runtime";
 import { NodeSchema, SchemaDefinition } from "./schema";
 import { Rpc, RpcGroup } from "@effect/rpc";
 
@@ -54,15 +54,19 @@ export type PackageBuildReturn<
   TState extends Schema.Schema<any>,
 > = {
   engine: PackageEngine.PackageEngine;
-  rpc: {
-    group: RpcGroup.RpcGroup<TRpcs>;
-    layer: Layer.Layer<Rpc.ToHandler<TRpcs>>;
-  };
-  state: {
-    schema: TState;
-    get: Effect.Effect<TState["Encoded"]>;
-  };
-};
+} & (
+  | {
+      rpc: {
+        group: RpcGroup.RpcGroup<TRpcs>;
+        layer: Layer.Layer<Rpc.ToHandler<TRpcs>>;
+      };
+      state: {
+        schema: TState;
+        get: Effect.Effect<TState["Encoded"]>;
+      };
+    }
+  | { rpc?: undefined; state?: undefined }
+);
 
 export class CredentialsFetchFailed extends Schema.TaggedError<CredentialsFetchFailed>()(
   "CredentialsFetchFailed",

@@ -189,6 +189,12 @@ importers:
       '@effect/rpc-http':
         specifier: ^0.52.4
         version: 0.52.4(@effect/platform@0.80.2(effect@3.14.2))(effect@3.14.2)
+      '@faker-js/faker':
+        specifier: ^9.8.0
+        version: 9.8.0
+      '@kobalte/core':
+        specifier: ^0.13.7
+        version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
       '@macrograph/web-api':
         specifier: workspace:*
         version: link:../../packages/web-api
@@ -213,9 +219,24 @@ importers:
       '@radix-ui/colors':
         specifier: ^3.0.0
         version: 3.0.0
+      '@solid-primitives/bounds':
+        specifier: ^0.0.118
+        version: 0.0.118(solid-js@1.9.7)
       '@solid-primitives/event-listener':
         specifier: ^2.3.3
         version: 2.3.3(solid-js@1.9.7)
+      '@solid-primitives/map':
+        specifier: ^0.4.11
+        version: 0.4.13(solid-js@1.9.7)
+      '@solid-primitives/mouse':
+        specifier: ^2.0.19
+        version: 2.0.19(solid-js@1.9.7)
+      '@solid-primitives/platform':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.7)
+      '@solid-primitives/refs':
+        specifier: ^1.0.8
+        version: 1.0.8(solid-js@1.9.7)
       '@solid-primitives/resource':
         specifier: ^0.1.2
         version: 0.1.2(solid-js@1.9.7)
@@ -246,12 +267,12 @@ importers:
       solid-presence:
         specifier: ^0.2.0
         version: 0.2.0(solid-js@1.9.7)
+      unocss-preset-primitives:
+        specifier: 0.0.2-beta.1
+        version: 0.0.2-beta.1
       unocss-preset-radix:
         specifier: ^2.8.2
         version: 2.8.2
-      unplugin-icons:
-        specifier: ^0.18.5
-        version: 0.18.5(@vue/compiler-sfc@3.5.13)
       vite-plugin-solid:
         specifier: ^2.10.2
         version: 2.11.0(@testing-library/jest-dom@6.4.8)(solid-js@1.9.7)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
@@ -265,6 +286,12 @@ importers:
       '@iconify-json/gg':
         specifier: ^1.0.0
         version: 1.2.2
+      '@iconify-json/line-md':
+        specifier: ^1.2.8
+        version: 1.2.8
+      '@iconify-json/lucide':
+        specifier: ^1.2.32
+        version: 1.2.32
       '@iconify-json/svg-spinners':
         specifier: ^1.2.2
         version: 1.2.2
@@ -277,6 +304,12 @@ importers:
       unocss-preset-animations:
         specifier: ^1.2.1
         version: 1.2.1(@unocss/preset-wind3@66.1.1)(unocss@66.1.1(postcss@8.5.3)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.3)))
+      unplugin-auto-import:
+        specifier: ^19.3.0
+        version: 19.3.0
+      unplugin-icons:
+        specifier: ^0.18.5
+        version: 0.18.5(@vue/compiler-sfc@3.5.13)
       vite:
         specifier: ^6.3.5
         version: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -3317,6 +3350,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@faker-js/faker@9.8.0':
+    resolution: {integrity: sha512-U9wpuSrJC93jZBxx/Qq2wPjCuYISBueyVUGK7qqdmj7r/nxaxwW8AQDCLeRO7wZnjj94sh3p246cAYjUKuqgfg==}
+    engines: {node: '>=18.0.0', npm: '>=9.0.0'}
+
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
@@ -3359,6 +3396,12 @@ packages:
 
   '@iconify-json/gg@1.2.2':
     resolution: {integrity: sha512-8iQh8+Tdb/0jakNYy0+t2GVubjhbaJbuYoPsRhFw8IAs00IQV2BjE9GoB2kGF/UObaJCqvCelB3qRaUdizkrmg==}
+
+  '@iconify-json/line-md@1.2.8':
+    resolution: {integrity: sha512-jWFsu6OZ1xAd4U0MLc/dgawC8nCbSn+a+WjTv+luiihpb6rrGLMw+Vy3wQ01hGf77v+fwt8sTvwm6K9zN3r4vQ==}
+
+  '@iconify-json/lucide@1.2.32':
+    resolution: {integrity: sha512-M5efeHQJhlT8FkAXjW+xGu5/lHUt5VBSjd/u9XxmQy6RGXLRCRi0PcUBosAuKALRT15j+U8dN4eWiDhDZjTbSw==}
 
   '@iconify-json/svg-spinners@1.2.2':
     resolution: {integrity: sha512-DIErwfBWWzLfmAG2oQnbUOSqZhDxlXvr8941itMCrxQoMB0Hiv8Ww6Bln/zIgxwjDvSem2dKJtap+yKKwsB/2A==}
@@ -4868,10 +4911,10 @@ packages:
       react-dom:
         optional: true
 
-  '@storybook/builder-vite@9.1.0-alpha.1':
-    resolution: {integrity: sha512-vjse+cpKwAiFxbdhrI1YsscjnUbenQdz3InJkecKzsb6kN4OGsHLhRv9g3Fi+Fgh93lwB53WFBtPUprPmtgXnA==}
+  '@storybook/builder-vite@9.1.0-alpha.2':
+    resolution: {integrity: sha512-N4RdEjLptun71RH/h4vQA551SKRtr+gyQGx5sVCyamdE52QRPnDOyoM5Kj1IOqTtqLPjYV4D7c0WV2mDIDYazg==}
     peerDependencies:
-      storybook: ^9.1.0-alpha.1
+      storybook: ^9.1.0-alpha.2
       vite: ^5.0.0 || ^6.0.0
 
   '@storybook/codemod@8.2.7':
@@ -4885,10 +4928,10 @@ packages:
     peerDependencies:
       storybook: ^8.2.7
 
-  '@storybook/csf-plugin@9.1.0-alpha.1':
-    resolution: {integrity: sha512-jOwlTNJNhsaYBAXl5j4Ff7fGyi2LYau41A42SZeBU2RUhPNUWoe4CWREIip3+xRVXUnhaF4qqBLUN/jYgpbIlA==}
+  '@storybook/csf-plugin@9.1.0-alpha.2':
+    resolution: {integrity: sha512-h2zb2J9lst1QMphSDpv3exNyw8fq4w8krV0aNJ+42E/GfHs11jI2zO4aamMCacWl0wSHSDeJaVxFUgXbZbLGcA==}
     peerDependencies:
-      storybook: ^9.1.0-alpha.1
+      storybook: ^9.1.0-alpha.2
 
   '@storybook/csf@0.1.11':
     resolution: {integrity: sha512-dHYFQH3mA+EtnCkHXzicbLgsvzYjcDJ1JWsogbItZogkPHgSJM/Wr71uMkcvw8v9mmCyP4NpXJuu6bPoVsOnzg==}
@@ -5393,6 +5436,9 @@ packages:
   '@unocss/config@66.1.1':
     resolution: {integrity: sha512-Fg4sRw5dncNHxh/SM6guRzAveBI1FErw2ncb70Qe0LzCY7+IfUqrOBep/HIHP7NA1Mcj2JxHlM61ITLqrcYKpw==}
     engines: {node: '>=14'}
+
+  '@unocss/core@0.61.9':
+    resolution: {integrity: sha512-2W1YZQIWXcueGdbXU/ZCqn/8yQhWk8e8kAHFkVlbc9rictkd2UmPB9nIZ8Ii1tMwt6F0TT6vfHbLJEGCV08o2g==}
 
   '@unocss/core@65.5.0':
     resolution: {integrity: sha512-XYWdS09M2XOjZNDotGhI2TIW/6duLNiyssopwjCbv4AlPklF0bZI86SKI55syYDBt6GRadoQbuvUkhSiTV/hzQ==}
@@ -10637,6 +10683,10 @@ packages:
   unimport@3.7.1:
     resolution: {integrity: sha512-V9HpXYfsZye5bPPYUgs0Otn3ODS1mDUciaBlXljI4C2fTwfFpvFZRywmlOu943puN9sncxROMZhsZCjNXEpzEQ==}
 
+  unimport@4.2.0:
+    resolution: {integrity: sha512-mYVtA0nmzrysnYnyb3ALMbByJ+Maosee2+WyE0puXl+Xm2bUwPorPaaeZt0ETfuroPOtG8jj1g/qeFZ6buFnag==}
+    engines: {node: '>=18.12.0'}
+
   unimport@5.0.1:
     resolution: {integrity: sha512-1YWzPj6wYhtwHE+9LxRlyqP4DiRrhGfJxdtH475im8ktyZXO3jHj/3PZ97zDdvkYoovFdi0K4SKl3a7l92v3sQ==}
     engines: {node: '>=18.12.0'}
@@ -10717,6 +10767,9 @@ packages:
       '@unocss/preset-wind3':
         optional: true
 
+  unocss-preset-primitives@0.0.2-beta.1:
+    resolution: {integrity: sha512-bGNUK8G1V720gPe0ToOKEeMQqgJsDIBz6IuSRDQNBVBvWVx/OzXtsn6hjkKlhw/TjROSawaxpwcULRoPAZ5Gvg==}
+
   unocss-preset-radix@2.8.2:
     resolution: {integrity: sha512-jesFnI0ux+Mc5nQYjdKZyKm+6jfL/02MjWcaYwk7oaog0G/sHpDrhiOB/XFw++t0PnQMuYs6CcZxtP1g2JLuhg==}
 
@@ -10750,6 +10803,18 @@ packages:
 
   unplugin-auto-import@0.17.8:
     resolution: {integrity: sha512-CHryj6HzJ+n4ASjzwHruD8arhbdl+UXvhuAIlHDs15Y/IMecG3wrf7FVg4pVH/DIysbq/n0phIjNHAjl7TG7Iw==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@nuxt/kit': ^3.2.2
+      '@vueuse/core': '*'
+    peerDependenciesMeta:
+      '@nuxt/kit':
+        optional: true
+      '@vueuse/core':
+        optional: true
+
+  unplugin-auto-import@19.3.0:
+    resolution: {integrity: sha512-iIi0u4Gq2uGkAOGqlPJOAMI8vocvjh1clGTfSK4SOrJKrt+tirrixo/FjgBwXQNNdS7ofcr7OxzmOb/RjWxeEQ==}
     engines: {node: '>=14'}
     peerDependencies:
       '@nuxt/kit': ^3.2.2
@@ -10811,6 +10876,10 @@ packages:
 
   unplugin@2.3.2:
     resolution: {integrity: sha512-3n7YA46rROb3zSj8fFxtxC/PqoyvYQ0llwz9wtUPUutr9ig09C8gGo5CWCwHrUzlqC1LLR43kxp5vEIyH1ac1w==}
+    engines: {node: '>=18.12.0'}
+
+  unplugin@2.3.5:
+    resolution: {integrity: sha512-RyWSb5AHmGtjjNQ6gIlA67sHOsWpsbWpwDokLwTcejVdOjEkJZh7QKu14J00gDDVSh8kGH4KYC/TNBceXFZhtw==}
     engines: {node: '>=18.12.0'}
 
   unstorage@1.13.1:
@@ -13518,6 +13587,8 @@ snapshots:
   '@esbuild/win32-x64@0.25.4':
     optional: true
 
+  '@faker-js/faker@9.8.0': {}
+
   '@fastify/busboy@2.1.1': {}
 
   '@fastify/busboy@3.1.1': {}
@@ -13554,6 +13625,14 @@ snapshots:
       zod: 3.25.36
 
   '@iconify-json/gg@1.2.2':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/line-md@1.2.8':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/lucide@1.2.32':
     dependencies:
       '@iconify/types': 2.0.0
 
@@ -15212,9 +15291,9 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
 
-  '@storybook/builder-vite@9.1.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/builder-vite@9.1.0-alpha.2(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@storybook/csf-plugin': 9.1.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
+      '@storybook/csf-plugin': 9.1.0-alpha.2(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
       ts-dedent: 2.2.0
       vite: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -15262,7 +15341,7 @@ snapshots:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
       unplugin: 1.16.0
 
-  '@storybook/csf-plugin@9.1.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))':
+  '@storybook/csf-plugin@9.1.0-alpha.2(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))':
     dependencies:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
       unplugin: 1.16.1
@@ -15907,6 +15986,8 @@ snapshots:
     dependencies:
       '@unocss/core': 66.1.1
       unconfig: 7.3.2
+
+  '@unocss/core@0.61.9': {}
 
   '@unocss/core@65.5.0': {}
 
@@ -21550,7 +21631,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.2(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
     dependencies:
-      '@storybook/builder-vite': 9.1.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/builder-vite': 9.1.0-alpha.2(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
     transitivePeerDependencies:
       - storybook
       - vite
@@ -22159,6 +22240,23 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
+  unimport@4.2.0:
+    dependencies:
+      acorn: 8.14.1
+      escape-string-regexp: 5.0.0
+      estree-walker: 3.0.3
+      local-pkg: 1.1.1
+      magic-string: 0.30.17
+      mlly: 1.7.4
+      pathe: 2.0.3
+      picomatch: 4.0.2
+      pkg-types: 2.1.0
+      scule: 1.3.0
+      strip-literal: 3.0.0
+      tinyglobby: 0.2.13
+      unplugin: 2.3.5
+      unplugin-utils: 0.2.4
+
   unimport@5.0.1:
     dependencies:
       acorn: 8.14.1
@@ -22267,6 +22365,10 @@ snapshots:
     optionalDependencies:
       '@unocss/preset-wind3': 66.1.1
 
+  unocss-preset-primitives@0.0.2-beta.1:
+    dependencies:
+      '@unocss/core': 0.61.9
+
   unocss-preset-radix@2.8.2:
     dependencies:
       '@radix-ui/colors': 3.0.0
@@ -22329,6 +22431,15 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
+  unplugin-auto-import@19.3.0:
+    dependencies:
+      local-pkg: 1.1.1
+      magic-string: 0.30.17
+      picomatch: 4.0.2
+      unimport: 4.2.0
+      unplugin: 2.3.5
+      unplugin-utils: 0.2.4
+
   unplugin-fonts@1.3.1(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
     dependencies:
       fast-glob: 3.3.2
@@ -22377,6 +22488,12 @@ snapshots:
       webpack-virtual-modules: 0.6.2
 
   unplugin@2.3.2:
+    dependencies:
+      acorn: 8.14.1
+      picomatch: 4.0.2
+      webpack-virtual-modules: 0.6.2
+
+  unplugin@2.3.5:
     dependencies:
       acorn: 8.14.1
       picomatch: 4.0.2

@@ -8,11 +8,11 @@ html {
 }
 
 button:hover {
-  cursor: initial;
+  cursor: default;
 }
 
 a:hover {
-  cursor: initial;
+  cursor: default;
 }
 
 a:hover[rel="external"] {

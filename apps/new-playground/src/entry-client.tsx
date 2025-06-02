@@ -1,10 +1,11 @@
-import { RpcClient, RpcSerialization } from "@effect/rpc";
-import { Brand, Layer, Match, PubSub, Schema, Stream } from "effect";
+// @refresh reload
+import { RpcClient, RpcMiddleware, RpcSerialization } from "@effect/rpc";
+import { Layer, Match, PubSub, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import { render } from "solid-js/web";
 import {
+  createMemo,
   createResource,
-  createRoot,
   createSignal,
   ErrorBoundary,
   For,
@@ -13,53 +14,73 @@ import {
 } from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
 import { BrowserRuntime, BrowserSocket } from "@effect/platform-browser";
-import { A, RouteDefinition, Router } from "@solidjs/router";
-import {
-  FetchHttpClient,
-  HttpClient,
-  HttpClientRequest,
-  Socket,
-} from "@effect/platform";
-import { HttpServerRequest } from "@effect/platform/HttpServerRequest";
+import { A, Navigate, RouteDefinition, Router } from "@solidjs/router";
+import { FetchHttpClient, Headers, Socket } from "@effect/platform";
 import { createDeepSignal } from "@solid-primitives/resource";
-import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { cx } from "cva";
+import { Popover } from "@kobalte/core/popover";
+import createPresence from "solid-presence";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createElementBounds } from "@solid-primitives/bounds";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
 import "./style.css";
 
 import { GlobalAppState } from "./package-settings-utils";
-import { PackageMeta, ProjectEvent, Rpcs, RpcsSerialization } from "./shared";
-import { Node, NodeHeader } from "./components/Node";
+import { ProjectEvent, Rpcs, RpcsSerialization } from "./shared";
 import { NodeRpcs } from "./domain/Node/rpc";
 import { NodeId, XY } from "./domain/Node/data";
 import { GraphId } from "./domain/Graph/data";
 import { SchemaRef } from "./domain/Package/data";
 import { DeepWriteable } from "./types";
+import { RpcRealtimeMiddleware } from "./domain/Rpc/Middleware";
+import {
+  Graph,
+  GraphTwoWayConnections,
+  IORef,
+  parseIORef,
+} from "./components/Graph";
+import { ComponentProps } from "solid-js";
 
-const API_HOST = "localhost:5678";
+const API_HOST = "192.168.20.22:5678";
+// const API_HOST = "te-jordan-trials-jackson.trycloudflare.com";
+const SECURE_PREIX = window.location.href.startsWith("https") ? "s" : "";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
 
-const SocketLayer = BrowserSocket.layerWebSocket(`ws://${API_HOST}/realtime`);
+const SocketLayer = BrowserSocket.layerWebSocket(
+  `ws${SECURE_PREIX}://${API_HOST}/realtime`,
+);
 
-let realtimeId: null | number = null;
+let realtimeId: null | number;
 
-const RpcTransport = RpcClient.layerProtocolHttp({
-  url: `http://${API_HOST}/rpc`,
-  transformClient: HttpClient.mapRequest((request) =>
-    HttpClientRequest.setHeader(
-      request,
-      "x-mg-realtime-id",
-      (realtimeId ?? -1).toString(),
-    ),
-  ),
-}).pipe(Layer.provide(FetchHttpClient.layer), Layer.provide(RpcsSerialization));
+const RpcRealtimeClient = RpcMiddleware.layerClient(
+  RpcRealtimeMiddleware,
+  ({ request }) =>
+    Effect.succeed({
+      ...request,
+      headers: Headers.set(
+        request.headers,
+        "realtime-id",
+        (realtimeId ?? -1).toString(),
+      ),
+    }),
+);
+
+const RpcSocketLayer = BrowserSocket.layerWebSocket(
+  `ws${SECURE_PREIX}://${API_HOST}/rpc`,
+);
+const RpcTransport = RpcClient.layerProtocolSocket.pipe(
+  Layer.provide(RpcsSerialization),
+  Layer.provide(RpcSocketLayer),
+);
 
 class Client extends Effect.Service<Client>()("Client", {
   effect: Effect.gen(function* () {
-    const client = yield* RpcClient.make(Rpcs.merge(NodeRpcs));
+    const client = yield* RpcClient.make(Rpcs.merge(NodeRpcs), {
+      disableTracing: true,
+    }).pipe(Effect.provide(RpcRealtimeClient));
 
     return { client };
   }),
@@ -81,10 +102,12 @@ class UI extends Effect.Service<UI>()("UI", {
         Object.entries(packageSettings.default).map(([name, _pkg]) =>
           Effect.gen(function* () {
             const pkg = yield* Effect.promise(_pkg);
-            const client = yield* RpcClient.make(pkg.Rpcs).pipe(
+            const client = yield* RpcClient.make(pkg.Rpcs, {
+              disableTracing: true,
+            }).pipe(
               Effect.provide(
                 RpcClient.layerProtocolHttp({
-                  url: `http://${API_HOST}/package/${name}/rpc`,
+                  url: `http${SECURE_PREIX}://${API_HOST}/package/${name}/rpc`,
                 }),
               ),
               Effect.provide(RpcSerialization.layerJson),
@@ -118,10 +141,53 @@ class UI extends Effect.Service<UI>()("UI", {
 
     const eventPubSub = yield* PubSub.unbounded<{ package: string }>();
 
-    const _data = yield* rpcClient.GetProject();
-    const [data, setData] = createStore(
-      _data as any as DeepWriteable<typeof _data>,
+    const [data, setData] = yield* rpcClient.GetProject().pipe(
+      Effect.map((data) => data as DeepWriteable<typeof data>),
+      Effect.map((data) => {
+        return {
+          ...data,
+          graphs: Object.entries(data.graphs).reduce(
+            (acc, [graphId, graph]) => {
+              const connections: GraphTwoWayConnections = {};
+
+              for (const [outNodeId, outNodeConnections] of Object.entries(
+                graph.connections,
+              )) {
+                for (const [outId, outConnections] of Object.entries(
+                  outNodeConnections,
+                )) {
+                  ((connections[NodeId.make(Number(outNodeId))] ??= {}).out ??=
+                    {})[outId] = outConnections;
+
+                  for (const [inNodeId, inId] of outConnections) {
+                    (((connections[inNodeId] ??= {}).in ??= {})[inId] ??=
+                      []).push([NodeId.make(Number(outNodeId)), outId]);
+                  }
+                }
+              }
+
+              return Object.assign(acc, {
+                [graphId]: Object.assign(graph, { connections }),
+              });
+            },
+            {} as Record<
+              string,
+              Omit<(typeof data.graphs)[string], "connections"> & {
+                connections: GraphTwoWayConnections;
+              }
+            >,
+          ),
+        };
+      }),
+      Effect.map(createStore),
     );
+
+    const [presence, setPresence] = createStore<
+      Record<
+        number,
+        { name: string; mouse?: { graph: GraphId; x: number; y: number } }
+      >
+    >({});
 
     const realtimeIdLatch = yield* Effect.makeLatch(false);
     yield* socket
@@ -153,7 +219,6 @@ class UI extends Effect.Service<UI>()("UI", {
                 }),
               ),
               tagType("packageStateChanged", (data) => {
-                console.log({ data });
                 return eventPubSub.offer({ package: data.package });
               }),
               tagType("connectedClientsChanged", ({ data }) =>
@@ -174,6 +239,21 @@ class UI extends Effect.Service<UI>()("UI", {
                       );
 
                       if (node) node.position = data.position;
+                    }),
+                  );
+                }),
+              ),
+              tagType("NodesMoved", (data) =>
+                Effect.sync(() => {
+                  setData(
+                    produce((prev) => {
+                      const graph = prev.graphs[data.graphId];
+                      if (!graph) return;
+
+                      for (const [nodeId, position] of data.positions) {
+                        const node = graph.nodes.find((n) => n.id === nodeId);
+                        if (node) node.position = position;
+                      }
                     }),
                   );
                 }),
@@ -201,6 +281,77 @@ class UI extends Effect.Service<UI>()("UI", {
                   );
                 }),
               ),
+              tagType("IOConnected", (data) =>
+                Effect.sync(() => {
+                  setData(
+                    produce((prev) => {
+                      const graph = prev.graphs[data.graphId];
+                      if (!graph) return;
+
+                      const outNodeConnections = (graph.connections[
+                        data.output.nodeId
+                      ] ??= {});
+                      const outConnections = ((outNodeConnections.out ??= {})[
+                        data.output.ioId
+                      ] ??= []);
+                      outConnections.push([data.input.nodeId, data.input.ioId]);
+
+                      const inNodeConnections = (graph.connections[
+                        data.input.nodeId
+                      ] ??= {});
+                      const inConnections = ((inNodeConnections.in ??= {})[
+                        data.input.ioId
+                      ] ??= []);
+                      inConnections.push([
+                        data.output.nodeId,
+                        data.output.ioId,
+                      ]);
+                    }),
+                  );
+                }),
+              ),
+              tagType("IODisconnected", (data) =>
+                Effect.sync(() => {
+                  // tbh probably gonna need to serialize everything that got disconnected
+
+                  setData(
+                    produce((prev) => {
+                      const graph = prev.graphs[data.graphId];
+                      if (!graph) return;
+
+                      const ioConnections =
+                        graph.connections[data.io.nodeId]?.[
+                          data.io.type === "i" ? "in" : "out"
+                        ];
+                      if (!ioConnections) return;
+
+                      const connections = ioConnections[data.io.ioId];
+                      if (!connections) return;
+                      delete ioConnections[data.io.ioId];
+
+                      for (const [oppNodeId, oppIoId] of connections) {
+                        const oppNodeConnections = graph.connections[oppNodeId];
+                        const oppConnections =
+                          oppNodeConnections?.[
+                            data.io.type === "o" ? "in" : "out"
+                          ]?.[oppIoId];
+                        if (!oppConnections) continue;
+
+                        const index = oppConnections.findIndex(
+                          ([nodeId, ioId]) =>
+                            nodeId === data.io.nodeId && ioId === data.io.ioId,
+                        );
+                        if (index !== -1) oppConnections.splice(index, 1);
+                      }
+                    }),
+                  );
+                }),
+              ),
+              tagType("PresenceUpdated", (data) =>
+                Effect.sync(() => {
+                  setPresence(reconcile(data.data));
+                }),
+              ),
               Match.exhaustive,
             );
           }
@@ -209,15 +360,6 @@ class UI extends Effect.Service<UI>()("UI", {
       .pipe(Effect.fork);
 
     yield* realtimeIdLatch.await;
-
-    const [selections, setSelections] = createSignal<NodeId[]>([]);
-
-    function getGraphPosition(e: MouseEvent) {
-      return {
-        x: e.clientX,
-        y: e.clientY,
-      };
-    }
 
     const actions = {
       SetNodePosition: (
@@ -238,19 +380,133 @@ class UI extends Effect.Service<UI>()("UI", {
           }),
         );
       },
-      CreateNode: (schema: SchemaRef) => {
+      SetNodePositions: (
+        graphId: GraphId,
+        positions: Array<[NodeId, (typeof XY)["Type"]]>,
+        ephemeral = true,
+      ) => {
+        rpcClient
+          .SetNodePositions({ graphId, positions })
+          .pipe(Effect.runPromise);
+        setData(
+          produce((data) => {
+            const graph = data.graphs[graphId];
+            if (!graph) return;
+            for (const [nodeId, position] of positions) {
+              const node = graph.nodes.find((n) => n.id === nodeId);
+              if (node) node.position = position;
+            }
+          }),
+        );
+      },
+      CreateNode: (
+        graphId: GraphId,
+        schema: SchemaRef,
+        position: [number, number],
+      ) => {
         Effect.gen(function* () {
-          const resp = yield* rpcClient.CreateNode({ schema });
-
-          data.graphs[0]?.nodes.push({
+          const resp = yield* rpcClient.CreateNode({
             schema,
-            id: resp.id,
-            position: { x: 0, y: 0 },
-            inputs: resp.io.inputs as DeepWriteable<typeof resp.io.inputs>,
-            outputs: resp.io.outputs as DeepWriteable<typeof resp.io.outputs>,
+            graphId,
+            position,
           });
+
+          setData(
+            produce((data) => {
+              data.graphs[graphId]?.nodes.push({
+                schema,
+                id: resp.id,
+                position: { x: position[0], y: position[1] },
+                inputs: resp.io.inputs as DeepWriteable<typeof resp.io.inputs>,
+                outputs: resp.io.outputs as DeepWriteable<
+                  typeof resp.io.outputs
+                >,
+              });
+            }),
+          );
         }).pipe(Effect.runPromise);
       },
+      ConnectIO: (graphId: GraphId, _one: IORef, _two: IORef) => {
+        Effect.gen(function* () {
+          const one = parseIORef(_one);
+          const two = parseIORef(_two);
+
+          let output, input;
+
+          if (one.type === "o" && two.type === "i") {
+            output = { nodeId: one.nodeId, ioId: one.id };
+            input = { nodeId: two.nodeId, ioId: two.id };
+          } else if (one.type === "i" && two.type === "o") {
+            output = { nodeId: two.nodeId, ioId: two.id };
+            input = { nodeId: one.nodeId, ioId: one.id };
+          } else return;
+
+          yield* rpcClient.ConnectIO({ graphId, output, input });
+
+          setData(
+            produce((data) => {
+              const connections = data.graphs[graphId]?.connections;
+              if (!connections) return;
+
+              const outNodeConnections = ((connections[output.nodeId] ??=
+                {}).out ??= {});
+              const outConnections = (outNodeConnections[output.ioId] ??= []);
+              outConnections.push([input.nodeId, input.ioId]);
+
+              const inNodeConnections = ((connections[input.nodeId] ??=
+                {}).in ??= {});
+              const inConnections = (inNodeConnections[input.ioId] ??= []);
+              inConnections.push([output.nodeId, output.ioId]);
+            }),
+          );
+        }).pipe(Effect.runPromise);
+      },
+      DisconnectIO: (graphId: GraphId, _io: IORef) =>
+        Effect.gen(function* () {
+          const io = parseIORef(_io);
+
+          yield* rpcClient.DisconnectIO({
+            graphId,
+            io: { nodeId: io.nodeId, ioId: io.id, type: io.type },
+          });
+
+          setData(
+            produce((data) => {
+              const connections = data.graphs[graphId]?.connections;
+              if (!connections) return;
+
+              const conns =
+                io.type === "i"
+                  ? connections[io.nodeId]?.in
+                  : connections[io.nodeId]?.out;
+
+              if (!conns) return;
+
+              const ioConnections = conns[io.id];
+              delete conns[io.id];
+              if (!ioConnections) return;
+
+              for (const ioConnection of ioConnections) {
+                const [nodeId, ioId] = ioConnection;
+
+                const oppNodeConnections =
+                  io.type === "i"
+                    ? connections[nodeId]?.out
+                    : connections[nodeId]?.in;
+                if (!oppNodeConnections) continue;
+
+                const oppConnections = oppNodeConnections[ioId];
+                if (!oppConnections) continue;
+
+                const index = oppConnections.findIndex(
+                  ([nodeId, inId]) => nodeId === io.nodeId && inId === io.id,
+                );
+                if (index !== -1) oppConnections.splice(index, 1);
+                if (oppConnections.length < 1) delete oppNodeConnections[ioId];
+              }
+            }),
+          );
+        }).pipe(Effect.runPromise),
     };
 
     const dispose = render(() => {
@@ -258,147 +514,173 @@ class UI extends Effect.Service<UI>()("UI", {
         {
           path: "/",
           component: () => {
+            const graph = () => data.graphs["0"];
+
+            const [selection, setSelection] = createStore<
+              { graphId: number; items: Set<NodeId> } | { graphId: null }
+            >({ graphId: null });
+
             return (
-              <div class="flex flex-row">
-                <div
-                  class="relative flex-1 flex flex-col gap-4 items-start w-full touch-none"
-                  onPointerMove={(e) => e.preventDefault()}
-                >
-                  <Show when={data.graphs["0"]}>
-                    {(graph) => (
-                      <For each={graph().nodes}>
-                        {(node) => {
-                          const [position, setPosition] = createSignal<
-                            null | typeof node.position
-                          >(null);
+              <div class="flex flex-row flex-1 overflow-hidden">
+                <Show when={graph()} keyed>
+                  {(graph) => {
+                    const [ref, setRef] = createSignal<HTMLElement | null>(
+                      null,
+                    );
 
-                          const schema = () =>
-                            data.packages[node.schema.pkgId]?.schemas[
-                              node.schema.schemaId
-                            ];
+                    const bounds = createElementBounds(ref);
 
-                          return (
-                            <Show when={schema()}>
-                              {(schema) => (
-                                <Node
-                                  {...node}
-                                  position={position() ?? node.position}
-                                  selected={selections().includes(node.id)}
+                    createEventListener(window, "pointermove", (e) => {
+                      rpcClient
+                        .SetMousePosition({
+                          graph: GraphId.make(0),
+                          position: {
+                            x: e.clientX - (bounds.left ?? 0),
+                            y: e.clientY - (bounds.top ?? 0),
+                          },
+                        })
+                        .pipe(Effect.runPromise);
+                    });
+
+                    const [schemaMenu, setSchemaMenu] = createSignal<
+                      | { open: false }
+                      | { open: true; position: { x: number; y: number } }
+                    >({ open: false });
+
+                    const [schemaMenuRef, setSchemaMenuRef] =
+                      createSignal<HTMLElement | null>(null);
+
+                    const schemaMenuPresence = createPresence({
+                      show: () => schemaMenu().open,
+                      element: schemaMenuRef,
+                    });
+
+                    const schemaMenuPosition = createMemo(
+                      (prev: { x: number; y: number } | undefined) => {
+                        const m = schemaMenu();
+                        if (m.open) return m.position;
+                        return prev;
+                      },
+                    );
+
+                    return (
+                      <>
+                        <Graph
+                          ref={setRef}
+                          nodes={graph.nodes}
+                          packages={data.packages}
+                          selection={
+                            selection.graphId === graph.id
+                              ? selection.items
+                              : new Set()
+                          }
+                          onNodeMoved={(nodeId, position) =>
+                            actions.SetNodePosition(graph.id, nodeId, position)
+                          }
+                          onItemsSelected={(items) => {
+                            setSelection(
+                              reconcile({ graphId: graph.id, items }),
+                            );
+                          }}
+                          onConnectIO={(from, to) => {
+                            actions.ConnectIO(graph.id, from, to);
+                          }}
+                          onDisconnectIO={(io) => {
+                            actions.DisconnectIO(graph.id, io);
+                          }}
+                          connections={graph.connections}
+                          onContextMenu={(position) => {
+                            setSchemaMenu({ open: true, position });
+                          }}
+                          onContextMenuClose={() => {
+                            setSchemaMenu({ open: false });
+                          }}
+                          onSelectionMoved={(items) => {
+                            if (selection.graphId === null) return;
+
+                            actions.SetNodePositions(graph.id, items);
+                          }}
+                        />
+                        <For each={Object.entries(presence)}>
+                          {(item) => (
+                            <Show
+                              when={
+                                Number(item[0]) !== realtimeId &&
+                                item[1].mouse?.graph === graph.id &&
+                                item[1].mouse
+                              }
+                            >
+                              {(mouse) => (
+                                <div
+                                  class="bg-white/70 rounded-full size-2 absolute -left-1 -top-1 pointer-events-none"
+                                  style={{
+                                    transform: `translate(${mouse().x + (bounds.left ?? 0)}px, ${mouse().y + (bounds.top ?? 0)}px)`,
+                                  }}
                                 >
-                                  <NodeHeader
-                                    name={node.name ?? schema().id}
-                                    variant={schema().type}
-                                    onPointerDown={(downEvent) => {
-                                      if (downEvent.metaKey)
-                                        setSelections((s) => [...s, node.id]);
-                                      else setSelections([node.id]);
-
-                                      const startPosition = {
-                                        x: node.position.x,
-                                        y: node.position.y,
-                                      };
-                                      const downPosition =
-                                        getGraphPosition(downEvent);
-                                      setPosition(startPosition);
-
-                                      createRoot((dispose) => {
-                                        createEventListenerMap(window, {
-                                          pointermove: (moveEvent) => {
-                                            if (
-                                              downEvent.pointerId !==
-                                              moveEvent.pointerId
-                                            )
-                                              return;
-
-                                            moveEvent.preventDefault();
-
-                                            const movePosition =
-                                              getGraphPosition(moveEvent);
-
-                                            const position = {
-                                              x:
-                                                startPosition.x +
-                                                movePosition.x -
-                                                downPosition.x,
-                                              y:
-                                                startPosition.y +
-                                                movePosition.y -
-                                                downPosition.y,
-                                            };
-
-                                            actions.SetNodePosition(
-                                              GraphId.make(0),
-                                              node.id,
-                                              position,
-                                            );
-                                            setPosition(position);
-                                          },
-                                          pointerup: (upEvent) => {
-                                            if (
-                                              downEvent.pointerId !==
-                                              upEvent.pointerId
-                                            )
-                                              return;
-
-                                            const upPosition =
-                                              getGraphPosition(upEvent);
-
-                                            const position = {
-                                              x:
-                                                startPosition.x +
-                                                upPosition.x -
-                                                downPosition.x,
-                                              y:
-                                                startPosition.y +
-                                                upPosition.y -
-                                                downPosition.y,
-                                            };
-
-                                            actions.SetNodePosition(
-                                              GraphId.make(0),
-                                              node.id,
-                                              position,
-                                            );
-                                            setPosition(null);
-
-                                            dispose();
-                                          },
-                                        });
-                                      });
-                                    }}
+                                  <Avatar
+                                    name={item[1].name}
+                                    class="absolute top-full left-full -mt-0.5 -ml-0.5 bg-black text-white rounded"
                                   />
-                                </Node>
+                                </div>
                               )}
                             </Show>
-                          );
-                        }}
-                      </For>
-                    )}
-                  </Show>
-                </div>
-                <div class={cx("flex flex-col p-2")}>
-                  <For each={Object.entries(data.packages)}>
-                    {([pkgId, pkg]) => (
-                      <div class="py-1">
-                        <span class="font-bold">{pkgId}</span>
-                        <div>
-                          <For each={Object.entries(pkg.schemas)}>
-                            {([schemaId, schema]) => (
-                              <div
-                                class="px-1 py-0.5 rounded hover:bg-white/10"
-                                onClick={() => {
-                                  actions.CreateNode({ pkgId, schemaId });
-                                }}
-                              >
-                                {schemaId}
-                              </div>
-                            )}
-                          </For>
-                        </div>
-                      </div>
-                    )}
-                  </For>
-                </div>
+                          )}
+                        </For>
+
+                        <Show
+                          when={
+                            schemaMenuPresence.present() && schemaMenuPosition()
+                          }
+                        >
+                          {(position) => (
+                            <div
+                              ref={setSchemaMenuRef}
+                              data-open={schemaMenu().open}
+                              class={cx(
+                                "absolute flex flex-col px-2 bg-gray-1 border border-gray-3 rounded-lg text-sm",
+                                "origin-top-left data-[open='true']:(animate-in fade-in zoom-in-95) data-[open='false']:(animate-out fade-out zoom-out-95)",
+                              )}
+                              style={{
+                                left: `${position().x + (bounds.left ?? 0) - 16}px`,
+                                top: `${position().y + (bounds.top ?? 0) - 16}px`,
+                              }}
+                            >
+                              <For each={Object.entries(data.packages)}>
+                                {([pkgId, pkg]) => (
+                                  <div class="py-1">
+                                    <span class="font-bold">{pkgId}</span>
+                                    <div>
+                                      <For each={Object.entries(pkg.schemas)}>
+                                        {([schemaId, schema]) => (
+                                          <button
+                                            class="block bg-transparent w-full text-left px-1 py-0.5 rounded @hover-bg-white/10 active:bg-white/10"
+                                            onClick={() => {
+                                              actions.CreateNode(
+                                                graph.id,
+                                                { pkgId, schemaId },
+                                                [
+                                                  position().x - 16,
+                                                  position().y - 16,
+                                                ],
+                                              );
+                                              setSchemaMenu({ open: false });
+                                            }}
+                                          >
+                                            {schemaId}
+                                          </button>
+                                        )}
+                                      </For>
+                                    </div>
+                                  </div>
+                                )}
+                              </For>
+                            </div>
+                          )}
+                        </Show>
+                      </>
+                    );
+                  }}
+                </Show>
               </div>
             );
           },
@@ -406,7 +688,14 @@ class UI extends Effect.Service<UI>()("UI", {
         {
           path: "/packages",
           children: [
-            { path: "/" },
+            {
+              path: "/",
+              component: () => (
+                <Show when={Object.keys(packages)[0]}>
+                  {(href) => <Navigate href={href()} />}
+                </Show>
+              ),
+            },
             {
               path: "/:package",
               component: (props) => (
@@ -473,7 +762,7 @@ class UI extends Effect.Service<UI>()("UI", {
                     )}
                   </For>
                 </ul>
-                <div>{connectedClients()} Clients Connected</div>
+                <div>{connectedClients()} Clients Connected </div>
               </nav>
               <div class="max-w-lg w-full flex flex-col items-stretch p-4 gap-4 text-sm">
                 <Suspense>{props.children}</Suspense>
@@ -487,10 +776,78 @@ class UI extends Effect.Service<UI>()("UI", {
         <ErrorBoundary fallback={(e) => e.toString()}>
           <Router
             root={(props) => (
-              <div class="w-full h-full flex flex-col divide-y divide-gray-5 overflow-hidden">
-                <div class="p-2 flex flex-row gap-2">
-                  <a href="/packages">Packages</a>
-                  <a href="/">Graph</a>
+              <div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default">
+                <div class="flex flex-row gap-2 px-2 items-center h-10 bg-gray-2 z-10 border-b border-gray-5">
+                  <A
+                    class="p-1 px-2 rounded hover:bg-gray-3"
+                    inactiveClass="bg-gray-2"
+                    activeClass="bg-gray-3"
+                    href="/packages"
+                  >
+                    Packages
+                  </A>
+                  <A
+                    class="p-1 px-2 rounded hover:bg-gray-3"
+                    inactiveClass="bg-gray-2"
+                    activeClass="bg-gray-3"
+                    href="/"
+                    end
+                  >
+                    Graph
+                  </A>
+                  <Popover
+                    placement="bottom-start"
+                    sameWidth
+                    gutter={4}
+                    open={
+                      Object.entries(presence).length <= 1 ? false : undefined
+                    }
+                  >
+                    <Show
+                      when={Object.entries(presence).find(
+                        ([id]) => id === realtimeId?.toString(),
+                      )}
+                    >
+                      {(data) => (
+                        <Popover.Trigger
+                          disabled={Object.entries(presence).length <= 1}
+                          class="ml-auto bg-gray-2 p-1 rounded not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1 outline-none"
+                        >
+                          <div class="flex flex-row space-x-1.5 items-center">
+                            <Avatar name={data()[1].name} />
+                            <span>{data()[1].name}</span>
+                          </div>
+                          {Object.entries(presence).length > 1 && (
+                            <IconLucideChevronDown class="ui-expanded:rotate-180 transition-transform" />
+                          )}
+                        </Popover.Trigger>
+                      )}
+                    </Show>
+                    <Popover.Portal>
+                      <Popover.Content
+                        as="ul"
+                        class="outline-none flex flex-col bg-gray-1 p-1.5 pt-1 rounded text-sm ui-expanded:(animate-in slide-in-from-top-1 fade-in) ui-closed:(animate-out slide-out-to-top-1 fade-out)"
+                      >
+                        <span class="text-xs text-gray-10 mb-1.5">
+                          Connected Clients
+                        </span>
+                        <ul class="space-y-1.5">
+                          <For each={Object.entries(presence)}>
+                            {([id, data]) => (
+                              <Show when={id !== realtimeId?.toString()}>
+                                <li>
+                                  <div class="flex flex-row space-x-1.5 items-center">
+                                    <Avatar name={data.name} />
+                                    <span>{data.name}</span>
+                                  </div>
+                                </li>
+                              </Show>
+                            )}
+                          </For>
+                        </ul>
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover>
                 </div>
                 {props.children}
               </div>
@@ -516,9 +873,21 @@ BrowserRuntime.runMain(
   ),
 );
 
-function sliceRequestUrl(request: HttpServerRequest, prefix: string) {
-  const prefexLen = prefix.length;
-  return request.modify({
-    url: request.url.length <= prefexLen ? "/" : request.url.slice(prefexLen),
-  });
+function Avatar(props: { name: string } & ComponentProps<"div">) {
+  return (
+    <div
+      {...props}
+      class={cx(
+        "bg-gray-5 rounded-full size-5 flex items-center justify-center text-[0.65rem]",
+        props.class,
+      )}
+    >
+      <span>
+        {props.name
+          .split(" ")
+          .slice(0, 2)
+          .map((s) => s[0]?.toUpperCase())}
+      </span>
+    </div>
+  );
 }

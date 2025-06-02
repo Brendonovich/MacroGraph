@@ -1,23 +1,42 @@
-import { Graph, GraphId } from "./domain/Graph/data";
-import { NodeId } from "./domain/Node/data";
+import { GraphId } from "./domain/Graph/data";
+import { NodeId, NodeIO } from "./domain/Node/data";
 import { DeepWriteable } from "./types";
 
-export const project = {
-  name: "",
-  graphs: {
-    "0": {
-      id: GraphId.make(0),
-      name: "New Graph",
-      nodes: [
+export type NodeConnections = {
+  in?: Map<string, Array<[NodeId, string]>>;
+  out?: Map<string, Array<[NodeId, string]>>;
+};
+
+export type Project = {
+  name: string;
+  graphs: Map<
+    GraphId,
+    {
+      id: GraphId;
+      name: string;
+      nodes: Array<
         {
-          id: NodeId.make(0),
-          name: "New Node",
-          position: { x: 0, y: 0 },
-          inputs: [],
-          outputs: [],
-          schema: { pkgId: "bruh", schemaId: "lmao" },
-        },
-      ],
-    } as DeepWriteable<(typeof Graph)["Type"]>,
-  },
+          id: NodeId;
+          name?: string;
+          position: { x: number; y: number };
+          schema: { pkgId: string; schemaId: string };
+        } & DeepWriteable<NodeIO>
+      >;
+      connections?: Map<NodeId, NodeConnections>;
+    }
+  >;
+};
+
+export const project: Project = {
+  name: "",
+  graphs: new Map([
+    [
+      GraphId.make(0),
+      {
+        id: GraphId.make(0),
+        name: "New Graph",
+        nodes: [],
+      },
+    ],
+  ]),
 };

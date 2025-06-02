@@ -1,4 +1,5 @@
 import {
+  Chunk,
   Context,
   Deferred,
   Effect,
@@ -6,6 +7,7 @@ import {
   Mailbox,
   Option,
   Schema,
+  Scope,
   Stream,
 } from "effect";
 
@@ -16,6 +18,7 @@ import {
   HttpApiClient,
   HttpClient,
   HttpClientRequest,
+  Socket,
 } from "@effect/platform";
 import { HelixApi } from "./helix";
 import {
@@ -23,6 +26,9 @@ import {
   EventSubMessage,
   isEventSubMessageType,
 } from "./eventSub";
+import { layerWebSocketConstructor } from "@effect/platform-node/NodeSocket";
+import { makeSpan } from "effect/Effect";
+import { Resource } from "@effect/opentelemetry/Resource";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -48,7 +54,6 @@ export default definePackage(
           return;
 
         const lock = Effect.unsafeMakeSemaphore(1);
-        const responseDefer = yield* Deferred.make<void>();
 
         const CredentialRefresh = (c: HttpClient.HttpClient) =>
           c.pipe(
@@ -95,6 +100,7 @@ export default definePackage(
             Context.make(FetchHttpClient.Fetch, (url, init) =>
               fetch(url, {
                 ...init,
+                // twitch doesn't like extra headers
                 headers: {
                   authorization: (init!.headers as { authorization: string })
                     .authorization,
@@ -106,115 +112,135 @@ export default definePackage(
           ),
         );
 
-        yield* Effect.gen(function* () {
-          const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
+        const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
 
-          ws.onmessage = (event) => {
-            events.unsafeOffer(
-              Schema.decodeSync(EVENTSUB_MESSAGE)(JSON.parse(event.data)),
-            );
-          };
+        const events = yield* Mailbox.make<EventSubMessage>();
 
-          ws.onclose = () => {
-            events.unsafeDone(Exit.succeed(undefined));
-          };
+        const socket: Socket = { lock, ws, state: "connecting", events };
 
-          const events = yield* Mailbox.make<EventSubMessage>();
+        yield* Effect.sync(() => {
+          sockets.set(accountId, socket);
+        }).pipe(lock.withPermits(1), Effect.ensuring(ctx.dirtyState));
 
-          yield* events.pipe(
-            Mailbox.toStream,
-            Stream.runForEach(
-              Effect.fn(function* (event) {
-                if (isEventSubMessageType(event, "session_welcome")) {
-                  yield* Effect.gen(function* () {
-                    if (socket.state === "connected") return;
+        ws.onmessage = (event) => {
+          events.unsafeOffer(
+            Schema.decodeSync(EVENTSUB_MESSAGE)(JSON.parse(event.data)),
+          );
+        };
 
-                    const subs = yield* helixClient.eventSub.getSubscriptions();
-                    for (const sub of subs.data) {
-                      if (sub.status === "websocket_disconnected")
-                        yield* helixClient.eventSub.deleteSubscription({
-                          urlParams: { id: sub.id },
-                        });
-                    }
+        ws.onclose = () => {
+          events.unsafeDone(Exit.succeed(undefined));
+        };
 
-                    yield* helixClient.eventSub.createSubscription({
-                      payload: {
-                        type: "channel.follow",
-                        version: "2",
-                        condition: {
-                          broadcaster_user_id: accountId,
-                          moderator_user_id: accountId,
-                        },
-                        transport: {
-                          method: "websocket",
-                          session_id: event.payload.session.id,
-                        },
-                      },
-                    });
+        const eventStream = Mailbox.toStream(events);
 
-                    yield* helixClient.eventSub.createSubscription({
-                      payload: {
-                        type: "channel.ban",
-                        version: "1",
-                        condition: {
-                          broadcaster_user_id: accountId,
-                        },
-                        transport: {
-                          method: "websocket",
-                          session_id: event.payload.session.id,
-                        },
-                      },
-                    });
-
-                    yield* helixClient.eventSub.createSubscription({
-                      payload: {
-                        type: "channel.unban",
-                        version: "1",
-                        condition: {
-                          broadcaster_user_id: accountId,
-                        },
-                        transport: {
-                          method: "websocket",
-                          session_id: event.payload.session.id,
-                        },
-                      },
-                    });
-
-                    socket.state = "connected";
-                  }).pipe(
-                    lock.withPermits(1),
-                    Effect.ensuring(Deferred.succeed(responseDefer, void 0)),
-                  );
-
-                  yield* ctx.dirtyState;
-                }
-              }),
+        const welcomeEvent = yield* Stream.take(eventStream, 1).pipe(
+          Stream.runCollect,
+          Effect.map(Chunk.get(0)),
+          Effect.map(
+            Option.getOrThrowWith(
+              () => new Error("Welcome event not received"),
             ),
-            Effect.ensuring(
-              Effect.all([
-                Effect.sync(() => sockets.delete(accountId)).pipe(
-                  lock.withPermits(1),
-                ),
-                Deferred.succeed(responseDefer, void 0),
-                ctx.dirtyState,
-              ]),
-            ),
-            Effect.fork,
+          ),
+        );
+
+        if (!isEventSubMessageType(welcomeEvent, "session_welcome"))
+          throw new Error(
+            `Invalid welcome event: ${welcomeEvent.metadata.message_type}`,
           );
 
-          const socket: Socket = {
-            lock,
-            ws,
-            state: "connecting",
-            events,
-          };
+        yield* Effect.gen(function* () {
+          const subs = yield* helixClient.eventSub.getSubscriptions();
+          yield* Effect.log(`Found ${subs.data.length} existing subscriptions`);
+          yield* Effect.all(
+            subs.data.map(
+              (sub) =>
+                // sub.status === "websocket_disconnected"
+                //   ?
+                helixClient.eventSub.deleteSubscription({
+                  urlParams: { id: sub.id },
+                }),
+              // : Effect.void,
+            ),
+            { concurrency: 10 },
+          ).pipe(Effect.withSpan("deleteOldSubscriptions"));
+          yield* Effect.log("Creating subscriptions");
+          yield* Effect.all(
+            [
+              helixClient.eventSub.createSubscription({
+                payload: {
+                  type: "channel.follow",
+                  version: "2",
+                  condition: {
+                    broadcaster_user_id: accountId,
+                    moderator_user_id: accountId,
+                  },
+                  transport: {
+                    method: "websocket",
+                    session_id: welcomeEvent.payload.session.id,
+                  },
+                },
+              }),
+              helixClient.eventSub.createSubscription({
+                payload: {
+                  type: "channel.ban",
+                  version: "1",
+                  condition: {
+                    broadcaster_user_id: accountId,
+                  },
+                  transport: {
+                    method: "websocket",
+                    session_id: welcomeEvent.payload.session.id,
+                  },
+                },
+              }),
+              helixClient.eventSub.createSubscription({
+                payload: {
+                  type: "channel.unban",
+                  version: "1",
+                  condition: {
+                    broadcaster_user_id: accountId,
+                  },
+                  transport: {
+                    method: "websocket",
+                    session_id: welcomeEvent.payload.session.id,
+                  },
+                },
+              }),
+            ],
+            { concurrency: 2 },
+          ).pipe(Effect.withSpan("createTestSubscriptions"));
+          socket.state = "connected";
+          yield* Effect.log("Socket Connected");
+        }).pipe(Effect.orDie, Effect.ensuring(ctx.dirtyState));
 
-          sockets.set(accountId, socket);
-          yield* ctx.dirtyState;
-          return socket;
-        }).pipe(lock.withPermits(1));
+        const scope = yield* Scope.make();
+        yield* Effect.gen(function* () {
+          yield* Stream.runForEach(eventStream, (event) => {
+            let spanName = `Message.${event.metadata.message_type}`;
 
-        yield* Deferred.await(responseDefer);
+            return Effect.gen(function* () {
+              if (isEventSubMessageType(event, "session_welcome"))
+                throw new Error("Unexpected session welcome");
+            }).pipe(
+              Effect.withSpan(spanName, { attributes: flattenObject(event) }),
+            );
+          });
+        }).pipe(
+          Effect.withSpan(`twitch.EventSub.${accountId}`, { root: true }),
+          Effect.ensuring(
+            Effect.all([
+              Effect.sync(() => sockets.delete(accountId)).pipe(
+                lock.withPermits(1),
+              ),
+              Scope.close(scope, Exit.succeed(null)),
+              ctx.dirtyState,
+              Effect.log("Socket Disconnected"),
+            ]),
+          ),
+          Effect.forkScoped,
+          Scope.extend(scope),
+        );
       }),
       DisconnectEventSub: Effect.fn(function* ({ accountId }) {
         const socket = sockets.get(accountId);
@@ -251,3 +277,26 @@ export default definePackage(
     };
   }),
 );
+
+function flattenObject(
+  obj: Record<string, any>,
+  prefix: string = "",
+  res: Record<string, any> = {},
+): Record<string, any> {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const newKey = prefix ? `${prefix}.${key}` : key;
+
+      if (
+        typeof obj[key] === "object" &&
+        obj[key] !== null &&
+        !Array.isArray(obj[key])
+      ) {
+        flattenObject(obj[key], newKey, res);
+      } else {
+        res[newKey] = obj[key];
+      }
+    }
+  }
+  return res;
+}

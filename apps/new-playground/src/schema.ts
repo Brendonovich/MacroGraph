@@ -1,9 +1,8 @@
 import { Data, Effect, Schema } from "effect";
-import { NoSuchElementException } from "effect/Cause";
 import { YieldWrap } from "effect/Utils";
 import { DataInputRef, DataOutputRef, ExecInputRef, ExecOutputRef } from "./io";
-import { SchemaRunGeneratorEffect } from "./runtime";
 import { EventRef } from "./package";
+import { SchemaRunGeneratorEffect } from "./Runtime";
 
 export { Schema } from "effect";
 
@@ -17,8 +16,6 @@ export type EffectGenerator<
   Ret = void,
 > = Generator<YieldWrap<Eff>, Ret, never>;
 
-class NotComputationNode extends Data.TaggedError("NotComputationNode") {}
-
 export interface IOFunctionContext {
   in: {
     exec: (id: string) => ExecInputRef;
@@ -30,43 +27,50 @@ export interface IOFunctionContext {
   };
 }
 
-export type PureSchemaDefinition<TIO = any> = {
+export interface SchemaDefinitionBase {
+  type: string;
+  name?: string;
+}
+
+export interface PureSchemaDefinition<TIO = any> extends SchemaDefinitionBase {
   type: "pure";
   io: (ctx: {
     in: Extract<IOFunctionContext["in"], { data: any }>;
     out: Extract<IOFunctionContext["out"], { data: any }>;
   }) => TIO;
   run: (io: TIO) => EffectGenerator<SchemaRunGeneratorEffect>;
-};
+}
 
-export type PureSchema<TIO = any> = Omit<PureSchemaDefinition<TIO>, "run"> & {
+export interface PureSchema<TIO = any>
+  extends Omit<PureSchemaDefinition<TIO>, "run"> {
   run: ReturnType<PureSchemaDefinition<TIO>["run"]> extends EffectGenerator<
     infer TEff
   >
     ? (...args: Parameters<PureSchemaDefinition<TIO>["run"]>) => TEff
     : never;
-};
+}
 
-export type ExecSchemaDefinition<TIO = any> = {
+export interface ExecSchemaDefinition<TIO = any> extends SchemaDefinitionBase {
   type: "exec";
   io: (ctx: IOFunctionContext) => TIO;
   run: (
     io: TIO,
   ) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef | void>;
-};
+}
 
-export type ExecSchema<TIO = any> = Omit<ExecSchemaDefinition<TIO>, "run"> & {
+export interface ExecSchema<TIO = any>
+  extends Omit<ExecSchemaDefinition<TIO>, "run"> {
   run: ReturnType<ExecSchemaDefinition<TIO>["run"]> extends EffectGenerator<
     infer TEff
   >
     ? (...args: Parameters<ExecSchemaDefinition<TIO>["run"]>) => TEff
     : never;
-};
+}
 
-export type EventSchemaDefinition<
+export interface EventSchemaDefinition<
   TIO = any,
   TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> = {
+> extends SchemaDefinitionBase {
   type: "event";
   event: EventRef<string, TEventData>;
   io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
@@ -74,12 +78,12 @@ export type EventSchemaDefinition<
     io: TIO,
     data: TEventData["Encoded"],
   ) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef>;
-};
+}
 
-export type EventSchema<
+export interface EventSchema<
   TIO = any,
   TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> = Omit<EventSchemaDefinition<TIO, TEventData>, "run"> & {
+> extends Omit<EventSchemaDefinition<TIO, TEventData>, "run"> {
   run: ReturnType<
     EventSchemaDefinition<TIO, TEventData>["run"]
   > extends EffectGenerator<infer TEff, any>
@@ -87,7 +91,7 @@ export type EventSchema<
         ...args: Parameters<EventSchemaDefinition<TIO, TEventData>["run"]>
       ) => TEff
     : never;
-};
+}
 
 export type SchemaDefinition<
   TIO = any,

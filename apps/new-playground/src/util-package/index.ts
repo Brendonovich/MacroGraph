@@ -1,15 +1,16 @@
-import { Schema } from "effect";
+import { Console, Schema } from "effect";
 import * as Effect from "effect/Effect";
 
 import { definePackage, PackageEngine } from "../package";
 import { getInput, setOutput } from "../package-utils";
-import { Logger } from "../runtime";
+import { Logger } from "../Runtime";
 
 export default definePackage(
   Effect.fn(function* (pkg) {
     const tick = pkg.event("tick", Schema.Number);
 
     yield* pkg.schema("print", {
+      name: "Print",
       type: "exec",
       io: (c) => ({
         execIn: c.in.exec("exec"),
@@ -18,13 +19,14 @@ export default definePackage(
       }),
       run: function* (io) {
         const logger = yield* Logger;
-        yield* logger.print(yield* getInput(io.in));
+        yield* logger.print(`Log: ${yield* getInput(io.in)}`);
 
         return io.execOut;
       },
     });
 
     yield* pkg.schema("ticker", {
+      name: "Ticker",
       type: "event",
       event: tick,
       io: (c) => ({
@@ -49,14 +51,14 @@ export default definePackage(
       },
     });
 
-    // return {
-    //   engine: Effect.gen(function* () {
-    //     let i = 0;
-    //     while (true) {
-    //       yield* PackageEngine.emit(tick, i++);
-    //       yield* Effect.sleep(1000);
-    //     }
-    //   }),
-    // };
+    return {
+      engine: Effect.gen(function* () {
+        let i = 0;
+        while (true) {
+          yield* PackageEngine.emit(tick, i++);
+          yield* Effect.sleep(1000);
+        }
+      }),
+    };
   }),
 );

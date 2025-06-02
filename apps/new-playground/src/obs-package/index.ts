@@ -11,8 +11,11 @@ export default definePackage(
     const obs = new OBSWebsocket();
 
     yield* pkg.schema("setCurrentProgramScene", {
+      name: "Set Current Program Scene",
       type: "exec",
       io: (c) => ({
+        execIn: c.in.exec("exec"),
+        execOut: c.out.exec("exec"),
         scene: c.in.data("scene", Schema.String),
       }),
       run: function* (io) {
@@ -45,22 +48,31 @@ export default definePackage(
           ws.on("ConnectionError", () =>
             Effect.gen(function* () {
               instance.state = "disconnected";
-              yield* ctx.dirtyState;
-            }).pipe(lock.withPermits(1), Effect.runFork),
+            }).pipe(
+              lock.withPermits(1),
+              Effect.ensuring(ctx.dirtyState),
+              Effect.runFork,
+            ),
           );
 
           ws.on("ConnectionClosed", () =>
             Effect.gen(function* () {
               instance.state = "disconnected";
-              yield* ctx.dirtyState;
-            }).pipe(lock.withPermits(1), Effect.runFork),
+            }).pipe(
+              lock.withPermits(1),
+              Effect.ensuring(ctx.dirtyState),
+              Effect.runFork,
+            ),
           );
 
           ws.on("ConnectionOpened", () =>
             Effect.gen(function* () {
               instance.state = "connected";
-              yield* ctx.dirtyState;
-            }).pipe(lock.withPermits(1), Effect.runFork),
+            }).pipe(
+              lock.withPermits(1),
+              Effect.ensuring(ctx.dirtyState),
+              Effect.runFork,
+            ),
           );
 
           const instance: Instance = {
@@ -72,10 +84,8 @@ export default definePackage(
 
           instances.set(address, instance);
 
-          yield* ctx.dirtyState;
-
           return instance;
-        }).pipe(lock.withPermits(1));
+        }).pipe(lock.withPermits(1), Effect.ensuring(ctx.dirtyState));
 
         yield* Effect.tryPromise({
           try: () => instance.ws.connect(address, password),
@@ -84,6 +94,7 @@ export default definePackage(
       }),
       RemoveSocket: Effect.fn(function* ({ address }) {
         const instance = instances.get(address);
+        yield* ctx.dirtyState;
         if (!instance) return;
 
         yield* Effect.gen(function* () {

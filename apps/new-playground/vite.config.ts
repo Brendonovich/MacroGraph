@@ -3,13 +3,15 @@ import { fileURLToPath } from "node:url";
 import solid from "vite-plugin-solid";
 import UnoCSS from "unocss/vite";
 import Icons from "unplugin-icons/vite";
+import AutoImport from "unplugin-auto-import/vite";
+import IconsResolver from "unplugin-icons/resolver";
 import * as fs from "node:fs/promises";
 
 const mgPackageSettings = "macrograph:package-settings";
 
 export default defineConfig({
   server: {
-    allowedHosts: ["5b6c-159-196-133-51.ngrok-free.app"],
+    allowedHosts: true,
   },
   environments: {
     client: { consumer: "client" },
@@ -67,7 +69,16 @@ export default defineConfig({
       },
     },
     UnoCSS(),
-    Icons({ compiler: "solid" }),
+    AutoImport({
+      resolvers: [
+        IconsResolver({
+          prefix: "Icon",
+          extension: "jsx",
+        }),
+      ],
+      dts: "./src/auto-imports.d.ts",
+    }),
+    Icons({ compiler: "solid", autoInstall: true }),
     {
       name: "macrograph-dev-load-settings",
       enforce: "pre",

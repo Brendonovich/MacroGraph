@@ -7,7 +7,5 @@ export type RealtimeConnectionId = (typeof RealtimeConnectionId)["Type"];
 
 export class RealtimeConnection extends Context.Tag("RealtimeConnection")<
   RealtimeConnection,
-  {
-    id: RealtimeConnectionId;
-  }
+  { id: RealtimeConnectionId }
 >() {}
