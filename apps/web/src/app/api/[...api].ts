@@ -25,6 +25,7 @@ import { oauthCredentials, users } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import { AuthProviders } from "../auth/providers";
 import { refreshToken } from "../auth/actions";
+import { posthogCapture, posthogShutdown } from "~/posthog/server";
 
 const IS_LOGGED_IN = "isLoggedIn";
 
@@ -204,6 +205,17 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
             }),
           catch: () => new HttpApiError.InternalServerError(),
         });
+
+        posthogCapture({
+          distinctId: session.userId,
+          event: "credential refreshed",
+          properties: {
+            providerId: credential.providerId,
+            providerUserId: credential.providerUserId,
+          },
+        });
+
+        yield* Effect.promise(() => posthogShutdown());
 
         return marshalCredential(credential);
       }),

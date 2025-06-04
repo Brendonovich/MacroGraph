@@ -43,8 +43,8 @@ import {
 } from "./components/Graph";
 import { ComponentProps } from "solid-js";
 
-const API_HOST = "192.168.20.22:5678";
-// const API_HOST = "te-jordan-trials-jackson.trycloudflare.com";
+// const API_HOST = "192.168.20.22:5678";
+const API_HOST = "accepting-window-arise-hear.trycloudflare.com";
 const SECURE_PREIX = window.location.href.startsWith("https") ? "s" : "";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
@@ -884,7 +884,7 @@ function Avatar(props: { name: string } & ComponentProps<"div">) {
     >
       <span>
         {props.name
-          .split(" ")
+          ?.split(" ")
           .slice(0, 2)
           .map((s) => s[0]?.toUpperCase())}
       </span>

@@ -17,6 +17,10 @@ export type PostHogEvent = {
     providerId: string;
     providerUserId: string;
   };
+  "credential refreshed": {
+    providerId: string;
+    providerUserId: string;
+  };
 };
 
 export function posthogIdentify(userId: string, properties: { email: string }) {
