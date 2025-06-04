@@ -98,7 +98,7 @@ const getCurrentSession = Effect.gen(function* () {
 
   return Option.some({
     id: data.session.id,
-    userId: data.user.email,
+    userId: data.user.id,
   });
 }).pipe(Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()));
 

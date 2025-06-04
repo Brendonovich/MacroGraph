@@ -53,6 +53,7 @@ export function Graph(
     packages: Record<string, PackageMeta>;
     onSelectionMoved?(items: Array<[NodeId, { x: number; y: number }]>): void;
     selection: Set<NodeId>;
+    remoteSelections?: Array<{ colour: string; nodes: Set<NodeId> }>;
     onItemsSelected?(selection: Set<NodeId>): void;
     onConnectIO?(from: IORef, to: IORef): void;
     onDisconnectIO?(io: IORef): void;
@@ -246,7 +247,11 @@ export function Graph(
                         node.position
                       );
                     })()}
-                    selected={props.selection.has(node.id)}
+                    selected={
+                      props.selection?.has(node.id) ||
+                      props.remoteSelections?.find((s) => s.nodes.has(node.id))
+                        ?.colour
+                    }
                     onPinDragStart={(e, type, id) => {
                       if (dragState().type !== "idle") return false;
 
@@ -304,14 +309,17 @@ export function Graph(
                               downEvent.stopPropagation();
 
                               if (downEvent.shiftKey) {
-                                if (props.selection.has(node.id)) {
-                                  props.selection.delete(node.id);
+                                if (props.selection?.has(node.id)) {
+                                  props.selection?.delete(node.id);
                                   props.onItemsSelected?.(
                                     new Set(props.selection),
                                   );
                                 } else {
                                   props.onItemsSelected?.(
-                                    new Set([...props.selection, node.id]),
+                                    new Set([
+                                      ...(props.selection ?? []),
+                                      node.id,
+                                    ]),
                                   );
                                 }
                               } else if (props.selection.size <= 1)

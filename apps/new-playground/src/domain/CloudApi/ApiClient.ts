@@ -7,7 +7,7 @@ import {
 import { Api } from "@macrograph/web-api";
 import { Effect } from "effect";
 
-const API_BEARER_TOKEN = "spmzr265y3ve6vx2277q3mobftxuywqjesuvhrz5";
+const API_BEARER_TOKEN = "nafenstk26btmporqdg5eacuaibeozrbypktyueg";
 const API_URL = "https://www.macrograph.app";
 
 export class CloudAPIClient extends Effect.Service<CloudAPIClient>()(

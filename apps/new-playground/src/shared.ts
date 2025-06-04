@@ -58,11 +58,18 @@ export const ProjectEvent = S.Union(
       key: S.String,
       value: S.Struct({
         name: S.String,
+        colour: S.String,
         mouse: S.optional(
           S.Struct({
             graph: GraphId,
             x: S.Number,
             y: S.Number,
+          }),
+        ),
+        selection: S.optional(
+          S.Struct({
+            graph: GraphId,
+            nodes: S.Array(NodeId),
           }),
         ),
       }),
@@ -129,11 +136,11 @@ export type PackageMeta = S.Schema.Type<typeof PackageMeta>;
 
 export const Rpcs = RpcGroup.make(
   Rpc.make("CreateNode", {
-    payload: S.Struct({
+    payload: {
       schema: SchemaRef,
       graphId: GraphId,
       position: S.Tuple(S.Number, S.Number),
-    }),
+    },
     success: S.Struct({
       id: NodeId,
       io: NodeIO,
@@ -141,11 +148,11 @@ export const Rpcs = RpcGroup.make(
     error: S.Union(SchemaNotFound),
   }),
   Rpc.make("ConnectIO", {
-    payload: S.Struct({
+    payload: {
       graphId: GraphId,
       output: IORef,
       input: IORef,
-    }),
+    },
     error: S.Union(GraphNotFoundError, NodeNotFound),
   }),
   Rpc.make("DisconnectIO", {
@@ -167,7 +174,7 @@ export const Rpcs = RpcGroup.make(
   //   success: ProjectEvent,
   // }),
   Rpc.make("GetPackageSettings", {
-    payload: S.Struct({ package: S.String }),
+    payload: { package: S.String },
     success: S.Any,
   }),
   Rpc.make("SetMousePosition", {
@@ -176,11 +183,21 @@ export const Rpcs = RpcGroup.make(
       position: S.Struct({ x: S.Number, y: S.Number }),
     }),
   }),
+  Rpc.make("SetSelection", {
+    payload: {
+      value: S.NullOr(
+        S.Struct({
+          graph: GraphId,
+          nodes: S.Array(NodeId),
+        }),
+      ),
+    },
+  }),
   Rpc.make("DeleteSelection", {
-    payload: S.Struct({
+    payload: {
       graph: GraphId,
       selection: S.Array(NodeId),
-    }),
+    },
     error: S.Union(GraphNotFoundError, NodeNotFound),
   }),
 ).middleware(RpcRealtimeMiddleware);

@@ -174,6 +174,15 @@ const program = Effect.gen(function* () {
           const presence = yield* RealtimePresence;
           yield* presence.setMouse(payload.graph, payload.position);
         }),
+        SetSelection: Effect.fn(function* ({ value }) {
+          const presence = yield* RealtimePresence;
+          if (value === null) yield* presence.setSelection();
+          else
+            yield* presence.setSelection(
+              value.graph,
+              value.nodes as DeepWriteable<typeof value.nodes>,
+            );
+        }),
         DeleteSelection: Effect.fn(function* (payload) {
           yield* projectActions.deleteSelection(
             payload.graph,

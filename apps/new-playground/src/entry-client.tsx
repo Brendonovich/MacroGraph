@@ -43,9 +43,10 @@ import {
 } from "./components/Graph";
 import { ComponentProps } from "solid-js";
 import { createMousePosition } from "@solid-primitives/mouse";
+import { createEffect } from "solid-js";
 
-const API_HOST = "192.168.20.22:5678";
-// const API_HOST = "aid-constitution-sagem-schema.trycloudflare.com";
+// const API_HOST = "192.168.20.22:5678";
+const API_HOST = "countries-cosmetics-valuable-selecting.trycloudflare.com";
 const SECURE_PREIX = window.location.href.startsWith("https") ? "s" : "";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
@@ -275,7 +276,12 @@ class UI extends Effect.Service<UI>()("UI", {
     const [presence, setPresence] = createStore<
       Record<
         number,
-        { name: string; mouse?: { graph: GraphId; x: number; y: number } }
+        {
+          name: string;
+          colour: string;
+          mouse?: { graph: GraphId; x: number; y: number };
+          selection?: { graph: GraphId; nodes: NodeId[] };
+        }
       >
     >({});
 
@@ -418,7 +424,9 @@ class UI extends Effect.Service<UI>()("UI", {
               ),
               tagType("PresenceUpdated", (data) =>
                 Effect.sync(() => {
-                  setPresence(reconcile(data.data));
+                  setPresence(
+                    reconcile(data.data as DeepWriteable<typeof data.data>),
+                  );
                 }),
               ),
               tagType("SelectionDeleted", (data) =>
@@ -628,6 +636,20 @@ class UI extends Effect.Service<UI>()("UI", {
               }
             });
 
+            createEffect(() => {
+              rpcClient
+                .SetSelection({
+                  value:
+                    selection.graphId === null
+                      ? null
+                      : {
+                          graph: selection.graphId,
+                          nodes: [...selection.items],
+                        },
+                })
+                .pipe(Effect.runPromise);
+            });
+
             return (
               <div class="flex flex-row flex-1 overflow-hidden">
                 <Show when={graph()} keyed>
@@ -671,6 +693,18 @@ class UI extends Effect.Service<UI>()("UI", {
                               ? selection.items
                               : new Set()
                           }
+                          remoteSelections={Object.values(presence).flatMap(
+                            (data) => {
+                              if (data.selection?.graph === graph.id)
+                                return [
+                                  {
+                                    colour: data.colour,
+                                    nodes: new Set(data.selection.nodes),
+                                  },
+                                ];
+                              return [];
+                            },
+                          )}
                           onItemsSelected={(items) => {
                             setSelection(
                               reconcile({ graphId: graph.id, items }),
@@ -695,13 +729,12 @@ class UI extends Effect.Service<UI>()("UI", {
                             actions.SetNodePositions(graph.id, items);
                           }}
                           onDeleteSelection={() => {
-                            console.log(selection);
                             if (selection.graphId === null) return;
                             actions.DeleteSelection(graph.id, [
                               ...selection.items,
                             ]);
                           }}
-                        />
+                        ></Graph>
                         <For each={Object.entries(presence)}>
                           {(item) => (
                             <Show
@@ -720,7 +753,10 @@ class UI extends Effect.Service<UI>()("UI", {
                                 >
                                   <Avatar
                                     name={item[1].name}
-                                    class="absolute top-full left-full -mt-0.5 -ml-0.5 bg-black text-white rounded"
+                                    class="absolute top-full left-full -mt-0.5 -ml-0.5 text-white rounded shadow-lg border border-gray-2"
+                                    style={{
+                                      "background-color": item[1].colour,
+                                    }}
                                   />
                                 </div>
                               )}
@@ -915,7 +951,10 @@ class UI extends Effect.Service<UI>()("UI", {
                           class="ml-auto bg-gray-2 p-1 rounded not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1 outline-none"
                         >
                           <div class="flex flex-row space-x-1.5 items-center">
-                            <Avatar name={data()[1].name} />
+                            <Avatar
+                              name={data()[1].name}
+                              style={{ "background-color": data()[1].colour }}
+                            />
                             <span>{data()[1].name}</span>
                           </div>
                           {Object.entries(presence).length > 1 && (
@@ -938,7 +977,12 @@ class UI extends Effect.Service<UI>()("UI", {
                               <Show when={id !== realtimeId?.toString()}>
                                 <li>
                                   <div class="flex flex-row space-x-1.5 items-center">
-                                    <Avatar name={data.name} />
+                                    <Avatar
+                                      name={data.name}
+                                      style={{
+                                        "background-color": data.colour,
+                                      }}
+                                    />
                                     <span>{data.name}</span>
                                   </div>
                                 </li>
@@ -979,7 +1023,7 @@ function Avatar(props: { name: string } & ComponentProps<"div">) {
     <div
       {...props}
       class={cx(
-        "bg-gray-5 rounded-full size-5 flex items-center justify-center text-[0.65rem]",
+        "rounded-full size-5.5 flex items-center justify-center text-[0.65rem]",
         props.class,
       )}
     >

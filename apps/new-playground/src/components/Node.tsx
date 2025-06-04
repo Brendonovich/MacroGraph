@@ -11,7 +11,6 @@ import {
   ParentProps,
 } from "solid-js";
 import { createEventListener } from "@solid-primitives/event-listener";
-import { createMemo } from "solid-js";
 
 import { NodeId, NodeIO } from "../domain/Node/data";
 import { DeepWriteable } from "../types";
@@ -27,7 +26,7 @@ export function NodeRoot(
     {
       id: NodeId;
       position: { x: number; y: number };
-      selected?: boolean;
+      selected?: boolean | string;
       graphBounds: { left: number; top: number };
       onPinDragStart?(
         event: PointerEvent,
@@ -114,10 +113,14 @@ export function NodeRoot(
       class={cx(
         "absolute rounded-lg overflow-hidden text-xs",
         "bg-black/75 border-black/75 border-2",
-        props.selected && "ring-2 ring-yellow-500 opacity-100",
+        props.selected && "ring-2 opacity-100",
+        props.selected === true && "ring-yellow-500",
+        props.selected,
       )}
       style={{
         transform: `translate(${props.position.x}px, ${props.position.y}px)`,
+        "--un-ring-color":
+          typeof props.selected === "string" ? props.selected : undefined,
       }}
       onPointerDown={(e) => {
         e.stopPropagation();

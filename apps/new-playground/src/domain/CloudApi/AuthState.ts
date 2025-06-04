@@ -10,6 +10,7 @@ export class CloudApiAuthState extends Effect.Service<CloudApiAuthState>()(
 
       const refetch = Effect.gen(function* () {
         const user = yield* apiClient.getUser();
+        console.log({ user });
         yield* SubscriptionRef.set(auth, user);
       });
 
