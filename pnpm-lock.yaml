@@ -292,6 +292,9 @@ importers:
       '@iconify-json/lucide':
         specifier: ^1.2.32
         version: 1.2.32
+      '@iconify-json/material-symbols':
+        specifier: ^1.2.23
+        version: 1.2.23
       '@iconify-json/svg-spinners':
         specifier: ^1.2.2
         version: 1.2.2
@@ -3402,6 +3405,9 @@ packages:
 
   '@iconify-json/lucide@1.2.32':
     resolution: {integrity: sha512-M5efeHQJhlT8FkAXjW+xGu5/lHUt5VBSjd/u9XxmQy6RGXLRCRi0PcUBosAuKALRT15j+U8dN4eWiDhDZjTbSw==}
+
+  '@iconify-json/material-symbols@1.2.23':
+    resolution: {integrity: sha512-GoNuWl8dVDiVFQq+HEgbOmPW0vTycs7qXgtpfBAx4XgDI4MVwnEIjIcYy/tlzzjMF1TPDwkX5fI1+KIylSdBwQ==}
 
   '@iconify-json/svg-spinners@1.2.2':
     resolution: {integrity: sha512-DIErwfBWWzLfmAG2oQnbUOSqZhDxlXvr8941itMCrxQoMB0Hiv8Ww6Bln/zIgxwjDvSem2dKJtap+yKKwsB/2A==}
@@ -13633,6 +13639,10 @@ snapshots:
       '@iconify/types': 2.0.0
 
   '@iconify-json/lucide@1.2.32':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/material-symbols@1.2.23':
     dependencies:
       '@iconify/types': 2.0.0
 

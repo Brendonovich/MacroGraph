@@ -44,9 +44,10 @@ import {
 import utilPackage from "./util-package";
 import twitchPackage from "./twitch-package";
 import obsPackage from "./obs-package";
+import { project } from "./project";
+import { DeepWriteable } from "./types";
 import { NodeRpcs, NodeRpcsLive } from "./domain/Node/rpc";
 import { Graphs } from "./domain/Graph/rpc";
-import { project } from "./project";
 import {
   RealtimeConnection,
   RealtimeConnectionId,
@@ -58,8 +59,7 @@ import { RealtimePresence } from "./domain/Realtime/Presence";
 import { RpcRealtimeMiddleware } from "./domain/Rpc/Middleware";
 import { ProjectActions } from "./domain/Project/Actions";
 import { ProjectPackages } from "./domain/Project/Packages";
-import { DeepWriteable } from "./types";
-import { Graph, GraphId } from "./domain/Graph/data";
+import { Graph } from "./domain/Graph/data";
 
 const program = Effect.gen(function* () {
   const projectActions = yield* ProjectActions;
@@ -71,49 +71,6 @@ const program = Effect.gen(function* () {
   const RpcsLive = Rpcs.toLayer(
     Effect.gen(function* () {
       return {
-        CreateNode: Effect.fn(function* (payload) {
-          const node = yield* projectActions
-            .createNode(payload.graphId, payload.schema, [...payload.position])
-            .pipe(Effect.mapError(() => new SchemaNotFound(payload.schema)));
-
-          yield* realtime.publish({
-            type: "NodeCreated",
-            graphId: payload.graphId,
-            nodeId: node.id,
-            position: node.position,
-            schema: payload.schema,
-            inputs: node.inputs,
-            outputs: node.outputs,
-          });
-
-          return {
-            id: node.id,
-            io: { inputs: node.inputs, outputs: node.outputs },
-          };
-        }),
-        ConnectIO: Effect.fn(function* (payload) {
-          yield* projectActions.addConnection(
-            payload.graphId,
-            payload.output,
-            payload.input,
-          );
-
-          yield* realtime.publish({
-            type: "IOConnected",
-            graphId: payload.graphId,
-            output: payload.output,
-            input: payload.input,
-          });
-        }),
-        DisconnectIO: Effect.fn(function* (payload) {
-          yield* projectActions.disconnectIO(payload.graphId, payload.io);
-
-          yield* realtime.publish({
-            type: "IODisconnected",
-            graphId: payload.graphId,
-            io: payload.io,
-          });
-        }),
         GetProject: Effect.fn(function* () {
           return {
             name: project.name,
@@ -170,9 +127,64 @@ const program = Effect.gen(function* () {
           const pkg = packages.get(payload.package)!;
           return yield* Option.getOrNull(pkg.state)!.get;
         }),
+        CreateNode: Effect.fn(function* (payload) {
+          const node = yield* projectActions
+            .createNode(payload.graphId, payload.schema, [...payload.position])
+            .pipe(Effect.mapError(() => new SchemaNotFound(payload.schema)));
+
+          yield* realtime.publish({
+            type: "NodeCreated",
+            graphId: payload.graphId,
+            nodeId: node.id,
+            position: node.position,
+            schema: payload.schema,
+            inputs: node.inputs,
+            outputs: node.outputs,
+          });
+
+          return {
+            id: node.id,
+            io: { inputs: node.inputs, outputs: node.outputs },
+          };
+        }),
+        ConnectIO: Effect.fn(function* (payload) {
+          yield* projectActions.addConnection(
+            payload.graphId,
+            payload.output,
+            payload.input,
+          );
+
+          yield* realtime.publish({
+            type: "IOConnected",
+            graphId: payload.graphId,
+            output: payload.output,
+            input: payload.input,
+          });
+        }),
+        DisconnectIO: Effect.fn(function* (payload) {
+          yield* projectActions.disconnectIO(payload.graphId, payload.io);
+
+          yield* realtime.publish({
+            type: "IODisconnected",
+            graphId: payload.graphId,
+            io: payload.io,
+          });
+        }),
         SetMousePosition: Effect.fn(function* (payload) {
           const presence = yield* RealtimePresence;
           yield* presence.setMouse(payload.graph, payload.position);
+        }),
+        DeleteSelection: Effect.fn(function* (payload) {
+          yield* projectActions.deleteSelection(
+            payload.graph,
+            payload.selection as DeepWriteable<typeof payload.selection>,
+          );
+
+          yield* realtime.publish({
+            type: "SelectionDeleted",
+            graphId: payload.graph,
+            selection: payload.selection,
+          });
         }),
       };
     }),

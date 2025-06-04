@@ -61,7 +61,7 @@ export function NodeRoot(
     type: "i" | "o",
     ref: Accessor<HTMLDivElement | undefined>,
   ) {
-    const position = createMemo(() => {
+    createEffect(() => {
       index();
 
       const element = ref();
@@ -69,24 +69,17 @@ export function NodeRoot(
 
       const rect = element.getBoundingClientRect();
 
-      return {
+      const position = {
         x: props.position.x + (rect.left - nodeBounds().left) + rect.width / 2,
         y: props.position.y + (rect.top - nodeBounds().top) + rect.height / 2,
       };
+
+      ioPositions.set(`${props.id}:${type}:${id}`, position);
     });
 
-    createEffect(() => {
-      const p = position();
-      if (!p) return;
-
-      ioPositions.set(`${props.id}:${type}:${id}`, p);
-
-      onCleanup(() => {
-        ioPositions.delete(`${props.id}:${type}:${id}`);
-      });
+    onCleanup(() => {
+      ioPositions.delete(`${props.id}:${type}:${id}`);
     });
-
-    return position;
   }
 
   function onPinPointerDown(

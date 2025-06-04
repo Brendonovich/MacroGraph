@@ -9,4 +9,5 @@ declare global {
   const IconLineMdChevronDown: typeof import('~icons/line-md/chevron-down.jsx')['default']
   const IconLineMdChevronSmallDown: typeof import('~icons/line-md/chevron-small-down.jsx')['default']
   const IconLucideChevronDown: typeof import('~icons/lucide/chevron-down.jsx')['default']
+  const IconMaterialSymbolsDeleteOutline: typeof import('~icons/material-symbols/delete-outline.jsx')['default']
 }

@@ -39,26 +39,21 @@ export const XY = S.Struct({
 
 export type ProjectEvent = (typeof ProjectEvent)["Type"];
 export const ProjectEvent = S.Union(
-  S.Struct({
-    type: S.Literal("authChanged"),
+  makeEvent("authChanged", {
     data: S.NullOr(S.Struct({ id: S.String })),
   }),
-  S.Struct({
-    type: S.Literal("packageAdded"),
+  makeEvent("packageAdded", {
     data: S.Struct({
       package: S.String,
     }),
   }),
-  S.Struct({
-    type: S.Literal("packageStateChanged"),
+  makeEvent("packageStateChanged", {
     package: S.String,
   }),
-  S.Struct({
-    type: S.Literal("connectedClientsChanged"),
+  makeEvent("connectedClientsChanged", {
     data: S.Int,
   }),
-  S.Struct({
-    type: S.Literal("PresenceUpdated"),
+  makeEvent("PresenceUpdated", {
     data: S.Record({
       key: S.String,
       value: S.Struct({
@@ -73,20 +68,17 @@ export const ProjectEvent = S.Union(
       }),
     }),
   }),
-  S.Struct({
-    type: S.Literal("NodeMoved"),
+  makeEvent("NodeMoved", {
     graphId: GraphId,
     nodeId: NodeId,
     position: XY,
   }),
-  S.Struct({
-    type: S.Literal("NodesMoved"),
+  makeEvent("NodesMoved", {
     graphId: GraphId,
     positions: S.Array(S.Tuple(NodeId, XY)),
   }),
   S.extend(
-    S.Struct({
-      type: S.Literal("NodeCreated"),
+    makeEvent("NodeCreated", {
       name: S.optional(S.String),
       graphId: GraphId,
       nodeId: NodeId,
@@ -95,18 +87,30 @@ export const ProjectEvent = S.Union(
     }),
     NodeIO,
   ),
-  S.Struct({
-    type: S.Literal("IOConnected"),
+  makeEvent("IOConnected", {
     graphId: GraphId,
     output: IORef,
     input: IORef,
   }),
-  S.Struct({
-    type: S.Literal("IODisconnected"),
+  makeEvent("IODisconnected", {
     graphId: GraphId,
     io: S.extend(IORef, S.Struct({ type: S.Literal("i", "o") })),
   }),
+  makeEvent("SelectionDeleted", {
+    graphId: GraphId,
+    selection: S.Array(NodeId),
+  }),
 );
+
+function makeEvent<S extends string, F extends S.Struct.Fields>(
+  type: S,
+  fields: F,
+) {
+  return S.Struct({
+    ...fields,
+    type: S.Literal(type),
+  });
+}
 
 const SchemaMeta = S.Struct({
   id: S.String,
@@ -171,6 +175,13 @@ export const Rpcs = RpcGroup.make(
       graph: GraphId,
       position: S.Struct({ x: S.Number, y: S.Number }),
     }),
+  }),
+  Rpc.make("DeleteSelection", {
+    payload: S.Struct({
+      graph: GraphId,
+      selection: S.Array(NodeId),
+    }),
+    error: S.Union(GraphNotFoundError, NodeNotFound),
   }),
 ).middleware(RpcRealtimeMiddleware);
 

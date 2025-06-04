@@ -495,7 +495,27 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
         });
       });
 
-      return { createNode, addPackage, addConnection, disconnectIO };
+      const deleteSelection = Effect.fn(function* (
+        graphId: GraphId,
+        selection: Array<NodeId>,
+      ) {
+        const graph = project.graphs.get(graphId);
+        if (!graph) return yield* new GraphNotFoundError({ graphId });
+
+        for (const nodeId of selection) {
+          const index = graph.nodes.findIndex((node) => node.id === nodeId);
+          if (index === -1) continue;
+          graph.nodes.splice(index, 1);
+        }
+      });
+
+      return {
+        createNode,
+        addPackage,
+        addConnection,
+        disconnectIO,
+        deleteSelection,
+      };
     }),
     dependencies: [
       CredentialsCache.Default,

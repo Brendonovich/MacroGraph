@@ -42,9 +42,10 @@ import {
   parseIORef,
 } from "./components/Graph";
 import { ComponentProps } from "solid-js";
+import { createMousePosition } from "@solid-primitives/mouse";
 
-// const API_HOST = "192.168.20.22:5678";
-const API_HOST = "accepting-window-arise-hear.trycloudflare.com";
+const API_HOST = "192.168.20.22:5678";
+// const API_HOST = "aid-constitution-sagem-schema.trycloudflare.com";
 const SECURE_PREIX = window.location.href.startsWith("https") ? "s" : "";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
@@ -82,7 +83,23 @@ class Client extends Effect.Service<Client>()("Client", {
       disableTracing: true,
     }).pipe(Effect.provide(RpcRealtimeClient));
 
-    return { client };
+    // let i = 0;
+
+    return {
+      client,
+      // client: new Proxy(client, {
+      //   get:
+      //     (target, key: string) =>
+      //     (...args: any[]) => {
+      //       const id = i++;
+      //       return Effect.gen(function* () {
+      //         const res = yield* (target as any)[key](...args);
+      //         console.log({ res });
+      //         return res;
+      //       }).pipe(Effect.ensuring(Effect.sync(() => {})));
+      //     },
+      // }),
+    };
   }),
   dependencies: [RpcTransport],
   accessors: true,
@@ -181,6 +198,79 @@ class UI extends Effect.Service<UI>()("UI", {
       }),
       Effect.map(createStore),
     );
+
+    const storeActions = {
+      disconnectIO(
+        prev: typeof data,
+        args: {
+          graphId: GraphId;
+          nodeId: NodeId;
+          type: "i" | "o";
+          ioId: string;
+        },
+      ) {
+        const graph = prev.graphs[args.graphId];
+        if (!graph) return;
+
+        const ioConnections =
+          graph.connections[args.nodeId]?.[args.type === "i" ? "in" : "out"];
+        if (!ioConnections) return;
+
+        const connections = ioConnections[args.ioId];
+        if (!connections) return;
+        delete ioConnections[args.ioId];
+
+        for (const [oppNodeId, oppIoId] of connections) {
+          const oppNodeConnections = graph.connections[oppNodeId];
+          const oppConnections =
+            oppNodeConnections?.[args.type === "o" ? "in" : "out"]?.[oppIoId];
+          if (!oppConnections) continue;
+
+          const index = oppConnections.findIndex(
+            ([nodeId, ioId]) => nodeId === args.nodeId && ioId === args.ioId,
+          );
+          if (index !== -1) oppConnections.splice(index, 1);
+        }
+      },
+      deleteNode(
+        prev: typeof data,
+        args: {
+          graphId: GraphId;
+          nodeId: NodeId;
+        },
+      ) {
+        const graph = prev.graphs[args.graphId];
+        if (!graph) return;
+
+        const nodeConnections = graph.connections[args.nodeId];
+
+        if (nodeConnections?.in)
+          for (const ioId of Object.keys(nodeConnections.in)) {
+            storeActions.disconnectIO(prev, {
+              graphId: args.graphId,
+              nodeId: args.nodeId,
+              type: "i",
+              ioId,
+            });
+          }
+
+        if (nodeConnections?.out)
+          for (const ioId of Object.keys(nodeConnections.out ?? {})) {
+            storeActions.disconnectIO(prev, {
+              graphId: args.graphId,
+              nodeId: args.nodeId,
+              type: "o",
+              ioId,
+            });
+          }
+
+        const nodeIndex = graph.nodes.findIndex(
+          (node) => node.id === args.nodeId,
+        );
+        if (nodeIndex === -1) return;
+        graph.nodes.splice(nodeIndex, 1);
+      },
+    };
 
     const [presence, setPresence] = createStore<
       Record<
@@ -316,33 +406,12 @@ class UI extends Effect.Service<UI>()("UI", {
 
                   setData(
                     produce((prev) => {
-                      const graph = prev.graphs[data.graphId];
-                      if (!graph) return;
-
-                      const ioConnections =
-                        graph.connections[data.io.nodeId]?.[
-                          data.io.type === "i" ? "in" : "out"
-                        ];
-                      if (!ioConnections) return;
-
-                      const connections = ioConnections[data.io.ioId];
-                      if (!connections) return;
-                      delete ioConnections[data.io.ioId];
-
-                      for (const [oppNodeId, oppIoId] of connections) {
-                        const oppNodeConnections = graph.connections[oppNodeId];
-                        const oppConnections =
-                          oppNodeConnections?.[
-                            data.io.type === "o" ? "in" : "out"
-                          ]?.[oppIoId];
-                        if (!oppConnections) continue;
-
-                        const index = oppConnections.findIndex(
-                          ([nodeId, ioId]) =>
-                            nodeId === data.io.nodeId && ioId === data.io.ioId,
-                        );
-                        if (index !== -1) oppConnections.splice(index, 1);
-                      }
+                      storeActions.disconnectIO(prev, {
+                        graphId: data.graphId,
+                        nodeId: data.io.nodeId,
+                        ioId: data.io.ioId,
+                        type: data.io.type,
+                      });
                     }),
                   );
                 }),
@@ -350,6 +419,23 @@ class UI extends Effect.Service<UI>()("UI", {
               tagType("PresenceUpdated", (data) =>
                 Effect.sync(() => {
                   setPresence(reconcile(data.data));
+                }),
+              ),
+              tagType("SelectionDeleted", (data) =>
+                Effect.sync(() => {
+                  setData(
+                    produce((prev) => {
+                      const graph = prev.graphs[data.graphId];
+                      if (!graph) return;
+
+                      for (const nodeId of data.selection) {
+                        storeActions.deleteNode(prev, {
+                          graphId: data.graphId,
+                          nodeId,
+                        });
+                      }
+                    }),
+                  );
                 }),
               ),
               Match.exhaustive,
@@ -362,24 +448,6 @@ class UI extends Effect.Service<UI>()("UI", {
     yield* realtimeIdLatch.await;
 
     const actions = {
-      SetNodePosition: (
-        graphId: GraphId,
-        nodeId: NodeId,
-        position: (typeof XY)["Type"],
-        ephemeral = true,
-      ) => {
-        rpcClient
-          .SetNodePosition({ nodeId, graphId, position })
-          .pipe(Effect.runPromise);
-        setData(
-          produce((data) => {
-            const node = data.graphs[graphId]?.nodes.find(
-              (n) => n.id === nodeId,
-            );
-            if (node) node.position = position;
-          }),
-        );
-      },
       SetNodePositions: (
         graphId: GraphId,
         positions: Array<[NodeId, (typeof XY)["Type"]]>,
@@ -403,7 +471,7 @@ class UI extends Effect.Service<UI>()("UI", {
         graphId: GraphId,
         schema: SchemaRef,
         position: [number, number],
-      ) => {
+      ) =>
         Effect.gen(function* () {
           const resp = yield* rpcClient.CreateNode({
             schema,
@@ -424,9 +492,8 @@ class UI extends Effect.Service<UI>()("UI", {
               });
             }),
           );
-        }).pipe(Effect.runPromise);
-      },
-      ConnectIO: (graphId: GraphId, _one: IORef, _two: IORef) => {
+        }).pipe(Effect.runPromise),
+      ConnectIO: (graphId: GraphId, _one: IORef, _two: IORef) =>
         Effect.gen(function* () {
           const one = parseIORef(_one);
           const two = parseIORef(_two);
@@ -459,8 +526,7 @@ class UI extends Effect.Service<UI>()("UI", {
               inConnections.push([output.nodeId, output.ioId]);
             }),
           );
-        }).pipe(Effect.runPromise);
-      },
+        }).pipe(Effect.runPromise),
       DisconnectIO: (graphId: GraphId, _io: IORef) =>
         Effect.gen(function* () {
           const io = parseIORef(_io);
@@ -507,6 +573,18 @@ class UI extends Effect.Service<UI>()("UI", {
             }),
           );
         }).pipe(Effect.runPromise),
+      DeleteSelection: (graphId: GraphId, selection: Array<NodeId>) =>
+        Effect.gen(function* () {
+          yield* rpcClient.DeleteSelection({ graph: graphId, selection });
+
+          setData(
+            produce((prev) => {
+              for (const nodeId of selection) {
+                storeActions.deleteNode(prev, { graphId, nodeId });
+              }
+            }),
+          );
+        }).pipe(Effect.runPromise),
     };
 
     const dispose = render(() => {
@@ -517,23 +595,47 @@ class UI extends Effect.Service<UI>()("UI", {
             const graph = () => data.graphs["0"];
 
             const [selection, setSelection] = createStore<
-              { graphId: number; items: Set<NodeId> } | { graphId: null }
+              { graphId: GraphId; items: Set<NodeId> } | { graphId: null }
             >({ graphId: null });
+
+            const [ref, setRef] = createSignal<HTMLElement | null>(null);
+
+            const bounds = createElementBounds(ref);
+            const mouse = createMousePosition();
+
+            const [schemaMenu, setSchemaMenu] = createSignal<
+              | { open: false }
+              | { open: true; position: { x: number; y: number } }
+            >({ open: false });
+
+            createEventListener(window, "keydown", (e) => {
+              if (e.code === "Backspace" || e.code === "Delete") {
+                if (selection.graphId !== null) {
+                  actions.DeleteSelection(selection.graphId, [
+                    ...selection.items,
+                  ]);
+                }
+              } else if (e.code === "Period") {
+                if (e.metaKey || e.ctrlKey) {
+                  setSchemaMenu({
+                    open: true,
+                    position: {
+                      x: mouse.x - (bounds.left ?? 0),
+                      y: mouse.y - (bounds.top ?? 0),
+                    },
+                  });
+                }
+              }
+            });
 
             return (
               <div class="flex flex-row flex-1 overflow-hidden">
                 <Show when={graph()} keyed>
                   {(graph) => {
-                    const [ref, setRef] = createSignal<HTMLElement | null>(
-                      null,
-                    );
-
-                    const bounds = createElementBounds(ref);
-
                     createEventListener(window, "pointermove", (e) => {
                       rpcClient
                         .SetMousePosition({
-                          graph: GraphId.make(0),
+                          graph: graph.id,
                           position: {
                             x: e.clientX - (bounds.left ?? 0),
                             y: e.clientY - (bounds.top ?? 0),
@@ -541,11 +643,6 @@ class UI extends Effect.Service<UI>()("UI", {
                         })
                         .pipe(Effect.runPromise);
                     });
-
-                    const [schemaMenu, setSchemaMenu] = createSignal<
-                      | { open: false }
-                      | { open: true; position: { x: number; y: number } }
-                    >({ open: false });
 
                     const [schemaMenuRef, setSchemaMenuRef] =
                       createSignal<HTMLElement | null>(null);
@@ -574,9 +671,6 @@ class UI extends Effect.Service<UI>()("UI", {
                               ? selection.items
                               : new Set()
                           }
-                          onNodeMoved={(nodeId, position) =>
-                            actions.SetNodePosition(graph.id, nodeId, position)
-                          }
                           onItemsSelected={(items) => {
                             setSelection(
                               reconcile({ graphId: graph.id, items }),
@@ -599,6 +693,13 @@ class UI extends Effect.Service<UI>()("UI", {
                             if (selection.graphId === null) return;
 
                             actions.SetNodePositions(graph.id, items);
+                          }}
+                          onDeleteSelection={() => {
+                            console.log(selection);
+                            if (selection.graphId === null) return;
+                            actions.DeleteSelection(graph.id, [
+                              ...selection.items,
+                            ]);
                           }}
                         />
                         <For each={Object.entries(presence)}>

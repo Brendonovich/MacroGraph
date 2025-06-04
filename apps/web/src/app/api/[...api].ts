@@ -25,7 +25,11 @@ import { oauthCredentials, users } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import { AuthProviders } from "../auth/providers";
 import { refreshToken } from "../auth/actions";
-import { posthogCapture, posthogShutdown } from "~/posthog/server";
+import {
+  posthogCapture,
+  posthogIdentify,
+  posthogShutdown,
+} from "~/posthog/server";
 
 const IS_LOGGED_IN = "isLoggedIn";
 
@@ -90,9 +94,11 @@ const getCurrentSession = Effect.gen(function* () {
       }),
     );
 
+  posthogIdentify(data.user.id, { email: data.user.email });
+
   return Option.some({
     id: data.session.id,
-    userId: data.user.id,
+    userId: data.user.email,
   });
 }).pipe(Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()));
 
