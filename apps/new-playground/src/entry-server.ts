@@ -1,17 +1,10 @@
 import {
   Headers,
   HttpApp,
-  HttpMiddleware,
   HttpRouter,
-  HttpServer,
   HttpServerRequest,
   HttpServerResponse,
 } from "@effect/platform";
-import {
-  NodeHttpServer,
-  NodeRuntime as EffectNodeRuntime,
-} from "@effect/platform-node";
-import { createServer } from "node:http";
 import { RpcServer } from "@effect/rpc";
 import {
   Context,
@@ -20,10 +13,8 @@ import {
   PubSub,
   Stream,
   Schema,
-  Scope,
   FiberRef,
   Mailbox,
-  Fiber,
 } from "effect";
 import * as Effect from "effect/Effect";
 import { NodeSdk } from "@effect/opentelemetry";
@@ -32,7 +23,6 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { Route } from "@effect/platform/HttpRouter";
 import { getCurrentFiber } from "effect/Fiber";
 
-import { Logger } from "./Runtime";
 import { SchemaNotFound } from "./errors";
 import {
   Rpcs,
@@ -61,7 +51,26 @@ import { ProjectActions } from "./domain/Project/Actions";
 import { ProjectPackages } from "./domain/Project/Packages";
 import { Graph } from "./domain/Graph/data";
 
-const program = Effect.gen(function* () {
+const NodeSdkLive = NodeSdk.layer(() => ({
+  resource: { serviceName: "mg-server" },
+  // Export span data to the console
+  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
+}));
+
+export const DepsLive = Layer.provideMerge(
+  ProjectActions.Default,
+  Layer.mergeAll(
+    Graphs.Default,
+    CloudApiAuthState.Default,
+    CloudAPIClient.Default,
+    RealtimePresence.Default,
+    ProjectPackages.Default,
+    RealtimePubSub.Default,
+    NodeSdkLive,
+  ),
+);
+
+export const ServerLive = Effect.gen(function* () {
   const projectActions = yield* ProjectActions;
   const packages = yield* ProjectPackages;
   const realtime = yield* RealtimePubSub;
@@ -204,144 +213,77 @@ const program = Effect.gen(function* () {
     return () => RealtimeConnectionId.make(i++);
   })();
 
-  const HttpAppLayer = Layer.unwrapEffect(
-    Effect.gen(function* () {
-      const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(RpcsAll, {
-        spanPrefix: "ProjectRpc",
-      }).pipe(
-        Effect.provide(RpcsLive),
-        Effect.provide(NodeRpcsLive),
-        Effect.provide(RpcsSerialization),
-        Effect.provide(
-          RpcRealtimeMiddleware.context((req) =>
-            Effect.succeed(
-              RealtimeConnection.of({
-                id: RealtimeConnectionId.make(
-                  +Headers.get(req.headers, "realtime-id").pipe(
-                    Option.getOrElse(() => "-1"),
-                  ),
-                ),
-              }),
+  yield* projectActions.addPackage("util", utilPackage).pipe(Effect.orDie);
+  yield* projectActions.addPackage("twitch", twitchPackage).pipe(Effect.orDie);
+  yield* projectActions.addPackage("obs", obsPackage).pipe(Effect.orDie);
+
+  const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(RpcsAll, {
+    spanPrefix: "ProjectRpc",
+  }).pipe(
+    Effect.provide(RpcsLive),
+    Effect.provide(NodeRpcsLive),
+    Effect.provide(RpcsSerialization),
+    Effect.provide(
+      RpcRealtimeMiddleware.context((req) =>
+        Effect.succeed(
+          RealtimeConnection.of({
+            id: RealtimeConnectionId.make(
+              +Headers.get(req.headers, "realtime-id").pipe(
+                Option.getOrElse(() => "-1"),
+              ),
             ),
-          ),
-        ),
-      );
-
-      return HttpRouter.empty.pipe(
-        HttpRouter.mountApp("/rpc", rpcsWebApp),
-        HttpRouter.get(
-          "/realtime",
-          Effect.gen(function* () {
-            const req = yield* HttpServerRequest.HttpServerRequest;
-            const socket = yield* req.upgrade;
-            const writer = yield* socket.writer;
-
-            const connectionId = nextRealtimeClient();
-
-            yield* Effect.gen(function* () {
-              yield* writer(
-                JSON.stringify({ type: "identify", id: connectionId }),
-              );
-
-              const mailbox = yield* createEventStream;
-              while (true) {
-                const a = yield* mailbox.take;
-                yield* writer(JSON.stringify(a));
-              }
-            }).pipe(
-              Effect.provideService(RealtimeConnection, { id: connectionId }),
-              Effect.forkScoped,
-            );
-
-            yield* socket.runRaw((data) => {});
-
-            return HttpServerResponse.empty();
-          }).pipe(Effect.scoped),
-        ),
-        allAsMounted(
-          "/package/:package/rpc",
-          Effect.gen(function* () {
-            const { package: pkg } = yield* HttpRouter.schemaPathParams(
-              Schema.Struct({ package: Schema.String }),
-            );
-            const server = packages
-              .get(pkg)
-              ?.rpcServer.pipe(Option.getOrUndefined);
-            if (!server)
-              return HttpServerResponse.text("Package not found", {
-                status: 404,
-              });
-
-            return yield* server;
           }),
         ),
-        HttpServer.serve(HttpMiddleware.cors()),
-        HttpServer.withLogAddress,
-      );
-    }),
+      ),
+    ),
   );
 
-  // wait for previous to close
-  yield* Effect.sleep("10 millis");
+  return HttpRouter.empty.pipe(
+    HttpRouter.mountApp("/rpc", rpcsWebApp),
+    HttpRouter.get(
+      "/realtime",
+      Effect.gen(function* () {
+        const req = yield* HttpServerRequest.HttpServerRequest;
+        const socket = yield* req.upgrade;
+        const writer = yield* socket.writer;
 
-  yield* projectActions.addPackage("util", utilPackage);
-  yield* projectActions.addPackage("twitch", twitchPackage);
-  yield* projectActions.addPackage("obs", obsPackage);
+        const connectionId = nextRealtimeClient();
 
-  return yield* Layer.launch(
-    HttpAppLayer.pipe(Layer.provide(HMRAwareNodeHttpServerLayer)),
+        yield* Effect.gen(function* () {
+          yield* writer(JSON.stringify({ type: "identify", id: connectionId }));
+
+          const mailbox = yield* createEventStream;
+          while (true) {
+            const a = yield* mailbox.take;
+            yield* writer(JSON.stringify(a));
+          }
+        }).pipe(
+          Effect.provideService(RealtimeConnection, { id: connectionId }),
+          Effect.forkScoped,
+        );
+
+        yield* socket.runRaw((data) => {});
+
+        return HttpServerResponse.empty();
+      }).pipe(Effect.scoped),
+    ),
+    allAsMounted(
+      "/package/:package/rpc",
+      Effect.gen(function* () {
+        const { package: pkg } = yield* HttpRouter.schemaPathParams(
+          Schema.Struct({ package: Schema.String }),
+        );
+        const server = packages.get(pkg)?.rpcServer.pipe(Option.getOrUndefined);
+        if (!server)
+          return HttpServerResponse.text("Package not found", {
+            status: 404,
+          });
+
+        return yield* server;
+      }),
+    ),
   );
 });
-
-const NodeSdkLive = NodeSdk.layer(() => ({
-  resource: { serviceName: "mg-server" },
-  // Export span data to the console
-  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
-}));
-
-program.pipe(
-  Effect.provide(
-    Layer.mergeAll(
-      Graphs.Default,
-      CloudApiAuthState.Default,
-      CloudAPIClient.Default,
-      RealtimePresence.Default,
-      ProjectActions.Default,
-      ProjectPackages.Default,
-    ),
-  ),
-  Effect.scoped,
-  Effect.provide(
-    Context.make(Logger, {
-      print: (v: string) => {
-        console.log(v);
-        return Effect.succeed(null);
-      },
-    }),
-  ),
-  Effect.provide(RealtimePubSub.Default),
-  Effect.provide(NodeSdkLive),
-  EffectNodeRuntime.runMain,
-);
-
-const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
-  () => {
-    const server = createServer();
-
-    const fiber = Option.getOrThrow(Fiber.getCurrentFiber());
-
-    if (import.meta.hot) {
-      import.meta.hot.accept(() => {
-        Fiber.interrupt(fiber).pipe(Effect.runPromise);
-        server.closeAllConnections();
-        server.close();
-      });
-    }
-
-    return server;
-  },
-  { port: 5678, host: "0.0.0.0" },
-);
 
 const executeAppAsMounted = <A, E, R>(app: HttpApp.HttpApp<A, E, R>) =>
   Effect.gen(function* () {
@@ -427,12 +369,13 @@ const createEventStream = Effect.gen(function* () {
   yield* presence.registerToScope;
 
   const numSubscriptionsStream = presence.changes.pipe(
-    Stream.map(
-      (v): ProjectEvent => ({
+    Stream.map((v): ProjectEvent => {
+      console.log({ v });
+      return {
         type: "PresenceUpdated",
         data: v,
-      }),
-    ),
+      };
+    }),
   );
 
   const mailbox = yield* Mailbox.make<ProjectEvent>();

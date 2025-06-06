@@ -6,6 +6,7 @@ import {
   Exit,
   Mailbox,
   Option,
+  Queue,
   Schema,
   Scope,
   Stream,

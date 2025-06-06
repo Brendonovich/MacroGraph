@@ -40,7 +40,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
   "ProjectActions",
   {
     effect: Effect.gen(function* () {
-      const logger = yield* Logger;
+      // const logger = yield* Logger;
       const credentials = yield* CredentialsCache;
       const apiClient = yield* CloudAPIClient;
       const realtime = yield* RealtimePubSub;

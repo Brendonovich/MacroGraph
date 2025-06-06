@@ -50,6 +50,7 @@ export class RealtimePresence extends Effect.Service<RealtimePresence>()(
           }
         >
       >({});
+      console.log({ clients });
 
       return {
         registerToScope: Effect.gen(function* () {
@@ -64,7 +65,9 @@ export class RealtimePresence extends Effect.Service<RealtimePresence>()(
 
           yield* Scope.addFinalizer(
             yield* Scope.Scope,
+
             SubscriptionRef.update(clients, (s) => {
+              console.log(`removing ${connection.id}`);
               delete s[connection.id];
               return { ...s };
             }),

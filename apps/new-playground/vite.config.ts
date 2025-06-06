@@ -6,15 +6,37 @@ import Icons from "unplugin-icons/vite";
 import AutoImport from "unplugin-auto-import/vite";
 import IconsResolver from "unplugin-icons/resolver";
 import * as fs from "node:fs/promises";
+import * as path from "node:path";
 
 const mgPackageSettings = "macrograph:package-settings";
+
+const serverEnvironmentEntry = "./src/prod-server.ts";
+const entryServer = "src/entry-server";
 
 export default defineConfig({
   server: {
     allowedHosts: true,
+    proxy: {
+      "/api": {
+        ws: true,
+        changeOrigin: true,
+        target: "http://localhost:5678",
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
   },
   environments: {
-    client: { consumer: "client" },
+    client: {
+      consumer: "client",
+      build: {
+        ssr: false,
+        rollupOptions: {
+          output: {
+            dir: "./dist/client",
+          },
+        },
+      },
+    },
     server: {
       consumer: "server",
       build: {
@@ -25,10 +47,10 @@ export default defineConfig({
         manifest: true,
         copyPublicDir: false,
         rollupOptions: {
-          input: "./src/entry-server.ts",
+          input: serverEnvironmentEntry,
           output: {
-            dir: "./server-out",
-            entryFileNames: "server.mjs",
+            dir: "./dist/server",
+            entryFileNames: "index.mjs",
           },
         },
         commonjsOptions: {
@@ -60,12 +82,9 @@ export default defineConfig({
         if (!isRunnableDevEnvironment(serverEnv))
           throw new Error("Server environment is not runnable");
 
-        await serverEnv.runner.import("./src/entry-server.ts").catch((e) => {
+        await serverEnv.runner.import("./src/dev-server").catch((e) => {
           console.error(e);
         });
-      },
-      config() {
-        return {};
       },
     },
     UnoCSS(),

@@ -51,9 +51,7 @@ const SECURE_PREIX = window.location.href.startsWith("https") ? "s" : "";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
 
-const SocketLayer = BrowserSocket.layerWebSocket(
-  `ws${SECURE_PREIX}://${API_HOST}/realtime`,
-);
+const SocketLayer = BrowserSocket.layerWebSocket(`/api/realtime`);
 
 let realtimeId: null | number;
 
@@ -70,9 +68,7 @@ const RpcRealtimeClient = RpcMiddleware.layerClient(
     }),
 );
 
-const RpcSocketLayer = BrowserSocket.layerWebSocket(
-  `ws${SECURE_PREIX}://${API_HOST}/rpc`,
-);
+const RpcSocketLayer = BrowserSocket.layerWebSocket(`/api/rpc`);
 const RpcTransport = RpcClient.layerProtocolSocket.pipe(
   Layer.provide(RpcsSerialization),
   Layer.provide(RpcSocketLayer),
@@ -125,7 +121,7 @@ class UI extends Effect.Service<UI>()("UI", {
             }).pipe(
               Effect.provide(
                 RpcClient.layerProtocolHttp({
-                  url: `http${SECURE_PREIX}://${API_HOST}/package/${name}/rpc`,
+                  url: `/api/package/${name}/rpc`,
                 }),
               ),
               Effect.provide(RpcSerialization.layerJson),

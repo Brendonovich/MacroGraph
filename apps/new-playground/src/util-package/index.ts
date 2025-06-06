@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 
 import { definePackage, PackageEngine } from "../package";
 import { getInput, setOutput } from "../package-utils";
-import { Logger } from "../Runtime";
+// import { Logger } from "../Runtime";
 
 export default definePackage(
   Effect.fn(function* (pkg) {
@@ -18,8 +18,8 @@ export default definePackage(
         in: c.in.data("in", Schema.String),
       }),
       run: function* (io) {
-        const logger = yield* Logger;
-        yield* logger.print(`Log: ${yield* getInput(io.in)}`);
+        // const logger = yield* Logger;
+        // yield* logger.print(`Log: ${yield* getInput(io.in)}`);
 
         return io.execOut;
       },
