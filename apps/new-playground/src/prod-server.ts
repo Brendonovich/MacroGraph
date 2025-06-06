@@ -1,4 +1,5 @@
 import {
+  Headers,
   HttpMiddleware,
   HttpRouter,
   HttpServer,
@@ -25,7 +26,18 @@ Layer.unwrapEffect(
               yield* HttpServerRequest.HttpServerRequest;
             let { url } = httpServerRequest;
             if (url === "/") url = "/index.html";
-            return yield* HttpServerResponse.file(`dist/client${url}`);
+
+            let response = yield* HttpServerResponse.file(`dist/client${url}`);
+
+            if (url.startsWith("/assets"))
+              response = response.pipe(
+                HttpServerResponse.setHeader(
+                  "cache-control",
+                  "public,immutable,max-age=31536000",
+                ),
+              );
+
+            return response;
           }),
         ),
       ),
