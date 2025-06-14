@@ -2,30 +2,21 @@ import { Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
 import OBSWebsocket from "obs-websocket-js";
 
-import { getInput } from "../package-utils";
-import { definePackage } from "../package";
-import { ConnectionFailed, RPCS, STATE } from "./shared";
+import { getInput, Package, PackageEngine } from "../package-utils";
+import { ConnectionFailed, RPCS } from "./shared";
 
-export default definePackage(
-  Effect.fn(function* (pkg, ctx) {
+const Engine = PackageEngine.make<
+  {
+    connections: Array<{
+      address: string;
+      password: string | undefined;
+      state: any;
+    }>;
+  },
+  typeof RPCS
+>({ rpc: RPCS })(
+  Effect.fn(function* (ctx) {
     const obs = new OBSWebsocket();
-
-    yield* pkg.schema("setCurrentProgramScene", {
-      name: "Set Current Program Scene",
-      type: "exec",
-      io: (c) => ({
-        execIn: c.in.exec("exec"),
-        execOut: c.out.exec("exec"),
-        scene: c.in.data("scene", Schema.String),
-      }),
-      run: function* (io) {
-        const sceneName = yield* getInput(io.scene);
-
-        yield* Effect.tryPromise(() =>
-          obs.call("SetCurrentProgramScene", { sceneName }),
-        ).pipe(Effect.catchTag("UnknownException", () => Effect.succeed(null)));
-      },
-    });
 
     type Instance = {
       password: Option.Option<string>;
@@ -131,26 +122,44 @@ export default definePackage(
     });
 
     return {
-      engine: Effect.gen(function* () {}),
-      rpc: { group: RPCS, layer },
-      state: {
-        schema: STATE,
-        get: Effect.gen(function* () {
-          return {
-            connections: yield* Effect.all(
-              [...instances.entries()].map(([address, instance]) =>
-                Effect.gen(function* () {
-                  return {
-                    address,
-                    password: Option.getOrUndefined(instance.password),
-                    state: instance.state,
-                  };
-                }).pipe(instance.lock.withPermits(1)),
-              ),
+      rpc: layer,
+      state: Effect.gen(function* () {
+        return {
+          connections: yield* Effect.all(
+            [...instances.entries()].map(([address, instance]) =>
+              Effect.gen(function* () {
+                return {
+                  address,
+                  password: Option.getOrUndefined(instance.password),
+                  state: instance.state,
+                };
+              }).pipe(instance.lock.withPermits(1)),
             ),
-          };
-        }),
-      },
+          ),
+        };
+      }),
     };
   }),
 );
+
+export default Package.make({
+  engine: Engine,
+  builder: (ctx) => {
+    ctx.schema("setCurrentProgramScene", {
+      name: "Set Current Program Scene",
+      type: "exec",
+      io: (c) => ({
+        execIn: c.in.exec("exec"),
+        execOut: c.out.exec("exec"),
+        scene: c.in.data("scene", Schema.String),
+      }),
+      run: function* (io) {
+        const sceneName = yield* getInput(io.scene);
+
+        // yield* Effect.tryPromise(() =>
+        //   obs.call("SetCurrentProgramScene", { sceneName }),
+        // ).pipe(Effect.catchTag("UnknownException", () => Effect.succeed(null)));
+      },
+    });
+  },
+});

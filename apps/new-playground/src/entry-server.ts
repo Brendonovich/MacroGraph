@@ -54,7 +54,7 @@ import { Graph } from "./domain/Graph/data";
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "mg-server" },
   // Export span data to the console
-  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
+  spanProcessor: [new BatchSpanProcessor(new OTLPTraceExporter())],
 }));
 
 export const DepsLive = Layer.provideMerge(
@@ -370,7 +370,6 @@ const createEventStream = Effect.gen(function* () {
 
   const numSubscriptionsStream = presence.changes.pipe(
     Stream.map((v): ProjectEvent => {
-      console.log({ v });
       return {
         type: "PresenceUpdated",
         data: v,

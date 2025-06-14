@@ -1,15 +1,27 @@
-import { Console, Schema } from "effect";
+import { Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
 
-import { definePackage, PackageEngine } from "../package";
-import { getInput, setOutput } from "../package-utils";
+import { getInput, Package, PackageEngine, setOutput } from "../package-utils";
 // import { Logger } from "../Runtime";
 
-export default definePackage(
-  Effect.fn(function* (pkg) {
-    const tick = pkg.event("tick", Schema.Number);
+const Engine = PackageEngine.make<never>()<number>(
+  Effect.fn(function* (ctx) {
+    let i = 0;
 
-    yield* pkg.schema("print", {
+    yield* Effect.forkScoped(
+      Effect.forever(
+        Effect.sync(() => ctx.emitEvent(i++)).pipe(Effect.delay("1 second")),
+      ),
+    );
+
+    return {};
+  }),
+);
+
+export default Package.make({
+  engine: Engine,
+  builder: (ctx) => {
+    ctx.schema("print", {
       name: "Print",
       type: "exec",
       io: (c) => ({
@@ -18,6 +30,7 @@ export default definePackage(
         in: c.in.data("in", Schema.String),
       }),
       run: function* (io) {
+        console.log(`Log: ${yield* getInput(io.in)}`);
         // const logger = yield* Logger;
         // yield* logger.print(`Log: ${yield* getInput(io.in)}`);
 
@@ -25,10 +38,10 @@ export default definePackage(
       },
     });
 
-    yield* pkg.schema("ticker", {
+    ctx.schema("ticker", {
       name: "Ticker",
       type: "event",
-      event: tick,
+      event: Option.some,
       io: (c) => ({
         execOut: c.out.exec("exec"),
         tick: c.out.data("tick", Schema.Int),
@@ -40,7 +53,7 @@ export default definePackage(
       },
     });
 
-    yield* pkg.schema("intToString", {
+    ctx.schema("intToString", {
       type: "pure",
       io: (c) => ({
         int: c.in.data("int", Schema.Int),
@@ -50,15 +63,5 @@ export default definePackage(
         yield* setOutput(io.str, String(yield* getInput(io.int)));
       },
     });
-
-    return {
-      engine: Effect.gen(function* () {
-        let i = 0;
-        while (true) {
-          yield* PackageEngine.emit(tick, i++);
-          yield* Effect.sleep(1000);
-        }
-      }),
-    };
-  }),
-);
+  },
+});

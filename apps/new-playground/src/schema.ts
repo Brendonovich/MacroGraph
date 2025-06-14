@@ -1,4 +1,4 @@
-import { Data, Effect, Schema } from "effect";
+import { Data, Effect, Option, Schema } from "effect";
 import { YieldWrap } from "effect/Utils";
 import { DataInputRef, DataOutputRef, ExecInputRef, ExecOutputRef } from "./io";
 import { EventRef } from "./package";
@@ -8,8 +8,9 @@ export { Schema } from "effect";
 
 export type NodeSchema<
   TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> = ExecSchema<TIO> | PureSchema<TIO> | EventSchema<TIO, TEventData>;
+  TEvents = never,
+  TEvent extends TEvents = never,
+> = ExecSchema<TIO> | PureSchema<TIO> | EventSchema<TIO, TEvents, TEvent>;
 
 export type EffectGenerator<
   Eff extends Effect.Effect<any, any, any>,
@@ -69,34 +70,37 @@ export interface ExecSchema<TIO = any>
 
 export interface EventSchemaDefinition<
   TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
+  TEvents = never,
+  TEvent extends TEvents = never,
 > extends SchemaDefinitionBase {
   type: "event";
-  event: EventRef<string, TEventData>;
+  event: (e: TEvents) => Option.Option<TEvent>;
   io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
   run: (
     io: TIO,
-    data: TEventData["Encoded"],
+    data: TEvent,
   ) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef>;
 }
 
 export interface EventSchema<
   TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
-> extends Omit<EventSchemaDefinition<TIO, TEventData>, "run"> {
+  TEvents = never,
+  TEvent extends TEvents = never,
+> extends Omit<EventSchemaDefinition<TIO, TEvents, TEvent>, "run"> {
   run: ReturnType<
-    EventSchemaDefinition<TIO, TEventData>["run"]
+    EventSchemaDefinition<TIO, TEvents, TEvent>["run"]
   > extends EffectGenerator<infer TEff, any>
     ? (
-        ...args: Parameters<EventSchemaDefinition<TIO, TEventData>["run"]>
+        ...args: Parameters<EventSchemaDefinition<TIO, TEvents, TEvent>["run"]>
       ) => TEff
     : never;
 }
 
 export type SchemaDefinition<
   TIO = any,
-  TEventData extends Schema.Schema<any> = Schema.Schema<any>,
+  TEvents = never,
+  TEvent extends TEvents = never,
 > =
   | ExecSchemaDefinition<TIO>
   | PureSchemaDefinition<TIO>
-  | EventSchemaDefinition<TIO, TEventData>;
+  | EventSchemaDefinition<TIO, TEvents, TEvent>;

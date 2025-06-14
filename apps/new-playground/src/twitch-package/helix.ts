@@ -62,11 +62,12 @@ export class HelixApi extends HttpApi.make("helix")
             data: S.Array(
               S.Struct({
                 id: S.String,
-                status: S.Literal(
-                  "enabled",
-                  "websocket_disconnected",
-                  "websocket_failed_ping_pong",
-                ),
+                status: S.String,
+                // S.Literal(
+                //   "enabled",
+                //   "websocket_disconnected",
+                //   "websocket_failed_ping_pong",
+                // ),
                 type: S.String,
                 version: S.String,
                 condition: S.Any,

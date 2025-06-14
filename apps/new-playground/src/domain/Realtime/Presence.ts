@@ -5,6 +5,7 @@ import {
   HashMap,
   Arbitrary,
   FastCheck,
+  Stream,
 } from "effect";
 import { faker } from "@faker-js/faker/locale/en_AU";
 
@@ -50,7 +51,6 @@ export class RealtimePresence extends Effect.Service<RealtimePresence>()(
           }
         >
       >({});
-      console.log({ clients });
 
       return {
         registerToScope: Effect.gen(function* () {
@@ -67,13 +67,18 @@ export class RealtimePresence extends Effect.Service<RealtimePresence>()(
             yield* Scope.Scope,
 
             SubscriptionRef.update(clients, (s) => {
-              console.log(`removing ${connection.id}`);
               delete s[connection.id];
               return { ...s };
             }),
           );
         }),
-        changes: clients.changes,
+        changes: clients.changes.pipe(
+          Stream.throttle({
+            cost: (c) => c.length,
+            duration: "25 millis",
+            units: 1,
+          }),
+        ),
         setMouse: Effect.fn(function* (
           graphId: GraphId,
           position: { x: number; y: number },

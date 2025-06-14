@@ -26,8 +26,14 @@ const subscriptionTypes = {
     },
     event: {
       user_id: S.String,
+      user_login: S.String,
+      user_name: S.String,
       broadcaster_user_id: S.String,
+      broadcaster_user_login: S.String,
+      broadcaster_user_name: S.String,
       moderator_user_id: S.String,
+      moderator_user_login: S.String,
+      moderator_user_name: S.String,
       reason: S.String,
       banned_at: S.DateFromString,
       ends_at: S.NullOr(S.DateFromString),
@@ -42,8 +48,14 @@ const subscriptionTypes = {
     },
     event: {
       user_id: S.String,
+      user_login: S.String,
+      user_name: S.String,
       broadcaster_user_id: S.String,
+      broadcaster_user_login: S.String,
+      broadcaster_user_name: S.String,
       moderator_user_id: S.String,
+      moderator_user_login: S.String,
+      moderator_user_name: S.String,
     },
   },
   channelFollow: {
@@ -135,4 +147,21 @@ export function isEventSubMessageType<
   type: T,
 ): msg is Extract<EventSubMessage, { metadata: { message_type: T } }> {
   return msg.metadata.message_type === type;
+}
+
+type EventSubNotificationMessage = Extract<
+  EventSubMessage,
+  { metadata: { message_type: "notification" } }
+>;
+
+export function isNotificationType<
+  T extends EventSubNotificationMessage["metadata"]["subscription_type"],
+>(
+  msg: EventSubNotificationMessage,
+  type: T,
+): msg is Extract<
+  EventSubNotificationMessage,
+  { metadata: { subscription_type: T } }
+> {
+  return msg.metadata.subscription_type === type;
 }

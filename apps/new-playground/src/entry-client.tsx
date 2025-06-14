@@ -689,8 +689,10 @@ class UI extends Effect.Service<UI>()("UI", {
                               ? selection.items
                               : new Set()
                           }
-                          remoteSelections={Object.values(presence).flatMap(
-                            (data) => {
+                          remoteSelections={Object.entries(presence).flatMap(
+                            ([userId, data]) => {
+                              if (Number(userId) === realtimeId) return [];
+
                               if (data.selection?.graph === graph.id)
                                 return [
                                   {
@@ -730,7 +732,7 @@ class UI extends Effect.Service<UI>()("UI", {
                               ...selection.items,
                             ]);
                           }}
-                        ></Graph>
+                        />
                         <For each={Object.entries(presence)}>
                           {(item) => (
                             <Show
@@ -799,7 +801,7 @@ class UI extends Effect.Service<UI>()("UI", {
                                               setSchemaMenu({ open: false });
                                             }}
                                           >
-                                            {schemaId}
+                                            {schema.name ?? schemaId}
                                           </button>
                                         )}
                                       </For>

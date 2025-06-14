@@ -1,45 +1,49 @@
 import {
   Chunk,
   Context,
-  Deferred,
   Effect,
   Exit,
   Mailbox,
   Option,
-  Queue,
   Schema,
   Scope,
   Stream,
 } from "effect";
-
-import { definePackage } from "../package";
-import { RPCS, STATE } from "./shared";
 import {
   FetchHttpClient,
   HttpApiClient,
   HttpClient,
   HttpClientRequest,
-  Socket,
 } from "@effect/platform";
+
+import { RPCS, STATE } from "./shared";
 import { HelixApi } from "./helix";
 import {
   EVENTSUB_MESSAGE,
   EventSubMessage,
   isEventSubMessageType,
+  isNotificationType,
 } from "./eventSub";
-import { layerWebSocketConstructor } from "@effect/platform-node/NodeSocket";
-import { makeSpan } from "effect/Effect";
-import { Resource } from "@effect/opentelemetry/Resource";
+import { Package, PackageEngine, setOutput } from "../package-utils";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
-export default definePackage(
-  Effect.fn(function* (pkg, ctx) {
+const Engine = PackageEngine.make<
+  {
+    accounts: Array<{
+      id: string;
+      displayName: string;
+      eventSubSocket: { state: "connecting" | "connected" | "disconnected" };
+    }>;
+  },
+  typeof RPCS
+>({ rpc: RPCS })<EventSubMessage>(
+  Effect.fn(function* (ctx) {
     type Socket = {
       lock: Effect.Semaphore;
       ws: WebSocket;
       state: "connecting" | "connected";
-      events: Mailbox.ReadonlyMailbox<EventSubMessage>;
+      events: Stream.Stream<EventSubMessage>;
     };
 
     const sockets = new Map<string, Socket>();
@@ -115,7 +119,20 @@ export default definePackage(
 
         const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
 
-        const events = yield* Mailbox.make<EventSubMessage>();
+        const events = Stream.asyncPush<EventSubMessage>((emit) =>
+          Effect.gen(function* () {
+            ws.onmessage = (event) => {
+              emit.single(
+                Schema.decodeSync(EVENTSUB_MESSAGE)(JSON.parse(event.data)),
+              );
+            };
+
+            ws.onclose = () => {
+              emit.end();
+              // events.unsafeDone(Exit.succeed(undefined));
+            };
+          }),
+        );
 
         const socket: Socket = { lock, ws, state: "connecting", events };
 
@@ -123,19 +140,7 @@ export default definePackage(
           sockets.set(accountId, socket);
         }).pipe(lock.withPermits(1), Effect.ensuring(ctx.dirtyState));
 
-        ws.onmessage = (event) => {
-          events.unsafeOffer(
-            Schema.decodeSync(EVENTSUB_MESSAGE)(JSON.parse(event.data)),
-          );
-        };
-
-        ws.onclose = () => {
-          events.unsafeDone(Exit.succeed(undefined));
-        };
-
-        const eventStream = Mailbox.toStream(events);
-
-        const welcomeEvent = yield* Stream.take(eventStream, 1).pipe(
+        const welcomeEvent = yield* Stream.take(events, 1).pipe(
           Stream.runCollect,
           Effect.map(Chunk.get(0)),
           Effect.map(
@@ -154,14 +159,12 @@ export default definePackage(
           const subs = yield* helixClient.eventSub.getSubscriptions();
           yield* Effect.log(`Found ${subs.data.length} existing subscriptions`);
           yield* Effect.all(
-            subs.data.map(
-              (sub) =>
-                // sub.status === "websocket_disconnected"
-                //   ?
-                helixClient.eventSub.deleteSubscription({
-                  urlParams: { id: sub.id },
-                }),
-              // : Effect.void,
+            subs.data.map((sub) =>
+              sub.status === "websocket_disconnected"
+                ? helixClient.eventSub.deleteSubscription({
+                    urlParams: { id: sub.id },
+                  })
+                : Effect.void,
             ),
             { concurrency: 10 },
           ).pipe(Effect.withSpan("deleteOldSubscriptions"));
@@ -216,17 +219,19 @@ export default definePackage(
         }).pipe(Effect.orDie, Effect.ensuring(ctx.dirtyState));
 
         const scope = yield* Scope.make();
-        yield* Effect.gen(function* () {
-          yield* Stream.runForEach(eventStream, (event) => {
-            let spanName = `Message.${event.metadata.message_type}`;
 
-            return Effect.gen(function* () {
-              if (isEventSubMessageType(event, "session_welcome"))
-                throw new Error("Unexpected session welcome");
-            }).pipe(
-              Effect.withSpan(spanName, { attributes: flattenObject(event) }),
-            );
-          });
+        yield* Stream.runForEach(events, (event) => {
+          let spanName = `Message.${event.metadata.message_type}`;
+
+          return Effect.gen(function* () {
+            if (isEventSubMessageType(event, "session_welcome"))
+              throw new Error("Unexpected session welcome");
+
+            if (isEventSubMessageType(event, "notification"))
+              ctx.emitEvent(event);
+          }).pipe(
+            Effect.withSpan(spanName, { attributes: flattenObject(event) }),
+          );
         }).pipe(
           Effect.withSpan(`twitch.EventSub.${accountId}`, { root: true }),
           Effect.ensuring(
@@ -249,35 +254,108 @@ export default definePackage(
 
         socket.ws.close();
 
-        yield* socket.events.await;
+        yield* socket.events.pipe(Stream.runForEach(() => Effect.void));
       }),
     });
 
     return {
-      engine: Effect.gen(function* () {}),
-      rpc: { group: RPCS, layer },
-      state: {
-        schema: STATE,
-        get: Effect.gen(function* () {
-          const credentials = yield* ctx.credentials.pipe(Effect.orDie);
+      rpc: layer,
+      state: Effect.gen(function* () {
+        const credentials = yield* ctx.credentials.pipe(Effect.orDie);
 
-          return {
-            accounts: credentials.map(
-              (c) =>
-                ({
-                  id: c.id,
-                  displayName: c.displayName!,
-                  eventSubSocket: {
-                    state: sockets.get(c.id)?.state ?? "disconnected",
-                  },
-                }) as const,
-            ),
-          };
-        }),
-      },
+        return {
+          accounts: credentials.map((c) => ({
+            id: c.id,
+            displayName: c.displayName!,
+            eventSubSocket: {
+              state: sockets.get(c.id)?.state ?? "disconnected",
+            },
+          })),
+        };
+      }),
     };
   }),
 );
+
+export default Package.make({
+  engine: Engine,
+  builder: (ctx) => {
+    ctx.schema("notification.channel.ban", {
+      name: "User Banned",
+      type: "event",
+      event: (e) =>
+        isEventSubMessageType(e, "notification") &&
+        isNotificationType(e, "channel.ban")
+          ? Option.some(e)
+          : Option.none(),
+      io: (io) => ({
+        exec: io.out.exec("exec"),
+        userId: io.out.data("userId", Schema.String),
+        userLogin: io.out.data("userLogin", Schema.String),
+        userName: io.out.data("userName", Schema.String),
+        broadcasterId: io.out.data("broadcasterId", Schema.String),
+        broadcasterLogin: io.out.data("broadcasterLogin", Schema.String),
+        broadcasterName: io.out.data("broadcasterName", Schema.String),
+        moderatorId: io.out.data("moderatorId", Schema.String),
+        moderatorLogin: io.out.data("moderatorLogin", Schema.String),
+        moderatorName: io.out.data("moderatorName", Schema.String),
+        reason: io.out.data("reason", Schema.String),
+        bannedAt: io.out.data("bannedAt", Schema.Date),
+        endsAt: io.out.data("endsAt", Schema.OptionFromNullOr(Schema.Date)),
+      }),
+      run: function* (io, { payload: { event } }) {
+        yield* setOutput(io.userId, event.user_id);
+        yield* setOutput(io.userName, event.user_name);
+        yield* setOutput(io.userLogin, event.user_login);
+        yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
+        yield* setOutput(io.broadcasterLogin, event.broadcaster_user_login);
+        yield* setOutput(io.broadcasterName, event.broadcaster_user_name);
+        yield* setOutput(io.moderatorId, event.moderator_user_id);
+        yield* setOutput(io.moderatorLogin, event.moderator_user_login);
+        yield* setOutput(io.moderatorName, event.moderator_user_name);
+        yield* setOutput(io.reason, event.reason);
+        yield* setOutput(io.bannedAt, event.banned_at);
+        yield* setOutput(io.endsAt, Option.fromNullable(event.ends_at));
+
+        return io.exec;
+      },
+    });
+    ctx.schema("notification.channel.unban", {
+      name: "User Unbanned",
+      type: "event",
+      event: (e) =>
+        isEventSubMessageType(e, "notification") &&
+        isNotificationType(e, "channel.unban")
+          ? Option.some(e)
+          : Option.none(),
+      io: (io) => ({
+        exec: io.out.exec("exec"),
+        userId: io.out.data("userId", Schema.String),
+        userLogin: io.out.data("userLogin", Schema.String),
+        userName: io.out.data("userName", Schema.String),
+        broadcasterId: io.out.data("broadcasterId", Schema.String),
+        broadcasterLogin: io.out.data("broadcasterLogin", Schema.String),
+        broadcasterName: io.out.data("broadcasterName", Schema.String),
+        moderatorId: io.out.data("moderatorId", Schema.String),
+        moderatorLogin: io.out.data("moderatorLogin", Schema.String),
+        moderatorName: io.out.data("moderatorName", Schema.String),
+      }),
+      run: function* (io, { payload: { event } }) {
+        yield* setOutput(io.userId, event.user_id);
+        yield* setOutput(io.userName, event.user_name);
+        yield* setOutput(io.userLogin, event.user_login);
+        yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
+        yield* setOutput(io.broadcasterLogin, event.broadcaster_user_login);
+        yield* setOutput(io.broadcasterName, event.broadcaster_user_name);
+        yield* setOutput(io.moderatorId, event.moderator_user_id);
+        yield* setOutput(io.moderatorLogin, event.moderator_user_login);
+        yield* setOutput(io.moderatorName, event.moderator_user_name);
+
+        return io.exec;
+      },
+    });
+  },
+});
 
 function flattenObject(
   obj: Record<string, any>,

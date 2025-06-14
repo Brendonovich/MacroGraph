@@ -1,4 +1,4 @@
-import { Context, Data, Effect, Layer, Option, Schema } from "effect";
+import { Context, Data, Effect, Layer, Option, Schema, Struct } from "effect";
 import { CREDENTIAL } from "@macrograph/web-api";
 
 import { NodeRuntime } from "./Runtime";
@@ -73,44 +73,48 @@ export class CredentialsFetchFailed extends Schema.TaggedError<CredentialsFetchF
   { message: Schema.String },
 ) {}
 
+export interface PackageContext<TEvents> {
+  dirtyState: Effect.Effect<void>;
+  credentials: Effect.Effect<
+    ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>,
+    CredentialsFetchFailed
+  >;
+  refreshCredential(id: string): Effect.Effect<never, ForceRetryError>;
+  emitEvent(event: TEvents): Effect.Effect<void>;
+}
 export type PackageDefinition<
   TRpcs extends Rpc.Any,
   TState extends Schema.Schema<any>,
+  TEvents extends any,
 > = (
   pkg: PackageBuilder,
-  ctx: {
-    dirtyState: Effect.Effect<void>;
-    credentials: Effect.Effect<
-      ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>,
-      CredentialsFetchFailed
-    >;
-    refreshCredential(id: string): Effect.Effect<never, ForceRetryError>;
-  },
+  ctx: PackageContext<TEvents>,
 ) => Effect.Effect<void | PackageBuildReturn<TRpcs, TState>, DuplicateSchemaId>;
 
 export function definePackage<
   TRpcs extends Rpc.Any,
   TState extends Schema.Schema<any>,
->(cb: PackageDefinition<TRpcs, TState>) {
+  TEvents extends any,
+>(cb: PackageDefinition<TRpcs, TState, TEvents>) {
   return cb;
 }
 
 export class PackageBuilder {
-  private schemas = new Map<string, NodeSchema>();
+  private schemas = new Map<string, NodeSchema<any, any, any>>();
   private events = new Map<string, EventRef>();
 
   constructor(public readonly id: string) {}
 
-  schema = <TIO>(id: string, schema: SchemaDefinition<TIO>) => {
+  schema = <TIO>(id: string, schema: SchemaDefinition<TIO, any, any>) => {
     const self = this;
-    return Effect.gen(function* () {
-      if (self.schemas.has(id)) yield* new DuplicateSchemaId();
+    // return Effect.gen(function* () {
+    //   if (self.schemas.has(id)) return yield* new DuplicateSchemaId();
 
-      self.schemas.set(id, {
-        ...schema,
-        run: Effect.fn(schema.run as any),
-      } as NodeSchema<TIO>);
-    });
+    self.schemas.set(id, {
+      ...schema,
+      run: Effect.fn(schema.run as any),
+    } as NodeSchema<TIO, any, any>);
+    // });
   };
 
   event<TId extends string>(id: TId): EventRef<TId, Schema.Schema<void>>;
@@ -136,7 +140,7 @@ export class PackageBuilder {
 export class Package {
   constructor(
     public readonly id: string,
-    public readonly schemas: Map<string, NodeSchema>,
+    public readonly schemas: Map<string, NodeSchema<any, any, any>>,
     private readonly events: Map<string, EventRef>,
     public engine?: PackageEngine.PackageEngine,
   ) {}

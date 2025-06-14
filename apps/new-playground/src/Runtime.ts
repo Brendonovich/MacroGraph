@@ -28,9 +28,8 @@ export class Logger extends Context.Tag("Logger")<
 >() {}
 
 export type RunFunctionAvailableRequirements =
-  | Logger
-  | ExecutionContext
-  | NodeExecutionContext;
+  // | Logger
+  ExecutionContext | NodeExecutionContext;
 
 export class ExecutionContext extends Context.Tag("ExecutionContext")<
   ExecutionContext,

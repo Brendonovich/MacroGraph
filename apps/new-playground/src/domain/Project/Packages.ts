@@ -6,7 +6,7 @@ export type PackageEntry = {
   pkg: Package;
   state: Option.Option<SubscriptionRef.SubscriptionRef<any>>;
   rpcServer: Option.Option<HttpApp.Default<never, Scope.Scope>>;
-  ret: PackageBuildReturn<any, any>;
+  // ret: PackageBuildReturn<any, any>;
 };
 
 export class ProjectPackages extends Effect.Service<ProjectPackages>()(

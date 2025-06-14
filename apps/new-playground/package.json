@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@effect/language-service": "^0.17.1",
+    "@effect/language-service": "^0.20.0",
     "@effect/vitest": "^0.20.2",
     "@iconify-json/gg": "^1.0.0",
     "@iconify-json/line-md": "^1.2.8",
