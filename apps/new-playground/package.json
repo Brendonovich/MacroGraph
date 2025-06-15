@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "dotenv -e .env.local -- vite",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -42,6 +42,7 @@
     "@opentelemetry/sdk-trace-web": "^2.0.1",
     "@radix-ui/colors": "^3.0.0",
     "@solid-primitives/bounds": "^0.0.118",
+    "@solid-primitives/context": "^0.2.3",
     "@solid-primitives/event-listener": "^2.3.3",
     "@solid-primitives/map": "^0.4.11",
     "@solid-primitives/mouse": "^2.0.19",
@@ -53,6 +54,7 @@
     "@tanstack/query-core": "^5.75.7",
     "@unocss/reset": "^66.1.1",
     "cva": "npm:class-variance-authority@^0.7.1",
+    "dotenv-cli": "^8.0.0",
     "effect": "^3.14.2",
     "hono": "^4.7.5",
     "obs-websocket-js": "^5.0.5",

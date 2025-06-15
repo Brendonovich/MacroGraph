@@ -1,4 +1,3 @@
-// @refresh reload
 import { RpcClient, RpcMiddleware, RpcSerialization } from "@effect/rpc";
 import { Layer, Match, PubSub, Stream } from "effect";
 import * as Effect from "effect/Effect";
@@ -22,14 +21,15 @@ import { Popover } from "@kobalte/core/popover";
 import createPresence from "solid-presence";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createElementBounds } from "@solid-primitives/bounds";
+import { createEffect, ComponentProps } from "solid-js";
+import { createMousePosition } from "@solid-primitives/mouse";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
 import "./style.css";
 
 import { GlobalAppState } from "./package-settings-utils";
-import { ProjectEvent, Rpcs, RpcsSerialization } from "./shared";
-import { NodeRpcs } from "./domain/Node/rpc";
+import { ProjectEvent, RpcsSerialization } from "./shared";
 import { NodeId, XY } from "./domain/Node/data";
 import { GraphId } from "./domain/Graph/data";
 import { SchemaRef } from "./domain/Package/data";
@@ -41,13 +41,7 @@ import {
   IORef,
   parseIORef,
 } from "./components/Graph";
-import { ComponentProps } from "solid-js";
-import { createMousePosition } from "@solid-primitives/mouse";
-import { createEffect } from "solid-js";
-
-// const API_HOST = "192.168.20.22:5678";
-const API_HOST = "countries-cosmetics-valuable-selecting.trycloudflare.com";
-const SECURE_PREIX = window.location.href.startsWith("https") ? "s" : "";
+import { Rpcs } from "./rpc";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
 
@@ -76,27 +70,11 @@ const RpcTransport = RpcClient.layerProtocolSocket.pipe(
 
 class Client extends Effect.Service<Client>()("Client", {
   effect: Effect.gen(function* () {
-    const client = yield* RpcClient.make(Rpcs.merge(NodeRpcs), {
+    const client = yield* RpcClient.make(Rpcs, {
       disableTracing: true,
     }).pipe(Effect.provide(RpcRealtimeClient));
 
-    // let i = 0;
-
-    return {
-      client,
-      // client: new Proxy(client, {
-      //   get:
-      //     (target, key: string) =>
-      //     (...args: any[]) => {
-      //       const id = i++;
-      //       return Effect.gen(function* () {
-      //         const res = yield* (target as any)[key](...args);
-      //         console.log({ res });
-      //         return res;
-      //       }).pipe(Effect.ensuring(Effect.sync(() => {})));
-      //     },
-      // }),
-    };
+    return { client };
   }),
   dependencies: [RpcTransport],
   accessors: true,
@@ -147,6 +125,7 @@ class UI extends Effect.Service<UI>()("UI", {
           console.log("LOGIN");
         }),
       },
+      logsPanelOpen: false,
     });
 
     const [connectedClients, setConnectedClients] = createSignal(0);
@@ -911,8 +890,8 @@ class UI extends Effect.Service<UI>()("UI", {
         <ErrorBoundary fallback={(e) => e.toString()}>
           <Router
             root={(props) => (
-              <div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default">
-                <div class="flex flex-row gap-2 px-2 items-center h-10 bg-gray-2 z-10 border-b border-gray-5">
+              <div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5">
+                <div class="flex flex-row gap-2 px-2 items-center h-10 bg-gray-2 z-10">
                   <A
                     class="p-1 px-2 rounded hover:bg-gray-3"
                     inactiveClass="bg-gray-2"
@@ -930,6 +909,14 @@ class UI extends Effect.Service<UI>()("UI", {
                   >
                     Graph
                   </A>
+                  <div class="flex-1" />
+                  {/* <button
+                    data-open={globalState.logsPanelOpen}
+                    class="p-1 px-2 rounded hover:bg-gray-3 bg-gray-2 data-[open='true']:bg-gray-3"
+                    onClick={() => setGlobalState("logsPanelOpen", (o) => !o)}
+                  >
+                    Logs
+                  </button> */}
                   <Popover
                     placement="bottom-start"
                     sameWidth
@@ -946,7 +933,7 @@ class UI extends Effect.Service<UI>()("UI", {
                       {(data) => (
                         <Popover.Trigger
                           disabled={Object.entries(presence).length <= 1}
-                          class="ml-auto bg-gray-2 p-1 rounded not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1 outline-none"
+                          class="bg-gray-2 p-1 rounded not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1 outline-none"
                         >
                           <div class="flex flex-row space-x-1.5 items-center">
                             <Avatar
@@ -992,7 +979,12 @@ class UI extends Effect.Service<UI>()("UI", {
                     </Popover.Portal>
                   </Popover>
                 </div>
-                {props.children}
+                <div class="flex flex-row flex-1 divide-x divide-gray-5">
+                  {props.children}
+                  <Show when={globalState.logsPanelOpen}>
+                    <div class="p-2 w-80">Logs</div>
+                  </Show>
+                </div>
               </div>
             )}
           >
@@ -1002,7 +994,7 @@ class UI extends Effect.Service<UI>()("UI", {
       );
     }, document.getElementById("app")!);
 
-    yield* Effect.never;
+    return yield* Effect.never;
 
     return { dispose };
   }),

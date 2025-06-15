@@ -2,12 +2,12 @@ import { Rpc, RpcGroup } from "@effect/rpc";
 import { Effect, Schema as S } from "effect";
 
 import { GraphId } from "../Graph/data";
-import { Node, NodeId, XY } from "./data";
-import { Graphs } from "../Graph/rpc";
+import { NodeId, XY } from "./data";
 import { RealtimePubSub } from "../Realtime/PubSub";
 import { RpcRealtimeMiddleware } from "../Rpc/Middleware";
 import { GraphNotFoundError } from "../Graph/error";
 import { DeepWriteable } from "../../types";
+import { Graphs } from "../Graph/Graphs";
 
 class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>(
   "NodeNotFoundError",

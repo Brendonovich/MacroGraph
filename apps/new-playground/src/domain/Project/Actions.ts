@@ -510,7 +510,6 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
             yield* Mailbox.toStream(events).pipe(
               Stream.runForEach(({ event }) =>
                 Effect.gen(function* () {
-                  console.log({ event });
                   for (const [graphId, graphEventNodes] of eventNodes) {
                     const packageEventNodes = graphEventNodes.get(name);
                     if (!packageEventNodes) continue;
