@@ -1,11 +1,8 @@
-import { RpcClient, RpcSerialization } from "@effect/rpc";
 import { Layer, ManagedRuntime, Match, PubSub, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import { ErrorBoundary, render } from "solid-js/web";
 import { createStore, produce, reconcile } from "solid-js/store";
-import { BrowserRuntime, BrowserSocket } from "@effect/platform-browser";
 import { Router } from "@solidjs/router";
-import { FetchHttpClient } from "@effect/platform";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
@@ -16,42 +13,17 @@ import { PresenceClient, PresenceContextProvider } from "./Presence/Context";
 import { Layout } from "./Layout";
 import { RealtimeContextProvider } from "./Realtime";
 import { ProjectRuntime, ProjectRuntimeProvider } from "./AppRuntime";
-import {
-  GetPackageRpcProtocol,
-  PackagesSettings,
-} from "./Packages/PackagesSettings";
+import { PackagesSettings } from "./Packages/PackagesSettings";
 import { routes } from "./routes/Routes";
-import { ProjectRpc } from "./Project/Rpc";
 import { ProjectState } from "./Project/State";
 import { ProjectRealtime } from "./Project/Realtime";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
 
-const ProjectRuntimeLive = Layer.provideMerge(
-  ProjectRuntime.layer,
-  Layer.mergeAll(
-    Layer.succeed(
-      GetPackageRpcProtocol,
-      GetPackageRpcProtocol.of((id) =>
-        RpcClient.layerProtocolHttp({
-          url: `/api/package/${id}/rpc`,
-        }).pipe(
-          Layer.provide([RpcSerialization.layerJson, FetchHttpClient.layer]),
-        ),
-      ),
-    ),
-    ProjectRpc.Default.pipe(
-      Layer.provide(Layer.scope),
-      Layer.provide(BrowserSocket.layerWebSocket(`/api/rpc`)),
-    ),
-    BrowserSocket.layerWebSocketConstructor,
-  ),
-);
-
-const runtime = ManagedRuntime.make(ProjectRuntimeLive);
+const runtime = ManagedRuntime.make(ProjectRuntime.layer);
 
 class UI extends Effect.Service<UI>()("UI", {
-  scoped: Effect.gen(function* () {
+  effect: Effect.gen(function* () {
     const packageSettings = yield* Effect.promise(
       () => import("macrograph:package-settings"),
     );
@@ -83,9 +55,10 @@ class UI extends Effect.Service<UI>()("UI", {
       Record<number, PresenceClient>
     >({});
 
-    const realtime = yield* ProjectRealtime.make();
+    const realtime = yield* ProjectRealtime;
     const tagType = Match.discriminator("type");
-    yield* realtime.stream.pipe(
+
+    realtime.stream.pipe(
       Stream.runForEach(
         Effect.fn(function* (data) {
           if (data.type === "identify")
@@ -240,11 +213,11 @@ class UI extends Effect.Service<UI>()("UI", {
           );
         }),
       ),
-      Effect.fork,
+      runtime.runFork,
     );
 
-    const dispose = render(() => {
-      return (
+    const dispose = render(
+      () => (
         <ProjectRuntimeProvider value={runtime}>
           <RealtimeContextProvider value={{ id: () => realtime.id }}>
             <PresenceContextProvider value={{ clients: presenceClients }}>
@@ -261,8 +234,9 @@ class UI extends Effect.Service<UI>()("UI", {
             </PresenceContextProvider>
           </RealtimeContextProvider>
         </ProjectRuntimeProvider>
-      );
-    }, document.getElementById("app")!);
+      ),
+      document.getElementById("app")!,
+    );
 
     return yield* Effect.never;
 
@@ -270,9 +244,4 @@ class UI extends Effect.Service<UI>()("UI", {
   }),
 }) {}
 
-runtime.runFork(
-  Layer.launch(UI.Default).pipe(
-    // Effect.provide(ProjectRuntimeLive),
-    Effect.scoped,
-  ),
-);
+runtime.runFork(Layer.launch(UI.Default).pipe(Effect.scoped));

@@ -4,17 +4,22 @@ import { createContext, useContext } from "solid-js";
 import { PackagesSettings } from "./Packages/PackagesSettings";
 import { ProjectActions } from "./Project/Actions";
 import { ProjectState } from "./Project/State";
+import { ProjectRealtime } from "./Project/Realtime";
+import { ProjectRpc } from "./Project/Rpc";
 
 export namespace ProjectRuntime {
   export type ProjectRuntime = ManagedRuntime.ManagedRuntime<
     | Layer.Layer.Success<typeof ProjectRuntime.layer>
     | Layer.Layer.Context<typeof ProjectRuntime.layer>,
-    never
+    Layer.Layer.Error<typeof ProjectRuntime.layer>
   >;
 
   export const layer = Layer.mergeAll(
     PackagesSettings.Default,
-    Layer.provideMerge(ProjectActions.Default, ProjectState.Default),
+    ProjectRealtime.Default,
+    ProjectActions.Default,
+    ProjectState.Default,
+    ProjectRpc.Default,
   );
 }
 

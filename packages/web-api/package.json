@@ -6,7 +6,7 @@
   "type": "module",
   "dependencies": {
     "@effect/platform": "^0.80.2",
-    "effect": "^3.14.2"
+    "effect": "^3.16.8"
   },
   "devDependencies": {
     "@macrograph/config": "workspace:*"

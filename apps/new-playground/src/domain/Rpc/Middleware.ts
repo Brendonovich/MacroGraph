@@ -6,5 +6,6 @@ export class RpcRealtimeMiddleware extends RpcMiddleware.Tag<RpcRealtimeMiddlewa
   "Middleware",
   {
     provides: RealtimeConnection,
+    requiredForClient: true,
   },
 ) {}

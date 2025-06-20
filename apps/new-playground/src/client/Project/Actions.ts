@@ -1,11 +1,15 @@
-import { Effect } from "effect";
+import { Data, Effect, SubscriptionRef } from "effect";
+import { createStore, produce } from "solid-js/store";
+
 import { GraphId } from "../../domain/Graph/data";
 import { NodeId, XY } from "../../domain/Node/data";
 import { ProjectRpc } from "./Rpc";
 import { ProjectState } from "./State";
-import { produce } from "solid-js/store";
 import { SchemaRef } from "../../domain/Package/data";
 import { IORef, parseIORef } from "../utils";
+import { Rpcs } from "../../rpc";
+import { Rpc, RpcGroup } from "@effect/rpc";
+import { createEffect } from "solid-js";
 
 export class ProjectActions extends Effect.Service<ProjectActions>()(
   "ProjectActions",
@@ -15,7 +19,47 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
       const rpc = yield* ProjectRpc.client;
       const { setState, actions } = yield* ProjectState;
 
+      type RpcToObject<T> =
+        T extends Rpc.Rpc<infer Name, infer Payload, any, any, any>
+          ? { name: Name; payload: Payload["Type"] }
+          : never;
+      type C = RpcGroup.Rpcs<typeof Rpcs>;
+      type T = Array<RpcToObject<C>>;
+
+      const [pending, setPending] = createStore<T>([]);
+
+      createEffect(() => {
+        console.log([...pending]);
+      });
+
+      const withPending = <T extends RpcToObject<C>>(
+        name: T["name"],
+        payload: T["payload"],
+      ) => {
+        setPending(
+          produce((draft) => {
+            draft.push({ name, payload });
+          }),
+        );
+
+        const pendingEntry = pending[pending.length - 1];
+
+        return <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+          Effect.ensuring(
+            effect,
+            Effect.sync(() => {
+              const index = pending.findIndex((e) => e === pendingEntry);
+              setPending(
+                produce((draft) => {
+                  if (index !== -1) draft.splice(index, 1);
+                }),
+              );
+            }),
+          );
+      };
+
       return {
+        pending,
         SetNodePositions: (
           graphId: GraphId,
           positions: Array<[NodeId, (typeof XY)["Type"]]>,
@@ -39,11 +83,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
           position: [number, number],
         ) =>
           Effect.gen(function* () {
-            const resp = yield* rpc.CreateNode({
-              schema,
-              graphId,
-              position,
-            });
+            const resp = yield* rpc.CreateNode({ schema, graphId, position });
 
             setState(
               produce((data) => {
@@ -60,22 +100,25 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
                 });
               }),
             );
-          }).pipe(Effect.runPromise),
-        ConnectIO: (graphId: GraphId, _one: IORef, _two: IORef) =>
-          Effect.gen(function* () {
-            const one = parseIORef(_one);
-            const two = parseIORef(_two);
+          }).pipe(
+            withPending("CreateNode", { graphId, schema, position }),
+            Effect.runPromise,
+          ),
+        ConnectIO: (graphId: GraphId, _one: IORef, _two: IORef) => {
+          const one = parseIORef(_one);
+          const two = parseIORef(_two);
 
-            let output, input;
+          let output, input;
 
-            if (one.type === "o" && two.type === "i") {
-              output = { nodeId: one.nodeId, ioId: one.id };
-              input = { nodeId: two.nodeId, ioId: two.id };
-            } else if (one.type === "i" && two.type === "o") {
-              output = { nodeId: two.nodeId, ioId: two.id };
-              input = { nodeId: one.nodeId, ioId: one.id };
-            } else return;
+          if (one.type === "o" && two.type === "i") {
+            output = { nodeId: one.nodeId, ioId: one.id };
+            input = { nodeId: two.nodeId, ioId: two.id };
+          } else if (one.type === "i" && two.type === "o") {
+            output = { nodeId: two.nodeId, ioId: two.id };
+            input = { nodeId: one.nodeId, ioId: one.id };
+          } else return;
 
+          return Effect.gen(function* () {
             yield* rpc.ConnectIO({ graphId, output, input });
 
             setState(
@@ -94,7 +137,11 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
                 inConnections.push([output.nodeId, output.ioId]);
               }),
             );
-          }).pipe(Effect.runPromise),
+          }).pipe(
+            withPending("ConnectIO", { graphId, output, input }),
+            Effect.runPromise,
+          );
+        },
         DisconnectIO: (graphId: GraphId, _io: IORef) =>
           Effect.gen(function* () {
             const io = parseIORef(_io);
@@ -156,5 +203,6 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
           }).pipe(Effect.runPromise),
       };
     }),
+    dependencies: [ProjectRpc.Default, ProjectState.Default],
   },
 ) {}

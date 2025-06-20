@@ -24,6 +24,8 @@ import { Node as NodeData, NodeId } from "../../domain/Node/data";
 import { isTouchDevice } from "../../util";
 import { SchemaRef } from "../../domain/Package/data";
 import { IORef } from "../utils";
+import { useProjectService } from "../AppRuntime";
+import { ProjectActions } from "../Project/Actions";
 
 export const ioPositions = new ReactiveMap<IORef, { x: number; y: number }>();
 
@@ -68,6 +70,7 @@ export function Graph(
   function getGraphPosition(e: MouseEvent) {
     return { x: e.clientX, y: e.clientY };
   }
+  const actions = useProjectService(ProjectActions);
 
   const [ref, setRef] = createSignal<HTMLDivElement | null>(null);
   const bounds = createElementBounds(ref);
@@ -78,6 +81,7 @@ export function Graph(
     const ret: {
       from: { x: number; y: number };
       to: { x: number; y: number };
+      opacity?: number;
     }[] = [];
 
     const draggingIO = (() => {
@@ -96,8 +100,8 @@ export function Graph(
 
         ret.push(
           draggingIO.includes(":o:")
-            ? { from: position, to: mousePos }
-            : { to: position, from: mousePos },
+            ? { from: position, to: mousePos, opacity: 0.5 }
+            : { to: position, from: mousePos, opacity: 0.5 },
         );
       }
     }
@@ -121,6 +125,22 @@ export function Graph(
           ret.push({ from: outPosition, to: inPosition });
         }
       }
+    }
+
+    for (const { name, payload } of actions.pending) {
+      if (name !== "ConnectIO") continue;
+
+      const outPosition = ioPositions.get(
+        `${NodeId.make(Number(payload.output.nodeId))}:o:${payload.output.ioId}`,
+      );
+      if (!outPosition) continue;
+
+      const inPosition = ioPositions.get(
+        `${NodeId.make(Number(payload.input.nodeId))}:i:${payload.input.ioId}`,
+      );
+      if (!inPosition) continue;
+
+      ret.push({ from: outPosition, to: inPosition, opacity: 0.5 });
     }
 
     return ret;
@@ -453,6 +473,7 @@ function Connections(props: {
   connections: Array<{
     from: { x: number; y: number };
     to: { x: number; y: number };
+    opacity?: number;
   }>;
 }) {
   const [ref, setRef] = createSignal<HTMLCanvasElement | null>(null);
@@ -475,7 +496,7 @@ function Connections(props: {
 
     ctx.clearRect(0, 0, props.width, props.height);
 
-    for (const { from, to } of props.connections) {
+    for (const { from, to, opacity } of props.connections) {
       const xDiff = from.x - to.x;
       const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
 
@@ -490,6 +511,7 @@ function Connections(props: {
         to.x,
         to.y,
       );
+      ctx.globalAlpha = 0.75 * (opacity ?? 1);
       ctx.strokeStyle = "white";
       ctx.stroke();
     }

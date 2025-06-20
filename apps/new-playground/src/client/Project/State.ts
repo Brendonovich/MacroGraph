@@ -125,5 +125,6 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 
       return { state, setState, actions };
     }),
+    dependencies: [ProjectRpc.Default],
   },
 ) {}

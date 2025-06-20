@@ -44,6 +44,8 @@ import { GraphRpcsLive } from "./domain/Graph/rpc";
 import { ProjectRpcsLive } from "./domain/Project/rpc";
 import { Rpcs } from "./rpc";
 import { PresenceRpcsLive } from "./domain/Presence/rpc";
+import { renderToStream } from "solid-js/web";
+import { Test } from "./ssr-test";
 
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "mg-server" },
