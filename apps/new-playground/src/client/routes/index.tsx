@@ -91,6 +91,12 @@ export default function () {
               .pipe(Effect.runPromise);
           });
 
+          createEffect(() => {
+            console.log(JSON.stringify(presence.clients, null, 2));
+            console.log("realtime id", realtime.id());
+            console.log("graph id", graph.id);
+          });
+
           return (
             <GraphContextProvider bounds={bounds}>
               <Graph
@@ -146,23 +152,27 @@ export default function () {
               />
               <For each={Object.entries(presence.clients)}>
                 {(item) => (
-                  <Show
-                    when={
-                      Number(item[0]) !== realtime.id() &&
-                      item[1].mouse?.graph === graph.id &&
-                      item[1].mouse
-                    }
-                  >
-                    {(mouse) => (
-                      <PresencePointer
-                        style={{
-                          transform: `translate(${mouse().x + (bounds.left ?? 0)}px, ${mouse().y + (bounds.top ?? 0)}px)`,
-                        }}
-                        name={item[1].name}
-                        colour={item[1].colour}
-                      />
-                    )}
-                  </Show>
+                  <>
+                    <Show
+                      when={
+                        Number(item[0]) !== realtime.id() &&
+                        item[1].mouse?.graph === graph.id &&
+                        item[1].mouse
+                      }
+                    >
+                      {(mouse) => (
+                        <>
+                          <PresencePointer
+                            style={{
+                              transform: `translate(${mouse().x + (bounds.left ?? 0)}px, ${mouse().y + (bounds.top ?? 0)}px)`,
+                            }}
+                            name={item[1].name}
+                            colour={item[1].colour}
+                          />
+                        </>
+                      )}
+                    </Show>
+                  </>
                 )}
               </For>
 

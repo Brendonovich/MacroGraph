@@ -68,8 +68,9 @@ export class Presence extends Effect.Service<Presence>()("Presence", {
       changes: clients.changes.pipe(
         Stream.throttle({
           cost: (c) => c.length,
-          duration: "25 millis",
+          duration: "10 millis",
           units: 1,
+          strategy: "enforce",
         }),
       ),
       setMouse: Effect.fn(function* (
