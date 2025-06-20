@@ -1,10 +1,8 @@
 import { createContext, useContext } from "solid-js";
 
-export interface RealtimeState {
-  realtimeId: string;
-}
-
-const RealtimeContext = createContext<{ state: RealtimeState }>();
+const RealtimeContext = createContext<{
+  id: () => number;
+}>();
 
 export const RealtimeContextProvider = RealtimeContext.Provider;
 

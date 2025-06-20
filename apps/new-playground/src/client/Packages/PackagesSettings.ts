@@ -4,6 +4,7 @@ import { Cache, Context, Effect, Layer, Option } from "effect";
 import { Component } from "solid-js";
 
 import { SettingsProps } from "../../package-settings-utils";
+import { ProjectRpc } from "../Project/Rpc";
 
 export class GetPackageRpcProtocol extends Context.Tag("GetPackageRpcProtocol")<
   GetPackageRpcProtocol,
@@ -24,9 +25,10 @@ export type PackageSettings = Readonly<{
 export class PackagesSettings extends Effect.Service<PackagesSettings>()(
   "PackageEngines",
   {
+    accessors: true,
     effect: Effect.gen(function* () {
       const getProtocol = yield* GetPackageRpcProtocol;
-      const getSettings = yield* GetPackageSettings;
+      const rpc = yield* ProjectRpc.client;
 
       const packages = new ReactiveMap<string, PackageSettings>();
 
@@ -44,7 +46,7 @@ export class PackagesSettings extends Effect.Service<PackagesSettings>()(
             SettingsUI: module.default,
             state: yield* Cache.make({
               capacity: 1,
-              lookup: (_: void) => getSettings(id),
+              lookup: (_: void) => rpc.GetPackageSettings({ package: id }),
               timeToLive: "1 minute",
             }),
           });

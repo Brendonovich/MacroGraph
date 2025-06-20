@@ -7,35 +7,23 @@ import {
   onCleanup,
   Show,
 } from "solid-js";
-import {
-  createEventListener,
-  createEventListenerMap,
-} from "@solid-primitives/event-listener";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { batch } from "solid-js";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { mergeRefs } from "@solid-primitives/refs";
 import { ContextMenu } from "@kobalte/core/context-menu";
-
-import { PackageMeta } from "../shared";
-import { NodeRoot, NodeHeader } from "./Node";
-import { Node as NodeData, NodeId } from "../domain/Node/data";
-import { DeepWriteable } from "../types";
-import { isTouchDevice } from "../util";
 import { ValidComponent } from "solid-js";
 import { cx } from "cva";
+import { Option } from "effect";
 
-export type IORef = `${NodeId}:${"i" | "o"}:${string}`;
-
-export function parseIORef(ioRef: IORef) {
-  const [nodeId, type, ...id] = ioRef.split(":");
-  return {
-    nodeId: NodeId.make(Number(nodeId)),
-    type: type as "i" | "o",
-    id: id.join(""),
-  };
-}
+import { SchemaMeta } from "../../shared";
+import { NodeRoot, NodeHeader } from "../Node";
+import { Node as NodeData, NodeId } from "../../domain/Node/data";
+import { isTouchDevice } from "../../util";
+import { SchemaRef } from "../../domain/Package/data";
+import { IORef } from "../utils";
 
 export const ioPositions = new ReactiveMap<IORef, { x: number; y: number }>();
 
@@ -50,7 +38,7 @@ export type GraphTwoWayConnections = Record<
 export function Graph(
   props: {
     nodes: DeepWriteable<NodeData>[];
-    packages: Record<string, PackageMeta>;
+    getSchema: (ref: SchemaRef) => Option.Option<SchemaMeta>;
     onSelectionMoved?(items: Array<[NodeId, { x: number; y: number }]>): void;
     selection: Set<NodeId>;
     remoteSelections?: Array<{ colour: string; nodes: Set<NodeId> }>;
@@ -225,206 +213,195 @@ export function Graph(
       />
       <ContextMenu>
         <For each={props.nodes}>
-          {(node) => {
-            const pkg = () => props.packages[node.schema.pkgId];
-            const schema = () => pkg()?.schemas[node.schema.schemaId];
+          {(node) => (
+            <Show when={Option.getOrUndefined(props.getSchema(node.schema))}>
+              {(schema) => (
+                <NodeRoot
+                  {...node}
+                  graphBounds={{
+                    top: bounds.top ?? 0,
+                    left: bounds.left ?? 0,
+                  }}
+                  position={(() => {
+                    const ds = dragState();
 
-            return (
-              <Show when={schema()}>
-                {(schema) => (
-                  <NodeRoot
-                    {...node}
-                    graphBounds={{
-                      top: bounds.top ?? 0,
-                      left: bounds.left ?? 0,
-                    }}
-                    position={(() => {
-                      const ds = dragState();
+                    if (ds.type !== "dragSelection") return node.position;
+                    return (
+                      ds.positions.find((p) => p[0] === node.id)?.[1] ??
+                      node.position
+                    );
+                  })()}
+                  selected={
+                    props.selection?.has(node.id) ||
+                    props.remoteSelections?.find((s) => s.nodes.has(node.id))
+                      ?.colour
+                  }
+                  onPinDragStart={(e, type, id) => {
+                    if (dragState().type !== "idle") return false;
 
-                      if (ds.type !== "dragSelection") return node.position;
-                      return (
-                        ds.positions.find((p) => p[0] === node.id)?.[1] ??
-                        node.position
-                      );
-                    })()}
-                    selected={
-                      props.selection?.has(node.id) ||
-                      props.remoteSelections?.find((s) => s.nodes.has(node.id))
-                        ?.colour
-                    }
-                    onPinDragStart={(e, type, id) => {
-                      if (dragState().type !== "idle") return false;
+                    setDragState({
+                      type: "dragIO",
+                      ioRef: `${node.id}:${type}:${id}`,
+                      pointerId: e.pointerId,
+                    });
 
-                      setDragState({
-                        type: "dragIO",
-                        ioRef: `${node.id}:${type}:${id}`,
-                        pointerId: e.pointerId,
-                      });
+                    return true;
+                  }}
+                  onPinDragEnd={() => {
+                    setDragState({ type: "idle" });
+                  }}
+                  onPinPointerUp={(e, type, id) => {
+                    const dragIO = (() => {
+                      const s = dragState();
+                      if (s.type === "dragIO") return s;
+                    })();
+                    if (!dragIO || e.pointerId !== dragIO.pointerId) return;
 
-                      return true;
-                    }}
-                    onPinDragEnd={() => {
-                      setDragState({ type: "idle" });
-                    }}
-                    onPinPointerUp={(e, type, id) => {
-                      const dragIO = (() => {
-                        const s = dragState();
-                        if (s.type === "dragIO") return s;
-                      })();
-                      if (!dragIO || e.pointerId !== dragIO.pointerId) return;
+                    props.onConnectIO?.(
+                      dragIO.ioRef,
+                      `${node.id}:${type}:${id}`,
+                    );
+                  }}
+                  onPinDoubleClick={(type, id) => {
+                    props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
+                  }}
+                  connections={{
+                    in: [
+                      ...Object.entries(props.connections[node.id]?.in ?? {}),
+                    ].flatMap(([id, connections]) => {
+                      if (connections.length > 0) return id;
+                      return [];
+                    }),
+                    out: [
+                      ...Object.entries(props.connections[node.id]?.out ?? {}),
+                    ].flatMap(([id, connections]) => {
+                      if (connections.length > 0) return id;
+                      return [];
+                    }),
+                  }}
+                >
+                  <ContextMenu.Trigger<ValidComponent>
+                    as={(cmProps) => (
+                      <NodeHeader
+                        {...cmProps}
+                        name={node.name ?? schema().name ?? schema().id}
+                        variant={schema().type}
+                        onPointerDown={(downEvent) => {
+                          if (downEvent.button === 0) {
+                            downEvent.stopPropagation();
 
-                      props.onConnectIO?.(
-                        dragIO.ioRef,
-                        `${node.id}:${type}:${id}`,
-                      );
-                    }}
-                    onPinDoubleClick={(type, id) => {
-                      props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
-                    }}
-                    connections={{
-                      in: [
-                        ...Object.entries(props.connections[node.id]?.in ?? {}),
-                      ].flatMap(([id, connections]) => {
-                        if (connections.length > 0) return id;
-                        return [];
-                      }),
-                      out: [
-                        ...Object.entries(
-                          props.connections[node.id]?.out ?? {},
-                        ),
-                      ].flatMap(([id, connections]) => {
-                        if (connections.length > 0) return id;
-                        return [];
-                      }),
-                    }}
-                  >
-                    <ContextMenu.Trigger<ValidComponent>
-                      as={(cmProps) => (
-                        <NodeHeader
-                          {...cmProps}
-                          name={node.name ?? schema().name ?? schema().id}
-                          variant={schema().type}
-                          onPointerDown={(downEvent) => {
-                            if (downEvent.button === 0) {
-                              downEvent.stopPropagation();
-
-                              if (downEvent.shiftKey) {
-                                if (props.selection?.has(node.id)) {
-                                  props.selection?.delete(node.id);
-                                  props.onItemsSelected?.(
-                                    new Set(props.selection),
-                                  );
-                                } else {
-                                  props.onItemsSelected?.(
-                                    new Set([
-                                      ...(props.selection ?? []),
-                                      node.id,
-                                    ]),
-                                  );
-                                }
-                              } else if (props.selection.size <= 1)
-                                props.onItemsSelected?.(new Set([node.id]));
-
-                              const startPositions: Array<
-                                [NodeId, { x: number; y: number }]
-                              > = [];
-                              props.selection.forEach((nodeId) => {
-                                const node = props.nodes.find(
-                                  (n) => n.id === nodeId,
+                            if (downEvent.shiftKey) {
+                              if (props.selection?.has(node.id)) {
+                                props.selection?.delete(node.id);
+                                props.onItemsSelected?.(
+                                  new Set(props.selection),
                                 );
-                                if (!node) return;
-                                startPositions.push([
-                                  nodeId,
-                                  { ...node.position },
-                                ]);
+                              } else {
+                                props.onItemsSelected?.(
+                                  new Set([
+                                    ...(props.selection ?? []),
+                                    node.id,
+                                  ]),
+                                );
+                              }
+                            } else if (props.selection.size <= 1)
+                              props.onItemsSelected?.(new Set([node.id]));
+
+                            const startPositions: Array<
+                              [NodeId, { x: number; y: number }]
+                            > = [];
+                            props.selection.forEach((nodeId) => {
+                              const node = props.nodes.find(
+                                (n) => n.id === nodeId,
+                              );
+                              if (!node) return;
+                              startPositions.push([
+                                nodeId,
+                                { ...node.position },
+                              ]);
+                            });
+
+                            const downPosition = getGraphPosition(downEvent);
+
+                            createRoot((dispose) => {
+                              createEventListenerMap(window, {
+                                pointermove: (moveEvent) => {
+                                  if (
+                                    downEvent.pointerId !== moveEvent.pointerId
+                                  )
+                                    return;
+
+                                  moveEvent.preventDefault();
+
+                                  const movePosition =
+                                    getGraphPosition(moveEvent);
+
+                                  const delta = {
+                                    x: movePosition.x - downPosition.x,
+                                    y: movePosition.y - downPosition.y,
+                                  };
+
+                                  const positions = startPositions.map(
+                                    ([nodeId, startPosition]) =>
+                                      [
+                                        nodeId,
+                                        {
+                                          x: startPosition.x + delta.x,
+                                          y: startPosition.y + delta.y,
+                                        },
+                                      ] satisfies [any, any],
+                                  );
+
+                                  props.onSelectionMoved?.(positions);
+
+                                  setDragState({
+                                    type: "dragSelection",
+                                    positions,
+                                  });
+                                },
+                                pointerup: (upEvent) => {
+                                  if (downEvent.pointerId !== upEvent.pointerId)
+                                    return;
+
+                                  const upPosition = getGraphPosition(upEvent);
+
+                                  const delta = {
+                                    x: upPosition.x - downPosition.x,
+                                    y: upPosition.y - downPosition.y,
+                                  };
+
+                                  props.onSelectionMoved?.(
+                                    startPositions.map(
+                                      ([nodeId, startPosition]) => [
+                                        nodeId,
+                                        {
+                                          x: startPosition.x + delta.x,
+                                          y: startPosition.y + delta.y,
+                                        },
+                                      ],
+                                    ),
+                                  );
+
+                                  setDragState({ type: "idle" });
+
+                                  dispose();
+                                },
                               });
+                            });
+                          } else if (downEvent.button === 2) {
+                            downEvent.preventDefault();
 
-                              const downPosition = getGraphPosition(downEvent);
-
-                              createRoot((dispose) => {
-                                createEventListenerMap(window, {
-                                  pointermove: (moveEvent) => {
-                                    if (
-                                      downEvent.pointerId !==
-                                      moveEvent.pointerId
-                                    )
-                                      return;
-
-                                    moveEvent.preventDefault();
-
-                                    const movePosition =
-                                      getGraphPosition(moveEvent);
-
-                                    const delta = {
-                                      x: movePosition.x - downPosition.x,
-                                      y: movePosition.y - downPosition.y,
-                                    };
-
-                                    const positions = startPositions.map(
-                                      ([nodeId, startPosition]) =>
-                                        [
-                                          nodeId,
-                                          {
-                                            x: startPosition.x + delta.x,
-                                            y: startPosition.y + delta.y,
-                                          },
-                                        ] satisfies [any, any],
-                                    );
-
-                                    props.onSelectionMoved?.(positions);
-
-                                    setDragState({
-                                      type: "dragSelection",
-                                      positions,
-                                    });
-                                  },
-                                  pointerup: (upEvent) => {
-                                    if (
-                                      downEvent.pointerId !== upEvent.pointerId
-                                    )
-                                      return;
-
-                                    const upPosition =
-                                      getGraphPosition(upEvent);
-
-                                    const delta = {
-                                      x: upPosition.x - downPosition.x,
-                                      y: upPosition.y - downPosition.y,
-                                    };
-
-                                    props.onSelectionMoved?.(
-                                      startPositions.map(
-                                        ([nodeId, startPosition]) => [
-                                          nodeId,
-                                          {
-                                            x: startPosition.x + delta.x,
-                                            y: startPosition.y + delta.y,
-                                          },
-                                        ],
-                                      ),
-                                    );
-
-                                    setDragState({ type: "idle" });
-
-                                    dispose();
-                                  },
-                                });
-                              });
-                            } else if (downEvent.button === 2) {
-                              downEvent.preventDefault();
-
-                              if (!props.selection.has(node.id))
-                                props.onItemsSelected?.(new Set([node.id]));
-                            }
-                          }}
-                        />
-                      )}
-                    />
-                  </NodeRoot>
-                )}
-              </Show>
-            );
-          }}
+                            if (!props.selection.has(node.id))
+                              props.onItemsSelected?.(new Set([node.id]));
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                </NodeRoot>
+              )}
+            </Show>
+          )}
         </For>
         <ContextMenu.Portal>
           <ContextMenu.Content<"div">

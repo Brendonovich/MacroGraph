@@ -4,7 +4,8 @@ import createPresence from "solid-presence";
 
 import { useGraphContext } from "./Context";
 import { SchemaRef } from "../../domain/Package/data";
-import { useProjectContext } from "../Project/Context";
+import { useProjectService } from "../AppRuntime";
+import { ProjectState } from "../Project/State";
 
 export function GraphContextMenu(props: {
   position: { x: number; y: number } | null;
@@ -13,8 +14,7 @@ export function GraphContextMenu(props: {
   ) => void;
 }) {
   const graphCtx = useGraphContext();
-  const { packages } = useProjectContext();
-  // const packagesCtx = usePackagesContext();
+  const { state } = useProjectService(ProjectState);
 
   const [ref, setRef] = createSignal<HTMLElement | null>(null);
 
@@ -46,7 +46,7 @@ export function GraphContextMenu(props: {
             top: `${position().y + (graphCtx.bounds.top ?? 0) - 16}px`,
           }}
         >
-          <For each={Object.entries(packages)}>
+          <For each={Object.entries(state.packages)}>
             {([pkgId, pkg]) => (
               <div class="py-1">
                 <span class="font-bold">{pkgId}</span>

@@ -10,7 +10,7 @@ export function ClientListDropdown() {
   const realtimeCtx = useRealtimeContext();
 
   const clientEntries = createMemo(() => Object.entries(presenceCtx.clients));
-  const realtimeId = () => realtimeCtx.state.realtimeId;
+  const realtimeId = () => realtimeCtx.id().toString();
 
   return (
     <Popover

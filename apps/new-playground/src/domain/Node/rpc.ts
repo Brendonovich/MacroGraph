@@ -6,7 +6,6 @@ import { NodeId, XY } from "./data";
 import { RealtimePubSub } from "../Realtime/PubSub";
 import { RpcRealtimeMiddleware } from "../Rpc/Middleware";
 import { GraphNotFoundError } from "../Graph/error";
-import { DeepWriteable } from "../../types";
 import { Graphs } from "../Graph/Graphs";
 
 class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>(

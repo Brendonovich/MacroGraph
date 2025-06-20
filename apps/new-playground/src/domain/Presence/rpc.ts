@@ -4,8 +4,8 @@ import * as S from "effect/Schema";
 
 import { GraphId } from "../Graph/data";
 import { NodeId } from "../Node/data";
-import { DeepWriteable } from "../../types";
 import { Presence } from "./Presence";
+import { RpcRealtimeMiddleware } from "../Rpc/Middleware";
 
 export const PresenceRpcs = RpcGroup.make(
   Rpc.make("SetMousePosition", {
@@ -24,7 +24,7 @@ export const PresenceRpcs = RpcGroup.make(
       ),
     },
   }),
-);
+).middleware(RpcRealtimeMiddleware);
 
 export const PresenceRpcsLive = PresenceRpcs.toLayer(
   Effect.gen(function* () {

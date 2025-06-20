@@ -31,7 +31,6 @@ import { NodeConnections, project } from "../../project";
 import { RealtimePubSub } from "../Realtime/PubSub";
 import { CloudAPIClient } from "../CloudApi/ApiClient";
 import { GraphId } from "../Graph/data";
-import { DeepWriteable } from "../../types";
 import { CredentialsCache } from "../CloudApi/CredentialsCache";
 import { ProjectPackages } from "./Packages";
 import { GraphNotFoundError } from "../Graph/error";

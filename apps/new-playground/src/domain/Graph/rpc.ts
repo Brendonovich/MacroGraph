@@ -9,7 +9,7 @@ import { GraphNotFoundError } from "./error";
 import { IORef } from "../../shared";
 import { ProjectActions } from "../Project/Actions";
 import { RealtimePubSub } from "../Realtime/PubSub";
-import { DeepWriteable } from "../../types";
+import { RpcRealtimeMiddleware } from "../Rpc/Middleware";
 
 export const GraphRpcs = RpcGroup.make(
   Rpc.make("CreateNode", {
@@ -46,7 +46,7 @@ export const GraphRpcs = RpcGroup.make(
     },
     error: S.Union(GraphNotFoundError, NodeNotFound),
   }),
-);
+).middleware(RpcRealtimeMiddleware);
 
 export const GraphRpcsLive = GraphRpcs.toLayer(
   Effect.gen(function* () {

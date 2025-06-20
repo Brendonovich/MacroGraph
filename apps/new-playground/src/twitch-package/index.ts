@@ -3,7 +3,6 @@ import {
   Context,
   Effect,
   Exit,
-  Mailbox,
   Option,
   Schema,
   Scope,
@@ -16,7 +15,7 @@ import {
   HttpClientRequest,
 } from "@effect/platform";
 
-import { RPCS, STATE } from "./shared";
+import { RPCS } from "./shared";
 import { HelixApi } from "./helix";
 import {
   EVENTSUB_MESSAGE,
@@ -140,7 +139,7 @@ const Engine = PackageEngine.make<
           sockets.set(accountId, socket);
         }).pipe(lock.withPermits(1), Effect.ensuring(ctx.dirtyState));
 
-        const welcomeEvent = yield* Stream.take(events, 1).pipe(
+        const firstEvent = yield* Stream.take(events, 1).pipe(
           Stream.runCollect,
           Effect.map(Chunk.get(0)),
           Effect.map(
@@ -150,9 +149,9 @@ const Engine = PackageEngine.make<
           ),
         );
 
-        if (!isEventSubMessageType(welcomeEvent, "session_welcome"))
+        if (!isEventSubMessageType(firstEvent, "session_welcome"))
           throw new Error(
-            `Invalid welcome event: ${welcomeEvent.metadata.message_type}`,
+            `Invalid first event: ${firstEvent.metadata.message_type}`,
           );
 
         yield* Effect.gen(function* () {
@@ -181,7 +180,7 @@ const Engine = PackageEngine.make<
                   },
                   transport: {
                     method: "websocket",
-                    session_id: welcomeEvent.payload.session.id,
+                    session_id: firstEvent.payload.session.id,
                   },
                 },
               }),
@@ -194,7 +193,7 @@ const Engine = PackageEngine.make<
                   },
                   transport: {
                     method: "websocket",
-                    session_id: welcomeEvent.payload.session.id,
+                    session_id: firstEvent.payload.session.id,
                   },
                 },
               }),
@@ -207,7 +206,7 @@ const Engine = PackageEngine.make<
                   },
                   transport: {
                     method: "websocket",
-                    session_id: welcomeEvent.payload.session.id,
+                    session_id: firstEvent.payload.session.id,
                   },
                 },
               }),
@@ -261,7 +260,9 @@ const Engine = PackageEngine.make<
     return {
       rpc: layer,
       state: Effect.gen(function* () {
-        const credentials = yield* ctx.credentials.pipe(Effect.orDie);
+        const credentials = yield* ctx.credentials.pipe(
+          Effect.catchTag("CredentialsFetchFailed", () => Effect.succeed([])),
+        );
 
         return {
           accounts: credentials.map((c) => ({

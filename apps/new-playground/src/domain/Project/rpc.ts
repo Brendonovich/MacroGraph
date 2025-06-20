@@ -4,8 +4,8 @@ import { Effect, Schema as S, Option } from "effect";
 import { Graph } from "../Graph/data";
 import { PackageMeta, SchemaMeta } from "../../shared";
 import { project } from "../../project";
-import { DeepWriteable } from "../../types";
 import { ProjectPackages } from "./Packages";
+import { RpcRealtimeMiddleware } from "../Rpc/Middleware";
 
 export const ProjectRpcs = RpcGroup.make(
   Rpc.make("GetProject", {
@@ -19,7 +19,7 @@ export const ProjectRpcs = RpcGroup.make(
     payload: { package: S.String },
     success: S.Any,
   }),
-);
+).middleware(RpcRealtimeMiddleware);
 
 export const ProjectRpcsLive = ProjectRpcs.toLayer(
   Effect.gen(function* () {

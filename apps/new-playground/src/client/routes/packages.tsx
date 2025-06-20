@@ -2,11 +2,11 @@ import { A } from "@solidjs/router";
 import { For, ParentProps, Suspense } from "solid-js";
 
 import { usePresenceContext } from "../Presence/Context";
-import { useAppRuntime } from "../AppRuntime";
+import { useProjectService } from "../AppRuntime";
 import { PackagesSettings } from "../Packages/PackagesSettings";
 
 export default function (props: ParentProps) {
-  const packagesSettings = PackagesSettings.pipe(useAppRuntime().runSync);
+  const packagesSettings = useProjectService(PackagesSettings);
   const presenceCtx = usePresenceContext();
 
   return (
