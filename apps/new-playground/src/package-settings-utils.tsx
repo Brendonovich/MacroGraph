@@ -18,6 +18,7 @@ export type GlobalAppState = {
   auth:
     | { state: "logged-out"; login: Effect.Effect<void> }
     | { state: "logged-in"; userId: string };
+  logsPanelOpen: boolean;
 };
 
 export type SettingsProps<

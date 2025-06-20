@@ -31,7 +31,6 @@ import { NodeConnections, project } from "../../project";
 import { RealtimePubSub } from "../Realtime/PubSub";
 import { CloudAPIClient } from "../CloudApi/ApiClient";
 import { GraphId } from "../Graph/data";
-import { DeepWriteable } from "../../types";
 import { CredentialsCache } from "../CloudApi/CredentialsCache";
 import { ProjectPackages } from "./Packages";
 import { GraphNotFoundError } from "../Graph/error";
@@ -510,7 +509,6 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
             yield* Mailbox.toStream(events).pipe(
               Stream.runForEach(({ event }) =>
                 Effect.gen(function* () {
-                  console.log({ event });
                   for (const [graphId, graphEventNodes] of eventNodes) {
                     const packageEventNodes = graphEventNodes.get(name);
                     if (!packageEventNodes) continue;

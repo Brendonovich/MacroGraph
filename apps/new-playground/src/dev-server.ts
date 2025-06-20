@@ -25,10 +25,12 @@ const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
   { port: 5678, host: "0.0.0.0" },
 );
 
-Effect.gen(function* () {
+const program = Effect.gen(function* () {
   const server = yield* ServerLive;
 
   return yield* Layer.launch(
     server.pipe(HttpServer.serve(), Layer.provide(HMRAwareNodeHttpServerLayer)),
   );
-}).pipe(Effect.provide(DepsLive), Effect.scoped, NodeRuntime.runMain);
+});
+
+program.pipe(Effect.provide(DepsLive), Effect.scoped, NodeRuntime.runMain);

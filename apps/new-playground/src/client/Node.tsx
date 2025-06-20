@@ -11,11 +11,10 @@ import {
   ParentProps,
 } from "solid-js";
 import { createEventListener } from "@solid-primitives/event-listener";
+import { DOMElement } from "solid-js/jsx-runtime";
 
 import { NodeId, NodeIO } from "../domain/Node/data";
-import { DeepWriteable } from "../types";
-import { ioPositions } from "./Graph";
-import { DOMElement } from "solid-js/jsx-runtime";
+import { ioPositions } from "./Graph/Graph";
 import { isTouchDevice } from "../util";
 
 type DataType = "string" | "int" | "float" | "bool";

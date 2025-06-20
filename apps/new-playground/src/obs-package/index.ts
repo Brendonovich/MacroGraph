@@ -1,9 +1,17 @@
-import { Option, Schema } from "effect";
+import { Data, Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
-import OBSWebsocket from "obs-websocket-js";
+import OBSWebsocket, {
+  OBSRequestTypes,
+  OBSResponseTypes,
+} from "obs-websocket-js";
 
 import { getInput, Package, PackageEngine } from "../package-utils";
 import { ConnectionFailed, RPCS } from "./shared";
+
+class OBSWebSocketError extends Data.TaggedError("OBSWebsocketError")<{
+  code: number;
+  message: string;
+}> {}
 
 const Engine = PackageEngine.make<
   {
@@ -16,7 +24,11 @@ const Engine = PackageEngine.make<
   typeof RPCS
 >({ rpc: RPCS })(
   Effect.fn(function* (ctx) {
-    const obs = new OBSWebsocket();
+    type WsRequestProxy = {
+      [K in keyof OBSRequestTypes]: (
+        args: OBSRequestTypes[K] extends never ? void : OBSRequestTypes[K],
+      ) => Effect.Effect<OBSResponseTypes[K], OBSWebSocketError>;
+    };
 
     type Instance = {
       password: Option.Option<string>;

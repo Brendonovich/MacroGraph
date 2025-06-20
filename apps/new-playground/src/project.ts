@@ -1,6 +1,5 @@
 import { GraphId } from "./domain/Graph/data";
 import { NodeId, NodeIO } from "./domain/Node/data";
-import { DeepWriteable } from "./types";
 
 export type NodeConnections = {
   in?: Map<string, Array<[NodeId, string]>>;

@@ -1,9 +1,9 @@
 import { Rpc, RpcGroup, RpcSerialization } from "@effect/rpc";
 import { Schema as S } from "effect";
 
-import { NodeNotFound, SchemaNotFound } from "./errors";
+import { NodeNotFound } from "./errors";
 import { Graph, GraphId } from "./domain/Graph/data";
-import { NodeId, NodeIO, NodeVariant } from "./domain/Node/data";
+import { NodeId, NodeIO } from "./domain/Node/data";
 import { RpcRealtimeMiddleware } from "./domain/Rpc/Middleware";
 import { SchemaRef } from "./domain/Package/data";
 import { GraphNotFoundError } from "./domain/Graph/error";
@@ -126,80 +126,12 @@ const SchemaMeta = S.Struct({
 });
 export type SchemaMeta = S.Schema.Type<typeof SchemaMeta>;
 
-const PackageMeta = S.Struct({
+export const PackageMeta = S.Struct({
   schemas: S.Record({
     key: S.String,
     value: SchemaMeta,
   }),
 });
 export type PackageMeta = S.Schema.Type<typeof PackageMeta>;
-
-export const Rpcs = RpcGroup.make(
-  Rpc.make("CreateNode", {
-    payload: {
-      schema: SchemaRef,
-      graphId: GraphId,
-      position: S.Tuple(S.Number, S.Number),
-    },
-    success: S.Struct({
-      id: NodeId,
-      io: NodeIO,
-    }),
-    error: S.Union(SchemaNotFound),
-  }),
-  Rpc.make("ConnectIO", {
-    payload: {
-      graphId: GraphId,
-      output: IORef,
-      input: IORef,
-    },
-    error: S.Union(GraphNotFoundError, NodeNotFound),
-  }),
-  Rpc.make("DisconnectIO", {
-    payload: S.Struct({
-      graphId: GraphId,
-      io: S.extend(IORef, S.Struct({ type: S.Literal("i", "o") })),
-    }),
-    error: S.Union(GraphNotFoundError, NodeNotFound),
-  }),
-  Rpc.make("GetProject", {
-    success: S.Struct({
-      name: S.String,
-      graphs: S.Record({ key: S.String, value: Graph }),
-      packages: S.Record({ key: S.String, value: PackageMeta }),
-    }),
-  }),
-  // Rpc.make("Events", {
-  //   stream: true,
-  //   success: ProjectEvent,
-  // }),
-  Rpc.make("GetPackageSettings", {
-    payload: { package: S.String },
-    success: S.Any,
-  }),
-  Rpc.make("SetMousePosition", {
-    payload: S.Struct({
-      graph: GraphId,
-      position: S.Struct({ x: S.Number, y: S.Number }),
-    }),
-  }),
-  Rpc.make("SetSelection", {
-    payload: {
-      value: S.NullOr(
-        S.Struct({
-          graph: GraphId,
-          nodes: S.Array(NodeId),
-        }),
-      ),
-    },
-  }),
-  Rpc.make("DeleteSelection", {
-    payload: {
-      graph: GraphId,
-      selection: S.Array(NodeId),
-    },
-    error: S.Union(GraphNotFoundError, NodeNotFound),
-  }),
-).middleware(RpcRealtimeMiddleware);
 
 export const RpcsSerialization = RpcSerialization.layerJson;

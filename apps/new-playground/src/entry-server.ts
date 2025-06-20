@@ -23,21 +23,11 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { Route } from "@effect/platform/HttpRouter";
 import { getCurrentFiber } from "effect/Fiber";
 
-import { SchemaNotFound } from "./errors";
-import {
-  Rpcs,
-  RpcsSerialization,
-  ProjectEvent,
-  SchemaMeta,
-  PackageMeta,
-} from "./shared";
+import { RpcsSerialization, ProjectEvent } from "./shared";
 import utilPackage from "./util-package";
 import twitchPackage from "./twitch-package";
 import obsPackage from "./obs-package";
-import { project } from "./project";
-import { DeepWriteable } from "./types";
-import { NodeRpcs, NodeRpcsLive } from "./domain/Node/rpc";
-import { Graphs } from "./domain/Graph/rpc";
+import { NodeRpcsLive } from "./domain/Node/rpc";
 import {
   RealtimeConnection,
   RealtimeConnectionId,
@@ -45,11 +35,15 @@ import {
 import { RealtimePubSub } from "./domain/Realtime/PubSub";
 import { CloudAPIClient } from "./domain/CloudApi/ApiClient";
 import { CloudApiAuthState } from "./domain/CloudApi/AuthState";
-import { RealtimePresence } from "./domain/Realtime/Presence";
+import { Presence } from "./domain/Presence/Presence";
 import { RpcRealtimeMiddleware } from "./domain/Rpc/Middleware";
 import { ProjectActions } from "./domain/Project/Actions";
 import { ProjectPackages } from "./domain/Project/Packages";
-import { Graph } from "./domain/Graph/data";
+import { Graphs } from "./domain/Graph/Graphs";
+import { GraphRpcsLive } from "./domain/Graph/rpc";
+import { ProjectRpcsLive } from "./domain/Project/rpc";
+import { Rpcs } from "./rpc";
+import { PresenceRpcsLive } from "./domain/Presence/rpc";
 
 const NodeSdkLive = NodeSdk.layer(() => ({
   resource: { serviceName: "mg-server" },
@@ -63,150 +57,23 @@ export const DepsLive = Layer.provideMerge(
     Graphs.Default,
     CloudApiAuthState.Default,
     CloudAPIClient.Default,
-    RealtimePresence.Default,
+    Presence.Default,
     ProjectPackages.Default,
     RealtimePubSub.Default,
     NodeSdkLive,
   ),
 );
 
+const RpcsLive = Layer.mergeAll(
+  ProjectRpcsLive,
+  GraphRpcsLive,
+  NodeRpcsLive,
+  PresenceRpcsLive,
+);
+
 export const ServerLive = Effect.gen(function* () {
   const projectActions = yield* ProjectActions;
   const packages = yield* ProjectPackages;
-  const realtime = yield* RealtimePubSub;
-
-  const RpcsAll = Rpcs.merge(Rpcs, NodeRpcs);
-
-  const RpcsLive = Rpcs.toLayer(
-    Effect.gen(function* () {
-      return {
-        GetProject: Effect.fn(function* () {
-          return {
-            name: project.name,
-            graphs: (() => {
-              const ret: Record<string, DeepWriteable<Graph>> = {};
-
-              for (const [key, value] of project.graphs.entries()) {
-                ret[key] = {
-                  ...value,
-                  connections: (() => {
-                    const ret: DeepWriteable<Graph["connections"]> = {};
-                    if (!value.connections) return ret;
-
-                    for (const [
-                      key,
-                      nodeConnections,
-                    ] of value.connections.entries()) {
-                      if (!nodeConnections.out) continue;
-                      const outputConns = (ret[key] =
-                        {} as (typeof ret)[string]);
-                      for (const [
-                        key,
-                        outputConnections,
-                      ] of nodeConnections.out.entries()) {
-                        outputConns[key] = outputConnections;
-                      }
-                    }
-
-                    return ret;
-                  })(),
-                };
-              }
-
-              return ret;
-            })(),
-            packages: [...packages.entries()].reduce(
-              (acc, [id, { pkg }]) => {
-                acc[id] = {
-                  schemas: [...pkg.schemas.entries()].reduce(
-                    (acc, [id, schema]) => {
-                      acc[id] = { id, name: schema.name, type: schema.type };
-                      return acc;
-                    },
-                    {} as Record<string, SchemaMeta>,
-                  ),
-                };
-                return acc;
-              },
-              {} as Record<string, PackageMeta>,
-            ),
-          };
-        }),
-        GetPackageSettings: Effect.fn(function* (payload) {
-          const pkg = packages.get(payload.package)!;
-          return yield* Option.getOrNull(pkg.state)!.get;
-        }),
-        CreateNode: Effect.fn(function* (payload) {
-          const node = yield* projectActions
-            .createNode(payload.graphId, payload.schema, [...payload.position])
-            .pipe(Effect.mapError(() => new SchemaNotFound(payload.schema)));
-
-          yield* realtime.publish({
-            type: "NodeCreated",
-            graphId: payload.graphId,
-            nodeId: node.id,
-            position: node.position,
-            schema: payload.schema,
-            inputs: node.inputs,
-            outputs: node.outputs,
-          });
-
-          return {
-            id: node.id,
-            io: { inputs: node.inputs, outputs: node.outputs },
-          };
-        }),
-        ConnectIO: Effect.fn(function* (payload) {
-          yield* projectActions.addConnection(
-            payload.graphId,
-            payload.output,
-            payload.input,
-          );
-
-          yield* realtime.publish({
-            type: "IOConnected",
-            graphId: payload.graphId,
-            output: payload.output,
-            input: payload.input,
-          });
-        }),
-        DisconnectIO: Effect.fn(function* (payload) {
-          yield* projectActions.disconnectIO(payload.graphId, payload.io);
-
-          yield* realtime.publish({
-            type: "IODisconnected",
-            graphId: payload.graphId,
-            io: payload.io,
-          });
-        }),
-        SetMousePosition: Effect.fn(function* (payload) {
-          const presence = yield* RealtimePresence;
-          yield* presence.setMouse(payload.graph, payload.position);
-        }),
-        SetSelection: Effect.fn(function* ({ value }) {
-          const presence = yield* RealtimePresence;
-          if (value === null) yield* presence.setSelection();
-          else
-            yield* presence.setSelection(
-              value.graph,
-              value.nodes as DeepWriteable<typeof value.nodes>,
-            );
-        }),
-        DeleteSelection: Effect.fn(function* (payload) {
-          yield* projectActions.deleteSelection(
-            payload.graph,
-            payload.selection as DeepWriteable<typeof payload.selection>,
-          );
-
-          yield* realtime.publish({
-            type: "SelectionDeleted",
-            graphId: payload.graph,
-            selection: payload.selection,
-          });
-        }),
-      };
-    }),
-  );
 
   const nextRealtimeClient = (() => {
     let i = 0;
@@ -217,7 +84,7 @@ export const ServerLive = Effect.gen(function* () {
   yield* projectActions.addPackage("twitch", twitchPackage).pipe(Effect.orDie);
   yield* projectActions.addPackage("obs", obsPackage).pipe(Effect.orDie);
 
-  const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(RpcsAll, {
+  const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs, {
     spanPrefix: "ProjectRpc",
   }).pipe(
     Effect.provide(RpcsLive),
@@ -365,7 +232,7 @@ const createEventStream = Effect.gen(function* () {
     ),
   );
 
-  const presence = yield* RealtimePresence;
+  const presence = yield* Presence;
   yield* presence.registerToScope;
 
   const numSubscriptionsStream = presence.changes.pipe(
