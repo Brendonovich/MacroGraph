@@ -12,6 +12,8 @@ export function createCtx() {
 	const [voices, setVoices] = createSignal<Map<string, string>>(new Map());
 	const [voiceChanger, setVoiceChanger] = createSignal(false);
 	const [hearVoice, setHearVoice] = createSignal(false);
+	const [backgroundEffects, setBackgroundEffects] = createSignal(false);
+	const [micMute, setMicMute] = createSignal(false);
 
 	type Voice = {
 		bitmapChecksum: string;
@@ -82,6 +84,24 @@ export function createCtx() {
 						}),
 					);
 				}, 2000);
+                setTimeout(() => {
+					ws.send(
+						JSON.stringify({
+							action: "getBackgroundEffectStatus",
+							id: "doesntMatter",
+							payload: {},
+						}),
+					);
+				}, 2000);
+                setTimeout(() => {
+					ws.send(
+						JSON.stringify({
+							action: "getMuteMicStatus",
+							id: "doesntMatter",
+							payload: {},
+						}),
+					);
+				}, 2000);
 				ws.addEventListener("close", (event) => {
 					console.log(`Port: ${port} Closed.`);
 					setState(None);
@@ -109,8 +129,13 @@ export function createCtx() {
 					if (data.actionType === "toggleHearMyVoice") {
 						setHearVoice(data.actionObject.value);
 					}
+                    if(data.actionType === "toggleBackground") {
+                        setBackgroundEffects(data.actionObject.value);
+                    }
+                    if(data.actionType === "toggleMuteMic") {
+                        setMicMute(data.actionObject.value);
+                    }
 
-					console.log(voices());
 				});
 			});
 		}
@@ -124,5 +149,5 @@ export function createCtx() {
 
 	connect();
 
-	return { state, setState, voices, setVoices, voiceChanger, hearVoice };
+	return { state, setState, voices, setVoices, voiceChanger, hearVoice, backgroundEffects, micMute };
 }
