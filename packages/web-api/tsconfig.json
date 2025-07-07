@@ -1,7 +1,7 @@
 {
-  "extends": "@macrograph/config/tsconfig",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "references": [{ "path": "../runtime" }, { "path": "../typesystem" }]
+	"extends": "@macrograph/config/tsconfig",
+	"compilerOptions": {
+		"outDir": "dist"
+	},
+	"references": [{ "path": "../runtime" }, { "path": "../typesystem" }]
 }

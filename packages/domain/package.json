@@ -1,16 +1,16 @@
 {
-  "name": "@macrograph/domain",
-  "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "dependencies": {
-    "@effect/rpc": "^0.62.4",
-    "@macrograph/web-api": "workspace:*",
-    "effect": "^3.16.8"
-  },
-  "exports": {
-    ".": "./src/index.ts",
-    "./Node": "./src/Node.ts",
-    "./Graph": "./src/Graph.ts"
-  }
+	"name": "@macrograph/domain",
+	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"dependencies": {
+		"@effect/rpc": "^0.62.4",
+		"@macrograph/web-api": "workspace:*",
+		"effect": "^3.16.8"
+	},
+	"exports": {
+		".": "./src/index.ts",
+		"./Node": "./src/Node.ts",
+		"./Graph": "./src/Graph.ts"
+	}
 }

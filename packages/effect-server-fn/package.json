@@ -1,11 +1,11 @@
 {
-  "name": "effect-server-fn",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "devDependencies": {
-    "@macrograph/config": "workspace:*"
-  },
-  "dependencies": {
-    "effect": "^3.16.8"
-  }
+	"name": "effect-server-fn",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"devDependencies": {
+		"@macrograph/config": "workspace:*"
+	},
+	"dependencies": {
+		"effect": "^3.16.8"
+	}
 }

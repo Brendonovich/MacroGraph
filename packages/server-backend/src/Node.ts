@@ -7,66 +7,66 @@ import { RealtimePubSub } from "./Realtime";
 import { Graphs } from "./Graph";
 
 export const NodeRpcsLive = Node.Rpcs.toLayer(
-  Effect.gen(function* () {
-    const realtime = yield* RealtimePubSub;
+	Effect.gen(function* () {
+		const realtime = yield* RealtimePubSub;
 
-    return {
-      SetNodePosition: Effect.fn(function* (payload) {
-        const graphs = yield* Graphs;
-        const graph = yield* graphs
-          .get(payload.graphId)
-          .pipe(
-            Effect.andThen(
-              Effect.catchTag(
-                "NoSuchElementException",
-                () => new Graph.NotFound({ graphId: payload.graphId }),
-              ),
-            ),
-          );
+		return {
+			SetNodePosition: Effect.fn(function* (payload) {
+				const graphs = yield* Graphs;
+				const graph = yield* graphs
+					.get(payload.graphId)
+					.pipe(
+						Effect.andThen(
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new Graph.NotFound({ graphId: payload.graphId }),
+							),
+						),
+					);
 
-        const node = graph.nodes.find((node) => node.id === payload.nodeId);
-        if (!node) return;
+				const node = graph.nodes.find((node) => node.id === payload.nodeId);
+				if (!node) return;
 
-        node.position = payload.position;
+				node.position = payload.position;
 
-        yield* realtime.publish({
-          type: "NodeMoved",
-          graphId: graph.id,
-          nodeId: node.id,
-          position: payload.position,
-        });
-      }),
-      SetNodePositions: Effect.fn(function* (payload) {
-        const graphs = yield* Graphs;
-        const graph = yield* graphs
-          .get(payload.graphId)
-          .pipe(
-            Effect.andThen(
-              Effect.catchTag(
-                "NoSuchElementException",
-                () => new Graph.NotFound({ graphId: payload.graphId }),
-              ),
-            ),
-          );
+				yield* realtime.publish({
+					type: "NodeMoved",
+					graphId: graph.id,
+					nodeId: node.id,
+					position: payload.position,
+				});
+			}),
+			SetNodePositions: Effect.fn(function* (payload) {
+				const graphs = yield* Graphs;
+				const graph = yield* graphs
+					.get(payload.graphId)
+					.pipe(
+						Effect.andThen(
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new Graph.NotFound({ graphId: payload.graphId }),
+							),
+						),
+					);
 
-        const positions: Array<{
-          node: Node.Id;
-          position: { x: number; y: number };
-        }> = [];
+				const positions: Array<{
+					node: Node.Id;
+					position: { x: number; y: number };
+				}> = [];
 
-        for (const [nodeId, position] of payload.positions) {
-          const node = graph.nodes.find((node) => node.id === nodeId);
-          if (!node) continue;
-          node.position = position;
-          positions.push({ node: nodeId, position });
-        }
+				for (const [nodeId, position] of payload.positions) {
+					const node = graph.nodes.find((node) => node.id === nodeId);
+					if (!node) continue;
+					node.position = position;
+					positions.push({ node: nodeId, position });
+				}
 
-        yield* realtime.publish({
-          type: "NodesMoved",
-          graphId: graph.id,
-          positions: payload.positions,
-        });
-      }),
-    };
-  }),
+				yield* realtime.publish({
+					type: "NodesMoved",
+					graphId: graph.id,
+					positions: payload.positions,
+				});
+			}),
+		};
+	}),
 );

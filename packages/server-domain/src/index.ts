@@ -19,9 +19,9 @@ import * as ClientAuth from "./ClientAuth";
 import * as CloudAuth from "./CloudAuth";
 
 export const Rpcs = Project.Rpcs.merge(
-  Presence.Rpcs,
-  Graph.Rpcs,
-  Node.Rpcs,
-  CloudAuth.Rpcs,
-  ClientAuth.Rpcs,
+	Presence.Rpcs,
+	Graph.Rpcs,
+	Node.Rpcs,
+	CloudAuth.Rpcs,
+	ClientAuth.Rpcs,
 );

@@ -10,42 +10,42 @@ import { fetch } from "./http";
 import { queryClient } from "./rspc";
 
 export const [sessionToken, setSessionToken] = makePersisted(
-  createSignal<string | null>(null),
-  { name: "mg-auth-token" },
+	createSignal<string | null>(null),
+	{ name: "mg-auth-token" },
 );
 
 export const rawApi = initClient(contract, {
-  api: (args) =>
-    fetch(args.path, args).then(async (r) => ({
-      status: r.status,
-      body: await r.json(),
-      headers: r.headers,
-    })),
-  baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
-  get baseHeaders(): Record<string, string> {
-    const token = sessionToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  },
+	api: (args) =>
+		fetch(args.path, args).then(async (r) => ({
+			status: r.status,
+			body: await r.json(),
+			headers: r.headers,
+		})),
+	baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
+	get baseHeaders(): Record<string, string> {
+		const token = sessionToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
+	},
 });
 
 export const api = initQueryClient(contract, {
-  api: (args) =>
-    fetch(args.path, args).then(async (r) => {
-      const body = await r.json();
-      return {
-        status: r.status,
-        body,
-        headers: r.headers,
-      };
-    }),
-  baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
-  get baseHeaders(): Record<string, string> {
-    const token = sessionToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  },
+	api: (args) =>
+		fetch(args.path, args).then(async (r) => {
+			const body = await r.json();
+			return {
+				status: r.status,
+				body,
+				headers: r.headers,
+			};
+		}),
+	baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
+	get baseHeaders(): Record<string, string> {
+		const token = sessionToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
+	},
 });
 
 export const logOutAction = action(async () => {
-  setSessionToken(null);
-  queryClient.clear();
+	setSessionToken(null);
+	queryClient.clear();
 });

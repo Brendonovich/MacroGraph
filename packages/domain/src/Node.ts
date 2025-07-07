@@ -7,7 +7,7 @@ export const Id = Schema.Int.pipe(Schema.brand("Node ID"));
 export type Id = Schema.Schema.Type<typeof Id>;
 
 export const IORef = Schema.Struct({
-  nodeId: Id,
-  ioId: Schema.String,
+	nodeId: Id,
+	ioId: Schema.String,
 });
 export type IORef = Schema.Schema.Type<typeof IORef>;
