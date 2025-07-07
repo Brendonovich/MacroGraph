@@ -24,36 +24,32 @@ import {
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
+import { isMobile } from "@solid-primitives/platform";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
+import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { toast } from "solid-sonner";
 import type * as v from "valibot";
-import clsx from "clsx";
-import { isMobile } from "@solid-primitives/platform";
 
 import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
 import { Graph } from "./components/Graph";
-import {
-	type GraphState,
-	makeGraphState,
-	toGraphSpace,
-} from "./components/Graph/Context";
+import { type GraphState, toGraphSpace } from "./components/Graph/Context";
 import { GRID_SIZE, SHIFT_MULTIPLIER } from "./components/Graph/util";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import {
 	type Environment,
 	type GraphBounds,
-	GraphTabListState,
+	type GraphTabListState,
 	InterfaceContextProvider,
 	useInterfaceContext,
 } from "./context";
 import "./global.css";
+import { usePlatform } from "./platform";
 import { isCtrlEvent } from "./util";
-import { PlatformContext, usePlatform } from "./platform";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";

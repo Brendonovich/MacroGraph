@@ -16,7 +16,7 @@ import type { z } from "zod";
 import { createHTTPClient } from "../httpEndpoint";
 import type { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";
-import { defaultProperties, TwitchAccount, TwitchChannel } from "./resource";
+import { TwitchAccount, TwitchChannel, defaultProperties } from "./resource";
 import type { Types } from "./types";
 
 export const HELIX_USER_ID = "helixUserId";
@@ -1902,7 +1902,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				headers: {
 					Authorization: `Bearer ${credential.token.access_token}`,
 				},
-			}).then((resp) => resp.json());
+			}).then((resp) => resp.json() as any);
 
 			ctx.setOutput(io.expiresIn, data.expires_in);
 			ctx.setOutput(io.login, data.login);

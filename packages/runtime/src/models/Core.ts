@@ -1,9 +1,10 @@
-import type { contract, CREDENTIAL } from "@macrograph/api-contract";
+import type { CREDENTIAL, contract } from "@macrograph/api-contract";
 import { Maybe, type Option } from "@macrograph/option";
 import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 
+import type { z } from "zod";
 import { implicitConversions } from "../utils";
 import { DataInput, type DataOutput, type ScopeOutput } from "./IO";
 import type { Node } from "./Node";
@@ -11,7 +12,6 @@ import type { EventsMap, RunCtx } from "./NodeSchema";
 import type { Package } from "./Package";
 import { Project } from "./Project";
 import type { Variable } from "./Variable";
-import { z } from "zod";
 
 class NodeEmit {
 	listeners = new Map<Node, Set<(d: Node) => any>>();

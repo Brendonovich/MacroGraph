@@ -13,12 +13,12 @@ import type {
 import { t } from "@macrograph/typesystem";
 import type * as v from "valibot";
 
+import { readBinaryFile } from "@tauri-apps/api/fs";
 import type { Ctx } from ".";
 import { createHTTPClient } from "../httpEndpoint";
 import type { Account, BotAccount } from "./auth";
 import { botProperty, defaultProperties } from "./resource";
 import type { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
-import { readBinaryFile } from "@tauri-apps/api/fs";
 
 export type Requests = {
 	[_: `POST /channels/${string}/messages`]: any;

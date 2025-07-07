@@ -14,15 +14,11 @@ import { createContextProvider } from "@solid-primitives/context";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { leading, throttle } from "@solid-primitives/scheduled";
 import { makePersisted } from "@solid-primitives/storage";
-import { createMemo, createSignal, onCleanup } from "solid-js";
+import { createSignal, onCleanup } from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
 
 import { historyActions } from "./actions";
-import {
-	type GraphState,
-	type SelectedItemID,
-	makeGraphState,
-} from "./components/Graph/Context";
+import { type GraphState, makeGraphState } from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
 
 export type Environment = "custom" | "browser";

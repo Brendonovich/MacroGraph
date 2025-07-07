@@ -127,7 +127,7 @@ export default function () {
 					MacroGraph can receive events from and send commands to all sorts of
 					programs and services
 				</p>
-				<div class="grid grid mt-4 grid-cols-1 md:grid-cols-2 gap-2 w-full">
+				<div class="grid mt-4 grid-cols-1 md:grid-cols-2 gap-2 w-full">
 					<For each={INTEGRATIONS}>
 						{(item) => (
 							<div class="bg-black/30 p-4 rounded-lg flex flex-row gap-3 items-center hover:scale-[1.02] border transition-transform">

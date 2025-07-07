@@ -14,8 +14,8 @@ import { ReactiveMap } from "@solid-primitives/map";
 import type { Ctx } from "../ctx";
 import type { Helix } from "../helix";
 import { defaultProperties } from "../resource";
-import type { Events } from "./types";
 import type { Types } from "../types";
+import type { Events } from "./types";
 
 export * from "./types";
 
@@ -2753,8 +2753,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					text: data.message.text,
 					fragments: (data.message.fragments as Fragment[]).map((fragment) =>
 						FragmentsStruct.create({
-							type: Maybe(fragment.type),
-							text: Maybe(fragment.text),
+							type: Maybe(fragment.type) as any,
+							text: Maybe(fragment.text) as any,
 							cheermote: Maybe(fragment.cheermote).map((cheermote) =>
 								CheermoteStruct.create({
 									prefix: cheermote.prefix,

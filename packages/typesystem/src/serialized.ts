@@ -3,8 +3,8 @@ import * as v from "valibot";
 
 import {
 	type Enum,
-	EnumBase,
-	EnumVariants,
+	type EnumBase,
+	type EnumVariants,
 	type Struct,
 	type StructBase,
 	t,

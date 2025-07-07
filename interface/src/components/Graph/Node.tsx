@@ -25,6 +25,7 @@ import {
 import { toast } from "solid-sonner";
 import { config } from "../../ConfigDialog";
 import { useInterfaceContext } from "../../context";
+import { usePlatform } from "../../platform";
 import { isCtrlEvent } from "../../util";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
@@ -38,7 +39,6 @@ import {
 } from "./IO";
 import "./Node.css";
 import { GRID_SIZE, handleSelectableItemPointerDown } from "./util";
-import { usePlatform } from "../../platform";
 
 interface Props {
 	node: NodeModel;

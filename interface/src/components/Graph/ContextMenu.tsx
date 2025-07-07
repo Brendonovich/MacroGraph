@@ -1,9 +1,9 @@
 import { ContextMenu } from "@kobalte/core";
-import type { ComponentProps } from "solid-js";
 import clsx from "clsx";
+import type { ComponentProps } from "solid-js";
 
-import { tw } from "../../util";
 import { useInlineTextEditorCtx } from "../../Sidebar/InlineTextEditor";
+import { tw } from "../../util";
 
 export const ContextMenuItem = tw(
 	ContextMenu.Item,

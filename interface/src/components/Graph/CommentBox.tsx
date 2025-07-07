@@ -1,23 +1,23 @@
 import { ContextMenu } from "@kobalte/core";
 import {
+	commentBoxToClipboardItem,
+	serializeClipboardItem,
+} from "@macrograph/clipboard";
+import {
 	type CommentBox as CommentBoxModel,
 	getNodesInRect,
 } from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
 import { Show, createMemo, createRoot, createSignal, onMount } from "solid-js";
-import {
-	commentBoxToClipboardItem,
-	serializeClipboardItem,
-} from "@macrograph/clipboard";
 import { toast } from "solid-sonner";
 
 import type { SelectionItem } from "../../actions";
 import { useInterfaceContext } from "../../context";
+import { usePlatform } from "../../platform";
 import { useGraphContext } from "./Context";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import { handleSelectableItemPointerDown } from "./util";
-import { usePlatform } from "../../platform";
 
 interface Props {
 	box: CommentBoxModel;
@@ -298,7 +298,7 @@ function hexToRgb(hex: string) {
 	}
 
 	// Parse the r, g, b values
-	const bigint = parseInt(hex, 16);
+	const bigint = Number.parseInt(hex, 16);
 	const r = (bigint >> 16) & 255;
 	const g = (bigint >> 8) & 255;
 	const b = bigint & 255;
