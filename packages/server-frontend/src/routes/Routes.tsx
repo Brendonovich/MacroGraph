@@ -1,4 +1,4 @@
-import { Navigate, RouteDefinition } from "@solidjs/router";
+import { Navigate, type RouteDefinition } from "@solidjs/router";
 import { lazy, Show } from "solid-js";
 
 import { useProjectService } from "../AppRuntime";

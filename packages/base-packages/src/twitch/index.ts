@@ -20,7 +20,7 @@ import { RPCS } from "./shared";
 import { HelixApi } from "./helix";
 import {
 	EVENTSUB_MESSAGE,
-	EventSubMessage,
+	type EventSubMessage,
 	isEventSubMessageType,
 	isNotificationType,
 } from "./eventSub";
@@ -220,7 +220,7 @@ const Engine = PackageEngine.make<
 				const scope = yield* Scope.make();
 
 				yield* Stream.runForEach(events, (event) => {
-					let spanName = `Message.${event.metadata.message_type}`;
+					const spanName = `Message.${event.metadata.message_type}`;
 
 					return Effect.gen(function* () {
 						if (isEventSubMessageType(event, "session_welcome"))
@@ -360,7 +360,7 @@ export default Package.make({
 
 function flattenObject(
 	obj: Record<string, any>,
-	prefix: string = "",
+	prefix = "",
 	res: Record<string, any> = {},
 ): Record<string, any> {
 	for (const key in obj) {

@@ -36,24 +36,20 @@ import { isMobile } from "@solid-primitives/platform";
 import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
 import { Graph } from "./components/Graph";
-import {
-	type GraphState,
-	makeGraphState,
-	toGraphSpace,
-} from "./components/Graph/Context";
+import { type GraphState, toGraphSpace } from "./components/Graph/Context";
 import { GRID_SIZE, SHIFT_MULTIPLIER } from "./components/Graph/util";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import {
 	type Environment,
 	type GraphBounds,
-	GraphTabListState,
+	type GraphTabListState,
 	InterfaceContextProvider,
 	useInterfaceContext,
 } from "./context";
 import "./global.css";
 import { isCtrlEvent } from "./util";
-import { PlatformContext, usePlatform } from "./platform";
+import { usePlatform } from "./platform";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";

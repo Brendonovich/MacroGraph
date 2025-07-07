@@ -1,4 +1,4 @@
-import { EventMessage, PostHog } from "posthog-node";
+import { type EventMessage, PostHog } from "posthog-node";
 
 const posthogServer = new PostHog(
 	"phc_7anSDyS3p1frzGL7bHWlkiNG8kJ9pxcHB8H7QjBMEMB",

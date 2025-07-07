@@ -1,12 +1,12 @@
-import { RpcClient, RpcGroup } from "@effect/rpc";
-import { cva, cx, VariantProps } from "cva";
-import { Effect, Schema } from "effect";
+import type { RpcClient, RpcGroup } from "@effect/rpc";
+import { cva, cx, type VariantProps } from "cva";
+import { Effect, type Schema } from "effect";
 import {
-	Accessor,
+	type Accessor,
 	children,
-	ComponentProps,
+	type ComponentProps,
 	createSignal,
-	JSX,
+	type JSX,
 	Show,
 	splitProps,
 	untrack,

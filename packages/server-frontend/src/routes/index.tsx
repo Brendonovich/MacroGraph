@@ -15,7 +15,7 @@ import { ProjectActions } from "../Project/Actions";
 import { ProjectRpc } from "../Project/Rpc";
 import { ProjectState } from "../Project/State";
 import { useRealtimeContext } from "../Realtime";
-import { Graph, Node } from "@macrograph/server-domain";
+import type { Graph, Node } from "@macrograph/server-domain";
 
 const GRAPH_ID = "0";
 

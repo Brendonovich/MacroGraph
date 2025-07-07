@@ -1,4 +1,4 @@
-import { JSONEnum, jsToJSON, jsonToJS, toJSON } from "@macrograph/json";
+import { JSONEnum, jsToJSON, jsonToJS } from "@macrograph/json";
 import { Maybe, None, type Option, Some } from "@macrograph/option";
 import type {
 	CreateIOFn,

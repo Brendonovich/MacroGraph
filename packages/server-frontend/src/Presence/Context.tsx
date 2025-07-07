@@ -1,4 +1,4 @@
-import { Graph, Node } from "@macrograph/server-domain";
+import type { Graph, Node } from "@macrograph/server-domain";
 import { createContext } from "solid-js";
 import { useContext } from "solid-js";
 

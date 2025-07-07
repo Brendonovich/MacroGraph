@@ -1,6 +1,5 @@
 import * as runtime from "@macrograph/runtime";
 import {
-	type EnumVariant,
 	type EnumVariantFields,
 	type Field,
 	serializeValue,

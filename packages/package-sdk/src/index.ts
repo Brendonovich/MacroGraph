@@ -1,14 +1,14 @@
-import { Effect, Layer, Schema, Scope } from "effect";
-import { CREDENTIAL } from "@macrograph/web-api";
+import { Effect, type Layer, type Schema, type Scope } from "effect";
+import type { CREDENTIAL } from "@macrograph/web-api";
 import {
-	CredentialsFetchFailed,
-	DataInputRef,
-	DataOutputRef,
+	type CredentialsFetchFailed,
+	type DataInputRef,
+	type DataOutputRef,
 	ExecutionContext,
-	ForceRetryError,
-	SchemaDefinition,
+	type ForceRetryError,
+	type SchemaDefinition,
 } from "@macrograph/domain";
-import { Rpc, RpcGroup } from "@effect/rpc";
+import type { Rpc, RpcGroup } from "@effect/rpc";
 
 export const getInput = <T extends Schema.Schema<any>>(ref: DataInputRef<T>) =>
 	Effect.flatMap(ExecutionContext, (ctx) => ctx.getInput(ref));

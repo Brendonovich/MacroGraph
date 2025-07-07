@@ -1,5 +1,4 @@
 import {
-	Headers,
 	HttpMiddleware,
 	HttpRouter,
 	HttpServer,

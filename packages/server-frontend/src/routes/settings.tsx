@@ -1,4 +1,4 @@
-import { For, ParentProps } from "solid-js";
+import { For, type ParentProps } from "solid-js";
 import { A } from "@solidjs/router";
 
 export default function Settings(props: ParentProps) {

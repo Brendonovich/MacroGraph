@@ -5,7 +5,7 @@ import {
 	HttpClientRequest,
 } from "@effect/platform";
 import { Api } from "@macrograph/web-api";
-import { Config, Console, Effect, Option, SubscriptionRef } from "effect";
+import { Config, Effect, Option, SubscriptionRef } from "effect";
 
 const CLIENT_ID = "macrograph-server";
 
@@ -14,7 +14,7 @@ export class CloudAPIClient extends Effect.Service<CloudAPIClient>()(
 	{
 		accessors: true,
 		effect: Effect.gen(function* () {
-			let token = yield* SubscriptionRef.make(Option.none<string>());
+			const token = yield* SubscriptionRef.make(Option.none<string>());
 
 			const baseUrl = yield* Config.string("API_URL").pipe(
 				Config.withDefault("https://www.macrograph.app"),

@@ -1,4 +1,4 @@
-import { Effect, Layer, ManagedRuntime } from "effect";
+import { type Effect, Layer, type ManagedRuntime } from "effect";
 import { createContext, useContext } from "solid-js";
 
 import { PackagesSettings } from "./Packages/PackagesSettings";

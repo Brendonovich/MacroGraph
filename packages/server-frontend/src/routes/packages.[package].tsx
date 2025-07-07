@@ -1,7 +1,7 @@
 import { Effect, Fiber, Option, Stream } from "effect";
 import {
 	createEffect,
-	Accessor,
+	type Accessor,
 	createResource,
 	onCleanup,
 	Show,
@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { Dynamic } from "solid-js/web";
-import { SubscribableCache } from "@macrograph/domain";
+import type { SubscribableCache } from "@macrograph/domain";
 
 import { useProjectRuntime, useProjectService } from "../AppRuntime";
 import { PackagesSettings } from "../Packages/PackagesSettings";
@@ -61,7 +61,7 @@ export function useSubscribableCache<A, E>(
 	});
 
 	createEffect(() => {
-		let fiber = cache()
+		const fiber = cache()
 			.changes()
 			.pipe(
 				Stream.runForEach(() =>

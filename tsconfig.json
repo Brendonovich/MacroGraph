@@ -1,14 +1,14 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./packages/web-api" },
-    { "path": "./packages/domain" },
-    { "path": "./packages/package-sdk" },
-    { "path": "./packages/base-packages" },
-    { "path": "./packages/server-domain" },
-    { "path": "./packages/server-backend" },
-    { "path": "./packages/server-frontend" },
-    { "path": "./apps/server" },
-    { "path": "./apps/web" }
-  ]
+	"files": [],
+	"references": [
+		{ "path": "./packages/web-api" },
+		{ "path": "./packages/domain" },
+		{ "path": "./packages/package-sdk" },
+		{ "path": "./packages/base-packages" },
+		{ "path": "./packages/server-domain" },
+		{ "path": "./packages/server-backend" },
+		{ "path": "./packages/server-frontend" },
+		{ "path": "./apps/server" },
+		{ "path": "./apps/web" }
+	]
 }

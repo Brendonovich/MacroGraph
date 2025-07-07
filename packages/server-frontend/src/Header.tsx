@@ -1,7 +1,7 @@
 import { A } from "@solidjs/router";
 import { Dialog } from "@kobalte/core";
 import { ClientListDropdown } from "./Presence/ClientListDropdown";
-import { ValidComponent } from "solid-js";
+import type { ValidComponent } from "solid-js";
 import { useProjectService } from "./AppRuntime";
 import { ClientAuth } from "./Auth";
 import { Button, EffectButton } from "@macrograph/package-sdk/ui";

@@ -1,6 +1,5 @@
 import { redirect } from "@solidjs/router";
 import type { APIEvent } from "@solidjs/start/server";
-import { renderToStream, Suspense } from "solid-js/web";
 import { appendResponseHeader } from "vinxi/http";
 import { type DownloadTarget, getDownloadURL } from "~/lib/releases";
 

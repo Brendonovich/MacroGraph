@@ -12,7 +12,7 @@ import { Switch } from "solid-js";
 import { Match } from "solid-js";
 import { createSignal, onMount } from "solid-js";
 
-import { ensureAuthedOrRedirect, getAuthState } from "~/api";
+import { ensureAuthedOrRedirect } from "~/api";
 import Screenshot from "~/assets/App Logo.png";
 import { db } from "~/drizzle";
 import { deviceCodeSessions } from "~/drizzle/schema";

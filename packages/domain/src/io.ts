@@ -1,4 +1,4 @@
-import { Brand } from "effect";
+import type { Brand } from "effect";
 
 export type IOId = string & Brand.Brand<"IOId">;
 

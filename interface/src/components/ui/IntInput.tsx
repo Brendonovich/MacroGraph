@@ -1,13 +1,7 @@
 import { NumberField } from "@kobalte/core/number-field";
 import { createEventListener } from "@solid-primitives/event-listener";
 import clsx from "clsx";
-import {
-	batch,
-	createEffect,
-	createSignal,
-	onCleanup,
-	onMount,
-} from "solid-js";
+import { batch, createEffect, createSignal, onMount } from "solid-js";
 
 import { config } from "../..";
 import { Input } from "./Input";

@@ -1,9 +1,9 @@
 import { Effect, Scope, SubscriptionRef, Stream } from "effect";
 import { faker } from "@faker-js/faker/locale/en_AU";
-import { Graph, Node, Position } from "@macrograph/server-domain";
+import type { Graph, Node, Position } from "@macrograph/server-domain";
 import { Presence } from "@macrograph/server-domain";
 
-import { RealtimeConnection, RealtimeConnectionId } from "./Realtime";
+import { RealtimeConnection, type RealtimeConnectionId } from "./Realtime";
 
 const colours = [
 	"#BC4D80",

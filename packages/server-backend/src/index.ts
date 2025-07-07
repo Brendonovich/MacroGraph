@@ -1,5 +1,5 @@
 import {
-	HttpApp,
+	type HttpApp,
 	HttpRouter,
 	HttpServerRequest,
 	HttpServerResponse,
@@ -19,12 +19,7 @@ import {
 } from "effect";
 import * as Effect from "effect/Effect";
 import { NodeSdk } from "@effect/opentelemetry";
-import {
-	BatchSpanProcessor,
-	ConsoleSpanExporter,
-} from "@opentelemetry/sdk-trace-base";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { Route } from "@effect/platform/HttpRouter";
+import type { Route } from "@effect/platform/HttpRouter";
 import { getCurrentFiber } from "effect/Fiber";
 import * as JOSE from "jose";
 
@@ -53,7 +48,7 @@ import * as JOSE from "jose";
 // import { CloudRpcsLive } from "./domain/CloudApi/rpc";
 // import { ClientAuthRpcsLive } from "./domain/ClientAuth/rpc";
 import {
-	ProjectEvent,
+	type ProjectEvent,
 	Realtime,
 	Rpcs,
 	RpcsSerialization,

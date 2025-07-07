@@ -1,9 +1,9 @@
-import { Context, Data, Effect, Layer, Schema } from "effect";
-import { CREDENTIAL } from "@macrograph/web-api";
-import { Rpc, RpcGroup } from "@effect/rpc";
+import { Context, Data, Effect, type Layer, Schema } from "effect";
+import type { CREDENTIAL } from "@macrograph/web-api";
+import type { Rpc, RpcGroup } from "@effect/rpc";
 
-import { NodeRuntime } from "./runtime";
-import { NodeSchema, SchemaDefinition } from "./schema";
+import type { NodeRuntime } from "./runtime";
+import type { NodeSchema, SchemaDefinition } from "./schema";
 
 export namespace PackageEngine {
 	type Requirements = PackageEngineContext | NodeRuntime;
@@ -56,7 +56,7 @@ export interface PackageContext<TEvents> {
 export type PackageDefinition<
 	TRpcs extends Rpc.Any,
 	TState extends Schema.Schema<any>,
-	TEvents extends any,
+	TEvents,
 > = (
 	pkg: PackageBuilder,
 	ctx: PackageContext<TEvents>,
@@ -65,7 +65,7 @@ export type PackageDefinition<
 export function definePackage<
 	TRpcs extends Rpc.Any,
 	TState extends Schema.Schema<any>,
-	TEvents extends any,
+	TEvents,
 >(cb: PackageDefinition<TRpcs, TState, TEvents>) {
 	return cb;
 }

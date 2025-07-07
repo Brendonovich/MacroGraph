@@ -1,8 +1,6 @@
 import type { PrintItem } from "@macrograph/runtime";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
 import { For, createMemo, createSignal, onCleanup, onMount } from "solid-js";
-
-import { produce } from "solid-js/store";
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";

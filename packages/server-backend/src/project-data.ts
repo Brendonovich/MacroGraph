@@ -1,4 +1,4 @@
-import { Node, Graph } from "@macrograph/server-domain";
+import { type Node, Graph } from "@macrograph/server-domain";
 
 export type NodeConnections = {
 	in?: Map<string, Array<[Node.Id, string]>>;

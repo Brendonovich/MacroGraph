@@ -1,14 +1,5 @@
-import { Rpc, RpcSerialization, RpcServer } from "@effect/rpc";
-import {
-	Console,
-	Context,
-	Mailbox,
-	Option,
-	pipe,
-	PubSub,
-	Queue,
-	Stream,
-} from "effect";
+import { type Rpc, RpcSerialization, RpcServer } from "@effect/rpc";
+import { Context, Mailbox, Option, pipe, PubSub, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import { Graph, Node } from "@macrograph/server-domain";
 import {
@@ -19,22 +10,21 @@ import {
 	ExecOutputRef,
 	ExecutionContext,
 	ForceRetryError,
-	IOId,
+	type IOId,
 	NodeExecutionContext,
-	NodeSchema,
+	type NodeSchema,
 	NotComputationNode,
 	NotEventNode,
 	PackageBuilder,
 	PackageEngine,
-	SchemaNotFound,
 } from "@macrograph/domain";
-import { Package } from "../../../package-sdk/src";
+import type { Package } from "../../../package-sdk/src";
 
 import { CloudAPIClient } from "../CloudApi/ApiClient";
 import { CredentialsCache } from "../CloudApi/CredentialsCache";
 import { ProjectPackages } from "./Packages";
 import { getNextNodeId } from "./NodeIdCounter";
-import { NodeConnections, project } from "../project-data";
+import { type NodeConnections, project } from "../project-data";
 import { RealtimePubSub } from "../Realtime";
 
 export class ProjectActions extends Effect.Service<ProjectActions>()(
@@ -119,7 +109,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					};
 
 					if (schema.type === "event") {
-						let graphEventNodes =
+						const graphEventNodes =
 							eventNodes.get(graphId) ??
 							(() => {
 								const nodes = new Map<string, Set<Node.Id>>();
@@ -197,10 +187,10 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						return v;
 					})();
 
-				let outputNodeConnections = upsertNodeConnections(output.nodeId);
+				const outputNodeConnections = upsertNodeConnections(output.nodeId);
 
 				outputNodeConnections.out ??= new Map();
-				let outputNodeInputConnections =
+				const outputNodeInputConnections =
 					outputNodeConnections.out.get(output.ioId) ??
 					(() => {
 						const v: Array<[Node.Id, string]> = [];
@@ -209,10 +199,10 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					})();
 				outputNodeInputConnections.push([input.nodeId, input.ioId]);
 
-				let inputNodeConnections = upsertNodeConnections(input.nodeId);
+				const inputNodeConnections = upsertNodeConnections(input.nodeId);
 
 				inputNodeConnections.in ??= new Map();
-				let inputNodeInputConnections =
+				const inputNodeInputConnections =
 					inputNodeConnections.in.get(input.ioId) ??
 					(() => {
 						const v: Array<[Node.Id, string]> = [];

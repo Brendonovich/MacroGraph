@@ -1,5 +1,5 @@
 import { RpcMiddleware } from "@effect/rpc";
-import { Context, Option, Schema, SubscriptionRef } from "effect";
+import { Context, type Option, Schema, type SubscriptionRef } from "effect";
 
 export const ConnectionId = Schema.Number.pipe(
 	Schema.brand("Realtime Client ID"),

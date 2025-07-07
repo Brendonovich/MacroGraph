@@ -3,7 +3,7 @@ import { presetKobalte } from "unocss-preset-primitives";
 import { presetAnimations } from "unocss-preset-animations";
 
 function getColorScale(name: string, alpha = false) {
-	let scale = {};
+	const scale = {};
 	for (let i = 1; i <= 12; i++) {
 		scale[i] = `var(--${name}-${i})`;
 		// next line only needed if using alpha values

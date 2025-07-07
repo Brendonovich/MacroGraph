@@ -8,7 +8,10 @@ import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
 import "./style.css";
 
-import { PresenceClient, PresenceContextProvider } from "./Presence/Context";
+import {
+	type PresenceClient,
+	PresenceContextProvider,
+} from "./Presence/Context";
 import { Layout } from "./Layout";
 import { RealtimeContextProvider } from "./Realtime";
 import { ProjectRuntime, ProjectRuntimeProvider } from "./AppRuntime";

@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import { For, ParentProps, Suspense } from "solid-js";
+import { For, type ParentProps, Suspense } from "solid-js";
 
 import { usePresenceContext } from "../Presence/Context";
 import { useProjectService } from "../AppRuntime";

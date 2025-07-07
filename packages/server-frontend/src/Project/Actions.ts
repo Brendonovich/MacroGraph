@@ -1,17 +1,17 @@
 import { Chunk, Effect, Option, Stream } from "effect";
 import { createStore, produce } from "solid-js/store";
-import {
+import type {
 	SchemaRef,
 	Graph,
 	Node,
 	Position,
 	Rpcs,
 } from "@macrograph/server-domain";
-import { Rpc, RpcGroup } from "@effect/rpc";
+import type { Rpc, RpcGroup } from "@effect/rpc";
 
 import { ProjectRpc } from "./Rpc";
 import { ProjectState } from "./State";
-import { IORef, parseIORef } from "../utils";
+import { type IORef, parseIORef } from "../utils";
 
 export class ProjectActions extends Effect.Service<ProjectActions>()(
 	"ProjectActions",

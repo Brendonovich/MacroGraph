@@ -1,4 +1,4 @@
-import { Cache, Duration, Effect, Mailbox, PubSub, Stream } from "effect";
+import { Cache, type Duration, Effect, PubSub, Stream } from "effect";
 
 export namespace SubscribableCache {
 	export interface SubscribableCache<A, E> {

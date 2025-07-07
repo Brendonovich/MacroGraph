@@ -1,9 +1,9 @@
 import { Effect } from "effect";
 import { createStore } from "solid-js/store";
-import { Node, Graph } from "@macrograph/server-domain";
+import { Node, type Graph } from "@macrograph/server-domain";
 
 import { ProjectRpc } from "./Rpc";
-import { GraphTwoWayConnections } from "../Graph/Graph";
+import type { GraphTwoWayConnections } from "../Graph/Graph";
 
 export class ProjectState extends Effect.Service<ProjectState>()(
 	"ProjectState",

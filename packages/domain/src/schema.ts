@@ -1,7 +1,12 @@
-import { Data, Effect, Option, Schema } from "effect";
-import { YieldWrap } from "effect/Utils";
-import { DataInputRef, DataOutputRef, ExecInputRef, ExecOutputRef } from "./io";
-import { SchemaRunGeneratorEffect } from "./runtime";
+import type { Effect, Option, Schema } from "effect";
+import type { YieldWrap } from "effect/Utils";
+import type {
+	DataInputRef,
+	DataOutputRef,
+	ExecInputRef,
+	ExecOutputRef,
+} from "./io";
+import type { SchemaRunGeneratorEffect } from "./runtime";
 
 export type NodeSchema<
 	TIO = any,

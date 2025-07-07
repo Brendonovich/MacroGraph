@@ -1,6 +1,6 @@
 import { Context, Data, Exit, Layer } from "effect";
 import * as Effect from "effect/Effect";
-import { ParseError } from "effect/ParseResult";
+import type { ParseError } from "effect/ParseResult";
 import * as Schema from "effect/Schema";
 
 export interface ServerFn<

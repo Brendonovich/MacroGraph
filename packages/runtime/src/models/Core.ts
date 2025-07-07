@@ -11,7 +11,7 @@ import type { EventsMap, RunCtx } from "./NodeSchema";
 import type { Package } from "./Package";
 import { Project } from "./Project";
 import type { Variable } from "./Variable";
-import { z } from "zod";
+import type { z } from "zod";
 
 class NodeEmit {
 	listeners = new Map<Node, Set<(d: Node) => any>>();

@@ -1,5 +1,11 @@
 import { Tabs } from "@kobalte/core";
-import { For, Show, ValidComponent, createMemo, createSignal } from "solid-js";
+import {
+	For,
+	Show,
+	type ValidComponent,
+	createMemo,
+	createSignal,
+} from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";

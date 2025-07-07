@@ -1,8 +1,14 @@
-import { For, JSXElement, Match, ParentProps, Switch } from "solid-js";
+import {
+	For,
+	type JSXElement,
+	Match,
+	type ParentProps,
+	Switch,
+} from "solid-js";
 import { cx } from "cva";
-import { EffectButton, SettingsProps } from "@macrograph/package-sdk/ui";
+import { EffectButton, type SettingsProps } from "@macrograph/package-sdk/ui";
 
-import { RPCS, STATE } from "./shared";
+import { RPCS, type STATE } from "./shared";
 
 const EVENTSUB_CONNECTION_INDICATOR = {
 	connected: {

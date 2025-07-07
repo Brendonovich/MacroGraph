@@ -1,5 +1,5 @@
 import { cx } from "cva";
-import { ComponentProps } from "solid-js";
+import type { ComponentProps } from "solid-js";
 
 export function Avatar(props: { name: string } & ComponentProps<"div">) {
 	return (

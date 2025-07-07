@@ -1,8 +1,8 @@
 import { Data, Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
 import OBSWebsocket, {
-	OBSRequestTypes,
-	OBSResponseTypes,
+	type OBSRequestTypes,
+	type OBSResponseTypes,
 } from "obs-websocket-js";
 import { getInput, Package, PackageEngine } from "@macrograph/package-sdk";
 

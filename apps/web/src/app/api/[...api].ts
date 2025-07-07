@@ -7,14 +7,14 @@ import {
 	HttpServerResponse,
 } from "@effect/platform";
 import { NodeHttpServer } from "@effect/platform-node/index";
-import { InferSelectModel } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { Config, Effect, Layer, Option } from "effect";
 import * as S from "effect/Schema";
 import { verifyRequestOrigin } from "lucia";
 import {
 	Authentication,
 	Api,
-	CREDENTIAL,
+	type CREDENTIAL,
 	CurrentSession,
 	DeviceFlowError,
 } from "@macrograph/web-api";
@@ -370,10 +370,6 @@ const ApiLive = HttpApiBuilder.api(Api).pipe(
 );
 
 import { NodeSdk } from "@effect/opentelemetry";
-import {
-	BatchSpanProcessor,
-	ConsoleSpanExporter,
-} from "@opentelemetry/sdk-trace-base";
 
 const { handler } = HttpApiBuilder.toWebHandler(
 	Layer.mergeAll(

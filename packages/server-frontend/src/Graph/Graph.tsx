@@ -1,5 +1,5 @@
 import {
-	ComponentProps,
+	type ComponentProps,
 	createEffect,
 	createRoot,
 	createSignal,
@@ -14,15 +14,15 @@ import { ReactiveMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { mergeRefs } from "@solid-primitives/refs";
 import { ContextMenu } from "@kobalte/core/context-menu";
-import { ValidComponent } from "solid-js";
+import type { ValidComponent } from "solid-js";
 import { cx } from "cva";
 import { Option } from "effect";
-import { Node, SchemaMeta } from "@macrograph/server-domain";
-import { SchemaRef } from "@macrograph/server-domain";
+import { Node, type SchemaMeta } from "@macrograph/server-domain";
+import type { SchemaRef } from "@macrograph/server-domain";
 import IconMaterialSymbolsDeleteOutline from "~icons/material-symbols/delete-outline.jsx";
 
 import { NodeRoot, NodeHeader } from "../Node";
-import { IORef, isTouchDevice } from "../utils";
+import { type IORef, isTouchDevice } from "../utils";
 import { useProjectService } from "../AppRuntime";
 import { ProjectActions } from "../Project/Actions";
 
@@ -167,7 +167,7 @@ export function GraphView(
 							if (s.type !== "idle") return s;
 
 							createRoot((dispose) => {
-								let timeout = setTimeout(() => {
+								const timeout = setTimeout(() => {
 									if (isTouchDevice) {
 										props.onContextMenu?.({
 											x: downEvent.clientX - (bounds.left ?? 0),

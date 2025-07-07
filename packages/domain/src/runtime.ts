@@ -1,8 +1,8 @@
-import { Context, Data, Effect, Schema } from "effect";
-import { NoSuchElementException } from "effect/Cause";
+import { Context, Data, type Effect, Schema } from "effect";
+import type { NoSuchElementException } from "effect/Cause";
 
-import { Id as NodeId } from "./Node";
-import { DataInputRef, DataOutputRef } from "./io";
+import type { Id as NodeId } from "./Node";
+import type { DataInputRef, DataOutputRef } from "./io";
 
 export class NotComputationNode extends Data.TaggedError(
 	"@macrograph/domain/NotComputationNode",

@@ -1,4 +1,4 @@
-import { NullableBounds } from "@solid-primitives/bounds";
+import type { NullableBounds } from "@solid-primitives/bounds";
 import { createContextProvider } from "@solid-primitives/context";
 
 const [GraphContextProvider, _useGraphContext] = createContextProvider(

@@ -1,9 +1,9 @@
 import { Effect, Option } from "effect";
 import {
-	PackageMeta,
+	type PackageMeta,
 	Project,
-	SchemaMeta,
-	Graph,
+	type SchemaMeta,
+	type Graph,
 } from "@macrograph/server-domain";
 
 import { ProjectPackages } from "./Packages";

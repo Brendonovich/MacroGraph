@@ -18,8 +18,6 @@ import { initClient } from "@ts-rest/core";
 import { Show, createSignal, onMount } from "solid-js";
 import { toast } from "solid-sonner";
 import * as v from "valibot";
-import { HttpApiClient } from "@effect/platform";
-import { Api } from "@macrograph/web-api";
 
 import { fetchPlaygroundProject, savePlaygroundProject } from "~/api";
 import { clientEnv } from "~/env/client";

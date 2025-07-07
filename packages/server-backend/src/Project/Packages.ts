@@ -1,6 +1,6 @@
-import { Effect, Option, Queue, Scope } from "effect";
-import { HttpApp } from "@effect/platform";
-import { Package } from "@macrograph/domain";
+import { Effect, type Option, type Queue, type Scope } from "effect";
+import type { HttpApp } from "@effect/platform";
+import type { Package } from "@macrograph/domain";
 
 export type PackageEntry = {
 	pkg: Package;

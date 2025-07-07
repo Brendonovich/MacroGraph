@@ -5,7 +5,7 @@ import createPresence from "solid-presence";
 import { useGraphContext } from "./Context";
 import { useProjectService } from "../AppRuntime";
 import { ProjectState } from "../Project/State";
-import { SchemaRef } from "@macrograph/server-domain";
+import type { SchemaRef } from "@macrograph/server-domain";
 
 export function GraphContextMenu(props: {
 	position: { x: number; y: number } | null;
