@@ -12,5 +12,6 @@
 		"typecheck": {
 			"outputs": ["dist/**"]
 		}
-	}
+	},
+	"globalEnv": ["*"]
 }
