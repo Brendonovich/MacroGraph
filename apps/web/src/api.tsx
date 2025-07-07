@@ -13,7 +13,7 @@ import { lucia } from "./lucia";
 function loginRedirect() {
   const url = new URL(getRequestEvent()!.request.url);
   const next = encodeURIComponent(`${url.pathname}?${url.search}`);
-  return redirect("/login");
+  return redirect(`/login?next=${next}`);
 }
 
 async function _getAuthState() {

@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@kobalte/core@0.13.7':
-    hash: ydksf54ocuiqvbunagt6kfibpq
+    hash: e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4
     path: patches/@kobalte__core@0.13.7.patch
 
 importers:
@@ -64,7 +64,7 @@ importers:
         version: 2.2.196
       '@kobalte/core':
         specifier: ^0.13.7
-        version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
       '@macrograph/api-contract':
         specifier: workspace:*
         version: link:../../packages/api-contract
@@ -103,7 +103,7 @@ importers:
         version: 1.1.3(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(jiti@2.4.2)(solid-js@1.9.7)(terser@5.39.0)(tsx@4.19.2)(vinxi@0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(yaml@2.6.1)
       '@t3-oss/env-core':
         specifier: ^0.6.1
-        version: 0.6.1(typescript@5.8.3)(zod@3.25.36)
+        version: 0.6.1(typescript@5.7.3)(zod@3.25.36)
       '@tanstack/solid-query':
         specifier: ^4.36.1
         version: 4.36.1(solid-js@1.9.7)
@@ -127,7 +127,7 @@ importers:
         version: link:../../crates/tauri-plugin-midi
       valibot:
         specifier: ^0.37.0
-        version: 0.37.0(typescript@5.8.3)
+        version: 0.37.0(typescript@5.7.3)
       vinxi:
         specifier: 0.5.6
         version: 0.5.6(@planetscale/database@1.19.0)(@types/node@22.10.2)(db0@0.3.2(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -194,7 +194,19 @@ importers:
         version: 9.8.0
       '@kobalte/core':
         specifier: ^0.13.7
-        version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
+      '@macrograph/base-packages':
+        specifier: workspace:*
+        version: link:../../packages/base-packages
+      '@macrograph/server-backend':
+        specifier: workspace:*
+        version: link:../../packages/server-backend
+      '@macrograph/server-domain':
+        specifier: workspace:*
+        version: link:../../packages/server-domain
+      '@macrograph/server-frontend':
+        specifier: workspace:*
+        version: link:../../packages/server-frontend
       '@macrograph/web-api':
         specifier: workspace:*
         version: link:../../packages/web-api
@@ -267,6 +279,9 @@ importers:
       hono:
         specifier: ^4.7.5
         version: 4.7.5
+      jose:
+        specifier: ^4.15.9
+        version: 4.15.9
       obs-websocket-js:
         specifier: ^5.0.5
         version: 5.0.5
@@ -371,6 +386,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@effect/opentelemetry':
+        specifier: ^0.50.3
+        version: 0.50.3(@effect/platform@0.80.2(effect@3.16.8))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.16.8)
       '@effect/platform':
         specifier: ^0.80.2
         version: 0.80.2(effect@3.16.8)
@@ -388,7 +406,7 @@ importers:
         version: 2.2.282
       '@kobalte/core':
         specifier: ^0.13.7
-        version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
       '@lucia-auth/adapter-drizzle':
         specifier: ^1.1.0
         version: 1.1.0(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(lucia@3.2.2)
@@ -419,6 +437,9 @@ importers:
       '@macrograph/web-api':
         specifier: workspace:*
         version: link:../../packages/web-api
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
       '@planetscale/database':
         specifier: ^1.19.0
         version: 1.19.0
@@ -587,7 +608,7 @@ importers:
     dependencies:
       '@kobalte/core':
         specifier: ^0.13.7
-        version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
       '@macrograph/action-history':
         specifier: workspace:*
         version: link:../packages/action-history
@@ -751,6 +772,118 @@ importers:
         specifier: ^0.4.2
         version: 0.4.2
 
+  packages/base-packages:
+    dependencies:
+      '@effect/experimental':
+        specifier: ^0.46.1
+        version: 0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1)
+      '@effect/opentelemetry':
+        specifier: ^0.50.3
+        version: 0.50.3(@effect/platform@0.80.2(effect@3.16.8))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.16.8)
+      '@effect/platform':
+        specifier: ^0.80.2
+        version: 0.80.2(effect@3.16.8)
+      '@effect/platform-browser':
+        specifier: ^0.59.2
+        version: 0.59.2(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/platform-node':
+        specifier: ^0.78.1
+        version: 0.78.1(@effect/cluster@0.31.1(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8))(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc':
+        specifier: ^0.62.4
+        version: 0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc-http':
+        specifier: ^0.52.4
+        version: 0.52.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@faker-js/faker':
+        specifier: ^9.8.0
+        version: 9.8.0
+      '@kobalte/core':
+        specifier: ^0.13.7
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
+      '@macrograph/package-sdk':
+        specifier: workspace:*
+        version: link:../package-sdk
+      '@macrograph/server-domain':
+        specifier: workspace:*
+        version: link:../server-domain
+      '@macrograph/web-api':
+        specifier: workspace:*
+        version: link:../web-api
+      '@solid-primitives/bounds':
+        specifier: ^0.0.118
+        version: 0.0.118(solid-js@1.9.7)
+      '@solid-primitives/context':
+        specifier: ^0.2.3
+        version: 0.2.3(solid-js@1.9.7)
+      '@solid-primitives/event-listener':
+        specifier: ^2.3.3
+        version: 2.3.3(solid-js@1.9.7)
+      '@solid-primitives/map':
+        specifier: ^0.4.11
+        version: 0.4.13(solid-js@1.9.7)
+      '@solid-primitives/mouse':
+        specifier: ^2.0.19
+        version: 2.0.19(solid-js@1.9.7)
+      '@solid-primitives/platform':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.7)
+      '@solid-primitives/refs':
+        specifier: ^1.0.8
+        version: 1.0.8(solid-js@1.9.7)
+      '@solid-primitives/resource':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.7)
+      '@solid-primitives/state-machine':
+        specifier: ^0.0.3
+        version: 0.0.3(solid-js@1.9.7)
+      '@solidjs/router':
+        specifier: ^0.15.3
+        version: 0.15.3(solid-js@1.9.7)
+      '@tanstack/query-core':
+        specifier: ^5.75.7
+        version: 5.75.7
+      '@unocss/reset':
+        specifier: ^66.1.1
+        version: 66.1.1
+      cva:
+        specifier: npm:class-variance-authority@^0.7.1
+        version: class-variance-authority@0.7.1
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
+      effect:
+        specifier: ^3.16.8
+        version: 3.16.8
+      hono:
+        specifier: ^4.7.5
+        version: 4.7.5
+      jose:
+        specifier: ^4.15.9
+        version: 4.15.9
+      obs-websocket-js:
+        specifier: ^5.0.5
+        version: 5.0.5
+      solid-presence:
+        specifier: ^0.2.0
+        version: 0.2.0(solid-js@1.9.7)
+      unocss-preset-primitives:
+        specifier: 0.0.2-beta.1
+        version: 0.0.2-beta.1
+      unocss-preset-radix:
+        specifier: ^2.8.2
+        version: 2.8.2
+      vite:
+        specifier: ^6.3.5
+        version: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vite-plugin-solid:
+        specifier: ^2.10.2
+        version: 2.11.6(@testing-library/jest-dom@6.4.8)(solid-js@1.9.7)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+    devDependencies:
+      unplugin-icons:
+        specifier: ^0.18.5
+        version: 0.18.5(@vue/compiler-sfc@3.5.13)
+
   packages/clipboard:
     dependencies:
       '@macrograph/option':
@@ -775,6 +908,18 @@ importers:
       '@tanstack/solid-query':
         specifier: ^4.36.1
         version: 4.36.1(solid-js@1.9.7)
+
+  packages/domain:
+    dependencies:
+      '@effect/rpc':
+        specifier: ^0.62.4
+        version: 0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@macrograph/web-api':
+        specifier: workspace:*
+        version: link:../web-api
+      effect:
+        specifier: ^3.16.8
+        version: 3.16.8
 
   packages/effect-server-fn:
     dependencies:
@@ -858,11 +1003,138 @@ importers:
         specifier: ^1.9.7
         version: 1.9.7
 
+  packages/package-sdk:
+    dependencies:
+      '@effect/experimental':
+        specifier: ^0.46.1
+        version: 0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1)
+      '@effect/opentelemetry':
+        specifier: ^0.50.3
+        version: 0.50.3(@effect/platform@0.80.2(effect@3.16.8))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.16.8)
+      '@effect/platform':
+        specifier: ^0.80.2
+        version: 0.80.2(effect@3.16.8)
+      '@effect/platform-browser':
+        specifier: ^0.59.2
+        version: 0.59.2(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/platform-node':
+        specifier: ^0.78.1
+        version: 0.78.1(@effect/cluster@0.31.1(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8))(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc':
+        specifier: ^0.62.4
+        version: 0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc-http':
+        specifier: ^0.52.4
+        version: 0.52.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@faker-js/faker':
+        specifier: ^9.8.0
+        version: 9.8.0
+      '@kobalte/core':
+        specifier: ^0.13.7
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
+      '@macrograph/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@macrograph/web-api':
+        specifier: workspace:*
+        version: link:../web-api
+      '@opentelemetry/exporter-trace-otlp-http':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-logs':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-web':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@radix-ui/colors':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@solid-primitives/bounds':
+        specifier: ^0.0.118
+        version: 0.0.118(solid-js@1.9.7)
+      '@solid-primitives/context':
+        specifier: ^0.2.3
+        version: 0.2.3(solid-js@1.9.7)
+      '@solid-primitives/event-listener':
+        specifier: ^2.3.3
+        version: 2.3.3(solid-js@1.9.7)
+      '@solid-primitives/map':
+        specifier: ^0.4.11
+        version: 0.4.13(solid-js@1.9.7)
+      '@solid-primitives/mouse':
+        specifier: ^2.0.19
+        version: 2.0.19(solid-js@1.9.7)
+      '@solid-primitives/platform':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.7)
+      '@solid-primitives/refs':
+        specifier: ^1.0.8
+        version: 1.0.8(solid-js@1.9.7)
+      '@solid-primitives/resource':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.7)
+      '@solid-primitives/state-machine':
+        specifier: ^0.0.3
+        version: 0.0.3(solid-js@1.9.7)
+      '@solidjs/router':
+        specifier: ^0.15.3
+        version: 0.15.3(solid-js@1.9.7)
+      '@tanstack/query-core':
+        specifier: ^5.75.7
+        version: 5.75.7
+      '@unocss/reset':
+        specifier: ^66.1.1
+        version: 66.1.1
+      cva:
+        specifier: npm:class-variance-authority@^0.7.1
+        version: class-variance-authority@0.7.1
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
+      effect:
+        specifier: ^3.16.8
+        version: 3.16.8
+      hono:
+        specifier: ^4.7.5
+        version: 4.7.5
+      jose:
+        specifier: ^4.15.9
+        version: 4.15.9
+      obs-websocket-js:
+        specifier: ^5.0.5
+        version: 5.0.5
+      solid-presence:
+        specifier: ^0.2.0
+        version: 0.2.0(solid-js@1.9.7)
+      unocss-preset-primitives:
+        specifier: 0.0.2-beta.1
+        version: 0.0.2-beta.1
+      unocss-preset-radix:
+        specifier: ^2.8.2
+        version: 2.8.2
+      vite-plugin-solid:
+        specifier: ^2.10.2
+        version: 2.11.6(@testing-library/jest-dom@6.4.8)(solid-js@1.9.7)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+    devDependencies:
+      unplugin-icons:
+        specifier: ^0.18.5
+        version: 0.18.5(@vue/compiler-sfc@3.5.13)
+
   packages/packages:
     dependencies:
       '@kobalte/core':
         specifier: ^0.13.7
-        version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
       '@macrograph/api-contract':
         specifier: workspace:^
         version: link:../api-contract
@@ -1120,6 +1392,317 @@ importers:
         specifier: workspace:*
         version: link:../config
 
+  packages/server-backend:
+    dependencies:
+      '@effect/experimental':
+        specifier: ^0.46.1
+        version: 0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1)
+      '@effect/opentelemetry':
+        specifier: ^0.50.3
+        version: 0.50.3(@effect/platform@0.80.2(effect@3.16.8))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.16.8)
+      '@effect/platform':
+        specifier: ^0.80.2
+        version: 0.80.2(effect@3.16.8)
+      '@effect/platform-browser':
+        specifier: ^0.59.2
+        version: 0.59.2(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/platform-node':
+        specifier: ^0.78.1
+        version: 0.78.1(@effect/cluster@0.31.1(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8))(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc':
+        specifier: ^0.62.4
+        version: 0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc-http':
+        specifier: ^0.52.4
+        version: 0.52.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@faker-js/faker':
+        specifier: ^9.8.0
+        version: 9.8.0
+      '@macrograph/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@macrograph/package-sdk':
+        specifier: workspace:*
+        version: link:../package-sdk
+      '@macrograph/server-domain':
+        specifier: workspace:*
+        version: link:../server-domain
+      '@macrograph/web-api':
+        specifier: workspace:*
+        version: link:../web-api
+      '@opentelemetry/exporter-trace-otlp-http':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-logs':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-web':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
+      effect:
+        specifier: ^3.16.8
+        version: 3.16.8
+      hono:
+        specifier: ^4.7.5
+        version: 4.7.5
+      jose:
+        specifier: ^4.15.9
+        version: 4.15.9
+      obs-websocket-js:
+        specifier: ^5.0.5
+        version: 5.0.5
+    devDependencies:
+      unplugin-icons:
+        specifier: ^0.18.5
+        version: 0.18.5(@vue/compiler-sfc@3.5.13)
+
+  packages/server-domain:
+    dependencies:
+      '@effect/experimental':
+        specifier: ^0.46.1
+        version: 0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1)
+      '@effect/opentelemetry':
+        specifier: ^0.50.3
+        version: 0.50.3(@effect/platform@0.80.2(effect@3.16.8))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.16.8)
+      '@effect/platform':
+        specifier: ^0.80.2
+        version: 0.80.2(effect@3.16.8)
+      '@effect/platform-browser':
+        specifier: ^0.59.2
+        version: 0.59.2(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/platform-node':
+        specifier: ^0.78.1
+        version: 0.78.1(@effect/cluster@0.31.1(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8))(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc':
+        specifier: ^0.62.4
+        version: 0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc-http':
+        specifier: ^0.52.4
+        version: 0.52.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@faker-js/faker':
+        specifier: ^9.8.0
+        version: 9.8.0
+      '@macrograph/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@macrograph/web-api':
+        specifier: workspace:*
+        version: link:../web-api
+      '@opentelemetry/exporter-trace-otlp-http':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-logs':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-web':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
+      effect:
+        specifier: ^3.16.8
+        version: 3.16.8
+      hono:
+        specifier: ^4.7.5
+        version: 4.7.5
+      jose:
+        specifier: ^4.15.9
+        version: 4.15.9
+      obs-websocket-js:
+        specifier: ^5.0.5
+        version: 5.0.5
+
+  packages/server-frontend:
+    dependencies:
+      '@effect/experimental':
+        specifier: ^0.46.1
+        version: 0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1)
+      '@effect/opentelemetry':
+        specifier: ^0.50.3
+        version: 0.50.3(@effect/platform@0.80.2(effect@3.16.8))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.201.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.0.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)(effect@3.16.8)
+      '@effect/platform':
+        specifier: ^0.80.2
+        version: 0.80.2(effect@3.16.8)
+      '@effect/platform-browser':
+        specifier: ^0.59.2
+        version: 0.59.2(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/platform-node':
+        specifier: ^0.78.1
+        version: 0.78.1(@effect/cluster@0.31.1(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8))(@effect/platform@0.80.2(effect@3.16.8))(@effect/rpc@0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(@effect/sql@0.34.1(@effect/experimental@0.46.1(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)(ioredis@5.6.1))(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc':
+        specifier: ^0.62.4
+        version: 0.62.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@effect/rpc-http':
+        specifier: ^0.52.4
+        version: 0.52.4(@effect/platform@0.80.2(effect@3.16.8))(effect@3.16.8)
+      '@faker-js/faker':
+        specifier: ^9.8.0
+        version: 9.8.0
+      '@kobalte/core':
+        specifier: ^0.13.7
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
+      '@macrograph/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@macrograph/package-sdk':
+        specifier: workspace:*
+        version: link:../package-sdk
+      '@macrograph/server-domain':
+        specifier: workspace:*
+        version: link:../server-domain
+      '@macrograph/web-api':
+        specifier: workspace:*
+        version: link:../web-api
+      '@opentelemetry/exporter-trace-otlp-http':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-logs':
+        specifier: ^0.201.1
+        version: 0.201.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-web':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@radix-ui/colors':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@solid-primitives/bounds':
+        specifier: ^0.0.118
+        version: 0.0.118(solid-js@1.9.7)
+      '@solid-primitives/context':
+        specifier: ^0.2.3
+        version: 0.2.3(solid-js@1.9.7)
+      '@solid-primitives/event-listener':
+        specifier: ^2.3.3
+        version: 2.3.3(solid-js@1.9.7)
+      '@solid-primitives/map':
+        specifier: ^0.4.11
+        version: 0.4.13(solid-js@1.9.7)
+      '@solid-primitives/mouse':
+        specifier: ^2.0.19
+        version: 2.0.19(solid-js@1.9.7)
+      '@solid-primitives/platform':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.7)
+      '@solid-primitives/refs':
+        specifier: ^1.0.8
+        version: 1.0.8(solid-js@1.9.7)
+      '@solid-primitives/resource':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.7)
+      '@solid-primitives/state-machine':
+        specifier: ^0.0.3
+        version: 0.0.3(solid-js@1.9.7)
+      '@solidjs/router':
+        specifier: ^0.15.3
+        version: 0.15.3(solid-js@1.9.7)
+      '@tanstack/query-core':
+        specifier: ^5.75.7
+        version: 5.75.7
+      '@unocss/reset':
+        specifier: ^66.1.1
+        version: 66.1.1
+      cva:
+        specifier: npm:class-variance-authority@^0.7.1
+        version: class-variance-authority@0.7.1
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
+      effect:
+        specifier: ^3.16.8
+        version: 3.16.8
+      hono:
+        specifier: ^4.7.5
+        version: 4.7.5
+      jose:
+        specifier: ^4.15.9
+        version: 4.15.9
+      obs-websocket-js:
+        specifier: ^5.0.5
+        version: 5.0.5
+      solid-presence:
+        specifier: ^0.2.0
+        version: 0.2.0(solid-js@1.9.7)
+      unocss-preset-primitives:
+        specifier: 0.0.2-beta.1
+        version: 0.0.2-beta.1
+      unocss-preset-radix:
+        specifier: ^2.8.2
+        version: 2.8.2
+      vite-plugin-solid:
+        specifier: ^2.10.2
+        version: 2.11.6(@testing-library/jest-dom@6.4.8)(solid-js@1.9.7)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+    devDependencies:
+      '@effect/language-service':
+        specifier: ^0.20.0
+        version: 0.20.0
+      '@effect/vitest':
+        specifier: ^0.20.2
+        version: 0.20.2(effect@3.16.8)(vitest@2.0.5)
+      '@iconify-json/gg':
+        specifier: ^1.0.0
+        version: 1.2.2
+      '@iconify-json/line-md':
+        specifier: ^1.2.8
+        version: 1.2.8
+      '@iconify-json/lucide':
+        specifier: ^1.2.32
+        version: 1.2.32
+      '@iconify-json/material-symbols':
+        specifier: ^1.2.23
+        version: 1.2.23
+      '@iconify-json/svg-spinners':
+        specifier: ^1.2.2
+        version: 1.2.2
+      typescript:
+        specifier: ~5.7.2
+        version: 5.7.3
+      unocss:
+        specifier: ^66.1.1
+        version: 66.1.1(postcss@8.5.3)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.3))
+      unocss-preset-animations:
+        specifier: ^1.2.1
+        version: 1.2.1(@unocss/preset-wind3@66.1.1)(unocss@66.1.1(postcss@8.5.3)(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.3)))
+      unplugin-auto-import:
+        specifier: ^19.3.0
+        version: 19.3.0
+      unplugin-icons:
+        specifier: ^0.18.5
+        version: 0.18.5(@vue/compiler-sfc@3.5.13)
+      vite:
+        specifier: ^6.3.5
+        version: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+
   packages/typesystem:
     dependencies:
       '@macrograph/option':
@@ -1164,7 +1747,7 @@ importers:
     dependencies:
       '@kobalte/core':
         specifier: ^0.13.7
-        version: 0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)
+        version: 0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
@@ -3502,6 +4085,7 @@ packages:
 
   '@lucia-auth/adapter-drizzle@1.1.0':
     resolution: {integrity: sha512-iCTnZWvfI5lLZOdUHZYiXA1jaspIFEeo2extLxQ3DjP3uOVys7IPwBi7zezLIRu9dhro4H4Kji+7gSYyjcef2A==}
+    deprecated: This package has been deprecated. Please see https://lucia-auth.com/lucia-v3/migrate.
     peerDependencies:
       drizzle-orm: '>= 0.29 <1'
       lucia: 3.x
@@ -8477,6 +9061,7 @@ packages:
 
   lucia@3.2.2:
     resolution: {integrity: sha512-P1FlFBGCMPMXu+EGdVD9W4Mjm0DqsusmKgO7Xc33mI5X1bklmsQb0hfzPhXomQr9waWIBDsiOjvr1e6BTaUqpA==}
+    deprecated: This package has been deprecated. Please see https://lucia-auth.com/lucia-v3/migrate.
 
   luxon@3.6.1:
     resolution: {integrity: sha512-tJLxrKJhO2ukZ5z0gyjY1zPh3Rh88Ej9P7jNrZiHMUXHae1yvI2imgOZtL1TO8TW6biMMKfTtAOoEJANgtWBMQ==}
@@ -10206,6 +10791,7 @@ packages:
   storybook-solidjs@1.0.0-beta.2:
     resolution: {integrity: sha512-wXjM/uH29IPjgxlPvQVNTM/7iBFNNzjuOugpk7iM2oy+sZl7K70eBjvOqGgX5v35pNHTaA8Ju3BlLdp+O20abg==}
     engines: {node: '>=16.0.0'}
+    deprecated: 'This package is deprecated. Use storybook-solidjs-vite instead: https://www.npmjs.com/package/storybook-solidjs-vite'
     peerDependencies:
       babel-preset-solid: ^1.6.6
       solid-js: ^1.6.6
@@ -13768,7 +14354,7 @@ snapshots:
 
   '@jspm/core@2.0.0-beta.24': {}
 
-  '@kobalte/core@0.13.7(patch_hash=ydksf54ocuiqvbunagt6kfibpq)(solid-js@1.9.7)':
+  '@kobalte/core@0.13.7(patch_hash=e2b9e3f4c845503f5b9999e826395bf24d6f871aebba8d21ef49ec06f166a9b4)(solid-js@1.9.7)':
     dependencies:
       '@floating-ui/dom': 1.6.11
       '@internationalized/date': 3.5.5
@@ -14755,7 +15341,7 @@ snapshots:
 
   '@rollup/pluginutils@5.1.4(rollup@4.40.2)':
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       estree-walker: 2.0.2
       picomatch: 4.0.2
     optionalDependencies:
@@ -15371,7 +15957,7 @@ snapshots:
   '@storybook/csf-plugin@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))':
     dependencies:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9))
-      unplugin: 1.16.0
+      unplugin: 1.16.1
 
   '@storybook/csf-plugin@9.1.0-alpha.6(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.24.9)))':
     dependencies:
@@ -15437,6 +16023,11 @@ snapshots:
   '@szmarczak/http-timer@5.0.1':
     dependencies:
       defer-to-connect: 2.0.1
+
+  '@t3-oss/env-core@0.6.1(typescript@5.7.3)(zod@3.25.36)':
+    dependencies:
+      typescript: 5.7.3
+      zod: 3.25.36
 
   '@t3-oss/env-core@0.6.1(typescript@5.8.3)(zod@3.25.36)':
     dependencies:
@@ -15969,7 +16560,7 @@ snapshots:
 
   '@typescript-eslint/types@5.62.0': {}
 
-  '@typescript-eslint/typescript-estree@5.62.0(typescript@5.8.3)':
+  '@typescript-eslint/typescript-estree@5.62.0(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/types': 5.62.0
       '@typescript-eslint/visitor-keys': 5.62.0
@@ -15977,9 +16568,9 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.7.1
-      tsutils: 3.21.0(typescript@5.8.3)
+      tsutils: 3.21.0(typescript@5.7.3)
     optionalDependencies:
-      typescript: 5.8.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
@@ -17570,8 +18161,8 @@ snapshots:
   detective-postcss@6.1.3:
     dependencies:
       is-url: 1.2.4
-      postcss: 8.4.38
-      postcss-values-parser: 6.0.2(postcss@8.4.38)
+      postcss: 8.5.3
+      postcss-values-parser: 6.0.2(postcss@8.5.3)
 
   detective-sass@5.0.3:
     dependencies:
@@ -17587,10 +18178,10 @@ snapshots:
 
   detective-typescript@11.2.0:
     dependencies:
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.8.3)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.7.3)
       ast-module-types: 5.0.0
       node-source-walk: 6.0.2
-      typescript: 5.8.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
 
@@ -19092,7 +19683,7 @@ snapshots:
 
   is-reference@1.2.1:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
 
   is-reference@3.0.3:
     dependencies:
@@ -20742,11 +21333,11 @@ snapshots:
 
   postcss-value-parser@4.2.0: {}
 
-  postcss-values-parser@6.0.2(postcss@8.4.38):
+  postcss-values-parser@6.0.2(postcss@8.5.3):
     dependencies:
       color-name: 1.1.4
       is-url-superb: 4.0.0
-      postcss: 8.4.38
+      postcss: 8.5.3
       quote-unquote: 1.0.0
 
   postcss@8.4.38:
@@ -22088,10 +22679,10 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsutils@3.21.0(typescript@5.8.3):
+  tsutils@3.21.0(typescript@5.7.3):
     dependencies:
       tslib: 1.14.1
-      typescript: 5.8.3
+      typescript: 5.7.3
 
   tsx@4.19.2:
     dependencies:
@@ -22285,7 +22876,7 @@ snapshots:
       pkg-types: 1.0.3
       scule: 1.3.0
       strip-literal: 1.3.0
-      unplugin: 1.10.1
+      unplugin: 1.16.1
     transitivePeerDependencies:
       - rollup
 
@@ -22676,6 +23267,10 @@ snapshots:
   valibot@0.37.0(typescript@5.5.3):
     optionalDependencies:
       typescript: 5.5.3
+
+  valibot@0.37.0(typescript@5.7.3):
+    optionalDependencies:
+      typescript: 5.7.3
 
   valibot@0.37.0(typescript@5.8.3):
     optionalDependencies:

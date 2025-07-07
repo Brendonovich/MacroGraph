@@ -1,15 +1,13 @@
 {
-	"files": [],
-	"references": [
-		{ "path": "./packages/typesystem" },
-		{ "path": "./packages/ui" },
-		{ "path": "./packages/runtime" },
-		{ "path": "./packages/json" },
-		{ "path": "./packages/packages" },
-		{ "path": "./packages/api-contract" },
-		{ "path": "./packages/clipboard" },
-		{ "path": "./interface" },
-		{ "path": "./apps/desktop" },
-		{ "path": "./apps/web" }
-	]
+  "files": [],
+  "references": [
+    { "path": "./packages/web-api" },
+    { "path": "./packages/domain" },
+    { "path": "./packages/package-sdk" },
+    { "path": "./packages/base-packages" },
+    { "path": "./packages/server-domain" },
+    { "path": "./packages/server-backend" },
+    { "path": "./packages/server-frontend" },
+    { "path": "./apps/new-playground" }
+  ]
 }

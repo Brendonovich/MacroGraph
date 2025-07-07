@@ -20,7 +20,8 @@
     "skipLibCheck": true,
     "paths": {
       "~/*": ["./src/*"]
-    }
+    },
+    "plugins": [{ "name": "@effect/language-service" }]
   },
   "references": [
     {

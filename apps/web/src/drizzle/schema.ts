@@ -63,7 +63,16 @@ export const projects = pgTable("project", {
 // }));
 
 export const deviceCodeSessions = pgTable("device_code_sessions", {
-  code: varchar("code", { length: 8 }),
-  userId: varchar("user_id", { length: 255 }).notNull(),
+  userCode: varchar("code", { length: 10 }).notNull(),
+  deviceCode: varchar("device_code", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const oauthSessions = pgTable("oauth_sessions", {
+  id: serial("id").primaryKey(),
+  accessToken: varchar("access_token", { length: 255 }).notNull(),
+  refreshToken: varchar("refresh_token", { length: 255 }).notNull(),
+  expires: timestamp("expires").notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
 });
