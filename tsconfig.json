@@ -8,6 +8,7 @@
     { "path": "./packages/server-domain" },
     { "path": "./packages/server-backend" },
     { "path": "./packages/server-frontend" },
-    { "path": "./apps/server" }
+    { "path": "./apps/server" },
+    { "path": "./apps/web" }
   ]
 }
