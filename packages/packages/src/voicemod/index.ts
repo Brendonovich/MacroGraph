@@ -1,7 +1,7 @@
 import { Package } from "@macrograph/runtime";
 
-import { createCtx } from "./ctx";
 import { t } from "@macrograph/typesystem";
+import { createCtx } from "./ctx";
 
 export type Pkg = ReturnType<typeof pkg>;
 

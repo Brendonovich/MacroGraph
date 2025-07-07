@@ -1,7 +1,4 @@
 import { type Rpc, RpcSerialization, RpcServer } from "@effect/rpc";
-import { Context, Mailbox, Option, pipe, PubSub, Stream } from "effect";
-import * as Effect from "effect/Effect";
-import { Graph, Node } from "@macrograph/server-domain";
 import {
 	CredentialsFetchFailed,
 	DataInputRef,
@@ -18,14 +15,17 @@ import {
 	PackageBuilder,
 	PackageEngine,
 } from "@macrograph/domain";
+import { Graph, Node } from "@macrograph/server-domain";
+import { Context, Mailbox, Option, PubSub, Stream, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import type { Package } from "../../../package-sdk/src";
 
 import { CloudAPIClient } from "../CloudApi/ApiClient";
 import { CredentialsCache } from "../CloudApi/CredentialsCache";
-import { ProjectPackages } from "./Packages";
-import { getNextNodeId } from "./NodeIdCounter";
-import { type NodeConnections, project } from "../project-data";
 import { RealtimePubSub } from "../Realtime";
+import { type NodeConnections, project } from "../project-data";
+import { getNextNodeId } from "./NodeIdCounter";
+import { ProjectPackages } from "./Packages";
 
 export class ProjectActions extends Effect.Service<ProjectActions>()(
 	"ProjectActions",

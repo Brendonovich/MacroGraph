@@ -1,15 +1,15 @@
+import type { SubscribableCache } from "@macrograph/domain";
+import { useParams } from "@solidjs/router";
 import { Effect, Fiber, Option, Stream } from "effect";
 import {
-	createEffect,
 	type Accessor,
+	ErrorBoundary,
+	Show,
+	createEffect,
 	createResource,
 	onCleanup,
-	Show,
-	ErrorBoundary,
 } from "solid-js";
-import { useParams } from "@solidjs/router";
 import { Dynamic } from "solid-js/web";
-import type { SubscribableCache } from "@macrograph/domain";
 
 import { useProjectRuntime, useProjectService } from "../AppRuntime";
 import { PackagesSettings } from "../Packages/PackagesSettings";

@@ -7,20 +7,20 @@ import {
 	HttpServerResponse,
 } from "@effect/platform";
 import { NodeHttpServer } from "@effect/platform-node/index";
-import type { InferSelectModel } from "drizzle-orm";
-import { Config, Effect, Layer, Option } from "effect";
-import * as S from "effect/Schema";
-import { verifyRequestOrigin } from "lucia";
 import {
-	Authentication,
 	Api,
+	Authentication,
 	type CREDENTIAL,
 	CurrentSession,
 	DeviceFlowError,
 } from "@macrograph/web-api";
 import type { APIHandler } from "@solidjs/start/server";
+import type { InferSelectModel } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
+import { Config, Effect, Layer, Option } from "effect";
+import * as S from "effect/Schema";
 import * as Jose from "jose";
+import { verifyRequestOrigin } from "lucia";
 
 import { db } from "~/drizzle";
 import {
@@ -30,13 +30,13 @@ import {
 	users,
 } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
-import { AuthProviders } from "../auth/providers";
-import { refreshToken } from "../auth/actions";
 import {
 	posthogCapture,
 	posthogIdentify,
 	posthogShutdown,
 } from "~/posthog/server";
+import { refreshToken } from "../auth/actions";
+import { AuthProviders } from "../auth/providers";
 
 const IS_LOGGED_IN = "isLoggedIn";
 

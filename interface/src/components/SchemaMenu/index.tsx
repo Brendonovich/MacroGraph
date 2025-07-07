@@ -18,7 +18,9 @@ import {
 	renderType,
 	renderedTypesCompatible,
 } from "@macrograph/runtime-rendering";
+import { createEventListener } from "@solid-primitives/event-listener";
 import { createWritableMemo } from "@solid-primitives/memo";
+import { isMobile } from "@solid-primitives/platform";
 import clsx from "clsx";
 import {
 	type ComponentProps,
@@ -28,8 +30,6 @@ import {
 	createSignal,
 	onMount,
 } from "solid-js";
-import { createEventListener } from "@solid-primitives/event-listener";
-import { isMobile } from "@solid-primitives/platform";
 
 import { useInterfaceContext } from "../../context";
 

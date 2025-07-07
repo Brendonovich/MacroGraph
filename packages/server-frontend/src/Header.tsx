@@ -1,10 +1,10 @@
-import { A } from "@solidjs/router";
 import { Dialog } from "@kobalte/core";
-import { ClientListDropdown } from "./Presence/ClientListDropdown";
+import { Button, EffectButton } from "@macrograph/package-sdk/ui";
+import { A } from "@solidjs/router";
 import type { ValidComponent } from "solid-js";
 import { useProjectService } from "./AppRuntime";
 import { ClientAuth } from "./Auth";
-import { Button, EffectButton } from "@macrograph/package-sdk/ui";
+import { ClientListDropdown } from "./Presence/ClientListDropdown";
 
 export function Header() {
 	return (

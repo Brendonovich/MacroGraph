@@ -1,9 +1,9 @@
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { HttpServer } from "@effect/platform";
 import { createServer } from "node:http";
-import { Layer, Option, Fiber } from "effect";
-import * as Effect from "effect/Effect";
+import { HttpServer } from "@effect/platform";
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { DepsLive } from "@macrograph/server-backend";
+import { Fiber, Layer, Option } from "effect";
+import * as Effect from "effect/Effect";
 
 import { ServerEntry } from "./entry-server";
 

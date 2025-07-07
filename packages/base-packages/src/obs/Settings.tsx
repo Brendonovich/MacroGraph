@@ -1,7 +1,7 @@
-import { type ComponentProps, For, splitProps } from "solid-js";
-import { cx } from "cva";
-import { createStore } from "solid-js/store";
 import { EffectButton, type SettingsProps } from "@macrograph/package-sdk/ui";
+import { cx } from "cva";
+import { type ComponentProps, For, splitProps } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import { RPCS, type STATE } from "./shared";
 

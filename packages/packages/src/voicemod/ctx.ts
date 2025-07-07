@@ -1,4 +1,4 @@
-import { None, Some, type Option } from "@macrograph/option";
+import { None, type Option, Some } from "@macrograph/option";
 import { createSignal } from "solid-js";
 
 export type Ctx = ReturnType<typeof createCtx>;

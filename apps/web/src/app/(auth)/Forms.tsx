@@ -9,12 +9,12 @@ import { appendResponseHeader, setCookie } from "vinxi/http";
 import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
-import { CREDENTIALS, IS_LOGGED_IN } from "./utils";
 import {
 	posthogCapture,
 	posthogIdentify,
 	posthogShutdown,
 } from "~/posthog/server";
+import { CREDENTIALS, IS_LOGGED_IN } from "./utils";
 
 async function createSession(userId: string) {
 	"use server";

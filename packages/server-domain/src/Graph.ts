@@ -1,8 +1,8 @@
 export * from "@macrograph/domain/Graph";
 
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { Schema } from "effect";
 import { Graph, SchemaNotFound } from "@macrograph/domain";
+import { Schema } from "effect";
 
 import * as Node from "./Node";
 import * as Realtime from "./Realtime";

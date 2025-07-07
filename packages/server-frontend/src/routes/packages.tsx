@@ -1,9 +1,9 @@
 import { A } from "@solidjs/router";
 import { For, type ParentProps, Suspense } from "solid-js";
 
-import { usePresenceContext } from "../Presence/Context";
 import { useProjectService } from "../AppRuntime";
 import { PackagesSettings } from "../Packages/PackagesSettings";
+import { usePresenceContext } from "../Presence/Context";
 
 export default function (props: ParentProps) {
 	const packagesSettings = useProjectService(PackagesSettings);

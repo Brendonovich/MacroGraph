@@ -1,6 +1,6 @@
 import { defineConfig, presetWind3, transformerVariantGroup } from "unocss";
-import { presetKobalte } from "unocss-preset-primitives";
 import { presetAnimations } from "unocss-preset-animations";
+import { presetKobalte } from "unocss-preset-primitives";
 
 function getColorScale(name: string, alpha = false) {
 	const scale = {};

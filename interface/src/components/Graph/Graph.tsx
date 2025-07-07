@@ -12,11 +12,11 @@ import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
+import { isMobile } from "@solid-primitives/platform";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
+import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createStore } from "solid-js/store";
-import { isMobile } from "@solid-primitives/platform";
-import clsx from "clsx";
 
 import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
 import { ConnectionRenderer } from "../Graph";

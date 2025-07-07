@@ -1,10 +1,10 @@
-import { Schema } from "effect";
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Node } from "@macrograph/domain";
+import { Schema } from "effect";
 
 import * as Graph from "./Graph";
-import * as Realtime from "./Realtime";
 import { Shape as IOShape } from "./IO";
+import * as Realtime from "./Realtime";
 import { Position, SchemaRef } from "./util";
 
 export * from "@macrograph/domain/Node";

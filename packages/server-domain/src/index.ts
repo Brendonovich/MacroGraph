@@ -11,12 +11,12 @@ export * from "./util";
 export * from "./errors";
 export * from "./event";
 
-import * as Graph from "./Graph";
-import * as Node from "./Node";
-import * as Project from "./Project";
-import * as Presence from "./Presence";
 import * as ClientAuth from "./ClientAuth";
 import * as CloudAuth from "./CloudAuth";
+import * as Graph from "./Graph";
+import * as Node from "./Node";
+import * as Presence from "./Presence";
+import * as Project from "./Project";
 
 export const Rpcs = Project.Rpcs.merge(
 	Presence.Rpcs,

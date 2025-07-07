@@ -1,5 +1,5 @@
-import { Effect, Mailbox, Option, Schedule, SubscriptionRef } from "effect";
 import { CloudAuth } from "@macrograph/server-domain";
+import { Effect, Mailbox, Option, Schedule, SubscriptionRef } from "effect";
 
 import { CloudAPIClient } from "./ApiClient";
 import { CloudApiAuthState } from "./AuthState";

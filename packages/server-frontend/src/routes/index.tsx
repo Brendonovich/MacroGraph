@@ -2,9 +2,10 @@ import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { Effect, Option } from "effect";
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { For, Show, createEffect, createSignal } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
+import type { Graph, Node } from "@macrograph/server-domain";
 import { useProjectService } from "../AppRuntime";
 import { GraphContextProvider } from "../Graph/Context";
 import { GraphContextMenu } from "../Graph/ContextMenu";
@@ -15,7 +16,6 @@ import { ProjectActions } from "../Project/Actions";
 import { ProjectRpc } from "../Project/Rpc";
 import { ProjectState } from "../Project/State";
 import { useRealtimeContext } from "../Realtime";
-import type { Graph, Node } from "@macrograph/server-domain";
 
 const GRAPH_ID = "0";
 

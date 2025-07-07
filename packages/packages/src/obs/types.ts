@@ -1,6 +1,6 @@
+import { JSONEnum } from "@macrograph/json";
 import { t } from "@macrograph/typesystem";
 import type { Pkg } from ".";
-import { JSONEnum } from "@macrograph/json";
 
 export function createTypes(pkg: Pkg) {
 	const BoundsType = pkg.createEnum("Bounds Type", (e) => [

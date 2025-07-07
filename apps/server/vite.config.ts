@@ -1,10 +1,10 @@
-import { defineConfig, isRunnableDevEnvironment } from "vite";
-import solid from "vite-plugin-solid";
+import basePackagesPlugin from "@macrograph/base-packages/vite";
 import UnoCSS from "unocss/vite";
-import Icons from "unplugin-icons/vite";
 import AutoImport from "unplugin-auto-import/vite";
 import IconsResolver from "unplugin-icons/resolver";
-import basePackagesPlugin from "@macrograph/base-packages/vite";
+import Icons from "unplugin-icons/vite";
+import { defineConfig, isRunnableDevEnvironment } from "vite";
+import solid from "vite-plugin-solid";
 
 const serverEnvironmentEntry = "./src/prod-server.ts";
 

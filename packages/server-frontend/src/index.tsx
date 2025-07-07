@@ -1,24 +1,24 @@
+import { Router } from "@solidjs/router";
 import { ManagedRuntime, Match, Option, Stream } from "effect";
 import * as Effect from "effect/Effect";
-import { ErrorBoundary, render } from "solid-js/web";
 import { createStore, produce, reconcile } from "solid-js/store";
-import { Router } from "@solidjs/router";
+import { ErrorBoundary, render } from "solid-js/web";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
 import "./style.css";
 
+import { ProjectRuntime, ProjectRuntimeProvider } from "./AppRuntime";
+import { Layout } from "./Layout";
+import { PackagesSettings } from "./Packages/PackagesSettings";
 import {
 	type PresenceClient,
 	PresenceContextProvider,
 } from "./Presence/Context";
-import { Layout } from "./Layout";
-import { RealtimeContextProvider } from "./Realtime";
-import { ProjectRuntime, ProjectRuntimeProvider } from "./AppRuntime";
-import { PackagesSettings } from "./Packages/PackagesSettings";
-import { routes } from "./routes/Routes";
-import { ProjectState } from "./Project/State";
 import { ProjectRealtime } from "./Project/Realtime";
+import { ProjectState } from "./Project/State";
+import { RealtimeContextProvider } from "./Realtime";
+import { routes } from "./routes/Routes";
 
 export { PackagesSettings } from "./Packages/PackagesSettings";
 

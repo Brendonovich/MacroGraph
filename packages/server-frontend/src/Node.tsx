@@ -1,18 +1,18 @@
+import type { Node } from "@macrograph/server-domain";
+import { createEventListener } from "@solid-primitives/event-listener";
 import { cx } from "cva";
 import { Match } from "effect";
 import {
 	type Accessor,
 	type ComponentProps,
+	For,
+	type ParentProps,
 	createEffect,
 	createRoot,
 	createSignal,
-	For,
 	onCleanup,
-	type ParentProps,
 } from "solid-js";
-import { createEventListener } from "@solid-primitives/event-listener";
 import type { DOMElement } from "solid-js/jsx-runtime";
-import type { Node } from "@macrograph/server-domain";
 
 import { ioPositions } from "./Graph/Graph";
 import { isTouchDevice } from "./utils";

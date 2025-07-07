@@ -1,3 +1,4 @@
+import { createServer } from "node:http";
 import {
 	HttpMiddleware,
 	HttpRouter,
@@ -5,10 +6,9 @@ import {
 	HttpServerRequest,
 	HttpServerResponse,
 } from "@effect/platform";
-import { Effect, Layer } from "effect";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { createServer } from "node:http";
 import { DepsLive } from "@macrograph/server-backend";
+import { Effect, Layer } from "effect";
 
 import { ServerEntry } from "./entry-server";
 

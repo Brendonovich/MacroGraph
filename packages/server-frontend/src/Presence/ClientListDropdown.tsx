@@ -1,5 +1,5 @@
 import { Popover } from "@kobalte/core/popover";
-import { createMemo, For, Show } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import IconLucideChevronDown from "~icons/lucide/chevron-down";
 
 import { Avatar } from "../Avatar";

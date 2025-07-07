@@ -1,4 +1,11 @@
 import {
+	FetchHttpClient,
+	HttpApiClient,
+	HttpClient,
+	HttpClientRequest,
+} from "@effect/platform";
+import { Package, PackageEngine, setOutput } from "@macrograph/package-sdk";
+import {
 	Chunk,
 	Context,
 	Effect,
@@ -8,22 +15,15 @@ import {
 	Scope,
 	Stream,
 } from "effect";
-import {
-	FetchHttpClient,
-	HttpApiClient,
-	HttpClient,
-	HttpClientRequest,
-} from "@effect/platform";
-import { Package, PackageEngine, setOutput } from "@macrograph/package-sdk";
 
-import { RPCS } from "./shared";
-import { HelixApi } from "./helix";
 import {
 	EVENTSUB_MESSAGE,
 	type EventSubMessage,
 	isEventSubMessageType,
 	isNotificationType,
 } from "./eventSub";
+import { HelixApi } from "./helix";
+import { RPCS } from "./shared";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 

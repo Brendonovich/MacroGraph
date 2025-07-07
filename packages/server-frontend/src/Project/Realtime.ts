@@ -1,7 +1,7 @@
-import { Chunk, Effect, Layer, Option, Stream } from "effect";
-import { BrowserSocket } from "@effect/platform-browser";
 import { Socket } from "@effect/platform";
+import { BrowserSocket } from "@effect/platform-browser";
 import type { ProjectEvent } from "@macrograph/server-domain";
+import { Chunk, Effect, Layer, Option, Stream } from "effect";
 
 export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 	"ProjectRealtime",

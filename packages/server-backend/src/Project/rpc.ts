@@ -1,13 +1,13 @@
-import { Effect, Option } from "effect";
 import {
+	type Graph,
 	type PackageMeta,
 	Project,
 	type SchemaMeta,
-	type Graph,
 } from "@macrograph/server-domain";
+import { Effect, Option } from "effect";
 
-import { ProjectPackages } from "./Packages";
 import { project } from "../project-data";
+import { ProjectPackages } from "./Packages";
 
 export const ProjectRpcsLive = Project.Rpcs.toLayer(
 	Effect.gen(function* () {

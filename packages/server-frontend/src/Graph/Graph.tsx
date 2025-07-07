@@ -1,30 +1,30 @@
-import {
-	type ComponentProps,
-	createEffect,
-	createRoot,
-	createSignal,
-	For,
-	onCleanup,
-	Show,
-} from "solid-js";
-import { createEventListenerMap } from "@solid-primitives/event-listener";
+import { ContextMenu } from "@kobalte/core/context-menu";
+import { Node, type SchemaMeta } from "@macrograph/server-domain";
+import type { SchemaRef } from "@macrograph/server-domain";
 import { createElementBounds } from "@solid-primitives/bounds";
-import { batch } from "solid-js";
+import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { mergeRefs } from "@solid-primitives/refs";
-import { ContextMenu } from "@kobalte/core/context-menu";
-import type { ValidComponent } from "solid-js";
 import { cx } from "cva";
 import { Option } from "effect";
-import { Node, type SchemaMeta } from "@macrograph/server-domain";
-import type { SchemaRef } from "@macrograph/server-domain";
+import {
+	type ComponentProps,
+	For,
+	Show,
+	createEffect,
+	createRoot,
+	createSignal,
+	onCleanup,
+} from "solid-js";
+import { batch } from "solid-js";
+import type { ValidComponent } from "solid-js";
 import IconMaterialSymbolsDeleteOutline from "~icons/material-symbols/delete-outline.jsx";
 
-import { NodeRoot, NodeHeader } from "../Node";
-import { type IORef, isTouchDevice } from "../utils";
 import { useProjectService } from "../AppRuntime";
+import { NodeHeader, NodeRoot } from "../Node";
 import { ProjectActions } from "../Project/Actions";
+import { type IORef, isTouchDevice } from "../utils";
 
 export const ioPositions = new ReactiveMap<IORef, { x: number; y: number }>();
 

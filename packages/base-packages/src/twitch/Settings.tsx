@@ -1,3 +1,5 @@
+import { EffectButton, type SettingsProps } from "@macrograph/package-sdk/ui";
+import { cx } from "cva";
 import {
 	For,
 	type JSXElement,
@@ -5,8 +7,6 @@ import {
 	type ParentProps,
 	Switch,
 } from "solid-js";
-import { cx } from "cva";
-import { EffectButton, type SettingsProps } from "@macrograph/package-sdk/ui";
 
 import { RPCS, type STATE } from "./shared";
 

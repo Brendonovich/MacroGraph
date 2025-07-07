@@ -1,4 +1,4 @@
-import { Chunk, Effect, Stream, Option, SubscriptionRef } from "effect";
+import { Chunk, Effect, Option, Stream, SubscriptionRef } from "effect";
 import { ProjectRpc } from "./Project/Rpc";
 
 export class ClientAuth extends Effect.Service<ClientAuth>()("ClientAuth", {

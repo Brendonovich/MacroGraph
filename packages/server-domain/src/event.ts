@@ -1,9 +1,9 @@
 import { Schema } from "effect";
 
+import { RpcSerialization } from "@effect/rpc";
 import * as Graph from "./Graph";
 import * as Node from "./Node";
 import { Position, SchemaRef } from "./util";
-import { RpcSerialization } from "@effect/rpc";
 
 export type ProjectEvent = Schema.Schema.Type<typeof ProjectEvent>;
 export const ProjectEvent = Schema.Union(

@@ -1,13 +1,13 @@
 import type { RpcClient, RpcGroup } from "@effect/rpc";
-import { cva, cx, type VariantProps } from "cva";
+import { type VariantProps, cva, cx } from "cva";
 import { Effect, type Schema } from "effect";
 import {
 	type Accessor,
-	children,
 	type ComponentProps,
-	createSignal,
 	type JSX,
 	Show,
+	children,
+	createSignal,
 	splitProps,
 	untrack,
 } from "solid-js";

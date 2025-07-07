@@ -2,9 +2,9 @@ import { Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
 
 import {
-	getInput,
 	Package,
 	PackageEngine,
+	getInput,
 	setOutput,
 } from "@macrograph/package-sdk";
 

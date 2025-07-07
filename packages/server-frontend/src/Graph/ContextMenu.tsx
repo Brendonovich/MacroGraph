@@ -1,11 +1,11 @@
-import { createMemo, createSignal, For, Show } from "solid-js";
 import { cx } from "cva";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import createPresence from "solid-presence";
 
-import { useGraphContext } from "./Context";
+import type { SchemaRef } from "@macrograph/server-domain";
 import { useProjectService } from "../AppRuntime";
 import { ProjectState } from "../Project/State";
-import type { SchemaRef } from "@macrograph/server-domain";
+import { useGraphContext } from "./Context";
 
 export function GraphContextMenu(props: {
 	position: { x: number; y: number } | null;

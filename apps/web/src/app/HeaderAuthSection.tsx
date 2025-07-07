@@ -11,6 +11,7 @@ import {
 } from "@macrograph/ui";
 import { createAsync, useAction, useSearchParams } from "@solidjs/router";
 import { parse } from "cookie-es";
+import posthog from "posthog-js";
 import {
 	type ParentProps,
 	Show,
@@ -22,7 +23,6 @@ import {
 	onMount,
 } from "solid-js";
 import { toast } from "solid-sonner";
-import posthog from "posthog-js";
 
 import { getUser } from "~/api";
 import { LoginForm, SignUpForm } from "./(auth)/Forms";

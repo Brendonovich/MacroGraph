@@ -23,11 +23,11 @@ import {
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
+import { usePlatform } from "../../platform";
 import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
-import { usePlatform } from "../../platform";
 
 interface Props {
 	currentGraph?: number;

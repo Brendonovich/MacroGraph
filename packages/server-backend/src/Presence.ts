@@ -1,7 +1,7 @@
-import { Effect, Scope, SubscriptionRef, Stream } from "effect";
 import { faker } from "@faker-js/faker/locale/en_AU";
 import type { Graph, Node, Position } from "@macrograph/server-domain";
 import { Presence } from "@macrograph/server-domain";
+import { Effect, Scope, Stream, SubscriptionRef } from "effect";
 
 import { RealtimeConnection, type RealtimeConnectionId } from "./Realtime";
 

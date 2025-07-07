@@ -1,12 +1,12 @@
 import { type Effect, Layer, type ManagedRuntime } from "effect";
 import { createContext, useContext } from "solid-js";
 
+import { ClientAuth } from "./Auth";
 import { PackagesSettings } from "./Packages/PackagesSettings";
 import { ProjectActions } from "./Project/Actions";
-import { ProjectState } from "./Project/State";
 import { ProjectRealtime } from "./Project/Realtime";
 import { ProjectRpc } from "./Project/Rpc";
-import { ClientAuth } from "./Auth";
+import { ProjectState } from "./Project/State";
 
 export namespace ProjectRuntime {
 	export type ProjectRuntime = ManagedRuntime.ManagedRuntime<

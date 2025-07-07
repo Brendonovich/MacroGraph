@@ -14,8 +14,8 @@ import { ReactiveMap } from "@solid-primitives/map";
 import type { Ctx } from "../ctx";
 import type { Helix } from "../helix";
 import { defaultProperties } from "../resource";
-import type { Events } from "./types";
 import type { Types } from "../types";
+import type { Events } from "./types";
 
 export * from "./types";
 

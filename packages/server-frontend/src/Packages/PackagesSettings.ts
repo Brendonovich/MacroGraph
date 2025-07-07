@@ -1,10 +1,10 @@
+import { FetchHttpClient } from "@effect/platform";
 import { RpcClient, RpcSerialization } from "@effect/rpc";
+import { SubscribableCache } from "@macrograph/domain";
+import type { SettingsProps } from "@macrograph/package-sdk/ui";
 import { ReactiveMap } from "@solid-primitives/map";
 import { Context, Effect, Layer, Option } from "effect";
 import type { Component } from "solid-js";
-import { FetchHttpClient } from "@effect/platform";
-import type { SettingsProps } from "@macrograph/package-sdk/ui";
-import { SubscribableCache } from "@macrograph/domain";
 
 import { ProjectRpc } from "../Project/Rpc";
 

@@ -7,6 +7,12 @@ import {
 	createSignal,
 } from "solid-js";
 
+import { ContextMenu } from "@kobalte/core/context-menu";
+import {
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuRenameItem,
+} from "../../components/Graph/ContextMenu";
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
 import { IconButton } from "../../components/ui";
@@ -14,12 +20,6 @@ import { useInterfaceContext } from "../../context";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
-import { ContextMenu } from "@kobalte/core/context-menu";
-import {
-	ContextMenuContent,
-	ContextMenuItem,
-	ContextMenuRenameItem,
-} from "../../components/Graph/ContextMenu";
 
 export function CustomTypes() {
 	const [search, setSearch] = createSignal("");

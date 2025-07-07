@@ -1,10 +1,10 @@
+import { Package, PackageEngine, getInput } from "@macrograph/package-sdk";
 import { Data, Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
 import OBSWebsocket, {
 	type OBSRequestTypes,
 	type OBSResponseTypes,
 } from "obs-websocket-js";
-import { getInput, Package, PackageEngine } from "@macrograph/package-sdk";
 
 import { ConnectionFailed, RPCS } from "./shared";
 

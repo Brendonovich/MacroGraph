@@ -16,7 +16,7 @@ import type { z } from "zod";
 import { createHTTPClient } from "../httpEndpoint";
 import type { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";
-import { defaultProperties, TwitchAccount, TwitchChannel } from "./resource";
+import { TwitchAccount, TwitchChannel, defaultProperties } from "./resource";
 import type { Types } from "./types";
 
 export const HELIX_USER_ID = "helixUserId";

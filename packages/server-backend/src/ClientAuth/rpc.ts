@@ -1,4 +1,5 @@
 import { HttpClient, HttpClientRequest } from "@effect/platform";
+import { ClientAuth, CloudAuth } from "@macrograph/server-domain";
 import {
 	Config,
 	Effect,
@@ -8,7 +9,6 @@ import {
 	SubscriptionRef,
 } from "effect";
 import * as Jose from "jose";
-import { ClientAuth, CloudAuth } from "@macrograph/server-domain";
 
 import { CloudAPIClient } from "../CloudApi/ApiClient";
 import { RealtimeConnection } from "../Realtime";

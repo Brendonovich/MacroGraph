@@ -24,14 +24,14 @@ import {
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
+import { isMobile } from "@solid-primitives/platform";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
+import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { toast } from "solid-sonner";
 import type * as v from "valibot";
-import clsx from "clsx";
-import { isMobile } from "@solid-primitives/platform";
 
 import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
@@ -48,8 +48,8 @@ import {
 	useInterfaceContext,
 } from "./context";
 import "./global.css";
-import { isCtrlEvent } from "./util";
 import { usePlatform } from "./platform";
+import { isCtrlEvent } from "./util";
 
 export * from "./platform";
 export * from "./ConnectionsDialog";

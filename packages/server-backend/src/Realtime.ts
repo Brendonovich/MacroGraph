@@ -1,13 +1,13 @@
-import {
-	Effect,
-	PubSub,
-	Stream,
-	Context,
-	Schema,
-	type SubscriptionRef,
-	type Option,
-} from "effect";
 import type { ProjectEvent } from "@macrograph/server-domain";
+import {
+	Context,
+	Effect,
+	type Option,
+	PubSub,
+	Schema,
+	Stream,
+	type SubscriptionRef,
+} from "effect";
 
 export class RealtimePubSub extends Effect.Service<RealtimePubSub>()(
 	"ProjectRealtime",
