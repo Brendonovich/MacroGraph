@@ -5,7 +5,7 @@
 	"types": "./src/index.ts",
 	"dependencies": {
 		"@effect/rpc": "^0.62.4",
-		"@macrograph/web-api": "workspace:*",
+		"@macrograph/web-domain": "workspace:*",
 		"effect": "^3.16.8"
 	},
 	"exports": {

@@ -15,7 +15,7 @@
 		"@macrograph/domain": "workspace:*",
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/server-domain": "workspace:*",
-		"@macrograph/web-api": "workspace:*",
+		"@macrograph/web-domain": "workspace:*",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.201.1",
 		"@opentelemetry/sdk-logs": "^0.201.1",
 		"@opentelemetry/sdk-metrics": "^2.0.1",

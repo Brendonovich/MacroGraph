@@ -1,5 +1,8 @@
 packages:
-    - "interface"
-    - "apps/*"
-    - "crates/*"
-    - "packages/*"
+  - "interface"
+  - "apps/*"
+  - "crates/*"
+  - "packages/*"
+
+patchedDependencies:
+  vite-plugin-solid: patches/vite-plugin-solid.patch

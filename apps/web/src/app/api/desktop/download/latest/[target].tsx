@@ -1,6 +1,6 @@
 import { redirect } from "@solidjs/router";
-import type { APIEvent } from "@solidjs/start/server";
-import { appendResponseHeader } from "vinxi/http";
+// import type { APIEvent } from "@solidjs/start/server";
+import { appendResponseHeader } from "h3";
 import { type DownloadTarget, getDownloadURL } from "~/lib/releases";
 
 export async function GET({ params }: APIEvent) {

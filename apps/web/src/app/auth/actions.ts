@@ -1,9 +1,9 @@
 "use server";
 
-import * as jose from "jose";
+import * as Jose from "jose";
 
 import { OAUTH_TOKEN } from "@macrograph/api-contract";
-import { getRequestHost, getRequestProtocol } from "vinxi/http";
+import { getRequestHost, getRequestProtocol } from "h3";
 import type { z } from "zod";
 import { serverEnv } from "~/env/server";
 import { CALLBACK_SEARCH_PARAMS, OAUTH_STATE } from "./[provider]/types";
@@ -12,6 +12,7 @@ import {
 	type AuthProviderConfig,
 	AuthProviders,
 } from "./providers";
+import { getRequestEvent } from "solid-js/web";
 
 type DistributiveOmit<T, K extends keyof any> = T extends any
 	? Omit<T, K>
@@ -24,7 +25,7 @@ export async function getOAuthLoginURL(
 ) {
 	const providerConfig = AuthProviders[provider];
 
-	const state = await new jose.SignJWT(
+	const state = await new Jose.SignJWT(
 		OAUTH_STATE.parse({
 			...statePayload,
 			redirect_uri: `${getRedirectOrigin(
@@ -66,7 +67,8 @@ export async function loginURLForProvider(provider: AuthProvider) {
 	const providerConfig = AuthProviders[provider];
 	if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
-	const requestOrigin = `${getRequestProtocol()}://${getRequestHost()}`;
+	const event = getRequestEvent()!.nativeEvent;
+	const requestOrigin = `${getRequestProtocol(event)}://${getRequestHost(event)}`;
 
 	const targetOrigin = getRedirectOrigin(requestOrigin);
 
@@ -99,11 +101,10 @@ export async function exchangeOAuthToken(
 export async function validateCallbackSearchParams(
 	searchParams: URLSearchParams,
 ) {
-	console.trace(searchParams);
 	return CALLBACK_SEARCH_PARAMS.parse({
 		code: searchParams.get("code"),
 		state: (
-			await jose.jwtVerify(
+			await Jose.jwtVerify(
 				searchParams.get("state")!,
 				new TextEncoder().encode(serverEnv.AUTH_SECRET),
 			)

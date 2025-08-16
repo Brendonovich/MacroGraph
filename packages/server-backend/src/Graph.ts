@@ -1,9 +1,9 @@
 import { SchemaNotFound } from "@macrograph/domain";
-import { Graph } from "@macrograph/server-domain";
-import { Effect, Option } from "effect";
+import { CurrentUser, Graph } from "@macrograph/server-domain";
+import { Effect, Fiber, Option } from "effect";
 
 import { ProjectActions } from "./Project/Actions";
-import { RealtimePubSub } from "./Realtime";
+import { RealtimeConnection, RealtimePubSub } from "./Realtime";
 
 import { project } from "./project-data";
 
@@ -25,8 +25,6 @@ export const GraphRpcsLive = Graph.Rpcs.toLayer(
 		return {
 			CreateNode: (payload) =>
 				Effect.gen(function* () {
-					// yield* ClientAuthJwt;
-
 					const node = yield* projectActions
 						.createNode(payload.graphId, payload.schema, [...payload.position])
 						.pipe(Effect.mapError(() => new SchemaNotFound(payload.schema)));

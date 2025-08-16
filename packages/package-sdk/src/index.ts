@@ -7,7 +7,7 @@ import {
 	type ForceRetryError,
 	type SchemaDefinition,
 } from "@macrograph/domain";
-import type { CREDENTIAL } from "@macrograph/web-api";
+import type { CREDENTIAL } from "@macrograph/web-domain";
 import { Effect, type Layer, type Schema, type Scope } from "effect";
 
 export const getInput = <T extends Schema.Schema<any>>(ref: DataInputRef<T>) =>

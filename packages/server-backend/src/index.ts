@@ -9,50 +9,29 @@ import type { Route } from "@effect/platform/HttpRouter";
 import { RpcServer } from "@effect/rpc";
 import {
 	Chunk,
+	Config,
 	Context,
 	FiberRef,
 	Layer,
 	Mailbox,
 	Option,
 	PubSub,
+	Schedule,
 	Schema,
 	Stream,
 	SubscriptionRef,
 } from "effect";
 import * as Effect from "effect/Effect";
 import { getCurrentFiber } from "effect/Fiber";
-import * as JOSE from "jose";
-
-// import { RpcsSerialization, ProjectEvent } from "./shared";
-// import { NodeRpcsLive } from "./domain/Node/rpc";
-// import {
-//   RealtimeConnection,
-//   RealtimeConnectionId,
-// } from "./domain/Realtime/Connection";
-// import { RealtimePubSub } from "./domain/Realtime/PubSub";
-// import { CloudAPIClient } from "./domain/CloudApi/ApiClient";
-// import { CloudApiAuthState } from "./domain/CloudApi/AuthState";
-// import { Presence } from "./domain/Presence/Presence";
-// import {
-//   ClientAuthJwt,
-//   RpcAuthMiddleware,
-//   RpcRealtimeMiddleware,
-// } from "./domain/Rpc/Middleware";
-// import { ProjectActions } from "./domain/Project/Actions";
-// import { ProjectPackages } from "./domain/Project/Packages";
-// import { Graphs } from "./domain/Graph/Graphs";
-// import { GraphRpcsLive } from "./domain/Graph/rpc";
-// import { ProjectRpcsLive } from "./domain/Project/rpc";
-// import { Rpcs } from "./rpc";
-// import { PresenceRpcsLive } from "./domain/Presence/rpc";
-// import { CloudRpcsLive } from "./domain/CloudApi/rpc";
-// import { ClientAuthRpcsLive } from "./domain/ClientAuth/rpc";
+import * as Jose from "jose";
 import {
+	CurrentUser,
 	type ProjectEvent,
 	Realtime,
 	Rpcs,
 	RpcsSerialization,
 } from "@macrograph/server-domain";
+
 import { ClientAuthRpcsLive } from "./ClientAuth/rpc";
 import { CloudAPIClient } from "./CloudApi/ApiClient";
 import { CloudApiAuthState } from "./CloudApi/AuthState";
@@ -68,6 +47,9 @@ import {
 	RealtimeConnectionId,
 	RealtimePubSub,
 } from "./Realtime";
+import { ServerRegistrationError } from "@macrograph/web-domain";
+import { CloudRegistration } from "./CloudApi/Registration";
+import { ClientAuthRpcMiddleware } from "@macrograph/server-domain/src/ClientAuth";
 
 export { ProjectActions } from "./Project/Actions";
 
@@ -102,6 +84,65 @@ const RpcsLive = Layer.mergeAll(
 
 export const ServerLive = Effect.gen(function* () {
 	const packages = yield* ProjectPackages;
+	const cloudClient = yield* CloudAPIClient.api;
+
+	const cloudAuthToken = yield* Config.string("CLOUD_AUTH_TOKEN").pipe(
+		Config.option,
+		Effect.andThen(
+			Effect.catchTag("NoSuchElementException", () =>
+				Effect.gen(function* () {
+					const pendingRegistration =
+						yield* cloudClient.startServerRegistration();
+
+					yield* Effect.log(
+						`Server registration code: ${pendingRegistration.userCode}`,
+					);
+
+					const registration = yield* cloudClient
+						.performServerRegistration({
+							payload: { id: pendingRegistration.id },
+						})
+						.pipe(
+							Effect.catchAll((error) => {
+								if (error._tag === "ServerRegistrationError")
+									return Effect.fail(error);
+								return Effect.dieMessage(
+									"Failed to perform server registration",
+								);
+							}),
+							Effect.retry({
+								schedule: Schedule.fixed(3000),
+								while: (error) => error.code === "authorization_pending",
+							}),
+							Effect.orDie,
+						);
+
+					return registration.token;
+				}),
+			),
+		),
+	);
+
+	const publicKey = yield* Config.string("JWT_PUBLIC_KEY").pipe(
+		Effect.tap(Effect.log),
+		Effect.andThen((v) =>
+			Effect.promise(() => Jose.importSPKI(v.replaceAll("\\n", "\n"), "RS256")),
+		),
+		Effect.orDie,
+	);
+
+	const { payload } = yield* Effect.promise(() =>
+		Jose.jwtVerify(cloudAuthToken, publicKey),
+	);
+
+	yield* Effect.log(`Cloud auth token: ${cloudAuthToken}`);
+
+	const { ownerId } = payload;
+
+	const cloudRegistration = CloudRegistration.context({
+		ownerId: ownerId as string,
+		token: cloudAuthToken,
+	});
 
 	const nextRealtimeClient = (() => {
 		let i = 0;
@@ -120,7 +161,7 @@ export const ServerLive = Effect.gen(function* () {
 	);
 
 	const realtimeSecretKey = yield* Effect.promise(() =>
-		JOSE.generateSecret("HS256"),
+		Jose.generateSecret("HS256"),
 	);
 
 	const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs, {
@@ -129,6 +170,12 @@ export const ServerLive = Effect.gen(function* () {
 		Effect.provide(RpcsLive),
 		Effect.provide(NodeRpcsLive),
 		Effect.provide(realtimeMiddleware),
+		Effect.provide(
+			ClientAuthRpcMiddleware.context((req) => {
+				console.log(req);
+				return Effect.succeed({ userId: "", permissions: new Set() });
+			}),
+		),
 		Effect.provide(RpcsSerialization),
 	);
 
@@ -151,12 +198,15 @@ export const ServerLive = Effect.gen(function* () {
 				);
 
 				const res = yield* Effect.promise(() =>
-					JOSE.jwtVerify(searchParams.token, realtimeSecretKey),
+					Jose.jwtVerify(searchParams.token, realtimeSecretKey),
 				);
 
 				const id = RealtimeConnectionId.make(res.payload.id as number);
 
 				return yield* rpcsWebApp.pipe(
+					// Effect.provide(
+					//   CurrentUser.context({ userId: "", permissions: new Set() }),
+					// ),
 					Effect.provide(
 						RealtimeConnection.context({
 							id,
@@ -183,7 +233,7 @@ export const ServerLive = Effect.gen(function* () {
 							type: "identify",
 							id: connectionId,
 							token: yield* Effect.promise(() =>
-								new JOSE.SignJWT({ id: connectionId })
+								new Jose.SignJWT({ id: connectionId })
 									.setProtectedHeader({ alg: "HS256" })
 									.sign(realtimeSecretKey),
 							),

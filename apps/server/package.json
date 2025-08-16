@@ -34,10 +34,10 @@
 		"@faker-js/faker": "^9.8.0",
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/base-packages": "workspace:*",
-		"@macrograph/web-api": "workspace:*",
 		"@macrograph/server-backend": "workspace:*",
 		"@macrograph/server-domain": "workspace:*",
 		"@macrograph/server-frontend": "workspace:*",
+		"@macrograph/web-domain": "workspace:*",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.201.1",
 		"@opentelemetry/sdk-logs": "^0.201.1",
 		"@opentelemetry/sdk-metrics": "^2.0.1",
@@ -66,7 +66,7 @@
 		"solid-presence": "^0.2.0",
 		"unocss-preset-primitives": "0.0.2-beta.1",
 		"unocss-preset-radix": "^2.8.2",
-		"vite-plugin-solid": "^2.10.2"
+		"vite-plugin-solid": "^2.11.8"
 	},
 	"engines": {
 		"node": ">=22"

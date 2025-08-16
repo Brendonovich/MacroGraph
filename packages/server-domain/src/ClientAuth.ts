@@ -1,7 +1,8 @@
-import { Rpc, RpcGroup } from "@effect/rpc";
+import { Rpc, RpcGroup, RpcMiddleware } from "@effect/rpc";
 import { Schema } from "effect";
 
 import * as Realtime from "./Realtime";
+import { CurrentUser } from "./Permissions";
 
 export const CloudLoginEvent = Schema.Union(
 	Schema.Struct({
@@ -26,3 +27,13 @@ export const Rpcs = RpcGroup.make(
 		}),
 	}),
 ).middleware(Realtime.ConnectionRpcMiddleware);
+
+export class UnauthenticatedError extends Schema.TaggedError<UnauthenticatedError>()(
+	"UnauthenticatedError",
+	{},
+) {}
+
+export class ClientAuthRpcMiddleware extends RpcMiddleware.Tag<ClientAuthRpcMiddleware>()(
+	"ClientAuthRpcMiddleware",
+	{ provides: CurrentUser, failure: UnauthenticatedError },
+) {}

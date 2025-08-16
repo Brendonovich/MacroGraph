@@ -18,12 +18,10 @@ export const CloudRpcsLive = CloudAuth.Rpcs.toLayer(
 					const data = yield* api
 						.createDeviceCodeFlow()
 						.pipe(Effect.catchAll(() => new CloudAuth.CloudApiError()));
-
 					yield* mailbox.offer({
 						type: "started",
 						verificationUrlComplete: data.verification_uri_complete,
 					});
-
 					const grant = yield* api
 						.performAccessTokenGrant({
 							urlParams: {
@@ -44,11 +42,8 @@ export const CloudRpcsLive = CloudAuth.Rpcs.toLayer(
 							}),
 							Effect.orDie,
 						);
-
 					yield* SubscriptionRef.set(token, Option.some(grant.access_token));
-
 					yield* authState.refetch;
-
 					yield* mailbox.offer({ type: "finished" });
 				}).pipe(Effect.forkScoped);
 

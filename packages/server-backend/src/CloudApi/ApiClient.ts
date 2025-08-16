@@ -4,8 +4,8 @@ import {
 	HttpClient,
 	HttpClientRequest,
 } from "@effect/platform";
-import { Api } from "@macrograph/web-api";
-import { Config, Effect, Option, SubscriptionRef } from "effect";
+import { Api } from "@macrograph/web-domain";
+import { Config, Effect, Option, Stream, SubscriptionRef } from "effect";
 
 const CLIENT_ID = "macrograph-server";
 
@@ -38,6 +38,11 @@ export class CloudAPIClient extends Effect.Service<CloudAPIClient>()(
 					),
 				),
 			});
+
+			yield* token.changes.pipe(
+				Stream.runForEach((token) => Effect.gen(function* () {})),
+				Effect.fork,
+			);
 
 			return {
 				api,

@@ -1,9 +1,10 @@
 import { action, reload } from "@solidjs/router";
 import * as v from "valibot";
-import { deleteCookie } from "vinxi/http";
+import { deleteCookie } from "h3";
 
 import { getAuthState, getUser } from "~/api";
 import { lucia } from "~/lucia";
+import { getRequestEvent } from "solid-js/web";
 
 export const CREDENTIALS = v.object({
 	email: v.pipe(v.string(), v.email()),
@@ -19,7 +20,7 @@ export const logOutAction = action(async () => {
 
 	if (authState) await lucia.invalidateSession(authState.session.id);
 
-	deleteCookie(IS_LOGGED_IN);
+	deleteCookie(getRequestEvent()!.nativeEvent, IS_LOGGED_IN);
 
 	throw reload({
 		revalidate: [getUser.key],

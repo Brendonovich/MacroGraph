@@ -7,6 +7,7 @@ import { Schema } from "effect";
 import * as Node from "./Node";
 import * as Realtime from "./Realtime";
 import { SchemaRef } from "./util";
+import { ClientAuthRpcMiddleware } from "./ClientAuth";
 
 export const Shape = Schema.Struct({
 	id: Graph.Id,
@@ -34,7 +35,7 @@ export const Rpcs = RpcGroup.make(
 			io: Node.IO,
 		}),
 		error: Schema.Union(SchemaNotFound),
-	}),
+	}).middleware(ClientAuthRpcMiddleware),
 	Rpc.make("ConnectIO", {
 		payload: {
 			graphId: Graph.Id,

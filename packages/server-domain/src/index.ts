@@ -10,6 +10,7 @@ export * as CloudAuth from "./CloudAuth";
 export * from "./util";
 export * from "./errors";
 export * from "./event";
+export * from "./Permissions";
 
 import * as ClientAuth from "./ClientAuth";
 import * as CloudAuth from "./CloudAuth";

@@ -76,3 +76,19 @@ export const oauthSessions = pgTable("oauth_sessions", {
 	expires: timestamp("expires").notNull(),
 	userId: varchar("user_id", { length: 255 }).notNull(),
 });
+
+export const serverRegistrations = pgTable("server_registrations", {
+	id: serial("id").primaryKey(),
+	registrationId: varchar("registration_id", { length: 255 }).notNull(),
+	ownerId: varchar("owner_id", { length: 255 }).notNull(),
+});
+
+export const serverRegistrationSessions = pgTable(
+	"server_registration_sessions",
+	{
+		id: varchar("id", { length: 255 }).primaryKey(),
+		userCode: varchar("userCode", { length: 10 }).notNull().unique(),
+		userId: varchar("user_id", { length: 255 }),
+		createdAt: timestamp("created_at").notNull().defaultNow(),
+	},
+);

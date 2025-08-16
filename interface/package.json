@@ -39,7 +39,7 @@
 		"@ts-rest/core": "^3.41.1",
 		"@ts-rest/solid-query": "^3.41.1",
 		"clsx": "^1.2.1",
-		"solid-js": "^1.9.7",
+		"solid-js": "^1.9.9",
 		"solid-sonner": "^0.2.5",
 		"valibot": "^0.37.0",
 		"zod": "^3.25.36"

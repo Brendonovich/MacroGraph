@@ -2,10 +2,10 @@ import { action, cache, redirect } from "@solidjs/router";
 import { and, eq } from "drizzle-orm";
 import { verifyRequestOrigin } from "lucia";
 import { getRequestEvent } from "solid-js/web";
-import { appendResponseHeader, getCookie, getHeader } from "vinxi/server";
+import { appendResponseHeader, getCookie, getHeader } from "h3";
 
 import { db } from "~/drizzle";
-import { oauthCredentials, users } from "~/drizzle/schema";
+import { oauthCredentials, serverRegistrations, users } from "~/drizzle/schema";
 import { loginURLForProvider, performOAuthExchange } from "./app/auth/actions";
 import type { AuthProvider } from "./app/auth/providers";
 import { lucia } from "./lucia";
@@ -25,7 +25,7 @@ async function _getAuthState() {
 	let data: Awaited<ReturnType<typeof lucia.validateSession>>;
 
 	// header auth
-	const authHeader = getHeader("Authorization");
+	const authHeader = getHeader(event, "Authorization");
 	if (authHeader?.startsWith("Bearer ")) {
 		const [, sessionId] = authHeader.split("Bearer ");
 
@@ -34,9 +34,9 @@ async function _getAuthState() {
 	// cookie auth
 	else {
 		if (requestEvent.request.method !== "GET") {
-			const originHeader = getHeader("Origin") ?? null;
+			const originHeader = getHeader(event, "Origin") ?? null;
 			// NOTE: You may need to use `X-Forwarded-Host` instead
-			const hostHeader = getHeader("Host") ?? null;
+			const hostHeader = getHeader(event, "Host") ?? null;
 			if (
 				!originHeader ||
 				!hostHeader ||
@@ -53,11 +53,13 @@ async function _getAuthState() {
 
 		if (data.session?.fresh)
 			appendResponseHeader(
+				event,
 				"Set-Cookie",
 				lucia.createSessionCookie(data.session.id).serialize(),
 			);
 		if (!data.session)
 			appendResponseHeader(
+				event,
 				"Set-Cookie",
 				lucia.createBlankSessionCookie().serialize(),
 			);
@@ -192,6 +194,18 @@ export const getCredentials = cache(async () => {
 
 	return c;
 }, "credentials");
+
+export const getServers = cache(async () => {
+	"use server";
+
+	const { user } = await ensureAuthedOrRedirect();
+
+	const c = await db.query.serverRegistrations.findMany({
+		where: eq(serverRegistrations.ownerId, user.id),
+	});
+
+	return c;
+}, "servers");
 
 import { createStorage } from "unstorage";
 import cloudflareKVHTTPDriver from "unstorage/drivers/cloudflare-kv-http";

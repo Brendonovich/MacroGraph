@@ -20,7 +20,7 @@
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/server-domain": "workspace:*",
-		"@macrograph/web-api": "workspace:*",
+		"@macrograph/web-domain": "workspace:*",
 		"@solid-primitives/bounds": "^0.0.118",
 		"@solid-primitives/context": "^0.2.3",
 		"@solid-primitives/event-listener": "^2.3.3",
@@ -43,7 +43,7 @@
 		"unocss-preset-primitives": "0.0.2-beta.1",
 		"unocss-preset-radix": "^2.8.2",
 		"vite": "^6.3.5",
-		"vite-plugin-solid": "^2.10.2"
+		"vite-plugin-solid": "^2.11.8"
 	},
 	"devDependencies": {
 		"unplugin-icons": "^0.18.5"

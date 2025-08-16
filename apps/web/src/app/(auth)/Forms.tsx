@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { generateId } from "lucia";
 import { Argon2id } from "oslo/password";
 import * as v from "valibot";
-import { appendResponseHeader, setCookie } from "vinxi/http";
+import { appendResponseHeader, setCookie } from "h3";
 
 import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";
@@ -15,15 +15,18 @@ import {
 	posthogShutdown,
 } from "~/posthog/server";
 import { CREDENTIALS, IS_LOGGED_IN } from "./utils";
+import { getRequestEvent } from "solid-js/web";
 
 async function createSession(userId: string) {
 	"use server";
 
+	const event = getRequestEvent()!.nativeEvent;
+
 	const session = await lucia.createSession(userId, {});
 	const sessionCookie = lucia.createSessionCookie(session.id);
 
-	appendResponseHeader("Set-Cookie", sessionCookie.serialize());
-	setCookie(IS_LOGGED_IN, "true", { httpOnly: false });
+	appendResponseHeader(event, "Set-Cookie", sessionCookie.serialize());
+	setCookie(event, IS_LOGGED_IN, "true", { httpOnly: false });
 }
 
 const signUpAction = action(async (form: FormData) => {

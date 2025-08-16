@@ -53,6 +53,12 @@ export class DeviceFlowError extends S.TaggedError<DeviceFlowError>()(
 	HttpApiSchema.annotations({ status: 400 }),
 ) {}
 
+export class ServerRegistrationError extends S.TaggedError<ServerRegistrationError>()(
+	"ServerRegistrationError",
+	{ code: S.Literal("authorization_pending", "incorrect_id", "access_denied") },
+	HttpApiSchema.annotations({ status: 400 }),
+) {}
+
 export class Api extends HttpApi.make("api")
 	.add(
 		HttpApiGroup.make("api", { topLevel: true })
@@ -130,6 +136,24 @@ export class Api extends HttpApi.make("api")
 						}).pipe(HttpApiSchema.withEncoding({ kind: "Json" })),
 					)
 					.addError(DeviceFlowError)
+					.addError(HttpApiError.InternalServerError),
+			)
+			.add(
+				HttpApiEndpoint.post(
+					"startServerRegistration",
+					"/server/start-registration",
+				)
+					.addSuccess(S.Struct({ id: S.String, userCode: S.String }))
+					.addError(HttpApiError.InternalServerError),
+			)
+			.add(
+				HttpApiEndpoint.post(
+					"performServerRegistration",
+					"/server/perform-registration",
+				)
+					.setPayload(S.Struct({ id: S.String }))
+					.addSuccess(S.Struct({ token: S.String }))
+					.addError(ServerRegistrationError)
 					.addError(HttpApiError.InternalServerError),
 			),
 	)

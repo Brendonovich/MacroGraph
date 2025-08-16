@@ -13,8 +13,9 @@ import {
 	type CREDENTIAL,
 	CurrentSession,
 	DeviceFlowError,
-} from "@macrograph/web-api";
-import type { APIHandler } from "@solidjs/start/server";
+	ServerRegistrationError,
+} from "@macrograph/web-domain";
+// import type { APIHandler } from "@solidjs/start/server";
 import type { InferSelectModel } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import { Config, Effect, Layer, Option } from "effect";
@@ -27,6 +28,8 @@ import {
 	deviceCodeSessions,
 	oauthCredentials,
 	oauthSessions,
+	serverRegistrations,
+	serverRegistrationSessions,
 	users,
 } from "~/drizzle/schema";
 import { lucia } from "~/lucia";
@@ -182,8 +185,6 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			Effect.fn(function* () {
 				const session = yield* CurrentSession;
 
-				console.log({ session });
-
 				const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
 					Effect.tap(Effect.log),
 					Effect.andThen((v) =>
@@ -194,10 +195,8 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					Effect.orDie,
 				);
 
-				const payload = { userId: session.userId };
-
 				const jwt = yield* Effect.promise(() =>
-					new Jose.SignJWT(payload)
+					new Jose.SignJWT({ type: "user", userId: session.userId })
 						.setProtectedHeader({ alg: "RS256" })
 						.setIssuedAt()
 						.sign(privateKey),
@@ -361,6 +360,80 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					token_type: "Bearer",
 				};
 			}),
+		)
+		.handle(
+			"startServerRegistration",
+			Effect.fn(function* () {
+				const id = crypto.randomUUID().replaceAll("-", "");
+				const userCode = yield* generateUserDeviceCode;
+
+				yield* Effect.tryPromise({
+					try: () =>
+						db.insert(serverRegistrationSessions).values({ id, userCode }),
+					catch: () => new HttpApiError.InternalServerError(),
+				});
+
+				return { id, userCode };
+			}),
+		)
+		.handle(
+			"performServerRegistration",
+			Effect.fn(function* ({ payload: { id } }) {
+				const session = yield* Effect.tryPromise({
+					try: () =>
+						db.query.serverRegistrationSessions.findFirst({
+							where: eq(serverRegistrationSessions.id, id),
+						}),
+					catch: () => new HttpApiError.InternalServerError(),
+				});
+				if (!session)
+					return yield* new ServerRegistrationError({ code: "incorrect_id" });
+
+				if (session.userId === null)
+					return yield* new ServerRegistrationError({
+						code: "authorization_pending",
+					});
+
+				const { userId } = session;
+
+				yield* Effect.tryPromise({
+					try: () =>
+						db.transaction((db) =>
+							Promise.all([
+								db
+									.delete(serverRegistrationSessions)
+									.where(eq(serverRegistrationSessions.id, id)),
+								db.insert(serverRegistrations).values({
+									registrationId: session.id,
+									ownerId: userId,
+								}),
+							]),
+						),
+					catch: () => new HttpApiError.InternalServerError(),
+				});
+
+				const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
+					Effect.andThen((v) =>
+						Effect.promise(() =>
+							Jose.importPKCS8(v.replaceAll("\\n", "\n"), "RS256"),
+						),
+					),
+					Effect.orDie,
+				);
+
+				const jwt = yield* Effect.promise(() =>
+					new Jose.SignJWT({
+						type: "server-registration",
+						registrationId: session.id,
+						ownerId: userId,
+					})
+						.setProtectedHeader({ alg: "RS256" })
+						.setIssuedAt()
+						.sign(privateKey),
+				);
+
+				return { token: jwt };
+			}),
 		),
 );
 
@@ -386,7 +459,7 @@ const { handler } = HttpApiBuilder.toWebHandler(
 	),
 );
 
-const createHandler = (): APIHandler => (event) => handler(event.request);
+const createHandler = () => (event: any) => handler(event.request);
 
 export const GET = createHandler();
 export const POST = createHandler();
