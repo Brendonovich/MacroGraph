@@ -26,7 +26,7 @@ export default defineConfig({
 				preset: "vercel",
 				prerender: {
 					crawlLinks: true,
-					routes: ["/landing"],
+					routes: ["/"],
 				},
 			},
 		}),
