@@ -22,13 +22,13 @@ export default defineConfig({
 			ssr: true,
 			routeDir: "app",
 			extensions: ["md", "mdx"],
-			// server: {
-			// 	preset: "vercel",
-			// 	prerender: {
-			// 		crawlLinks: true,
-			// 		routes: ["/landing"],
-			// 	},
-			// },
+			server: {
+				preset: "vercel",
+				prerender: {
+					crawlLinks: true,
+					routes: ["/landing"],
+				},
+			},
 		}),
 		// unfonts({
 		//   fontsource: {

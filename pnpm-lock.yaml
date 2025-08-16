@@ -456,8 +456,8 @@ importers:
         specifier: ^0.14.10
         version: 0.14.10(solid-js@1.9.9)
       '@solidjs/start':
-        specifier: https://pkg.pr.new/@solidjs/start@b2be5e9
-        version: https://pkg.pr.new/@solidjs/start@b2be5e9(@planetscale/database@1.19.0)(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+        specifier: https://pkg.pr.new/@solidjs/start@3c748c8
+        version: https://pkg.pr.new/@solidjs/start@3c748c8(@planetscale/database@1.19.0)(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.8.3)(zod@3.25.36)
@@ -5387,8 +5387,8 @@ packages:
     peerDependencies:
       vinxi: ^0.5.3
 
-  '@solidjs/start@https://pkg.pr.new/@solidjs/start@b2be5e9':
-    resolution: {tarball: https://pkg.pr.new/@solidjs/start@b2be5e9}
+  '@solidjs/start@https://pkg.pr.new/@solidjs/start@3c748c8':
+    resolution: {tarball: https://pkg.pr.new/@solidjs/start@3c748c8}
     version: 2.0.0-devinxi.0
     engines: {node: '>=22'}
 
@@ -15526,7 +15526,7 @@ snapshots:
       - vite
       - yaml
 
-  '@solidjs/start@https://pkg.pr.new/@solidjs/start@b2be5e9(@planetscale/database@1.19.0)(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
+  '@solidjs/start@https://pkg.pr.new/@solidjs/start@3c748c8(@planetscale/database@1.19.0)(@testing-library/jest-dom@6.4.8)(@types/node@22.10.2)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
     dependencies:
       '@babel/core': 7.28.3
       '@babel/traverse': 7.28.3
