@@ -42,7 +42,7 @@
 		"solid-presence": "^0.2.0",
 		"unocss-preset-primitives": "0.0.2-beta.1",
 		"unocss-preset-radix": "^2.8.2",
-		"vite": "^6.3.5",
+		"vite": "^7.1.3",
 		"vite-plugin-solid": "^2.11.8"
 	},
 	"devDependencies": {

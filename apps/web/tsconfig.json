@@ -21,19 +21,5 @@
 			"~/*": ["./src/*"]
 		},
 		"plugins": [{ "name": "@effect/language-service" }]
-	},
-	"references": [
-		{
-			"path": "../../interface"
-		},
-		{
-			"path": "../../packages/runtime"
-		},
-		{
-			"path": "../../packages/packages"
-		},
-		{
-			"path": "../../packages/effect-server-fn"
-		}
-	]
+	}
 }

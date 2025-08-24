@@ -10,7 +10,9 @@ import interfacePlugin from "../../packages/ui/vite";
 dotenv.config({ path: ".env.local" });
 
 export default defineConfig({
-	build: { minify: false },
+	build: {
+		minify: false
+	},
 	plugins: [
 		interfacePlugin,
 		mdx.default.withImports({})({
