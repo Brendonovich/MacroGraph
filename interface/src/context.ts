@@ -148,6 +148,8 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 						JSON.stringify(variable),
 					);
 				}
+
+				localStorage.removeItem("project");
 			},
 			100,
 		);
