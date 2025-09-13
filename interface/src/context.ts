@@ -124,10 +124,30 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			() => {
 				if (props.core.project.disableSave) return;
 
+				const serialized = serializeProject(props.core.project);
+
 				localStorage.setItem(
-					"project",
-					JSON.stringify(serializeProject(props.core.project)),
+					"project-root",
+					JSON.stringify({
+						...serialized,
+						graphs: serialized.graphs.map((g) => g.id),
+						variables: serialized.variables?.map((v) => v.id),
+					}),
 				);
+
+				for (const graph of serialized.graphs) {
+					localStorage.setItem(
+						`project-graph-${graph.id}`,
+						JSON.stringify(graph),
+					);
+				}
+
+				for (const variable of serialized.variables ?? []) {
+					localStorage.setItem(
+						`project-variable-${variable.id}`,
+						JSON.stringify(variable),
+					);
+				}
 			},
 			100,
 		);

@@ -225,3 +225,18 @@ export const Project = v.object({
 	variables: v.optional(v.array(Variable), []),
 });
 export type Project = v.InferOutput<typeof Project>;
+
+export const ProjectRoot = v.object({
+	name: v.optional(v.string()),
+	graphs: v.array(IntID),
+	graphIdCounter: v.pipe(v.number(), v.integer()),
+	customEvents: v.optional(v.array(CustomEvent), []),
+	customEventIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	customTypeIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	customStructs: v.optional(v.array(CustomStruct), []),
+	customEnums: v.optional(v.array(CustomEnum), []),
+	counter: v.optional(v.number(), 0),
+	resources: v.optional(v.array(Resource), []),
+	variables: v.optional(v.array(Variable), []),
+});
+export type ProjectRoot = v.InferOutput<typeof ProjectRoot>;
