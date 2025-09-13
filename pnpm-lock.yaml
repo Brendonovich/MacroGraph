@@ -88,7 +88,7 @@ importers:
         version: 0.0.0-main-6ed8cc98
       '@rspc/solid':
         specifier: 0.0.0-main-6ed8cc98
-        version: 0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@4.36.1(solid-js@1.9.9))(solid-js@1.9.9)
+        version: 0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@5.85.5(solid-js@1.9.9))(solid-js@1.9.9)
       '@rspc/tauri':
         specifier: 0.0.0-main-6ed8cc98
         version: 0.0.0-main-6ed8cc98(@tauri-apps/api@1.5.3)
@@ -105,8 +105,8 @@ importers:
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.7.3)(zod@3.25.36)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -115,7 +115,7 @@ importers:
         version: 3.52.1(@types/node@22.10.2)(zod@3.25.36)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.9))(zod@3.25.36)
+        version: 3.41.1(@tanstack/solid-query@5.85.5(solid-js@1.9.9))(zod@3.25.36)
       solid-js:
         specifier: ^1.9.9
         version: 1.9.9
@@ -462,8 +462,8 @@ importers:
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.8.3)(zod@3.25.36)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@ts-rest/core':
         specifier: ^3.51.0
         version: 3.51.0(zod@3.25.36)
@@ -573,6 +573,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.4.49)
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
       drizzle-kit:
         specifier: ^0.20.18
         version: 0.20.18
@@ -592,8 +595,8 @@ importers:
   crates/tauri-plugin-kb-mouse:
     dependencies:
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -601,8 +604,8 @@ importers:
   crates/tauri-plugin-midi:
     dependencies:
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -691,14 +694,14 @@ importers:
         specifier: ^0.15.3
         version: 0.15.3(solid-js@1.9.9)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@ts-rest/core':
         specifier: ^3.41.1
         version: 3.41.1(zod@3.25.36)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.9))(zod@3.25.36)
+        version: 3.41.1(@tanstack/solid-query@5.85.5(solid-js@1.9.9))(zod@3.25.36)
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
@@ -759,8 +762,8 @@ importers:
   packages/api-contract:
     dependencies:
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@ts-rest/core':
         specifier: ^3.52.1
         version: 3.52.1(@types/node@22.10.2)(zod@3.25.36)
@@ -909,8 +912,8 @@ importers:
   packages/config:
     dependencies:
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
 
   packages/domain:
     dependencies:
@@ -937,8 +940,8 @@ importers:
   packages/http-client:
     dependencies:
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -968,8 +971,8 @@ importers:
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.9.9)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       zod:
         specifier: ^3.25.36
         version: 3.25.36
@@ -996,8 +999,8 @@ importers:
   packages/option:
     dependencies:
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -1202,8 +1205,8 @@ importers:
         specifier: ^0.26.2
         version: 0.26.2(solid-js@1.9.9)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@tanstack/valibot-form-adapter':
         specifier: ^0.26.4
         version: 0.26.4(valibot@0.37.0(typescript@5.5.3))
@@ -1314,8 +1317,8 @@ importers:
         specifier: ^0.15.3
         version: 0.15.3(solid-js@1.9.9)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@tauri-apps/api':
         specifier: ^1.5.3
         version: 1.5.3
@@ -1324,7 +1327,7 @@ importers:
         version: 3.52.1(@types/node@22.10.2)(zod@3.25.36)
       '@ts-rest/solid-query':
         specifier: ^3.41.1
-        version: 3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.9))(zod@3.25.36)
+        version: 3.41.1(@tanstack/solid-query@5.85.5(solid-js@1.9.9))(zod@3.25.36)
       valibot:
         specifier: ^0.37.0
         version: 0.37.0(typescript@5.8.3)
@@ -1632,6 +1635,9 @@ importers:
       '@tanstack/query-core':
         specifier: ^5.75.7
         version: 5.75.7
+      '@tanstack/solid-query':
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       '@unocss/reset':
         specifier: ^66.1.1
         version: 66.1.1
@@ -1721,8 +1727,8 @@ importers:
         specifier: ^0.4.11
         version: 0.4.11(solid-js@1.9.9)
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       valibot:
         specifier: ^0.37.0
         version: 0.37.0(typescript@5.8.3)
@@ -1755,8 +1761,8 @@ importers:
         specifier: workspace:*
         version: link:../config
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
@@ -1795,8 +1801,8 @@ importers:
   packages/utils:
     dependencies:
       '@tanstack/solid-query':
-        specifier: ^4.36.1
-        version: 4.36.1(solid-js@1.9.9)
+        specifier: ^5.85.5
+        version: 5.85.5(solid-js@1.9.9)
     devDependencies:
       '@macrograph/config':
         specifier: workspace:*
@@ -1804,6 +1810,19 @@ importers:
       solid-js:
         specifier: ^1.9.9
         version: 1.9.9
+
+  packages/web-backend:
+    dependencies:
+      '@effect/platform':
+        specifier: ^0.80.2
+        version: 0.80.2(effect@3.16.8)
+      effect:
+        specifier: ^3.16.8
+        version: 3.16.8
+    devDependencies:
+      '@macrograph/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/web-domain:
     dependencies:
@@ -5508,10 +5527,10 @@ packages:
       react-dom:
         optional: true
 
-  '@storybook/builder-vite@10.0.0-beta.0':
-    resolution: {integrity: sha512-IGd75RO4YR7ofOZWqND2dYHrKLjwN05+mM1xfrucb2SoQzjbNXvFNVVxtOCBmqsarjmrMKLKHuRgFzU41vs43g==}
+  '@storybook/builder-vite@10.0.0-beta.2':
+    resolution: {integrity: sha512-H4U+LXXrxXFezTzPc0pfvZA/qjyg9XmgPCGSXa0Q41LH+8UrW9uP42TDVarQkD77jS4Trd7QIFCN64xe34XAoQ==}
     peerDependencies:
-      storybook: ^10.0.0-beta.0
+      storybook: ^10.0.0-beta.2
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
   '@storybook/codemod@8.2.7':
@@ -5520,12 +5539,12 @@ packages:
   '@storybook/core@8.2.7':
     resolution: {integrity: sha512-vgw5MYN9Bq2/ZsObCOEHbBHwi4RpbYCHPFtKkr4kTnWID++FCSiSVd7jY3xPvcNxWqCxOyH6dThpBi+SsB/ZAA==}
 
-  '@storybook/csf-plugin@10.0.0-beta.0':
-    resolution: {integrity: sha512-2vFHbbnp/yGWt4p53OO5swDVZzmOp3HkJEbhc1zE9BW3YcX0mG8Gh2sd7K0+Io04uoupwJpawTz8VDdKfYkJUA==}
+  '@storybook/csf-plugin@10.0.0-beta.2':
+    resolution: {integrity: sha512-OBjwaEdG3OrgsvUncu0AptCOH9u9BDQeIlMChj/QxnlNCy4yTUdPYNJ140mYzl51a20IKi6OTRverLopP7RNUg==}
     peerDependencies:
       esbuild: '*'
       rollup: '*'
-      storybook: ^10.0.0-beta.0
+      storybook: ^10.0.0-beta.2
       vite: '*'
       webpack: '*'
     peerDependenciesMeta:
@@ -5617,11 +5636,11 @@ packages:
   '@tanstack/form-core@0.26.4':
     resolution: {integrity: sha512-rQpwyjb82tWoC4eQHUq3R8ojFQ4M/6WxitTexiFEOQ0k8pfN1kLy9ktlyFH6QeAerl855orShpB1pkYzyZqw0w==}
 
-  '@tanstack/query-core@4.36.1':
-    resolution: {integrity: sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==}
-
   '@tanstack/query-core@5.75.7':
     resolution: {integrity: sha512-4BHu0qnxUHOSnTn3ow9fIoBKTelh0GY08yn1IO9cxjBTsGvnxz1ut42CHZqUE3Vl/8FAjcHsj8RNJMoXvjgHEA==}
+
+  '@tanstack/query-core@5.85.5':
+    resolution: {integrity: sha512-KO0WTob4JEApv69iYp1eGvfMSUkgw//IpMnq+//cORBzXf0smyRwPLrUvEe5qtAEGjwZTXrjxg+oJNP/C00t6w==}
 
   '@tanstack/router-utils@1.131.2':
     resolution: {integrity: sha512-sr3x0d2sx9YIJoVth0QnfEcAcl+39sQYaNQxThtHmRpyeFYNyM2TTH+Ud3TNEnI3bbzmLYEUD+7YqB987GzhDA==}
@@ -5636,10 +5655,10 @@ packages:
     peerDependencies:
       solid-js: ^1.6.0
 
-  '@tanstack/solid-query@4.36.1':
-    resolution: {integrity: sha512-w8L6B12AsCyF7AB2Np4fj9qsOBfrzzxyIkdsniKo9HErdXdlGLyynYaDm4EGsH9ePPcdJSUX7ELGqmXllofn/Q==}
+  '@tanstack/solid-query@5.85.5':
+    resolution: {integrity: sha512-0o0Ibk9wqydm4JatbIjmvDu1+MofeZ1bU9BKwAbpt7HYjrLVCeddpW6zGmp41nN7t/mHJyR+ctW9oiNumCkEfg==}
     peerDependencies:
-      solid-js: ^1.5.7
+      solid-js: ^1.6.0
 
   '@tanstack/solid-store@0.5.4':
     resolution: {integrity: sha512-PZi289dFudlI5N5eAXR+uHgY8jdu2rppfKuk44AEOt3qNdmrGpVPpmqrO2NR+9UDu/zq6Q8Q3GeTjQPhZ06vlQ==}
@@ -11503,8 +11522,8 @@ packages:
     resolution: {integrity: sha512-RyWSb5AHmGtjjNQ6gIlA67sHOsWpsbWpwDokLwTcejVdOjEkJZh7QKu14J00gDDVSh8kGH4KYC/TNBceXFZhtw==}
     engines: {node: '>=18.12.0'}
 
-  unplugin@2.3.8:
-    resolution: {integrity: sha512-lkaSIlxceytPyt9yfb1h7L9jDFqwMqvUZeGsKB7Z8QrvAO3xZv2S+xMQQYzxk0AGJHcQhbcvhKEstrMy99jnuQ==}
+  unplugin@2.3.9:
+    resolution: {integrity: sha512-2dcbZq6aprwXTkzptq3k5qm5B8cvpjG9ynPd5fyM2wDJuuF7PeUK64Sxf0d+X1ZyDOeGydbNzMqBSIVlH8GIfA==}
     engines: {node: '>=18.12.0'}
 
   unstorage@1.13.1:
@@ -15426,10 +15445,10 @@ snapshots:
 
   '@rspc/client@0.0.0-main-6ed8cc98': {}
 
-  '@rspc/solid@0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@4.36.1(solid-js@1.9.9))(solid-js@1.9.9)':
+  '@rspc/solid@0.0.0-main-6ed8cc98(@rspc/client@0.0.0-main-6ed8cc98)(@tanstack/solid-query@5.85.5(solid-js@1.9.9))(solid-js@1.9.9)':
     dependencies:
       '@rspc/client': 0.0.0-main-6ed8cc98
-      '@tanstack/solid-query': 4.36.1(solid-js@1.9.9)
+      '@tanstack/solid-query': 5.85.5(solid-js@1.9.9)
       solid-js: 1.9.9
 
   '@rspc/tauri@0.0.0-main-6ed8cc98(@tauri-apps/api@1.5.3)':
@@ -15865,9 +15884,9 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
 
-  '@storybook/builder-vite@10.0.0-beta.0(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/builder-vite@10.0.0-beta.2(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@storybook/csf-plugin': 10.0.0-beta.0(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/csf-plugin': 10.0.0-beta.2(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       ts-dedent: 2.2.0
       vite: 7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -15914,10 +15933,10 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@storybook/csf-plugin@10.0.0-beta.0(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/csf-plugin@10.0.0-beta.2(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
-      unplugin: 2.3.8
+      unplugin: 2.3.9
     optionalDependencies:
       esbuild: 0.21.5
       rollup: 4.48.0
@@ -16032,9 +16051,9 @@ snapshots:
     dependencies:
       '@tanstack/store': 0.5.4
 
-  '@tanstack/query-core@4.36.1': {}
-
   '@tanstack/query-core@5.75.7': {}
+
+  '@tanstack/query-core@5.85.5': {}
 
   '@tanstack/router-utils@1.131.2':
     dependencies:
@@ -16069,9 +16088,9 @@ snapshots:
       '@tanstack/solid-store': 0.5.4(solid-js@1.9.9)
       solid-js: 1.9.9
 
-  '@tanstack/solid-query@4.36.1(solid-js@1.9.9)':
+  '@tanstack/solid-query@5.85.5(solid-js@1.9.9)':
     dependencies:
-      '@tanstack/query-core': 4.36.1
+      '@tanstack/query-core': 5.85.5
       solid-js: 1.9.9
 
   '@tanstack/solid-store@0.5.4(solid-js@1.9.9)':
@@ -16209,9 +16228,9 @@ snapshots:
       '@types/node': 22.10.2
       zod: 3.25.36
 
-  '@ts-rest/solid-query@3.41.1(@tanstack/solid-query@4.36.1(solid-js@1.9.9))(zod@3.25.36)':
+  '@ts-rest/solid-query@3.41.1(@tanstack/solid-query@5.85.5(solid-js@1.9.9))(zod@3.25.36)':
     dependencies:
-      '@tanstack/solid-query': 4.36.1(solid-js@1.9.9)
+      '@tanstack/solid-query': 5.85.5(solid-js@1.9.9)
     optionalDependencies:
       zod: 3.25.36
 
@@ -22097,7 +22116,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.2(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
     dependencies:
-      '@storybook/builder-vite': 10.0.0-beta.0(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/builder-vite': 10.0.0-beta.2(esbuild@0.21.5)(rollup@4.48.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.3(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
     transitivePeerDependencies:
       - esbuild
       - rollup
@@ -22997,7 +23016,7 @@ snapshots:
       picomatch: 4.0.2
       webpack-virtual-modules: 0.6.2
 
-  unplugin@2.3.8:
+  unplugin@2.3.9:
     dependencies:
       '@jridgewell/remapping': 2.3.5
       acorn: 8.15.0

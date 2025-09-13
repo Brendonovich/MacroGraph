@@ -5,7 +5,7 @@ import { getRequestEvent } from "solid-js/web";
 import { appendResponseHeader, getCookie, getHeader } from "h3";
 
 import { db } from "~/drizzle";
-import { oauthCredentials, serverRegistrations, users } from "~/drizzle/schema";
+import { oauthCredentials, oauthApps, users } from "~/drizzle/schema";
 import { loginURLForProvider, performOAuthExchange } from "./app/auth/actions";
 import type { AuthProvider } from "./app/auth/providers";
 import { lucia } from "./lucia";
@@ -200,8 +200,8 @@ export const getServers = cache(async () => {
 
 	const { user } = await ensureAuthedOrRedirect();
 
-	const c = await db.query.serverRegistrations.findMany({
-		where: eq(serverRegistrations.ownerId, user.id),
+	const c = await db.query.oauthApps.findMany({
+		where: eq(oauthApps.ownerId, user.id),
 	});
 
 	return c;

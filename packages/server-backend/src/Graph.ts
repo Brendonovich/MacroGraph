@@ -3,7 +3,7 @@ import { CurrentUser, Graph } from "@macrograph/server-domain";
 import { Effect, Fiber, Option } from "effect";
 
 import { ProjectActions } from "./Project/Actions";
-import { RealtimeConnection, RealtimePubSub } from "./Realtime";
+import { RealtimePubSub } from "./Realtime";
 
 import { project } from "./project-data";
 

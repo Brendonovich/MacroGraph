@@ -203,8 +203,10 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							}),
 						);
 					}).pipe(Effect.runPromise),
-				CloudLogin: Effect.gen(function* () {
-					const getFlowStatus = yield* rpc.CloudLogin().pipe(Stream.toPull);
+				StartServerRegistration: Effect.gen(function* () {
+					const getFlowStatus = yield* rpc
+						.StartServerRegistration()
+						.pipe(Stream.toPull);
 
 					const status = yield* getFlowStatus.pipe(
 						Effect.map(Chunk.get(0)),
@@ -215,7 +217,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 
 					window.open(status.verificationUrlComplete);
 
-					const complete = yield* getFlowStatus.pipe(
+					yield* getFlowStatus.pipe(
 						Effect.map(Chunk.get(0)),
 						Effect.map(Option.getOrThrow),
 					);

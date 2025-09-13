@@ -5,13 +5,32 @@ import {
 	HttpApiGroup,
 	HttpApiMiddleware,
 	HttpApiSchema,
+	HttpApiSecurity,
 } from "@effect/platform";
-import { Context } from "effect";
+import { Context, Data, Schema } from "effect";
 import * as S from "effect/Schema";
 
 export class CurrentSession extends Context.Tag("CurrentSession")<
 	CurrentSession,
 	{ userId: string }
+>() {}
+
+export const ServerAuthToken = Schema.String.pipe(
+	Schema.brand("ServerAuthToken"),
+);
+export type ServerAuthToken = Schema.Schema.Type<typeof ServerAuthToken>;
+
+export class ServerAuth extends Context.Tag("ServerAuth")<
+	ServerAuth,
+	ServerAuthJWT
+>() {}
+
+export class UserAuth extends Context.Tag("UserAuth")<
+	UserAuth,
+	{
+		userId: string;
+		source: "web" | "oauth";
+	}
 >() {}
 
 export const OAUTH_TOKEN = S.Struct({
@@ -59,13 +78,49 @@ export class ServerRegistrationError extends S.TaggedError<ServerRegistrationErr
 	HttpApiSchema.annotations({ status: 400 }),
 ) {}
 
+export const RawJWT = Schema.String.pipe(Schema.brand("RawJWT"));
+export type RawJWT = Schema.Schema.Type<typeof RawJWT>;
+
+export const ServerRegistration = Schema.Struct({
+	ownerId: Schema.String,
+	// email: Schema.String,
+	// jwt: RawJWT
+});
+export type ServerRegistration = Schema.Schema.Type<typeof ServerRegistration>;
+
+export class ServerAuthJWT extends Schema.Class<ServerAuthJWT>("ServerAuthJWT")(
+	{
+		type: Schema.Literal("server-registration"),
+		oauthAppId: Schema.String,
+		ownerId: Schema.String,
+	},
+) {}
+
+export class ServerAuthMiddleware extends HttpApiMiddleware.Tag<ServerAuthMiddleware>()(
+	"ServerAuthMiddleware",
+	{
+		provides: ServerAuth,
+		failure: S.Union(
+			HttpApiError.Forbidden,
+			HttpApiError.BadRequest,
+			HttpApiError.InternalServerError,
+			HttpApiError.Unauthorized,
+		),
+		security: { bearer: HttpApiSecurity.bearer },
+	},
+) {}
+
+export class DatabaseError extends Data.TaggedError("DatabaseError")<{
+	cause: unknown;
+}> {}
+
 export class Api extends HttpApi.make("api")
 	.add(
 		HttpApiGroup.make("api", { topLevel: true })
 			.add(
 				HttpApiEndpoint.get("getUser", "/user")
 					.addSuccess(
-						S.NullOr(
+						S.OptionFromNullOr(
 							S.Struct({
 								id: S.String,
 								email: S.String,
@@ -78,7 +133,7 @@ export class Api extends HttpApi.make("api")
 			.add(
 				HttpApiEndpoint.get("getUserJwt", "/user/jwt")
 					.middleware(Authentication)
-					.addSuccess(S.Struct({ jwt: S.String }))
+					.addSuccess(S.Struct({ jwt: RawJWT }))
 					// .addError(HttpApiError.InternalServerError)
 					.addError(HttpApiError.BadRequest),
 			)
@@ -102,18 +157,17 @@ export class Api extends HttpApi.make("api")
 					.addSuccess(S.Array(CREDENTIAL)),
 			)
 			.add(
-				HttpApiEndpoint.post(
-					"createDeviceCodeFlow",
-					"/login/device/code",
-				).addSuccess(
-					S.Struct({
-						device_code: S.String,
-						user_code: S.String,
-						verification_uri: S.String,
-						expires_in: S.Int,
-						verification_uri_complete: S.String,
-					}),
-				),
+				HttpApiEndpoint.post("createDeviceCodeFlow", "/login/device/code")
+					.addSuccess(
+						S.Struct({
+							device_code: S.String,
+							user_code: S.String,
+							verification_uri: S.String,
+							expires_in: S.Int,
+							verification_uri_complete: S.String,
+						}),
+					)
+					.middleware(ServerAuthMiddleware),
 			)
 			.add(
 				HttpApiEndpoint.post(
@@ -130,7 +184,8 @@ export class Api extends HttpApi.make("api")
 					)
 					.addSuccess(
 						S.Struct({
-							access_token: S.String,
+							userId: S.String,
+							access_token: ServerAuthToken,
 							refresh_token: S.String,
 							token_type: S.Literal("Bearer"),
 						}).pipe(HttpApiSchema.withEncoding({ kind: "Json" })),
@@ -141,20 +196,34 @@ export class Api extends HttpApi.make("api")
 			.add(
 				HttpApiEndpoint.post(
 					"startServerRegistration",
-					"/server/start-registration",
+					"/server/registration/start",
 				)
-					.addSuccess(S.Struct({ id: S.String, userCode: S.String }))
+					.addSuccess(
+						S.Struct({
+							id: S.String,
+							userCode: S.String,
+							verification_uri: S.String,
+							verification_uri_complete: S.String,
+						}),
+					)
 					.addError(HttpApiError.InternalServerError),
 			)
 			.add(
 				HttpApiEndpoint.post(
 					"performServerRegistration",
-					"/server/perform-registration",
+					"/server/registration",
 				)
 					.setPayload(S.Struct({ id: S.String }))
-					.addSuccess(S.Struct({ token: S.String }))
+					.addSuccess(S.Struct({ token: RawJWT }))
 					.addError(ServerRegistrationError)
 					.addError(HttpApiError.InternalServerError),
+			)
+			.add(
+				HttpApiEndpoint.get("getServerRegistration", "/server/registration")
+					.addSuccess(Schema.Struct({ ownerId: Schema.String }))
+					.addError(HttpApiError.InternalServerError)
+					.addError(HttpApiError.NotFound)
+					.middleware(ServerAuthMiddleware),
 			),
 	)
 	.prefix("/api") {}

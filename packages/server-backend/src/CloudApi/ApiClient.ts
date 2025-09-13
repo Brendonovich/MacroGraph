@@ -4,17 +4,21 @@ import {
 	HttpClient,
 	HttpClientRequest,
 } from "@effect/platform";
-import { Api } from "@macrograph/web-domain";
-import { Config, Effect, Option, Stream, SubscriptionRef } from "effect";
+import { Api, type RawJWT } from "@macrograph/web-domain";
+import { Config, Effect, Option, SubscriptionRef } from "effect";
+import { Persistence } from "../Persistence";
 
 const CLIENT_ID = "macrograph-server";
 
-export class CloudAPIClient extends Effect.Service<CloudAPIClient>()(
-	"CloudAPIClient",
+export class CloudApiClient extends Effect.Service<CloudApiClient>()(
+	"CloudApiClient",
 	{
 		accessors: true,
 		effect: Effect.gen(function* () {
-			const token = yield* SubscriptionRef.make(Option.none<string>());
+			const persistence = yield* Persistence;
+			const token = yield* SubscriptionRef.make<Option.Option<RawJWT>>(
+				Option.fromNullable(persistence.getKey("api")),
+			);
 
 			const baseUrl = yield* Config.string("API_URL").pipe(
 				Config.withDefault("https://www.macrograph.app"),
@@ -39,14 +43,13 @@ export class CloudAPIClient extends Effect.Service<CloudAPIClient>()(
 				),
 			});
 
-			yield* token.changes.pipe(
-				Stream.runForEach((token) => Effect.gen(function* () {})),
-				Effect.fork,
-			);
-
 			return {
 				api,
-				token,
+				tokenChanges: token.changes,
+				setToken: Effect.fn(function* (value: Option.Option<RawJWT>) {
+					yield* persistence.setKey("api", Option.getOrNull(value));
+					yield* SubscriptionRef.set(token, value);
+				}),
 				makeClient: (options: {
 					readonly transformClient?:
 						| ((client: HttpClient.HttpClient) => HttpClient.HttpClient)
@@ -63,6 +66,6 @@ export class CloudAPIClient extends Effect.Service<CloudAPIClient>()(
 					}).pipe(Effect.provide(HttpClient.HttpClient.context(httpClient))),
 			};
 		}),
-		dependencies: [FetchHttpClient.layer],
+		dependencies: [FetchHttpClient.layer, Persistence.Default],
 	},
 ) {}

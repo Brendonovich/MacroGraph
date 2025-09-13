@@ -1,6 +1,6 @@
 import type { ParentProps } from "solid-js";
 
-import { Header } from "./Header";
+import { Header } from "./Footer";
 
 export function Layout(props: ParentProps) {
 	return (

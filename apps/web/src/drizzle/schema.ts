@@ -58,11 +58,8 @@ export const projects = pgTable("project", {
 	lastUpdated: timestamp("last_updated").notNull(),
 });
 
-// export const projectsRelations = relations(projects, ({ one }) => ({
-//   owner: one(users, { fields: [projects.ownerId], references: [users.id] }),
-// }));
-
 export const deviceCodeSessions = pgTable("device_code_sessions", {
+	appId: varchar("app_id", { length: 255 }).notNull(),
 	userCode: varchar("code", { length: 10 }).notNull(),
 	deviceCode: varchar("device_code", { length: 255 }).primaryKey(),
 	userId: varchar("user_id", { length: 255 }),
@@ -71,15 +68,17 @@ export const deviceCodeSessions = pgTable("device_code_sessions", {
 
 export const oauthSessions = pgTable("oauth_sessions", {
 	id: serial("id").primaryKey(),
-	accessToken: varchar("access_token", { length: 255 }).notNull(),
-	refreshToken: varchar("refresh_token", { length: 255 }).notNull(),
+	appId: varchar("app_id", { length: 255 }).notNull(),
+	accessToken: varchar("access_token", { length: 255 }).notNull().unique(),
+	refreshToken: varchar("refresh_token", { length: 255 }).notNull().unique(),
 	expires: timestamp("expires").notNull(),
 	userId: varchar("user_id", { length: 255 }).notNull(),
 });
 
-export const serverRegistrations = pgTable("server_registrations", {
-	id: serial("id").primaryKey(),
-	registrationId: varchar("registration_id", { length: 255 }).notNull(),
+export const oauthApps = pgTable("oauth_apps", {
+	pk: serial("pk").primaryKey(),
+	id: varchar("id", { length: 255 }).notNull(),
+	type: varchar("type", { enum: ["server"] }),
 	ownerId: varchar("owner_id", { length: 255 }).notNull(),
 });
 

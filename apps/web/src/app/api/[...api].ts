@@ -1,5 +1,6 @@
 import {
 	Cookies,
+	Headers,
 	HttpApiBuilder,
 	HttpApiError,
 	HttpApp,
@@ -13,25 +14,30 @@ import {
 	type CREDENTIAL,
 	CurrentSession,
 	DeviceFlowError,
+	RawJWT,
+	ServerAuth,
+	ServerAuthJWT,
+	ServerAuthMiddleware,
+	ServerAuthToken,
 	ServerRegistrationError,
 } from "@macrograph/web-domain";
-// import type { APIHandler } from "@solidjs/start/server";
 import type { InferSelectModel } from "drizzle-orm";
-import { and, eq } from "drizzle-orm";
-import { Config, Effect, Layer, Option } from "effect";
+import * as Dz from "drizzle-orm";
+import {
+	Config,
+	Effect,
+	Layer,
+	Option,
+	ParseResult,
+	Redacted,
+	Schema,
+} from "effect";
 import * as S from "effect/Schema";
 import * as Jose from "jose";
 import { verifyRequestOrigin } from "lucia";
 
-import { db } from "~/drizzle";
-import {
-	deviceCodeSessions,
-	oauthCredentials,
-	oauthSessions,
-	serverRegistrations,
-	serverRegistrationSessions,
-	users,
-} from "~/drizzle/schema";
+import { Database } from "./Database";
+import * as Db from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import {
 	posthogCapture,
@@ -46,6 +52,7 @@ const IS_LOGGED_IN = "isLoggedIn";
 type SessionType = "web" | "oauth";
 
 const getCurrentSession = Effect.gen(function* () {
+	const db = yield* Database;
 	const req = yield* HttpServerRequest.HttpServerRequest;
 
 	const headers = yield* HttpServerRequest.schemaHeaders(
@@ -86,70 +93,142 @@ const getCurrentSession = Effect.gen(function* () {
 		sessionId = sessionCookie.value;
 	} else return Option.none();
 
-	let userId;
+	switch (type) {
+		case "web": {
+			const sessionData = yield* Effect.tryPromise({
+				try: () => lucia.validateSession(sessionId),
+				catch: () => new HttpApiError.InternalServerError(),
+			});
 
-	if (type === "web") {
-		const sessionData = yield* Effect.tryPromise({
-			try: () => lucia.validateSession(sessionId),
-			catch: () => new HttpApiError.InternalServerError(),
-		});
+			if (sessionData.user === null) return Option.none();
 
-		if (sessionData.user === null) return Option.none();
+			if (Option.isSome(sessionCookie))
+				yield* HttpApp.appendPreResponseHandler(
+					Effect.fn(function* (_, _res) {
+						let res = _res;
 
-		if (Option.isSome(sessionCookie))
-			yield* HttpApp.appendPreResponseHandler(
-				Effect.fn(function* (_, res) {
-					if (res.cookies.pipe(Cookies.get(IS_LOGGED_IN), Option.isNone))
+						if (res.cookies.pipe(Cookies.get(IS_LOGGED_IN), Option.isNone))
+							return res;
+
+						if (sessionData.session.fresh)
+							res = yield* res.pipe(
+								HttpServerResponse.setCookie(
+									lucia.sessionCookieName,
+									lucia.createSessionCookie(sessionData.session.id).serialize(),
+								),
+								Effect.orDie,
+							);
+
 						return res;
+					}),
+				);
 
-					if (sessionData.session.fresh)
-						res = yield* res.pipe(
-							HttpServerResponse.setCookie(
-								lucia.sessionCookieName,
-								lucia.createSessionCookie(sessionData.session.id).serialize(),
-							),
-							Effect.orDie,
-						);
-
-					return res;
-				}),
-			);
-
-		userId = sessionData.user.id;
-
-		posthogIdentify(userId, { email: sessionData.user.email });
-	} else {
-		const sessionData = yield* Effect.tryPromise({
-			try: () =>
-				db.query.oauthSessions.findFirst({
-					where: eq(oauthSessions.accessToken, sessionId),
-				}),
-			catch: () => new HttpApiError.InternalServerError(),
-		});
-
-		if (!sessionData) return Option.none();
-
-		userId = sessionData.userId;
+			return Option.some({ userId: sessionData.user.id });
+		}
+		case "oauth": {
+			return yield* db
+				.use((db) =>
+					db.query.oauthSessions.findFirst({
+						where: Dz.eq(Db.oauthSessions.accessToken, sessionId),
+					}),
+				)
+				.pipe(
+					Effect.map((s) =>
+						Option.map(Option.fromNullable(s?.userId), (userId) => ({
+							userId,
+						})),
+					),
+				);
+		}
 	}
-
-	return Option.some({ userId });
 }).pipe(Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()));
 
-const AuthenticationLive = Layer.sync(Authentication, () =>
+const AuthenticationLive = Layer.effect(
+	Authentication,
 	Effect.gen(function* () {
-		const session = yield* getCurrentSession;
-		console.log({ session });
-		return yield* session.pipe(
+		const db = yield* Database;
+
+		return getCurrentSession.pipe(
 			Effect.catchTag(
-				"NoSuchElementException",
-				() => new HttpApiError.Forbidden(),
+				"DatabaseError",
+				() => new HttpApiError.InternalServerError(),
 			),
+			Effect.flatMap(
+				Effect.catchTag(
+					"NoSuchElementException",
+					() => new HttpApiError.Forbidden(),
+				),
+			),
+			Effect.provideService(Database, db),
 		);
 	}),
 );
 
+class JwtKeys extends Effect.Service<JwtKeys>()("JwtKeys", {
+	effect: Effect.gen(function* () {
+		const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
+			Effect.andThen((v) =>
+				Effect.promise(() =>
+					Jose.importPKCS8(v.replaceAll("\\n", "\n"), "RS256"),
+				),
+			),
+		);
+
+		return { privateKey };
+	}),
+}) {}
+
+const ServerAuthJWTFromRaw = RawJWT.pipe(
+	Schema.transformOrFail(ServerAuthJWT, {
+		strict: true,
+		encode: Effect.fn(function* (data) {
+			const keys = yield* JwtKeys;
+
+			const jwt = yield* Effect.promise(() =>
+				new Jose.SignJWT({
+					type: "server-registration",
+					oauthAppId: data.oauthAppId,
+					ownerId: data.ownerId,
+				})
+					.setProtectedHeader({ alg: "RS256" })
+					.setIssuedAt()
+					.sign(keys.privateKey),
+			);
+
+			return RawJWT.make(jwt);
+		}),
+		decode: Effect.fn(function* (input, _, ast) {
+			const keys = yield* JwtKeys;
+			const a = yield* Effect.promise(() =>
+				Jose.jwtVerify(input, keys.privateKey),
+			);
+
+			return yield* Schema.decodeUnknown(ServerAuthJWT)(a.payload).pipe(
+				Effect.catchTag("ParseError", (e) =>
+					Effect.fail(new ParseResult.Type(ast, input, e.message)),
+				),
+			);
+		}),
+	}),
+);
+
+const ServerAuthLive = Layer.effect(
+	ServerAuthMiddleware,
+	Effect.gen(function* () {
+		const keys = yield* JwtKeys;
+
+		return {
+			bearer: (v: Redacted.Redacted<string>) =>
+				Schema.decode(ServerAuthJWTFromRaw)(Redacted.value(v)).pipe(
+					Effect.catchTag("ParseError", () => new HttpApiError.Unauthorized()),
+					Effect.provide(JwtKeys.context(keys)),
+				),
+		};
+	}),
+);
+
 function marshalCredential(
-	c: InferSelectModel<typeof oauthCredentials>,
+	c: InferSelectModel<typeof Db.oauthCredentials>,
 ): (typeof CREDENTIAL)["Encoded"] {
 	return {
 		provider: c.providerId,
@@ -163,78 +242,62 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 	handlers
 		.handle(
 			"getUser",
-			Effect.fn(function* () {
-				const session = yield* getCurrentSession;
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const session = yield* getCurrentSession;
 
-				if (Option.isNone(session)) return null;
+					if (Option.isNone(session)) return Option.none();
 
-				const user = yield* Effect.tryPromise({
-					try: () =>
-						db.query.users.findFirst({
-							where: eq(users.id, session.value.userId),
-							columns: { id: true, email: true },
-						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
-
-				return user ?? null;
-			}),
+					return yield* db
+						.use((db) =>
+							db.query.users.findFirst({
+								where: Dz.eq(Db.users.id, session.value.userId),
+								columns: { id: true, email: true },
+							}),
+						)
+						.pipe(Effect.map(Option.fromNullable));
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"getUserJwt",
 			Effect.fn(function* () {
+				const keys = yield* JwtKeys;
 				const session = yield* CurrentSession;
-
-				const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
-					Effect.tap(Effect.log),
-					Effect.andThen((v) =>
-						Effect.promise(() =>
-							Jose.importPKCS8(v.replaceAll("\\n", "\n"), "RS256"),
-						),
-					),
-					Effect.orDie,
-				);
 
 				const jwt = yield* Effect.promise(() =>
 					new Jose.SignJWT({ type: "user", userId: session.userId })
 						.setProtectedHeader({ alg: "RS256" })
 						.setIssuedAt()
-						.sign(privateKey),
+						.sign(keys.privateKey),
 				);
 
-				return { jwt };
-			}),
-		)
-		.handle(
-			"getCredentials",
-			Effect.fn(function* () {
-				const session = yield* CurrentSession;
-
-				return yield* Effect.tryPromise({
-					try: () =>
-						db.query.oauthCredentials.findMany({
-							where: eq(oauthCredentials.userId, session.userId),
-						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				}).pipe(Effect.map((c) => c.map(marshalCredential)));
+				return { jwt: RawJWT.make(jwt) };
 			}),
 		)
 		.handle(
 			"refreshCredential",
-			Effect.fn(function* ({ path }) {
-				const providerConfig = AuthProviders[path.providerId];
-				if (!providerConfig) return yield* new HttpApiError.BadRequest();
+			Effect.fn(
+				function* ({ path }) {
+					const db = yield* Database;
 
-				const session = yield* CurrentSession;
+					const providerConfig = AuthProviders[path.providerId];
+					if (!providerConfig) return yield* new HttpApiError.BadRequest();
 
-				const where = and(
-					eq(oauthCredentials.providerId, path.providerId),
-					eq(oauthCredentials.userId, session.userId),
-					eq(oauthCredentials.providerUserId, path.providerUserId),
-				);
+					const session = yield* CurrentSession;
 
-				const credential = yield* Effect.tryPromise({
-					try: () =>
+					const where = Dz.and(
+						Dz.eq(Db.oauthCredentials.providerId, path.providerId),
+						Dz.eq(Db.oauthCredentials.userId, session.userId),
+						Dz.eq(Db.oauthCredentials.providerUserId, path.providerUserId),
+					);
+
+					const credential = yield* db.use((db) =>
 						db.transaction(async (db) => {
 							const credential = await db.query.oauthCredentials.findFirst({
 								where,
@@ -255,7 +318,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 
 							const issuedAt = new Date();
 							await db
-								.update(oauthCredentials)
+								.update(Db.oauthCredentials)
 								.set({ token, issuedAt })
 								.where(where);
 
@@ -265,181 +328,285 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 								token,
 							};
 						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
+					);
 
-				posthogCapture({
-					distinctId: session.userId,
-					event: "credential refreshed",
-					properties: {
-						providerId: credential.providerId,
-						providerUserId: credential.providerUserId,
-					},
-				});
+					posthogCapture({
+						distinctId: session.userId,
+						event: "credential refreshed",
+						properties: {
+							providerId: credential.providerId,
+							providerUserId: credential.providerUserId,
+						},
+					});
 
-				yield* Effect.promise(() => posthogShutdown());
+					yield* Effect.promise(() => posthogShutdown());
 
-				return marshalCredential(credential);
-			}),
+					return marshalCredential(credential);
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
+		)
+		.handle(
+			"getCredentials",
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const session = yield* CurrentSession;
+
+					return yield* db
+						.use((db) =>
+							db.query.oauthCredentials.findMany({
+								where: Dz.eq(Db.oauthCredentials.userId, session.userId),
+							}),
+						)
+						.pipe(Effect.map((c) => c.map(marshalCredential)));
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"createDeviceCodeFlow",
-			Effect.fn(function* () {
-				const userCode = yield* generateUserDeviceCode;
-				const deviceCode = crypto.randomUUID().replaceAll("-", "");
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const serverAuth = yield* ServerAuth;
 
-				const expiresIn = 60 * 15;
+					const deviceCode = crypto.randomUUID().replaceAll("-", "");
 
-				yield* Effect.promise(() =>
-					db.insert(deviceCodeSessions).values({ userCode, deviceCode }),
-				);
+					const userCode = yield* generateUserDeviceCode;
 
-				const verificationUri = `${serverEnv.VERCEL_URL}/login/device`;
+					const expiresIn = 60 * 15;
 
-				return {
-					user_code: userCode,
-					device_code: deviceCode,
-					expires_in: expiresIn,
-					verification_uri: verificationUri,
-					verification_uri_complete: `${verificationUri}?userCode=${encodeURIComponent(
-						userCode,
-					)}`,
-				};
-			}),
+					yield* db.use((db) =>
+						db
+							.insert(Db.deviceCodeSessions)
+							.values({ appId: serverAuth.oauthAppId, userCode, deviceCode }),
+					);
+
+					const verificationUri = `${serverEnv.VERCEL_URL}/login/device`;
+
+					return {
+						user_code: userCode,
+						device_code: deviceCode,
+						expires_in: expiresIn,
+						verification_uri: verificationUri,
+						verification_uri_complete: `${verificationUri}?userCode=${encodeURIComponent(
+							userCode,
+						)}`,
+					};
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"performAccessTokenGrant",
-			Effect.fn(function* ({ urlParams }) {
-				const deviceSession = yield* Effect.tryPromise({
-					try: () =>
-						db.query.deviceCodeSessions.findFirst({
-							where: eq(deviceCodeSessions.deviceCode, urlParams.device_code),
-						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				}).pipe(
-					Effect.flatMap(Option.fromNullable),
-					Effect.catchTag(
-						"NoSuchElementException",
-						() => new DeviceFlowError({ code: "incorrect_device_code" }),
-					),
-					Effect.flatMap((v) => {
-						if (+v.createdAt < Date.now() - 1000 * 60 * 10)
-							return new DeviceFlowError({ code: "expired_token" });
+			Effect.fn(
+				function* ({ urlParams }) {
+					const db = yield* Database;
+					const deviceSession = yield* db
+						.use((db) =>
+							db.query.deviceCodeSessions.findFirst({
+								where: Dz.eq(
+									Db.deviceCodeSessions.deviceCode,
+									urlParams.device_code,
+								),
+							}),
+						)
+						.pipe(
+							Effect.flatMap(Option.fromNullable),
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new DeviceFlowError({ code: "incorrect_device_code" }),
+							),
+							Effect.flatMap((v) => {
+								if (+v.createdAt < Date.now() - 1000 * 60 * 10)
+									return new DeviceFlowError({ code: "expired_token" });
 
-						if (v.userId === null)
-							return new DeviceFlowError({ code: "authorization_pending" });
+								if (v.userId === null)
+									return new DeviceFlowError({ code: "authorization_pending" });
 
-						return Effect.succeed({ ...v, userId: v.userId });
-					}),
-				);
+								return Effect.succeed({ ...v, userId: v.userId });
+							}),
+						);
 
-				const accessToken = crypto.randomUUID().replaceAll("-", "");
-				const refreshToken = crypto.randomUUID().replaceAll("-", "");
+					yield* Effect.log(`Got device session '${deviceSession.deviceCode}'`);
 
-				yield* Effect.tryPromise({
-					try: () =>
+					const accessToken = crypto.randomUUID().replaceAll("-", "");
+					const refreshToken = crypto.randomUUID().replaceAll("-", "");
+
+					yield* db.use((db) =>
 						db.transaction(async (db) => {
 							await db
-								.delete(deviceCodeSessions)
+								.delete(Db.deviceCodeSessions)
 								.where(
-									eq(deviceCodeSessions.deviceCode, deviceSession.deviceCode),
+									Dz.eq(
+										Db.deviceCodeSessions.deviceCode,
+										deviceSession.deviceCode,
+									),
 								);
-							await db.insert(oauthSessions).values({
+							await db.insert(Db.oauthSessions).values({
+								appId: deviceSession.appId,
+								userId: deviceSession.userId,
 								accessToken,
 								refreshToken,
 								expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-								userId: deviceSession.userId,
 							});
 						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
+					);
 
-				return {
-					access_token: accessToken,
-					refresh_token: refreshToken,
-					token_type: "Bearer",
-				};
-			}),
+					yield* Effect.log("Access token grant performed");
+
+					return {
+						userId: deviceSession.userId,
+						access_token: ServerAuthToken.make(accessToken),
+						refresh_token: refreshToken,
+						token_type: "Bearer" as const,
+					};
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"startServerRegistration",
-			Effect.fn(function* () {
-				const id = crypto.randomUUID().replaceAll("-", "");
-				const userCode = yield* generateUserDeviceCode;
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const id = crypto.randomUUID().replaceAll("-", "");
+					const userCode = yield* generateUserDeviceCode;
 
-				yield* Effect.tryPromise({
-					try: () =>
-						db.insert(serverRegistrationSessions).values({ id, userCode }),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
+					yield* db.use((db) =>
+						db.insert(Db.serverRegistrationSessions).values({ id, userCode }),
+					);
 
-				return { id, userCode };
-			}),
+					const verificationUri = `${serverEnv.VERCEL_URL}/server-registration`;
+
+					return {
+						id,
+						userCode,
+						verification_uri: verificationUri,
+						verification_uri_complete: `${verificationUri}?userCode=${encodeURIComponent(
+							userCode,
+						)}`,
+					};
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"performServerRegistration",
-			Effect.fn(function* ({ payload: { id } }) {
-				const session = yield* Effect.tryPromise({
-					try: () =>
-						db.query.serverRegistrationSessions.findFirst({
-							where: eq(serverRegistrationSessions.id, id),
-						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
-				if (!session)
-					return yield* new ServerRegistrationError({ code: "incorrect_id" });
+			Effect.fn(
+				function* ({ payload: { id } }) {
+					const db = yield* Database;
+					const session = yield* db
+						.use((db) =>
+							db.query.serverRegistrationSessions.findFirst({
+								where: Dz.eq(Db.serverRegistrationSessions.id, id),
+							}),
+						)
+						.pipe(
+							Effect.flatMap(Option.fromNullable),
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new ServerRegistrationError({ code: "incorrect_id" }),
+							),
+						);
 
-				if (session.userId === null)
-					return yield* new ServerRegistrationError({
-						code: "authorization_pending",
-					});
+					if (session.userId === null)
+						return yield* new ServerRegistrationError({
+							code: "authorization_pending",
+						});
 
-				const { userId } = session;
+					const { userId } = session;
 
-				yield* Effect.tryPromise({
-					try: () =>
+					const oauthAppId = session.id;
+
+					yield* db.use((db) =>
 						db.transaction((db) =>
 							Promise.all([
 								db
-									.delete(serverRegistrationSessions)
-									.where(eq(serverRegistrationSessions.id, id)),
-								db.insert(serverRegistrations).values({
-									registrationId: session.id,
+									.delete(Db.serverRegistrationSessions)
+									.where(Dz.eq(Db.serverRegistrationSessions.id, id)),
+								db.insert(Db.oauthApps).values({
+									type: "server",
+									id: oauthAppId,
 									ownerId: userId,
 								}),
 							]),
 						),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
+					);
 
-				const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
-					Effect.andThen((v) =>
-						Effect.promise(() =>
-							Jose.importPKCS8(v.replaceAll("\\n", "\n"), "RS256"),
+					const token = yield* Schema.encode(ServerAuthJWTFromRaw)(
+						new ServerAuthJWT({
+							type: "server-registration",
+							oauthAppId: oauthAppId,
+							ownerId: userId,
+						}),
+					).pipe(
+						Effect.catchTag(
+							"ParseError",
+							() => new HttpApiError.InternalServerError(),
 						),
-					),
-					Effect.orDie,
-				);
+						Effect.map(RawJWT.make),
+					);
 
-				const jwt = yield* Effect.promise(() =>
-					new Jose.SignJWT({
-						type: "server-registration",
-						registrationId: session.id,
-						ownerId: userId,
-					})
-						.setProtectedHeader({ alg: "RS256" })
-						.setIssuedAt()
-						.sign(privateKey),
-				);
+					return { token };
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
+		)
+		.handle(
+			"getServerRegistration",
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const auth = yield* ServerAuth;
 
-				return { token: jwt };
-			}),
+					const registration = yield* db.use((db) =>
+						db.query.oauthApps.findFirst({
+							where: Dz.and(
+								Dz.eq(Db.oauthApps.id, auth.oauthAppId),
+								Dz.eq(Db.oauthApps.type, "server"),
+							),
+						}),
+					);
+
+					if (!registration) return yield* new HttpApiError.NotFound();
+
+					return { ownerId: registration.ownerId };
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		),
 );
+
+const ApiDeps = Layer.mergeAll(JwtKeys.Default, Database.Default);
 
 const ApiLive = HttpApiBuilder.api(Api).pipe(
 	Layer.provide(ApiLiveGroup),
 	Layer.provide(AuthenticationLive),
+	Layer.provide(ServerAuthLive),
+	Layer.provide(ApiDeps),
 );
 
 import { NodeSdk } from "@effect/opentelemetry";
@@ -470,6 +637,10 @@ export const OPTIONS = createHandler();
 
 import * as crypto from "node:crypto";
 import { serverEnv } from "~/env/server";
+import {
+	BatchSpanProcessor,
+	ConsoleSpanExporter,
+} from "@opentelemetry/sdk-trace-base";
 
 const generateUserDeviceCode = Effect.gen(function* () {
 	const SEGMENT_LENGTH = 4;

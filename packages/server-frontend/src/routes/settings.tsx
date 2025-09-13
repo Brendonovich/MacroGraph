@@ -1,12 +1,12 @@
 import { A } from "@solidjs/router";
-import { For, type ParentProps } from "solid-js";
+import { For, Suspense, type ParentProps } from "solid-js";
 
 export default function Settings(props: ParentProps) {
 	return (
 		<div class="flex flex-row divide-x divide-gray-5 flex-1">
 			<nav class="w-40 text-sm p-2 shrink-0 flex flex-col">
 				<ul class="space-y-1 flex-1">
-					<For each={[{ name: "Account", href: "account" }]}>
+					<For each={[{ name: "Server", href: "server" }]}>
 						{(item) => (
 							<li>
 								<A
@@ -23,7 +23,7 @@ export default function Settings(props: ParentProps) {
 				</ul>
 			</nav>
 			<div class="max-w-lg w-full flex flex-col items-stretch p-4 text-sm">
-				{props.children}
+				<Suspense>{props.children}</Suspense>
 			</div>
 		</div>
 	);

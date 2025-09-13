@@ -1,11 +1,12 @@
 import { Chunk, Effect, Option, Stream, SubscriptionRef } from "effect";
-import { ProjectRpc } from "./Project/Rpc";
 
-export class ClientAuth extends Effect.Service<ClientAuth>()("ClientAuth", {
+import { ProjectRpc } from "./Project/Rpc";
+import { ClientAuth } from "./ClientAuth";
+
+export class AuthActions extends Effect.Service<AuthActions>()("AuthActions", {
 	effect: Effect.gen(function* () {
 		const rpc = yield* ProjectRpc.client;
-
-		const jwt = yield* SubscriptionRef.make(Option.none<string>());
+		const { jwt } = yield* ClientAuth;
 
 		return {
 			login: Effect.gen(function* () {
@@ -31,11 +32,8 @@ export class ClientAuth extends Effect.Service<ClientAuth>()("ClientAuth", {
 					throw new Error("Flow status is not finished");
 
 				yield* SubscriptionRef.set(jwt, Option.some(complete.jwt));
-
-				yield* rpc.Identify({ jwt: complete.jwt });
 			}).pipe(Effect.scoped),
-			jwt,
 		};
 	}),
-	dependencies: [ProjectRpc.Default],
+	dependencies: [ProjectRpc.Default, ClientAuth.Default],
 }) {}

@@ -4,6 +4,7 @@ import { createMousePosition } from "@solid-primitives/mouse";
 import { Effect, Option } from "effect";
 import { For, Show, createEffect, createSignal } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
+import type { ParentProps } from "solid-js";
 
 import type { Graph, Node } from "@macrograph/server-domain";
 import { useProjectService } from "../AppRuntime";
@@ -27,8 +28,28 @@ export default function () {
 	const presence = usePresenceContext();
 	const realtime = useRealtimeContext();
 
+	const [selected, setSelected] = createSignal(0);
+
 	return (
-		<div class="flex flex-row flex-1 overflow-hidden">
+		<div class="flex flex-row flex-1 overflow-hidden divide-x divide-gray-5 h-full">
+			<div class="w-64 h-full">
+				<ul>
+					<For each={[0, 1, 2]}>
+						{(n) => (
+							<li>
+								<button
+									type="button"
+									class="w-full data-[selected='true']:bg-gray-3 px-2 p-1 text-left bg-transparent appearance-none"
+									data-selected={selected() === n}
+									onClick={() => setSelected(n)}
+								>
+									Graph {n}
+								</button>
+							</li>
+						)}
+					</For>
+				</ul>
+			</div>
 			<Show when={state.graphs[GRAPH_ID]} keyed>
 				{(graph) => {
 					const [selection, setSelection] = createStore<
@@ -189,6 +210,28 @@ export default function () {
 					);
 				}}
 			</Show>
+		</div>
+	);
+}
+
+function SidebarSection(props: ParentProps<{ name: string }>) {
+	const [open, setOpen] = createSignal(true);
+
+	return (
+		<div class="flex flex-col items-stretch">
+			<button
+				type="button"
+				class="bg-transparent text-left font-semibold p-2 flex flex-row items-center data-[open='true']:shadow"
+				onClick={() => setOpen(!open())}
+				data-open={open()}
+			>
+				{props.name}
+				<IconLucideChevronRight
+					class="ml-auto size-3 data-[open='true']:rotate-90 transition-transform"
+					data-open={open()}
+				/>
+			</button>
+			{open() && props.children}
 		</div>
 	);
 }

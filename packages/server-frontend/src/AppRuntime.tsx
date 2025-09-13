@@ -1,12 +1,14 @@
 import { type Effect, Layer, type ManagedRuntime } from "effect";
 import { createContext, useContext } from "solid-js";
 
-import { ClientAuth } from "./Auth";
+import { ClientAuth } from "./ClientAuth";
 import { PackagesSettings } from "./Packages/PackagesSettings";
 import { ProjectActions } from "./Project/Actions";
 import { ProjectRealtime } from "./Project/Realtime";
 import { ProjectRpc } from "./Project/Rpc";
 import { ProjectState } from "./Project/State";
+import { AuthActions } from "./Auth";
+import { makeEffectQuery } from "./effect-query";
 
 export namespace ProjectRuntime {
 	export type ProjectRuntime = ManagedRuntime.ManagedRuntime<
@@ -24,8 +26,9 @@ export namespace ProjectRuntime {
 		ProjectActions.Default,
 		ProjectState.Default,
 		ProjectRpc.Default,
+		AuthActions.Default,
 		ClientAuth.Default,
-	);
+	).pipe(Layer.provideMerge(Layer.scope));
 }
 
 const ProjectRuntimeContext = createContext<ProjectRuntime.ProjectRuntime>();
@@ -53,3 +56,7 @@ export function useProjectService<T>(
 
 	return runtime.runSync(service);
 }
+
+export const { Provider, useEffectQuery, useEffectMutation } = makeEffectQuery(
+	() => ProjectRuntime.layer,
+);

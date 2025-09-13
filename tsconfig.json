@@ -10,5 +10,8 @@
 		{ "path": "./packages/server-frontend" },
 		{ "path": "./apps/server" },
 		{ "path": "./apps/web" }
-	]
+	],
+	"compilerOptions": {
+		"plugins": [{ "name": "@effect/language-service" }]
+	}
 }

@@ -6,6 +6,6 @@
 		"./tsconfig": "./tsconfig.json"
 	},
 	"dependencies": {
-		"@tanstack/solid-query": "^4.36.1"
+		"@tanstack/solid-query": "^5.85.5"
 	}
 }

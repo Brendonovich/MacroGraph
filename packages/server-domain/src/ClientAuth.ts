@@ -2,7 +2,13 @@ import { Rpc, RpcGroup, RpcMiddleware } from "@effect/rpc";
 import { Schema } from "effect";
 
 import * as Realtime from "./Realtime";
+import * as CloudAuth from "./CloudAuth";
 import { CurrentUser } from "./Permissions";
+
+export const EncodedJWT = Schema.String.pipe(
+	Schema.brand("ClientAuth/EncodedJWT"),
+);
+export type EncodedClientAuthJWT = Schema.Schema.Type<typeof EncodedJWT>;
 
 export const CloudLoginEvent = Schema.Union(
 	Schema.Struct({
@@ -11,7 +17,7 @@ export const CloudLoginEvent = Schema.Union(
 	}),
 	Schema.Struct({
 		type: Schema.Literal("finished"),
-		jwt: Schema.String,
+		jwt: EncodedJWT,
 	}),
 );
 export type CloudLoginEvent = Schema.Schema.Type<typeof CloudLoginEvent>;
@@ -21,10 +27,13 @@ export const Rpcs = RpcGroup.make(
 		stream: true,
 		success: CloudLoginEvent,
 	}),
-	Rpc.make("Identify", {
-		payload: Schema.Struct({
-			jwt: Schema.String,
-		}),
+	Rpc.make("GetUser", {
+		success: Schema.OptionFromNullOr(
+			Schema.Struct({
+				name: Schema.String,
+			}),
+		),
+		error: CloudAuth.CloudApiError,
 	}),
 ).middleware(Realtime.ConnectionRpcMiddleware);
 

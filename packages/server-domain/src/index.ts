@@ -6,6 +6,7 @@ export * as Project from "./Project";
 export * as Presence from "./Presence";
 export * as ClientAuth from "./ClientAuth";
 export * as CloudAuth from "./CloudAuth";
+export * as Policy from "./Policy";
 
 export * from "./util";
 export * from "./errors";

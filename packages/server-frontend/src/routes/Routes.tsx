@@ -15,11 +15,11 @@ export const routes: RouteDefinition[] = [
 		children: [
 			{
 				path: "/",
-				component: () => <Navigate href="account" />,
+				component: () => <Navigate href="server" />,
 			},
 			{
-				path: "/account",
-				component: lazy(() => import("./settings/account")),
+				path: "/server",
+				component: lazy(() => import("./settings/server")),
 			},
 		],
 	},

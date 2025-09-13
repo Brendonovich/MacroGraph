@@ -2,17 +2,12 @@ import { defineConfig } from "vite";
 import { solidStart } from "@solidjs/start/config";
 // @ts-expect-error
 import mdx from "@vinxi/plugin-mdx";
-import dotenv from "dotenv";
 // import unfonts from "unplugin-fonts/vite";
 
 import interfacePlugin from "../../packages/ui/vite";
 
-dotenv.config({ path: ".env.local" });
-
 export default defineConfig({
-	build: {
-		minify: false
-	},
+	optimizeDeps: { exclude: ["fsevents", "@node-rs/bcrypt", "@node-rs/argon2"] },
 	plugins: [
 		interfacePlugin,
 		mdx.default.withImports({})({

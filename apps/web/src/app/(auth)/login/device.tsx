@@ -185,7 +185,7 @@ export default function Page() {
 				</Switch>
 			</div>
 
-			<div class="flex-1"></div>
+			<div class="flex-1" />
 		</div>
 	);
 }

@@ -20,7 +20,7 @@ import { Context, Mailbox, Option, PubSub, Stream, pipe } from "effect";
 import * as Effect from "effect/Effect";
 import type { Package } from "../../../package-sdk/src";
 
-import { CloudAPIClient } from "../CloudApi/ApiClient";
+import { CloudApiClient } from "../CloudApi/ApiClient";
 import { CredentialsCache } from "../CloudApi/CredentialsCache";
 import { RealtimePubSub } from "../Realtime";
 import { type NodeConnections, project } from "../project-data";
@@ -33,7 +33,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 		effect: Effect.gen(function* () {
 			// const logger = yield* Logger;
 			const credentials = yield* CredentialsCache;
-			const apiClient = yield* CloudAPIClient.api;
+			const apiClient = yield* CloudApiClient.api;
 			const realtime = yield* RealtimePubSub;
 			const packages = yield* ProjectPackages;
 
@@ -544,7 +544,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 		}),
 		dependencies: [
 			CredentialsCache.Default,
-			CloudAPIClient.Default,
+			CloudApiClient.Default,
 			ProjectPackages.Default,
 			RealtimePubSub.Default,
 		],

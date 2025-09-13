@@ -1,21 +1,21 @@
 import { SubscribableCache } from "@macrograph/domain";
 import { Effect, Stream } from "effect";
 
-import { CloudAPIClient } from "./ApiClient";
+import { CloudApiClient } from "./ApiClient";
 
 export class CredentialsCache extends Effect.Service<CredentialsCache>()(
 	"CredentialsCache",
 	{
 		effect: Effect.gen(function* () {
-			const { api, token } = yield* CloudAPIClient;
+			const cloud = yield* CloudApiClient;
 
 			const credentialsCache = yield* SubscribableCache.make({
 				capacity: 1,
 				timeToLive: "1 minute",
-				lookup: api.getCredentials(),
+				lookup: cloud.api.getCredentials(),
 			});
 
-			yield* token.changes.pipe(
+			yield* cloud.tokenChanges.pipe(
 				Stream.runForEach(() =>
 					credentialsCache.refresh.pipe(Effect.catchAll(() => Effect.void)),
 				),
@@ -24,6 +24,6 @@ export class CredentialsCache extends Effect.Service<CredentialsCache>()(
 
 			return credentialsCache;
 		}),
-		dependencies: [CloudAPIClient.Default],
+		dependencies: [CloudApiClient.Default],
 	},
 ) {}

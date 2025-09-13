@@ -1,6 +1,8 @@
 import { NodeSdk } from "@effect/opentelemetry";
 import {
 	type HttpApp,
+	HttpClient,
+	HttpClientRequest,
 	HttpRouter,
 	HttpServerRequest,
 	HttpServerResponse,
@@ -31,10 +33,10 @@ import {
 	Rpcs,
 	RpcsSerialization,
 } from "@macrograph/server-domain";
+import { NodeContext } from "@effect/platform-node";
 
 import { ClientAuthRpcsLive } from "./ClientAuth/rpc";
-import { CloudAPIClient } from "./CloudApi/ApiClient";
-import { CloudApiAuthState } from "./CloudApi/AuthState";
+import { CloudApiClient } from "./CloudApi/ApiClient";
 import { CloudRpcsLive } from "./CloudApi/rpc";
 import { GraphRpcsLive, Graphs } from "./Graph";
 import { NodeRpcsLive } from "./Node";
@@ -42,36 +44,41 @@ import { PresenceRpcsLive, PresenceState } from "./Presence";
 import { ProjectActions } from "./Project/Actions";
 import { ProjectPackages } from "./Project/Packages";
 import { ProjectRpcsLive } from "./Project/rpc";
+import { RealtimeConnections, RealtimePubSub } from "./Realtime";
+import { ClientAuth } from "@macrograph/server-domain";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { JwtKeys } from "./JwtKeys";
+import { ClientAuthJWTFromEncoded } from "./ClientAuth/ClientAuthJWT";
 import {
-	RealtimeConnection,
-	RealtimeConnectionId,
-	RealtimePubSub,
-} from "./Realtime";
-import { ServerRegistrationError } from "@macrograph/web-domain";
-import { CloudRegistration } from "./CloudApi/Registration";
-import { ClientAuthRpcMiddleware } from "@macrograph/server-domain/src/ClientAuth";
+	ServerRegistration,
+	ServerRegistrationPolicy,
+} from "./ServerRegistration";
 
 export { ProjectActions } from "./Project/Actions";
 
 const NodeSdkLive = NodeSdk.layer(() => ({
 	resource: { serviceName: "mg-server" },
 	// Export span data to the console
-	// spanProcessor: [
-	//   new BatchSpanProcessor(new OTLPTraceExporter()),
-	//   new BatchSpanProcessor(new ConsoleSpanExporter()),
-	// ],
+	spanProcessor: [
+		new BatchSpanProcessor(new OTLPTraceExporter()),
+		//   new BatchSpanProcessor(new ConsoleSpanExporter()),
+	],
 }));
 
 export const DepsLive = Layer.mergeAll(
 	ProjectActions.Default,
 	Graphs.Default,
-	CloudApiAuthState.Default,
-	CloudAPIClient.Default,
+	CloudApiClient.Default,
 	PresenceState.Default,
 	ProjectPackages.Default,
 	RealtimePubSub.Default,
+	JwtKeys.Default,
+	RealtimeConnections.Default,
+	ServerRegistration.Default,
+	ServerRegistrationPolicy.Default,
 	NodeSdkLive,
-);
+).pipe(Layer.provideMerge(NodeContext.layer));
 
 const RpcsLive = Layer.mergeAll(
 	ProjectRpcsLive,
@@ -84,78 +91,72 @@ const RpcsLive = Layer.mergeAll(
 
 export const ServerLive = Effect.gen(function* () {
 	const packages = yield* ProjectPackages;
-	const cloudClient = yield* CloudAPIClient.api;
+	const cloud = yield* CloudApiClient;
 
-	const cloudAuthToken = yield* Config.string("CLOUD_AUTH_TOKEN").pipe(
-		Config.option,
-		Effect.andThen(
-			Effect.catchTag("NoSuchElementException", () =>
-				Effect.gen(function* () {
-					const pendingRegistration =
-						yield* cloudClient.startServerRegistration();
+	// const cloudAuthToken = yield* Config.string("CLOUD_AUTH_TOKEN").pipe(
+	// 	Config.option,
+	// 	Effect.andThen(
+	// 		Effect.catchTag("NoSuchElementException", () =>
+	// 			Effect.gen(function* () {
+	// 				const pendingRegistration =
+	// 					yield* cloud.api.startServerRegistration();
 
-					yield* Effect.log(
-						`Server registration code: ${pendingRegistration.userCode}`,
-					);
+	// 				yield* Effect.log(
+	// 					`Server registration code: ${pendingRegistration.userCode}`,
+	// 				);
 
-					const registration = yield* cloudClient
-						.performServerRegistration({
-							payload: { id: pendingRegistration.id },
-						})
-						.pipe(
-							Effect.catchAll((error) => {
-								if (error._tag === "ServerRegistrationError")
-									return Effect.fail(error);
-								return Effect.dieMessage(
-									"Failed to perform server registration",
-								);
-							}),
-							Effect.retry({
-								schedule: Schedule.fixed(3000),
-								while: (error) => error.code === "authorization_pending",
-							}),
-							Effect.orDie,
-						);
+	// 				const registration = yield* cloud.api
+	// 					.performServerRegistration({
+	// 						payload: { id: pendingRegistration.id },
+	// 					})
+	// 					.pipe(
+	// 						Effect.catchAll((error) => {
+	// 							if (error._tag === "ServerRegistrationError")
+	// 								return Effect.fail(error);
+	// 							return Effect.dieMessage(
+	// 								"Failed to perform server registration",
+	// 							);
+	// 						}),
+	// 						Effect.retry({
+	// 							schedule: Schedule.fixed(3000),
+	// 							while: (error) => error.code === "authorization_pending",
+	// 						}),
+	// 						Effect.orDie,
+	// 					);
 
-					return registration.token;
-				}),
-			),
-		),
-	);
+	// 				return registration.token;
+	// 			}),
+	// 		),
+	// 	),
+	// );
 
-	const publicKey = yield* Config.string("JWT_PUBLIC_KEY").pipe(
-		Effect.tap(Effect.log),
-		Effect.andThen((v) =>
-			Effect.promise(() => Jose.importSPKI(v.replaceAll("\\n", "\n"), "RS256")),
-		),
-		Effect.orDie,
-	);
+	// const publicKey = yield* Config.string("JWT_PUBLIC_KEY").pipe(
+	// 	Effect.andThen((v) =>
+	// 		Effect.promise(() => Jose.importSPKI(v.replaceAll("\\n", "\n"), "RS256")),
+	// 	),
+	// 	Effect.orDie,
+	// );
 
-	const { payload } = yield* Effect.promise(() =>
-		Jose.jwtVerify(cloudAuthToken, publicKey),
-	);
+	// const { payload } = yield* Effect.promise(() =>
+	// 	Jose.jwtVerify(cloudAuthToken, publicKey),
+	// );
 
-	yield* Effect.log(`Cloud auth token: ${cloudAuthToken}`);
+	// yield* Effect.log(`Cloud auth token: ${cloudAuthToken}`);
 
-	const { ownerId } = payload;
+	// const { ownerId } = payload;
 
-	const cloudRegistration = CloudRegistration.context({
-		ownerId: ownerId as string,
-		token: cloudAuthToken,
-	});
+	// const cloudRegistration = CloudRegistration.context({
+	// 	ownerId: ownerId as string,
+	// 	token: cloudAuthToken,
+	// });
 
 	const nextRealtimeClient = (() => {
 		let i = 0;
-		return () => RealtimeConnectionId.make(i++);
+		return () => Realtime.ConnectionId.make(i++);
 	})();
 
-	const realtimeConnections = new Map<
-		number,
-		{ auth: Option.Option<{ jwt: string; userId: string }> }
-	>();
-
 	const realtimeMiddleware = Realtime.ConnectionRpcMiddleware.context(() =>
-		Effect.serviceOption(RealtimeConnection).pipe(
+		Effect.serviceOption(Realtime.Connection).pipe(
 			Effect.map(Option.getOrThrow),
 		),
 	);
@@ -168,16 +169,16 @@ export const ServerLive = Effect.gen(function* () {
 		spanPrefix: "ProjectRpc",
 	}).pipe(
 		Effect.provide(RpcsLive),
-		Effect.provide(NodeRpcsLive),
 		Effect.provide(realtimeMiddleware),
 		Effect.provide(
-			ClientAuthRpcMiddleware.context((req) => {
-				console.log(req);
-				return Effect.succeed({ userId: "", permissions: new Set() });
-			}),
+			ClientAuth.ClientAuthRpcMiddleware.context(() =>
+				Effect.succeed({ userId: "", permissions: new Set() }),
+			),
 		),
 		Effect.provide(RpcsSerialization),
 	);
+
+	const realtimeConnections = yield* RealtimeConnections;
 
 	return HttpRouter.empty.pipe(
 		HttpRouter.mountApp(
@@ -201,16 +202,15 @@ export const ServerLive = Effect.gen(function* () {
 					Jose.jwtVerify(searchParams.token, realtimeSecretKey),
 				);
 
-				const id = RealtimeConnectionId.make(res.payload.id as number);
+				const id = Realtime.ConnectionId.make(res.payload.id as number);
+
+				const conn = realtimeConnections.get(id);
+				if (!conn) throw new Error("Connection not found");
 
 				return yield* rpcsWebApp.pipe(
-					// Effect.provide(
-					//   CurrentUser.context({ userId: "", permissions: new Set() }),
-					// ),
 					Effect.provide(
-						RealtimeConnection.context({
+						Realtime.Connection.context({
 							id,
-							authJwt: yield* SubscriptionRef.make(Option.none<string>()),
 						}),
 					),
 				);
@@ -223,9 +223,41 @@ export const ServerLive = Effect.gen(function* () {
 				const socket = yield* req.upgrade;
 				const writer = yield* socket.writer;
 
+				const { jwt } = yield* HttpServerRequest.schemaSearchParams(
+					Schema.Struct({
+						jwt: Schema.OptionFromUndefinedOr(ClientAuthJWTFromEncoded),
+					}),
+				);
+
+				const auth = yield* jwt.pipe(
+					Option.map(
+						Effect.fn(function* (jwt) {
+							const client = yield* cloud.makeClient({
+								transformClient: HttpClient.mapRequest(
+									HttpClientRequest.bearerToken(jwt.accessToken),
+								),
+							});
+
+							return yield* client.getUser().pipe(
+								Effect.option,
+								Effect.map(Option.flatten),
+								Effect.map(
+									Option.map((u) => ({
+										userId: u.id,
+										email: u.email,
+										jwt,
+									})),
+								),
+							);
+						}),
+					),
+					Effect.transposeOption,
+					Effect.map(Option.flatten),
+				);
+
 				const connectionId = nextRealtimeClient();
 
-				realtimeConnections.set(connectionId, { auth: Option.none() });
+				realtimeConnections.set(connectionId, { auth });
 
 				yield* Effect.gen(function* () {
 					yield* writer(
@@ -247,9 +279,8 @@ export const ServerLive = Effect.gen(function* () {
 					}
 				}).pipe(
 					Effect.provide(
-						RealtimeConnection.context({
+						Realtime.Connection.context({
 							id: connectionId,
-							authJwt: yield* SubscriptionRef.make(Option.none<string>()),
 						}),
 					),
 					Effect.forkScoped,
@@ -310,7 +341,7 @@ const allAsMounted =
 		HttpRouter.all(self, path, executeAppAsMounted(handler));
 
 const createEventStream = Effect.gen(function* () {
-	const realtimeClient = yield* RealtimeConnection;
+	const realtimeClient = yield* Realtime.Connection;
 	const packages = yield* ProjectPackages;
 
 	const packageStates = Stream.fromIterable(packages.entries()).pipe(
@@ -322,20 +353,6 @@ const createEventStream = Effect.gen(function* () {
 					data: { package: name },
 				}),
 			),
-		),
-	);
-
-	const cloudAuth = yield* CloudApiAuthState;
-
-	const authStream = Stream.concat(
-		Stream.fromEffect(cloudAuth.get),
-		cloudAuth.changes,
-	).pipe(
-		Stream.map(
-			(data): ProjectEvent => ({
-				type: "authChanged",
-				data: data ? { id: data.id, email: data.email } : null,
-			}),
 		),
 	);
 
@@ -390,7 +407,7 @@ const createEventStream = Effect.gen(function* () {
 	yield* Stream.mergeAll(
 		[
 			packageStates,
-			authStream,
+			// authStream,
 			eventStream,
 			packageStatesStream,
 			numSubscriptionsStream,

@@ -35,7 +35,7 @@ import type { AuthProvider } from "../../auth/providers";
 import { db } from "~/drizzle";
 import {
 	oauthCredentials,
-	serverRegistrations,
+	oauthApps,
 	serverRegistrationSessions,
 } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -176,8 +176,8 @@ const getServers = cache(async () => {
 
 	const { user } = await ensureAuthedOrRedirect();
 
-	const c = await db.query.serverRegistrations.findMany({
-		where: eq(serverRegistrations.ownerId, user.id),
+	const c = await db.query.oauthApps.findMany({
+		where: eq(oauthApps.ownerId, user.id),
 	});
 
 	return c;
