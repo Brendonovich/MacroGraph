@@ -1,24 +1,22 @@
-import { HttpClient, HttpClientRequest } from "@effect/platform";
 import { ClientAuth, CloudAuth, Realtime } from "@macrograph/server-domain";
 import { Effect, Mailbox, Option, Schedule, Schema } from "effect";
 
-import { CloudApiClient } from "../CloudApi/ApiClient";
 import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 import { getRealtimeConnection, RealtimeConnections } from "../Realtime";
+import { CloudApi, CloudApiToken } from "../CloudApi";
 
 export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 	Effect.gen(function* () {
-		const { api } = yield* CloudApiClient;
+		const connections = yield* RealtimeConnections;
+		const cloud = yield* CloudApi;
 
 		return {
 			ClientLogin: Effect.fn(function* () {
-				const connections = yield* RealtimeConnections;
 				const connection = yield* Realtime.Connection;
-				const cloud = yield* CloudApiClient;
 				const mailbox = yield* Mailbox.make<ClientAuth.CloudLoginEvent>();
 
 				yield* Effect.gen(function* () {
-					const data = yield* api
+					const data = yield* cloud.client
 						.createDeviceCodeFlow()
 						.pipe(Effect.catchAll(() => new CloudAuth.CloudApiError()));
 
@@ -31,7 +29,7 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 						`Starting access token grant check for session '${data.device_code}'`,
 					);
 
-					const grant = yield* api
+					const grant = yield* cloud.client
 						.performAccessTokenGrant({
 							urlParams: {
 								device_code: data.device_code,
@@ -67,11 +65,11 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 						jwt,
 					).pipe(Effect.map(ClientAuth.EncodedJWT.make));
 
-					const cloudApi = yield* cloud.makeClient({
-						transformClient: HttpClient.mapRequest(
-							HttpClientRequest.bearerToken(grant.access_token),
+					const cloudApi = yield* cloud.makeClient.pipe(
+						Effect.provide(
+							CloudApiToken.makeContext(Option.some(grant.access_token)),
 						),
-					});
+					);
 
 					const user = yield* cloudApi
 						.getUser()
@@ -91,18 +89,18 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 				return mailbox;
 			}),
 			GetUser: Effect.fn(function* () {
-				const cloud = yield* CloudApiClient;
-
 				const connection = yield* getRealtimeConnection;
 				const connectionAuth = Option.andThen(connection, (c) => c.auth);
 
 				if (Option.isNone(connectionAuth)) return Option.none();
 
-				const cloudApi = yield* cloud.makeClient({
-					transformClient: HttpClient.mapRequest(
-						HttpClientRequest.bearerToken(connectionAuth.value.jwt.accessToken),
+				const cloudApi = yield* cloud.makeClient.pipe(
+					Effect.provide(
+						CloudApiToken.makeContext(
+							Option.some(connectionAuth.value.jwt.accessToken),
+						),
 					),
-				});
+				);
 
 				return yield* cloudApi.getUser().pipe(
 					Effect.catchAll(() => new CloudAuth.CloudApiError()),

@@ -13,13 +13,13 @@ import {
 	useMutation as createMutation,
 	useQuery as createQuery,
 } from "@tanstack/solid-query";
-import type { ManagedRuntime } from "effect";
+import { ManagedRuntime, Scope } from "effect";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Either from "effect/Either";
 import * as Exit from "effect/Exit";
 
-import type { Accessor } from "solid-js";
+import { createEffect, onCleanup, onMount, type Accessor } from "solid-js";
 
 type Override<TTargetA, TTargetB> = {
 	[AKey in keyof TTargetA]: AKey extends keyof TTargetB
@@ -487,4 +487,18 @@ export function makeUseEffectMutation<
 			}
 		>;
 	};
+}
+
+export function createScopedEffect(
+	effect: Accessor<Effect.Effect<any, any, Scope.Scope>>,
+) {
+	createEffect(() => {
+		const scope = Scope.make().pipe(Effect.runSync);
+
+		onCleanup(() => {
+			Scope.close(scope, Exit.succeed<void>(undefined)).pipe(Effect.runSync);
+		});
+
+		effect().pipe(Scope.use(scope), Effect.runPromise);
+	});
 }

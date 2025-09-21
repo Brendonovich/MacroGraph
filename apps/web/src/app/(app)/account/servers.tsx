@@ -1,63 +1,59 @@
 import {
-	Button,
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogTitle,
-	DialogTrigger,
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@macrograph/ui";
 import {
-	action,
-	cache,
-	createAsync,
-	useAction,
-	useSubmission,
-	useSubmissions,
+  action,
+  cache,
+  createAsync,
+  useAction,
+  useSubmission,
+  useSubmissions,
 } from "@solidjs/router";
 import { For, Show, Suspense } from "solid-js/web";
 import { toast } from "solid-sonner";
 
 import {
-	PROVIDER_DISPLAY_NAMES,
-	WINDOW_OPEN_FAILED,
-	addCredential,
-	ensureAuthedOrRedirect,
-	ensureAuthedOrThrow,
-	getCredentials,
-	// getServers,
-	removeCredential,
+  PROVIDER_DISPLAY_NAMES,
+  WINDOW_OPEN_FAILED,
+  addCredential,
+  ensureAuthedOrRedirect,
+  ensureAuthedOrThrow,
+  getCredentials,
+  // getServers,
+  removeCredential,
 } from "~/api";
 import type { AuthProvider } from "../../auth/providers";
 import { db } from "~/drizzle";
-import {
-	oauthCredentials,
-	oauthApps,
-	serverRegistrationSessions,
-} from "~/drizzle/schema";
+import { oauthApps } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { createSignal } from "solid-js";
 
 export default function () {
-	return (
-		<div class="h-full w-full max-w-3xl p-4 space-y-4">
-			<header class="flex flex-row justify-between items-start text-white">
-				<div class="space-y-1.5">
-					<h1 class="text-3xl font-medium">Servers</h1>
-					<p class="text-sm text-neutral-400">
-						Add MacroGraph servers to your account to administrate them.
-					</p>
-				</div>
-				{/*<AddServerButton />*/}
-			</header>
-			<Suspense>
-				<ServersList />
-			</Suspense>
-		</div>
-	);
+  return (
+    <div class="h-full w-full max-w-3xl p-4 space-y-4">
+      <header class="flex flex-row justify-between items-start text-white">
+        <div class="space-y-1.5">
+          <h1 class="text-3xl font-medium">Servers</h1>
+          <p class="text-sm text-neutral-400">
+            Add MacroGraph servers to your account to administrate them.
+          </p>
+        </div>
+        {/*<AddServerButton />*/}
+      </header>
+      <Suspense>
+        <ServersList />
+      </Suspense>
+    </div>
+  );
 }
 
 // const PROVIDER_LIST: Array<AuthProvider> = [
@@ -172,29 +168,29 @@ export default function () {
 // }
 
 const getServers = cache(async () => {
-	"use server";
+  "use server";
 
-	const { user } = await ensureAuthedOrRedirect();
+  const { user } = await ensureAuthedOrRedirect();
 
-	const c = await db.query.oauthApps.findMany({
-		where: eq(oauthApps.ownerId, user.id),
-	});
+  const c = await db.query.oauthApps.findMany({
+    where: eq(oauthApps.ownerId, user.id),
+  });
 
-	return c;
+  return c;
 }, "servers");
 
 function ServersList() {
-	const servers = createAsync(() => getServers());
-	const submissions = useSubmissions(addCredential);
+  const servers = createAsync(() => getServers());
+  const submissions = useSubmissions(addCredential);
 
-	const pendingSubmissions = () => [...submissions].filter((s) => s.pending);
+  const pendingSubmissions = () => [...submissions].filter((s) => s.pending);
 
-	return (
-		<ul class="border border-neutral-800 rounded-lg divide-y divide-neutral-800">
-			<Show when={servers()?.length === 0 && pendingSubmissions().length === 0}>
-				<p class="p-4 text-sm text-medium text-center">No servers found</p>
-			</Show>
-			{/* <For each={pendingSubmissions()}>
+  return (
+    <ul class="border border-neutral-800 rounded-lg divide-y divide-neutral-800">
+      <Show when={servers()?.length === 0 && pendingSubmissions().length === 0}>
+        <p class="p-4 text-sm text-medium text-center">No servers found</p>
+      </Show>
+      {/* <For each={pendingSubmissions()}>
         {(submission) => (
           <li class="p-4 flex flex-row items-center space-x-4 text-base">
             <div>
@@ -210,7 +206,7 @@ function ServersList() {
           </li>
         )}
       </For> */}
-			{/* <For each={servers()}>
+      {/* <For each={servers()}>
         {(server) => {
           const removeSubmission = useSubmission(
             removeCredential,
@@ -248,6 +244,6 @@ function ServersList() {
           );
         }}
       </For> */}
-		</ul>
-	);
+    </ul>
+  );
 }

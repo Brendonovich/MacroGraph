@@ -1,6 +1,5 @@
 import {
 	Cookies,
-	Headers,
 	HttpApiBuilder,
 	HttpApiError,
 	HttpApp,
@@ -10,16 +9,14 @@ import {
 import { NodeHttpServer } from "@effect/platform-node/index";
 import {
 	Api,
-	Authentication,
 	type CREDENTIAL,
-	CurrentSession,
 	DeviceFlowError,
 	RawJWT,
-	ServerAuth,
 	ServerAuthJWT,
-	ServerAuthMiddleware,
-	ServerAuthToken,
 	ServerRegistrationError,
+	Authentication,
+	type AuthData,
+	AuthenticationMiddleware,
 } from "@macrograph/web-domain";
 import type { InferSelectModel } from "drizzle-orm";
 import * as Dz from "drizzle-orm";
@@ -35,25 +32,23 @@ import {
 import * as S from "effect/Schema";
 import * as Jose from "jose";
 import { verifyRequestOrigin } from "lucia";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
 import { Database } from "./Database";
 import * as Db from "~/drizzle/schema";
 import { lucia } from "~/lucia";
-import {
-	posthogCapture,
-	posthogIdentify,
-	posthogShutdown,
-} from "~/posthog/server";
+import { posthogCapture, posthogShutdown } from "~/posthog/server";
 import { refreshToken } from "../auth/actions";
 import { AuthProviders } from "../auth/providers";
 
 const IS_LOGGED_IN = "isLoggedIn";
 
-type SessionType = "web" | "oauth";
-
-const getCurrentSession = Effect.gen(function* () {
+const getAuthentication = Effect.gen(function* () {
 	const db = yield* Database;
+	const keys = yield* JwtKeys;
 	const req = yield* HttpServerRequest.HttpServerRequest;
+
+	let ret = Option.none<AuthData>();
 
 	const headers = yield* HttpServerRequest.schemaHeaders(
 		S.Struct({
@@ -68,16 +63,49 @@ const getCurrentSession = Effect.gen(function* () {
 	).pipe(Effect.map((v) => v[lucia.sessionCookieName]));
 
 	let sessionId: string;
-	let type: SessionType = "web";
+	let type: "session-web" | "session-desktop" | "mgu" | "server-jwt";
 
 	if (Option.isSome(headers.authorization)) {
 		const value = headers.authorization.value;
 		const BEARER = "Bearer ";
 		if (!value.startsWith(BEARER)) return yield* new HttpApiError.BadRequest();
 
-		sessionId = value.slice(BEARER.length);
+		const bearerToken = value.slice(BEARER.length);
 
-		if (Option.isSome(headers["client-id"])) type = "oauth";
+		if (Option.isSome(headers["client-id"])) {
+			if (bearerToken.startsWith("mgu_")) {
+				type = "mgu";
+
+				ret = yield* db
+					.use((db) =>
+						db.query.oauthSessions.findFirst({
+							where: Dz.eq(Db.oauthSessions.accessToken, bearerToken),
+						}),
+					)
+					.pipe(
+						Effect.map((s) =>
+							Option.map(
+								Option.fromNullable(s?.userId),
+								(userId) => ({ userId, source: "userAccessToken" }) as const,
+							),
+						),
+					);
+			} else {
+				const jwt = yield* Schema.decode(ServerAuthJWTFromRaw)(
+					Redacted.value(Redacted.make(bearerToken)),
+				).pipe(
+					Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()),
+					Effect.provide(JwtKeys.context(keys)),
+				);
+
+				type = "server-jwt";
+				ret = Option.some({
+					source: "serverJwt",
+					jwt,
+					userId: jwt.ownerId,
+				});
+			}
+		} else type = "session-desktop";
 	} else if (Option.isSome(sessionCookie)) {
 		if (req.method !== "GET") {
 			const { origin, host } = yield* HttpServerRequest.schemaHeaders(
@@ -91,10 +119,12 @@ const getCurrentSession = Effect.gen(function* () {
 		}
 
 		sessionId = sessionCookie.value;
+		type = "session-web";
 	} else return Option.none();
 
 	switch (type) {
-		case "web": {
+		case "session-web":
+		case "session-desktop": {
 			const sessionData = yield* Effect.tryPromise({
 				try: () => lucia.validateSession(sessionId),
 				catch: () => new HttpApiError.InternalServerError(),
@@ -123,32 +153,25 @@ const getCurrentSession = Effect.gen(function* () {
 					}),
 				);
 
-			return Option.some({ userId: sessionData.user.id });
+			ret = Option.some({
+				userId: sessionData.user.id,
+				source: "session",
+				type: type === "session-web" ? "web" : "desktop",
+			});
+
+			break;
 		}
-		case "oauth": {
-			return yield* db
-				.use((db) =>
-					db.query.oauthSessions.findFirst({
-						where: Dz.eq(Db.oauthSessions.accessToken, sessionId),
-					}),
-				)
-				.pipe(
-					Effect.map((s) =>
-						Option.map(Option.fromNullable(s?.userId), (userId) => ({
-							userId,
-						})),
-					),
-				);
-		}
+		default:
+			break;
 	}
+
+	return ret;
 }).pipe(Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()));
 
 const AuthenticationLive = Layer.effect(
-	Authentication,
+	AuthenticationMiddleware,
 	Effect.gen(function* () {
-		const db = yield* Database;
-
-		return getCurrentSession.pipe(
+		return getAuthentication.pipe(
 			Effect.catchTag(
 				"DatabaseError",
 				() => new HttpApiError.InternalServerError(),
@@ -159,7 +182,8 @@ const AuthenticationLive = Layer.effect(
 					() => new HttpApiError.Forbidden(),
 				),
 			),
-			Effect.provideService(Database, db),
+			Effect.provideService(Database, yield* Database),
+			Effect.provideService(JwtKeys, yield* JwtKeys),
 		);
 	}),
 );
@@ -178,54 +202,36 @@ class JwtKeys extends Effect.Service<JwtKeys>()("JwtKeys", {
 	}),
 }) {}
 
-const ServerAuthJWTFromRaw = RawJWT.pipe(
-	Schema.transformOrFail(ServerAuthJWT, {
-		strict: true,
-		encode: Effect.fn(function* (data) {
-			const keys = yield* JwtKeys;
-
-			const jwt = yield* Effect.promise(() =>
-				new Jose.SignJWT({
-					type: "server-registration",
-					oauthAppId: data.oauthAppId,
-					ownerId: data.ownerId,
-				})
-					.setProtectedHeader({ alg: "RS256" })
-					.setIssuedAt()
-					.sign(keys.privateKey),
-			);
-
-			return RawJWT.make(jwt);
-		}),
-		decode: Effect.fn(function* (input, _, ast) {
-			const keys = yield* JwtKeys;
-			const a = yield* Effect.promise(() =>
-				Jose.jwtVerify(input, keys.privateKey),
-			);
-
-			return yield* Schema.decodeUnknown(ServerAuthJWT)(a.payload).pipe(
-				Effect.catchTag("ParseError", (e) =>
-					Effect.fail(new ParseResult.Type(ast, input, e.message)),
-				),
-			);
-		}),
-	}),
-);
-
-const ServerAuthLive = Layer.effect(
-	ServerAuthMiddleware,
-	Effect.gen(function* () {
+const ServerAuthJWTFromRaw = Schema.transformOrFail(RawJWT, ServerAuthJWT, {
+	strict: true,
+	encode: Effect.fn(function* (data) {
 		const keys = yield* JwtKeys;
 
-		return {
-			bearer: (v: Redacted.Redacted<string>) =>
-				Schema.decode(ServerAuthJWTFromRaw)(Redacted.value(v)).pipe(
-					Effect.catchTag("ParseError", () => new HttpApiError.Unauthorized()),
-					Effect.provide(JwtKeys.context(keys)),
-				),
-		};
+		const jwt = yield* Effect.promise(() =>
+			new Jose.SignJWT({
+				oauthAppId: data.oauthAppId,
+				ownerId: data.ownerId,
+			})
+				.setProtectedHeader({ alg: "RS256" })
+				.setIssuedAt()
+				.sign(keys.privateKey),
+		);
+
+		return RawJWT.make(jwt);
 	}),
-);
+	decode: Effect.fn(function* (input, _, ast) {
+		const keys = yield* JwtKeys;
+		const a = yield* Effect.promise(() =>
+			Jose.jwtVerify(input, keys.privateKey),
+		);
+
+		return yield* Schema.decodeUnknown(ServerAuthJWT)(a.payload).pipe(
+			Effect.catchTag("ParseError", (e) =>
+				Effect.fail(new ParseResult.Type(ast, input, e.message)),
+			),
+		);
+	}),
+});
 
 function marshalCredential(
 	c: InferSelectModel<typeof Db.oauthCredentials>,
@@ -245,7 +251,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			Effect.fn(
 				function* () {
 					const db = yield* Database;
-					const session = yield* getCurrentSession;
+					const session = yield* getAuthentication;
 
 					if (Option.isNone(session)) return Option.none();
 
@@ -265,22 +271,6 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			),
 		)
 		.handle(
-			"getUserJwt",
-			Effect.fn(function* () {
-				const keys = yield* JwtKeys;
-				const session = yield* CurrentSession;
-
-				const jwt = yield* Effect.promise(() =>
-					new Jose.SignJWT({ type: "user", userId: session.userId })
-						.setProtectedHeader({ alg: "RS256" })
-						.setIssuedAt()
-						.sign(keys.privateKey),
-				);
-
-				return { jwt: RawJWT.make(jwt) };
-			}),
-		)
-		.handle(
 			"refreshCredential",
 			Effect.fn(
 				function* ({ path }) {
@@ -289,7 +279,9 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					const providerConfig = AuthProviders[path.providerId];
 					if (!providerConfig) return yield* new HttpApiError.BadRequest();
 
-					const session = yield* CurrentSession;
+					const session = yield* Authentication;
+					if (!(session.source === "session" || session.source === "serverJwt"))
+						return yield* new HttpApiError.Unauthorized();
 
 					const where = Dz.and(
 						Dz.eq(Db.oauthCredentials.providerId, path.providerId),
@@ -354,7 +346,10 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			Effect.fn(
 				function* () {
 					const db = yield* Database;
-					const session = yield* CurrentSession;
+					const session = yield* Authentication;
+
+					if (!(session.source === "session" || session.source === "serverJwt"))
+						return yield* new HttpApiError.Unauthorized();
 
 					return yield* db
 						.use((db) =>
@@ -375,7 +370,10 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			Effect.fn(
 				function* () {
 					const db = yield* Database;
-					const serverAuth = yield* ServerAuth;
+					const auth = yield* Authentication;
+
+					if (auth.source !== "serverJwt")
+						return yield* new HttpApiError.Unauthorized();
 
 					const deviceCode = crypto.randomUUID().replaceAll("-", "");
 
@@ -386,7 +384,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					yield* db.use((db) =>
 						db
 							.insert(Db.deviceCodeSessions)
-							.values({ appId: serverAuth.oauthAppId, userCode, deviceCode }),
+							.values({ appId: auth.jwt.oauthAppId, userCode, deviceCode }),
 					);
 
 					const verificationUri = `${serverEnv.VERCEL_URL}/login/device`;
@@ -440,8 +438,8 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 
 					yield* Effect.log(`Got device session '${deviceSession.deviceCode}'`);
 
-					const accessToken = crypto.randomUUID().replaceAll("-", "");
-					const refreshToken = crypto.randomUUID().replaceAll("-", "");
+					const accessToken = `mgu_${crypto.randomUUID().replaceAll("-", "")}`;
+					const refreshToken = `mgr_${crypto.randomUUID().replaceAll("-", "")}`;
 
 					yield* db.use((db) =>
 						db.transaction(async (db) => {
@@ -467,7 +465,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 
 					return {
 						userId: deviceSession.userId,
-						access_token: ServerAuthToken.make(accessToken),
+						access_token: accessToken,
 						refresh_token: refreshToken,
 						token_type: "Bearer" as const,
 					};
@@ -551,11 +549,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					);
 
 					const token = yield* Schema.encode(ServerAuthJWTFromRaw)(
-						new ServerAuthJWT({
-							type: "server-registration",
-							oauthAppId: oauthAppId,
-							ownerId: userId,
-						}),
+						new ServerAuthJWT({ oauthAppId: oauthAppId, ownerId: userId }),
 					).pipe(
 						Effect.catchTag(
 							"ParseError",
@@ -577,12 +571,15 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			Effect.fn(
 				function* () {
 					const db = yield* Database;
-					const auth = yield* ServerAuth;
+					const auth = yield* Authentication;
+
+					if (auth.source !== "serverJwt")
+						return yield* new HttpApiError.Unauthorized();
 
 					const registration = yield* db.use((db) =>
 						db.query.oauthApps.findFirst({
 							where: Dz.and(
-								Dz.eq(Db.oauthApps.id, auth.oauthAppId),
+								Dz.eq(Db.oauthApps.id, auth.jwt.oauthAppId),
 								Dz.eq(Db.oauthApps.type, "server"),
 							),
 						}),
@@ -605,7 +602,6 @@ const ApiDeps = Layer.mergeAll(JwtKeys.Default, Database.Default);
 const ApiLive = HttpApiBuilder.api(Api).pipe(
 	Layer.provide(ApiLiveGroup),
 	Layer.provide(AuthenticationLive),
-	Layer.provide(ServerAuthLive),
 	Layer.provide(ApiDeps),
 );
 
@@ -619,7 +615,7 @@ const { handler } = HttpApiBuilder.toWebHandler(
 			resource: { serviceName: "mg-web" },
 			// Export span data to the console
 			spanProcessor: [
-				// new BatchSpanProcessor(new OTLPTraceExporter()),
+				new BatchSpanProcessor(new OTLPTraceExporter()),
 				// new BatchSpanProcessor(new ConsoleSpanExporter()),
 			],
 		})),
@@ -637,10 +633,7 @@ export const OPTIONS = createHandler();
 
 import * as crypto from "node:crypto";
 import { serverEnv } from "~/env/server";
-import {
-	BatchSpanProcessor,
-	ConsoleSpanExporter,
-} from "@opentelemetry/sdk-trace-base";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
 const generateUserDeviceCode = Effect.gen(function* () {
 	const SEGMENT_LENGTH = 4;

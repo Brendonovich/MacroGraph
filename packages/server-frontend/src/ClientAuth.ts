@@ -9,7 +9,6 @@ export class ClientAuth extends Effect.Service<ClientAuth>()("ClientAuth", {
 		yield* jwt.changes.pipe(
 			Stream.runForEach((value) =>
 				Effect.sync(() => {
-					console.log({ value });
 					if (Option.isSome(value))
 						localStorage.setItem("mgInstanceAuthJwt", value.value);
 					else localStorage.removeItem("mgInstanceAuthJwt");

@@ -11,6 +11,7 @@
 	"devDependencies": {
 		"@effect/language-service": "^0.20.0",
 		"@effect/vitest": "^0.20.2",
+		"@iconify-json/bi": "^1.2.6",
 		"@iconify-json/gg": "^1.0.0",
 		"@iconify-json/line-md": "^1.2.8",
 		"@iconify-json/lucide": "^1.2.32",
@@ -66,6 +67,7 @@
 		"solid-presence": "^0.2.0",
 		"unocss-preset-primitives": "0.0.2-beta.1",
 		"unocss-preset-radix": "^2.8.2",
+		"unocss-preset-scrollbar": "^3.2.0",
 		"vite-plugin-solid": "^2.11.8"
 	},
 	"engines": {

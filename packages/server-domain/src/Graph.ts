@@ -8,6 +8,7 @@ import * as Node from "./Node";
 import * as Realtime from "./Realtime";
 import { SchemaRef } from "./util";
 import { ClientAuthRpcMiddleware } from "./ClientAuth";
+import { PolicyDeniedError } from "./Policy";
 
 export const Shape = Schema.Struct({
 	id: Graph.Id,
@@ -34,7 +35,7 @@ export const Rpcs = RpcGroup.make(
 			id: Node.Id,
 			io: Node.IO,
 		}),
-		error: Schema.Union(SchemaNotFound),
+		error: Schema.Union(SchemaNotFound, PolicyDeniedError),
 	}).middleware(ClientAuthRpcMiddleware),
 	Rpc.make("ConnectIO", {
 		payload: {
@@ -42,7 +43,7 @@ export const Rpcs = RpcGroup.make(
 			output: Node.IORef,
 			input: Node.IORef,
 		},
-		error: Schema.Union(Graph.NotFound, Node.NotFound),
+		error: Schema.Union(Graph.NotFound, Node.NotFound, PolicyDeniedError),
 	}),
 	Rpc.make("DisconnectIO", {
 		payload: Schema.Struct({
@@ -52,13 +53,13 @@ export const Rpcs = RpcGroup.make(
 				Schema.Struct({ type: Schema.Literal("i", "o") }),
 			),
 		}),
-		error: Schema.Union(Graph.NotFound, Node.NotFound),
+		error: Schema.Union(Graph.NotFound, Node.NotFound, PolicyDeniedError),
 	}),
 	Rpc.make("DeleteSelection", {
 		payload: {
 			graph: Graph.Id,
 			selection: Schema.Array(Node.Id),
 		},
-		error: Schema.Union(Graph.NotFound, Node.NotFound),
+		error: Schema.Union(Graph.NotFound, Node.NotFound, PolicyDeniedError),
 	}),
 ).middleware(Realtime.ConnectionRpcMiddleware);

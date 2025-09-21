@@ -9,7 +9,10 @@ export class Database extends Effect.Service<Database>()("Database", {
 			Effect.tryPromise({
 				try: () => f(db),
 				catch: (error) => new DatabaseError({ cause: error }),
-			}).pipe(Effect.tapErrorCause(Effect.logError));
+			}).pipe(
+				Effect.tapErrorCause(Effect.logError),
+				Effect.withSpan("Database.use"),
+			);
 
 		return { use } as const;
 	}),

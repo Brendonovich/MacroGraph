@@ -20,7 +20,7 @@ export class QueryClient extends Context.Tag("@solid-effect-query/QueryClient")<
 export function makeEffectQuery<
 	R,
 	E,
-	Args extends Record<string, unknown> = {},
+	Args extends Record<string, unknown> = Record<string, unknown>,
 >(
 	layer: (options: Args) => Layer.Layer<R, E>,
 ): {
@@ -66,7 +66,8 @@ export function makeEffectQuery<
 		}
 
 		// Create runtime with memoization
-		const runtime = ManagedRuntime.make(layer(props as Args), memoMap);
+		const runtime =
+			props.runtime ?? ManagedRuntime.make(layer(props as Args), memoMap);
 
 		// Dispose runtime on unmount
 		onCleanup(() => {

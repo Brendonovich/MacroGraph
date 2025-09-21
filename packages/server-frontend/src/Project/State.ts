@@ -1,5 +1,5 @@
 import { type Graph, Node } from "@macrograph/server-domain";
-import { Cache, Effect } from "effect";
+import { Effect } from "effect";
 import { createStore } from "solid-js/store";
 
 import type { GraphTwoWayConnections } from "../Graph/Graph";
@@ -127,4 +127,4 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 		}),
 		dependencies: [ProjectRpc.Default],
 	},
-) { }
+) {}

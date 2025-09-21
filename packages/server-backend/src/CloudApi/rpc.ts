@@ -1,29 +1,36 @@
 import { CloudAuth, Policy } from "@macrograph/server-domain";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
-import {
-	ServerRegistration,
-	ServerRegistrationPolicy,
-} from "../ServerRegistration";
+import { ServerRegistration } from "../ServerRegistration";
+import { ServerPolicy } from "../ServerPolicy";
 
 export const CloudRpcsLive = CloudAuth.Rpcs.toLayer(
 	Effect.gen(function* () {
 		const serverRegistration = yield* ServerRegistration;
-		const policy = yield* ServerRegistrationPolicy;
+		const policy = yield* ServerPolicy;
 
 		return {
 			StartServerRegistration: () =>
 				Effect.gen(function* () {
-					const mailbox = yield* serverRegistration.start.pipe(
-						Policy.withPolicy(policy.isOwner),
-					);
+					if (yield* serverRegistration.get.pipe(Effect.map(Option.isSome)))
+						return yield* new Policy.PolicyDeniedError();
 
-					return mailbox;
+					return yield* serverRegistration.start;
 				}),
 			RemoveServerRegistration: () =>
 				serverRegistration.remove.pipe(Policy.withPolicy(policy.isOwner)),
 			GetServerRegistration: () =>
-				serverRegistration.get.pipe(Policy.withPolicy(policy.isOwner)),
+				serverRegistration.get.pipe(
+					Effect.flatMap(
+						Option.match({
+							onNone: () => Effect.succeed(Option.none()),
+							onSome: (reg) =>
+								Effect.succeed(Option.some(reg)).pipe(
+									Policy.withPolicy(policy.isOwner),
+								),
+						}),
+					),
+				),
 		};
 	}),
 );

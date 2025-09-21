@@ -5,9 +5,19 @@ import {
 	HttpClientRequest,
 } from "@effect/platform";
 import { Api, type RawJWT } from "@macrograph/web-domain";
-import { Config, Effect, Option } from "effect";
+import { Config, Context, Effect, Layer, Option } from "effect";
 
 const CLIENT_ID = "macrograph-server";
+
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
+export class CloudApiToken extends Context.Tag("CloudApiToken")<
+	CloudApiToken,
+	Effect.Effect<Option.Option<RawJWT | string>>
+>() {
+	static makeContext(value: Option.Option<RawJWT | string>) {
+		return CloudApiToken.context(Effect.succeed(value));
+	}
+}
 
 export class CloudApi extends Effect.Service<CloudApi>()("CloudApi", {
 	effect: Effect.gen(function* () {
@@ -15,15 +25,18 @@ export class CloudApi extends Effect.Service<CloudApi>()("CloudApi", {
 			Config.withDefault("https://www.macrograph.app"),
 		);
 
-		const client = yield* HttpClient.HttpClient;
+		const httpClient = yield* HttpClient.HttpClient;
 
-		const makeClient = (token: Option.Option<RawJWT>) =>
-			HttpApiClient.make(Api, {
-				baseUrl,
-				transformClient: (client) =>
-					client.pipe(
-						HttpClient.mapRequest((req) =>
-							Option.match(token, {
+		const makeClient = Effect.gen(function* () {
+			const getToken = yield* CloudApiToken;
+
+			const httpClientLayer = Layer.succeed(
+				HttpClient.HttpClient,
+				httpClient.pipe(
+					HttpClient.mapRequestEffect((req) =>
+						Effect.map(
+							getToken,
+							Option.match({
 								onSome: (token) =>
 									req.pipe(
 										HttpClientRequest.bearerToken(token),
@@ -33,9 +46,21 @@ export class CloudApi extends Effect.Service<CloudApi>()("CloudApi", {
 							}),
 						),
 					),
-			}).pipe(Effect.provide(HttpClient.HttpClient.context(client)));
+				),
+			);
 
-		return { makeClient };
+			return yield* HttpApiClient.make(Api, {
+				baseUrl,
+			}).pipe(Effect.provide(httpClientLayer));
+		});
+
+		const client = yield* makeClient;
+
+		return {
+			client,
+			makeClient,
+			hasToken: (yield* CloudApiToken).pipe(Effect.map(Option.isSome)),
+		};
 	}),
 	dependencies: [FetchHttpClient.layer],
 }) {}

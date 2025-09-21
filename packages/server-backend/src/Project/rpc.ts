@@ -1,6 +1,7 @@
 import {
 	type Graph,
 	type PackageMeta,
+	Policy,
 	Project,
 	type SchemaMeta,
 } from "@macrograph/server-domain";
@@ -8,10 +9,12 @@ import { Effect, Option } from "effect";
 
 import { project } from "../project-data";
 import { ProjectPackages } from "./Packages";
+import { ServerPolicy } from "../ServerPolicy";
 
 export const ProjectRpcsLive = Project.Rpcs.toLayer(
 	Effect.gen(function* () {
 		const packages = yield* ProjectPackages;
+		const serverPolicy = yield* ServerPolicy;
 
 		return {
 			GetProject: Effect.fn(function* () {
@@ -65,10 +68,14 @@ export const ProjectRpcsLive = Project.Rpcs.toLayer(
 					),
 				};
 			}),
-			GetPackageSettings: Effect.fn(function* (payload) {
-				const pkg = packages.get(payload.package)!;
-				return yield* Option.getOrNull(pkg.state)!.get;
-			}),
+			GetPackageSettings: Effect.fn(
+				function* (payload) {
+					console.log("GET PACKAGE SETTINGS");
+					const pkg = packages.get(payload.package)!;
+					return yield* Option.getOrNull(pkg.state)!.get;
+				},
+				(e) => e.pipe(Policy.withPolicy(serverPolicy.isOwner)),
+			),
 		};
 	}),
 );

@@ -5,32 +5,19 @@ import {
 	HttpApiGroup,
 	HttpApiMiddleware,
 	HttpApiSchema,
-	HttpApiSecurity,
 } from "@effect/platform";
 import { Context, Data, Schema } from "effect";
 import * as S from "effect/Schema";
 
-export class CurrentSession extends Context.Tag("CurrentSession")<
-	CurrentSession,
-	{ userId: string }
->() {}
-
-export const ServerAuthToken = Schema.String.pipe(
-	Schema.brand("ServerAuthToken"),
+export type AuthData = { userId: string } & (
+	| { source: "session"; type: "web" | "desktop" }
+	| { source: "userAccessToken" }
+	| { source: "serverJwt"; jwt: ServerAuthJWT }
 );
-export type ServerAuthToken = Schema.Schema.Type<typeof ServerAuthToken>;
 
-export class ServerAuth extends Context.Tag("ServerAuth")<
-	ServerAuth,
-	ServerAuthJWT
->() {}
-
-export class UserAuth extends Context.Tag("UserAuth")<
-	UserAuth,
-	{
-		userId: string;
-		source: "web" | "oauth";
-	}
+export class Authentication extends Context.Tag("Authentication")<
+	Authentication,
+	AuthData
 >() {}
 
 export const OAUTH_TOKEN = S.Struct({
@@ -46,18 +33,6 @@ export const CREDENTIAL = S.Struct({
 	displayName: S.NullOr(S.String),
 	token: S.extend(OAUTH_TOKEN, S.Struct({ issuedAt: S.Number })),
 });
-
-export class Authentication extends HttpApiMiddleware.Tag<Authentication>()(
-	"Authentication",
-	{
-		provides: CurrentSession,
-		failure: S.Union(
-			HttpApiError.Forbidden,
-			HttpApiError.BadRequest,
-			HttpApiError.InternalServerError,
-		),
-	},
-) {}
 
 export class DeviceFlowError extends S.TaggedError<DeviceFlowError>()(
 	"DeviceFlowError",
@@ -89,24 +64,19 @@ export const ServerRegistration = Schema.Struct({
 export type ServerRegistration = Schema.Schema.Type<typeof ServerRegistration>;
 
 export class ServerAuthJWT extends Schema.Class<ServerAuthJWT>("ServerAuthJWT")(
-	{
-		type: Schema.Literal("server-registration"),
-		oauthAppId: Schema.String,
-		ownerId: Schema.String,
-	},
+	{ oauthAppId: Schema.String, ownerId: Schema.String },
 ) {}
 
-export class ServerAuthMiddleware extends HttpApiMiddleware.Tag<ServerAuthMiddleware>()(
-	"ServerAuthMiddleware",
+export class AuthenticationMiddleware extends HttpApiMiddleware.Tag<AuthenticationMiddleware>()(
+	"AuthenticationMiddleware",
 	{
-		provides: ServerAuth,
+		provides: Authentication,
 		failure: S.Union(
 			HttpApiError.Forbidden,
 			HttpApiError.BadRequest,
 			HttpApiError.InternalServerError,
 			HttpApiError.Unauthorized,
 		),
-		security: { bearer: HttpApiSecurity.bearer },
 	},
 ) {}
 
@@ -131,18 +101,11 @@ export class Api extends HttpApi.make("api")
 					.addError(HttpApiError.BadRequest),
 			)
 			.add(
-				HttpApiEndpoint.get("getUserJwt", "/user/jwt")
-					.middleware(Authentication)
-					.addSuccess(S.Struct({ jwt: RawJWT }))
-					// .addError(HttpApiError.InternalServerError)
-					.addError(HttpApiError.BadRequest),
-			)
-			.add(
 				HttpApiEndpoint.post(
 					"refreshCredential",
 					"/credentials/:providerId/:providerUserId/refresh",
 				)
-					.middleware(Authentication)
+					.middleware(AuthenticationMiddleware)
 					.setPath(
 						S.Struct({
 							providerId: S.String,
@@ -153,7 +116,7 @@ export class Api extends HttpApi.make("api")
 			)
 			.add(
 				HttpApiEndpoint.get("getCredentials", "/credentials")
-					.middleware(Authentication)
+					.middleware(AuthenticationMiddleware)
 					.addSuccess(S.Array(CREDENTIAL)),
 			)
 			.add(
@@ -167,7 +130,7 @@ export class Api extends HttpApi.make("api")
 							verification_uri_complete: S.String,
 						}),
 					)
-					.middleware(ServerAuthMiddleware),
+					.middleware(AuthenticationMiddleware),
 			)
 			.add(
 				HttpApiEndpoint.post(
@@ -185,7 +148,7 @@ export class Api extends HttpApi.make("api")
 					.addSuccess(
 						S.Struct({
 							userId: S.String,
-							access_token: ServerAuthToken,
+							access_token: S.String,
 							refresh_token: S.String,
 							token_type: S.Literal("Bearer"),
 						}).pipe(HttpApiSchema.withEncoding({ kind: "Json" })),
@@ -223,7 +186,7 @@ export class Api extends HttpApi.make("api")
 					.addSuccess(Schema.Struct({ ownerId: Schema.String }))
 					.addError(HttpApiError.InternalServerError)
 					.addError(HttpApiError.NotFound)
-					.middleware(ServerAuthMiddleware),
+					.middleware(AuthenticationMiddleware),
 			),
 	)
 	.prefix("/api") {}

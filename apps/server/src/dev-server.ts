@@ -1,11 +1,9 @@
 import { createServer } from "node:http";
 import { HttpServer } from "@effect/platform";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { DepsLive } from "@macrograph/server-backend";
+import { DepsLive, Server } from "@macrograph/server-backend";
 import { Fiber, Layer, Option } from "effect";
 import * as Effect from "effect/Effect";
-
-import { ServerEntry } from "./entry-server";
 
 const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 	() => {
@@ -27,11 +25,16 @@ const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 );
 
 const program = Effect.gen(function* () {
-	const server = yield* ServerEntry;
+	const server = yield* Server;
 
 	return yield* Layer.launch(
 		server.pipe(HttpServer.serve(), Layer.provide(HMRAwareNodeHttpServerLayer)),
 	);
 });
 
-program.pipe(Effect.provide(DepsLive), Effect.scoped, NodeRuntime.runMain);
+program.pipe(
+	Effect.provide(Server.Default),
+	Effect.provide(DepsLive),
+	Effect.scoped,
+	NodeRuntime.runMain,
+);
