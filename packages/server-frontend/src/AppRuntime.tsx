@@ -40,8 +40,7 @@ export namespace ProjectRuntime {
     ProjectRpc.Default,
     AuthActions.Default,
     ClientAuth.Default,
-    NodeSdkLive,
-  ).pipe(Layer.provideMerge(Layer.scope));
+  ).pipe(Layer.provideMerge(NodeSdkLive), Layer.provideMerge(Layer.scope));
 }
 
 const ProjectRuntimeContext = createContext<ProjectRuntime.ProjectRuntime>();

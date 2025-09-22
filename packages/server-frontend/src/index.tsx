@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import { createStore, produce, reconcile } from "solid-js/store";
 import { ErrorBoundary, render } from "solid-js/web";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
@@ -29,6 +30,8 @@ export const runtime = ManagedRuntime.make(ProjectRuntime.layer);
 
 export class UI extends Effect.Service<UI>()("UI", {
   effect: Effect.gen(function* () {
+    yield* Effect.log("Starting");
+
     const [presenceClients, setPresence] = createStore<
       Record<number, PresenceClient>
     >({});
@@ -199,27 +202,29 @@ export class UI extends Effect.Service<UI>()("UI", {
     const dispose = render(
       () => (
         <Provider runtime={runtime}>
-          <QueryClientProvider client={client}>
-            <ProjectRuntimeProvider value={runtime}>
-              <RealtimeContextProvider value={{ id: () => realtime.id }}>
-                <PresenceContextProvider value={{ clients: presenceClients }}>
-                  <ErrorBoundary
-                    fallback={(e) => {
-                      console.error(e);
-                      return (
-                        <div>
-                          {e.toString()}
-                          <pre>{e.stack}</pre>
-                        </div>
-                      );
-                    }}
-                  >
-                    <Router root={Layout}>{routes}</Router>
-                  </ErrorBoundary>
-                </PresenceContextProvider>
-              </RealtimeContextProvider>
-            </ProjectRuntimeProvider>
-          </QueryClientProvider>
+          <EffectRuntimeProvider runtime={runtime}>
+            <QueryClientProvider client={client}>
+              <ProjectRuntimeProvider value={runtime}>
+                <RealtimeContextProvider value={{ id: () => realtime.id }}>
+                  <PresenceContextProvider value={{ clients: presenceClients }}>
+                    <ErrorBoundary
+                      fallback={(e) => {
+                        console.error(e);
+                        return (
+                          <div>
+                            {e.toString()}
+                            <pre>{e.stack}</pre>
+                          </div>
+                        );
+                      }}
+                    >
+                      <Router root={Layout}>{routes}</Router>
+                    </ErrorBoundary>
+                  </PresenceContextProvider>
+                </RealtimeContextProvider>
+              </ProjectRuntimeProvider>
+            </QueryClientProvider>
+          </EffectRuntimeProvider>
         </Provider>
       ),
       document.getElementById("app")!,

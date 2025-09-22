@@ -1,6 +1,6 @@
 import type { RpcClient, RpcGroup } from "@effect/rpc";
 import { type VariantProps, cva, cx } from "cva";
-import { Effect, type Schema } from "effect";
+import { Effect, ManagedRuntime, Schema } from "effect";
 import {
   type Accessor,
   type ComponentProps,
@@ -12,6 +12,7 @@ import {
   untrack,
 } from "solid-js";
 import createPresence from "solid-presence";
+import { createContextProvider } from "@solid-primitives/context";
 import GgSpinner from "~icons/gg/spinner";
 
 export type GlobalAppState = {
@@ -70,6 +71,21 @@ export function Button(
   );
 }
 
+const [EffectRuntimeProvider, _useEffectRuntime] = createContextProvider(
+  (props: { runtime: ManagedRuntime.ManagedRuntime<any, any> }) =>
+    props.runtime,
+);
+export { EffectRuntimeProvider };
+export function useEffectRuntime() {
+  const runtime = _useEffectRuntime();
+  if (!runtime) {
+    throw new Error(
+      "useEffectRuntime must be used within an EffectRuntimeProvider",
+    );
+  }
+  return runtime;
+}
+
 export function EffectButton(
   props: Omit<ComponentProps<typeof Button>, "onClick" | "children"> & {
     onClick?(e: MouseEvent): Effect.Effect<any, any>;
@@ -84,6 +100,7 @@ export function EffectButton(
       ? untrack(() => child(loading))
       : (child as JSX.Element);
   });
+  const runtime = useEffectRuntime();
 
   const [ref, setRef] = createSignal<HTMLButtonElement | null>(null);
   const presence = createPresence({
@@ -104,7 +121,7 @@ export function EffectButton(
         if (!props.onClick) return;
         const currentTarget = e.currentTarget;
         const t = setTimeout(() => setLoading(true), 30);
-        Effect.runPromise(props.onClick(e)).finally(() => {
+        runtime!.runPromise(props.onClick(e)).finally(() => {
           clearTimeout(t);
           setLoading(false);
           if (document.activeElement === document.body) currentTarget.focus();

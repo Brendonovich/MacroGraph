@@ -1,3 +1,4 @@
+import { useEffectRuntime } from "@macrograph/package-sdk/ui";
 import type {
 	MutateOptions,
 	QueryFunctionContext,
@@ -492,13 +493,15 @@ export function makeUseEffectMutation<
 export function createScopedEffect(
 	effect: Accessor<Effect.Effect<any, any, Scope.Scope>>,
 ) {
+	const runtime = useEffectRuntime();
+
 	createEffect(() => {
-		const scope = Scope.make().pipe(Effect.runSync);
+		const scope = Scope.make().pipe(runtime.runSync);
 
 		onCleanup(() => {
-			Scope.close(scope, Exit.succeed<void>(undefined)).pipe(Effect.runSync);
+			Scope.close(scope, Exit.succeed<void>(undefined)).pipe(runtime.runSync);
 		});
 
-		effect().pipe(Scope.use(scope), Effect.runPromise);
+		effect().pipe(Scope.use(scope), runtime.runPromise);
 	});
 }

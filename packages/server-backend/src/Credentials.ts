@@ -44,7 +44,7 @@ export const CredentialsRpcsLive = Credential.Rpcs.toLayer(
 				Effect.catchIf(
 					(v) =>
 						!(v._tag === "NoRegistrationError" || v._tag === "PolicyDenied"),
-					() => Effect.die(null),
+					(e) => Effect.die(null),
 				),
 				Effect.map((v) =>
 					v.map(
@@ -61,7 +61,10 @@ export const CredentialsRpcsLive = Credential.Rpcs.toLayer(
 		return {
 			GetCredentials: () => credentials.get.pipe(transformCredentialRequest),
 			RefetchCredentials: () =>
-				credentials.refresh.pipe(transformCredentialRequest),
+				credentials.refresh.pipe(
+					Effect.zipRight(credentials.get),
+					transformCredentialRequest,
+				),
 		};
 	}),
 );

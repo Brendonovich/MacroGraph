@@ -57,7 +57,7 @@ export class PackagesSettings extends Effect.Service<PackagesSettings>()(
 					module: PackageSettingsModule,
 				) {
 					const client = yield* RpcClient.make(module.Rpcs, {
-						disableTracing: true,
+						disableTracing: false,
 					}).pipe(Effect.provide(getProtocol(id)));
 
 					const changesNotify = yield* PubSub.unbounded<null>();

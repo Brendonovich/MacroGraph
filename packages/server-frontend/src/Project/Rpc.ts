@@ -26,7 +26,7 @@ export class ProjectRpc extends Effect.Service<ProjectRpc>()("ProjectRpc", {
 		);
 
 		return {
-			client: yield* RpcClient.make(Rpcs, { disableTracing: true }).pipe(
+			client: yield* RpcClient.make(Rpcs, { disableTracing: false }).pipe(
 				Effect.provide(mw),
 				Effect.provideService(
 					RpcClient.Protocol,

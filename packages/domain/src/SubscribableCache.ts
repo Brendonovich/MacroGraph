@@ -26,7 +26,7 @@ export namespace SubscribableCache {
 				changes: () => Stream.fromPubSub(changeNotifications),
 				refresh: cache
 					.refresh()
-					.pipe(Effect.zipRight(changeNotifications.offer())),
+					.pipe(Effect.zipLeft(changeNotifications.offer())),
 			} as SubscribableCache<A, E>;
 		});
 }
