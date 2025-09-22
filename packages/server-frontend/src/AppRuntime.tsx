@@ -1,14 +1,28 @@
 import { type Effect, Layer, type ManagedRuntime } from "effect";
 import { createContext, useContext } from "solid-js";
+import { WebSdk } from "@effect/opentelemetry";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
-import { ClientAuth } from "./Auth";
+import { ClientAuth } from "./ClientAuth";
 import { PackagesSettings } from "./Packages/PackagesSettings";
 import { ProjectActions } from "./Project/Actions";
 import { ProjectRealtime } from "./Project/Realtime";
 import { ProjectRpc } from "./Project/Rpc";
 import { ProjectState } from "./Project/State";
+import { AuthActions } from "./Auth";
+import { makeEffectQuery } from "./effect-query";
 
 export namespace ProjectRuntime {
+	const NodeSdkLive = WebSdk.layer(() => ({
+		resource: { serviceName: "mg-server-frontend" },
+		// Export span data to the console
+		spanProcessor: [
+			new BatchSpanProcessor(new OTLPTraceExporter()),
+			// new BatchSpanProcessor(new ConsoleSpanExporter()),
+		],
+	}));
+
 	export type ProjectRuntime = ManagedRuntime.ManagedRuntime<
 		Context,
 		Layer.Layer.Error<typeof ProjectRuntime.layer>
@@ -24,8 +38,9 @@ export namespace ProjectRuntime {
 		ProjectActions.Default,
 		ProjectState.Default,
 		ProjectRpc.Default,
+		AuthActions.Default,
 		ClientAuth.Default,
-	);
+	).pipe(Layer.provideMerge(NodeSdkLive), Layer.provideMerge(Layer.scope));
 }
 
 const ProjectRuntimeContext = createContext<ProjectRuntime.ProjectRuntime>();
@@ -53,3 +68,7 @@ export function useProjectService<T>(
 
 	return runtime.runSync(service);
 }
+
+export const { Provider, useEffectQuery, useEffectMutation } = makeEffectQuery(
+	() => ProjectRuntime.layer,
+);

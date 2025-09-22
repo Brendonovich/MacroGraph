@@ -1,24 +1,17 @@
-import type { ProjectEvent } from "@macrograph/server-domain";
-import {
-	Context,
-	Effect,
-	type Option,
-	PubSub,
-	Schema,
-	Stream,
-	type SubscriptionRef,
-} from "effect";
+import { Realtime, type ProjectEvent } from "@macrograph/server-domain";
+import { Effect, Option, PubSub, Stream } from "effect";
+import type { ClientAuthJWT } from "./ClientAuth/ClientAuthJWT";
 
 export class RealtimePubSub extends Effect.Service<RealtimePubSub>()(
 	"ProjectRealtime",
 	{
 		effect: Effect.gen(function* () {
 			const pubsub =
-				yield* PubSub.unbounded<[RealtimeConnectionId, ProjectEvent]>();
+				yield* PubSub.unbounded<[Realtime.ConnectionId, ProjectEvent]>();
 
 			return {
 				publish: Effect.fn(function* (v: (typeof ProjectEvent)["Type"]) {
-					const realtimeClient = yield* RealtimeConnection;
+					const realtimeClient = yield* Realtime.Connection;
 
 					return yield* pubsub.publish([realtimeClient.id, v]);
 				}),
@@ -28,15 +21,29 @@ export class RealtimePubSub extends Effect.Service<RealtimePubSub>()(
 	},
 ) {}
 
-export const RealtimeConnectionId = Schema.Number.pipe(
-	Schema.brand("Realtime Client ID"),
-);
-export type RealtimeConnectionId = (typeof RealtimeConnectionId)["Type"];
+export const getRealtimeConnection = Effect.gen(function* () {
+	const connections = yield* RealtimeConnections;
+	const connection = yield* Realtime.Connection;
 
-export class RealtimeConnection extends Context.Tag("RealtimeConnection")<
-	RealtimeConnection,
+	return connections.get(connection.id);
+});
+
+type ConnectionAuth = { jwt: ClientAuthJWT; userId: string; email: string };
+
+export class RealtimeConnections extends Effect.Service<RealtimeConnections>()(
+	"RealtimeConnections",
 	{
-		id: RealtimeConnectionId;
-		authJwt: SubscriptionRef.SubscriptionRef<Option.Option<string>>;
-	}
->() {}
+		effect: Effect.sync(() => {
+			const realtimeConnections = new Map<
+				number,
+				{ auth: Option.Option<ConnectionAuth> }
+			>();
+
+			return {
+				get: (id: number) => Option.fromNullable(realtimeConnections.get(id)),
+				set: (id: number, value: { auth: Option.Option<ConnectionAuth> }) =>
+					realtimeConnections.set(id, value),
+			};
+		}),
+	},
+) {}

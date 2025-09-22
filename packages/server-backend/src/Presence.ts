@@ -1,9 +1,8 @@
 import { faker } from "@faker-js/faker/locale/en_AU";
-import type { Graph, Node, Position } from "@macrograph/server-domain";
+import { Graph, Node, Position, Realtime } from "@macrograph/server-domain";
 import { Presence } from "@macrograph/server-domain";
-import { Effect, Scope, Stream, SubscriptionRef } from "effect";
-
-import { RealtimeConnection, type RealtimeConnectionId } from "./Realtime";
+import { Effect, Option, Scope, Stream, SubscriptionRef } from "effect";
+import { getRealtimeConnection } from "./Realtime";
 
 const colours = [
 	"#BC4D80",
@@ -34,7 +33,7 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 		effect: Effect.gen(function* () {
 			const clients = yield* SubscriptionRef.make<
 				Record<
-					RealtimeConnectionId,
+					Realtime.ConnectionId,
 					{
 						name: string;
 						colour: string;
@@ -46,11 +45,20 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 
 			return {
 				registerToScope: Effect.gen(function* () {
-					const connection = yield* RealtimeConnection;
+					const connection = yield* Realtime.Connection;
+					const auth = yield* getRealtimeConnection.pipe(
+						Effect.map(Option.andThen((v) => v.auth)),
+					);
+
 					yield* SubscriptionRef.update(clients, (c) => ({
 						...c,
 						[connection.id]: {
-							name: `${faker.word.adjective()} ${faker.word.noun()}`,
+							name: auth.pipe(
+								Option.map((v) => v.email.split("@")[0]!),
+								Option.getOrElse(
+									() => `${faker.word.adjective()} ${faker.word.noun()}`,
+								),
+							),
 							colour: colours[Math.floor(Math.random() * 20)],
 						},
 					}));
@@ -73,7 +81,7 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 					}),
 				),
 				setMouse: Effect.fn(function* (graphId: Graph.Id, position: Position) {
-					const connection = yield* RealtimeConnection;
+					const connection = yield* Realtime.Connection;
 					yield* SubscriptionRef.update(clients, (c) => ({
 						...c,
 						[connection.id]: c[connection.id]
@@ -87,7 +95,7 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 				setSelection: Effect.fn(function* (
 					...args: [] | [graphId: Graph.Id, nodes: Array<Node.Id>]
 				) {
-					const connection = yield* RealtimeConnection;
+					const connection = yield* Realtime.Connection;
 
 					yield* SubscriptionRef.update(clients, (c) => ({
 						...c,

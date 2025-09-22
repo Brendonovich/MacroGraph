@@ -8,9 +8,11 @@ import { Package, PackageEngine, setOutput } from "@macrograph/package-sdk";
 import {
 	Chunk,
 	Context,
+	Deferred,
 	Effect,
 	Exit,
 	Option,
+	PubSub,
 	Schema,
 	Scope,
 	Stream,
@@ -24,6 +26,7 @@ import {
 } from "./eventSub";
 import { HelixApi } from "./helix";
 import { RPCS } from "./shared";
+import { makeWebSocket } from "@effect/platform/Socket";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -43,6 +46,7 @@ const Engine = PackageEngine.make<
 			ws: WebSocket;
 			state: "connecting" | "connected";
 			events: Stream.Stream<EventSubMessage>;
+			closed: Deferred.Deferred<void>;
 		};
 
 		const sockets = new Map<string, Socket>();
@@ -118,12 +122,17 @@ const Engine = PackageEngine.make<
 
 				const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
 
+				const closed = yield* Deferred.make<void>();
 				const events = Stream.asyncPush<EventSubMessage>((emit) =>
 					Effect.gen(function* () {
 						ws.onmessage = (event) => {
 							emit.single(
 								Schema.decodeSync(EVENTSUB_MESSAGE)(JSON.parse(event.data)),
 							);
+						};
+
+						ws.onerror = (e) => {
+							console.log;
 						};
 
 						ws.onclose = () => {
@@ -133,7 +142,13 @@ const Engine = PackageEngine.make<
 					}),
 				);
 
-				const socket: Socket = { lock, ws, state: "connecting", events };
+				const socket: Socket = {
+					lock,
+					ws,
+					state: "connecting",
+					events,
+					closed,
+				};
 
 				yield* Effect.sync(() => {
 					sockets.set(accountId, socket);
@@ -222,7 +237,7 @@ const Engine = PackageEngine.make<
 				yield* Stream.runForEach(events, (event) => {
 					const spanName = `Message.${event.metadata.message_type}`;
 
-					return Effect.gen(function* () {
+					return Effect.sync(() => {
 						if (isEventSubMessageType(event, "session_welcome"))
 							throw new Error("Unexpected session welcome");
 
@@ -232,7 +247,7 @@ const Engine = PackageEngine.make<
 						Effect.withSpan(spanName, { attributes: flattenObject(event) }),
 					);
 				}).pipe(
-					Effect.withSpan(`twitch.EventSub.${accountId}`, { root: true }),
+					Effect.withSpan(`twitch.EventSub{${accountId}}`, { root: true }),
 					Effect.ensuring(
 						Effect.all([
 							Effect.sync(() => sockets.delete(accountId)).pipe(
@@ -241,6 +256,7 @@ const Engine = PackageEngine.make<
 							Scope.close(scope, Exit.succeed(null)),
 							ctx.dirtyState,
 							Effect.log("Socket Disconnected"),
+							Deferred.complete(closed, Effect.void),
 						]),
 					),
 					Effect.forkScoped,
@@ -252,8 +268,7 @@ const Engine = PackageEngine.make<
 				if (!socket) return;
 
 				socket.ws.close();
-
-				yield* socket.events.pipe(Stream.runForEach(() => Effect.void));
+				yield* Deferred.await(socket.closed);
 			}),
 		});
 

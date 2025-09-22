@@ -20,22 +20,17 @@
 		"@vitest/ui": "^2.0.5",
 		"jsdom": "^24.1.1",
 		"safaridriver": "^0.0.5",
-		"solid-js": "^1.9.7",
+		"solid-js": "^1.9.9",
 		"turbo": "^2.5.4",
 		"turbo-ignore": "^1.13.0",
 		"typescript": "^5.5.3",
-		"vite-plugin-solid": "^2.10.2",
+		"vite-plugin-solid": "^2.11.8",
 		"vitest": "^2.0.5",
 		"vitest-github-actions-reporter": "^0.11.1",
 		"webdriverio": "^8.35.1"
 	},
 	"dependencies": {
 		"@biomejs/biome": "^1.6.4"
-	},
-	"pnpm": {
-		"patchedDependencies": {
-			"@kobalte/core@0.13.7": "patches/@kobalte__core@0.13.7.patch"
-		}
 	},
 	"packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184"
 }

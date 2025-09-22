@@ -1,5 +1,5 @@
 import type { Rpc, RpcGroup } from "@effect/rpc";
-import type { CREDENTIAL } from "@macrograph/web-api";
+import type { CREDENTIAL } from "@macrograph/web-domain";
 import { Context, Data, Effect, type Layer, Schema } from "effect";
 
 import type { NodeRuntime } from "./runtime";

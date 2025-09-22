@@ -4,6 +4,7 @@ import { Schema } from "effect";
 import * as Graph from "./Graph";
 import * as Realtime from "./Realtime";
 import { PackageMeta } from "./util";
+import { PolicyDeniedError } from "./Policy";
 
 export const Rpcs = RpcGroup.make(
 	Rpc.make("GetProject", {
@@ -16,5 +17,6 @@ export const Rpcs = RpcGroup.make(
 	Rpc.make("GetPackageSettings", {
 		payload: { package: Schema.String },
 		success: Schema.Any,
+		error: PolicyDeniedError,
 	}),
 ).middleware(Realtime.ConnectionRpcMiddleware);

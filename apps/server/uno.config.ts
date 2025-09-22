@@ -1,6 +1,12 @@
-import { defineConfig, presetWind3, transformerVariantGroup } from "unocss";
+import {
+	defineConfig,
+	presetWind3,
+	transformerDirectives,
+	transformerVariantGroup,
+} from "unocss";
 import { presetAnimations } from "unocss-preset-animations";
 import { presetKobalte } from "unocss-preset-primitives";
+import { presetScrollbar } from "unocss-preset-scrollbar";
 
 function getColorScale(name: string, alpha = false) {
 	const scale = {};
@@ -14,8 +20,13 @@ function getColorScale(name: string, alpha = false) {
 }
 
 export default defineConfig({
-	presets: [presetWind3(), presetAnimations(), presetKobalte() as any],
-	transformers: [transformerVariantGroup()],
+	presets: [
+		presetWind3(),
+		presetAnimations(),
+		presetKobalte() as any,
+		presetScrollbar,
+	],
+	transformers: [transformerVariantGroup(), transformerDirectives()],
 	theme: {
 		colors: {
 			gray: getColorScale("gray"),

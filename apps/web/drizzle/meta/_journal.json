@@ -1,13 +1,1 @@
-{
-	"version": "5",
-	"dialect": "pg",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "5",
-			"when": 1712225305949,
-			"tag": "0000_fresh_speedball",
-			"breakpoints": true
-		}
-	]
-}
+{ "version": "5", "dialect": "pg", "entries": [] }

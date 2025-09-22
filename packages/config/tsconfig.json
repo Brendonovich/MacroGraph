@@ -14,6 +14,7 @@
 		"emitDeclarationOnly": true,
 		"isolatedModules": true,
 		"composite": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"plugins": [{ "name": "@effect/language-service" }]
 	}
 }

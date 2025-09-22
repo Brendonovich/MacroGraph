@@ -24,7 +24,7 @@ export function ClientListDropdown() {
 				{(data) => (
 					<Popover.Trigger
 						disabled={clientEntries().length <= 1}
-						class="bg-gray-2 p-1 rounded not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1 outline-none"
+						class="h-full bg-transparent px-2 not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 					>
 						<div class="flex flex-row space-x-1.5 items-center">
 							<Avatar

@@ -5,8 +5,18 @@ import {
 	HttpServerRequest,
 	HttpServerResponse,
 } from "@effect/platform";
+import { NodeContext } from "@effect/platform-node";
 import type { Route } from "@effect/platform/HttpRouter";
 import { RpcServer } from "@effect/rpc";
+import {
+	ClientAuth,
+	type ProjectEvent,
+	Realtime,
+	Rpcs,
+	RpcsSerialization,
+} from "@macrograph/server-domain";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import {
 	Chunk,
 	Context,
@@ -17,78 +27,57 @@ import {
 	PubSub,
 	Schema,
 	Stream,
-	SubscriptionRef,
 } from "effect";
 import * as Effect from "effect/Effect";
 import { getCurrentFiber } from "effect/Fiber";
-import * as JOSE from "jose";
+import * as Jose from "jose";
+import * as Packages from "@macrograph/base-packages";
 
-// import { RpcsSerialization, ProjectEvent } from "./shared";
-// import { NodeRpcsLive } from "./domain/Node/rpc";
-// import {
-//   RealtimeConnection,
-//   RealtimeConnectionId,
-// } from "./domain/Realtime/Connection";
-// import { RealtimePubSub } from "./domain/Realtime/PubSub";
-// import { CloudAPIClient } from "./domain/CloudApi/ApiClient";
-// import { CloudApiAuthState } from "./domain/CloudApi/AuthState";
-// import { Presence } from "./domain/Presence/Presence";
-// import {
-//   ClientAuthJwt,
-//   RpcAuthMiddleware,
-//   RpcRealtimeMiddleware,
-// } from "./domain/Rpc/Middleware";
-// import { ProjectActions } from "./domain/Project/Actions";
-// import { ProjectPackages } from "./domain/Project/Packages";
-// import { Graphs } from "./domain/Graph/Graphs";
-// import { GraphRpcsLive } from "./domain/Graph/rpc";
-// import { ProjectRpcsLive } from "./domain/Project/rpc";
-// import { Rpcs } from "./rpc";
-// import { PresenceRpcsLive } from "./domain/Presence/rpc";
-// import { CloudRpcsLive } from "./domain/CloudApi/rpc";
-// import { ClientAuthRpcsLive } from "./domain/ClientAuth/rpc";
-import {
-	type ProjectEvent,
-	Realtime,
-	Rpcs,
-	RpcsSerialization,
-} from "@macrograph/server-domain";
+import { ClientAuthJWTFromEncoded } from "./ClientAuth/ClientAuthJWT";
 import { ClientAuthRpcsLive } from "./ClientAuth/rpc";
-import { CloudAPIClient } from "./CloudApi/ApiClient";
-import { CloudApiAuthState } from "./CloudApi/AuthState";
+import { CloudApi, CloudApiToken } from "./CloudApi";
 import { CloudRpcsLive } from "./CloudApi/rpc";
 import { GraphRpcsLive, Graphs } from "./Graph";
+import { JwtKeys } from "./JwtKeys";
 import { NodeRpcsLive } from "./Node";
 import { PresenceRpcsLive, PresenceState } from "./Presence";
 import { ProjectActions } from "./Project/Actions";
 import { ProjectPackages } from "./Project/Packages";
 import { ProjectRpcsLive } from "./Project/rpc";
+import { RealtimeConnections, RealtimePubSub } from "./Realtime";
 import {
-	RealtimeConnection,
-	RealtimeConnectionId,
-	RealtimePubSub,
-} from "./Realtime";
+	ServerRegistration,
+	ServerRegistrationToken,
+} from "./ServerRegistration";
+import { ServerPolicy } from "./ServerPolicy";
+import {
+	CredentialsRpcsLive as CredentialRpcsLive,
+	Credentials,
+} from "./Credentials";
 
 export { ProjectActions } from "./Project/Actions";
 
 const NodeSdkLive = NodeSdk.layer(() => ({
-	resource: { serviceName: "mg-server" },
+	resource: { serviceName: "mg-server-backend" },
 	// Export span data to the console
-	// spanProcessor: [
-	//   new BatchSpanProcessor(new OTLPTraceExporter()),
-	//   new BatchSpanProcessor(new ConsoleSpanExporter()),
-	// ],
+	spanProcessor: [
+		new BatchSpanProcessor(new OTLPTraceExporter()),
+		// new BatchSpanProcessor(new ConsoleSpanExporter()),
+	],
 }));
 
 export const DepsLive = Layer.mergeAll(
 	ProjectActions.Default,
-	Graphs.Default,
-	CloudApiAuthState.Default,
-	CloudAPIClient.Default,
-	PresenceState.Default,
-	ProjectPackages.Default,
-	RealtimePubSub.Default,
 	NodeSdkLive,
+).pipe(
+	Layer.provideMerge(
+		Layer.effect(
+			CloudApiToken,
+			Effect.map(ServerRegistrationToken, (t) => t.ref.get),
+		),
+	),
+	Layer.provide(ServerRegistrationToken.Default),
+	Layer.provideMerge(NodeContext.layer),
 );
 
 const RpcsLive = Layer.mergeAll(
@@ -98,135 +87,200 @@ const RpcsLive = Layer.mergeAll(
 	PresenceRpcsLive,
 	CloudRpcsLive,
 	ClientAuthRpcsLive,
+	CredentialRpcsLive,
 );
 
-export const ServerLive = Effect.gen(function* () {
-	const packages = yield* ProjectPackages;
+export class Server extends Effect.Service<Server>()("Server", {
+	effect: Effect.gen(function* () {
+		const projectActions = yield* ProjectActions;
 
-	const nextRealtimeClient = (() => {
-		let i = 0;
-		return () => RealtimeConnectionId.make(i++);
-	})();
+		yield* projectActions.addPackage("util", Packages.util).pipe(Effect.orDie);
+		yield* projectActions
+			.addPackage("twitch", Packages.twitch)
+			.pipe(Effect.orDie);
+		yield* projectActions.addPackage("obs", Packages.obs).pipe(Effect.orDie);
 
-	const realtimeConnections = new Map<
-		number,
-		{ auth: Option.Option<{ jwt: string; userId: string }> }
-	>();
+		const nextRealtimeClient = (() => {
+			let i = 0;
+			return () => Realtime.ConnectionId.make(i++);
+		})();
 
-	const realtimeMiddleware = Realtime.ConnectionRpcMiddleware.context(() =>
-		Effect.serviceOption(RealtimeConnection).pipe(
-			Effect.map(Option.getOrThrow),
-		),
-	);
+		const realtimeSecretKey = yield* Effect.promise(() =>
+			Jose.generateSecret("HS256"),
+		);
 
-	const realtimeSecretKey = yield* Effect.promise(() =>
-		JOSE.generateSecret("HS256"),
-	);
+		const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs, {
+			spanPrefix: "ProjectRpc",
+		}).pipe(
+			Effect.provide(RpcsLive),
+			Effect.provide(
+				Realtime.ConnectionRpcMiddleware.context(() =>
+					Effect.serviceOption(Realtime.Connection).pipe(
+						Effect.map(Option.getOrThrow),
+					),
+				),
+			),
+			Effect.provide(
+				ClientAuth.ClientAuthRpcMiddleware.context(() =>
+					Effect.succeed({ userId: "", permissions: new Set() }),
+				),
+			),
+			Effect.provide(RpcsSerialization),
+		);
 
-	const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs, {
-		spanPrefix: "ProjectRpc",
-	}).pipe(
-		Effect.provide(RpcsLive),
-		Effect.provide(NodeRpcsLive),
-		Effect.provide(realtimeMiddleware),
-		Effect.provide(RpcsSerialization),
-	);
+		return HttpRouter.empty.pipe(
+			HttpRouter.mountApp(
+				"/rpc",
+				Effect.gen(function* () {
+					const realtimeConnections = yield* RealtimeConnections;
+					const req = yield* HttpServerRequest.HttpServerRequest;
 
-	return HttpRouter.empty.pipe(
-		HttpRouter.mountApp(
-			"/rpc",
-			Effect.gen(function* () {
-				const req = yield* HttpServerRequest.HttpServerRequest;
-
-				const searchParams = yield* HttpServerRequest.schemaSearchParams(
-					Schema.Struct({ token: Schema.String }),
-				).pipe(
-					Effect.provide(
-						HttpServerRequest.ParsedSearchParams.context(
-							HttpServerRequest.searchParamsFromURL(
-								new URL(req.originalUrl, "s://"),
+					const searchParams = yield* HttpServerRequest.schemaSearchParams(
+						Schema.Struct({ token: Schema.String }),
+					).pipe(
+						Effect.provide(
+							HttpServerRequest.ParsedSearchParams.context(
+								HttpServerRequest.searchParamsFromURL(
+									new URL(req.originalUrl, "s://"),
+								),
 							),
 						),
-					),
-				);
+					);
 
-				const res = yield* Effect.promise(() =>
-					JOSE.jwtVerify(searchParams.token, realtimeSecretKey),
-				);
+					const res = yield* Effect.promise(() =>
+						Jose.jwtVerify(searchParams.token, realtimeSecretKey),
+					);
 
-				const id = RealtimeConnectionId.make(res.payload.id as number);
+					const id = Realtime.ConnectionId.make(res.payload.id as number);
 
-				return yield* rpcsWebApp.pipe(
-					Effect.provide(
-						RealtimeConnection.context({
-							id,
-							authJwt: yield* SubscriptionRef.make(Option.none<string>()),
-						}),
-					),
-				);
-			}),
-		),
-		HttpRouter.get(
-			"/realtime",
-			Effect.gen(function* () {
-				const req = yield* HttpServerRequest.HttpServerRequest;
-				const socket = yield* req.upgrade;
-				const writer = yield* socket.writer;
+					const conn = realtimeConnections.get(id);
+					if (!conn) throw new Error("Connection not found");
 
-				const connectionId = nextRealtimeClient();
+					return yield* rpcsWebApp.pipe(
+						Effect.provide(
+							Realtime.Connection.context({
+								id,
+							}),
+						),
+					);
+				}),
+			),
+			HttpRouter.get(
+				"/realtime",
+				Effect.gen(function* () {
+					const realtimeConnections = yield* RealtimeConnections;
+					const cloud = yield* CloudApi;
+					const req = yield* HttpServerRequest.HttpServerRequest;
+					const socket = yield* req.upgrade;
+					const writer = yield* socket.writer;
 
-				realtimeConnections.set(connectionId, { auth: Option.none() });
-
-				yield* Effect.gen(function* () {
-					yield* writer(
-						JSON.stringify({
-							type: "identify",
-							id: connectionId,
-							token: yield* Effect.promise(() =>
-								new JOSE.SignJWT({ id: connectionId })
-									.setProtectedHeader({ alg: "HS256" })
-									.sign(realtimeSecretKey),
-							),
+					const { jwt } = yield* HttpServerRequest.schemaSearchParams(
+						Schema.Struct({
+							jwt: Schema.OptionFromUndefinedOr(ClientAuthJWTFromEncoded),
 						}),
 					);
 
-					const mailbox = yield* createEventStream;
-					while (true) {
-						const a = yield* mailbox.take;
-						yield* writer(JSON.stringify(a));
-					}
-				}).pipe(
-					Effect.provide(
-						RealtimeConnection.context({
-							id: connectionId,
-							authJwt: yield* SubscriptionRef.make(Option.none<string>()),
-						}),
-					),
-					Effect.forkScoped,
-				);
+					const auth = yield* jwt.pipe(
+						Option.map((jwt) =>
+							Effect.gen(function* () {
+								const client = yield* cloud.makeClient.pipe(
+									Effect.provideService(
+										CloudApiToken,
+										Effect.succeed(Option.some(jwt.accessToken)),
+									),
+								);
 
-				yield* socket.runRaw(() => {});
+								return yield* client.getUser().pipe(
+									Effect.flatten,
+									Effect.map((u) => ({ userId: u.id, email: u.email, jwt })),
+									Effect.option,
+								);
+							}),
+						),
+						Effect.transposeOption,
+						Effect.map(Option.flatten),
+					);
 
-				return HttpServerResponse.empty();
-			}).pipe(Effect.scoped),
-		),
-		allAsMounted(
-			"/package/:package/rpc",
-			Effect.gen(function* () {
-				const { package: pkg } = yield* HttpRouter.schemaPathParams(
-					Schema.Struct({ package: Schema.String }),
-				);
-				const server = packages.get(pkg)?.rpcServer.pipe(Option.getOrUndefined);
-				if (!server)
-					return HttpServerResponse.text("Package not found", {
-						status: 404,
-					});
+					if (Option.isSome(auth))
+						yield* Effect.log(`Authenticated as '${auth.value.userId}'`);
 
-				return yield* server;
-			}),
-		),
-	);
-});
+					const connectionId = nextRealtimeClient();
+
+					realtimeConnections.set(connectionId, { auth });
+
+					yield* Effect.gen(function* () {
+						yield* writer(
+							JSON.stringify({
+								type: "identify",
+								id: connectionId,
+								token: yield* Effect.promise(() =>
+									new Jose.SignJWT({ id: connectionId })
+										.setProtectedHeader({ alg: "HS256" })
+										.sign(realtimeSecretKey),
+								),
+							}),
+						);
+
+						const mailbox = yield* createEventStream;
+						while (true) {
+							const a = yield* mailbox.take;
+							yield* writer(JSON.stringify(a));
+						}
+					}).pipe(
+						Effect.provide(
+							Realtime.Connection.context({
+								id: connectionId,
+							}),
+						),
+						Effect.forkScoped,
+					);
+
+					yield* socket.runRaw(() => {});
+
+					return HttpServerResponse.empty();
+				}).pipe(Effect.scoped),
+			),
+			allAsMounted(
+				"/package/:package/rpc",
+				Effect.gen(function* () {
+					const packages = yield* ProjectPackages;
+
+					const { package: pkg } = yield* HttpRouter.schemaPathParams(
+						Schema.Struct({ package: Schema.String }),
+					);
+					const server = packages
+						.get(pkg)
+						?.rpcServer.pipe(Option.getOrUndefined);
+					if (!server)
+						return HttpServerResponse.text("Package not found", {
+							status: 404,
+						});
+
+					return yield* server;
+				}),
+			),
+			Effect.provideService(RealtimeConnections, yield* RealtimeConnections),
+			Effect.provideService(ProjectPackages, yield* ProjectPackages),
+			Effect.provideService(RealtimePubSub, yield* RealtimePubSub),
+			Effect.provideService(PresenceState, yield* PresenceState),
+			Effect.provideService(CloudApi, yield* CloudApi),
+			Effect.provideService(JwtKeys, yield* JwtKeys),
+		);
+	}),
+	dependencies: [
+		ProjectPackages.Default,
+		CloudApi.Default,
+		Graphs.Default,
+		PresenceState.Default,
+		RealtimePubSub.Default,
+		RealtimeConnections.Default,
+		JwtKeys.Default,
+		ServerPolicy.Default,
+		ProjectActions.Default,
+		ServerRegistration.Default,
+		Credentials.Default,
+	],
+}) {}
 
 const executeAppAsMounted = <A, E, R>(app: HttpApp.HttpApp<A, E, R>) =>
 	Effect.gen(function* () {
@@ -260,7 +314,7 @@ const allAsMounted =
 		HttpRouter.all(self, path, executeAppAsMounted(handler));
 
 const createEventStream = Effect.gen(function* () {
-	const realtimeClient = yield* RealtimeConnection;
+	const realtimeClient = yield* Realtime.Connection;
 	const packages = yield* ProjectPackages;
 
 	const packageStates = Stream.fromIterable(packages.entries()).pipe(
@@ -272,20 +326,6 @@ const createEventStream = Effect.gen(function* () {
 					data: { package: name },
 				}),
 			),
-		),
-	);
-
-	const cloudAuth = yield* CloudApiAuthState;
-
-	const authStream = Stream.concat(
-		Stream.fromEffect(cloudAuth.get),
-		cloudAuth.changes,
-	).pipe(
-		Stream.map(
-			(data): ProjectEvent => ({
-				type: "authChanged",
-				data: data ? { id: data.id, email: data.email } : null,
-			}),
 		),
 	);
 
@@ -340,7 +380,7 @@ const createEventStream = Effect.gen(function* () {
 	yield* Stream.mergeAll(
 		[
 			packageStates,
-			authStream,
+			// authStream,
 			eventStream,
 			packageStatesStream,
 			numSubscriptionsStream,

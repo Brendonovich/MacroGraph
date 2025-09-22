@@ -9,41 +9,46 @@ import {
 import { NodeHttpServer } from "@effect/platform-node/index";
 import {
 	Api,
-	Authentication,
 	type CREDENTIAL,
-	CurrentSession,
 	DeviceFlowError,
-} from "@macrograph/web-api";
-import type { APIHandler } from "@solidjs/start/server";
+	RawJWT,
+	ServerAuthJWT,
+	ServerRegistrationError,
+	Authentication,
+	type AuthData,
+	AuthenticationMiddleware,
+} from "@macrograph/web-domain";
 import type { InferSelectModel } from "drizzle-orm";
-import { and, eq } from "drizzle-orm";
-import { Config, Effect, Layer, Option } from "effect";
+import * as Dz from "drizzle-orm";
+import {
+	Config,
+	Effect,
+	Layer,
+	Option,
+	ParseResult,
+	Redacted,
+	Schema,
+} from "effect";
 import * as S from "effect/Schema";
 import * as Jose from "jose";
 import { verifyRequestOrigin } from "lucia";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
-import { db } from "~/drizzle";
-import {
-	deviceCodeSessions,
-	oauthCredentials,
-	oauthSessions,
-	users,
-} from "~/drizzle/schema";
+import { Database } from "./Database";
+import * as Db from "~/drizzle/schema";
 import { lucia } from "~/lucia";
-import {
-	posthogCapture,
-	posthogIdentify,
-	posthogShutdown,
-} from "~/posthog/server";
+import { posthogCapture, posthogShutdown } from "~/posthog/server";
 import { refreshToken } from "../auth/actions";
 import { AuthProviders } from "../auth/providers";
 
 const IS_LOGGED_IN = "isLoggedIn";
 
-type SessionType = "web" | "oauth";
-
-const getCurrentSession = Effect.gen(function* () {
+const getAuthentication = Effect.gen(function* () {
+	const db = yield* Database;
+	const keys = yield* JwtKeys;
 	const req = yield* HttpServerRequest.HttpServerRequest;
+
+	let ret = Option.none<AuthData>();
 
 	const headers = yield* HttpServerRequest.schemaHeaders(
 		S.Struct({
@@ -58,16 +63,52 @@ const getCurrentSession = Effect.gen(function* () {
 	).pipe(Effect.map((v) => v[lucia.sessionCookieName]));
 
 	let sessionId: string;
-	let type: SessionType = "web";
+	let type: "session-web" | "session-desktop" | "mgu" | "server-jwt";
 
 	if (Option.isSome(headers.authorization)) {
 		const value = headers.authorization.value;
 		const BEARER = "Bearer ";
 		if (!value.startsWith(BEARER)) return yield* new HttpApiError.BadRequest();
 
-		sessionId = value.slice(BEARER.length);
+		const bearerToken = value.slice(BEARER.length);
 
-		if (Option.isSome(headers["client-id"])) type = "oauth";
+		if (Option.isSome(headers["client-id"])) {
+			if (bearerToken.startsWith("mgu_")) {
+				type = "mgu";
+
+				ret = yield* db
+					.use((db) =>
+						db.query.oauthSessions.findFirst({
+							where: Dz.eq(Db.oauthSessions.accessToken, bearerToken),
+						}),
+					)
+					.pipe(
+						Effect.map((s) =>
+							Option.map(
+								Option.fromNullable(s?.userId),
+								(userId) => ({ userId, source: "userAccessToken" }) as const,
+							),
+						),
+					);
+			} else {
+				const jwt = yield* Schema.decode(ServerAuthJWTFromRaw)(
+					Redacted.value(Redacted.make(bearerToken)),
+				).pipe(
+					Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()),
+					Effect.provide(JwtKeys.context(keys)),
+				);
+
+				type = "server-jwt";
+				ret = Option.some({
+					source: "serverJwt",
+					jwt,
+					userId: jwt.ownerId,
+				});
+			}
+		} else {
+			type = "session-desktop";
+			sessionId = bearerToken;
+		}
 	} else if (Option.isSome(sessionCookie)) {
 		if (req.method !== "GET") {
 			const { origin, host } = yield* HttpServerRequest.schemaHeaders(
@@ -81,72 +122,122 @@ const getCurrentSession = Effect.gen(function* () {
 		}
 
 		sessionId = sessionCookie.value;
+		type = "session-web";
 	} else return Option.none();
 
-	let userId;
+	switch (type) {
+		case "session-web":
+		case "session-desktop": {
+			const sessionData = yield* Effect.tryPromise({
+				try: () => lucia.validateSession(sessionId),
+				catch: () => new HttpApiError.InternalServerError(),
+			});
 
-	if (type === "web") {
-		const sessionData = yield* Effect.tryPromise({
-			try: () => lucia.validateSession(sessionId),
-			catch: () => new HttpApiError.InternalServerError(),
-		});
+			if (sessionData.user === null) return Option.none();
 
-		if (sessionData.user === null) return Option.none();
+			if (Option.isSome(sessionCookie))
+				yield* HttpApp.appendPreResponseHandler(
+					Effect.fn(function* (_, _res) {
+						let res = _res;
 
-		if (Option.isSome(sessionCookie))
-			yield* HttpApp.appendPreResponseHandler(
-				Effect.fn(function* (_, res) {
-					if (res.cookies.pipe(Cookies.get(IS_LOGGED_IN), Option.isNone))
+						if (res.cookies.pipe(Cookies.get(IS_LOGGED_IN), Option.isNone))
+							return res;
+
+						if (sessionData.session.fresh)
+							res = yield* res.pipe(
+								HttpServerResponse.setCookie(
+									lucia.sessionCookieName,
+									lucia.createSessionCookie(sessionData.session.id).serialize(),
+								),
+								Effect.orDie,
+							);
+
 						return res;
+					}),
+				);
 
-					if (sessionData.session.fresh)
-						res = yield* res.pipe(
-							HttpServerResponse.setCookie(
-								lucia.sessionCookieName,
-								lucia.createSessionCookie(sessionData.session.id).serialize(),
-							),
-							Effect.orDie,
-						);
+			ret = Option.some({
+				userId: sessionData.user.id,
+				source: "session",
+				type: type === "session-web" ? "web" : "desktop",
+			});
 
-					return res;
-				}),
-			);
-
-		userId = sessionData.user.id;
-
-		posthogIdentify(userId, { email: sessionData.user.email });
-	} else {
-		const sessionData = yield* Effect.tryPromise({
-			try: () =>
-				db.query.oauthSessions.findFirst({
-					where: eq(oauthSessions.accessToken, sessionId),
-				}),
-			catch: () => new HttpApiError.InternalServerError(),
-		});
-
-		if (!sessionData) return Option.none();
-
-		userId = sessionData.userId;
+			break;
+		}
+		default:
+			break;
 	}
 
-	return Option.some({ userId });
+	return ret;
 }).pipe(Effect.catchTag("ParseError", () => new HttpApiError.BadRequest()));
 
-const AuthenticationLive = Layer.sync(Authentication, () =>
+const AuthenticationLive = Layer.effect(
+	AuthenticationMiddleware,
 	Effect.gen(function* () {
-		const session = yield* getCurrentSession;
-		console.log({ session });
-		return yield* session.pipe(
+		return getAuthentication.pipe(
 			Effect.catchTag(
-				"NoSuchElementException",
-				() => new HttpApiError.Forbidden(),
+				"DatabaseError",
+				() => new HttpApiError.InternalServerError(),
 			),
+			Effect.flatMap(
+				Effect.catchTag(
+					"NoSuchElementException",
+					() => new HttpApiError.Forbidden(),
+				),
+			),
+			Effect.provideService(Database, yield* Database),
+			Effect.provideService(JwtKeys, yield* JwtKeys),
 		);
 	}),
 );
 
+class JwtKeys extends Effect.Service<JwtKeys>()("JwtKeys", {
+	effect: Effect.gen(function* () {
+		const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
+			Effect.andThen((v) =>
+				Effect.promise(() =>
+					Jose.importPKCS8(v.replaceAll("\\n", "\n"), "RS256"),
+				),
+			),
+		);
+
+		return { privateKey };
+	}),
+}) {}
+
+const ServerAuthJWTFromRaw = Schema.transformOrFail(RawJWT, ServerAuthJWT, {
+	strict: true,
+	encode: Effect.fn(function* (data) {
+		const keys = yield* JwtKeys;
+
+		const jwt = yield* Effect.promise(() =>
+			new Jose.SignJWT({
+				oauthAppId: data.oauthAppId,
+				ownerId: data.ownerId,
+			})
+				.setProtectedHeader({ alg: "RS256" })
+				.setIssuedAt()
+				.sign(keys.privateKey),
+		);
+
+		return RawJWT.make(jwt);
+	}),
+	decode: Effect.fn(function* (input, _, ast) {
+		const keys = yield* JwtKeys;
+		const a = yield* Effect.promise(() =>
+			Jose.jwtVerify(input, keys.privateKey),
+		);
+
+		return yield* Schema.decodeUnknown(ServerAuthJWT)(a.payload).pipe(
+			Effect.catchTag("ParseError", (e) =>
+				Effect.fail(new ParseResult.Type(ast, input, e.message)),
+			),
+		);
+	}),
+});
+
 function marshalCredential(
-	c: InferSelectModel<typeof oauthCredentials>,
+	c: InferSelectModel<typeof Db.oauthCredentials>,
 ): (typeof CREDENTIAL)["Encoded"] {
 	return {
 		provider: c.providerId,
@@ -160,82 +251,50 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 	handlers
 		.handle(
 			"getUser",
-			Effect.fn(function* () {
-				const session = yield* getCurrentSession;
+			Effect.fn(
+				function* () {
+					console.log("BRUH");
+					const db = yield* Database;
+					const session = yield* getAuthentication;
+					console.log({ session });
 
-				if (Option.isNone(session)) return null;
+					if (Option.isNone(session)) return Option.none();
 
-				const user = yield* Effect.tryPromise({
-					try: () =>
-						db.query.users.findFirst({
-							where: eq(users.id, session.value.userId),
-							columns: { id: true, email: true },
-						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
-
-				return user ?? null;
-			}),
-		)
-		.handle(
-			"getUserJwt",
-			Effect.fn(function* () {
-				const session = yield* CurrentSession;
-
-				console.log({ session });
-
-				const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
-					Effect.tap(Effect.log),
-					Effect.andThen((v) =>
-						Effect.promise(() =>
-							Jose.importPKCS8(v.replaceAll("\\n", "\n"), "RS256"),
-						),
-					),
-					Effect.orDie,
-				);
-
-				const payload = { userId: session.userId };
-
-				const jwt = yield* Effect.promise(() =>
-					new Jose.SignJWT(payload)
-						.setProtectedHeader({ alg: "RS256" })
-						.setIssuedAt()
-						.sign(privateKey),
-				);
-
-				return { jwt };
-			}),
-		)
-		.handle(
-			"getCredentials",
-			Effect.fn(function* () {
-				const session = yield* CurrentSession;
-
-				return yield* Effect.tryPromise({
-					try: () =>
-						db.query.oauthCredentials.findMany({
-							where: eq(oauthCredentials.userId, session.userId),
-						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				}).pipe(Effect.map((c) => c.map(marshalCredential)));
-			}),
+					return yield* db
+						.use((db) =>
+							db.query.users.findFirst({
+								where: Dz.eq(Db.users.id, session.value.userId),
+								columns: { id: true, email: true },
+							}),
+						)
+						.pipe(Effect.map(Option.fromNullable));
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"refreshCredential",
-			Effect.fn(function* ({ path }) {
-				const providerConfig = AuthProviders[path.providerId];
-				if (!providerConfig) return yield* new HttpApiError.BadRequest();
+			Effect.fn(
+				function* ({ path }) {
+					const db = yield* Database;
 
-				const session = yield* CurrentSession;
+					const providerConfig = AuthProviders[path.providerId];
+					if (!providerConfig) return yield* new HttpApiError.BadRequest();
 
-				const where = and(
-					eq(oauthCredentials.providerId, path.providerId),
-					eq(oauthCredentials.userId, session.userId),
-					eq(oauthCredentials.providerUserId, path.providerUserId),
-				);
+					const session = yield* Authentication;
+					if (!(session.source === "session" || session.source === "serverJwt"))
+						return yield* new HttpApiError.Unauthorized();
 
-				const credential = yield* Effect.tryPromise({
-					try: () =>
+					const where = Dz.and(
+						Dz.eq(Db.oauthCredentials.providerId, path.providerId),
+						Dz.eq(Db.oauthCredentials.userId, session.userId),
+						Dz.eq(Db.oauthCredentials.providerUserId, path.providerUserId),
+					);
+
+					const credential = yield* db.use((db) =>
 						db.transaction(async (db) => {
 							const credential = await db.query.oauthCredentials.findFirst({
 								where,
@@ -256,7 +315,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 
 							const issuedAt = new Date();
 							await db
-								.update(oauthCredentials)
+								.update(Db.oauthCredentials)
 								.set({ token, issuedAt })
 								.where(where);
 
@@ -266,107 +325,289 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 								token,
 							};
 						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
+					);
 
-				posthogCapture({
-					distinctId: session.userId,
-					event: "credential refreshed",
-					properties: {
-						providerId: credential.providerId,
-						providerUserId: credential.providerUserId,
-					},
-				});
+					posthogCapture({
+						distinctId: session.userId,
+						event: "credential refreshed",
+						properties: {
+							providerId: credential.providerId,
+							providerUserId: credential.providerUserId,
+						},
+					});
 
-				yield* Effect.promise(() => posthogShutdown());
+					yield* Effect.promise(() => posthogShutdown());
 
-				return marshalCredential(credential);
-			}),
+					return marshalCredential(credential);
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
+		)
+		.handle(
+			"getCredentials",
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const session = yield* Authentication;
+
+					if (!(session.source === "session" || session.source === "serverJwt"))
+						return yield* new HttpApiError.Unauthorized();
+
+					return yield* db
+						.use((db) =>
+							db.query.oauthCredentials.findMany({
+								where: Dz.eq(Db.oauthCredentials.userId, session.userId),
+							}),
+						)
+						.pipe(Effect.map((c) => c.map(marshalCredential)));
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"createDeviceCodeFlow",
-			Effect.fn(function* () {
-				const userCode = yield* generateUserDeviceCode;
-				const deviceCode = crypto.randomUUID().replaceAll("-", "");
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const auth = yield* Authentication;
 
-				const expiresIn = 60 * 15;
+					if (auth.source !== "serverJwt")
+						return yield* new HttpApiError.Unauthorized();
 
-				yield* Effect.promise(() =>
-					db.insert(deviceCodeSessions).values({ userCode, deviceCode }),
-				);
+					const deviceCode = crypto.randomUUID().replaceAll("-", "");
 
-				const verificationUri = `${serverEnv.VERCEL_URL}/login/device`;
+					const userCode = yield* generateUserDeviceCode;
 
-				return {
-					user_code: userCode,
-					device_code: deviceCode,
-					expires_in: expiresIn,
-					verification_uri: verificationUri,
-					verification_uri_complete: `${verificationUri}?userCode=${encodeURIComponent(
-						userCode,
-					)}`,
-				};
-			}),
+					const expiresIn = 60 * 15;
+
+					yield* db.use((db) =>
+						db
+							.insert(Db.deviceCodeSessions)
+							.values({ appId: auth.jwt.oauthAppId, userCode, deviceCode }),
+					);
+
+					const verificationUri = `${serverEnv.VERCEL_URL}/login/device`;
+
+					return {
+						user_code: userCode,
+						device_code: deviceCode,
+						expires_in: expiresIn,
+						verification_uri: verificationUri,
+						verification_uri_complete: `${verificationUri}?userCode=${encodeURIComponent(
+							userCode,
+						)}`,
+					};
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		)
 		.handle(
 			"performAccessTokenGrant",
-			Effect.fn(function* ({ urlParams }) {
-				const deviceSession = yield* Effect.tryPromise({
-					try: () =>
-						db.query.deviceCodeSessions.findFirst({
-							where: eq(deviceCodeSessions.deviceCode, urlParams.device_code),
-						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				}).pipe(
-					Effect.flatMap(Option.fromNullable),
-					Effect.catchTag(
-						"NoSuchElementException",
-						() => new DeviceFlowError({ code: "incorrect_device_code" }),
-					),
-					Effect.flatMap((v) => {
-						if (+v.createdAt < Date.now() - 1000 * 60 * 10)
-							return new DeviceFlowError({ code: "expired_token" });
+			Effect.fn(
+				function* ({ urlParams }) {
+					const db = yield* Database;
+					const deviceSession = yield* db
+						.use((db) =>
+							db.query.deviceCodeSessions.findFirst({
+								where: Dz.eq(
+									Db.deviceCodeSessions.deviceCode,
+									urlParams.device_code,
+								),
+							}),
+						)
+						.pipe(
+							Effect.flatMap(Option.fromNullable),
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new DeviceFlowError({ code: "incorrect_device_code" }),
+							),
+							Effect.flatMap((v) => {
+								if (+v.createdAt < Date.now() - 1000 * 60 * 10)
+									return new DeviceFlowError({ code: "expired_token" });
 
-						if (v.userId === null)
-							return new DeviceFlowError({ code: "authorization_pending" });
+								if (v.userId === null)
+									return new DeviceFlowError({ code: "authorization_pending" });
 
-						return Effect.succeed({ ...v, userId: v.userId });
-					}),
-				);
+								return Effect.succeed({ ...v, userId: v.userId });
+							}),
+						);
 
-				const accessToken = crypto.randomUUID().replaceAll("-", "");
-				const refreshToken = crypto.randomUUID().replaceAll("-", "");
+					yield* Effect.log(`Got device session '${deviceSession.deviceCode}'`);
 
-				yield* Effect.tryPromise({
-					try: () =>
+					const accessToken = `mgu_${crypto.randomUUID().replaceAll("-", "")}`;
+					const refreshToken = `mgr_${crypto.randomUUID().replaceAll("-", "")}`;
+
+					yield* db.use((db) =>
 						db.transaction(async (db) => {
 							await db
-								.delete(deviceCodeSessions)
+								.delete(Db.deviceCodeSessions)
 								.where(
-									eq(deviceCodeSessions.deviceCode, deviceSession.deviceCode),
+									Dz.eq(
+										Db.deviceCodeSessions.deviceCode,
+										deviceSession.deviceCode,
+									),
 								);
-							await db.insert(oauthSessions).values({
+							await db.insert(Db.oauthSessions).values({
+								appId: deviceSession.appId,
+								userId: deviceSession.userId,
 								accessToken,
 								refreshToken,
 								expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-								userId: deviceSession.userId,
 							});
 						}),
-					catch: () => new HttpApiError.InternalServerError(),
-				});
+					);
 
-				return {
-					access_token: accessToken,
-					refresh_token: refreshToken,
-					token_type: "Bearer",
-				};
-			}),
+					yield* Effect.log("Access token grant performed");
+
+					return {
+						userId: deviceSession.userId,
+						access_token: accessToken,
+						refresh_token: refreshToken,
+						token_type: "Bearer" as const,
+					};
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
+		)
+		.handle(
+			"startServerRegistration",
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const id = crypto.randomUUID().replaceAll("-", "");
+					const userCode = yield* generateUserDeviceCode;
+
+					yield* db.use((db) =>
+						db.insert(Db.serverRegistrationSessions).values({ id, userCode }),
+					);
+
+					const verificationUri = `${serverEnv.VERCEL_URL}/server-registration`;
+
+					return {
+						id,
+						userCode,
+						verification_uri: verificationUri,
+						verification_uri_complete: `${verificationUri}?userCode=${encodeURIComponent(
+							userCode,
+						)}`,
+					};
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
+		)
+		.handle(
+			"performServerRegistration",
+			Effect.fn(
+				function* ({ payload: { id } }) {
+					const db = yield* Database;
+					const session = yield* db
+						.use((db) =>
+							db.query.serverRegistrationSessions.findFirst({
+								where: Dz.eq(Db.serverRegistrationSessions.id, id),
+							}),
+						)
+						.pipe(
+							Effect.flatMap(Option.fromNullable),
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new ServerRegistrationError({ code: "incorrect_id" }),
+							),
+						);
+
+					if (session.userId === null)
+						return yield* new ServerRegistrationError({
+							code: "authorization_pending",
+						});
+
+					const { userId } = session;
+
+					const oauthAppId = session.id;
+
+					yield* db.use((db) =>
+						db.transaction((db) =>
+							Promise.all([
+								db
+									.delete(Db.serverRegistrationSessions)
+									.where(Dz.eq(Db.serverRegistrationSessions.id, id)),
+								db.insert(Db.oauthApps).values({
+									type: "server",
+									id: oauthAppId,
+									ownerId: userId,
+								}),
+							]),
+						),
+					);
+
+					const token = yield* Schema.encode(ServerAuthJWTFromRaw)(
+						new ServerAuthJWT({ oauthAppId: oauthAppId, ownerId: userId }),
+					).pipe(
+						Effect.catchTag(
+							"ParseError",
+							() => new HttpApiError.InternalServerError(),
+						),
+						Effect.map(RawJWT.make),
+					);
+
+					return { token };
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
+		)
+		.handle(
+			"getServerRegistration",
+			Effect.fn(
+				function* () {
+					const db = yield* Database;
+					const auth = yield* Authentication;
+
+					if (auth.source !== "serverJwt")
+						return yield* new HttpApiError.Unauthorized();
+
+					const registration = yield* db.use((db) =>
+						db.query.oauthApps.findFirst({
+							where: Dz.and(
+								Dz.eq(Db.oauthApps.id, auth.jwt.oauthAppId),
+								Dz.eq(Db.oauthApps.type, "server"),
+							),
+						}),
+					);
+
+					if (!registration) return yield* new HttpApiError.NotFound();
+
+					return { ownerId: registration.ownerId };
+				},
+				Effect.catchTag(
+					"DatabaseError",
+					() => new HttpApiError.InternalServerError(),
+				),
+			),
 		),
 );
+
+const ApiDeps = Layer.mergeAll(JwtKeys.Default, Database.Default);
 
 const ApiLive = HttpApiBuilder.api(Api).pipe(
 	Layer.provide(ApiLiveGroup),
 	Layer.provide(AuthenticationLive),
+	Layer.provide(ApiDeps),
 );
 
 import { NodeSdk } from "@effect/opentelemetry";
@@ -379,14 +620,14 @@ const { handler } = HttpApiBuilder.toWebHandler(
 			resource: { serviceName: "mg-web" },
 			// Export span data to the console
 			spanProcessor: [
-				// new BatchSpanProcessor(new OTLPTraceExporter()),
+				new BatchSpanProcessor(new OTLPTraceExporter()),
 				// new BatchSpanProcessor(new ConsoleSpanExporter()),
 			],
 		})),
 	),
 );
 
-const createHandler = (): APIHandler => (event) => handler(event.request);
+const createHandler = () => (event: any) => handler(event.request);
 
 export const GET = createHandler();
 export const POST = createHandler();
@@ -397,6 +638,7 @@ export const OPTIONS = createHandler();
 
 import * as crypto from "node:crypto";
 import { serverEnv } from "~/env/server";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
 const generateUserDeviceCode = Effect.gen(function* () {
 	const SEGMENT_LENGTH = 4;

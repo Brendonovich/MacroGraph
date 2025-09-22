@@ -18,8 +18,6 @@ const ClientLive = Layer.unwrapEffect(
 			{ concurrency: 3 },
 		);
 
-		console.log(yield* PackagesSettings.listPackages());
-
 		return UI.Default;
 	}),
 );

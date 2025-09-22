@@ -1,12 +1,17 @@
 import { FetchHttpClient } from "@effect/platform";
 import { RpcClient, RpcSerialization } from "@effect/rpc";
-import { SubscribableCache } from "@macrograph/domain";
 import type { SettingsProps } from "@macrograph/package-sdk/ui";
 import { ReactiveMap } from "@solid-primitives/map";
-import { Context, Effect, Layer, Option } from "effect";
+import {
+	Context,
+	Effect,
+	Layer,
+	Option,
+	PubSub,
+	type Scope,
+	Stream,
+} from "effect";
 import type { Component } from "solid-js";
-
-import { ProjectRpc } from "../Project/Rpc";
 
 export class GetPackageRpcProtocol extends Effect.Service<GetPackageRpcProtocol>()(
 	"GetPackageRpcProtocol",
@@ -26,7 +31,8 @@ export class GetPackageSettings extends Context.Tag("GetPackageSettings")<
 export type PackageSettings = Readonly<{
 	rpcClient: RpcClient.RpcClient<any>;
 	SettingsUI: Component<SettingsProps<any, any>>;
-	state: SubscribableCache.SubscribableCache<void, any>;
+	notifySettingsChange: Effect.Effect<void>;
+	settingsChanges: Effect.Effect<Stream.Stream<void>, never, Scope.Scope>;
 }>;
 
 export interface PackageSettingsModule {
@@ -42,7 +48,6 @@ export class PackagesSettings extends Effect.Service<PackagesSettings>()(
 		accessors: true,
 		effect: Effect.gen(function* () {
 			const getProtocol = yield* GetPackageRpcProtocol;
-			const rpc = yield* ProjectRpc.client;
 
 			const packages = new ReactiveMap<string, PackageSettings>();
 
@@ -52,23 +57,24 @@ export class PackagesSettings extends Effect.Service<PackagesSettings>()(
 					module: PackageSettingsModule,
 				) {
 					const client = yield* RpcClient.make(module.Rpcs, {
-						disableTracing: true,
+						disableTracing: false,
 					}).pipe(Effect.provide(getProtocol(id)));
+
+					const changesNotify = yield* PubSub.unbounded<null>();
 
 					packages.set(id, {
 						rpcClient: client,
 						SettingsUI: module.default,
-						state: yield* SubscribableCache.make({
-							capacity: 1,
-							lookup: rpc.GetPackageSettings({ package: id }),
-							timeToLive: 0,
-						}),
+						notifySettingsChange: changesNotify.offer(null),
+						settingsChanges: changesNotify.subscribe.pipe(
+							Effect.map(Stream.fromQueue),
+						),
 					});
 				}),
 				getPackage: (id: string) => Option.fromNullable(packages.get(id)),
 				listPackages: () => Array.from<string>(packages.keys()),
 			};
 		}),
-		dependencies: [ProjectRpc.Default, GetPackageRpcProtocol.Default],
+		dependencies: [GetPackageRpcProtocol.Default],
 	},
 ) {}

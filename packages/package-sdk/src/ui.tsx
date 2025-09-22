@@ -1,6 +1,6 @@
 import type { RpcClient, RpcGroup } from "@effect/rpc";
 import { type VariantProps, cva, cx } from "cva";
-import { Effect, type Schema } from "effect";
+import { Effect, ManagedRuntime, Schema } from "effect";
 import {
 	type Accessor,
 	type ComponentProps,
@@ -12,6 +12,7 @@ import {
 	untrack,
 } from "solid-js";
 import createPresence from "solid-presence";
+import { createContextProvider } from "@solid-primitives/context";
 import GgSpinner from "~icons/gg/spinner";
 
 export type GlobalAppState = {
@@ -36,13 +37,17 @@ const buttonStyles = cva(
 		variants: {
 			variant: {
 				primary:
-					"bg-gray-12 text-gray-1 hover:bg-gray-11 disabled:bg-gray-10 outline-offset-3 focus-visible:outline-2",
-				text: "bg-transparent text-gray-11 enabled:(hover:(text-gray-12 bg-gray-3) focus-visible:(text-gray-12 bg-gray-3 outline-offset-0 outline-1)) disabled:(text-gray-10 bg-gray-3)",
+					"bg-gray-12 text-gray-1 hover:bg-gray-11 disabled:bg-gray-10 outline-offset-3 focus-visible:outline-1.5",
+				text: "bg-transparent text-gray-12 enabled:(hover:(text-gray-12 bg-gray-3) focus-visible:(text-gray-12 bg-gray-3 outline-offset-0 outline-1)) disabled:(text-gray-10 bg-gray-3)",
 				textDanger:
 					"bg-transparent text-red-10 enabled:(hover:bg-red-3 focus-visible:(bg-red-3 outline-offset-0 outline-1)) disabled:(text-red-9 bg-red-3)",
 			},
 			size: {
-				md: "h-8 rounded px-2.5 y-1 text-sm",
+				md: "h-8 px-2.5 y-1 text-sm",
+			},
+			shape: {
+				block: "h-full",
+				rounded: "rounded",
 			},
 		},
 		defaultVariants: {
@@ -55,7 +60,7 @@ const buttonStyles = cva(
 export function Button(
 	props: VariantProps<typeof buttonStyles> & ComponentProps<"button">,
 ) {
-	const [cvaProps, restProps] = splitProps(props, ["variant", "size"]);
+	const [cvaProps, restProps] = splitProps(props, ["variant", "size", "shape"]);
 
 	return (
 		<button
@@ -64,6 +69,21 @@ export function Button(
 			class={buttonStyles({ ...cvaProps, class: props.class })}
 		/>
 	);
+}
+
+const [EffectRuntimeProvider, _useEffectRuntime] = createContextProvider(
+	(props: { runtime: ManagedRuntime.ManagedRuntime<any, any> }) =>
+		props.runtime,
+);
+export { EffectRuntimeProvider };
+export function useEffectRuntime() {
+	const runtime = _useEffectRuntime();
+	if (!runtime) {
+		throw new Error(
+			"useEffectRuntime must be used within an EffectRuntimeProvider",
+		);
+	}
+	return runtime;
 }
 
 export function EffectButton(
@@ -80,6 +100,7 @@ export function EffectButton(
 			? untrack(() => child(loading))
 			: (child as JSX.Element);
 	});
+	const runtime = useEffectRuntime();
 
 	const [ref, setRef] = createSignal<HTMLButtonElement | null>(null);
 	const presence = createPresence({
@@ -100,7 +121,7 @@ export function EffectButton(
 				if (!props.onClick) return;
 				const currentTarget = e.currentTarget;
 				const t = setTimeout(() => setLoading(true), 30);
-				Effect.runPromise(props.onClick(e)).finally(() => {
+				runtime!.runPromise(props.onClick(e)).finally(() => {
 					clearTimeout(t);
 					setLoading(false);
 					if (document.activeElement === document.body) currentTarget.focus();

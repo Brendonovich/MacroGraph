@@ -6,6 +6,7 @@ import * as Graph from "./Graph";
 import { Shape as IOShape } from "./IO";
 import * as Realtime from "./Realtime";
 import { Position, SchemaRef } from "./util";
+import { PolicyDeniedError } from "./Policy";
 
 export * from "@macrograph/domain/Node";
 
@@ -48,19 +49,11 @@ export const Shape = Schema.extend(
 export type Shape = Schema.Schema.Type<typeof Shape>;
 
 export const Rpcs = RpcGroup.make(
-	Rpc.make("SetNodePosition", {
-		payload: {
-			nodeId: Schema.Int,
-			graphId: Graph.Id,
-			position: Position,
-		},
-		error: Graph.NotFound,
-	}),
 	Rpc.make("SetNodePositions", {
 		payload: {
 			graphId: Graph.Id,
 			positions: Schema.Array(Schema.Tuple(Node.Id, Position)),
 		},
-		error: Schema.Union(Graph.NotFound, NotFound),
+		error: Schema.Union(Graph.NotFound, NotFound, PolicyDeniedError),
 	}),
 ).middleware(Realtime.ConnectionRpcMiddleware);

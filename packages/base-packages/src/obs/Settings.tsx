@@ -24,19 +24,22 @@ export default function Settings(
 	props: SettingsProps<typeof RPCS, typeof STATE>,
 ) {
 	return (
-		<>
+		<div class="flex flex-col gap-4">
 			<AddSocketForm {...props} />
-			<ul class="rounded border border-gray-6 divide-y divide-gray-6">
-				<For
-					each={props.state.connections}
-					fallback={
-						<div class="text-center p-3 text-gray-11 italic">No Sockets</div>
-					}
-				>
-					{(conn) => <SocketListItem {...props} conn={conn} />}
-				</For>
-			</ul>
-		</>
+			<div>
+				<span class="text-gray-11 font-medium text-xs">OBS Sockets</span>
+				<ul class="rounded divide-y divide-gray-6 gap-4">
+					<For
+						each={props.state.connections}
+						fallback={
+							<div class="p-2 text-center text-gray-11 italic">No Sockets</div>
+						}
+					>
+						{(conn) => <SocketListItem {...props} conn={conn} />}
+					</For>
+				</ul>
+			</div>
+		</div>
 	);
 }
 
@@ -74,7 +77,7 @@ function SocketListItem(
 	const conn = () => props.conn;
 
 	return (
-		<li class="flex flex-row px-3 py-2 w-full">
+		<li class="flex flex-row py-2 w-full">
 			<div class="flex flex-col gap-0.5">
 				<span class="font-medium">TODO Name</span>
 				<div class="flex flex-row items-center gap-2">
@@ -113,9 +116,9 @@ function InputField(props: { label: string } & ComponentProps<"input">) {
 	const [labelProps, inputProps] = splitProps(props, ["label"]);
 	return (
 		<div class="flex flex-col gap-1 flex-1 items-stretch">
-			<label class="font-medium text-sm">{labelProps.label}</label>
+			<label class="font-medium text-xs text-gray-11">{labelProps.label}</label>
 			<input
-				class="bg-white/85 dark:bg-black/25 w-full h-8 text-sm px-2 ring-1 rounded ring-gray-7 focus:ring-yellow-5 focus:ring-2 focus:outline-none"
+				class="bg-white/85 dark:bg-black/25 w-full h-8 text-sm px-2 ring-1 ring-gray-6 focus:ring-yellow-5 focus:outline-none"
 				{...inputProps}
 			/>
 		</div>

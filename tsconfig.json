@@ -1,7 +1,7 @@
 {
 	"files": [],
 	"references": [
-		{ "path": "./packages/web-api" },
+		{ "path": "./packages/web-domain" },
 		{ "path": "./packages/domain" },
 		{ "path": "./packages/package-sdk" },
 		{ "path": "./packages/base-packages" },
@@ -10,5 +10,8 @@
 		{ "path": "./packages/server-frontend" },
 		{ "path": "./apps/server" },
 		{ "path": "./apps/web" }
-	]
+	],
+	"compilerOptions": {
+		"plugins": [{ "name": "@effect/language-service" }]
+	}
 }

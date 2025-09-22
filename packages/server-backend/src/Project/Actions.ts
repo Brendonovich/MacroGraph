@@ -18,22 +18,22 @@ import {
 import { Graph, Node } from "@macrograph/server-domain";
 import { Context, Mailbox, Option, PubSub, Stream, pipe } from "effect";
 import * as Effect from "effect/Effect";
-import type { Package } from "../../../package-sdk/src";
 
-import { CloudAPIClient } from "../CloudApi/ApiClient";
-import { CredentialsCache } from "../CloudApi/CredentialsCache";
+import { Credentials } from "../Credentials";
 import { RealtimePubSub } from "../Realtime";
 import { type NodeConnections, project } from "../project-data";
 import { getNextNodeId } from "./NodeIdCounter";
 import { ProjectPackages } from "./Packages";
+import type { Package } from "../../../package-sdk/src";
+import { CloudApi } from "../CloudApi";
 
 export class ProjectActions extends Effect.Service<ProjectActions>()(
 	"ProjectActions",
 	{
 		effect: Effect.gen(function* () {
 			// const logger = yield* Logger;
-			const credentials = yield* CredentialsCache;
-			const apiClient = yield* CloudAPIClient.api;
+			const cloud = yield* CloudApi;
+			const credentials = yield* Credentials;
 			const realtime = yield* RealtimePubSub;
 			const packages = yield* ProjectPackages;
 
@@ -440,7 +440,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 									Effect.gen(function* () {
 										yield* credentialLatch.close;
 
-										yield* apiClient
+										yield* cloud.client
 											.refreshCredential({
 												path: {
 													providerId: name,
@@ -482,7 +482,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								spanPrefix: `PackageRpc.${name}`,
 							}).pipe(
 								Effect.provide(ret.rpc),
-								Effect.provide(RpcServer.layerProtocolHttp({ path: `/` })),
+								Effect.provide(RpcServer.layerProtocolHttp({ path: "/" })),
 								Effect.provide(RpcSerialization.layerJson),
 							);
 
@@ -543,8 +543,8 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 			};
 		}),
 		dependencies: [
-			CredentialsCache.Default,
-			CloudAPIClient.Default,
+			Credentials.Default,
+			CloudApi.Default,
 			ProjectPackages.Default,
 			RealtimePubSub.Default,
 		],

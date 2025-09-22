@@ -1,13 +1,25 @@
 import { Socket } from "@effect/platform";
 import { BrowserSocket } from "@effect/platform-browser";
 import type { ProjectEvent } from "@macrograph/server-domain";
-import { Chunk, Effect, Layer, Option, Stream } from "effect";
+import { Chunk, Effect, Option, Stream } from "effect";
+
+import { ClientAuth } from "../ClientAuth";
 
 export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 	"ProjectRealtime",
 	{
 		scoped: Effect.gen(function* () {
-			const socket = yield* Socket.Socket;
+			const { jwt } = yield* ClientAuth;
+
+			const params = new URLSearchParams();
+
+			const _jwt = yield* jwt.get;
+
+			if (Option.isSome(_jwt)) params.set("jwt", _jwt.value);
+
+			const socket = yield* Socket.makeWebSocket(
+				`/api/realtime?${params}`,
+			).pipe(Effect.provide(BrowserSocket.layerWebSocketConstructor));
 
 			const pull = yield* Stream.never.pipe(
 				Stream.pipeThroughChannel(Socket.toChannel(socket)),
@@ -37,10 +49,6 @@ export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 				stream: Stream.fromPull(Effect.sync(() => pull)),
 			};
 		}),
-		dependencies: [
-			Socket.layerWebSocket("/api/realtime").pipe(
-				Layer.provide(BrowserSocket.layerWebSocketConstructor),
-			),
-		],
+		dependencies: [ClientAuth.Default],
 	},
 ) {}

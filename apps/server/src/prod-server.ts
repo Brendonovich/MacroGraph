@@ -7,7 +7,7 @@ import {
 	HttpServerResponse,
 } from "@effect/platform";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { DepsLive } from "@macrograph/server-backend";
+import { DepsLive, Server } from "@macrograph/server-backend";
 import { Effect, Layer } from "effect";
 
 import { ServerEntry } from "./entry-server";
@@ -46,6 +46,7 @@ Layer.unwrapEffect(
 		);
 	}),
 ).pipe(
+	Layer.provide(Server.Default),
 	Layer.provide(NodeHttpServer.layer(createServer, { port: 23456 })),
 	Layer.launch,
 	Effect.provide(DepsLive),

@@ -6,17 +6,22 @@ import {
 } from "@macrograph/ui";
 import { cache, createAsync } from "@solidjs/router";
 import { type ComponentProps, For, type JSX, Suspense } from "solid-js";
-import { appendResponseHeader } from "vinxi/http";
+import { appendResponseHeader } from "h3";
 import {
 	type DownloadTarget,
 	getDownloadURL,
 	getLatestVersion,
 } from "~/lib/releases";
+import { getRequestEvent } from "solid-js/web";
 
 const getDownloadURL_cached = cache((target: DownloadTarget) => {
 	"use server";
 
-	appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 5}`);
+	appendResponseHeader(
+		getRequestEvent()!.nativeEvent,
+		"CDN-Cache-Control",
+		`public, max-age=${60 * 60 * 5}`,
+	);
 
 	return getDownloadURL(target);
 }, "getLatestVersion");
@@ -24,7 +29,11 @@ const getDownloadURL_cached = cache((target: DownloadTarget) => {
 const getLatestVersion_cached = cache(() => {
 	"use server";
 
-	appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 5}`);
+	appendResponseHeader(
+		getRequestEvent()!.nativeEvent,
+		"CDN-Cache-Control",
+		`public, max-age=${60 * 60 * 5}`,
+	);
 
 	return getLatestVersion();
 }, "getLatestVersion");

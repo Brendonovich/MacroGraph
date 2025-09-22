@@ -14,14 +14,14 @@
 		"@solid-primitives/deep": "^0.2.7",
 		"@solid-primitives/map": "^0.4.11",
 		"@solid-primitives/set": "^0.4.11",
-		"@tanstack/solid-query": "^4.36.1",
+		"@tanstack/solid-query": "^5.85.5",
 		"valibot": "^0.37.0"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",
 		"@total-typescript/ts-reset": "^0.4.2",
 		"safaridriver": "^0.0.5",
-		"solid-js": "^1.9.7",
+		"solid-js": "^1.9.9",
 		"type-fest": "^2.19.0",
 		"webdriverio": "^8.35.1"
 	}

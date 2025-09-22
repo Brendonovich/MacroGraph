@@ -1,28 +1,22 @@
-import { HttpClient, HttpClientRequest } from "@effect/platform";
-import { ClientAuth, CloudAuth } from "@macrograph/server-domain";
-import {
-	Config,
-	Effect,
-	Mailbox,
-	Option,
-	Schedule,
-	SubscriptionRef,
-} from "effect";
-import * as Jose from "jose";
+import { ClientAuth, CloudAuth, Realtime } from "@macrograph/server-domain";
+import { Effect, Mailbox, Option, Schedule, Schema } from "effect";
 
-import { CloudAPIClient } from "../CloudApi/ApiClient";
-import { RealtimeConnection } from "../Realtime";
+import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
+import { getRealtimeConnection, RealtimeConnections } from "../Realtime";
+import { CloudApi, CloudApiToken } from "../CloudApi";
 
 export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 	Effect.gen(function* () {
-		const { api, makeClient } = yield* CloudAPIClient;
+		const connections = yield* RealtimeConnections;
+		const cloud = yield* CloudApi;
 
 		return {
 			ClientLogin: Effect.fn(function* () {
+				const connection = yield* Realtime.Connection;
 				const mailbox = yield* Mailbox.make<ClientAuth.CloudLoginEvent>();
 
 				yield* Effect.gen(function* () {
-					const data = yield* api
+					const data = yield* cloud.client
 						.createDeviceCodeFlow()
 						.pipe(Effect.catchAll(() => new CloudAuth.CloudApiError()));
 
@@ -31,7 +25,11 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 						verificationUrlComplete: data.verification_uri_complete,
 					});
 
-					const grant = yield* api
+					yield* Effect.log(
+						`Starting access token grant check for session '${data.device_code}'`,
+					);
+
+					const grant = yield* cloud.client
 						.performAccessTokenGrant({
 							urlParams: {
 								device_code: data.device_code,
@@ -41,8 +39,10 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 						.pipe(
 							Effect.catchAll((error) => {
 								if (error._tag === "DeviceFlowError") return Effect.fail(error);
-								return Effect.dieMessage(
-									"Failed to perform access token grant",
+								return mailbox.end.pipe(
+									Effect.zipRight(
+										Effect.dieMessage("Failed to perform access token grant"),
+									),
 								);
 							}),
 							Effect.retry({
@@ -52,43 +52,59 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 							Effect.orDie,
 						);
 
-					console.log({ grant });
+					yield* Effect.log(
+						`Completed access token grant for user '${grant.userId}'`,
+					);
 
-					const userApi = yield* makeClient({
-						transformClient: HttpClient.mapRequest(
-							HttpClientRequest.setHeader(
-								"Authorization",
-								`Bearer ${grant.access_token}`,
-							),
-						),
+					const jwt = new ClientAuthJWT({
+						accessToken: grant.access_token,
+						refreshToken: grant.refresh_token,
 					});
 
-					const { jwt } = yield* userApi
-						.getUserJwt()
-						.pipe(Effect.tapError(Effect.log));
+					const encodedJwt = yield* Schema.encode(ClientAuthJWTFromEncoded)(
+						jwt,
+					).pipe(Effect.map(ClientAuth.EncodedJWT.make));
 
-					yield* mailbox.offer({ type: "finished", jwt });
+					const cloudApi = yield* cloud.makeClient.pipe(
+						Effect.provide(
+							CloudApiToken.makeContext(Option.some(grant.access_token)),
+						),
+					);
+
+					const user = yield* cloudApi
+						.getUser()
+						.pipe(Effect.catchAll(() => new CloudAuth.CloudApiError()));
+
+					connections.set(connection.id, {
+						auth: Option.map(user, (u) => ({
+							userId: u.id,
+							email: u.email,
+							jwt,
+						})),
+					});
+
+					yield* mailbox.offer({ type: "finished", jwt: encodedJwt });
 				}).pipe(Effect.forkScoped);
 
 				return mailbox;
 			}),
-			Identify: Effect.fn(function* (payload) {
-				const connection = yield* RealtimeConnection;
+			GetUser: Effect.fn(function* () {
+				const connection = yield* getRealtimeConnection;
+				const connectionAuth = Option.andThen(connection, (c) => c.auth);
 
-				const publicKey = yield* Config.string("JWT_PUBLIC_KEY").pipe(
-					Effect.tap(Effect.log),
-					Effect.andThen((v) =>
-						Effect.promise(() =>
-							Jose.importSPKI(v.replaceAll("\\n", "\n"), "RS256"),
+				if (Option.isNone(connectionAuth)) return Option.none();
+
+				const cloudApi = yield* cloud.makeClient.pipe(
+					Effect.provide(
+						CloudApiToken.makeContext(
+							Option.some(connectionAuth.value.jwt.accessToken),
 						),
 					),
-					Effect.orDie,
 				);
 
-				yield* Effect.promise(() => Jose.jwtVerify(payload.jwt, publicKey));
-
-				yield* connection.authJwt.pipe(
-					SubscriptionRef.set(Option.some(payload.jwt)),
+				return yield* cloudApi.getUser().pipe(
+					Effect.catchAll(() => new CloudAuth.CloudApiError()),
+					Effect.map(Option.map((u) => ({ name: u.email.split("@")[0]! }))),
 				);
 			}),
 		};

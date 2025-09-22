@@ -3,12 +3,14 @@ import { ManagedRuntime, Match, Option, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import { createStore, produce, reconcile } from "solid-js/store";
 import { ErrorBoundary, render } from "solid-js/web";
+import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
 import "./style.css";
 
-import { ProjectRuntime, ProjectRuntimeProvider } from "./AppRuntime";
+import { ProjectRuntime, ProjectRuntimeProvider, Provider } from "./AppRuntime";
 import { Layout } from "./Layout";
 import { PackagesSettings } from "./Packages/PackagesSettings";
 import {
@@ -28,6 +30,8 @@ export const runtime = ManagedRuntime.make(ProjectRuntime.layer);
 
 export class UI extends Effect.Service<UI>()("UI", {
 	effect: Effect.gen(function* () {
+		yield* Effect.log("Starting");
+
 		const [presenceClients, setPresence] = createStore<
 			Record<number, PresenceClient>
 		>({});
@@ -52,7 +56,7 @@ export class UI extends Effect.Service<UI>()("UI", {
 						),
 						tagType("packageStateChanged", (data) => {
 							return pkgSettings.getPackage(data.package).pipe(
-								Option.map((pkg) => pkg.state.refresh),
+								Option.map((pkg) => pkg.notifySettingsChange),
 								Effect.transposeOption,
 							);
 						}),
@@ -187,27 +191,41 @@ export class UI extends Effect.Service<UI>()("UI", {
 			runtime.runFork,
 		);
 
+		const client = new QueryClient({
+			defaultOptions: {
+				queries: {
+					retry: false,
+				},
+			},
+		});
+
 		const dispose = render(
 			() => (
-				<ProjectRuntimeProvider value={runtime}>
-					<RealtimeContextProvider value={{ id: () => realtime.id }}>
-						<PresenceContextProvider value={{ clients: presenceClients }}>
-							<ErrorBoundary
-								fallback={(e) => {
-									console.error(e);
-									return (
-										<div>
-											{e.toString()}
-											<pre>{e.stack}</pre>
-										</div>
-									);
-								}}
-							>
-								<Router root={Layout}>{routes}</Router>
-							</ErrorBoundary>
-						</PresenceContextProvider>
-					</RealtimeContextProvider>
-				</ProjectRuntimeProvider>
+				<Provider runtime={runtime}>
+					<EffectRuntimeProvider runtime={runtime}>
+						<QueryClientProvider client={client}>
+							<ProjectRuntimeProvider value={runtime}>
+								<RealtimeContextProvider value={{ id: () => realtime.id }}>
+									<PresenceContextProvider value={{ clients: presenceClients }}>
+										<ErrorBoundary
+											fallback={(e) => {
+												console.error(e);
+												return (
+													<div>
+														{e.toString()}
+														<pre>{e.stack}</pre>
+													</div>
+												);
+											}}
+										>
+											<Router root={Layout}>{routes}</Router>
+										</ErrorBoundary>
+									</PresenceContextProvider>
+								</RealtimeContextProvider>
+							</ProjectRuntimeProvider>
+						</QueryClientProvider>
+					</EffectRuntimeProvider>
+				</Provider>
 			),
 			document.getElementById("app")!,
 		);
