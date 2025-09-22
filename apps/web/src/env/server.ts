@@ -28,10 +28,21 @@ export const serverEnv = createEnv({
 		DATABASE_URL: z.string(),
 		RESEND_API_KEY: z.string(),
 	},
-	runtimeEnv: {
-		VERCEL_URL: "http://localhost:4321",
-		AUTH_REDIRECT_PROXY_URL: "http://localhost:4321",
-		...process.env,
-	},
+	runtimeEnv: (() => {
+		const base = {
+			VERCEL_URL: "http://localhost:4321",
+			AUTH_REDIRECT_PROXY_URL: "http://localhost:4321",
+			...process.env,
+		};
+
+		if (
+			process.env.VERCEL_ENV === "production" &&
+			process.env.VERCEL_PROJECT_PRODUCTION_URL
+		) {
+			base.VERCEL_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+		}
+
+		return base;
+	})(),
 	skipValidation: process.env.NODE_ENV === "development",
 });
