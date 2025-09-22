@@ -10,8 +10,6 @@ import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { DepsLive, Server } from "@macrograph/server-backend";
 import { Effect, Layer } from "effect";
 
-import { ServerEntry } from "./entry-server";
-
 Layer.unwrapEffect(
 	Effect.gen(function* () {
 		return HttpRouter.empty.pipe(
@@ -41,7 +39,7 @@ Layer.unwrapEffect(
 					}),
 				),
 			),
-			HttpRouter.mountApp("/api", yield* ServerEntry),
+			HttpRouter.mountApp("/api", yield* Server),
 			HttpServer.serve(),
 		);
 	}),
