@@ -105,7 +105,10 @@ const getAuthentication = Effect.gen(function* () {
 					userId: jwt.ownerId,
 				});
 			}
-		} else type = "session-desktop";
+		} else {
+			type = "session-desktop";
+			sessionId = bearerToken;
+		}
 	} else if (Option.isSome(sessionCookie)) {
 		if (req.method !== "GET") {
 			const { origin, host } = yield* HttpServerRequest.schemaHeaders(
@@ -250,8 +253,10 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			"getUser",
 			Effect.fn(
 				function* () {
+					console.log("BRUH");
 					const db = yield* Database;
 					const session = yield* getAuthentication;
+					console.log({ session });
 
 					if (Option.isNone(session)) return Option.none();
 
