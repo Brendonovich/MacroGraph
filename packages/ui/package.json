@@ -14,9 +14,7 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": [
-				"./src/auto-imports.d.ts"
-			]
+			"types": ["./src/auto-imports.d.ts"]
 		}
 	},
 	"devDependencies": {
