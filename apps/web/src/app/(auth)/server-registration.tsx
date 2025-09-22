@@ -57,8 +57,6 @@ const getInitialState = query(async (userCode: string) => {
     where: eq(Db.serverRegistrationSessions.userCode, userCode),
   });
 
-  console.log({ deviceSession });
-
   return { auth, userCode, userCodeValid: !!deviceSession };
 }, "getInitialState");
 
@@ -66,6 +64,8 @@ export default function Test() {
   const [searchParams] = useSearchParams<{
     userCode?: string;
   }>();
+
+  console.log({ ...searchParams });
 
   const initialState = createAsync(
     async () =>
