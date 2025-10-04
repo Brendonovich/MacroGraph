@@ -1,0 +1,19 @@
+{
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "destination": "https://macrograph-production.up.railway.app/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/:path*",
+      "headers": [
+        {
+          "key": "CDN-Cache-Control",
+          "value": "public, immutable, max-age=31536000"
+        }
+      ]
+    }
+  ]
+}
