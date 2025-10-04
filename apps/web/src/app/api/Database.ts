@@ -6,7 +6,9 @@ import { db } from "~/drizzle";
 
 export class Database extends Effect.Service<Database>()("Database", {
 	effect: Effect.gen(function* () {
-		const use = <A>(f: (_db: typeof db) => Promise<A> & { toSQL?(): Query }) => {
+		const use = <A>(
+			f: (_db: typeof db) => Promise<A> & { toSQL?(): Query },
+		) => {
 			const query = f(db);
 			return Effect.tryPromise({
 				try: () => query,
@@ -14,11 +16,11 @@ export class Database extends Effect.Service<Database>()("Database", {
 			}).pipe(
 				Effect.tapErrorCause(Effect.logError),
 				Effect.withSpan("Database.use", {
-					attributes: query.toSQL !== undefined ? { sql: query.toSQL().sql } : {},
+					attributes:
+						query.toSQL !== undefined ? { sql: query.toSQL().sql } : {},
 				}),
 			);
 		};
-
 
 		return { use } as const;
 	}),
