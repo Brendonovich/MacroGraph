@@ -1,6 +1,6 @@
 import { DatabaseError } from "@macrograph/web-domain";
 import type { Query } from "drizzle-orm";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 import { db } from "~/drizzle";
 

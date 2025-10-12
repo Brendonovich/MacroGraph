@@ -34,7 +34,7 @@ import * as Jose from "jose";
 import { verifyRequestOrigin } from "lucia";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
-import { Database } from "./Database";
+import { Database } from "../../lib/Database";
 import * as Db from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import { posthogCapture, posthogShutdown } from "~/posthog/server";

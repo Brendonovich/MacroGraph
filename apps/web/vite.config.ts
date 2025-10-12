@@ -1,14 +1,17 @@
 import { defineConfig } from "vite";
 import { solidStart } from "@solidjs/start/config";
-import { nitroV2Plugin } from "@solidjs/start/nitro-v2-plugin";
+import { nitro } from "nitro/vite";
 // @ts-expect-error
 import mdx from "@vinxi/plugin-mdx";
 // import unfonts from "unplugin-fonts/vite";
 
 import interfacePlugin from "../../packages/ui/vite";
 
-export default defineConfig({
-	optimizeDeps: { exclude: ["fsevents", "@node-rs/bcrypt", "@node-rs/argon2"] },
+const nodeOnlyDeps = ["@node-rs/bcrypt", "@node-rs/argon2"];
+
+export default defineConfig((env) => ({
+	optimizeDeps: { exclude: nodeOnlyDeps },
+	ssr: { external: nodeOnlyDeps },
 	plugins: [
 		interfacePlugin,
 		mdx.default.withImports({})({
@@ -19,15 +22,15 @@ export default defineConfig({
 		solidStart({
 			ssr: true,
 			routeDir: "app",
-			extensions: ["md", "mdx"],
+			// extensions: ["md", "mdx"],
 		}),
-		nitroV2Plugin({
-			preset: "vercel",
-			prerender: {
-				crawlLinks: true,
-				routes: ["/"],
-			},
-		}),
+		env.command === "build" &&
+			nitro({
+				config: {
+					preset: "vercel",
+					prerender: { crawlLinks: true, routes: ["/"] },
+				},
+			}),
 		// unfonts({
 		//   fontsource: {
 		//     families: [
@@ -39,4 +42,4 @@ export default defineConfig({
 		//   },
 		// }),
 	],
-});
+}));

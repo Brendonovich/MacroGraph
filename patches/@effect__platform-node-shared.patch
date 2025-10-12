@@ -1,0 +1,31 @@
+diff --git a/dist/esm/internal/stream.js b/dist/esm/internal/stream.js
+index 0c36b051c1ba104a2a6404ed67189533a1ba0461..15ce790aeed061544bc3c29e6ba0220c3947d142 100644
+--- a/dist/esm/internal/stream.js
++++ b/dist/esm/internal/stream.js
+@@ -96,14 +96,20 @@ export const writeInput = (writable, onFailure, {
+   endOnDone = true
+ } = {}, onDone = Effect.void) => {
+   const write = writeEffect(writable, encoding);
+-  const close = endOnDone ? Effect.async(resume => {
+-    if ("closed" in writable && writable.closed) {
+-      resume(Effect.void);
++  const close = (() => {
++    if (endOnDone) {
++      return Effect.async(resume => {
++        if ("closed" in writable && writable.closed) {
++          resume(Effect.void);
++        } else {
++          writable.once("finish", () => resume(Effect.void));
++          writable.end();
++        }
++      });
+     } else {
+-      writable.once("finish", () => resume(Effect.void));
+-      writable.end();
++      return Effect.void;
+     }
+-  }) : Effect.void;
++  })();
+   return {
+     awaitRead: () => Effect.void,
+     emit: write,

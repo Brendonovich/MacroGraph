@@ -1,19 +1,18 @@
 import { solidStart } from "@solidjs/start/config";
 import { defineConfig } from "vite";
+import { nitro } from "nitro/vite";
 
 import interfacePlugin from "../../packages/ui/vite";
 
-export default defineConfig({
+export default defineConfig((env) => ({
 	// https://vitejs.dev/config/
 	plugins: [
 		interfacePlugin,
 		solidStart({
 			ssr: false,
 			routeDir: "app",
-			server: {
-				preset: "static",
-			},
 		}),
+		env.command === "build" && nitro({ config: { preset: "static" } }),
 	],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	// prevent vite from obscuring rust errors
@@ -29,4 +28,4 @@ export default defineConfig({
 		sourcemap: !!process.env.TAURI_DEBUG,
 		minify: false,
 	},
-});
+}));
