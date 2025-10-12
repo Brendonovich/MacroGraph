@@ -1,89 +1,80 @@
 import {
-	Badge,
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
+  Badge,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
 } from "@macrograph/ui";
 import { cache, createAsync } from "@solidjs/router";
 import { type ComponentProps, For, type JSX, Suspense } from "solid-js";
-import { appendResponseHeader } from "h3";
+import { appendResponseHeader } from "@solidjs/start/http";
 import {
-	type DownloadTarget,
-	getDownloadURL,
-	getLatestVersion,
+  type DownloadTarget,
+  getDownloadURL,
+  getLatestVersion,
 } from "~/lib/releases";
-import { getRequestEvent } from "solid-js/web";
 
 const getDownloadURL_cached = cache((target: DownloadTarget) => {
-	"use server";
+  "use server";
 
-	appendResponseHeader(
-		getRequestEvent()!.nativeEvent,
-		"CDN-Cache-Control",
-		`public, max-age=${60 * 60 * 5}`,
-	);
+  appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 5}`);
 
-	return getDownloadURL(target);
+  return getDownloadURL(target);
 }, "getLatestVersion");
 
 const getLatestVersion_cached = cache(() => {
-	"use server";
+  "use server";
 
-	appendResponseHeader(
-		getRequestEvent()!.nativeEvent,
-		"CDN-Cache-Control",
-		`public, max-age=${60 * 60 * 5}`,
-	);
+  appendResponseHeader("CDN-Cache-Control", `public, max-age=${60 * 60 * 5}`);
 
-	return getLatestVersion();
+  return getLatestVersion();
 }, "getLatestVersion");
 
 export function DesktopDownloadDropdown(
-	props: ComponentProps<typeof DropdownMenu>,
+  props: ComponentProps<typeof DropdownMenu>,
 ) {
-	const latestVersion = createAsync(() => getLatestVersion_cached());
+  const latestVersion = createAsync(() => getLatestVersion_cached());
 
-	return (
-		<DropdownMenu {...props}>
-			{props.children}
-			<DropdownMenuContent>
-				<Suspense
-					fallback={
-						<div class="px-2 py-1 font-medium">Loading Versions...</div>
-					}
-				>
-					<For
-						each={
-							[
-								["windows-x86_64", "Windows"],
-								[
-									"darwin-aarch64",
-									["macOS", <Badge class="ml-2">Apple Silicon</Badge>],
-								],
-								["darwin-x86_64", ["macOS", <Badge class="ml-2">Intel</Badge>]],
-								[
-									"linux-x86_64-AppImage",
-									["Linux", <Badge class="ml-2">AppImage</Badge>],
-								],
-								[
-									"linux-x86_64-deb",
-									["Linux", <Badge class="ml-2">deb</Badge>],
-								],
-							] satisfies Array<[DownloadTarget, JSX.Element]>
-						}
-					>
-						{([target, name]) => (
-							<DropdownMenuItem
-								onSelect={() =>
-									getDownloadURL_cached(target).then((url) => window.open(url))
-								}
-							>
-								{name}
-							</DropdownMenuItem>
-						)}
-					</For>
-				</Suspense>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	);
+  return (
+    <DropdownMenu {...props}>
+      {props.children}
+      <DropdownMenuContent>
+        <Suspense
+          fallback={
+            <div class="px-2 py-1 font-medium">Loading Versions...</div>
+          }
+        >
+          <For
+            each={
+              [
+                ["windows-x86_64", "Windows"],
+                [
+                  "darwin-aarch64",
+                  ["macOS", <Badge class="ml-2">Apple Silicon</Badge>],
+                ],
+                ["darwin-x86_64", ["macOS", <Badge class="ml-2">Intel</Badge>]],
+                [
+                  "linux-x86_64-AppImage",
+                  ["Linux", <Badge class="ml-2">AppImage</Badge>],
+                ],
+                [
+                  "linux-x86_64-deb",
+                  ["Linux", <Badge class="ml-2">deb</Badge>],
+                ],
+              ] satisfies Array<[DownloadTarget, JSX.Element]>
+            }
+          >
+            {([target, name]) => (
+              <DropdownMenuItem
+                onSelect={() =>
+                  getDownloadURL_cached(target).then((url) => window.open(url))
+                }
+              >
+                {name}
+              </DropdownMenuItem>
+            )}
+          </For>
+        </Suspense>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

@@ -46,7 +46,6 @@
     "drizzle-orm": "^0.29.5",
     "effect": "^3.16.8",
     "effect-server-fn": "workspace:*",
-    "h3": "^1.15.4",
     "hono": "^3.12.12",
     "jose": "^4.15.9",
     "lucia": "^3.2.2",

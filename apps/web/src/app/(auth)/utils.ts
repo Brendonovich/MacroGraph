@@ -1,6 +1,5 @@
 import { action, reload } from "@solidjs/router";
 import * as v from "valibot";
-import { deleteCookie } from "h3";
 
 import { getAuthState, getUser } from "~/api";
 import { lucia } from "~/lucia";

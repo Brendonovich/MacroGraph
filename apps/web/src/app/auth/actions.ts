@@ -3,7 +3,6 @@
 import * as Jose from "jose";
 
 import { OAUTH_TOKEN } from "@macrograph/api-contract";
-import { getRequestHost, getRequestProtocol } from "h3";
 import type { z } from "zod";
 import { serverEnv } from "~/env/server";
 import { CALLBACK_SEARCH_PARAMS, OAUTH_STATE } from "./[provider]/types";

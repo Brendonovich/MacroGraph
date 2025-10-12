@@ -506,9 +506,6 @@ importers:
       effect-server-fn:
         specifier: workspace:*
         version: link:../../packages/effect-server-fn
-      h3:
-        specifier: ^1.15.4
-        version: 1.15.4
       hono:
         specifier: ^3.12.12
         version: 3.12.12
