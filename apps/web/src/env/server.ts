@@ -32,6 +32,7 @@ function createServerEnv() {
 		runtimeEnv: (() => {
 			const base = {
 				VERCEL_URL: "http://localhost:4321",
+				VERCEL_BRANCH_URL: "http://localhost:4321",
 				AUTH_REDIRECT_PROXY_URL: "http://localhost:4321",
 				...process.env,
 			};

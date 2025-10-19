@@ -34,7 +34,7 @@
     "@solid-primitives/timer": "^1.3.10",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.3",
-    "@solidjs/start": "npm:@brendonovich/solidjs__start@0.0.2",
+    "@solidjs/start": "npm:@brendonovich/solidjs__start@0.0.3",
     "@solidjs/start-nitro-v2-plugin": "npm:@brendonovich/solidjs__start-nitro-v2-plugin@0.0.0",
     "@t3-oss/env-core": "^0.6.1",
     "@tanstack/solid-query": "^5.85.5",

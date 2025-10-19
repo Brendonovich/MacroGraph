@@ -474,8 +474,8 @@ importers:
         specifier: ^0.15.3
         version: 0.15.3(solid-js@1.9.9)
       '@solidjs/start':
-        specifier: npm:@brendonovich/solidjs__start@0.0.2
-        version: '@brendonovich/solidjs__start@0.0.2(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
+        specifier: npm:@brendonovich/solidjs__start@0.0.3
+        version: '@brendonovich/solidjs__start@0.0.3(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
       '@solidjs/start-nitro-v2-plugin':
         specifier: npm:@brendonovich/solidjs__start-nitro-v2-plugin@0.0.0
         version: '@brendonovich/solidjs__start-nitro-v2-plugin@0.0.0(@planetscale/database@1.19.0)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
@@ -2582,8 +2582,8 @@ packages:
     resolution: {integrity: sha512-xaNur4hBx5wDijA5ZnHQjTx6p66ZrojMhE1G2PNymY9xfc9X0ovWmTxiA2i4hUmcTnj6WRTjR7Y6Bo0uKG6VQw==}
     engines: {node: '>=22'}
 
-  '@brendonovich/solidjs__start@0.0.2':
-    resolution: {integrity: sha512-VUWqaJAUuJbfiKIxiUw7EbXGXCGKRmsqM9i5HPk2C9cw75m4Cgj84RoR7psDsh6O0FoclJOGcXO1qQoC4v2y5g==}
+  '@brendonovich/solidjs__start@0.0.3':
+    resolution: {integrity: sha512-F5wYr2NC5/Zd//rCVPEnP9VEy5qVuGIElFhrUUcoQnUj8aCnodwtk9BXPgb2Dhh4DFOao2jyBImjo60UVNmHtA==}
     engines: {node: '>=22'}
 
   '@chromatic-com/storybook@1.6.1':
@@ -12696,7 +12696,7 @@ snapshots:
       - tsx
       - yaml
 
-  '@brendonovich/solidjs__start@0.0.2(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
+  '@brendonovich/solidjs__start@0.0.3(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
     dependencies:
       '@babel/core': 7.28.3
       '@babel/traverse': 7.28.3
