@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { getAuthState, getUser } from "~/api";
 import { lucia } from "~/lucia";
 import { getRequestEvent } from "solid-js/web";
+import { deleteCookie } from "@solidjs/start/http";
 
 export const CREDENTIALS = v.object({
 	email: v.pipe(v.string(), v.email()),
@@ -17,7 +18,7 @@ export const logOutAction = action(async () => {
 
 	const authState = await getAuthState();
 
-	if (authState) await lucia.invalidateSession(authState.session.id);
+	if (authState) await lucia().invalidateSession(authState.session.id);
 
 	deleteCookie(getRequestEvent()!.nativeEvent, IS_LOGGED_IN);
 

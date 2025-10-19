@@ -19,8 +19,8 @@ import { CREDENTIALS, IS_LOGGED_IN } from "./utils";
 async function createSession(userId: string) {
   "use server";
 
-  const session = await lucia.createSession(userId, {});
-  const sessionCookie = lucia.createSessionCookie(session.id);
+  const session = await lucia().createSession(userId, {});
+  const sessionCookie = lucia().createSessionCookie(session.id);
 
   appendResponseHeader("Set-Cookie", sessionCookie.serialize());
   setCookie(IS_LOGGED_IN, "true", { httpOnly: false });

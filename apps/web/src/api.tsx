@@ -26,14 +26,14 @@ async function _getAuthState() {
   const requestEvent = getRequestEvent()!;
   const event = requestEvent.nativeEvent;
 
-  let data: Awaited<ReturnType<typeof lucia.validateSession>>;
+  let data: Awaited<ReturnType<ReturnType<typeof lucia>["validateSession"]>>;
 
   // header auth
   const authHeader = getHeader("Authorization");
   if (authHeader?.startsWith("Bearer ")) {
     const [, sessionId] = authHeader.split("Bearer ");
 
-    data = await lucia.validateSession(sessionId);
+    data = await lucia().validateSession(sessionId);
   }
   // cookie auth
   else {
@@ -50,20 +50,20 @@ async function _getAuthState() {
       }
     }
 
-    const sessionId = getCookie(lucia.sessionCookieName) ?? null;
+    const sessionId = getCookie(lucia().sessionCookieName) ?? null;
     if (!sessionId) return;
 
-    data = await lucia.validateSession(sessionId);
+    data = await lucia().validateSession(sessionId);
 
     if (data.session?.fresh)
       appendResponseHeader(
         "Set-Cookie",
-        lucia.createSessionCookie(data.session.id).serialize(),
+        lucia().createSessionCookie(data.session.id).serialize(),
       );
     if (!data.session)
       appendResponseHeader(
         "Set-Cookie",
-        lucia.createBlankSessionCookie().serialize(),
+        lucia().createBlankSessionCookie().serialize(),
       );
   }
 

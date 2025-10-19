@@ -58,9 +58,9 @@ const getAuthentication = Effect.gen(function* () {
 	);
 	const sessionCookie = yield* HttpServerRequest.schemaCookies(
 		S.Struct({
-			[lucia.sessionCookieName]: S.OptionFromUndefinedOr(S.String),
+			[lucia().sessionCookieName]: S.OptionFromUndefinedOr(S.String),
 		}),
-	).pipe(Effect.map((v) => v[lucia.sessionCookieName]));
+	).pipe(Effect.map((v) => v[lucia().sessionCookieName]));
 
 	let sessionId: string;
 	let type: "session-web" | "session-desktop" | "mgu" | "server-jwt";
@@ -129,7 +129,7 @@ const getAuthentication = Effect.gen(function* () {
 		case "session-web":
 		case "session-desktop": {
 			const sessionData = yield* Effect.tryPromise({
-				try: () => lucia.validateSession(sessionId),
+				try: () => lucia().validateSession(sessionId),
 				catch: () => new HttpApiError.InternalServerError(),
 			});
 
@@ -146,8 +146,8 @@ const getAuthentication = Effect.gen(function* () {
 						if (sessionData.session.fresh)
 							res = yield* res.pipe(
 								HttpServerResponse.setCookie(
-									lucia.sessionCookieName,
-									lucia.createSessionCookie(sessionData.session.id).serialize(),
+									lucia().sessionCookieName,
+									lucia().createSessionCookie(sessionData.session.id).serialize(),
 								),
 								Effect.orDie,
 							);
