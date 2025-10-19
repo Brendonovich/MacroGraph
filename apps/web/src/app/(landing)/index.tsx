@@ -112,7 +112,7 @@ export default function () {
               <IconTablerChevronDown class="ml-2 size-5" />
             </DropdownMenuTrigger>
           </DesktopDownloadDropdown>
-          {/* <a href="/documentation" class={buttonVariants({ size: "lg" })}>
+          {/*<a href="/documentation" class={buttonVariants({ size: "lg" })}>
             <IconMaterialSymbolsBook4 class="size-5 mr-2" />
             Documentation
           </a> */}

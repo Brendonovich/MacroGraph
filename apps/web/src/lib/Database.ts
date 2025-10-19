@@ -7,9 +7,9 @@ import { db } from "~/drizzle";
 export class Database extends Effect.Service<Database>()("Database", {
 	effect: Effect.gen(function* () {
 		const use = <A>(
-			f: (_db: typeof db) => Promise<A> & { toSQL?(): Query },
+			f: (_db: ReturnType<typeof db>) => Promise<A> & { toSQL?(): Query },
 		) => {
-			const query = f(db);
+			const query = f(db());
 			return Effect.tryPromise({
 				try: () => query,
 				catch: (error) => new DatabaseError({ cause: error }),

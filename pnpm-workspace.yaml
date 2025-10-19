@@ -6,4 +6,4 @@ packages:
 
 patchedDependencies:
   vite-plugin-solid: patches/vite-plugin-solid.patch
-  '@effect/platform-node-shared': patches/@effect__platform-node-shared.patch
+  "@effect/platform-node-shared": patches/@effect__platform-node-shared.patch

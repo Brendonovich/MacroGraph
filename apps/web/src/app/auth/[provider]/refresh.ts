@@ -13,7 +13,7 @@ const BODY = z.object({ refreshToken: z.string() });
 export const POST: APIHandler = async ({ request, params }) => {
 	const { provider } = params as { provider: string };
 
-	const providerConfig = AuthProviders[provider];
+	const providerConfig = AuthProviders()[provider];
 	if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
 	const body = BODY.parse(await request.json());

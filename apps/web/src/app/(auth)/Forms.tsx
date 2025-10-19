@@ -43,7 +43,7 @@ const signUpAction = action(async (form: FormData) => {
     const hashedPassword = await new Argon2id().hash(data.password);
     const userId = generateId(15);
 
-    await db.insert(users).values({
+    await db().insert(users).values({
       id: userId,
       email: data.email,
       hashedPassword,
@@ -76,7 +76,7 @@ const loginWithCredentialsAction = action(async (form: FormData) => {
     if (!result.success) throw "Invalid credentials";
     const { output: data } = result;
 
-    const user = await db.query.users.findFirst({
+    const user = await db().query.users.findFirst({
       where: eq(users.email, data.email),
     });
     if (!user) throw "Invalid credentials";

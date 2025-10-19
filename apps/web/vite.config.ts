@@ -13,6 +13,7 @@ const nodeOnlyDeps = ["@node-rs/bcrypt", "@node-rs/argon2"];
 export default defineConfig((env) => ({
 	optimizeDeps: { exclude: nodeOnlyDeps },
 	ssr: { external: nodeOnlyDeps },
+	build: { minify: false },
 	plugins: [
 		interfacePlugin,
 		mdx.default.withImports({})({

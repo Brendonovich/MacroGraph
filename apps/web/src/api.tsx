@@ -96,7 +96,7 @@ export const getUser = cache(async () => {
 
   const { user } = state;
 
-  const res = await db.query.users.findFirst({
+  const res = await db().query.users.findFirst({
     where: eq(users.id, user.id),
     columns: {
       id: true,
@@ -127,7 +127,7 @@ async function addCredentialInner(provider: string, searchParams: string) {
 
   if (!user) throw { code: "forbidden" };
 
-  await db.insert(oauthCredentials).values({
+  await db().insert(oauthCredentials).values({
     providerId: provider,
     providerUserId: oauth.user.id,
     userId: user.id,
@@ -190,7 +190,7 @@ export const getCredentials = cache(async () => {
 
   const { user } = await ensureAuthedOrRedirect();
 
-  const c = await db.query.oauthCredentials.findMany({
+  const c = await db().query.oauthCredentials.findMany({
     where: eq(oauthCredentials.userId, user.id),
   });
 
@@ -202,7 +202,7 @@ export const getServers = cache(async () => {
 
   const { user } = await ensureAuthedOrRedirect();
 
-  const c = await db.query.oauthApps.findMany({
+  const c = await db().query.oauthApps.findMany({
     where: eq(oauthApps.ownerId, user.id),
   });
 
