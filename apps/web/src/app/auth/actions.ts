@@ -22,7 +22,7 @@ export async function getOAuthLoginURL(
 	callbackOrigin: string,
 	statePayload: DistributiveOmit<z.infer<typeof OAUTH_STATE>, "redirect_uri">,
 ) {
-	const providerConfig = AuthProviders[provider];
+	const providerConfig = AuthProviders()[provider];
 
 	const state = await new Jose.SignJWT(
 		OAUTH_STATE.parse({
@@ -33,12 +33,12 @@ export async function getOAuthLoginURL(
 		}),
 	)
 		.setProtectedHeader({ alg: "HS256" })
-		.sign(new TextEncoder().encode(serverEnv.AUTH_SECRET));
+		.sign(new TextEncoder().encode(serverEnv().AUTH_SECRET));
 
 	const params = new URLSearchParams({
 		...providerConfig.authorize?.searchParams,
 		client_id: providerConfig.clientId,
-		redirect_uri: `${serverEnv.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
+		redirect_uri: `${serverEnv().AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
 		response_type: "code",
 		scope: (providerConfig.scopes || []).join(" "),
 		state,
@@ -47,23 +47,23 @@ export async function getOAuthLoginURL(
 	return `${providerConfig.authorize.url}?${params}`;
 }
 
-const VALID_REDIRECT_ORIGINS = [
+const VALID_REDIRECT_ORIGINS = () => [
 	"https://macrograph.brendonovich.dev",
 	"https://www.macrograph.app",
 	"http://localhost:4321",
-	serverEnv.AUTH_REDIRECT_PROXY_URL,
-	serverEnv.VERCEL_URL,
-	serverEnv.VERCEL_BRANCH_URL,
+	serverEnv().AUTH_REDIRECT_PROXY_URL,
+	serverEnv().VERCEL_URL,
+	serverEnv().VERCEL_BRANCH_URL,
 ];
 
 function getRedirectOrigin(desired: string) {
-	return VALID_REDIRECT_ORIGINS.includes(desired)
+	return VALID_REDIRECT_ORIGINS().includes(desired)
 		? desired
-		: serverEnv.VERCEL_URL;
+		: serverEnv().VERCEL_URL;
 }
 
 export async function loginURLForProvider(provider: AuthProvider) {
-	const providerConfig = AuthProviders[provider];
+	const providerConfig = AuthProviders()[provider];
 	if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
 	const event = getRequestEvent()!.nativeEvent;
@@ -91,7 +91,7 @@ export async function exchangeOAuthToken(
 			client_secret: providerConfig.clientSecret,
 			code,
 			grant_type: "authorization_code",
-			redirect_uri: `${serverEnv.AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
+			redirect_uri: `${serverEnv().AUTH_REDIRECT_PROXY_URL}/auth/proxy`,
 		}),
 		headers: providerConfig.token?.headers,
 	});
@@ -107,7 +107,7 @@ export async function validateCallbackSearchParams(
 		state: (
 			await Jose.jwtVerify(
 				searchParams.get("state")!,
-				new TextEncoder().encode(serverEnv.AUTH_SECRET),
+				new TextEncoder().encode(serverEnv().AUTH_SECRET),
 			)
 		).payload,
 	});
@@ -116,7 +116,7 @@ export async function performOAuthExchange(
 	provider: string,
 	searchParams: string,
 ) {
-	const providerConfig = AuthProviders[provider];
+	const providerConfig = AuthProviders()[provider];
 	if (!providerConfig) throw new Error("unknown-provider");
 
 	const token = await exchangeOAuthToken(

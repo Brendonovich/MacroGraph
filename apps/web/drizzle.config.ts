@@ -14,6 +14,6 @@ export default defineConfig({
 	driver: "pg",
 	out: "./drizzle",
 	dbCredentials: {
-		connectionString: serverEnv.DATABASE_URL,
+		connectionString: serverEnv().DATABASE_URL,
 	},
 });

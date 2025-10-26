@@ -438,6 +438,7 @@ function ProjectInterface() {
 										});
 									}}
 									onPasteClipboard={async () => {
+										if (!platform.clipboard) return;
 										const item = deserializeClipboardItem(
 											await platform.clipboard.readText(),
 										);
@@ -635,7 +636,7 @@ function createKeydownShortcuts(
 	createEventListener(window, "keydown", async (e) => {
 		switch (e.code) {
 			case "KeyC": {
-				if (!isCtrlEvent(e)) return;
+				if (!isCtrlEvent(e) || platform.clipboard) return;
 				const graph = currentGraph();
 				if (!graph?.state) return;
 
@@ -722,7 +723,7 @@ function createKeydownShortcuts(
 				break;
 			}
 			case "KeyV": {
-				if (!isCtrlEvent(e)) return;
+				if (!isCtrlEvent(e) || platform.clipboard) return;
 
 				e.preventDefault();
 

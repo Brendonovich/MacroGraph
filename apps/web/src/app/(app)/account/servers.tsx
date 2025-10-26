@@ -69,7 +69,7 @@ export default function () {
 
 // 	const { user } = await ensureAuthedOrThrow();
 
-// 	const session = await db.query.serverRegistrationSessions.findFirst({
+// 	const session = await db().query.serverRegistrationSessions.findFirst({
 // 		where: eq(serverRegistrationSessions.userCode, userCode),
 // 	});
 
@@ -172,7 +172,7 @@ const getServers = cache(async () => {
 
 	const { user } = await ensureAuthedOrRedirect();
 
-	const c = await db.query.oauthApps.findMany({
+	const c = await db().query.oauthApps.findMany({
 		where: eq(oauthApps.ownerId, user.id),
 	});
 

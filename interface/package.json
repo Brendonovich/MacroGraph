@@ -54,6 +54,6 @@
 		"tailwindcss": "^3.4.3",
 		"unplugin-auto-import": "^0.17.5",
 		"unplugin-icons": "^0.18.5",
-		"vite": "^7.1.9"
+		"vite": "^7.1.10"
 	}
 }

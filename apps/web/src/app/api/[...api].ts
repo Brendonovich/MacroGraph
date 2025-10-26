@@ -58,9 +58,9 @@ const getAuthentication = Effect.gen(function* () {
 	);
 	const sessionCookie = yield* HttpServerRequest.schemaCookies(
 		S.Struct({
-			[lucia.sessionCookieName]: S.OptionFromUndefinedOr(S.String),
+			[lucia().sessionCookieName]: S.OptionFromUndefinedOr(S.String),
 		}),
-	).pipe(Effect.map((v) => v[lucia.sessionCookieName]));
+	).pipe(Effect.map((v) => v[lucia().sessionCookieName]));
 
 	let sessionId: string;
 	let type: "session-web" | "session-desktop" | "mgu" | "server-jwt";
@@ -129,7 +129,7 @@ const getAuthentication = Effect.gen(function* () {
 		case "session-web":
 		case "session-desktop": {
 			const sessionData = yield* Effect.tryPromise({
-				try: () => lucia.validateSession(sessionId),
+				try: () => lucia().validateSession(sessionId),
 				catch: () => new HttpApiError.InternalServerError(),
 			});
 
@@ -146,8 +146,10 @@ const getAuthentication = Effect.gen(function* () {
 						if (sessionData.session.fresh)
 							res = yield* res.pipe(
 								HttpServerResponse.setCookie(
-									lucia.sessionCookieName,
-									lucia.createSessionCookie(sessionData.session.id).serialize(),
+									lucia().sessionCookieName,
+									lucia()
+										.createSessionCookie(sessionData.session.id)
+										.serialize(),
 								),
 								Effect.orDie,
 							);
@@ -281,7 +283,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 				function* ({ path }) {
 					const db = yield* Database;
 
-					const providerConfig = AuthProviders[path.providerId];
+					const providerConfig = AuthProviders()[path.providerId];
 					if (!providerConfig) return yield* new HttpApiError.BadRequest();
 
 					const session = yield* Authentication;
@@ -392,7 +394,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 							.values({ appId: auth.jwt.oauthAppId, userCode, deviceCode }),
 					);
 
-					const verificationUri = `${serverEnv.VERCEL_URL}/login/device`;
+					const verificationUri = `${serverEnv().VERCEL_URL}/login/device`;
 
 					return {
 						user_code: userCode,
@@ -456,13 +458,15 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 										deviceSession.deviceCode,
 									),
 								);
-							await db.insert(Db.oauthSessions).values({
-								appId: deviceSession.appId,
-								userId: deviceSession.userId,
-								accessToken,
-								refreshToken,
-								expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-							});
+							await db()
+								.insert(Db.oauthSessions)
+								.values({
+									appId: deviceSession.appId,
+									userId: deviceSession.userId,
+									accessToken,
+									refreshToken,
+									expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+								});
 						}),
 					);
 
@@ -493,7 +497,9 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 						db.insert(Db.serverRegistrationSessions).values({ id, userCode }),
 					);
 
-					const verificationUri = `${serverEnv.VERCEL_URL}/server-registration`;
+					const verificationUri = `${
+						serverEnv().VERCEL_URL
+					}/server-registration`;
 
 					return {
 						id,
@@ -581,7 +587,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					if (auth.source !== "serverJwt")
 						return yield* new HttpApiError.Unauthorized();
 
-					const registration = yield* db.use((db) =>
+					const registration = yield* db().use((db) =>
 						db.query.oauthApps.findFirst({
 							where: Dz.and(
 								Dz.eq(Db.oauthApps.id, auth.jwt.oauthAppId),

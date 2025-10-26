@@ -7,7 +7,7 @@ import { AuthProviders } from "../providers";
 export const GET = async (event: APIEvent) => {
 	const { provider } = event.params as { provider: string };
 
-	const providerConfig = AuthProviders[provider];
+	const providerConfig = AuthProviders()[provider];
 	if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
 	const url = new URL(event.request.url);

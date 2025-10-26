@@ -146,10 +146,12 @@ export default () => {
 		>
 			<PlatformContext.Provider
 				value={{
-					clipboard: {
-						readText: navigator.clipboard.readText,
-						writeText: navigator.clipboard.writeText,
-					},
+					clipboard: navigator.clipboard
+						? {
+								readText: navigator.clipboard.readText,
+								writeText: navigator.clipboard.writeText,
+							}
+						: undefined,
 				}}
 			>
 				<Interface core={core} environment="browser" />

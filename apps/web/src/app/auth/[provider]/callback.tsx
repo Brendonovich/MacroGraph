@@ -9,7 +9,7 @@ import responderScript from "../responderScript.js?raw";
 export const GET: APIHandler = async (event) => {
 	const { provider } = event.params as { provider: string };
 
-	const providerConfig = AuthProviders[provider];
+	const providerConfig = AuthProviders()[provider];
 	if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
 	const params = await validateCallbackSearchParams(

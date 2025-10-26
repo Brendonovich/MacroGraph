@@ -21,7 +21,7 @@ import * as Db from "~/drizzle/schema";
 const verifyUserCodeAction = action(async (userCode: string) => {
 	"use server";
 
-	const session = await db.query.serverRegistrationSessions.findFirst({
+	const session = await db().query.serverRegistrationSessions.findFirst({
 		where: eq(Db.serverRegistrationSessions.userCode, userCode),
 	});
 
@@ -33,8 +33,8 @@ const grantAccessAction = action(async (userCode: string) => {
 
 	const { user } = await ensureAuthedOrRedirect();
 
-	return await db.transaction(async (db) => {
-		const session = await db.query.serverRegistrationSessions.findFirst({
+	return await db().transaction(async (db) => {
+		const session = await db().query.serverRegistrationSessions.findFirst({
 			where: eq(Db.serverRegistrationSessions.userCode, userCode),
 		});
 
@@ -53,7 +53,7 @@ const getInitialState = query(async (userCode: string) => {
 
 	const auth = await ensureAuthedOrRedirect();
 
-	const deviceSession = await db.query.serverRegistrationSessions.findFirst({
+	const deviceSession = await db().query.serverRegistrationSessions.findFirst({
 		where: eq(Db.serverRegistrationSessions.userCode, userCode),
 	});
 

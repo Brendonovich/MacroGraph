@@ -9,7 +9,7 @@ export const GET: APIHandler = async (event) => {
 
 	const { payload } = await Jose.jwtVerify(
 		searchParams.get("state")!,
-		new TextEncoder().encode(serverEnv.AUTH_SECRET),
+		new TextEncoder().encode(serverEnv().AUTH_SECRET),
 	);
 
 	const state = OAUTH_STATE.parse(payload);
