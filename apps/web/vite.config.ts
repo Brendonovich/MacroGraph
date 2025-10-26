@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { solidStart } from "@solidjs/start/config";
-// import { nitroV2Plugin } from "@solidjs/start-nitro-v2-plugin";
+import { nitroV2Plugin } from "@solidjs/start-nitro-v2-plugin";
 import { nitro } from "nitro/vite";
 // @ts-expect-error
 import mdx from "@vinxi/plugin-mdx";
@@ -26,11 +26,10 @@ export default defineConfig((env) => ({
 			routeDir: "app",
 			// extensions: ["md", "mdx"],
 		}),
-		// nitroV2Plugin({
-		// 	preset: "node-server",
-		// 	prerender: { crawlLinks: true, routes: ["/"] },
-		// }),
-		nitro({ config: { preset: "vercel" } }),
+		nitroV2Plugin({
+			preset: "vercel",
+			prerender: { crawlLinks: true, routes: ["/"] },
+		}),
 		// unfonts({
 		//   fontsource: {
 		//     families: [
