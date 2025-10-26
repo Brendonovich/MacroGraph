@@ -65,27 +65,31 @@ export function Graphs(props: Props) {
 						setSearch(e.currentTarget.value);
 					}}
 				/>
-				<IconButton
-					type="button"
-					title="Import graph from clipboard"
-					class="p-0.5"
-					onClick={async (e) => {
-						e.stopPropagation();
-						const item = deserializeClipboardItem(
-							await platform.clipboard.readText(),
-						);
-						if (item.type !== "graph") return;
+				<Show when={platform.clipboard}>
+					{(clipboard) => (
+						<IconButton
+							type="button"
+							title="Import graph from clipboard"
+							class="p-0.5"
+							onClick={async (e) => {
+								e.stopPropagation();
+								const item = deserializeClipboardItem(
+									await clipboard().readText(),
+								);
+								if (item.type !== "graph") return;
 
-						item.graph.id = interfaceCtx.core.project.generateGraphId();
-						const graph = await deserializeGraph(
-							interfaceCtx.core.project,
-							item.graph,
-						);
-						interfaceCtx.core.project.graphs.set(graph.id, graph);
-					}}
-				>
-					<IconGgImport class="size-4" />
-				</IconButton>
+								item.graph.id = interfaceCtx.core.project.generateGraphId();
+								const graph = await deserializeGraph(
+									interfaceCtx.core.project,
+									item.graph,
+								);
+								interfaceCtx.core.project.graphs.set(graph.id, graph);
+							}}
+						>
+							<IconGgImport class="size-4" />
+						</IconButton>
+					)}
+				</Show>
 				<IconButton
 					type="button"
 					title="Create graph"

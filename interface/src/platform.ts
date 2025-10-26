@@ -7,7 +7,7 @@ export interface Platform {
 		loadProject(): Promise<void>;
 		url: string | null;
 	};
-	clipboard: {
+	clipboard?: {
 		readText(): Promise<string>;
 		writeText(text: string): Promise<void>;
 	};

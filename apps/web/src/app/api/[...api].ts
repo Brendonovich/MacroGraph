@@ -147,7 +147,9 @@ const getAuthentication = Effect.gen(function* () {
 							res = yield* res.pipe(
 								HttpServerResponse.setCookie(
 									lucia().sessionCookieName,
-									lucia().createSessionCookie(sessionData.session.id).serialize(),
+									lucia()
+										.createSessionCookie(sessionData.session.id)
+										.serialize(),
 								),
 								Effect.orDie,
 							);
