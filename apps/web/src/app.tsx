@@ -5,6 +5,9 @@ import { FileRoutes } from "@solidjs/start/router";
 import { ErrorBoundary, Suspense } from "solid-js";
 import { Toaster } from "solid-sonner";
 
+import "virtual:uno.css";
+import "@unocss/reset/tailwind-compat.css";
+
 // import "unfonts.css";
 // import "@macrograph/ui/global.css";
 
