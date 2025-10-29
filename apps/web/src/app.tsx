@@ -7,9 +7,9 @@ import { Toaster } from "solid-sonner";
 
 import "virtual:uno.css";
 import "@unocss/reset/tailwind-compat.css";
+import "@macrograph/ui/global.css";
 
 // import "unfonts.css";
-// import "@macrograph/ui/global.css";
 
 // const DesktopListener = clientOnly(() => import("./app/DesktopListener"));
 
