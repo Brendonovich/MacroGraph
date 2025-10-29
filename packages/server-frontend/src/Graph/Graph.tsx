@@ -24,24 +24,16 @@ import IconMaterialSymbolsDeleteOutline from "~icons/material-symbols/delete-out
 import { useProjectService } from "../AppRuntime";
 import { NodeHeader, NodeRoot } from "../Node";
 import { ProjectActions } from "../Project/Actions";
-import { type IORef, isTouchDevice } from "../utils";
+import { isTouchDevice } from "../utils";
 
 export const ioPositions = new ReactiveMap<IORef, { x: number; y: number }>();
-
-export type GraphTwoWayConnections = Record<
-	Node.Id,
-	{
-		in?: Record<string, Array<[Node.Id, string]>>;
-		out?: Record<string, Array<[Node.Id, string]>>;
-	}
->;
 
 export function GraphView(
 	props: {
 		nodes: DeepWriteable<Node.Shape>[];
 		getSchema: (ref: SchemaRef) => Option.Option<SchemaMeta>;
 		onSelectionMoved?(items: Array<[Node.Id, { x: number; y: number }]>): void;
-		selection: Set<Node.Id>;
+		selection?: Set<Node.Id>;
 		remoteSelections?: Array<{ colour: string; nodes: Set<Node.Id> }>;
 		onItemsSelected?(selection: Set<Node.Id>): void;
 		onConnectIO?(from: IORef, to: IORef): void;
@@ -49,7 +41,7 @@ export function GraphView(
 		onContextMenu?(position: { x: number; y: number }): void;
 		onContextMenuClose?(): void;
 		onDeleteSelection?(): void;
-		connections: GraphTwoWayConnections;
+		connections?: GraphTwoWayConnections;
 	} & Pick<ComponentProps<"div">, "ref" | "children">,
 ) {
 	const [dragState, setDragState] = createSignal<
@@ -69,7 +61,7 @@ export function GraphView(
 	function getGraphPosition(e: MouseEvent) {
 		return { x: e.clientX, y: e.clientY };
 	}
-	const actions = useProjectService(ProjectActions);
+	// const actions = useProjectService(ProjectActions);
 
 	const [ref, setRef] = createSignal<HTMLDivElement | null>(null);
 	const bounds = createElementBounds(ref);
@@ -106,7 +98,7 @@ export function GraphView(
 		}
 
 		for (const [outNodeId, outConnections] of Object.entries(
-			props.connections,
+			props.connections ?? {},
 		)) {
 			if (!outConnections.out) continue;
 			for (const [outId, inputs] of Object.entries(outConnections.out)) {
@@ -126,23 +118,23 @@ export function GraphView(
 			}
 		}
 
-		for (const { name, payload } of actions.pending) {
-			if (name !== "ConnectIO") continue;
+		// for (const { name, payload } of actions.pending) {
+		//   if (name !== "ConnectIO") continue;
 
-			const outPosition = ioPositions.get(
-				`${Node.Id.make(Number(payload.output.nodeId))}:o:${
-					payload.output.ioId
-				}`,
-			);
-			if (!outPosition) continue;
+		//   const outPosition = ioPositions.get(
+		//     `${Node.Id.make(Number(payload.output.nodeId))}:o:${
+		//       payload.output.ioId
+		//     }`,
+		//   );
+		//   if (!outPosition) continue;
 
-			const inPosition = ioPositions.get(
-				`${Node.Id.make(Number(payload.input.nodeId))}:i:${payload.input.ioId}`,
-			);
-			if (!inPosition) continue;
+		//   const inPosition = ioPositions.get(
+		//     `${Node.Id.make(Number(payload.input.nodeId))}:i:${payload.input.ioId}`,
+		//   );
+		//   if (!inPosition) continue;
 
-			ret.push({ from: outPosition, to: inPosition, opacity: 0.5 });
-		}
+		//   ret.push({ from: outPosition, to: inPosition, opacity: 0.5 });
+		// }
 
 		return ret;
 	};
@@ -288,13 +280,15 @@ export function GraphView(
 									}}
 									connections={{
 										in: [
-											...Object.entries(props.connections[node.id]?.in ?? {}),
+											...Object.entries(props.connections?.[node.id]?.in ?? {}),
 										].flatMap(([id, connections]) => {
 											if (connections.length > 0) return id;
 											return [];
 										}),
 										out: [
-											...Object.entries(props.connections[node.id]?.out ?? {}),
+											...Object.entries(
+												props.connections?.[node.id]?.out ?? {},
+											),
 										].flatMap(([id, connections]) => {
 											if (connections.length > 0) return id;
 											return [];
@@ -325,13 +319,13 @@ export function GraphView(
 																	]),
 																);
 															}
-														} else if (props.selection.size <= 1)
+														} else if ((props.selection?.size ?? 0) <= 1)
 															props.onItemsSelected?.(new Set([node.id]));
 
 														const startPositions: Array<
 															[Node.Id, { x: number; y: number }]
 														> = [];
-														props.selection.forEach((nodeId) => {
+														props.selection?.forEach((nodeId) => {
 															const node = props.nodes.find(
 																(n) => n.id === nodeId,
 															);

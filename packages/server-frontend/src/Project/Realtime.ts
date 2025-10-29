@@ -38,6 +38,7 @@ export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 				Effect.map(
 					Option.getOrThrowWith(() => new Error("Identify event not received")),
 				),
+				Effect.catchAll(() => Effect.die("Socket error")),
 			);
 
 			if (firstEvent.type !== "identify")

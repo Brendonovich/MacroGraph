@@ -1,4 +1,4 @@
-import type { SubscribableCache } from "@macrograph/domain";
+import type { SubscribableCache } from "@macrograph/project-domain";
 import {
 	type Accessor,
 	createEffect,

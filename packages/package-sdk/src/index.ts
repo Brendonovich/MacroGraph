@@ -6,7 +6,7 @@ import {
 	ExecutionContext,
 	type ForceRetryError,
 	type SchemaDefinition,
-} from "@macrograph/domain";
+} from "@macrograph/project-domain";
 import type { CREDENTIAL } from "@macrograph/web-domain";
 import { Effect, type Layer, type Schema, type Scope } from "effect";
 

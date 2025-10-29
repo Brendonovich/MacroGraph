@@ -1,0 +1,18 @@
+{
+	"name": "@macrograph/project-backend",
+	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"dependencies": {
+		"@effect/platform": "^0.80.2",
+		"@effect/rpc": "^0.62.4",
+		"@macrograph/project-domain": "workspace:*",
+		"@macrograph/web-domain": "workspace:*",
+		"effect": "^3.16.8"
+	},
+	"exports": {
+		".": "./src/index.ts",
+		"./Node": "./src/Node.ts",
+		"./Graph": "./src/Graph.ts"
+	}
+}

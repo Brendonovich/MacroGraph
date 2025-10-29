@@ -9,7 +9,7 @@ import {
 import type { RawJWT } from "@macrograph/web-domain";
 
 import { Persistence } from "./Persistence";
-import { CloudApi, CloudApiToken } from "./CloudApi";
+import { CloudApi, CloudApiToken } from "@macrograph/project-backend";
 
 type RegistrationEvent =
 	| { type: "started"; verificationUrlComplete: string }

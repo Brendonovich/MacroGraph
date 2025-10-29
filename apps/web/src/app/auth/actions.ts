@@ -66,10 +66,9 @@ export async function loginURLForProvider(provider: AuthProvider) {
 	const providerConfig = AuthProviders()[provider];
 	if (!providerConfig) throw new Error(`Unknown provider ${provider}`);
 
-	const event = getRequestEvent()!.nativeEvent;
-	const requestOrigin = `${getRequestProtocol(event)}://${getRequestHost(
-		event,
-	)}`;
+	const event = getRequestEvent()!.request;
+
+	const requestOrigin = new URL(event.url).origin;
 
 	const targetOrigin = getRedirectOrigin(requestOrigin);
 

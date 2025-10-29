@@ -5,10 +5,7 @@ import { createStore, produce, reconcile } from "solid-js/store";
 import { ErrorBoundary, render } from "solid-js/web";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
-
-import "virtual:uno.css";
-import "@unocss/reset/tailwind-compat.css";
-import "./style.css";
+import { ProjectState } from "@macrograph/project-frontend";
 
 import { ProjectRuntime, ProjectRuntimeProvider, Provider } from "./AppRuntime";
 import { Layout } from "./Layout";
@@ -18,11 +15,15 @@ import {
 	PresenceContextProvider,
 } from "./Presence/Context";
 import { ProjectRealtime } from "./Project/Realtime";
-import { ProjectState } from "./Project/State";
 import { RealtimeContextProvider } from "./Realtime";
 import { routes } from "./routes/Routes";
 
+import "./style.css";
+import { ProjectRpc } from "./Project/Rpc";
+
 export { PackagesSettings } from "./Packages/PackagesSettings";
+export { GraphView } from "./Graph/Graph";
+export { GraphContextProvider } from "./Graph/Context";
 
 const [packages, setPackages] = createStore<Record<string, { id: string }>>({});
 
@@ -39,13 +40,17 @@ export class UI extends Effect.Service<UI>()("UI", {
 		const realtime = yield* ProjectRealtime;
 		const tagType = Match.discriminator("type");
 
+		const { setState, actions } = yield* ProjectState;
+		const rpc = yield* ProjectRpc.client;
+
+		actions.setProject(yield* rpc.GetProject({}));
+
 		realtime.stream.pipe(
 			Stream.runForEach(
 				Effect.fn(function* (data) {
 					if (data.type === "identify")
 						throw new Error("Duplicate identify event");
 
-					const { setState, actions } = yield* ProjectState;
 					const pkgSettings = yield* PackagesSettings;
 
 					yield* Match.value(data).pipe(

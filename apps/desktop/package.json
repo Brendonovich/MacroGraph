@@ -28,7 +28,7 @@
 		"@ts-rest/core": "^3.52.1",
 		"@ts-rest/solid-query": "^3.41.1",
 		"nitro": "npm:nitro-nightly@^3.0.0",
-		"solid-js": "^1.9.9",
+		"solid-js": "^1.9.10",
 		"solid-sonner": "^0.2.5",
 		"tauri-plugin-midi": "workspace:*",
 		"valibot": "^0.37.0",

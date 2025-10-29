@@ -1,9 +1,8 @@
 import { Schema } from "effect";
 
 import { RpcSerialization } from "@effect/rpc";
-import * as Graph from "./Graph";
-import * as Node from "./Node";
 import { Position, SchemaRef } from "./util";
+import { Graph, Node } from "@macrograph/project-domain";
 
 export type ProjectEvent = Schema.Schema.Type<typeof ProjectEvent>;
 export const ProjectEvent = Schema.Union(
@@ -54,16 +53,13 @@ export const ProjectEvent = Schema.Union(
 		graphId: Graph.Id,
 		positions: Schema.Array(Schema.Tuple(Node.Id, Position)),
 	}),
-	Schema.extend(
-		makeEvent("NodeCreated", {
-			name: Schema.optional(Schema.String),
-			graphId: Graph.Id,
-			nodeId: Node.Id,
-			schema: SchemaRef,
-			position: Position,
-		}),
-		Node.IO,
-	),
+	makeEvent("NodeCreated", {
+		name: Schema.optional(Schema.String),
+		graphId: Graph.Id,
+		nodeId: Node.Id,
+		schema: SchemaRef,
+		position: Position,
+	}).pipe(Schema.extend(Node.IO)),
 	makeEvent("IOConnected", {
 		graphId: Graph.Id,
 		output: Node.IORef,
