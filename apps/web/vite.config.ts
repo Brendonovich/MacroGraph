@@ -45,7 +45,7 @@ export default defineConfig((env) => ({
 		}),
 		nitroV2Plugin({
 			preset: "vercel",
-			prerender: { crawlLinks: true, routes: ["/"] },
+			prerender: { crawlLinks: true, routes: ["/", "/new-playground"] },
 		}),
 		// unfonts({
 		//   fontsource: {

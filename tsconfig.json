@@ -1,17 +1,16 @@
 {
-	"files": [],
-	"references": [
-		{ "path": "./packages/web-domain" },
-		{ "path": "./packages/domain" },
-		{ "path": "./packages/package-sdk" },
-		{ "path": "./packages/base-packages" },
-		{ "path": "./packages/server-domain" },
-		{ "path": "./packages/server-backend" },
-		{ "path": "./packages/server-frontend" },
-		{ "path": "./apps/server" },
-		{ "path": "./apps/web" }
-	],
-	"compilerOptions": {
-		"plugins": [{ "name": "@effect/language-service" }]
-	}
+  "files": [],
+  "references": [
+    { "path": "./packages/web-domain" },
+    { "path": "./packages/package-sdk" },
+    { "path": "./packages/base-packages" },
+    { "path": "./packages/server-domain" },
+    { "path": "./packages/server-backend" },
+    { "path": "./packages/server-frontend" },
+    { "path": "./apps/server" },
+    { "path": "./apps/web" }
+  ],
+  "compilerOptions": {
+    "plugins": [{ "name": "@effect/language-service" }]
+  }
 }
