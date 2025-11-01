@@ -194,16 +194,9 @@ function Inner() {
   const [selectedSidebar, setSelectedSidebar] = createWritableMemo<
     "graphs" | "packages" | null
   >((v) => {
-    const t = currentTabState();
     if (v === null) return null;
-    if (t?.type === "graph") return "graphs";
-    if (t?.type === "package") return "packages";
-    return v;
+    return getSelectedSidebar() ?? v;
   }, getSelectedSidebar());
-
-  createEffect(() => {
-    console.log(selectedSidebar());
-  });
 
   const mouse = createMousePosition();
 
