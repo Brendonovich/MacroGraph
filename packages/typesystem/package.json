@@ -14,7 +14,7 @@
 		"@solid-primitives/deep": "^0.2.7",
 		"@solid-primitives/map": "^0.4.11",
 		"@solid-primitives/set": "^0.4.11",
-		"@tanstack/solid-query": "^5.85.5",
+		"@tanstack/solid-query": "^5.90.6",
 		"valibot": "^0.37.0"
 	},
 	"devDependencies": {

@@ -4,9 +4,9 @@
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
 	"dependencies": {
-		"@effect/rpc": "^0.62.4",
+		"@effect/rpc": "^0.71.1",
 		"@macrograph/web-domain": "workspace:*",
-		"effect": "^3.16.8"
+		"effect": "^3.18.4"
 	},
 	"exports": {
 		".": "./src/index.ts",

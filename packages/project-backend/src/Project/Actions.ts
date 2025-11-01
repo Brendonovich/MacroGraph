@@ -424,7 +424,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						schema: (id, schema) => builder.schema(id, schema),
 					});
 
-					let rpcServer, state;
+					let rpcServer, state, rpc;
 
 					if (unbuiltPkg.engine) {
 						const stateBroadcast = yield* PubSub.unbounded<void>();
@@ -485,7 +485,12 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							};
 						}
 
-						if (engine.rpcs && ret.rpc)
+						if (engine.rpcs && ret.rpc) {
+							rpc = {
+								defs: engine.rpcs,
+								layer: ret.rpc,
+							};
+
 							rpcServer = yield* RpcServer.toHttpApp(engine.rpcs, {
 								spanPrefix: `PackageRpc.${name}`,
 							}).pipe(
@@ -493,6 +498,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								Effect.provide(RpcServer.layerProtocolHttp({ path: "/" })),
 								Effect.provide(RpcSerialization.layerJson),
 							);
+						}
 
 						yield* Mailbox.toStream(events).pipe(
 							Stream.runForEach(({ event }) =>
@@ -525,6 +531,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						pkg,
 						state: Option.fromNullable(state),
 						rpcServer: Option.fromNullable(rpcServer),
+						rpc: Option.fromNullable(rpc as any),
 					});
 				});
 

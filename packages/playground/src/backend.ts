@@ -1,16 +1,20 @@
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Schema, Scope } from "effect";
 import * as Packages from "@macrograph/base-packages";
 import {
 	CloudApiToken,
+	createEventStream,
 	Credentials,
 	GraphRequests,
+	NodeRequests,
 	ProjectActions,
+	ProjectPackages,
 	ProjectRequests,
 } from "@macrograph/project-backend";
-import { Rpcs } from "./rpc";
-import { Credential } from "@macrograph/project-domain";
+import { Credential, type Project } from "@macrograph/project-domain";
 
-class PlaygroundBackend extends Effect.Service<PlaygroundBackend>()(
+import { Rpcs } from "./rpc";
+
+export class PlaygroundBackend extends Effect.Service<PlaygroundBackend>()(
 	"PlaygroundBackend",
 	{
 		scoped: Effect.gen(function* () {
@@ -24,9 +28,11 @@ class PlaygroundBackend extends Effect.Service<PlaygroundBackend>()(
 				.pipe(Effect.orDie);
 			yield* projectActions.addPackage("obs", Packages.obs).pipe(Effect.orDie);
 
-			return {};
+			const eventStream = yield* createEventStream;
+
+			return { eventStream };
 		}),
-		dependencies: [ProjectActions.Default],
+		dependencies: [ProjectActions.Default, ProjectPackages.Default],
 	},
 ) {}
 
@@ -34,25 +40,48 @@ const RpcsLive = Rpcs.toLayer(
 	Effect.gen(function* () {
 		const projectReqs = yield* ProjectRequests;
 		const graphReqs = yield* GraphRequests;
-		const credentials = yield* Credentials
+		const nodeReqs = yield* NodeRequests;
+		const credentials = yield* Credentials;
 
 		return {
-			GetProject: Effect.request(projectReqs.GetProjectResolver),
-			GetPackageSettings: Effect.request(projectReqs.GetPackageSettingsResolver),
-			CreateNode: Effect.request(graphReqs.CreateNodeResolver),
-			GetCredentials: () => credentials.get.pipe(
-				Effect.map((v) =>
-					v.map(
-						(v) =>
-							new Credential.Credential({
-								providerId: v.provider,
-								providerUserId: v.id,
-								displayName: v.displayName,
-							}),
-					)
+			GetProject: (r: Project.GetProject) =>
+				Effect.request(r, projectReqs.GetProjectResolver).pipe(
+					Effect.map(structuredClone),
 				),
-				Effect.catchAll(() => Effect.die(null))
-			)
+			GetPackageSettings: Effect.request(
+				projectReqs.GetPackageSettingsResolver,
+			),
+			CreateNode: Effect.request(graphReqs.CreateNodeResolver),
+			GetCredentials: () =>
+				credentials.get.pipe(
+					Effect.map((v) =>
+						v.map(
+							(v) =>
+								new Credential.Credential({
+									providerId: v.provider,
+									providerUserId: v.id,
+									displayName: v.displayName,
+								}),
+						),
+					),
+					Effect.catchAll(() => Effect.die(null)),
+				),
+			RefetchCredentials: () =>
+				credentials.refresh.pipe(
+					Effect.zipRight(credentials.get),
+					Effect.map((v) =>
+						v.map(
+							(v) =>
+								new Credential.Credential({
+									providerId: v.provider,
+									providerUserId: v.id,
+									displayName: v.displayName,
+								}),
+						),
+					),
+					Effect.catchAll(() => Effect.die(null)),
+				),
+			SetNodePositions: Effect.request(nodeReqs.SetNodePositionsResolver),
 		};
 	}),
 );
@@ -60,9 +89,16 @@ const RpcsLive = Rpcs.toLayer(
 export const BackendLayers = Layer.empty.pipe(
 	Layer.merge(PlaygroundBackend.Default),
 	Layer.merge(RpcsLive),
-	Layer.provide(Layer.mergeAll(ProjectRequests.Default, GraphRequests.Default, Credentials.Default)),
+	Layer.provide(
+		Layer.mergeAll(
+			ProjectRequests.Default,
+			GraphRequests.Default,
+			NodeRequests.Default,
+			Credentials.Default,
+		),
+	),
 	Layer.provideMerge(ProjectActions.Default),
 	Layer.provideMerge(
 		Layer.succeed(CloudApiToken, Effect.succeed(Option.none())),
 	),
-);
+) satisfies Layer.Layer<any, any, Scope.Scope>;

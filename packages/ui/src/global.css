@@ -95,7 +95,7 @@
 }
 
 * {
-  border: hsl(var(--border));
+  border-color: hsl(var(--border));
 }
 
 body {

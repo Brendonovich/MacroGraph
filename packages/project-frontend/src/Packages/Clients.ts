@@ -1,20 +1,11 @@
-import { FetchHttpClient } from "@effect/platform";
-import { RpcClient, RpcSerialization } from "@effect/rpc";
+import type { Rpc, RpcClient, RpcGroup } from "@effect/rpc";
 import type { SettingsProps } from "@macrograph/package-sdk/ui";
 import { ReactiveMap } from "@solid-primitives/map";
-import {
-	Context,
-	Effect,
-	Layer,
-	Option,
-	PubSub,
-	type Scope,
-	Stream,
-} from "effect";
+import { Context, Effect, Option, PubSub, type Scope, Stream } from "effect";
 import type { Component } from "solid-js";
 
-export type PackageSettings = Readonly<{
-	rpcClient: RpcClient.RpcClient<any>;
+export type PackageClient = Readonly<{
+	rpcClient: RpcClient.RpcClient<RpcGroup.Rpcs<Rpc.Any>>;
 	SettingsUI: Component<SettingsProps<any, any>>;
 	notifySettingsChange: Effect.Effect<void>;
 	settingsChanges: Effect.Effect<Stream.Stream<void>, never, Scope.Scope>;
@@ -27,35 +18,33 @@ export interface PackageSettingsModule {
 	Rpcs: import("@effect/rpc/RpcGroup").RpcGroup<any>;
 }
 
-export class GetPackageRpcProtocol extends Context.Tag("GetPackageRpcProtocol")<GetPackageRpcProtocol, (id: string) => Layer.Layer<RpcClient.Protocol>>(){}
+export class GetPackageRpcClient extends Context.Tag("GetPackageRpcClient")<
+	GetPackageRpcClient,
+	<Rpcs extends Rpc.Any>(
+		id: string,
+		rpcs: RpcGroup.RpcGroup<Rpcs>,
+	) => Effect.Effect<
+		RpcClient.RpcClient<RpcGroup.Rpcs<Rpcs>>,
+		never,
+		Scope.Scope
+	>
+>() {}
 
-// export class GetPackageRpcProtocol extends Effect.Service<GetPackageRpcProtocol>()(
-// 	"GetPackageRpcProtocol",
-// 	{
-// 		sync: () => (id: string) =>
-// 			RpcClient.layerProtocolHttp({ url: `/api/package/${id}/rpc` }).pipe(
-// 				Layer.provide([RpcSerialization.layerJson, FetchHttpClient.layer]),
-// 			),
-// 	},
-// ) {}
-
-export class PackagesSettings extends Effect.Service<PackagesSettings>()(
-	"PackageEngines",
+export class PackageClients extends Effect.Service<PackageClients>()(
+	"PackageClients",
 	{
 		accessors: true,
 		effect: Effect.gen(function* () {
-			const getProtocol = yield* GetPackageRpcProtocol;
+			const getClient = yield* GetPackageRpcClient;
 
-			const packages = new ReactiveMap<string, PackageSettings>();
+			const packages = new ReactiveMap<string, PackageClient>();
 
 			return {
 				addPackage: Effect.fn(function* (
 					id: string,
 					module: PackageSettingsModule,
 				) {
-					const client = yield* RpcClient.make(module.Rpcs, {
-						disableTracing: false,
-					}).pipe(Effect.provide(getProtocol(id)));
+					const client = yield* getClient(id, module.Rpcs);
 
 					const changesNotify = yield* PubSub.unbounded<null>();
 

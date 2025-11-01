@@ -281,9 +281,11 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			"refreshCredential",
 			Effect.fn(
 				function* ({ path }) {
+					console.log({ path });
 					const db = yield* Database;
 
 					const providerConfig = AuthProviders()[path.providerId];
+					console.log({ providerConfig });
 					if (!providerConfig) return yield* new HttpApiError.BadRequest();
 
 					const session = yield* Authentication;
@@ -587,7 +589,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					if (auth.source !== "serverJwt")
 						return yield* new HttpApiError.Unauthorized();
 
-					const registration = yield* db().use((db) =>
+					const registration = yield* db.use((db) =>
 						db.query.oauthApps.findFirst({
 							where: Dz.and(
 								Dz.eq(Db.oauthApps.id, auth.jwt.oauthAppId),

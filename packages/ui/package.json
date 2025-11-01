@@ -35,7 +35,7 @@
 	"dependencies": {
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/config": "workspace:*",
-		"@tanstack/solid-query": "^5.85.5",
+		"@tanstack/solid-query": "^5.90.6",
 		"clsx": "^1.2.1",
 		"cva": "npm:class-variance-authority@^0.7.0",
 		"i": "^0.3.7",

@@ -14,6 +14,7 @@ declare global {
   const IconFa6SolidChevronRight: typeof import('~icons/fa6-solid/chevron-right.jsx')['default']
   const IconFaSolidSave: typeof import('~icons/fa-solid/save.jsx')['default']
   const IconGgImport: typeof import('~icons/gg/import.jsx')['default']
+  const IconGgSpinner: typeof import('~icons/gg/spinner.jsx')['default']
   const IconGravityUiPlugConnection: typeof import('~icons/gravity-ui/plug-connection.jsx')['default']
   const IconHeroiconsXMarkSolid: typeof import('~icons/heroicons/x-mark-solid.jsx')['default']
   const IconIcBaselineDiscord: typeof import('~icons/ic/baseline-discord.jsx')['default']

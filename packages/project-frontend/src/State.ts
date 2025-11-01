@@ -1,9 +1,9 @@
 import { type Graph, Node } from "@macrograph/project-domain";
-import { Effect, Request, Schema } from "effect";
+import { Effect, type Request } from "effect";
 import { createStore, reconcile } from "solid-js/store";
+import type { PackageMeta, Project } from "@macrograph/project-domain";
 
-import { PackageMeta, Project } from "@macrograph/project-domain";
-import { GraphTwoWayConnections } from "./Graph";
+import type { GraphTwoWayConnections } from "./Graph";
 
 export type GraphState = Omit<Graph.Shape, "connections"> & {
 	connections: GraphTwoWayConnections;

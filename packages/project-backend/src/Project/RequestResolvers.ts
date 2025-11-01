@@ -1,5 +1,6 @@
 import {
 	Graph,
+	Node,
 	PackageMeta,
 	Project,
 	SchemaMeta,
@@ -10,6 +11,7 @@ import { Effect, Option, RequestResolver } from "effect";
 import { ProjectPackages } from "./Packages";
 import { project } from "./data";
 import { ProjectActions } from "./Actions";
+import { Graphs } from "../Graph";
 
 export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 	"ProjectRequests",
@@ -106,5 +108,52 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 
 			return { CreateNodeResolver };
 		}),
+	},
+) {}
+
+export class NodeRequests extends Effect.Service<NodeRequests>()(
+	"NodeRequests",
+	{
+		effect: Effect.gen(function* () {
+			const graphs = yield* Graphs;
+			// const realtime = yield* RealtimePubSub;
+			// const serverPolicy = yield* ServerPolicy;
+
+			const SetNodePositionsResolver = RequestResolver.fromEffect(
+				Effect.fnUntraced(function* (payload: Node.SetNodePositions) {
+					const graph = yield* graphs
+						.get(payload.graphId)
+						.pipe(
+							Effect.andThen(
+								Effect.catchTag(
+									"NoSuchElementException",
+									() => new Graph.NotFound({ graphId: payload.graphId }),
+								),
+							),
+						);
+
+					const positions: Array<{
+						node: Node.Id;
+						position: { x: number; y: number };
+					}> = [];
+
+					for (const [nodeId, position] of payload.positions) {
+						const node = graph.nodes.find((node) => node.id === nodeId);
+						if (!node) continue;
+						node.position = position;
+						positions.push({ node: nodeId, position });
+					}
+
+					// yield* realtime.publish({
+					// 	type: "NodesMoved",
+					// 	graphId: graph.id,
+					// 	positions: payload.positions,
+					// });
+				}),
+			);
+
+			return { SetNodePositionsResolver };
+		}),
+		dependencies: [Graphs.Default],
 	},
 ) {}

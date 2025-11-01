@@ -414,7 +414,7 @@ export function GraphView(
 													} else if (downEvent.button === 2) {
 														downEvent.preventDefault();
 
-														if (!props.selection.has(node.id))
+														if (!props.selection?.has(node.id))
 															props.onItemsSelected?.(new Set([node.id]));
 													}
 												}}

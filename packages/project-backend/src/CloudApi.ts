@@ -5,7 +5,7 @@ import {
 	HttpClientRequest,
 } from "@effect/platform";
 import { Api, type RawJWT } from "@macrograph/web-domain";
-import { Config, Context, Effect, Layer, Option } from "effect";
+import { Context, Effect, Layer, Option } from "effect";
 
 const CLIENT_ID = "macrograph-server";
 
@@ -19,11 +19,14 @@ export class CloudApiToken extends Context.Tag("CloudApiToken")<
 	}
 }
 
+export class CloudApiURL extends Context.Reference<CloudApiURL>()(
+	"CloudApiURL",
+	{ defaultValue: () => undefined as string | undefined },
+) {}
+
 export class CloudApi extends Effect.Service<CloudApi>()("CloudApi", {
 	effect: Effect.gen(function* () {
-		const baseUrl = yield* Config.string("API_URL").pipe(
-			Config.withDefault((typeof window !== "undefined" && window.location?.origin) || "https://www.macrograph.app"),
-		);
+		const baseUrl = yield* CloudApiURL;
 
 		const httpClient = yield* HttpClient.HttpClient;
 

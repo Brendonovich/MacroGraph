@@ -1,9 +1,10 @@
 import {
-  PackagesSettings,
+  PackageClients,
   ProjectActions,
   ProjectState,
 } from "@macrograph/project-frontend";
 import { Effect, Layer } from "effect";
+
 import { PlaygroundRpc } from "./rpc";
 
 export const loadPackages = Effect.gen(function* () {
@@ -16,7 +17,7 @@ export const loadPackages = Effect.gen(function* () {
       Effect.gen(function* () {
         const pkg = yield* Effect.promise(getPkg);
 
-        yield* PackagesSettings.addPackage(id, pkg);
+        yield* PackageClients.addPackage(id, pkg);
       }),
     ),
     { concurrency: 3 },
@@ -24,7 +25,7 @@ export const loadPackages = Effect.gen(function* () {
 });
 
 export const FrontendLayers = Layer.mergeAll(
-  PackagesSettings.Default,
+  PackageClients.Default,
   PlaygroundRpc.Default,
   ProjectActions.Default,
   ProjectState.Default,

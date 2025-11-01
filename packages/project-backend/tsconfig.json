@@ -3,7 +3,7 @@
 		"target": "ESNext",
 		"useDefineForClassFields": true,
 		"module": "ESNext",
-		"lib": ["ES2021", "DOM", "DOM.Iterable"],
+		"lib": ["ES2021"],
 		"skipLibCheck": true,
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
