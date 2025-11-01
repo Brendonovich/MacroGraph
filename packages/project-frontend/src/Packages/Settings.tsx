@@ -1,8 +1,8 @@
-import { createScopedEffect } from "@macrograph/package-sdk/ui";
+import { createScopedEffect, LoadingBlock } from "@macrograph/package-sdk/ui";
 import { Project } from "@macrograph/project-domain";
 import { queryOptions, type UseQueryResult } from "@tanstack/solid-query";
 import { Effect, Stream, type Request } from "effect";
-import { Show } from "solid-js";
+import { Show, Suspense } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { reconcile } from "solid-js/store";
 
@@ -25,18 +25,14 @@ export function PackageSettings(props: {
   );
 
   return (
-    <div class="w-full h-full bg-gray-2">
-      <div class="flex flex-col items-stretch w-full max-w-120 p-4">
-        <Show when={props.settingsQuery.data}>
-          {(data) => (
-            <Dynamic
-              component={props.package.SettingsUI}
-              rpc={props.package.rpcClient}
-              state={data()}
-            />
-          )}
-        </Show>
-      </div>
+    <div class="flex flex-col items-stretch w-full max-w-120 p-4">
+      <Suspense fallback={<LoadingBlock />}>
+        <Dynamic
+          component={props.package.SettingsUI}
+          rpc={props.package.rpcClient}
+          state={props.settingsQuery.data}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { For, type JSX, Show, Suspense } from "solid-js";
+import { For, type JSX, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 export function SettingsLayout<TPage extends string>(props: {
@@ -30,11 +30,9 @@ export function SettingsLayout<TPage extends string>(props: {
       </nav>
 
       <div class="max-w-lg w-full flex flex-col items-stretch p-4 text-sm">
-        <Suspense>
-          <Show when={props.pages.find((page) => page.page === props.page)}>
-            {(page) => <Dynamic component={page().Component} />}
-          </Show>
-        </Suspense>
+        <Show when={props.pages.find((page) => page.page === props.page)} keyed>
+          {(page) => <Dynamic component={page.Component} />}
+        </Show>
       </div>
     </div>
   );

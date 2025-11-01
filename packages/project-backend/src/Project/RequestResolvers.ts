@@ -1,9 +1,9 @@
 import {
 	Graph,
-	Node,
-	PackageMeta,
-	Project,
-	SchemaMeta,
+	type Node,
+	type PackageMeta,
+	type Project,
+	type SchemaMeta,
 	SchemaNotFound,
 } from "@macrograph/project-domain";
 import { Effect, Option, RequestResolver } from "effect";
@@ -106,7 +106,37 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 				}),
 			);
 
-			return { CreateNodeResolver };
+			const ConnectIOResolver = RequestResolver.fromEffect(
+				Effect.fnUntraced(function* (payload: Graph.ConnectIO) {
+					yield* projectActions.addConnection(
+						payload.graphId,
+						payload.output,
+						payload.input,
+					);
+				}),
+			);
+
+			const DisconnectIOResolver = RequestResolver.fromEffect(
+				Effect.fnUntraced(function* (payload: Graph.DisconnectIO) {
+					yield* projectActions.disconnectIO(payload.graphId, payload.io);
+				}),
+			);
+
+			const DeleteSelectionResolver = RequestResolver.fromEffect(
+				Effect.fnUntraced(function* (payload: Graph.DeleteSelection) {
+					yield* projectActions.deleteSelection(
+						payload.graph,
+						payload.selection,
+					);
+				}),
+			);
+
+			return {
+				CreateNodeResolver,
+				ConnectIOResolver,
+				DisconnectIOResolver,
+				DeleteSelectionResolver,
+			};
 		}),
 	},
 ) {}

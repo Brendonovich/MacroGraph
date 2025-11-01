@@ -32,6 +32,7 @@ import {
   batch,
   Switch,
   Match,
+  Suspense,
 } from "solid-js";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { makePersisted } from "@solid-primitives/storage";
@@ -39,6 +40,8 @@ import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import { createStore, produce, reconcile } from "solid-js/store";
 import type { Graph, Node } from "@macrograph/project-domain";
 import "@total-typescript/ts-reset";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { createMousePosition } from "@solid-primitives/mouse";
 
 import {
   EffectRuntimeContext,
@@ -58,7 +61,7 @@ namespace PaneState {
     | {
         type: "graph";
         graphId: Graph.Id;
-        selection?: Set<Node.Id>;
+        selection: Node.Id[];
       }
     | { type: "package"; packageId: string }
     | { type: "settings"; page: "Credentials" };
@@ -85,7 +88,7 @@ export default function NewPlayground() {
   });
 
   return (
-    <div class="dark text-gray-12 font-sans w-full h-full">
+    <div class="text-gray-12 font-sans w-full h-full">
       <ProjectEffectRuntimeContext.Provider value={effectRuntime}>
         <EffectRuntimeProvider runtime={effectRuntime}>
           <EffectRuntimeContext.Provider value={effectRuntime}>
@@ -190,9 +193,11 @@ function Inner() {
     return v;
   }, "graphs");
 
+  const mouse = createMousePosition();
+
   return (
-    <div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
-      <div class="flex flex-row items-center h-9 z-10">
+    <div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-3">
+      <div class="flex flex-row items-center h-9 z-10 bg-gray-4">
         <button
           type="button"
           onClick={() => {
@@ -208,6 +213,7 @@ function Inner() {
         <button
           type="button"
           onClick={() => {
+            console.log("Graphs");
             setSelectedSidebar(
               selectedSidebar() === "graphs" ? null : "graphs",
             );
@@ -229,48 +235,73 @@ function Inner() {
         </button>
         {/*<AuthSection />*/}
       </div>
-      <div class="flex flex-row flex-1 divide-x divide-gray-5 h-full bg-gray-3">
-        <Show when={selectedSidebar()}>
-          <div class="w-56 h-full flex flex-col items-stretch justify-start divide-y divide-gray-5 shrink-0">
-            <Switch>
-              <Match when={selectedSidebar() === "graphs"}>
-                <GraphsSidebar
-                  graphs={state.graphs}
-                  selected={(() => {
-                    const s = currentTabState();
-                    if (s?.type === "graph") return s.graphId;
-                  })()}
-                  onSelected={(graph) => {
-                    openTab({ type: "graph", graphId: graph.id });
-                  }}
-                />
-              </Match>
-              <Match when={selectedSidebar() === "packages"}>
-                <PackagesSidebar
-                  packageId={(() => {
-                    const s = currentTabState();
-                    if (s?.type === "package") return s.packageId;
-                  })()}
-                  onChange={(packageId) =>
-                    openTab({ type: "package", packageId })
-                  }
-                />
-              </Match>
-            </Switch>
-          </div>
-        </Show>
+      <Show when={initialize.isSuccess}>
+        <div class="flex flex-row flex-1 divide-x divide-gray-5 h-full">
+          <Show when={selectedSidebar()}>
+            <div class="w-56 h-full flex flex-col items-stretch justify-start divide-y divide-gray-5 shrink-0">
+              <Switch>
+                <Match when={selectedSidebar() === "graphs"}>
+                  <GraphsSidebar
+                    graphs={state.graphs}
+                    selected={(() => {
+                      const s = currentTabState();
+                      if (s?.type === "graph") return s.graphId;
+                    })()}
+                    onSelected={(graph) => {
+                      openTab({
+                        type: "graph",
+                        graphId: graph.id,
+                        selection: [],
+                      });
+                    }}
+                  />
+                </Match>
+                <Match when={selectedSidebar() === "packages"}>
+                  <PackagesSidebar
+                    packageId={(() => {
+                      const s = currentTabState();
+                      if (s?.type === "package") return s.packageId;
+                    })()}
+                    onChange={(packageId) =>
+                      openTab({ type: "package", packageId })
+                    }
+                  />
+                </Match>
+              </Switch>
+            </div>
+          </Show>
 
-        <Show when={initialize.isSuccess}>
           <EditorTabs
             schema={{
               graph: {
                 getMeta: (tab) => ({ title: tab.graph.name }),
-                Component: (tab) => (
-                  <div class="w-full h-full bg-gray-2 flex">
+                Component: (tab) => {
+                  createEventListener(window, "keydown", (e) => {
+                    if (e.code === "Backspace" || e.code === "Delete") {
+                      actions.DeleteSelection(
+                        rpc.DeleteSelection,
+                        tab.graphId,
+                        tab.selection,
+                      );
+                    } else if (e.code === "Period") {
+                      if (e.metaKey || e.ctrlKey) {
+                        setSchemaMenu({
+                          open: true,
+                          position: {
+                            x: mouse.x - (bounds.left ?? 0),
+                            y: mouse.y - (bounds.top ?? 0),
+                          },
+                        });
+                      }
+                    }
+                  });
+
+                  return (
                     <GraphContextProvider bounds={bounds}>
                       <GraphView
                         ref={setRef}
                         nodes={tab.graph.nodes}
+                        connections={tab.graph.connections}
                         selection={tab.selection}
                         getSchema={(ref) =>
                           Option.fromNullable(
@@ -302,6 +333,28 @@ function Inner() {
                             items,
                           );
                         }}
+                        onConnectIO={(from, to) => {
+                          actions.ConnectIO(
+                            rpc.ConnectIO,
+                            tab.graph.id,
+                            from,
+                            to,
+                          );
+                        }}
+                        onDisconnectIO={(io) => {
+                          actions.DisconnectIO(
+                            rpc.DisconnectIO,
+                            tab.graph.id,
+                            io,
+                          );
+                        }}
+                        onDeleteSelection={() => {
+                          actions.DeleteSelection(
+                            rpc.DeleteSelection,
+                            tab.graph.id,
+                            [...tab.selection],
+                          );
+                        }}
                       />
                       <GraphContextMenu
                         position={(() => {
@@ -321,8 +374,8 @@ function Inner() {
                         packages={state.packages}
                       />
                     </GraphContextProvider>
-                  </div>
-                ),
+                  );
+                },
               },
               settings: {
                 getMeta: (tab) => ({ title: "Settings", desc: tab.page }),
@@ -409,9 +462,10 @@ function Inner() {
               .filter(Boolean)}
             selectedTabId={tabState.selectedTabId}
             onChange={(id) => setTabState("selectedTabId", id)}
+            onRemove={(id) => removeTab(id)}
           />
-        </Show>
-      </div>
+        </div>
+      </Show>
     </div>
   );
 }

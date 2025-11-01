@@ -48,28 +48,6 @@ export function EditorTabs<
                         <span class="ml-1 text-xs text-gray-11">{desc()}</span>
                       )}
                     </Show>
-                    {/*{(() => {
-                    if (tab.type === "graph") {
-                      const graph = state.graphs[tab.graphId];
-                      return graph?.name ?? `Graph ${tab.graphId}`;
-                    }
-                    if (tab.type === "package")
-                      return (
-                        <>
-                          <span>{tab.package}</span>
-                          <span class="ml-1 text-xs text-gray-11">Package</span>
-                        </>
-                      );
-                    if (tab.type === "settings")
-                      return (
-                        <>
-                          <span>{tab.page}</span>
-                          <span class="ml-1 text-xs text-gray-11">
-                            Settings
-                          </span>
-                        </>
-                      );
-                  })()}*/}
                   </button>
                   <div class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 absolute inset-y-0.5 pl-2 pr-1 right-0 flex items-center justify-center bg-gradient-to-gray-3 to-20% group-data-[selected='true']:(bg-gradient-to-gray-2 to-20%) bg-gradient-to-r from-transparent">
                     <button
@@ -77,7 +55,7 @@ export function EditorTabs<
                       class="bg-transparent hover:bg-gray-6 p-0.5 focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)"
                       onClick={() => props.onRemove?.(tab.tabId)}
                     >
-                      {/*<IconBiX class="size-3.5" />*/}
+                      <IconBiX class="size-3.5" />
                     </button>
                   </div>
                 </li>
@@ -88,11 +66,11 @@ export function EditorTabs<
         </ul>
         <Show when={selectedTabState()}>
           {(selectedTabState) => (
-            <>
+            <div class="w-full h-full bg-gray-2 flex flex-col overflow-hidden">
               {props.schema[
                 selectedTabState().type as keyof typeof props.schema
               ].Component(selectedTabState() as any)}
-            </>
+            </div>
           )}
         </Show>
       </Show>

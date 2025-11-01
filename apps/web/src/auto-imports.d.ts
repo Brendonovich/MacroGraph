@@ -23,6 +23,7 @@ declare global {
   const IconMaterialSymbolsArrowDropDownRounded: typeof import('~icons/material-symbols/arrow-drop-down-rounded.jsx')['default']
   const IconMaterialSymbolsArrowDropUpRounded: typeof import('~icons/material-symbols/arrow-drop-up-rounded.jsx')['default']
   const IconMaterialSymbolsArrowRightRounded: typeof import('~icons/material-symbols/arrow-right-rounded.jsx')['default']
+  const IconMaterialSymbolsDeleteOutline: typeof import('~icons/material-symbols/delete-outline.jsx')['default']
   const IconMdiConnection: typeof import('~icons/mdi/connection.jsx')['default']
   const IconMdiDotsHorizontal: typeof import('~icons/mdi/dots-horizontal.jsx')['default']
   const IconMdiGithub: typeof import('~icons/mdi/github.jsx')['default']

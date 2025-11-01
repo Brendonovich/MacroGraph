@@ -6,9 +6,7 @@ import Icons from "unplugin-icons/vite";
 import { defineConfig } from "vite";
 import { solidStart } from "@solidjs/start/config";
 import { nitroV2Plugin } from "@solidjs/start-nitro-v2-plugin";
-import { nitro } from "nitro/vite";
-// @ts-expect-error
-import mdx from "@vinxi/plugin-mdx";
+// import { nitro } from "nitro/vite";
 // import unfonts from "unplugin-fonts/vite";
 
 import interfacePlugin from "../../packages/ui/vite";
@@ -33,11 +31,6 @@ export default defineConfig((env) => ({
 		Icons({ compiler: "solid", autoInstall: false }),
 		basePackagesPlugin,
 		interfacePlugin,
-		mdx.default.withImports({})({
-			jsx: true,
-			jsxImportSource: "solid-js",
-			providerImportSource: "solid-mdx",
-		}),
 		solidStart({
 			ssr: true,
 			routeDir: "app",

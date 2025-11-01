@@ -1,4 +1,3 @@
-import { Effect, Layer, Option, Schema, Scope } from "effect";
 import * as Packages from "@macrograph/base-packages";
 import {
 	CloudApiToken,
@@ -11,6 +10,7 @@ import {
 	ProjectRequests,
 } from "@macrograph/project-backend";
 import { Credential, type Project } from "@macrograph/project-domain";
+import { Effect, Layer, Option, type Scope } from "effect";
 
 import { Rpcs } from "./rpc";
 
@@ -82,6 +82,9 @@ const RpcsLive = Rpcs.toLayer(
 					Effect.catchAll(() => Effect.die(null)),
 				),
 			SetNodePositions: Effect.request(nodeReqs.SetNodePositionsResolver),
+			ConnectIO: Effect.request(graphReqs.ConnectIOResolver),
+			DisconnectIO: Effect.request(graphReqs.DisconnectIOResolver),
+			DeleteSelection: Effect.request(graphReqs.DeleteSelectionResolver),
 		};
 	}),
 );

@@ -5,6 +5,9 @@ import { Effect, Schema } from "effect";
 export const Rpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Project.GetProject),
 	Rpc.fromTaggedRequest(Graph.CreateNode),
+	Rpc.fromTaggedRequest(Graph.ConnectIO),
+	Rpc.fromTaggedRequest(Graph.DisconnectIO),
+	Rpc.fromTaggedRequest(Graph.DeleteSelection),
 	Rpc.fromTaggedRequest(Project.GetPackageSettings),
 	Rpc.fromTaggedRequest(Node.SetNodePositions),
 	Rpc.make("GetCredentials", {

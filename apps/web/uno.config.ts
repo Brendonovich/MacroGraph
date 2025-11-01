@@ -29,6 +29,21 @@ export default defineConfig({
 	transformers: [transformerVariantGroup(), transformerDirectives()],
 	theme: {
 		colors: {
+			mg: {
+				bool: "#DC2626",
+				event: "#C20000",
+				string: "#DA5697",
+				exec: "#2163EB",
+				int: "#30F3DB",
+				pure: "#008E62",
+				float: "#00AE75",
+				graph: "#262626",
+				base: "#696969",
+				enum: "#1B4DFF",
+				struct: "#FACC15",
+				current: "var(--mg-current)",
+				focus: "#eab308",
+			},
 			gray: getColorScale("gray"),
 			red: getColorScale("red"),
 			border: "hsl(var(--border))",
@@ -79,6 +94,30 @@ export default defineConfig({
 			card: {
 				DEFAULT: "hsl(var(--card))",
 				foreground: "hsl(var(--card-foreground))",
+			},
+		},
+		animation: {
+			keyframes: {
+				"accordion-down":
+					"{from { height: 0; } to { height: var(--kb-accordion-content-height); }}",
+				"accordion-up":
+					"{from { height: var(--kb-accordion-content-height); } to { height: 0; }}",
+				"content-show":
+					"{from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); }}",
+				"content-hide":
+					"{from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.96); }}",
+			},
+			durations: {
+				"accordion-down": "0.2s",
+				"accordion-up": "0.2s",
+				"content-show": "0.2s",
+				"content-hide": "0.2s",
+			},
+			timingFns: {
+				"accordion-down": "ease-out",
+				"accordion-up": "ease-out",
+				"content-show": "ease-out",
+				"content-hide": "ease-out",
 			},
 		},
 	},

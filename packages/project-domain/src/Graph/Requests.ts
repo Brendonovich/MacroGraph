@@ -52,7 +52,7 @@ export class DeleteSelection extends Schema.TaggedRequest<DeleteSelection>()(
 	{
 		payload: {
 			graph: Graph.Id,
-			selection: Schema.Array(Node.Id),
+			selection: Schema.Array(Node.Id).pipe(Schema.mutable),
 		},
 		success: Schema.Void,
 		failure: Schema.Union(Graph.NotFound, Node.NotFound, PolicyDeniedError),

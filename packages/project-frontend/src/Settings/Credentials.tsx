@@ -1,4 +1,4 @@
-import { PromiseButton } from "@macrograph/package-sdk/ui";
+import { LoadingBlock, PromiseButton } from "@macrograph/package-sdk/ui";
 import type { UseQueryResult } from "@tanstack/solid-query";
 import type { Credential } from "@macrograph/project-domain";
 import { For, Suspense } from "solid-js";
@@ -22,13 +22,7 @@ export function CredentialsPage(props: {
           Refetch
         </PromiseButton>
       </div>
-      <Suspense
-        fallback={
-          <div class="w-full p-4 flex items-center justify-center">
-            <IconGgSpinner class="size-5 text-inherit animate-spin" />
-          </div>
-        }
-      >
+      <Suspense fallback={<LoadingBlock />}>
         <ul class="divide-gray-5 divide-y">
           <For each={props.credentials.data}>
             {(credential) => (

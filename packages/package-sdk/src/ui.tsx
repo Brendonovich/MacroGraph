@@ -34,7 +34,7 @@ export type SettingsProps<
   TState extends Schema.Schema<any>,
 > = {
   rpc: RpcClient.RpcClient<RpcGroup.Rpcs<TRpcs>>;
-  state: TState["Encoded"];
+  state?: TState["Encoded"];
 };
 
 const buttonStyles = cva(
@@ -180,4 +180,16 @@ export function createScopedEffect(
 
     effect().pipe(Scope.use(scope), runtime.runPromise);
   });
+}
+
+export function LoadingSpinner() {
+  return <IconGgSpinner class="size-5 text-inherit animate-spin" />;
+}
+
+export function LoadingBlock() {
+  return (
+    <div class="w-full p-4 flex items-center justify-center">
+      <LoadingSpinner />
+    </div>
+  );
 }
