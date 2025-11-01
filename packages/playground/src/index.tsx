@@ -33,6 +33,7 @@ import {
   Switch,
   Match,
   Suspense,
+  createEffect,
 } from "solid-js";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { makePersisted } from "@solid-primitives/storage";
@@ -183,6 +184,13 @@ function Inner() {
     });
   }
 
+  const getSelectedSidebar = () => {
+    const t = currentTabState();
+    if (t?.type === "graph") return "graphs";
+    if (t?.type === "package") return "packages";
+    return null;
+  };
+
   const [selectedSidebar, setSelectedSidebar] = createWritableMemo<
     "graphs" | "packages" | null
   >((v) => {
@@ -191,7 +199,11 @@ function Inner() {
     if (t?.type === "graph") return "graphs";
     if (t?.type === "package") return "packages";
     return v;
-  }, "graphs");
+  }, getSelectedSidebar());
+
+  createEffect(() => {
+    console.log(selectedSidebar());
+  });
 
   const mouse = createMousePosition();
 
@@ -213,7 +225,7 @@ function Inner() {
         <button
           type="button"
           onClick={() => {
-            console.log("Graphs");
+            console.log("Graphs", selectedSidebar());
             setSelectedSidebar(
               selectedSidebar() === "graphs" ? null : "graphs",
             );
