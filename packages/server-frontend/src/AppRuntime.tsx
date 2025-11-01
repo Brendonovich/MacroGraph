@@ -1,17 +1,18 @@
-import { type Effect, Layer, type ManagedRuntime } from "effect";
+import { Effect, Layer, type ManagedRuntime } from "effect";
 import { createContext, useContext } from "solid-js";
 import { WebSdk } from "@effect/opentelemetry";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { ProjectActions, ProjectState } from "@macrograph/project-frontend";
+import { createEffectQueryFromManagedRuntime } from "effect-query";
 
 import { ClientAuth } from "./ClientAuth";
 import { PackagesSettings } from "./Packages/PackagesSettings";
-import { ProjectActions } from "./Project/Actions";
 import { ProjectRealtime } from "./Project/Realtime";
 import { ProjectRpc } from "./Project/Rpc";
-import { ProjectState } from "./Project/State";
 import { AuthActions } from "./Auth";
 import { makeEffectQuery } from "./effect-query";
+import { runtime } from ".";
 
 export namespace ProjectRuntime {
 	const NodeSdkLive = WebSdk.layer(() => ({
@@ -72,3 +73,5 @@ export function useProjectService<T>(
 export const { Provider, useEffectQuery, useEffectMutation } = makeEffectQuery(
 	() => ProjectRuntime.layer,
 );
+
+export const eq = createEffectQueryFromManagedRuntime(runtime);

@@ -1,6 +1,6 @@
-@tailwind base;
+/*@tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities;*/
 
 @layer base {
   [data-kb-theme="light"] {
@@ -94,19 +94,20 @@
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+* {
+  border-color: hsl(var(--border));
+}
 
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+body {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+  font-feature-settings:
+    "rlig" 1,
+    "calt" 1;
 }
 
 @media (max-width: 640px) {
   .container {
-    @apply px-4;
+    padding: 1rem 0;
   }
 }

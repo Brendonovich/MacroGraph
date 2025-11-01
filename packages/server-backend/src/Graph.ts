@@ -1,8 +1,8 @@
-import { SchemaNotFound } from "@macrograph/domain";
+import { SchemaNotFound } from "@macrograph/project-domain";
 import { Graph, Policy } from "@macrograph/server-domain";
 import { Effect, Option } from "effect";
+import { ProjectActions } from "@macrograph/project-backend";
 
-import { ProjectActions } from "./Project/Actions";
 import { RealtimePubSub } from "./Realtime";
 
 import { project } from "./project-data";

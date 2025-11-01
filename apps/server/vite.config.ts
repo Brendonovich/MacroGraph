@@ -92,7 +92,7 @@ export default defineConfig({
 			],
 			dts: "./src/auto-imports.d.ts",
 		}),
-		Icons({ compiler: "solid", autoInstall: true }),
+		Icons({ compiler: "solid", autoInstall: false }),
 		basePackagesPlugin,
 		solid(),
 	],

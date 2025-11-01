@@ -489,19 +489,3 @@ export function makeUseEffectMutation<
 		>;
 	};
 }
-
-export function createScopedEffect(
-	effect: Accessor<Effect.Effect<any, any, Scope.Scope>>,
-) {
-	const runtime = useEffectRuntime();
-
-	createEffect(() => {
-		const scope = Scope.make().pipe(runtime.runSync);
-
-		onCleanup(() => {
-			Scope.close(scope, Exit.succeed<void>(undefined)).pipe(runtime.runSync);
-		});
-
-		effect().pipe(Scope.use(scope), runtime.runPromise);
-	});
-}

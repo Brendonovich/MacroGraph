@@ -18,9 +18,10 @@ import { Dynamic } from "solid-js/web";
 import { Dialog } from "@kobalte/core";
 import { Button, EffectButton } from "@macrograph/package-sdk/ui";
 import type { ValidComponent } from "solid-js";
-import { useQuery, useQueryClient } from "@tanstack/solid-query";
+import { useQueryClient } from "@tanstack/solid-query";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { makePersisted } from "@solid-primitives/storage";
+import { GraphsSidebar } from "@macrograph/project-frontend";
 
 import { useEffectQuery, useProjectService } from "../AppRuntime";
 import { GraphContextProvider } from "../Graph/Context";
@@ -43,7 +44,7 @@ import { createScopedEffect } from "../effect-query/hooks";
 
 namespace PaneState {
 	export type PaneState =
-		| { type: "graph"; graphId: number }
+		| { type: "graph"; graphId: Graph.Id }
 		| { type: "package"; package: string }
 		| { type: "settings"; page: "Server" | "Credentials" };
 
@@ -178,42 +179,16 @@ export default function () {
 					<div class="w-56 h-full flex flex-col items-stretch justify-start divide-y divide-gray-5 shrink-0">
 						<Switch>
 							<Match when={selectedSidebar() === "graphs"}>
-								<div class="h-8 flex flex-row">
-									<input
-										class="h-full flex-1 px-2 bg-gray-3 dark:bg-gray-2 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-										placeholder="Search Graphs"
-									/>
-									<button
-										type="button"
-										disabled
-										class="bg-transparent h-full disabled:(text-gray-10) px-2 not-disabled:hover:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-									>
-										New
-									</button>
-								</div>
-								<ul>
-									<For each={Object.values(state.graphs)}>
-										{(graph) => (
-											<li>
-												<button
-													type="button"
-													class="w-full data-[selected='true']:bg-gray-2 hover:bg-gray-2 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-													data-selected={(() => {
-														const s = currentTabState();
-														return (
-															s?.type === "graph" && s.graphId === graph.id
-														);
-													})()}
-													onClick={() => {
-														openTab({ type: "graph", graphId: graph.id });
-													}}
-												>
-													{graph.name}
-												</button>
-											</li>
-										)}
-									</For>
-								</ul>
+								<GraphsSidebar
+									graphs={state.graphs}
+									selected={(() => {
+										const s = currentTabState();
+										if (s?.type === "graph") return s.graphId;
+									})()}
+									onSelected={(graph) => {
+										openTab({ type: "graph", graphId: graph.id });
+									}}
+								/>
 							</Match>
 							<Match when={selectedSidebar() === "packages"}>
 								{(_) => {
@@ -475,6 +450,7 @@ export default function () {
 												</For>
 
 												<GraphContextMenu
+													packages={state.packages}
 													position={(() => {
 														const s = schemaMenu();
 														if (s.open) return s.position;

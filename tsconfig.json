@@ -2,7 +2,6 @@
 	"files": [],
 	"references": [
 		{ "path": "./packages/web-domain" },
-		{ "path": "./packages/domain" },
 		{ "path": "./packages/package-sdk" },
 		{ "path": "./packages/base-packages" },
 		{ "path": "./packages/server-domain" },

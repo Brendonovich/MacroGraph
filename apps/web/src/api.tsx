@@ -6,6 +6,8 @@ import {
 	getHeader,
 	getCookie,
 	appendResponseHeader,
+	setResponseHeader,
+	setResponseStatus,
 } from "@solidjs/start/http";
 
 import { db } from "~/drizzle";
@@ -46,7 +48,8 @@ async function _getAuthState() {
 				!hostHeader ||
 				!verifyRequestOrigin(originHeader, [hostHeader])
 			) {
-				throw event.runtime!.node!.res!.writeHead(403).end();
+				setResponseStatus(403);
+				return;
 			}
 		}
 
@@ -85,7 +88,9 @@ export async function ensureAuthedOrRedirect() {
 	const state = await getAuthState();
 	if (state) return state;
 
-	throw loginRedirect();
+	const redirect = loginRedirect();
+	console.log({ redirect });
+	throw redirect;
 }
 
 export const getUser = cache(async () => {

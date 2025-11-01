@@ -47,7 +47,7 @@ import {
 	InterfaceContextProvider,
 	useInterfaceContext,
 } from "./context";
-import "./global.css";
+// import "./global.css";
 import { usePlatform } from "./platform";
 import { isCtrlEvent } from "./util";
 

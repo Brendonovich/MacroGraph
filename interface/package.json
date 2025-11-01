@@ -35,11 +35,11 @@
 		"@solid-primitives/state-machine": "^0.0.3",
 		"@solid-primitives/storage": "^2.1.4",
 		"@solidjs/router": "^0.15.3",
-		"@tanstack/solid-query": "^5.85.5",
+		"@tanstack/solid-query": "^5.90.6",
 		"@ts-rest/core": "^3.41.1",
 		"@ts-rest/solid-query": "^3.41.1",
 		"clsx": "^1.2.1",
-		"solid-js": "^1.9.9",
+		"solid-js": "^1.9.10",
 		"solid-sonner": "^0.2.5",
 		"valibot": "^0.37.0",
 		"zod": "^3.25.36"

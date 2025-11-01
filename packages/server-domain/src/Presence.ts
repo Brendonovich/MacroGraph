@@ -1,8 +1,7 @@
+import { Graph, Node } from "@macrograph/project-domain";
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema } from "effect";
 
-import * as Graph from "./Graph";
-import * as Node from "./Node";
 import * as Realtime from "./Realtime";
 
 export const Rpcs = RpcGroup.make(

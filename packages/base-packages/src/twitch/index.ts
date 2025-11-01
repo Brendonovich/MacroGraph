@@ -11,6 +11,7 @@ import {
 	Deferred,
 	Effect,
 	Exit,
+	Layer,
 	Option,
 	PubSub,
 	Schema,
@@ -26,7 +27,6 @@ import {
 } from "./eventSub";
 import { HelixApi } from "./helix";
 import { RPCS } from "./shared";
-import { makeWebSocket } from "@effect/platform/Socket";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -80,6 +80,19 @@ const Engine = PackageEngine.make<
 						HttpClient.catchTags({ ForceRetryError: Effect.die }),
 					);
 
+				const twitchFetch = Layer.succeed(FetchHttpClient.Fetch, (url, init) =>
+					fetch(url, {
+						...init,
+						// twitch doesn't like extra headers
+						headers: {
+							authorization: (init!.headers as { authorization: string })
+								.authorization,
+							"client-id": CLIENT_ID,
+							"content-type": "application/json",
+						},
+					}),
+				);
+
 				const helixClient = yield* HttpApiClient.make(HelixApi, {
 					baseUrl: "https://api.twitch.tv/helix",
 					transformClient: (c) =>
@@ -103,20 +116,8 @@ const Engine = PackageEngine.make<
 							CredentialRefresh,
 						),
 				}).pipe(
-					Effect.provide(FetchHttpClient.layer),
 					Effect.provide(
-						Context.make(FetchHttpClient.Fetch, (url, init) =>
-							fetch(url, {
-								...init,
-								// twitch doesn't like extra headers
-								headers: {
-									authorization: (init!.headers as { authorization: string })
-										.authorization,
-									"client-id": CLIENT_ID,
-									"content-type": "application/json",
-								},
-							}),
-						),
+						FetchHttpClient.layer.pipe(Layer.provide(twitchFetch)),
 					),
 				);
 

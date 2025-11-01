@@ -1,81 +1,20 @@
-import {
-	type Graph,
-	type PackageMeta,
-	Policy,
-	Project,
-	type SchemaMeta,
-} from "@macrograph/server-domain";
-import { Effect, Option } from "effect";
+import { Policy, ProjectRpcs } from "@macrograph/server-domain";
+import { ProjectRequests } from "@macrograph/project-backend";
+import { Effect } from "effect";
 
-import { project } from "../project-data";
-import { ProjectPackages } from "./Packages";
 import { ServerPolicy } from "../ServerPolicy";
 
-export const ProjectRpcsLive = Project.Rpcs.toLayer(
+export const ProjectRpcsLive = ProjectRpcs.toLayer(
 	Effect.gen(function* () {
-		const packages = yield* ProjectPackages;
+		const reqs = yield* ProjectRequests;
 		const serverPolicy = yield* ServerPolicy;
 
 		return {
-			GetProject: Effect.fn(function* () {
-				return {
-					name: project.name,
-					graphs: (() => {
-						const ret: Record<string, DeepWriteable<Graph.Shape>> = {};
-
-						for (const [key, value] of project.graphs.entries()) {
-							ret[key] = {
-								...value,
-								connections: (() => {
-									const ret: DeepWriteable<Graph.Shape["connections"]> = {};
-									if (!value.connections) return ret;
-
-									for (const [
-										key,
-										nodeConnections,
-									] of value.connections.entries()) {
-										if (!nodeConnections.out) continue;
-										const outputConns = (ret[key] = {} as (typeof ret)[string]);
-										for (const [
-											key,
-											outputConnections,
-										] of nodeConnections.out.entries()) {
-											outputConns[key] = outputConnections;
-										}
-									}
-
-									return ret;
-								})(),
-							};
-						}
-
-						return ret;
-					})(),
-					packages: [...packages.entries()].reduce(
-						(acc, [id, { pkg }]) => {
-							acc[id] = {
-								schemas: [...pkg.schemas.entries()].reduce(
-									(acc, [id, schema]) => {
-										acc[id] = { id, name: schema.name, type: schema.type };
-										return acc;
-									},
-									{} as Record<string, SchemaMeta>,
-								),
-							};
-							return acc;
-						},
-						{} as Record<string, PackageMeta>,
-					),
-				};
-			}),
-			GetPackageSettings: Effect.fn(
-				function* (payload) {
-					console.log("GET PACKAGE SETTINGS");
-					const pkg = packages.get(payload.package)!;
-					return yield* Option.getOrNull(pkg.state)!.get;
-				},
-				(e) => e.pipe(Policy.withPolicy(serverPolicy.isOwner)),
-			),
+			GetProject: Effect.request(reqs.GetProjectResolver),
+			GetPackageSettings: (v) =>
+				Effect.request(v, reqs.GetPackageSettingsResolver).pipe(
+					Policy.withPolicy(serverPolicy.isOwner),
+				),
 		};
 	}),
 );

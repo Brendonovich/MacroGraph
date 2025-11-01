@@ -1,6 +1,9 @@
 import { PackagesSettings, UI, runtime } from "@macrograph/server-frontend";
 import { Effect, Layer } from "effect";
 
+import "virtual:uno.css";
+import "@unocss/reset/tailwind-compat.css";
+
 const ClientLive = Layer.unwrapEffect(
 	Effect.gen(function* () {
 		const packageSettings = yield* Effect.promise(
