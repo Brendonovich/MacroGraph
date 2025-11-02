@@ -1,11 +1,11 @@
-import { createMemo, For, type JSX, Show } from "solid-js";
+import { type Accessor, createMemo, For, type JSX, Show } from "solid-js";
 
 export function EditorTabs<
   TSchema extends { type: string; tabId: number },
 >(props: {
   schema: {
     [K in TSchema["type"]]: {
-      Component(state: Extract<TSchema, { type: K }>): JSX.Element;
+      Component(state: Accessor<Extract<TSchema, { type: K }>>): JSX.Element;
       getMeta(state: Extract<TSchema, { type: K }>): {
         title: string;
         desc?: string;
@@ -69,7 +69,7 @@ export function EditorTabs<
             <div class="w-full h-full bg-gray-2 flex flex-col overflow-hidden">
               {props.schema[
                 selectedTabState().type as keyof typeof props.schema
-              ].Component(selectedTabState() as any)}
+              ].Component(selectedTabState as any)}
             </div>
           )}
         </Show>

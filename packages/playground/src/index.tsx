@@ -34,6 +34,7 @@ import {
   Match,
   Suspense,
   createEffect,
+  onCleanup,
 } from "solid-js";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { makePersisted } from "@solid-primitives/storage";
@@ -63,6 +64,7 @@ namespace PaneState {
         type: "graph";
         graphId: Graph.Id;
         selection: Node.Id[];
+        transform?: { translate: { x: number; y: number }; zoom: number };
       }
     | { type: "package"; packageId: string }
     | { type: "settings"; page: "Credentials" };
@@ -218,7 +220,6 @@ function Inner() {
         <button
           type="button"
           onClick={() => {
-            console.log("Graphs", selectedSidebar());
             setSelectedSidebar(
               selectedSidebar() === "graphs" ? null : "graphs",
             );
@@ -285,8 +286,8 @@ function Inner() {
                     if (e.code === "Backspace" || e.code === "Delete") {
                       actions.DeleteSelection(
                         rpc.DeleteSelection,
-                        tab.graphId,
-                        tab.selection,
+                        tab().graphId,
+                        tab().selection,
                       );
                     } else if (e.code === "Period") {
                       if (e.metaKey || e.ctrlKey) {
@@ -302,46 +303,52 @@ function Inner() {
                   });
 
                   return (
-                    <GraphContextProvider bounds={bounds}>
+                    <GraphContextProvider
+                      bounds={bounds}
+                      translate={tab().transform?.translate}
+                    >
                       <GraphView
                         ref={setRef}
-                        nodes={tab.graph.nodes}
-                        connections={tab.graph.connections}
-                        selection={tab.selection}
+                        nodes={tab().graph.nodes}
+                        connections={tab().graph.connections}
+                        selection={tab().selection}
                         getSchema={(ref) =>
                           Option.fromNullable(
                             state.packages[ref.pkgId]?.schemas[ref.schemaId],
                           )
                         }
-                        onContextMenu={(position) => {
-                          setSchemaMenu({ open: true, position });
+                        onContextMenu={(e) => {
+                          setSchemaMenu({
+                            open: true,
+                            position: { x: e.clientX, y: e.clientY },
+                          });
                         }}
                         onContextMenuClose={() => {
                           setSchemaMenu({ open: false });
                         }}
                         onItemsSelected={(selection) => {
+                          console.log("selection", selection);
                           setTabState(
                             "tabs",
                             (tab) => tab.tabId === tabState.selectedTabId,
-                            reconcile({
-                              type: "graph",
-                              graphId: tab.graph.id,
-                              tabId: tab.tabId,
-                              selection,
+                            produce((tab) => {
+                              if (tab.type !== "graph") return;
+
+                              tab.selection = selection;
                             }),
                           );
                         }}
                         onSelectionMoved={(items) => {
                           actions.SetNodePositions(
                             rpc.SetNodePositions,
-                            tab.graph.id,
+                            tab().graph.id,
                             items,
                           );
                         }}
                         onConnectIO={(from, to) => {
                           actions.ConnectIO(
                             rpc.ConnectIO,
-                            tab.graph.id,
+                            tab().graph.id,
                             from,
                             to,
                           );
@@ -349,15 +356,30 @@ function Inner() {
                         onDisconnectIO={(io) => {
                           actions.DisconnectIO(
                             rpc.DisconnectIO,
-                            tab.graph.id,
+                            tab().graph.id,
                             io,
                           );
                         }}
                         onDeleteSelection={() => {
                           actions.DeleteSelection(
                             rpc.DeleteSelection,
-                            tab.graph.id,
-                            [...tab.selection],
+                            tab().graph.id,
+                            [...tab().selection],
+                          );
+                        }}
+                        onTranslateChange={(translate) => {
+                          setTabState(
+                            "tabs",
+                            (tab) => tab.tabId === tabState.selectedTabId,
+                            produce((tab) => {
+                              if (tab.type !== "graph") return;
+
+                              tab.transform ??= {
+                                translate: { x: 0, y: 0 },
+                                zoom: 1,
+                              };
+                              tab.transform.translate = translate;
+                            }),
                           );
                         }}
                       />
@@ -370,7 +392,7 @@ function Inner() {
                         onSchemaClick={(schemaRef) => {
                           actions.CreateNode(
                             rpc.CreateNode,
-                            tab.graph.id,
+                            tab().graph.id,
                             schemaRef,
                             [schemaRef.position.x, schemaRef.position.y],
                           );
@@ -413,7 +435,7 @@ function Inner() {
                         },
                       },
                     ]}
-                    page={tab.page}
+                    page={tab().page}
                     onChange={(page) => {
                       setTabState(
                         produce((s) => {
@@ -435,14 +457,14 @@ function Inner() {
                   const rpc = useService(PlaygroundRpc);
 
                   const settingsQuery = useQuery(() =>
-                    packageSettingsQueryOptions(tab.packageId, (req) =>
+                    packageSettingsQueryOptions(tab().packageId, (req) =>
                       rpc.GetPackageSettings(req).pipe(runtime.runPromise),
                     ),
                   );
 
                   return (
                     <PackageSettings
-                      package={tab.package}
+                      package={tab().package}
                       settingsQuery={settingsQuery}
                     />
                   );

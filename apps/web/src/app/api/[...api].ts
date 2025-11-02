@@ -255,7 +255,6 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			"getUser",
 			Effect.fn(
 				function* () {
-					console.log("BRUH");
 					const db = yield* Database;
 					const session = yield* getAuthentication;
 					console.log({ session });

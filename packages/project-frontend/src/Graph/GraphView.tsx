@@ -6,7 +6,10 @@ import {
   type SchemaRef,
 } from "@macrograph/project-domain";
 import { createElementBounds } from "@solid-primitives/bounds";
-import { createEventListenerMap } from "@solid-primitives/event-listener";
+import {
+  createEventListener,
+  createEventListenerMap,
+} from "@solid-primitives/event-listener";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { mergeRefs } from "@solid-primitives/refs";
@@ -29,26 +32,34 @@ import { NodeHeader, NodeRoot } from "./Node";
 // import { ProjectActions } from "../Project/Actions";
 import type { GraphTwoWayConnections } from "./types";
 import { isTouchDevice } from "./utils";
+import { useGraphContext } from "./Context";
 
 export const ioPositions = new ReactiveMap<
   IORefString,
   { x: number; y: number }
 >();
 
+export type GraphViewState = {
+  scale?: number;
+  translate?: { x: number; y: number };
+  selection?: Array<Node.Id>;
+};
+
 export function GraphView(
   props: {
     nodes: Node.Shape[];
-    getSchema: (ref: SchemaRef) => Option.Option<SchemaMeta>;
-    onSelectionMoved?(items: Array<[Node.Id, { x: number; y: number }]>): void;
+    connections?: GraphTwoWayConnections;
     selection?: Array<Node.Id>;
+    getSchema: (ref: SchemaRef) => Option.Option<SchemaMeta>;
     remoteSelections?: Array<{ colour: string; nodes: Set<Node.Id> }>;
+    onSelectionMoved?(items: Array<[Node.Id, { x: number; y: number }]>): void;
     onItemsSelected?(selection: Array<Node.Id>): void;
     onConnectIO?(from: IORefString, to: IORefString): void;
     onDisconnectIO?(io: IORefString): void;
-    onContextMenu?(position: { x: number; y: number }): void;
+    onContextMenu?(e: MouseEvent): void;
     onContextMenuClose?(): void;
     onDeleteSelection?(): void;
-    connections?: GraphTwoWayConnections;
+    onTranslateChange?(translate: { x: number; y: number }): void;
   } & Pick<ComponentProps<"div">, "ref" | "children">,
 ) {
   const [dragState, setDragState] = createSignal<
@@ -65,15 +76,29 @@ export function GraphView(
       }
   >({ type: "idle" });
 
-  function getGraphPosition(e: MouseEvent) {
-    return { x: e.clientX, y: e.clientY };
-  }
-  // const actions = useProjectService(ProjectActions);
-
-  const [ref, setRef] = createSignal<HTMLDivElement | null>(null);
+  const graphCtx = useGraphContext();
+  const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
   const bounds = createElementBounds(ref);
-
   const mouse = createMousePosition();
+
+  createEventListener(ref, "wheel", (e) => {
+    e.preventDefault();
+
+    let deltaX = e.deltaX;
+    let deltaY = e.deltaY;
+    let isTouchpad = false;
+
+    if (Math.abs((e as any).wheelDeltaY) === Math.abs(e.deltaY) * 3) {
+      deltaX = -(e as any).wheelDeltaX / 3;
+      deltaY = -(e as any).wheelDeltaY / 3;
+      isTouchpad = true;
+    }
+
+    props.onTranslateChange?.({
+      x: (graphCtx.translate?.x ?? 0) + deltaX,
+      y: (graphCtx.translate?.y ?? 0) + deltaY,
+    });
+  });
 
   const connections = () => {
     const ret: {
@@ -146,9 +171,14 @@ export function GraphView(
     return ret;
   };
 
+  const getEventGraphPosition = (e: MouseEvent) =>
+    graphCtx.getGraphPosition({
+      x: e.clientX,
+      y: e.clientY,
+    });
+
   return (
     <div
-      {...props}
       ref={mergeRefs(setRef, props.ref)}
       class="relative flex-1 flex flex-col gap-4 items-start w-full touch-none select-none"
       onPointerDown={(downEvent) => {
@@ -168,10 +198,7 @@ export function GraphView(
               createRoot((dispose) => {
                 const timeout = setTimeout(() => {
                   if (isTouchDevice) {
-                    props.onContextMenu?.({
-                      x: downEvent.clientX - (bounds.left ?? 0),
-                      y: downEvent.clientY - (bounds.top ?? 0),
-                    });
+                    props.onContextMenu?.(downEvent);
                   }
                 }, 300);
 
@@ -218,10 +245,7 @@ export function GraphView(
       onContextMenu={(e) => {
         if (!props.onContextMenu) return;
         e.preventDefault();
-        props.onContextMenu?.({
-          x: e.clientX - (bounds.left ?? 0),
-          y: e.clientY - (bounds.top ?? 0),
-        });
+        props.onContextMenu?.(e);
       }}
     >
       <Connections
@@ -232,201 +256,219 @@ export function GraphView(
         left={bounds.left ?? 0}
       />
       <ContextMenu>
-        <For each={props.nodes}>
-          {(node) => (
-            <Show when={Option.getOrUndefined(props.getSchema(node.schema))}>
-              {(schema) => (
-                <NodeRoot
-                  {...node}
-                  graphBounds={{
-                    top: bounds.top ?? 0,
-                    left: bounds.left ?? 0,
-                  }}
-                  position={(() => {
-                    const ds = dragState();
+        <div
+          class="origin-[0,0]"
+          style={{
+            transform: `translate(${(graphCtx.translate?.x ?? 0) * -1}px, ${
+              (graphCtx.translate?.y ?? 0) * -1
+            }px)`,
+          }}
+        >
+          <For each={props.nodes}>
+            {(node) => (
+              <Show when={Option.getOrUndefined(props.getSchema(node.schema))}>
+                {(schema) => (
+                  <NodeRoot
+                    {...node}
+                    graphBounds={{
+                      top: bounds.top ?? 0,
+                      left: bounds.left ?? 0,
+                    }}
+                    position={(() => {
+                      const ds = dragState();
 
-                    if (ds.type !== "dragSelection") return node.position;
-                    return (
-                      ds.positions.find((p) => p[0] === node.id)?.[1] ??
-                      node.position
-                    );
-                  })()}
-                  selected={
-                    props.selection?.some((id) => id === node.id) ||
-                    props.remoteSelections?.find((s) => s.nodes.has(node.id))
-                      ?.colour
-                  }
-                  onPinDragStart={(e, type, id) => {
-                    if (dragState().type !== "idle") return false;
+                      if (ds.type !== "dragSelection") return node.position;
+                      return (
+                        ds.positions.find((p) => p[0] === node.id)?.[1] ??
+                        node.position
+                      );
+                    })()}
+                    selected={
+                      props.selection?.some((id) => id === node.id) ||
+                      props.remoteSelections?.find((s) => s.nodes.has(node.id))
+                        ?.colour
+                    }
+                    onPinDragStart={(e, type, id) => {
+                      if (dragState().type !== "idle") return false;
 
-                    setDragState({
-                      type: "dragIO",
-                      ioRef: `${node.id}:${type}:${id}`,
-                      pointerId: e.pointerId,
-                    });
+                      setDragState({
+                        type: "dragIO",
+                        ioRef: `${node.id}:${type}:${id}`,
+                        pointerId: e.pointerId,
+                      });
 
-                    return true;
-                  }}
-                  onPinDragEnd={() => {
-                    setDragState({ type: "idle" });
-                  }}
-                  onPinPointerUp={(e, type, id) => {
-                    const dragIO = (() => {
-                      const s = dragState();
-                      if (s.type === "dragIO") return s;
-                    })();
-                    if (!dragIO || e.pointerId !== dragIO.pointerId) return;
+                      return true;
+                    }}
+                    onPinDragEnd={() => {
+                      setDragState({ type: "idle" });
+                    }}
+                    onPinPointerUp={(e, type, id) => {
+                      const dragIO = (() => {
+                        const s = dragState();
+                        if (s.type === "dragIO") return s;
+                      })();
+                      if (!dragIO || e.pointerId !== dragIO.pointerId) return;
 
-                    props.onConnectIO?.(
-                      dragIO.ioRef,
-                      `${node.id}:${type}:${id}`,
-                    );
-                  }}
-                  onPinDoubleClick={(type, id) => {
-                    props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
-                  }}
-                  connections={{
-                    in: [
-                      ...Object.entries(props.connections?.[node.id]?.in ?? {}),
-                    ].flatMap(([id, connections]) => {
-                      if (connections.length > 0) return id;
-                      return [];
-                    }),
-                    out: [
-                      ...Object.entries(
-                        props.connections?.[node.id]?.out ?? {},
-                      ),
-                    ].flatMap(([id, connections]) => {
-                      if (connections.length > 0) return id;
-                      return [];
-                    }),
-                  }}
-                >
-                  <ContextMenu.Trigger<ValidComponent>
-                    as={(cmProps) => (
-                      <NodeHeader
-                        {...cmProps}
-                        name={node.name ?? schema().name ?? schema().id}
-                        variant={schema().type}
-                        onPointerDown={(downEvent) => {
-                          if (downEvent.button === 0) {
-                            downEvent.stopPropagation();
+                      props.onConnectIO?.(
+                        dragIO.ioRef,
+                        `${node.id}:${type}:${id}`,
+                      );
+                    }}
+                    onPinDoubleClick={(type, id) => {
+                      props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
+                    }}
+                    connections={{
+                      in: [
+                        ...Object.entries(
+                          props.connections?.[node.id]?.in ?? {},
+                        ),
+                      ].flatMap(([id, connections]) => {
+                        if (connections.length > 0) return id;
+                        return [];
+                      }),
+                      out: [
+                        ...Object.entries(
+                          props.connections?.[node.id]?.out ?? {},
+                        ),
+                      ].flatMap(([id, connections]) => {
+                        if (connections.length > 0) return id;
+                        return [];
+                      }),
+                    }}
+                  >
+                    <ContextMenu.Trigger<ValidComponent>
+                      as={(cmProps) => (
+                        <NodeHeader
+                          {...cmProps}
+                          name={node.name ?? schema().name ?? schema().id}
+                          variant={schema().type}
+                          onPointerDown={(downEvent) => {
+                            if (downEvent.button === 0) {
+                              downEvent.stopPropagation();
 
-                            if (downEvent.shiftKey) {
-                              const index = props.selection?.findIndex(
-                                (id) => id === node.id,
-                              );
-                              if (index !== -1) {
-                                props.onItemsSelected?.(
-                                  props.selection?.filter(
-                                    (id) => node.id !== id,
-                                  ) ?? [],
+                              if (downEvent.shiftKey) {
+                                const index = props.selection?.findIndex(
+                                  (id) => id === node.id,
                                 );
-                              } else {
-                                props.onItemsSelected?.([
-                                  ...(props.selection ?? []),
-                                  node.id,
+                                if (index !== -1) {
+                                  props.onItemsSelected?.(
+                                    props.selection?.filter(
+                                      (id) => node.id !== id,
+                                    ) ?? [],
+                                  );
+                                } else {
+                                  props.onItemsSelected?.([
+                                    ...(props.selection ?? []),
+                                    node.id,
+                                  ]);
+                                }
+                              } else if ((props.selection?.length ?? 0) <= 1)
+                                props.onItemsSelected?.([node.id]);
+
+                              const startPositions: Array<
+                                [Node.Id, { x: number; y: number }]
+                              > = [];
+                              for (const nodeId of props.selection ?? []) {
+                                const node = props.nodes.find(
+                                  (n) => n.id === nodeId,
+                                );
+                                if (!node) return;
+                                startPositions.push([
+                                  nodeId,
+                                  { ...node.position },
                                 ]);
                               }
-                            } else if ((props.selection?.length ?? 0) <= 1)
-                              props.onItemsSelected?.([node.id]);
 
-                            const startPositions: Array<
-                              [Node.Id, { x: number; y: number }]
-                            > = [];
-                            for (const nodeId of props.selection ?? []) {
-                              const node = props.nodes.find(
-                                (n) => n.id === nodeId,
-                              );
-                              if (!node) return;
-                              startPositions.push([
-                                nodeId,
-                                { ...node.position },
-                              ]);
-                            }
+                              const downPosition =
+                                getEventGraphPosition(downEvent);
 
-                            const downPosition = getGraphPosition(downEvent);
+                              createRoot((dispose) => {
+                                createEventListenerMap(window, {
+                                  pointermove: (moveEvent) => {
+                                    if (
+                                      downEvent.pointerId !==
+                                      moveEvent.pointerId
+                                    )
+                                      return;
 
-                            createRoot((dispose) => {
-                              createEventListenerMap(window, {
-                                pointermove: (moveEvent) => {
-                                  if (
-                                    downEvent.pointerId !== moveEvent.pointerId
-                                  )
-                                    return;
+                                    moveEvent.preventDefault();
 
-                                  moveEvent.preventDefault();
+                                    const movePosition =
+                                      getEventGraphPosition(moveEvent);
 
-                                  const movePosition =
-                                    getGraphPosition(moveEvent);
+                                    const delta = {
+                                      x: movePosition.x - downPosition.x,
+                                      y: movePosition.y - downPosition.y,
+                                    };
 
-                                  const delta = {
-                                    x: movePosition.x - downPosition.x,
-                                    y: movePosition.y - downPosition.y,
-                                  };
+                                    const positions = startPositions.map(
+                                      ([nodeId, startPosition]) =>
+                                        [
+                                          nodeId,
+                                          {
+                                            x: startPosition.x + delta.x,
+                                            y: startPosition.y + delta.y,
+                                          },
+                                        ] satisfies [any, any],
+                                    );
 
-                                  const positions = startPositions.map(
-                                    ([nodeId, startPosition]) =>
-                                      [
-                                        nodeId,
-                                        {
-                                          x: startPosition.x + delta.x,
-                                          y: startPosition.y + delta.y,
-                                        },
-                                      ] satisfies [any, any],
-                                  );
+                                    props.onSelectionMoved?.(positions);
 
-                                  props.onSelectionMoved?.(positions);
+                                    setDragState({
+                                      type: "dragSelection",
+                                      positions,
+                                    });
+                                  },
+                                  pointerup: (upEvent) => {
+                                    if (
+                                      downEvent.pointerId !== upEvent.pointerId
+                                    )
+                                      return;
 
-                                  setDragState({
-                                    type: "dragSelection",
-                                    positions,
-                                  });
-                                },
-                                pointerup: (upEvent) => {
-                                  if (downEvent.pointerId !== upEvent.pointerId)
-                                    return;
+                                    const upPosition =
+                                      getEventGraphPosition(upEvent);
 
-                                  const upPosition = getGraphPosition(upEvent);
+                                    const delta = {
+                                      x: upPosition.x - downPosition.x,
+                                      y: upPosition.y - downPosition.y,
+                                    };
 
-                                  const delta = {
-                                    x: upPosition.x - downPosition.x,
-                                    y: upPosition.y - downPosition.y,
-                                  };
+                                    props.onSelectionMoved?.(
+                                      startPositions.map(
+                                        ([nodeId, startPosition]) => [
+                                          nodeId,
+                                          {
+                                            x: startPosition.x + delta.x,
+                                            y: startPosition.y + delta.y,
+                                          },
+                                        ],
+                                      ),
+                                    );
 
-                                  props.onSelectionMoved?.(
-                                    startPositions.map(
-                                      ([nodeId, startPosition]) => [
-                                        nodeId,
-                                        {
-                                          x: startPosition.x + delta.x,
-                                          y: startPosition.y + delta.y,
-                                        },
-                                      ],
-                                    ),
-                                  );
+                                    setDragState({ type: "idle" });
 
-                                  setDragState({ type: "idle" });
-
-                                  dispose();
-                                },
+                                    dispose();
+                                  },
+                                });
                               });
-                            });
-                          } else if (downEvent.button === 2) {
-                            downEvent.preventDefault();
+                            } else if (downEvent.button === 2) {
+                              downEvent.preventDefault();
 
-                            if (!props.selection?.some((id) => id === node.id))
-                              props.onItemsSelected?.([node.id]);
-                          }
-                        }}
-                      />
-                    )}
-                  />
-                </NodeRoot>
-              )}
-            </Show>
-          )}
-        </For>
+                              if (
+                                !props.selection?.some((id) => id === node.id)
+                              )
+                                props.onItemsSelected?.([node.id]);
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                  </NodeRoot>
+                )}
+              </Show>
+            )}
+          </For>
+        </div>
         <ContextMenu.Portal>
           <ContextMenu.Content<"div">
             class={cx(
