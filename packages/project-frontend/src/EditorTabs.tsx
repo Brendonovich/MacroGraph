@@ -21,6 +21,11 @@ export function EditorTabs<
     props.state.find((s) => s.tabId === props.selectedTabId),
   );
 
+  const Component = createMemo(() => {
+    const type = selectedTabState()?.type;
+    if (type) return props.schema[type as keyof typeof props.schema].Component;
+  });
+
   return (
     <div class="flex flex-col items-stretch flex-1 overflow-hidden">
       <Show when={props.state.length > 0}>
@@ -67,9 +72,7 @@ export function EditorTabs<
         <Show when={selectedTabState()}>
           {(selectedTabState) => (
             <div class="w-full h-full bg-gray-2 flex flex-col overflow-hidden">
-              {props.schema[
-                selectedTabState().type as keyof typeof props.schema
-              ].Component(selectedTabState as any)}
+              {Component()?.(selectedTabState as any)}
             </div>
           )}
         </Show>

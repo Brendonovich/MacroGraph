@@ -497,7 +497,7 @@ export function GraphView(
       >
         {(dragState) => (
           <div
-            class="absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10 rounded"
+            class="absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10"
             style={{
               width: `${Math.abs(
                 dragState().bottomRight.x - dragState().topLeft.x,

@@ -16,6 +16,7 @@ export function PackagesSidebar(props: {
       <input
         class="px-2 bg-gray-3 dark:bg-gray-2 h-8 text-sm focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
         placeholder="Search Packages"
+        disabled
       />
       <ul>
         <For each={packageClients.listPackages()}>

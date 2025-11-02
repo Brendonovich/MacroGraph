@@ -327,7 +327,6 @@ function Inner() {
                           setSchemaMenu({ open: false });
                         }}
                         onItemsSelected={(selection) => {
-                          console.log("selection", selection);
                           setTabState(
                             "tabs",
                             (tab) => tab.tabId === tabState.selectedTabId,

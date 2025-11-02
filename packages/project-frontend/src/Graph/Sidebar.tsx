@@ -14,6 +14,7 @@ export function GraphsSidebar(props: {
         <input
           class="h-full flex-1 px-2 bg-gray-3 dark:bg-gray-2 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
           placeholder="Search Graphs"
+          disabled
         />
         <button
           type="button"

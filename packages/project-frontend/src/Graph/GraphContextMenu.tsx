@@ -36,7 +36,7 @@ export function GraphContextMenu(props: {
           ref={setRef}
           data-open={props.position !== null}
           class={cx(
-            "absolute flex flex-col px-2 bg-gray-1 border border-gray-3 rounded-lg text-sm",
+            "absolute flex flex-col px-2 bg-gray-3 border border-gray-5 text-sm",
             "origin-top-left data-[open='true']:(animate-in fade-in zoom-in-95) data-[open='false']:(animate-out fade-out zoom-out-95)",
           )}
           style={{
@@ -53,7 +53,7 @@ export function GraphContextMenu(props: {
                     {([schemaId, schema]) => (
                       <button
                         type="button"
-                        class="block bg-transparent w-full text-left px-1 py-0.5 rounded @hover-bg-white/10 active:bg-white/10"
+                        class="block bg-transparent w-full text-left px-1 py-0.5 @hover-bg-white/10 active:bg-white/10"
                         onClick={() => {
                           props.onSchemaClick({
                             pkgId,
