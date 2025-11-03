@@ -1,8 +1,6 @@
 import basePackagesPlugin from "@macrograph/base-packages/vite";
 import UnoCSS from "unocss/vite";
-import AutoImport from "unplugin-auto-import/vite";
-import IconsResolver from "unplugin-icons/resolver";
-import Icons from "unplugin-icons/vite";
+import { Icons } from "@macrograph/icons/vite";
 import { defineConfig, isRunnableDevEnvironment } from "vite";
 import solid from "vite-plugin-solid";
 
@@ -83,16 +81,7 @@ export default defineConfig({
 			},
 		},
 		UnoCSS(),
-		AutoImport({
-			resolvers: [
-				IconsResolver({
-					prefix: "Icon",
-					extension: "jsx",
-				}),
-			],
-			dts: "./src/auto-imports.d.ts",
-		}),
-		Icons({ compiler: "solid", autoInstall: false }),
+		Icons(),
 		basePackagesPlugin,
 		solid(),
 	],

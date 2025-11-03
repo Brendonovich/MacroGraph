@@ -24,6 +24,7 @@ export type PackageBuildReturn<
 	TRpcs extends Rpc.Any,
 	TState extends Schema.Schema<any>,
 > = {
+	name: string;
 	engine: PackageEngine.PackageEngine;
 } & (
 	| {
@@ -73,7 +74,10 @@ export function definePackage<
 export class PackageBuilder {
 	private schemas = new Map<string, NodeSchema<any, any, any>>();
 
-	constructor(public readonly id: string) {}
+	constructor(
+		public readonly id: string,
+		public readonly name: string,
+	) {}
 
 	schema = <TIO>(id: string, schema: SchemaDefinition<TIO, any, any>) => {
 		const self = this;
@@ -89,13 +93,14 @@ export class PackageBuilder {
 
 	/** @internal */
 	toPackage(ret?: PackageBuildReturn<any, any>): Package {
-		return new Package(this.id, this.schemas, ret?.engine);
+		return new Package(this.id, this.name, this.schemas, ret?.engine);
 	}
 }
 
 export class Package {
 	constructor(
 		public readonly id: string,
+		public readonly name: string,
 		public readonly schemas: Map<string, NodeSchema<any, any, any>>,
 		public engine?: PackageEngine.PackageEngine,
 	) {}

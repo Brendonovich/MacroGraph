@@ -23,6 +23,7 @@ const Engine = PackageEngine.make<never>()<number>(
 );
 
 export default Package.make({
+	name: "Utilities",
 	engine: Engine,
 	builder: (ctx) => {
 		ctx.schema("print", {
@@ -31,7 +32,9 @@ export default Package.make({
 			io: (c) => ({
 				execIn: c.in.exec("exec"),
 				execOut: c.out.exec("exec"),
-				in: c.in.data("in", Schema.String),
+				in: c.in.data("in", Schema.String, {
+					name: "Input",
+				}),
 			}),
 			run: function* (io) {
 				console.log(`Log: ${yield* getInput(io.in)}`);

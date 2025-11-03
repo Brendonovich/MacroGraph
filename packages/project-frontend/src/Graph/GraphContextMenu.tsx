@@ -1,7 +1,11 @@
-import type { PackageMeta, SchemaRef } from "@macrograph/project-domain";
+import type {
+  PackageMeta,
+  SchemaRef,
+  SchemaType,
+} from "@macrograph/project-domain";
 import { cx } from "cva";
 import {
-  ComponentProps,
+  type ComponentProps,
   For,
   Show,
   createMemo,
@@ -12,6 +16,7 @@ import createPresence from "solid-presence";
 import { createWritableMemo } from "@solid-primitives/memo";
 
 import { useGraphContext } from "./Context";
+import { createEventListener } from "@solid-primitives/event-listener";
 
 export function GraphContextMenu(props: {
   position: { x: number; y: number } | null;
@@ -19,6 +24,7 @@ export function GraphContextMenu(props: {
     schema: SchemaRef & { position: { x: number; y: number } },
   ) => void;
   packages: Record<string, PackageMeta>;
+  onClose?(): void;
 }) {
   const graphCtx = useGraphContext();
 
@@ -46,6 +52,21 @@ export function GraphContextMenu(props: {
         const [search, setSearch] = createSignal<string>("");
 
         onMount(() => inputRef()?.focus());
+
+        createEventListener(window, "keydown", (e) => {
+          e.stopPropagation();
+
+          switch (e.code) {
+            case "Escape": {
+              props.onClose?.();
+              break;
+            }
+            default:
+              return;
+          }
+
+          e.preventDefault();
+        });
 
         const lowercaseSearchTokens = createMemo(() =>
           search()
@@ -87,18 +108,18 @@ export function GraphContextMenu(props: {
                       <ItemButton
                         type="button"
                         onClick={() => setOpen(!open())}
-                        class="group gap-0.5"
+                        class="group gap-0.5 pl-0.5"
                         data-open={open()}
                       >
-                        <IconMaterialSymbolsArrowRight class="group-data-[open='true']:rotate-90 transition-transform" />
-                        <span>{pkgId}</span>
+                        <IconMaterialSymbolsArrowRightRounded class="size-5 -my-1 -mr-0.5 group-data-[open='true']:rotate-90 transition-transform" />
+                        <span>{pkg.name}</span>
                       </ItemButton>
                       <Show when={open()}>
                         <div class="pl-2">
                           <For each={Object.entries(pkg.schemas)}>
                             {([schemaId, schema]) => (
                               <ItemButton
-                                class="gap-2 pl-2"
+                                class="gap-1.5 pl-1.5"
                                 onClick={() => {
                                   props.onSchemaClick({
                                     pkgId,
@@ -110,7 +131,12 @@ export function GraphContextMenu(props: {
                                   });
                                 }}
                               >
-                                <div class="size-3 bg-mg-event rounded-full" />
+                                <div
+                                  class={cx(
+                                    "size-3 bg-mg-event rounded-full",
+                                    TypeIndicatorColours[schema.type],
+                                  )}
+                                />
                                 {schema.name ?? schemaId}
                               </ItemButton>
                             )}
@@ -134,8 +160,15 @@ const ItemButton = (props: ComponentProps<"button">) => (
     type="button"
     {...props}
     class={cx(
-      "flex flex-row py-0.5 items-center bg-transparent w-full text-left @hover-bg-gray-6/10 active:bg-gray-5 rounded focus-visible:(ring-1 ring-inset ring-yellow outline-none bg-gray-5)",
+      "flex flex-row py-0.5 items-center bg-transparent w-full text-left @hover-bg-gray-6/10 rounded focus-visible:(ring-1 ring-inset ring-yellow outline-none)",
       props.class,
     )}
   />
 );
+
+const TypeIndicatorColours: Record<SchemaType, string> = {
+  base: "bg-mg-base",
+  exec: "bg-mg-exec",
+  event: "bg-mg-event",
+  pure: "bg-mg-pure",
+};

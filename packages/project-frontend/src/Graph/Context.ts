@@ -1,38 +1,35 @@
 import type { NullableBounds } from "@solid-primitives/bounds";
-import { createContextProvider } from "@solid-primitives/context";
+import { createContext, useContext, type Accessor } from "solid-js";
 
-const [GraphContextProvider, _useGraphContext] = createContextProvider(
-	(props: {
-		bounds: Readonly<NullableBounds>;
-		translate?: { x: number; y: number };
-	}) => {
+export const createGraphContext = (
+	bounds: Accessor<Readonly<NullableBounds>>,
+	translate: Accessor<{ x: number; y: number } | undefined>,
+) => ({
+	get bounds() {
+		return bounds();
+	},
+	get translate() {
+		return translate();
+	},
+	getScreenPosition(position: { x: number; y: number }) {
 		return {
-			get bounds() {
-				return props.bounds;
-			},
-			get translate() {
-				return props.translate;
-			},
-			getScreenPosition(position: { x: number; y: number }) {
-				return {
-					x: position.x + (props.bounds.left ?? 0) + (props.translate?.x ?? 0),
-					y: position.y + (props.bounds.top ?? 0) + (props.translate?.y ?? 0),
-				};
-			},
-			getGraphPosition(position: { x: number; y: number }) {
-				return {
-					x: position.x - (props.bounds.left ?? 0) + (props.translate?.x ?? 0),
-					y: position.y - (props.bounds.top ?? 0) + (props.translate?.y ?? 0),
-				};
-			},
+			x: position.x + (bounds().left ?? 0) + (translate()?.x ?? 0),
+			y: position.y + (bounds().top ?? 0) + (translate()?.y ?? 0),
 		};
 	},
-);
+	getGraphPosition(position: { x: number; y: number }) {
+		return {
+			x: position.x - (bounds().left ?? 0) + (translate()?.x ?? 0),
+			y: position.y - (bounds().top ?? 0) + (translate()?.y ?? 0),
+		};
+	},
+});
 
-export { GraphContextProvider };
+export const GraphContext =
+	createContext<ReturnType<typeof createGraphContext>>();
 
 export function useGraphContext() {
-	const ctx = _useGraphContext();
+	const ctx = useContext(GraphContext);
 	if (!ctx)
 		throw new Error(
 			"useGraphContext must be used within a GraphContextProvider",

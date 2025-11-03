@@ -7,13 +7,11 @@ import {
 import { Package, PackageEngine, setOutput } from "@macrograph/package-sdk";
 import {
 	Chunk,
-	Context,
 	Deferred,
 	Effect,
 	Exit,
 	Layer,
 	Option,
-	PubSub,
 	Schema,
 	Scope,
 	Stream,
@@ -69,7 +67,7 @@ const Engine = PackageEngine.make<
 						HttpClient.catchTags({
 							ResponseError: (e) => {
 								if (e.response.status === 401)
-									return ctx.refreshCredential(accountId);
+									return ctx.refreshCredential("twitch", accountId);
 								return e;
 							},
 						}),
@@ -128,7 +126,9 @@ const Engine = PackageEngine.make<
 					Effect.gen(function* () {
 						ws.onmessage = (event) => {
 							emit.single(
-								Schema.decodeSync(EVENTSUB_MESSAGE)(JSON.parse(event.data)),
+								Schema.decodeUnknownSync(EVENTSUB_MESSAGE)(
+									JSON.parse(event.data),
+								),
 							);
 						};
 
@@ -295,6 +295,7 @@ const Engine = PackageEngine.make<
 );
 
 export default Package.make({
+	name: "Twitch",
 	engine: Engine,
 	builder: (ctx) => {
 		ctx.schema("notification.channel.ban", {
@@ -307,18 +308,42 @@ export default Package.make({
 					: Option.none(),
 			io: (io) => ({
 				exec: io.out.exec("exec"),
-				userId: io.out.data("userId", Schema.String),
-				userLogin: io.out.data("userLogin", Schema.String),
-				userName: io.out.data("userName", Schema.String),
-				broadcasterId: io.out.data("broadcasterId", Schema.String),
-				broadcasterLogin: io.out.data("broadcasterLogin", Schema.String),
-				broadcasterName: io.out.data("broadcasterName", Schema.String),
-				moderatorId: io.out.data("moderatorId", Schema.String),
-				moderatorLogin: io.out.data("moderatorLogin", Schema.String),
-				moderatorName: io.out.data("moderatorName", Schema.String),
-				reason: io.out.data("reason", Schema.String),
-				bannedAt: io.out.data("bannedAt", Schema.Date),
-				endsAt: io.out.data("endsAt", Schema.OptionFromNullOr(Schema.Date)),
+				userId: io.out.data("userId", Schema.String, {
+					name: "User ID",
+				}),
+				userLogin: io.out.data("userLogin", Schema.String, {
+					name: "User Login",
+				}),
+				userName: io.out.data("userName", Schema.String, {
+					name: "User Name",
+				}),
+				broadcasterId: io.out.data("broadcasterId", Schema.String, {
+					name: "Broadcaster ID",
+				}),
+				broadcasterLogin: io.out.data("broadcasterLogin", Schema.String, {
+					name: "Broadcaster Login",
+				}),
+				broadcasterName: io.out.data("broadcasterName", Schema.String, {
+					name: "Broadcaster Name",
+				}),
+				moderatorId: io.out.data("moderatorId", Schema.String, {
+					name: "Moderator ID",
+				}),
+				moderatorLogin: io.out.data("moderatorLogin", Schema.String, {
+					name: "Moderator Login",
+				}),
+				moderatorName: io.out.data("moderatorName", Schema.String, {
+					name: "Moderator Name",
+				}),
+				reason: io.out.data("reason", Schema.String, {
+					name: "Reason",
+				}),
+				bannedAt: io.out.data("bannedAt", Schema.Date, {
+					name: "Banned At",
+				}),
+				endsAt: io.out.data("endsAt", Schema.OptionFromNullOr(Schema.Date), {
+					name: "Ends At",
+				}),
 			}),
 			run: function* (io, { payload: { event } }) {
 				yield* setOutput(io.userId, event.user_id);

@@ -58,6 +58,7 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 						packages: [...packages.entries()].reduce(
 							(acc, [id, { pkg }]) => {
 								acc[id] = {
+									name: pkg.name,
 									schemas: [...pkg.schemas.entries()].reduce(
 										(acc, [id, schema]) => {
 											acc[id] = { id, name: schema.name, type: schema.type };
@@ -101,6 +102,7 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 
 					return {
 						id: node.id,
+						name: node.name,
 						io: { inputs: node.inputs, outputs: node.outputs },
 					};
 				}),

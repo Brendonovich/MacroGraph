@@ -21,6 +21,7 @@ import {
 } from "solid-js";
 import createPresence from "solid-presence";
 import { createContextProvider } from "@solid-primitives/context";
+import "@total-typescript/ts-reset";
 
 export type GlobalAppState = {
   auth:

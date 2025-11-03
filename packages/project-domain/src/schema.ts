@@ -21,12 +21,20 @@ export type EffectGenerator<
 
 export interface IOFunctionContext {
 	in: {
-		exec: (id: string) => ExecInputRef;
-		data: <T extends Schema.Any>(id: string, type: T) => DataInputRef<T>;
+		exec: (id: string, options?: { name?: string }) => ExecInputRef;
+		data: <T extends Schema.Any>(
+			id: string,
+			type: T,
+			options?: { name?: string },
+		) => DataInputRef<T>;
 	};
 	out: {
-		exec: (id: string) => ExecOutputRef;
-		data: <T extends Schema.Any>(id: string, type: T) => DataOutputRef<T>;
+		exec: (id: string, options?: { name?: string }) => ExecOutputRef;
+		data: <T extends Schema.Any>(
+			id: string,
+			type: T,
+			options?: { name?: string },
+		) => DataOutputRef<T>;
 	};
 }
 

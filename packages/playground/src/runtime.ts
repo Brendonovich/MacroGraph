@@ -1,4 +1,4 @@
-import { type Rpc, type RpcClient, RpcTest } from "@effect/rpc";
+import { type Rpc, type RpcClient, RpcGroup, RpcTest } from "@effect/rpc";
 import { ProjectPackages } from "@macrograph/project-backend";
 import {
 	GetPackageRpcClient,
@@ -58,22 +58,21 @@ export const RuntimeLayers = Layer.empty.pipe(
 
 				const clients = new Map<string, RpcClient.RpcClient<Rpc.Any>>();
 
-				return Layer.succeed(
-					GetPackageRpcClient,
-					Effect.fnUntraced(function* (id, _rpcs) {
+				return Layer.succeed(GetPackageRpcClient, (id, rpcs) =>
+					Effect.gen(function* () {
 						if (clients.get(id)) return clients.get(id)!;
 
 						const pkg = packages.get(id)?.rpc ?? Option.none();
 
 						if (Option.isNone(pkg)) throw new Error("Pacakge not found");
 
-						const client = yield* RpcTest.makeClient(pkg.value.defs).pipe(
-							Effect.provide(pkg.value.layer),
-						);
+						const client = yield* RpcTest.makeClient(
+							rpcs as unknown as RpcGroup.RpcGroup<Rpc.Any>,
+						).pipe(Effect.provide(pkg.value.layer));
 
 						clients.set(id, client);
 
-						return client;
+						return client as any;
 					}),
 				);
 			}),

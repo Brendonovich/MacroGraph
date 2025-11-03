@@ -49,7 +49,7 @@ const Engine = PackageEngine.make<
 					const ws = new OBSWebsocket();
 
 					ws.on("ConnectionError", () =>
-						Effect.gen(function* () {
+						Effect.sync(() => {
 							instance.state = "disconnected";
 						}).pipe(
 							lock.withPermits(1),
@@ -59,7 +59,7 @@ const Engine = PackageEngine.make<
 					);
 
 					ws.on("ConnectionClosed", () =>
-						Effect.gen(function* () {
+						Effect.sync(() => {
 							instance.state = "disconnected";
 						}).pipe(
 							lock.withPermits(1),
@@ -69,7 +69,7 @@ const Engine = PackageEngine.make<
 					);
 
 					ws.on("ConnectionOpened", () =>
-						Effect.gen(function* () {
+						Effect.sync(() => {
 							instance.state = "connected";
 						}).pipe(
 							lock.withPermits(1),
@@ -139,7 +139,7 @@ const Engine = PackageEngine.make<
 				return {
 					connections: yield* Effect.all(
 						[...instances.entries()].map(([address, instance]) =>
-							Effect.gen(function* () {
+							Effect.sync(() => {
 								return {
 									address,
 									password: Option.getOrUndefined(instance.password),
@@ -155,6 +155,7 @@ const Engine = PackageEngine.make<
 );
 
 export default Package.make({
+	name: "OBS Studio",
 	engine: Engine,
 	builder: (ctx) => {
 		ctx.schema("setCurrentProgramScene", {
@@ -163,7 +164,9 @@ export default Package.make({
 			io: (c) => ({
 				execIn: c.in.exec("exec"),
 				execOut: c.out.exec("exec"),
-				scene: c.in.data("scene", Schema.String),
+				scene: c.in.data("scene", Schema.String, {
+					name: "Scene Name",
+				}),
 			}),
 			run: function* (io) {
 				const sceneName = yield* getInput(io.scene);

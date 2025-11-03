@@ -38,7 +38,10 @@ export namespace PackageEngine {
 			CredentialsFetchFailed
 		>;
 		emitEvent(event: TEvents): void;
-		refreshCredential(id: string): Effect.Effect<never, ForceRetryError>;
+		refreshCredential(
+			providerId: string,
+			providerUserId: string,
+		): Effect.Effect<never, ForceRetryError>;
 		dirtyState: Effect.Effect<void>;
 	}) => Effect.Effect<
 		([TState] extends [never]
@@ -69,10 +72,12 @@ export namespace Package {
 		TState = never,
 		TRpcs extends Rpc.Any = never,
 	>(args: {
+		name: string;
 		engine?: PackageEngine.PackageEngine<TEvents, TState, TRpcs>;
 		builder: PackageBuildFn<TEvents>;
 	}): UnbuiltPackage<TEvents, TState, TRpcs> => {
 		return {
+			name: args.name,
 			engine: args.engine,
 			builder: args.builder,
 		};
@@ -90,6 +95,7 @@ export namespace Package {
 		TState = never,
 		TRpcs extends Rpc.Any = never,
 	> {
+		name: string;
 		engine?: PackageEngine.PackageEngine<TEvents, TState, TRpcs>;
 		builder: PackageBuildFn<TEvents>;
 	}

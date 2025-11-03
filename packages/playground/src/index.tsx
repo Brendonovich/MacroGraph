@@ -1,7 +1,6 @@
 import {
   ProjectActions,
   ProjectState,
-  GraphContextProvider,
   GraphView,
   GraphContextMenu,
   GraphsSidebar,
@@ -14,6 +13,8 @@ import {
   PackageSettings,
   PackageClients,
   packageSettingsQueryOptions,
+  GraphContext,
+  createGraphContext,
 } from "@macrograph/project-frontend";
 import { createElementBounds } from "@solid-primitives/bounds";
 import {
@@ -32,14 +33,11 @@ import {
   batch,
   Switch,
   Match,
-  Suspense,
-  createEffect,
-  onCleanup,
 } from "solid-js";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { makePersisted } from "@solid-primitives/storage";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
-import { createStore, produce, reconcile } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import type { Graph, Node } from "@macrograph/project-domain";
 import "@total-typescript/ts-reset";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -282,6 +280,11 @@ function Inner() {
               graph: {
                 getMeta: (tab) => ({ title: tab.graph.name }),
                 Component: (tab) => {
+                  const graphCtx = createGraphContext(
+                    () => bounds,
+                    () => tab().transform?.translate,
+                  );
+
                   createEventListener(window, "keydown", (e) => {
                     if (e.code === "Backspace" || e.code === "Delete") {
                       actions.DeleteSelection(
@@ -293,20 +296,14 @@ function Inner() {
                       if (e.metaKey || e.ctrlKey) {
                         setSchemaMenu({
                           open: true,
-                          position: {
-                            x: mouse.x - (bounds.left ?? 0),
-                            y: mouse.y - (bounds.top ?? 0),
-                          },
+                          position: { x: mouse.x, y: mouse.y },
                         });
                       }
                     }
                   });
 
                   return (
-                    <GraphContextProvider
-                      bounds={bounds}
-                      translate={tab().transform?.translate}
-                    >
+                    <GraphContext.Provider value={graphCtx}>
                       <GraphView
                         ref={setRef}
                         nodes={tab().graph.nodes}
@@ -383,6 +380,7 @@ function Inner() {
                         }}
                       />
                       <GraphContextMenu
+                        packages={state.packages}
                         position={(() => {
                           const s = schemaMenu();
                           if (s.open) return s.position;
@@ -397,9 +395,11 @@ function Inner() {
                           );
                           setSchemaMenu({ open: false });
                         }}
-                        packages={state.packages}
+                        onClose={() => {
+                          setSchemaMenu({ open: false });
+                        }}
                       />
-                    </GraphContextProvider>
+                    </GraphContext.Provider>
                   );
                 },
               },

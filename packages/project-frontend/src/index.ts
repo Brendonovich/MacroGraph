@@ -7,3 +7,5 @@ export * from "./Packages";
 export { ProjectEffectRuntimeContext } from "./EffectRuntime";
 
 export * from "./tanstack-query";
+
+import "@macrograph/icons/types";

@@ -83,26 +83,38 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 
 					schema.io({
 						out: {
-							exec: (id) => {
-								io.outputs.push({ id, variant: "exec" });
-								return new ExecOutputRef(id as IOId);
+							exec: (id, options) => {
+								io.outputs.push({ id, variant: "exec", name: options?.name });
+								return new ExecOutputRef(id as IOId, options);
 							},
-							data: (id, type) => {
-								io.outputs.push({ id, variant: "data", data: "string" });
-								return new DataOutputRef(id, type);
+							data: (id, type, options) => {
+								io.outputs.push({
+									id,
+									variant: "data",
+									data: "string",
+									name: options?.name,
+								});
+								return new DataOutputRef(id, type, options);
 							},
 						},
 						in: {
-							exec: (id) => {
-								io.inputs.push({ id, variant: "exec" });
-								return new ExecInputRef(id);
+							exec: (id, options) => {
+								io.inputs.push({ id, variant: "exec", name: options?.name });
+								return new ExecInputRef(id, options);
 							},
-							data: (id, type) => {
-								io.inputs.push({ id, variant: "data", data: "string" });
-								return new DataInputRef(id as IOId, type);
+							data: (id, type, options) => {
+								io.inputs.push({
+									id,
+									variant: "data",
+									data: "string",
+									name: options?.name,
+								});
+								return new DataInputRef(id as IOId, type, options);
 							},
 						},
 					});
+
+					console.log(io);
 
 					const node: Node.Shape = {
 						schema: schemaRef,
@@ -401,14 +413,14 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						Effect.provide(execCtx),
 					);
 				}).pipe(
-					Effect.withSpan(`FireEventNode`, { attributes: { graphId, nodeId } }),
+					Effect.withSpan("FireEventNode", { attributes: { graphId, nodeId } }),
 				);
 
 				return true;
 			});
 
 			const addPackage = <TEvents, TState, TRpcs extends Rpc.Any>(
-				name: string,
+				id: string,
 				unbuiltPkg: Package.UnbuiltPackage<TEvents, TState, TRpcs>,
 			) =>
 				Effect.gen(function* () {
@@ -416,9 +428,9 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 
 					const getCredentials = credentialLatch
 						.whenOpen(credentials.get)
-						.pipe(Effect.map((c) => c.filter((c) => c.provider === name)));
+						.pipe(Effect.map((c) => c.filter((c) => c.provider === id)));
 
-					const builder = new PackageBuilder(name);
+					const builder = new PackageBuilder(id, unbuiltPkg.name);
 
 					unbuiltPkg.builder({
 						schema: (id, schema) => builder.schema(id, schema),
@@ -444,16 +456,13 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 											new CredentialsFetchFailed({ message: e.toString() }),
 									),
 								),
-								refreshCredential: (id) =>
+								refreshCredential: (providerId, providerUserId) =>
 									Effect.gen(function* () {
 										yield* credentialLatch.close;
 
 										yield* cloud.client
 											.refreshCredential({
-												path: {
-													providerId: name,
-													providerUserId: id,
-												},
+												path: { providerId, providerUserId },
 											})
 											.pipe(Effect.catchAll(Effect.die));
 										yield* credentials.refresh.pipe(
@@ -467,7 +476,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							.pipe(
 								Effect.provide(
 									PackageEngine.PackageEngineContext.context({
-										packageId: name,
+										packageId: id,
 									}),
 								),
 							);
@@ -492,7 +501,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							};
 
 							rpcServer = yield* RpcServer.toHttpApp(engine.rpcs, {
-								spanPrefix: `PackageRpc.${name}`,
+								spanPrefix: `PackageRpc.${id}`,
 							}).pipe(
 								Effect.provide(ret.rpc),
 								Effect.provide(RpcServer.layerProtocolHttp({ path: "/" })),
@@ -504,7 +513,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							Stream.runForEach(({ event }) =>
 								Effect.gen(function* () {
 									for (const [graphId, graphEventNodes] of eventNodes) {
-										const packageEventNodes = graphEventNodes.get(name);
+										const packageEventNodes = graphEventNodes.get(id);
 										if (!packageEventNodes) continue;
 
 										for (const nodeId of packageEventNodes) {
@@ -517,7 +526,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								}).pipe(
 									Effect.withSpan("Package.Event", {
 										root: true,
-										attributes: { package: name, event },
+										attributes: { package: id, event },
 									}),
 								),
 							),

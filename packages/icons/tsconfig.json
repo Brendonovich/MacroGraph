@@ -22,7 +22,7 @@
     "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true,
     "plugins": [{ "name": "@effect/language-service" }],
-    "types": ["@macrograph/icons/types"]
+    "types": ["unplugin-icons/types/solid"]
   },
-  "include": ["src"]
+  "include": ["auto-imports.d.ts"]
 }
