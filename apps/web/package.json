@@ -33,7 +33,7 @@
     "@solid-primitives/event-listener": "^2.3.3",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.3",
-    "@solidjs/start": "https://pkg.pr.new/@solidjs/start@bb63bb3",
+    "@solidjs/start": "https://pkg.pr.new/@solidjs/start@20087ed",
     "@solidjs/start-nitro-v2-plugin": "npm:@brendonovich/solidjs__start-nitro-v2-plugin@0.0.0",
     "@t3-oss/env-core": "^0.6.1",
     "@tanstack/solid-query": "^5.90.6",
