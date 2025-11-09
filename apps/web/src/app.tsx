@@ -4,6 +4,7 @@ import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { ErrorBoundary, Suspense } from "solid-js";
 import { Toaster } from "solid-sonner";
+import { clientOnly } from "@solidjs/start";
 
 import "@unocss/reset/tailwind.css";
 import "virtual:uno.css";
@@ -11,7 +12,7 @@ import "@macrograph/ui/global.css";
 
 // import "unfonts.css";
 
-// const DesktopListener = clientOnly(() => import("./app/DesktopListener"));
+const DesktopListener = clientOnly(() => import("./app/DesktopListener"));
 
 export default function App() {
   return (
@@ -21,7 +22,7 @@ export default function App() {
           <Title>MacroGraph</Title>
           <Suspense>{props.children}</Suspense>
           <ErrorBoundary fallback={null}>
-            {/*<DesktopListener />*/}
+            <DesktopListener />
           </ErrorBoundary>
           <Toaster />
         </MetaProvider>
