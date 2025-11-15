@@ -73,7 +73,7 @@ async function _getAuthState() {
 	if (data.user) return data;
 }
 
-export const getAuthState = cache(() => _getAuthState(), "getAuthState");
+export const getAuthState = cache(_getAuthState, "getAuthState");
 
 export async function ensureAuthedOrThrow() {
 	const state = await _getAuthState();
