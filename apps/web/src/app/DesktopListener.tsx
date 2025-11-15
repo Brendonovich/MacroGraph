@@ -3,6 +3,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { action, useAction } from "@solidjs/router";
 import { Show } from "solid-js";
 import { toast } from "solid-sonner";
+
 import { getAuthState } from "~/api";
 
 const doDesktopAuth = action(async () => {
@@ -11,6 +12,8 @@ const doDesktopAuth = action(async () => {
 		if (!id) return;
 
 		const auth = await getAuthState();
+
+		console.log({ auth });
 
 		const toastId = toast.info(
 			<>
