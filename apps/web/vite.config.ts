@@ -2,10 +2,10 @@ import basePackagesPlugin from "@macrograph/base-packages/vite";
 import { Icons } from "@macrograph/icons/vite";
 import { solidStart } from "@solidjs/start/config";
 import { nitroV2Plugin } from "@solidjs/start-nitro-v2-plugin";
-import { nitro } from "nitro/vite";
 import UnoCSS from "unocss/vite";
 import { defineConfig } from "vite";
 
+// import { nitro } from "nitro/vite";
 // import unfonts from "unplugin-fonts/vite";
 
 import interfacePlugin from "../../packages/ui/vite";
@@ -26,13 +26,11 @@ export default defineConfig({
 			routeDir: "app",
 			// extensions: ["md", "mdx"],
 		}),
-		nitro({
-			config: {
-				preset: "vercel",
-				prerender: { crawlLinks: true, routes: ["/", "/new-playground"] },
-				externals: {
-					external: nodeOnlyDeps,
-				},
+		nitroV2Plugin({
+			preset: "vercel",
+			prerender: { crawlLinks: true, routes: ["/", "/new-playground"] },
+			externals: {
+				external: nodeOnlyDeps,
 			},
 		}),
 		// unfonts({
