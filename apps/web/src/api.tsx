@@ -32,7 +32,7 @@ async function _getAuthState() {
 	let data: Awaited<ReturnType<ReturnType<typeof lucia>["validateSession"]>>;
 
 	// header auth
-	const authHeader = getHeader("Authorization");
+	const authHeader = event.req.headers.get("Authorization");
 	console.log({ authHeader });
 	if (authHeader?.startsWith("Bearer ")) {
 		const [, sessionId] = authHeader.split("Bearer ");
@@ -42,9 +42,9 @@ async function _getAuthState() {
 	// cookie auth
 	else {
 		if (requestEvent.request.method !== "GET") {
-			const originHeader = getHeader("Origin") ?? null;
+			const originHeader = event.req.headers.get("Origin") ?? null;
 			// NOTE: You may need to use `X-Forwarded-Host` instead
-			const hostHeader = getHeader("Host") ?? null;
+			const hostHeader = event.req.headers.get("Host") ?? null;
 			console.log({ originHeader, hostHeader });
 			if (
 				!originHeader ||

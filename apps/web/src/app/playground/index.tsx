@@ -3,21 +3,21 @@ import "./playground.css";
 
 const Editor = clientOnly(() => import("./Editor"));
 
-export default function () {
-	return (
-		<div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
-			<Meta name="mobile-web-app-capable" content="yes" />
-			<Meta
-				name="viewport"
-				content="width=device-width, initial-scale=1, maximum-scale=1"
-			/>
-			<Header />
-			<main class="flex-1 w-full bg-neutral-800 overflow-hidden">
-				<Editor />
-			</main>
-		</div>
-	);
-}
+// export default function () {
+// 	return (
+// 		<div class="w-screen h-screen bg-neutral-900 text-white flex flex-col">
+// 			<Meta name="mobile-web-app-capable" content="yes" />
+// 			<Meta
+// 				name="viewport"
+// 				content="width=device-width, initial-scale=1, maximum-scale=1"
+// 			/>
+// 			<Header />
+// 			<main class="flex-1 w-full bg-neutral-800 overflow-hidden">
+// 				<Editor />
+// 			</main>
+// 		</div>
+// 	);
+// }
 
 const MenuItems = clientOnly(() =>
 	import("./Editor").then((i) => ({ default: i.ConnectionsDialogButton })),
@@ -31,7 +31,9 @@ const ExportButton = clientOnly(() =>
 const ShareButton = clientOnly(() =>
 	import("./Editor").then((i) => ({ default: i.ShareButton })),
 );
+
 import { Meta } from "@solidjs/meta";
+
 import { HeaderAuthFallback } from "../HeaderAuthSection";
 import { Logo } from "../Logo";
 
