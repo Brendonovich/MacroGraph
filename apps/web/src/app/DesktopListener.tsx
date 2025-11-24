@@ -13,8 +13,6 @@ const doDesktopAuth = action(async () => {
 
 		const auth = await getAuthState();
 
-		console.log({ auth });
-
 		const toastId = toast.info(
 			<>
 				<b>MacroGraph Desktop</b> detected.

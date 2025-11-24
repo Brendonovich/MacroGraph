@@ -1,4 +1,18 @@
-import { type Rpc, RpcSerialization, RpcServer } from "@effect/rpc";
+import { RpcSerialization, RpcServer } from "@effect/rpc";
+import {
+	Context,
+	Iterable,
+	Layer,
+	Mailbox,
+	Option,
+	PubSub,
+	pipe,
+	Schema,
+	Stream,
+} from "effect";
+import * as Effect from "effect/Effect";
+import type { ParseError } from "effect/ParseResult";
+import type { Graph, Node } from "@macrograph/project-domain";
 import {
 	CredentialsFetchFailed,
 	DataInputRef,
@@ -8,40 +22,32 @@ import {
 	ExecutionContext,
 	ForceRetryError,
 	type IOId,
+	type IORef,
 	NodeExecutionContext,
 	type NodeSchema,
 	NotComputationNode,
 	NotEventNode,
 	PackageBuilder,
-	PackageEngine,
+	SubscribableCache,
 } from "@macrograph/project-domain";
-import { Graph, Node } from "@macrograph/project-domain";
-import { Context, Mailbox, Option, PubSub, Stream, pipe } from "effect";
-import * as Effect from "effect/Effect";
 
-import { Credentials } from "../Credentials";
 // import { RealtimePubSub } from "../Realtime";
 import type { Package } from "../../../package-sdk/src";
 import { CloudApi } from "../CloudApi";
-import { ProjectPackages } from "@macrograph/project-backend";
-import { NodeConnections, project } from "./data";
+import { Credentials } from "../Credentials";
+import { ProjectData, ProjectShape } from "./Data";
+import { ProjectPackages } from "./Packages";
 
-export class ProjectActions extends Effect.Service<ProjectActions>()(
-	"ProjectActions",
+export class ProjectRuntime extends Effect.Service<ProjectRuntime>()(
+	"ProjectRuntime",
 	{
 		effect: Effect.gen(function* () {
+			const project = yield* ProjectData;
 			// const logger = yield* Logger;
 			const cloud = yield* CloudApi;
 			const credentials = yield* Credentials;
 			// const realtime = yield* RealtimePubSub;
 			const packages = yield* ProjectPackages;
-
-			const getNextNodeId = (() => {
-				let nodeCounter = 0;
-				return () => Node.Id.make(++nodeCounter);
-			})();
-
-			// const nodes = new Map<number, Node>();
 
 			const getNode = (graphId: Graph.Id, id: Node.Id) =>
 				Option.fromNullable(
@@ -65,91 +71,6 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				Option.fromNullable(
 					packages.get(schemaRef.pkgId)?.pkg.schemas.get(schemaRef.schemaId),
 				);
-
-			const createNode = (
-				graphId: Graph.Id,
-				schemaRef: SchemaRef,
-				position: [number, number],
-			) =>
-				Effect.gen(function* () {
-					const schema = yield* getSchema(schemaRef);
-					const graph = project.graphs.get(graphId);
-					if (!graph) return yield* new Graph.NotFound({ graphId });
-
-					const io: Node.IO = {
-						inputs: [],
-						outputs: [],
-					};
-
-					schema.io({
-						out: {
-							exec: (id, options) => {
-								io.outputs.push({ id, variant: "exec", name: options?.name });
-								return new ExecOutputRef(id as IOId, options);
-							},
-							data: (id, type, options) => {
-								io.outputs.push({
-									id,
-									variant: "data",
-									data: "string",
-									name: options?.name,
-								});
-								return new DataOutputRef(id, type, options);
-							},
-						},
-						in: {
-							exec: (id, options) => {
-								io.inputs.push({ id, variant: "exec", name: options?.name });
-								return new ExecInputRef(id, options);
-							},
-							data: (id, type, options) => {
-								io.inputs.push({
-									id,
-									variant: "data",
-									data: "string",
-									name: options?.name,
-								});
-								return new DataInputRef(id as IOId, type, options);
-							},
-						},
-					});
-
-					console.log(io);
-
-					const node: Node.Shape = {
-						schema: schemaRef,
-						id: getNextNodeId(),
-						inputs: io.inputs,
-						outputs: io.outputs,
-						position: { x: position[0], y: position[1] },
-					};
-
-					if (schema.type === "event") {
-						const graphEventNodes =
-							eventNodes.get(graphId) ??
-							(() => {
-								const nodes = new Map<string, Set<Node.Id>>();
-								eventNodes.set(graphId, nodes);
-								return nodes;
-							})();
-
-						const packageEventNodes =
-							graphEventNodes.get(schemaRef.pkgId) ??
-							(() => {
-								const nodes = new Set<Node.Id>();
-								graphEventNodes.set(schemaRef.pkgId, nodes);
-								return nodes;
-							})();
-
-						packageEventNodes.add(node.id);
-					}
-
-					graph.nodes.push(node);
-
-					return node;
-				});
-
-			type IORef = { nodeId: Node.Id; ioId: string };
 
 			const getInputConnections = (
 				graphId: Graph.Id,
@@ -179,91 +100,6 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					Option.getOrElse(() => []),
 				);
 
-			const addConnection = Effect.fn(function* (
-				graphId: Graph.Id,
-				output: IORef,
-				input: IORef,
-			) {
-				const graph = project.graphs.get(graphId);
-				if (!graph) return yield* new Graph.NotFound({ graphId });
-				const connections = (graph.connections ??= new Map() as NonNullable<
-					typeof graph.connections
-				>);
-
-				if (Option.isNone(getNode(graphId, output.nodeId)))
-					return yield* new Node.NotFound(output);
-				if (Option.isNone(getNode(graphId, input.nodeId)))
-					return yield* new Node.NotFound(input);
-
-				const upsertNodeConnections = (nodeId: Node.Id) =>
-					connections.get(nodeId) ??
-					(() => {
-						const v: NodeConnections = {};
-						connections.set(nodeId, v);
-						return v;
-					})();
-
-				const outputNodeConnections = upsertNodeConnections(output.nodeId);
-
-				outputNodeConnections.out ??= new Map();
-				const outputNodeInputConnections =
-					outputNodeConnections.out.get(output.ioId) ??
-					(() => {
-						const v: Array<[Node.Id, string]> = [];
-						outputNodeConnections.out.set(output.ioId, v);
-						return v;
-					})();
-				outputNodeInputConnections.push([input.nodeId, input.ioId]);
-
-				const inputNodeConnections = upsertNodeConnections(input.nodeId);
-
-				inputNodeConnections.in ??= new Map();
-				const inputNodeInputConnections =
-					inputNodeConnections.in.get(input.ioId) ??
-					(() => {
-						const v: Array<[Node.Id, string]> = [];
-						inputNodeConnections.in.set(input.ioId, v);
-						return v;
-					})();
-				inputNodeInputConnections.push([output.nodeId, output.ioId]);
-			});
-
-			const disconnectIO = Effect.fn(function* (
-				graphId: Graph.Id,
-				io: IORef & { type: "i" | "o" },
-			) {
-				const graph = project.graphs.get(graphId);
-				if (!graph) return yield* new Graph.NotFound({ graphId });
-				if (!graph.connections) return;
-
-				const nodeConnections = graph.connections.get(io.nodeId);
-				const originConnections =
-					io.type === "i" ? nodeConnections?.in : nodeConnections?.out;
-				if (!originConnections) return;
-
-				const orginIOConnections = originConnections.get(io.ioId);
-				if (!orginIOConnections) return;
-
-				for (const [targetNodeId, targetIOId] of orginIOConnections) {
-					const targetNodeConnections = graph.connections.get(targetNodeId);
-					const targetConnections =
-						io.type === "o"
-							? targetNodeConnections?.in
-							: targetNodeConnections?.out;
-					if (!targetConnections) continue;
-
-					const targetIOConnections = targetConnections.get(targetIOId);
-					if (!targetIOConnections) continue;
-
-					const index = targetIOConnections.findIndex(
-						([nodeId, ioId]) => ioId === io.ioId && nodeId === io.nodeId,
-					);
-					if (index !== -1) targetIOConnections.splice(index, 1);
-				}
-
-				originConnections.delete(io.ioId);
-			});
-
 			const runNode = Effect.fn(function* (graphId: Graph.Id, nodeId: Node.Id) {
 				const node = yield* getNode(graphId, nodeId);
 				const schema = yield* getSchema(node.schema);
@@ -281,7 +117,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					},
 				});
 
-				return yield* schema.run(io).pipe(
+				return yield* schema.run({ io, properties: {} }).pipe(
 					Effect.map((v) => Option.fromNullable(v ?? undefined)),
 					Effect.map(Option.map((output) => ({ output, node }))),
 					Effect.provide(NodeExecutionContext.context({ node })),
@@ -321,7 +157,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					},
 				});
 
-				let ret = yield* schema.run(io, data).pipe(
+				let ret = yield* schema.run({ io, properties: {} }, data).pipe(
 					Effect.map((v) => Option.fromNullable(v ?? undefined)),
 					Effect.map(Option.map((output) => ({ output, node: eventNode }))),
 					Effect.provide(NodeExecutionContext.context({ node: eventNode })),
@@ -353,13 +189,38 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				data: any,
 			) {
 				const eventNode = yield* getNode(graphId, nodeId);
+				const pkg = yield* getPackage(eventNode.schema.pkgId);
 				const schema = yield* getSchema(eventNode.schema);
+
 				if (schema.type !== "event") return yield* new NotEventNode();
 
-				yield* Effect.sleep("10 millis");
+				const properties: Record<string, any> = {};
 
-				const eventData = schema.event(data);
-				if (Option.isNone(eventData)) return false;
+				if (schema.properties) {
+					for (const [name, def] of Object.entries(schema.properties ?? {})) {
+						console.log({ name, def });
+						const resource = pkg.resources.get(def.resource);
+						if (!resource) {
+							yield* Effect.log(
+								`Resource '${pkg.pkg.id}/${def.resource.id}' not found`,
+							);
+							return false;
+						}
+
+						const values = yield* resource.get;
+						const value = values[0];
+						if (!value) {
+							yield* Effect.log(
+								`No value for resource '${pkg.pkg.id}/${def.resource.id}' found`,
+							);
+							return false;
+						}
+						properties[name] = value;
+					}
+				}
+
+				const eventData = schema.event({ properties }, data);
+				if (eventData === undefined) return false;
 
 				yield* Effect.gen(function* () {
 					const outputData: Map<Node.Id, Record<string, any>> = new Map();
@@ -407,9 +268,12 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								}
 								nodeOutputData[output.id] = data;
 							}),
+						// getProperty: () => {
+						// 	throw new Error("TODO");
+						// },
 					});
 
-					yield* runEventNode(graphId, eventNode, schema, eventData.value).pipe(
+					yield* runEventNode(graphId, eventNode, schema, eventData).pipe(
 						Effect.provide(execCtx),
 					);
 				}).pipe(
@@ -419,9 +283,9 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				return true;
 			});
 
-			const addPackage = <TEvents, TState, TRpcs extends Rpc.Any>(
+			const addPackage = (
 				id: string,
-				unbuiltPkg: Package.UnbuiltPackage<TEvents, TState, TRpcs>,
+				unbuiltPkg: Package.UnbuiltPackage<any>,
 			) =>
 				Effect.gen(function* () {
 					const credentialLatch = yield* Effect.makeLatch(true);
@@ -433,53 +297,46 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					const builder = new PackageBuilder(id, unbuiltPkg.name);
 
 					unbuiltPkg.builder({
-						schema: (id, schema) => builder.schema(id, schema),
+						schema: (id, schema) => builder.schema(id, schema as any),
 					});
 
 					let rpcServer, state, rpc;
+
+					const resources = new Map();
 
 					if (unbuiltPkg.engine) {
 						const stateBroadcast = yield* PubSub.unbounded<void>();
 						const engine = unbuiltPkg.engine;
 
 						const events = yield* Mailbox.make<{
-							event: TEvents;
+							event: any;
 							// span: Tracer.Span;
 						}>();
 
-						const ret = yield* engine
-							.builder({
-								dirtyState: stateBroadcast.publish(),
-								credentials: getCredentials.pipe(
-									Effect.catchAll(
-										(e) =>
-											new CredentialsFetchFailed({ message: e.toString() }),
-									),
+						const ret = engine.builder({
+							dirtyState: stateBroadcast.publish(),
+							credentials: getCredentials.pipe(
+								Effect.catchAll(
+									(e) => new CredentialsFetchFailed({ message: e.toString() }),
 								),
-								refreshCredential: (providerId, providerUserId) =>
-									Effect.gen(function* () {
-										yield* credentialLatch.close;
+							),
+							refreshCredential: (providerId, providerUserId) =>
+								Effect.gen(function* () {
+									yield* credentialLatch.close;
 
-										yield* cloud.client
-											.refreshCredential({
-												path: { providerId, providerUserId },
-											})
-											.pipe(Effect.catchAll(Effect.die));
-										yield* credentials.refresh.pipe(
-											Effect.catchAll(Effect.die),
-										);
+									yield* cloud.client
+										.refreshCredential({
+											path: { providerId, providerUserId },
+										})
+										.pipe(Effect.catchAll(Effect.die));
+									yield* credentials.refresh.pipe(Effect.catchAll(Effect.die));
 
-										return yield* new ForceRetryError();
-									}).pipe(Effect.ensuring(credentialLatch.open)),
-								emitEvent: (data) => events.unsafeOffer({ event: data }),
-							})
-							.pipe(
-								Effect.provide(
-									PackageEngine.PackageEngineContext.context({
-										packageId: id,
-									}),
-								),
-							);
+									return yield* new ForceRetryError();
+								}).pipe(Effect.ensuring(credentialLatch.open)),
+							emitEvent: (data) => {
+								events.unsafeOffer({ event: data });
+							},
+						});
 
 						if (ret.state) {
 							yield* credentials.changes().pipe(
@@ -494,17 +351,21 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							};
 						}
 
-						if (engine.rpcs && ret.rpc) {
+						if (engine.def.rpc && ret.rpc) {
 							rpc = {
-								defs: engine.rpcs,
+								defs: engine.def.rpc,
 								layer: ret.rpc,
 							};
 
-							rpcServer = yield* RpcServer.toHttpApp(engine.rpcs, {
+							rpcServer = yield* RpcServer.toHttpApp(engine.def.rpc, {
 								spanPrefix: `PackageRpc.${id}`,
 							}).pipe(
-								Effect.provide(ret.rpc),
-								Effect.provide(RpcServer.layerProtocolHttp({ path: "/" })),
+								Effect.provide(
+									Layer.mergeAll(
+										ret.rpc,
+										RpcServer.layerProtocolHttp({ path: "/" }),
+									),
+								),
 								Effect.provide(RpcSerialization.layerJson),
 							);
 						}
@@ -532,6 +393,21 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							),
 							Effect.forkScoped,
 						);
+
+						for (const resource of unbuiltPkg.engine.def.resources ?? []) {
+							const impl = yield* resource.tag.pipe(
+								Effect.provide(ret.resources),
+							);
+
+							resources.set(
+								resource,
+								yield* SubscribableCache.make({
+									capacity: 1,
+									timeToLive: "1 minute",
+									lookup: impl.get,
+								}),
+							);
+						}
 					}
 
 					const pkg = builder.toPackage();
@@ -541,30 +417,13 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						state: Option.fromNullable(state),
 						rpcServer: Option.fromNullable(rpcServer),
 						rpc: Option.fromNullable(rpc as any),
+						resources,
 					});
 				});
 
-			const deleteSelection = Effect.fn(function* (
-				graphId: Graph.Id,
-				selection: Array<Node.Id>,
-			) {
-				const graph = project.graphs.get(graphId);
-				if (!graph) return yield* new Graph.NotFound({ graphId });
+			const load = Effect.fnUntraced(function* (v: ProjectShape) {});
 
-				for (const nodeId of selection) {
-					const index = graph.nodes.findIndex((node) => node.id === nodeId);
-					if (index === -1) continue;
-					graph.nodes.splice(index, 1);
-				}
-			});
-
-			return {
-				createNode,
-				addPackage,
-				addConnection,
-				disconnectIO,
-				deleteSelection,
-			};
+			return { addPackage, load, data: Effect.sync(() => project) };
 		}),
 		dependencies: [
 			Credentials.Default,
@@ -574,3 +433,84 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 		],
 	},
 ) {}
+
+class EventNodeRegistry {
+	eventNodes = new Map<Graph.Id, Map<string, Set<Node.Id>>>();
+
+	registerNode(graphId: Graph.Id, nodeId: Node.Id, packageId: string) {
+		const graphEventNodes =
+			this.eventNodes.get(graphId) ??
+			(() => {
+				const nodes = new Map<string, Set<Node.Id>>();
+				this.eventNodes.set(graphId, nodes);
+				return nodes;
+			})();
+
+		const packageEventNodes =
+			graphEventNodes.get(packageId) ??
+			(() => {
+				const nodes = new Set<Node.Id>();
+				graphEventNodes.set(packageId, nodes);
+				return nodes;
+			})();
+
+		packageEventNodes.add(nodeId);
+	}
+
+	unregisterNode(graphId: Graph.Id, nodeId: Node.Id, packageId: string) {
+		const graphEventNodes = eventNodes.get(graphId);
+		if (!graphEventNodes) return;
+
+		const packageEventNodes = graphEventNodes.get(packageId);
+		if (!packageEventNodes) return;
+
+		packageEventNodes.delete(nodeId);
+	}
+
+	lookup(packageId: string) {
+		return pipe(
+			this.eventNodes.entries(),
+			Iterable.filterMap(([graphId, nodes]) =>
+				Option.fromNullable(nodes.get(packageId)).pipe(
+					Option.map((nodes) => ({ graphId, nodes: nodes.values() }) as const),
+				),
+			),
+		);
+	}
+}
+
+export const makeRuntime = Effect.fnUntraced(function* (
+	v: Schema.Schema.Encoded<typeof ProjectShape>,
+) {
+	const state = yield* Schema.decode(ProjectShape)(v);
+
+	const eventNodes = new EventNodeRegistry();
+
+	const handleEvent = Effect.fnUntraced(function* (pkgId: string, event: any) {
+		for (const { graphId, nodes } of eventNodes.lookup(pkgId)) {
+			for (const nodeId of nodes) {
+				yield* Effect.log({ nodeId });
+				// yield* Effect.void;
+			}
+		}
+	});
+
+	const runtime: Runtime = {
+		handleEvent,
+		serialize: () => Schema.encode(ProjectShape)(state),
+
+		modify: (cb) => cb(state),
+	};
+
+	return runtime;
+});
+
+interface Runtime {
+	handleEvent(pkgId: string, event: any): Effect.Effect<void>;
+	serialize(): Effect.Effect<
+		Schema.Schema.Encoded<typeof ProjectShape>,
+		ParseError
+	>;
+
+	modify(cb: (v: ProjectShape) => void): void;
+}

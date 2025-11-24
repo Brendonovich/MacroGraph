@@ -1,4 +1,3 @@
-import type { Brand } from "effect";
 import { Schema } from "effect";
 
 export const Shape = Schema.Union(
@@ -13,7 +12,8 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
 export const Variant = Schema.Literal("exec", "data");
 export type Variant = Schema.Schema.Type<typeof Variant>;
 
-export type IOId = string & Brand.Brand<"IOId">;
+export const IOId = Schema.String.pipe(Schema.brand("IOId"));
+export type IOId = Schema.Schema.Type<typeof IOId>;
 
 export class ExecInputRef {
 	constructor(

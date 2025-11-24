@@ -36,7 +36,7 @@
     "@unocss/reset": "^66.1.1",
     "cva": "npm:class-variance-authority@^0.7.1",
     "dotenv-cli": "^8.0.0",
-    "effect": "^3.18.4",
+    "effect": "^3.19.3",
     "hono": "^4.7.5",
     "jose": "^4.15.9",
     "obs-websocket-js": "^5.0.5",

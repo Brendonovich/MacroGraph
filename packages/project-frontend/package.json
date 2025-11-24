@@ -7,9 +7,9 @@
     "@effect/platform": "^0.92.1",
     "@effect/rpc": "^0.71.1",
     "@kobalte/core": "^0.13.7",
+    "@macrograph/icons": "workspace:*",
     "@macrograph/package-sdk": "workspace:*",
     "@macrograph/project-domain": "workspace:*",
-    "@macrograph/icons": "workspace:*",
     "@radix-ui/colors": "^3.0.0",
     "@solid-primitives/bounds": "^0.0.118",
     "@solid-primitives/context": "^0.2.3",
@@ -21,7 +21,7 @@
     "@solid-primitives/refs": "^1.0.8",
     "@tanstack/solid-query": "^5.90.6",
     "cva": "npm:class-variance-authority@^0.7.1",
-    "effect": "^3.18.4",
+    "effect": "^3.19.3",
     "solid-presence": "^0.2.0"
   },
   "exports": {

@@ -103,15 +103,15 @@ function SocketListItem(
           variant="text"
           onClick={() =>
             conn().state === "connected"
-              ? props.rpc.DisconnectSocket({ address: conn().address })
-              : props.rpc.ConnectSocket({ address: conn().address })
+              ? props.rpc.DisconnectSocket({ url: conn().address })
+              : props.rpc.ConnectSocket({ url: conn().address })
           }
         >
           {props.conn.state === "connected" ? "Disconnect" : "Connect"}
         </EffectButton>
         <EffectButton
           variant="textDanger"
-          onClick={() => props.rpc.RemoveSocket({ address: conn().address })}
+          onClick={() => props.rpc.RemoveSocket({ url: conn().address })}
         >
           Remove
         </EffectButton>

@@ -1,25 +1,20 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
-	"files": {
-		"include": [
-			"apps/*/src/**",
-			"apps/*/*",
-			"interface/**",
-			"packages/*/src/**",
-			"packages/*/*",
-			"*"
-		],
-		"ignore": [
-			"auto-imports.d.ts",
-			"node_modules",
-			"dist",
-			"bindings.ts",
-			"rspc/types.ts",
-			"commands.ts"
-		]
-	},
-	"organizeImports": {
-		"enabled": true
+	"$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							["effect", "effect/**", "@effect/**"],
+							["@macrograph/**", ":PACKAGE:"],
+							":BLANK_LINE:"
+						]
+					}
+				}
+			}
+		}
 	},
 	"linter": {
 		"enabled": true,
@@ -27,7 +22,9 @@
 			"recommended": true,
 			"suspicious": {
 				"noExplicitAny": "off",
-				"noConfusingVoidType": "off"
+				"noConfusingVoidType": "off",
+				"noShadowRestrictedNames": "off",
+				"noAssignInExpressions": "off"
 			},
 			"style": {
 				"noNonNullAssertion": "off"
@@ -36,6 +33,9 @@
 				"noConstructorReturn": "off",
 				"noChildrenProp": "off",
 				"noUnusedImports": "warn"
+			},
+			"a11y": {
+				"noStaticElementInteractions": "off"
 			}
 		}
 	},

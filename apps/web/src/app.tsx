@@ -2,15 +2,13 @@
 import { MetaProvider, Title } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
+import { clientOnly } from "@solidjs/start";
 import { ErrorBoundary, Suspense } from "solid-js";
 import { Toaster } from "solid-sonner";
-import { clientOnly } from "@solidjs/start";
 
 import "@unocss/reset/tailwind.css";
 import "virtual:uno.css";
 import "@macrograph/ui/global.css";
-
-// import "unfonts.css";
 
 const DesktopListener = clientOnly(() => import("./app/DesktopListener"));
 

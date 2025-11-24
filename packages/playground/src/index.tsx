@@ -126,6 +126,9 @@ function Inner() {
         const project = yield* rpc.GetProject({});
         stateActions.setProject(project);
       }).pipe(runtime.runPromise),
+    onError: (e) => {
+      console.log(e);
+    },
   }));
 
   onMount(() => {
@@ -451,7 +454,10 @@ function Inner() {
                 ),
               },
               package: {
-                getMeta: (tab) => ({ title: tab.packageId, desc: "Package" }),
+                getMeta: (tab) => ({
+                  title: tab.package.name,
+                  desc: "Package",
+                }),
                 Component: (tab) => {
                   const rpc = useService(PlaygroundRpc);
 
@@ -463,7 +469,7 @@ function Inner() {
 
                   return (
                     <PackageSettings
-                      package={tab().package}
+                      packageClient={tab().client}
                       settingsQuery={settingsQuery}
                     />
                   );
@@ -479,8 +485,10 @@ function Inner() {
                 }
                 if (tab.type === "settings") return tab;
                 if (tab.type === "package") {
+                  const pkg = state.packages[tab.packageId];
+                  if (!pkg) return;
                   return packageClients.getPackage(tab.packageId).pipe(
-                    Option.map((pkg) => ({ ...tab, package: pkg })),
+                    Option.map((client) => ({ ...tab, client, package: pkg })),
                     Option.getOrUndefined,
                   );
                 }

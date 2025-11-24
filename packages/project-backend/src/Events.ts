@@ -1,10 +1,12 @@
-import { Chunk, Effect, Mailbox, Option, Stream } from "effect";
-import { ProjectEvent } from "@macrograph/project-domain";
+import { Chunk, Effect, Option, PubSub, Stream } from "effect";
+import type { ProjectEvent } from "@macrograph/project-domain";
 
 import { ProjectPackages } from "./Project";
+import { EventsPubSub } from "./Project/EventsPubSub";
 
 export const createEventStream = Effect.gen(function* () {
 	const packages = yield* ProjectPackages;
+	const eventQueue = yield* EventsPubSub;
 
 	const packageStatesStream = yield* Chunk.fromIterable(
 		packages.entries(),
@@ -31,7 +33,7 @@ export const createEventStream = Effect.gen(function* () {
 		[
 			// packageStates,
 			// authStream,
-			// eventStream,
+			eventQueue.subscribe(),
 			packageStatesStream,
 			// numSubscriptionsStream,
 			// realtimeStream,

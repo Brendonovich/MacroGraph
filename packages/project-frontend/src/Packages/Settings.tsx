@@ -9,13 +9,13 @@ import { reconcile } from "solid-js/store";
 import type { PackageClient } from "./Clients";
 
 export function PackageSettings(props: {
-  package: PackageClient;
+  packageClient: PackageClient;
   settingsQuery: UseQueryResult<
     Request.Request.Success<Project.GetPackageSettings>
   >;
 }) {
   createScopedEffect(() =>
-    props.package.settingsChanges.pipe(
+    props.packageClient.settingsChanges.pipe(
       Effect.flatMap(
         Stream.runForEach(() =>
           Effect.sync(() => props.settingsQuery.refetch()),
@@ -28,8 +28,8 @@ export function PackageSettings(props: {
     <div class="flex flex-col items-stretch w-full max-w-120 p-4">
       <Suspense fallback={<LoadingBlock />}>
         <Dynamic
-          component={props.package.SettingsUI}
-          rpc={props.package.rpcClient}
+          component={props.packageClient.SettingsUI}
+          rpc={props.packageClient.rpcClient}
           state={props.settingsQuery.data}
         />
       </Suspense>

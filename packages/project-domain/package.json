@@ -1,17 +1,18 @@
 {
-	"name": "@macrograph/project-domain",
-	"type": "module",
-	"main": "./src/index.ts",
-	"types": "./src/index.ts",
-	"dependencies": {
-		"@effect/rpc": "^0.71.1",
-		"@macrograph/web-domain": "workspace:*",
-		"effect": "^3.18.4"
-	},
-	"exports": {
-		".": "./src/index.ts",
-		"./Node": "./src/Node/index.ts",
-		"./Graph": "./src/Graph/index.ts",
-		"./Credential": "./src/Credential.ts"
-	}
+  "name": "@macrograph/project-domain",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@effect/rpc": "^0.71.1",
+    "@macrograph/web-domain": "workspace:*",
+    "effect": "^3.19.3"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./Node": "./src/Node/index.ts",
+    "./Graph": "./src/Graph/index.ts",
+    "./Credential": "./src/Credential.ts",
+    "./updated": "./src/updated/index.ts"
+  }
 }

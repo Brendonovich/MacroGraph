@@ -1,10 +1,11 @@
 import {
 	FetchHttpClient,
+	Headers,
 	HttpApiClient,
 	HttpClient,
 	HttpClientRequest,
+	Socket,
 } from "@effect/platform";
-import { Package, PackageEngine, setOutput } from "@macrograph/package-sdk";
 import {
 	Chunk,
 	Deferred,
@@ -12,10 +13,17 @@ import {
 	Exit,
 	Layer,
 	Option,
-	Schema,
+	pipe,
+	Schema as S,
 	Scope,
 	Stream,
 } from "effect";
+import {
+	Package,
+	PackageEngine,
+	Resource,
+	setOutput,
+} from "@macrograph/package-sdk";
 
 import {
 	EVENTSUB_MESSAGE,
@@ -24,40 +32,50 @@ import {
 	isNotificationType,
 } from "./eventSub";
 import { HelixApi } from "./helix";
-import { RPCS } from "./shared";
+import { RPCS, TwitchAPIError } from "./shared";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
-const Engine = PackageEngine.make<
-	{
-		accounts: Array<{
-			id: string;
-			displayName: string;
-			eventSubSocket: { state: "connecting" | "connected" | "disconnected" };
-		}>;
-	},
-	typeof RPCS
->({ rpc: RPCS })<EventSubMessage>(
-	Effect.fn(function* (ctx) {
-		type Socket = {
-			lock: Effect.Semaphore;
-			ws: WebSocket;
-			state: "connecting" | "connected";
-			events: Stream.Stream<EventSubMessage>;
-			closed: Deferred.Deferred<void>;
-		};
+const TwitchAccount = Resource.make<{
+	id: string;
+	displayName: string;
+}>()("TwitchAccount", {
+	name: "Twitch Account",
+	serialize: (value) => ({ id: value.id, display: value.displayName }),
+});
 
-		const sockets = new Map<string, Socket>();
+type State = {
+	accounts: Array<{
+		id: string;
+		displayName: string;
+		eventSubSocket: { state: "connecting" | "connected" | "disconnected" };
+	}>;
+};
 
-		const layer = RPCS.toLayer({
-			ConnectEventSub: Effect.fn(function* ({ accountId }) {
+const Engine = PackageEngine.define<State>()({
+	rpc: RPCS,
+	events: EVENTSUB_MESSAGE,
+	resources: [TwitchAccount],
+}).build((ctx) => {
+	type Socket = {
+		lock: Effect.Semaphore;
+		ws: Socket.Socket;
+		state: "connecting" | "connected";
+		events: Stream.Stream<EventSubMessage>;
+		closed: Deferred.Deferred<void>;
+	};
+
+	const sockets = new Map<string, Socket>();
+
+	const layer = RPCS.toLayer({
+		ConnectEventSub: Effect.fn(
+			function* ({ accountId }) {
 				if (sockets.get(accountId)) return;
-				if (
-					!(yield* ctx.credentials.pipe(Effect.orDie)).find(
-						(c) => c.id === accountId,
-					)
-				)
-					return;
+				const credentials = yield* ctx.credentials.pipe(
+					Effect.option,
+					Effect.map(Option.getOrUndefined),
+				);
+				if (!credentials?.find((c) => c.id === accountId)) return;
 
 				const lock = Effect.unsafeMakeSemaphore(1);
 
@@ -75,26 +93,30 @@ const Engine = PackageEngine.make<
 							times: 1,
 							while: (e) => e._tag === "ForceRetryError",
 						}),
-						HttpClient.catchTags({ ForceRetryError: Effect.die }),
 					);
 
-				const twitchFetch = Layer.succeed(FetchHttpClient.Fetch, (url, init) =>
-					fetch(url, {
-						...init,
-						// twitch doesn't like extra headers
-						headers: {
-							authorization: (init!.headers as { authorization: string })
-								.authorization,
-							"client-id": CLIENT_ID,
-							"content-type": "application/json",
-						},
-					}),
-				);
-
-				const helixClient = yield* HttpApiClient.make(HelixApi, {
-					baseUrl: "https://api.twitch.tv/helix",
-					transformClient: (c) =>
-						c.pipe(
+				const httpClient = yield* HttpClient.HttpClient.pipe(
+					Effect.map((client) =>
+						pipe(
+							client,
+							// HttpClient.mapRequestEffect((req) =>
+							// 	Effect.succeed(
+							// 		HttpClientRequest.make(req.method)(req.url, {
+							// 			urlParams: req.urlParams,
+							// 			hash: Option.getOrUndefined(req.hash),
+							// 			headers: Headers.fromInput({
+							// 				Authorization: pipe(
+							// 					req.headers,
+							// 					Headers.get("authorization"),
+							// 					Option.getOrUndefined,
+							// 				),
+							// 				"Client-Id": CLIENT_ID,
+							// 				"Content-Type": "application/json",
+							// 			}),
+							// 			body: req.body,
+							// 		}),
+							// 	),
+							// ),
 							HttpClient.mapRequestEffect((req) =>
 								Effect.gen(function* () {
 									const credentials = yield* ctx.credentials.pipe(Effect.orDie);
@@ -112,35 +134,48 @@ const Engine = PackageEngine.make<
 								}),
 							),
 							CredentialRefresh,
+							HttpClient.withTracerPropagation(false),
 						),
-				}).pipe(
-					Effect.provide(
-						FetchHttpClient.layer.pipe(Layer.provide(twitchFetch)),
 					),
+					Effect.provide(FetchHttpClient.layer),
+					Effect.provideService(FetchHttpClient.Fetch, (url, init) => {
+						console.log({ url, init });
+						return fetch(url, {
+							...init,
+							headers: {
+								Authorization: init.headers?.authorization,
+								"Client-Id": CLIENT_ID,
+								"Content-Type": "application/json",
+							},
+						});
+					}),
 				);
 
-				const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
+				const helixClient = yield* HttpApiClient.makeWith(HelixApi, {
+					baseUrl: "https://api.twitch.tv/helix",
+					httpClient,
+				});
+
+				const ws = yield* Socket.makeWebSocket(
+					"wss://eventsub.wss.twitch.tv/ws",
+				).pipe(Effect.provide(Socket.layerWebSocketConstructorGlobal));
+
+				// const ws = new WebSocket("wss://eventsub.wss.twitch.tv/ws");
 
 				const closed = yield* Deferred.make<void>();
 				const events = Stream.asyncPush<EventSubMessage>((emit) =>
-					Effect.gen(function* () {
-						ws.onmessage = (event) => {
+					ws
+						.runRaw((event) => {
+							if (typeof event !== "string") return;
+
 							emit.single(
-								Schema.decodeUnknownSync(EVENTSUB_MESSAGE)(
-									JSON.parse(event.data),
-								),
+								S.decodeUnknownSync(EVENTSUB_MESSAGE)(JSON.parse(event)),
 							);
-						};
-
-						ws.onerror = (e) => {
-							console.log;
-						};
-
-						ws.onclose = () => {
-							emit.end();
-							// events.unsafeDone(Exit.succeed(undefined));
-						};
-					}),
+						})
+						.pipe(
+							Effect.ensuring(Effect.sync(() => emit.end())),
+							Effect.forkScoped,
+						),
 				);
 
 				const socket: Socket = {
@@ -231,19 +266,19 @@ const Engine = PackageEngine.make<
 					).pipe(Effect.withSpan("createTestSubscriptions"));
 					socket.state = "connected";
 					yield* Effect.log("Socket Connected");
-				}).pipe(Effect.orDie, Effect.ensuring(ctx.dirtyState));
+				}).pipe(Effect.ensuring(ctx.dirtyState));
 
 				const scope = yield* Scope.make();
 
 				yield* Stream.runForEach(events, (event) => {
 					const spanName = `Message.${event.metadata.message_type}`;
 
-					return Effect.sync(() => {
+					return Effect.gen(function* () {
 						if (isEventSubMessageType(event, "session_welcome"))
 							throw new Error("Unexpected session welcome");
 
 						if (isEventSubMessageType(event, "notification"))
-							ctx.emitEvent(event);
+							yield* ctx.emitEvent(event);
 					}).pipe(
 						Effect.withSpan(spanName, { attributes: flattenObject(event) }),
 					);
@@ -263,36 +298,46 @@ const Engine = PackageEngine.make<
 					Effect.forkScoped,
 					Scope.extend(scope),
 				);
-			}),
-			DisconnectEventSub: Effect.fn(function* ({ accountId }) {
-				const socket = sockets.get(accountId);
-				if (!socket) return;
+			},
+			Effect.catchAll((cause) => new TwitchAPIError({ cause })),
+		),
+		DisconnectEventSub: Effect.fn(function* ({ accountId }) {
+			const socket = sockets.get(accountId);
+			if (!socket) return;
 
-				socket.ws.close();
-				yield* Deferred.await(socket.closed);
-			}),
-		});
+			socket.ws.close();
+			yield* Deferred.await(socket.closed);
+		}),
+	});
 
-		return {
-			rpc: layer,
-			state: Effect.gen(function* () {
-				const credentials = yield* ctx.credentials.pipe(
-					Effect.catchTag("CredentialsFetchFailed", () => Effect.succeed([])),
-				);
+	const TwitchAccountLive = TwitchAccount.toLayer(
+		Effect.gen(function* () {
+			const credentials = yield* ctx.credentials;
+			return credentials.map((c) => ({
+				id: c.id,
+				displayName: c.displayName ?? c.id,
+			}));
+		}),
+	);
 
-				return {
-					accounts: credentials.map((c) => ({
-						id: c.id,
-						displayName: c.displayName!,
-						eventSubSocket: {
-							state: sockets.get(c.id)?.state ?? "disconnected",
-						},
-					})),
-				};
-			}),
-		};
-	}),
-);
+	return {
+		rpc: layer,
+		state: Effect.gen(function* () {
+			const credentials = yield* ctx.credentials;
+
+			return {
+				accounts: credentials.map((c) => ({
+					id: c.id,
+					displayName: c.displayName!,
+					eventSubSocket: {
+						state: sockets.get(c.id)?.state ?? "disconnected",
+					},
+				})),
+			};
+		}),
+		resources: TwitchAccountLive,
+	};
+});
 
 export default Package.make({
 	name: "Twitch",
@@ -301,51 +346,60 @@ export default Package.make({
 		ctx.schema("notification.channel.ban", {
 			name: "User Banned",
 			type: "event",
-			event: (e) =>
-				isEventSubMessageType(e, "notification") &&
-				isNotificationType(e, "channel.ban")
-					? Option.some(e)
-					: Option.none(),
+			properties: {
+				account: {
+					name: "Account",
+					resource: TwitchAccount,
+				},
+			},
+			event: ({ properties }, e) => {
+				if (
+					isEventSubMessageType(e, "notification") &&
+					isNotificationType(e, "channel.ban") &&
+					e.payload.event.broadcaster_user_id === properties.account.id
+				)
+					return e;
+			},
 			io: (io) => ({
 				exec: io.out.exec("exec"),
-				userId: io.out.data("userId", Schema.String, {
+				userId: io.out.data("userId", S.String, {
 					name: "User ID",
 				}),
-				userLogin: io.out.data("userLogin", Schema.String, {
+				userLogin: io.out.data("userLogin", S.String, {
 					name: "User Login",
 				}),
-				userName: io.out.data("userName", Schema.String, {
+				userName: io.out.data("userName", S.String, {
 					name: "User Name",
 				}),
-				broadcasterId: io.out.data("broadcasterId", Schema.String, {
+				broadcasterId: io.out.data("broadcasterId", S.String, {
 					name: "Broadcaster ID",
 				}),
-				broadcasterLogin: io.out.data("broadcasterLogin", Schema.String, {
+				broadcasterLogin: io.out.data("broadcasterLogin", S.String, {
 					name: "Broadcaster Login",
 				}),
-				broadcasterName: io.out.data("broadcasterName", Schema.String, {
+				broadcasterName: io.out.data("broadcasterName", S.String, {
 					name: "Broadcaster Name",
 				}),
-				moderatorId: io.out.data("moderatorId", Schema.String, {
+				moderatorId: io.out.data("moderatorId", S.String, {
 					name: "Moderator ID",
 				}),
-				moderatorLogin: io.out.data("moderatorLogin", Schema.String, {
+				moderatorLogin: io.out.data("moderatorLogin", S.String, {
 					name: "Moderator Login",
 				}),
-				moderatorName: io.out.data("moderatorName", Schema.String, {
+				moderatorName: io.out.data("moderatorName", S.String, {
 					name: "Moderator Name",
 				}),
-				reason: io.out.data("reason", Schema.String, {
+				reason: io.out.data("reason", S.String, {
 					name: "Reason",
 				}),
-				bannedAt: io.out.data("bannedAt", Schema.Date, {
+				bannedAt: io.out.data("bannedAt", S.Date, {
 					name: "Banned At",
 				}),
-				endsAt: io.out.data("endsAt", Schema.OptionFromNullOr(Schema.Date), {
+				endsAt: io.out.data("endsAt", S.OptionFromNullOr(S.Date), {
 					name: "Ends At",
 				}),
 			}),
-			run: function* (io, { payload: { event } }) {
+			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.userId, event.user_id);
 				yield* setOutput(io.userName, event.user_name);
 				yield* setOutput(io.userLogin, event.user_login);
@@ -365,24 +419,51 @@ export default Package.make({
 		ctx.schema("notification.channel.unban", {
 			name: "User Unbanned",
 			type: "event",
-			event: (e) =>
-				isEventSubMessageType(e, "notification") &&
-				isNotificationType(e, "channel.unban")
-					? Option.some(e)
-					: Option.none(),
+			properties: {
+				account: {
+					name: "Account",
+					resource: TwitchAccount,
+				},
+			},
+			event: ({ properties }, e) => {
+				if (
+					isEventSubMessageType(e, "notification") &&
+					isNotificationType(e, "channel.unban") &&
+					e.payload.event.broadcaster_user_id === properties.account.id
+				)
+					return e;
+			},
 			io: (io) => ({
 				exec: io.out.exec("exec"),
-				userId: io.out.data("userId", Schema.String),
-				userLogin: io.out.data("userLogin", Schema.String),
-				userName: io.out.data("userName", Schema.String),
-				broadcasterId: io.out.data("broadcasterId", Schema.String),
-				broadcasterLogin: io.out.data("broadcasterLogin", Schema.String),
-				broadcasterName: io.out.data("broadcasterName", Schema.String),
-				moderatorId: io.out.data("moderatorId", Schema.String),
-				moderatorLogin: io.out.data("moderatorLogin", Schema.String),
-				moderatorName: io.out.data("moderatorName", Schema.String),
+				userId: io.out.data("userId", S.String, {
+					name: "User ID",
+				}),
+				userLogin: io.out.data("userLogin", S.String, {
+					name: "User Login",
+				}),
+				userName: io.out.data("userName", S.String, {
+					name: "User Name",
+				}),
+				broadcasterId: io.out.data("broadcasterId", S.String, {
+					name: "Broadcaster ID",
+				}),
+				broadcasterLogin: io.out.data("broadcasterLogin", S.String, {
+					name: "Broadcaster Login",
+				}),
+				broadcasterName: io.out.data("broadcasterName", S.String, {
+					name: "Broadcaster Name",
+				}),
+				moderatorId: io.out.data("moderatorId", S.String, {
+					name: "Moderator ID",
+				}),
+				moderatorLogin: io.out.data("moderatorLogin", S.String, {
+					name: "Moderator Login",
+				}),
+				moderatorName: io.out.data("moderatorName", S.String, {
+					name: "Moderator Name",
+				}),
 			}),
-			run: function* (io, { payload: { event } }) {
+			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.userId, event.user_id);
 				yield* setOutput(io.userName, event.user_name);
 				yield* setOutput(io.userLogin, event.user_login);
@@ -405,7 +486,7 @@ function flattenObject(
 	res: Record<string, any> = {},
 ): Record<string, any> {
 	for (const key in obj) {
-		if (Object.prototype.hasOwnProperty.call(obj, key)) {
+		if (key in obj) {
 			const newKey = prefix ? `${prefix}.${key}` : key;
 
 			if (

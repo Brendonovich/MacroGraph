@@ -1,6 +1,6 @@
 import type { Rpc, RpcGroup } from "@effect/rpc";
+import { Context, Data, Effect, type Layer, type Schema } from "effect";
 import type { CREDENTIAL } from "@macrograph/web-domain";
-import { Context, Data, Effect, type Layer, Schema } from "effect";
 
 import type { NodeRuntime } from "./runtime";
 import type { NodeSchema, SchemaDefinition } from "./schema";
@@ -40,16 +40,11 @@ export type PackageBuildReturn<
 	| { rpc?: undefined; state?: undefined }
 );
 
-export class CredentialsFetchFailed extends Schema.TaggedError<CredentialsFetchFailed>()(
-	"CredentialsFetchFailed",
-	{ message: Schema.String },
-) {}
-
 export interface PackageContext<TEvents> {
 	dirtyState: Effect.Effect<void>;
 	credentials: Effect.Effect<
 		ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>,
-		CredentialsFetchFailed
+		CredentialsFetchError
 	>;
 	refreshCredential(id: string): Effect.Effect<never, ForceRetryError>;
 	emitEvent(event: TEvents): Effect.Effect<void>;

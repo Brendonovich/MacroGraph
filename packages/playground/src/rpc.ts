@@ -1,5 +1,5 @@
 import { Rpc, RpcGroup, RpcTest } from "@effect/rpc";
-import { Credential, Graph, Node, Project } from "@macrograph/project-domain";
+import { Graph, Node, Project } from "@macrograph/project-domain/updated";
 import { Effect, Schema } from "effect";
 
 export const Rpcs = RpcGroup.make(

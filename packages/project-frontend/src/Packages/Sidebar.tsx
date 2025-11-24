@@ -20,18 +20,20 @@ export function PackagesSidebar(props: {
       />
       <ul>
         <For each={packageClients.listPackages()}>
-          {(pkg) => (
-            <Show when={state.packages[pkg]}>
-              <li>
-                <button
-                  type="button"
-                  class="w-full data-[selected='true']:bg-gray-2  hover:bg-gray-2 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-                  data-selected={props.packageId === pkg}
-                  onClick={() => props.onChange?.(pkg)}
-                >
-                  {pkg}
-                </button>
-              </li>
+          {(pkgid) => (
+            <Show when={state.packages[pkgid]}>
+              {(pkg) => (
+                <li>
+                  <button
+                    type="button"
+                    class="w-full data-[selected='true']:bg-gray-2  hover:bg-gray-2 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+                    data-selected={props.packageId === pkgid}
+                    onClick={() => props.onChange?.(pkgid)}
+                  >
+                    {pkg().name}
+                  </button>
+                </li>
+              )}
             </Show>
           )}
         </For>

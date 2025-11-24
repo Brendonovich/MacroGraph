@@ -9,4 +9,5 @@ export * from "./package";
 export * from "./runtime";
 export * from "./SubscribableCache";
 export * from "./Event";
+export * from "./Events";
 export * from "./types";
