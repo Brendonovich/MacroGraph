@@ -109,7 +109,7 @@ importers:
         version: 0.15.3(solid-js@1.9.10)
       '@solidjs/start':
         specifier: npm:@brendonovich/solidjs__start@0.0.1
-        version: '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
+        version: '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.7.3)(zod@3.25.36)
@@ -282,9 +282,9 @@ importers:
       '@unocss/reset':
         specifier: ^66.1.1
         version: 66.1.1
-      cva:
+      class-variance-authority:
         specifier: npm:class-variance-authority@^0.7.1
-        version: class-variance-authority@0.7.1
+        version: 0.7.1
       dotenv-cli:
         specifier: ^8.0.0
         version: 8.0.0
@@ -497,15 +497,15 @@ importers:
       '@vinxi/plugin-mdx':
         specifier: ^3.7.2
         version: 3.7.2(@mdx-js/mdx@2.3.0)
+      class-variance-authority:
+        specifier: npm:class-variance-authority@^0.7.1
+        version: 0.7.1
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
       cookie-es:
         specifier: ^1.2.2
         version: 1.2.2
-      cva:
-        specifier: npm:class-variance-authority@^0.7.1
-        version: class-variance-authority@0.7.1
       dotenv:
         specifier: ^16.4.7
         version: 16.5.0
@@ -886,9 +886,9 @@ importers:
       '@unocss/reset':
         specifier: ^66.1.1
         version: 66.1.1
-      cva:
+      class-variance-authority:
         specifier: npm:class-variance-authority@^0.7.1
-        version: class-variance-authority@0.7.1
+        version: 0.7.1
       dotenv-cli:
         specifier: ^8.0.0
         version: 8.0.0
@@ -1142,9 +1142,9 @@ importers:
       '@unocss/reset':
         specifier: ^66.1.1
         version: 66.1.1
-      cva:
+      class-variance-authority:
         specifier: npm:class-variance-authority@^0.7.1
-        version: class-variance-authority@0.7.1
+        version: 0.7.1
       dotenv-cli:
         specifier: ^8.0.0
         version: 8.0.0
@@ -1473,9 +1473,9 @@ importers:
       '@tanstack/solid-query':
         specifier: ^5.90.6
         version: 5.90.6(solid-js@1.9.10)
-      cva:
+      class-variance-authority:
         specifier: npm:class-variance-authority@^0.7.1
-        version: class-variance-authority@0.7.1
+        version: 0.7.1
       effect:
         specifier: ^3.19.3
         version: 3.19.3
@@ -1561,9 +1561,9 @@ importers:
       '@tanstack/solid-query':
         specifier: ^5.90.6
         version: 5.90.6(solid-js@1.9.10)
-      cva:
+      class-variance-authority:
         specifier: npm:class-variance-authority@^0.7.1
-        version: class-variance-authority@0.7.1
+        version: 0.7.1
       effect:
         specifier: ^3.19.3
         version: 3.19.3
@@ -1946,9 +1946,9 @@ importers:
       '@unocss/reset':
         specifier: ^66.1.1
         version: 66.1.1
-      cva:
+      class-variance-authority:
         specifier: npm:class-variance-authority@^0.7.1
-        version: class-variance-authority@0.7.1
+        version: 0.7.1
       dotenv-cli:
         specifier: ^8.0.0
         version: 8.0.0
@@ -2071,12 +2071,12 @@ importers:
       '@tanstack/solid-query':
         specifier: ^5.90.6
         version: 5.90.6(solid-js@1.9.10)
+      class-variance-authority:
+        specifier: npm:class-variance-authority@^0.7.0
+        version: 0.7.1
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
-      cva:
-        specifier: npm:class-variance-authority@^0.7.0
-        version: class-variance-authority@0.7.1
       i:
         specifier: ^0.3.7
         version: 0.3.7
@@ -13154,7 +13154,7 @@ snapshots:
       - xml2js
       - yaml
 
-  '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
+  '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
     dependencies:
       '@babel/core': 7.28.3
       '@babel/traverse': 7.28.3
@@ -13183,7 +13183,7 @@ snapshots:
       terracotta: 1.0.6(solid-js@1.9.10)
       vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       vite-plugin-solid: 2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      vitest: 3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vitest: 3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
     transitivePeerDependencies:
       - '@edge-runtime/vm'
       - '@testing-library/jest-dom'
@@ -23020,7 +23020,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
+  vitest@3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
     dependencies:
       '@vitest/expect': 3.0.5
       '@vitest/mocker': 3.0.5(vite@6.4.0(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))

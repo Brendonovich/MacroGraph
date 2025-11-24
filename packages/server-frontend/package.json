@@ -54,7 +54,7 @@
 		"@tanstack/query-core": "^5.75.7",
 		"@tanstack/solid-query": "^5.90.6",
 		"@unocss/reset": "^66.1.1",
-		"cva": "npm:class-variance-authority@^0.7.1",
+		"class-variance-authority": "npm:class-variance-authority@^0.7.1",
 		"dotenv-cli": "^8.0.0",
 		"effect": "^3.19.3",
 		"effect-query": "0.1.2-beta.1",

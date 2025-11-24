@@ -7,7 +7,7 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { mergeRefs } from "@solid-primitives/refs";
-import { cx } from "cva";
+import { cx } from "class-variance-authority";
 import type { ValidComponent } from "solid-js";
 import {
 	batch,

@@ -42,7 +42,7 @@
 		"@vinxi/plugin-mdx": "^3.7.2",
 		"clsx": "^1.2.1",
 		"cookie-es": "^1.2.2",
-		"cva": "npm:class-variance-authority@^0.7.1",
+		"class-variance-authority": "npm:class-variance-authority@^0.7.1",
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.29.5",
 		"effect": "^3.19.3",

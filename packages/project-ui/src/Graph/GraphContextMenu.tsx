@@ -1,7 +1,7 @@
 import type { Package, Schema } from "@macrograph/project-domain/updated";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createWritableMemo } from "@solid-primitives/memo";
-import { cx } from "cva";
+import { cx } from "class-variance-authority";
 import {
 	type ComponentProps,
 	createMemo,
