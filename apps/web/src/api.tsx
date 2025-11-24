@@ -2,8 +2,7 @@ import { action, cache, query, redirect } from "@solidjs/router";
 import {
 	appendResponseHeader,
 	getCookie,
-	getHeader,
-	setResponseHeader,
+	getHeaders,
 	setResponseStatus,
 } from "@solidjs/start/http";
 import { and, eq } from "drizzle-orm";
@@ -30,6 +29,8 @@ async function _getAuthState() {
 	console.log("event", event);
 
 	let data: Awaited<ReturnType<ReturnType<typeof lucia>["validateSession"]>>;
+
+	console.log("headers", getHeaders());
 
 	// header auth
 	const authHeader = event.req.headers.get("Authorization");
@@ -184,7 +185,7 @@ export const removeCredential = action(
 		"use server";
 		const { user } = await ensureAuthedOrRedirect();
 
-		await db
+		await db()
 			.delete(oauthCredentials)
 			.where(
 				and(
@@ -196,7 +197,7 @@ export const removeCredential = action(
 	},
 );
 
-export const getCredentials = cache(async () => {
+export const getCredentials = query(async () => {
 	"use server";
 
 	const { user } = await ensureAuthedOrRedirect();
@@ -208,7 +209,7 @@ export const getCredentials = cache(async () => {
 	return c;
 }, "credentials");
 
-export const getServers = cache(async () => {
+export const getServers = query(async () => {
 	"use server";
 
 	const { user } = await ensureAuthedOrRedirect();
