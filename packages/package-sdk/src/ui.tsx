@@ -39,8 +39,8 @@ export type SettingsProps<
 };
 
 const buttonStyles = cva(
-	"focus-visible:outline-yellow-5 outline-none focus-visible:outline-solid transition-colors",
 	{
+		base: "focus-visible:outline-yellow-5 outline-none focus-visible:outline-solid transition-colors",
 		variants: {
 			variant: {
 				primary:
