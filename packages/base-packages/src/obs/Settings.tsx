@@ -3,7 +3,7 @@ import {
 	LoadingBlock,
 	type SettingsProps,
 } from "@macrograph/package-sdk/ui";
-import { cx } from "class-variance-authority";
+import { cx } from "cva";
 import { type ComponentProps, For, Suspense, splitProps } from "solid-js";
 import { createStore } from "solid-js/store";
 

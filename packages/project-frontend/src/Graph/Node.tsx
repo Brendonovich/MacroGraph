@@ -1,7 +1,7 @@
 import { Match } from "effect";
 import type { Node } from "@macrograph/project-domain";
 import { createEventListener } from "@solid-primitives/event-listener";
-import { cx } from "class-variance-authority";
+import { cx } from "cva";
 import {
 	type Accessor,
 	type ComponentProps,

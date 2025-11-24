@@ -7,7 +7,7 @@ import {
 	Scope,
 } from "effect";
 import { createContextProvider } from "@solid-primitives/context";
-import { cva, cx, type VariantProps } from "class-variance-authority";
+import { cva, cx, type VariantProps } from "cva";
 import {
 	type Accessor,
 	type ComponentProps,

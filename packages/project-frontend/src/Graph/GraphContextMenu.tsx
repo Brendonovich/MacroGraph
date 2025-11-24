@@ -5,7 +5,7 @@ import type {
 } from "@macrograph/project-domain";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createWritableMemo } from "@solid-primitives/memo";
-import { cx } from "class-variance-authority";
+import { cx } from "cva";
 import {
 	type ComponentProps,
 	createMemo,

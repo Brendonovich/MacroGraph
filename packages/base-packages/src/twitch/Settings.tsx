@@ -3,7 +3,7 @@ import {
 	LoadingBlock,
 	type SettingsProps,
 } from "@macrograph/package-sdk/ui";
-import { cx } from "class-variance-authority";
+import { cx } from "cva";
 import { Index, Suspense } from "solid-js";
 
 import { RPCS, type STATE } from "./shared";

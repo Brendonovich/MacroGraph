@@ -33,7 +33,7 @@
 		"@solidjs/router": "^0.15.3",
 		"@tanstack/query-core": "^5.75.7",
 		"@unocss/reset": "^66.1.1",
-		"class-variance-authority": "npm:class-variance-authority@^0.7.1",
+		"cva": "1.0.0-beta.4",
 		"dotenv-cli": "^8.0.0",
 		"effect": "^3.19.3",
 		"hono": "^4.7.5",

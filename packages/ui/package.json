@@ -40,7 +40,7 @@
 		"@macrograph/config": "workspace:*",
 		"@tanstack/solid-query": "^5.90.6",
 		"clsx": "^1.2.1",
-		"class-variance-authority": "npm:class-variance-authority@^0.7.0",
+		"cva": "1.0.0-beta.4",
 		"i": "^0.3.7",
 		"tailwind-merge": "^2.2.2"
 	}

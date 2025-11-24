@@ -1,4 +1,4 @@
-import { cx } from "class-variance-authority";
+import { cx } from "cva";
 import type { ComponentProps } from "solid-js";
 
 export function Avatar(props: { name: string } & ComponentProps<"div">) {

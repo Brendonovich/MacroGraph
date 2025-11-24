@@ -2,7 +2,7 @@ import { Match } from "effect";
 import type { Mutable } from "effect/Types";
 import type { IO, Node, Schema } from "@macrograph/project-domain/updated";
 import { createEventListener } from "@solid-primitives/event-listener";
-import { cx } from "class-variance-authority";
+import { cx } from "cva";
 import {
 	type Accessor,
 	type ComponentProps,
