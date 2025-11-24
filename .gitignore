@@ -31,3 +31,6 @@ gitignore
 Thumbs.db
 
 tsconfig.tsbuildinfo
+
+# API Tester logs (may contain sensitive data)
+api-logs/
