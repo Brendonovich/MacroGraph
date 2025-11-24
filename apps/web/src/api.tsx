@@ -27,6 +27,7 @@ async function _getAuthState() {
 
 	const requestEvent = getRequestEvent()!;
 	const event = requestEvent.nativeEvent;
+	console.log("event", event);
 
 	let data: Awaited<ReturnType<ReturnType<typeof lucia>["validateSession"]>>;
 
