@@ -44,6 +44,7 @@ async function _getAuthState() {
 			const originHeader = getHeader("Origin") ?? null;
 			// NOTE: You may need to use `X-Forwarded-Host` instead
 			const hostHeader = getHeader("Host") ?? null;
+			console.log({ originHeader, hostHeader });
 			if (
 				!originHeader ||
 				!hostHeader ||
