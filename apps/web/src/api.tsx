@@ -1,17 +1,17 @@
-import { action, cache, redirect } from "@solidjs/router";
-import { and, eq } from "drizzle-orm";
-import { verifyRequestOrigin } from "lucia";
-import { getRequestEvent } from "solid-js/web";
+import { action, cache, query, redirect } from "@solidjs/router";
 import {
-	getHeader,
-	getCookie,
 	appendResponseHeader,
+	getCookie,
+	getHeader,
 	setResponseHeader,
 	setResponseStatus,
 } from "@solidjs/start/http";
+import { and, eq } from "drizzle-orm";
+import { verifyRequestOrigin } from "lucia";
+import { getRequestEvent } from "solid-js/web";
 
 import { db } from "~/drizzle";
-import { oauthCredentials, oauthApps, users } from "~/drizzle/schema";
+import { oauthApps, oauthCredentials, users } from "~/drizzle/schema";
 import { loginURLForProvider, performOAuthExchange } from "./app/auth/actions";
 import type { AuthProvider } from "./app/auth/providers";
 import { lucia } from "./lucia";
@@ -32,6 +32,7 @@ async function _getAuthState() {
 
 	// header auth
 	const authHeader = getHeader("Authorization");
+	console.log({ authHeader });
 	if (authHeader?.startsWith("Bearer ")) {
 		const [, sessionId] = authHeader.split("Bearer ");
 
@@ -54,9 +55,12 @@ async function _getAuthState() {
 		}
 
 		const sessionId = getCookie(lucia().sessionCookieName) ?? null;
+		console.log({ sessionId });
 		if (!sessionId) return;
 
 		data = await lucia().validateSession(sessionId);
+
+		console.log({ data });
 
 		if (data.session?.fresh)
 			appendResponseHeader(
@@ -73,7 +77,7 @@ async function _getAuthState() {
 	if (data.user) return data;
 }
 
-export const getAuthState = cache(_getAuthState, "getAuthState");
+export const getAuthState = query(_getAuthState, "getAuthState");
 
 export async function ensureAuthedOrThrow() {
 	const state = await _getAuthState();
@@ -216,6 +220,7 @@ export const getServers = cache(async () => {
 
 import { createStorage } from "unstorage";
 import cloudflareKVHTTPDriver from "unstorage/drivers/cloudflare-kv-http";
+
 import { posthogCapture, posthogShutdown } from "./posthog/server";
 
 const cloudflareKv = () => {
