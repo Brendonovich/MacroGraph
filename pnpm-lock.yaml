@@ -1375,6 +1375,9 @@ importers:
       '@tanstack/solid-query':
         specifier: ^5.90.6
         version: 5.90.6(solid-js@1.9.10)
+      cva:
+        specifier: 1.0.0-beta.4
+        version: 1.0.0-beta.4(typescript@5.8.3)
       effect:
         specifier: ^3.19.3
         version: 3.19.3
@@ -5632,10 +5635,10 @@ packages:
       react-dom:
         optional: true
 
-  '@storybook/builder-vite@10.1.0-beta.0':
-    resolution: {integrity: sha512-laiZfKzwsqkASAava7SY6urz+sUvRiPIozyJ93RhSt1Aze7kOnqayTzIMJlC7Z16C7NgLDWUBoq14+FOvRO8Ig==}
+  '@storybook/builder-vite@10.2.0-alpha.0':
+    resolution: {integrity: sha512-5Qw1MbvQSXBfwMm9VAofvg5JOEXUHTRZKSdpSDcJwLq3r6+T9qNaIrk+yez6Sn4DMMFbNLn7u1vjt/HqLU9X+w==}
     peerDependencies:
-      storybook: ^10.1.0-beta.0
+      storybook: ^10.2.0-alpha.0
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
   '@storybook/codemod@8.2.7':
@@ -5644,12 +5647,12 @@ packages:
   '@storybook/core@8.2.7':
     resolution: {integrity: sha512-vgw5MYN9Bq2/ZsObCOEHbBHwi4RpbYCHPFtKkr4kTnWID++FCSiSVd7jY3xPvcNxWqCxOyH6dThpBi+SsB/ZAA==}
 
-  '@storybook/csf-plugin@10.1.0-beta.0':
-    resolution: {integrity: sha512-in4ZGVK/KBdwtEMITIBAU/zO/LPXtCv+slrJa1+3MPnEyuHLrYSiyHUJRCiKJG3VOwrg2MHazFvFY+JCKfv27w==}
+  '@storybook/csf-plugin@10.2.0-alpha.0':
+    resolution: {integrity: sha512-4LMz6SOQ6gAGF5X1RvxjZyRPdarAvBWFKUfQEFskYAObnuZBWMaSDulZ3+KSKy7nSr9iLc9IMQOblKtgpVgE+g==}
     peerDependencies:
       esbuild: '*'
       rollup: '*'
-      storybook: ^10.1.0-beta.0
+      storybook: ^10.2.0-alpha.0
       vite: '*'
       webpack: '*'
     peerDependenciesMeta:
@@ -15519,9 +15522,9 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
 
-  '@storybook/builder-vite@10.1.0-beta.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/builder-vite@10.2.0-alpha.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@storybook/csf-plugin': 10.1.0-beta.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/csf-plugin': 10.2.0-alpha.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@vitest/mocker': 3.2.4(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       ts-dedent: 2.2.0
@@ -15570,7 +15573,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@storybook/csf-plugin@10.1.0-beta.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/csf-plugin@10.2.0-alpha.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       unplugin: 2.3.10
@@ -21767,7 +21770,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.8(@types/debug@4.1.12)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(esbuild@0.21.5)(rollup@4.52.5)(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite-plugin-solid@2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
     dependencies:
-      '@storybook/builder-vite': 10.1.0-beta.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/builder-vite': 10.2.0-alpha.0(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@storybook/types': 9.0.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
       magic-string: 0.30.19
       solid-js: 1.9.10

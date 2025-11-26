@@ -1,8 +1,9 @@
 import { Context, Data, type Effect, Schema as S } from "effect";
 import type { NoSuchElementException } from "effect/Cause";
 
-import type { DataInputRef, DataOutputRef } from "./IO";
-import type { Graph, Package, Schema } from "./updated/index.ts";
+import type { DataInput, DataOutput } from "./IO.ts";
+import type { T } from "./updated/IO.ts";
+import type { Graph } from "./updated/index.ts";
 import type * as Node from "./updated/Node.ts";
 
 export class NotComputationNode extends Data.TaggedError(
@@ -52,16 +53,16 @@ export class ExecutionContext extends Context.Tag("ExecutionContext")<
 	{
 		traceId: string;
 		// getProperty<T>(property: SchemaProperty<T>): Effect.Effect<T>;
-		getInput<T extends S.Schema<any>>(
-			input: DataInputRef<T>,
+		getInput<T extends T.Any>(
+			input: DataInput<T>,
 		): Effect.Effect<
-			T["Encoded"],
+			T.Infer<T>,
 			never,
 			NodeExecutionContext | RunFunctionAvailableRequirements
 		>;
-		setOutput<T extends S.Schema<any>>(
-			output: DataOutputRef<T>,
-			data: T,
+		setOutput<T extends T.Any>(
+			output: DataOutput<T>,
+			data: T.Infer<T>,
 		): Effect.Effect<void, never, NodeExecutionContext>;
 		graph: Graph.Graph;
 	}

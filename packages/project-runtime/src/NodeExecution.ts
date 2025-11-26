@@ -1,12 +1,11 @@
 import { Array, Effect, HashMap, Iterable, Option, pipe, Record } from "effect";
 import {
-	ExecOutputRef,
+	ExecOutput,
 	ExecutionContext,
 	NodeExecutionContext,
 	type NodeSchema,
 	type NotComputationNode,
 	NotEventNode,
-	type PureSchema,
 } from "@macrograph/project-domain";
 import {
 	type Credential,
@@ -62,7 +61,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 			const resolveExecConnection = Effect.fnUntraced(function* (
 				graph: Graph.Graph,
 				node: Node.Node,
-				output: ExecOutputRef,
+				output: ExecOutput,
 			) {
 				const runtime = yield* ProjectRuntime.Current;
 
@@ -296,7 +295,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 						.pipe(
 							Effect.map((v) =>
 								Option.fromNullable(v).pipe(
-									Option.filter((v) => v instanceof ExecOutputRef),
+									Option.filter((v) => v instanceof ExecOutput),
 									Option.map((v) => [node, v] as const),
 								),
 							),
@@ -322,7 +321,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 						nextOutput = yield* runNode(nextNode.value, pkg, schema).pipe(
 							Effect.map((v) =>
 								Option.fromNullable(v).pipe(
-									Option.filter((v) => v instanceof ExecOutputRef),
+									Option.filter((v) => v instanceof ExecOutput),
 									Option.map((v) => [nextNode.value, v] as const),
 								),
 							),

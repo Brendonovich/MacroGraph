@@ -1,5 +1,5 @@
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
-import { Schema } from "effect";
+import { Schema as S } from "effect";
 
 import { EVENTSUB_CREATE_SUBSCRIPTION_BODY } from "./eventSub";
 
@@ -10,31 +10,31 @@ export class HelixApi extends HttpApi.make("helix")
 			.add(
 				HttpApiEndpoint.post("createSubscription", "/subscriptions")
 					.setPayload(
-						Schema.extend(
+						S.extend(
 							EVENTSUB_CREATE_SUBSCRIPTION_BODY,
-							Schema.Struct({
-								transport: Schema.Union(
-									Schema.Struct({
-										method: Schema.Literal("websocket"),
-										session_id: Schema.String,
+							S.Struct({
+								transport: S.Union(
+									S.Struct({
+										method: S.Literal("websocket"),
+										session_id: S.String,
 									}),
-									Schema.Struct({
-										method: Schema.Literal("conduit"),
-										conduit: Schema.String,
+									S.Struct({
+										method: S.Literal("conduit"),
+										conduit: S.String,
 									}),
-									Schema.Struct({
-										method: Schema.Literal("webhook"),
-										callback: Schema.String,
-										secret: Schema.String,
+									S.Struct({
+										method: S.Literal("webhook"),
+										callback: S.String,
+										secret: S.String,
 									}),
 								),
 							}),
 						),
 					)
 					.addSuccess(
-						Schema.Struct({
-							data: Schema.Array(
-								Schema.Struct({
+						S.Struct({
+							data: S.Array(
+								S.Struct({
 									// id: S.String,
 									// status: S.Literal(
 									//   "enabled",
@@ -55,36 +55,36 @@ export class HelixApi extends HttpApi.make("helix")
 			)
 			.add(
 				HttpApiEndpoint.get("getSubscriptions", "/subscriptions").addSuccess(
-					Schema.Struct({
-						data: Schema.Array(
-							Schema.Struct({
-								id: Schema.String,
-								status: Schema.String,
+					S.Struct({
+						data: S.Array(
+							S.Struct({
+								id: S.String,
+								status: S.String,
 								// S.Literal(
 								//   "enabled",
 								//   "websocket_disconnected",
 								//   "websocket_failed_ping_pong",
 								// ),
-								type: Schema.String,
-								version: Schema.String,
-								condition: Schema.Any,
-								created_at: Schema.DateFromString,
-								transport: Schema.Union(
-									Schema.Struct({
-										method: Schema.Literal("webhook"),
-										callback: Schema.String,
+								type: S.String,
+								version: S.String,
+								condition: S.Any,
+								created_at: S.DateFromString,
+								transport: S.Union(
+									S.Struct({
+										method: S.Literal("webhook"),
+										callback: S.String,
 									}),
-									Schema.Struct({
-										method: Schema.Literal("websocket"),
-										session_id: Schema.String,
-										connected_at: Schema.DateFromString,
+									S.Struct({
+										method: S.Literal("websocket"),
+										session_id: S.String,
+										connected_at: S.DateFromString,
 									}),
 								),
 							}),
 						),
-						total: Schema.Int,
-						total_cost: Schema.Int,
-						max_total_cost: Schema.Int,
+						total: S.Int,
+						total_cost: S.Int,
+						max_total_cost: S.Int,
 					}),
 				),
 			)
@@ -92,7 +92,7 @@ export class HelixApi extends HttpApi.make("helix")
 				HttpApiEndpoint.del(
 					"deleteSubscription",
 					"/subscriptions",
-				).setUrlParams(Schema.Struct({ id: Schema.String })),
+				).setUrlParams(S.Struct({ id: S.String })),
 			)
 			.prefix("/eventsub"),
 	)
@@ -101,16 +101,16 @@ export class HelixApi extends HttpApi.make("helix")
 			.add(
 				HttpApiEndpoint.get("getUsers", "/")
 					.setUrlParams(
-						Schema.Struct({
-							id: Schema.optional(Schema.Array(Schema.String)),
-							login: Schema.optional(Schema.Array(Schema.String)),
+						S.Struct({
+							id: S.optional(S.Array(S.String)),
+							login: S.optional(S.Array(S.String)),
 						}),
 					)
 					.addSuccess(
-						Schema.Array(
-							Schema.Struct({
-								id: Schema.String,
-								login: Schema.String,
+						S.Array(
+							S.Struct({
+								id: S.String,
+								login: S.String,
 							}),
 						),
 					),

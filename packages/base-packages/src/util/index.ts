@@ -1,11 +1,5 @@
-import { Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
-import {
-	getInput,
-	Package,
-	PackageEngine,
-	setOutput,
-} from "@macrograph/package-sdk";
+import { getInput, Package, setOutput, t } from "@macrograph/package-sdk";
 
 // const Engine = PackageEngine.define<never>()({
 // 	events: Schema.Number,
@@ -29,7 +23,7 @@ export default Package.make({
 			io: (c) => ({
 				execIn: c.in.exec("exec"),
 				execOut: c.out.exec("exec"),
-				in: c.in.data("in", Schema.String, {
+				in: c.in.data("in", t.String, {
 					name: "Input",
 				}),
 			}),
@@ -46,9 +40,9 @@ export default Package.make({
 			name: "Concat Strings",
 			type: "pure",
 			io: (c) => ({
-				str1: c.in.data("str1", Schema.String),
-				str2: c.in.data("str2", Schema.String),
-				result: c.out.data("result", Schema.String),
+				str1: c.in.data("str1", t.String),
+				str2: c.in.data("str2", t.String),
+				result: c.out.data("result", t.String),
 			}),
 			run: function* ({ io }) {
 				yield* setOutput(
@@ -77,8 +71,8 @@ export default Package.make({
 			name: "Int To String",
 			type: "pure",
 			io: (c) => ({
-				int: c.in.data("int", Schema.Int),
-				str: c.out.data("str", Schema.String),
+				int: c.in.data("int", t.Int),
+				str: c.out.data("str", t.String),
 			}),
 			run: function* ({ io }) {
 				yield* setOutput(io.str, String(yield* getInput(io.int)));

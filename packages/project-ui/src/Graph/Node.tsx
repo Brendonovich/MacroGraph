@@ -1,6 +1,11 @@
 import { Match } from "effect";
 import type { Mutable } from "effect/Types";
-import type { IO, Node, Schema } from "@macrograph/project-domain/updated";
+import {
+	GraphPosition,
+	IO,
+	type Node,
+	type Schema,
+} from "@macrograph/project-domain/updated";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { cx } from "cva";
 import {
@@ -10,16 +15,16 @@ import {
 	createRoot,
 	createSignal,
 	For,
+	type JSX,
 	onCleanup,
 	type ParentProps,
+	Show,
 } from "solid-js";
 import type { DOMElement } from "solid-js/jsx-runtime";
 
 import { useGraphContext } from "./Context";
 import { ioPositions } from "./GraphView";
 import { isTouchDevice } from "./utils";
-
-type DataType = "string" | "int" | "float" | "bool";
 
 export function NodeRoot(
 	props: ParentProps<{
@@ -69,10 +74,10 @@ export function NodeRoot(
 
 			const rect = element.getBoundingClientRect();
 
-			const position = {
+			const position = GraphPosition.make({
 				x: props.position.x + (rect.left - nodeBounds().left) + rect.width / 2,
 				y: props.position.y + (rect.top - nodeBounds().top) + rect.height / 2,
-			};
+			});
 
 			ioPositions.set(`${props.id}:${type}:${id}`, position);
 		});
@@ -139,44 +144,39 @@ export function NodeRoot(
 							const [draggingPointers, setDraggingPointers] =
 								createSignal<number[]>();
 
+							const connected = () =>
+								(draggingPointers()?.length ?? 0) > 0 ||
+								props.connections?.in?.includes(input.id);
+
+							const pointerHandlers: Pick<
+								JSX.CustomEventHandlersCamelCase<any>,
+								"onPointerDown" | "onPointerUp" | "onDblClick"
+							> = {
+								onPointerDown: (e) => {
+									if (
+										onPinPointerDown(e, input.id, "i", () =>
+											setDraggingPointers((s) =>
+												s?.filter((p) => p !== e.pointerId),
+											),
+										)
+									) {
+										setDraggingPointers((s) =>
+											s ? [...s, e.pointerId] : [e.pointerId],
+										);
+									}
+								},
+								onPointerUp: (e) => props.onPinPointerUp?.(e, "i", input.id),
+								onDblClick: () => props.onPinDoubleClick?.("i", input.id),
+							};
+
 							return (
 								<div class="flex flex-row items-center space-x-1.5 h-4.5">
-									<div
+									<IOPin
+										connected={connected()}
 										ref={setRef}
-										class={cx(
-											"relative size-3.5 border-[2.5px] rounded-full border-current @hover-bg-current",
-											"text-white",
-											// input.variant._tag === "Data" &&
-											// 	matchTypeColor(input.variant.type),
-											((draggingPointers()?.length ?? 0) > 0 ||
-												props.connections?.in?.includes(input.id)) &&
-												"bg-current",
-										)}
-									>
-										<div
-											class={cx(
-												"absolute",
-												isTouchDevice ? "-inset-2" : "inset-0",
-											)}
-											onPointerDown={(e) => {
-												if (
-													onPinPointerDown(e, input.id, "i", () =>
-														setDraggingPointers((s) =>
-															s?.filter((p) => p !== e.pointerId),
-														),
-													)
-												) {
-													setDraggingPointers((s) =>
-														s ? [...s, e.pointerId] : [e.pointerId],
-													);
-												}
-											}}
-											onPointerUp={(e) =>
-												props.onPinPointerUp?.(e, "i", input.id)
-											}
-											onDblClick={() => props.onPinDoubleClick?.("i", input.id)}
-										/>
-									</div>
+										variant={input.variant}
+										pointerHandlers={pointerHandlers}
+									/>
 									<span>{input.name}</span>
 								</div>
 							);
@@ -194,46 +194,42 @@ export function NodeRoot(
 							const [draggingPointers, setDraggingPointers] =
 								createSignal<number[]>();
 
+							const connected = () =>
+								(draggingPointers()?.length ?? 0) > 0 ||
+								props.connections?.out?.includes(output.id);
+
+							const pointerHandlers: Pick<
+								JSX.CustomEventHandlersCamelCase<any>,
+								"onPointerDown" | "onPointerUp" | "onDblClick"
+							> = {
+								onPointerDown: (e) => {
+									if (
+										onPinPointerDown(e, output.id, "o", () =>
+											setDraggingPointers((s) =>
+												s?.filter((p) => p !== e.pointerId),
+											),
+										)
+									) {
+										setDraggingPointers((s) =>
+											s ? [...s, e.pointerId] : [e.pointerId],
+										);
+									}
+								},
+								onPointerUp: (e) => props.onPinPointerUp?.(e, "o", output.id),
+								onDblClick: () => props.onPinDoubleClick?.("o", output.id),
+							};
+
 							return (
 								<div class="flex flex-row items-center space-x-1.5 h-4.5">
-									<span>{output.name}</span>
-									<div
+									<Show when={output.name}>
+										<span>{output.name}</span>
+									</Show>
+									<IOPin
+										connected={connected()}
 										ref={setRef}
-										class={cx(
-											"relative size-3.5 border-[2.5px] rounded-full border-current @hover-bg-current",
-											"text-white",
-											// output.variant === "data" && matchTypeColor(output.data),
-											((draggingPointers()?.length ?? 0) > 0 ||
-												props.connections?.out?.includes(output.id)) &&
-												"bg-current",
-										)}
-									>
-										<div
-											class={cx(
-												"absolute",
-												isTouchDevice ? "-inset-2" : "inset-0",
-											)}
-											onPointerDown={(e) => {
-												if (
-													onPinPointerDown(e, output.id, "o", () =>
-														setDraggingPointers((s) =>
-															s?.filter((p) => p !== e.pointerId),
-														),
-													)
-												) {
-													setDraggingPointers((s) =>
-														s ? [...s, e.pointerId] : [e.pointerId],
-													);
-												}
-											}}
-											onPointerUp={(e) =>
-												props.onPinPointerUp?.(e, "o", output.id)
-											}
-											onDblClick={() =>
-												props.onPinDoubleClick?.("o", output.id)
-											}
-										/>
-									</div>
+										variant={output.variant}
+										pointerHandlers={pointerHandlers}
+									/>
 								</div>
 							);
 						}}
@@ -270,10 +266,97 @@ const matchNodeVariantColor = Match.type<Schema.Type>().pipe(
 	Match.exhaustive,
 );
 
-const matchTypeColor = Match.type<DataType>().pipe(
-	Match.when("bool", () => "text-red-600"),
-	Match.when("float", () => "text-green-600"),
-	Match.when("int", () => "text-teal-300"),
-	Match.when("string", () => "text-pink-500"),
+const matchTypeColor = Match.type<IO.T.Primitive["_tag"]>().pipe(
+	Match.when("Bool", () => "text-red-600"),
+	Match.when("Float", () => "text-green-600"),
+	Match.when("Int", () => "text-teal-300"),
+	Match.when("String", () => "text-pink-500"),
+	Match.when("DateTime", () => "text-blue-500"),
 	Match.exhaustive,
 );
+
+type IOPinPointerHanlders = Pick<
+	JSX.CustomEventHandlersCamelCase<any>,
+	"onPointerDown" | "onPointerUp" | "onDblClick"
+>;
+
+const IOPin = (
+	props: {
+		connected?: boolean;
+		variant: IO.Exec | IO.Data;
+		pointerHandlers: IOPinPointerHanlders;
+	} & Pick<ComponentProps<"div">, "ref"> &
+		IOPinPointerHanlders,
+) => {
+	return (
+		<div
+			ref={props.ref}
+			class={cx(
+				"size-3.5",
+				// output.variant === "data" && matchTypeColor(output.data),
+			)}
+		>
+			<Show when={props.variant._tag === "Exec"}>
+				<ExecPin connected={props.connected} {...props.pointerHandlers} />
+			</Show>
+			<Show when={props.variant._tag === "Data" && props.variant}>
+				{(variant) => (
+					<DataPin
+						connected={props.connected}
+						type={variant().type}
+						{...props.pointerHandlers}
+					/>
+				)}
+			</Show>
+		</div>
+	);
+};
+
+const DataPin = (
+	props: { connected?: boolean; type: IO.T.Any } & Pick<
+		ComponentProps<"div">,
+		"onPointerDown" | "onPointerUp" | "onDblClick"
+	>,
+) => {
+	return (
+		<div
+			class={cx(
+				"relative size-full border-[2.5px] rounded-full border-current @hover-bg-current",
+				props.connected && "bg-current",
+				matchTypeColor(IO.T.primaryTypeOf(props.type)._tag),
+			)}
+		>
+			<div
+				class={cx("absolute", isTouchDevice ? "-inset-2" : "inset-0")}
+				{...props}
+			/>
+		</div>
+	);
+};
+
+const ExecPin = (
+	props: { connected?: boolean } & Pick<
+		ComponentProps<"svg">,
+		"onPointerDown" | "onPointerUp" | "onDblClick"
+	>,
+) => {
+	return (
+		<svg
+			aria-hidden="true"
+			style={{ "pointer-events": "all" }}
+			viewBox="0 0 14 17.5"
+			class={cx(
+				"w-full text-white @hover-fill-current pointer-events-[all]",
+				props.connected && "fill-current",
+			)}
+			xmlns="http://www.w3.org/2000/svg"
+			{...props}
+		>
+			<path
+				d="M12.6667 8.53812C13.2689 9.03796 13.2689 9.96204 12.6667 10.4619L5.7983 16.1622C4.98369 16.8383 3.75 16.259 3.75 15.2003L3.75 3.79967C3.75 2.74104 4.98369 2.16171 5.79831 2.83779L12.6667 8.53812Z"
+				stroke="white"
+				stroke-width="1.5"
+			/>
+		</svg>
+	);
+};

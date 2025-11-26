@@ -1,14 +1,10 @@
-import { Context, Data, type Effect, Layer, type Schema } from "effect";
+import { Context, Data, type Effect, Layer } from "effect";
 import type { YieldWrap } from "effect/Utils";
 
-import type {
-	DataInputRef,
-	DataOutputRef,
-	ExecInputRef,
-	ExecOutputRef,
-} from "./IO";
+import type { DataInput, DataOutput, ExecInput, ExecOutput } from "./IO";
 import type { SchemaRunGeneratorEffect } from "./runtime";
 import type { Credential } from "./updated";
+import type { T } from "./updated/IO";
 
 export type NodeSchema<
 	TIO = any,
@@ -30,20 +26,20 @@ export type EffectGenerator<
 
 export interface IOFunctionContext {
 	in: {
-		exec: (id: string, options?: { name?: string }) => ExecInputRef;
-		data: <T extends Schema.Any>(
+		exec: (id: string, options?: { name?: string }) => ExecInput;
+		data: <T extends T.Any>(
 			id: string,
 			type: T,
 			options?: { name?: string },
-		) => DataInputRef<T>;
+		) => DataInput<T>;
 	};
 	out: {
-		exec: (id: string, options?: { name?: string }) => ExecOutputRef;
-		data: <T extends Schema.Any>(
+		exec: (id: string, options?: { name?: string }) => ExecOutput;
+		data: <T extends T.Any>(
 			id: string,
 			type: T,
 			options?: { name?: string },
-		) => DataOutputRef<T>;
+		) => DataOutput<T>;
 	};
 }
 
@@ -92,7 +88,7 @@ export interface ExecSchemaDefinition<
 	run: (ctx: {
 		io: TIO;
 		properties: TProperties;
-	}) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef | void>;
+	}) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutput | void>;
 }
 
 export interface ExecSchema<
@@ -133,7 +129,7 @@ export interface EventSchemaDefinition<
 			properties: TProperties;
 		},
 		data: TEvent,
-	) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef>;
+	) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutput>;
 }
 
 export interface EventSchema<

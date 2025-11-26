@@ -1,10 +1,9 @@
 import { Effect } from "effect";
 import {
-	DataInputRef,
-	DataOutputRef,
-	ExecInputRef,
-	ExecOutputRef,
-	IOId,
+	DataInput,
+	DataOutput,
+	ExecInput,
+	ExecOutput,
 	type NodeSchema,
 } from "@macrograph/project-domain";
 import { IO } from "@macrograph/project-domain/updated";
@@ -28,16 +27,16 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 								name: options?.name,
 								variant: new IO.Exec(),
 							});
-							return new ExecOutputRef(IOId.make(id), options);
+							return new ExecOutput({ id });
 						},
 						data: (_id, type, options) => {
 							const id = IO.Id.make(_id);
 							io.outputs.push({
 								id,
 								name: options?.name,
-								variant: new IO.Data({ type: "String" }),
+								variant: new IO.Data({ type }),
 							});
-							return new DataOutputRef(id, type, options);
+							return new DataOutput({ id, type });
 						},
 					},
 					in: {
@@ -48,16 +47,16 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 								name: options?.name,
 								variant: new IO.Exec(),
 							});
-							return new ExecInputRef(id, options);
+							return new ExecInput({ id });
 						},
 						data: (_id, type, options) => {
 							const id = IO.Id.make(_id);
 							io.inputs.push({
 								id,
 								name: options?.name,
-								variant: new IO.Data({ type: "String" }),
+								variant: new IO.Data({ type }),
 							});
-							return new DataInputRef(IOId.make(id), type, options);
+							return new DataInput({ id, type });
 						},
 					},
 				});

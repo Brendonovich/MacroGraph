@@ -1,30 +1,32 @@
 import type { Rpc, RpcGroup } from "@effect/rpc";
 import { Data, Effect, type Layer, type Schema, type Scope } from "effect";
 import {
-	type DataInputRef,
-	type DataOutputRef,
+	type DataInput,
+	type DataOutput,
 	ExecutionContext,
 	type ForceRetryError,
 	type Resource,
 	type SchemaDefinition,
 	type SchemaProperty,
 } from "@macrograph/project-domain";
-import type { Credential } from "@macrograph/project-domain/updated";
+import { type Credential, IO } from "@macrograph/project-domain/updated";
 import type { CREDENTIAL } from "@macrograph/web-domain";
 
+export * as DataTime from "effect/DateTime";
+export * as Option from "effect/Option";
 export { Resource } from "@macrograph/project-domain";
 
-export const getInput = <T extends Schema.Schema<any>>(ref: DataInputRef<T>) =>
+export const getInput = <T extends IO.T.Any>(ref: DataInput<T>) =>
 	Effect.flatMap(ExecutionContext, (ctx) => ctx.getInput(ref));
 
 // export const getProperty = <T extends Resource.Resource<any, any>>(
 // 	property: SchemaProperty<T>,
 // ) => Effect.flatMap(ExecutionContext, (ctx) => ctx.getProperty(property));
 
-export const setOutput = <T extends Schema.Schema<any>>(
-	ref: DataOutputRef<T>,
-	data: T["Type"],
-) => Effect.flatMap(ExecutionContext, (ctx) => ctx.setOutput(ref, data));
+export const setOutput = <T extends IO.T.Any>(
+	ref: DataOutput<T>,
+	data: IO.T.Infer<T>,
+) => Effect.flatMap(ExecutionContext, (ctx) => ctx.setOutput<T>(ref, data));
 
 export namespace PackageEngine {
 	export class PackageEngineDefinition<
@@ -180,3 +182,19 @@ export namespace Property {
 		resource: Resource.Resource<any, TValue>,
 	) => {};
 }
+
+export const t = {
+	String: new IO.T.String(),
+	Int: new IO.T.Int(),
+	Bool: new IO.T.Bool(),
+	Float: new IO.T.Float(),
+	DateTime: new IO.T.DateTime(),
+	Option: <T extends IO.T.Any>(t: T) => new IO.T.Option<T>({ inner: t }),
+	List: <T extends IO.T.Any>(t: T) => new IO.T.List<T>({ inner: t }),
+	// List: <T extends IO.DataType.Any>(t: T) =>
+	// 	["L", t] satisfies IO.DataType.List<T>,
+	// Map: <K extends IO.DataType.MapKey, V extends IO.DataType.Any>(k: K, v: V) =>
+	// 	["M", k, v] satisfies IO.DataType.Map<K, V>,
+	// _List: <T extends IO.DataType.Encoded.Any>(t: T) =>
+	// 	new IO.DataType._List<T>({ value: t }),
+};

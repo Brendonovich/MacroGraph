@@ -1,7 +1,8 @@
 import { Schema } from "effect";
 
-import { IOId, Shape as IOShape } from "../IO";
+import { Shape as IOShape } from "../IO";
 import { Position, SchemaRef } from "../types";
+import { Id as IOId } from "../updated/IO";
 
 export const Variant = Schema.Literal("exec", "base", "pure", "event");
 export type Variant = Schema.Schema.Type<typeof Variant>;
