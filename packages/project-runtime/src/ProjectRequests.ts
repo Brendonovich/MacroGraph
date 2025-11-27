@@ -71,6 +71,13 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 														id,
 														name: schema.name,
 														type: schema.type,
+														properties: Object.entries(
+															schema.properties ?? {},
+														).map(([id, property]) => ({
+															id,
+															name: property.name,
+															resource: property.resource.id,
+														})),
 													},
 												] as const,
 										),
@@ -81,6 +88,19 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 										id,
 										name: pkg.name,
 										schemas,
+										resources: pkg.engine.pipe(
+											Option.map((e) =>
+												pipe(
+													e.def.resources ?? [],
+													Iterable.map(
+														(resource) =>
+															[resource.id, { name: resource.name }] as const,
+													),
+													(i) => new Map(i),
+												),
+											),
+											Option.getOrElse(() => new Map()),
+										),
 									});
 								}),
 								(v) => [...v],

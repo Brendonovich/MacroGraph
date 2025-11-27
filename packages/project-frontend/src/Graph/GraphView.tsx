@@ -34,11 +34,6 @@ import { NodeHeader, NodeRoot } from "./Node";
 import type { GraphTwoWayConnections } from "./types";
 import { isTouchDevice } from "./utils";
 
-export const ioPositions = new ReactiveMap<
-	IORefString,
-	{ x: number; y: number }
->();
-
 export type GraphViewState = {
 	scale?: number;
 	translate?: { x: number; y: number };

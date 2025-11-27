@@ -6,7 +6,7 @@ import * as HashMap from "effect/HashMap";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 import type { PackageEngine } from "@macrograph/package-sdk";
-import type { NodeSchema } from "@macrograph/project-domain";
+import type { NodeSchema, Resource } from "@macrograph/project-domain";
 import {
 	Graph,
 	type IO,
@@ -34,7 +34,12 @@ export interface RuntimePackage {
 export interface RuntimePackageEngine
 	extends PackageEngine.BuiltEngine<any, any, any> {
 	events: PubSub.PubSub<any>;
-	def: PackageEngine.PackageEngineDefinition<any, any, any, any>;
+	def: PackageEngine.PackageEngineDefinition<
+		any,
+		any,
+		any,
+		Resource.Resource<string, any>
+	>;
 }
 
 // @effect-leakable-service

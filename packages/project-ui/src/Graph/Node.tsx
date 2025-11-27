@@ -23,7 +23,6 @@ import {
 import type { DOMElement } from "solid-js/jsx-runtime";
 
 import { useGraphContext } from "./Context";
-import { ioPositions } from "./GraphView";
 import { isTouchDevice } from "./utils";
 
 export function NodeRoot(
@@ -79,11 +78,11 @@ export function NodeRoot(
 				y: props.position.y + (rect.top - nodeBounds().top) + rect.height / 2,
 			});
 
-			ioPositions.set(`${props.id}:${type}:${id}`, position);
+			graphCtx.ioPositions.set(`${props.id}:${type}:${id}`, position);
 		});
 
 		onCleanup(() => {
-			ioPositions.delete(`${props.id}:${type}:${id}`);
+			graphCtx.ioPositions.delete(`${props.id}:${type}:${id}`);
 		});
 	}
 

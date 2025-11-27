@@ -14,7 +14,7 @@ import {
 } from "solid-js";
 import type { DOMElement } from "solid-js/jsx-runtime";
 
-import { ioPositions } from "./GraphView";
+import { useGraphContext } from "./Context";
 import { isTouchDevice } from "./utils";
 
 type DataType = "string" | "int" | "float" | "bool";
@@ -46,6 +46,8 @@ export function NodeRoot(
 		} & Node.IO
 	>,
 ) {
+	const { ioPositions } = useGraphContext();
+
 	const nodeBounds = () => {
 		return {
 			left: props.position.x + props.graphBounds.left,

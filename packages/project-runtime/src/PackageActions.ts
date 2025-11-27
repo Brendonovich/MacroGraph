@@ -2,7 +2,6 @@ import {
 	Effect,
 	HashMap,
 	Iterable,
-	Mailbox,
 	Option,
 	PubSub,
 	pipe,
@@ -118,7 +117,7 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 										}).pipe(
 											Effect.withSpan("Package.Event", {
 												root: true,
-												attributes: { package: id, event },
+												attributes: { package: id, event: e },
 											}),
 											Effect.catchAllDefect(Effect.logError),
 										),
@@ -146,9 +145,36 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 							schemas.entries(),
 							Iterable.map(
 								([id, schema]) =>
-									[id, { id, name: schema.name, type: schema.type }] as const,
+									[
+										id,
+										{
+											id,
+											name: schema.name,
+											type: schema.type,
+											properties: Object.entries(schema.properties ?? {}).map(
+												([id, property]) => ({
+													id,
+													name: property.name,
+													resource: property.resource.id,
+												}),
+											),
+										},
+									] as const,
 							),
 							(v) => new Map(v),
+						),
+						resources: engine.pipe(
+							Option.map((e) =>
+								pipe(
+									e.def.resources ?? [],
+									Iterable.map(
+										(resource) =>
+											[resource.id, { name: resource.name }] as const,
+									),
+									(i) => new Map(i),
+								),
+							),
+							Option.getOrElse(() => new Map()),
 						),
 					});
 

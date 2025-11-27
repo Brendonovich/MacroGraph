@@ -69,7 +69,7 @@ export namespace PackageEngine {
 			any,
 			TEvents,
 			RpcGroup.RpcGroup<Rpc.Any>,
-			Resource.Resource<any, any>
+			Resource.Resource<string, any>
 		>;
 		builder: BuildEngineFn<any, TEvents, RpcGroup.RpcGroup<Rpc.Any>, any>;
 	}> {}

@@ -19,7 +19,18 @@ export class Package extends S.Class<Package>("Package")({
 				id: Schema.Id,
 				type: Schema.Type,
 				name: S.String,
+				properties: S.Array(
+					S.Struct({
+						id: S.String,
+						name: S.String,
+						resource: S.String,
+					}),
+				),
 			}),
 		}),
 	),
+	resources: S.Map({
+		key: S.String,
+		value: S.Struct({ name: S.String }),
+	}),
 }) {}

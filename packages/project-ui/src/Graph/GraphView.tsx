@@ -36,8 +36,6 @@ import { NodeHeader, NodeRoot } from "./Node";
 import type { GraphTwoWayConnections } from "./types";
 import { isTouchDevice } from "./utils";
 
-export const ioPositions = new ReactiveMap<IO.RefString, GraphPosition>();
-
 export type GraphViewState = {
 	scale?: number;
 	translate?: { x: number; y: number };
@@ -121,7 +119,7 @@ export function GraphView(
 		})();
 
 		if (draggingIO) {
-			const position = ioPositions.get(draggingIO);
+			const position = graphCtx.ioPositions.get(draggingIO);
 
 			if (position) {
 				const mousePos = {
@@ -131,8 +129,8 @@ export function GraphView(
 
 				ret.push(
 					draggingIO.includes(":o:")
-						? { from: position, to: mousePos, opacity: 0.5 }
-						: { to: position, from: mousePos, opacity: 0.5 },
+						? { from: { ...position }, to: mousePos, opacity: 0.5 }
+						: { to: { ...position }, from: mousePos, opacity: 0.5 },
 				);
 			}
 		}
@@ -142,27 +140,28 @@ export function GraphView(
 		)) {
 			if (!outConnections.out) continue;
 			for (const [outId, inputs] of Object.entries(outConnections.out)) {
-				const outPosition = ioPositions.get(
+				const outPosition = graphCtx.ioPositions.get(
 					`${Node.Id.make(Number(outNodeId))}:o:${IO.Id.make(outId)}`,
 				);
 				if (!outPosition) continue;
 
 				for (const [inNodeId, inId] of inputs) {
-					const inPosition = ioPositions.get(`${inNodeId}:i:${inId}`);
+					const inPosition = graphCtx.ioPositions.get(`${inNodeId}:i:${inId}`);
 					if (!inPosition) continue;
 
-					ret.push({ from: outPosition, to: inPosition });
+					ret.push({ from: { ...outPosition }, to: { ...inPosition } });
 				}
 			}
 		}
 
-		if (graphCtx.translate)
+		if (graphCtx.translate) {
 			for (const val of ret) {
 				val.from.x -= graphCtx.translate.x;
 				val.from.y -= graphCtx.translate.y;
 				val.to.x -= graphCtx.translate.x;
 				val.to.y -= graphCtx.translate.y;
 			}
+		}
 
 		//   if (name !== "ConnectIO") continue;
 
@@ -339,7 +338,7 @@ export function GraphView(
 													props.connections?.[node.id]?.in ?? {},
 												),
 											].flatMap(([id, connections]) => {
-												if (connections.length > 0) return id;
+												if (connections.length > 0) return IO.Id.make(id);
 												return [];
 											}),
 											out: [
@@ -347,7 +346,7 @@ export function GraphView(
 													props.connections?.[node.id]?.out ?? {},
 												),
 											].flatMap(([id, connections]) => {
-												if (connections.length > 0) return id;
+												if (connections.length > 0) return IO.Id.make(id);
 												return [];
 											}),
 										}}
@@ -557,7 +556,7 @@ function Connections(props: {
 }) {
 	const [ref, setRef] = createSignal<HTMLCanvasElement | null>(null);
 
-	createEffect(() => {
+	function render() {
 		const canvas = ref();
 		if (!canvas) return;
 
@@ -565,9 +564,12 @@ function Connections(props: {
 		if (!ctx) return;
 
 		const scale = window.devicePixelRatio;
+		const scaledWidth = Math.floor(props.width * scale);
+		const scaledHeight = Math.floor(props.height * scale);
 
-		// canvas.width = Math.floor(props.width * scale);
-		// canvas.height = Math.floor(props.height * scale);
+		// Only set if changed
+		if (canvas.width !== scaledWidth) canvas.width = scaledWidth;
+		if (canvas.height !== scaledHeight) canvas.height = scaledHeight;
 
 		ctx.scale(scale, scale);
 
@@ -596,51 +598,11 @@ function Connections(props: {
 		}
 
 		ctx.scale(1 / scale, 1 / scale);
+	}
+
+	createEffect(() => {
+		render();
 	});
 
-	return (
-		<canvas
-			ref={setRef}
-			class="absolute inset-0 w-full h-full"
-			width={props.width * window.devicePixelRatio}
-			height={props.height * window.devicePixelRatio}
-		/>
-	);
+	return <canvas ref={setRef} class="absolute inset-0 w-full h-full" />;
 }
-
-const a = {
-	name: "Untitled Project",
-	graphs: [
-		[
-			0,
-			{
-				id: 0,
-				name: "New Graph",
-				nodes: [
-					[
-						12,
-						{
-							id: 12,
-							name: "Print",
-							schema: { pkg: "util", id: "print" },
-							position: { x: -2114.5096667309604, y: -847.8120492398739 },
-						},
-					],
-					[
-						14,
-						{
-							id: 14,
-							name: "Print",
-							schema: { pkg: "util", id: "print" },
-							position: { x: -1856.9159167309604, y: -809.2495492398739 },
-						},
-					],
-				],
-				connections: [[12, { exec: [[14, "exec"]] }]],
-				comments: [],
-			},
-		],
-	],
-	nextGraphId: 1,
-	nextNodeId: 15,
-};
