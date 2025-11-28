@@ -1,5 +1,9 @@
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
-import { Graph, type Node, Package } from "@macrograph/project-domain/updated";
+import {
+	type Graph,
+	type Node,
+	Package,
+} from "@macrograph/project-domain/updated";
 import {
 	ContextualSidebar,
 	CredentialsPage,
@@ -147,10 +151,7 @@ const [panes, setPanes] = createStore<Record<number, PaneState.PaneState>>({
 	0: {
 		id: 0,
 		selectedTab: 0,
-		tabs: [
-			{ tabId: 0, type: "graph", graphId: Graph.Id.make(0), selection: [] },
-			{ tabId: 1, type: "settings", page: "Credentials" },
-		],
+		tabs: [{ tabId: 1, type: "settings", page: "Credentials" }],
 	},
 	1: {
 		id: 1,
@@ -160,12 +161,6 @@ const [panes, setPanes] = createStore<Record<number, PaneState.PaneState>>({
 				tabId: 0,
 				type: "package",
 				packageId: Package.Id.make("twitch"),
-			},
-			{ tabId: 1, type: "graph", graphId: Graph.Id.make(0), selection: [] },
-			{
-				tabId: 2,
-				type: "settings",
-				page: "Credentials",
 			},
 		],
 	},
