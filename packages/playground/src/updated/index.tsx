@@ -28,6 +28,7 @@ import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { createMousePosition } from "@solid-primitives/mouse";
+import { isMobile } from "@solid-primitives/platform";
 import { makePersisted } from "@solid-primitives/storage";
 import {
 	QueryClient,
@@ -147,24 +148,27 @@ const [schemaMenu, setSchemaMenu] = createSignal<
 	| { open: true; position: { x: number; y: number }; paneId: number }
 >({ open: false });
 
-const [panes, setPanes] = createStore<Record<number, PaneState.PaneState>>({
-	0: {
-		id: 0,
-		selectedTab: 0,
-		tabs: [{ tabId: 1, type: "settings", page: "Credentials" }],
-	},
-	1: {
-		id: 1,
-		selectedTab: 1,
-		tabs: [
-			{
-				tabId: 0,
-				type: "package",
-				packageId: Package.Id.make("twitch"),
-			},
-		],
-	},
-});
+const [panes, setPanes] = makePersisted(
+	createStore<Record<number, PaneState.PaneState>>({
+		0: {
+			id: 0,
+			selectedTab: 0,
+			tabs: [{ tabId: 1, type: "settings", page: "Credentials" }],
+		},
+		1: {
+			id: 1,
+			selectedTab: 1,
+			tabs: [
+				{
+					tabId: 0,
+					type: "package",
+					packageId: Package.Id.make("twitch"),
+				},
+			],
+		},
+	}),
+	{ name: "editor-panes" },
+);
 
 function Inner() {
 	const actions = useService(ProjectActions);
@@ -201,15 +205,16 @@ function Inner() {
 		initialize.mutate();
 	});
 
-	const [paneLayout, setPaneLayout] = createStore<
-		PaneLayout.PaneLayout<number> | Record<string, never>
-	>({
-		variant: "horizontal",
-		panes: [
-			{ size: 0.5, variant: "single", pane: 0 },
-			{ size: 0.5, variant: "single", pane: 1 },
-		],
-	});
+	const [paneLayout, setPaneLayout] = makePersisted(
+		createStore<PaneLayout.PaneLayout<number> | Record<string, never>>({
+			variant: "horizontal",
+			panes: [
+				{ size: 0.5, variant: "single", pane: 0 },
+				{ size: 0.5, variant: "single", pane: 1 },
+			],
+		}),
+		{ name: "editor-pane-layout" },
+	);
 
 	// this really needs improving
 	function removePane(id: number) {
@@ -302,7 +307,7 @@ function Inner() {
 		return prevRet;
 	}, null);
 	const [contextualSidebarOpen, setContextualSidebarOpen] = makePersisted(
-		createSignal(true),
+		createSignal(!isMobile),
 		{ name: "contextual-sidebar" },
 	);
 
@@ -315,10 +320,17 @@ function Inner() {
 
 	const [selectedSidebar, setSelectedSidebar] = createWritableMemo<
 		"graphs" | "packages" | null
-	>((v) => {
-		if (v === null) return null;
-		return getSelectedSidebar() ?? v;
-	}, getSelectedSidebar());
+	>(
+		(v) => {
+			if (v === null) return null;
+			return getSelectedSidebar() ?? v;
+		},
+		isMobile ? null : getSelectedSidebar(),
+	);
+
+	const lastSelectedSidebar = createMemo<"graphs" | "packages">((v) => {
+		return selectedSidebar() ?? v;
+	}, "graphs");
 
 	const [zoomedPane, setZoomedPane] = createSignal<null | number>(null);
 
@@ -410,6 +422,8 @@ function Inner() {
 		});
 	}
 
+	const isTouchDevice = isMobile || navigator.maxTouchPoints > 0;
+
 	return (
 		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
 			<div class="flex flex-row items-center h-9 z-10">
@@ -452,42 +466,59 @@ function Inner() {
 			<Show when={initialize.isSuccess}>
 				<div class="flex flex-row flex-1 h-full relative">
 					<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full overflow-x-hidden">
-						<Show when={selectedSidebar()}>
-							<div class="w-56 h-full flex flex-col items-stretch justify-start divide-y divide-gray-5 shrink-0 bg-gray-3">
-								<Switch>
-									<Match when={selectedSidebar() === "graphs"}>
-										<GraphsSidebar
-											graphs={state.graphs}
-											selected={(() => {
-												const s = focusedTab();
-												if (s?.type === "graph") return s.graphId;
-											})()}
-											onSelected={(graph) => {
-												openTab({
-													type: "graph",
-													graphId: graph.id,
-													selection: [],
-												});
-											}}
-											onNewClicked={() => {
-												actions.CreateGraph(rpc.CreateGraph);
-											}}
-										/>
-									</Match>
-									<Match when={selectedSidebar() === "packages"}>
-										<PackagesSidebar
-											packageId={(() => {
-												const s = focusedTab();
-												if (s?.type === "package") return s.packageId;
-											})()}
-											onChange={(packageId) =>
-												openTab({ type: "package", packageId })
-											}
-										/>
-									</Match>
-								</Switch>
-							</div>
-						</Show>
+						<div class="relative h-full shrink-0 bg-gray-3">
+							<Show when={selectedSidebar()}>
+								<div class="w-56 flex flex-col items-stretch justify-start divide-y divide-gray-5">
+									<Switch>
+										<Match when={selectedSidebar() === "graphs"}>
+											<GraphsSidebar
+												graphs={state.graphs}
+												selected={(() => {
+													const s = focusedTab();
+													if (s?.type === "graph") return s.graphId;
+												})()}
+												onSelected={(graph) => {
+													openTab({
+														type: "graph",
+														graphId: graph.id,
+														selection: [],
+													});
+												}}
+												onNewClicked={() => {
+													actions.CreateGraph(rpc.CreateGraph);
+												}}
+											/>
+										</Match>
+										<Match when={selectedSidebar() === "packages"}>
+											<PackagesSidebar
+												packageId={(() => {
+													const s = focusedTab();
+													if (s?.type === "package") return s.packageId;
+												})()}
+												onChange={(packageId) =>
+													openTab({ type: "package", packageId })
+												}
+											/>
+										</Match>
+									</Switch>
+								</div>
+							</Show>
+							<Show when={isTouchDevice}>
+								<button
+									type="button"
+									class="absolute left-full z-10 top-1/2 -translate-y-1/2 py-2 bg-gray-3 border border-gray-5"
+									onClick={() => {
+										setSelectedSidebar((s) =>
+											s === null ? lastSelectedSidebar() : null,
+										);
+									}}
+								>
+									<IconTablerChevronRight
+										class={cx("size-3.5", selectedSidebar() && "rotate-180")}
+									/>
+								</button>
+							</Show>
+						</div>
 
 						<Show
 							when={Object.keys(paneLayout).length > 0}
@@ -532,16 +563,34 @@ function Inner() {
 							</EditorPanes>
 						</Show>
 
-						<Show when={contextualSidebarOpen()}>
-							<ContextualSidebar>
-								<Show
-									when={zoomedPane() === null}
-									fallback={<div class="flex-1 bg-gray-4" />}
+						<div class="relative h-full shrink-0">
+							<Show when={contextualSidebarOpen()}>
+								<ContextualSidebar>
+									<Show
+										when={zoomedPane() === null}
+										fallback={<div class="flex-1 bg-gray-4" />}
+									>
+										<ContextualSidebar.Content state={contextualSidebar()} />
+									</Show>
+								</ContextualSidebar>
+							</Show>
+							<Show when={isTouchDevice}>
+								<button
+									type="button"
+									class="absolute right-full z-10 top-1/2 -translate-y-1/2 py-2 bg-gray-3 border border-gray-5"
+									onClick={() => {
+										setContextualSidebarOpen((o) => !o);
+									}}
 								>
-									<ContextualSidebar.Content state={contextualSidebar()} />
-								</Show>
-							</ContextualSidebar>
-						</Show>
+									<IconTablerChevronRight
+										class={cx(
+											"size-3.5",
+											!contextualSidebarOpen() && "rotate-180",
+										)}
+									/>
+								</button>
+							</Show>
+						</div>
 					</div>
 
 					<Show when={panes[zoomedPane() ?? -1]}>

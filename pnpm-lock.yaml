@@ -1369,6 +1369,9 @@ importers:
       '@solid-primitives/mouse':
         specifier: ^2.0.19
         version: 2.0.19(solid-js@1.9.10)
+      '@solid-primitives/platform':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.10)
       '@solid-primitives/storage':
         specifier: ^2.1.4
         version: 2.1.4(solid-js@1.9.10)
