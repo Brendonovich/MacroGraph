@@ -2,8 +2,7 @@ import { action, cache, query, redirect } from "@solidjs/router";
 import {
 	appendResponseHeader,
 	getCookie,
-	getHeader,
-	setResponseHeader,
+	getHeaders,
 	setResponseStatus,
 } from "@solidjs/start/http";
 import { and, eq } from "drizzle-orm";
@@ -27,11 +26,14 @@ async function _getAuthState() {
 
 	const requestEvent = getRequestEvent()!;
 	const event = requestEvent.nativeEvent;
+	console.log("headers", Object.fromEntries(event.req.headers.entries()));
 
 	let data: Awaited<ReturnType<ReturnType<typeof lucia>["validateSession"]>>;
 
+	console.log("headers", getHeaders());
+
 	// header auth
-	const authHeader = getHeader("Authorization");
+	const authHeader = event.req.headers.get("Authorization");
 	console.log({ authHeader });
 	if (authHeader?.startsWith("Bearer ")) {
 		const [, sessionId] = authHeader.split("Bearer ");
@@ -41,9 +43,9 @@ async function _getAuthState() {
 	// cookie auth
 	else {
 		if (requestEvent.request.method !== "GET") {
-			const originHeader = getHeader("Origin") ?? null;
+			const originHeader = event.req.headers.get("Origin") ?? null;
 			// NOTE: You may need to use `X-Forwarded-Host` instead
-			const hostHeader = getHeader("Host") ?? null;
+			const hostHeader = event.req.headers.get("Host") ?? null;
 			console.log({ originHeader, hostHeader });
 			if (
 				!originHeader ||
@@ -183,7 +185,7 @@ export const removeCredential = action(
 		"use server";
 		const { user } = await ensureAuthedOrRedirect();
 
-		await db
+		await db()
 			.delete(oauthCredentials)
 			.where(
 				and(
@@ -195,7 +197,7 @@ export const removeCredential = action(
 	},
 );
 
-export const getCredentials = cache(async () => {
+export const getCredentials = query(async () => {
 	"use server";
 
 	const { user } = await ensureAuthedOrRedirect();
@@ -207,7 +209,7 @@ export const getCredentials = cache(async () => {
 	return c;
 }, "credentials");
 
-export const getServers = cache(async () => {
+export const getServers = query(async () => {
 	"use server";
 
 	const { user } = await ensureAuthedOrRedirect();

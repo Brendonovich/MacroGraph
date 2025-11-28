@@ -31,7 +31,9 @@ const ExportButton = clientOnly(() =>
 const ShareButton = clientOnly(() =>
 	import("./Editor").then((i) => ({ default: i.ShareButton })),
 );
+
 import { Meta } from "@solidjs/meta";
+
 import { HeaderAuthFallback } from "../HeaderAuthSection";
 import { Logo } from "../Logo";
 

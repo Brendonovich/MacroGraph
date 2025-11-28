@@ -1,40 +1,46 @@
-import { Graph, Node } from "@macrograph/project-domain";
+import { Graph, IOId, Node } from "@macrograph/project-domain";
+import { Context, Schema } from "effect";
 
 export type NodeConnections = {
 	in?: Map<string, Array<[Node.Id, string]>>;
 	out?: Map<string, Array<[Node.Id, string]>>;
 };
 
-export type Project = {
-	name: string;
-	graphs: Map<
-		Graph.Id,
-		{
-			id: Graph.Id;
-			name: string;
-			nodes: Array<
-				{
-					id: Node.Id;
-					name?: string;
-					position: { x: number; y: number };
-					schema: { pkgId: string; schemaId: string };
-				} & Node.IO
-			>;
-			connections?: Map<Node.Id, NodeConnections>;
-		}
-	>;
-};
+export const ProjectShape = Schema.Struct({
+	name: Schema.String,
+	nodeIdCounter: Schema.Int,
+	graphs: Schema.Map({
+		key: Graph.Id,
+		value: Schema.Struct({
+			id: Graph.Id,
+			name: Schema.String,
+			nodes: Schema.Array(Node.Shape).pipe(Schema.mutable),
+			connections: Schema.optional(
+				Schema.Map({
+					key: Node.Id,
+					value: Schema.Struct({
+						in: Schema.Map({
+							key: IOId,
+							value: Schema.Array(
+								Schema.Tuple(Node.Id, IOId).pipe(Schema.mutable),
+							).pipe(Schema.mutable),
+						}),
+						out: Schema.Map({
+							key: IOId,
+							value: Schema.Array(
+								Schema.Tuple(Node.Id, IOId).pipe(Schema.mutable),
+							).pipe(Schema.mutable),
+						}),
+					}).pipe(Schema.mutable),
+				}),
+			),
+		}).pipe(Schema.mutable),
+	}),
+}).pipe(Schema.mutable);
 
-export const project: Project = {
-	name: "",
-	graphs: new Map([
-		[
-			Graph.Id.make(0),
-			{
-				id: Graph.Id.make(0),
-				name: "New Graph",
-				nodes: [],
-			},
-		],
-	]),
-};
+export type ProjectShape = Schema.Schema.Type<typeof ProjectShape>;
+
+export class ProjectData extends Context.Tag("ProjectData")<
+	ProjectData,
+	ProjectShape
+>() {}

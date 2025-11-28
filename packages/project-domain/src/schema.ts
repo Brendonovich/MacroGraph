@@ -1,18 +1,23 @@
-import type { Effect, Option, Schema } from "effect";
+import { Context, Data, type Effect, Layer } from "effect";
 import type { YieldWrap } from "effect/Utils";
-import type {
-	DataInputRef,
-	DataOutputRef,
-	ExecInputRef,
-	ExecOutputRef,
-} from "./IO";
+
+import type { DataInput, DataOutput, ExecInput, ExecOutput } from "./IO";
 import type { SchemaRunGeneratorEffect } from "./runtime";
+import type { Credential } from "./updated";
+import type { T } from "./updated/IO";
 
 export type NodeSchema<
 	TIO = any,
-	TEvents = never,
-	TEvent extends TEvents = never,
-> = ExecSchema<TIO> | PureSchema<TIO> | EventSchema<TIO, TEvents, TEvent>;
+	TEvents = any,
+	TEvent extends TEvents = any,
+	TProperties extends Record<string, SchemaProperty<any>> = Record<
+		string,
+		SchemaProperty<Resource.Resource<string, any>>
+	>,
+> =
+	| ExecSchema<TIO, TProperties>
+	| PureSchema<TIO, TProperties>
+	| EventSchema<TIO, TProperties, TEvents, TEvent>;
 
 export type EffectGenerator<
 	Eff extends Effect.Effect<any, any, any>,
@@ -21,96 +26,190 @@ export type EffectGenerator<
 
 export interface IOFunctionContext {
 	in: {
-		exec: (id: string, options?: { name?: string }) => ExecInputRef;
-		data: <T extends Schema.Any>(
+		exec: (id: string, options?: { name?: string }) => ExecInput;
+		data: <T extends T.Any>(
 			id: string,
 			type: T,
 			options?: { name?: string },
-		) => DataInputRef<T>;
+		) => DataInput<T>;
 	};
 	out: {
-		exec: (id: string, options?: { name?: string }) => ExecOutputRef;
-		data: <T extends Schema.Any>(
+		exec: (id: string, options?: { name?: string }) => ExecOutput;
+		data: <T extends T.Any>(
 			id: string,
 			type: T,
 			options?: { name?: string },
-		) => DataOutputRef<T>;
+		) => DataOutput<T>;
 	};
 }
 
-export interface SchemaDefinitionBase {
+export interface SchemaDefinitionBase<
+	TProperties extends Record<string, SchemaProperty<any>>,
+> {
 	type: string;
-	name?: string;
+	name: string;
+	properties?: TProperties;
 }
 
-export interface PureSchemaDefinition<TIO = any> extends SchemaDefinitionBase {
+export interface PureSchemaDefinition<
+	TIO,
+	TProperties extends Record<string, SchemaProperty<any>>,
+> extends SchemaDefinitionBase<TProperties> {
 	type: "pure";
 	io: (ctx: {
 		in: Extract<IOFunctionContext["in"], { data: any }>;
 		out: Extract<IOFunctionContext["out"], { data: any }>;
 	}) => TIO;
-	run: (io: TIO) => EffectGenerator<SchemaRunGeneratorEffect>;
+	run: (ctx: {
+		io: TIO;
+		properties: TProperties;
+	}) => EffectGenerator<SchemaRunGeneratorEffect>;
 }
 
-export interface PureSchema<TIO = any>
-	extends Omit<PureSchemaDefinition<TIO>, "run"> {
-	run: ReturnType<PureSchemaDefinition<TIO>["run"]> extends EffectGenerator<
-		infer TEff
-	>
-		? (...args: Parameters<PureSchemaDefinition<TIO>["run"]>) => TEff
-		: never;
-}
-
-export interface ExecSchemaDefinition<TIO = any> extends SchemaDefinitionBase {
-	type: "exec";
-	io: (ctx: IOFunctionContext) => TIO;
-	run: (
-		io: TIO,
-	) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef | void>;
-}
-
-export interface ExecSchema<TIO = any>
-	extends Omit<ExecSchemaDefinition<TIO>, "run"> {
-	run: ReturnType<ExecSchemaDefinition<TIO>["run"]> extends EffectGenerator<
-		infer TEff
-	>
-		? (...args: Parameters<ExecSchemaDefinition<TIO>["run"]>) => TEff
-		: never;
-}
-
-export interface EventSchemaDefinition<
-	TIO = any,
-	TEvents = never,
-	TEvent extends TEvents = never,
-> extends SchemaDefinitionBase {
-	type: "event";
-	event: (e: TEvents) => Option.Option<TEvent>;
-	io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
-	run: (
-		io: TIO,
-		data: TEvent,
-	) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutputRef>;
-}
-
-export interface EventSchema<
-	TIO = any,
-	TEvents = never,
-	TEvent extends TEvents = never,
-> extends Omit<EventSchemaDefinition<TIO, TEvents, TEvent>, "run"> {
+export interface PureSchema<
+	TIO,
+	TProperties extends Record<string, SchemaProperty<any>>,
+> extends Omit<PureSchemaDefinition<TIO, TProperties>, "run"> {
 	run: ReturnType<
-		EventSchemaDefinition<TIO, TEvents, TEvent>["run"]
-	> extends EffectGenerator<infer TEff, any>
+		PureSchemaDefinition<TIO, TProperties>["run"]
+	> extends EffectGenerator<infer TEff>
 		? (
-				...args: Parameters<EventSchemaDefinition<TIO, TEvents, TEvent>["run"]>
+				...args: Parameters<PureSchemaDefinition<TIO, TProperties>["run"]>
 			) => TEff
 		: never;
 }
 
+export interface ExecSchemaDefinition<
+	TIO,
+	TProperties extends Record<string, SchemaProperty<any>>,
+> extends SchemaDefinitionBase<TProperties> {
+	type: "exec";
+	io: (ctx: IOFunctionContext) => TIO;
+	run: (ctx: {
+		io: TIO;
+		properties: TProperties;
+	}) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutput | void>;
+}
+
+export interface ExecSchema<
+	TIO,
+	TProperties extends Record<string, SchemaProperty<any>>,
+> extends Omit<ExecSchemaDefinition<TIO, TProperties>, "run"> {
+	run: ReturnType<
+		ExecSchemaDefinition<TIO, TProperties>["run"]
+	> extends EffectGenerator<infer TEff, any>
+		? (
+				...args: Parameters<ExecSchemaDefinition<TIO, TProperties>["run"]>
+			) => TEff
+		: never;
+}
+
+type EventFnCtx<TProperties extends Record<string, SchemaProperty<any>>> = {
+	properties: {
+		[K in keyof TProperties]: TProperties[K] extends SchemaProperty<
+			Resource.Resource<any, infer T>
+		>
+			? T
+			: never;
+	};
+};
+
+export interface EventSchemaDefinition<
+	TIO,
+	TProperties extends Record<string, SchemaProperty<any>>,
+	TEvents = any,
+	TEvent extends TEvents = any,
+> extends SchemaDefinitionBase<TProperties> {
+	type: "event";
+	event: (ctx: EventFnCtx<TProperties>, e: TEvents) => TEvent | undefined;
+	io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
+	run: (
+		ctx: {
+			io: TIO;
+			properties: TProperties;
+		},
+		data: TEvent,
+	) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutput>;
+}
+
+export interface EventSchema<
+	TIO,
+	TProperties extends Record<string, SchemaProperty<any>>,
+	TEvents = never,
+	TEvent extends TEvents = never,
+> extends Omit<
+		EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>,
+		"run"
+	> {
+	run: ReturnType<
+		EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>["run"]
+	> extends EffectGenerator<infer TEff, any>
+		? (
+				...args: Parameters<
+					EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>["run"]
+				>
+			) => TEff
+		: never;
+}
+
+export type SchemaProperty<TResource extends Resource.Resource<any, any>> = {
+	name: string;
+	resource: TResource;
+};
+
 export type SchemaDefinition<
 	TIO = any,
+	TProperties extends Record<string, SchemaProperty<any>> = Record<
+		string,
+		never
+	>,
 	TEvents = never,
 	TEvent extends TEvents = never,
 > =
-	| ExecSchemaDefinition<TIO>
-	| PureSchemaDefinition<TIO>
-	| EventSchemaDefinition<TIO, TEvents, TEvent>;
+	| ExecSchemaDefinition<TIO, TProperties>
+	| PureSchemaDefinition<TIO, TProperties>
+	| EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>;
+
+export namespace Resource {
+	export class Handler<TId extends string, T> extends Data.Class<{
+		get: Effect.Effect<Array<T>, Credential.FetchFailed>;
+		resource: Resource.Resource<TId, T>;
+	}> {}
+
+	export class Resource<TId extends string, T> extends Data.Class<{
+		id: TId;
+		name: string;
+		tag: Context.TagClass<Handler<TId, T>, string, Handler<TId, T>>;
+		serialize(value: T): { id: string; display: string };
+	}> {
+		toLayer(
+			get: Effect.Effect<Array<T>, Credential.FetchFailed>,
+		): Layer.Layer<Handler<TId, T>> {
+			return Layer.succeed(this.tag, new Handler({ get, resource: this }));
+		}
+	}
+
+	export type ToHandler<T> = T extends Resource.Resource<
+		infer TId,
+		infer TValue
+	>
+		? Handler<TId, TValue>
+		: never;
+
+	export const make =
+		<T>() =>
+		<TId extends string>(
+			id: TId,
+			args: {
+				name: string;
+				serialize(value: T): { id: string; display: string };
+			},
+		) => {
+			const tag = class Tag extends Context.Tag(`Resource/${id}`)<
+				Tag,
+				Handler<TId, T>
+			>() {};
+
+			return new Resource({ id, tag: tag as any, ...args });
+		};
+}

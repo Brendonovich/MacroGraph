@@ -8,19 +8,6 @@ import {
 } from "@effect/platform";
 import { NodeHttpServer } from "@effect/platform-node/index";
 import {
-	Api,
-	type CREDENTIAL,
-	DeviceFlowError,
-	RawJWT,
-	ServerAuthJWT,
-	ServerRegistrationError,
-	Authentication,
-	type AuthData,
-	AuthenticationMiddleware,
-} from "@macrograph/web-domain";
-import type { InferSelectModel } from "drizzle-orm";
-import * as Dz from "drizzle-orm";
-import {
 	Config,
 	Effect,
 	Layer,
@@ -30,14 +17,27 @@ import {
 	Schema,
 } from "effect";
 import * as S from "effect/Schema";
+import {
+	Api,
+	type AuthData,
+	Authentication,
+	AuthenticationMiddleware,
+	type CREDENTIAL,
+	DeviceFlowError,
+	RawJWT,
+	ServerAuthJWT,
+	ServerRegistrationError,
+} from "@macrograph/web-domain";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import type { InferSelectModel } from "drizzle-orm";
+import * as Dz from "drizzle-orm";
 import * as Jose from "jose";
 import { verifyRequestOrigin } from "lucia";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
-import { Database } from "../../lib/Database";
 import * as Db from "~/drizzle/schema";
 import { lucia } from "~/lucia";
 import { posthogCapture, posthogShutdown } from "~/posthog/server";
+import { Database } from "../../lib/Database";
 import { refreshToken } from "../auth/actions";
 import { AuthProviders } from "../auth/providers";
 
@@ -643,9 +643,10 @@ export const DELETE = createHandler();
 export const PATCH = createHandler();
 export const OPTIONS = createHandler();
 
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+
 import * as crypto from "node:crypto";
 import { serverEnv } from "~/env/server";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
 const generateUserDeviceCode = Effect.gen(function* () {
 	const SEGMENT_LENGTH = 4;

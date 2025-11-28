@@ -1,8 +1,10 @@
 {
 	"name": "@macrograph/playground",
 	"type": "module",
-	"main": "./src/index.tsx",
-	"types": "./src/index.tsx",
+	"exports": {
+		".": "./src/index.tsx",
+		"./updated": "./src/updated/index.tsx"
+	},
 	"dependencies": {
 		"@effect-atom/atom-solid": "workspace:*",
 		"@effect/platform": "^0.92.1",
@@ -12,14 +14,18 @@
 		"@macrograph/project-backend": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
 		"@macrograph/project-frontend": "workspace:*",
+		"@macrograph/project-runtime": "workspace:*",
+		"@macrograph/project-ui": "workspace:*",
 		"@solid-primitives/bounds": "^0.0.118",
 		"@solid-primitives/event-listener": "^2.3.3",
+		"@solid-primitives/keyboard": "^1.3.3",
 		"@solid-primitives/memo": "^1.3.8",
 		"@solid-primitives/mouse": "^2.0.19",
 		"@solid-primitives/storage": "^2.1.4",
 		"@tanstack/query-core": "^5.90.5",
 		"@tanstack/solid-query": "^5.90.6",
-		"effect": "^3.18.4"
+		"cva": "1.0.0-beta.4",
+		"effect": "^3.19.3"
 	},
 	"devDependencies": {
 		"@total-typescript/ts-reset": "^0.4.2"

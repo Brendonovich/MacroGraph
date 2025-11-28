@@ -1,22 +1,27 @@
+import { Effect, Option, RequestResolver } from "effect";
 import {
 	Graph,
-	type Node,
+	IOId,
+	Node,
+	NodeCreated,
 	type PackageMeta,
 	type Project,
 	type SchemaMeta,
 	SchemaNotFound,
+	type SchemaRef,
 } from "@macrograph/project-domain";
-import { Effect, Option, RequestResolver } from "effect";
 
-import { ProjectPackages } from "./Packages";
-import { project } from "./data";
-import { ProjectActions } from "./Actions";
 import { Graphs } from "../Graph";
+import { type NodeConnections, ProjectData } from "./Data";
+import { EventNodeRegistry } from "./EventNodeRegistry";
+import { EventsPubSub } from "./EventsPubSub";
+import { ProjectPackages } from "./Packages";
 
 export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 	"ProjectRequests",
 	{
 		effect: Effect.gen(function* () {
+			const project = yield* ProjectData;
 			const packages = yield* ProjectPackages;
 
 			const GetProjectResolver = RequestResolver.fromEffect(
@@ -92,44 +97,202 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 	"GraphRequests",
 	{
 		effect: Effect.gen(function* () {
-			const projectActions = yield* ProjectActions;
+			const eventNodes = yield* EventNodeRegistry;
+			const projectEvents = yield* EventsPubSub;
+			const packages = yield* ProjectPackages;
+			const project = yield* ProjectData;
+
+			const getNextNodeId = (() => {
+				return () => Node.Id.make(++project.nodeIdCounter);
+			})();
+
+			const getNode = (graphId: Graph.Id, id: Node.Id) =>
+				Option.fromNullable(
+					project.graphs.get(graphId)?.nodes.find((n) => n.id === id),
+				);
+
+			const getSchema = (schemaRef: SchemaRef) =>
+				Option.fromNullable(
+					packages.get(schemaRef.pkgId)?.pkg.schemas.get(schemaRef.schemaId),
+				);
 
 			const CreateNodeResolver = RequestResolver.fromEffect(
-				Effect.fnUntraced(function* (payload: Graph.CreateNode) {
-					const node = yield* projectActions
-						.createNode(payload.graphId, payload.schema, [...payload.position])
-						.pipe(Effect.mapError(() => new SchemaNotFound(payload.schema)));
+				Effect.fnUntraced(function* (req: Graph.CreateNode) {
+					const schema = yield* getSchema(req.schema).pipe(
+						Effect.catchTag(
+							"NoSuchElementException",
+							() => new SchemaNotFound(req.schema),
+						),
+					);
+					const graph = project.graphs.get(req.graphId);
+					if (!graph)
+						return yield* new Graph.NotFound({ graphId: req.graphId });
 
-					return {
-						id: node.id,
-						name: node.name,
-						io: { inputs: node.inputs, outputs: node.outputs },
+					const io: Node.IO = {
+						inputs: [],
+						outputs: [],
 					};
+
+					schema.io({
+						out: {
+							exec: (id, options) => {
+								io.outputs.push({ id, variant: "exec", name: options?.name });
+								return new ExecOutputRef(IOId.make(id), options);
+							},
+							data: (id, type, options) => {
+								io.outputs.push({
+									id,
+									variant: "data",
+									data: "string",
+									name: options?.name,
+								});
+								return new DataOutputRef(id, type, options);
+							},
+						},
+						in: {
+							exec: (id, options) => {
+								io.inputs.push({ id, variant: "exec", name: options?.name });
+								return new ExecInputRef(id, options);
+							},
+							data: (id, type, options) => {
+								io.inputs.push({
+									id,
+									variant: "data",
+									data: "string",
+									name: options?.name,
+								});
+								return new DataInputRef(id as IOId, type, options);
+							},
+						},
+					});
+
+					const node: Node.Shape = {
+						schema: req.schema,
+						id: getNextNodeId(),
+						inputs: io.inputs,
+						outputs: io.outputs,
+						position: { x: req.position[0], y: req.position[1] },
+					};
+
+					if (schema.type === "event")
+						eventNodes.registerNode(graph.id, node.id, req.schema.pkgId);
+
+					graph.nodes.push(node);
+
+					const event = new NodeCreated({
+						nodeId: node.id,
+						graphId: graph.id,
+						position: node.position,
+						schema: req.schema,
+						io,
+					});
+
+					yield* projectEvents.publish(event);
+
+					return event;
 				}),
 			);
 
 			const ConnectIOResolver = RequestResolver.fromEffect(
-				Effect.fnUntraced(function* (payload: Graph.ConnectIO) {
-					yield* projectActions.addConnection(
-						payload.graphId,
-						payload.output,
-						payload.input,
-					);
+				Effect.fnUntraced(function* ({
+					graphId,
+					output,
+					input,
+				}: Graph.ConnectIO) {
+					const graph = project.graphs.get(graphId);
+					if (!graph) return yield* new Graph.NotFound({ graphId });
+					const connections = (graph.connections ??= new Map() as NonNullable<
+						typeof graph.connections
+					>);
+
+					if (Option.isNone(getNode(graph.id, output.nodeId)))
+						return yield* new Node.NotFound(output);
+					if (Option.isNone(getNode(graph.id, input.nodeId)))
+						return yield* new Node.NotFound(input);
+
+					const upsertNodeConnections = (nodeId: Node.Id) =>
+						connections.get(nodeId) ??
+						(() => {
+							const v: NodeConnections = {};
+							connections.set(nodeId, v);
+							return v;
+						})();
+
+					const outputNodeConnections = upsertNodeConnections(output.nodeId);
+
+					outputNodeConnections.out ??= new Map();
+					const outputNodeInputConnections =
+						outputNodeConnections.out.get(output.ioId) ??
+						(() => {
+							const v: Array<[Node.Id, string]> = [];
+							outputNodeConnections.out.set(output.ioId, v);
+							return v;
+						})();
+					outputNodeInputConnections.push([input.nodeId, input.ioId]);
+
+					const inputNodeConnections = upsertNodeConnections(input.nodeId);
+
+					inputNodeConnections.in ??= new Map();
+					const inputNodeInputConnections =
+						inputNodeConnections.in.get(input.ioId) ??
+						(() => {
+							const v: Array<[Node.Id, string]> = [];
+							inputNodeConnections.in.set(input.ioId, v);
+							return v;
+						})();
+					inputNodeInputConnections.push([output.nodeId, output.ioId]);
 				}),
 			);
 
 			const DisconnectIOResolver = RequestResolver.fromEffect(
-				Effect.fnUntraced(function* (payload: Graph.DisconnectIO) {
-					yield* projectActions.disconnectIO(payload.graphId, payload.io);
+				Effect.fnUntraced(function* ({ graphId, io }: Graph.DisconnectIO) {
+					const graph = project.graphs.get(graphId);
+					if (!graph) return yield* new Graph.NotFound({ graphId });
+					if (!graph.connections) return;
+
+					const nodeConnections = graph.connections.get(io.nodeId);
+					const originConnections =
+						io.type === "i" ? nodeConnections?.in : nodeConnections?.out;
+					if (!originConnections) return;
+
+					const orginIOConnections = originConnections.get(io.ioId);
+					if (!orginIOConnections) return;
+
+					for (const [targetNodeId, targetIOId] of orginIOConnections) {
+						const targetNodeConnections = graph.connections.get(targetNodeId);
+						const targetConnections =
+							io.type === "o"
+								? targetNodeConnections?.in
+								: targetNodeConnections?.out;
+						if (!targetConnections) continue;
+
+						const targetIOConnections = targetConnections.get(targetIOId);
+						if (!targetIOConnections) continue;
+
+						const index = targetIOConnections.findIndex(
+							([nodeId, ioId]) => ioId === io.ioId && nodeId === io.nodeId,
+						);
+						if (index !== -1) targetIOConnections.splice(index, 1);
+					}
+
+					originConnections.delete(io.ioId);
 				}),
 			);
 
 			const DeleteSelectionResolver = RequestResolver.fromEffect(
-				Effect.fnUntraced(function* (payload: Graph.DeleteSelection) {
-					yield* projectActions.deleteSelection(
-						payload.graph,
-						payload.selection,
-					);
+				Effect.fnUntraced(function* (req: Graph.DeleteSelection) {
+					const graph = project.graphs.get(req.graph);
+					if (!graph) return yield* new Graph.NotFound({ graphId: req.graph });
+
+					for (const nodeId of req.selection) {
+						const index = graph.nodes.findIndex((node) => node.id === nodeId);
+						if (index === -1) continue;
+
+						const node = graph.nodes[index]!;
+						graph.nodes.splice(index, 1);
+
+						eventNodes.unregisterNode(graph.id, node.id, node.schema.pkgId);
+					}
 				}),
 			);
 
@@ -140,6 +303,7 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 				DeleteSelectionResolver,
 			};
 		}),
+		dependencies: [EventsPubSub.Default, EventNodeRegistry.Default],
 	},
 ) {}
 

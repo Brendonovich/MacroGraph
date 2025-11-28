@@ -1,8 +1,10 @@
-import { Context, Data, type Effect, Schema } from "effect";
+import { Context, Data, type Effect, Schema as S } from "effect";
 import type { NoSuchElementException } from "effect/Cause";
 
-import type { Id as NodeId } from "./Node";
-import type { DataInputRef, DataOutputRef } from "./IO";
+import type { DataInput, DataOutput } from "./IO.ts";
+import type { T } from "./updated/IO.ts";
+import type { Graph } from "./updated/index.ts";
+import type * as Node from "./updated/Node.ts";
 
 export class NotComputationNode extends Data.TaggedError(
 	"@macrograph/project-domain/NotComputationNode",
@@ -12,11 +14,11 @@ export class NotEventNode extends Data.TaggedError(
 	"@macrograph/project-domain/NotEventNode",
 ) {}
 
-export class SchemaNotFound extends Schema.TaggedError<SchemaNotFound>()(
+export class SchemaNotFound extends S.TaggedError<SchemaNotFound>()(
 	"@macrograph/project-domain/SchemaNotFound",
 	{
-		pkgId: Schema.String,
-		schemaId: Schema.String,
+		pkgId: S.String,
+		schemaId: S.String,
 	},
 ) {}
 
@@ -33,7 +35,7 @@ export class NodeRuntime extends Context.Tag("NodeRuntime")<
 
 export type SchemaRunGeneratorEffect = Effect.Effect<
 	any,
-	NoSuchElementException | NotComputationNode,
+	NotComputationNode,
 	RunFunctionAvailableRequirements
 >;
 
@@ -50,21 +52,24 @@ export class ExecutionContext extends Context.Tag("ExecutionContext")<
 	ExecutionContext,
 	{
 		traceId: string;
-		getInput<T extends Schema.Schema<any>>(
-			input: DataInputRef<T>,
+		// getProperty<T>(property: SchemaProperty<T>): Effect.Effect<T>;
+		getInput<T extends T.Any>(
+			input: DataInput<T>,
 		): Effect.Effect<
-			T["Encoded"],
-			NoSuchElementException | NotComputationNode,
+			T.Infer<T>,
+			never,
 			NodeExecutionContext | RunFunctionAvailableRequirements
 		>;
-		setOutput<T extends Schema.Schema<any>>(
-			output: DataOutputRef<T>,
-			data: T,
+		setOutput<T extends T.Any>(
+			output: DataOutput<T>,
+			data: T.Infer<T>,
 		): Effect.Effect<void, never, NodeExecutionContext>;
+		graph: Graph.Graph;
 	}
 >() {}
 
+// @effect-leakable-service
 export class NodeExecutionContext extends Context.Tag("NodeExecutionContext")<
 	NodeExecutionContext,
-	{ node: { id: NodeId } }
+	{ node: { id: Node.Id } }
 >() {}

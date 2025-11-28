@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { Shape as IOShape } from "../IO";
 import { Position, SchemaRef } from "../types";
+import { Id as IOId } from "../updated/IO";
 
 export const Variant = Schema.Literal("exec", "base", "pure", "event");
 export type Variant = Schema.Schema.Type<typeof Variant>;
@@ -11,7 +12,7 @@ export type Id = Schema.Schema.Type<typeof Id>;
 
 export const IORef = Schema.Struct({
 	nodeId: Id,
-	ioId: Schema.String,
+	ioId: IOId,
 });
 export type IORef = Schema.Schema.Type<typeof IORef>;
 

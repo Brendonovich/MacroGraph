@@ -1,11 +1,22 @@
 import { Rpc, RpcGroup } from "@effect/rpc";
-import { Schema as S } from "effect";
+import { Schema as S, Schema } from "effect";
+
+export class TwitchAPIError extends Schema.TaggedError<TwitchAPIError>()(
+	"TwitchAPIError",
+	{ cause: S.Unknown },
+) {}
+
+export class ConnectFailed extends Schema.TaggedError<ConnectFailed>()(
+	"ConnectFailed",
+	{ cause: S.Literal("session-welcome-expected") },
+) {}
 
 export const RPCS = RpcGroup.make().add(
 	Rpc.make("ConnectEventSub", {
 		payload: S.Struct({
 			accountId: S.String,
 		}),
+		error: S.Union(TwitchAPIError, ConnectFailed),
 	}),
 	Rpc.make("DisconnectEventSub", {
 		payload: S.Struct({

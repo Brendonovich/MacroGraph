@@ -1,0 +1,36 @@
+import * as S from "effect/Schema";
+
+import * as Schema from "./Schema";
+
+export const Id = S.String.pipe(S.brand("Package.Id"));
+export type Id = S.Schema.Type<typeof Id>;
+
+export class NotFound extends S.TaggedError<NotFound>()("Package.NotFound", {
+	id: Id,
+}) {}
+
+export class Package extends S.Class<Package>("Package")({
+	id: Id,
+	name: S.String,
+	schemas: S.suspend(() =>
+		S.Map({
+			key: Schema.Id,
+			value: S.Struct({
+				id: Schema.Id,
+				type: Schema.Type,
+				name: S.String,
+				properties: S.Array(
+					S.Struct({
+						id: S.String,
+						name: S.String,
+						resource: S.String,
+					}),
+				),
+			}),
+		}),
+	),
+	resources: S.Map({
+		key: S.String,
+		value: S.Struct({ name: S.String }),
+	}),
+}) {}

@@ -1,6 +1,12 @@
-import { Package, PackageEngine, getInput } from "@macrograph/package-sdk";
 import { Data, Option, Schema } from "effect";
 import * as Effect from "effect/Effect";
+import {
+	getInput,
+	getProperty,
+	Package,
+	PackageEngine,
+	Resource,
+} from "@macrograph/package-sdk";
 import OBSWebsocket, {
 	type OBSRequestTypes,
 	type OBSResponseTypes,
@@ -13,35 +19,36 @@ class OBSWebSocketError extends Data.TaggedError("OBSWebsocketError")<{
 	message: string;
 }> {}
 
+type Instance = {
+	url: string;
+	password: Option.Option<string>;
+	lock: Effect.Semaphore;
+	ws: OBSWebsocket;
+	state: "disconnected" | "connecting" | "connected";
+};
+
+const OBSConnection = Resource.make<Instance>({
+	name: "OBS Socket",
+	serialize: (instance) => ({ id: instance.url, display: instance.url }),
+});
+
 const Engine = PackageEngine.make<
 	{
 		connections: Array<{
-			address: string;
+			url: string;
 			password: string | undefined;
 			state: any;
 		}>;
 	},
-	typeof RPCS
+	typeof RPCS,
+	Instance
 >({ rpc: RPCS })(
 	Effect.fn(function* (ctx) {
-		type WsRequestProxy = {
-			[K in keyof OBSRequestTypes]: (
-				args: OBSRequestTypes[K] extends never ? void : OBSRequestTypes[K],
-			) => Effect.Effect<OBSResponseTypes[K], OBSWebSocketError>;
-		};
-
-		type Instance = {
-			password: Option.Option<string>;
-			lock: Effect.Semaphore;
-			ws: OBSWebsocket;
-			state: "disconnected" | "connecting" | "connected";
-		};
-
 		const instances = new Map<string, Instance>();
 
 		const layer = RPCS.toLayer({
-			AddSocket: Effect.fn(function* ({ address, password }) {
-				if (instances.get(address)) return;
+			AddSocket: Effect.fn(function* ({ url, password }) {
+				if (instances.get(url)) return;
 
 				const lock = Effect.unsafeMakeSemaphore(1);
 
@@ -79,24 +86,25 @@ const Engine = PackageEngine.make<
 					);
 
 					const instance: Instance = {
+						url,
 						password: Option.fromNullable(password),
 						lock,
 						ws,
 						state: "connecting",
 					};
 
-					instances.set(address, instance);
+					instances.set(url, instance);
 
 					return instance;
 				}).pipe(lock.withPermits(1), Effect.ensuring(ctx.dirtyState));
 
 				yield* Effect.tryPromise({
-					try: () => instance.ws.connect(address, password),
+					try: () => instance.ws.connect(url, password),
 					catch: () => new ConnectionFailed(),
 				});
 			}),
-			RemoveSocket: Effect.fn(function* ({ address }) {
-				const instance = instances.get(address);
+			RemoveSocket: Effect.fn(function* ({ url }) {
+				const instance = instances.get(url);
 				yield* ctx.dirtyState;
 				if (!instance) return;
 
@@ -104,26 +112,26 @@ const Engine = PackageEngine.make<
 					yield* Effect.promise(() => instance.ws.disconnect()).pipe(
 						Effect.ignore,
 					);
-					instances.delete(address);
+					instances.delete(url);
 				}).pipe(instance.lock.withPermits(1));
 
 				yield* ctx.dirtyState;
 			}),
-			DisconnectSocket: Effect.fn(function* ({ address }) {
-				const instance = instances.get(address);
+			DisconnectSocket: Effect.fn(function* ({ url }) {
+				const instance = instances.get(url);
 				if (!instance) return;
 
 				yield* Effect.promise(() => instance.ws.disconnect()).pipe(
 					Effect.ignore,
 				);
 			}),
-			ConnectSocket: Effect.fn(function* ({ address, password }) {
-				const instance = instances.get(address);
+			ConnectSocket: Effect.fn(function* ({ url, password }) {
+				const instance = instances.get(url);
 				if (!instance) return;
 
 				yield* Effect.gen(function* () {
 					yield* Effect.tryPromise({
-						try: () => instance.ws.connect(address, password),
+						try: () => instance.ws.connect(url, password),
 						catch: () => new ConnectionFailed(),
 					});
 
@@ -138,10 +146,10 @@ const Engine = PackageEngine.make<
 			state: Effect.gen(function* () {
 				return {
 					connections: yield* Effect.all(
-						[...instances.entries()].map(([address, instance]) =>
+						[...instances.entries()].map(([url, instance]) =>
 							Effect.sync(() => {
 								return {
-									address,
+									url,
 									password: Option.getOrUndefined(instance.password),
 									state: instance.state,
 								};
@@ -150,9 +158,17 @@ const Engine = PackageEngine.make<
 					),
 				};
 			}),
+			resources: OBSConnection.makeHandler(
+				Effect.sync(() => [...instances.values()]),
+			),
 		};
 	}),
 );
+
+const OBSConnectionProperty = {
+	name: "OBS Socket",
+	resource: OBSConnection,
+};
 
 export default Package.make({
 	name: "OBS Studio",
@@ -161,6 +177,7 @@ export default Package.make({
 		ctx.schema("setCurrentProgramScene", {
 			name: "Set Current Program Scene",
 			type: "exec",
+			properties: { connection: OBSConnectionProperty },
 			io: (c) => ({
 				execIn: c.in.exec("exec"),
 				execOut: c.out.exec("exec"),
@@ -168,12 +185,13 @@ export default Package.make({
 					name: "Scene Name",
 				}),
 			}),
-			run: function* (io) {
+			run: function* ({ io, properties }) {
 				const sceneName = yield* getInput(io.scene);
+				const connection = yield* getProperty(properties.connection);
 
-				// yield* Effect.tryPromise(() =>
-				//   obs.call("SetCurrentProgramScene", { sceneName }),
-				// ).pipe(Effect.catchTag("UnknownException", () => Effect.succeed(null)));
+				yield* Effect.tryPromise(() =>
+					connection.ws.call("SetCurrentProgramScene", { sceneName }),
+				).pipe(Effect.catchTag("UnknownException", () => Effect.succeed(null)));
 			},
 		});
 	},

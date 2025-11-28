@@ -25,7 +25,7 @@
 		"@opentelemetry/sdk-trace-node": "^2.0.1",
 		"@opentelemetry/sdk-trace-web": "^2.0.1",
 		"dotenv-cli": "^8.0.0",
-		"effect": "^3.18.4",
+		"effect": "^3.19.3",
 		"hono": "^4.7.5",
 		"jose": "^4.15.9",
 		"obs-websocket-js": "^5.0.5"

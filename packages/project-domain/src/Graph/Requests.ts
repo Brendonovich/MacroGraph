@@ -5,6 +5,7 @@ import * as Graph from "./Graph";
 import { PolicyDeniedError } from "../Policy";
 import { SchemaRef } from "../types";
 import { SchemaNotFound } from "../runtime";
+import { NodeCreated } from "../Events";
 
 export class CreateNode extends Schema.TaggedRequest<CreateNode>()(
 	"CreateNode",
@@ -14,11 +15,8 @@ export class CreateNode extends Schema.TaggedRequest<CreateNode>()(
 			graphId: Graph.Id,
 			position: Schema.Tuple(Schema.Number, Schema.Number),
 		},
-		success: Schema.Struct({
-			id: Node.Id,
-			io: Node.IO,
-		}),
-		failure: Schema.Union(SchemaNotFound, PolicyDeniedError),
+		success: NodeCreated,
+		failure: Schema.Union(Graph.NotFound, SchemaNotFound, PolicyDeniedError),
 	},
 ) {}
 

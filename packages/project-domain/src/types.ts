@@ -9,7 +9,7 @@ export type Position = Schema.Schema.Type<typeof Position>;
 export const SchemaRef = Schema.Struct({
 	pkgId: Schema.String,
 	schemaId: Schema.String,
-}).pipe(Schema.mutable);
+});
 export type SchemaRef = Schema.Schema.Type<typeof SchemaRef>;
 
 export const SchemaType = Schema.Literal("base", "exec", "pure", "event");

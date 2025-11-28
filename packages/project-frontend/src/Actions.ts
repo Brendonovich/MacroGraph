@@ -1,10 +1,10 @@
+import { Effect, type Request } from "effect";
 import {
 	Graph,
 	Node,
 	type Position,
 	type SchemaRef,
 } from "@macrograph/project-domain";
-import { Effect, type Request } from "effect";
 import { createStore, produce } from "solid-js/store";
 
 import { ProjectState } from "./State";

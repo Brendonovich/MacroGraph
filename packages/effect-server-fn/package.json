@@ -6,6 +6,6 @@
 		"@macrograph/config": "workspace:*"
 	},
 	"dependencies": {
-		"effect": "^3.18.4"
+		"effect": "^3.19.3"
 	}
 }

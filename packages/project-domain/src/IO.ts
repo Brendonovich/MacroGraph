@@ -1,5 +1,7 @@
-import type { Brand } from "effect";
-import { Schema } from "effect";
+import { Data, Schema } from "effect";
+
+import type { IO } from "./updated";
+import type { T } from "./updated/IO";
 
 export const Shape = Schema.Union(
 	Schema.Struct({ variant: Schema.Literal("exec") }),
@@ -13,34 +15,22 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
 export const Variant = Schema.Literal("exec", "data");
 export type Variant = Schema.Schema.Type<typeof Variant>;
 
-export type IOId = string & Brand.Brand<"IOId">;
+export class ExecInput extends Data.TaggedClass("ExecInput")<{
+	id: IO.Id;
+}> {}
 
-export class ExecInputRef {
-	constructor(
-		public id: string,
-		public options?: { name?: string },
-	) {}
-}
+export class ExecOutput extends Data.TaggedClass("ExecOutput")<{
+	id: IO.Id;
+}> {}
 
-export class ExecOutputRef {
-	constructor(
-		public id: IOId,
-		public options?: { name?: string },
-	) {}
-}
+export class DataInput<T extends T.Any> extends Data.TaggedClass("DataInput")<{
+	id: IO.Id;
+	type: T;
+}> {}
 
-export class DataInputRef<T> {
-	constructor(
-		public id: IOId,
-		public type: T,
-		public options?: { name?: string },
-	) {}
-}
-
-export class DataOutputRef<T> {
-	constructor(
-		public id: string,
-		public type: T,
-		public options?: { name?: string },
-	) {}
-}
+export class DataOutput<T extends T.Any> extends Data.TaggedClass(
+	"DataOutput",
+)<{
+	id: IO.Id;
+	type: T;
+}> {}

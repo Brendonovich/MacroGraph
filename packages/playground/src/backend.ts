@@ -3,36 +3,78 @@ import {
 	CloudApiToken,
 	createEventStream,
 	Credentials,
+	EventsPubSub,
 	GraphRequests,
 	NodeRequests,
-	ProjectActions,
+	ProjectData,
 	ProjectPackages,
 	ProjectRequests,
+	ProjectRuntime,
+	ProjectShape,
 } from "@macrograph/project-backend";
-import { Credential, type Project } from "@macrograph/project-domain";
-import { Effect, Layer, Option, type Scope } from "effect";
+import { Credential, Graph, type Project } from "@macrograph/project-domain";
+import { Effect, Layer, Option, Schema, Stream, type Scope } from "effect";
 
 import { Rpcs } from "./rpc";
+
+const ProjectDataLive = Layer.effect(
+	ProjectData,
+	Effect.suspend(() =>
+		Option.fromNullable(localStorage.getItem("mg-project")).pipe(
+			Effect.andThen((v) =>
+				Schema.decodeUnknown(Schema.parseJson(ProjectShape))(v),
+			),
+			Effect.catchAll(() =>
+				Effect.succeed({
+					name: "New Project",
+					graphs: new Map([
+						[
+							Graph.Id.make(0),
+							{ id: Graph.Id.make(0), name: "New Graph", nodes: [] },
+						],
+					]),
+				}),
+			),
+		),
+	),
+);
 
 export class PlaygroundBackend extends Effect.Service<PlaygroundBackend>()(
 	"PlaygroundBackend",
 	{
 		scoped: Effect.gen(function* () {
-			const projectActions = yield* ProjectActions;
+			const projectRuntime = yield* ProjectRuntime;
+			const project = yield* ProjectData;
 
-			yield* projectActions
+			yield* projectRuntime
 				.addPackage("util", Packages.util)
 				.pipe(Effect.orDie);
-			yield* projectActions
+			yield* projectRuntime
 				.addPackage("twitch", Packages.twitch)
 				.pipe(Effect.orDie);
-			yield* projectActions.addPackage("obs", Packages.obs).pipe(Effect.orDie);
+			// yield* projectActions.addPackage("obs", Packages.obs).pipe(Effect.orDie);
 
-			const eventStream = yield* createEventStream;
+			const eventStream = yield* createEventStream.pipe(
+				Effect.map(
+					Stream.tap((e) => {
+						console.log(e);
+						return Effect.sync(() => {
+							localStorage.setItem(
+								"mg-project",
+								JSON.stringify(Schema.encodeSync(ProjectShape)(project)),
+							);
+						});
+					}),
+				),
+			);
 
 			return { eventStream };
 		}),
-		dependencies: [ProjectActions.Default, ProjectPackages.Default],
+		dependencies: [
+			ProjectRuntime.Default,
+			ProjectPackages.Default,
+			EventsPubSub.Default,
+		],
 	},
 ) {}
 
@@ -100,8 +142,9 @@ export const BackendLayers = Layer.empty.pipe(
 			Credentials.Default,
 		),
 	),
-	Layer.provideMerge(ProjectActions.Default),
+	Layer.provideMerge(ProjectRuntime.Default),
 	Layer.provideMerge(
 		Layer.succeed(CloudApiToken, Effect.succeed(Option.none())),
 	),
+	Layer.provide(ProjectDataLive),
 ) satisfies Layer.Layer<any, any, Scope.Scope>;

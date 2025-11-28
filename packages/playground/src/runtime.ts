@@ -1,9 +1,4 @@
-import { type Rpc, type RpcClient, RpcGroup, RpcTest } from "@effect/rpc";
-import { ProjectPackages } from "@macrograph/project-backend";
-import {
-	GetPackageRpcClient,
-	PackageClients,
-} from "@macrograph/project-frontend";
+import { type Rpc, type RpcClient, type RpcGroup, RpcTest } from "@effect/rpc";
 import {
 	Effect,
 	Layer,
@@ -12,6 +7,11 @@ import {
 	Option,
 	Stream,
 } from "effect";
+import { ProjectPackages } from "@macrograph/project-backend";
+import {
+	GetPackageRpcClient,
+	PackageClients,
+} from "@macrograph/project-frontend";
 import { createContext, useContext } from "solid-js";
 
 import { BackendLayers, PlaygroundBackend } from "./backend";
@@ -64,7 +64,7 @@ export const RuntimeLayers = Layer.empty.pipe(
 
 						const pkg = packages.get(id)?.rpc ?? Option.none();
 
-						if (Option.isNone(pkg)) throw new Error("Pacakge not found");
+						if (Option.isNone(pkg)) throw new Error("Package not found");
 
 						const client = yield* RpcTest.makeClient(
 							rpcs as unknown as RpcGroup.RpcGroup<Rpc.Any>,

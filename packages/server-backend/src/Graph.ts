@@ -1,7 +1,7 @@
 import { SchemaNotFound } from "@macrograph/project-domain";
 import { Graph, Policy } from "@macrograph/server-domain";
 import { Effect, Option } from "effect";
-import { ProjectActions } from "@macrograph/project-backend";
+import { ProjectRuntime } from "@macrograph/project-backend";
 
 import { RealtimePubSub } from "./Realtime";
 
@@ -19,7 +19,7 @@ export class Graphs extends Effect.Service<Graphs>()("Graphs", {
 
 export const GraphRpcsLive = Graph.Rpcs.toLayer(
 	Effect.gen(function* () {
-		const projectActions = yield* ProjectActions;
+		const projectActions = yield* ProjectRuntime;
 		const realtime = yield* RealtimePubSub;
 		const serverPolicy = yield* ServerPolicy;
 
