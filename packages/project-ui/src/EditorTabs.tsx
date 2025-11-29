@@ -1,3 +1,4 @@
+import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import { cx } from "cva";
 import {
 	type Accessor,
@@ -39,7 +40,7 @@ export function EditorTabs<TSchema extends { type: string; tabId: number }>(
 		selectedTabId?: number | null;
 		onChange?: (tabId: number) => void;
 		onRemove?: (tabId: number) => void;
-		onSplit?: () => void;
+		onSplit?: (direction: "horizontal" | "vertical") => void;
 		onZoom?: () => void;
 		focused?: boolean;
 		zoomed?: boolean;
@@ -117,15 +118,28 @@ export function EditorTabs<TSchema extends { type: string; tabId: number }>(
 						<div class="h-full shrink-0 border-b border-l border-gray-5 flex flex-row items-center px-2 gap-1">
 							<Show when={props.onSplit}>
 								{(onSplit) => (
-									<button
-										type="button"
-										title="Split this panel"
-										onClick={() => onSplit()}
-										disabled
-										class="size-5 flex items-center justify-center bg-transparent opacity-0 group-hover/bar:opacity-100 group-data-[focused='true']/bar:opacity-100 text-gray-11 hover:(bg-gray-6 text-gray-12) rounded-sm focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)"
-									>
-										<IconPhSquareSplitHorizontal class="size-4" />
-									</button>
+									<DropdownMenu placement="bottom-end">
+										<DropdownMenu.Trigger
+											title="Split this panel"
+											class="size-5 flex items-center justify-center bg-transparent opacity-0 group-hover/bar:opacity-100 group-data-[focused='true']/bar:opacity-100 text-gray-11 hover:(bg-gray-6 text-gray-12) rounded-sm focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)"
+										>
+											<IconPhSquareSplitHorizontal class="size-4" />
+										</DropdownMenu.Trigger>
+										<DropdownMenu.Content class="p-1 bg-gray-3 z-10 text-xs border border-gray-5 animate-in fade-in slide-in-from-top-1">
+											<DropdownMenu.Item
+												class="py-0.5 px-1 @hover-bg-gray-5 rounded"
+												onSelect={() => onSplit()("horizontal")}
+											>
+												Split Right
+											</DropdownMenu.Item>
+											<DropdownMenu.Item
+												class="py-0.5 px-1 @hover-bg-gray-5 rounded"
+												onSelect={() => onSplit()("vertical")}
+											>
+												Split Down
+											</DropdownMenu.Item>
+										</DropdownMenu.Content>
+									</DropdownMenu>
 								)}
 							</Show>
 							<Show when={props.onZoom}>

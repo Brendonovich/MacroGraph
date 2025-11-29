@@ -53,7 +53,7 @@ import {
 	Switch,
 	startTransition,
 } from "solid-js";
-import { createStore, produce, reconcile } from "solid-js/store";
+import { createStore, produce, reconcile, unwrap } from "solid-js/store";
 
 import { PlaygroundRpc } from "./rpc";
 import {
@@ -109,7 +109,7 @@ namespace PaneLayout {
 	export type PaneLayout<T> =
 		| { variant: "single"; pane: T }
 		| {
-				variant: "horizontal" | "verical";
+				variant: "horizontal" | "vertical";
 				panes: Array<PaneLayout<T> & { size: number }>;
 		  };
 }
@@ -206,7 +206,7 @@ function Inner() {
 	});
 
 	const [paneLayout, setPaneLayout] = makePersisted(
-		createStore<PaneLayout.PaneLayout<number> | Record<string, never>>({
+		createStore<PaneLayout.PaneLayout<number> | { variant: "empty" }>({
 			variant: "horizontal",
 			panes: [
 				{ size: 0.5, variant: "single", pane: 0 },
@@ -220,49 +220,94 @@ function Inner() {
 	function removePane(id: number) {
 		batch(() => {
 			setPaneLayout((paneLayout) => {
-				if (paneLayout.variant === "single") return reconcile({})(paneLayout);
+				const recurse = (
+					paneLayout: PaneLayout.PaneLayout<number> | { variant: "empty" },
+				): PaneLayout.PaneLayout<number> | undefined => {
+					if (paneLayout.variant === "empty" || paneLayout.variant === "single")
+						return;
 
-				if (paneLayout.panes.length > 1) {
-					const i = paneLayout.panes.findIndex(
-						(p) => p.variant === "single" && p.pane === id,
-					);
-					if (i !== -1) {
-						return produce<typeof paneLayout>((paneLayout) => {
-							paneLayout.panes.splice(i, 1);
-						})(paneLayout);
+					for (let i = 0; i < paneLayout.panes.length; i++) {
+						const pane = paneLayout.panes[i];
+						if (!pane) continue;
+
+						if (pane.variant === "single") {
+							if (pane.pane === id)
+								if (paneLayout.panes.length > 2) {
+									paneLayout.panes.splice(i, 1);
+								} else {
+									return paneLayout.panes.find((p) => p.pane !== id);
+								}
+						} else {
+							const v = recurse(pane);
+							console.log({ v });
+							if (!v) continue;
+							paneLayout.panes[i] = { ...v, size: 1 / paneLayout.panes.length };
+							return;
+						}
 					}
-				} else {
-					return reconcile(paneLayout.panes[0])(paneLayout);
-				}
+				};
 
-				return;
+				if (paneLayout.variant === "empty") return;
+				if (paneLayout.variant === "single")
+					return reconcile({ variant: "empty" })(paneLayout);
+
+				if (
+					paneLayout.panes.find((p) => p.variant === "single" && p.pane === id)
+				)
+					return reconcile(
+						paneLayout.panes.find(
+							(p) => !(p.variant === "single" && p.pane === id),
+						),
+					)(paneLayout);
+
+				return produce(recurse)(paneLayout);
 			});
 			setPanes(id, undefined!);
 		});
 	}
 
 	function openTab(data: TabState.TabState) {
-		const paneId = Object.keys(panes).reduce<number | null>((min, paneId) => {
-			if (min === null || min > Number(paneId)) return Number(paneId);
-			return min;
-		}, null);
-		if (paneId === undefined || paneId === null) return;
+		batch(() => {
+			const paneIds = Object.keys(panes);
 
-		setPanes(
-			paneId,
-			produce((pane) => {
-				const existing = pane.tabs.find(
-					(s) => TabState.getKey(s) === TabState.getKey(data),
+			if (paneIds.length === 0) {
+				const id = Math.random();
+				setPanes(
+					id,
+					reconcile<PaneState.PaneState, PaneState.PaneState>({
+						id,
+						selectedTab: 0,
+						tabs: [{ tabId: 0, ...data }],
+					}),
 				);
-				if (existing) {
-					pane.selectedTab = existing.tabId;
-				} else {
-					const tabId = Math.random();
-					pane.tabs.push({ ...data, tabId });
-					pane.selectedTab = tabId;
-				}
-			}),
-		);
+				setPaneLayout(
+					reconcile({
+						variant: "single",
+						pane: id,
+					}),
+				);
+				return;
+			}
+
+			const paneId = focusedPaneId();
+			if (paneId === null) return;
+
+			setPanes(
+				paneId,
+				produce((pane) => {
+					const existing = pane.tabs.find(
+						(s) => TabState.getKey(s) === TabState.getKey(data),
+					);
+					if (existing) {
+						pane.selectedTab = existing.tabId;
+					} else {
+						const tabId = Math.random();
+						pane.tabs.push({ ...data, tabId });
+						pane.selectedTab = tabId;
+					}
+				}),
+			);
+		});
 	}
 
 	const runtime = useEffectRuntime();
@@ -396,7 +441,6 @@ function Inner() {
 	function removeTab(paneId: number, tabId: number) {
 		const pane = panes[paneId];
 		if (!pane) return;
-		console.log({ pane, paneId, tabId });
 
 		batch(() => {
 			if (pane.tabs.length < 2) {
@@ -419,6 +463,78 @@ function Inner() {
 					}),
 				);
 			}
+		});
+	}
+
+	function splitPane(paneId: number, direction: "horizontal" | "vertical") {
+		const pane = panes[paneId];
+		console.log({ paneId, pane });
+		if (!pane) return;
+
+		batch(() => {
+			setPaneLayout((paneLayout) => {
+				const recurse = (
+					paneLayout: PaneLayout.PaneLayout<number> | { variant: "empty" },
+				): PaneLayout.PaneLayout<number> | undefined => {
+					if (paneLayout.variant === "empty") return;
+					if (paneLayout.variant === "single") {
+						if (paneLayout.pane !== paneId) return;
+						const newId = Math.random();
+
+						setPanes(newId, { ...pane, id: newId });
+						setFocusedPaneId(newId);
+
+						return {
+							variant: direction,
+							panes: [
+								{ variant: "single", pane: paneLayout.pane, size: 0.5 },
+								{ variant: "single", pane: newId, size: 0.5 },
+							],
+						};
+					}
+
+					for (let i = 0; i < paneLayout.panes.length; i++) {
+						const innerPane = paneLayout.panes[i]!;
+						console.log({ i, innerPane });
+						if (innerPane?.variant === "single") {
+							if (innerPane.pane !== pane.id) continue;
+							if (paneLayout.variant === direction) {
+								const newId = Math.random();
+
+								setPanes(newId, { ...pane, id: newId });
+								setFocusedPaneId(newId);
+
+								paneLayout.panes.splice(i, 0, {
+									variant: "single",
+									pane: newId,
+									size: 1,
+								});
+							} else {
+								const v = recurse(innerPane);
+								console.log({ v });
+								if (!v) continue;
+								paneLayout.panes[i] = { ...v, size: 1 };
+							}
+						} else {
+							const v = recurse(innerPane);
+							if (!v) continue;
+							paneLayout.panes[i] = { ...v, size: 1 };
+						}
+
+						paneLayout.panes.forEach((p) => {
+							p.size = 1 / paneLayout.panes.length;
+						});
+
+						return;
+					}
+				};
+
+				if (paneLayout.variant === "empty" || paneLayout.variant === "single") {
+					const ret = recurse(paneLayout);
+					if (ret === undefined) return paneLayout;
+					return reconcile(ret)(paneLayout);
+				} else return produce(recurse)(paneLayout);
+			});
 		});
 	}
 
@@ -550,7 +666,7 @@ function Inner() {
 																setPanes(paneId(), "selectedTab", id)
 															}
 															onRemove={(id) => removeTab(paneId(), id)}
-															onSplit={() => {}}
+															onSplit={(dir) => splitPane(paneId(), dir)}
 															onZoom={() => setZoomedPane(paneId())}
 															focused={focusedPaneId() === paneId()}
 														/>
@@ -613,7 +729,7 @@ function Inner() {
 											selectedTabId={panes[paneId()]?.selectedTab}
 											onChange={(id) => setPanes(paneId(), "selectedTab", id)}
 											onRemove={(id) => removeTab(paneId(), id)}
-											onSplit={() => {}}
+											onSplit={(dir) => splitPane(paneId(), dir)}
 											onZoom={() => {
 												setZoomedPane(null);
 											}}
@@ -895,7 +1011,7 @@ function EditorPanes<T>(props: {
 					<div
 						class={cx(
 							"flex flex-1 divide-gray-5",
-							panes().variant === "verical"
+							panes().variant === "vertical"
 								? "flex-col divide-y-1"
 								: "flex-row divide-x-1 overflow-x-hidden",
 						)}
