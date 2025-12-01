@@ -25,5 +25,8 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./styles.css": "./src/styles.css"
+	},
+	"devDependencies": {
+		"vitest": "^4.0.14"
 	}
 }

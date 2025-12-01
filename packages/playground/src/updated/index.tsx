@@ -18,6 +18,7 @@ import {
 	PackageClients,
 	PackageSettings,
 	PackagesSidebar,
+	PaneLayout,
 	ProjectActions,
 	ProjectEffectRuntimeContext,
 	ProjectState,
@@ -103,15 +104,6 @@ namespace PaneState {
 		selectedTab: number;
 		tabs: Array<TabState.TabState & { tabId: number }>;
 	};
-}
-
-namespace PaneLayout {
-	export type PaneLayout<T> =
-		| { variant: "single"; pane: T }
-		| {
-				variant: "horizontal" | "vertical";
-				panes: Array<PaneLayout<T> & { size: number }>;
-		  };
 }
 
 export default function NewPlayground() {
@@ -206,7 +198,7 @@ function Inner() {
 	});
 
 	const [paneLayout, setPaneLayout] = makePersisted(
-		createStore<PaneLayout.PaneLayout<number> | { variant: "empty" }>({
+		createStore<PaneLayout.PaneLayout<number> | PaneLayout.Empty>({
 			variant: "horizontal",
 			panes: [
 				{ size: 0.5, variant: "single", pane: 0 },
@@ -219,49 +211,7 @@ function Inner() {
 	// this really needs improving
 	function removePane(id: number) {
 		batch(() => {
-			setPaneLayout((paneLayout) => {
-				const recurse = (
-					paneLayout: PaneLayout.PaneLayout<number> | { variant: "empty" },
-				): PaneLayout.PaneLayout<number> | undefined => {
-					if (paneLayout.variant === "empty" || paneLayout.variant === "single")
-						return;
-
-					for (let i = 0; i < paneLayout.panes.length; i++) {
-						const pane = paneLayout.panes[i];
-						if (!pane) continue;
-
-						if (pane.variant === "single") {
-							if (pane.pane === id)
-								if (paneLayout.panes.length > 2) {
-									paneLayout.panes.splice(i, 1);
-								} else {
-									return paneLayout.panes.find((p) => p.pane !== id);
-								}
-						} else {
-							const v = recurse(pane);
-							console.log({ v });
-							if (!v) continue;
-							paneLayout.panes[i] = { ...v, size: 1 / paneLayout.panes.length };
-							return;
-						}
-					}
-				};
-
-				if (paneLayout.variant === "empty") return;
-				if (paneLayout.variant === "single")
-					return reconcile({ variant: "empty" })(paneLayout);
-
-				if (
-					paneLayout.panes.find((p) => p.variant === "single" && p.pane === id)
-				)
-					return reconcile(
-						paneLayout.panes.find(
-							(p) => !(p.variant === "single" && p.pane === id),
-						),
-					)(paneLayout);
-
-				return produce(recurse)(paneLayout);
-			});
+			setPaneLayout((paneLayout) => PaneLayout.removePane(paneLayout, id));
 			setPanes(id, undefined!);
 		});
 	}
@@ -291,6 +241,8 @@ function Inner() {
 
 			const paneId = focusedPaneId();
 			if (paneId === null) return;
+
+			console.log({ paneId });
 
 			setPanes(
 				paneId,
@@ -468,73 +420,22 @@ function Inner() {
 
 	function splitPane(paneId: number, direction: "horizontal" | "vertical") {
 		const pane = panes[paneId];
-		console.log({ paneId, pane });
 		if (!pane) return;
 
+		const newId = Math.random();
+
+		let success = false;
 		batch(() => {
-			setPaneLayout((paneLayout) => {
-				const recurse = (
-					paneLayout: PaneLayout.PaneLayout<number> | { variant: "empty" },
-				): PaneLayout.PaneLayout<number> | undefined => {
-					if (paneLayout.variant === "empty") return;
-					if (paneLayout.variant === "single") {
-						if (paneLayout.pane !== paneId) return;
-						const newId = Math.random();
-
-						setPanes(newId, { ...pane, id: newId });
-						setFocusedPaneId(newId);
-
-						return {
-							variant: direction,
-							panes: [
-								{ variant: "single", pane: paneLayout.pane, size: 0.5 },
-								{ variant: "single", pane: newId, size: 0.5 },
-							],
-						};
-					}
-
-					for (let i = 0; i < paneLayout.panes.length; i++) {
-						const innerPane = paneLayout.panes[i]!;
-						console.log({ i, innerPane });
-						if (innerPane?.variant === "single") {
-							if (innerPane.pane !== pane.id) continue;
-							if (paneLayout.variant === direction) {
-								const newId = Math.random();
-
-								setPanes(newId, { ...pane, id: newId });
-								setFocusedPaneId(newId);
-
-								paneLayout.panes.splice(i, 0, {
-									variant: "single",
-									pane: newId,
-									size: 1,
-								});
-							} else {
-								const v = recurse(innerPane);
-								console.log({ v });
-								if (!v) continue;
-								paneLayout.panes[i] = { ...v, size: 1 };
-							}
-						} else {
-							const v = recurse(innerPane);
-							if (!v) continue;
-							paneLayout.panes[i] = { ...v, size: 1 };
-						}
-
-						paneLayout.panes.forEach((p) => {
-							p.size = 1 / paneLayout.panes.length;
-						});
-
-						return;
-					}
-				};
-
-				if (paneLayout.variant === "empty" || paneLayout.variant === "single") {
-					const ret = recurse(paneLayout);
-					if (ret === undefined) return paneLayout;
-					return reconcile(ret)(paneLayout);
-				} else return produce(recurse)(paneLayout);
-			});
+			setPaneLayout((paneLayout) =>
+				PaneLayout.splitPane(paneLayout, direction, paneId, newId, () => {
+					success = true;
+				}),
+			);
+			console.log({ newId });
+			if (success) {
+				setFocusedPaneId(newId);
+				setPanes(newId, { ...structuredClone(unwrap(pane)), id: newId });
+			}
 		});
 	}
 
