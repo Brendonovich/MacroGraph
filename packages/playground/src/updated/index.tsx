@@ -428,10 +428,17 @@ function Inner() {
 					success = true;
 				}),
 			);
-			console.log({ newId });
 			if (success) {
 				setFocusedPaneId(newId);
-				setPanes(newId, { ...structuredClone(unwrap(pane)), id: newId });
+				setPanes(newId, {
+					...structuredClone(unwrap(pane)),
+					tabs: structuredClone(
+						pane.tabs
+							.filter((t) => t.tabId === pane.selectedTab)
+							.map((v) => unwrap(v)),
+					),
+					id: newId,
+				});
 			}
 		});
 	}
