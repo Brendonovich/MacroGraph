@@ -40,11 +40,9 @@ import {
 } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
 import { Effect, ManagedRuntime, Option } from "effect";
-import { createShortcut } from "@solid-primitives/keyboard";
 import { cx } from "cva";
 import {
 	batch,
-	createEffect,
 	createResource,
 	createSignal,
 	type JSX,
@@ -52,7 +50,6 @@ import {
 	onMount,
 	Show,
 	Switch,
-	startTransition,
 } from "solid-js";
 import { createStore, produce, reconcile, unwrap } from "solid-js/store";
 
@@ -67,7 +64,7 @@ import {
 
 import "@macrograph/project-frontend/styles.css";
 import type { Accessor } from "solid-js";
-import { createMemo, For, type ParentProps } from "solid-js";
+import { createMemo, For } from "solid-js";
 
 export const effectRuntime = ManagedRuntime.make(RuntimeLayers);
 
@@ -587,7 +584,18 @@ function Inner() {
 										when={zoomedPane() === null}
 										fallback={<div class="flex-1 bg-gray-4" />}
 									>
-										<ContextualSidebar.Content state={contextualSidebar()} />
+										<ContextualSidebar.Content
+											state={contextualSidebar()}
+											setNodeProperty={(r) =>
+												actions.SetNodeProperty(
+													rpc.SetNodeProperty,
+													r.graph,
+													r.node,
+													r.property,
+													r.value,
+												)
+											}
+										/>
 									</Show>
 								</ContextualSidebar>
 							</Show>
@@ -641,6 +649,15 @@ function Inner() {
 											<ContextualSidebar>
 												<ContextualSidebar.Content
 													state={contextualSidebar()}
+													setNodeProperty={(r) =>
+														actions.SetNodeProperty(
+															rpc.SetNodeProperty,
+															r.graph,
+															r.node,
+															r.property,
+															r.value,
+														)
+													}
 												/>
 											</ContextualSidebar>
 										</Show>

@@ -20,7 +20,16 @@ import {
 export class ProjectRuntime extends Data.Class<{
 	readonly projectRef: Ref.Ref<Project.Project>;
 	readonly events: PubSub.PubSub<ProjectEvent.ProjectEvent>;
-	readonly nodesIORef: Ref.Ref<HashMap.HashMap<Node.Id, IO.NodeIO>>;
+	readonly nodesIORef: Ref.Ref<
+		HashMap.HashMap<
+			Node.Id,
+			{
+				readonly shape: unknown;
+				readonly inputs: Array<IO.InputPort>;
+				readonly outputs: Array<IO.OutputPort>;
+			}
+		>
+	>;
 	readonly packages: Map<Package.Id, RuntimePackage>;
 }> {}
 
@@ -59,7 +68,16 @@ export const make = () =>
 	Effect.gen(function* () {
 		return new ProjectRuntime({
 			projectRef: yield* Ref.make(defaultProject),
-			nodesIORef: yield* Ref.make(HashMap.empty<Node.Id, IO.NodeIO>()),
+			nodesIORef: yield* Ref.make(
+				HashMap.empty<
+					Node.Id,
+					{
+						readonly shape: unknown;
+						readonly inputs: Array<IO.InputPort>;
+						readonly outputs: Array<IO.OutputPort>;
+					}
+				>(),
+			),
 			events: yield* PubSub.unbounded<ProjectEvent.ProjectEvent>(),
 			packages: new Map(),
 		});

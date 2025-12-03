@@ -31,6 +31,14 @@ export class Package extends S.Class<Package>("Package")({
 	),
 	resources: S.Map({
 		key: S.String,
-		value: S.Struct({ name: S.String }),
+		value: S.Struct({
+			name: S.String,
+			values: S.Array(
+				S.Struct({
+					id: S.String,
+					display: S.String,
+				}),
+			),
+		}),
 	}),
 }) {}

@@ -58,52 +58,82 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 
 						return {
 							project: yield* Ref.get(runtime.projectRef),
-							packages: pipe(
+							packages: yield* pipe(
 								runtime.packages.entries(),
-								Iterable.map(([id, pkg]) => {
-									const schemas = pipe(
-										pkg.schemas.entries(),
-										Iterable.map(
-											([id, schema]) =>
-												[
-													id,
-													{
+								Iterable.map(([id, pkg]) =>
+									Effect.gen(function* () {
+										const schemas = pipe(
+											pkg.schemas.entries(),
+											Iterable.map(
+												([id, schema]) =>
+													[
 														id,
-														name: schema.name,
-														type: schema.type,
-														properties: Object.entries(
-															schema.properties ?? {},
-														).map(([id, property]) => ({
+														{
 															id,
-															name: property.name,
-															resource: property.resource.id,
-														})),
-													},
-												] as const,
-										),
-										(v) => new Map(v),
-									);
+															name: schema.name,
+															type: schema.type,
+															properties: Object.entries(
+																schema.properties ?? {},
+															).map(([id, property]) => ({
+																id,
+																name: property.name,
+																resource: property.resource.id,
+															})),
+														},
+													] as const,
+											),
+											(v) => new Map(v),
+										);
 
-									return new Package.Package({
-										id,
-										name: pkg.name,
-										schemas,
-										resources: pkg.engine.pipe(
-											Option.map((e) =>
-												pipe(
-													e.def.resources ?? [],
-													Iterable.map(
-														(resource) =>
-															[resource.id, { name: resource.name }] as const,
+										return new Package.Package({
+											id,
+											name: pkg.name,
+											schemas,
+											resources: yield* pkg.engine.pipe(
+												Option.map((e) =>
+													pipe(
+														e.def.resources ?? [],
+														Iterable.map((resource) =>
+															Effect.gen(function* () {
+																return [
+																	resource.id,
+																	{
+																		name: resource.name,
+																		values: yield* Effect.gen(function* () {
+																			const r = yield* resource.tag;
+																			return (yield* r.get).map(
+																				resource.serialize,
+																			);
+																		}).pipe(Effect.provide(e.resources)),
+																	},
+																] as const;
+															}),
+														),
+														Effect.all,
+														Effect.map((i) => new Map(i)),
 													),
-													(i) => new Map(i),
+												),
+												Effect.transposeOption,
+												Effect.map(
+													Option.getOrElse(
+														() =>
+															new Map<
+																string,
+																{
+																	readonly name: string;
+																	readonly values: ReadonlyArray<{
+																		readonly id: string;
+																		readonly display: string;
+																	}>;
+																}
+															>(),
+													),
 												),
 											),
-											Option.getOrElse(() => new Map()),
-										),
-									});
-								}),
-								(v) => [...v],
+										});
+									}),
+								),
+								Effect.all,
 							),
 							nodesIO: yield* runtime.nodesIORef.pipe(
 								Ref.get,

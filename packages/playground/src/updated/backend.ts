@@ -10,6 +10,7 @@ import {
 	CloudApiClient,
 	CredentialsStore,
 	GraphRequests,
+	NodeRequests,
 	PackageActions,
 	ProjectRequests,
 	ProjectRuntime,
@@ -22,6 +23,7 @@ const RpcsLive = Rpcs.toLayer(
 	Effect.gen(function* () {
 		const projectRequests = yield* ProjectRequests;
 		const graphRequests = yield* GraphRequests;
+		const nodeRequests = yield* NodeRequests;
 		const credentials = yield* CredentialsStore.CredentialsStore;
 
 		return {
@@ -33,6 +35,7 @@ const RpcsLive = Rpcs.toLayer(
 			CreateGraph: projectRequests.createGraph,
 			DeleteGraphItems: graphRequests.deleteItems,
 			DisconnectIO: graphRequests.disconnectIO,
+			SetNodeProperty: nodeRequests.setNodeProperty,
 			GetCredentials: () =>
 				credentials.get.pipe(
 					Effect.map((v) =>
@@ -120,6 +123,7 @@ export const BackendLayers = Layer.mergeAll(RpcsLive).pipe(
 		Layer.mergeAll(
 			ProjectRequests.Default,
 			GraphRequests.Default,
+			NodeRequests.Default,
 			PackageActions.Default,
 			RuntimeActions.Default,
 			CredentialsStore.layer,

@@ -282,9 +282,13 @@ const Engine = PackageEngine.define<State>()({
 		}),
 	});
 
+	const getCredentials = Effect.map(ctx.credentials, (c) =>
+		c.filter((c) => c.provider === "twitch"),
+	);
+
 	const TwitchAccountLive = TwitchAccount.toLayer(
 		Effect.gen(function* () {
-			const credentials = yield* ctx.credentials;
+			const credentials = yield* getCredentials;
 			return credentials.map((c) => ({
 				id: c.id,
 				displayName: c.displayName ?? c.id,
@@ -295,18 +299,16 @@ const Engine = PackageEngine.define<State>()({
 	return {
 		rpc: layer,
 		state: Effect.gen(function* () {
-			const credentials = yield* ctx.credentials;
+			const credentials = yield* getCredentials;
 
 			return {
-				accounts: credentials
-					.filter((c) => c.provider === "twitch")
-					.map((c) => ({
-						id: c.id,
-						displayName: c.displayName!,
-						eventSubSocket: {
-							state: sockets.get(c.id)?.state ?? "disconnected",
-						},
-					})),
+				accounts: credentials.map((c) => ({
+					id: c.id,
+					displayName: c.displayName!,
+					eventSubSocket: {
+						state: sockets.get(c.id)?.state ?? "disconnected",
+					},
+				})),
 			};
 		}),
 		resources: TwitchAccountLive,

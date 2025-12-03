@@ -37,7 +37,7 @@ export function removePane<T>(state: PaneLayout<T> | Empty, id: number) {
 		}
 	};
 
-	if (state.variant === "empty") return;
+	if (state.variant === "empty") return state;
 	if (state.variant === "single")
 		return reconcile({ variant: "empty" } as Empty)(state);
 
@@ -52,12 +52,12 @@ export function removePane<T>(state: PaneLayout<T> | Empty, id: number) {
 				panes: remaining,
 			})(state);
 
-		if (remaining.length > 0) return reconcile(remaining[0])(state);
+		if (remaining.length > 0) return reconcile(remaining[0]!)(state);
 
 		return reconcile({ variant: "empty" } as Empty)(state);
 	}
 
-	return produce(recurse)(state);
+	return produce(recurse)(state) ?? state;
 }
 
 export function splitPane(
@@ -120,5 +120,5 @@ export function splitPane(
 		const ret = recurse(state);
 		if (ret === undefined) return state;
 		return reconcile(ret)(state);
-	} else return produce(recurse)(state);
+	} else return produce(recurse)(state) ?? state;
 }

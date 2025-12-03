@@ -163,18 +163,44 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 							),
 							(v) => new Map(v),
 						),
-						resources: engine.pipe(
+						resources: yield* engine.pipe(
 							Option.map((e) =>
 								pipe(
 									e.def.resources ?? [],
-									Iterable.map(
-										(resource) =>
-											[resource.id, { name: resource.name }] as const,
+									Iterable.map((resource) =>
+										Effect.gen(function* () {
+											return [
+												resource.id,
+												{
+													name: resource.name,
+													values: yield* Effect.gen(function* () {
+														const r = yield* resource.tag;
+														return (yield* r.get).map(resource.serialize);
+													}).pipe(Effect.provide(e.resources)),
+												},
+											] as const;
+										}),
 									),
-									(i) => new Map(i),
+									Effect.all,
+									Effect.map((i) => new Map(i)),
 								),
 							),
-							Option.getOrElse(() => new Map()),
+							Effect.transposeOption,
+							Effect.map(
+								Option.getOrElse(
+									() =>
+										new Map<
+											string,
+											{
+												readonly name: string;
+												readonly values: ReadonlyArray<{
+													readonly id: string;
+													readonly display: string;
+												}>;
+											}
+										>(),
+								),
+							),
 						),
 					});
 

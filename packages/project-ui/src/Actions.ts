@@ -1,4 +1,4 @@
-import { Effect, type Request as ERequest, Record } from "effect";
+import { Effect, type Request as ERequest } from "effect";
 import {
 	type Graph,
 	IO,
@@ -135,6 +135,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 									position,
 									inputs: resp.io.inputs,
 									outputs: resp.io.outputs,
+									properties: {},
 								});
 							}),
 						);
@@ -283,6 +284,36 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 											});
 										}
 									}
+								}),
+							);
+						}),
+				),
+				SetNodeProperty: withRequest<Request.SetNodeProperty>()(
+					(
+						run,
+						graphId: Graph.Id,
+						nodeId: Node.Id,
+						property: string,
+						value: string,
+					) =>
+						Effect.gen(function* () {
+							yield* run(
+								new Request.SetNodeProperty({
+									graph: graphId,
+									node: nodeId,
+									property,
+									value,
+								}),
+							);
+
+							setState(
+								"graphs",
+								graphId,
+								"nodes",
+								(n) => n.id === nodeId,
+								produce((node) => {
+									node.properties ??= {};
+									node.properties[property] = value;
 								}),
 							);
 						}),

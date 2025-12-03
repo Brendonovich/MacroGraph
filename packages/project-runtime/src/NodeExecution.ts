@@ -23,14 +23,14 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 		effect: Effect.sync(() => {
 			const collectNodeProperties = Effect.fnUntraced(function* (
 				pkg: ProjectRuntime.RuntimePackage,
-				_node: Node.Node,
+				node: Node.Node,
 				schema: NodeSchema,
 			) {
 				const properties: Record<string, any> = {};
 				const engineResources = pkg.engine.pipe(
 					Option.getOrUndefined,
 				)?.resources;
-				for (const [name, def] of Object.entries(schema.properties ?? {})) {
+				for (const [id, def] of Object.entries(schema.properties ?? {})) {
 					if (!engineResources) continue;
 					const resource = yield* def.resource.tag.pipe(
 						Effect.provide(engineResources),
@@ -43,7 +43,11 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 					}
 
 					const values = yield* resource.get;
-					const value = values[0];
+					const value = values.find(
+						(v) =>
+							def.resource.serialize(v).id ===
+							node.properties?.pipe(HashMap.get(id), Option.getOrUndefined),
+					);
 					if (!value) {
 						yield* Effect.log(
 							`No value for resource '${pkg}/${def.resource.id}' found`,
@@ -52,7 +56,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 							property: def.name,
 						});
 					}
-					properties[name] = value;
+					properties[id] = value;
 				}
 
 				return properties;

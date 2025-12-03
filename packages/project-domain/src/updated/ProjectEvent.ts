@@ -61,6 +61,16 @@ export class GraphItemsDeleted extends S.TaggedClass<GraphItemsDeleted>()(
 	},
 ) {}
 
+export class NodePropertyUpdated extends S.TaggedClass<NodePropertyUpdated>()(
+	"NodePropertyUpdated",
+	{
+		graph: Graph.Id,
+		node: Node.Id,
+		property: S.String,
+		value: S.String,
+	},
+) {}
+
 export const ProjectEvent = S.Union(
 	NodeCreated,
 	GraphCreated,
@@ -69,5 +79,6 @@ export const ProjectEvent = S.Union(
 	GraphItemsDeleted,
 	PackageAdded,
 	PackageStateChanged,
+	NodePropertyUpdated,
 );
 export type ProjectEvent = S.Schema.Type<typeof ProjectEvent>;

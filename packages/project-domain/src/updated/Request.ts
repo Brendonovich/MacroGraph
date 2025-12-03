@@ -15,9 +15,9 @@ export class GetProject extends S.TaggedRequest<GetProject>()("GetProject", {
 	success: S.Struct({
 		project: Project.Project,
 		packages: S.Array(Package.Package),
-		nodesIO: S.Map({ key: Node.Id, value: IO.NodeIO.pipe(S.omit("shape")) }),
+		nodesIO: S.Map({ key: Node.Id, value: IO.NodeIO }),
 	}),
-	failure: S.Never,
+	failure: Credential.FetchFailed,
 }) {}
 
 export class GetPackageSettings extends S.TaggedRequest<GetPackageSettings>()(
@@ -100,5 +100,19 @@ export class DeleteGraphItems extends S.TaggedRequest<DeleteGraphItems>()(
 		},
 		success: ProjectEvent.GraphItemsDeleted,
 		failure: Graph.NotFound,
+	},
+) {}
+
+export class SetNodeProperty extends S.TaggedRequest<SetNodeProperty>()(
+	"SetNodeProperty",
+	{
+		payload: {
+			graph: Graph.Id,
+			node: Node.Id,
+			property: S.String,
+			value: S.String,
+		},
+		success: ProjectEvent.NodePropertyUpdated,
+		failure: S.Union(Graph.NotFound, Node.NotFound),
 	},
 ) {}

@@ -1,4 +1,3 @@
-import { schema } from "@effect/platform/Headers";
 import {
 	Effect,
 	type Request as ERequest,
@@ -24,7 +23,7 @@ export type NodeState = {
 	id: Node.Id;
 	name: string;
 	schema: Schema.Ref;
-	// properties: Record<string, unknown>;
+	properties?: Record<string, unknown>;
 	position: Position;
 } & Mutable<IO.NodeIO>;
 
@@ -39,7 +38,7 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 		effect: Effect.gen(function* () {
 			const [state, setState] = createStore<{
 				name: string;
-				graphs: Record<string, GraphState>;
+				graphs: Record<Graph.Id, GraphState>;
 				packages: Record<string, Package.Package>;
 			}>({
 				name: "New Project",
@@ -140,6 +139,10 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 													position: node.position,
 													inputs: data.nodesIO.get(node.id)?.inputs ?? [],
 													outputs: data.nodesIO.get(node.id)?.outputs ?? [],
+													properties: node.properties?.pipe(
+														HashMap.toEntries,
+														Object.fromEntries,
+													),
 												})),
 												(v) => Array.from(v),
 											),

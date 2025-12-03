@@ -17,10 +17,13 @@ declare global {
   const IconIcBaselineDiscord: typeof import('~icons/ic/baseline-discord.jsx').default
   const IconIcRoundShare: typeof import('~icons/ic/round-share.jsx').default
   const IconMaterialSymbolsAddRounded: typeof import('~icons/material-symbols/add-rounded.jsx').default
+  const IconMaterialSymbolsArrowDownRounded: typeof import('~icons/material-symbols/arrow-down-rounded.jsx').default
   const IconMaterialSymbolsArrowDropDownRounded: typeof import('~icons/material-symbols/arrow-drop-down-rounded.jsx').default
   const IconMaterialSymbolsArrowDropUpRounded: typeof import('~icons/material-symbols/arrow-drop-up-rounded.jsx').default
   const IconMaterialSymbolsArrowRight: typeof import('~icons/material-symbols/arrow-right.jsx').default
   const IconMaterialSymbolsArrowRightRounded: typeof import('~icons/material-symbols/arrow-right-rounded.jsx').default
+  const IconMaterialSymbolsArrowRounded: typeof import('~icons/material-symbols/arrow-rounded.jsx').default
+  const IconMaterialSymbolsArrowUpRounded: typeof import('~icons/material-symbols/arrow-up-rounded.jsx').default
   const IconMaterialSymbolsDeleteOutline: typeof import('~icons/material-symbols/delete-outline.jsx').default
   const IconMdiDotsHorizontal: typeof import('~icons/mdi/dots-horizontal.jsx').default
   const IconMdiGithub: typeof import('~icons/mdi/github.jsx').default

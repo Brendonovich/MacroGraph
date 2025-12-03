@@ -176,7 +176,6 @@ export const OutputPort = S.Struct({
 export type OutputPort = S.Schema.Type<typeof OutputPort>;
 
 export const NodeIO = S.Struct({
-	shape: S.Unknown,
 	inputs: S.Array(InputPort),
 	outputs: S.Array(OutputPort),
 });

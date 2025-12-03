@@ -11,6 +11,7 @@ export const Rpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.SetItemPositions),
 	Rpc.fromTaggedRequest(Request.GetPackageSettings),
 	Rpc.fromTaggedRequest(Request.DeleteGraphItems),
+	Rpc.fromTaggedRequest(Request.SetNodeProperty),
 	Rpc.make("GetCredentials", { success: S.Array(Credential.Credential) }),
 	Rpc.make("RefetchCredentials", { success: S.Array(Credential.Credential) }),
 );
