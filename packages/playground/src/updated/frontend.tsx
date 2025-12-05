@@ -1,16 +1,9 @@
 import { Layer } from "effect";
-import {
-	PackageClients,
-	ProjectActions,
-	ProjectState,
-} from "@macrograph/project-ui";
+import { ProjectUILayers } from "@macrograph/project-ui";
 
 import { PlaygroundRpc } from "./rpc";
 
-export const FrontendLayers = Layer.mergeAll(
-	PackageClients.Default,
+export const FrontendLive = Layer.mergeAll(
+	ProjectUILayers,
 	PlaygroundRpc.Default,
-	ProjectActions.Default,
-	ProjectState.Default,
-	Layer.scope,
 );

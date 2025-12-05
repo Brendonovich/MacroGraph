@@ -1,9 +1,9 @@
 import { Rpc, RpcGroup, RpcMiddleware } from "@effect/rpc";
 import { Schema } from "effect";
 
-import * as Realtime from "./Realtime";
 import * as CloudAuth from "./CloudAuth";
 import { CurrentUser } from "./Permissions";
+import * as Realtime from "./Realtime";
 
 export const EncodedJWT = Schema.String.pipe(
 	Schema.brand("ClientAuth/EncodedJWT"),

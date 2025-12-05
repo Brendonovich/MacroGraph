@@ -1,6 +1,6 @@
-import { Graph, Node } from "@macrograph/project-domain";
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema } from "effect";
+import { Graph, Node } from "@macrograph/project-domain";
 
 import * as Realtime from "./Realtime";
 

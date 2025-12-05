@@ -8,5 +8,6 @@ export * from "./Position.ts";
 export * as Project from "./Project.ts";
 export * as ProjectEvent from "./ProjectEvent.ts";
 export * as Request from "./Request.ts";
+export * as Resource from "./Resource.ts";
 export * as Schema from "./Schema.ts";
 export * as SubscribableCache from "./SubscribableCache.ts";

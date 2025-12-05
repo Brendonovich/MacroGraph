@@ -6,7 +6,7 @@ import * as S from "effect/Schema";
 import * as Node from "./Node";
 
 export const Id = S.String.pipe(S.brand("IO/Id"));
-export type Id = S.Schema.Type<typeof Id>;
+export type Id = typeof Id.Type;
 
 export type RefString = `${Node.Id}:${"i" | "o"}:${Id}`;
 
@@ -61,7 +61,7 @@ export namespace T {
 	export class DateTime extends S.TaggedClass<DateTime>()("DateTime", {}) {}
 
 	export const Primitive = S.Union(Int, Float, String, Bool, DateTime);
-	export type Primitive = S.Schema.Type<typeof Primitive>;
+	export type Primitive = typeof Primitive.Type;
 
 	export const primaryTypeOf = (t: Any): Primitive => {
 		switch (t._tag) {
@@ -78,16 +78,15 @@ export namespace T {
 
 	// export class Wildcard extends S.TaggedClass<Wildcard>()("Wildcard", {}) {}
 
-	export class List<_T extends Any> extends S.TaggedClass<List<any>>()("List", {
+	export class List<_T> extends S.TaggedClass<List<any>>()("List", {
 		inner: Any,
 	}) {}
 
-	export class Option<_T extends Any> extends S.TaggedClass<Option<any>>()(
-		"List",
-		{ inner: Any },
-	) {}
+	export class Option<_T> extends S.TaggedClass<Option<any>>()("List", {
+		inner: Any,
+	}) {}
 
-	export type Infer<T> = T extends Int | Float
+	export type InferPrimitive<T> = T extends Int | Float
 		? number
 		: T extends String
 			? string
@@ -95,28 +94,32 @@ export namespace T {
 				? boolean
 				: T extends DateTime
 					? DT.DateTime
-					: T extends Option<infer T>
-						? O.Option<Infer<T>>
-						: never;
+					: never;
+
+	export type Infer<T> = T extends Primitive
+		? InferPrimitive<T>
+		: T extends Option<infer T>
+			? O.Option<Infer<T>>
+			: never;
 
 	export namespace Encoded {
 		export const Int = S.Literal("I");
-		export type Int = S.Schema.Type<typeof Int>;
+		export type Int = typeof Int.Type;
 
 		export const Float = S.Literal("F");
-		export type Float = S.Schema.Type<typeof Float>;
+		export type Float = typeof Float.Type;
 
 		export const String = S.Literal("S");
-		export type String = S.Schema.Type<typeof String>;
+		export type String = typeof String.Type;
 
 		export const Bool = S.Literal("B");
-		export type Bool = S.Schema.Type<typeof Bool>;
+		export type Bool = typeof Bool.Type;
 
 		export const DateTime = S.Literal("DT");
-		export type DateTime = S.Schema.Type<typeof DateTime>;
+		export type DateTime = typeof DateTime.Type;
 
 		export const Primitive = S.Union(Int, Float, String, Bool, DateTime);
-		export type Primitive = S.Schema.Type<typeof Primitive>;
+		export type Primitive = typeof Primitive.Type;
 
 		// type InferPrimitive<T extends Primitive> = T extends Int | Float
 		// 	? number
@@ -125,7 +128,7 @@ export namespace T {
 		// 		: boolean;
 
 		export const MapKey = S.Union(Int, Float, String);
-		export type MapKey = S.Schema.Type<typeof MapKey>;
+		export type MapKey = typeof MapKey.Type;
 
 		export type Any = Primitive | Option<any> | List<any> | Map<MapKey, any>;
 		export const Any: S.Schema<Any> = S.suspend(() =>
@@ -159,30 +162,30 @@ export class Data extends S.TaggedClass<Data>()("Data", {
 }) {}
 
 export const Variant = S.Union(Exec, Data);
-export type Variant = S.Schema.Type<typeof Variant>;
+export type Variant = typeof Variant.Type;
 
 export const InputPort = S.Struct({
 	id: Id,
 	name: S.optional(S.String),
 	variant: Variant,
 });
-export type InputPort = S.Schema.Type<typeof InputPort>;
+export type InputPort = typeof InputPort.Type;
 
 export const OutputPort = S.Struct({
 	id: Id,
 	name: S.optional(S.String),
 	variant: Variant,
 });
-export type OutputPort = S.Schema.Type<typeof OutputPort>;
+export type OutputPort = typeof OutputPort.Type;
 
 export const NodeIO = S.Struct({
 	inputs: S.Array(InputPort),
 	outputs: S.Array(OutputPort),
 });
-export type NodeIO = S.Schema.Type<typeof NodeIO>;
+export type NodeIO = typeof NodeIO.Type;
 
 export const PortRef = S.Tuple(Node.Id, S.Literal("In", "Out"), Id);
-export type PortRef = S.Schema.Type<typeof PortRef>;
+export type PortRef = typeof PortRef.Type;
 
 export class PortConections extends S.Class<PortConections>("PortConections")({
 	from: PortRef,

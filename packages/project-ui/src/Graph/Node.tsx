@@ -22,8 +22,8 @@ import {
 } from "solid-js";
 import type { DOMElement } from "solid-js/jsx-runtime";
 
+import { isTouchDevice } from "../platform";
 import { useGraphContext } from "./Context";
-import { isTouchDevice } from "./utils";
 
 export function NodeRoot(
 	props: ParentProps<{

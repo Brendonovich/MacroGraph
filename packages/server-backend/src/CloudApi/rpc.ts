@@ -1,8 +1,8 @@
-import { CloudAuth, Policy } from "@macrograph/server-domain";
 import { Effect, Option } from "effect";
+import { CloudAuth, Policy } from "@macrograph/server-domain";
 
-import { ServerRegistration } from "../ServerRegistration";
 import { ServerPolicy } from "../ServerPolicy";
+import { ServerRegistration } from "../ServerRegistration";
 
 export const CloudRpcsLive = CloudAuth.Rpcs.toLayer(
 	Effect.gen(function* () {

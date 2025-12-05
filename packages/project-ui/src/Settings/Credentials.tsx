@@ -1,11 +1,30 @@
+import { Effect } from "effect";
 import { LoadingBlock, PromiseButton } from "@macrograph/package-sdk/ui";
 import type { Credential } from "@macrograph/project-domain/updated";
-import type { UseQueryResult } from "@tanstack/solid-query";
+import { queryOptions, type UseQueryResult } from "@tanstack/solid-query";
 import { For, Suspense } from "solid-js";
+
+import { mutationOptions } from "../tanstack-query";
+
+export const credentialsQueryOptions = (
+	queryFn: () => Promise<ReadonlyArray<Credential.Credential>>,
+) =>
+	queryOptions({
+		queryKey: ["credentials"],
+		queryFn,
+	});
+
+export const refetchCredentialsMutationOptions = (
+	mutationFn: () => Promise<any>,
+) =>
+	mutationOptions({
+		mutationKey: ["refetchCredentials"],
+		mutationFn,
+	});
 
 export function CredentialsPage(props: {
 	description: string;
-	credentials: UseQueryResult<readonly Credential.Credential[]>;
+	credentials: UseQueryResult<ReadonlyArray<Credential.Credential>>;
 	onRefetch?(): Promise<any>;
 }) {
 	return (

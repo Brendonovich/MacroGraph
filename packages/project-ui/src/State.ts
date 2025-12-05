@@ -13,6 +13,7 @@ import type {
 	Package,
 	Position,
 	Request,
+	Resource,
 	Schema,
 } from "@macrograph/project-domain/updated";
 import { createStore, reconcile } from "solid-js/store";
@@ -32,14 +33,21 @@ export type GraphState = Omit<Graph.Graph, "connections" | "nodes"> & {
 	connections: GraphTwoWayConnections;
 };
 
+export type PackageState = Omit<Package.Package, "resources"> & {
+	resources: Record<
+		string,
+		{ name: string; values: Array<Resource.ResourceValue> }
+	>;
+};
+
 export class ProjectState extends Effect.Service<ProjectState>()(
 	"ProjectState",
 	{
-		effect: Effect.gen(function* () {
+		scoped: Effect.gen(function* () {
 			const [state, setState] = createStore<{
 				name: string;
 				graphs: Record<Graph.Id, GraphState>;
-				packages: Record<string, Package.Package>;
+				packages: Record<string, PackageState>;
 			}>({
 				name: "New Project",
 				graphs: {},
@@ -185,7 +193,7 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 									acc[pkg.id] = pkg;
 									return acc;
 								},
-								{} as Record<Package.Id, Package.Package>,
+								{} as Record<Package.Id, any>, // TODO: fix
 							),
 						}),
 						// reconcile({

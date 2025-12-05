@@ -1,28 +1,26 @@
-import { PackagesSettings, UI, runtime } from "@macrograph/server-frontend";
 import { Effect, Layer } from "effect";
+import { Package } from "@macrograph/project-domain/updated";
+import { PackageClients } from "@macrograph/project-ui";
+import { runtime, UILive } from "@macrograph/server-frontend";
 
+import "@unocss/reset/tailwind.css";
 import "virtual:uno.css";
-import "@unocss/reset/tailwind-compat.css";
 
-const ClientLive = Layer.unwrapEffect(
+const RegisterPackages = Layer.effectDiscard(
 	Effect.gen(function* () {
+		const packageClients = yield* PackageClients;
+
 		const packageSettings = yield* Effect.promise(
 			() => import("@macrograph/base-packages/Settings"),
 		);
 
-		yield* Effect.all(
-			Object.entries(packageSettings.default).map(([id, getPkg]) =>
-				Effect.gen(function* () {
-					const pkg = yield* Effect.promise(getPkg);
-
-					yield* PackagesSettings.addPackage(id, pkg);
-				}),
-			),
-			{ concurrency: 3 },
-		);
-
-		return UI.Default;
+		for (const [id, getSettings] of Object.entries(packageSettings.default)) {
+			yield* packageClients.registerPackageClient(
+				Package.Id.make(id),
+				yield* Effect.promise(getSettings),
+			);
+		}
 	}),
 );
 
-runtime.runPromise(Layer.launch(ClientLive).pipe(Effect.scoped));
+Layer.mergeAll(RegisterPackages, UILive).pipe(Layer.launch, runtime.runPromise);

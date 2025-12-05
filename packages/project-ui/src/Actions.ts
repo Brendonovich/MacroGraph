@@ -28,13 +28,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				}) =>
 				<
 					F extends (
-						_: (
-							_: R,
-						) => Effect.Effect<
-							ERequest.Request.Success<R>,
-							ERequest.Request.Error<R>,
-							never
-						>,
+						_: (_: R) => Effect.Effect<ERequest.Request.Success<R>, any, never>,
 						...__: any[]
 					) => Effect.Effect<void, unknown, never>,
 				>(

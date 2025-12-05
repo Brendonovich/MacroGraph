@@ -1,4 +1,3 @@
-import type { Effect } from "effect";
 import { Select } from "@kobalte/core/select";
 import {
 	type Graph,
@@ -8,7 +7,6 @@ import {
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
 import {
-	createEffect,
 	createMemo,
 	For,
 	Match,
@@ -17,7 +15,7 @@ import {
 	Switch,
 } from "solid-js";
 
-import { useService } from "./EffectRuntime";
+import { useProjectService } from "./EffectRuntime";
 import { ProjectState } from "./State";
 
 function Content(props: {
@@ -27,7 +25,7 @@ function Content(props: {
 		| null;
 	setNodeProperty?: (r: Request.SetNodeProperty) => Promise<void>;
 }) {
-	const { state } = useService(ProjectState);
+	const { state } = useProjectService(ProjectState);
 
 	return (
 		<Show
@@ -115,9 +113,8 @@ function Content(props: {
 																			: undefined;
 
 																		const options = createMemo(() => [
-																			...(pkg()?.resources.get(
-																				property.resource,
-																			)?.values ?? []),
+																			...(pkg()?.resources[property.resource]
+																				?.values ?? []),
 																		]);
 
 																		const option = () =>
@@ -224,11 +221,4 @@ function Content(props: {
 	);
 }
 
-export const ContextualSidebar = Object.assign(
-	(props: ParentProps) => (
-		<div class="w-56 h-full flex flex-col items-stretch justify-start divide-y divide-gray-5 shrink-0 bg-gray-3">
-			{props.children}
-		</div>
-	),
-	{ Content },
-);
+export const ContextualSidebar = Object.assign({}, { Content });

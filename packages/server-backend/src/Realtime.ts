@@ -1,5 +1,6 @@
-import { Realtime, type ProjectEvent } from "@macrograph/server-domain";
 import { Effect, Option, PubSub, Stream } from "effect";
+import { Realtime, type ServerEvent } from "@macrograph/server-domain";
+
 import type { ClientAuthJWT } from "./ClientAuth/ClientAuthJWT";
 
 export class RealtimePubSub extends Effect.Service<RealtimePubSub>()(
@@ -7,10 +8,10 @@ export class RealtimePubSub extends Effect.Service<RealtimePubSub>()(
 	{
 		effect: Effect.gen(function* () {
 			const pubsub =
-				yield* PubSub.unbounded<[Realtime.ConnectionId, ProjectEvent]>();
+				yield* PubSub.unbounded<[Realtime.ConnectionId, ServerEvent]>();
 
 			return {
-				publish: Effect.fn(function* (v: (typeof ProjectEvent)["Type"]) {
+				publish: Effect.fn(function* (v: (typeof ServerEvent)["Type"]) {
 					const realtimeClient = yield* Realtime.Connection;
 
 					return yield* pubsub.publish([realtimeClient.id, v]);

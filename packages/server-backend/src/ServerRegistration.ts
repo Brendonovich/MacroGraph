@@ -6,10 +6,10 @@ import {
 	Schedule,
 	SubscriptionRef,
 } from "effect";
+import { CloudApiClient } from "@macrograph/project-runtime";
 import type { RawJWT } from "@macrograph/web-domain";
 
 import { Persistence } from "./Persistence";
-import { CloudApi, CloudApiToken } from "@macrograph/project-backend";
 
 type RegistrationEvent =
 	| { type: "started"; verificationUrlComplete: string }
@@ -49,7 +49,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 	"ServerRegistration",
 	{
 		effect: Effect.gen(function* () {
-			const cloud = yield* CloudApi;
+			const cloud = yield* CloudApiClient.CloudApiClient;
 			const token = yield* ServerRegistrationToken;
 
 			const registration = yield* Cache.make({
@@ -60,7 +60,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 						const tokenValue = yield* token.ref.get;
 						if (Option.isNone(tokenValue)) return Option.none();
 
-						return yield* cloud.client.getServerRegistration().pipe(
+						return yield* cloud.getServerRegistration().pipe(
 							Effect.map(Option.some),
 							Effect.catchAll((e) =>
 								Effect.gen(function* () {
@@ -77,9 +77,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 			});
 
 			const start = Effect.gen(function* () {
-				const api = yield* cloud.makeClient.pipe(
-					Effect.provide(CloudApiToken.makeContext(Option.none())),
-				);
+				const api = yield* CloudApiClient.make();
 				const mailbox = yield* Mailbox.make<RegistrationEvent>();
 
 				yield* Effect.gen(function* () {
@@ -130,6 +128,6 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 				start,
 			};
 		}),
-		dependencies: [CloudApi.Default, ServerRegistrationToken.Default],
+		dependencies: [ServerRegistrationToken.Default],
 	},
 ) {}

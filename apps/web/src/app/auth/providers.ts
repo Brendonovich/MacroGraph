@@ -1,10 +1,10 @@
 import { createHTTPClient } from "@macrograph/http-client";
-import { serverEnv } from "~/env/server";
-
 import type * as DiscordAPI from "@macrograph/packages/src/discord/api";
 import type * as PatreonAPI from "@macrograph/packages/src/patreon/ctx";
 import type * as SpotifyAPI from "@macrograph/packages/src/spotify/ctx";
 import type * as TwitchHelix from "@macrograph/packages/src/twitch/helix";
+
+import { serverEnv } from "~/env/server";
 
 export const AuthProviders = (): Record<
 	string,
@@ -18,8 +18,7 @@ export const AuthProviders = (): Record<
 					authorize: {
 						url: "https://id.twitch.tv/oauth2/authorize",
 						searchParams: {
-							// https://discuss.dev.twitch.com/t/force-verify-true-causing-502-error-with-authorization-flow-when-not-logged-in/59964
-							// force_verify: "true",
+							force_verify: "true",
 						},
 					},
 					token: { url: "https://id.twitch.tv/oauth2/token" },

@@ -1,7 +1,7 @@
 import * as S from "effect/Schema";
 
 export const Position = S.Struct({ x: S.Number, y: S.Number });
-export type Position = S.Schema.Type<typeof Position>;
+export type Position = typeof Position.Type;
 
 export const GraphPosition = Position.pipe(S.brand("GraphPosition"));
-export type GraphPosition = S.Schema.Type<typeof GraphPosition>;
+export type GraphPosition = typeof GraphPosition.Type;

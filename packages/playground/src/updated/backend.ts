@@ -1,5 +1,5 @@
 import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
-import { Stream } from "effect";
+import { Chunk, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
@@ -93,11 +93,11 @@ const RuntimeLive = Layer.scoped(
 
 		yield* runtime.events.pipe(
 			(e) => Stream.fromPubSub(e),
-			// Stream.throttle({
-			// 	cost: Chunk.size,
-			// 	duration: "100 millis",
-			// 	units: 1,
-			// }),
+			Stream.throttle({
+				cost: Chunk.size,
+				duration: "100 millis",
+				units: 1,
+			}),
 			Stream.runForEach(
 				Effect.fn(function* (e) {
 					// console.log(e);
@@ -117,7 +117,7 @@ const RuntimeLive = Layer.scoped(
 	}),
 );
 
-export const BackendLayers = Layer.mergeAll(RpcsLive).pipe(
+export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 	Layer.provideMerge(RuntimeLive),
 	Layer.provideMerge(
 		Layer.mergeAll(

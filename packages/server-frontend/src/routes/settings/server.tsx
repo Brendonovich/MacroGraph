@@ -1,15 +1,14 @@
+import { Effect, Option } from "effect";
 import { EffectButton } from "@macrograph/package-sdk/ui";
 import { Show } from "solid-js";
-import { Effect, Option } from "effect";
 
-import { useEffectQuery, useProjectService } from "../../AppRuntime";
-import { ProjectActions } from "../../Project/Actions";
-import { ProjectRpc } from "../../Project/Rpc";
+import { useEffectQuery, useEffectService } from "../../EffectRuntime";
 import { MatchEffectQuery } from "../../effect-query/components";
+import { ProjectRpc } from "../../Project/Rpc";
 
 export default function Account() {
-	const rpc = useProjectService(ProjectRpc.client);
-	const actions = useProjectService(ProjectActions);
+	const rpc = useEffectService(ProjectRpc.client);
+	const actions = useEffectService(ProjectActions);
 
 	const registration = useEffectQuery(() => ({
 		queryKey: ["server-registration"],

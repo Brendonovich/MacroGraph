@@ -396,10 +396,6 @@ function Inner() {
 														schemaRef,
 														[schemaRef.position.x, schemaRef.position.y],
 													);
-													setSchemaMenu({ open: false });
-												}}
-												onClose={() => {
-													setSchemaMenu({ open: false });
 												}}
 											/>
 										</GraphContext.Provider>

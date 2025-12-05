@@ -1,21 +1,20 @@
 import { Effect } from "effect";
+import { CredentialsStore } from "@macrograph/project-runtime";
 import { Credential, Policy } from "@macrograph/server-domain";
-import { Credentials } from "@macrograph/project-backend";
 
 import { ServerPolicy } from "./ServerPolicy";
 
 export const CredentialsRpcsLive = Credential.Rpcs.toLayer(
 	Effect.gen(function* () {
-		const credentials = yield* Credentials;
+		const credentials = yield* CredentialsStore.CredentialsStore;
 		const serverPolicy = yield* ServerPolicy;
 
 		const transformCredentialRequest = (e: typeof credentials.get) =>
 			e.pipe(
 				Policy.withPolicy(serverPolicy.isOwner),
 				Effect.catchIf(
-					(v) =>
-						!(v._tag === "NoRegistrationError" || v._tag === "PolicyDenied"),
-					(e) => Effect.die(null),
+					(v) => !(v._tag === "PolicyDenied"),
+					() => Effect.die(null),
 				),
 				Effect.map((v) =>
 					v.map(

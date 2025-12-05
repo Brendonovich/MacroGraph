@@ -1,25 +1,25 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "allowJs": true,
-    "strict": true,
-    "noEmit": true,
-    "types": [
-      "vite/client",
-      "unplugin-icons/types/solid",
-      "@macrograph/icons/types"
-    ],
-    "isolatedModules": true,
-    "skipLibCheck": true,
-    "paths": {
-      "~/*": ["./src/*"]
-    },
-    "plugins": [{ "name": "@effect/language-service" }]
-  }
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js",
+		"allowJs": true,
+		"strict": true,
+		"noEmit": true,
+		"types": [
+			"vite/client",
+			"unplugin-icons/types/solid",
+			"@macrograph/icons/types"
+		],
+		"isolatedModules": true,
+		"skipLibCheck": true,
+		"paths": {
+			"~/*": ["./src/*"]
+		},
+		"plugins": [{ "name": "@effect/language-service" }]
+	}
 }

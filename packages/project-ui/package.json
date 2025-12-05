@@ -6,6 +6,7 @@
 		"@effect/rpc": "^0.71.1",
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/icons": "workspace:*",
+		"@macrograph/ui": "workspace:*",
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
 		"@radix-ui/colors": "^3.0.0",

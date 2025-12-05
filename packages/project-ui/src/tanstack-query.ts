@@ -1,6 +1,6 @@
 import type {
-	SolidMutationOptions,
 	DefaultError,
+	SolidMutationOptions,
 	WithRequired,
 } from "@tanstack/solid-query";
 

@@ -1,7 +1,8 @@
 import { Socket } from "@effect/platform";
 import { BrowserSocket } from "@effect/platform-browser";
-import type { ProjectEvent } from "@macrograph/server-domain";
 import { Chunk, Effect, Option, Stream } from "effect";
+import type { ProjectEvent } from "@macrograph/project-domain/updated";
+import type { ServerEvent } from "@macrograph/server-domain";
 
 import { ClientAuth } from "../ClientAuth";
 
@@ -27,7 +28,8 @@ export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 				Stream.map(
 					(v) =>
 						JSON.parse(v) as
-							| ProjectEvent
+							| ServerEvent
+							| ProjectEvent.ProjectEvent
 							| { type: "identify"; id: number; token: string },
 				),
 				Stream.toPull,
@@ -41,8 +43,8 @@ export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 				Effect.catchAll(() => Effect.die("Socket error")),
 			);
 
-			if (firstEvent.type !== "identify")
-				throw new Error(`Invalid first event: ${firstEvent.type}`);
+			if (!("type" in firstEvent && firstEvent.type === "identify"))
+				throw new Error(`Invalid first event: ${firstEvent}`);
 
 			return {
 				id: firstEvent.id,

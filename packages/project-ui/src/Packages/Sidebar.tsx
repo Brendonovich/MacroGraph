@@ -1,7 +1,7 @@
 import type { Package } from "@macrograph/project-domain/updated";
 import { For, Show } from "solid-js";
 
-import { useService } from "../EffectRuntime";
+import { useProjectService } from "../EffectRuntime";
 import { ProjectState } from "../State";
 import { PackageClients } from "./Clients";
 
@@ -9,8 +9,8 @@ export function PackagesSidebar(props: {
 	packageId?: Package.Id;
 	onChange?(packageId: Package.Id): void;
 }) {
-	const packageClients = useService(PackageClients);
-	const { state } = useService(ProjectState);
+	const packageClients = useProjectService(PackageClients);
+	const { state } = useProjectService(ProjectState);
 
 	return (
 		<>

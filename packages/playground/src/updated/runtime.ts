@@ -1,32 +1,21 @@
-import { type Rpc, type RpcClient, type RpcGroup, RpcTest } from "@effect/rpc";
-import { Effect, Layer, type ManagedRuntime, Option, Stream } from "effect";
+import { type Rpc, type RpcClient, RpcTest } from "@effect/rpc";
+import {
+	Effect,
+	Layer,
+	type ManagedRuntime,
+	Option,
+	type Scope,
+	Stream,
+} from "effect";
 import { ProjectRuntime } from "@macrograph/project-runtime";
-import { GetPackageRpcClient, PackageClients } from "@macrograph/project-ui";
+import {
+	GetPackageRpcClient,
+	ProjectEventStream,
+} from "@macrograph/project-ui";
 import { createContext, useContext } from "solid-js";
 
-import { BackendLayers } from "./backend";
-import { FrontendLayers } from "./frontend";
-
-const StreamHandler = Layer.scopedDiscard(
-	Effect.gen(function* () {
-		const { events } = yield* ProjectRuntime.Current;
-		const pkgClients = yield* PackageClients;
-
-		yield* Stream.fromPubSub(events).pipe(
-			Stream.runForEach((e) =>
-				Effect.gen(function* () {
-					if (e._tag === "PackageStateChanged") {
-						yield* pkgClients.getPackage(e.pkg).pipe(
-							Effect.flatMap((p) => p.notifySettingsChange),
-							Effect.catchAll(() => Effect.void),
-						);
-					}
-				}),
-			),
-			Effect.forkScoped,
-		);
-	}),
-);
+import { BackendLive } from "./backend";
+import { FrontendLive } from "./frontend";
 
 const GetPackageRpcClientLive = Layer.effect(
 	GetPackageRpcClient,
@@ -58,27 +47,23 @@ const GetPackageRpcClientLive = Layer.effect(
 						}),
 					),
 				);
-				// const pkg = runtime.packages.get(id)?.rpc ?? Option.none();
-
-				// if (Option.isNone(pkg)) throw new Error("Package not found");
-
-				// const client = yield* RpcTest.makeClient(
-				// 	rpcs as unknown as RpcGroup.RpcGroup<Rpc.Any>,
-				// ).pipe(Effect.provide(pkg.value.layer));
-
-				// clients.set(id, client);
-
-				// return client as any;
 			});
 	}),
 );
 
-export const RuntimeLayers = Layer.empty.pipe(
-	Layer.merge(StreamHandler),
-	Layer.provideMerge(FrontendLayers),
-	Layer.provideMerge(GetPackageRpcClientLive),
-	Layer.provideMerge(BackendLayers),
+const ProjectEventStreamLive = Layer.effect(
+	ProjectEventStream,
+	Effect.map(ProjectRuntime.Current, (r) => Stream.fromPubSub(r.events)),
 );
+
+export const RuntimeLayers = Layer.empty.pipe(
+	Layer.provideMerge(FrontendLive),
+	Layer.provideMerge(
+		Layer.mergeAll(GetPackageRpcClientLive, ProjectEventStreamLive),
+	),
+	Layer.provideMerge(BackendLive),
+	Layer.provideMerge(Layer.scope),
+) satisfies Layer.Layer<any, any, Scope.Scope>;
 
 export type EffectRuntime = ManagedRuntime.ManagedRuntime<
 	Layer.Layer.Success<typeof RuntimeLayers>,

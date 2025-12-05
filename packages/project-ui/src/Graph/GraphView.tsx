@@ -2,7 +2,6 @@ import { Option } from "effect";
 import { ContextMenu } from "@kobalte/core/context-menu";
 import {
 	type Graph,
-	type GraphPosition,
 	IO,
 	Node,
 	type Schema,
@@ -12,7 +11,6 @@ import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
-import { ReactiveMap } from "@solid-primitives/map";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { mergeRefs } from "@solid-primitives/refs";
 import { cx } from "cva";
@@ -28,13 +26,13 @@ import {
 	Show,
 } from "solid-js";
 
+import { isTouchDevice } from "../platform";
 import type { NodeState } from "../State";
 import { useGraphContext } from "./Context";
 // import { useProjectService } from "../AppRuntime";
 import { NodeHeader, NodeRoot } from "./Node";
 // import { ProjectActions } from "../Project/Actions";
 import type { GraphTwoWayConnections } from "./types";
-import { isTouchDevice } from "./utils";
 
 export type GraphViewState = {
 	scale?: number;

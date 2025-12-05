@@ -38,31 +38,29 @@ export type SettingsProps<
 	state?: TState["Encoded"];
 };
 
-const buttonStyles = cva(
-	{
-		base: "focus-visible:outline-yellow-5 outline-none focus-visible:outline-solid transition-colors",
-		variants: {
-			variant: {
-				primary:
-					"bg-gray-12 text-gray-1 hover:bg-gray-11 disabled:bg-gray-10 outline-offset-3 focus-visible:outline-1.5",
-				text: "bg-transparent text-gray-12 enabled:(hover:(text-gray-12 bg-gray-3) focus-visible:(text-gray-12 bg-gray-3 outline-offset-0 outline-1)) disabled:(text-gray-10 bg-gray-3)",
-				textDanger:
-					"bg-transparent text-red-10 enabled:(hover:bg-red-3 focus-visible:(bg-red-3 outline-offset-0 outline-1)) disabled:(text-red-9 bg-red-3)",
-			},
-			size: {
-				md: "h-8 px-2.5 y-1 text-sm",
-			},
-			shape: {
-				block: "h-full",
-				rounded: "rounded",
-			},
+const buttonStyles = cva({
+	base: "focus-visible:outline-yellow-5 outline-none focus-visible:outline-solid transition-colors",
+	variants: {
+		variant: {
+			primary:
+				"bg-gray-12 text-gray-1 hover:bg-gray-11 disabled:bg-gray-10 outline-offset-3 focus-visible:outline-1.5",
+			text: "bg-transparent text-gray-12 enabled:(hover:(text-gray-12 bg-gray-3) focus-visible:(text-gray-12 bg-gray-3 outline-offset-0 outline-1)) disabled:(text-gray-10 bg-gray-3)",
+			textDanger:
+				"bg-transparent text-red-10 enabled:(hover:bg-red-3 focus-visible:(bg-red-3 outline-offset-0 outline-1)) disabled:(text-red-9 bg-red-3)",
 		},
-		defaultVariants: {
-			variant: "primary",
-			size: "md",
+		size: {
+			md: "h-8 px-2.5 y-1 text-sm",
+		},
+		shape: {
+			block: "h-full",
+			rounded: "rounded",
 		},
 	},
-);
+	defaultVariants: {
+		variant: "primary",
+		size: "md",
+	},
+});
 
 export function Button(
 	props: VariantProps<typeof buttonStyles> & ComponentProps<"button">,

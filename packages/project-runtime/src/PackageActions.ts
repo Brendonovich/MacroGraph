@@ -2,9 +2,11 @@ import {
 	Effect,
 	HashMap,
 	Iterable,
+	identity,
 	Option,
 	PubSub,
 	pipe,
+	Record,
 	Stream,
 } from "effect";
 import type { Package as SDKPackage } from "@macrograph/package-sdk";
@@ -44,14 +46,14 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 			return {
 				getSchema,
 				loadPackage: Effect.fnUntraced(function* <T>(
-					_id: string,
+					rawId: string,
 					unbuiltPkg: SDKPackage.UnbuiltPackage<T>,
 				) {
 					const runtime = yield* ProjectRuntime.Current;
 					const credentials = yield* CredentialsStore.CredentialsStore;
 
 					const schemas = new Map<Schema.Id, NodeSchema>();
-					const id = Package.Id.make(_id);
+					const id = Package.Id.make(rawId);
 
 					unbuiltPkg.builder({
 						schema: (id, schema) =>
@@ -94,6 +96,19 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 									),
 								});
 
+								const getResourceValues = (id: string) =>
+									Option.fromNullable(
+										engine.def.resources?.find((r) => r.id === id),
+									).pipe(
+										Option.map((def) =>
+											Effect.gen(function* () {
+												const handler = yield* def.tag;
+												return (yield* handler.get).map(def.serialize);
+											}).pipe(Effect.provide(builtEngine.resources)),
+										),
+										Effect.transposeOption,
+									);
+
 								yield* events.pipe(
 									(e) => Stream.fromPubSub(e),
 									Stream.runForEach((e) =>
@@ -125,7 +140,39 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 									Effect.forkScoped,
 								);
 
-								return { ...builtEngine, events, def: engine.def };
+								const updateResources = Effect.gen(function* () {
+									const resources = yield* pipe(
+										engine.def.resources ?? [],
+										Iterable.map((r) =>
+											getResourceValues(r.id).pipe(
+												Effect.map(Option.map((v) => [r.id, v] as const)),
+											),
+										),
+										Effect.all,
+										Effect.map(Iterable.filterMap(identity)),
+										Effect.map(Record.fromEntries),
+									);
+
+									yield* runtime.events.offer(
+										new ProjectEvent.PackageResourcesUpdated({
+											package: id,
+											resources,
+										}),
+									);
+								});
+
+								yield* credentials.changes().pipe(
+									Stream.runForEach(() => updateResources.pipe(Effect.ignore)),
+									Effect.forkScoped,
+								);
+
+								return {
+									...builtEngine,
+									events,
+									def: engine.def,
+									getResourceValues,
+									updateResources,
+								};
 							}),
 						),
 						Effect.transposeOption,
@@ -167,40 +214,27 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 							Option.map((e) =>
 								pipe(
 									e.def.resources ?? [],
-									Iterable.map((resource) =>
-										Effect.gen(function* () {
-											return [
-												resource.id,
-												{
-													name: resource.name,
-													values: yield* Effect.gen(function* () {
-														const r = yield* resource.tag;
-														return (yield* r.get).map(resource.serialize);
-													}).pipe(Effect.provide(e.resources)),
-												},
-											] as const;
-										}),
+									Iterable.map((r) =>
+										e
+											.getResourceValues(r.id)
+											.pipe(
+												Effect.option,
+												Effect.map(Option.flatten),
+												Effect.map(
+													Option.map(
+														(values) =>
+															[r.id, { name: r.name, values }] as const,
+													),
+												),
+											),
 									),
 									Effect.all,
-									Effect.map((i) => new Map(i)),
+									Effect.map(Iterable.filterMap(identity)),
+									Effect.map(Record.fromEntries),
 								),
 							),
 							Effect.transposeOption,
-							Effect.map(
-								Option.getOrElse(
-									() =>
-										new Map<
-											string,
-											{
-												readonly name: string;
-												readonly values: ReadonlyArray<{
-													readonly id: string;
-													readonly display: string;
-												}>;
-											}
-										>(),
-								),
-							),
+							Effect.map(Option.getOrElse(Record.empty)),
 						),
 					});
 

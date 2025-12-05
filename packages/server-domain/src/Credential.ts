@@ -3,7 +3,7 @@ import { Schema } from "effect";
 import { Credential } from "@macrograph/project-domain";
 
 import { PolicyDeniedError } from "./Policy";
-import { Realtime } from ".";
+import * as Realtime from "./Realtime";
 
 export * from "@macrograph/project-domain/Credential";
 

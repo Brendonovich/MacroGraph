@@ -14,7 +14,7 @@
 		"@faker-js/faker": "^9.8.0",
 		"@macrograph/base-packages": "workspace:*",
 		"@macrograph/package-sdk": "workspace:*",
-		"@macrograph/project-backend": "workspace:*",
+		"@macrograph/project-runtime": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
 		"@macrograph/server-domain": "workspace:*",
 		"@macrograph/web-domain": "workspace:*",

@@ -1,9 +1,10 @@
-import { createServer } from "node:http";
 import { HttpServer } from "@effect/platform";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { DepsLive, Server } from "@macrograph/server-backend";
 import { Fiber, Layer, Option } from "effect";
 import * as Effect from "effect/Effect";
+import { DepsLive, Server } from "@macrograph/server-backend";
+
+import { createServer } from "node:http";
 
 const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 	() => {

@@ -26,7 +26,7 @@ export function MatchEffectQuery<D, E>(props: {
 						<div class="w-full border-red-9 border bg-red-2 text-red-9 p-2	text-center">
 							{Cause.isFailType(e) && isPolicyDenied(e.error)
 								? "Access Denied"
-								: props.onError?.(e as any) ?? "Unexpected Error Occurred"}
+								: (props.onError?.(e as any) ?? "Unexpected Error Occurred")}
 						</div>
 					),
 				}),

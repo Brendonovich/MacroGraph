@@ -1,9 +1,8 @@
 import { Headers, Socket } from "@effect/platform";
 import { BrowserSocket } from "@effect/platform-browser";
 import { RpcClient, RpcMiddleware } from "@effect/rpc";
-import { Realtime, Rpcs } from "@macrograph/server-domain";
-import { RpcsSerialization } from "@macrograph/server-domain";
 import { Effect } from "effect";
+import { Realtime, Rpcs, RpcsSerialization } from "@macrograph/server-domain";
 
 import { ProjectRealtime } from "./Realtime";
 

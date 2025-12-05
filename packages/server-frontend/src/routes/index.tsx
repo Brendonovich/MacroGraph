@@ -1,63 +1,67 @@
-import { createElementBounds } from "@solid-primitives/bounds";
-import { createEventListener } from "@solid-primitives/event-listener";
-import { createMousePosition } from "@solid-primitives/mouse";
-import { Effect, Option, Stream } from "effect";
-import {
-	For,
-	Show,
-	Suspense,
-	createEffect,
-	createSignal,
-	startTransition,
-} from "solid-js";
-import { createStore, produce, reconcile } from "solid-js/store";
-
-import { Match, Switch } from "solid-js";
-import type { Graph, Node } from "@macrograph/server-domain";
-import { Dynamic } from "solid-js/web";
+import { Effect, Option } from "effect";
 import { Dialog } from "@kobalte/core";
-import { Button, EffectButton } from "@macrograph/package-sdk/ui";
-import type { ValidComponent } from "solid-js";
-import { useQueryClient } from "@tanstack/solid-query";
-import { createWritableMemo } from "@solid-primitives/memo";
+import {
+	Button,
+	EffectButton,
+	useEffectRuntime,
+} from "@macrograph/package-sdk/ui";
+import type { Graph, Package } from "@macrograph/project-domain/updated";
+import {
+	ContextualSidebar,
+	CredentialsPage,
+	createContextualSidebarState,
+	createSelectedSidebarState,
+	credentialsQueryOptions,
+	GraphContextMenu,
+	GraphsSidebar,
+	makeGraphTabSchema,
+	makePackageTabSchema,
+	PackageClients,
+	PackagesSidebar,
+	type PaneState,
+	ProjectActions,
+	ProjectPaneLayoutView,
+	ProjectPaneTabView,
+	ProjectState,
+	refetchCredentialsMutationOptions,
+	SettingsLayout,
+	Sidebar,
+	useLayoutState,
+} from "@macrograph/project-ui";
+import { PaneLayoutView, TabLayout } from "@macrograph/ui";
+import { createEventListener } from "@solid-primitives/event-listener";
 import { makePersisted } from "@solid-primitives/storage";
-import { GraphsSidebar } from "@macrograph/project-frontend";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
+import type { ValidComponent } from "solid-js";
+import { type Accessor, createSignal, Match, Show, Switch } from "solid-js";
+import { produce, type StoreSetter } from "solid-js/store";
 
-import { useEffectQuery, useProjectService } from "../AppRuntime";
-import { GraphContextProvider } from "../Graph/Context";
-import { GraphContextMenu } from "../Graph/ContextMenu";
-import { GraphView } from "../Graph/Graph";
-import { PresencePointer } from "../Graph/PresencePointer";
-import { usePresenceContext } from "../Presence/Context";
-import { ProjectActions } from "../Project/Actions";
-import { ProjectRpc } from "../Project/Rpc";
-import { ProjectState } from "../Project/State";
-import { useRealtimeContext } from "../Realtime";
-import { PackagesSettings } from "../Packages/PackagesSettings";
-import ServerSettings from "./settings/server";
-import CredentialsSettings from "./settings/credentials";
 import { AuthActions } from "../Auth";
+import { useEffectQuery, useEffectService } from "../EffectRuntime";
 import { ClientListDropdown } from "../Presence/ClientListDropdown";
-import { batch } from "solid-js";
-import { MatchEffectQuery } from "../effect-query/components";
-import { createScopedEffect } from "../effect-query/hooks";
+import { ProjectRpc } from "../Project/Rpc";
 
-namespace PaneState {
-	export type PaneState =
-		| { type: "graph"; graphId: Graph.Id }
-		| { type: "package"; package: string }
-		| { type: "settings"; page: "Server" | "Credentials" };
+namespace TabState {
+	export type TabState =
+		| {
+				type: "graph";
+				graphId: Graph.Id;
+				selection: Graph.ItemRef[];
+				transform?: { translate: { x: number; y: number }; zoom: number };
+		  }
+		| { type: "package"; packageId: Package.Id }
+		| { type: "settings"; page: "Credentials" };
 
 	export const isGraph = (
-		self: PaneState,
-	): self is Extract<PaneState, { type: "graph" }> => self.type === "graph";
+		self: TabState,
+	): self is Extract<TabState, { type: "graph" }> => self.type === "graph";
 
-	export const getKey = (state: PaneState) => {
+	export const getKey = (state: TabState) => {
 		switch (state.type) {
 			case "graph":
 				return `graph-${state.graphId}`;
 			case "package":
-				return `package-${state.package}`;
+				return `package-${state.packageId}`;
 			case "settings":
 				return "settings";
 		}
@@ -65,75 +69,26 @@ namespace PaneState {
 }
 
 export default function () {
-	const { state } = useProjectService(ProjectState);
-	const actions = useProjectService(ProjectActions);
-	const packagesSettings = useProjectService(PackagesSettings);
-	const rpc = useProjectService(ProjectRpc.client);
+	const { state } = useEffectService(ProjectState);
+	const rpc = useEffectService(ProjectRpc.client);
 
-	const presence = usePresenceContext();
-	const realtime = useRealtimeContext();
+	const actions = useEffectService(ProjectActions);
 
-	const [tabState, setTabState] = makePersisted(
-		createStore<{
-			tabs: Array<PaneState.PaneState & { tabId: number }>;
-			selectedTabId: number | null;
-			tabIdCounter: number;
-		}>(
-			{ tabs: [], selectedTabId: null, tabIdCounter: 0 },
-			{ name: "mg-tab-state" },
-		),
-	);
+	const layoutState = useLayoutState();
 
-	const getNextTabId = () => {
-		const i = tabState.tabIdCounter;
-		setTabState("tabIdCounter", i + 1);
-		return i;
-	};
-
-	const currentTabState = () =>
-		tabState.tabs.find((state) => state.tabId === tabState.selectedTabId);
-
-	function openTab(data: PaneState.PaneState) {
-		const existing = tabState.tabs.find(
-			(s) => PaneState.getKey(s) === PaneState.getKey(data),
-		);
-		if (existing) {
-			setTabState("selectedTabId", existing.tabId);
-			return;
-		}
-
-		const tabId = getNextTabId();
-		startTransition(() => {
-			batch(() => {
-				setTabState(produce((t) => t.tabs.push({ ...data, tabId })));
-				setTabState("selectedTabId", tabId);
-			});
-		});
-		return tabId;
-	}
-
-	function removeTab(tabId: number) {
-		batch(() => {
-			const index = tabState.tabs.findIndex((state) => state.tabId === tabId);
-			setTabState(
-				produce((s) => {
-					s.tabs.splice(index, 1);
-					s.selectedTabId =
-						s.tabs[index]?.tabId ?? s.tabs[s.tabs.length - 1]?.tabId ?? null;
-				}),
-			);
-		});
-	}
-
-	const [selectedSidebar, setSelectedSidebar] = createWritableMemo<
-		"graphs" | "packages" | null
-	>((v) => {
-		const t = currentTabState();
-		if (v === null) return null;
+	const selectedSidebar = createSelectedSidebarState(() => {
+		const t = layoutState.focusedTab();
 		if (t?.type === "graph") return "graphs";
 		if (t?.type === "package") return "packages";
-		return v;
+		return null;
 	}, "graphs");
+
+	const contextualSidebar = createContextualSidebarState({
+		wrapOpenSignal: (s) =>
+			makePersisted(s, {
+				name: "contextual-sidebar",
+			}),
+	});
 
 	return (
 		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
@@ -141,11 +96,9 @@ export default function () {
 				<button
 					type="button"
 					onClick={() => {
-						setSelectedSidebar(
-							selectedSidebar() === "packages" ? null : "packages",
-						);
+						selectedSidebar.toggle("packages");
 					}}
-					data-selected={selectedSidebar() === "packages"}
+					data-selected={selectedSidebar.state() === "packages"}
 					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 				>
 					Packages
@@ -153,11 +106,9 @@ export default function () {
 				<button
 					type="button"
 					onClick={() => {
-						setSelectedSidebar(
-							selectedSidebar() === "graphs" ? null : "graphs",
-						);
+						selectedSidebar.toggle("graphs");
 					}}
-					data-selected={selectedSidebar() === "graphs"}
+					data-selected={selectedSidebar.state() === "graphs"}
 					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 				>
 					Graphs
@@ -167,73 +118,91 @@ export default function () {
 					type="button"
 					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 					onClick={() => {
-						openTab({ type: "settings", page: "Server" });
+						layoutState.openTab({ type: "settings", page: "Credentials" });
 					}}
 				>
 					Settings
 				</button>
 				<AuthSection />
 			</div>
-			<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full bg-gray-3">
-				<Show when={selectedSidebar()}>
-					<div class="w-56 h-full flex flex-col items-stretch justify-start divide-y divide-gray-5 shrink-0">
+			<div class="flex flex-row flex-1 h-full relative">
+				<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full overflow-x-hidden">
+					<Sidebar
+						side="left"
+						open={!!selectedSidebar.state()}
+						onOpenChanged={(open) => {
+							selectedSidebar.toggle(open);
+						}}
+					>
 						<Switch>
-							<Match when={selectedSidebar() === "graphs"}>
+							<Match when={selectedSidebar.state() === "graphs"}>
 								<GraphsSidebar
 									graphs={state.graphs}
 									selected={(() => {
-										const s = currentTabState();
+										const s = layoutState.focusedTab();
 										if (s?.type === "graph") return s.graphId;
 									})()}
 									onSelected={(graph) => {
-										openTab({ type: "graph", graphId: graph.id });
+										layoutState.openTab({
+											type: "graph",
+											graphId: graph.id,
+											selection: [],
+										});
+									}}
+									onNewClicked={() => {
+										actions.CreateGraph(rpc.CreateGraph);
 									}}
 								/>
 							</Match>
-							<Match when={selectedSidebar() === "packages"}>
-								{(_) => {
-									const packagesSettings = useProjectService(PackagesSettings);
-
-									return (
-										<>
-											<input
-												class="px-2 bg-gray-3 dark:bg-gray-2 h-8 text-sm focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-												placeholder="Search Packages"
-											/>
-											<ul>
-												<For each={packagesSettings.listPackages()}>
-													{(pkg) => (
-														<Show when={state.packages[pkg]}>
-															<li>
-																<button
-																	type="button"
-																	class="w-full data-[selected='true']:bg-gray-2  hover:bg-gray-2 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-																	data-selected={(() => {
-																		const s = currentTabState();
-																		return (
-																			s?.type === "package" && s.package === pkg
-																		);
-																	})()}
-																	onClick={() =>
-																		openTab({ type: "package", package: pkg })
-																	}
-																>
-																	{pkg}
-																</button>
-															</li>
-														</Show>
-													)}
-												</For>
-											</ul>
-										</>
-									);
-								}}
+							<Match when={selectedSidebar.state() === "packages"}>
+								<PackagesSidebar
+									packageId={(() => {
+										const s = layoutState.focusedTab();
+										if (s?.type === "package") return s.packageId;
+									})()}
+									onChange={(packageId) =>
+										layoutState.openTab({ type: "package", packageId })
+									}
+								/>
 							</Match>
 						</Switch>
-					</div>
-				</Show>
+					</Sidebar>
 
-				<div class="flex flex-col items-stretch flex-1 overflow-hidden">
+					<ProjectPaneLayoutView
+						makeTabController={(pane) =>
+							usePaneTabController(pane, (setter) =>
+								layoutState.updateTab(pane().id, pane().selectedTab, setter),
+							)
+						}
+					/>
+
+					<Sidebar
+						side="right"
+						open={contextualSidebar.open()}
+						onOpenChanged={(open) => {
+							contextualSidebar.setOpen(open);
+						}}
+					>
+						<Show
+							when={layoutState.zoomedPane() === null}
+							fallback={<div class="flex-1 bg-gray-4" />}
+						>
+							<ContextualSidebar.Content
+								state={contextualSidebar.state()}
+								setNodeProperty={(r) =>
+									actions.SetNodeProperty(
+										rpc.SetNodeProperty,
+										r.graph,
+										r.node,
+										r.property,
+										r.value,
+									)
+								}
+							/>
+						</Show>
+					</Sidebar>
+
+					{/*<div class="flex flex-col items-stretch flex-1 overflow-hidden">
 					<Show when={tabState.tabs.length > 0}>
 						<ul class="flex flex-row items-start divide-x divide-gray-5 overflow-x-auto scrollbar-none shrink-0">
 							<For each={tabState.tabs}>
@@ -371,15 +340,16 @@ export default function () {
 												<GraphView
 													ref={setRef}
 													nodes={graph.nodes}
-													getSchema={(ref) =>
-														Option.fromNullable(
-															state.packages[ref.pkgId]?.schemas[ref.schemaId],
-														)
-													}
+													connections={graph.connections}
 													selection={
 														selection.graphId === graph.id
 															? selection.items
 															: new Set()
+													}
+													getSchema={(ref) =>
+														Option.fromNullable(
+															state.packages[ref.pkgId]?.schemas[ref.schemaId],
+														)
 													}
 													remoteSelections={Object.entries(
 														presence.clients,
@@ -406,7 +376,6 @@ export default function () {
 													onDisconnectIO={(io) => {
 														actions.DisconnectIO(graph.id, io);
 													}}
-													connections={graph.connections}
 													onContextMenu={(position) => {
 														setSchemaMenu({ open: true, position });
 													}}
@@ -589,6 +558,7 @@ export default function () {
 																	<ServerSettings />
 																</Match>
 																<Match when={settings().page === "Credentials"}>
+																<ServerSettings />
 																	<CredentialsSettings />
 																</Match>
 															</Switch>
@@ -602,14 +572,171 @@ export default function () {
 							</Match>
 						</Switch>
 					</Suspense>
+				</div>*/}
 				</div>
+				<Show when={layoutState.panes[layoutState.zoomedPane() ?? -1]}>
+					{(pane) => {
+						createEventListener(window, "keydown", (e) => {
+							if (e.key === "Escape") {
+								layoutState.toggleZoomedPane();
+							}
+						});
+
+						const tabController = usePaneTabController(pane, (setter) =>
+							layoutState.updateTab(pane().id, pane().selectedTab, setter),
+						);
+
+						return (
+							<div class="absolute inset-0 z-10 flex items-strech">
+								<div class="m-2 divide-x divide-gray-5 flex flex-row flex-1 border border-gray-5 bg-gray-2 pointer-events-auto">
+									<ProjectPaneTabView
+										controller={tabController}
+										pane={pane()}
+									/>
+
+									<Sidebar
+										side="right"
+										open={contextualSidebar.open()}
+										onOpenChanged={(open) => {
+											contextualSidebar.setOpen(open);
+										}}
+									>
+										<ContextualSidebar.Content
+											state={contextualSidebar.state()}
+											setNodeProperty={(r) =>
+												actions.SetNodeProperty(
+													rpc.SetNodeProperty,
+													r.graph,
+													r.node,
+													r.property,
+													r.value,
+												)
+											}
+										/>
+									</Sidebar>
+								</div>
+							</div>
+						);
+					}}
+				</Show>
 			</div>
 		</div>
 	);
 }
 
+const usePaneTabController = (
+	pane: Accessor<PaneState>,
+	updateTab: (_: StoreSetter<TabState.TabState>) => void,
+) => {
+	const rpc = useEffectService(ProjectRpc.client);
+	const [_, setGraphCtxMenu] = GraphContextMenu.useContext();
+
+	return TabLayout.defineController({
+		get tabs() {
+			const packageClients = useEffectService(PackageClients);
+			const { state } = useEffectService(ProjectState);
+
+			return pane()
+				.tabs.map((tab) => {
+					if (tab.type === "graph") {
+						const graph = state.graphs[tab.graphId];
+						if (!graph) return false;
+						return { ...tab, graph };
+					}
+					if (tab.type === "settings") return tab;
+					if (tab.type === "package") {
+						const pkg = state.packages[tab.packageId];
+						if (!pkg) return false;
+						return packageClients.getPackage(tab.packageId).pipe(
+							Option.map((client) => ({
+								...tab,
+								client,
+								package: pkg,
+							})),
+							Option.getOrUndefined,
+						);
+					}
+					return false;
+				})
+				.filter(Boolean);
+		},
+		get selectedTab() {
+			return pane().selectedTab;
+		},
+		schema: {
+			graph: makeGraphTabSchema(
+				(setter) => {
+					return updateTab((v) => {
+						if (v.type !== "graph") return v;
+						if (typeof setter === "function") return setter(v, []);
+						return setter;
+					});
+				},
+				rpc,
+				(state) => {
+					if (state.open) setGraphCtxMenu({ ...state, paneId: pane().id });
+					else setGraphCtxMenu(state);
+				},
+			),
+			settings: {
+				getMeta: (tab) => ({
+					title: "Settings",
+					desc: tab.page,
+				}),
+				Component: (tab) => (
+					<SettingsLayout
+						pages={[
+							{
+								name: "Credentials",
+								page: "Credentials" as const,
+								Component() {
+									const runtime = useEffectRuntime();
+
+									const credentials = useQuery(() =>
+										credentialsQueryOptions(() =>
+											rpc.GetCredentials().pipe(runtime.runPromise),
+										),
+									);
+									const refetchCredentials = useMutation(() =>
+										refetchCredentialsMutationOptions(() =>
+											rpc.RefetchCredentials().pipe(runtime.runPromise),
+										),
+									);
+
+									return (
+										<CredentialsPage
+											description="The credentials connected to your MacroGraph account."
+											credentials={credentials}
+											onRefetch={() =>
+												refetchCredentials
+													.mutateAsync()
+													.then(() => credentials.refetch())
+											}
+										/>
+									);
+								},
+							},
+						]}
+						page={tab().page}
+						onChange={(page) => {
+							updateTab(
+								produce((t) => {
+									if (t.type === "settings") {
+										t.page = page;
+									}
+								}),
+							);
+						}}
+					/>
+				),
+			},
+			package: makePackageTabSchema(rpc.GetPackageSettings),
+		},
+	});
+};
+
 function AuthSection() {
-	const rpc = useProjectService(ProjectRpc.client);
+	const rpc = useEffectService(ProjectRpc.client);
 
 	const user = useEffectQuery(() => ({
 		queryKey: ["user"],
@@ -627,7 +754,7 @@ function AuthSection() {
 function ClientLoginButton() {
 	const queryClient = useQueryClient();
 	const [open, setOpen] = createSignal(false);
-	const authActions = useProjectService(AuthActions);
+	const authActions = useEffectService(AuthActions);
 
 	return (
 		<Dialog.Root open={open()} onOpenChange={setOpen}>

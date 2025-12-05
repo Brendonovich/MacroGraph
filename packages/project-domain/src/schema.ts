@@ -170,6 +170,8 @@ export type SchemaDefinition<
 	| PureSchemaDefinition<TIO, TProperties>
 	| EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>;
 
+import type { ResourceValue } from "./updated/Resource";
+
 export namespace Resource {
 	export class Handler<TId extends string, T> extends Data.Class<{
 		get: Effect.Effect<Array<T>, Credential.FetchFailed>;
@@ -180,7 +182,7 @@ export namespace Resource {
 		id: TId;
 		name: string;
 		tag: Context.TagClass<Handler<TId, T>, string, Handler<TId, T>>;
-		serialize(value: T): { id: string; display: string };
+		serialize(value: T): ResourceValue;
 	}> {
 		toLayer(
 			get: Effect.Effect<Array<T>, Credential.FetchFailed>,

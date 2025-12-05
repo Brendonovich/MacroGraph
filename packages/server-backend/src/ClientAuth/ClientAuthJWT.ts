@@ -1,14 +1,11 @@
-import { ClientAuth } from "@macrograph/server-domain";
 import { Effect, ParseResult, Schema } from "effect";
+import { ClientAuth } from "@macrograph/server-domain";
 import * as Jose from "jose";
 
 import { JwtKeys } from "../JwtKeys";
 
 export class ClientAuthJWT extends Schema.Class<ClientAuthJWT>("ClientAuthJWT")(
-	{
-		accessToken: Schema.String,
-		refreshToken: Schema.String,
-	},
+	{ accessToken: Schema.String, refreshToken: Schema.String },
 ) {}
 
 export const ClientAuthJWTFromEncoded = Schema.transformOrFail(

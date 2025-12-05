@@ -213,6 +213,12 @@ importers:
       '@macrograph/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@macrograph/project-domain':
+        specifier: workspace:*
+        version: link:../../packages/project-domain
+      '@macrograph/project-ui':
+        specifier: workspace:*
+        version: link:../../packages/project-ui
       '@macrograph/server-backend':
         specifier: workspace:*
         version: link:../../packages/server-backend
@@ -322,24 +328,9 @@ importers:
       '@effect/vitest':
         specifier: ^0.26.0
         version: 0.26.0(effect@3.19.3)(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      '@iconify-json/bi':
-        specifier: ^1.2.6
-        version: 1.2.6
-      '@iconify-json/gg':
-        specifier: ^1.0.0
-        version: 1.2.2
-      '@iconify-json/line-md':
-        specifier: ^1.2.8
-        version: 1.2.8
-      '@iconify-json/lucide':
-        specifier: ^1.2.32
-        version: 1.2.32
-      '@iconify-json/material-symbols':
-        specifier: ^1.2.23
-        version: 1.2.23
-      '@iconify-json/svg-spinners':
-        specifier: ^1.2.2
-        version: 1.2.2
+      '@iconify/json':
+        specifier: ^2.2.282
+        version: 2.2.282
       typescript:
         specifier: ~5.7.2
         version: 5.7.3
@@ -1354,9 +1345,15 @@ importers:
       '@macrograph/project-ui':
         specifier: workspace:*
         version: link:../project-ui
+      '@macrograph/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@solid-primitives/bounds':
         specifier: ^0.0.118
         version: 0.0.118(solid-js@1.9.10)
+      '@solid-primitives/context':
+        specifier: ^0.2.3
+        version: 0.2.3(solid-js@1.9.10)
       '@solid-primitives/event-listener':
         specifier: ^2.3.3
         version: 2.3.3(solid-js@1.9.10)
@@ -1540,6 +1537,9 @@ importers:
       '@macrograph/project-domain':
         specifier: workspace:*
         version: link:../project-domain
+      '@macrograph/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@radix-ui/colors':
         specifier: ^3.0.0
         version: 3.0.0
@@ -1733,12 +1733,12 @@ importers:
       '@macrograph/package-sdk':
         specifier: workspace:*
         version: link:../package-sdk
-      '@macrograph/project-backend':
-        specifier: workspace:*
-        version: link:../project-backend
       '@macrograph/project-domain':
         specifier: workspace:*
         version: link:../project-domain
+      '@macrograph/project-runtime':
+        specifier: workspace:*
+        version: link:../project-runtime
       '@macrograph/server-domain':
         specifier: workspace:*
         version: link:../server-domain
@@ -1884,12 +1884,15 @@ importers:
       '@macrograph/project-domain':
         specifier: workspace:*
         version: link:../project-domain
-      '@macrograph/project-frontend':
+      '@macrograph/project-ui':
         specifier: workspace:*
-        version: link:../project-frontend
+        version: link:../project-ui
       '@macrograph/server-domain':
         specifier: workspace:*
         version: link:../server-domain
+      '@macrograph/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@macrograph/web-domain':
         specifier: workspace:*
         version: link:../web-domain
@@ -1999,21 +2002,6 @@ importers:
       '@effect/vitest':
         specifier: ^0.26.0
         version: 0.26.0(effect@3.19.3)(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      '@iconify-json/gg':
-        specifier: ^1.0.0
-        version: 1.2.2
-      '@iconify-json/line-md':
-        specifier: ^1.2.8
-        version: 1.2.8
-      '@iconify-json/lucide':
-        specifier: ^1.2.32
-        version: 1.2.32
-      '@iconify-json/material-symbols':
-        specifier: ^1.2.23
-        version: 1.2.23
-      '@iconify-json/svg-spinners':
-        specifier: ^1.2.2
-        version: 1.2.2
       typescript:
         specifier: ~5.7.2
         version: 5.7.3
@@ -2081,6 +2069,9 @@ importers:
       '@macrograph/config':
         specifier: workspace:*
         version: link:../config
+      '@solid-primitives/platform':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.9.10)
       '@tanstack/solid-query':
         specifier: ^5.90.6
         version: 5.90.6(solid-js@1.9.10)
@@ -4299,23 +4290,8 @@ packages:
       hono: '>=3.9.0'
       zod: ^3.19.1
 
-  '@iconify-json/bi@1.2.6':
-    resolution: {integrity: sha512-fWfLr1/+DJDe8+rIUXxMwvmWBZFlxRtM59sYnrezJ2xX87QKyXVw3QuforJ4kF2Orrz85J+JTRG6305vaJ7flA==}
-
-  '@iconify-json/gg@1.2.2':
-    resolution: {integrity: sha512-8iQh8+Tdb/0jakNYy0+t2GVubjhbaJbuYoPsRhFw8IAs00IQV2BjE9GoB2kGF/UObaJCqvCelB3qRaUdizkrmg==}
-
-  '@iconify-json/line-md@1.2.8':
-    resolution: {integrity: sha512-jWFsu6OZ1xAd4U0MLc/dgawC8nCbSn+a+WjTv+luiihpb6rrGLMw+Vy3wQ01hGf77v+fwt8sTvwm6K9zN3r4vQ==}
-
-  '@iconify-json/lucide@1.2.32':
-    resolution: {integrity: sha512-M5efeHQJhlT8FkAXjW+xGu5/lHUt5VBSjd/u9XxmQy6RGXLRCRi0PcUBosAuKALRT15j+U8dN4eWiDhDZjTbSw==}
-
   '@iconify-json/material-symbols@1.2.23':
     resolution: {integrity: sha512-GoNuWl8dVDiVFQq+HEgbOmPW0vTycs7qXgtpfBAx4XgDI4MVwnEIjIcYy/tlzzjMF1TPDwkX5fI1+KIylSdBwQ==}
-
-  '@iconify-json/svg-spinners@1.2.2':
-    resolution: {integrity: sha512-DIErwfBWWzLfmAG2oQnbUOSqZhDxlXvr8941itMCrxQoMB0Hiv8Ww6Bln/zIgxwjDvSem2dKJtap+yKKwsB/2A==}
 
   '@iconify/json@2.2.282':
     resolution: {integrity: sha512-G3PMvBEziGL8sbf6I2etaS7C0BFk+8swLhvzas3CBEubFmd8CSkbYbV6AwChgDRCcTTVgZ/ls7UALh69ohsGGQ==}
@@ -5665,10 +5641,10 @@ packages:
       react-dom:
         optional: true
 
-  '@storybook/builder-vite@10.2.0-alpha.1':
-    resolution: {integrity: sha512-UjgUJTJHhjiXRoW3XqNhkdSAQU04a+Jwaw9+0w4HtnPlIKSJCE9pd4eImxB2Oi1r1P9yKcxYGftKVOKVyPSjcg==}
+  '@storybook/builder-vite@10.2.0-alpha.3':
+    resolution: {integrity: sha512-ix9mF8UvsCykGQ/9+9JgvLgrP91hcuwsoAQ35+ilUGsV2WVcQ8pqhvQklwsyjJPGm1lWqM0/et2doucITl/W6A==}
     peerDependencies:
-      storybook: ^10.2.0-alpha.1
+      storybook: ^10.2.0-alpha.3
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
   '@storybook/codemod@8.2.7':
@@ -5677,12 +5653,12 @@ packages:
   '@storybook/core@8.2.7':
     resolution: {integrity: sha512-vgw5MYN9Bq2/ZsObCOEHbBHwi4RpbYCHPFtKkr4kTnWID++FCSiSVd7jY3xPvcNxWqCxOyH6dThpBi+SsB/ZAA==}
 
-  '@storybook/csf-plugin@10.2.0-alpha.1':
-    resolution: {integrity: sha512-kOl063iJw8fw861aw+AicnukARi1IdoHfOUBLN/AZbnOenQvnUBxkCvZCd/8hBIfedXys/fZyHBaORQuM0BlmA==}
+  '@storybook/csf-plugin@10.2.0-alpha.3':
+    resolution: {integrity: sha512-t+wMFO2H/sfpQtN6ismI2uqY3wuk9FSkO85un7UprANoNg2F0pLdE1v08NzhgPAjh3rCNXWX6s88iGUtW+qFxQ==}
     peerDependencies:
       esbuild: '*'
       rollup: '*'
-      storybook: ^10.2.0-alpha.1
+      storybook: ^10.2.0-alpha.3
       vite: '*'
       webpack: '*'
     peerDependenciesMeta:
@@ -14183,27 +14159,7 @@ snapshots:
       hono: 4.7.5
       zod: 3.25.36
 
-  '@iconify-json/bi@1.2.6':
-    dependencies:
-      '@iconify/types': 2.0.0
-
-  '@iconify-json/gg@1.2.2':
-    dependencies:
-      '@iconify/types': 2.0.0
-
-  '@iconify-json/line-md@1.2.8':
-    dependencies:
-      '@iconify/types': 2.0.0
-
-  '@iconify-json/lucide@1.2.32':
-    dependencies:
-      '@iconify/types': 2.0.0
-
   '@iconify-json/material-symbols@1.2.23':
-    dependencies:
-      '@iconify/types': 2.0.0
-
-  '@iconify-json/svg-spinners@1.2.2':
     dependencies:
       '@iconify/types': 2.0.0
 
@@ -15648,9 +15604,9 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
 
-  '@storybook/builder-vite@10.2.0-alpha.1(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/builder-vite@10.2.0-alpha.3(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@storybook/csf-plugin': 10.2.0-alpha.1(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/csf-plugin': 10.2.0-alpha.3(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@vitest/mocker': 3.2.4(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       ts-dedent: 2.2.0
@@ -15699,7 +15655,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@storybook/csf-plugin@10.2.0-alpha.1(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/csf-plugin@10.2.0-alpha.3(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       unplugin: 2.3.10
@@ -21939,7 +21895,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(esbuild@0.21.5)(rollup@4.52.5)(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite-plugin-solid@2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
     dependencies:
-      '@storybook/builder-vite': 10.2.0-alpha.1(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/builder-vite': 10.2.0-alpha.3(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@storybook/types': 9.0.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
       magic-string: 0.30.19
       solid-js: 1.9.10

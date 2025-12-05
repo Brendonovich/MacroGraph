@@ -1,4 +1,4 @@
-import { Option, pipe } from "effect";
+import { identity, Option, pipe, Record } from "effect";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Iterable from "effect/Iterable";
@@ -93,42 +93,30 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 												Option.map((e) =>
 													pipe(
 														e.def.resources ?? [],
-														Iterable.map((resource) =>
-															Effect.gen(function* () {
-																return [
-																	resource.id,
-																	{
-																		name: resource.name,
-																		values: yield* Effect.gen(function* () {
-																			const r = yield* resource.tag;
-																			return (yield* r.get).map(
-																				resource.serialize,
-																			);
-																		}).pipe(Effect.provide(e.resources)),
-																	},
-																] as const;
-															}),
+														Iterable.map((r) =>
+															e.getResourceValues(r.id).pipe(
+																Effect.option,
+																Effect.map((v) =>
+																	v.pipe(
+																		Option.flatten,
+																		Option.map(
+																			(values) =>
+																				[
+																					r.id,
+																					{ name: r.name, values },
+																				] as const,
+																		),
+																	),
+																),
+															),
 														),
 														Effect.all,
-														Effect.map((i) => new Map(i)),
+														Effect.map(Iterable.filterMap(identity)),
+														Effect.map(Record.fromEntries),
 													),
 												),
 												Effect.transposeOption,
-												Effect.map(
-													Option.getOrElse(
-														() =>
-															new Map<
-																string,
-																{
-																	readonly name: string;
-																	readonly values: ReadonlyArray<{
-																		readonly id: string;
-																		readonly display: string;
-																	}>;
-																}
-															>(),
-													),
-												),
+												Effect.map(Option.getOrElse(Record.empty)),
 											),
 										});
 									}),

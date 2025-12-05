@@ -1,19 +1,19 @@
+import { Effect, Fiber, Stream } from "effect";
 import type { SubscribableCache } from "@macrograph/project-domain";
+import { createDeepSignal } from "@solid-primitives/resource";
 import {
 	type Accessor,
 	createEffect,
 	createResource,
 	onCleanup,
 } from "solid-js";
-import { Effect, Fiber, Stream } from "effect";
-import { createDeepSignal } from "@solid-primitives/resource";
 
-import { useProjectRuntime } from "./AppRuntime";
+import { useEffectRuntime } from "./AppRuntime";
 
 export function useSubscribableCache<A, E>(
 	cache: Accessor<SubscribableCache.SubscribableCache<A, E>>,
 ) {
-	const projectRuntime = useProjectRuntime();
+	const projectRuntime = useEffectRuntime();
 
 	const [state, actions] = createResource(
 		cache,

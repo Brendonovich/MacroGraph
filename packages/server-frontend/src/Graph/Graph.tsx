@@ -21,7 +21,7 @@ import {
 } from "solid-js";
 
 import IconMaterialSymbolsDeleteOutline from "~icons/material-symbols/delete-outline.jsx";
-import { useProjectService } from "../AppRuntime";
+import { useEffectService } from "../EffectRuntime";
 import { NodeHeader, NodeRoot } from "../Node";
 import { ProjectActions } from "../Project/Actions";
 import { isTouchDevice } from "../utils";

@@ -1,11 +1,15 @@
 export { ProjectActions } from "./Actions";
 export * from "./ContextualSidebar";
-export * from "./EditorTabs";
 export { ProjectEffectRuntimeContext } from "./EffectRuntime";
 export * from "./Graph";
+export * from "./Layers";
+export * from "./LayoutState";
 export * from "./Packages";
-export * as PaneLayout from "./PaneLayout";
+export * from "./ProjectEventHandler";
+export * from "./ProjectPaneLayoutView";
+export * from "./ProjectPaneTabView";
 export * from "./Settings";
+export * from "./Sidebar";
 export { ProjectState } from "./State";
 export * from "./tanstack-query";
 

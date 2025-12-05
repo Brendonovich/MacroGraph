@@ -26,14 +26,14 @@ export const getInput = <T extends IO.T.Any>(ref: DataInput<T>) =>
 export const setOutput = <T extends IO.T.Any>(
 	ref: DataOutput<T>,
 	data: IO.T.Infer<T>,
-) => Effect.flatMap(ExecutionContext, (ctx) => ctx.setOutput<T>(ref, data));
+) => Effect.flatMap(ExecutionContext, (ctx) => ctx.setOutput(ref, data));
 
 export namespace PackageEngine {
 	export class PackageEngineDefinition<
 		TState,
 		TEvents,
 		TRpcs extends RpcGroup.RpcGroup<any>,
-		TResources extends Resource.Resource<any, any>,
+		TResources extends Resource.Resource<string, any>,
 	> extends Data.Class<{
 		events?: Schema.Schema<TEvents>;
 		rpc?: TRpcs;

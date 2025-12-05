@@ -1,14 +1,14 @@
-import { ClientAuth, CloudAuth, Realtime } from "@macrograph/server-domain";
 import { Effect, Mailbox, Option, Schedule, Schema } from "effect";
+import { CloudApiClient } from "@macrograph/project-runtime";
+import { ClientAuth, CloudAuth, Realtime } from "@macrograph/server-domain";
 
-import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 import { getRealtimeConnection, RealtimeConnections } from "../Realtime";
-import { CloudApi, CloudApiToken } from "../CloudApi";
+import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 
 export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 	Effect.gen(function* () {
 		const connections = yield* RealtimeConnections;
-		const cloud = yield* CloudApi;
+		const cloud = yield* CloudApiClient.CloudApiClient;
 
 		return {
 			ClientLogin: Effect.fn(function* () {
@@ -16,7 +16,7 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 				const mailbox = yield* Mailbox.make<ClientAuth.CloudLoginEvent>();
 
 				yield* Effect.gen(function* () {
-					const data = yield* cloud.client
+					const data = yield* cloud
 						.createDeviceCodeFlow()
 						.pipe(Effect.catchAll(() => new CloudAuth.CloudApiError()));
 
@@ -29,7 +29,7 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 						`Starting access token grant check for session '${data.device_code}'`,
 					);
 
-					const grant = yield* cloud.client
+					const grant = yield* cloud
 						.performAccessTokenGrant({
 							urlParams: {
 								device_code: data.device_code,
@@ -65,11 +65,9 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 						jwt,
 					).pipe(Effect.map(ClientAuth.EncodedJWT.make));
 
-					const cloudApi = yield* cloud.makeClient.pipe(
-						Effect.provide(
-							CloudApiToken.makeContext(Option.some(grant.access_token)),
-						),
-					);
+					const cloudApi = yield* CloudApiClient.make({
+						auth: { clientId: "macrograph-server", token: grant.access_token },
+					});
 
 					const user = yield* cloudApi
 						.getUser()
@@ -94,13 +92,12 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 
 				if (Option.isNone(connectionAuth)) return Option.none();
 
-				const cloudApi = yield* cloud.makeClient.pipe(
-					Effect.provide(
-						CloudApiToken.makeContext(
-							Option.some(connectionAuth.value.jwt.accessToken),
-						),
-					),
-				);
+				const cloudApi = yield* CloudApiClient.make({
+					auth: {
+						clientId: "macrograph-server",
+						token: connectionAuth.value.jwt.accessToken,
+					},
+				});
 
 				return yield* cloudApi.getUser().pipe(
 					Effect.catchAll(() => new CloudAuth.CloudApiError()),

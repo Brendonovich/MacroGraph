@@ -116,3 +116,14 @@ export class SetNodeProperty extends S.TaggedRequest<SetNodeProperty>()(
 		failure: S.Union(Graph.NotFound, Node.NotFound),
 	},
 ) {}
+
+export type Requests =
+	| GetProject
+	| GetPackageSettings
+	| SetItemPositions
+	| ConnectIO
+	| DisconnectIO
+	| CreateNode
+	| CreateGraph
+	| DeleteGraphItems
+	| SetNodeProperty;

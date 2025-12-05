@@ -1,17 +1,17 @@
-@import "@macrograph/project-frontend/styles.css";
+@import "@macrograph/project-ui/styles.css";
 
 html {
-  user-select: none;
+	user-select: none;
 }
 
 button:hover {
-  cursor: default;
+	cursor: default;
 }
 
 a:hover {
-  cursor: default;
+	cursor: default;
 }
 
 a:hover[rel="external"] {
-  cursor: inherit;
+	cursor: inherit;
 }

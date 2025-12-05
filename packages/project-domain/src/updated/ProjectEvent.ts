@@ -5,6 +5,7 @@ import * as Graph from "./Graph";
 import * as IO from "./IO";
 import * as Node from "./Node";
 import * as Package from "./Package";
+import * as Resource from "./Resource";
 
 export class NodeCreated extends S.TaggedClass<NodeCreated>()("NodeCreated", {
 	graph: Graph.Id,
@@ -71,14 +72,26 @@ export class NodePropertyUpdated extends S.TaggedClass<NodePropertyUpdated>()(
 	},
 ) {}
 
+export class PackageResourcesUpdated extends S.TaggedClass<PackageResourcesUpdated>()(
+	"PackageResourcesUpdated",
+	{
+		package: Package.Id,
+		resources: S.Record({
+			key: S.String,
+			value: S.Array(Resource.ResourceValue).pipe(S.mutable),
+		}).pipe(S.mutable),
+	},
+) {}
+
 export const ProjectEvent = S.Union(
-	NodeCreated,
-	GraphCreated,
-	IOUpdated,
-	GraphItemsMoved,
-	GraphItemsDeleted,
 	PackageAdded,
 	PackageStateChanged,
+	PackageResourcesUpdated,
+	GraphCreated,
+	GraphItemsMoved,
+	GraphItemsDeleted,
+	NodeCreated,
 	NodePropertyUpdated,
+	IOUpdated,
 );
-export type ProjectEvent = S.Schema.Type<typeof ProjectEvent>;
+export type ProjectEvent = typeof ProjectEvent.Type;

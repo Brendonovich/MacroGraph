@@ -1,34 +1,35 @@
 import type { Effect, ManagedRuntime } from "effect";
 import { createContext, useContext } from "solid-js";
 
+import type { ProjectActions } from "./Actions";
 import type { PackageClients } from "./Packages/Clients";
 import type { ProjectState } from "./State";
 
 export type EffectRuntime = ManagedRuntime.ManagedRuntime<
-  PackageClients | ProjectState,
-  never
+	PackageClients | ProjectState | ProjectActions,
+	any
 >;
 
 export const ProjectEffectRuntimeContext = createContext<EffectRuntime>();
 
 export function useEffectRuntime() {
-  const ctx = useContext(ProjectEffectRuntimeContext);
-  if (!ctx)
-    throw new Error(
-      "useEffectRuntime must be used within EffectRuntimeContext.Provider",
-    );
+	const ctx = useContext(ProjectEffectRuntimeContext);
+	if (!ctx)
+		throw new Error(
+			"useEffectRuntime must be used within EffectRuntimeContext.Provider",
+		);
 
-  return ctx;
+	return ctx;
 }
 
-export function useService<T>(
-  service: Effect.Effect<
-    T,
-    never,
-    ManagedRuntime.ManagedRuntime.Context<EffectRuntime>
-  >,
+export function useProjectService<T>(
+	service: Effect.Effect<
+		T,
+		never,
+		ManagedRuntime.ManagedRuntime.Context<EffectRuntime>
+	>,
 ) {
-  const runtime = useEffectRuntime();
+	const runtime = useEffectRuntime();
 
-  return runtime.runSync(service);
+	return runtime.runSync(service);
 }

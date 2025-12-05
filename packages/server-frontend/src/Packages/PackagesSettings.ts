@@ -1,7 +1,7 @@
 import { FetchHttpClient } from "@effect/platform";
 import { RpcClient, RpcSerialization } from "@effect/rpc";
-import { GetPackageRpcClient } from "@macrograph/project-frontend";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
+import { GetPackageRpcClient } from "@macrograph/project-ui";
 
 export const HttpPackgeRpcClient = Layer.succeed(
 	GetPackageRpcClient,
@@ -12,5 +12,6 @@ export const HttpPackgeRpcClient = Layer.succeed(
 					Layer.provide([RpcSerialization.layerJson, FetchHttpClient.layer]),
 				),
 			),
+			Effect.map(Option.some),
 		),
 );

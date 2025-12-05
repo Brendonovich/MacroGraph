@@ -1,5 +1,6 @@
 import * as S from "effect/Schema";
 
+import * as Resource from "./Resource";
 import * as Schema from "./Schema";
 
 export const Id = S.String.pipe(S.brand("Package.Id"));
@@ -29,16 +30,11 @@ export class Package extends S.Class<Package>("Package")({
 			}),
 		}),
 	),
-	resources: S.Map({
+	resources: S.Record({
 		key: S.String,
 		value: S.Struct({
 			name: S.String,
-			values: S.Array(
-				S.Struct({
-					id: S.String,
-					display: S.String,
-				}),
-			),
+			values: S.Array(Resource.ResourceValue),
 		}),
 	}),
 }) {}

@@ -2,22 +2,22 @@ import * as S from "effect/Schema";
 
 export namespace t {
 	export const Int = S.Literal("Int");
-	export type Int = S.Schema.Type<typeof Int>;
+	export type Int = typeof Int.Type;
 
 	export const Float = S.Literal("Float");
-	export type Float = S.Schema.Type<typeof Float>;
+	export type Float = typeof Float.Type;
 
 	export const String = S.Literal("String");
-	export type String = S.Schema.Type<typeof String>;
+	export type String = typeof String.Type;
 
 	export const Bool = S.Literal("Bool");
-	export type Bool = S.Schema.Type<typeof Bool>;
+	export type Bool = typeof Bool.Type;
 
 	const Primitive = S.Union(Int, Float, String, Bool);
-	type Primitive = S.Schema.Type<typeof Primitive>;
+	type Primitive = typeof Primitive.Type;
 
 	export const MapKey = S.Union(Int, Float, String);
-	export type MapKey = S.Schema.Type<typeof MapKey>;
+	export type MapKey = typeof MapKey.Type;
 
 	export type Any =
 		| Primitive

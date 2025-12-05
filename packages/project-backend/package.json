@@ -1,21 +1,21 @@
 {
-  "name": "@macrograph/project-backend",
-  "type": "module",
-  "dependencies": {
-    "@effect/platform": "^0.92.1",
-    "@effect/rpc": "^0.71.1",
-    "@macrograph/package-sdk": "workspace:*",
-    "@macrograph/project-domain": "workspace:*",
-    "@macrograph/web-domain": "workspace:*",
-    "effect": "^3.19.3"
-  },
-  "exports": {
-    ".": "./src/index.ts",
-    "./Node": "./src/Node.ts",
-    "./Graph": "./src/Graph.ts"
-  },
-  "devDependencies": {
-    "@effect/vitest": "^0.26.0",
-    "vitest": "^4.0.8"
-  }
+	"name": "@macrograph/project-backend",
+	"type": "module",
+	"dependencies": {
+		"@effect/platform": "^0.92.1",
+		"@effect/rpc": "^0.71.1",
+		"@macrograph/package-sdk": "workspace:*",
+		"@macrograph/project-domain": "workspace:*",
+		"@macrograph/web-domain": "workspace:*",
+		"effect": "^3.19.3"
+	},
+	"exports": {
+		".": "./src/index.ts",
+		"./Node": "./src/Node.ts",
+		"./Graph": "./src/Graph.ts"
+	},
+	"devDependencies": {
+		"@effect/vitest": "^0.26.0",
+		"vitest": "^4.0.8"
+	}
 }
