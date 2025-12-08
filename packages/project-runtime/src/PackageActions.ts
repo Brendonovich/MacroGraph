@@ -10,7 +10,13 @@ import {
 	Stream,
 } from "effect";
 import type { Package as SDKPackage } from "@macrograph/package-sdk";
-import { ForceRetryError, type NodeSchema } from "@macrograph/project-domain";
+import {
+	type ExecInput,
+	type ExecOutput,
+	ForceRetryError,
+	type IOFunctionContext,
+	type NodeSchema,
+} from "@macrograph/project-domain";
 import {
 	Credential,
 	Package,
@@ -56,11 +62,33 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 					const id = Package.Id.make(rawId);
 
 					unbuiltPkg.builder({
-						schema: (id, schema) =>
+						schema: (id, schema) => {
+							const run = Effect.fn(schema.run as any);
+
 							schemas.set(Schema.Id.make(id), {
 								...schema,
-								run: Effect.fn(schema.run as any),
-							} as NodeSchema),
+								io: (ctx: IOFunctionContext) => {
+									const baseIO: Array<ExecInput | ExecOutput> = [];
+									if (schema.type === "event") {
+										ctx.out.exec("exec");
+									} else if (schema.type === "exec") {
+										ctx.out.exec("exec");
+										ctx.in.exec("exec");
+									}
+
+									return [baseIO, schema.io(ctx)];
+								},
+								run: Effect.fnUntraced(function* (ctx: any, data) {
+									const ret = yield* run({ ...ctx, io: ctx.io[1] }, data);
+
+									if (schema.type === "event" || schema.type === "exec") {
+										return ctx.io[0][0];
+									}
+
+									return ret;
+								}),
+							} as NodeSchema);
+						},
 					});
 
 					const engine = yield* Option.fromNullable(unbuiltPkg.engine).pipe(
@@ -93,6 +121,9 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 										}).pipe(Effect.ensuring(credentialLatch.open)),
 									dirtyState: runtime.events.offer(
 										new ProjectEvent.PackageStateChanged({ pkg: id }),
+									),
+									dirtyResources: Effect.suspend(() =>
+										updateResources.pipe(Effect.ignore),
 									),
 								});
 

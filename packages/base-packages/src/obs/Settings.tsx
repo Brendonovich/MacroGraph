@@ -4,7 +4,13 @@ import {
 	type SettingsProps,
 } from "@macrograph/package-sdk/ui";
 import { cx } from "cva";
-import { type ComponentProps, For, Suspense, splitProps } from "solid-js";
+import {
+	type ComponentProps,
+	createUniqueId,
+	For,
+	Suspense,
+	splitProps,
+} from "solid-js";
 import { createStore } from "solid-js/store";
 
 import { RPCS, type STATE } from "./shared";
@@ -35,7 +41,7 @@ export default function Settings(
 				<Suspense fallback={<LoadingBlock />}>
 					<ul class="rounded divide-y divide-gray-6 gap-4">
 						<For
-							each={props.state?.connections ?? []}
+							each={props.state?.sockets ?? []}
 							fallback={
 								<div class="p-2 text-center text-gray-11 italic">
 									No Sockets
@@ -53,33 +59,46 @@ export default function Settings(
 
 function AddSocketForm(props: SettingsProps<typeof RPCS, typeof STATE>) {
 	const [addSocket, setAddSocket] = createStore({
+		name: "",
 		address: "ws://localhost:4455",
 		password: undefined as undefined | string,
 	});
 
 	return (
-		<div class="flex flex-row gap-4 items-end">
-			<InputField
-				label="Socket URL"
-				value="ws://localhost:4455"
-				onChange={(e) => setAddSocket("address", e.target.value)}
-			/>
-			<InputField
-				label="Password"
-				value=""
-				placeholder="Optional"
-				onChange={(e) => setAddSocket("password", e.target.value || undefined)}
-			/>
-			<EffectButton onClick={() => props.rpc.AddSocket(addSocket)}>
-				Add Socket
-			</EffectButton>
+		<div class="flex flex-col gap-3">
+			<div class="flex flex-row gap-3">
+				<InputField
+					label="Address"
+					value="ws://localhost:4455"
+					onChange={(e) => setAddSocket("address", e.target.value)}
+				/>
+				<InputField
+					label="Password"
+					value=""
+					placeholder="Optional"
+					onChange={(e) =>
+						setAddSocket("password", e.target.value || undefined)
+					}
+				/>
+			</div>
+			<div class="flex flex-row gap-3 items-end">
+				<InputField
+					label="Name"
+					value=""
+					placeholder="Optional"
+					onChange={(e) => setAddSocket("name", e.target.value || undefined)}
+				/>
+				<EffectButton onClick={() => props.rpc.AddSocket(addSocket)}>
+					Add Socket
+				</EffectButton>
+			</div>
 		</div>
 	);
 }
 
 function SocketListItem(
 	props: SettingsProps<typeof RPCS, typeof STATE> & {
-		conn: (typeof STATE)["Encoded"]["connections"][number];
+		conn: (typeof STATE)["Encoded"]["sockets"][number];
 	},
 ) {
 	const conn = () => props.conn;
@@ -87,7 +106,7 @@ function SocketListItem(
 	return (
 		<li class="flex flex-row py-2 w-full">
 			<div class="flex flex-col gap-0.5">
-				<span class="font-medium">TODO Name</span>
+				<span class="font-medium">{conn().name ?? conn().address}</span>
 				<div class="flex flex-row items-center gap-2">
 					<div
 						class={cx(
@@ -103,15 +122,15 @@ function SocketListItem(
 					variant="text"
 					onClick={() =>
 						conn().state === "connected"
-							? props.rpc.DisconnectSocket({ url: conn().address })
-							: props.rpc.ConnectSocket({ url: conn().address })
+							? props.rpc.DisconnectSocket({ address: conn().address })
+							: props.rpc.ConnectSocket({ address: conn().address })
 					}
 				>
 					{props.conn.state === "connected" ? "Disconnect" : "Connect"}
 				</EffectButton>
 				<EffectButton
 					variant="textDanger"
-					onClick={() => props.rpc.RemoveSocket({ url: conn().address })}
+					onClick={() => props.rpc.RemoveSocket({ address: conn().address })}
 				>
 					Remove
 				</EffectButton>
@@ -122,10 +141,15 @@ function SocketListItem(
 
 function InputField(props: { label: string } & ComponentProps<"input">) {
 	const [labelProps, inputProps] = splitProps(props, ["label"]);
+	const id = createUniqueId();
+
 	return (
 		<div class="flex flex-col gap-1 flex-1 items-stretch">
-			<label class="font-medium text-xs text-gray-11">{labelProps.label}</label>
+			<label for={id} class="font-medium text-xs text-gray-11">
+				{labelProps.label}
+			</label>
 			<input
+				id={id}
 				class="bg-white/85 dark:bg-black/25 w-full h-8 text-sm px-2 ring-1 ring-gray-6 focus:ring-yellow-5 focus:outline-none"
 				{...inputProps}
 			/>

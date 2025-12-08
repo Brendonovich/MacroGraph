@@ -1,24 +1,21 @@
+import { identity } from "effect";
 import { Select } from "@kobalte/core/select";
 import {
 	type Graph,
 	type Node,
 	Request,
 } from "@macrograph/project-domain/updated";
+import { createContextProvider } from "@solid-primitives/context";
+import { isMobile } from "@solid-primitives/platform";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
-import {
-	createMemo,
-	For,
-	Match,
-	type ParentProps,
-	Show,
-	Switch,
-} from "solid-js";
+import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
 
 import { useProjectService } from "./EffectRuntime";
+import { useLayoutStateRaw } from "./LayoutState";
 import { ProjectState } from "./State";
 
-function Content(props: {
+export function ContextualSidebarContent(props: {
 	state:
 		| { type: "graph"; graph: Graph.Id }
 		| { type: "node"; graph: Graph.Id; node: Node.Id }
@@ -221,4 +218,50 @@ function Content(props: {
 	);
 }
 
-export const ContextualSidebar = Object.assign({}, { Content });
+type IdentityFn<T> = (t: T) => T;
+
+function createContextualSidebar(opts?: {
+	wrapOpenSignal?: IdentityFn<ReturnType<typeof createSignal<boolean>>>;
+}) {
+	const { focusedPane } = useLayoutStateRaw();
+
+	const state = createMemo<
+		| null
+		| { type: "graph"; graph: Graph.Id }
+		| { type: "node"; graph: Graph.Id; node: Node.Id }
+	>((_) => {
+		const prevRet = null;
+		const pane = focusedPane();
+		if (!pane) return prevRet;
+		const tab = pane.tabs.find((t) => t.tabId === pane.selectedTab);
+		if (tab?.tabId !== pane.selectedTab) return prevRet;
+		if (tab.type !== "graph") return prevRet;
+		if (tab.selection.length < 1) return { type: "graph", graph: tab.graphId };
+		if (tab.selection.length === 1 && tab.selection[0]?.[0] === "Node")
+			return { type: "node", graph: tab.graphId, node: tab.selection[0][1] };
+		return prevRet;
+	}, null);
+
+	const [open, setOpen] = (opts?.wrapOpenSignal ?? identity)(
+		createSignal(!isMobile),
+	);
+
+	return { state, open, setOpen };
+}
+
+const [ContextualSidebarProvider, useContextualSidebar_] =
+	createContextProvider(
+		(opts: NonNullable<Parameters<typeof createContextualSidebar>[0]>) =>
+			createContextualSidebar(opts),
+	);
+
+const useContextualSidebar = () => {
+	const ctx = useContextualSidebar_();
+	if (!ctx)
+		throw new Error(
+			"useNavSidebar must be called underneath a NavSidebarProvider",
+		);
+	return ctx;
+};
+
+export { ContextualSidebarProvider, useContextualSidebar };

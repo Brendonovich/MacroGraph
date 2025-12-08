@@ -109,7 +109,7 @@ importers:
         version: 0.15.3(solid-js@1.9.10)
       '@solidjs/start':
         specifier: npm:@brendonovich/solidjs__start@0.0.1
-        version: '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
+        version: '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
       '@t3-oss/env-core':
         specifier: ^0.6.1
         version: 0.6.1(typescript@5.7.3)(zod@3.25.36)
@@ -1324,6 +1324,9 @@ importers:
       '@effect/rpc':
         specifier: ^0.71.1
         version: 0.71.1(@effect/platform@0.92.1(effect@3.19.3))(effect@3.19.3)
+      '@kobalte/core':
+        specifier: ^0.13.7
+        version: 0.13.7(solid-js@1.9.10)
       '@macrograph/base-packages':
         specifier: workspace:*
         version: link:../base-packages
@@ -13241,7 +13244,7 @@ snapshots:
       - xml2js
       - yaml
 
-  '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
+  '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
     dependencies:
       '@babel/core': 7.28.3
       '@babel/traverse': 7.28.3
@@ -13270,7 +13273,7 @@ snapshots:
       terracotta: 1.0.6(solid-js@1.9.10)
       vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       vite-plugin-solid: 2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      vitest: 3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vitest: 3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
     transitivePeerDependencies:
       - '@edge-runtime/vm'
       - '@testing-library/jest-dom'
@@ -14257,13 +14260,13 @@ snapshots:
 
   '@kobalte/utils@0.9.1(solid-js@1.9.10)':
     dependencies:
-      '@solid-primitives/event-listener': 2.3.3(solid-js@1.9.10)
+      '@solid-primitives/event-listener': 2.4.3(solid-js@1.9.10)
       '@solid-primitives/keyed': 1.2.3(solid-js@1.9.10)
       '@solid-primitives/map': 0.4.13(solid-js@1.9.10)
       '@solid-primitives/media': 2.2.9(solid-js@1.9.10)
       '@solid-primitives/props': 3.1.11(solid-js@1.9.10)
       '@solid-primitives/refs': 1.0.8(solid-js@1.9.10)
-      '@solid-primitives/utils': 6.2.3(solid-js@1.9.10)
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.10)
       solid-js: 1.9.10
 
   '@lucia-auth/adapter-drizzle@1.1.0(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(lucia@3.2.2)':
@@ -15330,10 +15333,10 @@ snapshots:
 
   '@solid-primitives/media@2.2.9(solid-js@1.9.10)':
     dependencies:
-      '@solid-primitives/event-listener': 2.3.3(solid-js@1.9.10)
-      '@solid-primitives/rootless': 1.4.5(solid-js@1.9.10)
+      '@solid-primitives/event-listener': 2.4.3(solid-js@1.9.10)
+      '@solid-primitives/rootless': 1.5.2(solid-js@1.9.10)
       '@solid-primitives/static-store': 0.0.8(solid-js@1.9.10)
-      '@solid-primitives/utils': 6.2.3(solid-js@1.9.10)
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.10)
       solid-js: 1.9.10
 
   '@solid-primitives/memo@1.3.8(solid-js@1.9.10)':
@@ -15356,7 +15359,7 @@ snapshots:
 
   '@solid-primitives/props@3.1.11(solid-js@1.9.10)':
     dependencies:
-      '@solid-primitives/utils': 6.2.3(solid-js@1.9.10)
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.10)
       solid-js: 1.9.10
 
   '@solid-primitives/refs@1.0.8(solid-js@1.9.10)':
@@ -23164,7 +23167,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
+  vitest@3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
     dependencies:
       '@vitest/expect': 3.0.5
       '@vitest/mocker': 3.0.5(vite@6.4.0(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))

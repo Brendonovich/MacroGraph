@@ -1,4 +1,3 @@
-import { createServer } from "node:http";
 import {
 	HttpMiddleware,
 	HttpRouter,
@@ -7,8 +6,10 @@ import {
 	HttpServerResponse,
 } from "@effect/platform";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { DepsLive, Server } from "@macrograph/server-backend";
 import { Effect, Layer } from "effect";
+import { DepsLive, Server } from "@macrograph/server-backend";
+
+import { createServer } from "node:http";
 
 Layer.unwrapEffect(
 	Effect.gen(function* () {

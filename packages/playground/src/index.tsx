@@ -1,49 +1,48 @@
-import { Effect, ManagedRuntime, Option } from "effect";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
-import type { Graph, Node } from "@macrograph/project-domain";
 import {
+	ContextualSidebarProvider,
 	CredentialsPage,
-	createGraphContext,
-	EditorTabs,
-	GraphContext,
+	credentialsQueryOptions,
+	defineBasePaneTabController,
 	GraphContextMenu,
-	GraphsSidebar,
-	GraphView,
-	mutationOptions,
+	Header,
+	makeGraphTabSchema,
+	makePackageTabSchema,
+	NavSidebarProvider,
 	PackageClients,
-	PackageSettings,
-	PackagesSidebar,
+	type PaneState,
 	ProjectActions,
 	ProjectEffectRuntimeContext,
+	ProjectPaneLayoutView,
+	ProjectPaneTabView,
 	ProjectState,
-	packageSettingsQueryOptions,
+	refetchCredentialsMutationOptions,
 	SettingsLayout,
-} from "@macrograph/project-frontend";
-import { createElementBounds } from "@solid-primitives/bounds";
-import { createWritableMemo } from "@solid-primitives/memo";
+	type TabState,
+	useContextualSidebar,
+	useNavSidebar,
+	ZoomedPaneWrapper,
+} from "@macrograph/project-ui";
+import { createEventListener } from "@solid-primitives/event-listener";
 import { makePersisted } from "@solid-primitives/storage";
 import {
 	QueryClient,
 	QueryClientProvider,
-	queryOptions,
 	useMutation,
 	useQuery,
 } from "@tanstack/solid-query";
-import {
-	batch,
-	createSignal,
-	Match,
-	onMount,
-	Show,
-	Switch,
-	startTransition,
-} from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import type { Accessor } from "solid-js";
 import "@total-typescript/ts-reset";
-import { createEventListener } from "@solid-primitives/event-listener";
-import { createMousePosition } from "@solid-primitives/mouse";
+import { Effect, ManagedRuntime } from "effect";
+import { createResource, onMount, Show } from "solid-js";
+import { produce, type StoreSetter } from "solid-js/store";
 
-import { loadPackages } from "./frontend";
+import {
+	createLayoutState,
+	LayoutStateProvider,
+	type SettingsPage,
+	useLayoutState,
+} from "./LayoutState";
 import { PlaygroundRpc } from "./rpc";
 import {
 	EffectRuntimeContext,
@@ -51,50 +50,49 @@ import {
 	useEffectRuntime,
 	useService,
 } from "./runtime";
+import { ContextualSidebar, NavSidebar } from "./Sidebars";
 
-import "@macrograph/project-frontend/styles.css";
+import "@macrograph/project-ui/styles.css";
 
 export const effectRuntime = ManagedRuntime.make(RuntimeLayers);
-
-namespace PaneState {
-	export type PaneState =
-		| {
-				type: "graph";
-				graphId: Graph.Id;
-				selection: Node.Id[];
-				transform?: { translate: { x: number; y: number }; zoom: number };
-		  }
-		| { type: "package"; packageId: string }
-		| { type: "settings"; page: "Credentials" };
-
-	export const isGraph = (
-		self: PaneState,
-	): self is Extract<PaneState, { type: "graph" }> => self.type === "graph";
-
-	export const getKey = (state: PaneState) => {
-		switch (state.type) {
-			case "graph":
-				return `graph-${state.graphId}`;
-			case "package":
-				return `package-${state.packageId}`;
-			case "settings":
-				return "settings";
-		}
-	};
-}
 
 export default function NewPlayground() {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
 
+	const [init] = createResource(async () => {
+		await effectRuntime.runPromise(Effect.void);
+		return true;
+	});
+
+	const layoutState = createLayoutState({
+		wrapPaneLayoutStore: (s) =>
+			makePersisted(s, { name: "editor-pane-layout" }),
+		wrapPanesStore: (s) => makePersisted(s, { name: "editor-panes" }),
+	});
+
 	return (
-		<div class="text-gray-12 font-sans w-full h-full">
+		<div class="text-gray-12 font-sans w-screen h-screen overflow-hidden">
 			<ProjectEffectRuntimeContext.Provider value={effectRuntime}>
 				<EffectRuntimeProvider runtime={effectRuntime}>
 					<EffectRuntimeContext.Provider value={effectRuntime}>
 						<QueryClientProvider client={client}>
-							<Inner />
+							<LayoutStateProvider {...layoutState}>
+								<NavSidebarProvider>
+									<ContextualSidebarProvider
+										wrapOpenSignal={(s) =>
+											makePersisted(s, {
+												name: "contextual-sidebar",
+											})
+										}
+									>
+										<Show when={init()}>
+											<Inner />
+										</Show>
+									</ContextualSidebarProvider>
+								</NavSidebarProvider>
+							</LayoutStateProvider>
 						</QueryClientProvider>
 					</EffectRuntimeContext.Provider>
 				</EffectRuntimeProvider>
@@ -104,26 +102,29 @@ export default function NewPlayground() {
 }
 
 function Inner() {
-	const [ref, setRef] = createSignal<HTMLDivElement | null>(null);
-	const [schemaMenu, setSchemaMenu] = createSignal<
-		{ open: false } | { open: true; position: { x: number; y: number } }
-	>({ open: false });
-
-	const bounds = createElementBounds(ref);
-
-	const runtime = useEffectRuntime();
-
 	const actions = useService(ProjectActions);
-	const { state, actions: stateActions } = useService(ProjectState);
+	const { actions: stateActions } = useService(ProjectState);
 	const rpc = useService(PlaygroundRpc);
-	const packageClients = useService(PackageClients);
 
 	const initialize = useMutation(() => ({
 		mutationFn: () =>
 			Effect.gen(function* () {
-				yield* loadPackages;
-
 				const project = yield* rpc.GetProject({});
+
+				const packageClients = yield* PackageClients;
+				const packageSettings = yield* Effect.promise(
+					() => import("@macrograph/base-packages/Settings"),
+				);
+
+				for (const p of project.packages) {
+					const getSettings = packageSettings.default[p.id];
+					if (!getSettings) continue;
+					yield* packageClients.registerPackageClient(
+						p.id,
+						yield* Effect.promise(getSettings),
+					);
+				}
+
 				stateActions.setProject(project);
 			}).pipe(runtime.runPromise),
 		onError: (e) => {
@@ -135,85 +136,47 @@ function Inner() {
 		initialize.mutate();
 	});
 
-	const [tabState, setTabState] = makePersisted(
-		createStore<{
-			tabs: Array<PaneState.PaneState & { tabId: number }>;
-			selectedTabId: number | null;
-			tabIdCounter: number;
-		}>(
-			{ tabs: [], selectedTabId: null, tabIdCounter: 0 },
-			{ name: "mg-tab-state" },
-		),
-	);
+	const runtime = useEffectRuntime();
 
-	const getNextTabId = () => {
-		const i = tabState.tabIdCounter;
-		setTabState("tabIdCounter", i + 1);
-		return i;
-	};
+	const layoutState = useLayoutState();
+	const navSidebar = useNavSidebar();
+	const contextualSidebar = useContextualSidebar();
 
-	const currentTabState = () =>
-		tabState.tabs.find((state) => state.tabId === tabState.selectedTabId);
-
-	function openTab(data: PaneState.PaneState) {
-		const existing = tabState.tabs.find(
-			(s) => PaneState.getKey(s) === PaneState.getKey(data),
-		);
-		if (existing) {
-			setTabState("selectedTabId", existing.tabId);
-			return;
+	createEventListener(window, "keydown", (e) => {
+		if (e.code === "KeyB" && e.metaKey) {
+			e.preventDefault();
+			navSidebar.toggle();
+		} else if (e.code === "KeyR" && e.metaKey) {
+			e.preventDefault();
+			contextualSidebar.setOpen((o) => !o);
+		} else if (e.code === "Escape" && e.shiftKey) {
+			layoutState.toggleZoomedPane(layoutState.focusedPaneId() ?? undefined);
+		} else if (e.code === "ArrowLeft" && e.metaKey) {
+			if (layoutState.moveSelectedTab(-1)) e.preventDefault();
+		} else if (e.code === "ArrowRight" && e.metaKey) {
+			if (layoutState.moveSelectedTab(1)) e.preventDefault();
+		} else if (e.code === "KeyW" && e.ctrlKey) {
+			const pane = layoutState.focusedPane();
+			if (pane === undefined) return;
+			layoutState.removeTab(pane.id, pane.selectedTab);
+			e.preventDefault();
+		} else if (e.code === "Backslash" && e.metaKey) {
+			const paneId = layoutState.focusedPaneId();
+			if (typeof paneId !== "number") return;
+			layoutState.splitPane(paneId, "horizontal");
+			e.preventDefault();
 		}
-
-		const tabId = getNextTabId();
-		startTransition(() => {
-			batch(() => {
-				setTabState(produce((t) => t.tabs.push({ ...data, tabId })));
-				setTabState("selectedTabId", tabId);
-			});
-		});
-		return tabId;
-	}
-
-	function removeTab(tabId: number) {
-		batch(() => {
-			const index = tabState.tabs.findIndex((state) => state.tabId === tabId);
-			setTabState(
-				produce((s) => {
-					s.tabs.splice(index, 1);
-					s.selectedTabId =
-						s.tabs[index]?.tabId ?? s.tabs[s.tabs.length - 1]?.tabId ?? null;
-				}),
-			);
-		});
-	}
-
-	const getSelectedSidebar = () => {
-		const t = currentTabState();
-		if (t?.type === "graph") return "graphs";
-		if (t?.type === "package") return "packages";
-		return null;
-	};
-
-	const [selectedSidebar, setSelectedSidebar] = createWritableMemo<
-		"graphs" | "packages" | null
-	>((v) => {
-		if (v === null) return null;
-		return getSelectedSidebar() ?? v;
-	}, getSelectedSidebar());
-
-	const mouse = createMousePosition();
+	});
 
 	return (
-		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-3">
-			<div class="flex flex-row items-center h-9 z-10 bg-gray-4">
+		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
+			<Header>
 				<button
 					type="button"
 					onClick={() => {
-						setSelectedSidebar(
-							selectedSidebar() === "packages" ? null : "packages",
-						);
+						navSidebar.toggle("packages");
 					}}
-					data-selected={selectedSidebar() === "packages"}
+					data-selected={navSidebar.state() === "packages"}
 					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 				>
 					Packages
@@ -221,337 +184,155 @@ function Inner() {
 				<button
 					type="button"
 					onClick={() => {
-						setSelectedSidebar(
-							selectedSidebar() === "graphs" ? null : "graphs",
-						);
+						navSidebar.toggle("graphs");
 					}}
-					data-selected={selectedSidebar() === "graphs"}
+					data-selected={navSidebar.state() === "graphs"}
 					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 				>
 					Graphs
+				</button>
+				<button
+					type="button"
+					onClick={() => {
+						navSidebar.toggle("constants");
+					}}
+					data-selected={navSidebar.state() === "constants"}
+					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+				>
+					Constants
 				</button>
 				<div class="flex-1" />
 				<button
 					type="button"
 					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 					onClick={() => {
-						openTab({ type: "settings", page: "Credentials" });
+						layoutState.openTab({ type: "settings", page: "credentials" });
 					}}
 				>
 					Settings
 				</button>
 				{/*<AuthSection />*/}
-			</div>
+			</Header>
 			<Show when={initialize.isSuccess}>
-				<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full">
-					<Show when={selectedSidebar()}>
-						<div class="w-56 h-full flex flex-col items-stretch justify-start divide-y divide-gray-5 shrink-0">
-							<Switch>
-								<Match when={selectedSidebar() === "graphs"}>
-									<GraphsSidebar
-										graphs={state.graphs}
-										selected={(() => {
-											const s = currentTabState();
-											if (s?.type === "graph") return s.graphId;
-										})()}
-										onSelected={(graph) => {
-											openTab({
-												type: "graph",
-												graphId: graph.id,
-												selection: [],
-											});
-										}}
+				<div class="flex flex-row flex-1 h-full relative">
+					<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full overflow-x-hidden">
+						<NavSidebar />
+
+						<ProjectPaneLayoutView<SettingsPage>
+							makeTabController={(pane) =>
+								usePaneTabController(pane, (setter) =>
+									layoutState.updateTab(pane().id, pane().selectedTab, setter),
+								)
+							}
+						/>
+
+						<ContextualSidebar />
+					</div>
+
+					<Show when={layoutState.panes[layoutState.zoomedPane() ?? -1]}>
+						{(pane) => {
+							createEventListener(window, "keydown", (e) => {
+								if (e.key === "Escape") {
+									layoutState.toggleZoomedPane();
+								}
+							});
+
+							const tabController = usePaneTabController(pane, (setter) =>
+								layoutState.updateTab(pane().id, pane().selectedTab, setter),
+							);
+
+							return (
+								<ZoomedPaneWrapper>
+									<ProjectPaneTabView
+										controller={tabController}
+										pane={pane()}
 									/>
-								</Match>
-								<Match when={selectedSidebar() === "packages"}>
-									<PackagesSidebar
-										packageId={(() => {
-											const s = currentTabState();
-											if (s?.type === "package") return s.packageId;
-										})()}
-										onChange={(packageId) =>
-											openTab({ type: "package", packageId })
-										}
-									/>
-								</Match>
-							</Switch>
-						</div>
-					</Show>
 
-					<EditorTabs
-						schema={{
-							graph: {
-								getMeta: (tab) => ({ title: tab.graph.name }),
-								Component: (tab) => {
-									const graphCtx = createGraphContext(
-										() => bounds,
-										() => tab().transform?.translate,
-									);
-
-									createEventListener(window, "keydown", (e) => {
-										if (e.code === "Backspace" || e.code === "Delete") {
-											actions.DeleteSelection(
-												rpc.DeleteSelection,
-												tab().graphId,
-												tab().selection,
-											);
-										} else if (e.code === "Period") {
-											if (e.metaKey || e.ctrlKey) {
-												setSchemaMenu({
-													open: true,
-													position: { x: mouse.x, y: mouse.y },
-												});
-											}
-										}
-									});
-
-									return (
-										<GraphContext.Provider value={graphCtx}>
-											<GraphView
-												ref={setRef}
-												nodes={tab().graph.nodes}
-												connections={tab().graph.connections}
-												selection={tab().selection}
-												getSchema={(ref) =>
-													Option.fromNullable(
-														state.packages[ref.pkgId]?.schemas[ref.schemaId],
-													)
-												}
-												onContextMenu={(e) => {
-													setSchemaMenu({
-														open: true,
-														position: { x: e.clientX, y: e.clientY },
-													});
-												}}
-												onContextMenuClose={() => {
-													setSchemaMenu({ open: false });
-												}}
-												onItemsSelected={(selection) => {
-													setTabState(
-														"tabs",
-														(tab) => tab.tabId === tabState.selectedTabId,
-														produce((tab) => {
-															if (tab.type !== "graph") return;
-
-															tab.selection = selection;
-														}),
-													);
-												}}
-												onSelectionMoved={(items) => {
-													actions.SetNodePositions(
-														rpc.SetNodePositions,
-														tab().graph.id,
-														items,
-													);
-												}}
-												onConnectIO={(from, to) => {
-													actions.ConnectIO(
-														rpc.ConnectIO,
-														tab().graph.id,
-														from,
-														to,
-													);
-												}}
-												onDisconnectIO={(io) => {
-													actions.DisconnectIO(
-														rpc.DisconnectIO,
-														tab().graph.id,
-														io,
-													);
-												}}
-												onDeleteSelection={() => {
-													actions.DeleteSelection(
-														rpc.DeleteSelection,
-														tab().graph.id,
-														[...tab().selection],
-													);
-												}}
-												onTranslateChange={(translate) => {
-													setTabState(
-														"tabs",
-														(tab) => tab.tabId === tabState.selectedTabId,
-														produce((tab) => {
-															if (tab.type !== "graph") return;
-
-															tab.transform ??= {
-																translate: { x: 0, y: 0 },
-																zoom: 1,
-															};
-															tab.transform.translate = translate;
-														}),
-													);
-												}}
-											/>
-											<GraphContextMenu
-												packages={state.packages}
-												position={(() => {
-													const s = schemaMenu();
-													if (s.open) return s.position;
-													return null;
-												})()}
-												onSchemaClick={(schemaRef) => {
-													actions.CreateNode(
-														rpc.CreateNode,
-														tab().graph.id,
-														schemaRef,
-														[schemaRef.position.x, schemaRef.position.y],
-													);
-												}}
-											/>
-										</GraphContext.Provider>
-									);
-								},
-							},
-							settings: {
-								getMeta: (tab) => ({ title: "Settings", desc: tab.page }),
-								Component: (tab) => (
-									<SettingsLayout
-										pages={[
-											{
-												name: "Credentials",
-												page: "Credentials" as const,
-												Component() {
-													const credentials = useQuery(() =>
-														credentialsQuery(runtime),
-													);
-
-													const refetchCredentials = useMutation(() =>
-														refetchCredentialsMutation(runtime),
-													);
-
-													return (
-														<CredentialsPage
-															description="The credentials connected to your MacroGraph account."
-															credentials={credentials}
-															onRefetch={() =>
-																refetchCredentials
-																	.mutateAsync()
-																	.then(() => credentials.refetch())
-															}
-														/>
-													);
-												},
-											},
-										]}
-										page={tab().page}
-										onChange={(page) => {
-											setTabState(
-												produce((s) => {
-													const t = s.tabs.find(
-														(t) => t.tabId === tabState.selectedTabId,
-													);
-													if (t?.type === "settings") {
-														t.page = page;
-													}
-												}),
-											);
-										}}
-									/>
-								),
-							},
-							package: {
-								getMeta: (tab) => ({
-									title: tab.package.name,
-									desc: "Package",
-								}),
-								Component: (tab) => {
-									const rpc = useService(PlaygroundRpc);
-
-									const settingsQuery = useQuery(() =>
-										packageSettingsQueryOptions(tab().packageId, (req) =>
-											rpc.GetPackageSettings(req).pipe(runtime.runPromise),
-										),
-									);
-
-									return (
-										<PackageSettings
-											packageClient={tab().client}
-											settingsQuery={settingsQuery}
-										/>
-									);
-								},
-							},
+									<ContextualSidebar />
+								</ZoomedPaneWrapper>
+							);
 						}}
-						state={tabState.tabs
-							.map((tab) => {
-								if (tab.type === "graph") {
-									const graph = state.graphs[tab.graphId];
-									if (!graph) return;
-									return { ...tab, graph };
-								}
-								if (tab.type === "settings") return tab;
-								if (tab.type === "package") {
-									const pkg = state.packages[tab.packageId];
-									if (!pkg) return;
-									return packageClients.getPackage(tab.packageId).pipe(
-										Option.map((client) => ({ ...tab, client, package: pkg })),
-										Option.getOrUndefined,
-									);
-								}
-							})
-							.filter(Boolean)}
-						selectedTabId={tabState.selectedTabId}
-						onChange={(id) => setTabState("selectedTabId", id)}
-						onRemove={(id) => removeTab(id)}
-					/>
+					</Show>
 				</div>
 			</Show>
 		</div>
 	);
 }
 
-const credentialsQuery = (
-	r: ManagedRuntime.ManagedRuntime<PlaygroundRpc, never>,
-) =>
-	queryOptions({
-		queryKey: ["credentials"],
-		queryFn: () =>
-			PlaygroundRpc.pipe(
-				Effect.flatMap((rpc) => rpc.GetCredentials()),
-				r.runPromise,
+const usePaneTabController = (
+	pane: Accessor<PaneState<SettingsPage>>,
+	updateTab: (_: StoreSetter<TabState.TabState<SettingsPage>>) => void,
+) => {
+	const rpc = useService(PlaygroundRpc);
+	const [_, setGraphCtxMenu] = GraphContextMenu.useContext();
+
+	return defineBasePaneTabController(pane, {
+		graph: makeGraphTabSchema(
+			(setter) => {
+				return updateTab((v) => {
+					if (v.type !== "graph") return v;
+					if (typeof setter === "function") return setter(v, []);
+					return setter;
+				});
+			},
+			rpc,
+			(state) => {
+				if (state.open) setGraphCtxMenu({ ...state, paneId: pane().id });
+				else setGraphCtxMenu(state);
+			},
+		),
+		package: makePackageTabSchema(rpc.GetPackageSettings),
+		settings: {
+			getMeta: (tab) => ({
+				title: "Settings",
+				desc: tab.page,
+			}),
+			Component: (tab) => (
+				<SettingsLayout
+					pages={[
+						{
+							name: "Credentials",
+							page: "credentials",
+							Component() {
+								const runtime = useEffectRuntime();
+
+								const credentials = useQuery(() =>
+									credentialsQueryOptions(() =>
+										rpc.GetCredentials().pipe(runtime.runPromise),
+									),
+								);
+								const refetchCredentials = useMutation(() =>
+									refetchCredentialsMutationOptions(() =>
+										rpc.RefetchCredentials().pipe(runtime.runPromise),
+									),
+								);
+
+								return (
+									<CredentialsPage
+										description="The credentials connected to your MacroGraph account."
+										credentials={credentials}
+										onRefetch={() =>
+											refetchCredentials
+												.mutateAsync()
+												.then(() => credentials.refetch())
+										}
+									/>
+								);
+							},
+						},
+					]}
+					page={tab().page}
+					onChange={(page) => {
+						updateTab(
+							produce((t) => {
+								if (t.type === "settings") {
+									t.page = page;
+								}
+							}),
+						);
+					}}
+				/>
 			),
+		},
 	});
-
-const refetchCredentialsMutation = (
-	r: ManagedRuntime.ManagedRuntime<PlaygroundRpc, never>,
-) =>
-	mutationOptions({
-		mutationKey: ["refetchCredentials"],
-		mutationFn: () =>
-			PlaygroundRpc.pipe(
-				Effect.flatMap((rpc) => rpc.RefetchCredentials()),
-				r.runPromise,
-			),
-	});
-
-// import {
-//   Atom,
-//   Registry,
-//   useAtomResource,
-//   useAtomSet,
-// } from "@effect-atom/atom-solid";
-// import { BackendLayers } from "./backend";
-
-// const atomRuntime = Atom.runtime(
-//   PlaygroundRpc.Default.pipe(
-//     Layer.provide(BackendLayers),
-//     Layer.provide(Layer.scope),
-//   ),
-// );
-
-// const credentialsAtom = atomRuntime.atom(
-//   Effect.flatMap(PlaygroundRpc, (rpc) => rpc.GetCredentials()).pipe(
-//     Effect.zipLeft(Effect.sleep("1 seconds")),
-//   ),
-// );
-
-// const refetchCredentialsAtom = atomRuntime.fn(
-//   Effect.fn(function* () {
-//     const rpc = yield* PlaygroundRpc;
-//     const atomRegistry = yield* Registry.AtomRegistry;
-
-//     yield* Effect.sleep("1 seconds");
-//     yield* rpc.RefreshCredentials();
-//     atomRegistry.refresh(credentialsAtom);
-//   }),
-// );
+};

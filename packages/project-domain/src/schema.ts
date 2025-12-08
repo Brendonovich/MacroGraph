@@ -24,22 +24,34 @@ export type EffectGenerator<
 	Ret = void,
 > = Generator<YieldWrap<Eff>, Ret, never>;
 
+export type CreateExecIn = (
+	id: string,
+	options?: { name?: string },
+) => ExecInput;
+export type CreateDataIn = <T extends T.Any>(
+	id: string,
+	type: T,
+	options?: { name?: string },
+) => DataInput<T>;
+
+export type CreateExecOut = (
+	id: string,
+	options?: { name?: string },
+) => ExecOutput;
+export type CreateDataOut = <T extends T.Any>(
+	id: string,
+	type: T,
+	options?: { name?: string },
+) => DataOutput<T>;
+
 export interface IOFunctionContext {
 	in: {
-		exec: (id: string, options?: { name?: string }) => ExecInput;
-		data: <T extends T.Any>(
-			id: string,
-			type: T,
-			options?: { name?: string },
-		) => DataInput<T>;
+		exec: CreateExecIn;
+		data: CreateDataIn;
 	};
 	out: {
-		exec: (id: string, options?: { name?: string }) => ExecOutput;
-		data: <T extends T.Any>(
-			id: string,
-			type: T,
-			options?: { name?: string },
-		) => DataOutput<T>;
+		exec: CreateExecOut;
+		data: CreateDataOut;
 	};
 }
 
@@ -57,8 +69,8 @@ export interface PureSchemaDefinition<
 > extends SchemaDefinitionBase<TProperties> {
 	type: "pure";
 	io: (ctx: {
-		in: Extract<IOFunctionContext["in"], { data: any }>;
-		out: Extract<IOFunctionContext["out"], { data: any }>;
+		in: { data: CreateDataIn };
+		out: { data: CreateDataOut };
 	}) => TIO;
 	run: (ctx: {
 		io: TIO;
@@ -84,11 +96,20 @@ export interface ExecSchemaDefinition<
 	TProperties extends Record<string, SchemaProperty<any>>,
 > extends SchemaDefinitionBase<TProperties> {
 	type: "exec";
-	io: (ctx: IOFunctionContext) => TIO;
+	io: (ctx: {
+		in: { data: CreateDataIn };
+		out: { data: CreateDataOut };
+	}) => TIO;
 	run: (ctx: {
 		io: TIO;
-		properties: TProperties;
-	}) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutput | void>;
+		properties: {
+			[K in keyof TProperties]: TProperties[K] extends SchemaProperty<
+				Resource.Resource<any, infer T>
+			>
+				? T
+				: never;
+		};
+	}) => EffectGenerator<SchemaRunGeneratorEffect, void>;
 }
 
 export interface ExecSchema<
@@ -118,18 +139,18 @@ export interface EventSchemaDefinition<
 	TIO,
 	TProperties extends Record<string, SchemaProperty<any>>,
 	TEvents = any,
-	TEvent extends TEvents = any,
+	TEvent = any,
 > extends SchemaDefinitionBase<TProperties> {
 	type: "event";
 	event: (ctx: EventFnCtx<TProperties>, e: TEvents) => TEvent | undefined;
-	io: (ctx: Omit<IOFunctionContext, "in">) => TIO;
+	io: (ctx: { out: { data: CreateDataOut } }) => TIO;
 	run: (
 		ctx: {
 			io: TIO;
 			properties: TProperties;
 		},
 		data: TEvent,
-	) => EffectGenerator<SchemaRunGeneratorEffect, ExecOutput>;
+	) => EffectGenerator<SchemaRunGeneratorEffect, void>;
 }
 
 export interface EventSchema<

@@ -2,8 +2,9 @@ import type { Rpc, RpcGroup } from "@effect/rpc";
 import { Context, Data, Effect, type Layer, type Schema } from "effect";
 import type { CREDENTIAL } from "@macrograph/web-domain";
 
+import type { ExecInput, ExecOutput } from ".";
 import type { NodeRuntime } from "./runtime";
-import type { NodeSchema, SchemaDefinition } from "./schema";
+import type { IOFunctionContext, NodeSchema, SchemaDefinition } from "./schema";
 
 export namespace PackageEngine {
 	type Requirements = PackageEngineContext | NodeRuntime;
@@ -76,14 +77,32 @@ export class PackageBuilder {
 
 	schema = <TIO>(id: string, schema: SchemaDefinition<TIO, any, any>) => {
 		const self = this;
-		// return Effect.gen(function* () {
-		//   if (self.schemas.has(id)) return yield* new DuplicateSchemaId();
+
+		const run = Effect.fn(schema.run as any);
 
 		self.schemas.set(id, {
 			...schema,
-			run: Effect.fn(schema.run as any),
+			io: (ctx: IOFunctionContext) => {
+				const baseIO: Array<ExecInput | ExecOutput> = [];
+				if (schema.type === "event") {
+					ctx.out.exec("exec");
+				} else if (schema.type === "exec") {
+					ctx.out.exec("exec");
+					ctx.in.exec("exec");
+				}
+
+				return [baseIO, schema.io(ctx)];
+			},
+			run: Effect.fnUntraced(function* (ctx: any, data) {
+				const ret = yield* run({ ...ctx, io: ctx.io[1] }, data);
+
+				if (schema.type === "event" || schema.type === "exec") {
+					return ctx.io[0][0];
+				}
+
+				return ret;
+			}),
 		} as NodeSchema<TIO, any, any>);
-		// });
 	};
 
 	/** @internal */

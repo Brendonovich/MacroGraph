@@ -1,8 +1,9 @@
-import { Effect, type Request as ERequest } from "effect";
+import { Effect, type Request as ERequest, Option } from "effect";
 import {
 	type Graph,
 	IO,
 	type Node,
+	type Package,
 	type Position,
 	Request,
 	type Schema,
@@ -310,6 +311,25 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 									node.properties[property] = value;
 								}),
 							);
+						}),
+				),
+				CreateResourceConstant: withRequest<Request.CreateResourceConstant>()(
+					(run, pkg: Package.Id, resource: string) =>
+						Effect.gen(function* () {
+							const e = yield* run(
+								new Request.CreateResourceConstant({
+									pkg,
+									resource,
+								}),
+							);
+
+							setState("constants", e.id, {
+								type: "resource",
+								name: e.name,
+								pkg: e.pkg,
+								resource: e.resource,
+								value: Option.getOrUndefined(e.value),
+							});
 						}),
 				),
 				// StartServerRegistration: Effect.gen(function* () {

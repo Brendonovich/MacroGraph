@@ -47,11 +47,21 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 			const [state, setState] = createStore<{
 				name: string;
 				graphs: Record<Graph.Id, GraphState>;
-				packages: Record<string, PackageState>;
+				packages: Record<Package.Id, PackageState>;
+				constants: Record<
+					string,
+					{ name: string } & {
+						type: "resource";
+						pkg: Package.Id;
+						resource: string;
+						value: string;
+					}
+				>;
 			}>({
 				name: "New Project",
 				graphs: {},
 				packages: {},
+				constants: {},
 			});
 
 			const actions = {
@@ -195,6 +205,7 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 								},
 								{} as Record<Package.Id, any>, // TODO: fix
 							),
+							constants: {},
 						}),
 						// reconcile({
 						// 	...data,

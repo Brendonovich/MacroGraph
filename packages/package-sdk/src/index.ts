@@ -55,6 +55,7 @@ export namespace PackageEngine {
 			providerUserId: string,
 		): Effect.Effect<never, ForceRetryError>;
 		dirtyState: Effect.Effect<void>;
+		dirtyResources: Effect.Effect<void>;
 	};
 
 	type BuildEngineFn<
@@ -157,7 +158,7 @@ export namespace Package {
 		schema: <
 			TIO,
 			TProperties extends Record<string, SchemaProperty<any>>,
-			TEvent extends TEvents,
+			TEvent,
 		>(
 			id: string,
 			schema: SchemaDefinition<TIO, TProperties, TEvents, TEvent>,

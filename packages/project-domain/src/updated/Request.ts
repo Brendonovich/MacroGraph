@@ -117,6 +117,18 @@ export class SetNodeProperty extends S.TaggedRequest<SetNodeProperty>()(
 	},
 ) {}
 
+export class CreateResourceConstant extends S.TaggedRequest<CreateResourceConstant>()(
+	"CreateResourceConstant",
+	{
+		payload: {
+			pkg: Package.Id,
+			resource: S.String,
+		},
+		success: ProjectEvent.ResourceConstantCreated,
+		failure: S.Union(Package.NotFound),
+	},
+) {}
+
 export type Requests =
 	| GetProject
 	| GetPackageSettings

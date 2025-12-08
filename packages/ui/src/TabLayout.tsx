@@ -21,11 +21,14 @@ export namespace TabLayout {
 		};
 	};
 
-	export type TabState = { type: string; tabId: number };
+	export type TabState<TType extends string = string> = {
+		type: TType;
+		tabId: number;
+	};
 
 	export type State<TTab extends TabState> = {
 		selectedTab: number | null;
-		tabs: Array<TTab & { tabId: number }>;
+		tabs: Array<TTab>;
 	};
 
 	export function defineController<TSchema extends TabState>(
@@ -34,10 +37,12 @@ export namespace TabLayout {
 		return base;
 	}
 
+	export type Schemas<TTab extends TabState> = {
+		[K in TTab["type"]]: Schema<Extract<TTab, { type: K }>>;
+	};
+
 	export type Controller<TTab extends TabState> = {
-		schema: {
-			[K in TTab["type"]]: Schema<Extract<TTab, { type: K }>>;
-		};
+		schema: Schemas<TTab>;
 	} & State<TTab>;
 
 	export function removeTab<TTab extends TabState>(
@@ -173,7 +178,7 @@ export function TabLayoutActions(props: {
 				{(onSplit) => (
 					<DropdownMenu placement="bottom-end">
 						<DropdownMenu.Trigger
-							title="Split this panel"
+							title="Split Pane"
 							class="size-5 flex items-center justify-center bg-transparent opacity-0 group-hover/bar:opacity-100 group-data-[focused='true']/bar:opacity-100 text-gray-11 hover:(bg-gray-6 text-gray-12) rounded-sm focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)"
 						>
 							<IconPhSquareSplitHorizontal class="size-4" />

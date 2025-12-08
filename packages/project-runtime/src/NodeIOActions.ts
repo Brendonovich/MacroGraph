@@ -4,6 +4,7 @@ import {
 	DataOutput,
 	ExecInput,
 	ExecOutput,
+	type IOFunctionContext,
 	type NodeSchema,
 } from "@macrograph/project-domain";
 import { IO } from "@macrograph/project-domain/updated";
@@ -59,7 +60,7 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 							return new DataInput({ id, type });
 						},
 					},
-				});
+				} as IOFunctionContext);
 
 				return IO.NodeIO.make(Object.assign(io, { shape }));
 			});

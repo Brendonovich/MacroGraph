@@ -1,36 +1,20 @@
 import { type Effect, type Request as ERequest, Option } from "effect";
-import type {
-	Graph,
-	Position,
-	Request,
-} from "@macrograph/project-domain/updated";
+import type { Graph, Request } from "@macrograph/project-domain/updated";
 import type { TabLayout } from "@macrograph/ui";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
-import type { DistributiveOmit } from "@tanstack/solid-query";
 import { createSignal } from "solid-js";
 import { produce, type StoreSetter } from "solid-js/store";
 
-import {
-	GraphContextMenu,
-	type GraphContextMenuState,
-	GraphView,
-	ProjectActions,
-	ProjectState,
-} from "..";
+import { GraphContextMenu, GraphView, ProjectActions, ProjectState } from "..";
 import { useProjectService } from "../EffectRuntime";
+import type { TabState } from "../LayoutState";
 import type { GraphState } from "../State";
 import { createGraphContext, GraphContext } from "./Context";
 
-export type GraphTabState = {
-	graphId: Graph.Id;
-	selection: Graph.ItemRef[];
-	transform?: { translate: { x: number; y: number }; zoom: number };
-};
-
 export function makeGraphTabSchema<RPCError>(
-	updateTab: (_: StoreSetter<GraphTabState>) => void,
+	updateTab: (_: StoreSetter<TabState.GraphTab>) => void,
 	rpc: {
 		[Tag in Request.Requests["_tag"]]: (
 			r: Extract<Request.Requests, { _tag: Tag }>,
@@ -44,7 +28,7 @@ export function makeGraphTabSchema<RPCError>(
 		state: { open: false } | { open: true; position: { x: number; y: number } },
 	) => void,
 ): TabLayout.Schema<
-	GraphTabState & {
+	TabState.GraphTab & {
 		graph: GraphState;
 	}
 > {

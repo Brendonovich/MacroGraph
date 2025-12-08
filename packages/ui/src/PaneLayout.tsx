@@ -162,6 +162,9 @@ export function PaneLayoutView<T>(props: {
 					</div>
 				)}
 			</Match>
+			<Match when={props.state.variant === "empty"}>
+				<div class="flex-1" />
+			</Match>
 		</Switch>
 	);
 }

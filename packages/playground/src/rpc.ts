@@ -1,23 +1,20 @@
 import { Rpc, RpcGroup, RpcTest } from "@effect/rpc";
-import { Graph, Node, Project } from "@macrograph/project-domain/updated";
-import { Effect, Schema } from "effect";
+import { Effect, Schema as S } from "effect";
+import { Credential, Request } from "@macrograph/project-domain/updated";
 
 export const Rpcs = RpcGroup.make(
-	Rpc.fromTaggedRequest(Project.GetProject),
-	Rpc.fromTaggedRequest(Graph.CreateNode),
-	Rpc.fromTaggedRequest(Graph.ConnectIO),
-	Rpc.fromTaggedRequest(Graph.DisconnectIO),
-	Rpc.fromTaggedRequest(Graph.DeleteSelection),
-	Rpc.fromTaggedRequest(Project.GetPackageSettings),
-	Rpc.fromTaggedRequest(Node.SetNodePositions),
-	Rpc.make("GetCredentials", {
-		success: Schema.Array(Credential.Credential),
-		error: Schema.Union(Credential.NoRegistrationError),
-	}),
-	Rpc.make("RefetchCredentials", {
-		success: Schema.Array(Credential.Credential),
-		error: Schema.Union(Credential.NoRegistrationError),
-	}),
+	Rpc.fromTaggedRequest(Request.GetProject),
+	Rpc.fromTaggedRequest(Request.CreateGraph),
+	Rpc.fromTaggedRequest(Request.CreateNode),
+	Rpc.fromTaggedRequest(Request.ConnectIO),
+	Rpc.fromTaggedRequest(Request.DisconnectIO),
+	Rpc.fromTaggedRequest(Request.SetItemPositions),
+	Rpc.fromTaggedRequest(Request.GetPackageSettings),
+	Rpc.fromTaggedRequest(Request.DeleteGraphItems),
+	Rpc.fromTaggedRequest(Request.SetNodeProperty),
+	Rpc.fromTaggedRequest(Request.CreateResourceConstant),
+	Rpc.make("GetCredentials", { success: S.Array(Credential.Credential) }),
+	Rpc.make("RefetchCredentials", { success: S.Array(Credential.Credential) }),
 );
 
 export class PlaygroundRpc extends Effect.Service<PlaygroundRpc>()(

@@ -5,6 +5,7 @@
 		"desktop": "pnpm --filter @macrograph/desktop --",
 		"web": "pnpm --filter @macrograph/web --",
 		"runtime": "pnpm --filter @macrograph/runtime --",
+		"server": "pnpm --filter @macrograph/server --",
 		"test": "vitest",
 		"typecheck": "pnpm tsc -b",
 		"lint": "turbo run lint",

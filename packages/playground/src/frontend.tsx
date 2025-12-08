@@ -1,34 +1,9 @@
-import { Effect, Layer } from "effect";
-import {
-	PackageClients,
-	ProjectActions,
-	ProjectState,
-} from "@macrograph/project-frontend";
+import { Layer } from "effect";
+import { ProjectUILayers } from "@macrograph/project-ui";
 
 import { PlaygroundRpc } from "./rpc";
 
-export const loadPackages = Effect.gen(function* () {
-	const packageSettings = yield* Effect.promise(
-		() => import("@macrograph/base-packages/Settings"),
-	);
-
-	yield* Effect.all(
-		Object.entries(packageSettings.default).map(([id, getPkg]) =>
-			Effect.gen(function* () {
-				if (id !== "twitch" && id !== "util") return;
-
-				const pkg = yield* Effect.promise(getPkg);
-
-				yield* PackageClients.addPackage(id, pkg);
-			}),
-		),
-		{ concurrency: 3 },
-	);
-});
-
-export const FrontendLayers = Layer.mergeAll(
-	PackageClients.Default,
+export const FrontendLive = Layer.mergeAll(
+	ProjectUILayers,
 	PlaygroundRpc.Default,
-	ProjectActions.Default,
-	ProjectState.Default,
 );

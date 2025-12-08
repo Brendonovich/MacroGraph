@@ -9,20 +9,21 @@ export class ConnectionFailed extends S.TaggedError<ConnectionFailed>()(
 export const RPCS = RpcGroup.make(
 	Rpc.make("AddSocket", {
 		payload: S.Struct({
-			url: S.String,
+			address: S.String,
 			password: S.optional(S.String),
+			name: S.optional(S.String),
 		}),
 		error: ConnectionFailed,
 	}),
 	Rpc.make("RemoveSocket", {
-		payload: S.Struct({ url: S.String }),
+		payload: S.Struct({ address: S.String }),
 	}),
 	Rpc.make("DisconnectSocket", {
-		payload: S.Struct({ url: S.String }),
+		payload: S.Struct({ address: S.String }),
 	}),
 	Rpc.make("ConnectSocket", {
 		payload: S.Struct({
-			url: S.String,
+			address: S.String,
 			password: S.optional(S.String),
 		}),
 		error: ConnectionFailed,
@@ -30,9 +31,10 @@ export const RPCS = RpcGroup.make(
 );
 
 export const STATE = S.Struct({
-	connections: S.Array(
+	sockets: S.Array(
 		S.Struct({
-			url: S.String,
+			name: S.optional(S.String),
+			address: S.String,
 			password: S.optional(S.String),
 			state: S.Union(
 				S.Literal("connected"),
@@ -42,3 +44,5 @@ export const STATE = S.Struct({
 		}),
 	),
 });
+
+export const EVENT = S.Union();

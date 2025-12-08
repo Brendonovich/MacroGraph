@@ -68,6 +68,7 @@ const defaultProject = new Project.Project({
 	nextGraphId: Graph.Id.make(0),
 	nextNodeId: Node.Id.make(0),
 	graphs: HashMap.empty(),
+	constants: HashMap.empty(),
 });
 
 export const make = () =>

@@ -1,86 +1,69 @@
-import { type Rpc, type RpcClient, type RpcGroup, RpcTest } from "@effect/rpc";
+import { type Rpc, type RpcClient, RpcTest } from "@effect/rpc";
 import {
 	Effect,
 	Layer,
 	type ManagedRuntime,
-	Match,
 	Option,
+	type Scope,
 	Stream,
 } from "effect";
-import { ProjectPackages } from "@macrograph/project-backend";
+import { ProjectRuntime } from "@macrograph/project-runtime";
 import {
 	GetPackageRpcClient,
-	PackageClients,
-} from "@macrograph/project-frontend";
+	ProjectEventStream,
+} from "@macrograph/project-ui";
 import { createContext, useContext } from "solid-js";
 
-import { BackendLayers, PlaygroundBackend } from "./backend";
-import { FrontendLayers } from "./frontend";
+import { BackendLive } from "./backend";
+import { FrontendLive } from "./frontend";
 
-export class PlaygroundRealtime extends Effect.Service<PlaygroundRealtime>()(
-	"PlaygroundRealtime",
-	{
-		scoped: Effect.gen(function* () {
-			const { eventStream } = yield* PlaygroundBackend;
-			const pkgClients = yield* PackageClients;
+const GetPackageRpcClientLive = Layer.effect(
+	GetPackageRpcClient,
+	Effect.gen(function* () {
+		const runtime = yield* ProjectRuntime.Current;
+		const clients = new Map<string, RpcClient.RpcClient<Rpc.Any>>();
 
-			const tagType = Match.discriminator("type");
+		return (id) =>
+			Effect.gen(function* () {
+				if (clients.get(id)) return clients.get(id)! as any;
 
-			yield* eventStream.pipe(
-				Stream.runForEach((data) => {
-					return Match.value(data).pipe(
-						tagType("packageStateChanged", (data) =>
-							pkgClients.getPackage(data.package).pipe(
-								Option.map((pkg) => pkg.notifySettingsChange),
-								Effect.transposeOption,
-							),
-						),
-						Match.orElse(() => Effect.void),
-					);
-				}),
-				Effect.forkScoped,
-			);
+				return runtime.packages.get(id)?.engine.pipe(
+					Effect.flatMap(
+						Effect.fn(function* (e) {
+							const [rpcs, layer] = yield* Option.fromNullable(e.def.rpc).pipe(
+								Option.zipWith(
+									Option.fromNullable(e.rpc),
+									(a, b) => [a, b] as const,
+								),
+							);
 
-			return {};
-		}),
-		dependencies: [PlaygroundBackend.Default, PackageClients.Default],
-	},
-) {}
+							const client = yield* RpcTest.makeClient(rpcs).pipe(
+								Effect.provide(layer),
+							);
+
+							clients.set(id, client);
+
+							return client;
+						}),
+					),
+				);
+			});
+	}),
+);
+
+const ProjectEventStreamLive = Layer.effect(
+	ProjectEventStream,
+	Effect.map(ProjectRuntime.Current, (r) => Stream.fromPubSub(r.events)),
+);
 
 export const RuntimeLayers = Layer.empty.pipe(
-	Layer.merge(PlaygroundRealtime.Default),
-	Layer.merge(FrontendLayers),
-	Layer.provideMerge(BackendLayers),
+	Layer.provideMerge(FrontendLive),
 	Layer.provideMerge(
-		Layer.unwrapEffect(
-			Effect.gen(function* () {
-				const packages = yield* ProjectPackages;
-
-				const clients = new Map<string, RpcClient.RpcClient<Rpc.Any>>();
-
-				return Layer.succeed(GetPackageRpcClient, (id, rpcs) =>
-					Effect.gen(function* () {
-						if (clients.get(id)) return clients.get(id)!;
-
-						const pkg = packages.get(id)?.rpc ?? Option.none();
-
-						if (Option.isNone(pkg)) throw new Error("Package not found");
-
-						const client = yield* RpcTest.makeClient(
-							rpcs as unknown as RpcGroup.RpcGroup<Rpc.Any>,
-						).pipe(Effect.provide(pkg.value.layer));
-
-						clients.set(id, client);
-
-						return client as any;
-					}),
-				);
-			}),
-		),
+		Layer.mergeAll(GetPackageRpcClientLive, ProjectEventStreamLive),
 	),
-	Layer.provideMerge(ProjectPackages.Default),
+	Layer.provideMerge(BackendLive),
 	Layer.provideMerge(Layer.scope),
-);
+) satisfies Layer.Layer<any, any, Scope.Scope>;
 
 export type EffectRuntime = ManagedRuntime.ManagedRuntime<
 	Layer.Layer.Success<typeof RuntimeLayers>,

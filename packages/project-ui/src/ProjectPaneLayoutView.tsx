@@ -3,49 +3,48 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { type Accessor, createSignal, Show } from "solid-js";
 
 import { GraphContextMenu } from "./Graph/GraphContextMenu";
-import { type PaneState, type TabState, useLayoutState } from "./LayoutState";
+import {
+	type PaneState,
+	type TabState,
+	useLayoutStateRaw,
+} from "./LayoutState";
 import { ProjectPaneTabView } from "./ProjectPaneTabView";
 
-export function ProjectPaneLayoutView(props: {
+export function ProjectPaneLayoutView<TSettingsPage extends string>(props: {
 	makeTabController: (
-		pane: Accessor<PaneState>,
+		pane: Accessor<PaneState<TSettingsPage>>,
 	) => TabLayout.Controller<TabState.TabState & { tabId: number }>;
 }) {
-	const layoutState = useLayoutState();
+	const layoutState = useLayoutStateRaw();
 
 	return (
-		<Show
-			when={Object.keys(layoutState.paneLayout).length > 0}
-			fallback={<div class="flex-1" />}
-		>
-			<GraphContextMenu.Provider>
-				<PaneLayoutView state={layoutState.paneLayout}>
-					{(paneId) => {
-						const [ref, setRef] = createSignal<HTMLDivElement>();
+		<GraphContextMenu.Provider>
+			<PaneLayoutView state={layoutState.paneLayout}>
+				{(paneId) => {
+					const [ref, setRef] = createSignal<HTMLDivElement>();
 
-						createEventListener(ref, "pointerdown", () => {
-							layoutState.setFocusedPaneId(paneId());
-						});
+					createEventListener(ref, "pointerdown", () => {
+						layoutState.setFocusedPaneId(paneId());
+					});
 
-						return (
-							<Show when={layoutState.panes[paneId()]}>
-								{(pane) => (
-									<Show
-										when={pane().id !== layoutState.zoomedPane()}
-										fallback={<div class="flex-1 bg-gray-4" />}
-									>
-										<ProjectPaneTabView
-											ref={setRef}
-											controller={props.makeTabController(pane)}
-											pane={pane()}
-										/>
-									</Show>
-								)}
-							</Show>
-						);
-					}}
-				</PaneLayoutView>
-			</GraphContextMenu.Provider>
-		</Show>
+					return (
+						<Show when={layoutState.panes[paneId()]}>
+							{(pane) => (
+								<Show
+									when={pane().id !== layoutState.zoomedPane()}
+									fallback={<div class="flex-1 bg-gray-4" />}
+								>
+									<ProjectPaneTabView
+										ref={setRef}
+										controller={props.makeTabController(pane)}
+										pane={pane()}
+									/>
+								</Show>
+							)}
+						</Show>
+					);
+				}}
+			</PaneLayoutView>
+		</GraphContextMenu.Provider>
 	);
 }

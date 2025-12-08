@@ -1,99 +1,42 @@
+import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
+import { Chunk, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
+import type * as Scope from "effect/Scope";
 import * as Packages from "@macrograph/base-packages";
+import { Credential, Project } from "@macrograph/project-domain/updated";
 import {
-	CloudApiToken,
-	createEventStream,
-	Credentials,
-	EventsPubSub,
+	CloudApiClient,
+	CredentialsStore,
 	GraphRequests,
 	NodeRequests,
-	ProjectData,
-	ProjectPackages,
+	PackageActions,
 	ProjectRequests,
 	ProjectRuntime,
-	ProjectShape,
-} from "@macrograph/project-backend";
-import { Credential, Graph, type Project } from "@macrograph/project-domain";
-import { Effect, Layer, Option, Schema, Stream, type Scope } from "effect";
+	RuntimeActions,
+} from "@macrograph/project-runtime";
 
 import { Rpcs } from "./rpc";
 
-const ProjectDataLive = Layer.effect(
-	ProjectData,
-	Effect.suspend(() =>
-		Option.fromNullable(localStorage.getItem("mg-project")).pipe(
-			Effect.andThen((v) =>
-				Schema.decodeUnknown(Schema.parseJson(ProjectShape))(v),
-			),
-			Effect.catchAll(() =>
-				Effect.succeed({
-					name: "New Project",
-					graphs: new Map([
-						[
-							Graph.Id.make(0),
-							{ id: Graph.Id.make(0), name: "New Graph", nodes: [] },
-						],
-					]),
-				}),
-			),
-		),
-	),
-);
-
-export class PlaygroundBackend extends Effect.Service<PlaygroundBackend>()(
-	"PlaygroundBackend",
-	{
-		scoped: Effect.gen(function* () {
-			const projectRuntime = yield* ProjectRuntime;
-			const project = yield* ProjectData;
-
-			yield* projectRuntime
-				.addPackage("util", Packages.util)
-				.pipe(Effect.orDie);
-			yield* projectRuntime
-				.addPackage("twitch", Packages.twitch)
-				.pipe(Effect.orDie);
-			// yield* projectActions.addPackage("obs", Packages.obs).pipe(Effect.orDie);
-
-			const eventStream = yield* createEventStream.pipe(
-				Effect.map(
-					Stream.tap((e) => {
-						console.log(e);
-						return Effect.sync(() => {
-							localStorage.setItem(
-								"mg-project",
-								JSON.stringify(Schema.encodeSync(ProjectShape)(project)),
-							);
-						});
-					}),
-				),
-			);
-
-			return { eventStream };
-		}),
-		dependencies: [
-			ProjectRuntime.Default,
-			ProjectPackages.Default,
-			EventsPubSub.Default,
-		],
-	},
-) {}
-
 const RpcsLive = Rpcs.toLayer(
 	Effect.gen(function* () {
-		const projectReqs = yield* ProjectRequests;
-		const graphReqs = yield* GraphRequests;
-		const nodeReqs = yield* NodeRequests;
-		const credentials = yield* Credentials;
+		const projectRequests = yield* ProjectRequests;
+		const graphRequests = yield* GraphRequests;
+		const nodeRequests = yield* NodeRequests;
+		const credentials = yield* CredentialsStore.CredentialsStore;
 
 		return {
-			GetProject: (r: Project.GetProject) =>
-				Effect.request(r, projectReqs.GetProjectResolver).pipe(
-					Effect.map(structuredClone),
-				),
-			GetPackageSettings: Effect.request(
-				projectReqs.GetPackageSettingsResolver,
-			),
-			CreateNode: Effect.request(graphReqs.CreateNodeResolver),
+			GetProject: () => projectRequests.getProject,
+			CreateNode: graphRequests.createNode,
+			ConnectIO: graphRequests.connectIO,
+			SetItemPositions: graphRequests.setItemPositions,
+			GetPackageSettings: projectRequests.getPackageSettings,
+			CreateGraph: projectRequests.createGraph,
+			DeleteGraphItems: graphRequests.deleteItems,
+			DisconnectIO: graphRequests.disconnectIO,
+			SetNodeProperty: nodeRequests.setNodeProperty,
+			CreateResourceConstant: projectRequests.createResourceConstant,
 			GetCredentials: () =>
 				credentials.get.pipe(
 					Effect.map((v) =>
@@ -123,28 +66,74 @@ const RpcsLive = Rpcs.toLayer(
 					),
 					Effect.catchAll(() => Effect.die(null)),
 				),
-			SetNodePositions: Effect.request(nodeReqs.SetNodePositionsResolver),
-			ConnectIO: Effect.request(graphReqs.ConnectIOResolver),
-			DisconnectIO: Effect.request(graphReqs.DisconnectIOResolver),
-			DeleteSelection: Effect.request(graphReqs.DeleteSelectionResolver),
 		};
 	}),
 );
 
-export const BackendLayers = Layer.empty.pipe(
-	Layer.merge(PlaygroundBackend.Default),
-	Layer.merge(RpcsLive),
-	Layer.provide(
+const RuntimeLive = Layer.scoped(
+	ProjectRuntime.Current,
+	Effect.gen(function* () {
+		const storedProject = localStorage.getItem("mg-project.0");
+
+		const proj = yield* storedProject
+			? S.decode(S.parseJson(Project.Project))(storedProject)
+			: Effect.succeed(undefined);
+
+		const runtime = yield* ProjectRuntime.make();
+
+		yield* Effect.gen(function* () {
+			const allPackages: Array<keyof typeof Packages> = [
+				"util",
+				"twitch",
+				"obs",
+			];
+			const packages = yield* PackageActions;
+			for (const p of allPackages) {
+				yield* packages.loadPackage(p, Packages[p] as any);
+			}
+
+			const runtimeActions = yield* RuntimeActions;
+			if (proj) yield* runtimeActions.loadProject(proj);
+		}).pipe(Effect.provideService(ProjectRuntime.Current, runtime));
+
+		yield* runtime.events.pipe(
+			(e) => Stream.fromPubSub(e),
+			Stream.throttle({
+				cost: Chunk.size,
+				duration: "100 millis",
+				units: 1,
+			}),
+			Stream.runForEach(
+				Effect.fn(function* (e) {
+					// console.log(e);
+
+					const project = yield* runtime.projectRef;
+
+					localStorage.setItem(
+						"mg-project.0",
+						JSON.stringify(yield* S.encode(Project.Project)(project)),
+					);
+				}),
+			),
+			Effect.forkScoped,
+		);
+
+		return runtime;
+	}),
+);
+
+export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
+	Layer.provideMerge(RuntimeLive),
+	Layer.provideMerge(
 		Layer.mergeAll(
 			ProjectRequests.Default,
 			GraphRequests.Default,
 			NodeRequests.Default,
-			Credentials.Default,
+			PackageActions.Default,
+			RuntimeActions.Default,
+			CredentialsStore.layer,
 		),
 	),
-	Layer.provideMerge(ProjectRuntime.Default),
-	Layer.provideMerge(
-		Layer.succeed(CloudApiToken, Effect.succeed(Option.none())),
-	),
-	Layer.provide(ProjectDataLive),
+	Layer.provideMerge(CloudApiClient.layer()),
+	Layer.provideMerge(FetchHttpClient.layer),
 ) satisfies Layer.Layer<any, any, Scope.Scope>;

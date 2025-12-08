@@ -1,197 +1,205 @@
-import { Data, Option, Schema } from "effect";
+import { Option, pipe, Schema as S } from "effect";
 import * as Effect from "effect/Effect";
 import {
 	getInput,
-	getProperty,
 	Package,
 	PackageEngine,
 	Resource,
+	setOutput,
+	t,
 } from "@macrograph/package-sdk";
-import OBSWebsocket, {
-	type OBSRequestTypes,
-	type OBSResponseTypes,
-} from "obs-websocket-js";
+import OBSWebsocket from "obs-websocket-js";
 
+import { Event } from "./event";
 import { ConnectionFailed, RPCS } from "./shared";
 
-class OBSWebSocketError extends Data.TaggedError("OBSWebsocketError")<{
-	code: number;
-	message: string;
-}> {}
-
-type Instance = {
-	url: string;
+type OBSWebSocket = {
+	name?: string;
+	address: string;
 	password: Option.Option<string>;
 	lock: Effect.Semaphore;
 	ws: OBSWebsocket;
 	state: "disconnected" | "connecting" | "connected";
 };
 
-const OBSConnection = Resource.make<Instance>({
-	name: "OBS Socket",
-	serialize: (instance) => ({ id: instance.url, display: instance.url }),
+const OBSWebSocket = Resource.make<OBSWebSocket>()("OBSWebSocket", {
+	name: "OBS WebSocket",
+	serialize: (instance) => ({
+		id: instance.address,
+		display: instance.name ?? instance.address,
+	}),
 });
 
-const Engine = PackageEngine.make<
-	{
-		connections: Array<{
-			url: string;
-			password: string | undefined;
-			state: any;
-		}>;
-	},
-	typeof RPCS,
-	Instance
->({ rpc: RPCS })(
-	Effect.fn(function* (ctx) {
-		const instances = new Map<string, Instance>();
+type State = {
+	sockets: Array<{
+		address: string;
+		password: string | undefined;
+		state: any;
+	}>;
+};
 
-		const layer = RPCS.toLayer({
-			AddSocket: Effect.fn(function* ({ url, password }) {
-				if (instances.get(url)) return;
+const Engine = PackageEngine.define<State>()({
+	rpc: RPCS,
+	events: S.Struct({ address: S.String, event: Event.Any }),
+	resources: [OBSWebSocket],
+}).build((ctx) => {
+	const instances = new Map<string, OBSWebSocket>();
 
-				const lock = Effect.unsafeMakeSemaphore(1);
+	const rpc = RPCS.toLayer({
+		AddSocket: Effect.fnUntraced(function* ({ name, address, password }) {
+			if (instances.get(address)) return;
 
-				const instance = yield* Effect.gen(function* () {
-					const ws = new OBSWebsocket();
+			const lock = Effect.unsafeMakeSemaphore(1);
 
-					ws.on("ConnectionError", () =>
-						Effect.sync(() => {
-							instance.state = "disconnected";
-						}).pipe(
-							lock.withPermits(1),
-							Effect.ensuring(ctx.dirtyState),
-							Effect.runFork,
-						),
-					);
+			const withInstanceLock = <A, E, R>(e: Effect.Effect<A, E, R>) =>
+				pipe(e, lock.withPermits(1), Effect.ensuring(ctx.dirtyState));
 
-					ws.on("ConnectionClosed", () =>
-						Effect.sync(() => {
-							instance.state = "disconnected";
-						}).pipe(
-							lock.withPermits(1),
-							Effect.ensuring(ctx.dirtyState),
-							Effect.runFork,
-						),
-					);
+			const instance = yield* Effect.gen(function* () {
+				const ws = new OBSWebsocket();
 
-					ws.on("ConnectionOpened", () =>
-						Effect.sync(() => {
-							instance.state = "connected";
-						}).pipe(
-							lock.withPermits(1),
-							Effect.ensuring(ctx.dirtyState),
-							Effect.runFork,
-						),
-					);
+				ws.on("CurrentProgramSceneChanged", (e) => {
+					ctx.emitEvent({
+						address,
+						event: new Event.CurrentProgramSceneChanged(e),
+					});
+				});
 
-					const instance: Instance = {
-						url,
-						password: Option.fromNullable(password),
-						lock,
-						ws,
-						state: "connecting",
-					};
+				ws.on("ConnectionError", () =>
+					Effect.sync(() => {
+						instance.state = "disconnected";
+					}).pipe(withInstanceLock, Effect.runFork),
+				);
 
-					instances.set(url, instance);
+				ws.on("ConnectionClosed", () =>
+					Effect.sync(() => {
+						instance.state = "disconnected";
+					}).pipe(withInstanceLock, Effect.runFork),
+				);
 
-					return instance;
-				}).pipe(lock.withPermits(1), Effect.ensuring(ctx.dirtyState));
+				ws.on("ConnectionOpened", () =>
+					Effect.sync(() => {
+						instance.state = "connected";
+					}).pipe(withInstanceLock, Effect.runFork),
+				);
 
+				const instance: OBSWebSocket = {
+					name: name || address,
+					address,
+					password: Option.fromNullable(password),
+					lock,
+					ws,
+					state: "connecting",
+				};
+
+				instances.set(address, instance);
+
+				return instance;
+			}).pipe(withInstanceLock, Effect.ensuring(ctx.dirtyResources));
+
+			yield* Effect.tryPromise({
+				try: () => instance.ws.connect(address, password),
+				catch: () => new ConnectionFailed(),
+			});
+		}),
+		RemoveSocket: Effect.fnUntraced(function* ({ address }) {
+			const instance = instances.get(address);
+			if (!instance) return;
+
+			yield* Effect.gen(function* () {
+				yield* Effect.promise(() => instance.ws.disconnect()).pipe(
+					Effect.ignore,
+				);
+				instances.delete(address);
+			}).pipe(
+				instance.lock.withPermits(1),
+				Effect.ensuring(ctx.dirtyState),
+				Effect.ensuring(ctx.dirtyResources),
+			);
+
+			yield* ctx.dirtyState;
+		}),
+		DisconnectSocket: Effect.fnUntraced(function* ({ address: url }) {
+			const instance = instances.get(url);
+			if (!instance) return;
+
+			yield* Effect.promise(() => instance.ws.disconnect()).pipe(Effect.ignore);
+		}),
+		ConnectSocket: Effect.fnUntraced(function* ({ address: url, password }) {
+			const instance = instances.get(url);
+			if (!instance) return;
+
+			yield* Effect.gen(function* () {
 				yield* Effect.tryPromise({
 					try: () => instance.ws.connect(url, password),
 					catch: () => new ConnectionFailed(),
 				});
-			}),
-			RemoveSocket: Effect.fn(function* ({ url }) {
-				const instance = instances.get(url);
-				yield* ctx.dirtyState;
-				if (!instance) return;
 
-				yield* Effect.gen(function* () {
-					yield* Effect.promise(() => instance.ws.disconnect()).pipe(
-						Effect.ignore,
-					);
-					instances.delete(url);
-				}).pipe(instance.lock.withPermits(1));
+				instance.state = "connecting";
+			}).pipe(instance.lock.withPermits(1));
+			yield* ctx.dirtyState;
+		}),
+	});
 
-				yield* ctx.dirtyState;
-			}),
-			DisconnectSocket: Effect.fn(function* ({ url }) {
-				const instance = instances.get(url);
-				if (!instance) return;
-
-				yield* Effect.promise(() => instance.ws.disconnect()).pipe(
-					Effect.ignore,
-				);
-			}),
-			ConnectSocket: Effect.fn(function* ({ url, password }) {
-				const instance = instances.get(url);
-				if (!instance) return;
-
-				yield* Effect.gen(function* () {
-					yield* Effect.tryPromise({
-						try: () => instance.ws.connect(url, password),
-						catch: () => new ConnectionFailed(),
-					});
-
-					instance.state = "connecting";
-				}).pipe(instance.lock.withPermits(1));
-				yield* ctx.dirtyState;
-			}),
-		});
-
-		return {
-			rpc: layer,
-			state: Effect.gen(function* () {
-				return {
-					connections: yield* Effect.all(
-						[...instances.entries()].map(([url, instance]) =>
-							Effect.sync(() => {
-								return {
-									url,
-									password: Option.getOrUndefined(instance.password),
-									state: instance.state,
-								};
-							}).pipe(instance.lock.withPermits(1)),
-						),
+	return {
+		rpc,
+		state: Effect.gen(function* () {
+			return {
+				sockets: yield* Effect.all(
+					[...instances.entries()].map(([address, instance]) =>
+						Effect.sync(() => {
+							return {
+								name: instance.name,
+								address,
+								password: Option.getOrUndefined(instance.password),
+								state: instance.state,
+							};
+						}).pipe(instance.lock.withPermits(1)),
 					),
-				};
-			}),
-			resources: OBSConnection.makeHandler(
-				Effect.sync(() => [...instances.values()]),
-			),
-		};
-	}),
-);
+				),
+			};
+		}),
+		resources: OBSWebSocket.toLayer(Effect.sync(() => [...instances.values()])),
+	};
+});
 
 const OBSConnectionProperty = {
 	name: "OBS Socket",
-	resource: OBSConnection,
+	resource: OBSWebSocket,
 };
 
 export default Package.make({
 	name: "OBS Studio",
 	engine: Engine,
 	builder: (ctx) => {
-		ctx.schema("setCurrentProgramScene", {
+		ctx.schema("request.SetCurrentProgramScene", {
 			name: "Set Current Program Scene",
 			type: "exec",
 			properties: { connection: OBSConnectionProperty },
 			io: (c) => ({
-				execIn: c.in.exec("exec"),
-				execOut: c.out.exec("exec"),
-				scene: c.in.data("scene", Schema.String, {
-					name: "Scene Name",
-				}),
+				scene: c.in.data("scene", t.String, { name: "Scene Name" }),
 			}),
-			run: function* ({ io, properties }) {
+			run: function* ({ io, properties: { connection } }) {
 				const sceneName = yield* getInput(io.scene);
-				const connection = yield* getProperty(properties.connection);
 
 				yield* Effect.tryPromise(() =>
 					connection.ws.call("SetCurrentProgramScene", { sceneName }),
 				).pipe(Effect.catchTag("UnknownException", () => Effect.succeed(null)));
+			},
+		});
+
+		ctx.schema("event.CurrentProgramSceneChanged", {
+			name: "Current Program Scene Changed",
+			type: "event",
+			properties: { connection: OBSConnectionProperty },
+			event: ({ properties }, e) => {
+				if (properties.connection.address !== e.address) return;
+				if (e.event._tag === "CurrentProgramSceneChanged") return e.event;
+			},
+			io: (c) => ({
+				scene: c.out.data("scene", t.String, { name: "Scene Name" }),
+			}),
+			run: function* ({ io }, event) {
+				yield* setOutput(io.scene, event.sceneName);
 			},
 		});
 	},

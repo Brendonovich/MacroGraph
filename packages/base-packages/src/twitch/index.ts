@@ -354,10 +354,9 @@ export default Package.make({
 					isNotificationType(e, "channel.ban") &&
 					e.payload.event.broadcaster_user_id === properties.account.id
 				)
-					return e;
+					return e.payload.event;
 			},
 			io: (io) => ({
-				exec: io.out.exec("exec"),
 				userId: io.out.data("userId", t.String, {
 					name: "User ID",
 				}),
@@ -395,7 +394,7 @@ export default Package.make({
 					name: "Ends At",
 				}),
 			}),
-			run: function* ({ io }, { payload: { event } }) {
+			run: function* ({ io }, event) {
 				yield* setOutput(io.userId, event.user_id);
 				yield* setOutput(io.userName, event.user_name);
 				yield* setOutput(io.userLogin, event.user_login);
@@ -408,8 +407,6 @@ export default Package.make({
 				yield* setOutput(io.reason, event.reason);
 				yield* setOutput(io.bannedAt, event.banned_at);
 				yield* setOutput(io.endsAt, Option.fromNullable(event.ends_at));
-
-				return io.exec;
 			},
 		});
 		ctx.schema("notification.channel.unban", {

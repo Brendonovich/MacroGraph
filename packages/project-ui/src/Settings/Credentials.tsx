@@ -1,4 +1,3 @@
-import { Effect } from "effect";
 import { LoadingBlock, PromiseButton } from "@macrograph/package-sdk/ui";
 import type { Credential } from "@macrograph/project-domain/updated";
 import { queryOptions, type UseQueryResult } from "@tanstack/solid-query";

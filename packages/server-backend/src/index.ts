@@ -110,7 +110,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 
 		yield* packages.loadPackage("util", Packages.util).pipe(Effect.orDie);
 		yield* packages.loadPackage("twitch", Packages.twitch).pipe(Effect.orDie);
-		// yield* packages.loadPackage("obs", Packages.obs).pipe(Effect.orDie);
+		yield* packages.loadPackage("obs", Packages.obs).pipe(Effect.orDie);
 
 		const nextRealtimeClient = (() => {
 			let i = 0;

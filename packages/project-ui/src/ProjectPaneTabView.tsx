@@ -5,7 +5,11 @@ import {
 } from "@macrograph/ui";
 import type { ComponentProps } from "solid-js";
 
-import { type PaneState, type TabState, useLayoutState } from "./LayoutState";
+import {
+	type PaneState,
+	type TabState,
+	useLayoutStateRaw,
+} from "./LayoutState";
 
 export function ProjectPaneTabView(
 	props: Pick<ComponentProps<typeof TabLayoutView>, "ref"> & {
@@ -13,7 +17,7 @@ export function ProjectPaneTabView(
 		pane: PaneState;
 	},
 ) {
-	const layoutState = useLayoutState();
+	const layoutState = useLayoutStateRaw();
 
 	return (
 		<TabLayoutView

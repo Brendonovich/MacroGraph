@@ -1,5 +1,6 @@
 import { Effect, Option } from "effect";
 import { EffectButton } from "@macrograph/package-sdk/ui";
+import { ProjectActions } from "@macrograph/project-ui";
 import { Show } from "solid-js";
 
 import { useEffectQuery, useEffectService } from "../../EffectRuntime";

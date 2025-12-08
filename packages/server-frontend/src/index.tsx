@@ -1,8 +1,8 @@
 import { Effect, Layer, Match } from "effect";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import {
-	createLayoutState,
-	LayoutStateProvider,
+	ContextualSidebarProvider,
+	NavSidebarProvider,
 	ProjectEffectRuntimeContext,
 	ProjectState,
 } from "@macrograph/project-ui";
@@ -23,6 +23,8 @@ import { RealtimeContextProvider } from "./Realtime";
 import App from "./routes";
 
 import "@macrograph/project-ui/styles.css";
+
+import { createLayoutState, LayoutStateProvider } from "./LayoutState";
 
 export { runtime } from "./EffectRuntime";
 
@@ -65,124 +67,10 @@ export const UILive = Layer.scopedDiscard(
 		// 				tagType("connectedClientsChanged", ({ data }) =>
 		// 					Effect.sync(() => {} /*setConnectedClients(data)*/),
 		// 				),
-		// 				tagType("packageAdded", ({ data }) =>
-		// 					Effect.sync(() => {
-		// 						if (packages[data.package]) return;
-		// 						setPackages(data.package, { id: data.package });
-		// 					}),
-		// 				),
-		// 				tagType("NodeMoved", (data) =>
-		// 					Effect.sync(() => {
-		// 						setState(
-		// 							produce((prev) => {
-		// 								const node = prev.graphs[data.graphId]?.nodes.find(
-		// 									(n) => n.id === data.nodeId,
-		// 								);
-
-		// 								if (node) node.position = data.position;
-		// 							}),
-		// 						);
-		// 					}),
-		// 				),
-		// 				tagType("NodesMoved", (data) =>
-		// 					Effect.sync(() => {
-		// 						setState(
-		// 							produce((prev) => {
-		// 								const graph = prev.graphs[data.graphId];
-		// 								if (!graph) return;
-
-		// 								for (const [nodeId, position] of data.positions) {
-		// 									const node = graph.nodes.find((n) => n.id === nodeId);
-		// 									if (node) node.position = position;
-		// 								}
-		// 							}),
-		// 						);
-		// 					}),
-		// 				),
-		// 				tagType("NodeCreated", (data) =>
-		// 					Effect.sync(() => {
-		// 						setState(
-		// 							produce((prev) => {
-		// 								const nodes = prev.graphs[data.graphId]?.nodes;
-		// 								if (!nodes) return;
-
-		// 								nodes.push({
-		// 									name: data.name,
-		// 									id: data.nodeId,
-		// 									inputs: data.inputs as DeepWriteable<typeof data.inputs>,
-		// 									outputs: data.outputs as DeepWriteable<
-		// 										typeof data.outputs
-		// 									>,
-		// 									position: data.position,
-		// 									schema: data.schema,
-		// 								});
-		// 							}),
-		// 						);
-		// 					}),
-		// 				),
-		// 				tagType("IOConnected", (data) =>
-		// 					Effect.sync(() => {
-		// 						setState(
-		// 							produce((prev) => {
-		// 								const graph = prev.graphs[data.graphId];
-		// 								if (!graph) return;
-
-		// 								const outNodeConnections = (graph.connections[
-		// 									data.output.nodeId
-		// 								] ??= {});
-		// 								const outConnections = ((outNodeConnections.out ??= {})[
-		// 									data.output.ioId
-		// 								] ??= []);
-		// 								outConnections.push([data.input.nodeId, data.input.ioId]);
-
-		// 								const inNodeConnections = (graph.connections[
-		// 									data.input.nodeId
-		// 								] ??= {});
-		// 								const inConnections = ((inNodeConnections.in ??= {})[
-		// 									data.input.ioId
-		// 								] ??= []);
-		// 								inConnections.push([data.output.nodeId, data.output.ioId]);
-		// 							}),
-		// 						);
-		// 					}),
-		// 				),
-		// 				tagType("IODisconnected", (data) =>
-		// 					Effect.sync(() => {
-		// 						// tbh probably gonna need to serialize everything that got disconnected
-
-		// 						setState(
-		// 							produce((prev) => {
-		// 								actions.disconnectIO(prev, {
-		// 									graphId: data.graphId,
-		// 									nodeId: data.io.nodeId,
-		// 									ioId: data.io.ioId,
-		// 									type: data.io.type,
-		// 								});
-		// 							}),
-		// 						);
-		// 					}),
-		// 				),
 		// 				tagType("PresenceUpdated", (data) =>
 		// 					Effect.sync(() => {
 		// 						setPresence(
 		// 							reconcile(data.data as DeepWriteable<typeof data.data>),
-		// 						);
-		// 					}),
-		// 				),
-		// 				tagType("SelectionDeleted", (data) =>
-		// 					Effect.sync(() => {
-		// 						setState(
-		// 							produce((prev) => {
-		// 								const graph = prev.graphs[data.graphId];
-		// 								if (!graph) return;
-
-		// 								for (const nodeId of data.selection) {
-		// 									actions.deleteNode(prev, {
-		// 										graphId: data.graphId,
-		// 										nodeId,
-		// 									});
-		// 								}
-		// 							}),
 		// 						);
 		// 					}),
 		// 				),
@@ -230,9 +118,19 @@ export const UILive = Layer.scopedDiscard(
 												}}
 											>
 												<LayoutStateProvider {...layoutState}>
-													<Layout>
-														<App />
-													</Layout>
+													<NavSidebarProvider>
+														<ContextualSidebarProvider
+															wrapOpenSignal={(s) =>
+																makePersisted(s, {
+																	name: "contextual-sidebar",
+																})
+															}
+														>
+															<Layout>
+																<App />
+															</Layout>
+														</ContextualSidebarProvider>
+													</NavSidebarProvider>
 												</LayoutStateProvider>
 											</ErrorBoundary>
 										</PresenceContextProvider>

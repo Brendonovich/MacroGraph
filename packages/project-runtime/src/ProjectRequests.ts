@@ -149,6 +149,44 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 					}),
 			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
 
+			const CreateResourceConstantResolver = RequestResolver.fromEffect(
+				(r: Request.CreateResourceConstant) =>
+					Effect.gen(function* () {
+						const runtime = yield* ProjectRuntime.Current;
+						const project = yield* runtime.projectRef;
+
+						const pkg = runtime.packages.get(r.pkg);
+						if (!pkg) return yield* new Package.NotFound({ id: r.pkg });
+
+						const name = "New Constant";
+						const id = Math.random().toString();
+
+						yield* Ref.set(
+							runtime.projectRef,
+							new Project.Project({
+								...project,
+								constants: HashMap.set(project.constants, id, {
+									name,
+									type: "resource",
+									pkg: pkg.id,
+									resource: r.resource,
+									value: Option.none(),
+								}),
+							}),
+						);
+
+						const event = new ProjectEvent.ResourceConstantCreated({
+							pkg: pkg.id,
+							resource: r.resource,
+							name,
+							id,
+							value: Option.none(),
+						});
+						yield* runtime.events.publish(event);
+						return event;
+					}),
+			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+
 			return {
 				createGraph: Effect.request<
 					Request.CreateGraph,
@@ -164,6 +202,11 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 					Request.GetPackageSettings,
 					typeof GetPackageSettingsResolver
 				>(GetPackageSettingsResolver),
+
+				createResourceConstant: Effect.request<
+					Request.CreateResourceConstant,
+					typeof CreateResourceConstantResolver
+				>(CreateResourceConstantResolver),
 			};
 		}),
 	},
