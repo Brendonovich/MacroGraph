@@ -11,8 +11,19 @@ import {
 import "@total-typescript/ts-reset";
 import { type Array, pipe, Record } from "effect";
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
+import { Select } from "@kobalte/core/select";
 import type { Package } from "@macrograph/project-domain/updated";
-import { createMemo, For, Index, Match, Show, Switch } from "solid-js";
+import { createMutation, useMutation } from "@tanstack/solid-query";
+import { cx } from "cva";
+import {
+	createEffect,
+	createMemo,
+	For,
+	Index,
+	Match,
+	Show,
+	Switch,
+} from "solid-js";
 
 import { useLayoutState } from "./LayoutState";
 import { PlaygroundRpc } from "./rpc";
@@ -66,37 +77,6 @@ export function NavSidebar() {
 				</Match>
 				<Match when={navSidebar.state() === "constants"}>
 					{(_) => {
-						const sortedConstants = () => {
-							const constantsEntries = Record.toEntries(state.constants);
-
-							const retArr: Array<
-								[Package.Id, Array<[string, Array<string>]>]
-							> = [];
-							for (const [pkgId, pkg] of Record.toEntries(state.packages)) {
-								const pkgArr: Array<[string, Array<string>]> = [];
-
-								for (const [resourceId, _] of pipe(
-									pkg.resources,
-									Record.toEntries,
-									(a) => a.sort((a, b) => a[1].name.localeCompare(b[1].name)),
-								)) {
-									const resourceConstants = constantsEntries.filter(
-										(c) =>
-											c[1].type === "resource" &&
-											c[1].pkg === pkgId &&
-											c[1].resource === resourceId,
-									);
-									if (resourceConstants.length > 0) continue;
-									pkgArr.push([resourceId, resourceConstants.map((v) => v[0])]);
-								}
-
-								if (pkgArr.length > 0) continue;
-								retArr.push([pkgId, pkgArr]);
-							}
-
-							return retArr;
-						};
-
 						return (
 							<div class="pt-2">
 								<div class="flex flex-row px-2 justify-between">
@@ -105,13 +85,120 @@ export function NavSidebar() {
 									</span>
 									<AddResourceConstantButton />
 								</div>
-								<For each={Object.values(state.constants)}>
-									{(constant) => (
-										<div>
-											<span>{constant.name}</span>
-										</div>
-									)}
-								</For>
+								<div class="p-2 divide-y divide-gray-5 flex flex-col *:pt-1.5 *:pb-2.5">
+									<For each={Object.keys(state.constants)}>
+										{(constantId) => {
+											const constant = () => state.constants[constantId];
+
+											const updateValue = useMutation(() => ({
+												mutationFn: (value: string) =>
+													actions.UpdateResourceConstant(
+														rpc.UpdateResourceConstant,
+														constantId,
+														value,
+													),
+											}));
+
+											const data = () => {
+												const c = constant();
+												if (!c) return null;
+												const pkg = state.packages[c.pkg];
+												if (!pkg) return null;
+												const resource = pkg.resources[c.resource];
+												if (!resource) return null;
+												return { constant: c, pkg, resource };
+											};
+
+											return (
+												<Show when={data()}>
+													{(data) => {
+														const options = () => data()?.resource.values;
+
+														const option = () =>
+															options().find(
+																(o) => o.id === data().constant.value,
+															) ?? null;
+
+														type Option = {
+															id: string;
+															display: string;
+														};
+														return (
+															<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
+																<div class="flex flex-row justify-between items-baseline">
+																	<span>{data().constant.name}</span>
+																	<span class="text-xs text-gray-11">
+																		{data().resource.name}
+																	</span>
+																</div>
+																<Select<Option>
+																	value={option()}
+																	options={options()}
+																	optionValue="id"
+																	optionTextValue="display"
+																	placeholder={
+																		<i class="text-gray-11">
+																			{options().length === 0
+																				? "No Options"
+																				: "No Value"}
+																		</i>
+																	}
+																	gutter={4}
+																	disabled={
+																		// !setProperty ||
+																		// setProperty.isPending ||
+																		options().length === 0
+																	}
+																	onChange={(v) => {
+																		if (!v) return;
+																		updateValue.mutate(v.id);
+																	}}
+																	itemComponent={(props) => (
+																		<Show when={props.item.rawValue.id !== ""}>
+																			<Select.Item
+																				item={props.item}
+																				class="p-1 py-0.5 block w-full text-left focus-visible:outline-none ui-highlighted:bg-blue-6 rounded-[0.125rem]"
+																			>
+																				<Select.ItemLabel>
+																					{props.item.rawValue.display}
+																				</Select.ItemLabel>
+																			</Select.Item>
+																		</Show>
+																	)}
+																>
+																	<Select.Trigger
+																		class={cx(
+																			"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 focus-visible:(ring-1 ring-yellow outline-none) appearance-none rounded-sm",
+																			!option() &&
+																				"ring-1 ring-red-9 outline-none",
+																		)}
+																	>
+																		<Select.Value<Option> class="flex-1 text-left">
+																			{(state) =>
+																				state.selectedOption().display
+																			}
+																		</Select.Value>
+																		{options().length > 0 && (
+																			<Select.Icon
+																				as={
+																					IconMaterialSymbolsArrowRightRounded
+																				}
+																				class="size-4 ui-closed:rotate-90 ui-expanded:-rotate-90 transition-transform"
+																			/>
+																		)}
+																	</Select.Trigger>
+																	<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-gray-6 rounded space-y-1 p-1">
+																		<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
+																	</Select.Content>
+																</Select>
+															</div>
+														);
+													}}
+												</Show>
+											);
+										}}
+									</For>
+								</div>
 							</div>
 						);
 					}}

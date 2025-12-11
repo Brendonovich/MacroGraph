@@ -1,32 +1,44 @@
 import type { Rpc, RpcGroup } from "@effect/rpc";
 import { Data, Effect, type Layer, type Schema, type Scope } from "effect";
+import type { UnknownException } from "effect/Cause";
 import {
 	type DataInput,
 	type DataOutput,
 	ExecutionContext,
-	type ForceRetryError,
+	type NodeExecutionContext,
 	type Resource,
+	type RunFunctionAvailableRequirements,
 	type SchemaDefinition,
 	type SchemaProperty,
 } from "@macrograph/project-domain";
 import { type Credential, IO } from "@macrograph/project-domain/updated";
 import type { CREDENTIAL } from "@macrograph/web-domain";
+import "@macrograph/project-domain";
 
 export * as DataTime from "effect/DateTime";
 export * as Option from "effect/Option";
 export { Resource } from "@macrograph/project-domain";
 
-export const getInput = <T extends IO.T.Any>(ref: DataInput<T>) =>
-	Effect.flatMap(ExecutionContext, (ctx) => ctx.getInput(ref));
+export const getInput = <T extends IO.T.Any_>(ref: DataInput<T>) =>
+	Effect.flatMap(ExecutionContext, (ctx) =>
+		ctx.getInput(ref),
+	) satisfies Effect.Effect<any, any, RunFunctionAvailableRequirements>;
 
 // export const getProperty = <T extends Resource.Resource<any, any>>(
 // 	property: SchemaProperty<T>,
 // ) => Effect.flatMap(ExecutionContext, (ctx) => ctx.getProperty(property));
 
-export const setOutput = <T extends IO.T.Any>(
+export const setOutput = <T extends IO.T.Any_>(
 	ref: DataOutput<T>,
-	data: IO.T.Infer<T>,
-) => Effect.flatMap(ExecutionContext, (ctx) => ctx.setOutput(ref, data));
+	data: IO.T.Infer_<T>,
+) =>
+	Effect.flatMap(ExecutionContext, (ctx) =>
+		ctx.setOutput(ref, data),
+	) satisfies Effect.Effect<
+		any,
+		any,
+		RunFunctionAvailableRequirements | NodeExecutionContext
+	>;
 
 export namespace PackageEngine {
 	export class PackageEngineDefinition<
@@ -53,7 +65,7 @@ export namespace PackageEngine {
 		refreshCredential(
 			providerId: string,
 			providerUserId: string,
-		): Effect.Effect<never, ForceRetryError>;
+		): Effect.Effect<void, UnknownException>;
 		dirtyState: Effect.Effect<void>;
 		dirtyResources: Effect.Effect<void>;
 	};
@@ -120,7 +132,7 @@ export namespace PackageEngine {
 		refreshCredential(
 			providerId: string,
 			providerUserId: string,
-		): Effect.Effect<never, ForceRetryError>;
+		): Effect.Effect<never, UnknownException>;
 		dirtyState: Effect.Effect<void>;
 	}) => Effect.Effect<
 		([TState] extends [never]
@@ -185,13 +197,13 @@ export namespace Property {
 }
 
 export const t = {
-	String: new IO.T.String(),
-	Int: new IO.T.Int(),
-	Bool: new IO.T.Bool(),
-	Float: new IO.T.Float(),
-	DateTime: new IO.T.DateTime(),
-	Option: <T extends IO.T.Any>(t: T) => new IO.T.Option<T>({ inner: t }),
-	List: <T extends IO.T.Any>(t: T) => new IO.T.List<T>({ inner: t }),
+	String: new IO.T.String_(),
+	Int: new IO.T.Int_(),
+	Bool: new IO.T.Bool_(),
+	Float: new IO.T.Float_(),
+	DateTime: new IO.T.DateTime_(),
+	Option: <T extends IO.T.Type_<any>>(t: T) => new IO.T.Option_({ inner: t }),
+	List: <T extends IO.T.Type_<any>>(t: T) => new IO.T.List_({ item: t }),
 	// List: <T extends IO.DataType.Any>(t: T) =>
 	// 	["L", t] satisfies IO.DataType.List<T>,
 	// Map: <K extends IO.DataType.MapKey, V extends IO.DataType.Any>(k: K, v: V) =>

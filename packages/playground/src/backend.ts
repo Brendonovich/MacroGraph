@@ -7,6 +7,7 @@ import type * as Scope from "effect/Scope";
 import * as Packages from "@macrograph/base-packages";
 import { Credential, Project } from "@macrograph/project-domain/updated";
 import {
+	Actor,
 	CloudApiClient,
 	CredentialsStore,
 	GraphRequests,
@@ -37,6 +38,7 @@ const RpcsLive = Rpcs.toLayer(
 			DisconnectIO: graphRequests.disconnectIO,
 			SetNodeProperty: nodeRequests.setNodeProperty,
 			CreateResourceConstant: projectRequests.createResourceConstant,
+			UpdateResourceConstant: projectRequests.updateResourceConstant,
 			GetCredentials: () =>
 				credentials.get.pipe(
 					Effect.map((v) =>
@@ -123,7 +125,12 @@ const RuntimeLive = Layer.scoped(
 );
 
 export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
-	Layer.provideMerge(RuntimeLive),
+	Layer.provideMerge(
+		Layer.mergeAll(
+			RuntimeLive,
+			Layer.succeed(Actor.Current, { type: "CLIENT", id: "PLAYGROUND" }),
+		),
+	),
 	Layer.provideMerge(
 		Layer.mergeAll(
 			ProjectRequests.Default,

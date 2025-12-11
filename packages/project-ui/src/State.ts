@@ -12,6 +12,7 @@ import type {
 	Node,
 	Package,
 	Position,
+	Project,
 	Request,
 	Resource,
 	Schema,
@@ -54,7 +55,7 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 						type: "resource";
 						pkg: Package.Id;
 						resource: string;
-						value: string;
+						value?: string;
 					}
 				>;
 			}>({
@@ -200,12 +201,15 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 							),
 							packages: data.packages.reduce(
 								(acc, pkg) => {
-									acc[pkg.id] = pkg;
+									acc[pkg.id] = { ...pkg };
 									return acc;
 								},
 								{} as Record<Package.Id, any>, // TODO: fix
 							),
-							constants: {},
+							constants: data.project.constants.pipe(
+								HashMap.toEntries,
+								Record.fromEntries,
+							),
 						}),
 						// reconcile({
 						// 	...data,

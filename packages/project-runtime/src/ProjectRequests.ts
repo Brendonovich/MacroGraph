@@ -5,7 +5,9 @@ import * as Iterable from "effect/Iterable";
 import * as Ref from "effect/Ref";
 import * as RequestResolver from "effect/RequestResolver";
 import {
+	Credential,
 	Graph,
+	IO,
 	Package,
 	Project,
 	ProjectEvent,
@@ -170,7 +172,6 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 									type: "resource",
 									pkg: pkg.id,
 									resource: r.resource,
-									value: Option.none(),
 								}),
 							}),
 						);
@@ -181,6 +182,39 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 							name,
 							id,
 							value: Option.none(),
+						});
+						yield* runtime.events.publish(event);
+						return event;
+					}),
+			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+
+			const UpdateResourceConstant = RequestResolver.fromEffect(
+				(r: Request.UpdateResourceConstant) =>
+					Effect.gen(function* () {
+						const runtime = yield* ProjectRuntime.Current;
+						const project = yield* runtime.projectRef;
+
+						// TODO: Validate resource value
+
+						yield* Ref.update(
+							runtime.projectRef,
+							(p) =>
+								new Project.Project({
+									...p,
+									constants: HashMap.modify(
+										project.constants,
+										r.id,
+										(constant) => ({
+											...constant,
+											value: r.value,
+										}),
+									),
+								}),
+						);
+
+						const event = new ProjectEvent.ResourceConstantUpdated({
+							id: r.id,
+							value: r.value,
 						});
 						yield* runtime.events.publish(event);
 						return event;
@@ -207,6 +241,11 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 					Request.CreateResourceConstant,
 					typeof CreateResourceConstantResolver
 				>(CreateResourceConstantResolver),
+
+				updateResourceConstant: Effect.request<
+					Request.UpdateResourceConstant,
+					typeof UpdateResourceConstant
+				>(UpdateResourceConstant),
 			};
 		}),
 	},

@@ -181,9 +181,9 @@ export default Package.make({
 			run: function* ({ io, properties: { connection } }) {
 				const sceneName = yield* getInput(io.scene);
 
-				yield* Effect.tryPromise(() =>
+				yield* Effect.promise(() =>
 					connection.ws.call("SetCurrentProgramScene", { sceneName }),
-				).pipe(Effect.catchTag("UnknownException", () => Effect.succeed(null)));
+				);
 			},
 		});
 

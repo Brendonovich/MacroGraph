@@ -35,7 +35,7 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 							io.outputs.push({
 								id,
 								name: options?.name,
-								variant: new IO.Data({ type }),
+								variant: new IO.Data({ type: IO.T.serialize(type) }),
 							});
 							return new DataOutput({ id, type });
 						},
@@ -55,14 +55,14 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 							io.inputs.push({
 								id,
 								name: options?.name,
-								variant: new IO.Data({ type }),
+								variant: new IO.Data({ type: IO.T.serialize(type) }),
 							});
 							return new DataInput({ id, type });
 						},
 					},
 				} as IOFunctionContext);
 
-				return IO.NodeIO.make(Object.assign(io, { shape }));
+				return Object.assign(io, { shape });
 			});
 
 			return { generateNodeIO };

@@ -1,7 +1,7 @@
 import { createContextProvider } from "@solid-primitives/context";
 import { createWritableMemo } from "@solid-primitives/memo";
 import { isMobile } from "@solid-primitives/platform";
-import { createMemo } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import { useLayoutStateRaw } from "./LayoutState";
 
@@ -17,13 +17,7 @@ function createNavSidebar() {
 		return null;
 	};
 
-	const [state, setState] = createWritableMemo(
-		(v) => {
-			if (v === null) return null;
-			return get() ?? v;
-		},
-		isMobile ? null : get(),
-	);
+	const [state, setState] = createSignal(isMobile ? null : get());
 
 	const lastState = createMemo((v) => {
 		return state() ?? v;

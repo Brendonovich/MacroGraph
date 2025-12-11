@@ -1,5 +1,10 @@
 import { Effect, HashMap, Ref } from "effect";
-import type { IO, Node, Project } from "@macrograph/project-domain/updated";
+import type {
+	IO,
+	Node,
+	Project,
+	Schema,
+} from "@macrograph/project-domain/updated";
 
 import { NodeIOActions } from "./NodeIOActions.ts";
 import { PackageActions } from "./PackageActions.ts";
@@ -18,7 +23,7 @@ export class RuntimeActions extends Effect.Service<RuntimeActions>()(
 
 					yield* Ref.set(runtime.projectRef, project);
 
-					const ios: Array<[Node.Id, IO.NodeIO]> = [];
+					const ios: Array<[Node.Id, ProjectRuntime.NodeIO]> = [];
 
 					for (const graph of HashMap.values(project.graphs)) {
 						for (const node of HashMap.values(graph.nodes)) {

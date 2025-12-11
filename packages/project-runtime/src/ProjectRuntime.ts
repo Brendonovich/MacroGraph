@@ -19,7 +19,9 @@ import {
 	type Schema,
 } from "@macrograph/project-domain/updated";
 
-interface NodeIO {
+import * as Actor from "./Actor";
+
+export interface NodeIO {
 	readonly shape: unknown;
 	readonly inputs: Array<IO.InputPort>;
 	readonly outputs: Array<IO.OutputPort>;
@@ -27,7 +29,9 @@ interface NodeIO {
 
 export class ProjectRuntime extends Data.Class<{
 	readonly projectRef: Ref.Ref<Project.Project>;
-	readonly events: PubSub.PubSub<ProjectEvent.ProjectEvent>;
+	readonly events: PubSub.PubSub<
+		ProjectEvent.ProjectEvent & { actor: Actor.Actor }
+	>;
 	readonly nodesIORef: Ref.Ref<HashMap.HashMap<Node.Id, NodeIO>>;
 	readonly packages: Map<Package.Id, RuntimePackage>;
 }> {}
@@ -76,7 +80,14 @@ export const make = () =>
 		return new ProjectRuntime({
 			projectRef: yield* Ref.make(defaultProject),
 			nodesIORef: yield* Ref.make(HashMap.empty<Node.Id, NodeIO>()),
-			events: yield* PubSub.unbounded<ProjectEvent.ProjectEvent>(),
+			events: yield* PubSub.unbounded(),
 			packages: new Map(),
 		});
+	});
+
+export const publishEvent = (event: ProjectEvent.ProjectEvent) =>
+	Effect.gen(function* () {
+		const runtime = yield* Current;
+		const actor = yield* Actor.Current;
+		yield* runtime.events.publish({ ...event, actor });
 	});

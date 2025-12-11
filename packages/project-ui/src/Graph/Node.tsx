@@ -265,7 +265,7 @@ const matchNodeVariantColor = Match.type<Schema.Type>().pipe(
 	Match.exhaustive,
 );
 
-const matchTypeColor = Match.type<IO.T.Primitive["_tag"]>().pipe(
+const matchTypeColor = Match.type<IO.T.Primitive_["_tag"]>().pipe(
 	Match.when("Bool", () => "text-red-600"),
 	Match.when("Float", () => "text-green-600"),
 	Match.when("Int", () => "text-teal-300"),
@@ -302,7 +302,7 @@ const IOPin = (
 				{(variant) => (
 					<DataPin
 						connected={props.connected}
-						type={variant().type}
+						type={IO.T.deserialize(variant().type)}
 						{...props.pointerHandlers}
 					/>
 				)}
@@ -312,7 +312,7 @@ const IOPin = (
 };
 
 const DataPin = (
-	props: { connected?: boolean; type: IO.T.Any } & Pick<
+	props: { connected?: boolean; type: IO.T.Any_ } & Pick<
 		ComponentProps<"div">,
 		"onPointerDown" | "onPointerUp" | "onDblClick"
 	>,
@@ -322,7 +322,7 @@ const DataPin = (
 			class={cx(
 				"relative size-full border-[2.5px] rounded-full border-current @hover-bg-current",
 				props.connected && "bg-current",
-				matchTypeColor(IO.T.primaryTypeOf(props.type)._tag),
+				matchTypeColor(IO.T.primaryTypeOf_(props.type)._tag),
 			)}
 		>
 			<div

@@ -1,8 +1,6 @@
 {
 	"name": "@macrograph/project-domain",
 	"type": "module",
-	"main": "./src/index.ts",
-	"types": "./src/index.ts",
 	"dependencies": {
 		"@effect/rpc": "^0.71.1",
 		"@macrograph/web-domain": "workspace:*",

@@ -48,21 +48,23 @@ export type RunFunctionAvailableRequirements =
 	// | Logger
 	ExecutionContext | NodeExecutionContext;
 
+Data.TaggedClass;
+
 export class ExecutionContext extends Context.Tag("ExecutionContext")<
 	ExecutionContext,
 	{
 		traceId: string;
 		// getProperty<T>(property: SchemaProperty<T>): Effect.Effect<T>;
-		getInput<T extends T.Any>(
+		getInput<T extends T.Any_>(
 			input: DataInput<T>,
 		): Effect.Effect<
-			T.Infer<T>,
+			T.Infer_<T>,
 			never,
 			NodeExecutionContext | RunFunctionAvailableRequirements
 		>;
-		setOutput<T extends T.Any>(
+		setOutput<T extends T.Any_>(
 			output: DataOutput<T>,
-			data: T.Infer<T>,
+			data: T.Infer_<T>,
 		): Effect.Effect<void, never, NodeExecutionContext>;
 		graph: Graph.Graph;
 	}

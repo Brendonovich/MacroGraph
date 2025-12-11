@@ -1,25 +1,26 @@
 import type { Effect, Request as ERequest } from "effect";
-import type { Request } from "@macrograph/project-domain/updated";
+import type { Package, Request } from "@macrograph/project-domain/updated";
+import type { TabLayout } from "@macrograph/ui";
 import { useQuery } from "@tanstack/solid-query";
 
 import { useEffectRuntime } from "../EffectRuntime";
 import type { PackageState } from "../State";
-import type { TabLayout } from "../TabLayout";
 import type { PackageClient } from "./Clients";
 import { PackageSettings, packageSettingsQueryOptions } from "./Settings";
 
-export function makePackageTabSchema<
-	TSchema extends {
-		type: string;
-		tabId: number;
-		package: PackageState;
-		client: PackageClient;
-	},
->(
+type Schema<TType extends string> = {
+	type: TType;
+	tabId: number;
+	package: PackageState;
+	packageId: Package.Id;
+	client: PackageClient;
+};
+
+export function makePackageTabSchema<TType extends string>(
 	getSettings: (
 		req: Request.GetPackageSettings,
 	) => Effect.Effect<ERequest.Request.Success<Request.GetPackageSettings>, any>,
-): TabLayout.Schema<TSchema> {
+): TabLayout.Schema<Schema<TType>> {
 	return {
 		getMeta: (tab) => ({
 			title: tab.package.name,

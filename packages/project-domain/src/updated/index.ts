@@ -1,3 +1,4 @@
+export * as Actor from "./Actor.ts";
 export * as Comment from "./Comment.ts";
 export * as Credential from "./Credential.ts";
 export * as Graph from "./Graph.ts";

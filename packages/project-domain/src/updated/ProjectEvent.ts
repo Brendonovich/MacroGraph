@@ -1,6 +1,7 @@
 import * as S from "effect/Schema";
 
 import { Position } from "../types";
+import { Actor } from "./Actor";
 import * as Graph from "./Graph";
 import * as IO from "./IO";
 import * as Node from "./Node";
@@ -18,23 +19,20 @@ export class GraphCreated extends S.TaggedClass<GraphCreated>()(
 	{ graph: Graph.Graph },
 ) {}
 
-export class IOUpdated extends S.TaggedClass<IOUpdated>()("IOUpdated", {
-	io: S.optional(
-		S.HashMap({
-			key: Node.Id,
-			value: S.Struct({
+export class NodeIOUpdated extends S.TaggedClass<NodeIOUpdated>()(
+	"NodeIOUpdated",
+	{
+		graph: Graph.Id,
+		node: Node.Id,
+		io: S.optional(
+			S.Struct({
 				inputs: S.Array(IO.InputPort),
 				outputs: S.Array(IO.OutputPort),
 			}),
-		}),
-	),
-	outConnections: S.optional(
-		S.HashMap({
-			key: Node.Id,
-			value: Graph.NodeOutputConnections,
-		}),
-	),
-}) {}
+		),
+		outConnections: S.optional(Graph.NodeOutputConnections),
+	},
+) {}
 
 export class PackageAdded extends S.TaggedClass<PackageAdded>()(
 	"PackageAdded",
@@ -94,6 +92,14 @@ export class ResourceConstantCreated extends S.TaggedClass<ResourceConstantCreat
 	},
 ) {}
 
+export class ResourceConstantUpdated extends S.TaggedClass<ResourceConstantUpdated>()(
+	"ResourceConstantUpdated",
+	{
+		id: S.String,
+		value: S.String,
+	},
+) {}
+
 export const ProjectEvent = S.Union(
 	PackageAdded,
 	PackageStateChanged,
@@ -103,7 +109,8 @@ export const ProjectEvent = S.Union(
 	GraphItemsDeleted,
 	NodeCreated,
 	NodePropertyUpdated,
-	IOUpdated,
+	NodeIOUpdated,
 	ResourceConstantCreated,
+	ResourceConstantUpdated,
 );
 export type ProjectEvent = typeof ProjectEvent.Type;

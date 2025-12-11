@@ -1,19 +1,19 @@
-import { Schema } from "effect";
+import { Schema as S } from "effect";
 
 type SubscriptionTypeDefinition = {
 	type: string;
 	version: number;
-	condition: Schema.Struct.Fields;
-	event: Schema.Struct.Fields;
+	condition: S.Struct.Fields;
+	event: S.Struct.Fields;
 };
 
 function makeCreateSubscriptionBody<
 	const TDef extends SubscriptionTypeDefinition,
 >(def: TDef) {
-	return Schema.Struct({
-		type: Schema.Literal(def.type as TDef["type"]),
-		version: Schema.Literal(`${def.version as TDef["version"]}`),
-		condition: Schema.Struct(def.condition as TDef["condition"]),
+	return S.Struct({
+		type: S.Literal(def.type as TDef["type"]),
+		version: S.Literal(`${def.version as TDef["version"]}`),
+		condition: S.Struct(def.condition as TDef["condition"]),
 	});
 }
 
@@ -22,58 +22,58 @@ const subscriptionTypes = {
 		type: "channel.ban",
 		version: 1,
 		condition: {
-			broadcaster_user_id: Schema.String,
+			broadcaster_user_id: S.String,
 		},
 		event: {
-			user_id: Schema.String,
-			user_login: Schema.String,
-			user_name: Schema.String,
-			broadcaster_user_id: Schema.String,
-			broadcaster_user_login: Schema.String,
-			broadcaster_user_name: Schema.String,
-			moderator_user_id: Schema.String,
-			moderator_user_login: Schema.String,
-			moderator_user_name: Schema.String,
-			reason: Schema.String,
-			banned_at: Schema.DateTimeUtc,
-			ends_at: Schema.NullOr(Schema.DateTimeUtc),
-			is_permanent: Schema.Boolean,
+			user_id: S.String,
+			user_login: S.String,
+			user_name: S.String,
+			broadcaster_user_id: S.String,
+			broadcaster_user_login: S.String,
+			broadcaster_user_name: S.String,
+			moderator_user_id: S.String,
+			moderator_user_login: S.String,
+			moderator_user_name: S.String,
+			reason: S.String,
+			banned_at: S.DateTimeUtc,
+			ends_at: S.NullOr(S.DateTimeUtc),
+			is_permanent: S.Boolean,
 		},
 	},
 	channelUnban: {
 		type: "channel.unban",
 		version: 1,
 		condition: {
-			broadcaster_user_id: Schema.String,
+			broadcaster_user_id: S.String,
 		},
 		event: {
-			user_id: Schema.String,
-			user_login: Schema.String,
-			user_name: Schema.String,
-			broadcaster_user_id: Schema.String,
-			broadcaster_user_login: Schema.String,
-			broadcaster_user_name: Schema.String,
-			moderator_user_id: Schema.String,
-			moderator_user_login: Schema.String,
-			moderator_user_name: Schema.String,
+			user_id: S.String,
+			user_login: S.String,
+			user_name: S.String,
+			broadcaster_user_id: S.String,
+			broadcaster_user_login: S.String,
+			broadcaster_user_name: S.String,
+			moderator_user_id: S.String,
+			moderator_user_login: S.String,
+			moderator_user_name: S.String,
 		},
 	},
 	channelFollow: {
 		type: "channel.follow",
 		version: 2,
 		condition: {
-			broadcaster_user_id: Schema.String,
-			moderator_user_id: Schema.String,
+			broadcaster_user_id: S.String,
+			moderator_user_id: S.String,
 		},
 		event: {
-			user_id: Schema.String,
-			broadcaster_user_id: Schema.String,
-			followed_at: Schema.DateFromString,
+			user_id: S.String,
+			broadcaster_user_id: S.String,
+			followed_at: S.DateFromString,
 		},
 	},
 } as const satisfies Record<string, SubscriptionTypeDefinition>;
 
-export const EVENTSUB_CREATE_SUBSCRIPTION_BODY = Schema.Union(
+export const EVENTSUB_CREATE_SUBSCRIPTION_BODY = S.Union(
 	makeCreateSubscriptionBody(subscriptionTypes.channelBan),
 	makeCreateSubscriptionBody(subscriptionTypes.channelUnban),
 	makeCreateSubscriptionBody(subscriptionTypes.channelFollow),
@@ -81,15 +81,15 @@ export const EVENTSUB_CREATE_SUBSCRIPTION_BODY = Schema.Union(
 
 function makeMessageSchema<
 	TType extends string,
-	TPayload extends Schema.Struct.Fields,
+	TPayload extends S.Struct.Fields,
 >(value: { message_type: TType; payload: TPayload }) {
-	return Schema.Struct({
-		metadata: Schema.Struct({
-			message_id: Schema.String,
-			message_timestamp: Schema.DateFromString,
-			message_type: Schema.Literal(value.message_type),
+	return S.Struct({
+		metadata: S.Struct({
+			message_id: S.String,
+			message_timestamp: S.DateFromString,
+			message_type: S.Literal(value.message_type),
 		}),
-		payload: Schema.Struct(value.payload),
+		payload: S.Struct(value.payload),
 	});
 }
 
@@ -99,21 +99,21 @@ function makeNotificationMessageSchema<TDef extends SubscriptionTypeDefinition>(
 	const s = makeMessageSchema({
 		message_type: "notification",
 		payload: {
-			subscription: Schema.Struct({
-				id: Schema.String,
-				type: Schema.Literal(def.type as TDef["type"]),
-				created_at: Schema.DateFromString,
+			subscription: S.Struct({
+				id: S.String,
+				type: S.Literal(def.type as TDef["type"]),
+				created_at: S.DateFromString,
 			}),
-			event: Schema.Struct(def.event as TDef["event"]),
+			event: S.Struct(def.event as TDef["event"]),
 		},
 	});
 
-	return Schema.Struct({
-		metadata: Schema.extend(
+	return S.Struct({
+		metadata: S.extend(
 			s.fields.metadata,
-			Schema.Struct({
-				subscription_type: Schema.Literal(def.type as TDef["type"]),
-				subscription_version: Schema.String,
+			S.Struct({
+				subscription_type: S.Literal(def.type as TDef["type"]),
+				subscription_version: S.String,
 			}),
 		),
 		payload: s.fields.payload,
@@ -121,14 +121,14 @@ function makeNotificationMessageSchema<TDef extends SubscriptionTypeDefinition>(
 }
 
 export type EventSubMessage = (typeof EVENTSUB_MESSAGE)["Type"];
-export const EVENTSUB_MESSAGE = Schema.Union(
+export const EVENTSUB_MESSAGE = S.Union(
 	makeMessageSchema({
 		message_type: "session_welcome",
 		payload: {
-			session: Schema.Struct({
-				id: Schema.String,
-				status: Schema.Literal("connected"),
-				connected_at: Schema.DateFromString,
+			session: S.Struct({
+				id: S.String,
+				status: S.Literal("connected"),
+				connected_at: S.DateFromString,
 			}),
 		},
 	}),

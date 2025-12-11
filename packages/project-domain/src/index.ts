@@ -5,8 +5,6 @@ export * as Graph from "./Graph";
 export * from "./IO";
 export * as Node from "./Node";
 export { IORef, type IORefString } from "./Node";
-export * as Project from "./Project";
-export * from "./package";
 export * from "./runtime";
 export * from "./SubscribableCache";
 export * from "./schema";

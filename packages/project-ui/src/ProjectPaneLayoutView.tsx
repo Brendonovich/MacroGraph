@@ -15,7 +15,7 @@ export function ProjectPaneLayoutView<TSettingsPage extends string>(props: {
 		pane: Accessor<PaneState<TSettingsPage>>,
 	) => TabLayout.Controller<TabState.TabState & { tabId: number }>;
 }) {
-	const layoutState = useLayoutStateRaw();
+	const layoutState = useLayoutStateRaw<TSettingsPage>();
 
 	return (
 		<GraphContextMenu.Provider>

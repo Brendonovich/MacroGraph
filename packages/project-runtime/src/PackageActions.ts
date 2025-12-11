@@ -9,13 +9,13 @@ import {
 	Record,
 	Stream,
 } from "effect";
+import { UnknownException } from "effect/Cause";
 import type { Package as SDKPackage } from "@macrograph/package-sdk";
-import {
-	type ExecInput,
-	type ExecOutput,
-	ForceRetryError,
-	type IOFunctionContext,
-	type NodeSchema,
+import type {
+	ExecInput,
+	ExecOutput,
+	IOFunctionContext,
+	NodeSchema,
 } from "@macrograph/project-domain";
 import {
 	Credential,
@@ -112,18 +112,16 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 												.refreshCredential({
 													path: { providerId, providerUserId },
 												})
-												.pipe(Effect.catchAll(() => Effect.void));
+												.pipe(Effect.catchAll((e) => new UnknownException(e)));
 											yield* credentials.refresh.pipe(
 												Effect.catchAll(Effect.die),
 											);
-
-											return yield* new ForceRetryError();
 										}).pipe(Effect.ensuring(credentialLatch.open)),
 									dirtyState: runtime.events.offer(
 										new ProjectEvent.PackageStateChanged({ pkg: id }),
 									),
 									dirtyResources: Effect.suspend(() =>
-										updateResources.pipe(Effect.ignore),
+										updateResources.pipe(Effect.fork),
 									),
 								});
 

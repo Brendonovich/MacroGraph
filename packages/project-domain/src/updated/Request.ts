@@ -49,7 +49,7 @@ export class ConnectIO extends S.TaggedRequest<ConnectIO>()("ConnectIO", {
 		output: S.Tuple(Node.Id, IO.Id),
 		input: S.Tuple(Node.Id, IO.Id),
 	},
-	success: ProjectEvent.IOUpdated,
+	success: ProjectEvent.NodeIOUpdated,
 	failure: S.Union(Graph.NotFound, Node.NotFound, IO.NotFound),
 }) {}
 
@@ -67,7 +67,7 @@ export class DisconnectIO extends S.TaggedRequest<DisconnectIO>()(
 				io: IO.Id,
 			}),
 		},
-		success: S.Void,
+		success: S.UndefinedOr(ProjectEvent.NodeIOUpdated),
 		failure: S.Union(Graph.NotFound, Node.NotFound),
 	},
 ) {}
@@ -125,6 +125,18 @@ export class CreateResourceConstant extends S.TaggedRequest<CreateResourceConsta
 			resource: S.String,
 		},
 		success: ProjectEvent.ResourceConstantCreated,
+		failure: S.Union(Package.NotFound),
+	},
+) {}
+
+export class UpdateResourceConstant extends S.TaggedRequest<UpdateResourceConstant>()(
+	"UpdateResourceConstant",
+	{
+		payload: {
+			id: S.String,
+			value: S.String,
+		},
+		success: ProjectEvent.ResourceConstantUpdated,
 		failure: S.Union(Package.NotFound),
 	},
 ) {}

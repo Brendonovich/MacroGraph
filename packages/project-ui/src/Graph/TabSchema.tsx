@@ -1,5 +1,5 @@
 import { type Effect, type Request as ERequest, Option } from "effect";
-import type { Graph, Request } from "@macrograph/project-domain/updated";
+import type { Request } from "@macrograph/project-domain/updated";
 import type { TabLayout } from "@macrograph/ui";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";

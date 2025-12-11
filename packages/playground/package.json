@@ -11,9 +11,7 @@
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/base-packages": "workspace:*",
 		"@macrograph/package-sdk": "workspace:*",
-		"@macrograph/project-backend": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
-		"@macrograph/project-frontend": "workspace:*",
 		"@macrograph/project-runtime": "workspace:*",
 		"@macrograph/project-ui": "workspace:*",
 		"@macrograph/ui": "workspace:*",
@@ -28,7 +26,8 @@
 		"@tanstack/query-core": "^5.90.5",
 		"@tanstack/solid-query": "^5.90.6",
 		"cva": "1.0.0-beta.4",
-		"effect": "^3.19.3"
+		"effect": "^3.19.3",
+		"tsgo": "npm:@typescript/native-preview"
 	},
 	"devDependencies": {
 		"@total-typescript/ts-reset": "^0.4.2"

@@ -54,7 +54,7 @@ import { ContextualSidebar, NavSidebar } from "./Sidebars";
 
 import "@macrograph/project-ui/styles.css";
 
-export const effectRuntime = ManagedRuntime.make(RuntimeLayers);
+const effectRuntime = ManagedRuntime.make(RuntimeLayers);
 
 export default function NewPlayground() {
 	const client = new QueryClient({

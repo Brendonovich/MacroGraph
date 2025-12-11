@@ -1,3 +1,4 @@
+export * as Actor from "./Actor.ts";
 export * from "./CloudApi.ts";
 export * as CredentialsStore from "./CredentialsStore.ts";
 export { GraphRequests } from "./GraphRequests.ts";

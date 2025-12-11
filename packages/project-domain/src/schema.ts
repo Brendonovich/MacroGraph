@@ -28,7 +28,7 @@ export type CreateExecIn = (
 	id: string,
 	options?: { name?: string },
 ) => ExecInput;
-export type CreateDataIn = <T extends T.Any>(
+export type CreateDataIn = <T extends T.Any_>(
 	id: string,
 	type: T,
 	options?: { name?: string },
@@ -38,7 +38,7 @@ export type CreateExecOut = (
 	id: string,
 	options?: { name?: string },
 ) => ExecOutput;
-export type CreateDataOut = <T extends T.Any>(
+export type CreateDataOut = <T extends T.Any_>(
 	id: string,
 	type: T,
 	options?: { name?: string },
@@ -185,7 +185,7 @@ export type SchemaDefinition<
 		never
 	>,
 	TEvents = never,
-	TEvent extends TEvents = never,
+	TEvent = never,
 > =
 	| ExecSchemaDefinition<TIO, TProperties>
 	| PureSchemaDefinition<TIO, TProperties>

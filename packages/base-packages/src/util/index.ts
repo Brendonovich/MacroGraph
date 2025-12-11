@@ -21,8 +21,6 @@ export default Package.make({
 			name: "Print",
 			type: "exec",
 			io: (c) => ({
-				execIn: c.in.exec("exec"),
-				execOut: c.out.exec("exec"),
 				in: c.in.data("in", t.String, {
 					name: "Input",
 				}),
@@ -31,8 +29,6 @@ export default Package.make({
 				yield* Effect.log(`Log: ${yield* getInput(io.in)}`);
 				// const logger = yield* Logger;
 				// yield* logger.print(`Log: ${yield* getInput(io.in)}`);
-
-				return io.execOut;
 			},
 		});
 

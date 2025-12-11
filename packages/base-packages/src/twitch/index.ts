@@ -9,6 +9,7 @@ import {
 } from "@effect/platform";
 import {
 	Chunk,
+	Data,
 	Deferred,
 	Effect,
 	Exit,
@@ -52,6 +53,8 @@ type State = {
 	}>;
 };
 
+class RetryRequest extends Data.TaggedError("RetryRequest")<{}> {}
+
 const Engine = PackageEngine.define<State>()({
 	rpc: RPCS,
 	events: EVENTSUB_MESSAGE,
@@ -82,15 +85,17 @@ const Engine = PackageEngine.define<State>()({
 					c.pipe(
 						HttpClient.filterStatusOk,
 						HttpClient.catchTags({
-							ResponseError: (e) => {
-								if (e.response.status === 401)
-									return ctx.refreshCredential("twitch", accountId);
-								return e;
-							},
+							ResponseError: Effect.fnUntraced(function* (e) {
+								if (e.response.status === 401) {
+									yield* ctx.refreshCredential("twitch", accountId);
+									return yield* new RetryRequest();
+								}
+								return yield* Effect.fail(e);
+							}),
 						}),
 						HttpClient.retry({
 							times: 1,
-							while: (e) => e._tag === "ForceRetryError",
+							while: (e) => e._tag === "RetryRequest",
 						}),
 					);
 
@@ -427,7 +432,6 @@ export default Package.make({
 					return e;
 			},
 			io: (io) => ({
-				exec: io.out.exec("exec"),
 				userId: io.out.data("userId", t.String, {
 					name: "User ID",
 				}),
@@ -466,8 +470,6 @@ export default Package.make({
 				yield* setOutput(io.moderatorId, event.moderator_user_id);
 				yield* setOutput(io.moderatorLogin, event.moderator_user_login);
 				yield* setOutput(io.moderatorName, event.moderator_user_name);
-
-				return io.exec;
 			},
 		});
 	},

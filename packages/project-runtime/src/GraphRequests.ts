@@ -7,15 +7,20 @@ import * as RequestResolver from "effect/RequestResolver";
 import {
 	Comment,
 	Graph,
+	IO,
 	Node,
+	Package,
 	Project,
 	ProjectEvent,
 	type Request,
+	Schema,
 } from "@macrograph/project-domain/updated";
 
+import * as Actor from "./Actor";
 import { NodeIOActions } from "./NodeIOActions";
 import { PackageActions } from "./PackageActions";
 import * as ProjectRuntime from "./ProjectRuntime";
+import { requestResolverServices } from "./Requests.ts";
 
 export class GraphRequests extends Effect.Service<GraphRequests>()(
 	"GraphRequests",
@@ -68,62 +73,11 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 							io,
 						});
 
-						yield* runtime.events.publish(event);
+						yield* ProjectRuntime.publishEvent(event);
 
 						return event;
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
-
-			const ConnectIOResolver = RequestResolver.fromEffect(
-				(r: Request.ConnectIO) =>
-					Effect.gen(function* () {
-						const runtime = yield* ProjectRuntime.Current;
-						const project = yield* Ref.get(runtime.projectRef);
-						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
-							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
-						);
-
-						const outNode = yield* graph.nodes.pipe(
-							HashMap.get(r.output[0]),
-							Effect.catchAll(() => new Node.NotFound({ id: r.output[0] })),
-						);
-						yield* graph.nodes.pipe(
-							HashMap.get(r.input[0]),
-							Effect.catchAll(() => new Node.NotFound({ id: r.input[0] })),
-						);
-
-						const outNodeConnections =
-							HashMap.get(graph.connections, outNode.id).pipe(
-								Option.getOrUndefined,
-							) ?? {};
-
-						const outConnections = outNodeConnections[r.output[1]] ?? [];
-
-						const connections = HashMap.set(graph.connections, outNode.id, {
-							...outNodeConnections,
-							[r.output[1]]: [...outConnections, r.input],
-						});
-
-						const updated = new Project.Project({
-							...project,
-							graphs: HashMap.set(
-								project.graphs,
-								graph.id,
-								new Graph.Graph({ ...graph, connections }),
-							),
-						});
-
-						yield* Ref.set(runtime.projectRef, updated);
-
-						const event = new ProjectEvent.IOUpdated({
-							outConnections: connections,
-						});
-
-						yield* runtime.events.publish(event);
-
-						return event;
-					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			const SetItemPositionsResolver = RequestResolver.fromEffect(
 				(r: Request.SetItemPositions) =>
@@ -173,14 +127,14 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 								(p) => Ref.set(runtime.projectRef, p),
 							);
 
-							yield* runtime.events.publish(
+							yield* ProjectRuntime.publishEvent(
 								new ProjectEvent.GraphItemsMoved({
 									graph: r.graph,
 									items: r.items,
 								}),
 							);
 						} else {
-							yield* runtime.events.publish(
+							yield* ProjectRuntime.publishEvent(
 								new ProjectEvent.GraphItemsMoved({
 									graph: r.graph,
 									items: r.items,
@@ -188,7 +142,7 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 							);
 						}
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			const DeleteItemsResolver = RequestResolver.fromEffect(
 				(r: Request.DeleteGraphItems) =>
@@ -219,11 +173,70 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 							items: r.items,
 						});
 
-						yield* runtime.events.publish(e);
+						yield* ProjectRuntime.publishEvent(e);
 
 						return e;
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
+
+			const ConnectIOResolver = RequestResolver.fromEffect(
+				(r: Request.ConnectIO) =>
+					Effect.gen(function* () {
+						const runtime = yield* ProjectRuntime.Current;
+						const project = yield* Ref.get(runtime.projectRef);
+						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
+							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
+						);
+
+						const outNode = yield* graph.nodes.pipe(
+							HashMap.get(r.output[0]),
+							Effect.catchAll(() => new Node.NotFound({ id: r.output[0] })),
+						);
+						yield* graph.nodes.pipe(
+							HashMap.get(r.input[0]),
+							Effect.catchAll(() => new Node.NotFound({ id: r.input[0] })),
+						);
+
+						const outNodeConnections =
+							HashMap.get(graph.connections, outNode.id).pipe(
+								Option.getOrUndefined,
+							) ?? {};
+
+						const outConnections = outNodeConnections[r.output[1]] ?? [];
+
+						const newOutNodeConnections = {
+							...outNodeConnections,
+							[r.output[1]]: [...outConnections, r.input],
+						};
+
+						const connections = HashMap.set(
+							graph.connections,
+							outNode.id,
+							newOutNodeConnections,
+						);
+
+						const updated = new Project.Project({
+							...project,
+							graphs: HashMap.set(
+								project.graphs,
+								graph.id,
+								new Graph.Graph({ ...graph, connections }),
+							),
+						});
+
+						yield* Ref.set(runtime.projectRef, updated);
+
+						const event = new ProjectEvent.NodeIOUpdated({
+							graph: r.graph,
+							node: outNode.id,
+							outConnections: newOutNodeConnections,
+						});
+
+						yield* ProjectRuntime.publishEvent(event);
+
+						return event;
+					}),
+			).pipe(requestResolverServices);
 
 			const DisconnectIOResolver = RequestResolver.fromEffect(
 				(r: Request.DisconnectIO) =>
@@ -233,10 +246,6 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 						);
-
-						// for(const conn of r.connections) {
-
-						// }
 
 						const outNode = yield* graph.nodes.pipe(
 							HashMap.get(r.output.node),
@@ -261,39 +270,45 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 								inNodeId !== inNode.id && inIO !== r.input.io,
 						);
 
-						const connections =
+						const newOutNodeConnections =
 							filteredConnections.length > 0
-								? HashMap.set(graph.connections, outNode.id, {
-										...outNodeConnections,
-										[r.output.io]: filteredConnections,
-									})
-								: HashMap.set(
-										graph.connections,
-										outNode.id,
-										Record.remove(outNodeConnections, r.output.io),
-									);
+								? Record.set(
+										outNodeConnections,
+										r.output.io,
+										filteredConnections,
+									)
+								: Record.remove(outNodeConnections, r.output.io);
 
-						const updated = new Project.Project({
-							...project,
-							graphs: HashMap.set(
-								project.graphs,
-								graph.id,
-								new Graph.Graph({ ...graph, connections }),
-							),
+						yield* Ref.set(
+							runtime.projectRef,
+							new Project.Project({
+								...project,
+								graphs: HashMap.set(
+									project.graphs,
+									graph.id,
+									new Graph.Graph({
+										...graph,
+										connections: HashMap.set(
+											graph.connections,
+											outNode.id,
+											newOutNodeConnections,
+										),
+									}),
+								),
+							}),
+						);
+
+						const event = new ProjectEvent.NodeIOUpdated({
+							graph: r.graph,
+							node: outNode.id,
+							outConnections: newOutNodeConnections,
 						});
 
-						yield* Ref.set(runtime.projectRef, updated);
-
-						const event = new ProjectEvent.IOUpdated({
-							outConnections: connections,
-						});
-
-						yield* runtime.events.publish(event);
+						yield* ProjectRuntime.publishEvent(event);
 
 						return event;
-						// return yield* Effect.die("bruh");
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			return {
 				createNode: Effect.request<

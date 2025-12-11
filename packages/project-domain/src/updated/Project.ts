@@ -21,7 +21,7 @@ export class Project extends S.Class<Project>("Project")({
 						type: S.Literal("resource"),
 						pkg: Package.Id,
 						resource: S.String,
-						value: S.Option(S.String),
+						value: S.optional(S.String),
 					}),
 				),
 			),

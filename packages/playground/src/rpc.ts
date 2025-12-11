@@ -13,6 +13,7 @@ export const Rpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.DeleteGraphItems),
 	Rpc.fromTaggedRequest(Request.SetNodeProperty),
 	Rpc.fromTaggedRequest(Request.CreateResourceConstant),
+	Rpc.fromTaggedRequest(Request.UpdateResourceConstant),
 	Rpc.make("GetCredentials", { success: S.Array(Credential.Credential) }),
 	Rpc.make("RefetchCredentials", { success: S.Array(Credential.Credential) }),
 );

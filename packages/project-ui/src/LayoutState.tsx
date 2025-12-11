@@ -42,7 +42,9 @@ export namespace TabState {
 		self: TabState,
 	): self is Extract<TabState, { type: "graph" }> => self.type === "graph";
 
-	export const getKey = (state: TabState) => {
+	export const getKey = <TSettingsPage extends string>(
+		state: DistributiveOmit<TabState.TabState<TSettingsPage>, "tabId">,
+	) => {
 		switch (state.type) {
 			case "graph":
 				return `graph-${state.graphId}`;
@@ -62,7 +64,7 @@ export type PaneState<TSettingsPage extends string = string> = {
 
 type IdentityFn<T> = (t: T) => T;
 
-function createLayoutState<TSettingsPage extends string>(opts?: {
+export function createLayoutState<TSettingsPage extends string>(opts?: {
 	wrapPanesStore?: IdentityFn<
 		ReturnType<typeof createStore<Record<number, PaneState<TSettingsPage>>>>
 	>;
@@ -85,7 +87,7 @@ function createLayoutState<TSettingsPage extends string>(opts?: {
 	return { panes, setPanes, paneLayout, setPaneLayout };
 }
 
-function createLayoutStateContext<TSettingsPage extends string>({
+export function createLayoutStateContext<TSettingsPage extends string>({
 	panes,
 	setPanes,
 	paneLayout,
@@ -266,11 +268,11 @@ const [LayoutStateProvider, _useLayoutState] = createContextProvider(
 	createLayoutStateContext<string>,
 );
 
-export const useLayoutStateRaw = () => {
+export const useLayoutStateRaw = <TSettingsPage extends string>() => {
 	const ctx = _useLayoutState();
 	if (!ctx)
 		throw new Error("useLayoutState must be used within a LayoutStateProvider");
-	return ctx;
+	return ctx as ReturnType<typeof createLayoutStateContext<TSettingsPage>>;
 };
 
 export { LayoutStateProvider };

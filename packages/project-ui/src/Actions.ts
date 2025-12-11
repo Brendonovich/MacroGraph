@@ -10,6 +10,7 @@ import {
 } from "@macrograph/project-domain/updated";
 import { createStore, produce } from "solid-js/store";
 
+import { ProjectEventHandler } from "./ProjectEventHandler";
 import { ProjectState } from "./State";
 
 export class ProjectActions extends Effect.Service<ProjectActions>()(
@@ -17,7 +18,8 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 	{
 		accessors: true,
 		effect: Effect.gen(function* () {
-			const { state, setState, actions } = yield* ProjectState;
+			const { state, setState } = yield* ProjectState;
+			const handleProjectEvent = yield* ProjectEventHandler;
 
 			type PendingRequest = Request.CreateNode | Request.ConnectIO;
 
@@ -95,46 +97,16 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					},
 				),
 				CreateGraph: withRequest<Request.CreateGraph>()((run) =>
-					Effect.gen(function* () {
-						const { graph } = yield* run(
-							new Request.CreateGraph({ name: "New Graph" }),
-						);
-
-						setState(
-							produce((data) => {
-								data.graphs[graph.id] = {
-									id: graph.id,
-									name: graph.name,
-									comments: [] as any,
-									nodes: [],
-									connections: [],
-								};
-							}),
-						);
-					}),
+					run(new Request.CreateGraph({ name: "New Graph" })).pipe(
+						Effect.andThen(handleProjectEvent),
+					),
 				),
 				CreateNode: withRequest<Request.CreateNode>({
 					pending: true,
 				})((run, graph: Graph.Id, schema: Schema.Ref, position: Position) =>
-					Effect.gen(function* () {
-						const resp = yield* run(
-							new Request.CreateNode({ schema, graph, position }),
-						);
-
-						setState(
-							produce((data) => {
-								data.graphs[graph]?.nodes.push({
-									id: resp.node.id,
-									name: resp.node.name,
-									schema,
-									position,
-									inputs: resp.io.inputs,
-									outputs: resp.io.outputs,
-									properties: {},
-								});
-							}),
-						);
-					}),
+					run(new Request.CreateNode({ schema, graph, position })).pipe(
+						Effect.andThen(handleProjectEvent),
+					),
 				),
 				ConnectIO: withRequest<Request.ConnectIO>({
 					pending: true,
@@ -153,23 +125,8 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							input = [one.nodeId, one.id] as const;
 						} else return;
 
-						yield* run(new Request.ConnectIO({ graph, output, input }));
-
-						setState(
-							produce((data) => {
-								const connections = data.graphs[graph]?.connections;
-								if (!connections) return;
-
-								const outNodeConnections = ((connections[output[0]] ??=
-									{}).out ??= {});
-								const outConnections = (outNodeConnections[output[1]] ??= []);
-								outConnections.push([...input]);
-
-								const inNodeConnections = ((connections[input[0]] ??= {}).in ??=
-									{});
-								const inConnections = (inNodeConnections[input[1]] ??= []);
-								inConnections.push([...output]);
-							}),
+						yield* run(new Request.ConnectIO({ graph, output, input })).pipe(
+							Effect.andThen(handleProjectEvent),
 						);
 					}),
 				),
@@ -217,71 +174,18 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								} else return;
 							} else return;
 
-							yield* run(req);
-
-							setState(
-								produce((data) => {
-									const connections = data.graphs[graph]?.connections;
-									if (!connections) return;
-
-									const conns =
-										io.type === "i"
-											? connections[io.nodeId]?.in
-											: connections[io.nodeId]?.out;
-
-									if (!conns) return;
-
-									const ioConnections = conns[io.id];
-									delete conns[io.id];
-									if (!ioConnections) return;
-
-									for (const ioConnection of ioConnections) {
-										const [nodeId, ioId] = ioConnection;
-
-										const oppNodeConnections =
-											io.type === "i"
-												? connections[nodeId]?.out
-												: connections[nodeId]?.in;
-										if (!oppNodeConnections) continue;
-
-										const oppConnections = oppNodeConnections[ioId];
-										if (!oppConnections) continue;
-
-										const index = oppConnections.findIndex(
-											([nodeId, inId]) =>
-												nodeId === io.nodeId && inId === io.id,
-										);
-										if (index !== -1) oppConnections.splice(index, 1);
-										if (oppConnections.length < 1)
-											delete oppNodeConnections[ioId];
-									}
-								}),
-							);
+							const e = yield* run(req);
+							if (e) yield* handleProjectEvent(e);
 						}),
 				),
 				DeleteGraphItems: withRequest<Request.DeleteGraphItems>()(
 					(run, graphId: Graph.Id, items: ReadonlyArray<Graph.ItemRef>) =>
-						Effect.gen(function* () {
-							yield* run(
-								new Request.DeleteGraphItems({
-									graph: graphId,
-									items,
-								}),
-							);
-
-							setState(
-								produce((prev) => {
-									for (const item of items) {
-										if (item[0] === "Node") {
-											actions.deleteNode(prev, {
-												graph: graphId,
-												nodeId: item[1],
-											});
-										}
-									}
-								}),
-							);
-						}),
+						run(
+							new Request.DeleteGraphItems({
+								graph: graphId,
+								items,
+							}),
+						).pipe(Effect.andThen(handleProjectEvent)),
 				),
 				SetNodeProperty: withRequest<Request.SetNodeProperty>()(
 					(
@@ -291,46 +195,32 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						property: string,
 						value: string,
 					) =>
-						Effect.gen(function* () {
-							yield* run(
-								new Request.SetNodeProperty({
-									graph: graphId,
-									node: nodeId,
-									property,
-									value,
-								}),
-							);
-
-							setState(
-								"graphs",
-								graphId,
-								"nodes",
-								(n) => n.id === nodeId,
-								produce((node) => {
-									node.properties ??= {};
-									node.properties[property] = value;
-								}),
-							);
-						}),
+						run(
+							new Request.SetNodeProperty({
+								graph: graphId,
+								node: nodeId,
+								property,
+								value,
+							}),
+						).pipe(Effect.andThen(handleProjectEvent)),
 				),
 				CreateResourceConstant: withRequest<Request.CreateResourceConstant>()(
 					(run, pkg: Package.Id, resource: string) =>
-						Effect.gen(function* () {
-							const e = yield* run(
-								new Request.CreateResourceConstant({
-									pkg,
-									resource,
-								}),
-							);
-
-							setState("constants", e.id, {
-								type: "resource",
-								name: e.name,
-								pkg: e.pkg,
-								resource: e.resource,
-								value: Option.getOrUndefined(e.value),
-							});
-						}),
+						run(
+							new Request.CreateResourceConstant({
+								pkg,
+								resource,
+							}),
+						).pipe(Effect.andThen(handleProjectEvent)),
+				),
+				UpdateResourceConstant: withRequest<Request.UpdateResourceConstant>()(
+					(run, constantId: string, value: string) =>
+						run(
+							new Request.UpdateResourceConstant({
+								id: constantId,
+								value,
+							}),
+						).pipe(Effect.andThen(handleProjectEvent)),
 				),
 				// StartServerRegistration: Effect.gen(function* () {
 				// 	const getFlowStatus = yield* rpc
@@ -353,6 +243,6 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				// }).pipe(Effect.scoped),
 			};
 		}),
-		dependencies: [ProjectState.Default],
+		dependencies: [ProjectState.Default, ProjectEventHandler.Default],
 	},
 ) {}
