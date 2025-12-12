@@ -24,6 +24,7 @@ import {
 	Schema,
 } from "@macrograph/project-domain/updated";
 
+import * as Actor from "./Actor.ts";
 import { CloudApiClient } from "./CloudApi.ts";
 import * as CredentialsStore from "./CredentialsStore.ts";
 import { NodeExecution } from "./NodeExecution.ts";
@@ -117,8 +118,11 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 												Effect.catchAll(Effect.die),
 											);
 										}).pipe(Effect.ensuring(credentialLatch.open)),
-									dirtyState: runtime.events.offer(
+									dirtyState: ProjectRuntime.publishEvent(
 										new ProjectEvent.PackageStateChanged({ pkg: id }),
+									).pipe(
+										Effect.provide(Actor.layerSystem),
+										Effect.provideService(ProjectRuntime.Current, runtime),
 									),
 									dirtyResources: Effect.suspend(() =>
 										updateResources.pipe(Effect.fork),
@@ -182,11 +186,14 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 										Effect.map(Record.fromEntries),
 									);
 
-									yield* runtime.events.offer(
+									yield* ProjectRuntime.publishEvent(
 										new ProjectEvent.PackageResourcesUpdated({
 											package: id,
 											resources,
 										}),
+									).pipe(
+										Effect.provide(Actor.layerSystem),
+										Effect.provideService(ProjectRuntime.Current, runtime),
 									);
 								});
 
@@ -267,11 +274,12 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 						),
 					});
 
-					const event = new ProjectEvent.PackageAdded({ pkg });
-
-					yield* runtime.events.offer(event);
-
-					return event;
+					yield* ProjectRuntime.publishEvent(
+						new ProjectEvent.PackageAdded({ pkg }),
+					).pipe(
+						Effect.provide(Actor.layerSystem),
+						Effect.provideService(ProjectRuntime.Current, runtime),
+					);
 				}),
 			};
 		}),

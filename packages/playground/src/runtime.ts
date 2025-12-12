@@ -53,7 +53,11 @@ const GetPackageRpcClientLive = Layer.effect(
 
 const ProjectEventStreamLive = Layer.effect(
 	ProjectEventStream,
-	Effect.map(ProjectRuntime.Current, (r) => Stream.fromPubSub(r.events)),
+	Effect.map(ProjectRuntime.Current, (r) =>
+		Stream.fromPubSub(r.events).pipe(
+			Stream.filter((e) => e.actor.type === "SYSTEM"),
+		),
+	),
 );
 
 export const RuntimeLayers = Layer.empty.pipe(

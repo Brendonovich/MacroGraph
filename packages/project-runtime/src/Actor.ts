@@ -1,9 +1,12 @@
-import { Context } from "effect";
-import type { Actor } from "@macrograph/project-domain/updated";
+import { Context, Layer } from "effect";
+import { Actor as DActor } from "@macrograph/project-domain/updated";
 
-export type { Actor };
+export const Actor = DActor.Actor;
+export type Actor = DActor.Actor;
 
 export class Current extends Context.Tag("Actor/Current")<
 	Current,
-	Actor.Actor
+	DActor.Actor
 >() {}
+
+export const layerSystem = Layer.succeed(Current, { type: "SYSTEM" });

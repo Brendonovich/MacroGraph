@@ -80,7 +80,7 @@ export const make = () =>
 		return new ProjectRuntime({
 			projectRef: yield* Ref.make(defaultProject),
 			nodesIORef: yield* Ref.make(HashMap.empty<Node.Id, NodeIO>()),
-			events: yield* PubSub.unbounded(),
+			events: yield* PubSub.unbounded() as any,
 			packages: new Map(),
 		});
 	});
