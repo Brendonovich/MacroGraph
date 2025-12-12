@@ -31,6 +31,8 @@ import {
 	EVENTSUB_MESSAGE,
 	isEventSubMessageType,
 	isNotificationType,
+	type SubscriptionTypeDefinition,
+	subscriptionTypes,
 } from "./eventSub";
 import { HelixApi } from "./helix";
 import { ConnectFailed, RPCS, TwitchAPIError } from "./shared";
@@ -51,6 +53,21 @@ type State = {
 		displayName: string;
 		eventSubSocket: { state: "connecting" | "connected" | "disconnected" };
 	}>;
+};
+
+const buildCondition = (
+	def: SubscriptionTypeDefinition,
+	accountId: string,
+): Record<string, string> => {
+	return Object.fromEntries(
+		Object.keys(def.condition).map((key) => [key, accountId]),
+	);
+};
+
+const toVersionString = (
+	version: SubscriptionTypeDefinition["version"],
+): "beta" | "1" | "2" => {
+	return version === "beta" ? "beta" : (String(version) as "1" | "2");
 };
 
 class RetryRequest extends Data.TaggedError("RetryRequest")<{}> {}
@@ -193,48 +210,19 @@ const Engine = PackageEngine.define<State>()({
 
 					yield* Effect.log("Creating subscriptions");
 					yield* Effect.all(
-						[
+						Object.values(subscriptionTypes).map((def) =>
 							helixClient.eventSub.createSubscription({
 								payload: {
-									type: "channel.follow",
-									version: "2",
-									condition: {
-										broadcaster_user_id: accountId,
-										moderator_user_id: accountId,
-									},
+									type: def.type,
+									version: toVersionString(def.version),
+									condition: buildCondition(def, accountId),
 									transport: {
 										method: "websocket",
 										session_id: firstEvent.payload.session.id,
 									},
 								},
 							}),
-							helixClient.eventSub.createSubscription({
-								payload: {
-									type: "channel.ban",
-									version: "1",
-									condition: {
-										broadcaster_user_id: accountId,
-									},
-									transport: {
-										method: "websocket",
-										session_id: firstEvent.payload.session.id,
-									},
-								},
-							}),
-							helixClient.eventSub.createSubscription({
-								payload: {
-									type: "channel.unban",
-									version: "1",
-									condition: {
-										broadcaster_user_id: accountId,
-									},
-									transport: {
-										method: "websocket",
-										session_id: firstEvent.payload.session.id,
-									},
-								},
-							}),
-						],
+						),
 						{ concurrency: 2 },
 					).pipe(Effect.withSpan("createTestSubscriptions"));
 					socket.state = "connected";
@@ -333,7 +321,7 @@ const deleteOldSubscriptions = Effect.fn(function* <E, R>(
 			sub.status === "websocket_disconnected"
 				? helixClient.eventSub.deleteSubscription({
 						urlParams: { id: sub.id },
-					})
+				  })
 				: Effect.void,
 		),
 		{ concurrency: 10 },
