@@ -5,12 +5,14 @@ import {
 	type Node,
 	type Package,
 	type Position,
+	ProjectEvent,
 	Request,
 	type Schema,
 } from "@macrograph/project-domain/updated";
 import { createStore, produce } from "solid-js/store";
 
 import { ProjectEventHandler } from "./ProjectEventHandler";
+import { ProjectRequestHandler } from "./RequestHandler";
 import { ProjectState } from "./State";
 
 export class ProjectActions extends Effect.Service<ProjectActions>()(
@@ -20,28 +22,27 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 		effect: Effect.gen(function* () {
 			const { state, setState } = yield* ProjectState;
 			const handleProjectEvent = yield* ProjectEventHandler;
+			const reqHandler = yield* ProjectRequestHandler;
 
 			type PendingRequest = Request.CreateNode | Request.ConnectIO;
 
 			const [pending, setPending] = createStore<Array<PendingRequest>>([]);
 
 			const withRequest =
-				<R extends ERequest.Request<any, any>>(config?: {
+				<R extends Request.Request>(config?: {
 					pending?: R extends PendingRequest ? boolean : never;
 				}) =>
-				<
-					F extends (
+				<A extends any[]>(
+					cb: (
 						_: (_: R) => Effect.Effect<ERequest.Request.Success<R>, any, never>,
-						...__: any[]
-					) => Effect.Effect<void, unknown, never>,
-				>(
-					cb: F,
+						...__: A
+					) => Effect.Effect<any, any>,
 				) => {
-					return (...[run, ...args]: Parameters<F>) => {
+					return (...args: A) => {
 						let pendingReq: R | null = null;
 
 						return cb(
-							(v) => {
+							(v: R) => {
 								if (config?.pending) {
 									pendingReq = v;
 									setPending(
@@ -51,7 +52,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 									);
 								}
 
-								return run(v);
+								return reqHandler[v._tag](v as any) as any;
 							},
 							...args,
 						).pipe(
@@ -80,21 +81,19 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						graph: Graph.Id,
 						items: ReadonlyArray<[Graph.ItemRef, Position]>,
 						ephemeral = true,
-					) => {
-						setState(
-							produce((data) => {
-								const _graph = data.graphs[graph];
-								if (!_graph) return;
-								for (const [[_, nodeId], position] of items) {
-									const node = _graph.nodes.find((n) => n.id === nodeId);
-									if (node) node.position = position;
-								}
-							}),
-						);
-						return run(
-							new Request.SetItemPositions({ graph, items, ephemeral }),
-						);
-					},
+					) =>
+						Effect.gen(function* () {
+							yield* handleProjectEvent(
+								new ProjectEvent.GraphItemsMoved({
+									graph,
+									items,
+								}),
+							);
+
+							yield* run(
+								new Request.SetItemPositions({ graph, items, ephemeral }),
+							);
+						}),
 				),
 				CreateGraph: withRequest<Request.CreateGraph>()((run) =>
 					run(new Request.CreateGraph({ name: "New Graph" })).pipe(

@@ -18,13 +18,13 @@ import type {
 	NodeSchema,
 } from "@macrograph/project-domain";
 import {
+	Actor,
 	Credential,
 	Package,
 	ProjectEvent,
 	Schema,
 } from "@macrograph/project-domain/updated";
 
-import * as Actor from "./Actor.ts";
 import { CloudApiClient } from "./CloudApi.ts";
 import * as CredentialsStore from "./CredentialsStore.ts";
 import { NodeExecution } from "./NodeExecution.ts";

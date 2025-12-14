@@ -6,6 +6,7 @@ import {
 	useEffectRuntime,
 } from "@macrograph/package-sdk/ui";
 import {
+	ContextualSidebar,
 	ContextualSidebarContent,
 	CredentialsPage,
 	credentialsQueryOptions,
@@ -15,6 +16,7 @@ import {
 	Header,
 	makeGraphTabSchema,
 	makePackageTabSchema,
+	NavSidebar,
 	PackagesSidebar,
 	type PaneState,
 	ProjectActions,
@@ -26,6 +28,7 @@ import {
 	Sidebar,
 	type TabState,
 	useContextualSidebar,
+	useEditorKeybinds,
 	useNavSidebar,
 	ZoomedPaneWrapper,
 } from "@macrograph/project-ui";
@@ -53,6 +56,8 @@ export default function () {
 	const layoutState = useLayoutState();
 	const navSidebar = useNavSidebar();
 
+	useEditorKeybinds();
+
 	return (
 		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
 			<Header>
@@ -75,6 +80,16 @@ export default function () {
 					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
 				>
 					Graphs
+				</button>
+				<button
+					type="button"
+					onClick={() => {
+						navSidebar.toggle("constants");
+					}}
+					data-selected={navSidebar.state() === "constants"}
+					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+				>
+					Constants
 				</button>
 				<div class="flex-1" />
 				<button
@@ -128,92 +143,6 @@ export default function () {
 	);
 }
 
-function NavSidebar() {
-	const actions = useEffectService(ProjectActions);
-	const { state } = useEffectService(ProjectState);
-	const navSidebar = useNavSidebar();
-	const layoutState = useLayoutState();
-	const rpc = useEffectService(ProjectRpc.client);
-
-	return (
-		<Sidebar
-			side="left"
-			open={!!navSidebar.state()}
-			onOpenChanged={(open) => {
-				navSidebar.toggle(open);
-			}}
-		>
-			<Switch>
-				<Match when={navSidebar.state() === "graphs"}>
-					<GraphsSidebar
-						graphs={state.graphs}
-						selected={(() => {
-							const s = layoutState.focusedTab();
-							if (s?.type === "graph") return s.graphId;
-						})()}
-						onSelected={(graph) => {
-							layoutState.openTab({
-								type: "graph",
-								graphId: graph.id,
-								selection: [],
-							});
-						}}
-						onNewClicked={() => {
-							actions.CreateGraph(rpc.CreateGraph);
-						}}
-					/>
-				</Match>
-				<Match when={navSidebar.state() === "packages"}>
-					<PackagesSidebar
-						packageId={(() => {
-							const s = layoutState.focusedTab();
-							if (s?.type === "package") return s.packageId;
-						})()}
-						onChange={(packageId) =>
-							layoutState.openTab({ type: "package", packageId })
-						}
-					/>
-				</Match>
-			</Switch>
-		</Sidebar>
-	);
-}
-
-function ContextualSidebar() {
-	const contextualSidebar = useContextualSidebar();
-	const layoutState = useLayoutState();
-	const rpc = useEffectService(ProjectRpc.client);
-	const actions = useEffectService(ProjectActions);
-
-	return (
-		<Sidebar
-			side="right"
-			open={contextualSidebar.open()}
-			onOpenChanged={(open) => {
-				contextualSidebar.setOpen(open);
-			}}
-		>
-			<Show
-				when={layoutState.zoomedPane() === null}
-				fallback={<div class="flex-1 bg-gray-4" />}
-			>
-				<ContextualSidebarContent
-					state={contextualSidebar.state()}
-					setNodeProperty={(r) =>
-						actions.SetNodeProperty(
-							rpc.SetNodeProperty,
-							r.graph,
-							r.node,
-							r.property,
-							r.value,
-						)
-					}
-				/>
-			</Show>
-		</Sidebar>
-	);
-}
-
 const usePaneTabController = (
 	pane: Accessor<PaneState<SettingsPage>>,
 	updateTab: (_: StoreSetter<TabState.TabState<SettingsPage>>) => void,
@@ -230,7 +159,6 @@ const usePaneTabController = (
 					return setter;
 				});
 			},
-			rpc,
 			(state) => {
 				if (state.open) setGraphCtxMenu({ ...state, paneId: pane().id });
 				else setGraphCtxMenu(state);

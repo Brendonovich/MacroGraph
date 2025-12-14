@@ -1,9 +1,38 @@
 import { createContextProvider } from "@solid-primitives/context";
-import { createWritableMemo } from "@solid-primitives/memo";
 import { isMobile } from "@solid-primitives/platform";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, Match, Switch } from "solid-js";
 
+import { ConstantsSidebar } from "./ConstantsSidebar";
+import { GraphsSidebar } from "./Graph/Sidebar";
 import { useLayoutStateRaw } from "./LayoutState";
+import { PackagesSidebar } from "./Packages/Sidebar";
+import { Sidebar } from "./Sidebar";
+
+export function NavSidebar() {
+	const navSidebar = useNavSidebar();
+
+	return (
+		<Sidebar
+			side="left"
+			open={!!navSidebar.state()}
+			onOpenChanged={(open) => {
+				navSidebar.toggle(open);
+			}}
+		>
+			<Switch>
+				<Match when={navSidebar.state() === "graphs"}>
+					<GraphsSidebar />
+				</Match>
+				<Match when={navSidebar.state() === "packages"}>
+					<PackagesSidebar />
+				</Match>
+				<Match when={navSidebar.state() === "constants"}>
+					<ConstantsSidebar />
+				</Match>
+			</Switch>
+		</Sidebar>
+	);
+}
 
 function createNavSidebar() {
 	type Type = "graphs" | "packages" | "constants";

@@ -97,25 +97,25 @@ export const UILive = Layer.scopedDiscard(
 
 		const dispose = render(
 			() => (
-				<Provider runtime={runtime}>
-					<ProjectEffectRuntimeContext.Provider value={runtime}>
-						<EffectRuntimeProvider runtime={runtime}>
-							<QueryClientProvider client={client}>
-								<ProjectRuntimeProvider value={runtime}>
-									<RealtimeContextProvider value={{ id: () => realtime.id }}>
-										<PresenceContextProvider
-											value={{ clients: presenceClients }}
-										>
-											<ErrorBoundary
-												fallback={(e) => {
-													console.error(e);
-													return (
-														<div>
-															{e.toString()}
-															<pre>{e.stack}</pre>
-														</div>
-													);
-												}}
+				<ErrorBoundary
+					fallback={(e) => {
+						console.error(e);
+						return (
+							<div>
+								{e.toString()}
+								<pre>{e.stack}</pre>
+							</div>
+						);
+					}}
+				>
+					<Provider runtime={runtime}>
+						<ProjectEffectRuntimeContext.Provider value={runtime}>
+							<EffectRuntimeProvider runtime={runtime}>
+								<QueryClientProvider client={client}>
+									<ProjectRuntimeProvider value={runtime}>
+										<RealtimeContextProvider value={{ id: () => realtime.id }}>
+											<PresenceContextProvider
+												value={{ clients: presenceClients }}
 											>
 												<LayoutStateProvider {...layoutState}>
 													<NavSidebarProvider>
@@ -132,14 +132,14 @@ export const UILive = Layer.scopedDiscard(
 														</ContextualSidebarProvider>
 													</NavSidebarProvider>
 												</LayoutStateProvider>
-											</ErrorBoundary>
-										</PresenceContextProvider>
-									</RealtimeContextProvider>
-								</ProjectRuntimeProvider>
-							</QueryClientProvider>
-						</EffectRuntimeProvider>
-					</ProjectEffectRuntimeContext.Provider>
-				</Provider>
+											</PresenceContextProvider>
+										</RealtimeContextProvider>
+									</ProjectRuntimeProvider>
+								</QueryClientProvider>
+							</EffectRuntimeProvider>
+						</ProjectEffectRuntimeContext.Provider>
+					</Provider>
+				</ErrorBoundary>
 			),
 			document.getElementById("app")!,
 		);

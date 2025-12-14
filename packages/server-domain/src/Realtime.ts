@@ -1,5 +1,6 @@
 import { RpcMiddleware } from "@effect/rpc";
 import { Context, Schema } from "effect";
+import { Actor } from "@macrograph/project-domain/updated";
 
 export const ConnectionId = Schema.Number.pipe(
 	Schema.brand("Realtime Client ID"),
@@ -17,4 +18,9 @@ export class ConnectionRpcMiddleware extends RpcMiddleware.Tag<ConnectionRpcMidd
 		provides: Connection,
 		requiredForClient: true,
 	},
+) {}
+
+export class CurrentActorRpcMiddleware extends RpcMiddleware.Tag<CurrentActorRpcMiddleware>()(
+	"CurrentActorRpcMiddleware",
+	{ provides: Actor.Current },
 ) {}

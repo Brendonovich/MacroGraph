@@ -8,6 +8,7 @@ import {
 } from "@macrograph/project-domain/updated";
 
 import * as ProjectRuntime from "./ProjectRuntime";
+import { requestResolverServices } from "./Requests";
 
 export class NodeRequests extends Effect.Service<NodeRequests>()(
 	"NodeRequests",
@@ -46,11 +47,11 @@ export class NodeRequests extends Effect.Service<NodeRequests>()(
 
 						const e = new ProjectEvent.NodePropertyUpdated(r);
 
-						yield* runtime.events.publish(e);
+						yield* ProjectRuntime.publishEvent(e);
 
 						return e;
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			return {
 				setNodeProperty: Effect.request<

@@ -321,7 +321,7 @@ const deleteOldSubscriptions = Effect.fn(function* <E, R>(
 			sub.status === "websocket_disconnected"
 				? helixClient.eventSub.deleteSubscription({
 						urlParams: { id: sub.id },
-				  })
+					})
 				: Effect.void,
 		),
 		{ concurrency: 10 },

@@ -15,6 +15,7 @@ import {
 } from "@macrograph/project-domain/updated";
 
 import * as ProjectRuntime from "./ProjectRuntime";
+import { requestResolverServices } from "./Requests";
 
 export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 	"ProjectRequests",
@@ -47,11 +48,11 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 
 						const event = new ProjectEvent.GraphCreated({ graph: newGraph });
 
-						yield* runtime.events.publish(event);
+						yield* ProjectRuntime.publishEvent(event);
 
 						return event;
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			const GetProjectResolver = RequestResolver.fromEffect(
 				(_r: Request.GetProject) =>
@@ -131,7 +132,7 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 							),
 						};
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			const GetPackageSettingsResolver = RequestResolver.fromEffect(
 				(r: Request.GetPackageSettings) =>
@@ -149,7 +150,7 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 							),
 						);
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			const CreateResourceConstantResolver = RequestResolver.fromEffect(
 				(r: Request.CreateResourceConstant) =>
@@ -183,10 +184,10 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 							id,
 							value: Option.none(),
 						});
-						yield* runtime.events.publish(event);
+						yield* ProjectRuntime.publishEvent(event);
 						return event;
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			const UpdateResourceConstant = RequestResolver.fromEffect(
 				(r: Request.UpdateResourceConstant) =>
@@ -216,10 +217,10 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 							id: r.id,
 							value: r.value,
 						});
-						yield* runtime.events.publish(event);
+						yield* ProjectRuntime.publishEvent(event);
 						return event;
 					}),
-			).pipe(RequestResolver.contextFromServices(ProjectRuntime.Current));
+			).pipe(requestResolverServices);
 
 			return {
 				createGraph: Effect.request<

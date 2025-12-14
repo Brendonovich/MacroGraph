@@ -3,10 +3,11 @@ import { createContext, useContext } from "solid-js";
 
 import type { ProjectActions } from "./Actions";
 import type { PackageClients } from "./Packages/Clients";
+import type { ProjectRequestHandler } from "./RequestHandler";
 import type { ProjectState } from "./State";
 
 export type EffectRuntime = ManagedRuntime.ManagedRuntime<
-	PackageClients | ProjectState | ProjectActions,
+	PackageClients | ProjectState | ProjectActions | ProjectRequestHandler,
 	any
 >;
 

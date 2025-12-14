@@ -108,7 +108,6 @@ export function TabLayoutView<TSchema extends TabLayout.TabState>(
 												selected()
 													? "text-gray-2 !border-b-transparent"
 													: "text-gray-3 !border-b-gray-5",
-												isTouchDevice ? "pl-3 pr-1 gap-1.5" : "px-4",
 											)}
 											data-selected={selected()}
 										>
@@ -116,6 +115,7 @@ export function TabLayoutView<TSchema extends TabLayout.TabState>(
 												type="button"
 												class={cx(
 													"h-full flex flex-row items-center focus-visible:(ring-1 ring-inset ring-yellow outline-none) text-nowrap",
+													isTouchDevice ? "pl-3 pr-1 gap-1.5" : "px-4",
 												)}
 												onClick={() => props.onSelectedChange?.(tab.tabId)}
 											>

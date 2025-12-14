@@ -5,9 +5,8 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Packages from "@macrograph/base-packages";
-import { Credential, Project } from "@macrograph/project-domain/updated";
+import { Actor, Credential, Project } from "@macrograph/project-domain/updated";
 import {
-	Actor,
 	CloudApiClient,
 	CredentialsStore,
 	GraphRequests,

@@ -1,6 +1,10 @@
 import { WebSdk } from "@effect/opentelemetry";
 import { Effect, Layer, ManagedRuntime, Option, Stream } from "effect";
-import { ProjectEventStream, ProjectUILayers } from "@macrograph/project-ui";
+import {
+	ProjectEventStream,
+	ProjectRequestHandler,
+	ProjectUILayers,
+} from "@macrograph/project-ui";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { createEffectQueryFromManagedRuntime } from "effect-query";
@@ -24,15 +28,23 @@ const ProjectEventStreamLive = Layer.effect(
 	}),
 );
 
-const FrontendLive = Layer.mergeAll(
-	ProjectUILayers,
-	ProjectRpc.Default,
-	AuthActions.Default,
-).pipe(
+const RequestHandlersLive = Layer.effect(
+	ProjectRequestHandler,
+	ProjectRpc.client,
+);
+
+const FrontendLive = Layer.empty.pipe(
+	Layer.provideMerge(Layer.mergeAll(ProjectUILayers, AuthActions.Default)),
 	Layer.provideMerge(
-		Layer.mergeAll(HttpPackgeRpcClient, ProjectEventStreamLive),
+		Layer.mergeAll(
+			HttpPackgeRpcClient,
+			ProjectEventStreamLive,
+			RequestHandlersLive,
+		),
 	),
-	Layer.provideMerge(ProjectRealtime.Default),
+	Layer.provideMerge(
+		Layer.mergeAll(ProjectRpc.Default, ProjectRealtime.Default),
+	),
 );
 
 export namespace EffectRuntime {

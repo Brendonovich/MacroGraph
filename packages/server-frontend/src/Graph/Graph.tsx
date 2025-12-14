@@ -61,7 +61,6 @@ export function GraphView(
 	function getGraphPosition(e: MouseEvent) {
 		return { x: e.clientX, y: e.clientY };
 	}
-	// const actions = useProjectService(ProjectActions);
 
 	const [ref, setRef] = createSignal<HTMLDivElement | null>(null);
 	const bounds = createElementBounds(ref);

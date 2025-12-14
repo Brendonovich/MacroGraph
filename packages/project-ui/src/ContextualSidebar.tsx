@@ -1,32 +1,48 @@
 import { Array, Iterable, identity, Option, pipe } from "effect";
 import { Select } from "@kobalte/core/select";
-import {
-	type Graph,
-	type Node,
-	Request,
-} from "@macrograph/project-domain/updated";
+import type { Graph, Node, Request } from "@macrograph/project-domain/updated";
 import { createContextProvider } from "@solid-primitives/context";
 import { isMobile } from "@solid-primitives/platform";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
 
+import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";
 import { useLayoutStateRaw } from "./LayoutState";
+import { Sidebar } from "./Sidebar";
 import { ProjectState } from "./State";
 
-export function ContextualSidebarContent(props: {
-	state:
-		| { type: "graph"; graph: Graph.Id }
-		| { type: "node"; graph: Graph.Id; node: Node.Id }
-		| null;
-	setNodeProperty?: (r: Request.SetNodeProperty) => Promise<void>;
-}) {
+export function ContextualSidebar() {
+	const contextualSidebar = useContextualSidebar();
+	const layoutState = useLayoutStateRaw();
+
+	return (
+		<Sidebar
+			side="right"
+			open={contextualSidebar.open()}
+			onOpenChanged={(open) => {
+				contextualSidebar.setOpen(open);
+			}}
+		>
+			<Show
+				when={layoutState.zoomedPane() === null}
+				fallback={<div class="flex-1 bg-gray-4" />}
+			>
+				<ContextualSidebarContent />
+			</Show>
+		</Sidebar>
+	);
+}
+
+export function ContextualSidebarContent() {
+	const self = useContextualSidebar();
 	const { state } = useProjectService(ProjectState);
+	const actions = useProjectService(ProjectActions);
 
 	return (
 		<Show
-			when={props.state}
+			when={self.state()}
 			fallback={
 				<div class="w-full h-full text-gray-11 italic text-center flex-1 p-4">
 					No information available
@@ -94,19 +110,15 @@ export function ContextualSidebarContent(props: {
 														<div class="flex flex-col">
 															<For each={schema().properties}>
 																{(property) => {
-																	const setProperty = props.setNodeProperty
-																		? useMutation(() => ({
-																				mutationFn: async (value: string) =>
-																					props.setNodeProperty?.(
-																						new Request.SetNodeProperty({
-																							graph: data.graph,
-																							node: node().id,
-																							property: property.id,
-																							value,
-																						}),
-																					),
-																			}))
-																		: undefined;
+																	const setProperty = useMutation(() => ({
+																		mutationFn: async (value: string) =>
+																			actions.SetNodeProperty(
+																				data.graph,
+																				node().id,
+																				property.id,
+																				value,
+																			),
+																	}));
 
 																	const options = createMemo(() =>
 																		pipe(

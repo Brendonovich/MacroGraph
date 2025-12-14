@@ -1,5 +1,6 @@
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import {
+	ContextualSidebar,
 	ContextualSidebarProvider,
 	CredentialsPage,
 	credentialsQueryOptions,
@@ -8,10 +9,10 @@ import {
 	Header,
 	makeGraphTabSchema,
 	makePackageTabSchema,
+	NavSidebar,
 	NavSidebarProvider,
 	PackageClients,
 	type PaneState,
-	ProjectActions,
 	ProjectEffectRuntimeContext,
 	ProjectPaneLayoutView,
 	ProjectPaneTabView,
@@ -19,7 +20,7 @@ import {
 	refetchCredentialsMutationOptions,
 	SettingsLayout,
 	type TabState,
-	useContextualSidebar,
+	useEditorKeybinds,
 	useNavSidebar,
 	ZoomedPaneWrapper,
 } from "@macrograph/project-ui";
@@ -50,9 +51,9 @@ import {
 	useEffectRuntime,
 	useService,
 } from "./runtime";
-import { ContextualSidebar, NavSidebar } from "./Sidebars";
 
 import "@macrograph/project-ui/styles.css";
+import { ErrorBoundary } from "solid-js";
 
 const effectRuntime = ManagedRuntime.make(RuntimeLayers);
 
@@ -74,35 +75,46 @@ export default function NewPlayground() {
 
 	return (
 		<div class="text-gray-12 font-sans w-screen h-screen overflow-hidden">
-			<ProjectEffectRuntimeContext.Provider value={effectRuntime}>
-				<EffectRuntimeProvider runtime={effectRuntime}>
-					<EffectRuntimeContext.Provider value={effectRuntime}>
-						<QueryClientProvider client={client}>
-							<LayoutStateProvider {...layoutState}>
-								<NavSidebarProvider>
-									<ContextualSidebarProvider
-										wrapOpenSignal={(s) =>
-											makePersisted(s, {
-												name: "contextual-sidebar",
-											})
-										}
-									>
-										<Show when={init()}>
-											<Inner />
-										</Show>
-									</ContextualSidebarProvider>
-								</NavSidebarProvider>
-							</LayoutStateProvider>
-						</QueryClientProvider>
-					</EffectRuntimeContext.Provider>
-				</EffectRuntimeProvider>
-			</ProjectEffectRuntimeContext.Provider>
+			<ErrorBoundary
+				fallback={(e) => {
+					console.error(e);
+					return (
+						<div>
+							{e.toString()}
+							<pre>{e.stack}</pre>
+						</div>
+					);
+				}}
+			>
+				<ProjectEffectRuntimeContext.Provider value={effectRuntime}>
+					<EffectRuntimeProvider runtime={effectRuntime}>
+						<EffectRuntimeContext.Provider value={effectRuntime}>
+							<QueryClientProvider client={client}>
+								<LayoutStateProvider {...layoutState}>
+									<NavSidebarProvider>
+										<ContextualSidebarProvider
+											wrapOpenSignal={(s) =>
+												makePersisted(s, {
+													name: "contextual-sidebar",
+												})
+											}
+										>
+											<Show when={init()}>
+												<Inner />
+											</Show>
+										</ContextualSidebarProvider>
+									</NavSidebarProvider>
+								</LayoutStateProvider>
+							</QueryClientProvider>
+						</EffectRuntimeContext.Provider>
+					</EffectRuntimeProvider>
+				</ProjectEffectRuntimeContext.Provider>
+			</ErrorBoundary>
 		</div>
 	);
 }
 
 function Inner() {
-	const actions = useService(ProjectActions);
 	const { actions: stateActions } = useService(ProjectState);
 	const rpc = useService(PlaygroundRpc);
 
@@ -140,33 +152,8 @@ function Inner() {
 
 	const layoutState = useLayoutState();
 	const navSidebar = useNavSidebar();
-	const contextualSidebar = useContextualSidebar();
 
-	createEventListener(window, "keydown", (e) => {
-		if (e.code === "KeyB" && e.metaKey) {
-			e.preventDefault();
-			navSidebar.toggle();
-		} else if (e.code === "KeyR" && e.metaKey) {
-			e.preventDefault();
-			contextualSidebar.setOpen((o) => !o);
-		} else if (e.code === "Escape" && e.shiftKey) {
-			layoutState.toggleZoomedPane(layoutState.focusedPaneId() ?? undefined);
-		} else if (e.code === "ArrowLeft" && e.metaKey) {
-			if (layoutState.moveSelectedTab(-1)) e.preventDefault();
-		} else if (e.code === "ArrowRight" && e.metaKey) {
-			if (layoutState.moveSelectedTab(1)) e.preventDefault();
-		} else if (e.code === "KeyW" && e.ctrlKey) {
-			const pane = layoutState.focusedPane();
-			if (pane === undefined) return;
-			layoutState.removeTab(pane.id, pane.selectedTab);
-			e.preventDefault();
-		} else if (e.code === "Backslash" && e.metaKey) {
-			const paneId = layoutState.focusedPaneId();
-			if (typeof paneId !== "number") return;
-			layoutState.splitPane(paneId, "horizontal");
-			e.preventDefault();
-		}
-	});
+	useEditorKeybinds();
 
 	return (
 		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
@@ -275,7 +262,6 @@ const usePaneTabController = (
 					return setter;
 				});
 			},
-			rpc,
 			(state) => {
 				if (state.open) setGraphCtxMenu({ ...state, paneId: pane().id });
 				else setGraphCtxMenu(state);

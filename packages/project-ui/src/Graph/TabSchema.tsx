@@ -1,5 +1,4 @@
-import { type Effect, type Request as ERequest, Option } from "effect";
-import type { Request } from "@macrograph/project-domain/updated";
+import { Option } from "effect";
 import type { TabLayout } from "@macrograph/ui";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -13,17 +12,8 @@ import type { TabState } from "../LayoutState";
 import type { GraphState } from "../State";
 import { createGraphContext, GraphContext } from "./Context";
 
-export function makeGraphTabSchema<RPCError>(
+export function makeGraphTabSchema(
 	updateTab: (_: StoreSetter<TabState.GraphTab>) => void,
-	rpc: {
-		[Tag in Request.Requests["_tag"]]: (
-			r: Extract<Request.Requests, { _tag: Tag }>,
-		) => Effect.Effect<
-			ERequest.Request.Success<Extract<Request.Requests, { _tag: Tag }>>,
-			| ERequest.Request.Error<Extract<Request.Requests, { _tag: Tag }>>
-			| RPCError
-		>;
-	},
 	setGraphCtxMenu: (
 		state: { open: false } | { open: true; position: { x: number; y: number } },
 	) => void,
@@ -48,11 +38,7 @@ export function makeGraphTabSchema<RPCError>(
 
 			createEventListener(window, "keydown", (e) => {
 				if (e.code === "Backspace" || e.code === "Delete") {
-					actions.DeleteGraphItems(
-						rpc.DeleteGraphItems,
-						tab().graphId,
-						tab().selection,
-					);
+					actions.DeleteGraphItems(tab().graphId, tab().selection);
 				} else if (e.code === "Period") {
 					if (e.metaKey || e.ctrlKey) {
 						setGraphCtxMenu({
@@ -91,30 +77,19 @@ export function makeGraphTabSchema<RPCError>(
 							updateTab({ selection });
 						}}
 						onSelectionDrag={(items) => {
-							actions.SetItemPositions(
-								rpc.SetItemPositions,
-								tab().graph.id,
-								items,
-							);
+							actions.SetItemPositions(tab().graph.id, items);
 						}}
 						onSelectionDragEnd={(items) => {
-							actions.SetItemPositions(
-								rpc.SetItemPositions,
-								tab().graph.id,
-								items,
-								false,
-							);
+							actions.SetItemPositions(tab().graph.id, items, false);
 						}}
 						onConnectIO={(from, to) => {
-							actions.ConnectIO(rpc.ConnectIO, tab().graph.id, from, to);
+							actions.ConnectIO(tab().graph.id, from, to);
 						}}
 						onDisconnectIO={(io) => {
-							actions.DisconnectIO(rpc.DisconnectIO, tab().graph.id, io);
+							actions.DisconnectIO(tab().graph.id, io);
 						}}
 						onDeleteSelection={() => {
-							actions.DeleteGraphItems(rpc.DeleteGraphItems, tab().graph.id, [
-								...tab().selection,
-							]);
+							actions.DeleteGraphItems(tab().graph.id, [...tab().selection]);
 						}}
 						onTranslateChange={(translate) => {
 							updateTab(
@@ -131,12 +106,7 @@ export function makeGraphTabSchema<RPCError>(
 					<GraphContextMenu
 						packages={state.packages}
 						onSchemaClick={(schemaRef, position) => {
-							actions.CreateNode(
-								rpc.CreateNode,
-								tab().graph.id,
-								schemaRef,
-								position,
-							);
+							actions.CreateNode(tab().graph.id, schemaRef, position);
 						}}
 					/>
 				</GraphContext.Provider>

@@ -8,6 +8,7 @@ import * as Ref from "effect/Ref";
 import type { PackageEngine } from "@macrograph/package-sdk";
 import type { NodeSchema, Resource } from "@macrograph/project-domain";
 import {
+	Actor,
 	type Credential,
 	type Resource as DResource,
 	Graph,
@@ -18,8 +19,6 @@ import {
 	type ProjectEvent,
 	type Schema,
 } from "@macrograph/project-domain/updated";
-
-import * as Actor from "./Actor";
 
 export interface NodeIO {
 	readonly shape: unknown;
@@ -80,7 +79,7 @@ export const make = () =>
 		return new ProjectRuntime({
 			projectRef: yield* Ref.make(defaultProject),
 			nodesIORef: yield* Ref.make(HashMap.empty<Node.Id, NodeIO>()),
-			events: yield* PubSub.unbounded() as any,
+			events: (yield* PubSub.unbounded()) as any,
 			packages: new Map(),
 		});
 	});

@@ -141,7 +141,7 @@ export class UpdateResourceConstant extends S.TaggedRequest<UpdateResourceConsta
 	},
 ) {}
 
-export type Requests =
+export type Request =
 	| GetProject
 	| GetPackageSettings
 	| SetItemPositions
@@ -150,4 +150,6 @@ export type Requests =
 	| CreateNode
 	| CreateGraph
 	| DeleteGraphItems
-	| SetNodeProperty;
+	| SetNodeProperty
+	| CreateResourceConstant
+	| UpdateResourceConstant;

@@ -1,16 +1,19 @@
-import type { Package } from "@macrograph/project-domain/updated";
 import { For, Show } from "solid-js";
 
 import { useProjectService } from "../EffectRuntime";
+import { useLayoutStateRaw } from "../LayoutState";
 import { ProjectState } from "../State";
 import { PackageClients } from "./Clients";
 
-export function PackagesSidebar(props: {
-	packageId?: Package.Id;
-	onChange?(packageId: Package.Id): void;
-}) {
+export function PackagesSidebar() {
 	const packageClients = useProjectService(PackageClients);
 	const { state } = useProjectService(ProjectState);
+	const layoutState = useLayoutStateRaw();
+
+	const selected = () => {
+		const s = layoutState.focusedTab();
+		if (s?.type === "package") return s.packageId;
+	};
 
 	return (
 		<>
@@ -21,15 +24,17 @@ export function PackagesSidebar(props: {
 			/>
 			<ul>
 				<For each={packageClients.listPackages()}>
-					{(pkgid) => (
-						<Show when={state.packages[pkgid]}>
+					{(pkgId) => (
+						<Show when={state.packages[pkgId]}>
 							{(pkg) => (
 								<li>
 									<button
 										type="button"
 										class="w-full data-[selected='true']:bg-gray-2  hover:bg-gray-2 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-										data-selected={props.packageId === pkgid}
-										onClick={() => props.onChange?.(pkgid)}
+										data-selected={selected() === pkgId}
+										onClick={() =>
+											layoutState.openTab({ type: "package", packageId: pkgId })
+										}
 									>
 										{pkg().name}
 									</button>

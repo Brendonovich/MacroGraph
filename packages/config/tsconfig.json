@@ -15,6 +15,7 @@
 		"isolatedModules": true,
 		"composite": true,
 		"skipLibCheck": true,
-		"plugins": [{ "name": "@effect/language-service" }]
+		"plugins": [{ "name": "@effect/language-service" }],
+		"types": ["@macrograph/icons/types"]
 	}
 }

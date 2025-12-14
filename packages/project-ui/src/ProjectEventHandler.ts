@@ -9,7 +9,7 @@ import {
 	Stream,
 } from "effect";
 import type { ProjectEvent } from "@macrograph/project-domain/updated";
-import { batch, createEffect, createRoot, onCleanup } from "solid-js";
+import { batch } from "solid-js";
 import { produce } from "solid-js/store";
 
 import { PackageClients } from "./Packages/Clients";
@@ -24,7 +24,7 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 	"ProjectEventHandler",
 	{
 		effect: Effect.gen(function* () {
-			const { state, setState, actions } = yield* ProjectState;
+			const { setState, actions } = yield* ProjectState;
 			const pkgClients = yield* PackageClients;
 
 			return Match.type<ProjectEvent.ProjectEvent>().pipe(
@@ -185,6 +185,19 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 												Record.fromEntries,
 											) ?? {},
 									});
+								}),
+							);
+						}),
+					GraphItemsMoved: (e) =>
+						Effect.sync(() => {
+							setState(
+								produce((data) => {
+									const _graph = data.graphs[e.graph];
+									if (!_graph) return;
+									for (const [[_, nodeId], position] of e.items) {
+										const node = _graph.nodes.find((n) => n.id === nodeId);
+										if (node) node.position = position;
+									}
 								}),
 							);
 						}),

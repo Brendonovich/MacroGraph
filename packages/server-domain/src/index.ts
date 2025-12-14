@@ -20,6 +20,7 @@ import * as ClientAuth from "./ClientAuth";
 import * as CloudAuth from "./CloudAuth";
 import * as Credential from "./Credential";
 import * as Presence from "./Presence";
+import { CurrentActorRpcMiddleware } from "./Realtime";
 
 // const GraphRpcs = RpcGroup.make(
 // 	Rpc.fromTaggedRequest(Graph.CreateNode),
@@ -45,7 +46,9 @@ export const RequestRpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.GetPackageSettings),
 	Rpc.fromTaggedRequest(Request.DeleteGraphItems),
 	Rpc.fromTaggedRequest(Request.SetNodeProperty),
-);
+	Rpc.fromTaggedRequest(Request.CreateResourceConstant),
+	Rpc.fromTaggedRequest(Request.UpdateResourceConstant),
+).middleware(CurrentActorRpcMiddleware);
 
 export const Rpcs = RequestRpcs.merge(
 	// GraphRpcs,

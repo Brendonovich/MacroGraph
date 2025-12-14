@@ -90,6 +90,8 @@ const RequestRpcsLive = RequestRpcs.toLayer(
 			DeleteGraphItems: graphRequests.deleteItems,
 			DisconnectIO: graphRequests.disconnectIO,
 			SetNodeProperty: nodeRequests.setNodeProperty,
+			CreateResourceConstant: projectRequests.createResourceConstant,
+			UpdateResourceConstant: projectRequests.updateResourceConstant,
 		};
 	}),
 );
@@ -126,6 +128,14 @@ export class Server extends Effect.Service<Server>()("Server", {
 		}).pipe(
 			Effect.provide(RpcsLive),
 			Effect.provide(
+				Realtime.CurrentActorRpcMiddleware.context(() =>
+					Effect.serviceOption(Realtime.Connection).pipe(
+						Effect.map(Option.getOrThrowWith(() => "BRUH")),
+						Effect.map((conn) => ({ type: "CLIENT", id: conn.id.toString() })),
+					),
+				),
+			),
+			Effect.provide(
 				Realtime.ConnectionRpcMiddleware.context(() =>
 					Effect.serviceOption(Realtime.Connection).pipe(
 						Effect.map(Option.getOrThrow),
@@ -140,6 +150,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 			Effect.provide(RpcsSerialization),
 		);
 
+		// @effect-diagnostics-next-line returnEffectInGen:off
 		return HttpRouter.empty.pipe(
 			HttpRouter.mountApp(
 				"/rpc",
@@ -295,7 +306,6 @@ export class Server extends Effect.Service<Server>()("Server", {
 		);
 	}),
 	dependencies: [
-		// Graphs.Default,
 		PresenceState.Default,
 		RealtimePubSub.Default,
 		RealtimeConnections.Default,
@@ -353,7 +363,7 @@ const allAsMounted =
 
 const createEventStream = Effect.gen(function* () {
 	const runtime = yield* ProjectRuntime.Current;
-	const realtimeClient = yield* Realtime.Connection;
+	const realtimeConnection = yield* Realtime.Connection;
 
 	const eventQueue = yield* PubSub.unbounded<ServerEvent>();
 
@@ -386,7 +396,15 @@ const createEventStream = Effect.gen(function* () {
 
 	yield* Stream.mergeAll(
 		[
-			Stream.fromPubSub(runtime.events),
+			Stream.fromPubSub(runtime.events).pipe(
+				Stream.filter(
+					(e) =>
+						!(
+							e.actor.type === "CLIENT" &&
+							e.actor.id === realtimeConnection.id.toString()
+						),
+				),
+			),
 			// authStream,
 			// eventStream,
 			// numSubscriptionsStream,

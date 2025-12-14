@@ -1,6 +1,6 @@
 import { RequestResolver } from "effect";
+import { Actor } from "@macrograph/project-domain/updated";
 
-import * as Actor from "./Actor";
 import * as ProjectRuntime from "./ProjectRuntime";
 
 export const requestResolverServices = RequestResolver.contextFromServices(

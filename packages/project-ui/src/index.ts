@@ -1,8 +1,10 @@
 export { ProjectActions } from "./Actions";
+export * from "./ConstantsSidebar";
 export * from "./ContextualSidebar";
 export { ProjectEffectRuntimeContext } from "./EffectRuntime";
 export * from "./Graph";
 export * from "./Header";
+export * from "./keybinds";
 export * from "./Layers";
 export * from "./LayoutState";
 export * from "./NavSidebar";
@@ -10,6 +12,7 @@ export * from "./Packages";
 export * from "./ProjectEventHandler";
 export * from "./ProjectPaneLayoutView";
 export * from "./ProjectPaneTabView";
+export * from "./RequestHandler";
 export * from "./Settings";
 export * from "./Sidebar";
 export { ProjectState } from "./State";
