@@ -1,4 +1,5 @@
 import type { Package, Schema } from "@macrograph/project-domain/updated";
+import { focusRingClasses } from "@macrograph/ui";
 import { createContextProvider } from "@solid-primitives/context";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createWritableMemo } from "@solid-primitives/memo";
@@ -112,7 +113,10 @@ export const GraphContextMenu = Object.assign(
 								<input
 									ref={setInputRef}
 									type="text"
-									class="bg-transparent p-1.5 text-xs bg-gray-2 border-b border-gray-5 focus-visible:(ring-1 ring-inset ring-yellow outline-none) rounded-t"
+									class={cx(
+										"bg-transparent p-1.5 text-xs bg-gray-2 border-b border-gray-5 rounded-t",
+										focusRingClasses("inset"),
+									)}
 									placeholder="Search Nodes..."
 									value={search()}
 									onInput={(e) => setSearch(e.currentTarget.value)}
@@ -188,7 +192,8 @@ const ItemButton = (props: ComponentProps<"button">) => (
 		type="button"
 		{...props}
 		class={cx(
-			"flex flex-row py-0.5 items-center bg-transparent w-full text-left @hover-bg-gray-6/10 rounded focus-visible:(ring-1 ring-inset ring-yellow outline-none)",
+			"flex flex-row py-0.5 items-center bg-transparent w-full text-left @hover-bg-gray-6/10 rounded",
+			focusRingClasses("inset"),
 			props.class,
 		)}
 	/>

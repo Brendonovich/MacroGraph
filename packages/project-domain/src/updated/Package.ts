@@ -20,6 +20,7 @@ export class Package extends S.Class<Package>("Package")({
 				id: Schema.Id,
 				type: Schema.Type,
 				name: S.String,
+				description: S.optional(S.String),
 				properties: S.Array(
 					S.Struct({
 						id: S.String,

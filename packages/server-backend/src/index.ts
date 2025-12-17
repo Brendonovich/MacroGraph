@@ -3,6 +3,7 @@ import {
 	FetchHttpClient,
 	type HttpApp,
 	HttpClient,
+	HttpLayerRouter,
 	HttpRouter,
 	HttpServerRequest,
 	HttpServerResponse,
@@ -130,7 +131,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 			Effect.provide(
 				Realtime.CurrentActorRpcMiddleware.context(() =>
 					Effect.serviceOption(Realtime.Connection).pipe(
-						Effect.map(Option.getOrThrowWith(() => "BRUH")),
+						Effect.map(Option.getOrThrow),
 						Effect.map((conn) => ({ type: "CLIENT", id: conn.id.toString() })),
 					),
 				),

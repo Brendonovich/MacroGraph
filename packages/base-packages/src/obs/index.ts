@@ -174,6 +174,7 @@ export default Package.make({
 		ctx.schema("request.SetCurrentProgramScene", {
 			name: "Set Current Program Scene",
 			type: "exec",
+			description: "Sets the current program scene in OBS.",
 			properties: { connection: OBSConnectionProperty },
 			io: (c) => ({
 				scene: c.in.data("scene", t.String, { name: "Scene Name" }),
@@ -190,6 +191,7 @@ export default Package.make({
 		ctx.schema("event.CurrentProgramSceneChanged", {
 			name: "Current Program Scene Changed",
 			type: "event",
+			description: "Fires when the current program scene in OBS is changed.",
 			properties: { connection: OBSConnectionProperty },
 			event: ({ properties }, e) => {
 				if (properties.connection.address !== e.address) return;

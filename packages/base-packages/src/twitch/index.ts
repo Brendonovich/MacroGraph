@@ -335,6 +335,7 @@ export default Package.make({
 		ctx.schema("notification.channel.ban", {
 			name: "User Banned",
 			type: "event",
+			description: "Fires when a user is banned from the specified channel.",
 			properties: {
 				account: {
 					name: "Account",
@@ -405,6 +406,7 @@ export default Package.make({
 		ctx.schema("notification.channel.unban", {
 			name: "User Unbanned",
 			type: "event",
+			description: "Fires when a user is unbanned from the specified channel.",
 			properties: {
 				account: {
 					name: "Account",

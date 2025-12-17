@@ -1,7 +1,9 @@
 import { Popover } from "@kobalte/core/popover";
-import { For, Show, createMemo } from "solid-js";
-import IconLucideChevronDown from "~icons/lucide/chevron-down";
+import { focusRingClasses } from "@macrograph/ui";
+import { cx } from "cva";
+import { createMemo, For, Show } from "solid-js";
 
+import IconLucideChevronDown from "~icons/lucide/chevron-down";
 import { Avatar } from "../Avatar";
 import { useRealtimeContext } from "../Realtime";
 import { usePresenceContext } from "./Context";
@@ -24,7 +26,10 @@ export function ClientListDropdown() {
 				{(data) => (
 					<Popover.Trigger
 						disabled={clientEntries().length <= 1}
-						class="h-full bg-transparent px-2 not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+						class={cx(
+							"h-full bg-transparent px-2 not-disabled:@hover-bg-gray-3 not-disabled:active:bg-gray-3 group flex flex-row items-center space-x-1",
+							focusRingClasses("inset"),
+						)}
 					>
 						<div class="flex flex-row space-x-1.5 items-center">
 							<Avatar

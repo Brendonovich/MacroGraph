@@ -1,3 +1,5 @@
+import { focusRingClasses } from "@macrograph/ui";
+import { cx } from "cva";
 import { For } from "solid-js";
 
 import { ProjectActions } from "../Actions";
@@ -19,13 +21,19 @@ export function GraphsSidebar() {
 		<>
 			<div class="h-8 flex flex-row">
 				<input
-					class="h-full flex-1 px-2 bg-gray-3 dark:bg-gray-2 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+					class={cx(
+						"h-full flex-1 px-2 bg-gray-3 dark:bg-gray-2",
+						focusRingClasses("inset"),
+					)}
 					placeholder="Search Graphs"
 					disabled
 				/>
 				<button
 					type="button"
-					class="bg-transparent h-full disabled:(text-gray-10) px-2 not-disabled:hover:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+					class={cx(
+						"bg-transparent h-full disabled:text-gray-10 px-2 not-disabled:hover:bg-gray-3",
+						focusRingClasses("inset"),
+					)}
 					onClick={() => actions.CreateGraph()}
 				>
 					New
@@ -37,7 +45,10 @@ export function GraphsSidebar() {
 						<li>
 							<button
 								type="button"
-								class="w-full data-[selected='true']:bg-gray-2 hover:bg-gray-2 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+								class={cx(
+									"w-full data-[selected='true']:bg-gray-2 hover:bg-gray-2 px-2 p-1 text-left bg-transparent",
+									focusRingClasses("inset"),
+								)}
 								data-selected={selected() === graph.id}
 								onClick={() =>
 									layoutState.openTab({

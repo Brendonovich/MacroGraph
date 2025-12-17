@@ -139,3 +139,8 @@ yield* withProjectRuntime(
 - **SchemaId.make(string)**: Create schema ID
 
 **Never use**: `as ProjectId`, `as GraphId`, `as NodeId`, `as PackageId`, `as SchemaId`
+
+## Checking your code
+- **Formatting**: Run `pnpm format`
+- **Linting**: Don't bother
+- **Type Checking**: Use the TypeScript LSP if available, otherwise don't bother

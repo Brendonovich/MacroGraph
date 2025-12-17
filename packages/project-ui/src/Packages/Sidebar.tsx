@@ -1,3 +1,5 @@
+import { focusRingClasses } from "@macrograph/ui";
+import { cx } from "cva";
 import { For, Show } from "solid-js";
 
 import { useProjectService } from "../EffectRuntime";
@@ -18,7 +20,10 @@ export function PackagesSidebar() {
 	return (
 		<>
 			<input
-				class="px-2 bg-gray-3 dark:bg-gray-2 h-8 text-sm focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+				class={cx(
+					"px-2 bg-gray-3 dark:bg-gray-2 h-8 text-sm",
+					focusRingClasses("inset"),
+				)}
 				placeholder="Search Packages"
 				disabled
 			/>
@@ -30,7 +35,10 @@ export function PackagesSidebar() {
 								<li>
 									<button
 										type="button"
-										class="w-full data-[selected='true']:bg-gray-2  hover:bg-gray-2 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+										class={cx(
+											"w-full data-[selected='true']:bg-gray-2  hover:bg-gray-2 px-2 p-1 text-left bg-transparent",
+											focusRingClasses("inset"),
+										)}
 										data-selected={selected() === pkgId}
 										onClick={() =>
 											layoutState.openTab({ type: "package", packageId: pkgId })

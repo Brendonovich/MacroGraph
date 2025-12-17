@@ -32,8 +32,10 @@ import {
 	useNavSidebar,
 	ZoomedPaneWrapper,
 } from "@macrograph/project-ui";
+import { focusRingClasses } from "@macrograph/ui";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
+import { cx } from "cva";
 import type { ValidComponent } from "solid-js";
 import {
 	type Accessor,
@@ -58,88 +60,103 @@ export default function () {
 
 	useEditorKeybinds();
 
+	const headerButtonClass = cx(
+		"px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3",
+		focusRingClasses("inset"),
+	);
+
 	return (
-		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
-			<Header>
-				<button
-					type="button"
-					onClick={() => {
-						navSidebar.toggle("packages");
-					}}
-					data-selected={navSidebar.state() === "packages"}
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-				>
-					Packages
-				</button>
-				<button
-					type="button"
-					onClick={() => {
-						navSidebar.toggle("graphs");
-					}}
-					data-selected={navSidebar.state() === "graphs"}
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-				>
-					Graphs
-				</button>
-				<button
-					type="button"
-					onClick={() => {
-						navSidebar.toggle("constants");
-					}}
-					data-selected={navSidebar.state() === "constants"}
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-				>
-					Constants
-				</button>
-				<div class="flex-1" />
-				<button
-					type="button"
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
-					onClick={() => {
-						layoutState.openTab({ type: "settings", page: "credentials" });
-					}}
-				>
-					Settings
-				</button>
-				<AuthSection />
-			</Header>
-			<div class="flex flex-row flex-1 h-full relative">
-				<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full overflow-x-hidden">
-					<NavSidebar />
+		<GraphContextMenu.Provider>
+			<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
+				<Header>
+					<button
+						type="button"
+						onClick={() => {
+							navSidebar.toggle("packages");
+						}}
+						data-selected={navSidebar.state() === "packages"}
+						class={headerButtonClass}
+					>
+						Packages
+					</button>
+					<button
+						type="button"
+						onClick={() => {
+							navSidebar.toggle("graphs");
+						}}
+						data-selected={navSidebar.state() === "graphs"}
+						class={headerButtonClass}
+					>
+						Graphs
+					</button>
+					<button
+						type="button"
+						onClick={() => {
+							navSidebar.toggle("constants");
+						}}
+						data-selected={navSidebar.state() === "constants"}
+						class={headerButtonClass}
+					>
+						Constants
+					</button>
+					<div class="flex-1" />
+					<button
+						type="button"
+						class={headerButtonClass}
+						onClick={() => {
+							layoutState.openTab({ type: "settings", page: "credentials" });
+						}}
+					>
+						Settings
+					</button>
+					<AuthSection />
+				</Header>
+				<div class="flex flex-row flex-1 h-full relative">
+					<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full overflow-x-hidden">
+						<NavSidebar />
 
-					<ProjectPaneLayoutView<SettingsPage>
-						makeTabController={(pane) =>
-							usePaneTabController(pane, (setter) =>
-								layoutState.updateTab(pane().id, pane().selectedTab, setter),
-							)
-						}
-					/>
-
-					<ContextualSidebar />
-				</div>
-				<Show when={layoutState.panes[layoutState.zoomedPane() ?? -1]}>
-					{(pane) => {
-						createEventListener(window, "keydown", (e) => {
-							if (e.key === "Escape") {
-								layoutState.toggleZoomedPane();
+						<ProjectPaneLayoutView<SettingsPage>
+							makeTabController={(pane) =>
+								usePaneTabController(pane, (setter) =>
+									layoutState.updateTab(pane().id, pane().selectedTab, setter),
+								)
 							}
-						});
+						/>
 
-						const tabController = usePaneTabController(pane, (setter) =>
-							layoutState.updateTab(pane().id, pane().selectedTab, setter),
-						);
+						<Show
+							when={layoutState.zoomedPane() === null}
+							fallback={<div class="flex-1 bg-gray-4" />}
+						>
+							<ContextualSidebar />
+						</Show>
+					</div>
+					<Show when={layoutState.panes[layoutState.zoomedPane() ?? -1]}>
+						{(pane) => {
+							createEventListener(window, "keydown", (e) => {
+								if (e.key === "Escape") {
+									layoutState.toggleZoomedPane();
+								}
+							});
 
-						return (
-							<ZoomedPaneWrapper>
-								<ProjectPaneTabView controller={tabController} pane={pane()} />
+							const tabController = usePaneTabController(pane, (setter) =>
+								layoutState.updateTab(pane().id, pane().selectedTab, setter),
+							);
 
-								<ContextualSidebar />
-							</ZoomedPaneWrapper>
-						);
-					}}
-				</Show>
+							return (
+								<ZoomedPaneWrapper>
+									<ProjectPaneTabView
+										controller={tabController}
+										pane={pane()}
+									/>
+
+									<ContextualSidebar />
+								</ZoomedPaneWrapper>
+							);
+						}}
+					</Show>
+				</div>
 			</div>
-		</div>
+		</GraphContextMenu.Provider>
 	);
 }
 

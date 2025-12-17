@@ -53,6 +53,8 @@ import {
 } from "./runtime";
 
 import "@macrograph/project-ui/styles.css";
+import { focusRingClasses } from "@macrograph/ui";
+import { cx } from "cva";
 import { ErrorBoundary } from "solid-js";
 
 const effectRuntime = ManagedRuntime.make(RuntimeLayers);
@@ -99,9 +101,11 @@ export default function NewPlayground() {
 												})
 											}
 										>
-											<Show when={init()}>
-												<Inner />
-											</Show>
+											<GraphContextMenu.Provider>
+												<Show when={init()}>
+													<Inner />
+												</Show>
+											</GraphContextMenu.Provider>
 										</ContextualSidebarProvider>
 									</NavSidebarProvider>
 								</LayoutStateProvider>
@@ -155,6 +159,7 @@ function Inner() {
 
 	useEditorKeybinds();
 
+	const headerButtonClass = `px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 ${focusRingClasses("inset")}`;
 	return (
 		<div class="w-full h-full flex flex-col overflow-hidden text-sm *:select-none *:cursor-default divide-y divide-gray-5 bg-gray-4">
 			<Header>
@@ -164,7 +169,7 @@ function Inner() {
 						navSidebar.toggle("packages");
 					}}
 					data-selected={navSidebar.state() === "packages"}
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+					class={headerButtonClass}
 				>
 					Packages
 				</button>
@@ -174,7 +179,7 @@ function Inner() {
 						navSidebar.toggle("graphs");
 					}}
 					data-selected={navSidebar.state() === "graphs"}
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+					class={headerButtonClass}
 				>
 					Graphs
 				</button>
@@ -184,14 +189,14 @@ function Inner() {
 						navSidebar.toggle("constants");
 					}}
 					data-selected={navSidebar.state() === "constants"}
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+					class={headerButtonClass}
 				>
 					Constants
 				</button>
 				<div class="flex-1" />
 				<button
 					type="button"
-					class="px-3 hover:bg-gray-3 h-full flex items-center justify-center bg-transparent data-[selected='true']:bg-gray-3 focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+					class={headerButtonClass}
 					onClick={() => {
 						layoutState.openTab({ type: "settings", page: "credentials" });
 					}}

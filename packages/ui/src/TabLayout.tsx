@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
+import { focusRingClasses } from "./button";
 import { isTouchDevice } from "./platform";
 
 export namespace TabLayout {
@@ -114,7 +115,8 @@ export function TabLayoutView<TSchema extends TabLayout.TabState>(
 											<button
 												type="button"
 												class={cx(
-													"h-full flex flex-row items-center focus-visible:(ring-1 ring-inset ring-yellow outline-none) text-nowrap",
+													"h-full flex flex-row items-center text-nowrap",
+													focusRingClasses("inset"),
 													isTouchDevice ? "pl-3 pr-1 gap-1.5" : "px-4",
 												)}
 												onClick={() => props.onSelectedChange?.(tab.tabId)}
@@ -138,7 +140,8 @@ export function TabLayoutView<TSchema extends TabLayout.TabState>(
 												<button
 													type="button"
 													class={cx(
-														"pointer-events-auto text-white hover:bg-gray-6 p-0.5 rounded-sm focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)",
+														"pointer-events-auto text-white hover:bg-gray-6 p-0.5 rounded-sm focus-visible:bg-gray-6",
+														focusRingClasses("outline"),
 														!isTouchDevice && "bg-transparent",
 													)}
 													onClick={() => props.onRemove?.(tab.tabId)}
@@ -179,7 +182,10 @@ export function TabLayoutActions(props: {
 					<DropdownMenu placement="bottom-end">
 						<DropdownMenu.Trigger
 							title="Split Pane"
-							class="size-5 flex items-center justify-center bg-transparent opacity-0 group-hover/bar:opacity-100 group-data-[focused='true']/bar:opacity-100 text-gray-11 hover:(bg-gray-6 text-gray-12) rounded-sm focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)"
+							class={cx(
+								"size-5 flex items-center justify-center bg-transparent opacity-0 group-hover/bar:opacity-100 group-data-[focused='true']/bar:opacity-100 text-gray-11 hover:(bg-gray-6 text-gray-12) rounded-sm focus-visible:bg-gray-6",
+								focusRingClasses("outline"),
+							)}
 						>
 							<IconPhSquareSplitHorizontal class="size-4" />
 						</DropdownMenu.Trigger>
@@ -206,7 +212,10 @@ export function TabLayoutActions(props: {
 						type="button"
 						title="Zoom this panel"
 						onClick={() => onZoom()()}
-						class="size-5 flex items-center justify-center bg-transparent opacity-0 group-hover/bar:opacity-100 group-data-[focused='true']/bar:opacity-100 text-gray-11 hover:(bg-gray-6 text-gray-12) data-[zoomed='true']:(bg-gray-6 text-gray-12) rounded-sm focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)"
+						class={cx(
+							"size-5 flex items-center justify-center bg-transparent opacity-0 group-hover/bar:opacity-100 group-data-[focused='true']/bar:opacity-100 text-gray-11 hover:(bg-gray-6 text-gray-12) data-[zoomed='true']:(bg-gray-6 text-gray-12) rounded-sm focus-visible:bg-gray-6",
+							focusRingClasses("outline"),
+						)}
 						data-zoomed={props.zoomed}
 					>
 						<Dynamic

@@ -18,33 +18,31 @@ export function ProjectPaneLayoutView<TSettingsPage extends string>(props: {
 	const layoutState = useLayoutStateRaw<TSettingsPage>();
 
 	return (
-		<GraphContextMenu.Provider>
-			<PaneLayoutView state={layoutState.paneLayout}>
-				{(paneId) => {
-					const [ref, setRef] = createSignal<HTMLDivElement>();
+		<PaneLayoutView state={layoutState.paneLayout}>
+			{(paneId) => {
+				const [ref, setRef] = createSignal<HTMLDivElement>();
 
-					createEventListener(ref, "pointerdown", () => {
-						layoutState.setFocusedPaneId(paneId());
-					});
+				createEventListener(ref, "pointerdown", () => {
+					layoutState.setFocusedPaneId(paneId());
+				});
 
-					return (
-						<Show when={layoutState.panes[paneId()]}>
-							{(pane) => (
-								<Show
-									when={pane().id !== layoutState.zoomedPane()}
-									fallback={<div class="flex-1 bg-gray-4" />}
-								>
-									<ProjectPaneTabView
-										ref={setRef}
-										controller={props.makeTabController(pane)}
-										pane={pane()}
-									/>
-								</Show>
-							)}
-						</Show>
-					);
-				}}
-			</PaneLayoutView>
-		</GraphContextMenu.Provider>
+				return (
+					<Show when={layoutState.panes[paneId()]}>
+						{(pane) => (
+							<Show
+								when={pane().id !== layoutState.zoomedPane()}
+								fallback={<div class="flex-1 bg-gray-4" />}
+							>
+								<ProjectPaneTabView
+									ref={setRef}
+									controller={props.makeTabController(pane)}
+									pane={pane()}
+								/>
+							</Show>
+						)}
+					</Show>
+				);
+			}}
+		</PaneLayoutView>
 	);
 }

@@ -60,6 +60,7 @@ export interface SchemaDefinitionBase<
 > {
 	type: string;
 	name: string;
+	description?: string;
 	properties?: TProperties;
 }
 

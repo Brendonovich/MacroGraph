@@ -243,7 +243,12 @@ export function NodeHeader(
 	props: { variant: Schema.Type; name: string } & ComponentProps<"div">,
 ) {
 	return (
-		<div class={cx("h-5.5 font-medium", matchNodeVariantColor(props.variant))}>
+		<div
+			class={cx(
+				"h-5.5 font-medium",
+				matchSchemaTypeBackgroundColour(props.variant),
+			)}
+		>
 			<div
 				{...props}
 				class={cx(
@@ -257,11 +262,19 @@ export function NodeHeader(
 	);
 }
 
-const matchNodeVariantColor = Match.type<Schema.Type>().pipe(
+export const matchSchemaTypeBackgroundColour = Match.type<Schema.Type>().pipe(
 	Match.when("base", () => "bg-neutral-600"),
 	Match.when("event", () => "bg-red-700"),
 	Match.when("exec", () => "bg-blue-600"),
 	Match.when("pure", () => "bg-emerald-700"),
+	Match.exhaustive,
+);
+
+export const matchSchemaTypeTextColour = Match.type<Schema.Type>().pipe(
+	Match.when("base", () => "text-neutral-600"),
+	Match.when("event", () => "text-red-700"),
+	Match.when("exec", () => "text-blue-600"),
+	Match.when("pure", () => "text-emerald-700"),
 	Match.exhaustive,
 );
 

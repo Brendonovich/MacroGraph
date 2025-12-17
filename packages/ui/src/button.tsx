@@ -1,5 +1,5 @@
 import type { VariantProps } from "cva";
-import { cva } from "cva";
+import { cva, cx } from "cva";
 import type { Component, ComponentProps } from "solid-js";
 import { createSignal, splitProps } from "solid-js";
 import type { JSX } from "solid-js/jsx-runtime";
@@ -77,3 +77,10 @@ export function AsyncButton(
 }
 
 export { Button, buttonVariants };
+
+export type FocusRingPosition = "inset" | "outline";
+export const focusRingClasses = (position: FocusRingPosition) =>
+	cx(
+		"focus-visible:(ring-1 ring-yellow outline-none)",
+		position === "inset" && "ring-inset",
+	);

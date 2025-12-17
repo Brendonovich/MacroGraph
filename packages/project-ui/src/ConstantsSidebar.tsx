@@ -1,6 +1,7 @@
 import { Record } from "effect";
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import { Select } from "@kobalte/core/select";
+import { focusRingClasses } from "@macrograph/ui";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
 import { createMemo, For, Index, Show } from "solid-js";
@@ -95,8 +96,9 @@ export function ConstantsSidebar() {
 											>
 												<Select.Trigger
 													class={cx(
-														"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 focus-visible:(ring-1 ring-yellow outline-none) appearance-none rounded-sm",
+														"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 appearance-none rounded-sm",
 														!option() && "ring-1 ring-red-9 outline-none",
+														focusRingClasses("outline"),
 													)}
 												>
 													<Select.Value<Option> class="flex-1 text-left">
@@ -133,7 +135,10 @@ function AddResourceConstantButton() {
 		<DropdownMenu placement="bottom">
 			<DropdownMenu.Trigger
 				title="Create Resource Constant"
-				class="size-5 flex items-center justify-center bg-transparent text-gray-11 hover:(bg-gray-6 text-gray-12) rounded-sm focus-visible:(ring-1 ring-yellow outline-none bg-gray-6)"
+				class={cx(
+					"size-5 flex items-center justify-center bg-transparent text-gray-11 @hover-bg-gray-6 focus-visible:bg-gray-6 @hover-text-gray-12 rounded-sm",
+					focusRingClasses("outline"),
+				)}
 			>
 				<IconBiX class="rotate-45" />
 			</DropdownMenu.Trigger>
@@ -158,7 +163,10 @@ function AddResourceConstantButton() {
 												<For each={resources()}>
 													{(resource) => (
 														<DropdownMenu.Item
-															class="py-0.5 px-1 @hover-bg-gray-5 cursor-default rounded focus-visible:(ring-1 ring-yellow outline-none)"
+															class={cx(
+																"py-0.5 px-1 @hover-bg-gray-5 cursor-default rounded",
+																focusRingClasses("outline"),
+															)}
 															onSelect={() => {
 																actions.CreateResourceConstant(
 																	pkg().id,

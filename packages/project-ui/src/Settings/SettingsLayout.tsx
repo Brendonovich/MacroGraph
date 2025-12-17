@@ -16,7 +16,10 @@ export function SettingsLayout<TPage extends string>(props: {
 								<button
 									type="button"
 									data-selected={item.page === props.page}
-									class="w-full data-[selected='true']:bg-gray-3 px-2 p-1 text-left bg-transparent focus-visible:(ring-1 ring-inset ring-yellow outline-none)"
+									class={cx(
+										"w-full data-[selected='true']:bg-gray-3 px-2 p-1 text-left bg-transparent",
+										focusRingClasses("inset"),
+									)}
 									onClick={() => {
 										props.onChange(item.page);
 									}}
