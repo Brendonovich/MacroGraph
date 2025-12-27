@@ -32,8 +32,11 @@ declare global {
   const IconTablerArrowsDiagonal: typeof import('~icons/tabler/arrows-diagonal.jsx').default
   const IconTablerArrowsDiagonalMinimize2: typeof import('~icons/tabler/arrows-diagonal-minimize2.jsx').default
   const IconTablerCheck: typeof import('~icons/tabler/check.jsx').default
+  const IconTablerChevronDown: typeof import('~icons/tabler/chevron-down.jsx').default
   const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx').default
   const IconTablerCircle: typeof import('~icons/tabler/circle.jsx').default
   const IconTablerCopy: typeof import('~icons/tabler/copy.jsx').default
+  const IconTablerDeviceDesktopDown: typeof import('~icons/tabler/device-desktop-down.jsx').default
+  const IconTablerSandbox: typeof import('~icons/tabler/sandbox.jsx').default
   const IconTablerSettings: typeof import('~icons/tabler/settings.jsx').default
 }

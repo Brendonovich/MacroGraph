@@ -4,6 +4,7 @@ import UnpluginIcons from "unplugin-icons/vite";
 
 const FixedAutoImport = (options) => {
 	const autoimport = AutoImport(options);
+
 	const wrapTransform = (fn) => (src, id) => {
 		const pathname = id.startsWith("/") ? new URL(`file://${id}`).pathname : id;
 		return fn(src, pathname);
@@ -12,7 +13,7 @@ const FixedAutoImport = (options) => {
 	if (typeof autoimport.transform === "function") {
 		autoimport.transform = wrapTransform(autoimport.transform);
 	} else if (typeof autoimport.transform === "object") {
-		autoimport.transform.handler = wrapTransform(autoimport.transform.handler);
+		autoimport.transform = wrapTransform(autoimport.transform.handler);
 	}
 
 	return autoimport;
@@ -30,13 +31,5 @@ export function Icons() {
 			dts: new URL("./auto-imports.d.ts", import.meta.url).pathname,
 		}),
 		UnpluginIcons({ compiler: "solid" }),
-		{
-			name: "bruh",
-			transform(code, id) {
-				if (id.includes("(landing)/index.tsx")) {
-					console.log(code);
-				}
-			},
-		},
 	];
 }
