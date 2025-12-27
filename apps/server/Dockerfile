@@ -17,13 +17,15 @@ WORKDIR apps/server
 # Build the app
 RUN pnpm build
 
+RUN pnpm --filter . deploy deployed --legacy
+
 # Runner stage
 FROM denoland/deno:alpine AS runner
 
 WORKDIR /app
 
 # Copy built files from builder
-COPY --from=builder /app/apps/server/dist ./dist
+COPY --from=builder /app/apps/server/deployed ./
 
 # Expose port
 EXPOSE 23456
