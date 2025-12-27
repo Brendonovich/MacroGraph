@@ -31,4 +31,4 @@ COPY --from=builder /app/apps/server/deployed ./
 EXPOSE 23456
 
 # Run the server with Deno
-CMD ["deno", "run", "--allow-net", "--allow-read", "--allow-write", "dist/server/index.mjs"]
+CMD ["deno", "run", "--allow-net", "--allow-read", "--allow-write", "--allow-env", "--allow-ffi", "dist/server/index.mjs"]
