@@ -7,10 +7,15 @@ RUN npm install -g pnpm
 # Set working directory
 WORKDIR /app
 
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches patches
+
+RUN pnpm fetch --prod
+
 COPY . ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install -r --offline --prod
 
 WORKDIR apps/server
 
