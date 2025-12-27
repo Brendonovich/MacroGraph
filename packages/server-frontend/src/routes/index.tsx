@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect, Iterable, Option, pipe } from "effect";
 import { Dialog } from "@kobalte/core";
 import { Button, EffectButton } from "@macrograph/package-sdk/ui";
 import {
@@ -27,7 +27,7 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { cx } from "cva";
 import type { ValidComponent } from "solid-js";
-import { type Accessor, createSignal, For, Show } from "solid-js";
+import { type Accessor, createEffect, createSignal, For, Show } from "solid-js";
 import { produce, type StoreSetter } from "solid-js/store";
 
 import { AuthActions } from "../Auth";
@@ -190,6 +190,26 @@ const usePaneTabController = (
 			},
 			(props) => {
 				const graphCtx = useGraphContext();
+				const layoutState = useLayoutState();
+
+				createEffect(() => {
+					if (layoutState.focusedPaneId() !== pane().id) return;
+
+					rpc
+						.SetSelection({
+							value: {
+								graph: graphCtx.id(),
+								nodes: pipe(
+									props.tab.selection,
+									Iterable.filterMap((s) =>
+										s[0] === "Node" ? Option.some(s[1]) : Option.none(),
+									),
+									(v) => Array.from(v),
+								),
+							},
+						})
+						.pipe(Effect.runPromise);
+				});
 
 				createEventListener(
 					() => graphCtx.ref() ?? undefined,
@@ -206,8 +226,6 @@ const usePaneTabController = (
 							.pipe(Effect.runPromise);
 					},
 				);
-
-				const graphCtx = useGraphContext();
 
 				return (
 					<For each={Object.entries(presence.presenceClients)}>

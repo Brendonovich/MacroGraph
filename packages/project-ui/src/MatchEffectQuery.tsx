@@ -1,5 +1,5 @@
 import { Cause, Exit, Schema } from "effect";
-import { Policy } from "@macrograph/server-domain";
+import { Policy } from "@macrograph/project-domain";
 import type { UseQueryResult } from "@tanstack/solid-query";
 import type { Accessor, JSX } from "solid-js";
 

@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import type { Graph, Node } from "@macrograph/project-domain";
-import { createStore } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
 
 export type PresenceClient = {
 	name: string;
@@ -30,7 +30,7 @@ export class PresenceClients extends Effect.Service<PresenceClients>()(
 							convertedData[clientId] = value as PresenceClient;
 						}
 					}
-					setPresence(convertedData);
+					setPresence(reconcile(convertedData));
 				},
 			};
 		}),

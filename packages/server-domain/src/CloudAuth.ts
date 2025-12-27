@@ -1,7 +1,7 @@
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema } from "effect";
+import { Policy } from "@macrograph/project-domain";
 
-import { PolicyDeniedError } from "./Policy";
 import { ConnectionRpcMiddleware } from "./Realtime";
 
 export const CloudLoginEvent = Schema.Union(
@@ -22,13 +22,13 @@ export const Rpcs = RpcGroup.make(
 	Rpc.make("StartServerRegistration", {
 		stream: true,
 		success: CloudLoginEvent,
-		error: Schema.Union(CloudApiError, PolicyDeniedError),
+		error: Schema.Union(CloudApiError, Policy.PolicyDeniedError),
 	}),
 	Rpc.make("RemoveServerRegistration", {
-		error: Schema.Union(CloudApiError, PolicyDeniedError),
+		error: Schema.Union(CloudApiError, Policy.PolicyDeniedError),
 	}),
 	Rpc.make("GetServerRegistration", {
 		success: Schema.Option(Schema.Struct({ ownerId: Schema.String })),
-		error: Schema.Union(CloudApiError, PolicyDeniedError),
+		error: Schema.Union(CloudApiError, Policy.PolicyDeniedError),
 	}),
 ).middleware(ConnectionRpcMiddleware);

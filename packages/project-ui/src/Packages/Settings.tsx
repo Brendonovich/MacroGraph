@@ -6,6 +6,7 @@ import { Suspense } from "solid-js";
 import { reconcile } from "solid-js/store";
 import { Dynamic } from "solid-js/web";
 
+import { MatchEffectQuery } from "../MatchEffectQuery";
 import type { PackageClient } from "./Clients";
 
 export function PackageSettings(props: {
@@ -27,10 +28,15 @@ export function PackageSettings(props: {
 	return (
 		<div class="flex flex-col items-stretch w-full max-w-120 p-4">
 			<Suspense fallback={<LoadingBlock />}>
-				<Dynamic
-					component={props.packageClient.SettingsUI}
-					rpc={props.packageClient.rpcClient}
-					state={props.settingsQuery.data}
+				<MatchEffectQuery
+					query={props.settingsQuery}
+					onSuccess={(data) => (
+						<Dynamic
+							component={props.packageClient.SettingsUI}
+							rpc={props.packageClient.rpcClient}
+							state={data()}
+						/>
+					)}
 				/>
 			</Suspense>
 		</div>

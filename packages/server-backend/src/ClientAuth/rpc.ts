@@ -3,28 +3,17 @@ import { CloudApiClient } from "@macrograph/project-runtime";
 import { ClientAuth, CloudAuth, Realtime } from "@macrograph/server-domain";
 
 import { getRealtimeConnection, RealtimeConnections } from "../Realtime";
-import { ServerRegistrationToken } from "../ServerRegistration";
 import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 
 export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 	Effect.gen(function* () {
 		const connections = yield* RealtimeConnections;
-		const registrationToken = yield* ServerRegistrationToken;
+		const cloud = yield* CloudApiClient.CloudApiClient;
 
 		return {
 			ClientLogin: Effect.fn(function* () {
 				const connection = yield* Realtime.Connection;
 				const mailbox = yield* Mailbox.make<ClientAuth.CloudLoginEvent>();
-
-				const cloud = yield* CloudApiClient.make({
-					auth: (yield* registrationToken.get).pipe(
-						Option.map((token) => ({
-							clientId: "macrograph-server",
-							token,
-						})),
-						Option.getOrUndefined,
-					),
-				});
 
 				yield* Effect.gen(function* () {
 					const data = yield* cloud.createDeviceCodeFlow().pipe(
@@ -77,13 +66,18 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 						jwt,
 					).pipe(Effect.map(ClientAuth.EncodedJWT.make));
 
-					const cloudApi = yield* CloudApiClient.make({
-						auth: { clientId: "macrograph-server", token: grant.access_token },
-					});
-
-					const user = yield* cloudApi
-						.getUser()
-						.pipe(Effect.catchAll(() => new CloudAuth.CloudApiError()));
+					const user = yield* cloud.getUser().pipe(
+						Effect.catchAll(() => new CloudAuth.CloudApiError()),
+						Effect.provideService(
+							CloudApiClient.Auth,
+							Effect.succeed(
+								Option.some({
+									clientId: "macrograph-server",
+									token: grant.access_token,
+								}),
+							),
+						),
+					);
 
 					connections.set(connection.id, {
 						auth: Option.map(user, (u) => ({
@@ -104,16 +98,18 @@ export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 
 				if (Option.isNone(connectionAuth)) return Option.none();
 
-				const cloudApi = yield* CloudApiClient.make({
-					auth: {
-						clientId: "macrograph-server",
-						token: connectionAuth.value.jwt.accessToken,
-					},
-				});
-
-				return yield* cloudApi.getUser().pipe(
+				return yield* cloud.getUser().pipe(
 					Effect.catchAll(() => new CloudAuth.CloudApiError()),
 					Effect.map(Option.map((u) => ({ name: u.email.split("@")[0]! }))),
+					Effect.provideService(
+						CloudApiClient.Auth,
+						Effect.succeed(
+							Option.some({
+								clientId: "macrograph-server",
+								token: connectionAuth.value.jwt.accessToken,
+							}),
+						),
+					),
 				);
 			}),
 		};

@@ -99,22 +99,23 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 														Iterable.map((r) =>
 															e.getResourceValues(r.id).pipe(
 																Effect.option,
-																Effect.map((v) =>
-																	v.pipe(
-																		Option.flatten,
-																		Option.map(
-																			(values) =>
-																				[
-																					r.id,
-																					{ name: r.name, values },
-																				] as const,
-																		),
-																	),
+																Effect.flatMap(
+																	Effect.fn(function* (v) {
+																		return [
+																			r.id,
+																			{
+																				name: r.name,
+																				values: v.pipe(
+																					Option.flatten,
+																					Option.getOrElse(() => []),
+																				),
+																			},
+																		] as const;
+																	}),
 																),
 															),
 														),
 														Effect.all,
-														Effect.map(Iterable.filterMap(identity)),
 														Effect.map(Record.fromEntries),
 													),
 												),

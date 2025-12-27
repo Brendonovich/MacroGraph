@@ -1,6 +1,7 @@
 import { Effect } from "effect";
+import { Policy } from "@macrograph/project-domain";
 import { CredentialsStore } from "@macrograph/project-runtime";
-import { Credential, Policy } from "@macrograph/server-domain";
+import { Credential } from "@macrograph/server-domain";
 
 import { ServerPolicy } from "./ServerPolicy";
 

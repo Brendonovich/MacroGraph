@@ -5,6 +5,7 @@ import * as Graph from "./Graph.ts";
 import * as IO from "./IO.ts";
 import * as Node from "./Node.ts";
 import * as Package from "./Package.ts";
+import * as Policy from "./Policy.ts";
 import * as Project from "./Project.ts";
 import * as ProjectEvent from "./ProjectEvent.ts";
 import * as Schema from "./Schema.ts";
@@ -25,7 +26,11 @@ export class GetPackageSettings extends S.TaggedRequest<GetPackageSettings>()(
 	{
 		payload: { package: Package.Id },
 		success: S.Any,
-		failure: S.Union(Package.NotFound, Credential.FetchFailed),
+		failure: S.Union(
+			Package.NotFound,
+			Credential.FetchFailed,
+			Policy.PolicyDeniedError,
+		),
 	},
 ) {}
 

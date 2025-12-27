@@ -86,13 +86,14 @@ export namespace ServerConfigPersistence {
 
 				return {
 					get,
-					update: (value) =>
-						fs
+					update: (value) => {
+						return fs
 							.writeFileString(
 								path,
 								JSON.stringify(Schema.encodeSync(ServerConfig.Shape)(value)),
 							)
-							.pipe(Effect.catchAll((e) => new PersistenceError({ cause: e }))),
+							.pipe(Effect.catchAll((e) => new PersistenceError({ cause: e })));
+					},
 				};
 			}),
 		);

@@ -7,6 +7,7 @@ export * from "./Header";
 export * from "./keybinds";
 export * from "./Layers";
 export * from "./LayoutState";
+export * from "./MatchEffectQuery";
 export * from "./NavSidebar";
 export * from "./Packages";
 export * from "./ProjectEventHandler";

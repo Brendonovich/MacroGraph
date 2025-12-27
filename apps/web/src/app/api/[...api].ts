@@ -11,6 +11,7 @@ import {
 	Config,
 	Effect,
 	Layer,
+	Logger,
 	Option,
 	ParseResult,
 	Redacted,
@@ -56,7 +57,6 @@ const getAuthentication = Effect.gen(function* () {
 			"client-id": S.OptionFromUndefinedOr(S.String),
 		}),
 	);
-	console.log("headers", headers);
 	const sessionCookie = yield* HttpServerRequest.schemaCookies(
 		S.Struct({
 			[lucia().sessionCookieName]: S.OptionFromUndefinedOr(S.String),
@@ -94,7 +94,6 @@ const getAuthentication = Effect.gen(function* () {
 						),
 					);
 			} else {
-				yield* Effect.log("token", bearerToken);
 				const jwt = yield* Schema.decode(ServerAuthJWTFromRaw)(
 					Redacted.value(Redacted.make(bearerToken)),
 				).pipe(
@@ -631,6 +630,7 @@ const { handler } = HttpApiBuilder.toWebHandler(
 				// new BatchSpanProcessor(new ConsoleSpanExporter()),
 			],
 		})),
+		Logger.pretty,
 	),
 );
 

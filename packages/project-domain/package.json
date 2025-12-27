@@ -37,6 +37,10 @@
 			"types": "./dist/src/Actor.d.ts",
 			"default": "./src/Actor.ts"
 		},
+		"./Policy": {
+			"types": "./dist/src/Policy.d.ts",
+			"default": "./src/Policy.ts"
+		},
 		"./IO": {
 			"types": "./dist/src/IO.d.ts",
 			"default": "./src/IO.ts"

@@ -19,7 +19,10 @@ export function makeGraphTabSchema(
 		state: { open: false } | { open: true; position: { x: number; y: number } },
 	) => void,
 	graphProps?: Pick<ComponentProps<typeof GraphView>, "remoteSelections">,
-	Component?: (props: { graph: { id: Graph.Id } }) => JSX.Element,
+	Component?: (props: {
+		graph: { id: Graph.Id };
+		tab: TabState.GraphTab;
+	}) => JSX.Element,
 ): TabLayout.Schema<
 	TabState.GraphTab & {
 		graph: GraphState;
@@ -39,6 +42,7 @@ export function makeGraphTabSchema(
 				() => tab().transform?.translate,
 				ref,
 				() => tab().graph.id,
+				() => tab().selection,
 			);
 
 			createEventListener(window, "keydown", (e) => {
@@ -109,7 +113,7 @@ export function makeGraphTabSchema(
 						}}
 						{...graphProps}
 					/>
-					{Component && <Component graph={tab().graph} />}
+					{Component && <Component graph={tab().graph} tab={tab()} />}
 					<GraphContextMenu
 						packages={state.packages}
 						onSchemaClick={(schemaRef, position) => {

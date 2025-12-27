@@ -1,9 +1,9 @@
 import { Cause, Effect } from "effect";
 import { EffectButton } from "@macrograph/package-sdk/ui";
+import { MatchEffectQuery } from "@macrograph/project-ui";
 import { useQuery } from "@tanstack/solid-query";
 
 import { useEffectRuntime, useEffectService } from "../../EffectRuntime";
-import { MatchEffectQuery } from "../../effect-query/components";
 import { ServerRpc } from "../../ServerRpc";
 
 export default function Credentials() {

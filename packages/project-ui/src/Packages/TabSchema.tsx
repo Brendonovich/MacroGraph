@@ -31,7 +31,7 @@ export function makePackageTabSchema<TType extends string>(
 
 			const settingsQuery = useQuery(() =>
 				packageSettingsQueryOptions(tab().package.id, (req) =>
-					getSettings(req).pipe(runtime.runPromise),
+					getSettings(req).pipe(runtime.runPromiseExit),
 				),
 			);
 

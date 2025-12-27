@@ -50,6 +50,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 	{
 		effect: Effect.gen(function* () {
 			const registrationToken = yield* ServerRegistrationToken;
+			const cloud = yield* CloudApiClient.CloudApiClient;
 
 			const registration = yield* Cache.make({
 				capacity: 1,
@@ -58,10 +59,6 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 					Effect.gen(function* () {
 						const tokenValue = yield* registrationToken.get;
 						if (Option.isNone(tokenValue)) return Option.none();
-
-						const cloud = yield* CloudApiClient.make({
-							auth: { clientId: "macrograph-server", token: tokenValue.value },
-						});
 
 						return yield* cloud.getServerRegistration().pipe(
 							Effect.map(Option.some),
@@ -80,11 +77,10 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 			});
 
 			const start = Effect.gen(function* () {
-				const api = yield* CloudApiClient.make();
 				const mailbox = yield* Mailbox.make<RegistrationEvent>();
 
 				yield* Effect.gen(function* () {
-					const data = yield* api.startServerRegistration();
+					const data = yield* cloud.startServerRegistration();
 
 					yield* Effect.log(`Starting server registration '${data.id}'`);
 
@@ -92,7 +88,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 						type: "started",
 						verificationUrlComplete: data.verification_uri_complete,
 					});
-					const grant = yield* api
+					const grant = yield* cloud
 						.performServerRegistration({ payload: { id: data.id } })
 						.pipe(
 							Effect.zipLeft(

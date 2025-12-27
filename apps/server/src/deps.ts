@@ -1,5 +1,6 @@
 import { NodeSdk } from "@effect/opentelemetry";
-import { Layer } from "effect";
+import { FetchHttpClient } from "@effect/platform";
+import { Effect, Layer, Option } from "effect";
 import { CloudApiClient } from "@macrograph/project-runtime";
 import {
 	ServerConfig,
@@ -17,10 +18,30 @@ const NodeSdkLive = NodeSdk.layer(() => ({
 	],
 }));
 
-export const SharedDepsLive = Layer.mergeAll(
-	NodeSdkLive,
-	Layer.succeed(CloudApiClient.BaseUrl, "http://localhost:4321"),
-	ServerRegistrationToken.layerServerConfig.pipe(
-		Layer.provide(ServerConfig.ServerConfig.Default),
+const CloudApiClientAuth = Layer.effect(
+	CloudApiClient.Auth,
+	Effect.gen(function* () {
+		const serverToken = yield* ServerRegistrationToken;
+
+		// @effect-diagnostics-next-line returnEffectInGen:off
+		return serverToken.get.pipe(
+			Effect.map(
+				Option.map((token) => ({ clientId: "macrograph-server", token })),
+			),
+		);
+	}),
+);
+
+export const SharedDepsLive = CloudApiClient.layer().pipe(
+	Layer.provide(CloudApiClientAuth),
+	Layer.provideMerge(
+		Layer.mergeAll(
+			NodeSdkLive,
+			FetchHttpClient.layer,
+			Layer.succeed(CloudApiClient.BaseUrl, "http://localhost:4321"),
+			ServerRegistrationToken.layerServerConfig.pipe(
+				Layer.provide(ServerConfig.ServerConfig.Default),
+			),
+		),
 	),
 );

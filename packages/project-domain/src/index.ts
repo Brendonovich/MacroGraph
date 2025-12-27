@@ -6,6 +6,7 @@ export * as IO from "./IO.ts";
 export * as Node from "./Node.ts";
 export * from "./NodeSchema.ts";
 export * as Package from "./Package.ts";
+export * as Policy from "./Policy.ts";
 export * from "./Position.ts";
 export * as Project from "./Project.ts";
 export * as ProjectEvent from "./ProjectEvent.ts";

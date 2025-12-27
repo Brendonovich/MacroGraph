@@ -4,7 +4,6 @@ export * as Credential from "./Credential";
 export * from "./errors";
 export * as ServerEvent from "./event";
 export * from "./Permissions";
-export * as Policy from "./Policy";
 export * as Presence from "./Presence";
 export * as Realtime from "./Realtime";
 export * from "./util";
@@ -33,8 +32,6 @@ export const RequestRpcs = RpcGroup.make(
 ).middleware(CurrentActorRpcMiddleware);
 
 export const Rpcs = RequestRpcs.merge(
-	// GraphRpcs,
-	// NodeRpcs,
 	Presence.Rpcs,
 	CloudAuth.Rpcs,
 	ClientAuth.Rpcs,

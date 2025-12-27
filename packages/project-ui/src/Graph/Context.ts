@@ -8,12 +8,14 @@ export const createGraphContext = (
 	translate: Accessor<{ x: number; y: number } | undefined>,
 	ref: Accessor<HTMLDivElement | null>,
 	id: Accessor<Graph.Id>,
+	selection: () => Graph.ItemRef[],
 ) => {
 	const ioPositions = new ReactiveMap<IO.RefString, { x: number; y: number }>();
 
 	return {
 		id,
 		ref,
+		selection,
 		ioPositions,
 		get bounds() {
 			return bounds();

@@ -1,10 +1,10 @@
 import { Effect, Option } from "effect";
 import { EffectButton } from "@macrograph/package-sdk/ui";
+import { MatchEffectQuery } from "@macrograph/project-ui";
 import { useQuery } from "@tanstack/solid-query";
 import { Show } from "solid-js";
 
 import { useEffectRuntime, useEffectService } from "../../EffectRuntime";
-import { MatchEffectQuery } from "../../effect-query/components";
 import { ServerRegistration } from "../../ServerRegistration";
 import { ServerRpc } from "../../ServerRpc";
 

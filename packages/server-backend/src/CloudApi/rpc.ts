@@ -1,5 +1,6 @@
 import { Effect, Option } from "effect";
-import { CloudAuth, Policy } from "@macrograph/server-domain";
+import { Policy } from "@macrograph/project-domain";
+import { CloudAuth } from "@macrograph/server-domain";
 
 import { ServerPolicy } from "../ServerPolicy";
 import { ServerRegistration } from "../ServerRegistration";

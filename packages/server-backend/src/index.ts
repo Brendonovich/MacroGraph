@@ -12,7 +12,7 @@ import { Context, FiberRef, Layer, Option, Schema, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import { getCurrentFiber } from "effect/Fiber";
 import * as Packages from "@macrograph/base-packages";
-import { Package, type ProjectEvent } from "@macrograph/project-domain";
+import { Package, Policy, type ProjectEvent } from "@macrograph/project-domain";
 import {
 	CloudApiClient,
 	CredentialsStore,
@@ -51,13 +51,17 @@ const RequestRpcsLive = RequestRpcs.toLayer(
 		const projectRequests = yield* ProjectRequests;
 		const graphRequests = yield* GraphRequests;
 		const nodeRequests = yield* NodeRequests;
+		const serverPolicy = yield* ServerPolicy;
 
 		return {
 			GetProject: () => projectRequests.getProject,
 			CreateNode: graphRequests.createNode,
 			ConnectIO: graphRequests.connectIO,
 			SetItemPositions: graphRequests.setItemPositions,
-			GetPackageSettings: projectRequests.getPackageSettings,
+			GetPackageSettings: (req) =>
+				projectRequests
+					.getPackageSettings(req)
+					.pipe(Policy.withPolicy(serverPolicy.isOwner)),
 			CreateGraph: projectRequests.createGraph,
 			DeleteGraphItems: graphRequests.deleteItems,
 			DisconnectIO: graphRequests.disconnectIO,
@@ -163,6 +167,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 			HttpRouter.get(
 				"/realtime",
 				Effect.gen(function* () {
+					const cloud = yield* CloudApiClient.CloudApiClient;
 					const req = yield* HttpServerRequest.HttpServerRequest;
 					const socket = yield* req.upgrade;
 					const writer = yield* socket.writer;
@@ -176,17 +181,19 @@ export class Server extends Effect.Service<Server>()("Server", {
 					const auth = yield* jwt.pipe(
 						Option.map(
 							Effect.fnUntraced(function* (jwt) {
-								const cloud = yield* CloudApiClient.make({
-									auth: {
-										token: jwt.accessToken,
-										clientId: "macrograph-server",
-									},
-								});
-
 								return yield* cloud.getUser().pipe(
 									Effect.flatten,
 									Effect.map((u) => ({ userId: u.id, email: u.email, jwt })),
 									Effect.option,
+									Effect.provideService(
+										CloudApiClient.Auth,
+										Effect.succeed(
+											Option.some({
+												token: jwt.accessToken,
+												clientId: "macrograph-server",
+											}),
+										),
+									),
 								);
 							}),
 						),
@@ -287,16 +294,10 @@ export class Server extends Effect.Service<Server>()("Server", {
 		NodeRequests.Default,
 		PackageActions.Default,
 		RuntimeActions.Default,
-		Layer.mergeAll(
-			CredentialsStore.layer,
-			ServerRegistration.Default,
-			ServerPolicy.Default,
-			CredentialsStore.layer,
-		).pipe(
-			Layer.provideMerge(
-				CloudApiClient.layer().pipe(Layer.provideMerge(FetchHttpClient.layer)),
-			),
-		),
+		CredentialsStore.layer,
+		ServerRegistration.Default,
+		ServerPolicy.Default,
+		CredentialsStore.layer,
 		Layer.effect(ProjectRuntime.Current, ProjectRuntime.make()),
 	],
 }) {}
