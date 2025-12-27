@@ -36,6 +36,7 @@ export function makeGraphTabSchema(
 			const graphCtx = createGraphContext(
 				() => bounds,
 				() => tab().transform?.translate,
+				ref,
 			);
 
 			createEventListener(window, "keydown", (e) => {

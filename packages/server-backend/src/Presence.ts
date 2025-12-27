@@ -67,12 +67,18 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 						},
 					]);
 
+					yield* Effect.log(`Registered presence client ${connection.id}`);
+
 					yield* Scope.addFinalizer(
 						yield* Scope.Scope,
 						SubscriptionRef.update(clients, (s) => {
 							delete s[connection.id];
 							return { ...s };
-						}),
+						}).pipe(
+							Effect.zipLeft(
+								Effect.log(`Unregistered presence client ${connection.id}`),
+							),
+						),
 					);
 				}),
 				changes: clients.changes.pipe(

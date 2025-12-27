@@ -6,10 +6,12 @@ import { type Accessor, createContext, useContext } from "solid-js";
 export const createGraphContext = (
 	bounds: Accessor<Readonly<NullableBounds>>,
 	translate: Accessor<{ x: number; y: number } | undefined>,
+	ref: Accessor<HTMLDivElement | null>,
 ) => {
 	const ioPositions = new ReactiveMap<IO.RefString, { x: number; y: number }>();
 
 	return {
+		ref,
 		ioPositions,
 		get bounds() {
 			return bounds();

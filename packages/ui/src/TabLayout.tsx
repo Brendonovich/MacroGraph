@@ -160,7 +160,7 @@ export function TabLayoutView<TSchema extends TabLayout.TabState>(
 				</div>
 				<Show when={selectedTabState()}>
 					{(selectedTabState) => (
-						<div class="w-full h-full bg-gray-2 flex flex-col overflow-hidden">
+						<div class="w-full h-full bg-gray-2 flex flex-col overflow-hidden relative">
 							{Component()?.(selectedTabState as any)}
 						</div>
 					)}

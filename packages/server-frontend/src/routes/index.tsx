@@ -18,6 +18,7 @@ import {
 	SettingsLayout,
 	type TabState,
 	useEditorKeybinds,
+	useGraphContext,
 	useNavSidebar,
 	ZoomedPaneWrapper,
 } from "@macrograph/project-ui";
@@ -166,6 +167,24 @@ const usePaneTabController = (
 				else setGraphCtxMenu(state);
 			},
 			(props) => {
+				const graphCtx = useGraphContext();
+
+				createEventListener(
+					() => graphCtx.ref() ?? undefined,
+					"pointermove",
+					(e) => {
+						rpc
+							.SetMousePosition({
+								graph: props.graph.id,
+								position: graphCtx.getGraphPosition({
+									x: e.clientX,
+									y: e.clientY,
+								}),
+							})
+							.pipe(Effect.runPromise);
+					},
+				);
+
 				const realtime = useRealtimeContext();
 				const presence = useEffectService(PresenceClients);
 
@@ -182,7 +201,7 @@ const usePaneTabController = (
 								{(mouse) => (
 									<PresencePointer
 										style={{
-											transform: `translate(${mouse().x}px, ${mouse().y}px)`,
+											transform: `translate(${mouse().x - (graphCtx.translate?.x ?? 0)}px, ${mouse().y - (graphCtx.translate?.y ?? 0)}px)`,
 										}}
 										name={item[1].name}
 										colour={item[1].colour}
