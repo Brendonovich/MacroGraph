@@ -14,10 +14,12 @@ RUN pnpm install --frozen-lockfile
 
 WORKDIR apps/server
 
+RUN pnpm --filter . deploy deployed --legacy
+
+WORKDIR deployed
+
 # Build the app
 RUN pnpm build
-
-RUN pnpm --filter . deploy deployed --legacy
 
 # Runner stage
 FROM denoland/deno:alpine AS runner
