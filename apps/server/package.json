@@ -68,5 +68,8 @@
 		"unocss-preset-radix": "^2.8.2",
 		"unocss-preset-scrollbar": "^3.2.0",
 		"vite-plugin-solid": "^2.11.8"
-	}
+	},
+	"files": [
+		"dist"
+	]
 }
