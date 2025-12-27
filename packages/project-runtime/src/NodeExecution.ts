@@ -1,19 +1,17 @@
 import { Array, Effect, HashMap, Iterable, Option, pipe, Record } from "effect";
 import {
-	ExecOutput,
+	type Credential,
 	ExecutionContext,
+	Graph,
+	IO,
+	Node,
 	NodeExecutionContext,
 	type NodeSchema,
 	type NotComputationNode,
 	NotEventNode,
-} from "@macrograph/project-domain";
-import {
-	type Credential,
-	Graph,
-	Node,
 	Package,
 	Schema,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 
 import * as ProjectRuntime from "./ProjectRuntime.ts";
 
@@ -65,7 +63,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 			const resolveExecConnection = Effect.fnUntraced(function* (
 				graph: Graph.Graph,
 				node: Node.Node,
-				output: ExecOutput,
+				output: IO.ExecOutput,
 			) {
 				const runtime = yield* ProjectRuntime.Current;
 
@@ -299,7 +297,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 						.pipe(
 							Effect.map((v) =>
 								Option.fromNullable(v).pipe(
-									Option.filter((v) => v instanceof ExecOutput),
+									Option.filter((v) => v instanceof IO.ExecOutput),
 									Option.map((v) => [node, v] as const),
 								),
 							),
@@ -325,7 +323,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 						nextOutput = yield* runNode(nextNode.value, pkg, schema).pipe(
 							Effect.map((v) =>
 								Option.fromNullable(v).pipe(
-									Option.filter((v) => v instanceof ExecOutput),
+									Option.filter((v) => v instanceof IO.ExecOutput),
 									Option.map((v) => [nextNode.value, v] as const),
 								),
 							),

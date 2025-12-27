@@ -1,6 +1,6 @@
 import { Effect, type Request as ERequest, Stream } from "effect";
 import { createScopedEffect, LoadingBlock } from "@macrograph/package-sdk/ui";
-import { type Package, Request } from "@macrograph/project-domain/updated";
+import { type Package, Request } from "@macrograph/project-domain";
 import { queryOptions, type UseQueryResult } from "@tanstack/solid-query";
 import { Suspense } from "solid-js";
 import { reconcile } from "solid-js/store";

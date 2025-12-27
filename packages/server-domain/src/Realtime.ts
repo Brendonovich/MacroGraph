@@ -1,9 +1,9 @@
 import { RpcMiddleware } from "@effect/rpc";
 import { Context, Schema } from "effect";
-import { Actor } from "@macrograph/project-domain/updated";
+import { Actor } from "@macrograph/project-domain";
 
 export const ConnectionId = Schema.Number.pipe(
-	Schema.brand("Realtime Client ID"),
+	Schema.brand("Realtime/ConnectionId"),
 );
 export type ConnectionId = Schema.Schema.Type<typeof ConnectionId>;
 

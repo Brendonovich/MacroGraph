@@ -2,6 +2,7 @@ import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const settingsExportId = "@macrograph/base-packages/Settings";
+const metaExportId = "@macrograph/base-packages/meta";
 
 const BASE_URL = import.meta.url;
 
@@ -11,6 +12,7 @@ export default {
 	enforce: "pre",
 	resolveId(id) {
 		if (id === settingsExportId) return `\0${settingsExportId}`;
+		if (id === metaExportId) return `\0${metaExportId}`;
 
 		if (id.startsWith(settingsExportId)) {
 			const params = new URLSearchParams(id.slice(settingsExportId.length));
@@ -24,24 +26,70 @@ export default {
 		}
 	},
 	async load(id) {
-		if (id !== `\0${settingsExportId}`) return;
+		if (id === `\0${metaExportId}`) {
+			const files = await fs.readdir(new URL(`./src`, BASE_URL), {
+				withFileTypes: true,
+			});
 
-		const files = await fs.readdir(new URL(`./src`, BASE_URL));
+			const packages = [];
+			const imports = [];
 
-		const packages = [];
+			const getImportId = (() => {
+				let i = 0;
+				return () => i++;
+			})();
 
-		for (const folder of files) {
-			const hasSettings = await fs
-				.readFile(new URL(`./src/${folder}/Settings.tsx`, BASE_URL))
-				.then(() => true)
-				.catch(() => false);
+			for (const folder of files) {
+				if (!folder.isDirectory()) continue;
+				console.log(folder);
 
-			if (hasSettings)
-				packages.push(
-					`${folder}: () => import("@macrograph/base-packages/Settings?package=${folder}"),`,
+				const iconUrl = new URL(
+					`./src/${folder.name}/package-icon.png`,
+					BASE_URL,
 				);
-		}
+				const hasIcon = await fs
+					.readFile(iconUrl)
+					.then(() => true)
+					.catch(() => false);
 
-		return `export default { ${packages.join("\n")} }`;
+				const iconImport = `icon${getImportId()}`;
+				if (hasIcon)
+					imports.push(`import ${iconImport} from "${iconUrl.pathname}"`);
+
+				packages.push(
+					`${folder.name}: ${JSON.stringify({
+						name: folder.name,
+						icon: hasIcon ? `$${iconImport}$` : undefined,
+					})},`
+						.replaceAll(`"$`, "")
+						.replaceAll(`$"`, ""),
+				);
+			}
+
+			console.log(packages);
+
+			return `
+      	${imports.join("\n")}
+      	export default { ${packages.join("\n")} }
+      `;
+		} else if (id === `\0${settingsExportId}`) {
+			const files = await fs.readdir(new URL(`./src`, BASE_URL));
+
+			const packages = [];
+
+			for (const folder of files) {
+				const hasSettings = await fs
+					.readFile(new URL(`./src/${folder}/Settings.tsx`, BASE_URL))
+					.then(() => true)
+					.catch(() => false);
+
+				if (hasSettings)
+					packages.push(
+						`${folder}: () => import("@macrograph/base-packages/Settings?package=${folder}"),`,
+					);
+			}
+
+			return `export default { ${packages.join("\n")} }`;
+		}
 	},
 };

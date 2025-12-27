@@ -1,5 +1,5 @@
 import { Context, type Effect, type Request as ERequest } from "effect";
-import type { Request } from "@macrograph/project-domain/updated";
+import type { Request } from "@macrograph/project-domain";
 
 export class ProjectRequestHandler extends Context.Tag("ProjectRequestHandler")<
 	ProjectRequestHandler,

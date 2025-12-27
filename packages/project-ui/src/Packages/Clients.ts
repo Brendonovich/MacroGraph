@@ -1,7 +1,7 @@
 import type { Rpc, RpcClient, RpcGroup } from "@effect/rpc";
 import { Context, Effect, Option, PubSub, type Scope, Stream } from "effect";
 import type { SettingsProps } from "@macrograph/package-sdk/ui";
-import { Package } from "@macrograph/project-domain/updated";
+import { Package } from "@macrograph/project-domain";
 import { ReactiveMap } from "@solid-primitives/map";
 import type { Component } from "solid-js";
 
@@ -10,6 +10,7 @@ export type PackageClient = Readonly<{
 	SettingsUI: Component<SettingsProps<any, any>>;
 	notifySettingsChange: Effect.Effect<void>;
 	settingsChanges: Effect.Effect<Stream.Stream<void>, never, Scope.Scope>;
+	packageIcon?: string;
 }>;
 
 export interface PackageSettingsModule {
@@ -17,6 +18,7 @@ export interface PackageSettingsModule {
 		import("@macrograph/package-sdk/ui").SettingsProps<any, any>
 	>;
 	Rpcs: import("@effect/rpc/RpcGroup").RpcGroup<any>;
+	PackageIcon?: string;
 }
 
 export class GetPackageRpcClient extends Context.Tag("GetPackageRpcClient")<
@@ -44,6 +46,7 @@ export class PackageClients extends Effect.Service<PackageClients>()(
 				registerPackageClient: Effect.fn(function* (
 					id: Package.Id,
 					module: PackageSettingsModule,
+					meta: { icon?: string },
 				) {
 					const client = yield* getClient(id, module.Rpcs).pipe(
 						Effect.flatten,
@@ -62,6 +65,7 @@ export class PackageClients extends Effect.Service<PackageClients>()(
 						settingsChanges: changesNotify.subscribe.pipe(
 							Effect.map(Stream.fromQueue),
 						),
+						packageIcon: meta.icon,
 					});
 				}),
 				getPackage: (id: Package.Id) => Option.fromNullable(packages.get(id)),

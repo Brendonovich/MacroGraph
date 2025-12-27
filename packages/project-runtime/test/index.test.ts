@@ -1,18 +1,14 @@
 import { it } from "@effect/vitest";
-import { Effect, Layer, Stream, Schema as S } from "effect";
+import { Effect, Layer, Schema as S, Stream } from "effect";
+import * as PackageSDK from "@macrograph/package-sdk";
+import { t } from "@macrograph/package-sdk";
+import { IO, Package, Request, Schema } from "@macrograph/project-domain";
 import {
 	GraphRequests,
 	PackageActions,
 	ProjectRequests,
 	ProjectRuntime,
 } from "@macrograph/project-runtime";
-import {
-	IO,
-	Package,
-	Request,
-	Schema,
-} from "@macrograph/project-domain/updated";
-import * as PackageSDK from "@macrograph/package-sdk";
 
 const ServicesLive = Layer.mergeAll(
 	ProjectRequests.Default,
@@ -27,11 +23,9 @@ const TestPackage = PackageSDK.Package.make({
 	builder: (ctx) => {
 		ctx.schema(PRINT_NODE_ID, {
 			name: "Log",
-			variant: "Exec",
+			type: "exec",
 			io: (c) => ({
-				execIn: c.in.exec("exec"),
-				execOut: c.out.exec("exec"),
-				in: c.in.data("in", S.String, {
+				in: c.in.data("in", t.String, {
 					name: "Input",
 				}),
 			}),

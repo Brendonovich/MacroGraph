@@ -1,4 +1,4 @@
-import type { IO } from "@macrograph/project-domain/updated";
+import type { IO } from "@macrograph/project-domain";
 import type { NullableBounds } from "@solid-primitives/bounds";
 import { ReactiveMap } from "@solid-primitives/map";
 import { type Accessor, createContext, useContext } from "solid-js";

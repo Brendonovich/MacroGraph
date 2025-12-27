@@ -7,15 +7,60 @@ export type SubscriptionTypeDefinition = {
 	event: S.Struct.Fields;
 };
 
-function makeCreateSubscriptionBody<
+function makeCreateSubscriptionBodySchema<
 	const TDef extends SubscriptionTypeDefinition,
->(def: TDef) {
+>(
+	def: TDef,
+): TDef extends SubscriptionTypeDefinition
+	? S.Struct<{
+			type: S.Literal<[TDef["type"]]>;
+			version: S.Literal<[`${TDef["version"]}`]>;
+			condition: S.Struct<TDef["condition"]>;
+		}>
+	: never {
 	return S.Struct({
-		type: S.Literal(def.type as TDef["type"]),
-		version: S.Literal(`${def.version as TDef["version"]}`),
-		condition: S.Struct(def.condition as TDef["condition"]),
-	});
+		type: S.Literal(def.type),
+		version: S.Literal(`${def.version}`),
+		condition: S.Struct(def.condition),
+	}) as any;
 }
+
+// interface ESEvent {
+// 	type: string;
+// 	fields: Schema.Struct.Fields;
+// }
+
+// function ESEvent<Self>() {
+// 	return <Type extends string, Fields extends Schema.Struct.Fields>(opts: {
+// 		type: Type;
+// 		fields: Fields;
+// 	}) => {
+// 		class TestEvent extends Schema.Class<TestEvent>("ABC")({
+// 			...opts.fields,
+// 		}) {}
+
+// 		return class Event extends Schema.Class<Event>(opts.type)(opts.fields) {};
+// 	};
+// }
+
+// class ChannelBan extends ESEvent<ChannelBan>()({
+// 	type: "channel.ban",
+// 	fields: {
+// 		user_id: S.String,
+// 		user_login: S.String,
+// 		user_name: S.String,
+// 		broadcaster_user_id: S.String,
+// 		broadcaster_user_login: S.String,
+// 		broadcaster_user_name: S.String,
+// 		moderator_user_id: S.String,
+// 		moderator_user_login: S.String,
+// 		moderator_user_name: S.String,
+// 		reason: S.String,
+// 		banned_at: S.DateTimeUtc,
+// 		ends_at: S.NullOr(S.DateTimeUtc),
+// 		is_permanent: S.Boolean,
+// 	},
+// }) {}
 
 export const subscriptionTypes = {
 	channelBan: {
@@ -2807,7 +2852,7 @@ export const subscriptionTypes = {
 } as const satisfies Record<string, SubscriptionTypeDefinition>;
 
 export const EVENTSUB_CREATE_SUBSCRIPTION_BODY = S.Union(
-	...Object.values(subscriptionTypes).map(makeCreateSubscriptionBody),
+	...Object.values(subscriptionTypes).map(makeCreateSubscriptionBodySchema),
 );
 
 const EVENTSUB_NOTIFICATION_MESSAGES = S.Union(
@@ -2847,7 +2892,31 @@ function makeMessageSchema<
 
 function makeNotificationMessageSchema<TDef extends SubscriptionTypeDefinition>(
 	def: TDef,
-) {
+): TDef extends SubscriptionTypeDefinition
+	? S.Struct<{
+			metadata: S.Struct<
+				ReturnType<
+					typeof makeMessageSchema<"notification", TDef["event"]>
+				>["fields"]["metadata"]["fields"] & {
+					subscription_type: S.Literal<[TDef["type"]]>;
+					subscription_version: typeof S.String;
+				}
+			>;
+			payload: ReturnType<
+				typeof makeMessageSchema<
+					TDef["type"],
+					{
+						subscription: S.Struct<{
+							id: typeof S.String;
+							type: S.Literal<[TDef["type"]]>;
+							created_at: typeof S.DateFromString;
+						}>;
+						event: S.Struct<TDef["event"]>;
+					}
+				>
+			>["fields"]["payload"];
+		}>
+	: never {
 	const s = makeMessageSchema({
 		message_type: "notification",
 		payload: {
@@ -2861,15 +2930,13 @@ function makeNotificationMessageSchema<TDef extends SubscriptionTypeDefinition>(
 	});
 
 	return S.Struct({
-		metadata: S.extend(
-			s.fields.metadata,
-			S.Struct({
-				subscription_type: S.Literal(def.type as TDef["type"]),
-				subscription_version: S.String,
-			}),
-		),
+		metadata: S.Struct({
+			...s.fields.metadata.fields,
+			subscription_type: S.Literal(def.type as TDef["type"]),
+			subscription_version: S.String,
+		}),
 		payload: s.fields.payload,
-	});
+	}) as any;
 }
 
 export type EventSubMessage = (typeof EVENTSUB_MESSAGE)["Type"];
@@ -2877,6 +2944,12 @@ export const EVENTSUB_MESSAGE = S.Union(
 	EVENTSUB_CONTROL_MESSAGES,
 	EVENTSUB_NOTIFICATION_MESSAGES,
 );
+
+export function isEventSubNotificationMessage(
+	msg: EventSubMessage,
+): msg is S.Schema.Type<typeof EVENTSUB_NOTIFICATION_MESSAGES> {
+	return msg.metadata.message_type === "notification";
+}
 
 export function isEventSubMessageType<
 	T extends EventSubMessage["metadata"]["message_type"],

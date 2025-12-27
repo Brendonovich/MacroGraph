@@ -18,7 +18,7 @@ import {
 	Project,
 	type ProjectEvent,
 	type Schema,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 
 export interface NodeIO {
 	readonly shape: unknown;

@@ -13,7 +13,9 @@
 		"allowImportingTsExtensions": true,
 		"isolatedModules": true,
 		"moduleDetection": "force",
-		"noEmit": true,
+		"composite": true,
+		"outDir": "dist",
+		"emitDeclarationOnly": true,
 
 		/* Linting */
 		"strict": true,
@@ -21,7 +23,9 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"plugins": [{ "name": "@effect/language-service" }]
+		"plugins": [{ "name": "@effect/language-service" }],
+		"customConditions": ["@macrograph/source"],
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"references": [{ "path": "../web-domain" }],
 }

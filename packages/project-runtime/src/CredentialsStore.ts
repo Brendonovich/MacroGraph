@@ -1,5 +1,5 @@
 import { Effect, Layer } from "effect";
-import { SubscribableCache } from "@macrograph/project-domain/updated";
+import { SubscribableCache } from "@macrograph/project-domain";
 
 import { CloudApiClient } from "./CloudApi";
 

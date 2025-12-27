@@ -1,64 +1,67 @@
 import {
 	Cache,
+	Console,
+	Context,
 	Effect,
+	Layer,
 	Mailbox,
 	Option,
 	Schedule,
-	SubscriptionRef,
 } from "effect";
 import { CloudApiClient } from "@macrograph/project-runtime";
 import type { RawJWT } from "@macrograph/web-domain";
 
-import { Persistence } from "./Persistence";
+import { ServerConfig } from "./ServerConfig";
 
 type RegistrationEvent =
 	| { type: "started"; verificationUrlComplete: string }
 	| { type: "completed" };
 
-export class ServerRegistrationToken extends Effect.Service<ServerRegistrationToken>()(
-	"ServerRegistrationToken",
+export class ServerRegistrationToken extends Context.Tag(
+	"@macrograph/server-backend/ServerRegistrationToken",
+)<
+	ServerRegistrationToken,
 	{
-		effect: Effect.gen(function* () {
-			const persistence = yield* Persistence;
-			const ref = yield* SubscriptionRef.make<Option.Option<RawJWT>>(
-				Option.fromNullable(persistence.getKey("api")),
-			);
+		get: Effect.Effect<Option.Option<RawJWT>>;
+		set: (v: Option.Option<RawJWT>) => Effect.Effect<void>;
+	}
+>() {
+	static layerServerConfig = Layer.effect(
+		ServerRegistrationToken,
+		Effect.gen(function* () {
+			const serverConfig = yield* ServerConfig.ServerConfig;
 
 			return {
-				ref,
+				get: serverConfig.get.pipe(
+					Effect.map((c) => c.serverRegistrationToken),
+				),
 				set: (v: Option.Option<RawJWT>) =>
-					Effect.gen(function* () {
-						if (Option.isSome(v))
-							yield* persistence
-								.setKey("api", v.value)
-								.pipe(Effect.catchAll(() => Effect.void));
-						else
-							yield* persistence
-								.setKey("api", null)
-								.pipe(Effect.catchAll(() => Effect.void));
-
-						yield* SubscriptionRef.set(ref, v);
-					}),
+					serverConfig.update((value) => ({
+						...value,
+						serverRegistrationToken: v,
+					})),
 			};
 		}),
-		dependencies: [Persistence.Default],
-	},
-) {}
+	);
+}
 
 export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 	"ServerRegistration",
 	{
 		effect: Effect.gen(function* () {
-			const cloud = yield* CloudApiClient.CloudApiClient;
-			const token = yield* ServerRegistrationToken;
+			const registrationToken = yield* ServerRegistrationToken;
 
 			const registration = yield* Cache.make({
 				capacity: 1,
 				timeToLive: "1 hour",
 				lookup: (_: void) =>
 					Effect.gen(function* () {
-						const tokenValue = yield* token.ref.get;
+						const tokenValue = yield* registrationToken.get;
 						if (Option.isNone(tokenValue)) return Option.none();
+
+						const cloud = yield* CloudApiClient.make({
+							auth: { clientId: "macrograph-server", token: tokenValue.value },
+						});
 
 						return yield* cloud.getServerRegistration().pipe(
 							Effect.map(Option.some),
@@ -83,9 +86,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 				yield* Effect.gen(function* () {
 					const data = yield* api.startServerRegistration();
 
-					yield* Effect.log(
-						`Starting server registration with id '${data.id}'`,
-					);
+					yield* Effect.log(`Starting server registration '${data.id}'`);
 
 					yield* mailbox.offer({
 						type: "started",
@@ -94,6 +95,11 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 					const grant = yield* api
 						.performServerRegistration({ payload: { id: data.id } })
 						.pipe(
+							Effect.zipLeft(
+								Effect.log(
+									`Attempting to perform server registration '${data.id}'`,
+								),
+							),
 							Effect.catchAll((error) => {
 								if (error._tag === "ServerRegistrationError")
 									return Effect.fail(error);
@@ -105,12 +111,14 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 								schedule: Schedule.fixed(3000),
 								while: (error) => error.code === "authorization_pending",
 							}),
+							Effect.tapError(Console.log),
+							Effect.tapDefect(Console.log),
 							Effect.orDie,
 						);
 
 					yield* Effect.log("Access token grant performed");
 
-					yield* token.set(Option.some(grant.token));
+					yield* registrationToken.set(Option.some(grant.token));
 					yield* registration.refresh();
 
 					yield* mailbox.offer({ type: "completed" });
@@ -122,12 +130,11 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 			return {
 				get: registration.get(),
 				remove: Effect.gen(function* () {
-					yield* token.set(Option.none());
+					yield* registrationToken.set(Option.none());
 					yield* registration.refresh();
 				}),
 				start,
 			};
 		}),
-		dependencies: [ServerRegistrationToken.Default],
 	},
 ) {}

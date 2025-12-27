@@ -1,10 +1,5 @@
 import { Effect, HashMap, Ref } from "effect";
-import type {
-	IO,
-	Node,
-	Project,
-	Schema,
-} from "@macrograph/project-domain/updated";
+import type { IO, Node, Project, Schema } from "@macrograph/project-domain";
 
 import { NodeIOActions } from "./NodeIOActions.ts";
 import { PackageActions } from "./PackageActions.ts";

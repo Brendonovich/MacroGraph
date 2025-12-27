@@ -5,7 +5,7 @@ import {
 	IO,
 	type Node,
 	type Schema,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { cx } from "cva";
 import {

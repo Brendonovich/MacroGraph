@@ -7,7 +7,7 @@
 		"runtime": "pnpm --filter @macrograph/runtime --",
 		"server": "pnpm --filter @macrograph/server --",
 		"test": "vitest",
-		"typecheck": "pnpm tsc -b",
+		"typecheck": "pnpm tsgo -b",
 		"lint": "turbo run lint",
 		"lint:fix": "turbo run lint -- --fix",
 		"dev:web": "pnpm web dev",
@@ -22,6 +22,7 @@
 		"jsdom": "^24.1.1",
 		"safaridriver": "^0.0.5",
 		"solid-js": "^1.9.10",
+		"tsgo": "npm:@typescript/native-preview",
 		"turbo": "^2.5.4",
 		"turbo-ignore": "^1.13.0",
 		"typescript": "^5.5.3",
@@ -33,7 +34,7 @@
 	"dependencies": {
 		"@biomejs/biome": "^2.3.5",
 		"@solidjs/start-nitro-v2-plugin": "link:../../../Library/pnpm/global/5/node_modules/@solidjs/start-nitro-v2-plugin",
-		"effect": "^3.19.3"
+		"effect": "^3.19.13"
 	},
 	"packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184",
 	"engines": {

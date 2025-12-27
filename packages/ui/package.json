@@ -13,7 +13,7 @@
 		"./tailwind.preset.js": "./tailwind.preset.js",
 		"./vite": "./vite.js",
 		"./global.css": "./src/global.css",
-		"./types": "./src/auto-imports.d.ts"
+		"./types": "./src/types.d.ts"
 	},
 	"devDependencies": {
 		"@macrograph/icons": "workspace:*",
@@ -33,7 +33,7 @@
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/config": "workspace:*",
 		"@solid-primitives/platform": "^0.1.2",
-		"@tanstack/solid-query": "^5.90.6",
+		"@tanstack/solid-query": "^5.90.15",
 		"clsx": "^1.2.1",
 		"cva": "1.0.0-beta.4",
 		"i": "^0.3.7",

@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
 
-import * as Resource from "./Resource";
+import { Resource } from "./NodeSchema";
 import * as Schema from "./Schema";
 
 export const Id = S.String.pipe(S.brand("Package.Id"));

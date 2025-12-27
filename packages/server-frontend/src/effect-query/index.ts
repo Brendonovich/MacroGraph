@@ -1,11 +1,11 @@
-import {
-	createContext,
-	useContext,
-	onCleanup,
-	createComponent,
-	type ParentComponent,
-} from "solid-js";
 import { Context, Effect, Layer, ManagedRuntime } from "effect";
+import {
+	createComponent,
+	createContext,
+	onCleanup,
+	type ParentComponent,
+	useContext,
+} from "solid-js";
 
 import * as Hooks from "./hooks";
 
@@ -17,13 +17,11 @@ export class QueryClient extends Context.Tag("@solid-effect-query/QueryClient")<
 	any // We'll use the actual TanStack QueryClient type later
 >() {}
 
-export function makeEffectQuery<
+interface EffectQuery<
 	R,
 	E,
 	Args extends Record<string, unknown> = Record<string, unknown>,
->(
-	layer: (options: Args) => Layer.Layer<R, E>,
-): {
+> {
 	Provider: ParentComponent<Args>;
 	useEffectRuntime: () => ManagedRuntime.ManagedRuntime<R, E>;
 	useEffectQuery: ReturnType<
@@ -32,7 +30,13 @@ export function makeEffectQuery<
 	useEffectMutation: ReturnType<
 		typeof Hooks.makeUseEffectMutation<R, ManagedRuntime.ManagedRuntime<R, E>>
 	>;
-} {
+}
+
+export function makeEffectQuery<
+	R,
+	E,
+	Args extends Record<string, unknown> = Record<string, unknown>,
+>(layer: (options: Args) => Layer.Layer<R, E>): EffectQuery<R, E, Args> {
 	const RuntimeContext = createContext<ManagedRuntime.ManagedRuntime<
 		R,
 		E
@@ -66,8 +70,11 @@ export function makeEffectQuery<
 		}
 
 		// Create runtime with memoization
-		const runtime =
-			props.runtime ?? ManagedRuntime.make(layer(props as Args), memoMap);
+		const runtime = (props.runtime ??
+			ManagedRuntime.make(
+				layer(props as Args),
+				memoMap,
+			)) as ManagedRuntime.ManagedRuntime<any, any>;
 
 		// Dispose runtime on unmount
 		onCleanup(() => {
@@ -91,4 +98,4 @@ export function makeEffectQuery<
 }
 
 // Re-export from hooks
-export { makeUseEffectQuery, makeUseEffectMutation } from "./hooks";
+export { makeUseEffectMutation, makeUseEffectQuery } from "./hooks";

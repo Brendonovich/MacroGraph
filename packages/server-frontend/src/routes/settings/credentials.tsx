@@ -1,16 +1,18 @@
 import { Cause, Effect } from "effect";
 import { EffectButton } from "@macrograph/package-sdk/ui";
+import { useQuery } from "@tanstack/solid-query";
 
-import { useEffectQuery, useEffectService } from "../../EffectRuntime";
+import { useEffectRuntime, useEffectService } from "../../EffectRuntime";
 import { MatchEffectQuery } from "../../effect-query/components";
-import { ProjectRpc } from "../../Project/Rpc";
+import { ServerRpc } from "../../ServerRpc";
 
 export default function Credentials() {
-	const rpc = useEffectService(ProjectRpc.client);
+	const rpc = useEffectService(ServerRpc.client);
+	const runtime = useEffectRuntime();
 
-	const credentials = useEffectQuery(() => ({
+	const credentials = useQuery(() => ({
 		queryKey: ["credentials"],
-		queryFn: () => rpc.GetCredentials(),
+		queryFn: () => rpc.GetCredentials().pipe(runtime.runPromiseExit),
 	}));
 
 	return (

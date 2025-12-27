@@ -6,20 +6,20 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./vite": "./vite.js",
-		"./Settings": "./src/Settings.tsx"
+		"./Settings": "./src/Settings.tsx",
+		"./meta": "./src/meta.ts"
 	},
 	"dependencies": {
-		"@effect/experimental": "^0.56.0",
-		"@effect/opentelemetry": "^0.58.0",
-		"@effect/platform": "^0.92.1",
-		"@effect/platform-browser": "^0.72.0",
-		"@effect/platform-node": "^0.98.4",
-		"@effect/rpc": "^0.71.1",
+		"@effect/experimental": "^0.58.0",
+		"@effect/opentelemetry": "^0.60.0",
+		"@effect/platform": "^0.94.0",
+		"@effect/platform-browser": "^0.74.0",
+		"@effect/platform-node": "^0.104.0",
+		"@effect/rpc": "^0.73.0",
 		"@effect/rpc-http": "^0.52.4",
 		"@faker-js/faker": "^9.8.0",
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/package-sdk": "workspace:*",
-		"@macrograph/server-domain": "workspace:*",
 		"@macrograph/web-domain": "workspace:*",
 		"@solid-primitives/bounds": "^0.0.118",
 		"@solid-primitives/context": "^0.2.3",
@@ -31,19 +31,18 @@
 		"@solid-primitives/resource": "^0.1.2",
 		"@solid-primitives/state-machine": "^0.0.3",
 		"@solidjs/router": "^0.15.3",
-		"@tanstack/query-core": "^5.75.7",
+		"@tanstack/query-core": "^5.90.12",
 		"@unocss/reset": "^66.1.1",
 		"cva": "1.0.0-beta.4",
 		"dotenv-cli": "^8.0.0",
-		"effect": "^3.19.3",
+		"effect": "^3.19.13",
 		"hono": "^4.7.5",
 		"jose": "^4.15.9",
 		"obs-websocket-js": "^5.0.5",
 		"solid-presence": "^0.2.0",
 		"unocss-preset-primitives": "0.0.2-beta.1",
 		"unocss-preset-radix": "^2.8.2",
-		"vite": "^7.1.10",
-		"vite-plugin-solid": "^2.11.8"
+		"vite": "^7.1.10"
 	},
 	"devDependencies": {
 		"unplugin-icons": "^0.18.5"

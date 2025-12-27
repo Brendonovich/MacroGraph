@@ -1,7 +1,7 @@
 import * as S from "effect/Schema";
 
-import { Position } from "../types.ts";
 import * as Schema from "./Schema.ts";
+import { Position } from "./types.ts";
 
 export const Id = S.Int.pipe(S.brand("Node.Id"));
 export type Id = typeof Id.Type;

@@ -1,5 +1,5 @@
 import type { Effect, Request as ERequest } from "effect";
-import type { Package, Request } from "@macrograph/project-domain/updated";
+import type { Package, Request } from "@macrograph/project-domain";
 import type { TabLayout } from "@macrograph/ui";
 import { useQuery } from "@tanstack/solid-query";
 

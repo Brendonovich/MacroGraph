@@ -5,24 +5,65 @@ import {
 	ProjectRequestHandler,
 	ProjectUILayers,
 } from "@macrograph/project-ui";
+import type { ServerEvent } from "@macrograph/server-domain";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { createEffectQueryFromManagedRuntime } from "effect-query";
 import { createContext, useContext } from "solid-js";
 
 import { AuthActions } from "./Auth";
-import { makeEffectQuery } from "./effect-query";
+import { ConnectedClientsState } from "./ConnectedClientsState";
 import { HttpPackgeRpcClient } from "./Packages/PackagesSettings";
+import { PresenceClients } from "./Presence/PresenceClients";
 import { ProjectRealtime } from "./Project/Realtime";
-import { ProjectRpc } from "./Project/Rpc";
+import { QueryInvalidation, TSQueryClient } from "./QueryInvalidation";
+import {
+	ServerEventStream,
+	ServerEventStreamHandlerLive,
+} from "./ServerEventHandler";
+import { ServerRegistration } from "./ServerRegistration";
+import { ServerRpc } from "./ServerRpc";
 
 const ProjectEventStreamLive = Layer.effect(
 	ProjectEventStream,
 	Effect.gen(function* () {
 		const realtime = yield* ProjectRealtime;
 
-		return realtime.stream.pipe(
-			Stream.filterMap((e) => ("_tag" in e ? Option.some(e) : Option.none())),
+		return realtime.stream().pipe(
+			Stream.filterMap((e) => {
+				if (!("_tag" in e)) return Option.none();
+				// Filter for ProjectEvent tags (not ServerEvent tags)
+				const serverEventTags = [
+					"AuthChanged",
+					"ConnectedClientsChanged",
+					"PresenceUpdated",
+				];
+				if (serverEventTags.includes(e._tag)) return Option.none();
+				return Option.some(e as any);
+			}),
+			Stream.orDie,
+		);
+	}),
+);
+
+const ServerEventStreamLive = Layer.effect(
+	ServerEventStream,
+	Effect.gen(function* () {
+		const realtime = yield* ProjectRealtime;
+
+		return realtime.stream().pipe(
+			Stream.filterMap((e) => {
+				// Filter for ServerEvent tags only
+				if (!("_tag" in e)) return Option.none();
+				const serverEventTags = [
+					"AuthChanged",
+					"ConnectedClientsChanged",
+					"PresenceUpdated",
+				];
+				if (serverEventTags.includes(e._tag)) {
+					return Option.some(e as ServerEvent.ServerEvent);
+				}
+				return Option.none();
+			}),
 			Stream.orDie,
 		);
 	}),
@@ -30,20 +71,31 @@ const ProjectEventStreamLive = Layer.effect(
 
 const RequestHandlersLive = Layer.effect(
 	ProjectRequestHandler,
-	ProjectRpc.client,
+	ServerRpc.client,
 );
 
-const FrontendLive = Layer.empty.pipe(
-	Layer.provideMerge(Layer.mergeAll(ProjectUILayers, AuthActions.Default)),
+const FrontendLive = ServerEventStreamHandlerLive.pipe(
+	Layer.provideMerge(
+		Layer.mergeAll(
+			ProjectUILayers,
+			AuthActions.Default,
+			ConnectedClientsState.Default,
+			ServerRegistration.Default,
+			PresenceClients.Default,
+			QueryInvalidation.Default,
+			TSQueryClient.Default,
+		),
+	),
 	Layer.provideMerge(
 		Layer.mergeAll(
 			HttpPackgeRpcClient,
 			ProjectEventStreamLive,
+			ServerEventStreamLive,
 			RequestHandlersLive,
 		),
 	),
 	Layer.provideMerge(
-		Layer.mergeAll(ProjectRpc.Default, ProjectRealtime.Default),
+		Layer.mergeAll(ServerRpc.Default, ProjectRealtime.Default),
 	),
 );
 
@@ -97,9 +149,4 @@ export function useEffectService<T>(
 	return runtime.runSync(service);
 }
 
-export const { Provider, useEffectQuery, useEffectMutation } = makeEffectQuery(
-	() => EffectRuntime.layer,
-);
-
 export const runtime = ManagedRuntime.make(EffectRuntime.layer);
-export const eq = createEffectQueryFromManagedRuntime(runtime);

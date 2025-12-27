@@ -15,7 +15,8 @@ export namespace CloudApiClient {
 				opts?.baseUrl ??
 				(yield* Effect.serviceOption(BaseUrl).pipe(
 					Effect.map(Option.getOrUndefined),
-				)),
+				)) ??
+				"https://macrograph.app",
 			httpClient: httpClient.pipe(
 				HttpClient.mapRequest((req) =>
 					Option.fromNullable(opts?.auth).pipe(
@@ -33,10 +34,10 @@ export namespace CloudApiClient {
 		});
 	});
 
-	export class BaseUrl extends Context.Tag("CloudApiClient/BaseUrl")<
-		BaseUrl,
-		string
-	>() {}
+	export class BaseUrl extends Context.Reference<BaseUrl>()(
+		"CloudApiClient/BaseUrl",
+		{ defaultValue: () => "https://macrograph.app" },
+	) {}
 
 	export class CloudApiClient extends Context.Tag("CloudApiClient")<
 		CloudApiClient,

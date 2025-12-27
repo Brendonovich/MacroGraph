@@ -26,15 +26,11 @@ async function _getAuthState() {
 
 	const requestEvent = getRequestEvent()!;
 	const event = requestEvent.nativeEvent;
-	console.log("headers", Object.fromEntries(event.req.headers.entries()));
 
 	let data: Awaited<ReturnType<ReturnType<typeof lucia>["validateSession"]>>;
 
-	console.log("headers", getHeaders());
-
 	// header auth
 	const authHeader = event.req.headers.get("Authorization");
-	console.log({ authHeader });
 	if (authHeader?.startsWith("Bearer ")) {
 		const [, sessionId] = authHeader.split("Bearer ");
 
@@ -46,7 +42,6 @@ async function _getAuthState() {
 			const originHeader = event.req.headers.get("Origin") ?? null;
 			// NOTE: You may need to use `X-Forwarded-Host` instead
 			const hostHeader = event.req.headers.get("Host") ?? null;
-			console.log({ originHeader, hostHeader });
 			if (
 				!originHeader ||
 				!hostHeader ||
@@ -58,12 +53,9 @@ async function _getAuthState() {
 		}
 
 		const sessionId = getCookie(lucia().sessionCookieName) ?? null;
-		console.log({ sessionId });
 		if (!sessionId) return;
 
 		data = await lucia().validateSession(sessionId);
-
-		console.log({ data });
 
 		if (data.session?.fresh)
 			appendResponseHeader(
@@ -96,7 +88,6 @@ export async function ensureAuthedOrRedirect() {
 	if (state) return state;
 
 	const redirect = loginRedirect();
-	console.log({ redirect });
 	throw redirect;
 }
 

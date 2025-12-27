@@ -1,4 +1,10 @@
-import { Effect, type Request as ERequest, Option } from "effect";
+import {
+	Chunk,
+	Effect,
+	type Request as ERequest,
+	Option,
+	Stream,
+} from "effect";
 import {
 	type Graph,
 	IO,
@@ -8,7 +14,7 @@ import {
 	ProjectEvent,
 	Request,
 	type Schema,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 import { createStore, produce } from "solid-js/store";
 
 import { ProjectEventHandler } from "./ProjectEventHandler";
@@ -20,7 +26,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 	{
 		accessors: true,
 		effect: Effect.gen(function* () {
-			const { state, setState } = yield* ProjectState;
+			const { state } = yield* ProjectState;
 			const handleProjectEvent = yield* ProjectEventHandler;
 			const reqHandler = yield* ProjectRequestHandler;
 
@@ -221,25 +227,6 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							}),
 						).pipe(Effect.andThen(handleProjectEvent)),
 				),
-				// StartServerRegistration: Effect.gen(function* () {
-				// 	const getFlowStatus = yield* rpc
-				// 		.StartServerRegistration()
-				// 		.pipe(Stream.toPull);
-
-				// 	const status = yield* getFlowStatus.pipe(
-				// 		Effect.map(Chunk.get(0)),
-				// 		Effect.map(Option.getOrThrow),
-				// 	);
-				// 	if (status.type !== "started")
-				// 		throw new Error("Flow status is not started");
-
-				// 	window.open(status.verificationUrlComplete);
-
-				// 	yield* getFlowStatus.pipe(
-				// 		Effect.map(Chunk.get(0)),
-				// 		Effect.map(Option.getOrThrow),
-				// 	);
-				// }).pipe(Effect.scoped),
 			};
 		}),
 		dependencies: [ProjectState.Default, ProjectEventHandler.Default],

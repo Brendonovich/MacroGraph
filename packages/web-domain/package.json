@@ -5,8 +5,8 @@
 	"types": "./src/index.ts",
 	"type": "module",
 	"dependencies": {
-		"@effect/platform": "^0.92.1",
-		"effect": "^3.19.3"
+		"@effect/platform": "^0.94.0",
+		"effect": "^3.19.13"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*"

@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
 
-import { Position } from "../types";
+import { Position } from "./types";
 
 export const Id = S.Int.pipe(S.brand("Comment.Id"));
 export type Id = typeof Id.Type;

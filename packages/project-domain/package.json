@@ -2,15 +2,44 @@
 	"name": "@macrograph/project-domain",
 	"type": "module",
 	"dependencies": {
-		"@effect/rpc": "^0.71.1",
+		"@effect/rpc": "^0.73.0",
 		"@macrograph/web-domain": "workspace:*",
-		"effect": "^3.19.3"
+		"effect": "^3.19.13"
 	},
 	"exports": {
 		".": "./src/index.ts",
-		"./Node": "./src/Node/index.ts",
-		"./Graph": "./src/Graph/index.ts",
 		"./Credential": "./src/Credential.ts",
-		"./updated": "./src/updated/index.ts"
+		"./Package": {
+			"types": "./dist/src/Package.d.ts",
+			"default": "./src/Package.ts"
+		},
+		"./Project": {
+			"types": "./dist/src/Project.d.ts",
+			"default": "./src/Project.ts"
+		},
+		"./Graph": {
+			"types": "./dist/src/Graph.d.ts",
+			"default": "./src/Graph.ts"
+		},
+		"./Node": {
+			"types": "./dist/src/Node.d.ts",
+			"default": "./src/Node.ts"
+		},
+		"./ProjectEvent": {
+			"types": "./dist/src/ProjectEvent.d.ts",
+			"default": "./src/ProjectEvent.ts"
+		},
+		"./Schema": {
+			"types": "./dist/src/Schema.d.ts",
+			"default": "./src/Schema.ts"
+		},
+		"./Actor": {
+			"types": "./dist/src/Actor.d.ts",
+			"default": "./src/Actor.ts"
+		},
+		"./IO": {
+			"types": "./dist/src/IO.d.ts",
+			"default": "./src/IO.ts"
+		}
 	}
 }

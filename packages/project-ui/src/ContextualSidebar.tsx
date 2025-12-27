@@ -1,7 +1,7 @@
 import { Array, Iterable, identity, Option, pipe } from "effect";
 import { Popover } from "@kobalte/core/popover";
 import { Select } from "@kobalte/core/select";
-import type { Graph, Node, Schema } from "@macrograph/project-domain/updated";
+import type { Graph, Node, Package, Schema } from "@macrograph/project-domain";
 import { focusRingClasses } from "@macrograph/ui";
 import { createContextProvider } from "@solid-primitives/context";
 import { isMobile } from "@solid-primitives/platform";
@@ -13,6 +13,7 @@ import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";
 import { matchSchemaTypeBackgroundColour } from "./Graph/Node";
 import { useLayoutStateRaw } from "./LayoutState";
+import { PackageClients } from "./Packages/Clients";
 import { Sidebar } from "./Sidebar";
 import { ProjectState } from "./State";
 
@@ -288,9 +289,16 @@ export { ContextualSidebarProvider, useContextualSidebar };
 
 function SchemaInfoButton(props: {
 	schema: { name: string; id: string; type: Schema.Type };
-	package: { name: string } | undefined;
+	package: { id: Package.Id; name: string } | undefined;
 }) {
 	let closeButton!: HTMLButtonElement;
+
+	const packageClients = useProjectService(PackageClients);
+
+	const pkg = () =>
+		props.package
+			? Option.getOrUndefined(packageClients.getPackage(props.package?.id))
+			: undefined;
 
 	return (
 		<Popover placement="left-start" gutter={4}>
@@ -300,11 +308,9 @@ function SchemaInfoButton(props: {
 					focusRingClasses("outline"),
 				)}
 			>
-				<img
-					src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6fmaMpRuDpD09Na1BFBU44_VGz2w-4MY5fg&s"
-					alt="Schema"
-					class="size-9"
-				/>
+				<Show when={pkg()?.packageIcon}>
+					{(src) => <img src={src()} alt="Schema" class="size-9" />}
+				</Show>
 				<div class="flex-1 min-w-0 pr-1.5">
 					<span class="block text-xs font-medium text-gray-12 truncate">
 						{props.schema.name}
@@ -345,11 +351,9 @@ function SchemaInfoButton(props: {
 									focusRingClasses("outline"),
 								)}
 							>
-								<img
-									src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6fmaMpRuDpD09Na1BFBU44_VGz2w-4MY5fg&s"
-									alt="Schema"
-									class="size-5"
-								/>
+								<Show when={pkg()?.packageIcon}>
+									{(src) => <img src={src()} alt="Schema" class="size-5" />}
+								</Show>
 								<div class="flex-1 min-w-0 pr-1.5">
 									<span class="block text-xs font-normal text-gray-12 truncate">
 										{props.package?.name}

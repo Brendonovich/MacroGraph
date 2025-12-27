@@ -7,16 +7,12 @@ import * as RequestResolver from "effect/RequestResolver";
 import {
 	Comment,
 	Graph,
-	IO,
 	Node,
-	Package,
 	Project,
 	ProjectEvent,
 	type Request,
-	Schema,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 
-import * as Actor from "./Actor";
 import { NodeIOActions } from "./NodeIOActions";
 import { PackageActions } from "./PackageActions";
 import * as ProjectRuntime from "./ProjectRuntime";

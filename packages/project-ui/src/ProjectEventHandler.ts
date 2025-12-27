@@ -8,7 +8,7 @@ import {
 	Record,
 	Stream,
 } from "effect";
-import type { ProjectEvent } from "@macrograph/project-domain/updated";
+import type { ProjectEvent } from "@macrograph/project-domain";
 import { batch } from "solid-js";
 import { produce } from "solid-js/store";
 

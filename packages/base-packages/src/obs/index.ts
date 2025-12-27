@@ -58,10 +58,12 @@ const Engine = PackageEngine.define<State>()({
 				const ws = new OBSWebsocket();
 
 				ws.on("CurrentProgramSceneChanged", (e) => {
-					ctx.emitEvent({
-						address,
-						event: new Event.CurrentProgramSceneChanged(e),
-					});
+					ctx
+						.emitEvent({
+							address,
+							event: new Event.CurrentProgramSceneChanged(e),
+						})
+						.pipe(Effect.runFork);
 				});
 
 				ws.on("ConnectionError", () =>
@@ -184,6 +186,25 @@ export default Package.make({
 
 				yield* Effect.promise(() =>
 					connection.ws.call("SetCurrentProgramScene", { sceneName }),
+				);
+			},
+		});
+
+		ctx.schema("request.CreateInput", {
+			name: "Create Input",
+			type: "exec",
+			description: "Sets the current program scene in OBS.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
+				inputKind: c.in.data("inputKind", t.String, { name: "Input Kind" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const inputName = yield* getInput(io.inputName);
+				const inputKind = yield* getInput(io.inputKind);
+
+				yield* Effect.promise(() =>
+					connection.ws.call("CreateInput", { inputName, inputKind }),
 				);
 			},
 		});

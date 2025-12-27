@@ -1,11 +1,6 @@
 import { Option } from "effect";
 import { ContextMenu } from "@kobalte/core/context-menu";
-import {
-	type Graph,
-	IO,
-	Node,
-	type Schema,
-} from "@macrograph/project-domain/updated";
+import { type Graph, IO, Node, type Schema } from "@macrograph/project-domain";
 import { createElementBounds } from "@solid-primitives/bounds";
 import {
 	createEventListener,

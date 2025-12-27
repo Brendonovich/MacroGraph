@@ -1,7 +1,8 @@
-import { faker } from "@faker-js/faker/locale/en_AU";
-import { Graph, Node, Position, Realtime } from "@macrograph/server-domain";
-import { Presence } from "@macrograph/server-domain";
 import { Effect, Option, Scope, Stream, SubscriptionRef } from "effect";
+import { faker } from "@faker-js/faker/locale/en_AU";
+import type { Graph, Node } from "@macrograph/project-domain";
+import { type Position, Presence, Realtime } from "@macrograph/server-domain";
+
 import { getRealtimeConnection } from "./Realtime";
 
 const colours = [
@@ -50,22 +51,24 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 						Effect.map(Option.andThen((v) => v.auth)),
 					);
 
-					yield* SubscriptionRef.update(clients, (c) => ({
-						...c,
-						[connection.id]: {
-							name: auth.pipe(
-								Option.map((v) => v.email.split("@")[0]!),
-								Option.getOrElse(
-									() => `${faker.word.adjective()} ${faker.word.noun()}`,
+					yield* SubscriptionRef.modify(clients, (c) => [
+						null,
+						{
+							...c,
+							[connection.id]: {
+								name: auth.pipe(
+									Option.map((v) => v.email.split("@")[0]!),
+									Option.getOrElse(
+										() => `${faker.word.adjective()} ${faker.word.noun()}`,
+									),
 								),
-							),
-							colour: colours[Math.floor(Math.random() * 20)],
+								colour: colours[Math.floor(Math.random() * 20)],
+							},
 						},
-					}));
+					]);
 
 					yield* Scope.addFinalizer(
 						yield* Scope.Scope,
-
 						SubscriptionRef.update(clients, (s) => {
 							delete s[connection.id];
 							return { ...s };

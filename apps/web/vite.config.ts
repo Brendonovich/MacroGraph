@@ -20,7 +20,6 @@ export default defineConfig({
 		UnoCSS(),
 		Icons(),
 		basePackagesPlugin,
-		interfacePlugin,
 		solidStart({
 			ssr: true,
 			routeDir: "app",

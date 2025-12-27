@@ -56,6 +56,7 @@ const getAuthentication = Effect.gen(function* () {
 			"client-id": S.OptionFromUndefinedOr(S.String),
 		}),
 	);
+	console.log("headers", headers);
 	const sessionCookie = yield* HttpServerRequest.schemaCookies(
 		S.Struct({
 			[lucia().sessionCookieName]: S.OptionFromUndefinedOr(S.String),
@@ -66,6 +67,7 @@ const getAuthentication = Effect.gen(function* () {
 	let type: "session-web" | "session-desktop" | "mgu" | "server-jwt";
 
 	if (Option.isSome(headers.authorization)) {
+		yield* Effect.log("auth header found");
 		const value = headers.authorization.value;
 		const BEARER = "Bearer ";
 		if (!value.startsWith(BEARER)) return yield* new HttpApiError.BadRequest();
@@ -73,6 +75,7 @@ const getAuthentication = Effect.gen(function* () {
 		const bearerToken = value.slice(BEARER.length);
 
 		if (Option.isSome(headers["client-id"])) {
+			yield* Effect.log("client id found");
 			if (bearerToken.startsWith("mgu_")) {
 				type = "mgu";
 
@@ -91,6 +94,7 @@ const getAuthentication = Effect.gen(function* () {
 						),
 					);
 			} else {
+				yield* Effect.log("token", bearerToken);
 				const jwt = yield* Schema.decode(ServerAuthJWTFromRaw)(
 					Redacted.value(Redacted.make(bearerToken)),
 				).pipe(
@@ -257,7 +261,6 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 				function* () {
 					const db = yield* Database;
 					const session = yield* getAuthentication;
-					console.log({ session });
 
 					if (Option.isNone(session)) return Option.none();
 
@@ -280,7 +283,6 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 			"refreshCredential",
 			Effect.fn(
 				function* ({ path }) {
-					console.log({ path });
 					const db = yield* Database;
 
 					const providerConfig = AuthProviders()[path.providerId];
@@ -459,15 +461,13 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 										deviceSession.deviceCode,
 									),
 								);
-							await db()
-								.insert(Db.oauthSessions)
-								.values({
-									appId: deviceSession.appId,
-									userId: deviceSession.userId,
-									accessToken,
-									refreshToken,
-									expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-								});
+							await db.insert(Db.oauthSessions).values({
+								appId: deviceSession.appId,
+								userId: deviceSession.userId,
+								accessToken,
+								refreshToken,
+								expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+							});
 						}),
 					);
 

@@ -1,4 +1,4 @@
-import type { IO, Node } from "@macrograph/project-domain/updated";
+import type { IO, Node } from "@macrograph/project-domain";
 
 export type GraphTwoWayConnections = Record<
 	Node.Id,

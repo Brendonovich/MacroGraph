@@ -7,8 +7,10 @@
 		{ "path": "./packages/server-domain" },
 		{ "path": "./packages/server-backend" },
 		{ "path": "./packages/server-frontend" },
-		{ "path": "./apps/server" },
-		{ "path": "./apps/web" }
+		{ "path": "./packages/package-domain" },
+		{ "path": "./packages/package-ui" },
+		{ "path": "./packages/package-runtime" },
+		{ "path": "./apps/server" }
 	],
 	"compilerOptions": {
 		"plugins": [{ "name": "@effect/language-service" }]

@@ -3,22 +3,34 @@ import { CloudApiClient } from "@macrograph/project-runtime";
 import { ClientAuth, CloudAuth, Realtime } from "@macrograph/server-domain";
 
 import { getRealtimeConnection, RealtimeConnections } from "../Realtime";
+import { ServerRegistrationToken } from "../ServerRegistration";
 import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 
 export const ClientAuthRpcsLive = ClientAuth.Rpcs.toLayer(
 	Effect.gen(function* () {
 		const connections = yield* RealtimeConnections;
-		const cloud = yield* CloudApiClient.CloudApiClient;
+		const registrationToken = yield* ServerRegistrationToken;
 
 		return {
 			ClientLogin: Effect.fn(function* () {
 				const connection = yield* Realtime.Connection;
 				const mailbox = yield* Mailbox.make<ClientAuth.CloudLoginEvent>();
 
+				const cloud = yield* CloudApiClient.make({
+					auth: (yield* registrationToken.get).pipe(
+						Option.map((token) => ({
+							clientId: "macrograph-server",
+							token,
+						})),
+						Option.getOrUndefined,
+					),
+				});
+
 				yield* Effect.gen(function* () {
-					const data = yield* cloud
-						.createDeviceCodeFlow()
-						.pipe(Effect.catchAll(() => new CloudAuth.CloudApiError()));
+					const data = yield* cloud.createDeviceCodeFlow().pipe(
+						Effect.tapError(Effect.log),
+						Effect.catchAll(() => new CloudAuth.CloudApiError()),
+					);
 
 					yield* mailbox.offer({
 						type: "started",

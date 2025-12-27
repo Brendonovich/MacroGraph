@@ -48,7 +48,7 @@ function createNavSidebar() {
 
 	const [state, setState] = createSignal(isMobile ? null : get());
 
-	const lastState = createMemo((v) => {
+	const lastState = createMemo<string>((v) => {
 		return state() ?? v;
 	}, "graphs");
 

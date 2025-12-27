@@ -1,5 +1,5 @@
 import { RequestResolver } from "effect";
-import { Actor } from "@macrograph/project-domain/updated";
+import { Actor } from "@macrograph/project-domain";
 
 import * as ProjectRuntime from "./ProjectRuntime";
 

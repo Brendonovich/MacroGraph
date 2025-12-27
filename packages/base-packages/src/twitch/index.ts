@@ -55,19 +55,13 @@ type State = {
 	}>;
 };
 
-const buildCondition = (
-	def: SubscriptionTypeDefinition,
+const buildCondition = <T extends SubscriptionTypeDefinition>(
+	def: T,
 	accountId: string,
-): Record<string, string> => {
+): Record<keyof SubscriptionTypeDefinition["condition"], string> => {
 	return Object.fromEntries(
 		Object.keys(def.condition).map((key) => [key, accountId]),
-	);
-};
-
-const toVersionString = (
-	version: SubscriptionTypeDefinition["version"],
-): "beta" | "1" | "2" => {
-	return version === "beta" ? "beta" : (String(version) as "1" | "2");
+	) as any;
 };
 
 class RetryRequest extends Data.TaggedError("RetryRequest")<{}> {}
@@ -214,13 +208,13 @@ const Engine = PackageEngine.define<State>()({
 							helixClient.eventSub.createSubscription({
 								payload: {
 									type: def.type,
-									version: toVersionString(def.version),
+									version: def.version.toString(),
 									condition: buildCondition(def, accountId),
 									transport: {
 										method: "websocket",
 										session_id: firstEvent.payload.session.id,
 									},
-								},
+								} as any,
 							}),
 						),
 						{ concurrency: 2 },

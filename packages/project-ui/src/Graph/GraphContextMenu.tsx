@@ -1,4 +1,4 @@
-import type { Package, Schema } from "@macrograph/project-domain/updated";
+import type { Package, Schema } from "@macrograph/project-domain";
 import { focusRingClasses } from "@macrograph/ui";
 import { createContextProvider } from "@solid-primitives/context";
 import { createEventListener } from "@solid-primitives/event-listener";

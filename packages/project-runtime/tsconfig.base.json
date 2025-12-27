@@ -8,14 +8,15 @@
 		"skipLibCheck": true,
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
-		"composite": true,
 
 		/* Bundler mode */
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
-		"emitDeclarationOnly": true,
 		"isolatedModules": true,
 		"moduleDetection": "force",
+		"composite": true,
+		"outDir": "dist",
+		"emitDeclarationOnly": true,
 
 		/* Linting */
 		"strict": true,
@@ -23,7 +24,8 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"plugins": [{ "name": "@effect/language-service" }]
+		"plugins": [{ "name": "@effect/language-service" }],
 	},
-	"references": [{ "path": "../project-domain" }]
+	"include": ["src"],
+	"references": [{ "path": "../project-domain" }],
 }

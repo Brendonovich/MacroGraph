@@ -1,13 +1,9 @@
 import { Effect } from "effect";
 import {
-	DataInput,
-	DataOutput,
-	ExecInput,
-	ExecOutput,
+	IO,
 	type IOFunctionContext,
 	type NodeSchema,
 } from "@macrograph/project-domain";
-import { IO } from "@macrograph/project-domain/updated";
 
 export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 	"NodeIOActions",
@@ -28,7 +24,7 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 								name: options?.name,
 								variant: new IO.Exec(),
 							});
-							return new ExecOutput({ id });
+							return new IO.ExecOutput({ id });
 						},
 						data: (_id, type, options) => {
 							const id = IO.Id.make(_id);
@@ -37,7 +33,7 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 								name: options?.name,
 								variant: new IO.Data({ type: IO.T.serialize(type) }),
 							});
-							return new DataOutput({ id, type });
+							return new IO.DataOutput({ id, type });
 						},
 					},
 					in: {
@@ -48,7 +44,7 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 								name: options?.name,
 								variant: new IO.Exec(),
 							});
-							return new ExecInput({ id });
+							return new IO.ExecInput({ id });
 						},
 						data: (_id, type, options) => {
 							const id = IO.Id.make(_id);
@@ -57,7 +53,7 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 								name: options?.name,
 								variant: new IO.Data({ type: IO.T.serialize(type) }),
 							});
-							return new DataInput({ id, type });
+							return new IO.DataInput({ id, type });
 						},
 					},
 				} as IOFunctionContext);

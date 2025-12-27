@@ -4,9 +4,9 @@ import { RpcClient, RpcMiddleware } from "@effect/rpc";
 import { Effect } from "effect";
 import { Realtime, Rpcs, RpcsSerialization } from "@macrograph/server-domain";
 
-import { ProjectRealtime } from "./Realtime";
+import { ProjectRealtime } from "./Project/Realtime";
 
-export class ProjectRpc extends Effect.Service<ProjectRpc>()("ProjectRpc", {
+export class ServerRpc extends Effect.Service<ServerRpc>()("ServerRpc", {
 	accessors: true,
 	scoped: Effect.gen(function* () {
 		const realtime = yield* ProjectRealtime;

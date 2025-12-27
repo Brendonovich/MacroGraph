@@ -1,18 +1,16 @@
-import { RpcSerialization } from "@effect/rpc";
 import { Schema } from "effect";
 import { Graph, Node } from "@macrograph/project-domain";
 
-export type ServerEvent = Schema.Schema.Type<typeof ServerEvent>;
-export const ServerEvent = Schema.Union(
-	makeEvent("authChanged", {
-		data: Schema.NullOr(
-			Schema.Struct({ id: Schema.String, email: Schema.String }),
-		),
-	}),
-	makeEvent("connectedClientsChanged", {
+export class ConnectedClientsChanged extends Schema.TaggedClass<ConnectedClientsChanged>()(
+	"ConnectedClientsChanged",
+	{
 		data: Schema.Int,
-	}),
-	makeEvent("PresenceUpdated", {
+	},
+) {}
+
+export class PresenceUpdated extends Schema.TaggedClass<PresenceUpdated>()(
+	"PresenceUpdated",
+	{
 		data: Schema.Record({
 			key: Schema.String,
 			value: Schema.Struct({
@@ -33,17 +31,11 @@ export const ServerEvent = Schema.Union(
 				),
 			}),
 		}),
-	}),
+	},
+) {}
+
+export type ServerEvent = Schema.Schema.Type<typeof ServerEvent>;
+export const ServerEvent = Schema.Union(
+	ConnectedClientsChanged,
+	PresenceUpdated,
 );
-
-function makeEvent<S extends string, F extends Schema.Struct.Fields>(
-	type: S,
-	fields: F,
-) {
-	return Schema.Struct({
-		...fields,
-		type: Schema.Literal(type),
-	});
-}
-
-export const RpcsSerialization = RpcSerialization.layerJson;

@@ -12,8 +12,7 @@ import {
 import { UnknownException } from "effect/Cause";
 import type { Package as SDKPackage } from "@macrograph/package-sdk";
 import type {
-	ExecInput,
-	ExecOutput,
+	IO,
 	IOFunctionContext,
 	NodeSchema,
 } from "@macrograph/project-domain";
@@ -23,7 +22,7 @@ import {
 	Package,
 	ProjectEvent,
 	Schema,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 
 import { CloudApiClient } from "./CloudApi.ts";
 import * as CredentialsStore from "./CredentialsStore.ts";
@@ -69,7 +68,7 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 							schemas.set(Schema.Id.make(id), {
 								...schema,
 								io: (ctx: IOFunctionContext) => {
-									const baseIO: Array<ExecInput | ExecOutput> = [];
+									const baseIO: Array<IO.ExecInput | IO.ExecOutput> = [];
 									if (schema.type === "event") {
 										ctx.out.exec("exec");
 									} else if (schema.type === "exec") {

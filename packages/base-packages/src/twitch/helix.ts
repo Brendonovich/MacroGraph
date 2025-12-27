@@ -3,6 +3,22 @@ import { Schema as S } from "effect";
 
 import { EVENTSUB_CREATE_SUBSCRIPTION_BODY } from "./eventSub";
 
+export const EventSubTransport = S.Union(
+	S.Struct({
+		method: S.Literal("websocket"),
+		session_id: S.String,
+	}),
+	S.Struct({
+		method: S.Literal("conduit"),
+		conduit: S.String,
+	}),
+	S.Struct({
+		method: S.Literal("webhook"),
+		callback: S.String,
+		secret: S.String,
+	}),
+);
+
 export class HelixApi extends HttpApi.make("helix")
 	.prefix("/helix")
 	.add(
@@ -12,23 +28,7 @@ export class HelixApi extends HttpApi.make("helix")
 					.setPayload(
 						S.extend(
 							EVENTSUB_CREATE_SUBSCRIPTION_BODY,
-							S.Struct({
-								transport: S.Union(
-									S.Struct({
-										method: S.Literal("websocket"),
-										session_id: S.String,
-									}),
-									S.Struct({
-										method: S.Literal("conduit"),
-										conduit: S.String,
-									}),
-									S.Struct({
-										method: S.Literal("webhook"),
-										callback: S.String,
-										secret: S.String,
-									}),
-								),
-							}),
+							S.Struct({ transport: EventSubTransport }),
 						),
 					)
 					.addSuccess(

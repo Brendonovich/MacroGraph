@@ -1,11 +1,11 @@
 import { Chunk, Effect, Option, Stream, SubscriptionRef } from "effect";
 
-import { ProjectRpc } from "./Project/Rpc";
 import { ClientAuth } from "./ClientAuth";
+import { ServerRpc } from "./ServerRpc";
 
 export class AuthActions extends Effect.Service<AuthActions>()("AuthActions", {
-	effect: Effect.gen(function* () {
-		const rpc = yield* ProjectRpc.client;
+	scoped: Effect.gen(function* () {
+		const rpc = yield* ServerRpc.client;
 		const { jwt } = yield* ClientAuth;
 
 		return {
@@ -18,6 +18,7 @@ export class AuthActions extends Effect.Service<AuthActions>()("AuthActions", {
 					Effect.map(Chunk.get(0)),
 					Effect.map(Option.getOrThrow),
 				);
+				console.log({ status });
 				if (status.type !== "started")
 					throw new Error("Flow status is not started");
 
@@ -35,5 +36,5 @@ export class AuthActions extends Effect.Service<AuthActions>()("AuthActions", {
 			}).pipe(Effect.scoped),
 		};
 	}),
-	dependencies: [ProjectRpc.Default, ClientAuth.Default],
+	dependencies: [ServerRpc.Default, ClientAuth.Default],
 }) {}

@@ -4,7 +4,7 @@
 		".": "./src/index.ts"
 	},
 	"devDependencies": {
-		"effect": "^3.19.3"
+		"effect": "^3.19.13"
 	},
 	"peerDependencies": {
 		"effect": "^3.18"

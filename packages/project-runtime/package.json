@@ -2,18 +2,18 @@
 	"name": "@macrograph/project-runtime",
 	"type": "module",
 	"dependencies": {
-		"@effect/platform": "^0.92.1",
-		"@effect/rpc": "^0.71.1",
+		"@effect/platform": "^0.94.0",
+		"@effect/rpc": "^0.73.0",
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
 		"@macrograph/web-domain": "workspace:*",
-		"effect": "^3.19.3"
+		"effect": "^3.19.13"
 	},
 	"exports": {
 		".": "./src/index.ts"
 	},
 	"devDependencies": {
-		"@effect/vitest": "^0.26.0",
+		"@effect/vitest": "^0.27.0",
 		"vitest": "^4.0.8"
 	}
 }

@@ -1,26 +1,25 @@
-import { useEffectRuntime } from "@macrograph/package-sdk/ui";
+import { type ManagedRuntime, Scope } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Either from "effect/Either";
+import * as Exit from "effect/Exit";
+import {} from "@tanstack/query-core";
 import type {
 	MutateOptions,
 	QueryFunctionContext,
 	QueryKey,
 	SkipToken,
 	SolidMutationOptions,
-	UseMutationResult,
 	SolidQueryOptions,
+	UseMutationResult,
 	UseQueryResult,
 } from "@tanstack/solid-query";
 import {
-	skipToken,
 	useMutation as createMutation,
 	useQuery as createQuery,
+	skipToken,
 } from "@tanstack/solid-query";
-import { ManagedRuntime, Scope } from "effect";
-import * as Cause from "effect/Cause";
-import * as Effect from "effect/Effect";
-import * as Either from "effect/Either";
-import * as Exit from "effect/Exit";
-
-import { createEffect, onCleanup, onMount, type Accessor } from "solid-js";
+import type { Accessor } from "solid-js";
 
 type Override<TTargetA, TTargetB> = {
 	[AKey in keyof TTargetA]: AKey extends keyof TTargetB

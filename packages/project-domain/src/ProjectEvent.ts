@@ -1,12 +1,11 @@
 import * as S from "effect/Schema";
 
-import { Position } from "../types";
-import { Actor } from "./Actor";
 import * as Graph from "./Graph";
 import * as IO from "./IO";
 import * as Node from "./Node";
+import { Resource } from "./NodeSchema";
 import * as Package from "./Package";
-import * as Resource from "./Resource";
+import { Position } from "./types";
 
 export class NodeCreated extends S.TaggedClass<NodeCreated>()("NodeCreated", {
 	graph: Graph.Id,

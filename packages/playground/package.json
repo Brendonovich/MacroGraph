@@ -6,8 +6,8 @@
 	},
 	"dependencies": {
 		"@effect-atom/atom-solid": "workspace:*",
-		"@effect/platform": "^0.92.1",
-		"@effect/rpc": "^0.71.1",
+		"@effect/platform": "^0.94.0",
+		"@effect/rpc": "^0.73.0",
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/base-packages": "workspace:*",
 		"@macrograph/package-sdk": "workspace:*",
@@ -23,10 +23,10 @@
 		"@solid-primitives/mouse": "^2.0.19",
 		"@solid-primitives/platform": "^0.1.2",
 		"@solid-primitives/storage": "^2.1.4",
-		"@tanstack/query-core": "^5.90.5",
-		"@tanstack/solid-query": "^5.90.6",
+		"@tanstack/query-core": "^5.90.12",
+		"@tanstack/solid-query": "^5.90.15",
 		"cva": "1.0.0-beta.4",
-		"effect": "^3.19.3",
+		"effect": "^3.19.13",
 		"tsgo": "npm:@typescript/native-preview"
 	},
 	"devDependencies": {

@@ -1,30 +1,18 @@
-import { NodeSdk } from "@effect/opentelemetry";
 import {
 	FetchHttpClient,
 	type HttpApp,
 	HttpClient,
-	HttpLayerRouter,
 	HttpRouter,
 	HttpServerRequest,
 	HttpServerResponse,
 } from "@effect/platform";
 import type { Route } from "@effect/platform/HttpRouter";
-import { NodeContext } from "@effect/platform-node";
 import { RpcSerialization, RpcServer } from "@effect/rpc";
-import {
-	Context,
-	FiberRef,
-	Layer,
-	Mailbox,
-	Option,
-	PubSub,
-	Schema,
-	Stream,
-} from "effect";
+import { Context, FiberRef, Layer, Option, Schema, Stream } from "effect";
 import * as Effect from "effect/Effect";
 import { getCurrentFiber } from "effect/Fiber";
 import * as Packages from "@macrograph/base-packages";
-import { Package, type ProjectEvent } from "@macrograph/project-domain/updated";
+import { Package, type ProjectEvent } from "@macrograph/project-domain";
 import {
 	CloudApiClient,
 	CredentialsStore,
@@ -41,39 +29,22 @@ import {
 	RequestRpcs,
 	Rpcs,
 	RpcsSerialization,
-	type ServerEvent,
+	ServerEvent,
 } from "@macrograph/server-domain";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import * as Jose from "jose";
 
 import { ClientAuthJWTFromEncoded } from "./ClientAuth/ClientAuthJWT";
 import { ClientAuthRpcsLive } from "./ClientAuth/rpc";
 import { CloudRpcsLive } from "./CloudApi/rpc";
 import { CredentialsRpcsLive as CredentialRpcsLive } from "./Credentials";
-// import { GraphRpcsLive, Graphs } from "./Graph";
 import { JwtKeys } from "./JwtKeys";
 import { PresenceRpcsLive, PresenceState } from "./Presence";
 import { RealtimeConnections, RealtimePubSub } from "./Realtime";
 import { ServerPolicy } from "./ServerPolicy";
-import {
-	ServerRegistration,
-	ServerRegistrationToken,
-} from "./ServerRegistration";
+import { ServerRegistration } from "./ServerRegistration";
 
-const NodeSdkLive = NodeSdk.layer(() => ({
-	resource: { serviceName: "mg-server-backend" },
-	// Export span data to the console
-	spanProcessor: [
-		new BatchSpanProcessor(new OTLPTraceExporter()),
-		// new BatchSpanProcessor(new ConsoleSpanExporter()),
-	],
-}));
-
-export const DepsLive = Layer.mergeAll(NodeSdkLive).pipe(
-	Layer.provide(ServerRegistrationToken.Default),
-	Layer.provideMerge(NodeContext.layer),
-);
+export * from "./ServerConfig";
+export * from "./ServerRegistration";
 
 const RequestRpcsLive = RequestRpcs.toLayer(
 	Effect.gen(function* () {
@@ -243,11 +214,11 @@ export class Server extends Effect.Service<Server>()("Server", {
 							}),
 						);
 
-						const mailbox = yield* createEventStream;
-						while (true) {
-							const a = yield* mailbox.take;
-							yield* writer(JSON.stringify(a));
-						}
+						yield* createEventStream.pipe(
+							Effect.flatMap(
+								Stream.runForEach((e) => writer(JSON.stringify(e))),
+							),
+						);
 					}).pipe(
 						Effect.provide(
 							Realtime.Connection.context({
@@ -327,7 +298,6 @@ export class Server extends Effect.Service<Server>()("Server", {
 			),
 		),
 		Layer.effect(ProjectRuntime.Current, ProjectRuntime.make()),
-		Layer.succeed(CloudApiClient.BaseUrl, "http://localhost:4321"),
 	],
 }) {}
 
@@ -366,36 +336,10 @@ const createEventStream = Effect.gen(function* () {
 	const runtime = yield* ProjectRuntime.Current;
 	const realtimeConnection = yield* Realtime.Connection;
 
-	const eventQueue = yield* PubSub.unbounded<ServerEvent>();
-
-	const eventStream = Stream.fromPubSub(eventQueue);
-
 	const presence = yield* PresenceState;
 	yield* presence.registerToScope;
 
-	const numSubscriptionsStream = presence.changes.pipe(
-		Stream.map((v): ServerEvent => {
-			return {
-				type: "PresenceUpdated",
-				data: v,
-			};
-		}),
-	);
-
-	const mailbox = yield* Mailbox.make<
-		ServerEvent | ProjectEvent.ProjectEvent
-	>();
-
-	// const realtime = yield* RealtimePubSub;
-
-	// const realtimeStream = realtime.subscribe().pipe(
-	// 	Stream.filterMap(([id, item]) => {
-	// 		if (id !== realtimeClient.id) return Option.some(item);
-	// 		return Option.none();
-	// 	}),
-	// );
-
-	yield* Stream.mergeAll(
+	return Stream.mergeAll(
 		[
 			Stream.fromPubSub(runtime.events).pipe(
 				Stream.filter(
@@ -405,17 +349,17 @@ const createEventStream = Effect.gen(function* () {
 							e.actor.id === realtimeConnection.id.toString()
 						),
 				),
+				Stream.map(
+					(v): ServerEvent.ServerEvent | ProjectEvent.ProjectEvent => v,
+				),
 			),
-			// authStream,
-			// eventStream,
-			// numSubscriptionsStream,
-			// realtimeStream,
+			presence.changes.pipe(
+				Stream.map(
+					(v): ServerEvent.ServerEvent | ProjectEvent.ProjectEvent =>
+						new ServerEvent.PresenceUpdated({ data: v }),
+				),
+			),
 		],
 		{ concurrency: "unbounded" },
-	).pipe(
-		Stream.runForEach((i) => mailbox.offer(i)),
-		Effect.forkScoped,
 	);
-
-	return mailbox;
 });

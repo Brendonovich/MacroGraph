@@ -1,9 +1,10 @@
 import { Option } from "effect";
+import type { Graph } from "@macrograph/project-domain";
 import type { TabLayout } from "@macrograph/ui";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
-import { createSignal } from "solid-js";
+import { createSignal, type JSX } from "solid-js";
 import { produce, type StoreSetter } from "solid-js/store";
 
 import { GraphContextMenu, GraphView, ProjectActions, ProjectState } from "..";
@@ -17,6 +18,7 @@ export function makeGraphTabSchema(
 	setGraphCtxMenu: (
 		state: { open: false } | { open: true; position: { x: number; y: number } },
 	) => void,
+	Component?: (props: { graph: { id: Graph.Id } }) => JSX.Element,
 ): TabLayout.Schema<
 	TabState.GraphTab & {
 		graph: GraphState;
@@ -103,6 +105,7 @@ export function makeGraphTabSchema(
 							);
 						}}
 					/>
+					{Component && <Component graph={tab().graph} />}
 					<GraphContextMenu
 						packages={state.packages}
 						onSchemaClick={(schemaRef, position) => {

@@ -53,6 +53,7 @@ import {
 } from "./runtime";
 
 import "@macrograph/project-ui/styles.css";
+import { Package } from "@macrograph/project-domain";
 import { focusRingClasses } from "@macrograph/ui";
 import { cx } from "cva";
 import { ErrorBoundary } from "solid-js";
@@ -132,12 +133,27 @@ function Inner() {
 					() => import("@macrograph/base-packages/Settings"),
 				);
 
-				for (const p of project.packages) {
-					const getSettings = packageSettings.default[p.id];
-					if (!getSettings) continue;
+				const packageMeta = yield* Effect.promise(
+					() => import("@macrograph/base-packages/meta"),
+				);
+
+				// for (const p of project.packages) {
+				// 	const getSettings = packageSettings.default[p.id];
+				// 	if (!getSettings) continue;
+				// 	yield* packageClients.registerPackageClient(
+				// 		p.id,
+				// 		yield* Effect.promise(getSettings),
+				// 		packageMeta.default[.id],
+				// 	);
+				// }
+
+				for (const [id, getSettings] of Object.entries(
+					packageSettings.default,
+				)) {
 					yield* packageClients.registerPackageClient(
-						p.id,
+						Package.Id.make(id),
 						yield* Effect.promise(getSettings),
+						packageMeta.default[id],
 					);
 				}
 

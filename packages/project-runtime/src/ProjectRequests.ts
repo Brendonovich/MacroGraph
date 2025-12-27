@@ -12,7 +12,7 @@ import {
 	Project,
 	ProjectEvent,
 	Request,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 
 import * as ProjectRuntime from "./ProjectRuntime";
 import { requestResolverServices } from "./Requests";

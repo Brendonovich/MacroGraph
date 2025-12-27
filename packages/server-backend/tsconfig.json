@@ -13,7 +13,9 @@
 		"allowImportingTsExtensions": true,
 		"isolatedModules": true,
 		"moduleDetection": "force",
-		"noEmit": true,
+		"composite": true,
+		"outDir": "dist",
+		"emitDeclarationOnly": true,
 
 		/* Linting */
 		"strict": true,
@@ -22,7 +24,15 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"types": ["unplugin-icons/types/solid"]
+		"types": ["unplugin-icons/types/solid"],
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"references": [
+		{ "path": "../base-packages" },
+		{ "path": "../package-sdk" },
+		{ "path": "../project-domain" },
+		{ "path": "../project-runtime" },
+		{ "path": "../server-domain" },
+		{ "path": "../web-domain" },
+	],
 }

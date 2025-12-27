@@ -3,16 +3,16 @@ import { focusRingClasses } from "@macrograph/ui";
 import { cx } from "cva";
 import { createMemo, For, Show } from "solid-js";
 
-import IconLucideChevronDown from "~icons/lucide/chevron-down";
 import { Avatar } from "../Avatar";
+import { useEffectService } from "../EffectRuntime";
 import { useRealtimeContext } from "../Realtime";
-import { usePresenceContext } from "./Context";
+import { PresenceClients } from "./PresenceClients";
 
 export function ClientListDropdown() {
-	const presenceCtx = usePresenceContext();
+	const { presenceClients } = useEffectService(PresenceClients);
 	const realtimeCtx = useRealtimeContext();
 
-	const clientEntries = createMemo(() => Object.entries(presenceCtx.clients));
+	const clientEntries = createMemo(() => Object.entries(presenceClients));
 	const realtimeId = () => realtimeCtx.id().toString();
 
 	return (

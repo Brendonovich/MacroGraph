@@ -6,6 +6,7 @@ export class Credential extends Schema.Class<Credential>("Credential")({
 	displayName: Schema.NullOr(Schema.String),
 }) {}
 
-export class NoRegistrationError extends Schema.TaggedError<NoRegistrationError>(
-	"NoRegistrationError",
-)("NoRegistrationError", {}) {}
+export class FetchFailed extends Schema.TaggedError<FetchFailed>()(
+	"Credential/FetchFailed",
+	{},
+) {}

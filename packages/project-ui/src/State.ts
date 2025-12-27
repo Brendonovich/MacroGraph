@@ -16,7 +16,7 @@ import type {
 	Request,
 	Resource,
 	Schema,
-} from "@macrograph/project-domain/updated";
+} from "@macrograph/project-domain";
 import { createStore, reconcile } from "solid-js/store";
 
 import type { GraphTwoWayConnections } from "./Graph";

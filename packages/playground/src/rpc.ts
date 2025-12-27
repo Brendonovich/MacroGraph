@@ -1,6 +1,6 @@
 import { Rpc, RpcGroup, RpcTest } from "@effect/rpc";
 import { Effect, Schema as S } from "effect";
-import { Credential, Request } from "@macrograph/project-domain/updated";
+import { Credential, Request } from "@macrograph/project-domain";
 
 export const Rpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.GetProject),

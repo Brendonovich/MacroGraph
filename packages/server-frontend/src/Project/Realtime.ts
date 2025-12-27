@@ -1,7 +1,7 @@
 import { Socket } from "@effect/platform";
 import { BrowserSocket } from "@effect/platform-browser";
 import { Chunk, Effect, Option, Stream } from "effect";
-import type { ProjectEvent } from "@macrograph/project-domain/updated";
+import type { ProjectEvent } from "@macrograph/project-domain";
 import type { ServerEvent } from "@macrograph/server-domain";
 
 import { ClientAuth } from "../ClientAuth";
@@ -18,9 +18,7 @@ export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 
 			if (Option.isSome(_jwt)) params.set("jwt", _jwt.value);
 
-			const socket = yield* Socket.makeWebSocket(
-				`/api/realtime?${params}`,
-			).pipe(Effect.provide(BrowserSocket.layerWebSocketConstructor));
+			const socket = yield* Socket.makeWebSocket(`/api/realtime?${params}`);
 
 			const pull = yield* Stream.never.pipe(
 				Stream.pipeThroughChannel(Socket.toChannel(socket)),
@@ -28,7 +26,7 @@ export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 				Stream.map(
 					(v) =>
 						JSON.parse(v) as
-							| ServerEvent
+							| ServerEvent.ServerEvent
 							| ProjectEvent.ProjectEvent
 							| { type: "identify"; id: number; token: string },
 				),
@@ -46,12 +44,17 @@ export class ProjectRealtime extends Effect.Service<ProjectRealtime>()(
 			if (!("type" in firstEvent && firstEvent.type === "identify"))
 				throw new Error(`Invalid first event: ${firstEvent}`);
 
+			const events = yield* Stream.toPubSub(
+				Stream.fromPull(Effect.succeed(pull)),
+				{ capacity: "unbounded" },
+			);
+
 			return {
 				id: firstEvent.id,
 				token: firstEvent.token,
-				stream: Stream.fromPull(Effect.sync(() => pull)),
+				stream: () => Stream.fromPubSub(events).pipe(Stream.flattenTake),
 			};
 		}),
-		dependencies: [ClientAuth.Default],
+		dependencies: [ClientAuth.Default, BrowserSocket.layerWebSocketConstructor],
 	},
 ) {}

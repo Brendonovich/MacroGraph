@@ -1,17 +1,15 @@
 import { Button } from "@macrograph/ui";
 import {
 	action,
-	query,
 	createAsync,
+	query,
 	useAction,
 	useSearchParams,
 	useSubmission,
 } from "@solidjs/router";
 import { eq } from "drizzle-orm";
 import type { User } from "lucia";
-import { Show, Switch, untrack } from "solid-js";
-import { Match } from "solid-js";
-import { createSignal, onMount } from "solid-js";
+import { createSignal, Match, onMount, Show, Switch, untrack } from "solid-js";
 
 import { ensureAuthedOrRedirect } from "~/api";
 import Screenshot from "~/assets/App Logo.png";
@@ -34,7 +32,7 @@ const grantAccessAction = action(async (userCode: string) => {
 	const { user } = await ensureAuthedOrRedirect();
 
 	return await db().transaction(async (db) => {
-		const session = await db().query.serverRegistrationSessions.findFirst({
+		const session = await db.query.serverRegistrationSessions.findFirst({
 			where: eq(Db.serverRegistrationSessions.userCode, userCode),
 		});
 
@@ -64,8 +62,6 @@ export default function Test() {
 	const [searchParams] = useSearchParams<{
 		userCode?: string;
 	}>();
-
-	console.log({ ...searchParams });
 
 	const initialState = createAsync(
 		async () =>

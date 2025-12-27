@@ -1,33 +1,22 @@
 import { Effect, Option } from "effect";
 import { Dialog } from "@kobalte/core";
-import {
-	Button,
-	EffectButton,
-	useEffectRuntime,
-} from "@macrograph/package-sdk/ui";
+import { Button, EffectButton } from "@macrograph/package-sdk/ui";
 import {
 	ContextualSidebar,
-	ContextualSidebarContent,
 	CredentialsPage,
 	credentialsQueryOptions,
 	defineBasePaneTabController,
 	GraphContextMenu,
-	GraphsSidebar,
 	Header,
 	makeGraphTabSchema,
 	makePackageTabSchema,
 	NavSidebar,
-	PackagesSidebar,
 	type PaneState,
-	ProjectActions,
 	ProjectPaneLayoutView,
 	ProjectPaneTabView,
-	ProjectState,
 	refetchCredentialsMutationOptions,
 	SettingsLayout,
-	Sidebar,
 	type TabState,
-	useContextualSidebar,
 	useEditorKeybinds,
 	useNavSidebar,
 	ZoomedPaneWrapper,
@@ -37,21 +26,17 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query";
 import { cx } from "cva";
 import type { ValidComponent } from "solid-js";
-import {
-	type Accessor,
-	createSignal,
-	For,
-	Match,
-	Show,
-	Switch,
-} from "solid-js";
+import { type Accessor, createSignal, For, Show } from "solid-js";
 import { produce, type StoreSetter } from "solid-js/store";
 
 import { AuthActions } from "../Auth";
-import { useEffectQuery, useEffectService } from "../EffectRuntime";
+import { useEffectRuntime, useEffectService } from "../EffectRuntime";
+import { PresencePointer } from "../Graph/PresencePointer";
 import { type SettingsPage, useLayoutState } from "../LayoutState";
 import { ClientListDropdown } from "../Presence/ClientListDropdown";
-import { ProjectRpc } from "../Project/Rpc";
+import { PresenceClients } from "../Presence/PresenceClients";
+import { useRealtimeContext } from "../Realtime";
+import { ServerRpc } from "../ServerRpc";
 import ServerSettings from "./settings/server";
 
 export default function () {
@@ -164,7 +149,7 @@ const usePaneTabController = (
 	pane: Accessor<PaneState<SettingsPage>>,
 	updateTab: (_: StoreSetter<TabState.TabState<SettingsPage>>) => void,
 ) => {
-	const rpc = useEffectService(ProjectRpc.client);
+	const rpc = useEffectService(ServerRpc.client);
 	const [_, setGraphCtxMenu] = GraphContextMenu.useContext();
 
 	return defineBasePaneTabController(pane, {
@@ -179,6 +164,34 @@ const usePaneTabController = (
 			(state) => {
 				if (state.open) setGraphCtxMenu({ ...state, paneId: pane().id });
 				else setGraphCtxMenu(state);
+			},
+			(props) => {
+				const realtime = useRealtimeContext();
+				const presence = useEffectService(PresenceClients);
+
+				return (
+					<For each={Object.entries(presence.presenceClients)}>
+						{(item) => (
+							<Show
+								when={
+									Number(item[0]) !== realtime.id() &&
+									item[1].mouse?.graph === props.graph.id &&
+									item[1].mouse
+								}
+							>
+								{(mouse) => (
+									<PresencePointer
+										style={{
+											transform: `translate(${mouse().x}px, ${mouse().y}px)`,
+										}}
+										name={item[1].name}
+										colour={item[1].colour}
+									/>
+								)}
+							</Show>
+						)}
+					</For>
+				);
 			},
 		),
 		package: makePackageTabSchema(rpc.GetPackageSettings),
@@ -243,11 +256,12 @@ const usePaneTabController = (
 };
 
 function AuthSection() {
-	const rpc = useEffectService(ProjectRpc.client);
+	const rpc = useEffectService(ServerRpc.client);
+	const runtime = useEffectRuntime();
 
-	const user = useEffectQuery(() => ({
+	const user = useQuery(() => ({
 		queryKey: ["user"],
-		queryFn: () => rpc.GetUser(),
+		queryFn: () => rpc.GetUser().pipe(runtime.runPromise),
 	}));
 
 	return (

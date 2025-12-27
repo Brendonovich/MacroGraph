@@ -1,19 +1,21 @@
 import { Effect, Option } from "effect";
 import { EffectButton } from "@macrograph/package-sdk/ui";
-import { ProjectActions } from "@macrograph/project-ui";
+import { useQuery } from "@tanstack/solid-query";
 import { Show } from "solid-js";
 
-import { useEffectQuery, useEffectService } from "../../EffectRuntime";
+import { useEffectRuntime, useEffectService } from "../../EffectRuntime";
 import { MatchEffectQuery } from "../../effect-query/components";
-import { ProjectRpc } from "../../Project/Rpc";
+import { ServerRegistration } from "../../ServerRegistration";
+import { ServerRpc } from "../../ServerRpc";
 
 export default function Account() {
-	const rpc = useEffectService(ProjectRpc.client);
-	const actions = useEffectService(ProjectActions);
+	const rpc = useEffectService(ServerRpc.client);
+	const serverRegistration = useEffectService(ServerRegistration);
+	const runtime = useEffectRuntime();
 
-	const registration = useEffectQuery(() => ({
+	const registration = useQuery(() => ({
 		queryKey: ["server-registration"],
-		queryFn: () => rpc.GetServerRegistration(),
+		queryFn: () => rpc.GetServerRegistration().pipe(runtime.runPromiseExit),
 	}));
 
 	return (
@@ -31,7 +33,7 @@ export default function Account() {
 						fallback={
 							<EffectButton
 								onClick={() =>
-									actions.StartServerRegistration.pipe(
+									serverRegistration.start.pipe(
 										Effect.zipRight(
 											Effect.promise(() => registration.refetch()),
 										),

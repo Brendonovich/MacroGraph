@@ -1,10 +1,15 @@
 import { HttpServer } from "@effect/platform";
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import {
+	NodeContext,
+	NodeHttpServer,
+	NodeRuntime,
+} from "@effect/platform-node";
 import { Fiber, Layer, Option } from "effect";
 import * as Effect from "effect/Effect";
-import { DepsLive, Server } from "@macrograph/server-backend";
+import { Server, ServerConfigPersistence } from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
+import { SharedDepsLive } from "./deps";
 
 const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 	() => {
@@ -25,14 +30,25 @@ const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 	{ port: 5678, host: "0.0.0.0" },
 );
 
-Effect.gen(function* () {
-	const server = yield* Server;
+Layer.scopedDiscard(
+	Effect.gen(function* () {
+		const server = yield* Server;
 
-	return yield* Layer.launch(
-		server.pipe(HttpServer.serve(), Layer.provide(HMRAwareNodeHttpServerLayer)),
-	);
-}).pipe(
-	Effect.provide(Server.Default.pipe(Layer.provideMerge(DepsLive))),
+		return yield* Layer.launch(
+			server.pipe(
+				HttpServer.serve(),
+				Layer.provide(HMRAwareNodeHttpServerLayer),
+			),
+		);
+	}),
+).pipe(
+	Layer.provide(Server.Default),
+	Layer.provide(SharedDepsLive),
+	Layer.provide(
+		ServerConfigPersistence.jsonFile("./node_modules/server-state.json"),
+	),
+	Layer.provide(NodeContext.layer),
+	Layer.launch,
 	Effect.scoped,
 	NodeRuntime.runMain,
 );

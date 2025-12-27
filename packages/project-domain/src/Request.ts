@@ -1,6 +1,5 @@
 import * as S from "effect/Schema";
 
-import { Position } from "../types.ts";
 import * as Credential from "./Credential.ts";
 import * as Graph from "./Graph.ts";
 import * as IO from "./IO.ts";
@@ -9,6 +8,7 @@ import * as Package from "./Package.ts";
 import * as Project from "./Project.ts";
 import * as ProjectEvent from "./ProjectEvent.ts";
 import * as Schema from "./Schema.ts";
+import { Position } from "./types.ts";
 
 export class GetProject extends S.TaggedRequest<GetProject>()("GetProject", {
 	payload: {},

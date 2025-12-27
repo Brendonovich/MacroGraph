@@ -5,11 +5,16 @@ import {
 	HttpServerRequest,
 	HttpServerResponse,
 } from "@effect/platform";
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import {
+	NodeContext,
+	NodeHttpServer,
+	NodeRuntime,
+} from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { DepsLive, Server } from "@macrograph/server-backend";
+import { Server, ServerConfigPersistence } from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
+import { SharedDepsLive } from "./deps";
 
 Layer.unwrapEffect(
 	Effect.gen(function* () {
@@ -46,9 +51,11 @@ Layer.unwrapEffect(
 	}),
 ).pipe(
 	Layer.provide(Server.Default),
+	Layer.provide(SharedDepsLive),
+	Layer.provide(ServerConfigPersistence.jsonFile("./server-state.json")),
+	Layer.provide(NodeContext.layer),
 	Layer.provide(NodeHttpServer.layer(createServer, { port: 23456 })),
 	Layer.launch,
-	Effect.provide(DepsLive),
 	Effect.scoped,
 	NodeRuntime.runMain,
 );

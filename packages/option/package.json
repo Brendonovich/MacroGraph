@@ -14,6 +14,6 @@
 		"solid-js": "^1.9.10"
 	},
 	"dependencies": {
-		"@tanstack/solid-query": "^5.90.6"
+		"@tanstack/solid-query": "^5.90.15"
 	}
 }

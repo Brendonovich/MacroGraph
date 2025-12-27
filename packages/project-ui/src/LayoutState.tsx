@@ -1,4 +1,4 @@
-import type { Graph, Package } from "@macrograph/project-domain/updated";
+import type { Graph, Package } from "@macrograph/project-domain";
 import { PaneLayout, TabLayout } from "@macrograph/ui";
 import { createWritableMemo } from "@solid-primitives/memo";
 import "@total-typescript/ts-reset";

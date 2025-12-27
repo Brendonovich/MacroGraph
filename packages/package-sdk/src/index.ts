@@ -2,24 +2,22 @@ import type { Rpc, RpcGroup } from "@effect/rpc";
 import { Data, Effect, type Layer, type Schema, type Scope } from "effect";
 import type { UnknownException } from "effect/Cause";
 import {
-	type DataInput,
-	type DataOutput,
+	type Credential,
 	ExecutionContext,
+	IO,
 	type NodeExecutionContext,
 	type Resource,
 	type RunFunctionAvailableRequirements,
 	type SchemaDefinition,
 	type SchemaProperty,
 } from "@macrograph/project-domain";
-import { type Credential, IO } from "@macrograph/project-domain/updated";
 import type { CREDENTIAL } from "@macrograph/web-domain";
-import "@macrograph/project-domain";
 
 export * as DataTime from "effect/DateTime";
 export * as Option from "effect/Option";
 export { Resource } from "@macrograph/project-domain";
 
-export const getInput = <T extends IO.T.Any_>(ref: DataInput<T>) =>
+export const getInput = <T extends IO.T.Any_>(ref: IO.DataInput<T>) =>
 	Effect.flatMap(ExecutionContext, (ctx) =>
 		ctx.getInput(ref),
 	) satisfies Effect.Effect<any, any, RunFunctionAvailableRequirements>;
@@ -29,7 +27,7 @@ export const getInput = <T extends IO.T.Any_>(ref: DataInput<T>) =>
 // ) => Effect.flatMap(ExecutionContext, (ctx) => ctx.getProperty(property));
 
 export const setOutput = <T extends IO.T.Any_>(
-	ref: DataOutput<T>,
+	ref: IO.DataOutput<T>,
 	data: IO.T.Infer_<T>,
 ) =>
 	Effect.flatMap(ExecutionContext, (ctx) =>

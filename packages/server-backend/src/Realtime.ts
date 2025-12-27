@@ -8,10 +8,12 @@ export class RealtimePubSub extends Effect.Service<RealtimePubSub>()(
 	{
 		effect: Effect.gen(function* () {
 			const pubsub =
-				yield* PubSub.unbounded<[Realtime.ConnectionId, ServerEvent]>();
+				yield* PubSub.unbounded<
+					[Realtime.ConnectionId, ServerEvent.ServerEvent]
+				>();
 
 			return {
-				publish: Effect.fn(function* (v: (typeof ServerEvent)["Type"]) {
+				publish: Effect.fn(function* (v: ServerEvent.ServerEvent) {
 					const realtimeClient = yield* Realtime.Connection;
 
 					return yield* pubsub.publish([realtimeClient.id, v]);

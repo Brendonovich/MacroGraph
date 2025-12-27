@@ -1,5 +1,5 @@
 import { LoadingBlock, PromiseButton } from "@macrograph/package-sdk/ui";
-import type { Credential } from "@macrograph/project-domain/updated";
+import type { Credential } from "@macrograph/project-domain";
 import { queryOptions, type UseQueryResult } from "@tanstack/solid-query";
 import { For, Suspense } from "solid-js";
 
