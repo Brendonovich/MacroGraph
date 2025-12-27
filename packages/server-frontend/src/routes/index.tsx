@@ -152,6 +152,8 @@ const usePaneTabController = (
 ) => {
 	const rpc = useEffectService(ServerRpc.client);
 	const [_, setGraphCtxMenu] = GraphContextMenu.useContext();
+	const presence = useEffectService(PresenceClients);
+	const realtime = useRealtimeContext();
 
 	return defineBasePaneTabController(pane, {
 		graph: makeGraphTabSchema(
@@ -165,6 +167,26 @@ const usePaneTabController = (
 			(state) => {
 				if (state.open) setGraphCtxMenu({ ...state, paneId: pane().id });
 				else setGraphCtxMenu(state);
+			},
+			{
+				get remoteSelections() {
+					const graphCtx = useGraphContext();
+
+					return Object.entries(presence.presenceClients).flatMap(
+						([userId, data]) => {
+							if (Number(userId) === realtime.id()) return [];
+
+							if (data.selection?.graph === graphCtx.id())
+								return [
+									{
+										colour: data.colour,
+										nodes: new Set(data.selection?.nodes ?? []),
+									},
+								];
+							return [];
+						},
+					);
+				},
 			},
 			(props) => {
 				const graphCtx = useGraphContext();
@@ -185,8 +207,7 @@ const usePaneTabController = (
 					},
 				);
 
-				const realtime = useRealtimeContext();
-				const presence = useEffectService(PresenceClients);
+				const graphCtx = useGraphContext();
 
 				return (
 					<For each={Object.entries(presence.presenceClients)}>

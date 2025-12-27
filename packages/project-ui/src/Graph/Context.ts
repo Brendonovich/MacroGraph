@@ -1,4 +1,4 @@
-import type { IO } from "@macrograph/project-domain";
+import type { Graph, IO } from "@macrograph/project-domain";
 import type { NullableBounds } from "@solid-primitives/bounds";
 import { ReactiveMap } from "@solid-primitives/map";
 import { type Accessor, createContext, useContext } from "solid-js";
@@ -7,10 +7,12 @@ export const createGraphContext = (
 	bounds: Accessor<Readonly<NullableBounds>>,
 	translate: Accessor<{ x: number; y: number } | undefined>,
 	ref: Accessor<HTMLDivElement | null>,
+	id: Accessor<Graph.Id>,
 ) => {
 	const ioPositions = new ReactiveMap<IO.RefString, { x: number; y: number }>();
 
 	return {
+		id,
 		ref,
 		ioPositions,
 		get bounds() {
