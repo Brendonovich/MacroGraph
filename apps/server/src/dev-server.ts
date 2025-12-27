@@ -4,8 +4,9 @@ import {
 	NodeHttpServer,
 	NodeRuntime,
 } from "@effect/platform-node";
-import { Fiber, Layer, Option } from "effect";
+import { Config, Fiber, Layer, Option } from "effect";
 import * as Effect from "effect/Effect";
+import { CloudApiClient } from "@macrograph/project-runtime";
 import { Server, ServerConfigPersistence } from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
@@ -46,6 +47,12 @@ Layer.scopedDiscard(
 	Layer.provide(SharedDepsLive),
 	Layer.provide(
 		ServerConfigPersistence.jsonFile("./node_modules/server-state.json"),
+	),
+	Layer.effect(
+		CloudApiClient.BaseUrl,
+		Config.string("MG_CLOUD_BASE_URL").pipe(
+			Config.withDefault("http://localhost:4321"),
+		),
 	),
 	Layer.provide(NodeContext.layer),
 	Layer.launch,

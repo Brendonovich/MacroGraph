@@ -38,7 +38,6 @@ export const SharedDepsLive = CloudApiClient.layer().pipe(
 		Layer.mergeAll(
 			NodeSdkLive,
 			FetchHttpClient.layer,
-			Layer.succeed(CloudApiClient.BaseUrl, "http://localhost:4321"),
 			ServerRegistrationToken.layerServerConfig.pipe(
 				Layer.provide(ServerConfig.ServerConfig.Default),
 			),
