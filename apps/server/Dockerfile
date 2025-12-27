@@ -10,7 +10,7 @@ WORKDIR /app
 COPY . ./
 
 # Install dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 WORKDIR apps/server
 
