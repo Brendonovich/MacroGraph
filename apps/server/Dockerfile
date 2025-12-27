@@ -10,12 +10,12 @@ WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY patches patches
 
-RUN pnpm fetch --prod
+RUN pnpm fetch
 
 COPY . ./
 
 # Install dependencies
-RUN pnpm install -r --offline --prod
+RUN pnpm install -r --offline
 
 WORKDIR apps/server
 

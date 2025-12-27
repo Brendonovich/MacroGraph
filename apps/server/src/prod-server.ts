@@ -64,10 +64,14 @@ Layer.unwrapEffect(
 ).pipe(
 	Layer.provide(Server.Default),
 	Layer.provide(SharedDepsLive),
-	Layer.provide(ServerConfigPersistence.jsonFile("./server-state.json")),
-	Layer.effect(
-		CloudApiClient.BaseUrl,
-		Effect.map(ServerEnv, (e) => e.cloudBaseUrl),
+	Layer.provide(
+		Layer.mergeAll(
+			ServerConfigPersistence.jsonFile("./server-state.json"),
+			Layer.effect(
+				CloudApiClient.BaseUrl,
+				Effect.map(ServerEnv, (e) => e.cloudBaseUrl),
+			),
+		),
 	),
 	Layer.provide(Layer.mergeAll(NodeContext.layer, ServerEnv.Default)),
 	Layer.provide(NodeHttpServer.layer(createServer, { port: 23456 })),
