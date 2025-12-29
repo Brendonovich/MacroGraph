@@ -1,5 +1,5 @@
 import { NodeSdk } from "@effect/opentelemetry";
-import { NodeHttpClient } from "@effect/platform-node";
+import { FetchHttpClient } from "@effect/platform";
 import { Effect, Layer, Option } from "effect";
 import { CloudApiClient } from "@macrograph/project-runtime";
 import {
@@ -37,7 +37,7 @@ export const SharedDepsLive = CloudApiClient.layer().pipe(
 	Layer.provideMerge(
 		Layer.mergeAll(
 			NodeSdkLive,
-			NodeHttpClient.layer,
+			FetchHttpClient.layer,
 			ServerRegistrationToken.layerServerConfig.pipe(
 				Layer.provide(ServerConfig.ServerConfig.Default),
 			),
