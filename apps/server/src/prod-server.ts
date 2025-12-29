@@ -22,7 +22,7 @@ class ServerEnv extends Effect.Service<ServerEnv>()(
 	{
 		effect: Config.all({
 			cloudBaseUrl: Config.string("MG_CLOUD_BASE_URL").pipe(
-				Config.withDefault("https://macrograph.app"),
+				Config.withDefault("https://www.macrograph.app"),
 			),
 		}),
 	},

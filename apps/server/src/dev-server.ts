@@ -48,10 +48,12 @@ Layer.scopedDiscard(
 	Layer.provide(
 		ServerConfigPersistence.jsonFile("./node_modules/server-state.json"),
 	),
-	Layer.effect(
-		CloudApiClient.BaseUrl,
-		Config.string("MG_CLOUD_BASE_URL").pipe(
-			Config.withDefault("http://localhost:4321"),
+	Layer.provide(
+		Layer.effect(
+			CloudApiClient.BaseUrl,
+			Config.string("MG_CLOUD_BASE_URL").pipe(
+				Config.withDefault("https://www.macrograph.app"),
+			),
 		),
 	),
 	Layer.provide(NodeContext.layer),

@@ -46,7 +46,7 @@ importers:
         version: 1.9.10
       tsgo:
         specifier: npm:@typescript/native-preview
-        version: '@typescript/native-preview@7.0.0-dev.20251225.1'
+        version: '@typescript/native-preview@7.0.0-dev.20251229.1'
       turbo:
         specifier: ^2.5.4
         version: 2.5.4
@@ -112,10 +112,10 @@ importers:
         version: 0.15.3(solid-js@1.9.10)
       '@solidjs/start':
         specifier: npm:@brendonovich/solidjs__start@0.0.1
-        version: '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
+        version: '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.9.8))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
       '@t3-oss/env-core':
         specifier: ^0.6.1
-        version: 0.6.1(typescript@5.7.3)(zod@3.25.36)
+        version: 0.6.1(typescript@5.8.3)(zod@3.25.36)
       '@tanstack/solid-query':
         specifier: ^5.90.15
         version: 5.90.15(solid-js@1.9.10)
@@ -142,7 +142,7 @@ importers:
         version: link:../../crates/tauri-plugin-midi
       valibot:
         specifier: ^0.37.0
-        version: 0.37.0(typescript@5.7.3)
+        version: 0.37.0(typescript@5.8.3)
       vinxi:
         specifier: 0.5.6
         version: 0.5.6(@planetscale/database@1.19.0)(db0@0.3.4(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(ioredis@5.6.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -173,7 +173,7 @@ importers:
         version: 3.4.16
       unplugin-auto-import:
         specifier: ^0.17.5
-        version: 0.17.8(rollup@4.52.4)
+        version: 0.17.8(rollup@4.52.5)
       unplugin-icons:
         specifier: ^0.18.5
         version: 0.18.5(@vue/compiler-sfc@3.5.22)
@@ -373,7 +373,7 @@ importers:
         version: 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
       '@storybook/addon-interactions':
         specifier: ^8.2.7
-        version: 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+        version: 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@storybook/addon-links':
         specifier: ^8.2.7
         version: 8.2.7(react@18.2.0)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
@@ -391,7 +391,7 @@ importers:
         version: 1.0.0-beta.2(babel-preset-solid@1.9.9(@babel/core@7.28.3)(solid-js@1.9.10))(solid-js@1.9.10)
       storybook-solidjs-vite:
         specifier: ^1.0.0-beta.7
-        version: 1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(esbuild@0.21.5)(rollup@4.52.5)(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite-plugin-solid@2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+        version: 1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(esbuild@0.21.5)(rollup@4.52.5)(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite-plugin-solid@2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       typescript:
         specifier: ^5.2.2
         version: 5.7.3
@@ -475,13 +475,13 @@ importers:
         version: 0.15.3(solid-js@1.9.10)
       '@solidjs/start':
         specifier: https://pkg.pr.new/@solidjs/start@bed6215
-        version: https://pkg.pr.new/@solidjs/start@bed6215(@testing-library/jest-dom@6.4.8)(crossws@0.4.1(srvx@0.9.8))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+        version: https://pkg.pr.new/@solidjs/start@bed6215(@testing-library/jest-dom@6.4.8)(crossws@0.4.1(srvx@0.8.16))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@solidjs/start-nitro-v2-plugin':
         specifier: npm:@brendonovich/solidjs__start-nitro-v2-plugin@0.0.0
         version: '@brendonovich/solidjs__start-nitro-v2-plugin@0.0.0(@planetscale/database@1.19.0)(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0))(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)'
       '@t3-oss/env-core':
         specifier: ^0.6.1
-        version: 0.6.1(typescript@5.8.3)(zod@3.25.36)
+        version: 0.6.1(typescript@5.7.3)(zod@3.25.36)
       '@tanstack/solid-query':
         specifier: ^5.90.15
         version: 5.90.15(solid-js@1.9.10)
@@ -502,7 +502,7 @@ importers:
         version: 1.2.2
       cva:
         specifier: 1.0.0-beta.4
-        version: 1.0.0-beta.4(typescript@5.8.3)
+        version: 1.0.0-beta.4(typescript@5.7.3)
       dotenv:
         specifier: ^16.4.7
         version: 16.5.0
@@ -550,13 +550,13 @@ importers:
         version: 2.5.5
       unocss:
         specifier: ^66.1.1
-        version: 66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))
+        version: 66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.7.3))
       unstorage:
         specifier: ^1.13.1
         version: 1.16.0(@planetscale/database@1.19.0)(db0@0.3.4(drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@planetscale/database@1.19.0)(@types/react@18.2.73)(pg@8.13.1)(postgres@3.4.5)(react@18.2.0)))(ioredis@5.6.1)
       valibot:
         specifier: ^0.37.0
-        version: 0.37.0(typescript@5.8.3)
+        version: 0.37.0(typescript@5.7.3)
       vite:
         specifier: ^7.1.10
         version: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -596,16 +596,16 @@ importers:
         version: 4.19.2
       unocss-preset-animations:
         specifier: ^1.2.1
-        version: 1.2.1(@unocss/preset-wind3@66.1.1)(unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3)))
+        version: 1.2.1(@unocss/preset-wind3@66.1.1)(unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.7.3)))
       unocss-preset-primitives:
         specifier: 0.0.2-beta.1
         version: 0.0.2-beta.1
       unocss-preset-scrollbar:
         specifier: ^3.2.0
-        version: 3.2.0(unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3)))
+        version: 3.2.0(unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.7.3)))
       unplugin-auto-import:
         specifier: ^0.17.8
-        version: 0.17.8(rollup@4.52.5)
+        version: 0.17.8(rollup@4.52.4)
       unplugin-fonts:
         specifier: ^1.3.1
         version: 1.3.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
@@ -1172,7 +1172,7 @@ importers:
     devDependencies:
       tsgo:
         specifier: npm:@typescript/native-preview
-        version: '@typescript/native-preview@7.0.0-dev.20251225.1'
+        version: '@typescript/native-preview@7.0.0-dev.20251229.1'
       unplugin-icons:
         specifier: ^0.18.5
         version: 0.18.5(@vue/compiler-sfc@3.5.22)
@@ -1392,7 +1392,7 @@ importers:
         version: 3.19.13
       tsgo:
         specifier: npm:@typescript/native-preview
-        version: '@typescript/native-preview@7.0.0-dev.20251225.1'
+        version: '@typescript/native-preview@7.0.0-dev.20251229.1'
     devDependencies:
       '@total-typescript/ts-reset':
         specifier: ^0.4.2
@@ -6132,43 +6132,43 @@ packages:
     resolution: {integrity: sha512-07ny+LHRzQXepkGg6w0mFY41fVUNBrL2Roj/++7V1txKugfjm/Ci/qSND03r2RhlJhJYMcTn9AhhSSqQp0Ysyw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-YyjUjsQzJgx48BxtDQ40AfOdXexxcdVGNVA1m5pbuZeb4SwpKoRHy9eBq/QhPDNQApZtQB5RuEb5/X8lfTeaQw==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-AVo6J3Lrh0v900q9QdTXtzcOdKPuAuZ7U2hUEv/H6+yFoBcvrebRxsCbCuzBxqr8/RhIsE4Ue9m9RvbqRKNJTA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-GPQ/Xm5FNGoDYm0+BeReBrCvdyUrTP1ZSBqHGR+lkKBmSrAfwaaflGis31TPjsBiXg/MgvFxVNAcYh9lJOjueA==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-+wtv9YvKYH1hjoj+5Ixc6aCaarUkPL5hSRtW1H0RRweoEnxU7O/3+/qr57W5NQ/mkQLFPeboOG7oUM1zW/X/Yg==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-n6RAbCr7JwdwdXJZsWqa9A+lz6CFjHJ24JeUy3xDFLw5N2kIDoINpAPS3qILsChBuMKwSKNug2tNF0Us4Pf2qg==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-e+RN9DdKJEOU7LQV8XcgxKwHaKX5V2eYDabJTcaRF1zan9C1YKB7tOVXC9iXmwLHhybOujr4yu8RI/gGb2cxcw==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-N/syQPMvfboRiC8YEwSMqqN0d5HK/ha3ITahh5jW8LA+3EoPGygWnDVvlaQubV7Pwm/K9vvf9O7mMS1tAOo1tA==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-ujbKUXIUcZwE8fHI1Ba4Fc04vSDFn7qZ6pBxmjDzDUJeYig+MQlIyQbyi3LCVhwSKklCgdDCUg1b6nf2Q5ZKhA==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-mG3I+Gr6Htgvz8Go7jG+GlEnML6bIznbk0O9v1dtLrBOgKG9LqGPp3mjRkLGD54yWeE0GW2EWOFNfmnB44tumg==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-/gW7OMxYU2O7fFV2qMwkA/d9gHFk1po+ufFucB719eunn84MtxHxO6SyJoK+nGlKPYRFMVAniB+0JLQlG2j4eg==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-+kJtJ0HQXqBmzKdQRSe+EUTxHccoME9j3x6FYMInPpk2jsZgiVmnRc7MsaUSoHb6GhgFMF0aGSNIcw3QfgJ/gg==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-zRXc+em8zA6VR3a0evJCW3FaCvBdxt/vCQeWjnA8fTdnCaQR7NHzA9qGECgcRnBLmbzo18sjdQ35QtzIV/xFBg==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-e0r08Y6Yps8x0kw3IfiJ8R2afyqIupVvzaxhydKtR0bVNhA/HbVCLYNEB7UmjRS3sWqGYVA+GxegMpQKryrfog==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-Z/sAzzAQTX7xgo0oQ7ow4ghvbvP/bbwNJfZNveFi66LXi3Y1r92dMe7M9y03U/aCUkmKoHKHzRZcfkkFtlO/hQ==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20251225.1':
-    resolution: {integrity: sha512-vb+1x8j1uRG6hxKWJ3I8XDuq8FvQw0qTDPOQK/DtBZOdoWDFDWdmvFgGQwJ6h2se/W0x31Y4r+SFxj9B/uzgTA==}
+  '@typescript/native-preview@7.0.0-dev.20251229.1':
+    resolution: {integrity: sha512-hjACA2wU89fwpTn3MNFFnRMtMUZfqnSsyHQCQzSF39d+vahzqVrWvBpBZRO4TaSKYot4Bbi9Bu3BHaZKpnlIlA==}
     hasBin: true
 
   '@ungap/structured-clone@1.2.0':
@@ -11263,8 +11263,8 @@ packages:
     resolution: {integrity: sha512-iS857PdOEy/y3wlM3yRp+6SNQQ6xU0mmZcwRSriqk+et/cwWAtwmIGf6WkoDN2EK/AMdCO/dfXzIwi+rFMrjjQ==}
     engines: {node: '>=14.0'}
 
-  undici@5.28.4:
-    resolution: {integrity: sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==}
+  undici@5.29.0:
+    resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
     engines: {node: '>=14.0'}
 
   undici@7.16.0:
@@ -12308,7 +12308,7 @@ snapshots:
   '@actions/http-client@2.2.1':
     dependencies:
       tunnel: 0.0.6
-      undici: 5.28.4
+      undici: 5.29.0
 
   '@adobe/css-tools@4.4.0': {}
 
@@ -13239,7 +13239,7 @@ snapshots:
       - xml2js
       - yaml
 
-  '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(crossws@0.4.1(srvx@0.8.16))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
+  '@brendonovich/solidjs__start@0.0.1(@testing-library/jest-dom@6.4.8)(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(crossws@0.4.1(srvx@0.9.8))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)':
     dependencies:
       '@babel/core': 7.28.3
       '@babel/traverse': 7.28.3
@@ -13253,7 +13253,7 @@ snapshots:
       es-module-lexer: 1.7.0
       esbuild: 0.25.11
       fast-glob: 3.3.3
-      h3: 2.0.0-beta.4(crossws@0.4.1(srvx@0.8.16))
+      h3: 2.0.0-beta.4(crossws@0.4.1(srvx@0.9.8))
       html-to-image: 1.11.13
       micromatch: 4.0.8
       path-to-regexp: 8.3.0
@@ -13268,7 +13268,7 @@ snapshots:
       terracotta: 1.0.6(solid-js@1.9.10)
       vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       vite-plugin-solid: 2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
-      vitest: 3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
+      vitest: 3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
     transitivePeerDependencies:
       - '@edge-runtime/vm'
       - '@testing-library/jest-dom'
@@ -15446,7 +15446,7 @@ snapshots:
     dependencies:
       solid-js: 1.9.10
 
-  '@solidjs/start@https://pkg.pr.new/@solidjs/start@bed6215(@testing-library/jest-dom@6.4.8)(crossws@0.4.1(srvx@0.9.8))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@solidjs/start@https://pkg.pr.new/@solidjs/start@bed6215(@testing-library/jest-dom@6.4.8)(crossws@0.4.1(srvx@0.8.16))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       '@babel/core': 7.28.3
       '@babel/traverse': 7.28.3
@@ -15461,7 +15461,7 @@ snapshots:
       es-module-lexer: 1.7.0
       esbuild: 0.25.11
       fast-glob: 3.3.3
-      h3: 2.0.1-rc.4(crossws@0.4.1(srvx@0.9.8))
+      h3: 2.0.1-rc.4(crossws@0.4.1(srvx@0.8.16))
       html-to-image: 1.11.13
       micromatch: 4.0.8
       path-to-regexp: 8.3.0
@@ -15548,11 +15548,11 @@ snapshots:
       '@storybook/global': 5.0.0
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
 
-  '@storybook/addon-interactions@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/addon-interactions@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/instrumenter': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
-      '@storybook/test': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/test': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       polished: 4.3.1
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       ts-dedent: 2.2.0
@@ -15715,12 +15715,12 @@ snapshots:
       react-dom: 18.3.1(react@18.2.0)
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
 
-  '@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       '@storybook/csf': 0.1.11
       '@storybook/instrumenter': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
       '@testing-library/dom': 10.1.0
-      '@testing-library/jest-dom': 6.4.5(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@testing-library/jest-dom': 6.4.5(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.1.0)
       '@vitest/expect': 1.6.0
       '@vitest/spy': 1.6.0
@@ -15973,7 +15973,7 @@ snapshots:
       lz-string: 1.5.0
       pretty-format: 27.5.1
 
-  '@testing-library/jest-dom@6.4.5(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@testing-library/jest-dom@6.4.5(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       '@adobe/css-tools': 4.4.0
       '@babel/runtime': 7.24.1
@@ -16316,36 +16316,36 @@ snapshots:
       '@typescript-eslint/types': 5.62.0
       eslint-visitor-keys: 3.4.3
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251225.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251229.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251225.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251229.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251225.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251229.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20251225.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251229.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20251225.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251229.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251225.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251229.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20251225.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251229.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20251225.1':
+  '@typescript/native-preview@7.0.0-dev.20251229.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20251225.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20251225.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20251225.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20251225.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20251225.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20251225.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20251225.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20251229.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20251229.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20251229.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20251229.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20251229.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20251229.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20251229.1
 
   '@ungap/structured-clone@1.2.0': {}
 
@@ -16354,16 +16354,6 @@ snapshots:
       '@unocss/core': 66.1.1
       '@unocss/reset': 66.1.1
       '@unocss/vite': 66.1.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.7.3))
-    optionalDependencies:
-      vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
-    transitivePeerDependencies:
-      - vue
-
-  '@unocss/astro@66.1.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))':
-    dependencies:
-      '@unocss/core': 66.1.1
-      '@unocss/reset': 66.1.1
-      '@unocss/vite': 66.1.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))
     optionalDependencies:
       vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
     transitivePeerDependencies:
@@ -16412,17 +16402,6 @@ snapshots:
       gzip-size: 6.0.0
       sirv: 3.0.1
       vue-flow-layout: 0.1.1(vue@3.5.22(typescript@5.7.3))
-    transitivePeerDependencies:
-      - vue
-
-  '@unocss/inspector@66.1.1(vue@3.5.22(typescript@5.8.3))':
-    dependencies:
-      '@unocss/core': 66.1.1
-      '@unocss/rule-utils': 66.1.1
-      colorette: 2.0.20
-      gzip-size: 6.0.0
-      sirv: 3.0.1
-      vue-flow-layout: 0.1.1(vue@3.5.22(typescript@5.8.3))
     transitivePeerDependencies:
       - vue
 
@@ -16532,21 +16511,6 @@ snapshots:
       '@unocss/config': 66.1.1
       '@unocss/core': 66.1.1
       '@unocss/inspector': 66.1.1(vue@3.5.22(typescript@5.7.3))
-      chokidar: 3.6.0
-      magic-string: 0.30.21
-      pathe: 2.0.3
-      tinyglobby: 0.2.15
-      unplugin-utils: 0.2.4
-      vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
-    transitivePeerDependencies:
-      - vue
-
-  '@unocss/vite@66.1.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))':
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@unocss/config': 66.1.1
-      '@unocss/core': 66.1.1
-      '@unocss/inspector': 66.1.1(vue@3.5.22(typescript@5.8.3))
       chokidar: 3.6.0
       magic-string: 0.30.21
       pathe: 2.0.3
@@ -16879,12 +16843,6 @@ snapshots:
       '@vue/compiler-ssr': 3.5.22
       '@vue/shared': 3.5.22
       vue: 3.5.22(typescript@5.7.3)
-
-  '@vue/server-renderer@3.5.22(vue@3.5.22(typescript@5.8.3))':
-    dependencies:
-      '@vue/compiler-ssr': 3.5.22
-      '@vue/shared': 3.5.22
-      vue: 3.5.22(typescript@5.8.3)
 
   '@vue/shared@3.5.22': {}
 
@@ -19039,14 +18997,14 @@ snapshots:
       ufo: 1.6.1
       uncrypto: 0.1.3
 
-  h3@2.0.0-beta.4(crossws@0.4.1(srvx@0.8.16)):
+  h3@2.0.0-beta.4(crossws@0.4.1(srvx@0.9.8)):
     dependencies:
       cookie-es: 2.0.0
       fetchdts: 0.1.7
       rou3: 0.7.12
       srvx: 0.8.16
     optionalDependencies:
-      crossws: 0.4.1(srvx@0.8.16)
+      crossws: 0.4.1(srvx@0.9.8)
 
   h3@2.0.1-rc.2(crossws@0.4.1(srvx@0.8.16)):
     dependencies:
@@ -19057,12 +19015,12 @@ snapshots:
     optionalDependencies:
       crossws: 0.4.1(srvx@0.8.16)
 
-  h3@2.0.1-rc.4(crossws@0.4.1(srvx@0.9.8)):
+  h3@2.0.1-rc.4(crossws@0.4.1(srvx@0.8.16)):
     dependencies:
       rou3: 0.7.12
       srvx: 0.9.8
     optionalDependencies:
-      crossws: 0.4.1(srvx@0.9.8)
+      crossws: 0.4.1(srvx@0.8.16)
 
   hanji@0.0.5:
     dependencies:
@@ -21930,14 +21888,14 @@ snapshots:
     dependencies:
       internal-slot: 1.0.7
 
-  storybook-solidjs-vite@1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(esbuild@0.21.5)(rollup@4.52.5)(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite-plugin-solid@2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
+  storybook-solidjs-vite@1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(esbuild@0.21.5)(rollup@4.52.5)(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite-plugin-solid@2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
     dependencies:
       '@storybook/builder-vite': 10.2.0-alpha.9(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@storybook/types': 9.0.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
       magic-string: 0.30.19
       solid-js: 1.9.10
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
-      storybook-solidjs: 1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
+      storybook-solidjs: 1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
       vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
       vite-plugin-solid: 2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
     transitivePeerDependencies:
@@ -21952,7 +21910,7 @@ snapshots:
       babel-preset-solid: 1.9.9(@babel/core@7.28.3)(solid-js@1.9.10)
       solid-js: 1.9.10
 
-  storybook-solidjs@1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))):
+  storybook-solidjs@1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))):
     dependencies:
       '@babel/standalone': 7.28.5
       '@storybook/docs-tools': 9.0.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
@@ -21964,7 +21922,7 @@ snapshots:
       solid-js: 1.9.10
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
     optionalDependencies:
-      '@storybook/test': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/test': 8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
 
   storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)):
     dependencies:
@@ -22419,7 +22377,7 @@ snapshots:
     dependencies:
       '@fastify/busboy': 2.1.1
 
-  undici@5.28.4:
+  undici@5.29.0:
     dependencies:
       '@fastify/busboy': 2.1.1
 
@@ -22651,12 +22609,6 @@ snapshots:
     optionalDependencies:
       '@unocss/preset-wind3': 66.1.1
 
-  unocss-preset-animations@1.2.1(@unocss/preset-wind3@66.1.1)(unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))):
-    dependencies:
-      unocss: 66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))
-    optionalDependencies:
-      '@unocss/preset-wind3': 66.1.1
-
   unocss-preset-primitives@0.0.2-beta.1:
     dependencies:
       '@unocss/core': 0.61.9
@@ -22671,11 +22623,6 @@ snapshots:
     dependencies:
       '@unocss/preset-mini': 65.5.0
       unocss: 66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.7.3))
-
-  unocss-preset-scrollbar@3.2.0(unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))):
-    dependencies:
-      '@unocss/preset-mini': 65.5.0
-      unocss: 66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))
 
   unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.7.3)):
     dependencies:
@@ -22698,34 +22645,6 @@ snapshots:
       '@unocss/transformer-directives': 66.1.1
       '@unocss/transformer-variant-group': 66.1.1
       '@unocss/vite': 66.1.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.7.3))
-    optionalDependencies:
-      vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
-    transitivePeerDependencies:
-      - postcss
-      - supports-color
-      - vue
-
-  unocss@66.1.1(postcss@8.5.6)(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3)):
-    dependencies:
-      '@unocss/astro': 66.1.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))
-      '@unocss/cli': 66.1.1
-      '@unocss/core': 66.1.1
-      '@unocss/postcss': 66.1.1(postcss@8.5.6)
-      '@unocss/preset-attributify': 66.1.1
-      '@unocss/preset-icons': 66.1.1
-      '@unocss/preset-mini': 66.1.1
-      '@unocss/preset-tagify': 66.1.1
-      '@unocss/preset-typography': 66.1.1
-      '@unocss/preset-uno': 66.1.1
-      '@unocss/preset-web-fonts': 66.1.1
-      '@unocss/preset-wind': 66.1.1
-      '@unocss/preset-wind3': 66.1.1
-      '@unocss/preset-wind4': 66.1.1
-      '@unocss/transformer-attributify-jsx': 66.1.1
-      '@unocss/transformer-compile-class': 66.1.1
-      '@unocss/transformer-directives': 66.1.1
-      '@unocss/transformer-variant-group': 66.1.1
-      '@unocss/vite': 66.1.1(vite@7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.22(typescript@5.8.3))
     optionalDependencies:
       vite: 7.1.10(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
     transitivePeerDependencies:
@@ -23205,7 +23124,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4)(@vitest/ui@2.0.5)(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
+  vitest@3.0.5(@types/debug@4.1.12)(@vitest/browser@0.32.4(rollup@4.52.5)(vitest@2.0.5))(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1):
     dependencies:
       '@vitest/expect': 3.0.5
       '@vitest/mocker': 3.0.5(vite@6.4.0(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
@@ -23331,10 +23250,6 @@ snapshots:
     dependencies:
       vue: 3.5.22(typescript@5.7.3)
 
-  vue-flow-layout@0.1.1(vue@3.5.22(typescript@5.8.3)):
-    dependencies:
-      vue: 3.5.22(typescript@5.8.3)
-
   vue@3.5.22(typescript@5.7.3):
     dependencies:
       '@vue/compiler-dom': 3.5.22
@@ -23344,16 +23259,6 @@ snapshots:
       '@vue/shared': 3.5.22
     optionalDependencies:
       typescript: 5.7.3
-
-  vue@3.5.22(typescript@5.8.3):
-    dependencies:
-      '@vue/compiler-dom': 3.5.22
-      '@vue/compiler-sfc': 3.5.22
-      '@vue/runtime-dom': 3.5.22
-      '@vue/server-renderer': 3.5.22(vue@3.5.22(typescript@5.8.3))
-      '@vue/shared': 3.5.22
-    optionalDependencies:
-      typescript: 5.8.3
 
   w3c-xmlserializer@5.0.0:
     dependencies:

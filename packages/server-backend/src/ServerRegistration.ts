@@ -99,8 +99,9 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 							Effect.catchAll((error) => {
 								if (error._tag === "ServerRegistrationError")
 									return Effect.fail(error);
+								console.log(error);
 								return Effect.dieMessage(
-									"Failed to perform access token grant",
+									`Failed to perform access token grant: ${error}`,
 								);
 							}),
 							Effect.retry({
@@ -121,7 +122,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 				}).pipe(Effect.forkScoped);
 
 				return mailbox;
-			});
+			}).pipe(Effect.withSpan("ServerRegistration.start"));
 
 			return {
 				get: registration.get(),
