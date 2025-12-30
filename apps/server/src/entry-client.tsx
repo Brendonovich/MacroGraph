@@ -22,19 +22,22 @@ const TracingLive = Layer.unwrapEffect(
 
 		const exporterConfig: OTLPExporterNodeConfigBase = {};
 
+		const headers: Record<string, string> = {};
+
 		if (Option.isSome(env.axiom)) {
 			const axiom = env.axiom.value;
 			exporterConfig.url = `https://${axiom.domain}/v1/traces`;
-			exporterConfig.headers ??= {};
-			exporterConfig.headers.Authorization = `Bearer ${axiom.apiToken}`;
-			exporterConfig.headers["X-Axiom-Dataset"] = axiom.dataset;
+			headers.Authorization = `Bearer ${axiom.apiToken}`;
+			headers["X-Axiom-Dataset"] = axiom.dataset;
 		}
+
+		exporterConfig.headers = headers;
 
 		return WebSdk.layer(() => ({
 			resource: { serviceName: "mg-server-frontend" },
 			// Export span data to the console
 			spanProcessor: [
-				new BatchSpanProcessor(new OTLPTraceExporter()),
+				new BatchSpanProcessor(new OTLPTraceExporter(exporterConfig)),
 				// new BatchSpanProcessor(new ConsoleSpanExporter()),
 			],
 		}));

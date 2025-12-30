@@ -31,14 +31,16 @@ const NodeSdkLive = Layer.unwrapEffect(
 		const env = yield* ServerEnv;
 
 		const exporterConfig: OTLPExporterNodeConfigBase = {};
+		const headers: Record<string, string> = {};
 
 		if (Option.isSome(env.axiom)) {
 			const axiom = env.axiom.value;
 			exporterConfig.url = `https://${axiom.domain}/v1/traces`;
-			exporterConfig.headers ??= {};
-			exporterConfig.headers.Authorization = `Bearer ${axiom.apiToken}`;
-			exporterConfig.headers["X-Axiom-Dataset"] = axiom.dataset;
+			headers.Authorization = `Bearer ${axiom.apiToken}`;
+			headers["X-Axiom-Dataset"] = axiom.dataset;
 		}
+
+		exporterConfig.headers = headers;
 
 		return NodeSdk.layer(() => ({
 			resource: { serviceName: "mg-server-backend" },
