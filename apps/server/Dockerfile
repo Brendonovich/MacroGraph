@@ -19,6 +19,10 @@ RUN pnpm install -r --offline
 
 WORKDIR apps/server
 
+ARG VITE_AXIOM_API_TOKEN
+ARG VITE_AXIOM_DATASET
+ARG VITE_AXIOM_DOMAIN
+
 # Build the app
 RUN pnpm build
 
