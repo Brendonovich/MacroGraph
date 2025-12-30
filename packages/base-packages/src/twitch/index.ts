@@ -1558,7 +1558,8 @@ export default Package.make({
 		ctx.schema("notification.channel.moderate", {
 			name: "Channel Moderate",
 			type: "event",
-			description: "Fires when a moderator performs a moderation action in a channel.",
+			description:
+				"Fires when a moderator performs a moderation action in a channel.",
 			properties: {
 				account: {
 					name: "Account",
@@ -1586,12 +1587,20 @@ export default Package.make({
 				sourceBroadcasterId: io.out.data("sourceBroadcasterId", t.String, {
 					name: "Source Broadcaster ID",
 				}),
-				sourceBroadcasterLogin: io.out.data("sourceBroadcasterLogin", t.String, {
-					name: "Source Broadcaster Login",
-				}),
-				sourceBroadcasterName: io.out.data("sourceBroadcasterName", t.Option(t.String), {
-					name: "Source Broadcaster Name",
-				}),
+				sourceBroadcasterLogin: io.out.data(
+					"sourceBroadcasterLogin",
+					t.String,
+					{
+						name: "Source Broadcaster Login",
+					},
+				),
+				sourceBroadcasterName: io.out.data(
+					"sourceBroadcasterName",
+					t.Option(t.String),
+					{
+						name: "Source Broadcaster Name",
+					},
+				),
 				moderatorId: io.out.data("moderatorId", t.String, {
 					name: "Moderator ID",
 				}),
@@ -1609,9 +1618,18 @@ export default Package.make({
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
 				yield* setOutput(io.broadcasterLogin, event.broadcaster_user_login);
 				yield* setOutput(io.broadcasterName, event.broadcaster_user_name);
-				yield* setOutput(io.sourceBroadcasterId, event.source_broadcaster_user_id);
-				yield* setOutput(io.sourceBroadcasterLogin, event.source_broadcaster_user_login);
-				yield* setOutput(io.sourceBroadcasterName, Option.fromNullable(event.source_broadcaster_user_name));
+				yield* setOutput(
+					io.sourceBroadcasterId,
+					event.source_broadcaster_user_id,
+				);
+				yield* setOutput(
+					io.sourceBroadcasterLogin,
+					event.source_broadcaster_user_login,
+				);
+				yield* setOutput(
+					io.sourceBroadcasterName,
+					Option.fromNullable(event.source_broadcaster_user_name),
+				);
 				yield* setOutput(io.moderatorId, event.moderator_user_id);
 				yield* setOutput(io.moderatorLogin, event.moderator_user_login);
 				yield* setOutput(io.moderatorName, event.moderator_user_name);
@@ -1691,11 +1709,20 @@ export default Package.make({
 				yield* setOutput(io.moderatorLogin, event.moderator_user_login);
 				yield* setOutput(io.moderatorName, event.moderator_user_name);
 				yield* setOutput(io.bullying, event.bullying);
-				yield* setOutput(io.overallLevel, Option.fromNullable(event.overall_level));
+				yield* setOutput(
+					io.overallLevel,
+					Option.fromNullable(event.overall_level),
+				);
 				yield* setOutput(io.disability, event.disability);
-				yield* setOutput(io.raceEthnicityOrReligion, event.race_ethnicity_or_religion);
+				yield* setOutput(
+					io.raceEthnicityOrReligion,
+					event.race_ethnicity_or_religion,
+				);
 				yield* setOutput(io.misogyny, event.misogyny);
-				yield* setOutput(io.sexualitySexOrGender, event.sexuality_sex_or_gender);
+				yield* setOutput(
+					io.sexualitySexOrGender,
+					event.sexuality_sex_or_gender,
+				);
 				yield* setOutput(io.aggression, event.aggression);
 				yield* setOutput(io.sexBasedTerms, event.sex_based_terms);
 				yield* setOutput(io.swearing, event.swearing);
@@ -1821,13 +1848,25 @@ export default Package.make({
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
 				yield* setOutput(io.broadcasterLogin, event.broadcaster_user_login);
 				yield* setOutput(io.broadcasterName, event.broadcaster_user_name);
-				yield* setOutput(io.moderatorId, Option.fromNullable(event.moderator_id));
-				yield* setOutput(io.moderatorLogin, Option.fromNullable(event.moderator_login));
-				yield* setOutput(io.moderatorName, Option.fromNullable(event.moderator_name));
+				yield* setOutput(
+					io.moderatorId,
+					Option.fromNullable(event.moderator_id),
+				);
+				yield* setOutput(
+					io.moderatorLogin,
+					Option.fromNullable(event.moderator_login),
+				);
+				yield* setOutput(
+					io.moderatorName,
+					Option.fromNullable(event.moderator_name),
+				);
 				yield* setOutput(io.userId, event.user_id);
 				yield* setOutput(io.userLogin, event.user_login);
 				yield* setOutput(io.userName, event.user_name);
-				yield* setOutput(io.resolutionText, Option.fromNullable(event.resolution_text));
+				yield* setOutput(
+					io.resolutionText,
+					Option.fromNullable(event.resolution_text),
+				);
 				yield* setOutput(io.status, event.status);
 			},
 		});
@@ -1934,9 +1973,13 @@ export default Package.make({
 				lowTrustStatus: io.out.data("lowTrustStatus", t.String, {
 					name: "Low Trust Status",
 				}),
-				sharedBanChannelIds: io.out.data("sharedBanChannelIds", t.Array(t.String), {
-					name: "Shared Ban Channel IDs",
-				}),
+				sharedBanChannelIds: io.out.data(
+					"sharedBanChannelIds",
+					t.Array(t.String),
+					{
+						name: "Shared Ban Channel IDs",
+					},
+				),
 				types: io.out.data("types", t.Array(t.String), {
 					name: "Types",
 				}),
@@ -2331,7 +2374,10 @@ export default Package.make({
 				yield* setOutput(io.startedAt, event.started_at);
 				yield* setOutput(io.endedAt, event.ended_at);
 				yield* setOutput(io.status, event.status);
-				yield* setOutput(io.winningOutcomeId, Option.fromNullable(event.winning_outcome_id));
+				yield* setOutput(
+					io.winningOutcomeId,
+					Option.fromNullable(event.winning_outcome_id),
+				);
 			},
 		});
 
@@ -2457,9 +2503,13 @@ export default Package.make({
 				categoryName: io.out.data("categoryName", t.String, {
 					name: "Category Name",
 				}),
-				contentClassificationLabels: io.out.data("contentClassificationLabels", t.Array(t.String), {
-					name: "Content Classification Labels",
-				}),
+				contentClassificationLabels: io.out.data(
+					"contentClassificationLabels",
+					t.Array(t.String),
+					{
+						name: "Content Classification Labels",
+					},
+				),
 			}),
 			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -2469,13 +2519,17 @@ export default Package.make({
 				yield* setOutput(io.language, event.language);
 				yield* setOutput(io.categoryId, event.category_id);
 				yield* setOutput(io.categoryName, event.category_name);
-				yield* setOutput(io.contentClassificationLabels, event.content_classification_labels);
+				yield* setOutput(
+					io.contentClassificationLabels,
+					event.content_classification_labels,
+				);
 			},
 		});
 		ctx.schema("notification.channel.raid", {
 			name: "Channel Raid",
 			type: "event",
-			description: "Fires when a broadcaster raids another broadcaster's channel.",
+			description:
+				"Fires when a broadcaster raids another broadcaster's channel.",
 			properties: {
 				account: {
 					name: "Account",
@@ -2515,10 +2569,19 @@ export default Package.make({
 			}),
 			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.fromBroadcasterId, event.from_broadcaster_user_id);
-				yield* setOutput(io.fromBroadcasterLogin, event.from_broadcaster_user_login);
-				yield* setOutput(io.fromBroadcasterName, event.from_broadcaster_user_name);
+				yield* setOutput(
+					io.fromBroadcasterLogin,
+					event.from_broadcaster_user_login,
+				);
+				yield* setOutput(
+					io.fromBroadcasterName,
+					event.from_broadcaster_user_name,
+				);
 				yield* setOutput(io.toBroadcasterId, event.to_broadcaster_user_id);
-				yield* setOutput(io.toBroadcasterLogin, event.to_broadcaster_user_login);
+				yield* setOutput(
+					io.toBroadcasterLogin,
+					event.to_broadcaster_user_login,
+				);
 				yield* setOutput(io.toBroadcasterName, event.to_broadcaster_user_name);
 				yield* setOutput(io.viewers, event.viewers);
 			},
@@ -2637,85 +2700,92 @@ export default Package.make({
 				yield* setOutput(io.type, event.type);
 			},
 		});
-		ctx.schema("notification.channel.channel_points_automatic_reward_redemption.add", {
-			name: "Channel Points Automatic Reward Redemption",
-			type: "event",
-			description: "Fires when a viewer uses an automatic channel points reward.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
+		ctx.schema(
+			"notification.channel.channel_points_automatic_reward_redemption.add",
+			{
+				name: "Channel Points Automatic Reward Redemption",
+				type: "event",
+				description:
+					"Fires when a viewer uses an automatic channel points reward.",
+				properties: {
+					account: {
+						name: "Account",
+						resource: TwitchAccount,
+					},
+				},
+				event: ({ properties }, e) => {
+					if (
+						isEventSubMessageType(e, "notification") &&
+						isNotificationType(
+							e,
+							"channel.channel_points_automatic_reward_redemption.add",
+						) &&
+						e.payload.event.broadcaster_user_id === properties.account.id
+					)
+						return e;
+				},
+				io: (io) => ({
+					redemptionId: io.out.data("redemptionId", t.String, {
+						name: "Redemption ID",
+					}),
+					broadcasterId: io.out.data("broadcasterId", t.String, {
+						name: "Broadcaster ID",
+					}),
+					broadcasterLogin: io.out.data("broadcasterLogin", t.String, {
+						name: "Broadcaster Login",
+					}),
+					broadcasterName: io.out.data("broadcasterName", t.String, {
+						name: "Broadcaster Name",
+					}),
+					userId: io.out.data("userId", t.String, {
+						name: "User ID",
+					}),
+					userLogin: io.out.data("userLogin", t.String, {
+						name: "User Login",
+					}),
+					userName: io.out.data("userName", t.String, {
+						name: "User Name",
+					}),
+					rewardId: io.out.data("rewardId", t.String, {
+						name: "Reward ID",
+					}),
+					rewardTitle: io.out.data("rewardTitle", t.String, {
+						name: "Reward Title",
+					}),
+					rewardPrompt: io.out.data("rewardPrompt", t.String, {
+						name: "Reward Prompt",
+					}),
+					rewardCost: io.out.data("rewardCost", t.Int, {
+						name: "Reward Cost",
+					}),
+					userInput: io.out.data("userInput", t.Option(t.String), {
+						name: "User Input",
+					}),
+					status: io.out.data("status", t.String, {
+						name: "Status",
+					}),
+					redeemedAt: io.out.data("redeemedAt", t.DateTime, {
+						name: "Redeemed At",
+					}),
+				}),
+				run: function* ({ io }, { payload: { event } }) {
+					yield* setOutput(io.redemptionId, event.id);
+					yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
+					yield* setOutput(io.broadcasterLogin, event.broadcaster_user_login);
+					yield* setOutput(io.broadcasterName, event.broadcaster_user_name);
+					yield* setOutput(io.userId, event.user_id);
+					yield* setOutput(io.userLogin, event.user_login);
+					yield* setOutput(io.userName, event.user_name);
+					yield* setOutput(io.rewardId, event.reward.id);
+					yield* setOutput(io.rewardTitle, event.reward.title);
+					yield* setOutput(io.rewardPrompt, event.reward.prompt);
+					yield* setOutput(io.rewardCost, event.reward.cost);
+					yield* setOutput(io.userInput, Option.fromNullable(event.user_input));
+					yield* setOutput(io.status, event.status);
+					yield* setOutput(io.redeemedAt, event.redeemed_at);
 				},
 			},
-			event: ({ properties }, e) => {
-				if (
-					isEventSubMessageType(e, "notification") &&
-					isNotificationType(e, "channel.channel_points_automatic_reward_redemption.add") &&
-					e.payload.event.broadcaster_user_id === properties.account.id
-				)
-					return e;
-			},
-			io: (io) => ({
-				redemptionId: io.out.data("redemptionId", t.String, {
-					name: "Redemption ID",
-				}),
-				broadcasterId: io.out.data("broadcasterId", t.String, {
-					name: "Broadcaster ID",
-				}),
-				broadcasterLogin: io.out.data("broadcasterLogin", t.String, {
-					name: "Broadcaster Login",
-				}),
-				broadcasterName: io.out.data("broadcasterName", t.String, {
-					name: "Broadcaster Name",
-				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
-				rewardId: io.out.data("rewardId", t.String, {
-					name: "Reward ID",
-				}),
-				rewardTitle: io.out.data("rewardTitle", t.String, {
-					name: "Reward Title",
-				}),
-				rewardPrompt: io.out.data("rewardPrompt", t.String, {
-					name: "Reward Prompt",
-				}),
-				rewardCost: io.out.data("rewardCost", t.Int, {
-					name: "Reward Cost",
-				}),
-				userInput: io.out.data("userInput", t.Option(t.String), {
-					name: "User Input",
-				}),
-				status: io.out.data("status", t.String, {
-					name: "Status",
-				}),
-				redeemedAt: io.out.data("redeemedAt", t.DateTime, {
-					name: "Redeemed At",
-				}),
-			}),
-			run: function* ({ io }, { payload: { event } }) {
-				yield* setOutput(io.redemptionId, event.id);
-				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
-				yield* setOutput(io.broadcasterLogin, event.broadcaster_user_login);
-				yield* setOutput(io.broadcasterName, event.broadcaster_user_name);
-				yield* setOutput(io.userId, event.user_id);
-				yield* setOutput(io.userLogin, event.user_login);
-				yield* setOutput(io.userName, event.user_name);
-				yield* setOutput(io.rewardId, event.reward.id);
-				yield* setOutput(io.rewardTitle, event.reward.title);
-				yield* setOutput(io.rewardPrompt, event.reward.prompt);
-				yield* setOutput(io.rewardCost, event.reward.cost);
-				yield* setOutput(io.userInput, Option.fromNullable(event.user_input));
-				yield* setOutput(io.status, event.status);
-				yield* setOutput(io.redeemedAt, event.redeemed_at);
-			},
-		});
+		);
 		ctx.schema("notification.channel.hype_train.progress", {
 			name: "Hype Train Progress",
 			type: "event",

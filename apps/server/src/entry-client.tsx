@@ -10,40 +10,6 @@ import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import "@unocss/reset/tailwind.css";
 import "virtual:uno.css";
 
-const TracingLive = Layer.unwrapEffect(
-	Effect.gen(function* () {
-		const env = yield* Config.all({
-			axiom: Config.all({
-				dataset: Config.string("VITE_AXIOM_DATASET"),
-				apiToken: Config.string("VITE_AXIOM_API_TOKEN"),
-				domain: Config.string("VITE_AXIOM_DOMAIN"),
-			}).pipe(Config.option),
-		});
-
-		const exporterConfig: OTLPExporterNodeConfigBase = {};
-
-		const headers: Record<string, string> = {};
-
-		if (Option.isSome(env.axiom)) {
-			const axiom = env.axiom.value;
-			exporterConfig.url = `https://${axiom.domain}/v1/traces`;
-			headers.Authorization = `Bearer ${axiom.apiToken}`;
-			headers["X-Axiom-Dataset"] = axiom.dataset;
-		}
-
-		exporterConfig.headers = headers;
-
-		return WebSdk.layer(() => ({
-			resource: { serviceName: "mg-server-frontend" },
-			// Export span data to the console
-			spanProcessor: [
-				new BatchSpanProcessor(new OTLPTraceExporter(exporterConfig)),
-				// new BatchSpanProcessor(new ConsoleSpanExporter()),
-			],
-		}));
-	}),
-);
-
 const RegisterPackages = Layer.scopedDiscard(
 	Effect.gen(function* () {
 		const packageClients = yield* PackageClients;
@@ -71,7 +37,6 @@ const ImportMetaEnvConfig = Layer.setConfigProvider(
 );
 
 Layer.mergeAll(RegisterPackages, UILive).pipe(
-	Layer.provide(TracingLive),
 	Layer.provide(ImportMetaEnvConfig),
 	Layer.launch,
 	runtime.runPromise,

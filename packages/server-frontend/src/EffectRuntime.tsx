@@ -1,5 +1,5 @@
 import { WebSdk } from "@effect/opentelemetry";
-import { Effect, Layer, ManagedRuntime, Option, Stream } from "effect";
+import { Config, Effect, Layer, ManagedRuntime, Option, Stream } from "effect";
 import {
 	ProjectEventStream,
 	ProjectRequestHandler,
@@ -109,7 +109,32 @@ export namespace EffectRuntime {
 		| Layer.Layer.Success<typeof EffectRuntime.layer>
 		| Layer.Layer.Context<typeof EffectRuntime.layer>;
 
-	export const layer = FrontendLive.pipe(Layer.provideMerge(Layer.scope));
+	const TracingLive = Layer.unwrapEffect(
+		Effect.gen(function* () {
+			const env = yield* Config.all({
+				otelTraceUrl: Config.string("VITE_OTEL_TRACE_URL").pipe(Config.option),
+			});
+
+			const exporterConfig: OTLPExporterNodeConfigBase = {};
+
+			if (Option.isSome(env.otelTraceUrl))
+				exporterConfig.url = env.otelTraceUrl.value;
+
+			return WebSdk.layer(() => ({
+				resource: { serviceName: "mg-server-frontend" },
+				// Export span data to the console
+				spanProcessor: [
+					new BatchSpanProcessor(new OTLPTraceExporter(exporterConfig)),
+					// new BatchSpanProcessor(new ConsoleSpanExporter()),
+				],
+			}));
+		}),
+	);
+
+	export const layer = FrontendLive.pipe(
+		Layer.provide(TracingLive),
+		Layer.provideMerge(Layer.scope),
+	);
 }
 
 const EffectRuntimeContext = createContext<EffectRuntime.EffectRuntime>();
