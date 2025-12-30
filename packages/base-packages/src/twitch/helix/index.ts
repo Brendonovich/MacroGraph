@@ -1,35 +1,33 @@
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
-import { Schema as S } from "effect";
+import { HttpApi } from "@effect/platform";
 
-import { AuthenticationGroup } from "./groups/authentication";
-import { AdsGroup, CategoriesGroup } from "./groups/ads-categories";
+import { AdsGroup } from "./groups/ads-categories";
 import {
 	AnalyticsGroup,
-	VideosGroup,
 	SubscriptionsGroup,
+	VideosGroup,
 } from "./groups/analytics";
+import { AuthenticationGroup } from "./groups/authentication";
+import { ChannelPointsGroup } from "./groups/channel-points";
+import { ChannelsGroup } from "./groups/channels";
+import { ChatGroup } from "./groups/chat";
 import {
 	BitsGroup,
 	CharityGroup,
 	ClipsGroup,
 } from "./groups/clips-charity-bits";
-import { StreamsGroup, ScheduleGroup } from "./groups/streams";
 import {
+	EventSubGroup,
 	PollsGroup,
 	PredictionsGroup,
-	EventSubGroup,
 } from "./groups/community";
-import { RaidsGroup, GamesGroup, DropsGroup } from "./groups/raids-games-drops";
-import { ChannelPointsGroup } from "./groups/channel-points";
-import { ChatGroup } from "./groups/chat";
-import { ChannelsGroup } from "./groups/channels";
-import { ExtensionsGroup } from "./groups/extensions";
-import { ModerationGroup } from "./groups/moderation";
-import { UsersGroup } from "./groups/users";
 import { EntitlementsGroup } from "./groups/entitlements";
-import { WebhooksGroup } from "./groups/webhooks";
+import { ExtensionsGroup } from "./groups/extensions";
 import { GoalsGroup } from "./groups/goals";
 import { HypeTrainGroup } from "./groups/hype-train";
+import { DropsGroup, GamesGroup, RaidsGroup } from "./groups/raids-games-drops";
+import { ScheduleGroup, StreamsGroup } from "./groups/streams";
+import { UsersGroup } from "./groups/users";
+import { WebhooksGroup } from "./groups/webhooks";
 import { WhispersGroup } from "./groups/whispers";
 
 export const HelixApi = HttpApi.make("helix")
@@ -60,19 +58,3 @@ export const HelixApi = HttpApi.make("helix")
 	.add(VideosGroup)
 	.add(WebhooksGroup)
 	.add(WhispersGroup);
-
-export const EventSubTransport = S.Union(
-	S.Struct({
-		method: S.Literal("websocket"),
-		session_id: S.String,
-	}),
-	S.Struct({
-		method: S.Literal("conduit"),
-		conduit: S.String,
-	}),
-	S.Struct({
-		method: S.Literal("webhook"),
-		callback: S.String,
-		secret: S.String,
-	}),
-);

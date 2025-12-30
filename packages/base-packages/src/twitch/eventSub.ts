@@ -216,6 +216,7 @@ export const subscriptionTypes = {
 		version: 1,
 		condition: {
 			broadcaster_user_id: S.String,
+			user_id: S.String,
 		},
 		event: {
 			broadcaster_user_id: S.String,
@@ -2866,7 +2867,7 @@ const EVENTSUB_CONTROL_MESSAGES = S.Union(
 			session: S.Struct({
 				id: S.String,
 				status: S.Literal("connected"),
-				connected_at: S.DateFromString,
+				// connected_at: S.DateFromString,
 			}),
 		},
 	}),

@@ -183,6 +183,7 @@ const Engine = PackageEngine.define<State>()({
 						S.decodeUnknown(S.parseJson(EVENTSUB_MESSAGE))(s),
 					),
 					Stream.toPull,
+					Effect.provideService(Scope.Scope, scope),
 				);
 
 				const firstEvent = yield* getEvent.pipe(
@@ -205,17 +206,23 @@ const Engine = PackageEngine.define<State>()({
 					yield* Effect.log("Creating subscriptions");
 					yield* Effect.all(
 						Object.values(subscriptionTypes).map((def) =>
-							helixClient.eventSub.createSubscription({
-								payload: {
-									type: def.type,
-									version: def.version.toString(),
-									condition: buildCondition(def, accountId),
-									transport: {
-										method: "websocket",
-										session_id: firstEvent.payload.session.id,
-									},
-								} as any,
-							}),
+							helixClient.eventSub
+								.createSubscription({
+									payload: {
+										type: def.type,
+										version: def.version.toString(),
+										condition: buildCondition(def, accountId),
+										transport: {
+											method: "websocket",
+											session_id: firstEvent.payload.session.id,
+										},
+									} as any,
+								})
+								.pipe(
+									Effect.withSpan("createSubscription", {
+										attributes: { "eventsub.type": def.type },
+									}),
+								),
 						),
 						{ concurrency: 2 },
 					).pipe(Effect.withSpan("createTestSubscriptions"));
@@ -305,10 +312,11 @@ const Engine = PackageEngine.define<State>()({
 type Groups<T extends HttpApi.HttpApi<any, any, any, any>> =
 	T extends HttpApi.HttpApi<any, infer TGroups, any, any> ? TGroups : never;
 
-const deleteOldSubscriptions = Effect.fn(function* <E, R>(
-	helixClient: HttpApiClient.Client<Groups<typeof HelixApi>, E, R>,
-) {
-	const subs = yield* helixClient.eventSub.getSubscriptions();
+const deleteOldSubscriptions = Effect.fn("deleteOldSubscriptions")(function* <
+	E,
+	R,
+>(helixClient: HttpApiClient.Client<Groups<typeof HelixApi>, E, R>) {
+	const subs = yield* helixClient.eventSub.getSubscriptions({ urlParams: {} });
 	yield* Effect.log(`Found ${subs.data.length} existing subscriptions`);
 	yield* Effect.all(
 		subs.data.map((sub) =>
@@ -319,7 +327,7 @@ const deleteOldSubscriptions = Effect.fn(function* <E, R>(
 				: Effect.void,
 		),
 		{ concurrency: 10 },
-	).pipe(Effect.withSpan("deleteOldSubscriptions"));
+	);
 });
 
 export default Package.make({
@@ -1975,12 +1983,12 @@ export default Package.make({
 				}),
 				sharedBanChannelIds: io.out.data(
 					"sharedBanChannelIds",
-					t.Array(t.String),
+					t.List(t.String),
 					{
 						name: "Shared Ban Channel IDs",
 					},
 				),
-				types: io.out.data("types", t.Array(t.String), {
+				types: io.out.data("types", t.List(t.String), {
 					name: "Types",
 				}),
 				banEvasionEvaluation: io.out.data("banEvasionEvaluation", t.String, {
@@ -2161,7 +2169,7 @@ export default Package.make({
 				yield* setOutput(io.broadcasterName, event.broadcaster_user_name);
 				yield* setOutput(io.title, event.title);
 				yield* setOutput(io.startedAt, event.started_at);
-				yield* setOutput(io.endsAt, event.ends_at);
+				yield* setOutput(io.endsAt, event.ended_at);
 				yield* setOutput(io.status, event.status);
 			},
 		});
@@ -2505,7 +2513,7 @@ export default Package.make({
 				}),
 				contentClassificationLabels: io.out.data(
 					"contentClassificationLabels",
-					t.Array(t.String),
+					t.List(t.String),
 					{
 						name: "Content Classification Labels",
 					},
@@ -2776,12 +2784,12 @@ export default Package.make({
 					yield* setOutput(io.userId, event.user_id);
 					yield* setOutput(io.userLogin, event.user_login);
 					yield* setOutput(io.userName, event.user_name);
-					yield* setOutput(io.rewardId, event.reward.id);
-					yield* setOutput(io.rewardTitle, event.reward.title);
-					yield* setOutput(io.rewardPrompt, event.reward.prompt);
-					yield* setOutput(io.rewardCost, event.reward.cost);
-					yield* setOutput(io.userInput, Option.fromNullable(event.user_input));
-					yield* setOutput(io.status, event.status);
+					// yield* setOutput(io.rewardId, event.reward.id);
+					// yield* setOutput(io.rewardTitle, event.reward.title);
+					// yield* setOutput(io.rewardPrompt, event.reward.prompt);
+					// yield* setOutput(io.rewardCost, event.reward.cost);
+					// yield* setOutput(io.userInput, Option.fromNullable(event.user_input));
+					// yield* setOutput(io.status, event.status);
 					yield* setOutput(io.redeemedAt, event.redeemed_at);
 				},
 			},

@@ -1,11 +1,7 @@
-import { WebSdk } from "@effect/opentelemetry";
-import { Config, ConfigProvider, Effect, Layer, Option } from "effect";
+import { Effect, Layer } from "effect";
 import { Package } from "@macrograph/project-domain";
 import { PackageClients } from "@macrograph/project-ui";
 import { runtime, UILive } from "@macrograph/server-frontend";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import type { OTLPExporterNodeConfigBase } from "@opentelemetry/otlp-exporter-base";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
 import "@unocss/reset/tailwind.css";
 import "virtual:uno.css";

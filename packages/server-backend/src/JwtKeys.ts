@@ -1,25 +1,35 @@
 import { Config, Data, Effect } from "effect";
-import * as Jose from "jose";
 
 export class JwtKeys extends Effect.Service<JwtKeys>()("JwtKeys", {
 	effect: Effect.gen(function* () {
-		const publicKey = yield* Config.string("JWT_PUBLIC_KEY").pipe(
-			Effect.andThen((v) =>
-				Effect.promise(() =>
-					Jose.importSPKI(v.replaceAll("\\n", "\n"), "RSA-OAEP-256"),
-				),
+		const jwtSecret = yield* Config.string("JWT_SECRET");
+
+		const keyMaterial = yield* Effect.promise(() =>
+			crypto.subtle.importKey(
+				"raw",
+				new TextEncoder().encode(jwtSecret),
+				{ name: "HKDF" },
+				false,
+				["deriveBits", "deriveKey"],
 			),
 		);
 
-		const privateKey = yield* Config.string("JWT_PRIVATE_KEY").pipe(
-			Effect.andThen((v) =>
-				Effect.promise(() =>
-					Jose.importPKCS8(v.replaceAll("\\n", "\n"), "RSA-OAEP-256"),
-				),
+		const secretKey = yield* Effect.promise(() =>
+			crypto.subtle.deriveKey(
+				{
+					name: "HKDF",
+					hash: "SHA-256",
+					salt: new Uint8Array(0),
+					info: new Uint8Array(0),
+				},
+				keyMaterial,
+				{ name: "AES-GCM", length: 256 },
+				false,
+				["encrypt", "decrypt"],
 			),
 		);
 
-		return { publicKey, privateKey };
+		return { secretKey };
 	}),
 }) {}
 

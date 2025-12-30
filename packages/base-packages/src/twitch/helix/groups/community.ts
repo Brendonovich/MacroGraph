@@ -1,8 +1,10 @@
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
 
+import { EVENTSUB_CREATE_SUBSCRIPTION_BODY } from "../../eventSub";
+
 export const Pagination = S.Struct({
-	cursor: S.String,
+	cursor: S.optional(S.String),
 });
 
 export const PollChoice = S.Struct({
@@ -125,13 +127,15 @@ export const EventSubTransportWebhook = S.Struct({
 export const EventSubTransportWebsocket = S.Struct({
 	method: S.Literal("websocket"),
 	session_id: S.String,
-	connected_at: S.DateFromString,
+	// connected_at: S.DateFromString,
 });
 
 export const EventSubTransport = S.Union(
 	EventSubTransportWebhook,
 	EventSubTransportWebsocket,
 );
+
+export const EventSubTransportInput = EventSubTransport;
 
 export const EventSubSubscription = S.Struct({
 	id: S.String,
@@ -222,5 +226,35 @@ export const EventSubGroup = HttpApiGroup.make("eventSub")
 				id: S.String,
 			}),
 		),
+	)
+	.add(
+		HttpApiEndpoint.post("createSubscription", "/subscriptions")
+			.setPayload(
+				S.extend(
+					EVENTSUB_CREATE_SUBSCRIPTION_BODY,
+					S.Struct({ transport: EventSubTransportInput }),
+				),
+			)
+			.addSuccess(
+				S.Struct({
+					data: S.Array(
+						S.Struct({
+							// id: S.String,
+							// status: S.Literal(
+							//   "enabled",
+							//   "webhook_callback_verification_pending",
+							// ),
+							// type: S.String,
+							// version: S.String,
+							// condition: S.Any,
+							// created_at: S.DateFromString,
+						}),
+					),
+					// total: S.Int,
+					// total_cost: S.Int,
+					// max_total_cost: S.Int,
+				}),
+				{ status: 202 },
+			),
 	)
 	.prefix("/eventsub");
