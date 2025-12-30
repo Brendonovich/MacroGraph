@@ -1,5 +1,13 @@
 import { WebSdk } from "@effect/opentelemetry";
-import { Config, Effect, Layer, ManagedRuntime, Option, Stream } from "effect";
+import {
+	Config,
+	ConfigProvider,
+	Effect,
+	Layer,
+	ManagedRuntime,
+	Option,
+	Stream,
+} from "effect";
 import {
 	ProjectEventStream,
 	ProjectRequestHandler,
