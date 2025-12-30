@@ -99,9 +99,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 			Jose.generateSecret("HS256"),
 		);
 
-		const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs, {
-			spanPrefix: "ProjectRpc",
-		}).pipe(
+		const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs).pipe(
 			Effect.provide(RpcsLive),
 			Effect.provide(
 				Realtime.CurrentActorRpcMiddleware.context(() =>
