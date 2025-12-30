@@ -19,9 +19,7 @@ RUN pnpm install -r --offline
 
 WORKDIR apps/server
 
-ARG VITE_AXIOM_API_TOKEN
-ARG VITE_AXIOM_DATASET
-ARG VITE_AXIOM_DOMAIN
+ARG VITE_OTEL_TRACE_URL
 
 # Build the app
 RUN pnpm build

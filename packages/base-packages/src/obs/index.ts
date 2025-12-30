@@ -622,7 +622,7 @@ export default Package.make({
 		ctx.schema("request.CreateInput", {
 			name: "Create Input",
 			type: "exec",
-			description: "Sets the current program scene in OBS.",
+			description: "Creates a new input in OBS.",
 			properties: { connection: OBSConnectionProperty },
 			io: (c) => ({
 				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
@@ -634,6 +634,1002 @@ export default Package.make({
 
 				yield* Effect.promise(() =>
 					connection.ws.call("CreateInput", { inputName, inputKind }),
+				);
+			},
+		});
+
+		// === General ===
+
+		ctx.schema("request.GetVersion", {
+			name: "Get Version",
+			type: "exec",
+			description: "Gets the version of OBS and obs-websocket.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				obsVersion: c.out.data("obsVersion", t.String, { name: "OBS Version" }),
+				obsWebSocketVersion: c.out.data("obsWebSocketVersion", t.String, {
+					name: "OBS WebSocket Version",
+				}),
+				rpcVersion: c.out.data("rpcVersion", t.Int, { name: "RPC Version" }),
+				platform: c.out.data("platform", t.String, { name: "Platform" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetVersion"),
+				);
+				yield* setOutput(io.obsVersion, result.obsVersion);
+				yield* setOutput(io.obsWebSocketVersion, result.obsWebSocketVersion);
+				yield* setOutput(io.rpcVersion, result.rpcVersion);
+				yield* setOutput(io.platform, result.platform);
+			},
+		});
+
+		ctx.schema("request.GetStats", {
+			name: "Get Stats",
+			type: "exec",
+			description: "Gets statistics about OBS.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				cpuUsage: c.out.data("cpuUsage", t.Float, { name: "CPU Usage (%)" }),
+				memoryUsage: c.out.data("memoryUsage", t.Float, {
+					name: "Memory Usage (MB)",
+				}),
+				activeFps: c.out.data("activeFps", t.Float, { name: "Active FPS" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetStats"),
+				);
+				yield* setOutput(io.cpuUsage, result.cpuUsage);
+				yield* setOutput(io.memoryUsage, result.memoryUsage);
+				yield* setOutput(io.activeFps, result.activeFps);
+			},
+		});
+
+		// === Scene Collections ===
+
+		ctx.schema("request.GetSceneCollectionList", {
+			name: "Get Scene Collection List",
+			type: "exec",
+			description: "Gets the list of available scene collections.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				currentSceneCollectionName: c.out.data(
+					"currentSceneCollectionName",
+					t.String,
+					{ name: "Current Scene Collection" },
+				),
+				sceneCollections: c.out.data("sceneCollections", t.String, {
+					name: "Scene Collections (JSON)",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetSceneCollectionList"),
+				);
+				yield* setOutput(
+					io.currentSceneCollectionName,
+					result.currentSceneCollectionName,
+				);
+				yield* setOutput(
+					io.sceneCollections,
+					JSON.stringify(result.sceneCollections),
+				);
+			},
+		});
+
+		ctx.schema("request.SetCurrentSceneCollection", {
+			name: "Set Current Scene Collection",
+			type: "exec",
+			description: "Sets the current scene collection.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				sceneCollectionName: c.in.data("sceneCollectionName", t.String, {
+					name: "Scene Collection Name",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const sceneCollectionName = yield* getInput(io.sceneCollectionName);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetCurrentSceneCollection", {
+						sceneCollectionName,
+					}),
+				);
+			},
+		});
+
+		ctx.schema("request.CreateSceneCollection", {
+			name: "Create Scene Collection",
+			type: "exec",
+			description: "Creates a new scene collection.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				sceneCollectionName: c.in.data("sceneCollectionName", t.String, {
+					name: "Scene Collection Name",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const sceneCollectionName = yield* getInput(io.sceneCollectionName);
+				yield* Effect.promise(() =>
+					connection.ws.call("CreateSceneCollection", { sceneCollectionName }),
+				);
+			},
+		});
+
+		// === Profiles ===
+
+		ctx.schema("request.GetProfileList", {
+			name: "Get Profile List",
+			type: "exec",
+			description: "Gets the list of available profiles.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				currentProfileName: c.out.data("currentProfileName", t.String, {
+					name: "Current Profile",
+				}),
+				profiles: c.out.data("profiles", t.String, { name: "Profiles (JSON)" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetProfileList"),
+				);
+				yield* setOutput(io.currentProfileName, result.currentProfileName);
+				yield* setOutput(io.profiles, JSON.stringify(result.profiles));
+			},
+		});
+
+		ctx.schema("request.SetCurrentProfile", {
+			name: "Set Current Profile",
+			type: "exec",
+			description: "Sets the current profile.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				profileName: c.in.data("profileName", t.String, {
+					name: "Profile Name",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const profileName = yield* getInput(io.profileName);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetCurrentProfile", { profileName }),
+				);
+			},
+		});
+
+		ctx.schema("request.CreateProfile", {
+			name: "Create Profile",
+			type: "exec",
+			description: "Creates a new profile.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				profileName: c.in.data("profileName", t.String, {
+					name: "Profile Name",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const profileName = yield* getInput(io.profileName);
+				yield* Effect.promise(() =>
+					connection.ws.call("CreateProfile", { profileName }),
+				);
+			},
+		});
+
+		ctx.schema("request.RemoveProfile", {
+			name: "Remove Profile",
+			type: "exec",
+			description: "Removes a profile.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				profileName: c.in.data("profileName", t.String, {
+					name: "Profile Name",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const profileName = yield* getInput(io.profileName);
+				yield* Effect.promise(() =>
+					connection.ws.call("RemoveProfile", { profileName }),
+				);
+			},
+		});
+
+		ctx.schema("request.GetProfileParameter", {
+			name: "Get Profile Parameter",
+			type: "exec",
+			description: "Gets a profile parameter value.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				parameterCategory: c.in.data("parameterCategory", t.String, {
+					name: "Parameter Category",
+				}),
+				parameterName: c.in.data("parameterName", t.String, {
+					name: "Parameter Name",
+				}),
+				parameterValue: c.out.data("parameterValue", t.String, {
+					name: "Parameter Value",
+				}),
+				defaultParameterValue: c.out.data("defaultParameterValue", t.String, {
+					name: "Default Value",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const parameterCategory = yield* getInput(io.parameterCategory);
+				const parameterName = yield* getInput(io.parameterName);
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetProfileParameter", {
+						parameterCategory,
+						parameterName,
+					}),
+				);
+				yield* setOutput(io.parameterValue, result.parameterValue);
+				yield* setOutput(
+					io.defaultParameterValue,
+					result.defaultParameterValue,
+				);
+			},
+		});
+
+		ctx.schema("request.SetProfileParameter", {
+			name: "Set Profile Parameter",
+			type: "exec",
+			description: "Sets a profile parameter value.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				parameterCategory: c.in.data("parameterCategory", t.String, {
+					name: "Parameter Category",
+				}),
+				parameterName: c.in.data("parameterName", t.String, {
+					name: "Parameter Name",
+				}),
+				parameterValue: c.in.data("parameterValue", t.String, {
+					name: "Parameter Value",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const parameterCategory = yield* getInput(io.parameterCategory);
+				const parameterName = yield* getInput(io.parameterName);
+				const parameterValue = yield* getInput(io.parameterValue);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetProfileParameter", {
+						parameterCategory,
+						parameterName,
+						parameterValue,
+					}),
+				);
+			},
+		});
+
+		// === Video Settings ===
+
+		ctx.schema("request.GetVideoSettings", {
+			name: "Get Video Settings",
+			type: "exec",
+			description: "Gets video settings.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				fpsNumerator: c.out.data("fpsNumerator", t.Int, {
+					name: "FPS Numerator",
+				}),
+				fpsDenominator: c.out.data("fpsDenominator", t.Int, {
+					name: "FPS Denominator",
+				}),
+				baseWidth: c.out.data("baseWidth", t.Int, { name: "Base Width" }),
+				baseHeight: c.out.data("baseHeight", t.Int, { name: "Base Height" }),
+				outputWidth: c.out.data("outputWidth", t.Int, { name: "Output Width" }),
+				outputHeight: c.out.data("outputHeight", t.Int, {
+					name: "Output Height",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetVideoSettings"),
+				);
+				yield* setOutput(io.fpsNumerator, result.fpsNumerator);
+				yield* setOutput(io.fpsDenominator, result.fpsDenominator);
+				yield* setOutput(io.baseWidth, result.baseWidth);
+				yield* setOutput(io.baseHeight, result.baseHeight);
+				yield* setOutput(io.outputWidth, result.outputWidth);
+				yield* setOutput(io.outputHeight, result.outputHeight);
+			},
+		});
+
+		ctx.schema("request.SetVideoSettings", {
+			name: "Set Video Settings",
+			type: "exec",
+			description: "Sets video settings.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				fpsNumerator: c.in.data("fpsNumerator", t.Int, {
+					name: "FPS Numerator",
+				}),
+				fpsDenominator: c.in.data("fpsDenominator", t.Int, {
+					name: "FPS Denominator",
+				}),
+				baseWidth: c.in.data("baseWidth", t.Int, { name: "Base Width" }),
+				baseHeight: c.in.data("baseHeight", t.Int, { name: "Base Height" }),
+				outputWidth: c.in.data("outputWidth", t.Int, { name: "Output Width" }),
+				outputHeight: c.in.data("outputHeight", t.Int, {
+					name: "Output Height",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const fpsNumerator = yield* getInput(io.fpsNumerator);
+				const fpsDenominator = yield* getInput(io.fpsDenominator);
+				const baseWidth = yield* getInput(io.baseWidth);
+				const baseHeight = yield* getInput(io.baseHeight);
+				const outputWidth = yield* getInput(io.outputWidth);
+				const outputHeight = yield* getInput(io.outputHeight);
+
+				const params: any = {};
+				if (fpsNumerator !== undefined) params.fpsNumerator = fpsNumerator;
+				if (fpsDenominator !== undefined)
+					params.fpsDenominator = fpsDenominator;
+				if (baseWidth !== undefined) params.baseWidth = baseWidth;
+				if (baseHeight !== undefined) params.baseHeight = baseHeight;
+				if (outputWidth !== undefined) params.outputWidth = outputWidth;
+				if (outputHeight !== undefined) params.outputHeight = outputHeight;
+
+				yield* Effect.promise(() =>
+					connection.ws.call("SetVideoSettings", params),
+				);
+			},
+		});
+
+		// === Stream Service ===
+
+		ctx.schema("request.GetStreamServiceSettings", {
+			name: "Get Stream Service Settings",
+			type: "exec",
+			description: "Gets stream service settings.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				streamServiceType: c.out.data("streamServiceType", t.String, {
+					name: "Stream Service Type",
+				}),
+				streamServiceSettings: c.out.data("streamServiceSettings", t.String, {
+					name: "Stream Service Settings",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetStreamServiceSettings"),
+				);
+				yield* setOutput(io.streamServiceType, result.streamServiceType);
+				yield* setOutput(
+					io.streamServiceSettings,
+					JSON.stringify(result.streamServiceSettings),
+				);
+			},
+		});
+
+		ctx.schema("request.SetStreamServiceSettings", {
+			name: "Set Stream Service Settings",
+			type: "exec",
+			description: "Sets stream service settings.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				streamServiceType: c.in.data("streamServiceType", t.String, {
+					name: "Stream Service Type",
+				}),
+				streamServiceSettings: c.in.data("streamServiceSettings", t.String, {
+					name: "Stream Service Settings (JSON)",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const streamServiceType = yield* getInput(io.streamServiceType);
+				const streamServiceSettings = yield* getInput(io.streamServiceSettings);
+				const data = (
+					typeof streamServiceSettings === "string"
+						? JSON.parse(streamServiceSettings)
+						: streamServiceSettings
+				) as any;
+				yield* Effect.promise(() =>
+					connection.ws.call("SetStreamServiceSettings", {
+						streamServiceType,
+						streamServiceSettings: data,
+					}),
+				);
+			},
+		});
+
+		// === Record Directory ===
+
+		ctx.schema("request.GetRecordDirectory", {
+			name: "Get Record Directory",
+			type: "exec",
+			description: "Gets the record directory.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				recordDirectory: c.out.data("recordDirectory", t.String, {
+					name: "Record Directory",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetRecordDirectory"),
+				);
+				yield* setOutput(io.recordDirectory, result.recordDirectory);
+			},
+		});
+
+		ctx.schema("request.SetRecordDirectory", {
+			name: "Set Record Directory",
+			type: "exec",
+			description: "Sets the record directory.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				recordDirectory: c.in.data("recordDirectory", t.String, {
+					name: "Record Directory",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const recordDirectory = yield* getInput(io.recordDirectory);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetRecordDirectory", { recordDirectory }),
+				);
+			},
+		});
+
+		// === Scenes ===
+
+		ctx.schema("request.GetSceneList", {
+			name: "Get Scene List",
+			type: "exec",
+			description: "Gets the list of scenes.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				currentProgramSceneName: c.out.data(
+					"currentProgramSceneName",
+					t.String,
+					{ name: "Current Program Scene" },
+				),
+				currentPreviewSceneName: c.out.data(
+					"currentPreviewSceneName",
+					t.String,
+					{ name: "Current Preview Scene" },
+				),
+				scenes: c.out.data("scenes", t.String, { name: "Scenes (JSON)" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetSceneList"),
+				);
+				yield* setOutput(
+					io.currentProgramSceneName,
+					result.currentProgramSceneName,
+				);
+				yield* setOutput(
+					io.currentPreviewSceneName,
+					result.currentPreviewSceneName,
+				);
+				yield* setOutput(io.scenes, JSON.stringify(result.scenes));
+			},
+		});
+
+		ctx.schema("request.GetCurrentProgramScene", {
+			name: "Get Current Program Scene",
+			type: "exec",
+			description: "Gets the current program scene.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				sceneName: c.out.data("sceneName", t.String, { name: "Scene Name" }),
+				sceneUuid: c.out.data("sceneUuid", t.String, { name: "Scene UUID" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetCurrentProgramScene"),
+				);
+				yield* setOutput(io.sceneName, result.sceneName);
+				yield* setOutput(io.sceneUuid, result.sceneUuid);
+			},
+		});
+
+		ctx.schema("request.GetCurrentPreviewScene", {
+			name: "Get Current Preview Scene",
+			type: "exec",
+			description: "Gets the current preview scene.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				sceneName: c.out.data("sceneName", t.String, { name: "Scene Name" }),
+				sceneUuid: c.out.data("sceneUuid", t.String, { name: "Scene UUID" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetCurrentPreviewScene"),
+				);
+				yield* setOutput(io.sceneName, result.sceneName);
+				yield* setOutput(io.sceneUuid, result.sceneUuid);
+			},
+		});
+
+		ctx.schema("request.CreateScene", {
+			name: "Create Scene",
+			type: "exec",
+			description: "Creates a new scene.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				sceneName: c.in.data("sceneName", t.String, { name: "Scene Name" }),
+				sceneUuid: c.out.data("sceneUuid", t.String, { name: "Scene UUID" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const sceneName = yield* getInput(io.sceneName);
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("CreateScene", { sceneName }),
+				);
+				yield* setOutput(io.sceneUuid, result.sceneUuid);
+			},
+		});
+
+		ctx.schema("request.RemoveScene", {
+			name: "Remove Scene",
+			type: "exec",
+			description: "Removes a scene.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				sceneName: c.in.data("sceneName", t.String, { name: "Scene Name" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const sceneName = yield* getInput(io.sceneName);
+				yield* Effect.promise(() =>
+					connection.ws.call("RemoveScene", { sceneName }),
+				);
+			},
+		});
+
+		ctx.schema("request.SetSceneName", {
+			name: "Set Scene Name",
+			type: "exec",
+			description: "Renames a scene.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				sceneName: c.in.data("sceneName", t.String, {
+					name: "Current Scene Name",
+				}),
+				newSceneName: c.in.data("newSceneName", t.String, {
+					name: "New Scene Name",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const sceneName = yield* getInput(io.sceneName);
+				const newSceneName = yield* getInput(io.newSceneName);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetSceneName", { sceneName, newSceneName }),
+				);
+			},
+		});
+
+		// === Stream ===
+
+		ctx.schema("request.GetStreamStatus", {
+			name: "Get Stream Status",
+			type: "exec",
+			description: "Gets the status of the stream.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+				outputReconnecting: c.out.data("outputReconnecting", t.Bool, {
+					name: "Output Reconnecting",
+				}),
+				outputTimecode: c.out.data("outputTimecode", t.String, {
+					name: "Timecode",
+				}),
+				outputDuration: c.out.data("outputDuration", t.Int, {
+					name: "Duration (ms)",
+				}),
+				outputBytes: c.out.data("outputBytes", t.Int, { name: "Bytes Sent" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetStreamStatus"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+				yield* setOutput(io.outputReconnecting, result.outputReconnecting);
+				yield* setOutput(io.outputTimecode, result.outputTimecode);
+				yield* setOutput(io.outputDuration, result.outputDuration);
+				yield* setOutput(io.outputBytes, result.outputBytes);
+			},
+		});
+
+		ctx.schema("request.ToggleStream", {
+			name: "Toggle Stream",
+			type: "exec",
+			description: "Toggles the status of the stream.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("ToggleStream"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+			},
+		});
+
+		ctx.schema("request.StartStream", {
+			name: "Start Stream",
+			type: "exec",
+			description: "Starts the stream.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("StartStream"));
+			},
+		});
+
+		ctx.schema("request.StopStream", {
+			name: "Stop Stream",
+			type: "exec",
+			description: "Stops the stream.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("StopStream"));
+			},
+		});
+
+		ctx.schema("request.SendStreamCaption", {
+			name: "Send Stream Caption",
+			type: "exec",
+			description: "Sends a caption to the stream.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				captionText: c.in.data("captionText", t.String, {
+					name: "Caption Text",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const captionText = yield* getInput(io.captionText);
+				yield* Effect.promise(() =>
+					connection.ws.call("SendStreamCaption", { captionText }),
+				);
+			},
+		});
+
+		// === Record ===
+
+		ctx.schema("request.GetRecordStatus", {
+			name: "Get Record Status",
+			type: "exec",
+			description: "Gets the status of the record.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+				outputPaused: c.out.data("outputPaused", t.Bool, {
+					name: "Output Paused",
+				}),
+				outputTimecode: c.out.data("outputTimecode", t.String, {
+					name: "Timecode",
+				}),
+				outputDuration: c.out.data("outputDuration", t.Int, {
+					name: "Duration (ms)",
+				}),
+				outputBytes: c.out.data("outputBytes", t.Int, {
+					name: "Bytes Written",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetRecordStatus"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+				yield* setOutput(io.outputPaused, result.outputPaused);
+				yield* setOutput(io.outputTimecode, result.outputTimecode);
+				yield* setOutput(io.outputDuration, result.outputDuration);
+				yield* setOutput(io.outputBytes, result.outputBytes);
+			},
+		});
+
+		ctx.schema("request.ToggleRecord", {
+			name: "Toggle Record",
+			type: "exec",
+			description: "Toggles the status of the record.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("ToggleRecord"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+			},
+		});
+
+		ctx.schema("request.StartRecord", {
+			name: "Start Record",
+			type: "exec",
+			description: "Starts the record.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("StartRecord"));
+			},
+		});
+
+		ctx.schema("request.StopRecord", {
+			name: "Stop Record",
+			type: "exec",
+			description: "Stops the record.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputPath: c.out.data("outputPath", t.String, { name: "Output Path" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("StopRecord"),
+				);
+				yield* setOutput(io.outputPath, result.outputPath);
+			},
+		});
+
+		ctx.schema("request.ToggleRecordPause", {
+			name: "Toggle Record Pause",
+			type: "exec",
+			description: "Toggles pause on the record.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("ToggleRecordPause"));
+			},
+		});
+
+		ctx.schema("request.PauseRecord", {
+			name: "Pause Record",
+			type: "exec",
+			description: "Pauses the record.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("PauseRecord"));
+			},
+		});
+
+		ctx.schema("request.ResumeRecord", {
+			name: "Resume Record",
+			type: "exec",
+			description: "Resumes the record.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("ResumeRecord"));
+			},
+		});
+
+		// === Virtual Camera ===
+
+		ctx.schema("request.GetVirtualCamStatus", {
+			name: "Get Virtual Cam Status",
+			type: "exec",
+			description: "Gets the status of the virtual camera.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetVirtualCamStatus"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+			},
+		});
+
+		ctx.schema("request.ToggleVirtualCam", {
+			name: "Toggle Virtual Cam",
+			type: "exec",
+			description: "Toggles the status of the virtual camera.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("ToggleVirtualCam"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+			},
+		});
+
+		ctx.schema("request.StartVirtualCam", {
+			name: "Start Virtual Cam",
+			type: "exec",
+			description: "Starts the virtual camera.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("StartVirtualCam"));
+			},
+		});
+
+		ctx.schema("request.StopVirtualCam", {
+			name: "Stop Virtual Cam",
+			type: "exec",
+			description: "Stops the virtual camera.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("StopVirtualCam"));
+			},
+		});
+
+		// === Replay Buffer ===
+
+		ctx.schema("request.GetReplayBufferStatus", {
+			name: "Get Replay Buffer Status",
+			type: "exec",
+			description: "Gets the status of the replay buffer.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetReplayBufferStatus"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+			},
+		});
+
+		ctx.schema("request.ToggleReplayBuffer", {
+			name: "Toggle Replay Buffer",
+			type: "exec",
+			description: "Toggles the status of the replay buffer.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				outputActive: c.out.data("outputActive", t.Bool, {
+					name: "Output Active",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("ToggleReplayBuffer"),
+				);
+				yield* setOutput(io.outputActive, result.outputActive);
+			},
+		});
+
+		ctx.schema("request.StartReplayBuffer", {
+			name: "Start Replay Buffer",
+			type: "exec",
+			description: "Starts the replay buffer.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("StartReplayBuffer"));
+			},
+		});
+
+		ctx.schema("request.StopReplayBuffer", {
+			name: "Stop Replay Buffer",
+			type: "exec",
+			description: "Stops the replay buffer.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("StopReplayBuffer"));
+			},
+		});
+
+		ctx.schema("request.SaveReplayBuffer", {
+			name: "Save Replay Buffer",
+			type: "exec",
+			description: "Saves the replay buffer.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({}),
+			run: function* ({ properties: { connection } }) {
+				yield* Effect.promise(() => connection.ws.call("SaveReplayBuffer"));
+			},
+		});
+
+		// === Input Audio Controls ===
+
+		ctx.schema("request.GetInputMute", {
+			name: "Get Input Mute",
+			type: "exec",
+			description: "Gets the mute state of an input.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
+				inputMuted: c.out.data("inputMuted", t.Bool, { name: "Input Muted" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const inputName = yield* getInput(io.inputName);
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetInputMute", { inputName }),
+				);
+				yield* setOutput(io.inputMuted, result.inputMuted);
+			},
+		});
+
+		ctx.schema("request.SetInputMute", {
+			name: "Set Input Mute",
+			type: "exec",
+			description: "Sets the mute state of an input.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
+				inputMuted: c.in.data("inputMuted", t.Bool, { name: "Input Muted" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const inputName = yield* getInput(io.inputName);
+				const inputMuted = yield* getInput(io.inputMuted);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetInputMute", { inputName, inputMuted }),
+				);
+			},
+		});
+
+		ctx.schema("request.ToggleInputMute", {
+			name: "Toggle Input Mute",
+			type: "exec",
+			description: "Toggles the mute state of an input.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
+				inputMuted: c.out.data("inputMuted", t.Bool, { name: "Input Muted" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const inputName = yield* getInput(io.inputName);
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("ToggleInputMute", { inputName }),
+				);
+				yield* setOutput(io.inputMuted, result.inputMuted);
+			},
+		});
+
+		ctx.schema("request.GetInputVolume", {
+			name: "Get Input Volume",
+			type: "exec",
+			description: "Gets the volume of an input.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
+				inputVolumeMul: c.out.data("inputVolumeMul", t.Float, {
+					name: "Volume Multiplier",
+				}),
+				inputVolumeDb: c.out.data("inputVolumeDb", t.Float, {
+					name: "Volume dB",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const inputName = yield* getInput(io.inputName);
+				const result = yield* Effect.promise(() =>
+					connection.ws.call("GetInputVolume", { inputName }),
+				);
+				yield* setOutput(io.inputVolumeMul, result.inputVolumeMul);
+				yield* setOutput(io.inputVolumeDb, result.inputVolumeDb);
+			},
+		});
+
+		ctx.schema("request.SetInputVolume", {
+			name: "Set Input Volume",
+			type: "exec",
+			description: "Sets the volume of an input.",
+			properties: { connection: OBSConnectionProperty },
+			io: (c) => ({
+				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
+				inputVolumeMul: c.in.data("inputVolumeMul", t.Float, {
+					name: "Volume Multiplier",
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const inputName = yield* getInput(io.inputName);
+				const inputVolumeMul = yield* getInput(io.inputVolumeMul);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetInputVolume", { inputName, inputVolumeMul }),
 				);
 			},
 		});
