@@ -109,6 +109,10 @@ export namespace EffectRuntime {
 		| Layer.Layer.Success<typeof EffectRuntime.layer>
 		| Layer.Layer.Context<typeof EffectRuntime.layer>;
 
+	const ImportMetaEnvConfig = Layer.setConfigProvider(
+		ConfigProvider.fromMap(new Map(Object.entries(import.meta.env))),
+	);
+
 	const TracingLive = Layer.unwrapEffect(
 		Effect.gen(function* () {
 			const env = yield* Config.all({
@@ -133,6 +137,7 @@ export namespace EffectRuntime {
 
 	export const layer = FrontendLive.pipe(
 		Layer.provide(TracingLive),
+		Layer.provide(ImportMetaEnvConfig),
 		Layer.provideMerge(Layer.scope),
 	);
 }

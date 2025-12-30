@@ -32,12 +32,4 @@ const RegisterPackages = Layer.scopedDiscard(
 	}),
 );
 
-const ImportMetaEnvConfig = Layer.setConfigProvider(
-	ConfigProvider.fromMap(new Map(Object.entries(import.meta.env))),
-);
-
-Layer.mergeAll(RegisterPackages, UILive).pipe(
-	Layer.provide(ImportMetaEnvConfig),
-	Layer.launch,
-	runtime.runPromise,
-);
+Layer.mergeAll(RegisterPackages, UILive).pipe(Layer.launch, runtime.runPromise);
