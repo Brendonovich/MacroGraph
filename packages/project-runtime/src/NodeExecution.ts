@@ -24,6 +24,9 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 				node: Node.Node,
 				schema: NodeSchema,
 			) {
+				const { projectRef } = yield* ProjectRuntime.Current;
+				const project = yield* projectRef;
+
 				const properties: Record<string, any> = {};
 				const engineResources = pkg.engine.pipe(
 					Option.getOrUndefined,
@@ -40,12 +43,43 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 						});
 					}
 
-					const values = yield* resource.get;
-					const value = values.find(
-						(v) =>
-							def.resource.serialize(v).id ===
-							node.properties?.pipe(HashMap.get(id), Option.getOrUndefined),
+					const constantId = node.properties?.pipe(
+						HashMap.get(id),
+						Option.getOrUndefined,
+					) as string | undefined;
+
+					if (constantId === undefined) {
+						yield* Effect.log(`Constant '${id}' not found`);
+						return yield* new Schema.InvalidPropertyValue({
+							property: def.name,
+						});
+					}
+
+					console.log({ constantId });
+
+					const constantValue = project.constants.pipe(
+						HashMap.get(constantId),
+						Option.map((c) => c.value),
+						Option.getOrUndefined,
 					);
+
+					console.log({ constantValue });
+
+					if (constantValue === undefined) {
+						yield* Effect.log(`Constant '${constantId}' not found`);
+						return yield* new Schema.InvalidPropertyValue({
+							property: def.name,
+						});
+					}
+
+					const values = yield* resource.get;
+
+					console.log({ values });
+
+					const value = values.find(
+						(v) => def.resource.serialize(v).id === constantValue,
+					);
+					console.log({ value });
 					if (!value) {
 						yield* Effect.log(
 							`No value for resource '${pkg}/${def.resource.id}' found`,
@@ -56,6 +90,8 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 					}
 					properties[id] = value;
 				}
+
+				console.log({ properties });
 
 				return properties;
 			});
@@ -306,12 +342,14 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 							}),
 						);
 
+					console.log({ nextOutput });
 					while (Option.isSome(nextOutput)) {
 						const nextNode = yield* resolveExecConnection(
 							graph,
 							nextOutput.value[0],
 							nextOutput.value[1],
 						);
+						console.log({ nextNode });
 
 						if (Option.isNone(nextNode)) break;
 
