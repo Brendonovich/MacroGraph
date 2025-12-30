@@ -63,9 +63,8 @@ const RegisterPackages = Layer.scopedDiscard(
 	}),
 );
 
-const ImportMetaEnvConfig = Layer.succeed(
-	ConfigProvider.ConfigProvider,
-	ConfigProvider.fromJson(import.meta.env),
+const ImportMetaEnvConfig = Layer.setConfigProvider(
+	ConfigProvider.fromMap(new Map(Object.entries(import.meta.env))),
 );
 
 Layer.mergeAll(RegisterPackages, UILive).pipe(
