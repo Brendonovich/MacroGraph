@@ -100,15 +100,6 @@ const FrontendLive = ServerEventStreamHandlerLive.pipe(
 );
 
 export namespace EffectRuntime {
-	const NodeSdkLive = WebSdk.layer(() => ({
-		resource: { serviceName: "mg-server-frontend" },
-		// Export span data to the console
-		spanProcessor: [
-			new BatchSpanProcessor(new OTLPTraceExporter()),
-			// new BatchSpanProcessor(new ConsoleSpanExporter()),
-		],
-	}));
-
 	export type EffectRuntime = ManagedRuntime.ManagedRuntime<
 		Context,
 		Layer.Layer.Error<typeof EffectRuntime.layer>
@@ -118,9 +109,7 @@ export namespace EffectRuntime {
 		| Layer.Layer.Success<typeof EffectRuntime.layer>
 		| Layer.Layer.Context<typeof EffectRuntime.layer>;
 
-	export const layer = Layer.mergeAll(FrontendLive, NodeSdkLive).pipe(
-		Layer.provideMerge(Layer.scope),
-	);
+	export const layer = FrontendLive.pipe(Layer.provideMerge(Layer.scope));
 }
 
 const EffectRuntimeContext = createContext<EffectRuntime.EffectRuntime>();

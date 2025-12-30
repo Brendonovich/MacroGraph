@@ -14,7 +14,7 @@ import { Effect, Layer } from "effect";
 import { Server, ServerConfigPersistence } from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
-import { ServerEnv, SharedDepsLive } from "./deps";
+import { ServerEnv, SharedDepsLive } from "./server-deps";
 
 Layer.unwrapEffect(
 	Effect.gen(function* () {

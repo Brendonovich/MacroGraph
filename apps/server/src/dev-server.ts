@@ -9,7 +9,7 @@ import * as Effect from "effect/Effect";
 import { Server, ServerConfigPersistence } from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
-import { ServerEnv, SharedDepsLive } from "./deps";
+import { ServerEnv, SharedDepsLive } from "./server-deps";
 
 const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 	() => {
