@@ -22,12 +22,12 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"types": ["unplugin-icons/types/solid"],
-		"plugins": [{ "name": "@effect/language-service" }],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
 	"references": [
 		{ "path": "../../packages/server-domain" },
 		{ "path": "../../packages/server-backend" },
-		{ "path": "../../packages/server-frontend" },
-	],
+		{ "path": "../../packages/server-frontend" }
+	]
 }

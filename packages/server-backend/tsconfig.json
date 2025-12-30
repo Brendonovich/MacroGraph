@@ -24,7 +24,7 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"types": ["unplugin-icons/types/solid"],
+		"types": ["unplugin-icons/types/solid"]
 	},
 	"include": ["src"],
 	"references": [
@@ -33,6 +33,6 @@
 		{ "path": "../project-domain" },
 		{ "path": "../project-runtime" },
 		{ "path": "../server-domain" },
-		{ "path": "../web-domain" },
-	],
+		{ "path": "../web-domain" }
+	]
 }

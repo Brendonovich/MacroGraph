@@ -8,7 +8,7 @@ import * as Realtime from "./Realtime";
 export const EncodedJWT = Schema.String.pipe(
 	Schema.brand("ClientAuth/EncodedJWT"),
 );
-export type EncodedClientAuthJWT = Schema.Schema.Type<typeof EncodedJWT>;
+export type EncodedJWT = Schema.Schema.Type<typeof EncodedJWT>;
 
 export const CloudLoginEvent = Schema.Union(
 	Schema.Struct({

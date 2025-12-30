@@ -1,5 +1,4 @@
 import {
-	FetchHttpClient,
 	type HttpApp,
 	HttpClient,
 	HttpRouter,
@@ -24,7 +23,7 @@ import {
 	RuntimeActions,
 } from "@macrograph/project-runtime";
 import {
-	ClientAuth,
+	ClientAuth as DClientAuth,
 	Realtime,
 	RequestRpcs,
 	Rpcs,
@@ -33,6 +32,7 @@ import {
 } from "@macrograph/server-domain";
 import * as Jose from "jose";
 
+import { ClientAuth } from "./ClientAuth/ClientAuth";
 import { ClientAuthJWTFromEncoded } from "./ClientAuth/ClientAuthJWT";
 import { ClientAuthRpcsLive } from "./ClientAuth/rpc";
 import { CloudRpcsLive } from "./CloudApi/rpc";
@@ -119,7 +119,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 				),
 			),
 			Effect.provide(
-				ClientAuth.ClientAuthRpcMiddleware.context(() =>
+				DClientAuth.ClientAuthRpcMiddleware.context(() =>
 					Effect.succeed({ userId: "", permissions: new Set() }),
 				),
 			),
@@ -298,6 +298,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 		ServerRegistration.Default,
 		ServerPolicy.Default,
 		CredentialsStore.layer,
+		ClientAuth.Default,
 		Layer.effect(ProjectRuntime.Current, ProjectRuntime.make()),
 	],
 }) {}

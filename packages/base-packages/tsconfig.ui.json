@@ -24,8 +24,8 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"types": ["unplugin-icons/types/solid", "vite/client"],
-		"plugins": [{ "name": "@effect/language-service" }],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
-	"references": [{ "path": "../package-sdk" }, { "path": "../web-domain" }],
+	"references": [{ "path": "../package-sdk" }, { "path": "../web-domain" }]
 }

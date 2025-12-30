@@ -24,7 +24,7 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"types": ["unplugin-icons/types/solid"],
-		"plugins": [{ "name": "@effect/language-service" }],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
 	"exclude": ["src/**/*.tsx"],
@@ -32,6 +32,6 @@
 		{ "path": "./tsconfig.ui.json" },
 		{ "path": "../package-sdk" },
 		{ "path": "../server-domain" },
-		{ "path": "../web-domain" },
-	],
+		{ "path": "../web-domain" }
+	]
 }

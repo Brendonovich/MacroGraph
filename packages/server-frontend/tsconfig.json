@@ -24,7 +24,7 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"types": ["unplugin-icons/types/solid"],
-		"plugins": [{ "name": "@effect/language-service" }],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
-	"include": ["src"],
+	"include": ["src"]
 }

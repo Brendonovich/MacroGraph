@@ -23,8 +23,8 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"plugins": [{ "name": "@effect/language-service" }],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
-	"references": [{ "path": "../project-domain" }, { "path": "../web-domain" }],
+	"references": [{ "path": "../project-domain" }, { "path": "../web-domain" }]
 }

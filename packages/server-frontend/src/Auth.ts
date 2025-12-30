@@ -10,15 +10,16 @@ export class AuthActions extends Effect.Service<AuthActions>()("AuthActions", {
 
 		return {
 			login: Effect.gen(function* () {
+				yield* Effect.log("Starting login flow");
 				const getFlowStatus = yield* rpc
 					.ClientLogin()
 					.pipe(Stream.toPull, Effect.map(Effect.orDie));
+				yield* Effect.log("Started login flow");
 
 				const status = yield* getFlowStatus.pipe(
 					Effect.map(Chunk.get(0)),
 					Effect.map(Option.getOrThrow),
 				);
-				console.log({ status });
 				if (status.type !== "started")
 					throw new Error("Flow status is not started");
 

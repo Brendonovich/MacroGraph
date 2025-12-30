@@ -102,7 +102,7 @@ export const GraphContextMenu = Object.assign(
 								ref={setRef}
 								data-open={position() !== null}
 								class={cx(
-									"absolute flex flex-col bg-gray-3 border border-gray-5 text-sm w-72 h-[22rem] rounded",
+									"absolute flex flex-col bg-gray-3 border border-gray-5 text-sm w-72 h-[22rem] rounded overflow-hidden",
 									"origin-top-left data-[open='true']:(animate-in fade-in zoom-in-95) data-[open='false']:(animate-out fade-out zoom-out-95)",
 								)}
 								style={{
@@ -121,61 +121,64 @@ export const GraphContextMenu = Object.assign(
 									value={search()}
 									onInput={(e) => setSearch(e.currentTarget.value)}
 								/>
-								<div class="p-1">
-									<For each={Object.entries(props.packages)}>
-										{([pkgId, pkg]) => {
-											const [open, setOpen] = createWritableMemo(
-												() =>
-													/*props.suggestion !== undefined ||*/ search() !== "",
-											);
+								<div class="overflow-y-auto">
+									<div class="p-1">
+										<For each={Object.entries(props.packages)}>
+											{([pkgId, pkg]) => {
+												const [open, setOpen] = createWritableMemo(
+													() =>
+														/*props.suggestion !== undefined ||*/ search() !==
+														"",
+												);
 
-											return (
-												<div class="flex flex-col items-stretch">
-													<ItemButton
-														type="button"
-														onClick={() => setOpen(!open())}
-														class="group gap-0.5 pl-0.5"
-														data-open={open()}
-													>
-														<IconMaterialSymbolsArrowRightRounded class="size-5 -my-1 -mr-0.5 group-data-[open='true']:rotate-90 transition-transform" />
-														<span>{pkg.name}</span>
-													</ItemButton>
-													<Show when={open()}>
-														<div class="pl-2">
-															<For each={[...pkg.schemas.entries()]}>
-																{([schemaId, schema]) => (
-																	<ItemButton
-																		class="gap-1.5 pl-1.5"
-																		onClick={() => {
-																			props.onSchemaClick(
-																				{
-																					pkg: pkg.id,
-																					id: schemaId,
-																				},
-																				graphCtx.getGraphPosition({
-																					x: position().x - 16,
-																					y: position().y - 16,
-																				}),
-																			);
-																			setState({ open: false });
-																		}}
-																	>
-																		<div
-																			class={cx(
-																				"size-3 bg-mg-event rounded-full",
-																				TypeIndicatorColours[schema.type],
-																			)}
-																		/>
-																		{schema.name ?? schemaId}
-																	</ItemButton>
-																)}
-															</For>
-														</div>
-													</Show>
-												</div>
-											);
-										}}
-									</For>
+												return (
+													<div class="flex flex-col items-stretch">
+														<ItemButton
+															type="button"
+															onClick={() => setOpen(!open())}
+															class="group gap-0.5 pl-0.5"
+															data-open={open()}
+														>
+															<IconMaterialSymbolsArrowRightRounded class="size-5 -my-1 -mr-0.5 group-data-[open='true']:rotate-90 transition-transform" />
+															<span>{pkg.name}</span>
+														</ItemButton>
+														<Show when={open()}>
+															<div class="pl-2">
+																<For each={[...pkg.schemas.entries()]}>
+																	{([schemaId, schema]) => (
+																		<ItemButton
+																			class="gap-1.5 pl-1.5"
+																			onClick={() => {
+																				props.onSchemaClick(
+																					{
+																						pkg: pkg.id,
+																						id: schemaId,
+																					},
+																					graphCtx.getGraphPosition({
+																						x: position().x - 16,
+																						y: position().y - 16,
+																					}),
+																				);
+																				setState({ open: false });
+																			}}
+																		>
+																			<div
+																				class={cx(
+																					"size-3 bg-mg-event rounded-full",
+																					TypeIndicatorColours[schema.type],
+																				)}
+																			/>
+																			{schema.name ?? schemaId}
+																		</ItemButton>
+																	)}
+																</For>
+															</div>
+														</Show>
+													</div>
+												);
+											}}
+										</For>
+									</div>
 								</div>
 							</div>
 						</Portal>

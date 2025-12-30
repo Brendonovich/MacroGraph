@@ -24,12 +24,12 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"types": ["@macrograph/ui/types"],
-		"plugins": [{ "name": "@effect/language-service" }],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
 	"references": [
 		{ "path": "../project-domain" },
 		{ "path": "../ui" },
-		{ "path": "../web-domain" },
-	],
+		{ "path": "../web-domain" }
+	]
 }
