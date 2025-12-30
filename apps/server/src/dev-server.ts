@@ -4,13 +4,12 @@ import {
 	NodeHttpServer,
 	NodeRuntime,
 } from "@effect/platform-node";
-import { Config, Fiber, Layer, Option } from "effect";
+import { Fiber, Layer, Option } from "effect";
 import * as Effect from "effect/Effect";
-import { CloudApiClient } from "@macrograph/project-runtime";
 import { Server, ServerConfigPersistence } from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
-import { SharedDepsLive } from "./deps";
+import { ServerEnv, SharedDepsLive } from "./deps";
 
 const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 	() => {
@@ -48,15 +47,7 @@ Layer.scopedDiscard(
 	Layer.provide(
 		ServerConfigPersistence.jsonFile("./node_modules/server-state.json"),
 	),
-	Layer.provide(
-		Layer.effect(
-			CloudApiClient.BaseUrl,
-			Config.string("MG_CLOUD_BASE_URL").pipe(
-				Config.withDefault("https://www.macrograph.app"),
-			),
-		),
-	),
-	Layer.provide(NodeContext.layer),
+	Layer.provide(Layer.mergeAll(NodeContext.layer, ServerEnv.Default)),
 	Layer.launch,
 	Effect.scoped,
 	NodeRuntime.runMain,

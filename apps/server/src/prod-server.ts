@@ -10,23 +10,11 @@ import {
 	NodeHttpServer,
 	NodeRuntime,
 } from "@effect/platform-node";
-import { Config, Effect, Layer } from "effect";
-import { CloudApiClient } from "@macrograph/project-runtime";
+import { Effect, Layer } from "effect";
 import { Server, ServerConfigPersistence } from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
-import { SharedDepsLive } from "./deps";
-
-class ServerEnv extends Effect.Service<ServerEnv>()(
-	"@macrograph/server/ServerEnv",
-	{
-		effect: Config.all({
-			cloudBaseUrl: Config.string("MG_CLOUD_BASE_URL").pipe(
-				Config.withDefault("https://www.macrograph.app"),
-			),
-		}),
-	},
-) {}
+import { ServerEnv, SharedDepsLive } from "./deps";
 
 Layer.unwrapEffect(
 	Effect.gen(function* () {
@@ -64,15 +52,7 @@ Layer.unwrapEffect(
 ).pipe(
 	Layer.provide(Server.Default),
 	Layer.provide(SharedDepsLive),
-	Layer.provide(
-		Layer.mergeAll(
-			ServerConfigPersistence.jsonFile("./server-state.json"),
-			Layer.effect(
-				CloudApiClient.BaseUrl,
-				Effect.map(ServerEnv, (e) => e.cloudBaseUrl),
-			),
-		),
-	),
+	Layer.provide(ServerConfigPersistence.jsonFile("./server-state.json")),
 	Layer.provide(Layer.mergeAll(NodeContext.layer, ServerEnv.Default)),
 	Layer.provide(NodeHttpServer.layer(createServer, { port: 23456 })),
 	Layer.launch,

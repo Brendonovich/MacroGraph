@@ -1,22 +1,55 @@
 import { NodeSdk } from "@effect/opentelemetry";
 import { FetchHttpClient } from "@effect/platform";
-import { Effect, Layer, Option } from "effect";
+import { Config, Effect, Layer, Option } from "effect";
 import { CloudApiClient } from "@macrograph/project-runtime";
 import {
 	ServerConfig,
 	ServerRegistrationToken,
 } from "@macrograph/server-backend";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import type { OTLPExporterNodeConfigBase } from "@opentelemetry/otlp-exporter-base";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
-const NodeSdkLive = NodeSdk.layer(() => ({
-	resource: { serviceName: "mg-server-backend" },
-	// Export span data to the console
-	spanProcessor: [
-		new BatchSpanProcessor(new OTLPTraceExporter()),
-		// new BatchSpanProcessor(new ConsoleSpanExporter()),
-	],
-}));
+export class ServerEnv extends Effect.Service<ServerEnv>()(
+	"@macrograph/server/ServerEnv",
+	{
+		effect: Config.all({
+			cloudBaseUrl: Config.string("MG_CLOUD_BASE_URL").pipe(
+				Config.withDefault("https://www.macrograph.app"),
+			),
+			axiom: Config.all({
+				dataset: Config.string("AXIOM_DATASET"),
+				apiToken: Config.string("AXIOM_API_TOKEN"),
+				domain: Config.string("AXIOM_DOMAIN"),
+			}).pipe(Config.option),
+		}),
+	},
+) {}
+
+const NodeSdkLive = Layer.unwrapEffect(
+	Effect.gen(function* () {
+		const env = yield* ServerEnv;
+
+		const exporterConfig: OTLPExporterNodeConfigBase = {};
+
+		if (Option.isSome(env.axiom)) {
+			const axiom = env.axiom.value;
+			exporterConfig.url = `https://${axiom.domain}/v1/traces`;
+			exporterConfig.headers ??= {};
+			exporterConfig.headers.Authorization = `Bearer ${axiom.apiToken}`;
+			exporterConfig.headers["X-Axiom-Dataset"] = axiom.dataset;
+		}
+
+		return NodeSdk.layer(() => ({
+			resource: { serviceName: "mg-server-backend" },
+			// Export span data to the console
+			spanProcessor: [
+				new BatchSpanProcessor(new OTLPTraceExporter(exporterConfig)),
+				// new BatchSpanProcessor(new ConsoleSpanExporter()),
+			],
+		}));
+	}),
+);
 
 const CloudApiClientAuth = Layer.effect(
 	CloudApiClient.Auth,
@@ -37,6 +70,10 @@ export const SharedDepsLive = CloudApiClient.layer().pipe(
 	Layer.provideMerge(
 		Layer.mergeAll(
 			NodeSdkLive,
+			Layer.effect(
+				CloudApiClient.BaseUrl,
+				Effect.map(ServerEnv, (e) => e.cloudBaseUrl),
+			),
 			FetchHttpClient.layer,
 			ServerRegistrationToken.layerServerConfig.pipe(
 				Layer.provide(ServerConfig.ServerConfig.Default),
