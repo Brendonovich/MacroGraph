@@ -31,3 +31,5 @@ gitignore
 Thumbs.db
 
 tsconfig.tsbuildinfo
+
+clones/

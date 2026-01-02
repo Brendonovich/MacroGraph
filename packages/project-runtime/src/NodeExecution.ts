@@ -342,14 +342,12 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 							}),
 						);
 
-					console.log({ nextOutput });
 					while (Option.isSome(nextOutput)) {
 						const nextNode = yield* resolveExecConnection(
 							graph,
 							nextOutput.value[0],
 							nextOutput.value[1],
 						);
-						console.log({ nextNode });
 
 						if (Option.isNone(nextNode)) break;
 

@@ -1,15 +1,22 @@
 import type { Rpc, RpcGroup } from "@effect/rpc";
-import { Data, Effect, type Layer, type Schema, type Scope } from "effect";
+import { Context, Data, Effect, Layer, type Schema, type Scope } from "effect";
 import type { UnknownException } from "effect/Cause";
 import {
+	type CreateDataIn,
+	type CreateDataOut,
+	type CreateExecOut,
 	type Credential,
+	type EffectGenerator,
 	ExecutionContext,
+	type InferProperties,
 	IO,
 	type NodeExecutionContext,
+	type PropertiesSchema,
 	type Resource,
 	type RunFunctionAvailableRequirements,
 	type SchemaDefinition,
 	type SchemaProperty,
+	type SchemaRunGeneratorEffect,
 } from "@macrograph/project-domain";
 import type { CREDENTIAL } from "@macrograph/web-domain";
 
@@ -180,6 +187,75 @@ export namespace Package {
 		engine?: PackageEngine.PackageEngine<TEvents>;
 		builder: PackageBuildFn<TEvents>;
 	}
+
+	// export type SchemaImplsFrom<Schema extends NodeSchema.Any> = {
+	// 	readonly [Current in Schema as Schema["id"]]: NodeSchema.ToImpl<Current>;
+	// };
+
+	export interface PackageBuilder<Schemas extends NodeSchema.Any, Events> {
+		schema<Id extends Extract<Schemas, { type: "exec" }>["id"], TIO>(
+			id: Id,
+			schema: NodeSchema.ExecImpl<Extract<Schemas, { id: Id }>, TIO>,
+		): PackageBuilder<Exclude<Schemas, Extract<Schemas, { id: Id }>>, Events>;
+		schema<Id extends Extract<Schemas, { type: "event" }>["id"], TIO, Event>(
+			id: Id,
+			schema: NodeSchema.EventImpl<
+				Extract<Schemas, { id: Id }>,
+				TIO,
+				Events,
+				Event
+			>,
+		): PackageBuilder<Exclude<Schemas, Extract<Schemas, { id: Id }>>, Events>;
+	}
+
+	interface PackageDef<
+		Schemas extends NodeSchema.Any,
+		Engine extends PackageEngine.PackageEngineDefinition<any, any, any, any>,
+	> {
+		name: string;
+		schemas: Schemas[];
+		engine?: Engine;
+	}
+
+	interface Package<
+		Schemas extends NodeSchema.Any,
+		Engine extends PackageEngine.PackageEngineDefinition<any, any, any, any>,
+	> extends PackageDef<Schemas, Engine> {
+		toLayer: (
+			build: (
+				builder: PackageBuilder<Schemas, Schema.Schema.Type<Engine["events"]>>,
+			) => PackageBuilder<never, Schema.Schema.Type<Engine["events"]>>,
+		) => Layer.Layer<never>;
+	}
+
+	export class Tag extends Context.Tag("@macrograph/package-sdk/Package/Tag")<
+		Tag,
+		{
+			def: PackageDef<any, any>;
+			schemas: Map<string, NodeSchema.AnyImpl>;
+		}
+	>() {}
+
+	export const _make = <
+		const Schemas extends NodeSchema.Any,
+		const Engine extends PackageEngine.PackageEngineDefinition<
+			any,
+			any,
+			any,
+			any
+		> = never,
+	>(
+		def: PackageDef<Schemas, Engine>,
+	): Package<Schemas, Engine> => ({
+		...def,
+		toLayer: (build) =>
+			Layer.effect(
+				Tag,
+				Effect.sync(() => {
+					return { def, schemas: new Map() };
+				}),
+			),
+	});
 }
 
 export namespace Property {
@@ -209,3 +285,71 @@ export const t = {
 	// _List: <T extends IO.DataType.Encoded.Any>(t: T) =>
 	// 	new IO.DataType._List<T>({ value: t }),
 };
+
+export namespace NodeSchema {
+	export type Schema<
+		Id extends string,
+		Type extends "exec" | "base" | "pure" | "event",
+		Properties extends PropertiesSchema,
+	> = {
+		id: Id;
+		type: Type;
+		properties: Properties;
+		name: string;
+		description: string;
+	};
+
+	export type Any = Schema<
+		string,
+		"exec" | "base" | "pure" | "event",
+		PropertiesSchema
+	>;
+
+	export const make = <
+		const Id extends string,
+		const Type extends "exec" | "base" | "pure" | "event",
+		const Properties extends PropertiesSchema,
+	>(
+		id: Id,
+		value: Omit<Schema<Id, Type, Properties>, "id">,
+	) => Object.assign(value, { id });
+
+	interface ExecIOCtx<S extends Any> {
+		in: { data: CreateDataIn<S["properties"]> };
+		out: { data: CreateDataOut };
+	}
+
+	interface EventIOCtx {
+		out: { exec: CreateExecOut; data: CreateDataOut };
+	}
+
+	export interface ExecImpl<S extends Any, IO> {
+		io: (_: ExecIOCtx<S>) => IO;
+		run: (ctx: {
+			io: IO;
+			properties: InferProperties<S["properties"]>;
+		}) => EffectGenerator<SchemaRunGeneratorEffect, void>;
+	}
+
+	export interface EventImpl<S extends Any, IO, Events, Event> {
+		io: (_: EventIOCtx) => IO;
+		event: (
+			ctx: { properties: InferProperties<S["properties"]> },
+			e: Events,
+		) => Event | undefined;
+		run: (
+			ctx: {
+				io: IO;
+				properties: InferProperties<S["properties"]>;
+			},
+			event: Event,
+		) => EffectGenerator<SchemaRunGeneratorEffect, void>;
+	}
+
+	export type AnyImpl<
+		S extends Any = Any,
+		IO = any,
+		Events = any,
+		Event extends Events = any,
+	> = ExecImpl<S, IO> | EventImpl<S, IO, Events, Event>;
+}

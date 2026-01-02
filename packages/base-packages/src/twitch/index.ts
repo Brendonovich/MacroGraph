@@ -316,12 +316,12 @@ const deleteOldSubscriptions = Effect.fn("deleteOldSubscriptions")(function* <
 	E,
 	R,
 >(helixClient: HttpApiClient.Client<Groups<typeof HelixApi>, E, R>) {
-	const subs = yield* helixClient.eventSub.getSubscriptions({ urlParams: {} });
+	const subs = yield* helixClient.getEventSubSubscriptions({ urlParams: {} });
 	yield* Effect.log(`Found ${subs.data.length} existing subscriptions`);
 	yield* Effect.all(
 		subs.data.map((sub) =>
 			sub.status === "websocket_disconnected"
-				? helixClient.eventSub.deleteSubscription({
+				? helixClient.deleteEventSubSubscription({
 						urlParams: { id: sub.id },
 					})
 				: Effect.void,

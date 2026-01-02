@@ -96,6 +96,43 @@ export const GraphContextMenu = Object.assign(
 							.filter((s) => s !== ""),
 					);
 
+					const filteredPackages = createMemo(() => {
+						const tokens = lowercaseSearchTokens();
+
+						const packages = Object.entries(props.packages).map(([, pkg]) => {
+							const lowercasePackageName = pkg.name.toLowerCase();
+
+							const leftoverSearchTokens = tokens.filter(
+								(s) => !lowercasePackageName.startsWith(s),
+							);
+
+							const matchingSchemas = [...pkg.schemas.entries()].filter(
+								([, schema]) => {
+									if (leftoverSearchTokens.length === 0) return true;
+									const lowercaseSchemaName = (schema.name ?? "").toLowerCase();
+									return leftoverSearchTokens.every((t) =>
+										lowercaseSchemaName.includes(t),
+									);
+								},
+							);
+
+							matchingSchemas.sort((a, b) => {
+								const aName = a[1].name ?? a[0];
+								const bName = b[1].name ?? b[0];
+								return aName.localeCompare(bName);
+							});
+
+							return {
+								pkg,
+								schemas: matchingSchemas,
+							};
+						});
+
+						packages.sort((a, b) => a.pkg.name.localeCompare(b.pkg.name));
+
+						return { packages, hasSearch: tokens.length > 0 };
+					});
+
 					return (
 						<Portal>
 							<div
@@ -123,58 +160,63 @@ export const GraphContextMenu = Object.assign(
 								/>
 								<div class="overflow-y-auto">
 									<div class="p-1">
-										<For each={Object.entries(props.packages)}>
-											{([pkgId, pkg]) => {
+										<For each={filteredPackages().packages}>
+											{({ pkg, schemas }) => {
 												const [open, setOpen] = createWritableMemo(
-													() =>
-														/*props.suggestion !== undefined ||*/ search() !==
-														"",
+													() => search() !== "",
 												);
 
 												return (
-													<div class="flex flex-col items-stretch">
-														<ItemButton
-															type="button"
-															onClick={() => setOpen(!open())}
-															class="group gap-0.5 pl-0.5"
-															data-open={open()}
-														>
-															<IconMaterialSymbolsArrowRightRounded class="size-5 -my-1 -mr-0.5 group-data-[open='true']:rotate-90 transition-transform" />
-															<span>{pkg.name}</span>
-														</ItemButton>
-														<Show when={open()}>
-															<div class="pl-2">
-																<For each={[...pkg.schemas.entries()]}>
-																	{([schemaId, schema]) => (
-																		<ItemButton
-																			class="gap-1.5 pl-1.5"
-																			onClick={() => {
-																				props.onSchemaClick(
-																					{
-																						pkg: pkg.id,
-																						id: schemaId,
-																					},
-																					graphCtx.getGraphPosition({
-																						x: position().x - 16,
-																						y: position().y - 16,
-																					}),
-																				);
-																				setState({ open: false });
-																			}}
-																		>
-																			<div
-																				class={cx(
-																					"size-3 bg-mg-event rounded-full",
-																					TypeIndicatorColours[schema.type],
-																				)}
-																			/>
-																			{schema.name ?? schemaId}
-																		</ItemButton>
-																	)}
-																</For>
-															</div>
-														</Show>
-													</div>
+													<Show
+														when={
+															!filteredPackages().hasSearch ||
+															schemas.length > 0
+														}
+													>
+														<div class="flex flex-col items-stretch">
+															<ItemButton
+																type="button"
+																onClick={() => setOpen(!open())}
+																class="group gap-0.5 pl-0.5"
+																data-open={open()}
+															>
+																<IconMaterialSymbolsArrowRightRounded class="size-5 -my-1 -mr-0.5 group-data-[open='true']:rotate-90 transition-transform" />
+																<span>{pkg.name}</span>
+															</ItemButton>
+															<Show when={open()}>
+																<div class="pl-2">
+																	<For each={schemas}>
+																		{([schemaId, schema]) => (
+																			<ItemButton
+																				class="gap-1.5 pl-1.5"
+																				onClick={() => {
+																					props.onSchemaClick(
+																						{
+																							pkg: pkg.id,
+																							id: schemaId,
+																						},
+																						graphCtx.getGraphPosition({
+																							x: position().x - 16,
+																							y: position().y - 16,
+																						}),
+																					);
+																					setState({ open: false });
+																				}}
+																			>
+																				<div
+																					class={cx(
+																						"size-3 bg-mg-event rounded-full shrink-0",
+																						TypeIndicatorColours[schema.type],
+																					)}
+																				/>
+																				{schema.name ?? schemaId}
+																			</ItemButton>
+																		)}
+																	</For>
+																</div>
+															</Show>
+														</div>
+													</Show>
 												);
 											}}
 										</For>
@@ -195,7 +237,7 @@ const ItemButton = (props: ComponentProps<"button">) => (
 		type="button"
 		{...props}
 		class={cx(
-			"flex flex-row py-0.5 items-center bg-transparent w-full text-left @hover-bg-gray-6/10 rounded",
+			"flex flex-row py-0.5 items-center w-full text-left @hover-bg-gray-6/10 rounded",
 			focusRingClasses("inset"),
 			props.class,
 		)}

@@ -82,10 +82,17 @@ export type CreateExecIn = (
 	id: string,
 	options?: { name?: string },
 ) => ExecInput;
-export type CreateDataIn = <T extends T.Any_>(
+export type CreateDataIn<
+	TProperties extends Record<string, any> = Record<string, never>,
+> = <T extends T.Any_>(
 	id: string,
 	type: T,
-	options?: { name?: string },
+	options?: {
+		name?: string;
+		suggestions?: (_: {
+			properties: InferProperties<TProperties>;
+		}) => Effect.Effect<Array<T.Infer_<T>>, any>;
+	},
 ) => DataInput<T>;
 
 export type CreateExecOut = (
@@ -98,10 +105,12 @@ export type CreateDataOut = <T extends T.Any_>(
 	options?: { name?: string },
 ) => DataOutput<T>;
 
-export interface IOFunctionContext {
+export interface IOFunctionContext<
+	TProperties extends Record<string, any> = Record<string, never>,
+> {
 	in: {
 		exec: CreateExecIn;
-		data: CreateDataIn;
+		data: CreateDataIn<TProperties>;
 	};
 	out: {
 		exec: CreateExecOut;
@@ -109,22 +118,18 @@ export interface IOFunctionContext {
 	};
 }
 
-export interface SchemaDefinitionBase<
-	TProperties extends Record<string, SchemaProperty<any>>,
-> {
+export interface SchemaDefinitionBase<TProperties extends PropertiesSchema> {
 	type: string;
 	name: string;
 	description?: string;
 	properties?: TProperties;
 }
 
-export interface PureSchemaDefinition<
-	TIO,
-	TProperties extends Record<string, SchemaProperty<any>>,
-> extends SchemaDefinitionBase<TProperties> {
+export interface PureSchemaDefinition<TIO, TProperties extends PropertiesSchema>
+	extends SchemaDefinitionBase<TProperties> {
 	type: "pure";
 	io: (ctx: {
-		in: { data: CreateDataIn };
+		in: { data: CreateDataIn<TProperties> };
 		out: { data: CreateDataOut };
 	}) => TIO;
 	run: (ctx: {
@@ -146,24 +151,26 @@ export interface PureSchema<
 		: never;
 }
 
-export interface ExecSchemaDefinition<
-	TIO,
-	TProperties extends Record<string, SchemaProperty<any>>,
-> extends SchemaDefinitionBase<TProperties> {
+export type PropertiesSchema = Record<string, SchemaProperty<any>>;
+
+export type InferProperties<TProperties extends PropertiesSchema> = {
+	[K in keyof TProperties]: TProperties[K] extends SchemaProperty<
+		Resource.Resource<any, infer T>
+	>
+		? T
+		: never;
+};
+
+export interface ExecSchemaDefinition<TIO, TProperties extends PropertiesSchema>
+	extends SchemaDefinitionBase<TProperties> {
 	type: "exec";
 	io: (ctx: {
-		in: { data: CreateDataIn };
+		in: { data: CreateDataIn<TProperties> };
 		out: { data: CreateDataOut };
 	}) => TIO;
 	run: (ctx: {
 		io: TIO;
-		properties: {
-			[K in keyof TProperties]: TProperties[K] extends SchemaProperty<
-				Resource.Resource<any, infer T>
-			>
-				? T
-				: never;
-		};
+		properties: InferProperties<TProperties>;
 	}) => EffectGenerator<SchemaRunGeneratorEffect, void>;
 }
 
@@ -180,19 +187,13 @@ export interface ExecSchema<
 		: never;
 }
 
-type EventFnCtx<TProperties extends Record<string, SchemaProperty<any>>> = {
-	properties: {
-		[K in keyof TProperties]: TProperties[K] extends SchemaProperty<
-			Resource.Resource<any, infer T>
-		>
-			? T
-			: never;
-	};
+type EventFnCtx<TProperties extends PropertiesSchema> = {
+	properties: InferProperties<TProperties>;
 };
 
 export interface EventSchemaDefinition<
 	TIO,
-	TProperties extends Record<string, SchemaProperty<any>>,
+	TProperties extends PropertiesSchema,
 	TEvents = any,
 	TEvent = any,
 > extends SchemaDefinitionBase<TProperties> {
@@ -202,7 +203,7 @@ export interface EventSchemaDefinition<
 	run: (
 		ctx: {
 			io: TIO;
-			properties: TProperties;
+			properties: InferProperties<TProperties>;
 		},
 		data: TEvent,
 	) => EffectGenerator<SchemaRunGeneratorEffect, void>;
@@ -235,10 +236,7 @@ export type SchemaProperty<TResource extends Resource.Resource<any, any>> = {
 
 export type SchemaDefinition<
 	TIO = any,
-	TProperties extends Record<string, SchemaProperty<any>> = Record<
-		string,
-		never
-	>,
+	TProperties extends PropertiesSchema = Record<string, never>,
 	TEvents = never,
 	TEvent = never,
 > =

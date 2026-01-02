@@ -2,6 +2,7 @@ import { Option, pipe, Schema as S } from "effect";
 import * as Effect from "effect/Effect";
 import {
 	getInput,
+	NodeSchema,
 	Package,
 	PackageEngine,
 	Resource,
@@ -38,11 +39,13 @@ type State = {
 	}>;
 };
 
-const Engine = PackageEngine.define<State>()({
+const EngineDef = PackageEngine.define<State>()({
 	rpc: RPCS,
 	events: S.Struct({ address: S.String, event: Event.Any }),
 	resources: [OBSWebSocket],
-}).build((ctx) => {
+});
+
+const Engine = EngineDef.build((ctx) => {
 	const instances = new Map<string, OBSWebSocket>();
 
 	const rpc = RPCS.toLayer({
@@ -598,6 +601,82 @@ const OBSConnectionProperty = {
 	resource: OBSWebSocket,
 };
 
+const OBSPackage = Package._make({
+	name: "OBS Studio",
+	engine: EngineDef,
+	schemas: [
+		NodeSchema.make("SetCurrentProgramScene", {
+			type: "exec",
+			properties: { connection: OBSConnectionProperty },
+			name: "Set Current Program Scene",
+			description: "Sets the current program scene in OBS.",
+		}),
+		NodeSchema.make("CreateInput", {
+			type: "exec",
+			properties: { connection: OBSConnectionProperty },
+			name: "Create Input",
+			description: "Creates a new input in OBS.",
+		}),
+		NodeSchema.make("CurrentProgramSceneChanged", {
+			type: "event",
+			properties: { connection: OBSConnectionProperty },
+			name: "Current Program Scene Changed",
+			description: "Fires when the current program scene in OBS is changed.",
+		}),
+	],
+});
+
+export const _default = OBSPackage.toLayer((builder) =>
+	builder
+		.schema("SetCurrentProgramScene", {
+			io: (c) => ({
+				scene: c.in.data("scene", t.String, {
+					name: "Scene Name",
+					suggestions: ({ properties }) =>
+						Effect.tryPromise(() =>
+							properties.connection.ws.call("GetSceneList"),
+						).pipe(
+							Effect.map((r) =>
+								r.scenes.map((scene) => scene.sceneName as string),
+							),
+						),
+				}),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const sceneName = yield* getInput(io.scene);
+				yield* Effect.promise(() =>
+					connection.ws.call("SetCurrentProgramScene", { sceneName }),
+				);
+			},
+		})
+		.schema("CreateInput", {
+			io: (c) => ({
+				inputName: c.in.data("inputName", t.String, { name: "Input Name" }),
+				inputKind: c.in.data("inputKind", t.String, { name: "Input Kind" }),
+			}),
+			run: function* ({ io, properties: { connection } }) {
+				const inputName = yield* getInput(io.inputName);
+				const inputKind = yield* getInput(io.inputKind);
+
+				yield* Effect.promise(() =>
+					connection.ws.call("CreateInput", { inputName, inputKind }),
+				);
+			},
+		})
+		.schema("CurrentProgramSceneChanged", {
+			event: ({ properties }, e) => {
+				if (properties.connection.address !== e.address) return;
+				if (e.event._tag === "CurrentProgramSceneChanged") return e.event;
+			},
+			io: (c) => ({
+				scene: c.out.data("scene", t.String, { name: "Scene Name" }),
+			}),
+			run: function* ({ io }, event) {
+				yield* setOutput(io.scene, event.sceneName);
+			},
+		}),
+);
+
 export default Package.make({
 	name: "OBS Studio",
 	engine: Engine,
@@ -608,7 +687,17 @@ export default Package.make({
 			description: "Sets the current program scene in OBS.",
 			properties: { connection: OBSConnectionProperty },
 			io: (c) => ({
-				scene: c.in.data("scene", t.String, { name: "Scene Name" }),
+				scene: c.in.data("scene", t.String, {
+					name: "Scene Name",
+					suggestions: ({ properties }) =>
+						Effect.tryPromise(() =>
+							properties.connection.ws.call("GetSceneList"),
+						).pipe(
+							Effect.map((r) =>
+								r.scenes.map((scene) => scene.sceneName as string),
+							),
+						),
+				}),
 			}),
 			run: function* ({ io, properties: { connection } }) {
 				const sceneName = yield* getInput(io.scene);

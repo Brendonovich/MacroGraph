@@ -16,7 +16,7 @@ export default createHandler(
 						{/*<link rel="stylesheet" href={globalCss} />*/}
 						{assets}
 					</head>
-					<body class="dark bg-neutral-900 overflow-hidden" id="app">
+					<body class="dark bg-neutral-900" id="app">
 						{children}
 						{scripts}
 					</body>

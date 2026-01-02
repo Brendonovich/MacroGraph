@@ -29,11 +29,7 @@ import { NodeHeader, NodeRoot } from "./Node";
 // import { ProjectActions } from "../Project/Actions";
 import type { GraphTwoWayConnections } from "./types";
 
-export type GraphViewState = {
-	scale?: number;
-	translate?: { x: number; y: number };
-	selection?: Array<Node.Id>;
-};
+const PAN_THRESHOLD = 5;
 
 export function GraphView(
 	props: {
@@ -74,6 +70,9 @@ export function GraphView(
 				positions: Array<[Graph.ItemRef, { x: number; y: number }]>;
 		  }
 	>({ type: "idle" });
+
+	const [isPanning, setIsPanning] = createSignal(false);
+	const [rightClickPending, setRightClickPending] = createSignal(false);
 
 	const graphCtx = useGraphContext();
 	const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
@@ -185,7 +184,10 @@ export function GraphView(
 	return (
 		<div
 			ref={mergeRefs(setRef, props.ref)}
-			class="relative flex-1 flex flex-col gap-4 items-start w-full touch-none select-none"
+			class={cx(
+				"relative flex-1 flex flex-col gap-4 items-start w-full touch-none select-none",
+				isPanning() && "cursor-grabbing",
+			)}
 			onPointerDown={(downEvent) => {
 				if (downEvent.button === 0) {
 					downEvent.preventDefault();
@@ -245,12 +247,73 @@ export function GraphView(
 							};
 						});
 					});
+				} else if (downEvent.button === 2) {
+					downEvent.preventDefault();
+					setRightClickPending(true);
+
+					const startScreenPosition = {
+						x: downEvent.clientX,
+						y: downEvent.clientY,
+					};
+					const startTranslate = graphCtx.translate ?? { x: 0, y: 0 };
+					let isDragging = false;
+
+					createRoot((dispose) => {
+						const handlePointerMove = (moveEvent: PointerEvent) => {
+							if (downEvent.pointerId !== moveEvent.pointerId) return;
+
+							const distance = Math.hypot(
+								moveEvent.clientX - startScreenPosition.x,
+								moveEvent.clientY - startScreenPosition.y,
+							);
+
+							if (distance > PAN_THRESHOLD) {
+								isDragging = true;
+								setIsPanning(true);
+								setRightClickPending(false);
+
+								const delta = {
+									x: startScreenPosition.x - moveEvent.clientX,
+									y: startScreenPosition.y - moveEvent.clientY,
+								};
+
+								props.onTranslateChange?.({
+									x: startTranslate.x + delta.x,
+									y: startTranslate.y + delta.y,
+								});
+							}
+						};
+
+						const handlePointerUp = (upEvent: PointerEvent) => {
+							if (downEvent.pointerId !== upEvent.pointerId) return;
+
+							if (!isDragging) {
+								props.onContextMenu?.(upEvent);
+							}
+
+							setRightClickPending(false);
+							dispose();
+						};
+
+						createEventListenerMap(window, {
+							pointermove: handlePointerMove,
+							pointerup: handlePointerUp,
+						});
+
+						onCleanup(() => {
+							setIsPanning(false);
+							setRightClickPending(false);
+							dispose();
+						});
+					});
 				}
 			}}
 			onContextMenu={(e) => {
-				if (!props.onContextMenu) return;
+				if (!props.onContextMenu || isPanning()) return;
 				e.preventDefault();
-				props.onContextMenu?.(e);
+				if (!rightClickPending()) {
+					props.onContextMenu?.(e);
+				}
 			}}
 		>
 			<Connections
