@@ -150,7 +150,7 @@ function ConstantRenameDialog(props: {
 	const [editName, setEditName] = createSignal(props.name);
 
 	return (
-		<Popover placement="right-start" gutter={4}>
+		<Popover placement="right-start" gutter={8}>
 			<Popover.Trigger
 				class={cx(
 					"text-xs text-gray-12 hover:text-gray-11 focus-visible:outline-none",
@@ -172,12 +172,15 @@ function ConstantRenameDialog(props: {
 							type="text"
 							value={editName()}
 							onInput={(e) => setEditName(e.currentTarget.value)}
-							class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-7"
+							class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-yellow"
 							disabled={props.isRenaming}
 						/>
-						<div class="flex justify-end gap-2">
+						<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center">
 							<Popover.CloseButton
-								class="px-2 py-1 text-xs text-gray-11 hover:text-gray-12 rounded-sm"
+								class={cx(
+									"flex-1 rounded-bl text-gray-11 hover:text-gray-12",
+									focusRingClasses("inset"),
+								)}
 								disabled={props.isRenaming}
 							>
 								Cancel
@@ -186,7 +189,10 @@ function ConstantRenameDialog(props: {
 								onClick={() => {
 									props.onRename(editName());
 								}}
-								class="px-2 py-1 text-xs bg-blue-7 text-blue-1 hover:bg-blue-6 rounded-sm"
+								class={cx(
+									"flex-1 rounded-br text-gray-11 hover:text-gray-12 hover:bg-gray-6",
+									focusRingClasses("inset"),
+								)}
 								disabled={props.isRenaming || !editName().trim()}
 							>
 								{props.isRenaming ? "Saving..." : "Save"}
