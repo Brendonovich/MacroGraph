@@ -33,7 +33,10 @@ import {
 import * as Jose from "jose";
 
 import { ClientAuth } from "./ClientAuth/ClientAuth";
-import { ClientAuthJWTFromEncoded } from "./ClientAuth/ClientAuthJWT";
+import {
+	type ClientAuthJWT,
+	ClientAuthJWTFromEncoded,
+} from "./ClientAuth/ClientAuthJWT";
 import { ClientAuthRpcsLive } from "./ClientAuth/rpc";
 import { CloudRpcsLive } from "./CloudApi/rpc";
 import { CredentialsRpcsLive as CredentialRpcsLive } from "./Credentials";
@@ -174,6 +177,10 @@ export class Server extends Effect.Service<Server>()("Server", {
 						Schema.Struct({
 							jwt: Schema.OptionFromUndefinedOr(ClientAuthJWTFromEncoded),
 						}),
+					).pipe(
+						Effect.catchAll(() =>
+							Effect.succeed({ jwt: Option.none<ClientAuthJWT>() }),
+						),
 					);
 
 					const auth = yield* jwt.pipe(
