@@ -22,9 +22,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set image name
+        run: echo "IMAGE_NAME=ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/macrograph-server" >> $GITHUB_ENV
+
       - uses: docker/build-push-action@v5
         with:
           context: .
           file: apps/server/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/macrograph-server:main
+          tags: ${{ env.IMAGE_NAME }}:main
