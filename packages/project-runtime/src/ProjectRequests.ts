@@ -208,7 +208,8 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 										r.id,
 										(constant) => ({
 											...constant,
-											value: r.value,
+											value: r.value ?? constant.value,
+											name: r.name ?? constant.name,
 										}),
 									),
 								}),
@@ -217,6 +218,7 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 						const event = new ProjectEvent.ResourceConstantUpdated({
 							id: r.id,
 							value: r.value,
+							name: r.name,
 						});
 						yield* ProjectRuntime.publishEvent(event);
 						return event;

@@ -90,7 +90,8 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 								"constants",
 								e.id,
 								produce((constant) => {
-									constant.value = e.value;
+									if (e.value) constant.value = e.value;
+									if (e.name) constant.name = e.name;
 								}),
 							);
 						}),

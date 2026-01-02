@@ -1,10 +1,11 @@
 import { Record } from "effect";
+import { Dialog, DialogContent, DialogTrigger } from "@macrograph/ui";
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import { Select } from "@kobalte/core/select";
 import { focusRingClasses } from "@macrograph/ui";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
-import { createMemo, For, Index, Show } from "solid-js";
+import { createMemo, createSignal, For, Index, Show } from "solid-js";
 
 import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";
@@ -28,6 +29,16 @@ export function ConstantsSidebar() {
 						const updateValue = useMutation(() => ({
 							mutationFn: (value: string) =>
 								actions.UpdateResourceConstant(constantId, value),
+						}));
+
+						const renameMutation = useMutation(() => ({
+							mutationFn: ({
+								name,
+								value,
+							}: {
+								name?: string;
+								value?: string;
+							}) => actions.UpdateResourceConstant(constantId, value, name),
 						}));
 
 						const data = () => {
@@ -56,7 +67,11 @@ export function ConstantsSidebar() {
 									return (
 										<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
 											<div class="flex flex-row justify-between items-baseline">
-												<span>{data().constant.name}</span>
+												<ConstantRenameDialog
+													name={data().constant.name}
+													onRename={(name) => renameMutation.mutate({ name })}
+													isRenaming={renameMutation.isPending}
+												/>
 												<span class="text-xs text-gray-11">
 													{data().resource.name}
 												</span>
@@ -124,6 +139,65 @@ export function ConstantsSidebar() {
 				</For>
 			</div>
 		</div>
+	);
+}
+
+function ConstantRenameDialog(props: {
+	name: string;
+	onRename: (name: string) => void;
+	isRenaming: boolean;
+}) {
+	const [open, setOpen] = createSignal(false);
+	const [editName, setEditName] = createSignal(props.name);
+
+	return (
+		<Dialog
+			open={open()}
+			onOpenChange={(o) => {
+				setOpen(o);
+				if (o) setEditName(props.name);
+			}}
+		>
+			<DialogTrigger
+				class={cx(
+					"text-xs text-gray-12 hover:text-gray-11 focus-visible:outline-none",
+					focusRingClasses("outline"),
+				)}
+			>
+				{props.name}
+			</DialogTrigger>
+			<DialogContent class="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+				<div class="flex flex-col gap-2">
+					<span class="text-xs font-medium text-gray-12">Rename Constant</span>
+					<input
+						type="text"
+						value={editName()}
+						onInput={(e) => setEditName(e.currentTarget.value)}
+						class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-7"
+						disabled={props.isRenaming}
+					/>
+					<div class="flex justify-end gap-2 mt-2">
+						<button
+							onClick={() => setOpen(false)}
+							class="px-2 py-1 text-xs text-gray-11 hover:text-gray-12 rounded-sm"
+							disabled={props.isRenaming}
+						>
+							Cancel
+						</button>
+						<button
+							onClick={() => {
+								props.onRename(editName());
+								setOpen(false);
+							}}
+							class="px-2 py-1 text-xs bg-blue-7 text-blue-1 hover:bg-blue-6 rounded-sm"
+							disabled={props.isRenaming || !editName().trim()}
+						>
+							{props.isRenaming ? "Saving..." : "Save"}
+						</button>
+					</div>
+				</div>
+			</DialogContent>
+		</Dialog>
 	);
 }
 
