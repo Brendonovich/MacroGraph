@@ -1,10 +1,11 @@
 import { Record } from "effect";
+import { Popover } from "@kobalte/core/popover";
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import { Select } from "@kobalte/core/select";
 import { focusRingClasses } from "@macrograph/ui";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
-import { createMemo, For, Index, Show } from "solid-js";
+import { createMemo, createSignal, For, Index, Show } from "solid-js";
 
 import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";
@@ -28,6 +29,16 @@ export function ConstantsSidebar() {
 						const updateValue = useMutation(() => ({
 							mutationFn: (value: string) =>
 								actions.UpdateResourceConstant(constantId, value),
+						}));
+
+						const renameMutation = useMutation(() => ({
+							mutationFn: ({
+								name,
+								value,
+							}: {
+								name?: string;
+								value?: string;
+							}) => actions.UpdateResourceConstant(constantId, value, name),
 						}));
 
 						const data = () => {
@@ -56,7 +67,11 @@ export function ConstantsSidebar() {
 									return (
 										<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
 											<div class="flex flex-row justify-between items-baseline">
-												<span>{data().constant.name}</span>
+												<ConstantRenameDialog
+													name={data().constant.name}
+													onRename={(name) => renameMutation.mutate({ name })}
+													isRenaming={renameMutation.isPending}
+												/>
 												<span class="text-xs text-gray-11">
 													{data().resource.name}
 												</span>
@@ -124,6 +139,69 @@ export function ConstantsSidebar() {
 				</For>
 			</div>
 		</div>
+	);
+}
+
+function ConstantRenameDialog(props: {
+	name: string;
+	onRename: (name: string) => void;
+	isRenaming: boolean;
+}) {
+	const [editName, setEditName] = createSignal(props.name);
+
+	return (
+		<Popover placement="right-start" gutter={8}>
+			<Popover.Trigger
+				class={cx(
+					"text-xs text-gray-12 hover:text-gray-11 focus-visible:outline-none",
+					focusRingClasses("outline"),
+				)}
+			>
+				{props.name}
+			</Popover.Trigger>
+			<Popover.Portal>
+				<Popover.Content
+					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 border border-gray-6 rounded shadow-lg focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-left-2) ui-closed:(animate-out fade-out slide-out-to-left-2)"
+					onOpenAutoFocus={(e) => e.preventDefault()}
+				>
+					<div class="flex flex-col gap-2 p-2">
+						<span class="text-xs font-medium text-gray-12">
+							Rename Constant
+						</span>
+						<input
+							type="text"
+							value={editName()}
+							onInput={(e) => setEditName(e.currentTarget.value)}
+							class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-yellow"
+							disabled={props.isRenaming}
+						/>
+						<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center">
+							<Popover.CloseButton
+								class={cx(
+									"flex-1 rounded-bl text-gray-11 hover:text-gray-12",
+									focusRingClasses("inset"),
+								)}
+								disabled={props.isRenaming}
+							>
+								Cancel
+							</Popover.CloseButton>
+							<button
+								onClick={() => {
+									props.onRename(editName());
+								}}
+								class={cx(
+									"flex-1 rounded-br text-gray-11 hover:text-gray-12 hover:bg-gray-6",
+									focusRingClasses("inset"),
+								)}
+								disabled={props.isRenaming || !editName().trim()}
+							>
+								{props.isRenaming ? "Saving..." : "Save"}
+							</button>
+						</div>
+					</div>
+				</Popover.Content>
+			</Popover.Portal>
+		</Popover>
 	);
 }
 

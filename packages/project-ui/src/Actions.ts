@@ -219,11 +219,12 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						).pipe(Effect.andThen(handleProjectEvent)),
 				),
 				UpdateResourceConstant: withRequest<Request.UpdateResourceConstant>()(
-					(run, constantId: string, value: string) =>
+					(run, constantId: string, value?: string, name?: string) =>
 						run(
 							new Request.UpdateResourceConstant({
 								id: constantId,
 								value,
+								name,
 							}),
 						).pipe(Effect.andThen(handleProjectEvent)),
 				),

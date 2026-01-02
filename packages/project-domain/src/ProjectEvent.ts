@@ -95,7 +95,8 @@ export class ResourceConstantUpdated extends S.TaggedClass<ResourceConstantUpdat
 	"ResourceConstantUpdated",
 	{
 		id: S.String,
-		value: S.String,
+		value: S.optional(S.String),
+		name: S.optional(S.String),
 	},
 ) {}
 
