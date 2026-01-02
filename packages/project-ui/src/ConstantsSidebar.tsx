@@ -150,7 +150,7 @@ function ConstantRenameDialog(props: {
 	const [editName, setEditName] = createSignal(props.name);
 
 	return (
-		<Popover placement="left-start" gutter={4}>
+		<Popover placement="right-start" gutter={4}>
 			<Popover.Trigger
 				class={cx(
 					"text-xs text-gray-12 hover:text-gray-11 focus-visible:outline-none",
@@ -161,7 +161,7 @@ function ConstantRenameDialog(props: {
 			</Popover.Trigger>
 			<Popover.Portal>
 				<Popover.Content
-					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 border border-gray-6 rounded shadow-lg focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-right-2) ui-closed:(animate-out fade-out slide-out-to-right-2)"
+					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 border border-gray-6 rounded shadow-lg focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-left-2) ui-closed:(animate-out fade-out slide-out-to-left-2)"
 					onOpenAutoFocus={(e) => e.preventDefault()}
 				>
 					<div class="flex flex-col gap-2 p-2">
