@@ -175,29 +175,29 @@ function ConstantRenameDialog(props: {
 							class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-yellow"
 							disabled={props.isRenaming}
 						/>
-						<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center">
-							<Popover.CloseButton
-								class={cx(
-									"flex-1 rounded-bl text-gray-11 hover:text-gray-12",
-									focusRingClasses("inset"),
-								)}
-								disabled={props.isRenaming}
-							>
-								Cancel
-							</Popover.CloseButton>
-							<button
-								onClick={() => {
-									props.onRename(editName());
-								}}
-								class={cx(
-									"flex-1 rounded-br bg-gray-12 text-gray-3 hover:text-gray-12 hover:bg-gray-6",
-									focusRingClasses("inset"),
-								)}
-								disabled={props.isRenaming || !editName().trim()}
-							>
-								{props.isRenaming ? "Saving..." : "Save"}
-							</button>
-						</div>
+					</div>
+					<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center">
+						<Popover.CloseButton
+							class={cx(
+								"flex-1 rounded-bl text-gray-11 hover:text-gray-12",
+								focusRingClasses("inset"),
+							)}
+							disabled={props.isRenaming}
+						>
+							Cancel
+						</Popover.CloseButton>
+						<button
+							onClick={() => {
+								props.onRename(editName());
+							}}
+							class={cx(
+								"flex-1 rounded-br bg-gray-12 text-gray-3 hover:text-gray-12 hover:bg-gray-6",
+								focusRingClasses("inset"),
+							)}
+							disabled={props.isRenaming || !editName().trim()}
+						>
+							{props.isRenaming ? "Saving..." : "Save"}
+						</button>
 					</div>
 				</Popover.Content>
 			</Popover.Portal>
