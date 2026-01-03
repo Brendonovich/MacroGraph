@@ -53,7 +53,6 @@ jobs:
           tags: |
             ${{format('{0}:{1}', env.IMAGE_NAME, env.TAG) }}
           provenance: false
-          attests: type=sha
           cache-from: type=gha
           cache-to: type=gha,mode=max,image-manifest=mediatype=application/vnd.oci.image.manifest.v1+json
 
