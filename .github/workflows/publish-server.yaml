@@ -3,6 +3,8 @@ name: Publish Server
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
@@ -11,6 +13,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.repository == 'MacroGraph/MacroGraph'
     steps:
       - uses: actions/checkout@v4
 
@@ -25,9 +28,18 @@ jobs:
       - name: Set image name
         run: echo "IMAGE_NAME=ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/macrograph-server" >> $GITHUB_ENV
 
+      - name: Determine tag
+        id: determine-tag
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "TAG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "TAG=main" >> $GITHUB_ENV
+          fi
+
       - uses: docker/build-push-action@v5
         with:
           context: .
           file: apps/server/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:main
+          tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}
