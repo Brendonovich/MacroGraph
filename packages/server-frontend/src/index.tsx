@@ -1,4 +1,4 @@
-import { Effect, Layer,ManagedRuntime } from "effect";
+import { Effect, Layer, ManagedRuntime } from "effect";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import {
 	ContextualSidebarProvider,
@@ -22,68 +22,69 @@ import "@macrograph/project-ui/styles.css";
 import { createLayoutState, LayoutStateProvider } from "./LayoutState";
 import { TSQueryClient } from "./QueryInvalidation";
 
-export { EffectRuntime } from "./EffectRuntime"
+export { EffectRuntime } from "./EffectRuntime";
 
-export const UILive = (runtime: EffectRuntime.EffectRuntime) => Layer.scopedDiscard(
-	Effect.gen(function* () {
-		yield* Effect.log("Starting");
+export const UILive = (runtime: EffectRuntime.EffectRuntime) =>
+	Layer.scopedDiscard(
+		Effect.gen(function* () {
+			yield* Effect.log("Starting");
 
-		const realtime = yield* ProjectRealtime;
+			const realtime = yield* ProjectRealtime;
 
-		const { actions } = yield* ProjectState;
-		const rpc = yield* ServerRpc.client;
+			const { actions } = yield* ProjectState;
+			const rpc = yield* ServerRpc.client;
 
-		actions.setProject(yield* rpc.GetProject({}));
+			actions.setProject(yield* rpc.GetProject({}));
 
-		const layoutState = createLayoutState({
-			wrapPaneLayoutStore: (s) =>
-				makePersisted(s, { name: "editor-pane-layout" }),
-			wrapPanesStore: (s) => makePersisted(s, { name: "editor-panes" }),
-		});
+			const layoutState = createLayoutState({
+				wrapPaneLayoutStore: (s) =>
+					makePersisted(s, { name: "editor-pane-layout" }),
+				wrapPanesStore: (s) => makePersisted(s, { name: "editor-panes" }),
+			});
 
-		const queryClient = yield* TSQueryClient;
+			const queryClient = yield* TSQueryClient;
 
-		render(
-			() => (
-				<ErrorBoundary
-					fallback={(e) => {
-						console.error(e);
-						return (
-							<div>
-								{e.toString()}
-								<pre>{e.stack}</pre>
-							</div>
-						);
-					}}
-				>
-					<ProjectEffectRuntimeContext.Provider value={runtime}>
-						<EffectRuntimeProvider runtime={runtime}>
-							<QueryClientProvider client={queryClient}>
-								<ProjectRuntimeProvider value={runtime}>
-									<RealtimeContextProvider value={{ id: () => realtime.id }}>
-										<LayoutStateProvider {...layoutState}>
-											<NavSidebarProvider>
-												<ContextualSidebarProvider
-													wrapOpenSignal={(s) =>
-														makePersisted(s, { name: "contextual-sidebar" })
-													}
-												>
-													<Layout>
-														<App />
-													</Layout>
-												</ContextualSidebarProvider>
-											</NavSidebarProvider>
-										</LayoutStateProvider>
-									</RealtimeContextProvider>
-								</ProjectRuntimeProvider>
-							</QueryClientProvider>
-						</EffectRuntimeProvider>
-					</ProjectEffectRuntimeContext.Provider>
-				</ErrorBoundary>
-			),
-			document.getElementById("app")!,
-		);
+			render(
+				() => (
+					<ErrorBoundary
+						fallback={(e) => {
+							console.error(e);
+							return (
+								<div>
+									{e.toString()}
+									<pre>{e.stack}</pre>
+								</div>
+							);
+						}}
+					>
+						<ProjectEffectRuntimeContext.Provider value={runtime}>
+							<EffectRuntimeProvider runtime={runtime}>
+								<QueryClientProvider client={queryClient}>
+									<ProjectRuntimeProvider value={runtime}>
+										<RealtimeContextProvider value={{ id: () => realtime.id }}>
+											<LayoutStateProvider {...layoutState}>
+												<NavSidebarProvider>
+													<ContextualSidebarProvider
+														wrapOpenSignal={(s) =>
+															makePersisted(s, { name: "contextual-sidebar" })
+														}
+													>
+														<Layout>
+															<App />
+														</Layout>
+													</ContextualSidebarProvider>
+												</NavSidebarProvider>
+											</LayoutStateProvider>
+										</RealtimeContextProvider>
+									</ProjectRuntimeProvider>
+								</QueryClientProvider>
+							</EffectRuntimeProvider>
+						</ProjectEffectRuntimeContext.Provider>
+					</ErrorBoundary>
+				),
+				document.getElementById("app")!,
+			);
 
-		return yield* Effect.never;
-	}),
-);
+			return yield* Effect.never;
+		}),
+	);

@@ -1,10 +1,4 @@
-import {
-	Effect,
-	Layer,
-	ManagedRuntime,
-	Option,
-	Stream,
-} from "effect";
+import { Effect, Layer, ManagedRuntime, Option, Stream } from "effect";
 import {
 	ProjectEventStream,
 	ProjectRequestHandler,
@@ -103,18 +97,13 @@ const FrontendLive = ServerEventStreamHandlerLive.pipe(
 );
 
 export namespace EffectRuntime {
-	export type EffectRuntime = ManagedRuntime.ManagedRuntime<
-		Context,
-		any
-	>;
+	export type EffectRuntime = ManagedRuntime.ManagedRuntime<Context, any>;
 
 	export type Context =
 		| Layer.Layer.Success<typeof EffectRuntime.layer>
 		| Layer.Layer.Context<typeof EffectRuntime.layer>;
 
-	export const layer = FrontendLive.pipe(
-		Layer.provideMerge(Layer.scope),
-	);
+	export const layer = FrontendLive.pipe(Layer.provideMerge(Layer.scope));
 }
 
 const EffectRuntimeContext = createContext<EffectRuntime.EffectRuntime>();
