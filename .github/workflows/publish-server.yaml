@@ -36,10 +36,11 @@ jobs:
           else
             echo "TAG=main" >> $GITHUB_ENV
           fi
+          echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
 
       - uses: docker/build-push-action@v5
         with:
           context: .
           file: apps/server/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
