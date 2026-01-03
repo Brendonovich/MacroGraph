@@ -100,11 +100,7 @@ const RuntimeLive = Layer.scoped(
 
 		yield* runtime.events.pipe(
 			(e) => Stream.fromPubSub(e),
-			Stream.throttle({
-				cost: Chunk.size,
-				duration: "100 millis",
-				units: 1,
-			}),
+			Stream.throttle({ cost: Chunk.size, duration: "100 millis", units: 1 }),
 			Stream.runForEach(
 				Effect.fn(function* (e) {
 					// console.log(e);

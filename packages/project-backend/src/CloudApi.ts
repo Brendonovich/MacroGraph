@@ -52,9 +52,9 @@ export class CloudApi extends Effect.Service<CloudApi>()("CloudApi", {
 				),
 			);
 
-			return yield* HttpApiClient.make(Api, {
-				baseUrl,
-			}).pipe(Effect.provide(httpClientLayer));
+			return yield* HttpApiClient.make(Api, { baseUrl }).pipe(
+				Effect.provide(httpClientLayer),
+			);
 		});
 
 		const client = yield* makeClient;

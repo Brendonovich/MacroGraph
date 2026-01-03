@@ -45,7 +45,5 @@
 		"unocss-preset-radix": "^2.8.2",
 		"vite": "^7.1.10"
 	},
-	"devDependencies": {
-		"unplugin-icons": "^0.18.5"
-	}
+	"devDependencies": { "unplugin-icons": "^0.18.5" }
 }

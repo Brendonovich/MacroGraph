@@ -22,11 +22,7 @@ export class Package extends S.Class<Package>("Package")({
 				name: S.String,
 				description: S.optional(S.String),
 				properties: S.Array(
-					S.Struct({
-						id: S.String,
-						name: S.String,
-						resource: S.String,
-					}),
+					S.Struct({ id: S.String, name: S.String, resource: S.String }),
 				),
 			}),
 		}),

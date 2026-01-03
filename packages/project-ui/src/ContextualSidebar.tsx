@@ -145,10 +145,7 @@ export function ContextualSidebarContent() {
 																				node().properties?.[property.id],
 																		) ?? null;
 
-																	type Option = {
-																		id: string;
-																		display: string;
-																	};
+																	type Option = { id: string; display: string };
 
 																	return (
 																		<>

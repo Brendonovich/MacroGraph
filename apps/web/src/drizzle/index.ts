@@ -7,9 +7,7 @@ import * as schema from "./schema";
 export { schema };
 
 function createConnection() {
-	return postgres(serverEnv().DATABASE_URL, {
-		prepare: false,
-	});
+	return postgres(serverEnv().DATABASE_URL, { prepare: false });
 }
 
 let _connection: ReturnType<typeof createConnection> | undefined;

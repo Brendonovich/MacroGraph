@@ -3,36 +3,22 @@ import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 export function pkg() {
-	const pkg = new Package({
-		name: "List",
-	});
+	const pkg = new Package({ name: "List" });
 
 	pkg.createSchema({
 		name: "List Create",
 		type: "pure",
-		properties: {
-			number: {
-				name: "Entries",
-				type: t.int(),
-				default: 1,
-			},
-		},
+		properties: { number: { name: "Entries", type: t.int(), default: 1 } },
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 			const w = io.wildcard("");
 			const inputs = Array.from({ length: value }, (_, i) => ({
-				value: io.dataInput({
-					id: `value-${i}`,
-					type: t.wildcard(w),
-				}),
+				value: io.dataInput({ id: `value-${i}`, type: t.wildcard(w) }),
 			}));
 
 			return {
 				inputs,
-				out: io.dataOutput({
-					id: "",
-					type: t.list(t.wildcard(w)),
-				}),
+				out: io.dataOutput({ id: "", type: t.list(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -52,18 +38,9 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				list: io.dataInput({
-					id: "list",
-					type: t.list(t.wildcard(w)),
-				}),
-				value: io.dataInput({
-					id: "value",
-					type: t.wildcard(w),
-				}),
-				outList: io.dataOutput({
-					id: "outList",
-					type: t.list(t.wildcard(w)),
-				}),
+				list: io.dataInput({ id: "list", type: t.list(t.wildcard(w)) }),
+				value: io.dataInput({ id: "value", type: t.wildcard(w) }),
+				outList: io.dataOutput({ id: "outList", type: t.list(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -82,22 +59,10 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				list: io.dataInput({
-					id: "list",
-					type: t.list(t.wildcard(w)),
-				}),
-				index: io.dataInput({
-					id: "index",
-					type: t.int(),
-				}),
-				value: io.dataInput({
-					id: "value",
-					type: t.wildcard(w),
-				}),
-				outList: io.dataOutput({
-					id: "outList",
-					type: t.list(t.wildcard(w)),
-				}),
+				list: io.dataInput({ id: "list", type: t.list(t.wildcard(w)) }),
+				index: io.dataInput({ id: "index", type: t.int() }),
+				value: io.dataInput({ id: "value", type: t.wildcard(w) }),
+				outList: io.dataOutput({ id: "outList", type: t.list(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -116,22 +81,10 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				list: io.dataInput({
-					id: "list",
-					type: t.list(t.wildcard(w)),
-				}),
-				index: io.dataInput({
-					id: "index",
-					type: t.int(),
-				}),
-				value: io.dataInput({
-					id: "value",
-					type: t.wildcard(w),
-				}),
-				outList: io.dataOutput({
-					id: "outList",
-					type: t.list(t.wildcard(w)),
-				}),
+				list: io.dataInput({ id: "list", type: t.list(t.wildcard(w)) }),
+				index: io.dataInput({ id: "index", type: t.int() }),
+				value: io.dataInput({ id: "value", type: t.wildcard(w) }),
+				outList: io.dataOutput({ id: "outList", type: t.list(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -148,14 +101,8 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				list: io.dataInput({
-					id: "list",
-					type: t.list(t.wildcard(w)),
-				}),
-				index: io.dataInput({
-					id: "index",
-					type: t.int(),
-				}),
+				list: io.dataInput({ id: "list", type: t.list(t.wildcard(w)) }),
+				index: io.dataInput({ id: "index", type: t.int() }),
 				returnList: io.dataOutput({
 					id: "returnList",
 					type: t.list(t.wildcard(w)),
@@ -184,14 +131,8 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				list: io.dataInput({
-					id: "list",
-					type: t.list(t.wildcard(w)),
-				}),
-				index: io.dataInput({
-					id: "index",
-					type: t.int(),
-				}),
+				list: io.dataInput({ id: "list", type: t.list(t.wildcard(w)) }),
+				index: io.dataInput({ id: "index", type: t.int() }),
 				return: io.dataOutput({
 					id: "return",
 					name: "Value",
@@ -215,19 +156,13 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.list(t.string()),
-				}),
+				input: io.dataInput({ id: "input", type: t.list(t.string()) }),
 				separator: io.dataInput({
 					id: "separator",
 					name: "Separator",
 					type: t.string(),
 				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {

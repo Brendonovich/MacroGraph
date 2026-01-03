@@ -10,10 +10,7 @@ export type HistoryAction<E, P, I = void> = {
 };
 export type HistoryItemEntry<T extends HistoryAction<any, any, any>> =
 	T extends HistoryAction<infer E, any, any> ? HistoryEntry<E> : never;
-export type HistoryEntryData = {
-	type: string;
-	entry: object;
-};
+export type HistoryEntryData = { type: string; entry: object };
 export type HistoryActions = Record<string, HistoryAction<any, any, any>>;
 
 export function historyAction<E, P, I = void>(args: HistoryAction<E, P, I>) {
@@ -53,10 +50,7 @@ export function createActionHistory<TActions extends HistoryActions>(
 	const [state, setState] = createStore<{
 		undo: Array<Array<HistoryItem<TActions, keyof TActions>>>;
 		redo: Array<Array<HistoryItem<TActions, keyof TActions>>>;
-	}>({
-		undo: [],
-		redo: [],
-	});
+	}>({ undo: [], redo: [] });
 
 	const [history, setHistory] = createStore<
 		Array<Array<HistoryItem<TActions, keyof TActions>>>

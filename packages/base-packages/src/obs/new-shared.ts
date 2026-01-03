@@ -1,7 +1,7 @@
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
+import { Resource } from "@macrograph/package-sdk/updated";
 
-import { Resource } from "../new-sdk";
 import { SocketAddress } from "./types";
 
 export class ConnectionFailed extends S.TaggedError<ConnectionFailed>()(
@@ -18,9 +18,7 @@ export class ClientRpcs extends RpcGroup.make(
 		}),
 		error: ConnectionFailed,
 	}),
-	Rpc.make("RemoveSocket", {
-		payload: S.Struct({ address: SocketAddress }),
-	}),
+	Rpc.make("RemoveSocket", { payload: S.Struct({ address: SocketAddress }) }),
 	Rpc.make("DisconnectSocket", {
 		payload: S.Struct({ address: SocketAddress }),
 	}),
@@ -35,10 +33,7 @@ export class ClientRpcs extends RpcGroup.make(
 
 export class RuntimeRpcs extends RpcGroup.make(
 	Rpc.make("BroadcastCustomEvent", {
-		payload: S.Struct({
-			address: SocketAddress,
-			eventData: S.Any,
-		}),
+		payload: S.Struct({ address: SocketAddress, eventData: S.Any }),
 	}),
 	Rpc.make("CallVendorRequest", {
 		payload: S.Struct({
@@ -62,16 +57,10 @@ export class RuntimeRpcs extends RpcGroup.make(
 			inputSettings: S.optional(S.Any),
 			sceneItemEnabled: S.optional(S.Boolean),
 		}),
-		success: S.Struct({
-			inputUuid: S.String,
-			sceneItemId: S.Number,
-		}),
+		success: S.Struct({ inputUuid: S.String, sceneItemId: S.Number }),
 	}),
 	Rpc.make("CreateProfile", {
-		payload: S.Struct({
-			address: SocketAddress,
-			profileName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, profileName: S.String }),
 	}),
 	Rpc.make("CreateRecordChapter", {
 		payload: S.Struct({
@@ -80,13 +69,8 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("CreateScene", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sceneName: S.String,
-		}),
-		success: S.Struct({
-			sceneUuid: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, sceneName: S.String }),
+		success: S.Struct({ sceneUuid: S.String }),
 	}),
 	Rpc.make("CreateSceneCollection", {
 		payload: S.Struct({
@@ -101,9 +85,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sourceName: S.String,
 			sceneItemEnabled: S.optional(S.Boolean),
 		}),
-		success: S.Struct({
-			sceneItemId: S.Number,
-		}),
+		success: S.Struct({ sceneItemId: S.Number }),
 	}),
 	Rpc.make("CreateSourceFilter", {
 		payload: S.Struct({
@@ -121,32 +103,18 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sceneItemId: S.Number.pipe(S.greaterThanOrEqualTo(0)),
 			destinationSceneName: S.optional(S.String),
 		}),
-		success: S.Struct({
-			sceneItemId: S.Number,
-		}),
+		success: S.Struct({ sceneItemId: S.Number }),
 	}),
 	Rpc.make("GetCurrentPreviewScene", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			sceneName: S.String,
-			sceneUuid: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ sceneName: S.String, sceneUuid: S.String }),
 	}),
 	Rpc.make("GetCurrentProgramScene", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			sceneName: S.String,
-			sceneUuid: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ sceneName: S.String, sceneUuid: S.String }),
 	}),
 	Rpc.make("GetCurrentSceneTransition", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			transitionName: S.String,
 			transitionUuid: S.String,
@@ -158,127 +126,66 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetCurrentSceneTransitionCursor", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			transitionCursor: S.Number,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ transitionCursor: S.Number }),
 	}),
 	Rpc.make("GetGroupList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			groups: S.Array(S.String),
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ groups: S.Array(S.String) }),
 	}),
 	Rpc.make("GetGroupSceneItemList", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sceneName: S.String,
-		}),
-		success: S.Struct({
-			sceneItems: S.Array(S.Any),
-		}),
+		payload: S.Struct({ address: SocketAddress, sceneName: S.String }),
+		success: S.Struct({ sceneItems: S.Array(S.Any) }),
 	}),
 	Rpc.make("GetHotkeyList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			hotkeys: S.Array(S.String),
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ hotkeys: S.Array(S.String) }),
 	}),
 	Rpc.make("GetInputAudioBalance", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputAudioBalance: S.Number,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputAudioBalance: S.Number }),
 	}),
 	Rpc.make("GetInputAudioMonitorType", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			monitorType: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ monitorType: S.String }),
 	}),
 	Rpc.make("GetInputAudioSyncOffset", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputAudioSyncOffset: S.Number,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputAudioSyncOffset: S.Number }),
 	}),
 	Rpc.make("GetInputAudioTracks", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputAudioTracks: S.Any,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputAudioTracks: S.Any }),
 	}),
 	Rpc.make("GetInputDefaultSettings", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputKind: S.String,
-		}),
-		success: S.Struct({
-			defaultInputSettings: S.Any,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputKind: S.String }),
+		success: S.Struct({ defaultInputSettings: S.Any }),
 	}),
 	Rpc.make("GetInputDeinterlaceFieldOrder", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputDeinterlaceFieldOrder: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputDeinterlaceFieldOrder: S.String }),
 	}),
 	Rpc.make("GetInputDeinterlaceMode", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputDeinterlaceMode: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputDeinterlaceMode: S.String }),
 	}),
 	Rpc.make("GetInputKindList", {
 		payload: S.Struct({
 			address: SocketAddress,
 			unversioned: S.optional(S.Boolean),
 		}),
-		success: S.Struct({
-			inputKinds: S.Array(S.String),
-		}),
+		success: S.Struct({ inputKinds: S.Array(S.String) }),
 	}),
 	Rpc.make("GetInputList", {
 		payload: S.Struct({
 			address: SocketAddress,
 			inputKind: S.optional(S.String),
 		}),
-		success: S.Struct({
-			inputs: S.Array(S.Any),
-		}),
+		success: S.Struct({ inputs: S.Array(S.Any) }),
 	}),
 	Rpc.make("GetInputMute", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputMuted: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputMuted: S.Boolean }),
 	}),
 	Rpc.make("GetInputPropertiesListPropertyItems", {
 		payload: S.Struct({
@@ -286,43 +193,22 @@ export class RuntimeRpcs extends RpcGroup.make(
 			inputName: S.String,
 			propertyName: S.String,
 		}),
-		success: S.Struct({
-			propertyItems: S.Array(S.Any),
-		}),
+		success: S.Struct({ propertyItems: S.Array(S.Any) }),
 	}),
 	Rpc.make("GetInputSettings", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputSettings: S.Any,
-			inputKind: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputSettings: S.Any, inputKind: S.String }),
 	}),
 	Rpc.make("GetInputVolume", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputVolumeMul: S.Number,
-			inputVolumeDb: S.Number,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputVolumeMul: S.Number, inputVolumeDb: S.Number }),
 	}),
 	Rpc.make("GetLastReplayBufferReplay", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			savedReplayPath: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ savedReplayPath: S.String }),
 	}),
 	Rpc.make("GetMediaInputStatus", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
 		success: S.Struct({
 			mediaState: S.String,
 			mediaDuration: S.NullOr(S.Number),
@@ -330,35 +216,19 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetMonitorList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			monitors: S.Array(S.Any),
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ monitors: S.Array(S.Any) }),
 	}),
 	Rpc.make("GetOutputList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputs: S.Array(S.Any),
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputs: S.Array(S.Any) }),
 	}),
 	Rpc.make("GetOutputSettings", {
-		payload: S.Struct({
-			address: SocketAddress,
-			outputName: S.String,
-		}),
-		success: S.Struct({
-			outputSettings: S.Any,
-		}),
+		payload: S.Struct({ address: SocketAddress, outputName: S.String }),
+		success: S.Struct({ outputSettings: S.Any }),
 	}),
 	Rpc.make("GetOutputStatus", {
-		payload: S.Struct({
-			address: SocketAddress,
-			outputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, outputName: S.String }),
 		success: S.Struct({
 			outputActive: S.Boolean,
 			outputReconnecting: S.Boolean,
@@ -376,14 +246,10 @@ export class RuntimeRpcs extends RpcGroup.make(
 			realm: S.String,
 			slotName: S.String,
 		}),
-		success: S.Struct({
-			slotValue: S.NullOr(S.Any),
-		}),
+		success: S.Struct({ slotValue: S.NullOr(S.Any) }),
 	}),
 	Rpc.make("GetProfileList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			currentProfileName: S.String,
 			profiles: S.Array(S.String),
@@ -401,17 +267,11 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetRecordDirectory", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			recordDirectory: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ recordDirectory: S.String }),
 	}),
 	Rpc.make("GetRecordStatus", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			outputActive: S.Boolean,
 			outputPaused: S.Boolean,
@@ -421,17 +281,11 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetReplayBufferStatus", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputActive: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputActive: S.Boolean }),
 	}),
 	Rpc.make("GetSceneCollectionList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			currentSceneCollectionName: S.String,
 			sceneCollections: S.Array(S.String),
@@ -443,9 +297,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sceneName: S.String,
 			sceneItemId: S.Number.pipe(S.greaterThanOrEqualTo(0)),
 		}),
-		success: S.Struct({
-			sceneItemBlendMode: S.String,
-		}),
+		success: S.Struct({ sceneItemBlendMode: S.String }),
 	}),
 	Rpc.make("GetSceneItemEnabled", {
 		payload: S.Struct({
@@ -453,9 +305,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sceneName: S.String,
 			sceneItemId: S.Number.pipe(S.greaterThanOrEqualTo(0)),
 		}),
-		success: S.Struct({
-			sceneItemEnabled: S.Boolean,
-		}),
+		success: S.Struct({ sceneItemEnabled: S.Boolean }),
 	}),
 	Rpc.make("GetSceneItemId", {
 		payload: S.Struct({
@@ -464,9 +314,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sourceName: S.String,
 			searchOffset: S.optional(S.Number.pipe(S.greaterThanOrEqualTo(-1))),
 		}),
-		success: S.Struct({
-			sceneItemId: S.Number,
-		}),
+		success: S.Struct({ sceneItemId: S.Number }),
 	}),
 	Rpc.make("GetSceneItemIndex", {
 		payload: S.Struct({
@@ -474,18 +322,11 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sceneName: S.String,
 			sceneItemId: S.Number.pipe(S.greaterThanOrEqualTo(0)),
 		}),
-		success: S.Struct({
-			sceneItemIndex: S.Number,
-		}),
+		success: S.Struct({ sceneItemIndex: S.Number }),
 	}),
 	Rpc.make("GetSceneItemList", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sceneName: S.String,
-		}),
-		success: S.Struct({
-			sceneItems: S.Array(S.Any),
-		}),
+		payload: S.Struct({ address: SocketAddress, sceneName: S.String }),
+		success: S.Struct({ sceneItems: S.Array(S.Any) }),
 	}),
 	Rpc.make("GetSceneItemLocked", {
 		payload: S.Struct({
@@ -493,9 +334,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sceneName: S.String,
 			sceneItemId: S.Number.pipe(S.greaterThanOrEqualTo(0)),
 		}),
-		success: S.Struct({
-			sceneItemLocked: S.Boolean,
-		}),
+		success: S.Struct({ sceneItemLocked: S.Boolean }),
 	}),
 	Rpc.make("GetSceneItemSource", {
 		payload: S.Struct({
@@ -503,10 +342,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sceneName: S.String,
 			sceneItemId: S.Number.pipe(S.greaterThanOrEqualTo(0)),
 		}),
-		success: S.Struct({
-			sourceName: S.String,
-			sourceUuid: S.String,
-		}),
+		success: S.Struct({ sourceName: S.String, sourceUuid: S.String }),
 	}),
 	Rpc.make("GetSceneItemTransform", {
 		payload: S.Struct({
@@ -514,14 +350,10 @@ export class RuntimeRpcs extends RpcGroup.make(
 			sceneName: S.String,
 			sceneItemId: S.Number.pipe(S.greaterThanOrEqualTo(0)),
 		}),
-		success: S.Struct({
-			sceneItemTransform: S.Any,
-		}),
+		success: S.Struct({ sceneItemTransform: S.Any }),
 	}),
 	Rpc.make("GetSceneList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			currentProgramSceneName: S.NullOr(S.String),
 			currentProgramSceneUuid: S.NullOr(S.String),
@@ -531,19 +363,14 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetSceneSceneTransitionOverride", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sceneName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, sceneName: S.String }),
 		success: S.Struct({
 			transitionName: S.NullOr(S.String),
 			transitionDuration: S.NullOr(S.Number),
 		}),
 	}),
 	Rpc.make("GetSceneTransitionList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			currentSceneTransitionName: S.NullOr(S.String),
 			currentSceneTransitionUuid: S.NullOr(S.String),
@@ -552,14 +379,8 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetSourceActive", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sourceName: S.String,
-		}),
-		success: S.Struct({
-			videoActive: S.Boolean,
-			videoShowing: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress, sourceName: S.String }),
+		success: S.Struct({ videoActive: S.Boolean, videoShowing: S.Boolean }),
 	}),
 	Rpc.make("GetSourceFilter", {
 		payload: S.Struct({
@@ -575,30 +396,16 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetSourceFilterDefaultSettings", {
-		payload: S.Struct({
-			address: SocketAddress,
-			filterKind: S.String,
-		}),
-		success: S.Struct({
-			defaultFilterSettings: S.Any,
-		}),
+		payload: S.Struct({ address: SocketAddress, filterKind: S.String }),
+		success: S.Struct({ defaultFilterSettings: S.Any }),
 	}),
 	Rpc.make("GetSourceFilterKindList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			sourceFilterKinds: S.Array(S.String),
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ sourceFilterKinds: S.Array(S.String) }),
 	}),
 	Rpc.make("GetSourceFilterList", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sourceName: S.String,
-		}),
-		success: S.Struct({
-			filters: S.Array(S.Any),
-		}),
+		payload: S.Struct({ address: SocketAddress, sourceName: S.String }),
+		success: S.Struct({ filters: S.Array(S.Any) }),
 	}),
 	Rpc.make("GetSourceScreenshot", {
 		payload: S.Struct({
@@ -615,14 +422,10 @@ export class RuntimeRpcs extends RpcGroup.make(
 				S.Number.pipe(S.greaterThanOrEqualTo(-1), S.lessThanOrEqualTo(100)),
 			),
 		}),
-		success: S.Struct({
-			imageData: S.String,
-		}),
+		success: S.Struct({ imageData: S.String }),
 	}),
 	Rpc.make("GetSpecialInputs", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			desktop1: S.String,
 			desktop2: S.String,
@@ -633,9 +436,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetStats", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			cpuUsage: S.Number,
 			memoryUsage: S.Number,
@@ -651,18 +452,14 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetStreamServiceSettings", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			streamServiceType: S.String,
 			streamServiceSettings: S.Any,
 		}),
 	}),
 	Rpc.make("GetStreamStatus", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			outputActive: S.Boolean,
 			outputReconnecting: S.Boolean,
@@ -675,25 +472,15 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetStudioModeEnabled", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			studioModeEnabled: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ studioModeEnabled: S.Boolean }),
 	}),
 	Rpc.make("GetTransitionKindList", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			transitionKinds: S.Array(S.String),
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ transitionKinds: S.Array(S.String) }),
 	}),
 	Rpc.make("GetVersion", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			obsVersion: S.String,
 			obsWebSocketVersion: S.String,
@@ -705,9 +492,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetVideoSettings", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		success: S.Struct({
 			fpsNumerator: S.Number,
 			fpsDenominator: S.Number,
@@ -718,12 +503,8 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("GetVirtualCamStatus", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputActive: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputActive: S.Boolean }),
 	}),
 	Rpc.make("OffsetMediaInputCursor", {
 		payload: S.Struct({
@@ -733,22 +514,13 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("OpenInputFiltersDialog", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
 	}),
 	Rpc.make("OpenInputInteractDialog", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
 	}),
 	Rpc.make("OpenInputPropertiesDialog", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
 	}),
 	Rpc.make("OpenSourceProjector", {
 		payload: S.Struct({
@@ -766,11 +538,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 			projectorGeometry: S.optional(S.String),
 		}),
 	}),
-	Rpc.make("PauseRecord", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-	}),
+	Rpc.make("PauseRecord", { payload: S.Struct({ address: SocketAddress }) }),
 	Rpc.make("PressInputPropertiesButton", {
 		payload: S.Struct({
 			address: SocketAddress,
@@ -779,22 +547,13 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("RemoveInput", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
 	}),
 	Rpc.make("RemoveProfile", {
-		payload: S.Struct({
-			address: SocketAddress,
-			profileName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, profileName: S.String }),
 	}),
 	Rpc.make("RemoveScene", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sceneName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, sceneName: S.String }),
 	}),
 	Rpc.make("RemoveSceneItem", {
 		payload: S.Struct({
@@ -810,15 +569,9 @@ export class RuntimeRpcs extends RpcGroup.make(
 			filterName: S.String,
 		}),
 	}),
-	Rpc.make("ResumeRecord", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-	}),
+	Rpc.make("ResumeRecord", { payload: S.Struct({ address: SocketAddress }) }),
 	Rpc.make("SaveReplayBuffer", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 	}),
 	Rpc.make("SaveSourceScreenshot", {
 		payload: S.Struct({
@@ -838,28 +591,16 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("SendStreamCaption", {
-		payload: S.Struct({
-			address: SocketAddress,
-			captionText: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, captionText: S.String }),
 	}),
 	Rpc.make("SetCurrentPreviewScene", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sceneName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, sceneName: S.String }),
 	}),
 	Rpc.make("SetCurrentProfile", {
-		payload: S.Struct({
-			address: SocketAddress,
-			profileName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, profileName: S.String }),
 	}),
 	Rpc.make("SetCurrentProgramScene", {
-		payload: S.Struct({
-			address: SocketAddress,
-			sceneName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, sceneName: S.String }),
 	}),
 	Rpc.make("SetCurrentSceneCollection", {
 		payload: S.Struct({
@@ -868,10 +609,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("SetCurrentSceneTransition", {
-		payload: S.Struct({
-			address: SocketAddress,
-			transitionName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, transitionName: S.String }),
 	}),
 	Rpc.make("SetCurrentSceneTransitionDuration", {
 		payload: S.Struct({
@@ -1002,10 +740,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("SetRecordDirectory", {
-		payload: S.Struct({
-			address: SocketAddress,
-			recordDirectory: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, recordDirectory: S.String }),
 	}),
 	Rpc.make("SetSceneItemBlendMode", {
 		payload: S.Struct({
@@ -1105,10 +840,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("SetStudioModeEnabled", {
-		payload: S.Struct({
-			address: SocketAddress,
-			studioModeEnabled: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress, studioModeEnabled: S.Boolean }),
 	}),
 	Rpc.make("SetTBarPosition", {
 		payload: S.Struct({
@@ -1151,119 +883,57 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("SplitRecordFile", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 	}),
 	Rpc.make("StartOutput", {
-		payload: S.Struct({
-			address: SocketAddress,
-			outputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, outputName: S.String }),
 	}),
-	Rpc.make("StartRecord", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-	}),
+	Rpc.make("StartRecord", { payload: S.Struct({ address: SocketAddress }) }),
 	Rpc.make("StartReplayBuffer", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 	}),
-	Rpc.make("StartStream", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-	}),
+	Rpc.make("StartStream", { payload: S.Struct({ address: SocketAddress }) }),
 	Rpc.make("StartVirtualCam", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 	}),
 	Rpc.make("StopOutput", {
-		payload: S.Struct({
-			address: SocketAddress,
-			outputName: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress, outputName: S.String }),
 	}),
 	Rpc.make("StopRecord", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputPath: S.String,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputPath: S.String }),
 	}),
 	Rpc.make("StopReplayBuffer", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 	}),
-	Rpc.make("StopStream", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-	}),
-	Rpc.make("StopVirtualCam", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-	}),
+	Rpc.make("StopStream", { payload: S.Struct({ address: SocketAddress }) }),
+	Rpc.make("StopVirtualCam", { payload: S.Struct({ address: SocketAddress }) }),
 	Rpc.make("ToggleInputMute", {
-		payload: S.Struct({
-			address: SocketAddress,
-			inputName: S.String,
-		}),
-		success: S.Struct({
-			inputMuted: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress, inputName: S.String }),
+		success: S.Struct({ inputMuted: S.Boolean }),
 	}),
 	Rpc.make("ToggleOutput", {
-		payload: S.Struct({
-			address: SocketAddress,
-			outputName: S.String,
-		}),
-		success: S.Struct({
-			outputActive: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress, outputName: S.String }),
+		success: S.Struct({ outputActive: S.Boolean }),
 	}),
 	Rpc.make("ToggleRecord", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputActive: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputActive: S.Boolean }),
 	}),
 	Rpc.make("ToggleRecordPause", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 	}),
 	Rpc.make("ToggleReplayBuffer", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputActive: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputActive: S.Boolean }),
 	}),
 	Rpc.make("ToggleStream", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputActive: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputActive: S.Boolean }),
 	}),
 	Rpc.make("ToggleVirtualCam", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
-		success: S.Struct({
-			outputActive: S.Boolean,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
+		success: S.Struct({ outputActive: S.Boolean }),
 	}),
 	Rpc.make("TriggerHotkeyByKeySequence", {
 		payload: S.Struct({
@@ -1287,9 +957,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 		}),
 	}),
 	Rpc.make("TriggerStudioModeTransition", {
-		payload: S.Struct({
-			address: SocketAddress,
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 	}),
 ) {}
 

@@ -354,16 +354,9 @@ export interface Events {
 		redemptions_redeemed_current_stream: number | null;
 		max_per_stream: MaxPerStream;
 		max_per_user_per_stream: MaxPerStream;
-		global_cooldown: {
-			is_enabled: boolean;
-			seconds: number | null;
-		};
+		global_cooldown: { is_enabled: boolean; seconds: number | null };
 		background_color: string;
-		image: {
-			url_1x: string;
-			url_2x: string;
-			url_4x: string;
-		} | null;
+		image: { url_1x: string; url_2x: string; url_4x: string } | null;
 		default_image: 1 | 2 | 4;
 	};
 	"channel.channel_points_custom_reward.update": this["channel.channel_points_custom_reward.add"];
@@ -429,15 +422,8 @@ export interface Events {
 		user_id: string;
 		user_login: string;
 		user_name: string;
-		reward: {
-			type: string;
-			cost: number;
-			unlocked_emote: null;
-		};
-		message: {
-			text: string;
-			emotes: Emotes[];
-		};
+		reward: { type: string; cost: number; unlocked_emote: null };
+		message: { text: string; emotes: Emotes[] };
 	};
 	"channel.poll.end": {
 		id: string;
@@ -715,22 +701,14 @@ export interface Events {
 			fragments: {
 				type: "text" | "cheermote" | "emote" | "mention";
 				text: string;
-				cheermote?: {
-					prefix: string;
-					bits: number;
-					tier: number;
-				};
+				cheermote?: { prefix: string; bits: number; tier: number };
 				emote?: {
 					id: string;
 					emote_set_id: string;
 					owner_id: string;
 					format: ("static" | "animated")[];
 				};
-				mention?: {
-					user_id: string;
-					user_name: string;
-					user_login: string;
-				};
+				mention?: { user_id: string; user_name: string; user_login: string };
 			}[];
 		};
 		message_type:
@@ -740,14 +718,8 @@ export interface Events {
 			| "user_intro"
 			| "power_ups_message_effect"
 			| "power_ups_gigantified_emote";
-		badges: {
-			set_id: string;
-			id: string;
-			info: string;
-		}[];
-		cheer?: {
-			bits: number;
-		};
+		badges: { set_id: string; id: string; info: string }[];
+		cheer?: { bits: number };
 		color: string;
 		reply?: {
 			parent_message_id: string;
@@ -765,11 +737,7 @@ export interface Events {
 		source_broadcaster_user_name?: string;
 		source_broadcaster_user_login?: string;
 		source_message_id?: string;
-		source_badges?: {
-			set_id: string;
-			id: string;
-			info: string;
-		}[];
+		source_badges?: { set_id: string; id: string; info: string }[];
 		is_source_only?: boolean;
 	};
 	"user.whisper.message": {

@@ -67,11 +67,7 @@ export function Interface(props: { core: Core; environment: Environment }) {
 	);
 }
 
-type CurrentGraph = {
-	model: GraphModel;
-	state: GraphState;
-	size: GraphBounds;
-};
+type CurrentGraph = { model: GraphModel; state: GraphState; size: GraphBounds };
 
 // type MosaicItem = {
 //   type: "graph";
@@ -912,10 +908,7 @@ function createKeydownShortcuts(
 						items.push({
 							itemId: selectedItemId.id,
 							itemVariant: "node",
-							position: {
-								x: position.x,
-								y: position.y + delta,
-							},
+							position: { x: position.x, y: position.y + delta },
 							from: { ...position },
 						});
 					} else if (selectedItemId.type === "commentBox") {
@@ -927,10 +920,7 @@ function createKeydownShortcuts(
 						items.push({
 							itemId: selectedItemId.id,
 							itemVariant: "commentBox",
-							position: {
-								x: position.x,
-								y: position.y + delta,
-							},
+							position: { x: position.x, y: position.y + delta },
 							from: { ...position },
 						});
 					}

@@ -1,8 +1,8 @@
 import { Effect, pipe } from "effect";
+import type { PackageEngine } from "@macrograph/package-sdk/updated";
 import OBSWebsocket, { type OBSRequestTypes } from "obs-websocket-js";
 
 import { EngineDef } from "./new-defs";
-import type { PackageEngine } from "../new-sdk";
 import { ConnectionFailed } from "./new-shared";
 import { Event, type SocketAddress } from "./types";
 
@@ -36,28 +36,18 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 					sockets: yield* Effect.all(
 						[...sockets.entries()].map(([address, socket]) =>
 							Effect.sync(() => {
-								return {
-									name: address,
-									address,
-									state: socket.state,
-								};
+								return { name: address, address, state: socket.state };
 							}),
 						),
 					),
 				};
 			}),
-			resources: {
-				OBSWebSocket: Effect.sync(() => [...sockets.keys()]),
-			},
+			resources: { OBSWebSocket: Effect.sync(() => [...sockets.keys()]) },
 			clientRpcs: {
 				AddSocket: Effect.fnUntraced(function* (opts) {
 					const ws = new OBSWebsocket();
 
-					const socket = {
-						address: opts.address,
-						ws,
-						state: "disconnected",
-					};
+					const socket = { address: opts.address, ws, state: "disconnected" };
 
 					const runSocketEdit = <A, E>(e: Effect.Effect<A, E>) =>
 						pipe(
@@ -733,12 +723,7 @@ function addWsEventListeners(
 	onEvent: (event: Event.Any) => void,
 ) {
 	ws.on("CurrentProgramSceneChanged", (e) => {
-		onEvent(
-			new Event.CurrentProgramSceneChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.CurrentProgramSceneChanged({ ...e, address: address }));
 	});
 
 	ws.on("ExitStarted", () => {
@@ -756,19 +741,13 @@ function addWsEventListeners(
 
 	ws.on("CurrentSceneCollectionChanging", (e) => {
 		onEvent(
-			new Event.CurrentSceneCollectionChanging({
-				...e,
-				address: address,
-			}),
+			new Event.CurrentSceneCollectionChanging({ ...e, address: address }),
 		);
 	});
 
 	ws.on("CurrentSceneCollectionChanged", (e) => {
 		onEvent(
-			new Event.CurrentSceneCollectionChanged({
-				...e,
-				address: address,
-			}),
+			new Event.CurrentSceneCollectionChanged({ ...e, address: address }),
 		);
 	});
 
@@ -782,21 +761,11 @@ function addWsEventListeners(
 	});
 
 	ws.on("CurrentProfileChanging", (e) => {
-		onEvent(
-			new Event.CurrentProfileChanging({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.CurrentProfileChanging({ ...e, address: address }));
 	});
 
 	ws.on("CurrentProfileChanged", (e) => {
-		onEvent(
-			new Event.CurrentProfileChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.CurrentProfileChanged({ ...e, address: address }));
 	});
 
 	ws.on("ProfileListChanged", (e) => {
@@ -832,21 +801,11 @@ function addWsEventListeners(
 	});
 
 	ws.on("SourceFilterRemoved", (e) => {
-		onEvent(
-			new Event.SourceFilterRemoved({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SourceFilterRemoved({ ...e, address: address }));
 	});
 
 	ws.on("SourceFilterNameChanged", (e) => {
-		onEvent(
-			new Event.SourceFilterNameChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SourceFilterNameChanged({ ...e, address: address }));
 	});
 
 	ws.on("SourceFilterSettingsChanged", (e) => {
@@ -862,10 +821,7 @@ function addWsEventListeners(
 
 	ws.on("SourceFilterEnableStateChanged", (e) => {
 		onEvent(
-			new Event.SourceFilterEnableStateChanged({
-				...e,
-				address: address,
-			}),
+			new Event.SourceFilterEnableStateChanged({ ...e, address: address }),
 		);
 	});
 
@@ -882,21 +838,11 @@ function addWsEventListeners(
 	});
 
 	ws.on("InputRemoved", (e) => {
-		onEvent(
-			new Event.InputRemoved({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.InputRemoved({ ...e, address: address }));
 	});
 
 	ws.on("InputNameChanged", (e) => {
-		onEvent(
-			new Event.InputNameChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.InputNameChanged({ ...e, address: address }));
 	});
 
 	ws.on("InputSettingsChanged", (e) => {
@@ -911,39 +857,19 @@ function addWsEventListeners(
 	});
 
 	ws.on("InputMuteStateChanged", (e) => {
-		onEvent(
-			new Event.InputMuteStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.InputMuteStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("InputVolumeChanged", (e) => {
-		onEvent(
-			new Event.InputVolumeChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.InputVolumeChanged({ ...e, address: address }));
 	});
 
 	ws.on("InputAudioBalanceChanged", (e) => {
-		onEvent(
-			new Event.InputAudioBalanceChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.InputAudioBalanceChanged({ ...e, address: address }));
 	});
 
 	ws.on("InputAudioSyncOffsetChanged", (e) => {
-		onEvent(
-			new Event.InputAudioSyncOffsetChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.InputAudioSyncOffsetChanged({ ...e, address: address }));
 	});
 
 	ws.on("InputAudioTracksChanged", (e) => {
@@ -958,102 +884,47 @@ function addWsEventListeners(
 	});
 
 	ws.on("InputAudioMonitorTypeChanged", (e) => {
-		onEvent(
-			new Event.InputAudioMonitorTypeChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.InputAudioMonitorTypeChanged({ ...e, address: address }));
 	});
 
 	ws.on("MediaInputPlaybackStarted", (e) => {
-		onEvent(
-			new Event.MediaInputPlaybackStarted({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.MediaInputPlaybackStarted({ ...e, address: address }));
 	});
 
 	ws.on("MediaInputPlaybackEnded", (e) => {
-		onEvent(
-			new Event.MediaInputPlaybackEnded({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.MediaInputPlaybackEnded({ ...e, address: address }));
 	});
 
 	ws.on("MediaInputActionTriggered", (e) => {
-		onEvent(
-			new Event.MediaInputActionTriggered({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.MediaInputActionTriggered({ ...e, address: address }));
 	});
 
 	ws.on("StreamStateChanged", (e) => {
-		onEvent(
-			new Event.StreamStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.StreamStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("RecordStateChanged", (e) => {
-		onEvent(
-			new Event.RecordStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.RecordStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("ReplayBufferStateChanged", (e) => {
-		onEvent(
-			new Event.ReplayBufferStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.ReplayBufferStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("VirtualcamStateChanged", (e) => {
-		onEvent(
-			new Event.VirtualcamStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.VirtualcamStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("ReplayBufferSaved", (e) => {
-		onEvent(
-			new Event.ReplayBufferSaved({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.ReplayBufferSaved({ ...e, address: address }));
 	});
 
 	ws.on("SceneItemCreated", (e) => {
-		onEvent(
-			new Event.SceneItemCreated({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneItemCreated({ ...e, address: address }));
 	});
 
 	ws.on("SceneItemRemoved", (e) => {
-		onEvent(
-			new Event.SceneItemRemoved({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneItemRemoved({ ...e, address: address }));
 	});
 
 	ws.on("SceneItemListReindexed", (e) => {
@@ -1068,66 +939,31 @@ function addWsEventListeners(
 	});
 
 	ws.on("SceneItemEnableStateChanged", (e) => {
-		onEvent(
-			new Event.SceneItemEnableStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneItemEnableStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("SceneItemLockStateChanged", (e) => {
-		onEvent(
-			new Event.SceneItemLockStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneItemLockStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("SceneItemSelected", (e) => {
-		onEvent(
-			new Event.SceneItemSelected({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneItemSelected({ ...e, address: address }));
 	});
 
 	ws.on("SceneCreated", (e) => {
-		onEvent(
-			new Event.SceneCreated({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneCreated({ ...e, address: address }));
 	});
 
 	ws.on("SceneRemoved", (e) => {
-		onEvent(
-			new Event.SceneRemoved({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneRemoved({ ...e, address: address }));
 	});
 
 	ws.on("SceneNameChanged", (e) => {
-		onEvent(
-			new Event.SceneNameChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneNameChanged({ ...e, address: address }));
 	});
 
 	ws.on("CurrentPreviewSceneChanged", (e) => {
-		onEvent(
-			new Event.CurrentPreviewSceneChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.CurrentPreviewSceneChanged({ ...e, address: address }));
 	});
 
 	ws.on("SceneListChanged", (e) => {
@@ -1141,10 +977,7 @@ function addWsEventListeners(
 
 	ws.on("CurrentSceneTransitionChanged", (e) => {
 		onEvent(
-			new Event.CurrentSceneTransitionChanged({
-				...e,
-				address: address,
-			}),
+			new Event.CurrentSceneTransitionChanged({ ...e, address: address }),
 		);
 	});
 
@@ -1158,48 +991,23 @@ function addWsEventListeners(
 	});
 
 	ws.on("SceneTransitionStarted", (e) => {
-		onEvent(
-			new Event.SceneTransitionStarted({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneTransitionStarted({ ...e, address: address }));
 	});
 
 	ws.on("SceneTransitionEnded", (e) => {
-		onEvent(
-			new Event.SceneTransitionEnded({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneTransitionEnded({ ...e, address: address }));
 	});
 
 	ws.on("SceneTransitionVideoEnded", (e) => {
-		onEvent(
-			new Event.SceneTransitionVideoEnded({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.SceneTransitionVideoEnded({ ...e, address: address }));
 	});
 
 	ws.on("StudioModeStateChanged", (e) => {
-		onEvent(
-			new Event.StudioModeStateChanged({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.StudioModeStateChanged({ ...e, address: address }));
 	});
 
 	ws.on("ScreenshotSaved", (e) => {
-		onEvent(
-			new Event.ScreenshotSaved({
-				...e,
-				address: address,
-			}),
-		);
+		onEvent(new Event.ScreenshotSaved({ ...e, address: address }));
 	});
 
 	ws.on("VendorEvent", (e) => {

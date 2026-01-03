@@ -26,10 +26,7 @@ const buttonVariants = cva({
 			icon: "p-1",
 		},
 	},
-	defaultVariants: {
-		variant: "default",
-		size: "sm",
-	},
+	defaultVariants: { variant: "default", size: "sm" },
 });
 
 export interface ButtonProps

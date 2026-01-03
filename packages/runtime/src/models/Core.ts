@@ -64,9 +64,7 @@ type OAuth = {
 };
 
 export class Core {
-	project: Project = new Project({
-		core: this,
-	});
+	project: Project = new Project({ core: this });
 
 	packages = [] as Package[];
 

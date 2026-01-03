@@ -5,10 +5,7 @@ import { type Pkg, STATUS_BYTES } from "./";
 import { MIDIOutput } from "./resource";
 
 const defaultProperties = {
-	output: {
-		name: "MIDI Output",
-		resource: MIDIOutput,
-	},
+	output: { name: "MIDI Output", resource: MIDIOutput },
 };
 
 export function register(pkg: Pkg) {
@@ -92,11 +89,7 @@ export function register(pkg: Pkg) {
 		variant: "controlChange",
 		createIO: ({ io }) => ({
 			control: io.dataInput({ id: "control", name: "Control", type: t.int() }),
-			data: io.dataInput({
-				id: "data",
-				name: "Data",
-				type: t.int(),
-			}),
+			data: io.dataInput({ id: "data", name: "Data", type: t.int() }),
 		}),
 		run({ ctx, io }) {
 			return [ctx.getInput(io.control), ctx.getInput(io.data)];
@@ -133,11 +126,7 @@ export function register(pkg: Pkg) {
 		name: "Pitch Bend",
 		variant: "pitchBend",
 		createIO: ({ io }) => ({
-			delta: io.dataInput({
-				id: "delta",
-				name: "Delta",
-				type: t.int(),
-			}),
+			delta: io.dataInput({ id: "delta", name: "Delta", type: t.int() }),
 		}),
 		run({ ctx, io }) {
 			return [ctx.getInput(io.delta)];

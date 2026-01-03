@@ -1,7 +1,4 @@
-import { WebSdk } from "@effect/opentelemetry";
 import {
-	Config,
-	ConfigProvider,
 	Effect,
 	Layer,
 	ManagedRuntime,
@@ -14,8 +11,6 @@ import {
 	ProjectUILayers,
 } from "@macrograph/project-ui";
 import type { ServerEvent } from "@macrograph/server-domain";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { createContext, useContext } from "solid-js";
 
 import { AuthActions } from "./Auth";
@@ -110,42 +105,14 @@ const FrontendLive = ServerEventStreamHandlerLive.pipe(
 export namespace EffectRuntime {
 	export type EffectRuntime = ManagedRuntime.ManagedRuntime<
 		Context,
-		Layer.Layer.Error<typeof EffectRuntime.layer>
+		any
 	>;
 
 	export type Context =
 		| Layer.Layer.Success<typeof EffectRuntime.layer>
 		| Layer.Layer.Context<typeof EffectRuntime.layer>;
 
-	const ImportMetaEnvConfig = Layer.setConfigProvider(
-		ConfigProvider.fromMap(new Map(Object.entries(import.meta.env))),
-	);
-
-	const TracingLive = Layer.unwrapEffect(
-		Effect.gen(function* () {
-			const env = yield* Config.all({
-				otelTraceUrl: Config.string("VITE_OTEL_TRACE_URL").pipe(Config.option),
-			});
-
-			const exporterConfig: OTLPExporterNodeConfigBase = {};
-
-			if (Option.isSome(env.otelTraceUrl))
-				exporterConfig.url = env.otelTraceUrl.value;
-
-			return WebSdk.layer(() => ({
-				resource: { serviceName: "mg-server-frontend" },
-				// Export span data to the console
-				spanProcessor: [
-					new BatchSpanProcessor(new OTLPTraceExporter(exporterConfig)),
-					// new BatchSpanProcessor(new ConsoleSpanExporter()),
-				],
-			}));
-		}),
-	);
-
 	export const layer = FrontendLive.pipe(
-		Layer.provide(TracingLive),
-		Layer.provide(ImportMetaEnvConfig),
 		Layer.provideMerge(Layer.scope),
 	);
 }
@@ -175,5 +142,3 @@ export function useEffectService<T>(
 
 	return runtime.runSync(service);
 }
-
-export const runtime = ManagedRuntime.make(EffectRuntime.layer);

@@ -59,9 +59,7 @@ const getInitialState = query(async (userCode: string) => {
 }, "getInitialState");
 
 export default function Test() {
-	const [searchParams] = useSearchParams<{
-		userCode?: string;
-	}>();
+	const [searchParams] = useSearchParams<{ userCode?: string }>();
 
 	const initialState = createAsync(
 		async () =>
@@ -92,9 +90,7 @@ export default function Test() {
 type State = { state: "enter-code" } | { state: "confirmation"; code: string };
 
 function Inner(props: { initialState?: State; user: User }) {
-	const [, setSearchParams] = useSearchParams<{
-		userCode?: string;
-	}>();
+	const [, setSearchParams] = useSearchParams<{ userCode?: string }>();
 
 	const [step, setStep] = createSignal<State>(
 		props.initialState ?? { state: "enter-code" },

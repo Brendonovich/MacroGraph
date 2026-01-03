@@ -7,19 +7,11 @@ import { mutationOptions } from "../tanstack-query";
 
 export const credentialsQueryOptions = (
 	queryFn: () => Promise<ReadonlyArray<Credential.Credential>>,
-) =>
-	queryOptions({
-		queryKey: ["credentials"],
-		queryFn,
-	});
+) => queryOptions({ queryKey: ["credentials"], queryFn });
 
 export const refetchCredentialsMutationOptions = (
 	mutationFn: () => Promise<any>,
-) =>
-	mutationOptions({
-		mutationKey: ["refetchCredentials"],
-		mutationFn,
-	});
+) => mutationOptions({ mutationKey: ["refetchCredentials"], mutationFn });
 
 export function CredentialsPage(props: {
 	description: string;

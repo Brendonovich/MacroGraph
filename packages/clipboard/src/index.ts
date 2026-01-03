@@ -22,24 +22,15 @@ import {
 import * as v from "valibot";
 
 export const ClipboardItem = v.variant("type", [
-	v.object({
-		type: v.literal("node"),
-		node: serde.Node,
-	}),
+	v.object({ type: v.literal("node"), node: serde.Node }),
 	v.object({
 		type: v.literal("commentBox"),
 		commentBox: serde.CommentBox,
 		nodes: v.array(serde.Node),
 		connections: v.array(serde.Connection),
 	}),
-	v.object({
-		type: v.literal("graph"),
-		graph: serde.Graph,
-	}),
-	v.object({
-		type: v.literal("project"),
-		project: serde.Project,
-	}),
+	v.object({ type: v.literal("graph"), graph: serde.Graph }),
+	v.object({ type: v.literal("project"), project: serde.Project }),
 	v.object({
 		type: v.literal("selection"),
 		origin: serde.XY,
@@ -99,10 +90,7 @@ export function deserializeClipboardItem(input: string) {
 export function nodeToClipboardItem(
 	node: Node,
 ): Extract<v.InferInput<typeof ClipboardItem>, { type: "node" }> {
-	return {
-		type: "node",
-		node: serializeNode(node),
-	};
+	return { type: "node", node: serializeNode(node) };
 }
 
 export function serializeConnections(nodes: Set<Node>) {
@@ -162,19 +150,13 @@ export function commentBoxToClipboardItem(
 export function graphToClipboardItem(
 	graph: Graph,
 ): Extract<ClipboardItem, { type: "graph" }> {
-	return {
-		type: "graph",
-		graph: serializeGraph(graph),
-	};
+	return { type: "graph", graph: serializeGraph(graph) };
 }
 
 export function projectToClipboardItem(
 	project: Project,
 ): Extract<ClipboardItem, { type: "project" }> {
-	return {
-		type: "project",
-		project: serializeProject(project),
-	};
+	return { type: "project", project: serializeProject(project) };
 }
 
 export type ClipboardModel = Node | CommentBox | Graph | Project;

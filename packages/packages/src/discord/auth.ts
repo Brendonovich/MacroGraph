@@ -34,10 +34,7 @@ export function createAuth(
 
 			const data = await api.call("GET /users/@me", { type: "cred", cred });
 
-			return {
-				data,
-				credential: cred,
-			};
+			return { data, credential: cred };
 		});
 
 		await getAccount();
@@ -88,14 +85,7 @@ export function createAuth(
 		});
 	}
 
-	return {
-		accounts,
-		enableAccount,
-		disableAccount,
-		bots,
-		addBot,
-		removeBot,
-	};
+	return { accounts, enableAccount, disableAccount, bots, addBot, removeBot };
 }
 
 export type Auth = ReturnType<typeof createAuth>;

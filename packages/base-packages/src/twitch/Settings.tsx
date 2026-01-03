@@ -9,18 +9,9 @@ import { Index, Suspense } from "solid-js";
 import { RPCS, type STATE } from "./shared";
 
 const EVENTSUB_CONNECTION_INDICATOR = {
-	connected: {
-		class: "bg-green-600",
-		label: "EventSub Connected",
-	},
-	disconnected: {
-		class: "bg-red-600",
-		label: "EventSub Disconnected",
-	},
-	connecting: {
-		class: "bg-yellow-600",
-		label: "EventSub Connecting",
-	},
+	connected: { class: "bg-green-600", label: "EventSub Connected" },
+	disconnected: { class: "bg-red-600", label: "EventSub Disconnected" },
+	connecting: { class: "bg-yellow-600", label: "EventSub Connecting" },
 };
 
 export default function Settings(

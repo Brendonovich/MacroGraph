@@ -8,10 +8,7 @@ export default defineConfig((env) => ({
 	// https://vitejs.dev/config/
 	plugins: [
 		interfacePlugin,
-		solidStart({
-			ssr: false,
-			routeDir: "app",
-		}),
+		solidStart({ ssr: false, routeDir: "app" }),
 		env.command === "build" && nitro({ config: { preset: "static" } }),
 	],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

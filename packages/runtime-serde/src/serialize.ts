@@ -41,13 +41,7 @@ export function serializeResources(
 	type: runtime.ResourceType<any, any>,
 	entry: runtime.ResourceTypeEntry,
 ): v.InferInput<typeof serde.Resource> {
-	return {
-		type: {
-			pkg: type.package.name,
-			name: type.name,
-		},
-		entry,
-	};
+	return { type: { pkg: type.package.name, name: type.name }, entry };
 }
 
 export function serializeGraph(
@@ -74,14 +68,8 @@ export function serializeGraph(
 					const connRef = runtime.splitIORef(conn);
 
 					serialized.push({
-						from: {
-							node: ref.nodeId,
-							output: ref.ioId,
-						},
-						to: {
-							node: connRef.nodeId,
-							input: connRef.ioId,
-						},
+						from: { node: ref.nodeId, output: ref.ioId },
+						to: { node: connRef.nodeId, input: connRef.ioId },
 					});
 				}
 			}
@@ -105,10 +93,7 @@ export function serializeCustomEvent(
 export function serializeCustomEventField(
 	field: Field,
 ): v.InferInput<typeof serde.Field> {
-	return {
-		...field,
-		type: field.type.serialize(),
-	};
+	return { ...field, type: field.type.serialize() };
 }
 
 export function serializeCustomStruct(
@@ -132,11 +117,7 @@ export function serializeCustomStruct(
 export function serializeCustomStructField(
 	field: Field,
 ): v.InferInput<typeof serde.CustomStructField> {
-	return {
-		name: field.name,
-		id: field.id,
-		type: field.type.serialize(),
-	};
+	return { name: field.name, id: field.id, type: field.type.serialize() };
 }
 
 export function serializeCustomEnum(
@@ -169,11 +150,7 @@ export function serializeCustomEnumVariant(
 }
 
 export function serializeField(field: Field): v.InferInput<typeof serde.Field> {
-	return {
-		id: field.id,
-		name: field.name,
-		type: field.type.serialize(),
-	};
+	return { id: field.id, name: field.name, type: field.type.serialize() };
 }
 
 export function serializeVariable(
@@ -194,10 +171,7 @@ export function serializeNode(
 		id: node.id,
 		name: node.state.name,
 		position: [node.state.position.x, node.state.position.y],
-		schema: {
-			package: node.schema.package.name,
-			id: node.schema.name,
-		},
+		schema: { package: node.schema.package.name, id: node.schema.name },
 		defaultValues: node.state.inputs.reduce(
 			(acc, i) => {
 				if (!(i instanceof runtime.DataInput)) return acc;

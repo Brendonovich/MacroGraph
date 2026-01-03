@@ -23,11 +23,7 @@ export function makeGraphTabSchema(
 		graph: { id: Graph.Id };
 		tab: TabState.GraphTab;
 	}) => JSX.Element,
-): TabLayout.Schema<
-	TabState.GraphTab & {
-		graph: GraphState;
-	}
-> {
+): TabLayout.Schema<TabState.GraphTab & { graph: GraphState }> {
 	return {
 		getMeta: (tab) => ({ title: tab.graph.name }),
 		Component: (tab) => {
@@ -74,10 +70,7 @@ export function makeGraphTabSchema(
 						onContextMenu={(e) => {
 							setGraphCtxMenu({
 								open: true,
-								position: {
-									x: e.clientX,
-									y: e.clientY,
-								},
+								position: { x: e.clientX, y: e.clientY },
 							});
 						}}
 						onContextMenuClose={() => {
@@ -104,10 +97,7 @@ export function makeGraphTabSchema(
 						onTranslateChange={(translate) => {
 							updateTab(
 								produce((tab) => {
-									tab.transform ??= {
-										translate: { x: 0, y: 0 },
-										zoom: 1,
-									};
+									tab.transform ??= { translate: { x: 0, y: 0 }, zoom: 1 };
 									tab.transform.translate = translate;
 								}),
 							);
@@ -115,10 +105,7 @@ export function makeGraphTabSchema(
 						onScaleChange={(zoom) => {
 							updateTab(
 								produce((tab) => {
-									tab.transform ??= {
-										translate: { x: 0, y: 0 },
-										zoom: 1,
-									};
+									tab.transform ??= { translate: { x: 0, y: 0 }, zoom: 1 };
 									tab.transform.zoom = zoom;
 								}),
 							);

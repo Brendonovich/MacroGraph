@@ -39,9 +39,7 @@ export function makeUseEffectQuery<
 		TQueryKey extends QueryKey = QueryKey,
 	>(
 		options: Accessor<
-			{
-				throwOnDefect?: ThrowOnDefect;
-			} & Override<
+			{ throwOnDefect?: ThrowOnDefect } & Override<
 				SolidQueryOptions<TData, TExposedError, TData, TQueryKey>,
 				{
 					queryFn?:
@@ -63,9 +61,7 @@ export function makeUseEffectQuery<
 			const queryFn = opts.queryFn;
 			const throwOnError = opts.throwOnError;
 
-			const processedOptions: any = {
-				...opts,
-			};
+			const processedOptions: any = { ...opts };
 
 			if (typeof queryFn === "function") {
 				processedOptions.queryFn = async (
@@ -187,9 +183,7 @@ export function makeUseEffectMutation<
 		TContext = unknown,
 	>(
 		options: Accessor<
-			{
-				throwOnDefect?: ThrowOnDefect;
-			} & Override<
+			{ throwOnDefect?: ThrowOnDefect } & Override<
 				Omit<
 					SolidMutationOptions<TData, TExposedError, TVariables, TContext>,
 					"retry" | "retryDelay"
@@ -258,9 +252,7 @@ export function makeUseEffectMutation<
 			const onError = opts.onError;
 			const onSettled = opts.onSettled;
 
-			const processedOptions: any = {
-				...opts,
-			};
+			const processedOptions: any = { ...opts };
 
 			if (typeof mutationFn === "function") {
 				processedOptions.mutationFn = async (variables: TVariables) => {
@@ -309,9 +301,7 @@ export function makeUseEffectMutation<
 					return await runPromise(
 						onMutate(...args).pipe(
 							Effect.withSpan("useEffectMutation.onMutate", {
-								attributes: {
-									mutationFn: mutationFn?.toString(),
-								},
+								attributes: { mutationFn: mutationFn?.toString() },
 							}),
 						),
 					);
@@ -325,9 +315,7 @@ export function makeUseEffectMutation<
 					return await runPromise(
 						onSuccess(...args).pipe(
 							Effect.withSpan("useEffectMutation.onSuccess", {
-								attributes: {
-									mutationFn: mutationFn?.toString(),
-								},
+								attributes: { mutationFn: mutationFn?.toString() },
 							}),
 						),
 					);
@@ -356,9 +344,7 @@ export function makeUseEffectMutation<
 					return await runPromise(
 						onError(error, ...args).pipe(
 							Effect.withSpan("useEffectMutation.onError", {
-								attributes: {
-									mutationFn: mutationFn?.toString(),
-								},
+								attributes: { mutationFn: mutationFn?.toString() },
 							}),
 						),
 					);
@@ -390,9 +376,7 @@ export function makeUseEffectMutation<
 					return await runPromise(
 						onSettled(data, error, ...args).pipe(
 							Effect.withSpan("useEffectMutation.onSettled", {
-								attributes: {
-									mutationFn: mutationFn?.toString(),
-								},
+								attributes: { mutationFn: mutationFn?.toString() },
 							}),
 						),
 					);

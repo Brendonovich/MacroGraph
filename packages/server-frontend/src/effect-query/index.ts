@@ -89,12 +89,7 @@ export function makeEffectQuery<
 		});
 	};
 
-	return {
-		Provider,
-		useEffectRuntime,
-		useEffectQuery,
-		useEffectMutation,
-	};
+	return { Provider, useEffectRuntime, useEffectQuery, useEffectMutation };
 }
 
 // Re-export from hooks

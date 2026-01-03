@@ -25,9 +25,7 @@ export function requests(pkg: Pkg, types: Types) {
 		> & {
 			properties?: TProperties;
 			run(
-				props: RunProps<TProperties, TIO> & {
-					vts: ApiClient;
-				},
+				props: RunProps<TProperties, TIO> & { vts: ApiClient },
 			): void | Promise<void>;
 			createIO: MergeFnProps<
 				CreateIOFn<TProperties, TIO>,
@@ -133,11 +131,7 @@ export function requests(pkg: Pkg, types: Types) {
 							})
 							.then((o) => o.unwrapOr([])),
 				}),
-				active: io.dataInput({
-					id: "active",
-					name: "Active",
-					type: t.bool(),
-				}),
+				active: io.dataInput({ id: "active", name: "Active", type: t.bool() }),
 			};
 		},
 		async run({ ctx, io, vts }) {
@@ -151,10 +145,7 @@ export function requests(pkg: Pkg, types: Types) {
 	createVTSExecSchema({
 		name: "Get Hotkey List",
 		createIO: ({ io }) =>
-			io.dataOutput({
-				id: "",
-				type: t.list(t.struct(types.Hotkey)),
-			}),
+			io.dataOutput({ id: "", type: t.list(t.struct(types.Hotkey)) }),
 		async run({ ctx, io, vts }) {
 			const resp = await vts.hotkeysInCurrentModel({});
 

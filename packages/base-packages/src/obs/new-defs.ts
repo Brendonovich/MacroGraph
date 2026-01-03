@@ -1,7 +1,7 @@
 import { Effect, Option } from "effect";
 import { t } from "@macrograph/package-sdk";
+import { Package, PackageEngine } from "@macrograph/package-sdk/updated";
 
-import { Package, PackageEngine } from "../new-sdk";
 import {
 	ClientRpcs,
 	ClientState,
@@ -18,10 +18,7 @@ export class EngineDef extends PackageEngine.define({
 	resources: [SocketResource],
 }) {}
 
-const OBSSocketProperty = {
-	name: "OBS Socket",
-	resource: SocketResource,
-};
+const OBSSocketProperty = { name: "OBS Socket", resource: SocketResource };
 
 export const PackageDef = Package.define({
 	name: "OBS Studio",
@@ -33,9 +30,7 @@ export const PackageDef = Package.define({
 		name: "Get Current Program Scene",
 		description: "Gets the current program scene from OBS.",
 		io: (c) => ({
-			scene: c.out.data("scene", t.String, {
-				name: "Scene Name",
-			}),
+			scene: c.out.data("scene", t.String, { name: "Scene Name" }),
 		}),
 		run: function* ({ io, properties: { socket } }) {
 			yield* socket.engine
@@ -1658,9 +1653,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Toggle Stream",
 		description: "Toggles the stream output.",
-		io: (c) => ({
-			active: c.out.data("active", t.Bool, { name: "Active" }),
-		}),
+		io: (c) => ({ active: c.out.data("active", t.Bool, { name: "Active" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			const result = yield* socket.engine.ToggleStream({
 				address: socket.value,
@@ -1726,9 +1719,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Toggle Record",
 		description: "Toggles recording.",
-		io: (c) => ({
-			active: c.out.data("active", t.Bool, { name: "Active" }),
-		}),
+		io: (c) => ({ active: c.out.data("active", t.Bool, { name: "Active" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			const result = yield* socket.engine.ToggleRecord({
 				address: socket.value,
@@ -1820,9 +1811,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Get Replay Buffer Status",
 		description: "Gets replay buffer status.",
-		io: (c) => ({
-			active: c.out.data("active", t.Bool, { name: "Active" }),
-		}),
+		io: (c) => ({ active: c.out.data("active", t.Bool, { name: "Active" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			const result = yield* socket.engine.GetReplayBufferStatus({
 				address: socket.value,
@@ -1835,9 +1824,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Toggle Replay Buffer",
 		description: "Toggles replay buffer.",
-		io: (c) => ({
-			active: c.out.data("active", t.Bool, { name: "Active" }),
-		}),
+		io: (c) => ({ active: c.out.data("active", t.Bool, { name: "Active" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			const result = yield* socket.engine.ToggleReplayBuffer({
 				address: socket.value,
@@ -1880,9 +1867,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Get Last Replay Buffer Replay",
 		description: "Gets the last replay buffer path.",
-		io: (c) => ({
-			path: c.out.data("path", t.String, { name: "Saved Path" }),
-		}),
+		io: (c) => ({ path: c.out.data("path", t.String, { name: "Saved Path" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			const result = yield* socket.engine.GetLastReplayBufferReplay({
 				address: socket.value,
@@ -1896,9 +1881,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Get Virtual Cam Status",
 		description: "Gets virtual camera status.",
-		io: (c) => ({
-			active: c.out.data("active", t.Bool, { name: "Active" }),
-		}),
+		io: (c) => ({ active: c.out.data("active", t.Bool, { name: "Active" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			const result = yield* socket.engine.GetVirtualCamStatus({
 				address: socket.value,
@@ -1911,9 +1894,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Toggle Virtual Cam",
 		description: "Toggles virtual camera.",
-		io: (c) => ({
-			active: c.out.data("active", t.Bool, { name: "Active" }),
-		}),
+		io: (c) => ({ active: c.out.data("active", t.Bool, { name: "Active" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			const result = yield* socket.engine.ToggleVirtualCam({
 				address: socket.value,
@@ -2017,9 +1998,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Create Scene",
 		description: "Creates a new scene.",
-		io: (c) => ({
-			name: c.in.data("name", t.String, { name: "Scene Name" }),
-		}),
+		io: (c) => ({ name: c.in.data("name", t.String, { name: "Scene Name" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			yield* socket.engine.CreateScene({
 				address: socket.value,
@@ -3681,9 +3660,7 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Set Studio Mode Enabled",
 		description: "Enables/disables studio mode.",
-		io: (c) => ({
-			enabled: c.in.data("enabled", t.Bool, { name: "Enabled" }),
-		}),
+		io: (c) => ({ enabled: c.in.data("enabled", t.Bool, { name: "Enabled" }) }),
 		run: function* ({ io, properties: { socket } }) {
 			yield* socket.engine.SetStudioModeEnabled({
 				address: socket.value,

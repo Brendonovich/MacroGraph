@@ -27,9 +27,7 @@ const doDesktopAuth = action(async () => {
 									onClick={async () => {
 										await fetch("http://localhost:25000/session", {
 											method: "POST",
-											headers: {
-												"Content-Type": "application/json",
-											},
+											headers: { "Content-Type": "application/json" },
 											body: JSON.stringify(auth().session.id),
 										});
 

@@ -15,18 +15,10 @@ export function pkg(core: Core) {
 	const pkg = new Package({ name: "HTTP Requests" });
 
 	const BodyEnum = pkg.createEnum("Body", (e) => [
-		e.variant("Plaintext", {
-			value: t.string(),
-		}),
-		e.variant("HTML", {
-			value: t.string(),
-		}),
-		e.variant("JSON", {
-			value: t.enum(JSONEnum),
-		}),
-		e.variant("FormData", {
-			value: t.map(t.string()),
-		}),
+		e.variant("Plaintext", { value: t.string() }),
+		e.variant("HTML", { value: t.string() }),
+		e.variant("JSON", { value: t.enum(JSONEnum) }),
+		e.variant("FormData", { value: t.map(t.string()) }),
 	]);
 
 	pkg.createSchema({
@@ -34,11 +26,7 @@ export function pkg(core: Core) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				url: io.dataInput({
-					id: "url",
-					name: "URL",
-					type: t.string(),
-				}),
+				url: io.dataInput({ id: "url", name: "URL", type: t.string() }),
 				headers: io.dataInput({
 					id: "headers",
 					name: "Headers",
@@ -76,25 +64,19 @@ export function pkg(core: Core) {
 							case "text/plain": {
 								return BodyEnum.variant([
 									"Plaintext",
-									{
-										value: await response.text(),
-									},
+									{ value: await response.text() },
 								]);
 							}
 							case "text/html": {
 								return BodyEnum.variant([
 									"HTML",
-									{
-										value: await response.text(),
-									},
+									{ value: await response.text() },
 								]);
 							}
 							case "application/json": {
 								return BodyEnum.variant([
 									"JSON",
-									{
-										value: jsToJSON(await response.json())!,
-									},
+									{ value: jsToJSON(await response.json())! },
 								]);
 							}
 							case "multipart/form-data": {
@@ -102,12 +84,7 @@ export function pkg(core: Core) {
 								for (const entry of (await response.formData()).entries()) {
 									formData.set(entry[0], entry[1].toString());
 								}
-								return BodyEnum.variant([
-									"FormData",
-									{
-										value: formData,
-									},
-								]);
+								return BodyEnum.variant(["FormData", { value: formData }]);
 							}
 							default: {
 								return null;
@@ -130,16 +107,8 @@ export function pkg(core: Core) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				url: io.dataInput({
-					id: "url",
-					name: "URL",
-					type: t.string(),
-				}),
-				path: io.dataInput({
-					id: "path",
-					name: "File Path",
-					type: t.string(),
-				}),
+				url: io.dataInput({ id: "url", name: "URL", type: t.string() }),
+				path: io.dataInput({ id: "path", name: "File Path", type: t.string() }),
 				headers: io.dataInput({
 					id: "headers",
 					name: "Headers",
@@ -184,25 +153,19 @@ export function pkg(core: Core) {
 								case "text/plain": {
 									return BodyEnum.variant([
 										"Plaintext",
-										{
-											value: await response.text(),
-										},
+										{ value: await response.text() },
 									]);
 								}
 								case "text/html": {
 									return BodyEnum.variant([
 										"HTML",
-										{
-											value: await response.text(),
-										},
+										{ value: await response.text() },
 									]);
 								}
 								case "application/json": {
 									return BodyEnum.variant([
 										"JSON",
-										{
-											value: jsToJSON(await response.json())!,
-										},
+										{ value: jsToJSON(await response.json())! },
 									]);
 								}
 								case "multipart/form-data": {
@@ -210,12 +173,7 @@ export function pkg(core: Core) {
 									for (const entry of (await response.formData()).entries()) {
 										formData.set(entry[0], entry[1].toString());
 									}
-									return BodyEnum.variant([
-										"FormData",
-										{
-											value: formData,
-										},
-									]);
+									return BodyEnum.variant(["FormData", { value: formData }]);
 								}
 								default: {
 									return null;
@@ -239,11 +197,7 @@ export function pkg(core: Core) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				url: io.dataInput({
-					id: "url",
-					name: "URL",
-					type: t.string(),
-				}),
+				url: io.dataInput({ id: "url", name: "URL", type: t.string() }),
 				body: io.dataInput({
 					id: "body",
 					name: "Body",
@@ -327,25 +281,19 @@ export function pkg(core: Core) {
 							case "text/plain": {
 								return BodyEnum.variant([
 									"Plaintext",
-									{
-										value: await response.text(),
-									},
+									{ value: await response.text() },
 								]);
 							}
 							case "text/html": {
 								return BodyEnum.variant([
 									"HTML",
-									{
-										value: await response.text(),
-									},
+									{ value: await response.text() },
 								]);
 							}
 							case "application/json": {
 								return BodyEnum.variant([
 									"JSON",
-									{
-										value: jsToJSON(await response.json())!,
-									},
+									{ value: jsToJSON(await response.json())! },
 								]);
 							}
 							case "multipart/form-data": {
@@ -353,12 +301,7 @@ export function pkg(core: Core) {
 								for (const entry of (await response.formData()).entries()) {
 									formData.set(entry[0], entry[1].toString());
 								}
-								return BodyEnum.variant([
-									"FormData",
-									{
-										value: formData,
-									},
-								]);
+								return BodyEnum.variant(["FormData", { value: formData }]);
 							}
 							default: {
 								return null;
@@ -381,11 +324,7 @@ export function pkg(core: Core) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				url: io.dataInput({
-					id: "url",
-					name: "URL",
-					type: t.string(),
-				}),
+				url: io.dataInput({ id: "url", name: "URL", type: t.string() }),
 				body: io.dataInput({
 					id: "body",
 					name: "Body",
@@ -467,25 +406,19 @@ export function pkg(core: Core) {
 							case "text/plain": {
 								return BodyEnum.variant([
 									"Plaintext",
-									{
-										value: await response.text(),
-									},
+									{ value: await response.text() },
 								]);
 							}
 							case "text/html": {
 								return BodyEnum.variant([
 									"HTML",
-									{
-										value: await response.text(),
-									},
+									{ value: await response.text() },
 								]);
 							}
 							case "application/json": {
 								return BodyEnum.variant([
 									"JSON",
-									{
-										value: jsToJSON(await response.json())!,
-									},
+									{ value: jsToJSON(await response.json())! },
 								]);
 							}
 							case "multipart/form-data": {
@@ -493,12 +426,7 @@ export function pkg(core: Core) {
 								for (const entry of (await response.formData()).entries()) {
 									formData.set(entry[0], entry[1].toString());
 								}
-								return BodyEnum.variant([
-									"FormData",
-									{
-										value: formData,
-									},
-								]);
+								return BodyEnum.variant(["FormData", { value: formData }]);
 							}
 							default: {
 								return null;
@@ -521,11 +449,7 @@ export function pkg(core: Core) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				url: io.dataInput({
-					id: "url",
-					name: "URL",
-					type: t.string(),
-				}),
+				url: io.dataInput({ id: "url", name: "URL", type: t.string() }),
 				headers: io.dataInput({
 					id: "headers",
 					name: "Headers",
@@ -563,14 +487,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -583,14 +501,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {

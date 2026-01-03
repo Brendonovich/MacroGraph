@@ -16,7 +16,5 @@
 		"@solid-primitives/map": "^0.4.11",
 		"valibot": "^0.37.0"
 	},
-	"devDependencies": {
-		"@macrograph/config": "workspace:*"
-	}
+	"devDependencies": { "@macrograph/config": "workspace:*" }
 }

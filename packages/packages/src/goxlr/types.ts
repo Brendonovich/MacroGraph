@@ -44,24 +44,14 @@ export function createTypes(pkg: Pkg) {
 		e.variant("Sampler"),
 	]);
 
-	return {
-		Sliders,
-		MicType,
-		Presets,
-		Inputs,
-		Outputs,
-	};
+	return { Sliders, MicType, Presets, Inputs, Outputs };
 }
 
 export type Types = ReturnType<typeof createTypes>;
 
-export const Levels = v.object({
-	volumes: v.record(v.string(), v.number()),
-});
+export const Levels = v.object({ volumes: v.record(v.string(), v.number()) });
 
-export const MixerStatus = v.object({
-	levels: Levels,
-});
+export const MixerStatus = v.object({ levels: Levels });
 
 export const DaemonStatus = v.object({
 	mixers: v.record(v.string(), MixerStatus),

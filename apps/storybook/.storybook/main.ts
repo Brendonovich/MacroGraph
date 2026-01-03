@@ -20,9 +20,6 @@ const config: StorybookConfig = {
 		getAbsolutePath("@chromatic-com/storybook"),
 		getAbsolutePath("@storybook/addon-interactions"),
 	],
-	framework: {
-		name: getAbsolutePath("storybook-solidjs-vite"),
-		options: {},
-	},
+	framework: { name: getAbsolutePath("storybook-solidjs-vite"), options: {} },
 };
 export default config;

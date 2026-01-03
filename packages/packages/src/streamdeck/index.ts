@@ -16,15 +16,8 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 		event: "keyDown",
 		name: "Stream Deck Key Down",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-				name: "",
-			}),
-			id: io.dataOutput({
-				id: "id",
-				name: "Key ID",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec", name: "" }),
+			id: io.dataOutput({ id: "id", name: "Key ID", type: t.string() }),
 		}),
 		run({ ctx, data, io }) {
 			ctx.setOutput(io.id, data.settings.id);
@@ -36,15 +29,8 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 		event: "keyUp",
 		name: "Stream Deck Key Up",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-				name: "",
-			}),
-			id: io.dataOutput({
-				id: "id",
-				name: "Key ID",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec", name: "" }),
+			id: io.dataOutput({ id: "id", name: "Key ID", type: t.string() }),
 		}),
 		run({ ctx, data, io }) {
 			ctx.setOutput(io.id, data.settings.id);

@@ -3,12 +3,8 @@ import { t } from "@macrograph/typesystem";
 
 export function pkg() {
 	const pkg = new Package<{
-		[K in `${Lowercase<Alphabet>}-key`]: {
-			state: "pressed" | "released";
-		};
-	}>({
-		name: "Keyboard Inputs",
-	});
+		[K in `${Lowercase<Alphabet>}-key`]: { state: "pressed" | "released" };
+	}>({ name: "Keyboard Inputs" });
 
 	const pressedKeys = new Set<Lowercase<Alphabet>>();
 
@@ -38,14 +34,8 @@ export function pkg() {
 			event: `${toLowercase(a)}-key`,
 			createIO({ io }) {
 				return {
-					pressed: io.execOutput({
-						id: "pressed",
-						name: "Pressed",
-					}),
-					released: io.execOutput({
-						id: "released",
-						name: "Released",
-					}),
+					pressed: io.execOutput({ id: "pressed", name: "Pressed" }),
+					released: io.execOutput({ id: "released", name: "Released" }),
 				};
 			},
 			run({ ctx, data, io }) {
@@ -59,10 +49,7 @@ export function pkg() {
 			name: `${a} Key Pressed`,
 			type: "pure",
 			createIO({ io }) {
-				return io.dataOutput({
-					id: "value",
-					type: t.bool(),
-				});
+				return io.dataOutput({ id: "value", type: t.bool() });
 			},
 			run({ ctx, io }) {
 				ctx.setOutput(io, pressedKeys.has(a.toLowerCase() as any));

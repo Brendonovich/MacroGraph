@@ -1,15 +1,7 @@
 {
 	"name": "@effect-atom/atom-solid",
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"devDependencies": {
-		"effect": "^3.19.13"
-	},
-	"peerDependencies": {
-		"effect": "^3.18"
-	},
-	"dependencies": {
-		"@effect-atom/atom": "^0.3.4"
-	}
+	"exports": { ".": "./src/index.ts" },
+	"devDependencies": { "effect": "^3.19.13" },
+	"peerDependencies": { "effect": "^3.18" },
+	"dependencies": { "@effect-atom/atom": "^0.3.4" }
 }

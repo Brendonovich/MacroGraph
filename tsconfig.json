@@ -11,7 +11,5 @@
 		{ "path": "./packages/project-runtime" },
 		{ "path": "./apps/server" }
 	],
-	"compilerOptions": {
-		"plugins": [{ "name": "@effect/language-service" }]
-	}
+	"compilerOptions": { "plugins": [{ "name": "@effect/language-service" }] }
 }

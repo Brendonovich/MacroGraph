@@ -1,8 +1,6 @@
 import { createContext, useContext } from "solid-js";
 
-const RealtimeContext = createContext<{
-	id: () => number;
-}>();
+const RealtimeContext = createContext<{ id: () => number }>();
 
 export const RealtimeContextProvider = RealtimeContext.Provider;
 

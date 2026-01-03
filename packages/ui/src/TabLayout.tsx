@@ -16,10 +16,7 @@ import { isTouchDevice } from "./platform";
 export namespace TabLayout {
 	export type Schema<TTab> = {
 		Component(state: Accessor<TTab>): JSX.Element;
-		getMeta(state: TTab): {
-			title: string;
-			desc?: string;
-		};
+		getMeta(state: TTab): { title: string; desc?: string };
 	};
 
 	export type TabState<TType extends string = string> = {

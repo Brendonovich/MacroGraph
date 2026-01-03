@@ -29,14 +29,8 @@ export function pkg(core: Core) {
 		event: "subscription",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				name: io.dataOutput({
-					name: "Name",
-					id: "name",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				name: io.dataOutput({ name: "Name", id: "name", type: t.string() }),
 				months: io.dataOutput({
 					name: "Months",
 					id: "months",
@@ -68,14 +62,8 @@ export function pkg(core: Core) {
 		event: "membershipGift",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				name: io.dataOutput({
-					name: "Name",
-					id: "name",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				name: io.dataOutput({ name: "Name", id: "name", type: t.string() }),
 				membershipLevelName: io.dataOutput({
 					name: "Membership Level Name",
 					id: "membershipLevelName",
@@ -101,14 +89,8 @@ export function pkg(core: Core) {
 		event: "membershipGiftStart",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				name: io.dataOutput({
-					name: "Name",
-					id: "name",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				name: io.dataOutput({ name: "Name", id: "name", type: t.string() }),
 				giftMembershipsLevelName: io.dataOutput({
 					name: "Membership Level Name",
 					id: "giftMembershipsLevelName",
@@ -146,14 +128,8 @@ export function pkg(core: Core) {
 		event: "donation",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				name: io.dataOutput({
-					name: "Name",
-					id: "name",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				name: io.dataOutput({ name: "Name", id: "name", type: t.string() }),
 				amount: io.dataOutput({
 					name: "Amount",
 					id: "amount",
@@ -174,11 +150,7 @@ export function pkg(core: Core) {
 					id: "currency",
 					type: t.string(),
 				}),
-				from: io.dataOutput({
-					name: "From",
-					id: "from",
-					type: t.string(),
-				}),
+				from: io.dataOutput({ name: "From", id: "from", type: t.string() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -198,14 +170,8 @@ export function pkg(core: Core) {
 		event: "superchat",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				name: io.dataOutput({
-					name: "Name",
-					id: "name",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				name: io.dataOutput({ name: "Name", id: "name", type: t.string() }),
 				currency: io.dataOutput({
 					name: "Currency",
 					id: "currency",

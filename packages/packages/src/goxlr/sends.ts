@@ -66,9 +66,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx, types: Types) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: {
-						Command: [mixerID(), { SetMicrophoneType: type.variant }],
-					},
+					data: { Command: [mixerID(), { SetMicrophoneType: type.variant }] },
 				}),
 			);
 		},
@@ -78,18 +76,12 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx, types: Types) {
 		name: "Set Reverb Amount",
 		type: "exec",
 		createIO: ({ io }) =>
-			io.dataInput({
-				name: "Amount (%)",
-				id: "amount",
-				type: t.int(),
-			}),
+			io.dataInput({ name: "Amount (%)", id: "amount", type: t.int() }),
 		run({ ctx, io }) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: {
-						Command: [mixerID(), { SetReverbAmount: ctx.getInput(io) }],
-					},
+					data: { Command: [mixerID(), { SetReverbAmount: ctx.getInput(io) }] },
 				}),
 			);
 		},
@@ -99,18 +91,12 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx, types: Types) {
 		name: "Set Echo Amount",
 		type: "exec",
 		createIO: ({ io }) =>
-			io.dataInput({
-				name: "Amount (%)",
-				id: "amount",
-				type: t.int(),
-			}),
+			io.dataInput({ name: "Amount (%)", id: "amount", type: t.int() }),
 		run({ ctx, io }) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: {
-						Command: [mixerID(), { SetEchoAmount: ctx.getInput(io) }],
-					},
+					data: { Command: [mixerID(), { SetEchoAmount: ctx.getInput(io) }] },
 				}),
 			);
 		},
@@ -120,18 +106,12 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx, types: Types) {
 		name: "Set Pitch Amount",
 		type: "exec",
 		createIO: ({ io }) =>
-			io.dataInput({
-				name: "Amount (%)",
-				id: "amount",
-				type: t.int(),
-			}),
+			io.dataInput({ name: "Amount (%)", id: "amount", type: t.int() }),
 		run({ ctx, io }) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: {
-						Command: [mixerID(), { SetPitchAmount: ctx.getInput(io) }],
-					},
+					data: { Command: [mixerID(), { SetPitchAmount: ctx.getInput(io) }] },
 				}),
 			);
 		},
@@ -141,23 +121,12 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx, types: Types) {
 		name: "Set Gender Amount",
 		type: "exec",
 		createIO: ({ io }) =>
-			io.dataInput({
-				name: "(%)",
-				id: "amount",
-				type: t.int(),
-			}),
+			io.dataInput({ name: "(%)", id: "amount", type: t.int() }),
 		run({ ctx, io }) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: {
-						Command: [
-							mixerID(),
-							{
-								SetGenderAmount: ctx.getInput(io),
-							},
-						],
-					},
+					data: { Command: [mixerID(), { SetGenderAmount: ctx.getInput(io) }] },
 				}),
 			);
 		},
@@ -167,23 +136,12 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx, types: Types) {
 		name: "Set FX State",
 		type: "exec",
 		createIO: ({ io }) =>
-			io.dataInput({
-				name: "State",
-				id: "state",
-				type: t.bool(),
-			}),
+			io.dataInput({ name: "State", id: "state", type: t.bool() }),
 		run({ ctx, io }) {
 			getSocket().send(
 				JSON.stringify({
 					id: 0,
-					data: {
-						Command: [
-							mixerID(),
-							{
-								SetFXEnabled: ctx.getInput(io),
-							},
-						],
-					},
+					data: { Command: [mixerID(), { SetFXEnabled: ctx.getInput(io) }] },
 				}),
 			);
 		},
@@ -227,11 +185,7 @@ export function register(pkg: Pkg, { mixerID, state }: Ctx, types: Types) {
 					id: "output",
 					type: t.enum(types.Outputs),
 				}),
-				state: io.dataInput({
-					name: "State",
-					id: "state",
-					type: t.bool(),
-				}),
+				state: io.dataInput({ name: "State", id: "state", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {

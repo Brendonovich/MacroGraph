@@ -17,9 +17,7 @@ export const AuthProviders = (): Record<
 					clientSecret: serverEnv().TWITCH_CLIENT_SECRET,
 					authorize: {
 						url: "https://id.twitch.tv/oauth2/authorize",
-						searchParams: {
-							force_verify: "true",
-						},
+						searchParams: { force_verify: "true" },
 					},
 					token: { url: "https://id.twitch.tv/oauth2/token" },
 					get scopes() {
@@ -90,9 +88,7 @@ export const AuthProviders = (): Record<
 			? {
 					clientId: serverEnv().GITHUB_CLIENT_ID,
 					clientSecret: serverEnv().GITHUB_CLIENT_SECRET,
-					authorize: {
-						url: "https://github.com/login/oauth/authorize",
-					},
+					authorize: { url: "https://github.com/login/oauth/authorize" },
 					token: {
 						url: "https://github.com/login/oauth/access_token",
 						headers: { Accept: "application/json" },
@@ -165,14 +161,9 @@ export const AuthProviders = (): Record<
 					clientSecret: serverEnv().GOOGLE_CLIENT_SECRET,
 					authorize: {
 						url: "https://accounts.google.com/o/oauth2/v2/auth",
-						searchParams: {
-							access_type: "offline",
-							prompt: "consent",
-						},
+						searchParams: { access_type: "offline", prompt: "consent" },
 					},
-					token: {
-						url: "https://oauth2.googleapis.com/token",
-					},
+					token: { url: "https://oauth2.googleapis.com/token" },
 					scopes: [
 						"https://www.googleapis.com/auth/youtube",
 						"email",
@@ -209,10 +200,7 @@ export const AuthProviders = (): Record<
 							accessToken,
 						);
 
-						return {
-							id: data.id,
-							displayName: data.attributes.full_name,
-						};
+						return { id: data.id, displayName: data.attributes.full_name };
 					},
 				}
 			: undefined,

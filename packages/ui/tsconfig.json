@@ -1,7 +1,4 @@
 {
 	"extends": "@macrograph/config/tsconfig",
-	"compilerOptions": {
-		"composite": true,
-		"outDir": "dist"
-	}
+	"compilerOptions": { "composite": true, "outDir": "dist" }
 }

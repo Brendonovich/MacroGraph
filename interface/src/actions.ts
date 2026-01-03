@@ -72,11 +72,7 @@ export type CreateNodeInput = GraphRef & {
 	position: XY;
 	connection?: {
 		fromPinId: string;
-		to: {
-			nodeId: number;
-			variant: "o" | "i";
-			pinId: string;
-		};
+		to: { nodeId: number; variant: "o" | "i"; pinId: string };
 	};
 	name?: string;
 	properties?: Record<string, any>;
@@ -88,12 +84,8 @@ type CommentBoxRef = GraphRef & { commentBoxId: number };
 type CustomStructRef = { structId: number };
 type CustomStructFieldRef = CustomStructRef & { fieldId: number };
 type CustomEnumRef = { enumId: number };
-type CustomEnumVariantRef = CustomEnumRef & {
-	variantId: string;
-};
-type CustomEnumVariantFieldRef = CustomEnumVariantRef & {
-	fieldId: string;
-};
+type CustomEnumVariantRef = CustomEnumRef & { variantId: string };
+type CustomEnumVariantFieldRef = CustomEnumVariantRef & { fieldId: string };
 type CustomEventRef = { eventId: number };
 type CustomEventFieldRef = CustomEventRef & { fieldId: number };
 
@@ -253,10 +245,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const graph = core.project.graphs.get(input.graphId);
 				if (!graph) return;
 
-				return {
-					...input,
-					prev: graph.name,
-				};
+				return { ...input, prev: graph.name };
 			},
 			perform(entry) {
 				const graph = core.project.graphs.get(entry.graphId);
@@ -715,12 +704,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const box = core.project.graphs.get(entry.graphId)?.createCommentBox({
-					id: entry.commentBoxId,
-					position: entry.position,
-					size: { x: 400, y: 200 },
-					text: "Comment",
-				});
+				const box = core.project.graphs
+					.get(entry.graphId)
+					?.createCommentBox({
+						id: entry.commentBoxId,
+						position: entry.position,
+						size: { x: 400, y: 200 },
+						text: "Comment",
+					});
 
 				// if (box)
 				//   editor.setGraphStates(
@@ -780,10 +771,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					?.commentBoxes.get(input.boxId);
 				if (!box) return;
 
-				return {
-					...input,
-					prev: input.prev ?? box.tint,
-				};
+				return { ...input, prev: input.prev ?? box.tint };
 			},
 			perform(entry) {
 				const box = core.project.graphs
@@ -831,10 +819,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					?.commentBoxes.get(input.boxId);
 				if (!box) return;
 
-				return {
-					...input,
-					prev: box.text,
-				};
+				return { ...input, prev: box.text };
 			},
 			perform(entry) {
 				const box = core.project.graphs
@@ -2544,18 +2529,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		createVariable: historyAction({
 			prepare(input: VariableLocation) {
 				if (input.location === "project")
-					return {
-						...input,
-						id: core.project.generateId(),
-					};
+					return { ...input, id: core.project.generateId() };
 
 				const graph = core.project.graphs.get(input.graphId);
 				if (!graph) return;
 
-				return {
-					...input,
-					id: graph.generateId(),
-				};
+				return { ...input, id: graph.generateId() };
 			},
 			perform(entry) {
 				if (entry.location === "project") {
@@ -2968,10 +2947,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				if (!core.project.resources.has(entry.type)) {
 					core.project.resources.set(
 						entry.type,
-						createMutable({
-							default: entry.default,
-							items: [],
-						}),
+						createMutable({ default: entry.default, items: [] }),
 					);
 				}
 

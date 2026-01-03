@@ -24,11 +24,6 @@
 		"effect": "^3.19.13",
 		"solid-presence": "^0.2.0"
 	},
-	"exports": {
-		".": "./src/index.ts",
-		"./styles.css": "./src/styles.css"
-	},
-	"devDependencies": {
-		"vitest": "^4.0.14"
-	}
+	"exports": { ".": "./src/index.ts", "./styles.css": "./src/styles.css" },
+	"devDependencies": { "vitest": "^4.0.14" }
 }

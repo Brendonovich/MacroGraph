@@ -1,9 +1,7 @@
 import { Package, type PropertyDef } from "@macrograph/runtime";
 
 export function pkg() {
-	const pkg = new Package({
-		name: "Custom Events",
-	});
+	const pkg = new Package({ name: "Custom Events" });
 
 	const eventProperty = {
 		name: "Custom Event",
@@ -25,13 +23,8 @@ export function pkg() {
 			if (!event) return;
 
 			return {
-				execInput: io.execInput({
-					id: "execIn",
-					name: event.name,
-				}),
-				execOutput: io.execOutput({
-					id: "",
-				}),
+				execInput: io.execInput({ id: "execIn", name: event.name }),
+				execOutput: io.execOutput({ id: "" }),
 				inputs: event.fields.map((field) =>
 					io.dataInput({
 						id: `${event.id}:${field.id}`,
@@ -71,10 +64,7 @@ export function pkg() {
 			if (!event) return;
 
 			return {
-				exec: io.execOutput({
-					id: "",
-					name: event.name,
-				}),
+				exec: io.execOutput({ id: "", name: event.name }),
 				event,
 				outputs: event.fields.map((field) =>
 					io.dataOutput({

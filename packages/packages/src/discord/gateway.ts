@@ -88,11 +88,7 @@ export function createGateway([, setPersisted]: PersistedStore) {
 		ws.close();
 	};
 
-	return {
-		sockets,
-		connectSocket,
-		disconnectSocket,
-	};
+	return { sockets, connectSocket, disconnectSocket };
 }
 
 export function register(pkg: Package, { gateway }: Ctx) {
@@ -123,9 +119,7 @@ export function register(pkg: Package, { gateway }: Ctx) {
 			return bus;
 		},
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			message: io.dataOutput({
 				id: "message",
 				name: "Message",

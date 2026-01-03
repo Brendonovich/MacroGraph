@@ -90,12 +90,7 @@ export class Api extends HttpApi.make("api")
 			.add(
 				HttpApiEndpoint.get("getUser", "/user")
 					.addSuccess(
-						S.OptionFromNullOr(
-							S.Struct({
-								id: S.String,
-								email: S.String,
-							}),
-						),
+						S.OptionFromNullOr(S.Struct({ id: S.String, email: S.String })),
 					)
 					.addError(HttpApiError.InternalServerError)
 					.addError(HttpApiError.BadRequest),
@@ -106,12 +101,7 @@ export class Api extends HttpApi.make("api")
 					"/credentials/:providerId/:providerUserId/refresh",
 				)
 					.middleware(AuthenticationMiddleware)
-					.setPath(
-						S.Struct({
-							providerId: S.String,
-							providerUserId: S.String,
-						}),
-					)
+					.setPath(S.Struct({ providerId: S.String, providerUserId: S.String }))
 					.addSuccess(CREDENTIAL),
 			)
 			.add(

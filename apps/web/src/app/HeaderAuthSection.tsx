@@ -41,10 +41,7 @@ export function HeaderAuthSection() {
 		on(
 			() => user(),
 			(user) => {
-				if (user)
-					posthog.identify(user.id, {
-						email: user.email,
-					});
+				if (user) posthog.identify(user.id, { email: user.email });
 				else posthog.reset();
 			},
 		),

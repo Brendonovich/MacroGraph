@@ -25,11 +25,7 @@ export function createTypes(pkg: Pkg) {
 		file: s.field("File", t.string()),
 	}));
 
-	return {
-		Model,
-		Expression,
-		Hotkey,
-	};
+	return { Model, Expression, Hotkey };
 }
 
 export type Types = ReturnType<typeof createTypes>;

@@ -21,10 +21,7 @@
 			"types": "./dist/src/Graph.d.ts",
 			"default": "./src/Graph.ts"
 		},
-		"./Node": {
-			"types": "./dist/src/Node.d.ts",
-			"default": "./src/Node.ts"
-		},
+		"./Node": { "types": "./dist/src/Node.d.ts", "default": "./src/Node.ts" },
 		"./ProjectEvent": {
 			"types": "./dist/src/ProjectEvent.d.ts",
 			"default": "./src/ProjectEvent.ts"
@@ -41,9 +38,6 @@
 			"types": "./dist/src/Policy.d.ts",
 			"default": "./src/Policy.ts"
 		},
-		"./IO": {
-			"types": "./dist/src/IO.d.ts",
-			"default": "./src/IO.ts"
-		}
+		"./IO": { "types": "./dist/src/IO.d.ts", "default": "./src/IO.ts" }
 	}
 }

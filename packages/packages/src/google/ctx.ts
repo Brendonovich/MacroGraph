@@ -52,9 +52,7 @@ export function createCtx(core: Core) {
 		oauth: (() => {
 			const oauth = client.extend("/oauth2/v3");
 
-			return {
-				userinfo: oauth.extend("/userinfo"),
-			};
+			return { userinfo: oauth.extend("/userinfo") };
 		})(),
 	};
 
@@ -77,12 +75,7 @@ export function createCtx(core: Core) {
 		},
 	);
 
-	return {
-		core,
-		authToken,
-		setAuthToken,
-		user,
-	};
+	return { core, authToken, setAuthToken, user };
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

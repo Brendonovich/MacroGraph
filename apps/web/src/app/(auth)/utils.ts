@@ -22,7 +22,5 @@ export const logOutAction = action(async () => {
 
 	deleteCookie(getRequestEvent()!.nativeEvent, IS_LOGGED_IN);
 
-	throw reload({
-		revalidate: [getUser.key],
-	});
+	throw reload({ revalidate: [getUser.key] });
 });

@@ -47,11 +47,7 @@ export async function fetch(
 	const res =
 		body.length === 0
 			? new Response(new Uint8Array(body))
-			: new Response(new Uint8Array(body), {
-					headers,
-					status,
-					statusText,
-				});
+			: new Response(new Uint8Array(body), { headers, status, statusText });
 
 	// url is read only but seems like we can do this
 	Object.defineProperty(res, "url", { value: url });

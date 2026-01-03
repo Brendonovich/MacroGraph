@@ -1,14 +1,14 @@
+/** biome-ignore-all lint/complexity/noBannedTypes: {} is used by effect and it's fine */
+
 import { type Rpc, type RpcClient, RpcGroup } from "@effect/rpc";
 import {
 	Context,
-	type Effect,
+	Effect,
 	type Layer,
 	type Option,
 	type Schema as S,
 } from "effect";
 import type { EffectGenerator, IO } from "@macrograph/project-domain";
-
-type AnyEvent = { _tag: string } & S.Any;
 
 export namespace PackageEngine {
 	export type Any = PackageEngine<any, any, any, any, any>;
@@ -16,6 +16,19 @@ export namespace PackageEngine {
 	export type LayerCtx<Events extends AnyEvent> = {
 		emitEvent(event: S.Schema.Type<Events>): void;
 		dirtyState(): void;
+		credentials: Effect.Effect<
+			ReadonlyArray<{
+				provider: string;
+				id: string;
+				displayName: string;
+				token: {
+					access_token: string;
+					refresh_token?: string;
+					expires_in: number;
+				};
+			}>
+		>;
+		refreshCredential(provider: string, id: string): Effect.Effect<void>;
 	};
 
 	export type LayerBuilderRet<
@@ -153,42 +166,64 @@ export namespace PackageEngine {
 	>
 		? S.Schema.Type<Events>
 		: never;
+
+	export type AnyEvent = { _tag: string } & S.Any;
 }
 
 export namespace Package {
 	export interface Package<Engine extends PackageEngine.Any> {
 		name: string;
-		engine: Engine;
+		engine?: Engine;
 
-		addSchema: MakeSchema<Engine, this>;
+		addSchema: Schema.MakeFn<Engine, this>;
 	}
 
-	export const define = <Engine extends PackageEngine.Any>(opts: {
+	export const define = <Engine extends PackageEngine.Any = never>(opts: {
 		name: string;
-		engine: Engine;
+		engine?: Engine;
 	}): Package<Engine> => {
-		return opts as any;
-	};
-}
+		const schemas = new Map<string, Schema.Any>();
 
-export interface MakeSchema<Engine extends PackageEngine.Any, Ret> {
-	<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
-		id: Id,
-		schema: Omit<Schema.Exec<Engine, Id, Properties, IO>, "id">,
-	): Ret;
-	<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
-		id: Id,
-		schema: Omit<Schema.Pure<Engine, Id, Properties, IO>, "id">,
-	): Ret;
-	<
-		Id extends string,
-		IO,
-		Event extends PackageEngine.Events<Engine>,
-		Properties extends PropertiesSchema.Any = never,
-	>(
-		id: Id,
-		schema: Omit<Schema.Event<Engine, Id, Properties, IO, Event>, "id">,
-	): Ret;
+		const self: Package<Engine> = {
+			...opts,
+			addSchema: ((id, schema) => {
+				const effectRun: (ctx: any) => Effect.Effect<any, any, any> =
+					schema.type === "exec"
+						? Effect.fnUntraced(schema.run as any)
+						: (ctx) => Effect.sync(() => schema.run(ctx));
+
+				schemas.set(id, {
+					id,
+					...schema,
+					io: (
+						ctx: Schema.AnyIOCtx<Engine, NonNullable<typeof schema.properties>>,
+					) => {
+						const systemIO: Array<IO.ExecInput | IO.ExecOutput> = [];
+						if (schema.type === "event") {
+							systemIO.push(ctx.out.exec("exec"));
+						} else if (schema.type === "exec") {
+							systemIO.push(ctx.out.exec("exec"));
+							systemIO.push(ctx.in.exec("exec"));
+						}
+
+						return [systemIO, schema.io(ctx)];
+					},
+					run: Effect.fnUntraced(function* (ctx: any) {
+						const ret = yield* effectRun({ ...ctx, io: ctx.io[1] });
+
+						if (schema.type === "event" || schema.type === "exec") {
+							return ctx.io[0][0];
+						}
+
+						return ret;
+					}),
+				} as any);
+				return self;
+			}) as Schema.AnyMakeFn<Engine, Package<Engine>>,
+		};
+
+		return self;
+	};
 }
 
 export namespace Resource {
@@ -197,12 +232,7 @@ export namespace Resource {
 		name: string;
 
 		toLayer(
-			handler: Effect.Effect<
-				ReadonlyArray<{
-					raw: Value;
-					display: string;
-				}>
-			>,
+			handler: Effect.Effect<ReadonlyArray<{ raw: Value; display: string }>>,
 		): Layer.Layer<Handler<Id, Value>>;
 	}
 
@@ -236,9 +266,7 @@ export namespace Property {
 	export type ResourceSource<Id extends string, Value> = {
 		resource: Resource.Tag<Id, Value>;
 	};
-	export type ValueSource = {
-		type: IO.T.Any_;
-	};
+	export type ValueSource = { type: IO.T.Any_ };
 	export type AnySource<Id extends string = any, Value = any> =
 		| ResourceSource<Id, Value>
 		| ValueSource;
@@ -269,7 +297,7 @@ export namespace Schema {
 		id: Id;
 		name: string;
 		type: string;
-		description: string;
+		description?: string;
 		properties?: Properties;
 	}
 
@@ -292,9 +320,7 @@ export namespace Schema {
 	> = <T extends IO.T.Any_>(
 		id: string,
 		type: T,
-		options?: {
-			name?: string;
-		} & (IO.T.Infer_<T> extends string
+		options?: { name?: string } & (IO.T.Infer_<T> extends string
 			? {
 					suggestions?: (
 						ctx: SuggestionsCtx<Engine, Properties>,
@@ -320,6 +346,14 @@ export namespace Schema {
 			: IO extends Record<string, any>
 				? { [K in keyof IO]: InferIO<IO[K]> }
 				: IO;
+
+	export type AnyIOCtx<
+		Engine extends PackageEngine.Any,
+		Properties extends PropertiesSchema.Any,
+	> = {
+		in: { data: CreateDataIn<Engine, Properties>; exec: CreateExecIn };
+		out: { data: CreateDataOut; exec: CreateExecOut };
+	};
 
 	export interface Exec<
 		Engine extends PackageEngine.Any,
@@ -351,6 +385,12 @@ export namespace Schema {
 			in: { data: CreateDataIn<Engine, Properties> };
 			out: { data: CreateDataOut };
 		}) => IO;
+		run: (ctx: {
+			io: InferIO<IO>;
+			properties: {
+				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
+			};
+		}) => void;
 	}
 
 	export interface Event<
@@ -383,4 +423,34 @@ export namespace Schema {
 		| Exec<Engine, Id, Properties, IO>
 		| Pure<Engine, Id, Properties, IO>
 		| Event<Engine, Id, Properties, IO, E>;
+
+	export type AnyMakeFn<Engine extends PackageEngine.Any, Ret> = <
+		Id extends string,
+		Properties extends PropertiesSchema.Any,
+		IO,
+		E extends PackageEngine.Events<Engine>,
+	>(
+		id: Id,
+		schema: Omit<Schema.Any<Engine, Id, Properties, IO, E>, "id">,
+	) => Ret;
+
+	export interface MakeFn<Engine extends PackageEngine.Any, Ret> {
+		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
+			id: Id,
+			schema: Omit<Schema.Exec<Engine, Id, Properties, IO>, "id">,
+		): Ret;
+		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
+			id: Id,
+			schema: Omit<Schema.Pure<Engine, Id, Properties, IO>, "id">,
+		): Ret;
+		<
+			Id extends string,
+			IO,
+			Event extends PackageEngine.Events<Engine>,
+			Properties extends PropertiesSchema.Any = never,
+		>(
+			id: Id,
+			schema: Omit<Schema.Event<Engine, Id, Properties, IO, Event>, "id">,
+		): Ret;
+	}
 }

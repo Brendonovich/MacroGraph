@@ -55,15 +55,11 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 						});
 					}
 
-					console.log({ constantId });
-
 					const constantValue = project.constants.pipe(
 						HashMap.get(constantId),
 						Option.map((c) => c.value),
 						Option.getOrUndefined,
 					);
-
-					console.log({ constantValue });
 
 					if (constantValue === undefined) {
 						yield* Effect.log(`Constant '${constantId}' not found`);
@@ -74,12 +70,9 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 
 					const values = yield* resource.get;
 
-					console.log({ values });
-
 					const value = values.find(
 						(v) => def.resource.serialize(v).id === constantValue,
 					);
-					console.log({ value });
 					if (!value) {
 						yield* Effect.log(
 							`No value for resource '${pkg}/${def.resource.id}' found`,
@@ -90,8 +83,6 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 					}
 					properties[id] = value;
 				}
-
-				console.log({ properties });
 
 				return properties;
 			});
@@ -233,11 +224,13 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 
 				yield* processNodeInputs(node);
 
-				return yield* schema.run({ io: io.shape, properties }).pipe(
-					Effect.provideService(NodeExecutionContext, {
-						node: { id: node.id },
-					}),
-				);
+				return yield* schema
+					.run({ io: io.shape, properties })
+					.pipe(
+						Effect.provideService(NodeExecutionContext, {
+							node: { id: node.id },
+						}),
+					);
 			});
 
 			const fireEventNode = Effect.fn(function* (

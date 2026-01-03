@@ -102,11 +102,7 @@ const getAuthentication = Effect.gen(function* () {
 				);
 
 				type = "server-jwt";
-				ret = Option.some({
-					source: "serverJwt",
-					jwt,
-					userId: jwt.ownerId,
-				});
+				ret = Option.some({ source: "serverJwt", jwt, userId: jwt.ownerId });
 			}
 		} else {
 			type = "session-desktop";
@@ -216,10 +212,7 @@ const ServerAuthJWTFromRaw = Schema.transformOrFail(RawJWT, ServerAuthJWT, {
 		const keys = yield* JwtKeys;
 
 		const jwt = yield* Effect.promise(() =>
-			new Jose.SignJWT({
-				oauthAppId: data.oauthAppId,
-				ownerId: data.ownerId,
-			})
+			new Jose.SignJWT({ oauthAppId: data.oauthAppId, ownerId: data.ownerId })
 				.setProtectedHeader({ alg: "RS256" })
 				.setIssuedAt()
 				.sign(keys.privateKey),
@@ -323,11 +316,7 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 								.set({ token, issuedAt })
 								.where(where);
 
-							return {
-								...credential,
-								issuedAt,
-								token,
-							};
+							return { ...credential, issuedAt, token };
 						}),
 					);
 
@@ -460,13 +449,15 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 										deviceSession.deviceCode,
 									),
 								);
-							await db.insert(Db.oauthSessions).values({
-								appId: deviceSession.appId,
-								userId: deviceSession.userId,
-								accessToken,
-								refreshToken,
-								expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-							});
+							await db
+								.insert(Db.oauthSessions)
+								.values({
+									appId: deviceSession.appId,
+									userId: deviceSession.userId,
+									accessToken,
+									refreshToken,
+									expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+								});
 						}),
 					);
 
@@ -550,11 +541,9 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 								db
 									.delete(Db.serverRegistrationSessions)
 									.where(Dz.eq(Db.serverRegistrationSessions.id, id)),
-								db.insert(Db.oauthApps).values({
-									type: "server",
-									id: oauthAppId,
-									ownerId: userId,
-								}),
+								db
+									.insert(Db.oauthApps)
+									.values({ type: "server", id: oauthAppId, ownerId: userId }),
 							]),
 						),
 					);

@@ -52,9 +52,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		> & {
 			properties?: TProperties;
 			run(
-				props: RunProps<TProperties, TIO> & {
-					obs: OBSWebSocket;
-				},
+				props: RunProps<TProperties, TIO> & { obs: OBSWebSocket },
 			): void | Promise<void>;
 			createIO: MergeFnProps<
 				CreateIOFn<TProperties, TIO>,
@@ -93,26 +91,10 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	}
 
 	const versionOutputs = [
-		{
-			id: "obsVersion",
-			name: "OBS Version",
-			type: t.string(),
-		},
-		{
-			id: "obsWebSocketVersion",
-			name: "OBS WS Version",
-			type: t.string(),
-		},
-		{
-			id: "rpcVersion",
-			name: "RPC Version",
-			type: t.int(),
-		},
-		{
-			id: "platform",
-			name: "Platform",
-			type: t.string(),
-		},
+		{ id: "obsVersion", name: "OBS Version", type: t.string() },
+		{ id: "obsWebSocketVersion", name: "OBS WS Version", type: t.string() },
+		{ id: "rpcVersion", name: "RPC Version", type: t.int() },
+		{ id: "platform", name: "Platform", type: t.string() },
 		{
 			id: "supportedImageFormats",
 			name: "Supported Image Formats",
@@ -192,11 +174,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	createOBSExecSchema({
 		name: "Trigger Hotkey By Name",
 		createIO: ({ io }) =>
-			io.dataInput({
-				id: "hotkeyName",
-				name: "Hotkey Name",
-				type: t.string(),
-			}),
+			io.dataInput({ id: "hotkeyName", name: "Hotkey Name", type: t.string() }),
 		async run({ ctx, io, obs }) {
 			await obs.call("TriggerHotkeyByName", { hotkeyName: ctx.getInput(io) });
 		},
@@ -205,11 +183,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	createOBSExecSchema({
 		name: "Trigger Hotkey By Key Sequence",
 		createIO: ({ io }) => ({
-			id: io.dataInput({
-				id: "keyId",
-				name: "Key ID",
-				type: t.string(),
-			}),
+			id: io.dataInput({ id: "keyId", name: "Key ID", type: t.string() }),
 			modifiers: io.dataInput({
 				id: "keyModifiers",
 				name: "Key Modifiers",
@@ -237,14 +211,8 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -548,9 +516,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				streamServiceType: ctx.getInput(io.streamServiceType),
 				streamServiceSettings: jsonToJS({
 					variant: "Map",
-					data: {
-						value: ctx.getInput(io.streamServiceSettings),
-					},
+					data: { value: ctx.getInput(io.streamServiceSettings) },
 				}),
 			});
 		},
@@ -603,11 +569,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	createOBSExecSchema({
 		name: "Get Group List",
 		createIO: ({ io }) =>
-			io.dataOutput({
-				id: "groups",
-				name: "Groups",
-				type: t.list(t.string()),
-			}),
+			io.dataOutput({ id: "groups", name: "Groups", type: t.list(t.string()) }),
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetGroupList");
 			ctx.setOutput(io, data.groups);
@@ -617,10 +579,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	createOBSExecSchema({
 		name: "Get Current Program Scene",
 		createIO: ({ io }) =>
-			io.dataOutput({
-				id: "currentProgramSceneName",
-				type: t.string(),
-			}),
+			io.dataOutput({ id: "currentProgramSceneName", type: t.string() }),
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetCurrentProgramScene");
 			ctx.setOutput(io, data.currentProgramSceneName);
@@ -805,9 +764,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
 		async run({ ctx, io, obs }) {
-			await obs.call("SetCurrentProgramScene", {
-				sceneName: ctx.getInput(io),
-			});
+			await obs.call("SetCurrentProgramScene", { sceneName: ctx.getInput(io) });
 		},
 	});
 
@@ -835,20 +792,14 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
 		async run({ ctx, io, obs }) {
-			await obs.call("SetCurrentPreviewScene", {
-				sceneName: ctx.getInput(io),
-			});
+			await obs.call("SetCurrentPreviewScene", { sceneName: ctx.getInput(io) });
 		},
 	});
 
 	createOBSExecSchema({
 		name: "Create Scene",
 		createIO: ({ io }) =>
-			io.dataInput({
-				id: "sceneName",
-				name: "Scene Name",
-				type: t.string(),
-			}),
+			io.dataInput({ id: "sceneName", name: "Scene Name", type: t.string() }),
 		async run({ ctx, io, obs }) {
 			await obs.call("CreateScene", { sceneName: ctx.getInput(io) });
 		},
@@ -1048,9 +999,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneItemEnabled: ctx.getInput(io.sceneItemEnabled),
 				inputSettings: jsonToJS({
 					variant: "Map",
-					data: {
-						value: ctx.getInput(io.inputSettings),
-					},
+					data: { value: ctx.getInput(io.inputSettings) },
 				}),
 			});
 			ctx.setOutput(io.sceneItemId, data.sceneItemId);
@@ -1067,9 +1016,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				fetchSuggestions: inputListSuggestionFactory(obs),
 			}),
 		async run({ ctx, io, obs }) {
-			await obs.call("RemoveInput", {
-				inputName: ctx.getInput(io),
-			});
+			await obs.call("RemoveInput", { inputName: ctx.getInput(io) });
 		},
 	});
 
@@ -1114,9 +1061,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const data = await obs.call(
 				"GetInputList",
 				ctx.getInput(io.inputKind)
-					? {
-							inputKind: ctx.getInput(io.inputKind),
-						}
+					? { inputKind: ctx.getInput(io.inputKind) }
 					: {},
 			);
 
@@ -1245,20 +1190,14 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Input Settings",
 				type: t.map(t.enum(JSONEnum)),
 			}),
-			overlay: io.dataInput({
-				id: "overlay",
-				name: "Overlay",
-				type: t.bool(),
-			}),
+			overlay: io.dataInput({ id: "overlay", name: "Overlay", type: t.bool() }),
 		}),
 		async run({ ctx, io, obs }) {
 			await obs.call("SetInputSettings", {
 				inputName: ctx.getInput(io.inputName),
 				inputSettings: jsonToJS({
 					variant: "Map",
-					data: {
-						value: ctx.getInput(io.inputSettings),
-					},
+					data: { value: ctx.getInput(io.inputSettings) },
 				}),
 				overlay: ctx.getInput(io.overlay),
 			});
@@ -1600,9 +1539,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				inputName: ctx.getInput(io.inputName),
 				inputAudioTracks: jsonToJS({
 					variant: "Map",
-					data: {
-						value: ctx.getInput(io.inputAudioTracks),
-					},
+					data: { value: ctx.getInput(io.inputAudioTracks) },
 				}),
 			});
 		},
@@ -1812,19 +1749,13 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Transition Settings",
 				type: t.map(t.enum(JSONEnum)),
 			}),
-			overlay: io.dataInput({
-				id: "overlay",
-				name: "Overlay",
-				type: t.bool(),
-			}),
+			overlay: io.dataInput({ id: "overlay", name: "Overlay", type: t.bool() }),
 		}),
 		async run({ ctx, io, obs }) {
 			await obs.call("SetCurrentSceneTransitionSettings", {
 				transitionSettings: jsonToJS({
 					variant: "Map",
-					data: {
-						value: ctx.getInput(io.transitionSettings),
-					},
+					data: { value: ctx.getInput(io.transitionSettings) },
 				}),
 				overlay: ctx.getInput(io.overlay),
 			});
@@ -1861,11 +1792,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Position",
 				type: t.int(),
 			}),
-			release: io.dataInput({
-				id: "release",
-				name: "Release",
-				type: t.bool(),
-			}),
+			release: io.dataInput({ id: "release", name: "Release", type: t.bool() }),
 		}),
 		async run({ ctx, io, obs }) {
 			await obs.call("SetTBarPosition", {
@@ -1968,9 +1895,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				filterSettings: ctx.getInput(io.filterSettings)
 					? jsonToJS({
 							variant: "Map",
-							data: {
-								value: ctx.getInput(io.filterSettings),
-							},
+							data: { value: ctx.getInput(io.filterSettings) },
 						})
 					: {},
 			});
@@ -2157,9 +2082,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				filterName: ctx.getInput(io.filterName),
 				filterSettings: jsonToJS({
 					variant: "Map",
-					data: {
-						value: ctx.getInput(io.filterSettings),
-					},
+					data: { value: ctx.getInput(io.filterSettings) },
 				}),
 				overlay: ctx.getInput(io.overlay),
 			});
@@ -3013,46 +2936,18 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	//SetOutputSettings has object
 
 	const StreamStatus = [
-		{
-			id: "outputActive",
-			name: "Output Active",
-			type: t.bool(),
-		},
-		{
-			id: "outputReconnecting",
-			name: "Output Reconnecting",
-			type: t.bool(),
-		},
-		{
-			id: "outputTimecode",
-			name: "Output Timecode",
-			type: t.string(),
-		},
-		{
-			id: "outputDuration",
-			name: "Output Duration",
-			type: t.int(),
-		},
+		{ id: "outputActive", name: "Output Active", type: t.bool() },
+		{ id: "outputReconnecting", name: "Output Reconnecting", type: t.bool() },
+		{ id: "outputTimecode", name: "Output Timecode", type: t.string() },
+		{ id: "outputDuration", name: "Output Duration", type: t.int() },
 		// {
 		//   id: "outputCongestion",
 		//   name: "Output Congestion",
 		//   type: types.int(),
 		// },
-		{
-			id: "outputBytes",
-			name: "Output Bytes",
-			type: t.int(),
-		},
-		{
-			id: "outputSkippedFrames",
-			name: "Output Skipped Frames",
-			type: t.int(),
-		},
-		{
-			id: "outputTotalFrames",
-			name: "Output Total Frames",
-			type: t.int(),
-		},
+		{ id: "outputBytes", name: "Output Bytes", type: t.int() },
+		{ id: "outputSkippedFrames", name: "Output Skipped Frames", type: t.int() },
+		{ id: "outputTotalFrames", name: "Output Total Frames", type: t.int() },
 	] as const;
 
 	createOBSExecSchema({
@@ -3106,9 +3001,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				type: t.string(),
 			}),
 		async run({ ctx, io, obs }) {
-			await obs.call("SendStreamCaption", {
-				captionText: ctx.getInput(io),
-			});
+			await obs.call("SendStreamCaption", { captionText: ctx.getInput(io) });
 		},
 	});
 
@@ -3382,9 +3275,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				fetchSuggestions: inputListSuggestionFactory(obs),
 			}),
 		async run({ ctx, io, obs }) {
-			await obs.call("OpenInputFiltersDialog", {
-				inputName: ctx.getInput(io),
-			});
+			await obs.call("OpenInputFiltersDialog", { inputName: ctx.getInput(io) });
 		},
 	});
 

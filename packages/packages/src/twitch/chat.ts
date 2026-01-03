@@ -107,11 +107,7 @@ export function createChat() {
 		await chat.client.disconnect();
 	}
 
-	return {
-		clients,
-		connectClient,
-		disconnectClient,
-	};
+	return { clients, connectClient, disconnectClient };
 }
 
 export type Chat = ReturnType<typeof createChat>;
@@ -316,9 +312,7 @@ export function register(pkg: Package, { chat }: Ctx) {
 			}),
 		},
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			username: io.dataOutput({
 				id: "username",
 				name: "Username",
@@ -359,21 +353,9 @@ export function register(pkg: Package, { chat }: Ctx) {
 				name: "Broadcaster",
 				type: t.bool(),
 			}),
-			mod: io.dataOutput({
-				id: "mod",
-				name: "Moderator",
-				type: t.bool(),
-			}),
-			vip: io.dataOutput({
-				id: "vip",
-				name: "VIP",
-				type: t.bool(),
-			}),
-			sub: io.dataOutput({
-				id: "sub",
-				name: "Subscriber",
-				type: t.bool(),
-			}),
+			mod: io.dataOutput({ id: "mod", name: "Moderator", type: t.bool() }),
+			vip: io.dataOutput({ id: "vip", name: "VIP", type: t.bool() }),
+			sub: io.dataOutput({ id: "sub", name: "Subscriber", type: t.bool() }),
 		}),
 		run({ ctx, data, io }) {
 			if (data.self) return;
@@ -414,19 +396,13 @@ export function register(pkg: Package, { chat }: Ctx) {
 			}),
 		},
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			enabled: io.dataOutput({
 				id: "enabled",
 				name: "Enabled",
 				type: t.bool(),
 			}),
-			length: io.dataOutput({
-				id: "length",
-				name: "Duration",
-				type: t.int(),
-			}),
+			length: io.dataOutput({ id: "length", name: "Duration", type: t.int() }),
 		}),
 		run({ ctx, data, io }) {
 			ctx.setOutput(io.enabled, data.enabled);
@@ -442,9 +418,7 @@ export function register(pkg: Package, { chat }: Ctx) {
 			handler: (channel, data) => ({ channel, data }),
 		},
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			enabled: io.dataOutput({
 				id: "enabled",
 				name: "Enabled",
@@ -464,9 +438,7 @@ export function register(pkg: Package, { chat }: Ctx) {
 			handler: (channel, data) => ({ channel, data }),
 		},
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			enabled: io.dataOutput({
 				id: "enabled",
 				name: "Enabled",
@@ -489,19 +461,13 @@ export function register(pkg: Package, { chat }: Ctx) {
 			}),
 		},
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			enabled: io.dataOutput({
 				id: "enabled",
 				name: "Enabled",
 				type: t.bool(),
 			}),
-			length: io.dataOutput({
-				id: "length",
-				name: "Duration",
-				type: t.int(),
-			}),
+			length: io.dataOutput({ id: "length", name: "Duration", type: t.int() }),
 		}),
 		run({ ctx, data, io }) {
 			ctx.setOutput(io.enabled, data.enabled);
@@ -520,9 +486,7 @@ export function register(pkg: Package, { chat }: Ctx) {
 			}),
 		},
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			username: io.dataOutput({
 				id: "username",
 				name: "Username",

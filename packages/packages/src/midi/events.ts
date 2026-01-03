@@ -31,9 +31,7 @@ export function register(pkg: Pkg) {
 	}: Omit<
 		CreateEventSchema<typeof defaultProperties, TIO, TFire>,
 		"type" | "createListener" | "properties"
-	> & {
-		handleMessage: (data: Array<number>) => TFire | undefined;
-	}) {
+	> & { handleMessage: (data: Array<number>) => TFire | undefined }) {
 		pkg.createSchema({
 			...s,
 			type: "event",
@@ -242,11 +240,7 @@ export function register(pkg: Pkg) {
 		createIO: ({ io }) => ({
 			exec: io.execOutput({ id: "exec" }),
 			channel: io.dataOutput({ id: "channel", name: "Channel", type: t.int() }),
-			delta: io.dataOutput({
-				id: "delta",
-				name: "Delta",
-				type: t.int(),
-			}),
+			delta: io.dataOutput({ id: "delta", name: "Delta", type: t.int() }),
 		}),
 		run({ ctx, data, io }) {
 			ctx.setOutput(io.delta, data.delta);

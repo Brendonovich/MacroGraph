@@ -5,13 +5,7 @@ export default {
 	darkMode: ["class", '[data-kb-theme="dark"]'],
 	content: ["./src/**/*.{js,jsx,md,mdx,ts,tsx}"],
 	theme: {
-		container: {
-			center: true,
-			padding: "2rem",
-			screens: {
-				"2xl": "1400px",
-			},
-		},
+		container: { center: true, padding: "2rem", screens: { "2xl": "1400px" } },
 		extend: {
 			colors: {
 				border: "hsl(var(--border))",
@@ -69,9 +63,7 @@ export default {
 				md: "calc(var(--radius) - 2px)",
 				sm: "calc(var(--radius) - 4px)",
 			},
-			fontFamily: {
-				sans: ["Inter", ...fontFamily.sans],
-			},
+			fontFamily: { sans: ["Inter", ...fontFamily.sans] },
 			keyframes: {
 				"accordion-down": {
 					from: { height: 0 },

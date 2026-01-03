@@ -23,11 +23,7 @@ export default defineConfig({
 			consumer: "client",
 			build: {
 				ssr: false,
-				rollupOptions: {
-					output: {
-						dir: "./dist/client",
-					},
-				},
+				rollupOptions: { output: { dir: "./dist/client" } },
 			},
 		},
 		server: {
@@ -41,14 +37,9 @@ export default defineConfig({
 				copyPublicDir: false,
 				rollupOptions: {
 					input: serverEnvironmentEntry,
-					output: {
-						dir: "./dist/server",
-						entryFileNames: "index.mjs",
-					},
+					output: { dir: "./dist/server", entryFileNames: "index.mjs" },
 				},
-				commonjsOptions: {
-					include: [/node_modules/],
-				},
+				commonjsOptions: { include: [/node_modules/] },
 			},
 		},
 	},

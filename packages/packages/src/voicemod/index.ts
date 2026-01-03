@@ -33,9 +33,7 @@ export function pkg() {
 			const request = {
 				action: "loadVoice",
 				id: "ThisDoesntMatter",
-				payload: {
-					voiceID: context.voices().get(ctx.getInput(io.voice)),
-				},
+				payload: { voiceID: context.voices().get(ctx.getInput(io.voice)) },
 			};
 
 			if (ws.isSome()) {
@@ -48,12 +46,7 @@ export function pkg() {
 		name: "Set Voice Changer State",
 		type: "exec",
 		createIO({ io }) {
-			return {
-				state: io.dataInput({
-					id: "state",
-					type: t.bool(),
-				}),
-			};
+			return { state: io.dataInput({ id: "state", type: t.bool() }) };
 		},
 		async run({ ctx, io }) {
 			const ws = context.state();
@@ -74,12 +67,7 @@ export function pkg() {
 		name: "Set Hear Self State",
 		type: "exec",
 		createIO({ io }) {
-			return {
-				state: io.dataInput({
-					id: "state",
-					type: t.bool(),
-				}),
-			};
+			return { state: io.dataInput({ id: "state", type: t.bool() }) };
 		},
 		async run({ ctx, io }) {
 			const ws = context.state();

@@ -14,10 +14,7 @@ export class Connection extends Context.Tag("RealtimeConnection")<
 
 export class ConnectionRpcMiddleware extends RpcMiddleware.Tag<ConnectionRpcMiddleware>()(
 	"ConnectionRpcMiddleware",
-	{
-		provides: Connection,
-		requiredForClient: true,
-	},
+	{ provides: Connection, requiredForClient: true },
 ) {}
 
 export class CurrentActorRpcMiddleware extends RpcMiddleware.Tag<CurrentActorRpcMiddleware>()(

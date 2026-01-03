@@ -45,9 +45,7 @@ export namespace ServerConfig {
 	});
 	export type Shape = Schema.Schema.Type<typeof Shape>;
 
-	const Default = (): Shape => ({
-		serverRegistrationToken: Option.none(),
-	});
+	const Default = (): Shape => ({ serverRegistrationToken: Option.none() });
 }
 
 export namespace ServerConfigPersistence {

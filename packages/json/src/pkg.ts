@@ -6,10 +6,7 @@ import { jsToJSON, jsonToJS, toJSON } from "./conversion";
 import { JSONEnum } from "./type";
 
 export function pkg() {
-	const pkg = new Package({
-		name: "JSON",
-		ctx: {},
-	});
+	const pkg = new Package({ name: "JSON", ctx: {} });
 
 	pkg.registerType(JSONEnum);
 
@@ -21,14 +18,8 @@ export function pkg() {
 
 			return {
 				w,
-				in: io.dataInput({
-					id: "in",
-					type: t.wildcard(w),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.enum(JSONEnum),
-				}),
+				in: io.dataInput({ id: "in", type: t.wildcard(w) }),
+				out: io.dataOutput({ id: "out", type: t.enum(JSONEnum) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -49,14 +40,8 @@ export function pkg() {
 			const w = io.wildcard("");
 			return {
 				w,
-				in: io.dataInput({
-					id: "in",
-					type: t.enum(JSONEnum),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.wildcard(w),
-				}),
+				in: io.dataInput({ id: "in", type: t.enum(JSONEnum) }),
+				out: io.dataOutput({ id: "out", type: t.wildcard(w) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -70,14 +55,8 @@ export function pkg() {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.string(),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.enum(JSONEnum),
-				}),
+				in: io.dataInput({ id: "in", type: t.string() }),
+				out: io.dataOutput({ id: "out", type: t.enum(JSONEnum) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -89,22 +68,11 @@ export function pkg() {
 	pkg.createSchema({
 		name: "Query JSON",
 		type: "exec",
-		properties: {
-			query: {
-				name: "Query",
-				type: t.string(),
-			},
-		},
+		properties: { query: { name: "Query", type: t.string() } },
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.enum(JSONEnum),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.option(t.enum(JSONEnum)),
-				}),
+				in: io.dataInput({ id: "in", type: t.enum(JSONEnum) }),
+				out: io.dataOutput({ id: "out", type: t.option(t.enum(JSONEnum)) }),
 			};
 		},
 		run({ ctx, io, properties }) {
@@ -134,14 +102,8 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.enum(JSONEnum),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.option(t.string()),
-				}),
+				in: io.dataInput({ id: "in", type: t.enum(JSONEnum) }),
+				out: io.dataOutput({ id: "out", type: t.option(t.string()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -159,14 +121,8 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.enum(JSONEnum),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.option(t.float()),
-				}),
+				in: io.dataInput({ id: "in", type: t.enum(JSONEnum) }),
+				out: io.dataOutput({ id: "out", type: t.option(t.float()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -184,14 +140,8 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.enum(JSONEnum),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.option(t.bool()),
-				}),
+				in: io.dataInput({ id: "in", type: t.enum(JSONEnum) }),
+				out: io.dataOutput({ id: "out", type: t.option(t.bool()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -209,10 +159,7 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.enum(JSONEnum),
-				}),
+				in: io.dataInput({ id: "in", type: t.enum(JSONEnum) }),
 				out: io.dataOutput({
 					id: "out",
 					type: t.option(t.list(t.enum(JSONEnum))),
@@ -234,10 +181,7 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.enum(JSONEnum),
-				}),
+				in: io.dataInput({ id: "in", type: t.enum(JSONEnum) }),
 				out: io.dataOutput({
 					id: "out",
 					type: t.option(t.map(t.enum(JSONEnum))),

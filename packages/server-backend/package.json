@@ -30,7 +30,5 @@
 		"jose": "^4.15.9",
 		"obs-websocket-js": "^5.0.7"
 	},
-	"devDependencies": {
-		"unplugin-icons": "^0.18.5"
-	}
+	"devDependencies": { "unplugin-icons": "^0.18.5" }
 }

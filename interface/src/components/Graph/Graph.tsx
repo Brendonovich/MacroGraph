@@ -48,10 +48,7 @@ interface Props extends Solid.ComponentProps<"div"> {
 	onBoundsChange(bounds: XY): void;
 }
 
-type State = {
-	size: Size;
-	bounds: XY;
-};
+type State = { size: Size; bounds: XY };
 
 export const Graph = (props: Props) => {
 	const [ref, setRef] = Solid.createSignal<HTMLDivElement | undefined>();
@@ -65,10 +62,7 @@ export const Graph = (props: Props) => {
 	});
 
 	createResizeObserver(ref, (bounds) => {
-		const value = {
-			width: bounds.width,
-			height: bounds.height,
-		};
+		const value = { width: bounds.width, height: bounds.height };
 
 		props.onSizeChange(value);
 		setState("size", value);
@@ -77,10 +71,7 @@ export const Graph = (props: Props) => {
 	function onResize() {
 		const bounds = ref()!.getBoundingClientRect()!;
 
-		const value = {
-			x: bounds.left,
-			y: bounds.top,
-		};
+		const value = { x: bounds.left, y: bounds.top };
 
 		props.onBoundsChange(value);
 		setState("bounds", value);
@@ -169,10 +160,7 @@ export const Graph = (props: Props) => {
 			if (e.ctrlKey) {
 				const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
 
-				updateScale(delta, {
-					x: e.clientX,
-					y: e.clientY,
-				});
+				updateScale(delta, { x: e.clientX, y: e.clientY });
 			} else
 				props.onTranslateChange({
 					x: props.state.translate.x + deltaX,
@@ -305,10 +293,7 @@ export const Graph = (props: Props) => {
 
 		Solid.createRoot((dispose) => {
 			const getItems = (e: MouseEvent) => {
-				const end = ctx.toGraphSpace({
-					x: e.clientX,
-					y: e.clientY,
-				});
+				const end = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
 
 				const xSide: "l" | "r" = start.x < end.x ? "r" : "l";
 				const ySide: "u" | "d" = start.y < end.y ? "d" : "u";
@@ -336,10 +321,7 @@ export const Graph = (props: Props) => {
 							rect,
 							GRID_SIZE * 2,
 						),
-					].map((b) => ({
-						id: b.id,
-						type: "commentBox" as const,
-					})),
+					].map((b) => ({ id: b.id, type: "commentBox" as const })),
 				];
 
 				return [items, rect] as const;
@@ -423,10 +405,7 @@ export const Graph = (props: Props) => {
 						const state: SchemaMenuOpenState = {
 							status: "schemaMenuOpen",
 							// graph: props.state,
-							position: {
-								x: e.clientX,
-								y: e.clientY,
-							},
+							position: { x: e.clientX, y: e.clientY },
 						};
 
 						if (interfaceCtx.state.status === "connectionAssignMode")
@@ -489,14 +468,8 @@ export const Graph = (props: Props) => {
 
 						gesture.pointers.push({
 							pointerId: e.pointerId,
-							start: {
-								x: e.clientX,
-								y: e.clientY,
-							},
-							current: {
-								x: e.clientX,
-								y: e.clientY,
-							},
+							start: { x: e.clientX, y: e.clientY },
+							current: { x: e.clientX, y: e.clientY },
 							button: e.button,
 						});
 

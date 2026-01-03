@@ -58,9 +58,7 @@ export function ClientListDropdown() {
 										<div class="flex flex-row space-x-1.5 items-center">
 											<Avatar
 												name={data.name}
-												style={{
-													"background-color": data.colour,
-												}}
+												style={{ "background-color": data.colour }}
 											/>
 											<span>{data.name}</span>
 										</div>

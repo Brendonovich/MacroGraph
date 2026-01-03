@@ -17,10 +17,7 @@ export type Pkg = Package<any, Ctx>;
 const PERSISTED_SCHEMA = v.object({
 	bots: v.record(
 		v.string(),
-		v.object({
-			token: v.string(),
-			gateway: v.optional(v.boolean()),
-		}),
+		v.object({ token: v.string(), gateway: v.optional(v.boolean()) }),
 	),
 	users: v.array(v.string()),
 });
@@ -61,13 +58,7 @@ function createCtx(core: Core) {
 		await Promise.allSettled([setupUsers(), setupBots()]);
 	});
 
-	return {
-		api,
-		auth,
-		core,
-		gateway,
-		setup,
-	};
+	return { api, auth, core, gateway, setup };
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

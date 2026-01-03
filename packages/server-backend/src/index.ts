@@ -158,11 +158,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 					if (!conn) throw new Error("Connection not found");
 
 					return yield* rpcsWebApp.pipe(
-						Effect.provide(
-							Realtime.Connection.context({
-								id,
-							}),
-						),
+						Effect.provide(Realtime.Connection.context({ id })),
 					);
 				}),
 			),
@@ -233,11 +229,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 							),
 						);
 					}).pipe(
-						Effect.provide(
-							Realtime.Connection.context({
-								id: connectionId,
-							}),
-						),
+						Effect.provide(Realtime.Connection.context({ id: connectionId })),
 						Effect.forkScoped,
 					);
 

@@ -97,9 +97,7 @@ export default function NewPlayground() {
 									<NavSidebarProvider>
 										<ContextualSidebarProvider
 											wrapOpenSignal={(s) =>
-												makePersisted(s, {
-													name: "contextual-sidebar",
-												})
+												makePersisted(s, { name: "contextual-sidebar" })
 											}
 										>
 											<GraphContextMenu.Provider>
@@ -290,10 +288,7 @@ const usePaneTabController = (
 		),
 		package: makePackageTabSchema(rpc.GetPackageSettings),
 		settings: {
-			getMeta: (tab) => ({
-				title: "Settings",
-				desc: tab.page,
-			}),
+			getMeta: (tab) => ({ title: "Settings", desc: tab.page }),
 			Component: (tab) => (
 				<SettingsLayout
 					pages={[

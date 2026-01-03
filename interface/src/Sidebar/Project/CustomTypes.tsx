@@ -189,10 +189,7 @@ export function CustomTypes() {
 
 																		interfaceCtx.execute(
 																			"deleteCustomEventField",
-																			{
-																				eventId: id,
-																				fieldId: field.id,
-																			},
+																			{ eventId: id, fieldId: field.id },
 																		);
 																	}}
 																>

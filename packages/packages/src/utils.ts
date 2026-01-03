@@ -20,19 +20,13 @@ import duration from "dayjs/plugin/duration";
 dayjs.extend(duration);
 
 export function pkg(core: Core) {
-	const pkg = new Package({
-		name: "Utils",
-	});
+	const pkg = new Package({ name: "Utils" });
 
 	pkg.createSchema({
 		name: "Print",
 		type: "exec",
 		createIO({ io }) {
-			return io.dataInput({
-				id: "input",
-				name: "Input",
-				type: t.string(),
-			});
+			return io.dataInput({ id: "input", name: "Input", type: t.string() });
 		},
 		run({ ctx, io }) {
 			core.print(ctx.getInput(io), io.node);
@@ -54,10 +48,7 @@ export function pkg(core: Core) {
 					name: "Includes",
 					type: t.string(),
 				}),
-				out: io.dataOutput({
-					id: "bool",
-					type: t.bool(),
-				}),
+				out: io.dataOutput({ id: "bool", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -73,25 +64,14 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					name: "String",
-					type: t.string(),
-				}),
-				find: io.dataInput({
-					id: "find",
-					name: "Find",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", name: "String", type: t.string() }),
+				find: io.dataInput({ id: "find", name: "Find", type: t.string() }),
 				replace: io.dataInput({
 					id: "replace",
 					name: "Replace",
 					type: t.string(),
 				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.string(),
-				}),
+				out: io.dataOutput({ id: "out", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -109,25 +89,14 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					name: "String",
-					type: t.string(),
-				}),
-				find: io.dataInput({
-					id: "find",
-					name: "Find",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", name: "String", type: t.string() }),
+				find: io.dataInput({ id: "find", name: "Find", type: t.string() }),
 				replace: io.dataInput({
 					id: "replace",
 					name: "Replace",
 					type: t.string(),
 				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.string(),
-				}),
+				out: io.dataOutput({ id: "out", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -145,15 +114,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					name: "String",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "int",
-					type: t.int(),
-				}),
+				input: io.dataInput({ id: "input", name: "String", type: t.string() }),
+				output: io.dataOutput({ id: "int", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -166,20 +128,13 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					name: "String",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", name: "String", type: t.string() }),
 				prefix: io.dataInput({
 					id: "prefix",
 					name: "Starts With",
 					type: t.string(),
 				}),
-				out: io.dataOutput({
-					id: "bool",
-					type: t.bool(),
-				}),
+				out: io.dataOutput({ id: "bool", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -195,24 +150,10 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				start: io.dataInput({
-					id: "start",
-					name: "Start",
-					type: t.int(),
-				}),
-				end: io.dataInput({
-					id: "end",
-					name: "End",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				start: io.dataInput({ id: "start", name: "Start", type: t.int() }),
+				end: io.dataInput({ id: "end", name: "End", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -231,14 +172,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -251,14 +186,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -271,14 +200,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -291,14 +214,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "int",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "string",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "int", type: t.int() }),
+				output: io.dataOutput({ id: "string", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -311,19 +228,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "int",
-					type: t.int(),
-				}),
-				base: io.dataInput({
-					id: "base",
-					name: "Base",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "string",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "int", type: t.int() }),
+				base: io.dataInput({ id: "base", name: "Base", type: t.int() }),
+				output: io.dataOutput({ id: "string", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -339,14 +246,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				float: io.dataInput({
-					id: "float",
-					type: t.float(),
-				}),
-				string: io.dataOutput({
-					id: "string",
-					type: t.string(),
-				}),
+				float: io.dataInput({ id: "float", type: t.float() }),
+				string: io.dataOutput({ id: "string", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -359,14 +260,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				bool: io.dataInput({
-					id: "bool",
-					type: t.bool(),
-				}),
-				string: io.dataOutput({
-					id: "string",
-					type: t.string(),
-				}),
+				bool: io.dataInput({ id: "bool", type: t.bool() }),
+				string: io.dataOutput({ id: "string", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -379,14 +274,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				string: io.dataInput({
-					id: "string",
-					type: t.string(),
-				}),
-				int: io.dataOutput({
-					id: "int",
-					type: t.option(t.int()),
-				}),
+				string: io.dataInput({ id: "string", type: t.string() }),
+				int: io.dataOutput({ id: "int", type: t.option(t.int()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -406,19 +295,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				string: io.dataInput({
-					id: "string",
-					type: t.string(),
-				}),
-				base: io.dataInput({
-					id: "base",
-					name: "Base",
-					type: t.int(),
-				}),
-				int: io.dataOutput({
-					id: "int",
-					type: t.option(t.int()),
-				}),
+				string: io.dataInput({ id: "string", type: t.string() }),
+				base: io.dataInput({ id: "base", name: "Base", type: t.int() }),
+				int: io.dataOutput({ id: "int", type: t.option(t.int()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -437,14 +316,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				string: io.dataInput({
-					id: "string",
-					type: t.string(),
-				}),
-				float: io.dataOutput({
-					id: "float",
-					type: t.option(t.float()),
-				}),
+				string: io.dataInput({ id: "string", type: t.string() }),
+				float: io.dataOutput({ id: "float", type: t.option(t.float()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -460,18 +333,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.int(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				one: io.dataInput({ id: "one", type: t.int() }),
+				two: io.dataInput({ id: "two", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -485,18 +349,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				two: io.dataInput({ id: "two", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -510,20 +365,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					name: "Number",
-					type: t.float(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					name: "Exponent",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", name: "Number", type: t.float() }),
+				two: io.dataInput({ id: "two", name: "Exponent", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -537,14 +381,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.float(),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.int(),
-				}),
+				in: io.dataInput({ id: "in", type: t.float() }),
+				out: io.dataOutput({ id: "out", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -557,14 +395,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.int(),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.float(),
-				}),
+				in: io.dataInput({ id: "in", type: t.int() }),
+				out: io.dataOutput({ id: "out", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -577,18 +409,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.int(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.int() }),
+				two: io.dataInput({ id: "two", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -602,18 +425,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.int(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				one: io.dataInput({ id: "one", type: t.int() }),
+				two: io.dataInput({ id: "two", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -627,18 +441,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				two: io.dataInput({ id: "two", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -652,18 +457,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				two: io.dataInput({ id: "two", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -677,18 +473,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				two: io.dataInput({ id: "two", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -702,18 +489,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.int(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				one: io.dataInput({ id: "one", type: t.int() }),
+				two: io.dataInput({ id: "two", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -727,18 +505,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.int(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				one: io.dataInput({ id: "one", type: t.int() }),
+				two: io.dataInput({ id: "two", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -752,14 +521,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -773,14 +536,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -794,14 +551,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -815,18 +566,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.int(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				one: io.dataInput({ id: "one", type: t.int() }),
+				two: io.dataInput({ id: "two", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -840,18 +582,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				two: io.dataInput({ id: "two", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -864,18 +597,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.int(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				one: io.dataInput({ id: "one", type: t.int() }),
+				two: io.dataInput({ id: "two", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -889,18 +613,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.float(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				one: io.dataInput({ id: "one", type: t.float() }),
+				two: io.dataInput({ id: "two", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -914,30 +629,12 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.string(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.string(),
-				}),
-				three: io.dataInput({
-					id: "three",
-					type: t.string(),
-				}),
-				four: io.dataInput({
-					id: "four",
-					type: t.string(),
-				}),
-				five: io.dataInput({
-					id: "five",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				one: io.dataInput({ id: "one", type: t.string() }),
+				two: io.dataInput({ id: "two", type: t.string() }),
+				three: io.dataInput({ id: "three", type: t.string() }),
+				four: io.dataInput({ id: "four", type: t.string() }),
+				five: io.dataInput({ id: "five", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -959,10 +656,7 @@ export function pkg(core: Core) {
 			let inputs: DataInput<t.String>[];
 
 			if (!io.previous) {
-				const last = io.dataInput({
-					id: "1",
-					type: t.string(),
-				});
+				const last = io.dataInput({ id: "1", type: t.string() });
 
 				last.connection;
 
@@ -1002,12 +696,7 @@ export function pkg(core: Core) {
 						? lastConnectedIndex.map((i) => i + 2).unwrapOr(1)
 						: undefined,
 				)) {
-					inputs.push(
-						io.dataInput({
-							id: input.id,
-							type: t.string(),
-						}),
-					);
+					inputs.push(io.dataInput({ id: input.id, type: t.string() }));
 				}
 
 				if (endState === "addOne")
@@ -1024,10 +713,7 @@ export function pkg(core: Core) {
 
 			return {
 				inputs,
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1045,11 +731,7 @@ export function pkg(core: Core) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				output: io.dataOutput({
-					id: "uuid",
-					name: "UUID",
-					type: t.string(),
-				}),
+				output: io.dataOutput({ id: "uuid", name: "UUID", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1062,11 +744,7 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				time: io.dataOutput({
-					id: "time",
-					name: "Time (ms)",
-					type: t.int(),
-				}),
+				time: io.dataOutput({ id: "time", name: "Time (ms)", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1079,11 +757,7 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				timeIn: io.dataInput({
-					id: "timeIn",
-					name: "Time",
-					type: t.string(),
-				}),
+				timeIn: io.dataInput({ id: "timeIn", name: "Time", type: t.string() }),
 				timeOut: io.dataOutput({
 					id: "timeOut",
 					name: "Time (ms)",
@@ -1100,25 +774,13 @@ export function pkg(core: Core) {
 		name: "Format Time",
 		type: "pure",
 		properties: {
-			string: {
-				name: "String",
-				type: t.string(),
-			},
-			duration: {
-				name: "Duration",
-				type: t.bool(),
-			},
+			string: { name: "String", type: t.string() },
+			duration: { name: "Duration", type: t.bool() },
 		},
 		createIO({ io }) {
 			return {
-				timeIn: io.dataInput({
-					id: "timeIn",
-					type: t.int(),
-				}),
-				timeOut: io.dataOutput({
-					id: "timeOut",
-					type: t.string(),
-				}),
+				timeIn: io.dataInput({ id: "timeIn", type: t.int() }),
+				timeOut: io.dataOutput({ id: "timeOut", type: t.string() }),
 			};
 		},
 		run({ ctx, io, properties }) {
@@ -1140,19 +802,13 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.float(),
-				}),
+				input: io.dataInput({ id: "input", type: t.float() }),
 				decimal: io.dataInput({
 					id: "decimal",
 					name: "Decimal Places",
 					type: t.int(),
 				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1171,14 +827,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				input: io.dataInput({ id: "input", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1193,11 +843,7 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				number: io.dataInput({
-					id: "input",
-					name: "Number",
-					type: t.float(),
-				}),
+				number: io.dataInput({ id: "input", name: "Number", type: t.float() }),
 				divisor: io.dataInput({
 					id: "divisor",
 					name: "Divisor",
@@ -1223,11 +869,7 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				number: io.dataInput({
-					id: "input",
-					name: "Number",
-					type: t.int(),
-				}),
+				number: io.dataInput({ id: "input", name: "Number", type: t.int() }),
 				divisor: io.dataInput({
 					id: "divisor",
 					name: "Divisor",
@@ -1252,10 +894,7 @@ export function pkg(core: Core) {
 		name: "Random Float",
 		type: "pure",
 		createIO({ io }) {
-			return io.dataOutput({
-				id: "output",
-				type: t.float(),
-			});
+			return io.dataOutput({ id: "output", type: t.float() });
 		},
 		run({ ctx, io }) {
 			ctx.setOutput(io, Math.random());
@@ -1267,20 +906,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				min: io.dataInput({
-					id: "min",
-					name: "Min",
-					type: t.float(),
-				}),
-				max: io.dataInput({
-					id: "max",
-					name: "Max",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				min: io.dataInput({ id: "min", name: "Min", type: t.float() }),
+				max: io.dataInput({ id: "max", name: "Max", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1295,10 +923,7 @@ export function pkg(core: Core) {
 		name: "Random Integer",
 		type: "pure",
 		createIO({ io }) {
-			return io.dataOutput({
-				id: "output",
-				type: t.int(),
-			});
+			return io.dataOutput({ id: "output", type: t.int() });
 		},
 
 		run({ ctx, io }) {
@@ -1312,20 +937,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				min: io.dataInput({
-					id: "min",
-					name: "Min",
-					type: t.int(),
-				}),
-				max: io.dataInput({
-					id: "max",
-					name: "Max",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				min: io.dataInput({ id: "min", name: "Min", type: t.int() }),
+				max: io.dataInput({ id: "max", name: "Max", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1345,31 +959,19 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "number",
-					name: "Number",
-					type: t.float(),
-				}),
+				input: io.dataInput({ id: "number", name: "Number", type: t.float() }),
 				compare: io.dataInput({
 					id: "compare",
 					name: "Compare against",
 					type: t.float(),
 				}),
-				equal: io.dataOutput({
-					id: "outputE",
-					name: "Equal",
-					type: t.bool(),
-				}),
+				equal: io.dataOutput({ id: "outputE", name: "Equal", type: t.bool() }),
 				greater: io.dataOutput({
 					id: "outputG",
 					name: "Greater",
 					type: t.bool(),
 				}),
-				less: io.dataOutput({
-					id: "outputL",
-					name: "Less",
-					type: t.bool(),
-				}),
+				less: io.dataOutput({ id: "outputL", name: "Less", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1387,31 +989,19 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "number",
-					name: "Number",
-					type: t.int(),
-				}),
+				input: io.dataInput({ id: "number", name: "Number", type: t.int() }),
 				compare: io.dataInput({
 					id: "compare",
 					name: "Compare against",
 					type: t.int(),
 				}),
-				equal: io.dataOutput({
-					id: "outputE",
-					name: "Equal",
-					type: t.bool(),
-				}),
+				equal: io.dataOutput({ id: "outputE", name: "Equal", type: t.bool() }),
 				greater: io.dataOutput({
 					id: "outputG",
 					name: "Greater",
 					type: t.bool(),
 				}),
-				less: io.dataOutput({
-					id: "outputL",
-					name: "Less",
-					type: t.bool(),
-				}),
+				less: io.dataOutput({ id: "outputL", name: "Less", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1431,14 +1021,8 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.wildcard(w),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.wildcard(w),
-				}),
+				input: io.dataInput({ id: "input", type: t.wildcard(w) }),
+				output: io.dataOutput({ id: "output", type: t.wildcard(w) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1451,14 +1035,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1471,14 +1049,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				input: io.dataInput({ id: "input", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1491,14 +1063,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.float(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.float(),
-				}),
+				input: io.dataInput({ id: "input", type: t.float() }),
+				output: io.dataOutput({ id: "output", type: t.float() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1513,18 +1079,9 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.wildcard(w),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.wildcard(w),
-				}),
-				equal: io.dataOutput({
-					id: "equal",
-					type: t.bool(),
-				}),
+				one: io.dataInput({ id: "one", type: t.wildcard(w) }),
+				two: io.dataInput({ id: "two", type: t.wildcard(w) }),
+				equal: io.dataOutput({ id: "equal", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1539,18 +1096,9 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.wildcard(w),
-				}),
-				list: io.dataInput({
-					id: "list",
-					type: t.list(t.wildcard(w)),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.bool(),
-				}),
+				input: io.dataInput({ id: "input", type: t.wildcard(w) }),
+				list: io.dataInput({ id: "list", type: t.list(t.wildcard(w)) }),
+				output: io.dataOutput({ id: "output", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1570,10 +1118,7 @@ export function pkg(core: Core) {
 					id: "list",
 					type: t.list(t.wildcard(io.wildcard(""))),
 				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.int(),
-				}),
+				output: io.dataOutput({ id: "output", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1586,20 +1131,13 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					name: "String",
-					type: t.string(),
-				}),
+				input: io.dataInput({ id: "input", name: "String", type: t.string() }),
 				separator: io.dataInput({
 					id: "separator",
 					name: "Separator",
 					type: t.string(),
 				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.list(t.string()),
-				}),
+				output: io.dataOutput({ id: "output", type: t.list(t.string()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1615,24 +1153,10 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				list: io.dataInput({
-					id: "list",
-					type: t.list(t.wildcard(w)),
-				}),
-				start: io.dataInput({
-					id: "start",
-					name: "Start",
-					type: t.int(),
-				}),
-				end: io.dataInput({
-					id: "end",
-					name: "End",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.list(t.wildcard(w)),
-				}),
+				list: io.dataInput({ id: "list", type: t.list(t.wildcard(w)) }),
+				start: io.dataInput({ id: "start", name: "Start", type: t.int() }),
+				end: io.dataInput({ id: "end", name: "End", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.list(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1650,15 +1174,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					name: "String",
-					type: t.string(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.list(t.string()),
-				}),
+				input: io.dataInput({ id: "input", name: "String", type: t.string() }),
+				output: io.dataOutput({ id: "output", type: t.list(t.string()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1677,10 +1194,7 @@ export function pkg(core: Core) {
 					name: "Lines",
 					type: t.list(t.string()),
 				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.string(),
-				}),
+				output: io.dataOutput({ id: "output", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1693,19 +1207,9 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.string(),
-				}),
-				index: io.dataInput({
-					id: "index",
-					name: "N",
-					type: t.int(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.option(t.string()),
-				}),
+				input: io.dataInput({ id: "input", type: t.string() }),
+				index: io.dataInput({ id: "index", name: "N", type: t.int() }),
+				output: io.dataOutput({ id: "output", type: t.option(t.string()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1724,14 +1228,8 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.option(t.wildcard(w)),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.wildcard(w),
-				}),
+				input: io.dataInput({ id: "input", type: t.option(t.wildcard(w)) }),
+				output: io.dataOutput({ id: "output", type: t.wildcard(w) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1746,18 +1244,9 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.option(t.wildcard(w)),
-				}),
-				or: io.dataInput({
-					id: "or",
-					type: t.wildcard(w),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.wildcard(w),
-				}),
+				input: io.dataInput({ id: "input", type: t.option(t.wildcard(w)) }),
+				or: io.dataInput({ id: "or", type: t.wildcard(w) }),
+				output: io.dataOutput({ id: "output", type: t.wildcard(w) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1775,14 +1264,8 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.option(t.wildcard(w)),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.bool(),
-				}),
+				input: io.dataInput({ id: "input", type: t.option(t.wildcard(w)) }),
+				output: io.dataOutput({ id: "output", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1797,14 +1280,8 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.option(t.wildcard(w)),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.bool(),
-				}),
+				input: io.dataInput({ id: "input", type: t.option(t.wildcard(w)) }),
+				output: io.dataOutput({ id: "output", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1819,14 +1296,8 @@ export function pkg(core: Core) {
 			const type = io.wildcard("");
 
 			return {
-				in: io.dataInput({
-					id: "in",
-					type: t.wildcard(type),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.option(t.wildcard(type)),
-				}),
+				in: io.dataInput({ id: "in", type: t.wildcard(type) }),
+				out: io.dataOutput({ id: "out", type: t.option(t.wildcard(type)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -1840,10 +1311,7 @@ export function pkg(core: Core) {
 		createIO({ io }) {
 			const w = io.wildcard("");
 
-			const input = io.dataInput({
-				id: "",
-				type: t.wildcard(w),
-			});
+			const input = io.dataInput({ id: "", type: t.wildcard(w) });
 
 			const outputs = w.value().map((wt) => {
 				if (!(wt instanceof t.Struct)) return null;
@@ -1851,11 +1319,7 @@ export function pkg(core: Core) {
 				const dataOutputs = Object.entries(
 					wt.struct.fields as StructFields,
 				).map(([id, field]) =>
-					io.dataOutput({
-						id,
-						name: field.name ?? field.id,
-						type: field.type,
-					}),
+					io.dataOutput({ id, name: field.name ?? field.id, type: field.type }),
 				);
 
 				return {
@@ -1884,10 +1348,7 @@ export function pkg(core: Core) {
 		createIO({ io }) {
 			const w = io.wildcard("");
 
-			const output = io.dataOutput({
-				id: "",
-				type: t.wildcard(w),
-			});
+			const output = io.dataOutput({ id: "", type: t.wildcard(w) });
 
 			return w.value().map((wt) => {
 				if (!(wt instanceof t.Struct)) return null;
@@ -1927,10 +1388,7 @@ export function pkg(core: Core) {
 		createIO({ io }) {
 			const w = io.wildcard("");
 
-			const output = io.dataOutput({
-				id: "",
-				type: t.wildcard(w),
-			});
+			const output = io.dataOutput({ id: "", type: t.wildcard(w) });
 
 			return w.value().map((wt) => {
 				if (!(wt instanceof t.Struct)) return null;
@@ -1970,15 +1428,9 @@ export function pkg(core: Core) {
 		createIO({ io }) {
 			const w = io.wildcard("");
 
-			const input = io.dataInput({
-				id: "",
-				type: t.wildcard(w),
-			});
+			const input = io.dataInput({ id: "", type: t.wildcard(w) });
 
-			const output = io.dataOutput({
-				id: "",
-				type: t.wildcard(w),
-			});
+			const output = io.dataOutput({ id: "", type: t.wildcard(w) });
 
 			return w.value().map((wt) => {
 				if (!(wt instanceof t.Struct)) return null;
@@ -2025,10 +1477,7 @@ export function pkg(core: Core) {
 				name: "Enum",
 				source: ({ node }) => {
 					const enums = [...node.graph.project.customEnums.values()];
-					return enums.map((e) => ({
-						id: e.id,
-						display: e.name,
-					}));
+					return enums.map((e) => ({ id: e.id, display: e.name }));
 				},
 			},
 			variant: {
@@ -2040,10 +1489,10 @@ export function pkg(core: Core) {
 					if (!enumId) return [];
 
 					return (
-						node.graph.project.customEnums.get(enumId)?.variants.map((v) => ({
-							id: v.id,
-							display: v.name ?? v.id,
-						})) ?? []
+						node.graph.project.customEnums
+							.get(enumId)
+							?.variants.map((v) => ({ id: v.id, display: v.name ?? v.id })) ??
+						[]
 					);
 				},
 			},
@@ -2069,12 +1518,7 @@ export function pkg(core: Core) {
 				io.dataInput({ id, name: field.name ?? field.id, type: field.type }),
 			);
 
-			return {
-				output,
-				inputs: dataInputs,
-				enum: enm,
-				variant,
-			};
+			return { output, inputs: dataInputs, enum: enm, variant };
 		},
 		run({ ctx, io }) {
 			if (!io) return;
@@ -2105,10 +1549,7 @@ export function pkg(core: Core) {
 						...node.graph.project.core.packages.filter((p) => p.enums.size > 0),
 					];
 
-					return packages.map((p) => ({
-						id: p.name,
-						display: p.name,
-					}));
+					return packages.map((p) => ({ id: p.name, display: p.name }));
 				},
 			},
 			enum: {
@@ -2125,10 +1566,7 @@ export function pkg(core: Core) {
 					if (!pkgObj) return [];
 
 					const enums = [...pkgObj.enums.values()];
-					return enums.map((e) => ({
-						id: e.name,
-						display: e.name,
-					}));
+					return enums.map((e) => ({ id: e.name, display: e.name }));
 				},
 			},
 			variant: {
@@ -2186,12 +1624,7 @@ export function pkg(core: Core) {
 					io.dataInput({ id, name: field.name ?? field.id, type: field.type }),
 			);
 
-			return {
-				output,
-				inputs: dataInputs,
-				enum: enm,
-				variant,
-			};
+			return { output, inputs: dataInputs, enum: enm, variant };
 		},
 		run({ ctx, io }) {
 			if (!io) return;
@@ -2217,14 +1650,9 @@ export function pkg(core: Core) {
 		createIO({ io }) {
 			const w = io.wildcard("");
 
-			io.execInput({
-				id: "exec",
-			});
+			io.execInput({ id: "exec" });
 
-			const data = io.dataInput({
-				id: "data",
-				type: t.wildcard(w),
-			});
+			const data = io.dataInput({ id: "data", type: t.wildcard(w) });
 
 			const outputs = w.value().map((v) => {
 				if (v instanceof t.Enum) {
@@ -2234,21 +1662,14 @@ export function pkg(core: Core) {
 						const { id: name, fields: data } = v;
 
 						if (data === null) {
-							return io.execOutput({
-								id: name,
-								name: name,
-							});
+							return io.execOutput({ id: name, name: name });
 						}
 						return io.scopeOutput({
 							id: name,
 							name: v.name ?? v.id,
 							scope: (s) => {
 								for (const [id, field] of Object.entries(data)) {
-									s.output({
-										id,
-										name: field.name,
-										type: field.type,
-									});
+									s.output({ id, name: field.name, type: field.type });
 								}
 							},
 						});
@@ -2269,25 +1690,16 @@ export function pkg(core: Core) {
 								id: "some",
 								name: "Some",
 								scope: (s) => {
-									s.output({
-										id: "value",
-										type: v.inner,
-									});
+									s.output({ id: "value", type: v.inner });
 								},
 							}),
-							none: io.execOutput({
-								id: "none",
-								name: "None",
-							}),
+							none: io.execOutput({ id: "none", name: "None" }),
 						},
 					};
 				}
 			});
 
-			return {
-				data,
-				outputs,
-			};
+			return { data, outputs };
 		},
 		run({ ctx, io }) {
 			io.outputs.peek((v) => {
@@ -2319,24 +1731,17 @@ export function pkg(core: Core) {
 		name: "Break Scope",
 		type: "base",
 		createIO({ io }) {
-			const input = io.scopeInput({
-				id: "",
-			});
+			const input = io.scopeInput({ id: "" });
 
 			const outputs = input.scope().map((scope) => {
-				const exec = io.execOutput({
-					id: "",
-				});
+				const exec = io.execOutput({ id: "" });
 
 				const outputs = scope.outputs.map((out) => io.dataOutput(out));
 
 				return { exec, outputs };
 			});
 
-			return {
-				input,
-				outputs,
-			};
+			return { input, outputs };
 		},
 		async run({ ctx, io }) {
 			const data = ctx.getInput(io.input);
@@ -2355,12 +1760,7 @@ export function pkg(core: Core) {
 		event: "MGLoaded",
 		name: "Macrograph Started",
 		createIO({ io }) {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
-			};
+			return { exec: io.execOutput({ id: "exec", name: "" }) };
 		},
 		run({ ctx, data, io }) {
 			ctx.exec(io.exec);
@@ -2376,10 +1776,7 @@ export function pkg(core: Core) {
 		name: "Custom Event",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inName: io.dataInput({
 					id: "inName",
 					name: "Event Name",
@@ -2395,11 +1792,7 @@ export function pkg(core: Core) {
 					name: "String Data",
 					type: t.string(),
 				}),
-				int: io.dataOutput({
-					id: "int",
-					name: "Int Data",
-					type: t.int(),
-				}),
+				int: io.dataOutput({ id: "int", name: "Int Data", type: t.int() }),
 				float: io.dataOutput({
 					id: "float",
 					name: "Float Data",
@@ -2429,10 +1822,7 @@ export function pkg(core: Core) {
 		name: "Custom Event Return",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inName: io.dataInput({
 					id: "inName",
 					name: "Event Name",
@@ -2448,11 +1838,7 @@ export function pkg(core: Core) {
 					name: "String Data",
 					type: t.string(),
 				}),
-				int: io.dataOutput({
-					id: "int",
-					name: "Int Data",
-					type: t.int(),
-				}),
+				int: io.dataOutput({ id: "int", name: "Int Data", type: t.int() }),
 				float: io.dataOutput({
 					id: "float",
 					name: "Float Data",
@@ -2492,11 +1878,7 @@ export function pkg(core: Core) {
 					name: "String Data",
 					type: t.string(),
 				}),
-				int: io.dataInput({
-					id: "int",
-					name: "Int Data",
-					type: t.int(),
-				}),
+				int: io.dataInput({ id: "int", name: "Int Data", type: t.int() }),
 				float: io.dataInput({
 					id: "float",
 					name: "Float Data",
@@ -2538,11 +1920,7 @@ export function pkg(core: Core) {
 					name: "String Data",
 					type: t.string(),
 				}),
-				int: io.dataInput({
-					id: "int",
-					name: "Int Data",
-					type: t.int(),
-				}),
+				int: io.dataInput({ id: "int", name: "Int Data", type: t.int() }),
 				float: io.dataInput({
 					id: "float",
 					name: "Float Data",
@@ -2574,16 +1952,8 @@ export function pkg(core: Core) {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				in: io.dataInput({
-					id: "in",
-					name: "Json",
-					type: t.enum(JSONEnum),
-				}),
-				out: io.dataOutput({
-					id: "string",
-					name: "String",
-					type: t.string(),
-				}),
+				in: io.dataInput({ id: "in", name: "Json", type: t.enum(JSONEnum) }),
+				out: io.dataOutput({ id: "string", name: "String", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -2601,14 +1971,8 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				in: io.dataInput({
-					id: "",
-					type: t.wildcard(w),
-				}),
-				out: io.dataOutput({
-					id: "",
-					type: t.wildcard(w),
-				}),
+				in: io.dataInput({ id: "", type: t.wildcard(w) }),
+				out: io.dataOutput({ id: "", type: t.wildcard(w) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -2623,14 +1987,8 @@ export function pkg(core: Core) {
 			const w = io.wildcard("");
 
 			return {
-				in: io.dataInput({
-					id: "",
-					type: t.wildcard(w),
-				}),
-				out: io.dataOutput({
-					id: "",
-					type: t.wildcard(w),
-				}),
+				in: io.dataInput({ id: "", type: t.wildcard(w) }),
+				out: io.dataOutput({ id: "", type: t.wildcard(w) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -2651,11 +2009,7 @@ export function pkg(core: Core) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				out: io.dataOutput({
-					id: "out",
-					name: "Timestamp",
-					type: t.int(),
-				}),
+				out: io.dataOutput({ id: "out", name: "Timestamp", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -2666,12 +2020,7 @@ export function pkg(core: Core) {
 	pkg.createSchema({
 		name: "Format String",
 		type: "pure",
-		properties: {
-			string: {
-				name: "String",
-				type: t.string(),
-			},
-		},
+		properties: { string: { name: "String", type: t.string() } },
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.string) ?? "";
 			const blocks = parseFormatString(value);
@@ -2687,10 +2036,7 @@ export function pkg(core: Core) {
 					}
 					return block.text;
 				}),
-				output: io.dataOutput({
-					id: "",
-					type: t.string(),
-				}),
+				output: io.dataOutput({ id: "", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -2708,12 +2054,7 @@ export function pkg(core: Core) {
 		type: "exec",
 		properties: { regex: { name: "Regex", type: t.string() } },
 		createIO({ io, ctx, properties }) {
-			const base = {
-				input: io.dataInput({
-					id: "",
-					type: t.string(),
-				}),
-			};
+			const base = { input: io.dataInput({ id: "", type: t.string() }) };
 
 			try {
 				const groupOutputs: DataOutput<t.String>[] = [];
@@ -2730,11 +2071,7 @@ export function pkg(core: Core) {
 					);
 				}
 
-				return {
-					...base,
-					regex,
-					groupOutputs,
-				};
+				return { ...base, regex, groupOutputs };
 			} catch {
 				if (io.previous) return io.previous;
 

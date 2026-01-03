@@ -39,13 +39,13 @@ import { ConnectFailed, RPCS, TwitchAPIError } from "./shared";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
-const TwitchAccount = Resource.make<{
-	id: string;
-	displayName: string;
-}>()("TwitchAccount", {
-	name: "Twitch Account",
-	serialize: (value) => ({ id: value.id, display: value.displayName }),
-});
+const TwitchAccount = Resource.make<{ id: string; displayName: string }>()(
+	"TwitchAccount",
+	{
+		name: "Twitch Account",
+		serialize: (value) => ({ id: value.id, display: value.displayName }),
+	},
+);
 
 type State = {
 	accounts: Array<{
@@ -163,12 +163,7 @@ const Engine = PackageEngine.define({
 				const closed = yield* Deferred.make<void>();
 				const scope = yield* Scope.make();
 
-				const socket: Socket = {
-					lock,
-					state: "connecting",
-					closed,
-					scope,
-				};
+				const socket: Socket = { lock, state: "connecting", closed, scope };
 
 				yield* Effect.sync(() => {
 					sockets.set(accountId, socket);
@@ -299,9 +294,7 @@ const Engine = PackageEngine.define({
 				accounts: credentials.map((c) => ({
 					id: c.id,
 					displayName: c.displayName!,
-					eventSubSocket: {
-						state: sockets.get(c.id)?.state ?? "disconnected",
-					},
+					eventSubSocket: { state: sockets.get(c.id)?.state ?? "disconnected" },
 				})),
 			};
 		}),
@@ -321,9 +314,7 @@ const deleteOldSubscriptions = Effect.fn("deleteOldSubscriptions")(function* <
 	yield* Effect.all(
 		subs.data.map((sub) =>
 			sub.status === "websocket_disconnected"
-				? helixClient.deleteEventSubSubscription({
-						urlParams: { id: sub.id },
-					})
+				? helixClient.deleteEventSubSubscription({ urlParams: { id: sub.id } })
 				: Effect.void,
 		),
 		{ concurrency: 10 },
@@ -338,12 +329,7 @@ export default Package.make({
 			name: "User Banned",
 			type: "event",
 			description: "Fires when a user is banned from the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -353,15 +339,9 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -380,12 +360,8 @@ export default Package.make({
 				moderatorName: io.out.data("moderatorName", t.String, {
 					name: "Moderator Name",
 				}),
-				reason: io.out.data("reason", t.String, {
-					name: "Reason",
-				}),
-				bannedAt: io.out.data("bannedAt", t.DateTime, {
-					name: "Banned At",
-				}),
+				reason: io.out.data("reason", t.String, { name: "Reason" }),
+				bannedAt: io.out.data("bannedAt", t.DateTime, { name: "Banned At" }),
 				endsAt: io.out.data("endsAt", t.Option(t.DateTime), {
 					name: "Ends At",
 				}),
@@ -409,12 +385,7 @@ export default Package.make({
 			name: "User Unbanned",
 			type: "event",
 			description: "Fires when a user is unbanned from the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -424,15 +395,9 @@ export default Package.make({
 					return e;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -469,12 +434,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when all chat messages are cleared from the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -505,12 +465,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when chat messages are cleared for a specific user in the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -553,12 +508,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a user sends a chat message in the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -586,42 +536,30 @@ export default Package.make({
 				chatterUserName: io.out.data("chatterUserName", t.String, {
 					name: "Chatter User Name",
 				}),
-				messageId: io.out.data("messageId", t.String, {
-					name: "Message ID",
-				}),
+				messageId: io.out.data("messageId", t.String, { name: "Message ID" }),
 				messageType: io.out.data("messageType", t.String, {
 					name: "Message Type",
 				}),
-				color: io.out.data("color", t.String, {
-					name: "Color",
-				}),
+				color: io.out.data("color", t.String, { name: "Color" }),
 				channelPointsCustomRewardId: io.out.data(
 					"channelPointsCustomRewardId",
 					t.Option(t.String),
-					{
-						name: "Channel Points Custom Reward ID",
-					},
+					{ name: "Channel Points Custom Reward ID" },
 				),
 				sourceBroadcasterUserId: io.out.data(
 					"sourceBroadcasterUserId",
 					t.Option(t.String),
-					{
-						name: "Source Broadcaster User ID",
-					},
+					{ name: "Source Broadcaster User ID" },
 				),
 				sourceBroadcasterUserName: io.out.data(
 					"sourceBroadcasterUserName",
 					t.Option(t.String),
-					{
-						name: "Source Broadcaster User Name",
-					},
+					{ name: "Source Broadcaster User Name" },
 				),
 				sourceBroadcasterUserLogin: io.out.data(
 					"sourceBroadcasterUserLogin",
 					t.Option(t.String),
-					{
-						name: "Source Broadcaster User Login",
-					},
+					{ name: "Source Broadcaster User Login" },
 				),
 				sourceMessageId: io.out.data("sourceMessageId", t.Option(t.String), {
 					name: "Source Message ID",
@@ -671,12 +609,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a chat message is deleted from the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -704,9 +637,7 @@ export default Package.make({
 				targetUserName: io.out.data("targetUserName", t.String, {
 					name: "Target User Name",
 				}),
-				messageId: io.out.data("messageId", t.String, {
-					name: "Message ID",
-				}),
+				messageId: io.out.data("messageId", t.String, { name: "Message ID" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -723,12 +654,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a chat notification (e.g., sub, resub, raid, etc.) is sent in the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -759,38 +685,28 @@ export default Package.make({
 				chatterIsAnonymous: io.out.data("chatterIsAnonymous", t.Bool, {
 					name: "Chatter Is Anonymous",
 				}),
-				color: io.out.data("color", t.String, {
-					name: "Color",
-				}),
+				color: io.out.data("color", t.String, { name: "Color" }),
 				systemMessage: io.out.data("systemMessage", t.String, {
 					name: "System Message",
 				}),
-				messageId: io.out.data("messageId", t.String, {
-					name: "Message ID",
-				}),
+				messageId: io.out.data("messageId", t.String, { name: "Message ID" }),
 				noticeType: io.out.data("noticeType", t.String, {
 					name: "Notice Type",
 				}),
 				sourceBroadcasterUserId: io.out.data(
 					"sourceBroadcasterUserId",
 					t.Option(t.String),
-					{
-						name: "Source Broadcaster User ID",
-					},
+					{ name: "Source Broadcaster User ID" },
 				),
 				sourceBroadcasterUserName: io.out.data(
 					"sourceBroadcasterUserName",
 					t.Option(t.String),
-					{
-						name: "Source Broadcaster User Name",
-					},
+					{ name: "Source Broadcaster User Name" },
 				),
 				sourceBroadcasterUserLogin: io.out.data(
 					"sourceBroadcasterUserLogin",
 					t.Option(t.String),
-					{
-						name: "Source Broadcaster User Login",
-					},
+					{ name: "Source Broadcaster User Login" },
 				),
 				sourceMessageId: io.out.data("sourceMessageId", t.Option(t.String), {
 					name: "Source Message ID",
@@ -831,12 +747,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when the chat settings are updated for the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -855,28 +766,20 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				emoteMode: io.out.data("emoteMode", t.Bool, {
-					name: "Emote Mode",
-				}),
+				emoteMode: io.out.data("emoteMode", t.Bool, { name: "Emote Mode" }),
 				followerMode: io.out.data("followerMode", t.Bool, {
 					name: "Follower Mode",
 				}),
 				followerModeDurationMinutes: io.out.data(
 					"followerModeDurationMinutes",
 					t.Option(t.Int),
-					{
-						name: "Follower Mode Duration Minutes",
-					},
+					{ name: "Follower Mode Duration Minutes" },
 				),
-				slowMode: io.out.data("slowMode", t.Bool, {
-					name: "Slow Mode",
-				}),
+				slowMode: io.out.data("slowMode", t.Bool, { name: "Slow Mode" }),
 				slowModeWaitTimeSeconds: io.out.data(
 					"slowModeWaitTimeSeconds",
 					t.Option(t.Int),
-					{
-						name: "Slow Mode Wait Time Seconds",
-					},
+					{ name: "Slow Mode Wait Time Seconds" },
 				),
 				subscriberMode: io.out.data("subscriberMode", t.Bool, {
 					name: "Subscriber Mode",
@@ -909,12 +812,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a user's chat message is held for review in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -933,18 +831,10 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
-				messageId: io.out.data("messageId", t.String, {
-					name: "Message ID",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
+				messageId: io.out.data("messageId", t.String, { name: "Message ID" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -961,12 +851,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a held user message is approved, denied, or found invalid in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -985,21 +870,11 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
-				status: io.out.data("status", t.String, {
-					name: "Status",
-				}),
-				messageId: io.out.data("messageId", t.String, {
-					name: "Message ID",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
+				status: io.out.data("status", t.String, { name: "Status" }),
+				messageId: io.out.data("messageId", t.String, { name: "Message ID" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -1016,12 +891,7 @@ export default Package.make({
 			name: "User Subscribed",
 			type: "event",
 			description: "Fires when a user subscribes to the specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1031,15 +901,9 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -1049,12 +913,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				tier: io.out.data("tier", t.String, {
-					name: "Tier",
-				}),
-				isGift: io.out.data("isGift", t.Bool, {
-					name: "Is Gift",
-				}),
+				tier: io.out.data("tier", t.String, { name: "Tier" }),
+				isGift: io.out.data("isGift", t.Bool, { name: "Is Gift" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.userId, event.user_id);
@@ -1072,12 +932,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a user's subscription to the specified channel ends.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1087,15 +942,9 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -1105,12 +954,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				tier: io.out.data("tier", t.String, {
-					name: "Tier",
-				}),
-				isGift: io.out.data("isGift", t.Bool, {
-					name: "Is Gift",
-				}),
+				tier: io.out.data("tier", t.String, { name: "Tier" }),
+				isGift: io.out.data("isGift", t.Bool, { name: "Is Gift" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.userId, event.user_id);
@@ -1128,12 +973,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a user gifts one or more subscriptions to the channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1143,9 +983,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.Option(t.String), {
-					name: "User ID",
-				}),
+				userId: io.out.data("userId", t.Option(t.String), { name: "User ID" }),
 				userLogin: io.out.data("userLogin", t.Option(t.String), {
 					name: "User Login",
 				}),
@@ -1161,12 +999,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				total: io.out.data("total", t.Int, {
-					name: "Total",
-				}),
-				tier: io.out.data("tier", t.String, {
-					name: "Tier",
-				}),
+				total: io.out.data("total", t.Int, { name: "Total" }),
+				tier: io.out.data("tier", t.String, { name: "Tier" }),
 				cumulativeTotal: io.out.data("cumulativeTotal", t.Option(t.Int), {
 					name: "Cumulative Total",
 				}),
@@ -1194,12 +1028,7 @@ export default Package.make({
 			name: "Subscription Message",
 			type: "event",
 			description: "Fires when a user sends a resubscription chat message.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1209,15 +1038,9 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -1227,9 +1050,7 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				tier: io.out.data("tier", t.String, {
-					name: "Tier",
-				}),
+				tier: io.out.data("tier", t.String, { name: "Tier" }),
 				cumulativeMonths: io.out.data("cumulativeMonths", t.Int, {
 					name: "Cumulative Months",
 				}),
@@ -1260,12 +1081,7 @@ export default Package.make({
 			name: "Cheer Event",
 			type: "event",
 			description: "Fires when a user cheers bits to the channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1278,9 +1094,7 @@ export default Package.make({
 				isAnonymous: io.out.data("isAnonymous", t.Bool, {
 					name: "Is Anonymous",
 				}),
-				userId: io.out.data("userId", t.Option(t.String), {
-					name: "User ID",
-				}),
+				userId: io.out.data("userId", t.Option(t.String), { name: "User ID" }),
 				userLogin: io.out.data("userLogin", t.Option(t.String), {
 					name: "User Login",
 				}),
@@ -1296,12 +1110,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				message: io.out.data("message", t.String, {
-					name: "Message",
-				}),
-				bits: io.out.data("bits", t.Int, {
-					name: "Bits",
-				}),
+				message: io.out.data("message", t.String, { name: "Message" }),
+				bits: io.out.data("bits", t.Int, { name: "Bits" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.isAnonymous, event.is_anonymous);
@@ -1319,12 +1129,7 @@ export default Package.make({
 			name: "Moderator Added",
 			type: "event",
 			description: "Fires when a user is added as a moderator.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1343,15 +1148,9 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -1366,12 +1165,7 @@ export default Package.make({
 			name: "Moderator Removed",
 			type: "event",
 			description: "Fires when a user is removed as a moderator.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1390,15 +1184,9 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -1413,12 +1201,7 @@ export default Package.make({
 			name: "VIP Added",
 			type: "event",
 			description: "Fires when a user is added as a VIP.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1428,15 +1211,9 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -1460,12 +1237,7 @@ export default Package.make({
 			name: "VIP Removed",
 			type: "event",
 			description: "Fires when a user is removed as a VIP.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1475,15 +1247,9 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -1507,12 +1273,7 @@ export default Package.make({
 			name: "Unban Request Created",
 			type: "event",
 			description: "Fires when a user creates an unban request.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1522,9 +1283,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Request ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Request ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -1534,21 +1293,11 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
-				text: io.out.data("text", t.String, {
-					name: "Text",
-				}),
-				createdAt: io.out.data("createdAt", t.DateTime, {
-					name: "Created At",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
+				text: io.out.data("text", t.String, { name: "Text" }),
+				createdAt: io.out.data("createdAt", t.DateTime, { name: "Created At" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.id, event.id);
@@ -1568,12 +1317,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a moderator performs a moderation action in a channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1598,16 +1342,12 @@ export default Package.make({
 				sourceBroadcasterLogin: io.out.data(
 					"sourceBroadcasterLogin",
 					t.String,
-					{
-						name: "Source Broadcaster Login",
-					},
+					{ name: "Source Broadcaster Login" },
 				),
 				sourceBroadcasterName: io.out.data(
 					"sourceBroadcasterName",
 					t.Option(t.String),
-					{
-						name: "Source Broadcaster Name",
-					},
+					{ name: "Source Broadcaster Name" },
 				),
 				moderatorId: io.out.data("moderatorId", t.String, {
 					name: "Moderator ID",
@@ -1618,9 +1358,7 @@ export default Package.make({
 				moderatorName: io.out.data("moderatorName", t.String, {
 					name: "Moderator Name",
 				}),
-				action: io.out.data("action", t.String, {
-					name: "Action",
-				}),
+				action: io.out.data("action", t.String, { name: "Action" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -1648,12 +1386,7 @@ export default Package.make({
 			name: "AutoMod Settings Update",
 			type: "event",
 			description: "Fires when AutoMod settings are updated.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1681,33 +1414,23 @@ export default Package.make({
 				moderatorName: io.out.data("moderatorName", t.String, {
 					name: "Moderator Name",
 				}),
-				bullying: io.out.data("bullying", t.Int, {
-					name: "Bullying",
-				}),
+				bullying: io.out.data("bullying", t.Int, { name: "Bullying" }),
 				overallLevel: io.out.data("overallLevel", t.Option(t.Int), {
 					name: "Overall Level",
 				}),
-				disability: io.out.data("disability", t.Int, {
-					name: "Disability",
-				}),
+				disability: io.out.data("disability", t.Int, { name: "Disability" }),
 				raceEthnicityOrReligion: io.out.data("raceEthnicityOrReligion", t.Int, {
 					name: "Race Ethnicity Or Religion",
 				}),
-				misogyny: io.out.data("misogyny", t.Int, {
-					name: "Misogyny",
-				}),
+				misogyny: io.out.data("misogyny", t.Int, { name: "Misogyny" }),
 				sexualitySexOrGender: io.out.data("sexualitySexOrGender", t.Int, {
 					name: "Sexuality Sex Or Gender",
 				}),
-				aggression: io.out.data("aggression", t.Int, {
-					name: "Aggression",
-				}),
+				aggression: io.out.data("aggression", t.Int, { name: "Aggression" }),
 				sexBasedTerms: io.out.data("sexBasedTerms", t.Int, {
 					name: "Sex Based Terms",
 				}),
-				swearing: io.out.data("swearing", t.Int, {
-					name: "Swearing",
-				}),
+				swearing: io.out.data("swearing", t.Int, { name: "Swearing" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -1740,12 +1463,7 @@ export default Package.make({
 			name: "AutoMod Terms Update",
 			type: "event",
 			description: "Fires when AutoMod terms are added or removed.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1773,15 +1491,11 @@ export default Package.make({
 				moderatorName: io.out.data("moderatorName", t.String, {
 					name: "Moderator Name",
 				}),
-				action: io.out.data("action", t.String, {
-					name: "Action",
-				}),
+				action: io.out.data("action", t.String, { name: "Action" }),
 				fromAutomod: io.out.data("fromAutomod", t.Bool, {
 					name: "From Automod",
 				}),
-				terms: io.out.data("terms", t.List(t.String), {
-					name: "Terms",
-				}),
+				terms: io.out.data("terms", t.List(t.String), { name: "Terms" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.broadcasterId, event.broadcaster_user_id);
@@ -1792,19 +1506,14 @@ export default Package.make({
 				yield* setOutput(io.moderatorName, event.moderator_user_name);
 				yield* setOutput(io.action, event.action);
 				yield* setOutput(io.fromAutomod, event.from_automod);
-				yield* setOutput(io.terms, event.terms);
+				yield* setOutput(io.terms, [...event.terms]);
 			},
 		});
 		ctx.schema("notification.channel.unban_request.resolve", {
 			name: "Channel Unban Request Resolve",
 			type: "event",
 			description: "Fires when an unban request is resolved.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1814,9 +1523,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "ID",
-				}),
+				id: io.out.data("id", t.String, { name: "ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -1835,21 +1542,13 @@ export default Package.make({
 				moderatorName: io.out.data("moderatorName", t.Option(t.String), {
 					name: "Moderator Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				resolutionText: io.out.data("resolutionText", t.Option(t.String), {
 					name: "Resolution Text",
 				}),
-				status: io.out.data("status", t.String, {
-					name: "Status",
-				}),
+				status: io.out.data("status", t.String, { name: "Status" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.id, event.id);
@@ -1882,12 +1581,7 @@ export default Package.make({
 			name: "Channel Suspicious User Update",
 			type: "event",
 			description: "Fires when a suspicious user's status is updated.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1915,15 +1609,9 @@ export default Package.make({
 				moderatorName: io.out.data("moderatorName", t.String, {
 					name: "Moderator Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				lowTrustStatus: io.out.data("lowTrustStatus", t.String, {
 					name: "Low Trust Status",
 				}),
@@ -1945,12 +1633,7 @@ export default Package.make({
 			name: "Channel Suspicious User Message",
 			type: "event",
 			description: "Fires when a suspicious user sends a message.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -1969,34 +1652,22 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				lowTrustStatus: io.out.data("lowTrustStatus", t.String, {
 					name: "Low Trust Status",
 				}),
 				sharedBanChannelIds: io.out.data(
 					"sharedBanChannelIds",
 					t.List(t.String),
-					{
-						name: "Shared Ban Channel IDs",
-					},
+					{ name: "Shared Ban Channel IDs" },
 				),
-				types: io.out.data("types", t.List(t.String), {
-					name: "Types",
-				}),
+				types: io.out.data("types", t.List(t.String), { name: "Types" }),
 				banEvasionEvaluation: io.out.data("banEvasionEvaluation", t.String, {
 					name: "Ban Evasion Evaluation",
 				}),
-				messageId: io.out.data("messageId", t.String, {
-					name: "Message ID",
-				}),
+				messageId: io.out.data("messageId", t.String, { name: "Message ID" }),
 				messageText: io.out.data("messageText", t.String, {
 					name: "Message Text",
 				}),
@@ -2009,8 +1680,10 @@ export default Package.make({
 				yield* setOutput(io.userLogin, event.user_login);
 				yield* setOutput(io.userName, event.user_name);
 				yield* setOutput(io.lowTrustStatus, event.low_trust_status);
-				yield* setOutput(io.sharedBanChannelIds, event.shared_ban_channel_ids);
-				yield* setOutput(io.types, event.types);
+				yield* setOutput(io.sharedBanChannelIds, [
+					...event.shared_ban_channel_ids,
+				]);
+				yield* setOutput(io.types, [...event.types]);
 				yield* setOutput(io.banEvasionEvaluation, event.ban_evasion_evaluation);
 				yield* setOutput(io.messageId, event.message.message_id);
 				yield* setOutput(io.messageText, event.message.text);
@@ -2020,12 +1693,7 @@ export default Package.make({
 			name: "Poll Started",
 			type: "event",
 			description: "Fires when a poll begins in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2035,9 +1703,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Poll ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Poll ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2047,15 +1713,9 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
-				endsAt: io.out.data("endsAt", t.DateTime, {
-					name: "Ends At",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
+				endsAt: io.out.data("endsAt", t.DateTime, { name: "Ends At" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.id, event.id);
@@ -2071,12 +1731,7 @@ export default Package.make({
 			name: "Poll Progress",
 			type: "event",
 			description: "Fires when a poll is updated in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2086,9 +1741,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Poll ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Poll ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2098,15 +1751,9 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
-				endsAt: io.out.data("endsAt", t.DateTime, {
-					name: "Ends At",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
+				endsAt: io.out.data("endsAt", t.DateTime, { name: "Ends At" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.id, event.id);
@@ -2122,12 +1769,7 @@ export default Package.make({
 			name: "Poll Ended",
 			type: "event",
 			description: "Fires when a poll ends in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2137,9 +1779,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Poll ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Poll ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2149,18 +1789,10 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
-				endsAt: io.out.data("endsAt", t.DateTime, {
-					name: "Ends At",
-				}),
-				status: io.out.data("status", t.String, {
-					name: "Status",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
+				endsAt: io.out.data("endsAt", t.DateTime, { name: "Ends At" }),
+				status: io.out.data("status", t.String, { name: "Status" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.id, event.id);
@@ -2177,12 +1809,7 @@ export default Package.make({
 			name: "Prediction Started",
 			type: "event",
 			description: "Fires when a prediction begins in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2192,9 +1819,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Prediction ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Prediction ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2204,12 +1829,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
 				locksAt: io.out.data("locksAt", t.Option(t.DateTime), {
 					name: "Locks At",
 				}),
@@ -2228,12 +1849,7 @@ export default Package.make({
 			name: "Prediction Progress",
 			type: "event",
 			description: "Fires when a prediction is updated in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2243,9 +1859,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Prediction ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Prediction ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2255,12 +1869,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
 				locksAt: io.out.data("locksAt", t.Option(t.DateTime), {
 					name: "Locks At",
 				}),
@@ -2279,12 +1889,7 @@ export default Package.make({
 			name: "Prediction Locked",
 			type: "event",
 			description: "Fires when a prediction locks in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2294,9 +1899,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Prediction ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Prediction ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2306,15 +1909,9 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
-				lockedAt: io.out.data("lockedAt", t.DateTime, {
-					name: "Locked At",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
+				lockedAt: io.out.data("lockedAt", t.DateTime, { name: "Locked At" }),
 			}),
 			run: function* ({ io }, event) {
 				yield* setOutput(io.id, event.id);
@@ -2330,12 +1927,7 @@ export default Package.make({
 			name: "Prediction Ended",
 			type: "event",
 			description: "Fires when a prediction ends in specified channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2345,9 +1937,7 @@ export default Package.make({
 					return e.payload.event;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "Prediction ID",
-				}),
+				id: io.out.data("id", t.String, { name: "Prediction ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2357,18 +1947,10 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
-				endedAt: io.out.data("endedAt", t.DateTime, {
-					name: "Ended At",
-				}),
-				status: io.out.data("status", t.String, {
-					name: "Status",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
+				endedAt: io.out.data("endedAt", t.DateTime, { name: "Ended At" }),
+				status: io.out.data("status", t.String, { name: "Status" }),
 				winningOutcomeId: io.out.data("winningOutcomeId", t.Option(t.String), {
 					name: "Winning Outcome ID",
 				}),
@@ -2393,12 +1975,7 @@ export default Package.make({
 			name: "Stream Online",
 			type: "event",
 			description: "Fires when specified broadcaster starts a stream.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2408,9 +1985,7 @@ export default Package.make({
 					return e;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "ID",
-				}),
+				id: io.out.data("id", t.String, { name: "ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2420,12 +1995,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				type: io.out.data("type", t.String, {
-					name: "Type",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
+				type: io.out.data("type", t.String, { name: "Type" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
 			}),
 			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.id, event.id);
@@ -2440,12 +2011,7 @@ export default Package.make({
 			name: "Stream Offline",
 			type: "event",
 			description: "Fires when specified broadcaster stops a stream.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2475,12 +2041,7 @@ export default Package.make({
 			name: "Channel Update",
 			type: "event",
 			description: "Fires when a broadcaster updates their channel properties.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2499,12 +2060,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				title: io.out.data("title", t.String, {
-					name: "Title",
-				}),
-				language: io.out.data("language", t.String, {
-					name: "Language",
-				}),
+				title: io.out.data("title", t.String, { name: "Title" }),
+				language: io.out.data("language", t.String, { name: "Language" }),
 				categoryId: io.out.data("categoryId", t.String, {
 					name: "Category ID",
 				}),
@@ -2514,9 +2071,7 @@ export default Package.make({
 				contentClassificationLabels: io.out.data(
 					"contentClassificationLabels",
 					t.List(t.String),
-					{
-						name: "Content Classification Labels",
-					},
+					{ name: "Content Classification Labels" },
 				),
 			}),
 			run: function* ({ io }, { payload: { event } }) {
@@ -2527,10 +2082,9 @@ export default Package.make({
 				yield* setOutput(io.language, event.language);
 				yield* setOutput(io.categoryId, event.category_id);
 				yield* setOutput(io.categoryName, event.category_name);
-				yield* setOutput(
-					io.contentClassificationLabels,
-					event.content_classification_labels,
-				);
+				yield* setOutput(io.contentClassificationLabels, [
+					...event.content_classification_labels,
+				]);
 			},
 		});
 		ctx.schema("notification.channel.raid", {
@@ -2538,12 +2092,7 @@ export default Package.make({
 			type: "event",
 			description:
 				"Fires when a broadcaster raids another broadcaster's channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2571,9 +2120,7 @@ export default Package.make({
 				toBroadcasterName: io.out.data("toBroadcasterName", t.String, {
 					name: "To Broadcaster Name",
 				}),
-				viewers: io.out.data("viewers", t.Int, {
-					name: "Viewers",
-				}),
+				viewers: io.out.data("viewers", t.Int, { name: "Viewers" }),
 			}),
 			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.fromBroadcasterId, event.from_broadcaster_user_id);
@@ -2598,12 +2145,7 @@ export default Package.make({
 			name: "Channel Ad Break Begin",
 			type: "event",
 			description: "Fires when an ad break begins on channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2634,9 +2176,7 @@ export default Package.make({
 				durationSeconds: io.out.data("durationSeconds", t.Int, {
 					name: "Duration Seconds",
 				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
 				isAutomatic: io.out.data("isAutomatic", t.Bool, {
 					name: "Is Automatic",
 				}),
@@ -2657,12 +2197,7 @@ export default Package.make({
 			name: "Channel Bits Use",
 			type: "event",
 			description: "Fires when viewers cheer bits on channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2672,15 +2207,9 @@ export default Package.make({
 					return e;
 			},
 			io: (io) => ({
-				userId: io.out.data("userId", t.String, {
-					name: "User ID",
-				}),
-				userLogin: io.out.data("userLogin", t.String, {
-					name: "User Login",
-				}),
-				userName: io.out.data("userName", t.String, {
-					name: "User Name",
-				}),
+				userId: io.out.data("userId", t.String, { name: "User ID" }),
+				userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+				userName: io.out.data("userName", t.String, { name: "User Name" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2690,12 +2219,8 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				bits: io.out.data("bits", t.Int, {
-					name: "Bits",
-				}),
-				type: io.out.data("type", t.String, {
-					name: "Type",
-				}),
+				bits: io.out.data("bits", t.Int, { name: "Bits" }),
+				type: io.out.data("type", t.String, { name: "Type" }),
 			}),
 			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.userId, event.user_id);
@@ -2715,12 +2240,7 @@ export default Package.make({
 				type: "event",
 				description:
 					"Fires when a viewer uses an automatic channel points reward.",
-				properties: {
-					account: {
-						name: "Account",
-						resource: TwitchAccount,
-					},
-				},
+				properties: { account: { name: "Account", resource: TwitchAccount } },
 				event: ({ properties }, e) => {
 					if (
 						isEventSubMessageType(e, "notification") &&
@@ -2745,33 +2265,21 @@ export default Package.make({
 					broadcasterName: io.out.data("broadcasterName", t.String, {
 						name: "Broadcaster Name",
 					}),
-					userId: io.out.data("userId", t.String, {
-						name: "User ID",
-					}),
-					userLogin: io.out.data("userLogin", t.String, {
-						name: "User Login",
-					}),
-					userName: io.out.data("userName", t.String, {
-						name: "User Name",
-					}),
-					rewardId: io.out.data("rewardId", t.String, {
-						name: "Reward ID",
-					}),
+					userId: io.out.data("userId", t.String, { name: "User ID" }),
+					userLogin: io.out.data("userLogin", t.String, { name: "User Login" }),
+					userName: io.out.data("userName", t.String, { name: "User Name" }),
+					rewardId: io.out.data("rewardId", t.String, { name: "Reward ID" }),
 					rewardTitle: io.out.data("rewardTitle", t.String, {
 						name: "Reward Title",
 					}),
 					rewardPrompt: io.out.data("rewardPrompt", t.String, {
 						name: "Reward Prompt",
 					}),
-					rewardCost: io.out.data("rewardCost", t.Int, {
-						name: "Reward Cost",
-					}),
+					rewardCost: io.out.data("rewardCost", t.Int, { name: "Reward Cost" }),
 					userInput: io.out.data("userInput", t.Option(t.String), {
 						name: "User Input",
 					}),
-					status: io.out.data("status", t.String, {
-						name: "Status",
-					}),
+					status: io.out.data("status", t.String, { name: "Status" }),
 					redeemedAt: io.out.data("redeemedAt", t.DateTime, {
 						name: "Redeemed At",
 					}),
@@ -2798,12 +2306,7 @@ export default Package.make({
 			name: "Hype Train Progress",
 			type: "event",
 			description: "Fires when hype train level increases on channel.",
-			properties: {
-				account: {
-					name: "Account",
-					resource: TwitchAccount,
-				},
-			},
+			properties: { account: { name: "Account", resource: TwitchAccount } },
 			event: ({ properties }, e) => {
 				if (
 					isEventSubMessageType(e, "notification") &&
@@ -2813,9 +2316,7 @@ export default Package.make({
 					return e;
 			},
 			io: (io) => ({
-				id: io.out.data("id", t.String, {
-					name: "ID",
-				}),
+				id: io.out.data("id", t.String, { name: "ID" }),
 				broadcasterId: io.out.data("broadcasterId", t.String, {
 					name: "Broadcaster ID",
 				}),
@@ -2825,24 +2326,12 @@ export default Package.make({
 				broadcasterName: io.out.data("broadcasterName", t.String, {
 					name: "Broadcaster Name",
 				}),
-				level: io.out.data("level", t.Int, {
-					name: "Level",
-				}),
-				total: io.out.data("total", t.Int, {
-					name: "Total",
-				}),
-				progress: io.out.data("progress", t.Int, {
-					name: "Progress",
-				}),
-				goal: io.out.data("goal", t.Int, {
-					name: "Goal",
-				}),
-				startedAt: io.out.data("startedAt", t.DateTime, {
-					name: "Started At",
-				}),
-				expiresAt: io.out.data("expiresAt", t.DateTime, {
-					name: "Expires At",
-				}),
+				level: io.out.data("level", t.Int, { name: "Level" }),
+				total: io.out.data("total", t.Int, { name: "Total" }),
+				progress: io.out.data("progress", t.Int, { name: "Progress" }),
+				goal: io.out.data("goal", t.Int, { name: "Goal" }),
+				startedAt: io.out.data("startedAt", t.DateTime, { name: "Started At" }),
+				expiresAt: io.out.data("expiresAt", t.DateTime, { name: "Expires At" }),
 			}),
 			run: function* ({ io }, { payload: { event } }) {
 				yield* setOutput(io.id, event.id);

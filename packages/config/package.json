@@ -2,10 +2,6 @@
 	"name": "@macrograph/config",
 	"type": "module",
 	"private": true,
-	"exports": {
-		"./tsconfig": "./tsconfig.json"
-	},
-	"dependencies": {
-		"@tanstack/solid-query": "^5.90.15"
-	}
+	"exports": { "./tsconfig": "./tsconfig.json" },
+	"dependencies": { "@tanstack/solid-query": "^5.90.15" }
 }

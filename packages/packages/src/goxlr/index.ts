@@ -6,22 +6,10 @@ import * as sends from "./sends";
 import { createTypes } from "./types";
 
 export type Event = {
-	levelsChange: {
-		channel: string;
-		value: number;
-	};
-	buttonDown: {
-		buttonName: string;
-		state: boolean;
-	};
-	faderStatus: {
-		channel: string;
-		state: boolean;
-	};
-	effects: {
-		dial: string;
-		amount: number;
-	};
+	levelsChange: { channel: string; value: number };
+	buttonDown: { buttonName: string; state: boolean };
+	faderStatus: { channel: string; state: boolean };
+	effects: { dial: string; amount: number };
 };
 
 export type Pkg = ReturnType<typeof pkg>;

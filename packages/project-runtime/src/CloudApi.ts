@@ -4,9 +4,7 @@ import { Context, Effect, Layer, Option } from "effect";
 import { Api } from "@macrograph/web-domain";
 
 export namespace CloudApiClient {
-	export type Options = {
-		baseUrl?: string;
-	};
+	export type Options = { baseUrl?: string };
 
 	export const make = Effect.fn(function* (opts?: Options) {
 		const httpClient = yield* HttpClient.HttpClient;
@@ -46,12 +44,7 @@ export namespace CloudApiClient {
 		"@macrograph/project-runtime/CloudApi/Auth",
 	)<
 		Auth,
-		Effect.Effect<
-			Option.Option<{
-				clientId: string;
-				token: string;
-			}>
-		>
+		Effect.Effect<Option.Option<{ clientId: string; token: string }>>
 	>() {}
 
 	export class BaseUrl extends Context.Reference<BaseUrl>()(

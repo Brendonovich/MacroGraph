@@ -46,15 +46,7 @@ export function createCtx(core: Core) {
 		}
 	});
 
-	return {
-		core,
-		auth,
-		helixClient,
-		chat,
-		eventSub,
-		persisted,
-		setup,
-	};
+	return { core, auth, helixClient, chat, eventSub, persisted, setup };
 }
 
 export type Ctx = Awaited<ReturnType<typeof createCtx>>;

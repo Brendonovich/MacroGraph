@@ -90,10 +90,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 					) =>
 						Effect.gen(function* () {
 							yield* handleProjectEvent(
-								new ProjectEvent.GraphItemsMoved({
-									graph,
-									items,
-								}),
+								new ProjectEvent.GraphItemsMoved({ graph, items }),
 							);
 
 							yield* run(
@@ -106,34 +103,32 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						Effect.andThen(handleProjectEvent),
 					),
 				),
-				CreateNode: withRequest<Request.CreateNode>({
-					pending: true,
-				})((run, graph: Graph.Id, schema: Schema.Ref, position: Position) =>
-					run(new Request.CreateNode({ schema, graph, position })).pipe(
-						Effect.andThen(handleProjectEvent),
-					),
-				),
-				ConnectIO: withRequest<Request.ConnectIO>({
-					pending: true,
-				})((run, graph: Graph.Id, _one: IO.RefString, _two: IO.RefString) =>
-					Effect.gen(function* () {
-						const one = IO.parseRef(_one);
-						const two = IO.parseRef(_two);
-
-						let output: [Node.Id, IO.Id], input: [Node.Id, IO.Id];
-
-						if (one.type === "o" && two.type === "i") {
-							output = [one.nodeId, one.id] as const;
-							input = [two.nodeId, two.id] as const;
-						} else if (one.type === "i" && two.type === "o") {
-							output = [two.nodeId, two.id] as const;
-							input = [one.nodeId, one.id] as const;
-						} else return;
-
-						yield* run(new Request.ConnectIO({ graph, output, input })).pipe(
+				CreateNode: withRequest<Request.CreateNode>({ pending: true })(
+					(run, graph: Graph.Id, schema: Schema.Ref, position: Position) =>
+						run(new Request.CreateNode({ schema, graph, position })).pipe(
 							Effect.andThen(handleProjectEvent),
-						);
-					}),
+						),
+				),
+				ConnectIO: withRequest<Request.ConnectIO>({ pending: true })(
+					(run, graph: Graph.Id, _one: IO.RefString, _two: IO.RefString) =>
+						Effect.gen(function* () {
+							const one = IO.parseRef(_one);
+							const two = IO.parseRef(_two);
+
+							let output: [Node.Id, IO.Id], input: [Node.Id, IO.Id];
+
+							if (one.type === "o" && two.type === "i") {
+								output = [one.nodeId, one.id] as const;
+								input = [two.nodeId, two.id] as const;
+							} else if (one.type === "i" && two.type === "o") {
+								output = [two.nodeId, two.id] as const;
+								input = [one.nodeId, one.id] as const;
+							} else return;
+
+							yield* run(new Request.ConnectIO({ graph, output, input })).pipe(
+								Effect.andThen(handleProjectEvent),
+							);
+						}),
 				),
 				DisconnectIO: withRequest<Request.DisconnectIO>()(
 					(run, graph: Graph.Id, _io: IO.RefString) =>
@@ -152,14 +147,8 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								if (conns?.[0]) {
 									req = new Request.DisconnectIO({
 										graph,
-										output: {
-											node: conns[0][0],
-											io: conns[0][1],
-										},
-										input: {
-											node: io.nodeId,
-											io: io.id,
-										},
+										output: { node: conns[0][0], io: conns[0][1] },
+										input: { node: io.nodeId, io: io.id },
 									});
 								} else return;
 							} else if (io.type === "o" && nodeConnections.out?.[io.id]) {
@@ -167,14 +156,8 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								if (conns?.[0]) {
 									req = new Request.DisconnectIO({
 										graph,
-										output: {
-											node: io.nodeId,
-											io: io.id,
-										},
-										input: {
-											node: conns[0][0],
-											io: conns[0][1],
-										},
+										output: { node: io.nodeId, io: io.id },
+										input: { node: conns[0][0], io: conns[0][1] },
 									});
 								} else return;
 							} else return;
@@ -185,12 +168,9 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				),
 				DeleteGraphItems: withRequest<Request.DeleteGraphItems>()(
 					(run, graphId: Graph.Id, items: ReadonlyArray<Graph.ItemRef>) =>
-						run(
-							new Request.DeleteGraphItems({
-								graph: graphId,
-								items,
-							}),
-						).pipe(Effect.andThen(handleProjectEvent)),
+						run(new Request.DeleteGraphItems({ graph: graphId, items })).pipe(
+							Effect.andThen(handleProjectEvent),
+						),
 				),
 				SetNodeProperty: withRequest<Request.SetNodeProperty>()(
 					(
@@ -211,12 +191,9 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				),
 				CreateResourceConstant: withRequest<Request.CreateResourceConstant>()(
 					(run, pkg: Package.Id, resource: string) =>
-						run(
-							new Request.CreateResourceConstant({
-								pkg,
-								resource,
-							}),
-						).pipe(Effect.andThen(handleProjectEvent)),
+						run(new Request.CreateResourceConstant({ pkg, resource })).pipe(
+							Effect.andThen(handleProjectEvent),
+						),
 				),
 				UpdateResourceConstant: withRequest<Request.UpdateResourceConstant>()(
 					(run, constantId: string, value?: string, name?: string) =>
@@ -230,11 +207,9 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				),
 				DeleteResourceConstant: withRequest<Request.DeleteResourceConstant>()(
 					(run, constantId: string) =>
-						run(
-							new Request.DeleteResourceConstant({
-								id: constantId,
-							}),
-						).pipe(Effect.andThen(handleProjectEvent)),
+						run(new Request.DeleteResourceConstant({ id: constantId })).pipe(
+							Effect.andThen(handleProjectEvent),
+						),
 				),
 			};
 		}),

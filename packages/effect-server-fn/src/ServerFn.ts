@@ -12,11 +12,7 @@ export interface ServerFn<
 	id: TId;
 	/* @internal */
 	key: string;
-	schemas: {
-		input?: TIn;
-		output?: TOut;
-		error?: TErr;
-	};
+	schemas: { input?: TIn; output?: TOut; error?: TErr };
 	toLayer: (
 		handler: HandlerFn<TIn, TOut, TErr>,
 	) => Layer.Layer<Handler<TId>, never, never>;
@@ -45,11 +41,7 @@ export const make = <
 	TErr extends Schema.Schema<any>,
 >(
 	id: TId,
-	schemas?: {
-		input?: TIn;
-		output?: TOut;
-		error?: TErr;
-	},
+	schemas?: { input?: TIn; output?: TOut; error?: TErr },
 ): ServerFn<TId, TIn, TOut, TErr> => {
 	const key = `@macrograph/server-function/${id}`;
 	return {

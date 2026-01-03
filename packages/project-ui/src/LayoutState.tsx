@@ -117,12 +117,7 @@ export function createLayoutStateContext<TSettingsPage extends string>({
 						tabs: [{ tabId: 0, ...data }],
 					}),
 				);
-				setPaneLayout(
-					reconcile({
-						variant: "single",
-						pane: id,
-					}),
-				);
+				setPaneLayout(reconcile({ variant: "single", pane: id }));
 				return;
 			}
 
@@ -308,11 +303,7 @@ export function usePaneTabs<TSettingsPage extends string>(
 				const pkg = state.packages[tab.packageId];
 				if (!pkg) return false;
 				return packageClients.getPackage(tab.packageId).pipe(
-					Option.map((client) => ({
-						...tab,
-						client,
-						package: pkg,
-					})),
+					Option.map((client) => ({ ...tab, client, package: pkg })),
 					Option.getOrUndefined,
 				);
 			}

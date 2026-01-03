@@ -19,14 +19,8 @@ import { PresenceState } from "../Presence";
 import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 
 export type ClientAuthEvent =
-	| {
-			type: "started";
-			verificationUrlComplete: string;
-	  }
-	| {
-			type: "finished";
-			jwt: DClientAuth.EncodedJWT;
-	  };
+	| { type: "started"; verificationUrlComplete: string }
+	| { type: "finished"; jwt: DClientAuth.EncodedJWT };
 
 export class ClientAuthError extends Data.TaggedError("ClientAuthError")<{
 	reason: "perform-failed";
@@ -75,10 +69,7 @@ export class ClientAuth extends Effect.Service<ClientAuth>()(
 						}),
 						Effect.mapError(
 							(e) =>
-								new ClientAuthError({
-									reason: "perform-failed",
-									cause: e,
-								}),
+								new ClientAuthError({ reason: "perform-failed", cause: e }),
 						),
 					);
 

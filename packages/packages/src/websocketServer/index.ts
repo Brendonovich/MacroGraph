@@ -17,19 +17,9 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 		event: "WSSConnect",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				port: io.dataOutput({
-					id: "port",
-					name: "Port",
-					type: t.int(),
-				}),
-				client: io.dataOutput({
-					id: "client",
-					name: "Client",
-					type: t.int(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				port: io.dataOutput({ id: "port", name: "Port", type: t.int() }),
+				client: io.dataOutput({ id: "client", name: "Client", type: t.int() }),
 			};
 		},
 		run({ ctx, io, data }) {
@@ -44,19 +34,9 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 		event: "WSSDisconnect",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				port: io.dataOutput({
-					id: "port",
-					name: "Port",
-					type: t.int(),
-				}),
-				client: io.dataOutput({
-					id: "client",
-					name: "Client",
-					type: t.int(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				port: io.dataOutput({ id: "port", name: "Port", type: t.int() }),
+				client: io.dataOutput({ id: "client", name: "Client", type: t.int() }),
 			};
 		},
 		run({ ctx, io, data }) {
@@ -71,21 +51,13 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				port: io.dataInput({
-					id: "port",
-					name: "Port",
-					type: t.int(),
-				}),
+				port: io.dataInput({ id: "port", name: "Port", type: t.int() }),
 				client: io.dataInput({
 					id: "client",
 					name: "Client",
 					type: t.option(t.int()),
 				}),
-				data: io.dataInput({
-					id: "data",
-					name: "Data",
-					type: t.string(),
-				}),
+				data: io.dataInput({ id: "data", name: "Data", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -102,24 +74,10 @@ export function pkg<TServer>(ws: WsProvider<TServer>) {
 		name: "WSS Event",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				port: io.dataOutput({
-					id: "port",
-					name: "Port",
-					type: t.int(),
-				}),
-				client: io.dataOutput({
-					id: "client",
-					name: "Client",
-					type: t.int(),
-				}),
-				data: io.dataOutput({
-					id: "data",
-					name: "Data",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				port: io.dataOutput({ id: "port", name: "Port", type: t.int() }),
+				client: io.dataOutput({ id: "client", name: "Client", type: t.int() }),
+				data: io.dataOutput({ id: "data", name: "Data", type: t.string() }),
 			};
 		},
 		run({ ctx, data, io }) {

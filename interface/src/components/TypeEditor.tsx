@@ -311,11 +311,7 @@ function TypeEditorSegment(props: {
 	);
 }
 
-function Span(
-	props: ParentProps<{
-		onClick?: (e: MouseEvent) => void;
-	}>,
-) {
+function Span(props: ParentProps<{ onClick?: (e: MouseEvent) => void }>) {
 	const editorCtx = useContext(TypeEditorContext)!;
 	const ctx = useContext(TypeEditorSegmentContext)!;
 

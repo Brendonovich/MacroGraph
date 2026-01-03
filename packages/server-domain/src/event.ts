@@ -3,9 +3,7 @@ import { Graph, Node } from "@macrograph/project-domain";
 
 export class ConnectedClientsChanged extends Schema.TaggedClass<ConnectedClientsChanged>()(
 	"ConnectedClientsChanged",
-	{
-		data: Schema.Int,
-	},
+	{ data: Schema.Int },
 ) {}
 
 export class PresenceUpdated extends Schema.TaggedClass<PresenceUpdated>()(
@@ -24,10 +22,7 @@ export class PresenceUpdated extends Schema.TaggedClass<PresenceUpdated>()(
 					}),
 				),
 				selection: Schema.optional(
-					Schema.Struct({
-						graph: Graph.Id,
-						nodes: Schema.Array(Node.Id),
-					}),
+					Schema.Struct({ graph: Graph.Id, nodes: Schema.Array(Node.Id) }),
 				),
 			}),
 		}),

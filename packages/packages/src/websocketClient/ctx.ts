@@ -17,10 +17,7 @@ export function createCtx(callback: (data: any) => void) {
 		const ws = new WebSocket(ip);
 
 		ws.onopen = () => {
-			websockets.set(ip, {
-				state: "connected",
-				socket: ws,
-			});
+			websockets.set(ip, { state: "connected", socket: ws });
 		};
 
 		ws.onclose = () => {

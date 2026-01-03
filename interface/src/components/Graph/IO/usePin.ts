@@ -235,10 +235,7 @@ export function usePin(pin: Accessor<Pin>) {
 										graph.model(),
 										interfaceCtx,
 										pin(),
-										graph.toGraphSpace({
-											x: e.clientX,
-											y: e.clientY,
-										}),
+										graph.toGraphSpace({ x: e.clientX, y: e.clientY }),
 									);
 
 									interfaceCtx.setState({

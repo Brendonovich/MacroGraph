@@ -130,10 +130,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 		const dragState = getDragState();
 		if (dragState) {
 			const pinPos = Maybe(interfaceCtx.pinPositions.get(dragState.pin)).map(
-				(pos) => ({
-					x: pos.x,
-					y: pos.y,
-				}),
+				(pos) => ({ x: pos.x, y: pos.y }),
 			);
 
 			const mousePosition = ctx.toGraphSpace({

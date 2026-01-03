@@ -1,6 +1,8 @@
 import * as Effect from "effect/Effect";
 import { getInput, Package, setOutput, t } from "@macrograph/package-sdk";
 
+import "./new.ts";
+
 // const Engine = PackageEngine.define<never>()({
 // 	events: Schema.Number,
 // }).build((ctx) => {
@@ -20,11 +22,7 @@ export default Package.make({
 		ctx.schema("print", {
 			name: "Print",
 			type: "exec",
-			io: (c) => ({
-				in: c.in.data("in", t.String, {
-					name: "Input",
-				}),
-			}),
+			io: (c) => ({ in: c.in.data("in", t.String, { name: "Input" }) }),
 			run: function* ({ io }) {
 				yield* Effect.log(`Log: ${yield* getInput(io.in)}`);
 				// const logger = yield* Logger;

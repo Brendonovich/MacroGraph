@@ -45,12 +45,7 @@ export function createCtx(core: Core) {
 		},
 	);
 
-	return {
-		core,
-		authToken,
-		user,
-		setAuthToken,
-	};
+	return { core, authToken, user, setAuthToken };
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

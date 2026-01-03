@@ -23,22 +23,12 @@ const [projectUrl, setProjectUrl] = makePersisted(
 	{ name: "currentProjectUrl" },
 );
 
-const platform = createPlatform({
-	projectUrl,
-	setProjectUrl,
-	core,
-});
+const platform = createPlatform({ projectUrl, setProjectUrl, core });
 
 [
-	() =>
-		pkgs.audio.pkg({
-			prepareURL: (url: string) => convertFileSrc(url),
-		}),
+	() => pkgs.audio.pkg({ prepareURL: (url: string) => convertFileSrc(url) }),
 	pkgs.discord.pkg,
-	() =>
-		pkgs.fs.register({
-			list: (path) => client.query(["fs.list", path]),
-		}),
+	() => pkgs.fs.register({ list: (path) => client.query(["fs.list", path]) }),
 	pkgs.github.pkg,
 	pkgs.goxlr.pkg,
 	// pkgs.google.pkg,

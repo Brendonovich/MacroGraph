@@ -50,10 +50,7 @@ export namespace PaneLayout {
 			);
 
 			if (remaining.length > 1)
-				return reconcile({
-					...state,
-					panes: remaining,
-				})(state);
+				return reconcile({ ...state, panes: remaining })(state);
 
 			if (remaining.length > 0) return reconcile(remaining[0]!)(state);
 

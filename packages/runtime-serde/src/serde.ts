@@ -54,18 +54,9 @@ export type Type =
 
 export const Type: v.BaseSchema<Type, any, any> = v.union([
 	TypeBases,
-	v.object({
-		variant: v.literal("option"),
-		inner: v.lazy(() => Type),
-	}),
-	v.object({
-		variant: v.literal("list"),
-		item: v.lazy(() => Type),
-	}),
-	v.object({
-		variant: v.literal("map"),
-		value: v.lazy(() => Type),
-	}),
+	v.object({ variant: v.literal("option"), inner: v.lazy(() => Type) }),
+	v.object({ variant: v.literal("list"), item: v.lazy(() => Type) }),
+	v.object({ variant: v.literal("map"), value: v.lazy(() => Type) }),
 ]);
 
 export const Variable = v.object({
@@ -139,14 +130,8 @@ export const CustomEnum = v.object({
 export type CustomEnum = v.InferOutput<typeof CustomEnum>;
 
 export const Connection = v.object({
-	from: v.object({
-		node: IntID,
-		output: v.string(),
-	}),
-	to: v.object({
-		node: IntID,
-		input: v.string(),
-	}),
+	from: v.object({ node: IntID, output: v.string() }),
+	to: v.object({ node: IntID, input: v.string() }),
 });
 export type Connection = v.InferOutput<typeof Connection>;
 
@@ -163,10 +148,7 @@ export const Node = v.object({
 	id: v.number(),
 	name: v.string(),
 	position: XY,
-	schema: v.object({
-		package: v.string(),
-		id: v.string(),
-	}),
+	schema: v.object({ package: v.string(), id: v.string() }),
 	defaultValues: v.record(v.string(), v.any()),
 	properties: v.optional(
 		v.record(
@@ -191,10 +173,7 @@ export const Graph = v.object({
 export type Graph = v.InferOutput<typeof Graph>;
 
 export const ResourceItem = v.intersect([
-	v.object({
-		id: v.number(),
-		name: v.string(),
-	}),
+	v.object({ id: v.number(), name: v.string() }),
 	v.union([
 		v.object({ value: v.string() }),
 		v.object({ sourceId: v.nullable(v.string()) }),

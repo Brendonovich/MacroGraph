@@ -24,11 +24,7 @@ const TestPackage = PackageSDK.Package.make({
 		ctx.schema(PRINT_NODE_ID, {
 			name: "Log",
 			type: "exec",
-			io: (c) => ({
-				in: c.in.data("in", t.String, {
-					name: "Input",
-				}),
-			}),
+			io: (c) => ({ in: c.in.data("in", t.String, { name: "Input" }) }),
 			run: function* ({ io }) {
 				console.log(`Log: ${yield* PackageSDK.getInput(io.in)}`);
 				// const logger = yield* Logger;

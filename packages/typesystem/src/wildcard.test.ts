@@ -79,14 +79,7 @@ describe("Connect Map<String> + Map<Wildcard> + Map<Wildcard>", () => {
 		const wildcard3 = new Wildcard("3");
 		const input3 = t.map(t.wildcard(wildcard3));
 
-		return {
-			output1,
-			wildcard2,
-			input2,
-			output2,
-			wildcard3,
-			input3,
-		};
+		return { output1, wildcard2, input2, output2, wildcard3, input3 };
 	}
 
 	test("Connect Forwards", () => {
@@ -131,11 +124,7 @@ describe("Connect Map<String> + Wildcard(A) + Map<Wildcard(B)>", () => {
 			return { wildcard, input };
 		})();
 
-		return {
-			node1,
-			node2,
-			node3,
-		};
+		return { node1, node2, node3 };
 	}
 
 	test("Connect Forward", () => {
@@ -285,11 +274,7 @@ describe("issues", () => {
 			const input = t.wildcard(w);
 			const output = t.list(t.wildcard(w));
 
-			return {
-				w,
-				input,
-				output,
-			};
+			return { w, input, output };
 		})();
 
 		connectWildcardsInTypes(node1.output, node2.input);

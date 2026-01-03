@@ -4,9 +4,7 @@ import { type EventBus, createEventBus } from "@solid-primitives/event-bus";
 import { events, type Key, commands } from "tauri-plugin-kb-mouse";
 
 export function pkg() {
-	const pkg = new Package({
-		name: "Global Mouse & Keyboard",
-	});
+	const pkg = new Package({ name: "Global Mouse & Keyboard" });
 
 	pkg.createSchema({
 		name: "Emulate Keyboard Input",
@@ -64,16 +62,8 @@ export function pkg() {
 		name: "Set Mouse Position",
 		type: "exec",
 		createIO: ({ io }) => ({
-			x: io.dataInput({
-				id: "x",
-				name: "X",
-				type: t.float(),
-			}),
-			y: io.dataInput({
-				id: "y",
-				name: "Y",
-				type: t.float(),
-			}),
+			x: io.dataInput({ id: "x", name: "X", type: t.float() }),
+			y: io.dataInput({ id: "y", name: "Y", type: t.float() }),
 			absolute: io.dataInput({
 				id: "absolute",
 				name: "Absolute",
@@ -123,14 +113,8 @@ export function pkg() {
 			createListener: () => busses.get(a)!,
 			createIO({ io }) {
 				return {
-					pressed: io.execOutput({
-						id: "pressed",
-						name: "Pressed",
-					}),
-					released: io.execOutput({
-						id: "released",
-						name: "Released",
-					}),
+					pressed: io.execOutput({ id: "pressed", name: "Pressed" }),
+					released: io.execOutput({ id: "released", name: "Released" }),
 				};
 			},
 			run({ ctx, data, io }) {
@@ -145,10 +129,7 @@ export function pkg() {
 			name: `${a.slice(3)} Key Pressed`,
 			type: "pure",
 			createIO({ io }) {
-				return io.dataOutput({
-					id: "value",
-					type: t.bool(),
-				});
+				return io.dataOutput({ id: "value", type: t.bool() });
 			},
 			run({ ctx, io }) {
 				ctx.setOutput(io, pressedKeys.has(a));

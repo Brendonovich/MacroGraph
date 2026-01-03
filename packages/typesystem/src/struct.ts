@@ -50,10 +50,7 @@ export class Struct<
 				field.name = field.id;
 				field.id = id;
 			}
-			this._fields = val = {
-				type: "resolved",
-				fields,
-			};
+			this._fields = val = { type: "resolved", fields };
 		}
 
 		return val.fields;

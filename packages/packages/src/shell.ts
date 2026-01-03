@@ -8,11 +8,7 @@ export function pkg(execute: (cmd: string) => Promise<void>) {
 		type: "exec",
 		name: "Execute Shell Command",
 		createIO: ({ io }) => {
-			return io.dataInput({
-				id: "command",
-				name: "Command",
-				type: t.string(),
-			});
+			return io.dataInput({ id: "command", name: "Command", type: t.string() });
 		},
 		run: async ({ ctx, io }) => {
 			await execute(ctx.getInput(io));

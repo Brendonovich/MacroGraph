@@ -18,9 +18,7 @@ const badgeVariants = cva({
 			outline: "text-foreground",
 		},
 	},
-	defaultVariants: {
-		variant: "default",
-	},
+	defaultVariants: { variant: "default" },
 });
 
 export interface BadgeProps

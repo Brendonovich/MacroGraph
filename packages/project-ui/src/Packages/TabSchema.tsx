@@ -22,10 +22,7 @@ export function makePackageTabSchema<TType extends string>(
 	) => Effect.Effect<ERequest.Request.Success<Request.GetPackageSettings>, any>,
 ): TabLayout.Schema<Schema<TType>> {
 	return {
-		getMeta: (tab) => ({
-			title: tab.package.name,
-			desc: "Package",
-		}),
+		getMeta: (tab) => ({ title: tab.package.name, desc: "Package" }),
 		Component: (tab) => {
 			const runtime = useEffectRuntime();
 

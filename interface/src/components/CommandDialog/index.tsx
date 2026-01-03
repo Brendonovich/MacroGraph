@@ -72,15 +72,11 @@ function createControl() {
 
 			const index = control.actions().indexOf(el);
 			if (index === 0) {
-				el.scrollIntoView({
-					block: "end",
-				});
+				el.scrollIntoView({ block: "end" });
 				return;
 			}
 
-			el.scrollIntoView({
-				block: "nearest",
-			});
+			el.scrollIntoView({ block: "nearest" });
 		},
 		move(direction: -1 | 1) {
 			const current = control.active();

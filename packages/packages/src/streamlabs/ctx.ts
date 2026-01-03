@@ -22,14 +22,9 @@ const USER_TOKEN_LOCALSTORAGE = "streamlabsUserToken";
 
 export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 	const [state, setState] = createSignal<
-		| {
-				type: "disconnected";
-		  }
+		| { type: "disconnected" }
 		| { type: "connecting" }
-		| {
-				type: "connected";
-				socket: Socket;
-		  }
+		| { type: "connected"; socket: Socket }
 	>({ type: "disconnected" });
 
 	const [token, setToken] = makePersistedOption<string>(
@@ -67,17 +62,11 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 			},
 		});
 
-		const api = {
-			user: client.extend("/user"),
-		};
+		const api = { user: client.extend("/user") };
 
 		const [user] = createResource(async () => {
 			const resp = await api.user.get(
-				v.object({
-					streamlabs: v.object({
-						display_name: v.string(),
-					}),
-				}),
+				v.object({ streamlabs: v.object({ display_name: v.string() }) }),
 			);
 
 			return resp;
@@ -121,10 +110,7 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 							setState({ type: "connected", socket });
 						});
 
-						setState({
-							type: "connecting",
-							socket,
-						});
+						setState({ type: "connecting", socket });
 
 						socket.connect();
 
@@ -140,13 +126,6 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 
 	return {
 		core,
-		auth: {
-			user,
-			state,
-			token,
-			setToken,
-			userToken,
-			setUserToken,
-		},
+		auth: { user, state, token, setToken, userToken, setUserToken },
 	};
 }

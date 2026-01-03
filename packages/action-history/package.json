@@ -9,10 +9,6 @@
 		"test": "vitest",
 		"typecheck": "tsc -b"
 	},
-	"devDependencies": {
-		"@macrograph/config": "workspace:*"
-	},
-	"dependencies": {
-		"solid-js": "^1.9.10"
-	}
+	"devDependencies": { "@macrograph/config": "workspace:*" },
+	"dependencies": { "solid-js": "^1.9.10" }
 }

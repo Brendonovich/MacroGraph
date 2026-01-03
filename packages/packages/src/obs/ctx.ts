@@ -32,10 +32,7 @@ export function createCtx() {
 
 		const instance = maybeInstance;
 		function setDisconnected() {
-			instances.set(ip, {
-				state: "disconnected",
-				password: instance.password,
-			});
+			instances.set(ip, { state: "disconnected", password: instance.password });
 
 			setTimeout(() => {
 				console.log("disconnect running");

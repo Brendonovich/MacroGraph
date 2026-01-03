@@ -16,18 +16,9 @@ import { createStore } from "solid-js/store";
 import { CLIENT_RPCS, type STATE } from "./shared";
 
 const CONNECTION_INDICATOR = {
-	connected: {
-		class: "bg-green-600",
-		label: "Connected",
-	},
-	disconnected: {
-		class: "bg-red-600",
-		label: "Disconnected",
-	},
-	connecting: {
-		class: "bg-yellow-600",
-		label: "Connecting",
-	},
+	connected: { class: "bg-green-600", label: "Connected" },
+	disconnected: { class: "bg-red-600", label: "Disconnected" },
+	connecting: { class: "bg-yellow-600", label: "Connecting" },
 };
 
 export default function Settings(

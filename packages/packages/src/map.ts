@@ -5,37 +5,20 @@ import { t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 
 export function pkg() {
-	const pkg = new Package({
-		name: "Map",
-	});
+	const pkg = new Package({ name: "Map" });
 
 	pkg.createSchema({
 		name: "Map Get",
 		type: "pure",
-		properties: {
-			number: {
-				name: "Keys",
-				type: t.int(),
-				default: 1,
-			},
-		},
+		properties: { number: { name: "Keys", type: t.int(), default: 1 } },
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 			const w = io.wildcard("");
 			return {
-				mapIn: io.dataInput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
-				mapOut: io.dataOutput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
+				mapIn: io.dataInput({ id: "map", type: t.map(t.wildcard(w)) }),
+				mapOut: io.dataOutput({ id: "map", type: t.map(t.wildcard(w)) }),
 				pins: Array.from({ length: value }, (_, i) => ({
-					key: io.dataInput({
-						id: `key-${i}`,
-						type: t.string(),
-					}),
+					key: io.dataInput({ id: `key-${i}`, type: t.string() }),
 					value: io.dataOutput({
 						id: `value-${i}`,
 						type: t.option(t.wildcard(w)),
@@ -55,35 +38,17 @@ export function pkg() {
 	pkg.createSchema({
 		name: "Map Insert",
 		type: "exec",
-		properties: {
-			number: {
-				name: "Entries",
-				type: t.int(),
-				default: 1,
-			},
-		},
+		properties: { number: { name: "Entries", type: t.int(), default: 1 } },
 		createIO({ io, ctx, properties }) {
 			const w = io.wildcard("");
 			const value = ctx.getProperty(properties.number);
 
 			return {
-				mapIn: io.dataInput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
-				mapOut: io.dataOutput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
+				mapIn: io.dataInput({ id: "map", type: t.map(t.wildcard(w)) }),
+				mapOut: io.dataOutput({ id: "map", type: t.map(t.wildcard(w)) }),
 				pins: Array.from({ length: value }, (_, i) => ({
-					key: io.dataInput({
-						id: `key-${i}`,
-						type: t.string(),
-					}),
-					value: io.dataInput({
-						id: `value-${i}`,
-						type: t.wildcard(w),
-					}),
+					key: io.dataInput({ id: `key-${i}`, type: t.string() }),
+					value: io.dataInput({ id: `value-${i}`, type: t.wildcard(w) }),
 					current: io.dataOutput({
 						id: `current-${i}`,
 						type: t.option(t.wildcard(w)),
@@ -104,33 +69,18 @@ export function pkg() {
 	pkg.createSchema({
 		name: "Map Create",
 		type: "pure",
-		properties: {
-			number: {
-				name: "Entries",
-				type: t.int(),
-				default: 1,
-			},
-		},
+		properties: { number: { name: "Entries", type: t.int(), default: 1 } },
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 			const w = io.wildcard("");
 			const inputs = Array.from({ length: value }, (_, i) => ({
-				key: io.dataInput({
-					id: `key-${i}`,
-					type: t.string(),
-				}),
-				value: io.dataInput({
-					id: `value-${i}`,
-					type: t.wildcard(w),
-				}),
+				key: io.dataInput({ id: `key-${i}`, type: t.string() }),
+				value: io.dataInput({ id: `value-${i}`, type: t.wildcard(w) }),
 			}));
 
 			return {
 				inputs,
-				out: io.dataOutput({
-					id: "",
-					type: t.map(t.wildcard(w)),
-				}),
+				out: io.dataOutput({ id: "", type: t.map(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -147,21 +97,12 @@ export function pkg() {
 	pkg.createSchema({
 		name: "JSON Map Create",
 		type: "pure",
-		properties: {
-			number: {
-				name: "Entries",
-				type: t.int(),
-				default: 1,
-			},
-		},
+		properties: { number: { name: "Entries", type: t.int(), default: 1 } },
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 
 			const inputs = Array.from({ length: value }, (_, i) => ({
-				key: io.dataInput({
-					id: `key-${i}`,
-					type: t.string(),
-				}),
+				key: io.dataInput({ id: `key-${i}`, type: t.string() }),
 				value: io.dataInput({
 					id: `value-${i}`,
 					type: t.wildcard(io.wildcard(`${i}`)),
@@ -170,10 +111,7 @@ export function pkg() {
 
 			return {
 				inputs,
-				out: io.dataOutput({
-					id: "",
-					type: t.map(t.enum(JSONEnum)),
-				}),
+				out: io.dataOutput({ id: "", type: t.map(t.enum(JSONEnum)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -196,10 +134,7 @@ export function pkg() {
 		createIO({ io }) {
 			const w = io.wildcard("");
 
-			return io.dataInput({
-				id: "map",
-				type: t.map(t.wildcard(w)),
-			});
+			return io.dataInput({ id: "map", type: t.map(t.wildcard(w)) });
 		},
 		run({ ctx, io }) {
 			ctx.getInput(io).clear();
@@ -213,18 +148,9 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				map: io.dataInput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
-				key: io.dataInput({
-					id: "key",
-					type: t.string(),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.bool(),
-				}),
+				map: io.dataInput({ id: "map", type: t.map(t.wildcard(w)) }),
+				key: io.dataInput({ id: "key", type: t.string() }),
+				out: io.dataOutput({ id: "out", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -242,14 +168,8 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				map: io.dataInput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
-				keys: io.dataOutput({
-					id: "keys",
-					type: t.list(t.string()),
-				}),
+				map: io.dataInput({ id: "map", type: t.map(t.wildcard(w)) }),
+				keys: io.dataOutput({ id: "keys", type: t.list(t.string()) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -266,14 +186,8 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				map: io.dataInput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
-				values: io.dataOutput({
-					id: "values",
-					type: t.list(t.wildcard(w)),
-				}),
+				map: io.dataInput({ id: "map", type: t.map(t.wildcard(w)) }),
+				values: io.dataOutput({ id: "values", type: t.list(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -290,14 +204,8 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				map: io.dataInput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
-				size: io.dataOutput({
-					id: "size",
-					type: t.int(),
-				}),
+				map: io.dataInput({ id: "map", type: t.map(t.wildcard(w)) }),
+				size: io.dataOutput({ id: "size", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -314,22 +222,10 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				map: io.dataInput({
-					id: "map",
-					type: t.map(t.wildcard(w)),
-				}),
-				key: io.dataInput({
-					id: "key",
-					type: t.string(),
-				}),
-				mapOut: io.dataOutput({
-					id: "mapOut",
-					type: t.map(t.wildcard(w)),
-				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.option(t.wildcard(w)),
-				}),
+				map: io.dataInput({ id: "map", type: t.map(t.wildcard(w)) }),
+				key: io.dataInput({ id: "key", type: t.string() }),
+				mapOut: io.dataOutput({ id: "mapOut", type: t.map(t.wildcard(w)) }),
+				out: io.dataOutput({ id: "out", type: t.option(t.wildcard(w)) }),
 			};
 		},
 		run({ ctx, io }) {

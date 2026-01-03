@@ -6,15 +6,10 @@ import * as Package from "./Package.ts";
 
 export class Project extends S.Class<Project>("Project")({
 	name: S.String,
-	graphs: S.HashMap({
-		key: Graph.Id,
-		value: S.suspend(() => Graph.Graph),
-	}),
+	graphs: S.HashMap({ key: Graph.Id, value: S.suspend(() => Graph.Graph) }),
 	constants: S.HashMap({
 		key: S.String,
-		value: S.Struct({
-			name: S.String,
-		}).pipe(
+		value: S.Struct({ name: S.String }).pipe(
 			S.extend(
 				S.Union(
 					S.Struct({

@@ -5,16 +5,9 @@ import type { ChatCompletionAssistantMessageParam } from "openai/resources";
 import type { Pkg } from ".";
 import type { Ctx } from "./ctx";
 
-type Message = {
-	role: string;
-	content: string;
-};
+type Message = { role: string; content: string };
 
-type Choices = {
-	finish_reason: string;
-	index: number;
-	message: Message;
-};
+type Choices = { finish_reason: string; index: number; message: Message };
 
 export function register(pkg: Pkg, state: Ctx) {
 	const Model = pkg.createEnum("ChatGPT Model", (e) => [
@@ -27,9 +20,7 @@ export function register(pkg: Pkg, state: Ctx) {
 		type: "base",
 		createIO({ io }) {
 			return {
-				exec: io.execInput({
-					id: "exec",
-				}),
+				exec: io.execInput({ id: "exec" }),
 				message: io.dataInput({
 					id: "message",
 					name: "Message",
@@ -60,11 +51,7 @@ export function register(pkg: Pkg, state: Ctx) {
 					id: "complete",
 					name: "Completed",
 					scope: (s) => {
-						s.output({
-							id: "response",
-							name: "Response",
-							type: t.string(),
-						});
+						s.output({ id: "response", name: "Response", type: t.string() });
 					},
 				}),
 			};
@@ -117,11 +104,7 @@ export function register(pkg: Pkg, state: Ctx) {
 					name: "Prompt",
 					type: t.string(),
 				}),
-				url: io.dataOutput({
-					id: "url",
-					name: "Image URL",
-					type: t.string(),
-				}),
+				url: io.dataOutput({ id: "url", name: "Image URL", type: t.string() }),
 				revised: io.dataOutput({
 					id: "revised",
 					name: "Revised Prompt",

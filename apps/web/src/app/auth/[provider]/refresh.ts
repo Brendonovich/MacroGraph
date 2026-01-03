@@ -24,6 +24,4 @@ export const POST: APIHandler = async ({ request, params }) => {
 };
 
 export const OPTIONS: APIHandler = async () =>
-	new Response(undefined, {
-		headers: CORS_HEADERS,
-	});
+	new Response(undefined, { headers: CORS_HEADERS });

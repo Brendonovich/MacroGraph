@@ -6,9 +6,7 @@ export class TSQueryClient extends Effect.Service<TSQueryClient>()(
 	{
 		sync: () => {
 			const client = new QueryClient({
-				defaultOptions: {
-					queries: { retry: false },
-				},
+				defaultOptions: { queries: { retry: false } },
 			});
 
 			return client;

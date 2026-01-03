@@ -1,9 +1,6 @@
 import { Schema } from "effect";
 
-export const Position = Schema.Struct({
-	x: Schema.Number,
-	y: Schema.Number,
-});
+export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Position = Schema.Schema.Type<typeof Position>;
 
 export const SchemaRef = Schema.Struct({

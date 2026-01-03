@@ -6,40 +6,17 @@
 		"distDir": "../.output/public",
 		"withGlobalTauri": false
 	},
-	"package": {
-		"productName": "MacroGraph"
-	},
+	"package": { "productName": "MacroGraph" },
 	"tauri": {
 		"allowlist": {
 			"all": false,
-			"clipboard": {
-				"all": true
-			},
-			"shell": {
-				"all": true,
-				"execute": true,
-				"sidecar": true,
-				"open": true
-			},
-			"dialog": {
-				"all": true
-			},
-			"path": {
-				"all": true
-			},
-			"fs": {
-				"all": true,
-				"scope": ["**"]
-			},
-			"protocol": {
-				"all": true,
-				"asset": true,
-				"assetScope": ["**"]
-			},
-			"http": {
-				"all": true,
-				"scope": ["https://**"]
-			}
+			"clipboard": { "all": true },
+			"shell": { "all": true, "execute": true, "sidecar": true, "open": true },
+			"dialog": { "all": true },
+			"path": { "all": true },
+			"fs": { "all": true, "scope": ["**"] },
+			"protocol": { "all": true, "asset": true, "assetScope": ["**"] },
+			"http": { "all": true, "scope": ["https://**"] }
 		},
 		"bundle": {
 			"active": true,
@@ -52,13 +29,9 @@
 			],
 			"identifier": "macrograph.brendonovich.dev",
 			"targets": "all",
-			"dmg": {
-				"background": "./assets/dmg-background.png"
-			}
+			"dmg": { "background": "./assets/dmg-background.png" }
 		},
-		"security": {
-			"csp": "asset: https://asset.localhost;"
-		},
+		"security": { "csp": "asset: https://asset.localhost;" },
 		"updater": {
 			"active": true,
 			"endpoints": [

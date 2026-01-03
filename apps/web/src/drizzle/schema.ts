@@ -17,12 +17,8 @@ export const users = pgTable("user", {
 });
 
 export const sessions = pgTable("session", {
-	id: varchar("id", {
-		length: 255,
-	}).primaryKey(),
-	userId: varchar("user_id", {
-		length: 255,
-	}).notNull(),
+	id: varchar("id", { length: 255 }).primaryKey(),
+	userId: varchar("user_id", { length: 255 }).notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
 });
 

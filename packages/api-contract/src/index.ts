@@ -23,9 +23,7 @@ export const contract = c.router({
 	getCredentials: {
 		method: "GET",
 		path: "/credentials",
-		responses: {
-			200: z.array(CREDENTIAL),
-		},
+		responses: { 200: z.array(CREDENTIAL) },
 		summary: "Gets all credentials linked to an account",
 	},
 	refreshCredential: {
@@ -35,9 +33,7 @@ export const contract = c.router({
 			providerId: z.string(),
 			providerUserId: z.string(),
 		}),
-		responses: {
-			200: CREDENTIAL,
-		},
+		responses: { 200: CREDENTIAL },
 		body: null,
 		summary: "Refreshes a credential if it hasn't been recently refreshed",
 	},

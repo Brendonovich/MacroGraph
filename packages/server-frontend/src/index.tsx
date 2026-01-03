@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Effect, Layer,ManagedRuntime } from "effect";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import {
 	ContextualSidebarProvider,
@@ -10,7 +10,7 @@ import { makePersisted } from "@solid-primitives/storage";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { ErrorBoundary, render } from "solid-js/web";
 
-import { ProjectRuntimeProvider, runtime } from "./EffectRuntime";
+import { EffectRuntime, ProjectRuntimeProvider } from "./EffectRuntime";
 import { Layout } from "./Layout";
 import { ProjectRealtime } from "./Project/Realtime";
 import { RealtimeContextProvider } from "./Realtime";
@@ -22,9 +22,9 @@ import "@macrograph/project-ui/styles.css";
 import { createLayoutState, LayoutStateProvider } from "./LayoutState";
 import { TSQueryClient } from "./QueryInvalidation";
 
-export { runtime } from "./EffectRuntime";
+export { EffectRuntime } from "./EffectRuntime"
 
-export const UILive = Layer.scopedDiscard(
+export const UILive = (runtime: EffectRuntime.EffectRuntime) => Layer.scopedDiscard(
 	Effect.gen(function* () {
 		yield* Effect.log("Starting");
 
@@ -65,9 +65,7 @@ export const UILive = Layer.scopedDiscard(
 											<NavSidebarProvider>
 												<ContextualSidebarProvider
 													wrapOpenSignal={(s) =>
-														makePersisted(s, {
-															name: "contextual-sidebar",
-														})
+														makePersisted(s, { name: "contextual-sidebar" })
 													}
 												>
 													<Layout>

@@ -34,11 +34,7 @@ export function splitIORef(ref: IORef) {
 		...string[],
 	];
 
-	return {
-		type,
-		nodeId: Number(nodeId),
-		ioId: ioId.join(":"),
-	};
+	return { type, nodeId: Number(nodeId), ioId: ioId.join(":") };
 }
 
 export function makeIORef(io: Pin): IORef {
@@ -98,11 +94,7 @@ export class Graph extends Disposable {
 	) {
 		const id = args.id ?? this.generateId();
 
-		const box = new CommentBox({
-			...args,
-			id,
-			graph: this,
-		});
+		const box = new CommentBox({ ...args, id, graph: this });
 
 		this.commentBoxes.set(id, box);
 

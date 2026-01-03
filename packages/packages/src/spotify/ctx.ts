@@ -41,9 +41,7 @@ const USER_PRIVATE = v.intersect([
 	}),
 ]);
 
-export type Requests = {
-	"GET /me": v.InferOutput<typeof USER_PRIVATE>;
-};
+export type Requests = { "GET /me": v.InferOutput<typeof USER_PRIVATE> };
 
 export function createCtx(core: Core) {
 	const [authToken, setAuthToken] = makePersistedOption<OAuthToken>(
@@ -81,9 +79,7 @@ export function createCtx(core: Core) {
 		},
 	});
 
-	const api = {
-		me: client.extend("/me"),
-	};
+	const api = { me: client.extend("/me") };
 
 	const [user] = createResource(
 		() => authToken().toNullable(),
@@ -94,12 +90,7 @@ export function createCtx(core: Core) {
 		},
 	);
 
-	return {
-		core,
-		authToken,
-		setAuthToken,
-		user,
-	};
+	return { core, authToken, setAuthToken, user };
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

@@ -59,9 +59,7 @@ export class Package<
 		schema: Omit<
 			NonEventNodeSchema<TIO, TProperties>,
 			"package" | "properties"
-		> & {
-			properties?: TProperties;
-		},
+		> & { properties?: TProperties },
 	) {
 		const altered: NonEventNodeSchema<
 			{ custom: TIO; default?: { in: ExecInput; out: ExecOutput } },
@@ -70,10 +68,7 @@ export class Package<
 			...schema,
 			properties: Object.entries(schema.properties ?? {}).reduce(
 				(acc: any, [id, property]: any) => {
-					acc[id] = {
-						id,
-						...property,
-					};
+					acc[id] = { id, ...property };
 
 					return acc;
 				},
@@ -91,10 +86,7 @@ export class Package<
 
 				const custom = schema.createIO(ctx);
 
-				return {
-					custom,
-					default: defaultIO,
-				};
+				return { custom, default: defaultIO };
 			},
 			run: async (args) => {
 				await schema.run({ ...args, io: args.io.custom });
@@ -118,18 +110,13 @@ export class Package<
 		schema: Omit<
 			EventNodeSchema<TEvents, TEvent, TIO, TProperties>,
 			"package" | "properties"
-		> & {
-			properties?: TProperties;
-		},
+		> & { properties?: TProperties },
 	) {
 		const altered: EventNodeSchema<TEvents, TEvent, TIO, TProperties> = {
 			...schema,
 			properties: Object.entries(schema.properties ?? {}).reduce(
 				(acc: any, [id, property]: any) => {
-					acc[id] = {
-						id,
-						...property,
-					};
+					acc[id] = { id, ...property };
 
 					return acc;
 				},
@@ -152,10 +139,7 @@ export class Package<
 			...schema,
 			properties: Object.entries(schema.properties ?? {}).reduce(
 				(acc: any, [id, property]: any) => {
-					acc[id] = {
-						id,
-						...property,
-					};
+					acc[id] = { id, ...property };
 
 					return acc;
 				},
@@ -173,10 +157,7 @@ export class Package<
 
 				const custom = schema.createIO(ctx);
 
-				return {
-					custom,
-					default: defaultIO,
-				};
+				return { custom, default: defaultIO };
 			},
 			run: async (props: RunProps<TProperties, IO>) => {
 				await schema.run({ ...(props as any), io: props.io.custom });

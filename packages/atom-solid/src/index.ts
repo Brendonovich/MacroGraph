@@ -178,20 +178,12 @@ function setAtom<
 ): "promise" extends Mode
 	? (
 			value: W,
-			options?:
-				| {
-						readonly signal?: AbortSignal | undefined;
-				  }
-				| undefined,
+			options?: { readonly signal?: AbortSignal | undefined } | undefined,
 		) => Promise<Result.Result.Success<R>>
 	: "promiseExit" extends Mode
 		? (
 				value: W,
-				options?:
-					| {
-							readonly signal?: AbortSignal | undefined;
-					  }
-					| undefined,
+				options?: { readonly signal?: AbortSignal | undefined } | undefined,
 			) => Promise<
 				Exit.Exit<Result.Result.Success<R>, Result.Result.Failure<R>>
 			>
@@ -238,20 +230,12 @@ export const useAtomSet = <
 ): "promise" extends Mode
 	? (
 			value: W,
-			options?:
-				| {
-						readonly signal?: AbortSignal | undefined;
-				  }
-				| undefined,
+			options?: { readonly signal?: AbortSignal | undefined } | undefined,
 		) => Promise<Result.Result.Success<R>>
 	: "promiseExit" extends Mode
 		? (
 				value: W,
-				options?:
-					| {
-							readonly signal?: AbortSignal | undefined;
-					  }
-					| undefined,
+				options?: { readonly signal?: AbortSignal | undefined } | undefined,
 			) => Promise<
 				Exit.Exit<Result.Result.Success<R>, Result.Result.Failure<R>>
 			>

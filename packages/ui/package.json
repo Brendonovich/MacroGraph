@@ -6,10 +6,7 @@
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
 	"exports": {
-		".": {
-			"solid": "./src/index.ts",
-			"default": "./src/index.ts"
-		},
+		".": { "solid": "./src/index.ts", "default": "./src/index.ts" },
 		"./tailwind.preset.js": "./tailwind.preset.js",
 		"./vite": "./vite.js",
 		"./global.css": "./src/global.css",
@@ -25,10 +22,7 @@
 		"unplugin-icons": "^0.18.5",
 		"vite": "^7.1.10"
 	},
-	"peerDependencies": {
-		"solid-js": "^1.7.11",
-		"tailwindcss": "^3.4.3"
-	},
+	"peerDependencies": { "solid-js": "^1.7.11", "tailwindcss": "^3.4.3" },
 	"dependencies": {
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/config": "workspace:*",

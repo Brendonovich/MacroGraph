@@ -254,18 +254,11 @@ const usePaneTabController = (
 		),
 		package: makePackageTabSchema(rpc.GetPackageSettings),
 		settings: {
-			getMeta: (tab) => ({
-				title: "Settings",
-				desc: tab.page,
-			}),
+			getMeta: (tab) => ({ title: "Settings", desc: tab.page }),
 			Component: (tab) => (
 				<SettingsLayout
 					pages={[
-						{
-							name: "Server",
-							page: "server",
-							Component: ServerSettings,
-						},
+						{ name: "Server", page: "server", Component: ServerSettings },
 						{
 							name: "Credentials",
 							page: "credentials",

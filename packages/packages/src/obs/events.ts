@@ -78,10 +78,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				OBSFire<TEvent>[0]
 			>,
 			"type" | "createListener"
-		> & {
-			properties?: TProperties;
-			event: TEvent;
-		},
+		> & { properties?: TProperties; event: TEvent },
 	) {
 		pkg.createSchema({
 			...s,
@@ -115,11 +112,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	createOBSEventSchema({
 		name: "Exit Started",
 		event: "ExitStarted",
-		createIO: ({ io }) =>
-			io.execOutput({
-				id: "exec",
-				name: "",
-			}),
+		createIO: ({ io }) => io.execOutput({ id: "exec", name: "" }),
 		run({ ctx, io }) {
 			ctx.exec(io);
 		},
@@ -130,10 +123,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Vendor Event",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				vendorName: io.dataOutput({
 					id: "vendorName",
 					name: "Vendor Name",
@@ -166,10 +156,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Scene Collection Changing",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneCollectionName: io.dataOutput({
 					id: "sceneCollectionName",
 					name: "Scene Collection Name",
@@ -188,10 +175,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Scene Collection Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneCollectionName: io.dataOutput({
 					id: "sceneCollectionName",
 					name: "Scene Collection Name",
@@ -210,10 +194,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Collection List Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneCollections: io.dataOutput({
 					id: "sceneCollections",
 					name: "Scene Collections",
@@ -232,10 +213,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Profile Changing",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				profileName: io.dataOutput({
 					id: "profileName",
 					name: "Profile Name",
@@ -254,10 +232,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Profile Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				profileName: io.dataOutput({
 					id: "profileName",
 					name: "Profile Name",
@@ -276,10 +251,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Profile List Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				profiles: io.dataOutput({
 					id: "profiles",
 					name: "Profiles",
@@ -298,10 +270,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Created",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene Name",
@@ -326,10 +295,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Removed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene Name",
@@ -354,10 +320,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Name Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				oldSceneName: io.dataOutput({
 					id: "oldSceneName",
 					name: "Old Scene Name",
@@ -382,10 +345,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Program Scene Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene Name",
@@ -404,10 +364,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Preview Scene Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene Name",
@@ -426,10 +383,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene List Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				scenes: io.dataOutput({
 					id: "scenes",
 					name: "Scenes",
@@ -454,10 +408,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Created",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -506,10 +457,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Removed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -528,10 +476,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Name Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -556,10 +501,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Active State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -584,10 +526,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Show State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -612,10 +551,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Mute State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -640,10 +576,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Volume Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -674,10 +607,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Audio Balance Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -702,10 +632,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Audio Sync Offset Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -730,10 +657,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Audio Tracks Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -766,10 +690,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Audio Monitor Type Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -799,10 +720,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Input Volume Meters",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputs: io.dataOutput({
 					id: "inputs",
 					name: "Inputs",
@@ -827,10 +745,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Scene Transition Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				transitionName: io.dataOutput({
 					id: "transitionName",
 					name: "Transition Name",
@@ -849,10 +764,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Current Scene Transition Duration Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				transitionDuration: io.dataOutput({
 					id: "transitionDuration",
 					name: "Transition Duration",
@@ -871,10 +783,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Transition Started",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				transitionName: io.dataOutput({
 					id: "transitionName",
 					name: "Transition Name",
@@ -893,10 +802,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Transition Ended",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				transitionName: io.dataOutput({
 					id: "transitionName",
 					name: "Transition Name",
@@ -915,10 +821,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Transition Video Ended",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				transitionName: io.dataOutput({
 					id: "transitionName",
 					name: "Transition Name",
@@ -941,10 +844,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Source Filter Removed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sourceName: io.dataOutput({
 					id: "sourceName",
 					name: "Source name",
@@ -969,10 +869,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Source Filter Name Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sourceName: io.dataOutput({
 					id: "sourceName",
 					name: "Source name",
@@ -1003,10 +900,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Source Filter Enable State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sourceName: io.dataOutput({
 					id: "sourceName",
 					name: "Source name",
@@ -1037,10 +931,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Item Created",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene name",
@@ -1077,10 +968,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Item Removed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene name",
@@ -1140,10 +1028,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Item Enable State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene name",
@@ -1174,10 +1059,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Item Lock State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene name",
@@ -1208,10 +1090,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Item Selected",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene name",
@@ -1236,10 +1115,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Scene Item Transform Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				sceneName: io.dataOutput({
 					id: "sceneName",
 					name: "Scene name",
@@ -1301,10 +1177,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Stream State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				outputActive: io.dataOutput({
 					id: "outputActive",
 					name: "Output Active",
@@ -1329,10 +1202,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Record State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				outputActive: io.dataOutput({
 					id: "outputActive",
 					name: "Output Active",
@@ -1363,10 +1233,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Replay Buffer State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				outputActive: io.dataOutput({
 					id: "outputActive",
 					name: "Output Active",
@@ -1391,10 +1258,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Virtual Cam State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				outputActive: io.dataOutput({
 					id: "outputActive",
 					name: "Output Active",
@@ -1419,10 +1283,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Replay Buffer Saved",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				savedReplayPath: io.dataOutput({
 					id: "savedReplayPath",
 					name: "Saved Replay Path",
@@ -1441,10 +1302,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Media Input Playback Started",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -1463,10 +1321,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Media Input Playback Ended",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -1485,10 +1340,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Media Input Action Triggered",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				inputName: io.dataOutput({
 					id: "inputName",
 					name: "Input Name",
@@ -1513,10 +1365,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		name: "Studio Mode State Changed",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
 				studioModeEnabled: io.dataOutput({
 					id: "studioModeEnabled",
 					name: "Studio Mode Enabled",
@@ -1556,11 +1405,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	createOBSEventSchema({
 		event: "ConnectionOpened",
 		name: "Connection Opened",
-		createIO: ({ io }) =>
-			io.execOutput({
-				id: "exec",
-				name: "",
-			}),
+		createIO: ({ io }) => io.execOutput({ id: "exec", name: "" }),
 		run({ ctx, io }) {
 			ctx.exec(io);
 		},

@@ -14,10 +14,7 @@ export const Rpcs = RpcGroup.make(
 	Rpc.make("SetSelection", {
 		payload: {
 			value: Schema.NullOr(
-				Schema.Struct({
-					graph: Graph.Id,
-					nodes: Schema.Array(Node.Id),
-				}),
+				Schema.Struct({ graph: Graph.Id, nodes: Schema.Array(Node.Id) }),
 			),
 		},
 	}),

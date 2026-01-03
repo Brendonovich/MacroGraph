@@ -87,10 +87,7 @@ export function handleSelectableItemPointerDown(
 	const nodePositions = new Map<Node, XY>();
 	const commentBoxPositions = new Map<CommentBox, XY>();
 
-	const downPosition = graph.toGraphSpace({
-		x: e.clientX,
-		y: e.clientY,
-	});
+	const downPosition = graph.toGraphSpace({ x: e.clientX, y: e.clientY });
 
 	const nodes = new Set<Node>();
 	const commentBoxes = new Set<CommentBox>();
@@ -102,9 +99,7 @@ export function handleSelectableItemPointerDown(
 			const node = graph.model().nodes.get(selectedItemId.id);
 			if (!node) continue;
 
-			selectedItemPositions.set(selectedItemId, {
-				...node.state.position,
-			});
+			selectedItemPositions.set(selectedItemId, { ...node.state.position });
 			nodePositions.set(node, { ...node.state.position });
 			nodes.add(node);
 		} else {
@@ -113,9 +108,7 @@ export function handleSelectableItemPointerDown(
 
 			commentBoxes.add(box);
 
-			selectedItemPositions.set(selectedItemId, {
-				...box.position,
-			});
+			selectedItemPositions.set(selectedItemId, { ...box.position });
 			commentBoxPositions.set(box, { ...box.position });
 
 			const nodes = getNodesInRect(
@@ -327,10 +320,7 @@ export function handleSelectableItemPointerDown(
 
 function moveStandaloneItemOnGrid(e: MouseEvent, startPosition: XY, delta: XY) {
 	if (e.shiftKey)
-		return {
-			x: startPosition.x + delta.x,
-			y: startPosition.y + delta.y,
-		};
+		return { x: startPosition.x + delta.x, y: startPosition.y + delta.y };
 
 	const ret: XY = {
 		x: snapToGrid(startPosition.x + delta.x),

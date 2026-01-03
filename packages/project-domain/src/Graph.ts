@@ -17,10 +17,7 @@ export class Graph extends S.Class<Graph>("Graph")({
 	id: Id,
 	name: S.String,
 	nodes: S.HashMap({ key: Node.Id, value: S.suspend(() => Node.Node) }),
-	connections: S.HashMap({
-		key: Node.Id,
-		value: NodeOutputConnections,
-	}),
+	connections: S.HashMap({ key: Node.Id, value: NodeOutputConnections }),
 	comments: S.HashMap({
 		key: Comment.Id,
 		value: S.suspend(() => Comment.Comment),

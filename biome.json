@@ -26,22 +26,16 @@
 				"noShadowRestrictedNames": "off",
 				"noAssignInExpressions": "off"
 			},
-			"style": {
-				"noNonNullAssertion": "off"
-			},
+			"style": { "noNonNullAssertion": "off" },
 			"correctness": {
 				"noConstructorReturn": "off",
 				"noChildrenProp": "off",
 				"noUnusedImports": "warn"
 			},
-			"a11y": {
-				"noStaticElementInteractions": "off"
-			}
+			"a11y": { "noStaticElementInteractions": "off" }
 		}
 	},
-	"formatter": {
-		"indentStyle": "tab"
-	},
+	"formatter": { "indentStyle": "tab", "expand": "never" },
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",

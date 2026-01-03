@@ -134,16 +134,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Warn User",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				name: "User ID",
-				id: "userId",
-				type: t.string(),
-			}),
-			reason: io.dataInput({
-				name: "Reason",
-				id: "reason",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ name: "User ID", id: "userId", type: t.string() }),
+			reason: io.dataInput({ name: "Reason", id: "reason", type: t.string() }),
 		}),
 		async run({ ctx, io, account, credential }) {
 			await helix.call("POST /moderation/warnings", credential, {
@@ -162,21 +154,13 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Ban User",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				name: "User ID",
-				id: "userId",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ name: "User ID", id: "userId", type: t.string() }),
 			duration: io.dataInput({
 				name: "Duration",
 				id: "duration",
 				type: t.int(),
 			}),
-			reason: io.dataInput({
-				name: "Reason",
-				id: "reason",
-				type: t.string(),
-			}),
+			reason: io.dataInput({ name: "Reason", id: "reason", type: t.string() }),
 		}),
 		run({ ctx, io, account, credential }) {
 			return helix.call("POST /moderation/bans", credential, {
@@ -196,11 +180,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Unban User",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				name: "userID",
-				id: "userId",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ name: "userID", id: "userId", type: t.string() }),
 		}),
 		run({ ctx, io, account, credential }) {
 			return helix.call("DELETE /moderation/bans", credential, {
@@ -216,11 +196,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Add Moderator",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				name: "userID",
-				id: "userId",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ name: "userID", id: "userId", type: t.string() }),
 		}),
 		run({ ctx, io, account, credential }) {
 			return helix.call("POST /moderation/moderators", credential, {
@@ -235,11 +211,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Remove Moderator",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				name: "userID",
-				id: "userId",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ name: "userID", id: "userId", type: t.string() }),
 		}),
 		run({ ctx, io, account, credential }) {
 			return helix.call("DELETE /moderation/moderators", credential, {
@@ -279,11 +251,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				id: "broadcasterLanguage",
 				type: t.string(),
 			}),
-			title: io.dataOutput({
-				name: "Title",
-				id: "title",
-				type: t.string(),
-			}),
+			title: io.dataOutput({ name: "Title", id: "title", type: t.string() }),
 			catagory: io.dataOutput({
 				name: "Stream Catagory",
 				id: "catagory",
@@ -299,11 +267,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				id: "tags",
 				type: t.list(t.string()),
 			}),
-			delay: io.dataOutput({
-				name: "Delay",
-				id: "delay",
-				type: t.int(),
-			}),
+			delay: io.dataOutput({ name: "Delay", id: "delay", type: t.int() }),
 		}),
 		async run({ ctx, io, account, credential }) {
 			const data = await helix.call("GET /channels", credential, {
@@ -332,11 +296,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				id: "broadcasterLanguage",
 				type: t.string(),
 			}),
-			title: io.dataInput({
-				name: "Title",
-				id: "title",
-				type: t.string(),
-			}),
+			title: io.dataInput({ name: "Title", id: "title", type: t.string() }),
 			catagoryName: io.dataInput({
 				name: "Catagory",
 				id: "catagoryName",
@@ -347,11 +307,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				id: "tags",
 				type: t.list(t.string()),
 			}),
-			delay: io.dataInput({
-				name: "Delay",
-				id: "delay",
-				type: t.int(),
-			}),
+			delay: io.dataInput({ name: "Delay", id: "delay", type: t.int() }),
 		}),
 		async run({ ctx, io, account, credential }) {
 			const body = {} as any;
@@ -364,19 +320,14 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 
 			if (ctx.getInput(io.catagoryName)) {
 				const data = await helix.call("GET /games", credential, {
-					body: new URLSearchParams({
-						name: ctx.getInput(io.catagoryName),
-					}),
+					body: new URLSearchParams({ name: ctx.getInput(io.catagoryName) }),
 				});
 
 				body.game_id = data.data[0].id;
 			}
 
 			await helix.call("PATCH /channels", credential, {
-				body: {
-					...body,
-					broadcaster_id: account.data.id,
-				},
+				body: { ...body, broadcaster_id: account.data.id },
 			});
 		},
 	});
@@ -410,9 +361,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		}),
 		async run({ ctx, io, account, credential }) {
 			const data = await helix.call("GET /streams", credential, {
-				body: new URLSearchParams({
-					user_id: ctx.getInput(io.broadcasterId),
-				}),
+				body: new URLSearchParams({ user_id: ctx.getInput(io.broadcasterId) }),
 			});
 			const info = Maybe(data[0]);
 
@@ -498,21 +447,9 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				id: "expiresAt",
 				type: t.string(),
 			}),
-			level: io.dataOutput({
-				name: "Level",
-				id: "level",
-				type: t.int(),
-			}),
-			goal: io.dataOutput({
-				name: "Goal",
-				id: "goal",
-				type: t.int(),
-			}),
-			total: io.dataOutput({
-				name: "Total",
-				id: "total",
-				type: t.int(),
-			}),
+			level: io.dataOutput({ name: "Level", id: "level", type: t.int() }),
+			goal: io.dataOutput({ name: "Goal", id: "goal", type: t.int() }),
+			total: io.dataOutput({ name: "Total", id: "total", type: t.int() }),
 		}),
 		async run({ ctx, io, account, credential }) {
 			const data = await helix.call("GET /hypetrain/events", credential, {
@@ -530,11 +467,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Check User Subscription",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				name: "User ID",
-				id: "userId",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ name: "User ID", id: "userId", type: t.string() }),
 			out: io.dataOutput({
 				id: "out",
 				type: t.option(t.struct(types.UserSubscription)),
@@ -610,11 +543,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 					id: "userId",
 					type: t.string(),
 				}),
-				vip: io.dataOutput({
-					name: "Vip",
-					id: "vip",
-					type: t.bool(),
-				}),
+				vip: io.dataOutput({ name: "Vip", id: "vip", type: t.bool() }),
 			};
 		},
 		async run({ ctx, io, account, credential }) {
@@ -632,11 +561,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Check User Mod",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				name: "User ID",
-				id: "userId",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ name: "User ID", id: "userId", type: t.string() }),
 			moderator: io.dataOutput({
 				name: "Moderator",
 				id: "moderator",
@@ -701,16 +626,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		name: "Create Custom Reward",
 		createIO: ({ io }) => {
 			return {
-				title: io.dataInput({
-					name: "Title",
-					id: "title",
-					type: t.string(),
-				}),
-				cost: io.dataInput({
-					name: "Cost",
-					id: "cost",
-					type: t.int(),
-				}),
+				title: io.dataInput({ name: "Title", id: "title", type: t.string() }),
+				cost: io.dataInput({ name: "Cost", id: "cost", type: t.int() }),
 				prompt: io.dataInput({
 					name: "Prompt",
 					id: "prompt",
@@ -751,10 +668,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 					id: "skipRequestQueue",
 					type: t.option(t.bool()),
 				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.struct(types.Reward),
-				}),
+				out: io.dataOutput({ id: "out", type: t.struct(types.Reward) }),
 			};
 		},
 		async run({ ctx, io, account, credential }) {
@@ -1017,11 +931,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		name: "Edit Custom Reward",
 		createIO: ({ io }) => {
 			return {
-				id: io.dataInput({
-					name: "Reward Id",
-					id: "id",
-					type: t.string(),
-				}),
+				id: io.dataInput({ name: "Reward Id", id: "id", type: t.string() }),
 				title: io.dataInput({
 					name: "Title",
 					id: "title",
@@ -1077,10 +987,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 					id: "skipRequestQueue",
 					type: t.option(t.bool()),
 				}),
-				out: io.dataOutput({
-					id: "out",
-					type: t.struct(types.Reward),
-				}),
+				out: io.dataOutput({ id: "out", type: t.struct(types.Reward) }),
 			};
 		},
 		async run({ ctx, io, account, credential }) {
@@ -1247,11 +1154,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		name: "Get Reward By Title",
 		createIO: ({ io }) => {
 			return {
-				title: io.dataInput({
-					id: "title",
-					name: "Title",
-					type: t.string(),
-				}),
+				title: io.dataInput({ id: "title", name: "Title", type: t.string() }),
 				manageableOnly: io.dataInput({
 					name: "Manageable Only",
 					id: "manageableOnly",
@@ -1309,11 +1212,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		name: "Delete Custom Reward",
 		createIO: ({ io }) => {
 			return {
-				id: io.dataInput({
-					id: "id",
-					name: "Reward Id",
-					type: t.string(),
-				}),
+				id: io.dataInput({ id: "id", name: "Reward Id", type: t.string() }),
 			};
 		},
 		run({ ctx, io, account, credential }) {
@@ -1388,9 +1287,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		},
 		async run({ ctx, io, account, credential }) {
 			const response = await helix.call("GET /users", credential, {
-				body: new URLSearchParams({
-					login: ctx.getInput(io.userLoginIn),
-				}),
+				body: new URLSearchParams({ login: ctx.getInput(io.userLoginIn) }),
 			});
 
 			const data = Maybe(response.data[0]).expect("No user found");
@@ -1503,9 +1400,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		}),
 		async run({ ctx, io, account, credential }) {
 			const resp = await helix.call("GET /users", credential, {
-				body: new URLSearchParams({
-					id: ctx.getInput(io.userIdIn),
-				}),
+				body: new URLSearchParams({ id: ctx.getInput(io.userIdIn) }),
 			});
 
 			const data = Maybe(resp.data[0]).expect("No user found");
@@ -1567,10 +1462,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 					name: "Delay (minutes)",
 					type: t.int(),
 				}),
-				enabled: io.dataInput({
-					id: "enabled",
-					type: t.bool(),
-				}),
+				enabled: io.dataInput({ id: "enabled", type: t.bool() }),
 			};
 		},
 		async run({ ctx, io, account, credential }) {
@@ -1648,9 +1540,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		},
 		async run({ ctx, io, account, credential }) {
 			const color = await helix.call("GET /chat/color", credential, {
-				body: new URLSearchParams({
-					user_id: ctx.getInput(io.userId),
-				}),
+				body: new URLSearchParams({ user_id: ctx.getInput(io.userId) }),
 			});
 
 			ctx.setOutput(
@@ -1664,15 +1554,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		name: "Slow Mode",
 		createIO: ({ io }) => {
 			return {
-				delay: io.dataInput({
-					id: "delay",
-					name: "Delay (s)",
-					type: t.int(),
-				}),
-				enabled: io.dataInput({
-					id: "enabled",
-					type: t.bool(),
-				}),
+				delay: io.dataInput({ id: "delay", name: "Delay (s)", type: t.int() }),
+				enabled: io.dataInput({ id: "enabled", type: t.bool() }),
 			};
 		},
 		async run({ ctx, io, account, credential }) {
@@ -1700,15 +1583,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		name: "Moderation Chat Delay",
 		createIO: ({ io }) => {
 			return {
-				delay: io.dataInput({
-					id: "delay",
-					name: "Delay (s)",
-					type: t.int(),
-				}),
-				enabled: io.dataInput({
-					id: "enabled",
-					type: t.bool(),
-				}),
+				delay: io.dataInput({ id: "delay", name: "Delay (s)", type: t.int() }),
+				enabled: io.dataInput({ id: "enabled", type: t.bool() }),
 			};
 		},
 		async run({ ctx, io, account, credential }) {
@@ -1735,12 +1611,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Sub Only Mode",
 		createIO: ({ io }) => {
-			return {
-				enabled: io.dataInput({
-					id: "enabled",
-					type: t.bool(),
-				}),
-			};
+			return { enabled: io.dataInput({ id: "enabled", type: t.bool() }) };
 		},
 		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
@@ -1759,14 +1630,8 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		variant: "Exec",
 		name: "Send Chat Message (Helix)",
 		properties: {
-			chatAccount: {
-				name: "Chatting Account",
-				resource: TwitchAccount,
-			},
-			chat: {
-				name: "Chat to send to",
-				resource: TwitchChannel,
-			},
+			chatAccount: { name: "Chatting Account", resource: TwitchAccount },
+			chat: { name: "Chat to send to", resource: TwitchChannel },
 		},
 		createIO: ({ io }) => ({
 			message: io.dataInput({
@@ -1806,12 +1671,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Unique Chat Mode",
 		createIO: ({ io }) => {
-			return {
-				enabled: io.dataInput({
-					id: "enabled",
-					type: t.bool(),
-				}),
-			};
+			return { enabled: io.dataInput({ id: "enabled", type: t.bool() }) };
 		},
 		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
@@ -1829,12 +1689,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 	createHelixExecSchema({
 		name: "Emote Only Mode",
 		createIO: ({ io }) => {
-			return {
-				enabled: io.dataInput({
-					id: "enabled",
-					type: t.bool(),
-				}),
-			};
+			return { enabled: io.dataInput({ id: "enabled", type: t.bool() }) };
 		},
 		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
@@ -1899,9 +1754,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 
 			const data = await fetch("https://id.twitch.tv/oauth2/validate", {
 				method: "GET",
-				headers: {
-					Authorization: `Bearer ${credential.token.access_token}`,
-				},
+				headers: { Authorization: `Bearer ${credential.token.access_token}` },
 			}).then((resp) => resp.json() as any);
 
 			ctx.setOutput(io.expiresIn, data.expires_in);
@@ -1973,9 +1826,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			};
 		},
 		async run({ ctx, io, account, credential }) {
-			const params: any = {
-				broadcaster_id: credential.id,
-			};
+			const params: any = { broadcaster_id: credential.id };
 
 			console.log("id", ctx.getInput(io.id));
 
@@ -2034,9 +1885,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 
 type PaginatedData<T> = {
 	data: Array<T>;
-	pagination: Partial<{
-		cursor: string;
-	}>;
+	pagination: Partial<{ cursor: string }>;
 };
 
 // thanks twurple :)

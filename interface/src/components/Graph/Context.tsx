@@ -23,10 +23,7 @@ export function toScreenSpace(graphXY: XY, bounds: XY, state: GraphState) {
 export function makeGraphState(model: GraphModel) {
 	return {
 		id: model.id,
-		translate: {
-			x: 0,
-			y: 0,
-		} as XY,
+		translate: { x: 0, y: 0 } as XY,
 		scale: 1,
 		selectedItemIds: [] as SelectedItemID[],
 	};

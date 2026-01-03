@@ -15,17 +15,10 @@ export const CLIENT_RPCS = RpcGroup.make(
 		}),
 		error: ConnectionFailed,
 	}),
-	Rpc.make("RemoveSocket", {
-		payload: S.Struct({ address: S.String }),
-	}),
-	Rpc.make("DisconnectSocket", {
-		payload: S.Struct({ address: S.String }),
-	}),
+	Rpc.make("RemoveSocket", { payload: S.Struct({ address: S.String }) }),
+	Rpc.make("DisconnectSocket", { payload: S.Struct({ address: S.String }) }),
 	Rpc.make("ConnectSocket", {
-		payload: S.Struct({
-			address: S.String,
-			password: S.optional(S.String),
-		}),
+		payload: S.Struct({ address: S.String, password: S.optional(S.String) }),
 		error: ConnectionFailed,
 	}),
 );

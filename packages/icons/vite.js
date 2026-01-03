@@ -22,12 +22,7 @@ const FixedAutoImport = (options) => {
 export function Icons() {
 	return [
 		FixedAutoImport({
-			resolvers: [
-				IconsResolver({
-					prefix: "Icon",
-					extension: "jsx",
-				}),
-			],
+			resolvers: [IconsResolver({ prefix: "Icon", extension: "jsx" })],
 			dts: new URL("./auto-imports.d.ts", import.meta.url).pathname,
 		}),
 		UnpluginIcons({ compiler: "solid" }),

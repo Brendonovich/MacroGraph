@@ -23,16 +23,11 @@ import { MIN_WIDTH } from "./components/Sidebar";
 
 export type Environment = "custom" | "browser";
 
-export type GraphBounds = XY & {
-	width: number;
-	height: number;
-};
+export type GraphBounds = XY & { width: number; height: number };
 
 function createEditorState() {
 	const [hoveringPin, setHoveringPin] = createSignal<Pin | null>(null);
-	const [state, setState] = createStore<GraphMouseState>({
-		status: "idle",
-	});
+	const [state, setState] = createStore<GraphMouseState>({ status: "idle" });
 	const leftSidebar = createSidebarState("left-sidebar");
 	const rightSidebar = createSidebarState("right-sidebar");
 
@@ -195,10 +190,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 
 export type InterfaceContext = ReturnType<typeof useInterfaceContext>;
 
-export type SchemaMenuOpenState = {
-	status: "schemaMenuOpen";
-	position: XY;
-};
+export type SchemaMenuOpenState = { status: "schemaMenuOpen"; position: XY };
 
 // https://stately.ai/registry/editor/embed/1f1797a0-4d3f-4441-b8c7-292f3ed59008?machineId=62d40a42-0c7f-4c26-aa26-ef61b57f0b1b&mode=Design
 export type GraphMouseState =

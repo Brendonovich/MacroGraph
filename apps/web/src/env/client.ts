@@ -9,7 +9,5 @@ export const clientEnv = createEnv({
 			.optional()
 			.transform((d) => (d ? `https://${d}` : "")),
 	},
-	runtimeEnv: {
-		...import.meta.env,
-	},
+	runtimeEnv: { ...import.meta.env },
 });

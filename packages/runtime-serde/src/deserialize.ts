@@ -16,9 +16,7 @@ export async function deserializeProject(
 	core: runtime.Core,
 	data: serde.Project,
 ): Promise<runtime.Project> {
-	const project = new runtime.Project({
-		core,
-	});
+	const project = new runtime.Project({ core });
 
 	batch(() => {
 		project.disableSave = true;
@@ -168,11 +166,7 @@ export function deserializeCustomEnum(
 	data: v.InferOutput<typeof serde.CustomEnum>,
 	deferrer: ReturnType<typeof createDeferrer>,
 ): runtime.CustomEnum {
-	const enm = new runtime.CustomEnum({
-		project,
-		id: data.id,
-		name: data.name,
-	});
+	const enm = new runtime.CustomEnum({ project, id: data.id, name: data.name });
 
 	enm.variantIdCounter = data.variantIdCounter;
 
@@ -253,11 +247,7 @@ export async function deserializeGraph(
 	project: runtime.Project,
 	data: serde.Graph,
 ): Promise<runtime.Graph> {
-	const graph = new runtime.Graph({
-		project,
-		id: data.id,
-		name: data.name,
-	});
+	const graph = new runtime.Graph({ project, id: data.id, name: data.name });
 
 	graph.idCounter = data.nodeIdCounter;
 

@@ -38,17 +38,10 @@ const EngineDef = PackageEngine.define({
 	suggestions: ["SceneList"],
 });
 
-const OBSConnectionProperty = {
-	name: "OBS Socket",
-	resource: OBSWebSocket,
-};
+const OBSConnectionProperty = { name: "OBS Socket", resource: OBSWebSocket };
 
 type State = {
-	sockets: Array<{
-		address: string;
-		password: string | undefined;
-		state: any;
-	}>;
+	sockets: Array<{ address: string; password: string | undefined; state: any }>;
 };
 
 const Engine = EngineDef.build<State>((ctx) => {
@@ -174,17 +167,7 @@ export default Package.make({
 			description: "Sets the current program scene in OBS.",
 			properties: { connection: OBSConnectionProperty },
 			io: (c) => ({
-				scene: c.in.data("scene", t.String, {
-					name: "Scene Name",
-					suggestions: ({ properties }) =>
-						Effect.tryPromise(() =>
-							properties.connection.ws.call("GetSceneList"),
-						).pipe(
-							Effect.map((r) =>
-								r.scenes.map((scene) => scene.sceneName as string),
-							),
-						),
-				}),
+				scene: c.in.data("scene", t.String, { name: "Scene Name" }),
 			}),
 			run: function* ({ io, properties: { connection } }) {
 				const sceneName = yield* getInput(io.scene);
@@ -1402,9 +1385,7 @@ export default Package.make({
 				sourceName: c.out.data("sourceName", t.String, { name: "Source Name" }),
 				filterName: c.out.data("filterName", t.String, { name: "Filter Name" }),
 				filterKind: c.out.data("filterKind", t.String, { name: "Filter Kind" }),
-				filterIndex: c.out.data("filterIndex", t.Int, {
-					name: "Filter Index",
-				}),
+				filterIndex: c.out.data("filterIndex", t.Int, { name: "Filter Index" }),
 				filterSettings: c.out.data("filterSettings", t.String, {
 					name: "Filter Settings",
 				}),

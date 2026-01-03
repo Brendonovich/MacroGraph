@@ -13,14 +13,8 @@ const posthogServer = new PostHog(
 export type PostHogEvent = {
 	"user signed up": undefined;
 	"user logged in": undefined;
-	"credential connected": {
-		providerId: string;
-		providerUserId: string;
-	};
-	"credential refreshed": {
-		providerId: string;
-		providerUserId: string;
-	};
+	"credential connected": { providerId: string; providerUserId: string };
+	"credential refreshed": { providerId: string; providerUserId: string };
 };
 
 export function posthogIdentify(userId: string, properties: { email: string }) {

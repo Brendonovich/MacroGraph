@@ -13,6 +13,8 @@ import {
 	Pagination,
 } from "./schemas/common.ts";
 
+const IntFromString = S.NumberFromString.pipe(S.int());
+
 export const AdDetails = S.Struct({
 	length: S.Literal(30, 60, 90, 120, 150, 180),
 	message: S.String,
@@ -56,12 +58,7 @@ export const Video = S.Struct({
 	language: S.String,
 	type: S.Literal("upload", "archive", "highlight"),
 	duration: S.String,
-	muted_segments: S.Array(
-		S.Struct({
-			duration: S.Int,
-			offset: S.Int,
-		}),
-	),
+	muted_segments: S.Array(S.Struct({ duration: S.Int, offset: S.Int })),
 });
 
 export const Subscription = S.Struct({
@@ -341,9 +338,7 @@ export const ChatBadge = S.Struct({
 	versions: S.Array(BadgeVersion),
 });
 
-export const GetChatBadgeResponse = S.Struct({
-	data: S.Array(ChatBadge),
-});
+export const GetChatBadgeResponse = S.Struct({ data: S.Array(ChatBadge) });
 
 export const EmoteImage = S.Struct({
 	url_1x: S.String,
@@ -370,13 +365,9 @@ export const EmoteWithOwner = S.Struct({
 	owner_id: S.String,
 });
 
-export const GetChannelEmotesResponse = S.Struct({
-	data: S.Array(Emote),
-});
+export const GetChannelEmotesResponse = S.Struct({ data: S.Array(Emote) });
 
-export const GetEmoteSetsResponse = S.Struct({
-	data: S.Array(EmoteWithOwner),
-});
+export const GetEmoteSetsResponse = S.Struct({ data: S.Array(EmoteWithOwner) });
 
 export const ChatSettings = S.Struct({
 	broadcaster_id: S.String,
@@ -408,15 +399,10 @@ export const GetUserChatColorUser = S.Struct({
 });
 
 export const GetUserChatColorResponse = S.Struct({
-	data: S.Struct({
-		data: S.Array(GetUserChatColorUser),
-	}),
+	data: S.Struct({ data: S.Array(GetUserChatColorUser) }),
 });
 
-export const DropReason = S.Struct({
-	code: S.String,
-	message: S.String,
-});
+export const DropReason = S.Struct({ code: S.String, message: S.String });
 
 export const ChatMessage = S.Struct({
 	message_id: S.String,
@@ -425,9 +411,7 @@ export const ChatMessage = S.Struct({
 });
 
 export const ChatMessageResponse = S.Struct({
-	data: S.Struct({
-		data: S.Array(ChatMessage),
-	}),
+	data: S.Struct({ data: S.Array(ChatMessage) }),
 });
 
 export const ChatAnnouncementPayload = S.Struct({
@@ -481,10 +465,7 @@ export const Clip = S.Struct({
 	vod_offset: S.Int,
 });
 
-export const ClipEditURL = S.Struct({
-	id: S.String,
-	edit_url: S.String,
-});
+export const ClipEditURL = S.Struct({ id: S.String, edit_url: S.String });
 
 export const CharityCampaign = S.Struct({
 	id: S.String,
@@ -583,9 +564,7 @@ export const Poll = S.Struct({
 	ended_at: S.DateFromString,
 });
 
-export const PollChoiceParam = S.Struct({
-	title: S.String,
-});
+export const PollChoiceParam = S.Struct({ title: S.String });
 
 export const CreatePollParams = S.Struct({
 	broadcaster_id: S.String,
@@ -644,11 +623,7 @@ export const Prediction = S.Struct({
 export const CreatePredictionParams = S.Struct({
 	broadcaster_id: S.String,
 	title: S.String,
-	outcomes: S.Array(
-		S.Struct({
-			title: S.String,
-		}),
-	),
+	outcomes: S.Array(S.Struct({ title: S.String })),
 	prediction_window: S.Int,
 });
 
@@ -713,14 +688,9 @@ export const EntitlementCodeStatus = S.Struct({
 	),
 });
 
-export const EntitlementsUploadUrl = S.Struct({
-	url: S.String,
-});
+export const EntitlementsUploadUrl = S.Struct({ url: S.String });
 
-export const ProductCost = S.Struct({
-	amount: S.Int,
-	type: S.String,
-});
+export const ProductCost = S.Struct({ amount: S.Int, type: S.String });
 
 export const ProductData = S.Struct({
 	domain: S.String,
@@ -844,9 +814,7 @@ export const ExtensionSecretCreationResponse = S.Struct({
 	data: ManyExtensionSecrets,
 });
 
-export const GetExtensionSecretParams = S.Struct({
-	extension_id: S.String,
-});
+export const GetExtensionSecretParams = S.Struct({ extension_id: S.String });
 
 export const GetExtensionSecretResponse = S.Struct({
 	data: ManyExtensionSecrets,
@@ -899,9 +867,7 @@ export const StartRaidParams = S.Struct({
 	to_broadcaster_id: S.String,
 });
 
-export const CancelRaidParams = S.Struct({
-	broadcaster_id: S.String,
-});
+export const CancelRaidParams = S.Struct({ broadcaster_id: S.String });
 
 export const Game = S.Struct({
 	id: S.String,
@@ -959,21 +925,13 @@ export const ManyStreams = S.Struct({
 	pagination: Pagination,
 });
 
-export const StreamsResponse = S.Struct({
-	data: ManyStreams,
-});
+export const StreamsResponse = S.Struct({ data: ManyStreams });
 
-export const StreamKey = S.Struct({
-	stream_key: S.String,
-});
+export const StreamKey = S.Struct({ stream_key: S.String });
 
-export const ManyStreamKeys = S.Struct({
-	data: S.Array(StreamKey),
-});
+export const ManyStreamKeys = S.Struct({ data: S.Array(StreamKey) });
 
-export const StreamKeysResponse = S.Struct({
-	data: ManyStreamKeys,
-});
+export const StreamKeysResponse = S.Struct({ data: ManyStreamKeys });
 
 export const Marker = S.Struct({
 	id: S.String,
@@ -1000,9 +958,7 @@ export const ManyStreamMarkers = S.Struct({
 	pagination: Pagination,
 });
 
-export const StreamMarkersResponse = S.Struct({
-	data: ManyStreamMarkers,
-});
+export const StreamMarkersResponse = S.Struct({ data: ManyStreamMarkers });
 
 export const CreateStreamMarker = S.Struct({
 	id: S.String,
@@ -1047,30 +1003,22 @@ export const ScheduleData = S.Struct({
 	vacation: S.optional(GetScheduleVacation),
 });
 
-export const GetSchedulePagination = S.Struct({
-	cursor: S.String,
-});
+export const GetSchedulePagination = S.Struct({ cursor: S.String });
 
 export const GetScheduleData = S.Struct({
 	data: ScheduleData,
 	pagination: GetSchedulePagination,
 });
 
-export const GetScheduleResponse = S.Struct({
-	data: GetScheduleData,
-});
+export const GetScheduleResponse = S.Struct({ data: GetScheduleData });
 
-export const CreateScheduleSegmentData = S.Struct({
-	data: ScheduleData,
-});
+export const CreateScheduleSegmentData = S.Struct({ data: ScheduleData });
 
 export const CreateScheduleSegmentResponse = S.Struct({
 	data: CreateScheduleSegmentData,
 });
 
-export const UpdateScheduleSegmentData = S.Struct({
-	data: ScheduleData,
-});
+export const UpdateScheduleSegmentData = S.Struct({ data: ScheduleData });
 
 export const UpdateScheduleSegmentResponse = S.Struct({
 	data: UpdateScheduleSegmentData,
@@ -1119,9 +1067,7 @@ export const WebhookSubscriptionPayload = S.Struct({
 	"hub.secret": S.optional(S.String),
 });
 
-export const SendWhisperBody = S.Struct({
-	message: S.String,
-});
+export const SendWhisperBody = S.Struct({ message: S.String });
 
 export const HelixApi = HttpApi.make("HELIX")
 	.prefix("/helix")
@@ -1140,17 +1086,10 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.post("startCommercial", "/channels/commercial")
 					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-							length: S.String,
-						}),
+						S.Struct({ broadcaster_id: S.String, length: S.String }),
 					)
 					.addSuccess(
-						S.Struct({
-							data: S.Struct({
-								data: S.Array(AdDetails),
-							}),
-						}),
+						S.Struct({ data: S.Struct({ data: S.Array(AdDetails) }) }),
 					),
 			)
 			.add(
@@ -1233,18 +1172,13 @@ export const HelixApi = HttpApi.make("HELIX")
 					)
 					.addSuccess(
 						S.Struct({
-							data: S.Struct({
-								data: S.Array(Video),
-								pagination: Pagination,
-							}),
+							data: S.Struct({ data: S.Array(Video), pagination: Pagination }),
 						}),
 					),
 			)
 			.add(
 				HttpApiEndpoint.del("deleteVideos", "/videos").setUrlParams(
-					S.Struct({
-						id: S.Array(S.String),
-					}),
+					S.Struct({ id: S.Array(S.String) }),
 				),
 			)
 			.add(
@@ -1272,17 +1206,10 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.get("checkUserSubscription", "/subscriptions/user")
 					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-							user_id: S.String,
-						}),
+						S.Struct({ broadcaster_id: S.String, user_id: S.String }),
 					)
 					.addSuccess(
-						S.Struct({
-							data: S.Struct({
-								data: S.Array(UserSubscription),
-							}),
-						}),
+						S.Struct({ data: S.Struct({ data: S.Array(UserSubscription) }) }),
 					),
 			)
 			.add(
@@ -1330,11 +1257,7 @@ export const HelixApi = HttpApi.make("HELIX")
 							only_manageable_rewards: S.optional(S.String),
 						}),
 					)
-					.addSuccess(
-						S.Struct({
-							data: S.Array(ChannelCustomReward),
-						}),
-					),
+					.addSuccess(S.Struct({ data: S.Array(ChannelCustomReward) })),
 			)
 			.add(
 				HttpApiEndpoint.post(
@@ -1342,40 +1265,22 @@ export const HelixApi = HttpApi.make("HELIX")
 					"/channel_points/custom_rewards",
 				)
 					.setPayload(ChannelCustomRewardsParams)
-					.addSuccess(
-						S.Struct({
-							data: S.Array(ChannelCustomReward),
-						}),
-					),
+					.addSuccess(S.Struct({ data: S.Array(ChannelCustomReward) })),
 			)
 			.add(
 				HttpApiEndpoint.patch(
 					"updateCustomReward",
 					"/channel_points/custom_rewards",
 				)
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-							id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ broadcaster_id: S.String, id: S.String }))
 					.setPayload(UpdateChannelCustomRewardsParams)
-					.addSuccess(
-						S.Struct({
-							data: S.Array(ChannelCustomReward),
-						}),
-					),
+					.addSuccess(S.Struct({ data: S.Array(ChannelCustomReward) })),
 			)
 			.add(
 				HttpApiEndpoint.del(
 					"deleteCustomRewards",
 					"/channel_points/custom_rewards",
-				).setUrlParams(
-					S.Struct({
-						broadcaster_id: S.String,
-						id: S.String,
-					}),
-				),
+				).setUrlParams(S.Struct({ broadcaster_id: S.String, id: S.String })),
 			)
 			.add(
 				HttpApiEndpoint.get(
@@ -1394,9 +1299,7 @@ export const HelixApi = HttpApi.make("HELIX")
 						}),
 					)
 					.addSuccess(
-						S.Struct({
-							data: S.Array(ChannelCustomRewardsRedemption),
-						}),
+						S.Struct({ data: S.Array(ChannelCustomRewardsRedemption) }),
 					),
 			)
 			.add(
@@ -1413,27 +1316,19 @@ export const HelixApi = HttpApi.make("HELIX")
 					)
 					.setPayload(UpdateChannelCustomRewardsRedemptionStatusParams)
 					.addSuccess(
-						S.Struct({
-							data: S.Array(ChannelCustomRewardsRedemption),
-						}),
+						S.Struct({ data: S.Array(ChannelCustomRewardsRedemption) }),
 					),
 			)
 			.add(
 				HttpApiEndpoint.get("getChannelInformation", "/channels")
 					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.optional(S.Array(S.String)),
-						}),
+						S.Struct({ broadcaster_id: S.optional(S.Array(S.String)) }),
 					)
 					.addSuccess(S.Struct({ data: S.Array(ChannelInformation) })),
 			)
 			.add(
 				HttpApiEndpoint.patch("modifyChannelInformation", "/channels")
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ broadcaster_id: S.String }))
 					.setPayload(EditChannelInformationParams)
 					.addSuccess(S.Void, { status: 204 }),
 			)
@@ -1492,11 +1387,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.get("getChannelEditors", "/channels/editors")
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ broadcaster_id: S.String }))
 					.addSuccess(S.Struct({ data: S.Array(ChannelEditor) })),
 			)
 			.add(
@@ -1519,20 +1410,14 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.post("addChannelVip", "/channels/vips")
 					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-							user_id: S.String,
-						}),
+						S.Struct({ broadcaster_id: S.String, user_id: S.String }),
 					)
 					.addSuccess(S.Void, { status: 204 }),
 			)
 			.add(
 				HttpApiEndpoint.del("removeChannelVip", "/channels/vips")
 					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-							user_id: S.String,
-						}),
+						S.Struct({ broadcaster_id: S.String, user_id: S.String }),
 					)
 					.addSuccess(S.Void, { status: 204 }),
 			)
@@ -1550,11 +1435,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.get("getChannelChatBadges", "/chat/badges")
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ broadcaster_id: S.String }))
 					.addSuccess(GetChatBadgeResponse),
 			)
 			.add(
@@ -1565,11 +1446,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.get("getChannelEmotes", "/chat/emotes")
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ broadcaster_id: S.String }))
 					.addSuccess(GetChannelEmotesResponse),
 			)
 			.add(
@@ -1580,20 +1457,13 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.get("getEmoteSets", "/chat/emotes/set")
-					.setUrlParams(
-						S.Struct({
-							emote_set_id: S.Array(S.String),
-						}),
-					)
+					.setUrlParams(S.Struct({ emote_set_id: S.Array(S.String) }))
 					.addSuccess(GetEmoteSetsResponse),
 			)
 			.add(
 				HttpApiEndpoint.post("sendChatAnnouncement", "/chat/announcements")
 					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-							moderator_id: S.String,
-						}),
+						S.Struct({ broadcaster_id: S.String, moderator_id: S.String }),
 					)
 					.setPayload(ChatAnnouncementPayload)
 					.addSuccess(S.Void, { status: 200 }),
@@ -1611,31 +1481,19 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.patch("updateChatSettings", "/chat/settings")
 					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-							moderator_id: S.String,
-						}),
+						S.Struct({ broadcaster_id: S.String, moderator_id: S.String }),
 					)
 					.setPayload(UpdateChatSettingsPayload)
 					.addSuccess(UpdateChatSettingsResponse),
 			)
 			.add(
 				HttpApiEndpoint.get("getUserChatColor", "/chat/color")
-					.setUrlParams(
-						S.Struct({
-							user_id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ user_id: S.String }))
 					.addSuccess(GetUserChatColorResponse),
 			)
 			.add(
 				HttpApiEndpoint.put("updateUserChatColor", "/chat/color")
-					.setUrlParams(
-						S.Struct({
-							user_id: S.String,
-							color: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ user_id: S.String, color: S.String }))
 					.addSuccess(S.Void, { status: 200 }),
 			)
 			.add(
@@ -1672,12 +1530,9 @@ export const HelixApi = HttpApi.make("HELIX")
 							has_delay: S.optional(S.String),
 						}),
 					)
-					.addSuccess(
-						S.Struct({
-							data: S.Array(ClipEditURL),
-						}),
-						{ status: 202 },
-					),
+					.addSuccess(S.Struct({ data: S.Array(ClipEditURL) }), {
+						status: 202,
+					}),
 			)
 			.add(
 				HttpApiEndpoint.get("getCharityCampaigns", "/charity/campaigns")
@@ -1741,16 +1596,8 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.get("getCheermotes", "/bits/cheermotes")
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.optional(S.String),
-						}),
-					)
-					.addSuccess(
-						S.Struct({
-							data: S.Array(Cheermotes),
-						}),
-					),
+					.setUrlParams(S.Struct({ broadcaster_id: S.optional(S.String) }))
+					.addSuccess(S.Struct({ data: S.Array(Cheermotes) })),
 			)
 			.add(
 				HttpApiEndpoint.get("getPolls", "/polls")
@@ -1830,11 +1677,7 @@ export const HelixApi = HttpApi.make("HELIX")
 				HttpApiEndpoint.del(
 					"deleteEventSubSubscription",
 					"/eventsub/subscriptions",
-				).setUrlParams(
-					S.Struct({
-						id: S.String,
-					}),
-				),
+				).setUrlParams(S.Struct({ id: S.String })),
 			)
 			.add(
 				HttpApiEndpoint.post(
@@ -1847,12 +1690,9 @@ export const HelixApi = HttpApi.make("HELIX")
 							S.Struct({ transport: EventSubTransportInput }),
 						),
 					)
-					.addSuccess(
-						S.Struct({
-							data: S.Array(S.Struct({})),
-						}),
-						{ status: 202 },
-					),
+					.addSuccess(S.Struct({ data: S.Array(S.Struct({})) }), {
+						status: 202,
+					}),
 			)
 			.add(
 				HttpApiEndpoint.get("getEntitlementCodeStatus", "/entitlements/codes")
@@ -1867,10 +1707,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.post("redeemEntitlementCode", "/entitlements/code")
 					.setUrlParams(
-						S.Struct({
-							user_id: S.String,
-							code: S.Array(S.String),
-						}),
+						S.Struct({ user_id: S.String, code: S.Array(S.String) }),
 					)
 					.addSuccess(S.Struct({ data: S.Array(EntitlementCodeStatus) })),
 			)
@@ -1879,12 +1716,7 @@ export const HelixApi = HttpApi.make("HELIX")
 					"createEntitlementsUploadUrl",
 					"/entitlements/upload",
 				)
-					.setUrlParams(
-						S.Struct({
-							manifest_id: S.String,
-							type: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ manifest_id: S.String, type: S.String }))
 					.addSuccess(S.Struct({ data: S.Array(EntitlementsUploadUrl) })),
 			)
 			.add(
@@ -1958,10 +1790,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.post("createExtensionSecret", "/extensions/jwt/secrets")
 					.setUrlParams(
-						S.Struct({
-							extension_id: S.String,
-							delay: S.optional(S.String),
-						}),
+						S.Struct({ extension_id: S.String, delay: S.optional(S.String) }),
 					)
 					.addSuccess(ExtensionSecretCreationResponse),
 			)
@@ -1975,11 +1804,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.get("getCreatorGoals", "/goals")
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ broadcaster_id: S.String }))
 					.addSuccess(
 						S.Struct({
 							data: S.Struct({
@@ -2077,9 +1902,7 @@ export const HelixApi = HttpApi.make("HELIX")
 					.setPayload(UpdateDropsEntitlementsParams)
 					.addSuccess(
 						S.Struct({
-							data: S.Struct({
-								data: S.Array(UpdatedEntitlementSet),
-							}),
+							data: S.Struct({ data: S.Array(UpdatedEntitlementSet) }),
 						}),
 					),
 			)
@@ -2089,7 +1912,7 @@ export const HelixApi = HttpApi.make("HELIX")
 						S.Struct({
 							after: S.optional(S.String),
 							before: S.optional(S.String),
-							first: S.optional(S.Int),
+							first: S.optional(IntFromString),
 							game_id: S.optional(S.Array(S.String)),
 							language: S.optional(S.Array(S.String)),
 							type: S.optional(S.Literal("all", "live", "vodcast")),
@@ -2105,7 +1928,7 @@ export const HelixApi = HttpApi.make("HELIX")
 						S.Struct({
 							after: S.optional(S.String),
 							before: S.optional(S.String),
-							first: S.optional(S.Int),
+							first: S.optional(IntFromString),
 							user_id: S.String,
 						}),
 					)
@@ -2113,11 +1936,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.get("getStreamKey", "/streams/key")
-					.setUrlParams(
-						S.Struct({
-							broadcaster_id: S.String,
-						}),
-					)
+					.setUrlParams(S.Struct({ broadcaster_id: S.String }))
 					.addSuccess(StreamKeysResponse),
 			)
 			.add(
@@ -2128,7 +1947,7 @@ export const HelixApi = HttpApi.make("HELIX")
 							video_id: S.optional(S.String),
 							after: S.optional(S.String),
 							before: S.optional(S.String),
-							first: S.optional(S.Int),
+							first: S.optional(IntFromString),
 						}),
 					)
 					.addSuccess(StreamMarkersResponse),
@@ -2136,10 +1955,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.post("createStreamMarker", "/streams/markers")
 					.setUrlParams(
-						S.Struct({
-							user_id: S.String,
-							description: S.optional(S.String),
-						}),
+						S.Struct({ user_id: S.String, description: S.optional(S.String) }),
 					)
 					.addSuccess(CreateStreamMarkerResponse),
 			)
@@ -2151,7 +1967,7 @@ export const HelixApi = HttpApi.make("HELIX")
 							id: S.optional(S.String),
 							start_time: S.optional(S.String),
 							utc_offset: S.optional(S.String),
-							first: S.optional(S.Int),
+							first: S.optional(IntFromString),
 							after: S.optional(S.String),
 						}),
 					)
@@ -2192,19 +2008,14 @@ export const HelixApi = HttpApi.make("HELIX")
 				HttpApiEndpoint.del(
 					"deleteScheduleSegment",
 					"/schedule/segment",
-				).setUrlParams(
-					S.Struct({
-						broadcaster_id: S.String,
-						id: S.String,
-					}),
-				),
+				).setUrlParams(S.Struct({ broadcaster_id: S.String, id: S.String })),
 			)
 			.add(
 				HttpApiEndpoint.patch("updateSchedule", "/schedule/settings")
 					.setUrlParams(
 						S.Struct({
 							broadcaster_id: S.String,
-							is_vacation_enabled: S.optional(S.Boolean),
+							is_vacation_enabled: S.optional(S.BooleanFromString),
 							vacation_start_time: S.optional(S.String),
 							vacation_end_time: S.optional(S.String),
 							timezone: S.optional(S.String),
@@ -2224,11 +2035,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.put("updateUser", "/users")
-					.setUrlParams(
-						S.Struct({
-							description: S.optional(S.String),
-						}),
-					)
+					.setUrlParams(S.Struct({ description: S.optional(S.String) }))
 					.addSuccess(S.Struct({ data: S.Array(User) })),
 			)
 			.add(
@@ -2266,9 +2073,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			)
 			.add(
 				HttpApiEndpoint.del("unblockUser", "/users/blocks").setUrlParams(
-					S.Struct({
-						target_user_id: S.String,
-					}),
+					S.Struct({ target_user_id: S.String }),
 				),
 			)
 			.add(
@@ -2318,10 +2123,7 @@ export const HelixApi = HttpApi.make("HELIX")
 			.add(
 				HttpApiEndpoint.post("sendWhisper", "/whispers")
 					.setUrlParams(
-						S.Struct({
-							from_user_id: S.String,
-							to_user_id: S.String,
-						}),
+						S.Struct({ from_user_id: S.String, to_user_id: S.String }),
 					)
 					.setPayload(SendWhisperBody)
 					.addSuccess(S.Void, { status: 204 }),

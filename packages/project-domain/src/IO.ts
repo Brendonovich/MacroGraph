@@ -326,24 +326,14 @@ export class PortConections extends S.Class<PortConections>("PortConections")({
 	to: S.Array(PortRef),
 }) {}
 
-export class ExecInput extends D.TaggedClass("ExecInput")<{
-	id: IO.Id;
-}> {}
+export class ExecInput extends D.TaggedClass("ExecInput")<{ id: IO.Id }> {}
 
-export class ExecOutput extends D.TaggedClass("ExecOutput")<{
-	id: IO.Id;
-}> {}
+export class ExecOutput extends D.TaggedClass("ExecOutput")<{ id: IO.Id }> {}
 
 export class DataInput<T extends T.Type_<any>> extends D.TaggedClass(
 	"DataInput",
-)<{
-	id: IO.Id;
-	type: T;
-}> {}
+)<{ id: IO.Id; type: T }> {}
 
 export class DataOutput<T extends T.Type_<any>> extends D.TaggedClass(
 	"DataOutput",
-)<{
-	id: IO.Id;
-	type: T;
-}> {}
+)<{ id: IO.Id; type: T }> {}

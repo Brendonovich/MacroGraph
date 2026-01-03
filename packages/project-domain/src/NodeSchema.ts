@@ -16,10 +16,7 @@ export class NotEventNode extends Data.TaggedError(
 
 export class SchemaNotFound extends S.TaggedError<SchemaNotFound>()(
 	"@macrograph/project-domain/SchemaNotFound",
-	{
-		pkgId: S.String,
-		schemaId: S.String,
-	},
+	{ pkgId: S.String, schemaId: S.String },
 ) {}
 
 export type SchemaRunGeneratorEffect<Ret = any> = Effect.Effect<
@@ -83,10 +80,7 @@ export type CreateExecIn = (
 export type CreateDataIn<Suggestions extends string> = <T extends T.Any_>(
 	id: string,
 	type: T,
-	options?: {
-		name?: string;
-		suggestions?: Suggestions;
-	},
+	options?: { name?: string; suggestions?: Suggestions },
 ) => DataInput<T>;
 
 export type CreateExecOut = (
@@ -100,14 +94,8 @@ export type CreateDataOut = <T extends T.Any_>(
 ) => DataOutput<T>;
 
 export interface IOFunctionContext<Suggestions extends string = never> {
-	in: {
-		exec: CreateExecIn;
-		data: CreateDataIn<Suggestions>;
-	};
-	out: {
-		exec: CreateExecOut;
-		data: CreateDataOut;
-	};
+	in: { exec: CreateExecIn; data: CreateDataIn<Suggestions> };
+	out: { exec: CreateExecOut; data: CreateDataOut };
 }
 
 export interface SchemaDefinitionBase<TProperties extends PropertiesSchema> {
@@ -121,7 +109,7 @@ export interface PureSchemaDefinition<TIO, TProperties extends PropertiesSchema>
 	extends SchemaDefinitionBase<TProperties> {
 	type: "pure";
 	io: (ctx: {
-		in: { data: CreateDataIn<TProperties> };
+		in: { data: CreateDataIn<never> };
 		out: { data: CreateDataOut };
 	}) => TIO;
 	run: (ctx: {
@@ -157,7 +145,7 @@ export interface ExecSchemaDefinition<TIO, TProperties extends PropertiesSchema>
 	extends SchemaDefinitionBase<TProperties> {
 	type: "exec";
 	io: (ctx: {
-		in: { data: CreateDataIn<TProperties> };
+		in: { data: CreateDataIn<never> };
 		out: { data: CreateDataOut };
 	}) => TIO;
 	run: (ctx: {
@@ -172,7 +160,7 @@ export interface ExecSchema<
 > extends Omit<ExecSchemaDefinition<TIO, TProperties>, "run"> {
 	run: ReturnType<
 		ExecSchemaDefinition<TIO, TProperties>["run"]
-	> extends EffectGenerator<infer TEff, any>
+	> extends EffectGenerator<infer TEff>
 		? (
 				...args: Parameters<ExecSchemaDefinition<TIO, TProperties>["run"]>
 			) => TEff
@@ -193,12 +181,9 @@ export interface EventSchemaDefinition<
 	event: (ctx: EventFnCtx<TProperties>, e: TEvents) => TEvent | undefined;
 	io: (ctx: { out: { data: CreateDataOut } }) => TIO;
 	run: (
-		ctx: {
-			io: TIO;
-			properties: InferProperties<TProperties>;
-		},
+		ctx: { io: TIO; properties: InferProperties<TProperties> },
 		data: TEvent,
-	) => EffectGenerator<SchemaRunGeneratorEffect<void>>;
+	) => EffectGenerator<SchemaRunGeneratorEffect<ExecOutput | void>>;
 }
 
 export interface EventSchema<
@@ -212,7 +197,7 @@ export interface EventSchema<
 	> {
 	run: ReturnType<
 		EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>["run"]
-	> extends EffectGenerator<infer TEff, any>
+	> extends EffectGenerator<infer TEff>
 		? (
 				...args: Parameters<
 					EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>["run"]
@@ -237,10 +222,7 @@ export type SchemaDefinition<
 	| EventSchemaDefinition<TIO, TProperties, TEvents, TEvent>;
 
 export namespace Resource {
-	export const ResourceValue = S.Struct({
-		id: S.String,
-		display: S.String,
-	});
+	export const ResourceValue = S.Struct({ id: S.String, display: S.String });
 	export type ResourceValue = typeof ResourceValue.Type;
 
 	export class Handler<TId extends string, T> extends Data.Class<{

@@ -5,10 +5,7 @@ import { ReactiveSet } from "@solid-primitives/set";
 
 export const WS_PORTS_LOCALSTORAGE = "wsPorts";
 
-export type ConnectionState = {
-	connections: ReactiveSet<number>;
-	server: any;
-};
+export type ConnectionState = { connections: ReactiveSet<number>; server: any };
 
 export type Ctx = ReturnType<typeof createCtx>;
 
@@ -30,16 +27,10 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
 
 			if (msg === "Connected") {
 				websocketData.connections.add(client);
-				onEvent({
-					name: "WSSConnect",
-					data: { client, port },
-				});
+				onEvent({ name: "WSSConnect", data: { client, port } });
 			} else if (msg === "Disconnected") {
 				websocketData.connections.delete(client);
-				onEvent({
-					name: "WSSDisconnect",
-					data: { client, port },
-				});
+				onEvent({ name: "WSSDisconnect", data: { client, port } });
 			} else
 				onEvent({
 					name: "wsEvent",

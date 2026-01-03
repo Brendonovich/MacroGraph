@@ -4,9 +4,7 @@
 	"sideEffects": true,
 	"main": "./guest-js/index.ts",
 	"types": "./guest-js/index.ts",
-	"scripts": {
-		"build:types": "tsc"
-	},
+	"scripts": { "build:types": "tsc" },
 	"dependencies": {
 		"@tanstack/solid-query": "^5.90.15",
 		"@tauri-apps/api": "^1.5.3"

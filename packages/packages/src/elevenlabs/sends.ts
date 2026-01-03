@@ -6,16 +6,9 @@ import { createStruct } from "@macrograph/runtime";
 import type { Pkg } from ".";
 import type { Ctx } from "./ctx";
 
-type Message = {
-	role: string;
-	content: string;
-};
+type Message = { role: string; content: string };
 
-type Choices = {
-	finish_reason: string;
-	index: number;
-	message: Message;
-};
+type Choices = { finish_reason: string; index: number; message: Message };
 
 export async function streamToArrayBuffer(
 	stream: ReadableStream<Uint8Array>,
@@ -91,11 +84,7 @@ export function register(pkg: Pkg, state: Ctx) {
 		variant: "Exec",
 		createIO({ io }) {
 			return {
-				text: io.dataInput({
-					id: "text",
-					name: "Text",
-					type: t.string(),
-				}),
+				text: io.dataInput({ id: "text", name: "Text", type: t.string() }),
 				modelId: io.dataInput({
 					id: "modelId",
 					name: "Model Id",

@@ -2,17 +2,13 @@ import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 export function pkg() {
-	const pkg = new Package({
-		name: "Logic",
-	});
+	const pkg = new Package({ name: "Logic" });
 
 	pkg.createSchema({
 		name: "Branch",
 		type: "base",
 		createIO({ io }) {
-			io.execInput({
-				id: "exec",
-			});
+			io.execInput({ id: "exec" });
 
 			return {
 				condition: io.dataInput({
@@ -20,14 +16,8 @@ export function pkg() {
 					name: "Condition",
 					type: t.bool(),
 				}),
-				true: io.execOutput({
-					id: "true",
-					name: "True",
-				}),
-				false: io.execOutput({
-					id: "false",
-					name: "False",
-				}),
+				true: io.execOutput({ id: "true", name: "True" }),
+				false: io.execOutput({ id: "false", name: "False" }),
 			};
 		},
 		run({ ctx, io }) {
@@ -39,11 +29,7 @@ export function pkg() {
 		name: "Wait",
 		type: "exec",
 		createIO({ io }) {
-			return io.dataInput({
-				id: "delay",
-				name: "Wait in ms",
-				type: t.int(),
-			});
+			return io.dataInput({ id: "delay", name: "Wait in ms", type: t.int() });
 		},
 		run({ ctx, io }) {
 			return new Promise((res) => setTimeout(res, ctx.getInput(io)));
@@ -55,18 +41,9 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.bool(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.bool(),
-				}),
-				value: io.dataOutput({
-					id: "value",
-					type: t.bool(),
-				}),
+				one: io.dataInput({ id: "one", type: t.bool() }),
+				two: io.dataInput({ id: "two", type: t.bool() }),
+				value: io.dataOutput({ id: "value", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -79,18 +56,9 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.bool(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.bool(),
-				}),
-				value: io.dataOutput({
-					id: "value",
-					type: t.bool(),
-				}),
+				one: io.dataInput({ id: "one", type: t.bool() }),
+				two: io.dataInput({ id: "two", type: t.bool() }),
+				value: io.dataOutput({ id: "value", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -103,18 +71,9 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.bool(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.bool(),
-				}),
-				value: io.dataOutput({
-					id: "value",
-					type: t.bool(),
-				}),
+				one: io.dataInput({ id: "one", type: t.bool() }),
+				two: io.dataInput({ id: "two", type: t.bool() }),
+				value: io.dataOutput({ id: "value", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -127,18 +86,9 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.bool(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.bool(),
-				}),
-				value: io.dataOutput({
-					id: "value",
-					type: t.bool(),
-				}),
+				one: io.dataInput({ id: "one", type: t.bool() }),
+				two: io.dataInput({ id: "two", type: t.bool() }),
+				value: io.dataOutput({ id: "value", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -151,18 +101,9 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				one: io.dataInput({
-					id: "one",
-					type: t.bool(),
-				}),
-				two: io.dataInput({
-					id: "two",
-					type: t.bool(),
-				}),
-				value: io.dataOutput({
-					id: "value",
-					type: t.bool(),
-				}),
+				one: io.dataInput({ id: "one", type: t.bool() }),
+				two: io.dataInput({ id: "two", type: t.bool() }),
+				value: io.dataOutput({ id: "value", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -175,14 +116,8 @@ export function pkg() {
 		type: "pure",
 		createIO({ io }) {
 			return {
-				input: io.dataInput({
-					id: "input",
-					type: t.bool(),
-				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.bool(),
-				}),
+				input: io.dataInput({ id: "input", type: t.bool() }),
+				output: io.dataOutput({ id: "output", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -212,10 +147,7 @@ export function pkg() {
 					name: "False",
 					type: t.wildcard(w),
 				}),
-				output: io.dataOutput({
-					id: "output",
-					type: t.wildcard(w),
-				}),
+				output: io.dataOutput({ id: "output", type: t.wildcard(w) }),
 			};
 		},
 		run({ ctx, io }) {
@@ -235,9 +167,7 @@ export function pkg() {
 			const w = io.wildcard("");
 
 			return {
-				exec: io.execInput({
-					id: "exec",
-				}),
+				exec: io.execInput({ id: "exec" }),
 				array: io.dataInput({
 					id: "array",
 					name: "Array",
@@ -252,17 +182,10 @@ export function pkg() {
 							name: "Array Element",
 							type: t.wildcard(w),
 						});
-						s.output({
-							id: "index",
-							name: "Array Index",
-							type: t.int(),
-						});
+						s.output({ id: "index", name: "Array Index", type: t.int() });
 					},
 				}),
-				completed: io.execOutput({
-					id: "completed",
-					name: "Completed",
-				}),
+				completed: io.execOutput({ id: "completed", name: "Completed" }),
 			};
 		},
 		async run({ ctx, io }) {
@@ -279,9 +202,7 @@ export function pkg() {
 		type: "base",
 		createIO({ io }) {
 			return {
-				exec: io.execInput({
-					id: "exec",
-				}),
+				exec: io.execInput({ id: "exec" }),
 				number: io.dataInput({
 					id: "numberOfLoops",
 					name: "Times to Loop",
@@ -291,17 +212,10 @@ export function pkg() {
 					id: "body",
 					name: "Loop Body",
 					scope: (s) => {
-						s.output({
-							id: "index",
-							name: "Array Index",
-							type: t.int(),
-						});
+						s.output({ id: "index", name: "Array Index", type: t.int() });
 					},
 				}),
-				completed: io.execOutput({
-					id: "completed",
-					name: "Completed",
-				}),
+				completed: io.execOutput({ id: "completed", name: "Completed" }),
 			};
 		},
 		async run({ ctx, io }) {
@@ -316,25 +230,14 @@ export function pkg() {
 	pkg.createSchema({
 		name: "Switch",
 		type: "base",
-		properties: {
-			number: {
-				name: "Keys",
-				type: t.int(),
-				default: 1,
-			},
-		},
+		properties: { number: { name: "Keys", type: t.int(), default: 1 } },
 		createIO({ io, ctx, properties }) {
 			const value = ctx.getProperty(properties.number);
 			const w = io.wildcard("");
 
 			return {
-				exec: io.execInput({
-					id: "exec",
-				}),
-				default: io.execOutput({
-					id: "exec",
-					name: "Default",
-				}),
+				exec: io.execInput({ id: "exec" }),
+				default: io.execOutput({ id: "exec", name: "Default" }),
 				switchOn: io.dataInput({
 					id: "switchOn",
 					type: t.wildcard(w),
@@ -346,13 +249,8 @@ export function pkg() {
 					name: "Data Out",
 				}),
 				pins: Array.from({ length: value }, (_, i) => ({
-					case: io.dataInput({
-						id: `key-${i}`,
-						type: t.wildcard(w),
-					}),
-					exec: io.execOutput({
-						id: `key-${i}`,
-					}),
+					case: io.dataInput({ id: `key-${i}`, type: t.wildcard(w) }),
+					exec: io.execOutput({ id: `key-${i}` }),
 				})),
 			};
 		},

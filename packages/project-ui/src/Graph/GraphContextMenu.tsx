@@ -122,10 +122,7 @@ export const GraphContextMenu = Object.assign(
 								return aName.localeCompare(bName);
 							});
 
-							return {
-								pkg,
-								schemas: matchingSchemas,
-							};
+							return { pkg, schemas: matchingSchemas };
 						});
 
 						packages.sort((a, b) => a.pkg.name.localeCompare(b.pkg.name));
@@ -193,10 +190,7 @@ export const GraphContextMenu = Object.assign(
 																				class="gap-1.5 pl-1.5"
 																				onClick={() => {
 																					props.onSchemaClick(
-																						{
-																							pkg: pkg.id,
-																							id: schemaId,
-																						},
+																						{ pkg: pkg.id, id: schemaId },
 																						graphCtx.getGraphPosition({
 																							x: position().x - 16,
 																							y: position().y - 16,

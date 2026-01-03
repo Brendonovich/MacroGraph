@@ -80,9 +80,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 		> & {
 			properties?: TProperties;
 			run(
-				props: RunProps<TProperties, TIO> & {
-					account: Account;
-				},
+				props: RunProps<TProperties, TIO> & { account: Account },
 			): void | Promise<void>;
 			createIO: MergeFnProps<
 				CreateIOFn<TProperties, TIO>,
@@ -136,9 +134,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				{ bot(): Option<BotAccount> }
 			>;
 			run(
-				props: RunProps<TProperties, TIO> & {
-					bot: BotAccount;
-				},
+				props: RunProps<TProperties, TIO> & { bot: BotAccount },
 			): void | Promise<void>;
 		},
 	) {
@@ -211,11 +207,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 	createUserExecSchema({
 		name: "Get Discord User",
 		createIO: ({ io }) => ({
-			userId: io.dataInput({
-				id: "userId",
-				name: "User ID",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ id: "userId", name: "User ID", type: t.string() }),
 			username: io.dataOutput({
 				id: "username",
 				name: "UserName",
@@ -252,11 +244,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				name: "Guild ID",
 				type: t.string(),
 			}),
-			userId: io.dataInput({
-				id: "userId",
-				name: "User ID",
-				type: t.string(),
-			}),
+			userId: io.dataInput({ id: "userId", name: "User ID", type: t.string() }),
 			username: io.dataOutput({
 				id: "username",
 				name: "UserName",
@@ -317,11 +305,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				name: "Role ID",
 				type: t.string(),
 			}),
-			name: io.dataOutput({
-				id: "name",
-				name: "Name",
-				type: t.string(),
-			}),
+			name: io.dataOutput({ id: "name", name: "Name", type: t.string() }),
 			roleIdOut: io.dataOutput({
 				id: "roleIdOut",
 				name: "Role ID",
@@ -387,21 +371,13 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				name: "Avatar URL",
 				type: t.option(t.string()),
 			}),
-			tts: io.dataInput({
-				id: "tts",
-				name: "TTS",
-				type: t.bool(),
-			}),
+			tts: io.dataInput({ id: "tts", name: "TTS", type: t.bool() }),
 			fileLocation: io.dataInput({
 				id: "fileLocation",
 				name: "File Location",
 				type: t.option(t.string()),
 			}),
-			status: io.dataOutput({
-				id: "status",
-				name: "Status",
-				type: t.int(),
-			}),
+			status: io.dataOutput({ id: "status", name: "Status", type: t.int() }),
 		}),
 		async run({ ctx, io }) {
 			const formData = new FormData();

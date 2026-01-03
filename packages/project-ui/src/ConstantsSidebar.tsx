@@ -95,10 +95,7 @@ export function ConstantsSidebar() {
 										options().find((o) => o.id === data().constant.value) ??
 										null;
 
-									type Option = {
-										id: string;
-										display: string;
-									};
+									type Option = { id: string; display: string };
 									return (
 										<ContextMenu>
 											<ContextMenu.Trigger>

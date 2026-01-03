@@ -9,9 +9,7 @@ export const CloudLoginEvent = Schema.Union(
 		type: Schema.Literal("started"),
 		verificationUrlComplete: Schema.String,
 	}),
-	Schema.Struct({
-		type: Schema.Literal("completed"),
-	}),
+	Schema.Struct({ type: Schema.Literal("completed") }),
 );
 
 export class CloudApiError extends Schema.TaggedError<CloudApiError>(

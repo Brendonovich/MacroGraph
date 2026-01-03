@@ -49,10 +49,7 @@ export const EVENT = v.variant("type", [
 		type: v.literal("membershipGift"),
 		message: v.tuple([
 			v.intersect([
-				v.object({
-					name: maybe(v.string()),
-					channelUrl: maybe(v.string()),
-				}),
+				v.object({ name: maybe(v.string()), channelUrl: maybe(v.string()) }),
 				v.union([
 					v.object({
 						giftMembershipsLevelName: maybe(v.string()),

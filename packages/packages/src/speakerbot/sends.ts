@@ -15,11 +15,7 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				voice: io.dataInput({
-					id: "voice",
-					name: "Voice",
-					type: t.string(),
-				}),
+				voice: io.dataInput({ id: "voice", name: "Voice", type: t.string() }),
 				message: io.dataInput({
 					id: "message",
 					name: "Message",
@@ -44,12 +40,7 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		type: "exec",
 		createIO() {},
 		run() {
-			ws().send(
-				JSON.stringify({
-					id: "Macrograph",
-					request: "Stop",
-				}),
-			);
+			ws().send(JSON.stringify({ id: "Macrograph", request: "Stop" }));
 		},
 	});
 
@@ -58,11 +49,7 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				state: io.dataInput({
-					id: "state",
-					name: "State",
-					type: t.bool(),
-				}),
+				state: io.dataInput({ id: "state", name: "State", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -80,11 +67,7 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				state: io.dataInput({
-					id: "state",
-					name: "State",
-					type: t.bool(),
-				}),
+				state: io.dataInput({ id: "state", name: "State", type: t.bool() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -125,12 +108,7 @@ export function register(pkg: Pkg, { state }: Ctx) {
 		type: "exec",
 		createIO({ io }) {},
 		run() {
-			ws().send(
-				JSON.stringify({
-					id: "Macrograph",
-					request: "Clear",
-				}),
-			);
+			ws().send(JSON.stringify({ id: "Macrograph", request: "Clear" }));
 		},
 	});
 }

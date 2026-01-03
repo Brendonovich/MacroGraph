@@ -94,10 +94,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 			Events[TEvent]
 		>,
 		"type" | "createListener"
-	> & {
-		properties?: TProperties;
-		event: TEvent;
-	}) {
+	> & { properties?: TProperties; event: TEvent }) {
 		pkg.createSchema({
 			...s,
 			type: "event",
@@ -133,9 +130,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "User Banned",
 		event: "channel.ban",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			channelId: io.dataOutput({
 				id: "channelId",
 				name: "Channel ID",
@@ -200,9 +195,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "User Unbanned",
 		event: "channel.unban",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			userId: io.dataOutput({
 				id: "userId",
 				name: "User ID",
@@ -218,11 +211,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 				name: "Mod Name",
 				type: t.string(),
 			}),
-			modId: io.dataOutput({
-				id: "modId",
-				name: "Mod ID",
-				type: t.string(),
-			}),
+			modId: io.dataOutput({ id: "modId", name: "Mod ID", type: t.string() }),
 		}),
 		run({ ctx, data, io }) {
 			ctx.setOutput(io.userId, data.user_id);
@@ -237,14 +226,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Moderator Add",
 		event: "channel.moderator.add",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			userId: io.dataOutput({
-				id: "userId",
-				name: "userID",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			userId: io.dataOutput({ id: "userId", name: "userID", type: t.string() }),
 			userLogin: io.dataOutput({
 				id: "userLogin",
 				name: "Username",
@@ -262,14 +245,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Moderator Remove",
 		event: "channel.moderator.remove",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			userId: io.dataOutput({
-				id: "userId",
-				name: "userID",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			userId: io.dataOutput({ id: "userId", name: "userID", type: t.string() }),
 			userLogin: io.dataOutput({
 				id: "userLogin",
 				name: "Username",
@@ -287,44 +264,22 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Point Reward Add",
 		event: "channel.channel_points_custom_reward.add",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			id: io.dataOutput({
-				id: "id",
-				name: "ID",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			id: io.dataOutput({ id: "id", name: "ID", type: t.string() }),
 			enabled: io.dataOutput({
 				id: "enabled",
 				name: "Enabled",
 				type: t.bool(),
 			}),
-			paused: io.dataOutput({
-				id: "paused",
-				name: "Paused",
-				type: t.bool(),
-			}),
+			paused: io.dataOutput({ id: "paused", name: "Paused", type: t.bool() }),
 			inStock: io.dataOutput({
 				id: "inStock",
 				name: "In Stock",
 				type: t.bool(),
 			}),
-			title: io.dataOutput({
-				id: "title",
-				name: "Title",
-				type: t.string(),
-			}),
-			cost: io.dataOutput({
-				id: "cost",
-				name: "Cost",
-				type: t.int(),
-			}),
-			prompt: io.dataOutput({
-				id: "prompt",
-				name: "Prompt",
-				type: t.string(),
-			}),
+			title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
+			cost: io.dataOutput({ id: "cost", name: "Cost", type: t.int() }),
+			prompt: io.dataOutput({ id: "prompt", name: "Prompt", type: t.string() }),
 			inputRequired: io.dataOutput({
 				id: "inputRequired",
 				name: "Input Required",
@@ -396,29 +351,11 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Point Reward Updated",
 		event: "channel.channel_points_custom_reward.update",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			id: io.dataOutput({
-				id: "id",
-				name: "ID",
-				type: t.string(),
-			}),
-			title: io.dataOutput({
-				id: "title",
-				name: "Title",
-				type: t.string(),
-			}),
-			cost: io.dataOutput({
-				id: "cost",
-				name: "Cost",
-				type: t.int(),
-			}),
-			prompt: io.dataOutput({
-				id: "prompt",
-				name: "Prompt",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			id: io.dataOutput({ id: "id", name: "ID", type: t.string() }),
+			title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
+			cost: io.dataOutput({ id: "cost", name: "Cost", type: t.int() }),
+			prompt: io.dataOutput({ id: "prompt", name: "Prompt", type: t.string() }),
 			enabled: io.dataOutput({
 				id: "enabled",
 				name: "Enabled",
@@ -449,11 +386,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 				name: "Global Cooldown",
 				type: t.option(t.int()),
 			}),
-			paused: io.dataOutput({
-				id: "paused",
-				name: "Paused",
-				type: t.bool(),
-			}),
+			paused: io.dataOutput({ id: "paused", name: "Paused", type: t.bool() }),
 			inStock: io.dataOutput({
 				id: "inStock",
 				name: "In Stock",
@@ -519,44 +452,22 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Point Reward Removed",
 		event: "channel.channel_points_custom_reward.remove",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			id: io.dataOutput({
-				id: "id",
-				name: "ID",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			id: io.dataOutput({ id: "id", name: "ID", type: t.string() }),
 			enabled: io.dataOutput({
 				id: "enabled",
 				name: "Enabled",
 				type: t.bool(),
 			}),
-			paused: io.dataOutput({
-				id: "paused",
-				name: "Paused",
-				type: t.bool(),
-			}),
+			paused: io.dataOutput({ id: "paused", name: "Paused", type: t.bool() }),
 			inStock: io.dataOutput({
 				id: "inStock",
 				name: "In Stock",
 				type: t.bool(),
 			}),
-			title: io.dataOutput({
-				id: "title",
-				name: "Title",
-				type: t.string(),
-			}),
-			cost: io.dataOutput({
-				id: "cost",
-				name: "Cost",
-				type: t.int(),
-			}),
-			prompt: io.dataOutput({
-				id: "prompt",
-				name: "Prompt",
-				type: t.string(),
-			}),
+			title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
+			cost: io.dataOutput({ id: "cost", name: "Cost", type: t.int() }),
+			prompt: io.dataOutput({ id: "prompt", name: "Prompt", type: t.string() }),
 			inputRequired: io.dataOutput({
 				id: "inputRequired",
 				name: "Input Required",
@@ -628,9 +539,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Points Automatic Redemption Redeemed",
 		event: "channel.channel_points_automatic_reward_redemption.add",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			rewardId: io.dataOutput({
 				id: "rewardId",
 				name: "Reward ID",
@@ -651,11 +560,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 				name: "User Name",
 				type: t.string(),
 			}),
-			text: io.dataOutput({
-				id: "text",
-				name: "Text",
-				type: t.string(),
-			}),
+			text: io.dataOutput({ id: "text", name: "Text", type: t.string() }),
 			emotes: io.dataOutput({
 				id: "emotes",
 				name: "emotes",
@@ -690,14 +595,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Point Reward Redeemed",
 		event: "channel.channel_points_custom_reward_redemption.add",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			id: io.dataOutput({
-				id: "id",
-				name: "Redemption ID",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			id: io.dataOutput({ id: "id", name: "Redemption ID", type: t.string() }),
 			userId: io.dataOutput({
 				id: "userId",
 				name: "User ID",
@@ -718,11 +617,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 				name: "User Input",
 				type: t.string(),
 			}),
-			status: io.dataOutput({
-				id: "status",
-				name: "Status",
-				type: t.string(),
-			}),
+			status: io.dataOutput({ id: "status", name: "Status", type: t.string() }),
 			rewardId: io.dataOutput({
 				id: "rewardId",
 				name: "Reward Id",
@@ -763,9 +658,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Shared Chat Begin",
 		event: "channel.shared_chat.begin",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			session_id: io.dataOutput({
 				id: "sessionId",
 				name: "Session ID",
@@ -817,9 +710,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Shared Chat Update",
 		event: "channel.shared_chat.update",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			session_id: io.dataOutput({
 				id: "sessionId",
 				name: "Session ID",
@@ -871,9 +762,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Shared Chat End",
 		event: "channel.shared_chat.end",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			session_id: io.dataOutput({
 				id: "sessionId",
 				name: "Session ID",
@@ -914,14 +803,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Poll Begin",
 		event: "channel.poll.begin",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			title: io.dataOutput({
-				id: "title",
-				name: "Title",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 			choices: io.dataOutput({
 				id: "choices",
 				name: "Choices",
@@ -961,14 +844,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.poll.progress",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				title: io.dataOutput({
-					id: "title",
-					name: "Title",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 				choices: io.dataOutput({
 					id: "choices",
 					name: "Choices",
@@ -1006,14 +883,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.poll.end",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				title: io.dataOutput({
-					id: "title",
-					name: "Title",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 				choices: io.dataOutput({
 					id: "choices",
 					name: "Choices",
@@ -1051,14 +922,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.prediction.begin",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				title: io.dataOutput({
-					id: "title",
-					name: "Title",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 				outcomes: io.dataOutput({
 					id: "outcomes",
 					name: "Outcomes",
@@ -1078,14 +943,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.prediction.progress",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				title: io.dataOutput({
-					id: "title",
-					name: "Title",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 				outcomes: io.dataOutput({
 					id: "outcomes",
 					name: "Outcomes",
@@ -1117,14 +976,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Prediction Lock",
 		event: "channel.prediction.lock",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
-			title: io.dataOutput({
-				id: "title",
-				name: "Title",
-				type: t.string(),
-			}),
+			exec: io.execOutput({ id: "exec" }),
+			title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 			outcomes: io.dataOutput({
 				id: "outcomes",
 				name: "Outcomes",
@@ -1156,14 +1009,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.prediction.end",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				title: io.dataOutput({
-					id: "title",
-					name: "Title",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 				outcomes: io.dataOutput({
 					id: "outcomes",
 					name: "Outcomes",
@@ -1229,24 +1076,14 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.hype_train.begin",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				total: io.dataOutput({
-					id: "total",
-					name: "Total",
-					type: t.int(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				total: io.dataOutput({ id: "total", name: "Total", type: t.int() }),
 				progress: io.dataOutput({
 					id: "progress",
 					name: "Progress",
 					type: t.int(),
 				}),
-				goal: io.dataOutput({
-					id: "goal",
-					name: "Goal",
-					type: t.int(),
-				}),
+				goal: io.dataOutput({ id: "goal", name: "Goal", type: t.int() }),
 				topContributions: io.dataOutput({
 					id: "topContributions",
 					name: "Top Contributions",
@@ -1257,11 +1094,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Last Contribution",
 					type: t.struct(LastContribute),
 				}),
-				level: io.dataOutput({
-					id: "level",
-					name: "Level",
-					type: t.int(),
-				}),
+				level: io.dataOutput({ id: "level", name: "Level", type: t.int() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -1300,24 +1133,14 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.hype_train.progress",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				total: io.dataOutput({
-					id: "total",
-					name: "Total",
-					type: t.int(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				total: io.dataOutput({ id: "total", name: "Total", type: t.int() }),
 				progress: io.dataOutput({
 					id: "progress",
 					name: "Progress",
 					type: t.int(),
 				}),
-				goal: io.dataOutput({
-					id: "goal",
-					name: "Goal",
-					type: t.int(),
-				}),
+				goal: io.dataOutput({ id: "goal", name: "Goal", type: t.int() }),
 				topContributions: io.dataOutput({
 					id: "topContributions",
 					name: "Top Contributions",
@@ -1328,11 +1151,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Last Contribution",
 					type: t.struct(LastContribute),
 				}),
-				level: io.dataOutput({
-					id: "level",
-					name: "Level",
-					type: t.int(),
-				}),
+				level: io.dataOutput({ id: "level", name: "Level", type: t.int() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -1372,19 +1191,9 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.hype_train.end",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				total: io.dataOutput({
-					id: "total",
-					name: "Total",
-					type: t.int(),
-				}),
-				level: io.dataOutput({
-					id: "level",
-					name: "Level",
-					type: t.int(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				total: io.dataOutput({ id: "total", name: "Total", type: t.int() }),
+				level: io.dataOutput({ id: "level", name: "Level", type: t.int() }),
 				topContributions: io.dataOutput({
 					id: "topContributions",
 					name: "Top Contributions",
@@ -1421,9 +1230,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.update",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				channelId: io.dataOutput({
 					id: "channelId",
 					name: "Channel ID",
@@ -1434,11 +1241,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Channel Name",
 					type: t.string(),
 				}),
-				title: io.dataOutput({
-					id: "title",
-					name: "Title",
-					type: t.string(),
-				}),
+				title: io.dataOutput({ id: "title", name: "Title", type: t.string() }),
 				categoryId: io.dataOutput({
 					id: "categoryId",
 					name: "Category Id",
@@ -1475,9 +1278,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.subscribe",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				userId: io.dataOutput({
 					id: "userId",
 					name: "userID",
@@ -1488,16 +1289,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Username",
 					type: t.string(),
 				}),
-				tier: io.dataOutput({
-					id: "tier",
-					name: "Tier",
-					type: t.string(),
-				}),
-				isGift: io.dataOutput({
-					id: "isGift",
-					name: "Gifted",
-					type: t.bool(),
-				}),
+				tier: io.dataOutput({ id: "tier", name: "Tier", type: t.string() }),
+				isGift: io.dataOutput({ id: "isGift", name: "Gifted", type: t.bool() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -1514,9 +1307,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.subscription.end",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				userId: io.dataOutput({
 					id: "userId",
 					name: "userID",
@@ -1527,16 +1318,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Username",
 					type: t.string(),
 				}),
-				tier: io.dataOutput({
-					id: "tier",
-					name: "Tier",
-					type: t.string(),
-				}),
-				isGift: io.dataOutput({
-					id: "isGift",
-					name: "Gifted",
-					type: t.bool(),
-				}),
+				tier: io.dataOutput({ id: "tier", name: "Tier", type: t.string() }),
+				isGift: io.dataOutput({ id: "isGift", name: "Gifted", type: t.bool() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -1553,9 +1336,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.subscription.gift",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				userId: io.dataOutput({
 					id: "userId",
 					name: "userID",
@@ -1566,16 +1347,8 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Username",
 					type: t.string(),
 				}),
-				tier: io.dataOutput({
-					id: "tier",
-					name: "Tier",
-					type: t.string(),
-				}),
-				total: io.dataOutput({
-					id: "total",
-					name: "Total",
-					type: t.int(),
-				}),
+				tier: io.dataOutput({ id: "tier", name: "Tier", type: t.string() }),
+				total: io.dataOutput({ id: "total", name: "Total", type: t.int() }),
 				cumulative: io.dataOutput({
 					id: "cumulative",
 					name: "Cumulative Total",
@@ -1604,9 +1377,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.subscription.message",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				userId: io.dataOutput({
 					id: "userId",
 					name: "userID",
@@ -1617,11 +1388,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Username",
 					type: t.string(),
 				}),
-				tier: io.dataOutput({
-					id: "tier",
-					name: "Tier",
-					type: t.string(),
-				}),
+				tier: io.dataOutput({ id: "tier", name: "Tier", type: t.string() }),
 				message: io.dataOutput({
 					id: "message",
 					name: "Message",
@@ -1661,9 +1428,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "user.whisper.message",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				fromUserId: io.dataOutput({
 					id: "fromUserId",
 					name: "From User ID",
@@ -1706,9 +1471,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.cheer",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				userId: io.dataOutput({
 					id: "userId",
 					name: "userID",
@@ -1734,11 +1497,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Message",
 					type: t.string(),
 				}),
-				bits: io.dataOutput({
-					id: "bits",
-					name: "Bits",
-					type: t.int(),
-				}),
+				bits: io.dataOutput({ id: "bits", name: "Bits", type: t.int() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -1757,9 +1516,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.raid",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				userId: io.dataOutput({
 					id: "userId",
 					name: "userID",
@@ -1790,9 +1547,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.ad_break.begin",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				length: io.dataOutput({
 					id: "length",
 					name: "Length (seconds)",
@@ -1817,9 +1572,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.follow",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				userId: io.dataOutput({
 					id: "userID",
 					name: "User ID",
@@ -1850,9 +1603,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.shoutout.receive",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				viewerCount: io.dataOutput({
 					id: "viewerCount",
 					name: "Type",
@@ -1878,19 +1629,9 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.goal.begin",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				id: io.dataOutput({
-					id: "id",
-					name: "Id",
-					type: t.string(),
-				}),
-				type: io.dataOutput({
-					id: "type",
-					name: "Type",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				id: io.dataOutput({ id: "id", name: "Id", type: t.string() }),
+				type: io.dataOutput({ id: "type", name: "Type", type: t.string() }),
 				description: io.dataOutput({
 					id: "description",
 					name: "Description",
@@ -1930,19 +1671,9 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.goal.progress",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				id: io.dataOutput({
-					id: "id",
-					name: "Id",
-					type: t.string(),
-				}),
-				type: io.dataOutput({
-					id: "type",
-					name: "Type",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				id: io.dataOutput({ id: "id", name: "Id", type: t.string() }),
+				type: io.dataOutput({ id: "type", name: "Type", type: t.string() }),
 				description: io.dataOutput({
 					id: "description",
 					name: "Description",
@@ -1982,19 +1713,9 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.goal.end",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				id: io.dataOutput({
-					id: "id",
-					name: "Id",
-					type: t.string(),
-				}),
-				type: io.dataOutput({
-					id: "type",
-					name: "Type",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				id: io.dataOutput({ id: "id", name: "Id", type: t.string() }),
+				type: io.dataOutput({ id: "type", name: "Type", type: t.string() }),
 				description: io.dataOutput({
 					id: "description",
 					name: "Description",
@@ -2046,19 +1767,9 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "stream.online",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				id: io.dataOutput({
-					id: "id",
-					name: "Id",
-					type: t.string(),
-				}),
-				type: io.dataOutput({
-					id: "type",
-					name: "Type",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				id: io.dataOutput({ id: "id", name: "Id", type: t.string() }),
+				type: io.dataOutput({ id: "type", name: "Type", type: t.string() }),
 				startedAt: io.dataOutput({
 					id: "startedAt",
 					name: "Started At",
@@ -2078,11 +1789,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Stream Offline",
 		event: "stream.offline",
 		createIO: ({ io }) => {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-			};
+			return { exec: io.execOutput({ id: "exec" }) };
 		},
 		run({ ctx, io }) {
 			ctx.exec(io.exec);
@@ -2115,9 +1822,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.chat.message",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				chatterUserId: io.dataOutput({
 					id: "chatterUserId",
 					name: "Chatter User Id",
@@ -2158,11 +1863,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Moderator",
 					type: t.bool(),
 				}),
-				vip: io.dataOutput({
-					id: "vip",
-					name: "VIP",
-					type: t.bool(),
-				}),
+				vip: io.dataOutput({ id: "vip", name: "VIP", type: t.bool() }),
 				subscriber: io.dataOutput({
 					id: "subscriber",
 					name: "Subscriber",
@@ -2178,11 +1879,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 					name: "Cheer",
 					type: t.option(t.int()),
 				}),
-				color: io.dataOutput({
-					id: "color",
-					name: "Color",
-					type: t.string(),
-				}),
+				color: io.dataOutput({ id: "color", name: "Color", type: t.string() }),
 				reply: io.dataOutput({
 					id: "reply",
 					name: "Reply",
@@ -2387,9 +2084,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.chat.clear_user_messages",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				targetUserId: io.dataOutput({
 					id: "targetUserId",
 					name: "User ID",
@@ -2420,9 +2115,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		event: "channel.chat.message_delete",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				targetUserId: io.dataOutput({
 					id: "targetUserId",
 					name: "User ID",
@@ -2458,11 +2151,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Chat Clear",
 		event: "channel.chat.clear",
 		createIO: ({ io }) => {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-			};
+			return { exec: io.execOutput({ id: "exec" }) };
 		},
 		run({ ctx, io }) {
 			ctx.exec(io.exec);
@@ -2621,39 +2310,21 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 	const ChannelChatNotificationEnum = pkg.createEnum(
 		"Channel Chat Notification",
 		(e) => [
-			e.variant("Sub", {
-				value: t.struct(SubStruct),
-			}),
-			e.variant("Resub", {
-				value: t.struct(ReSubStruct),
-			}),
-			e.variant("Sub Gift", {
-				value: t.struct(SubGiftStruct),
-			}),
+			e.variant("Sub", { value: t.struct(SubStruct) }),
+			e.variant("Resub", { value: t.struct(ReSubStruct) }),
+			e.variant("Sub Gift", { value: t.struct(SubGiftStruct) }),
 			e.variant("Community Sub Gift", {
 				value: t.struct(CommunitySubGiftStruct),
 			}),
 			e.variant("Gift Paid Upgrade", {
 				value: t.struct(GiftPaidUpgradeStruct),
 			}),
-			e.variant("Prime Paid Upgrade", {
-				value: t.string(),
-			}),
-			e.variant("Raid", {
-				value: t.struct(RaidStruct),
-			}),
-			e.variant("Pay It Forward", {
-				value: t.struct(PayItForwardStruct),
-			}),
-			e.variant("Announcement", {
-				value: t.string(),
-			}),
-			e.variant("Charity Donation", {
-				value: t.struct(CharityDonationStruct),
-			}),
-			e.variant("Bits Badge Tier", {
-				value: t.int(),
-			}),
+			e.variant("Prime Paid Upgrade", { value: t.string() }),
+			e.variant("Raid", { value: t.struct(RaidStruct) }),
+			e.variant("Pay It Forward", { value: t.struct(PayItForwardStruct) }),
+			e.variant("Announcement", { value: t.string() }),
+			e.variant("Charity Donation", { value: t.struct(CharityDonationStruct) }),
+			e.variant("Bits Badge Tier", { value: t.int() }),
 		],
 	);
 
@@ -2661,9 +2332,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 		name: "Channel Chat Notification",
 		event: "channel.chat.notification",
 		createIO: ({ io }) => ({
-			exec: io.execOutput({
-				id: "exec",
-			}),
+			exec: io.execOutput({ id: "exec" }),
 			broadcaster: io.dataOutput({
 				id: "broadcaster",
 				name: "Broadcaster",
@@ -2679,11 +2348,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 				name: "Chatter is Anonymous",
 				type: t.bool(),
 			}),
-			color: io.dataOutput({
-				id: "color",
-				name: "Color",
-				type: t.string(),
-			}),
+			color: io.dataOutput({ id: "color", name: "Color", type: t.string() }),
 			badges: io.dataOutput({
 				id: "badges",
 				name: "Badges",
@@ -2871,9 +2536,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 						case "prime_paid_upgrade": {
 							return ChannelChatNotificationEnum.variant([
 								"Prime Paid Upgrade",
-								{
-									value: data.prime_paid_upgrade!.sub_tier,
-								},
+								{ value: data.prime_paid_upgrade!.sub_tier },
 							]);
 						}
 						case "raid": {
@@ -2909,9 +2572,7 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 						case "bits_badge_tier": {
 							return ChannelChatNotificationEnum.variant([
 								"Bits Badge Tier",
-								{
-									value: data.bits_badge_tier!.tier,
-								},
+								{ value: data.bits_badge_tier!.tier },
 							]);
 						}
 						case "announcement": {

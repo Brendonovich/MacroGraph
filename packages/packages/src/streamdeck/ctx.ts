@@ -25,10 +25,7 @@ function createADTStore<T extends object>(init: T) {
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-const COORDINATES = v.object({
-	column: v.number(),
-	row: v.number(),
-});
+const COORDINATES = v.object({ column: v.number(), row: v.number() });
 
 const keyEvent = <TEvent extends string>(event: TEvent) =>
 	v.object({
@@ -36,10 +33,7 @@ const keyEvent = <TEvent extends string>(event: TEvent) =>
 		payload: v.object({
 			coordinates: COORDINATES,
 			isInMultiAction: v.boolean(),
-			settings: v.object({
-				id: v.string(),
-				remoteServer: v.string(),
-			}),
+			settings: v.object({ id: v.string(), remoteServer: v.string() }),
 		}),
 	});
 

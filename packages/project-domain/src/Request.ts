@@ -63,14 +63,8 @@ export class DisconnectIO extends S.TaggedRequest<DisconnectIO>()(
 	{
 		payload: {
 			graph: Graph.Id,
-			output: S.Struct({
-				node: Node.Id,
-				io: IO.Id,
-			}),
-			input: S.Struct({
-				node: Node.Id,
-				io: IO.Id,
-			}),
+			output: S.Struct({ node: Node.Id, io: IO.Id }),
+			input: S.Struct({ node: Node.Id, io: IO.Id }),
 		},
 		success: S.UndefinedOr(ProjectEvent.NodeIOUpdated),
 		failure: S.Union(Graph.NotFound, Node.NotFound),
@@ -89,9 +83,7 @@ export class CreateNode extends S.TaggedRequest<CreateNode>()("CreateNode", {
 }) {}
 
 export class CreateGraph extends S.TaggedRequest<CreateGraph>()("CreateGraph", {
-	payload: {
-		name: S.String,
-	},
+	payload: { name: S.String },
 	success: ProjectEvent.GraphCreated,
 	failure: S.Never,
 }) {}
@@ -99,10 +91,7 @@ export class CreateGraph extends S.TaggedRequest<CreateGraph>()("CreateGraph", {
 export class DeleteGraphItems extends S.TaggedRequest<DeleteGraphItems>()(
 	"DeleteGraphItems",
 	{
-		payload: {
-			graph: Graph.Id,
-			items: S.Array(Graph.ItemRef),
-		},
+		payload: { graph: Graph.Id, items: S.Array(Graph.ItemRef) },
 		success: ProjectEvent.GraphItemsDeleted,
 		failure: Graph.NotFound,
 	},
@@ -125,10 +114,7 @@ export class SetNodeProperty extends S.TaggedRequest<SetNodeProperty>()(
 export class CreateResourceConstant extends S.TaggedRequest<CreateResourceConstant>()(
 	"CreateResourceConstant",
 	{
-		payload: {
-			pkg: Package.Id,
-			resource: S.String,
-		},
+		payload: { pkg: Package.Id, resource: S.String },
 		success: ProjectEvent.ResourceConstantCreated,
 		failure: S.Union(Package.NotFound),
 	},
@@ -150,9 +136,7 @@ export class UpdateResourceConstant extends S.TaggedRequest<UpdateResourceConsta
 export class DeleteResourceConstant extends S.TaggedRequest<DeleteResourceConstant>()(
 	"DeleteResourceConstant",
 	{
-		payload: {
-			id: S.String,
-		},
+		payload: { id: S.String },
 		success: ProjectEvent.ResourceConstantDeleted,
 		failure: S.Never,
 	},

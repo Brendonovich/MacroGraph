@@ -45,28 +45,17 @@ export class PackageStateChanged extends S.TaggedClass<PackageStateChanged>()(
 
 export class GraphItemsMoved extends S.TaggedClass<GraphItemsMoved>()(
 	"GraphItemsMoved",
-	{
-		graph: Graph.Id,
-		items: S.Array(S.Tuple(Graph.ItemRef, Position)),
-	},
+	{ graph: Graph.Id, items: S.Array(S.Tuple(Graph.ItemRef, Position)) },
 ) {}
 
 export class GraphItemsDeleted extends S.TaggedClass<GraphItemsDeleted>()(
 	"GraphItemsDeleted",
-	{
-		graph: Graph.Id,
-		items: S.Array(Graph.ItemRef),
-	},
+	{ graph: Graph.Id, items: S.Array(Graph.ItemRef) },
 ) {}
 
 export class NodePropertyUpdated extends S.TaggedClass<NodePropertyUpdated>()(
 	"NodePropertyUpdated",
-	{
-		graph: Graph.Id,
-		node: Node.Id,
-		property: S.String,
-		value: S.String,
-	},
+	{ graph: Graph.Id, node: Node.Id, property: S.String, value: S.String },
 ) {}
 
 export class PackageResourcesUpdated extends S.TaggedClass<PackageResourcesUpdated>()(
@@ -93,18 +82,12 @@ export class ResourceConstantCreated extends S.TaggedClass<ResourceConstantCreat
 
 export class ResourceConstantUpdated extends S.TaggedClass<ResourceConstantUpdated>()(
 	"ResourceConstantUpdated",
-	{
-		id: S.String,
-		value: S.optional(S.String),
-		name: S.optional(S.String),
-	},
+	{ id: S.String, value: S.optional(S.String), name: S.optional(S.String) },
 ) {}
 
 export class ResourceConstantDeleted extends S.TaggedClass<ResourceConstantDeleted>()(
 	"ResourceConstantDeleted",
-	{
-		id: S.String,
-	},
+	{ id: S.String },
 ) {}
 
 export const ProjectEvent = S.Union(

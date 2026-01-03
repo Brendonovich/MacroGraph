@@ -10,10 +10,11 @@
 		"effect": "^3.19.13"
 	},
 	"exports": {
-		".": "./src/index.ts"
+		".": { "types": "./dist/src/index.d.ts", "default": "./src/index.ts" },
+		"./CloudApiClient": {
+			"types": "./dist/src/CloudApiClient.d.ts",
+			"default": "./src/CloudApiClient.ts"
+		}
 	},
-	"devDependencies": {
-		"@effect/vitest": "^0.27.0",
-		"vitest": "^4.0.8"
-	}
+	"devDependencies": { "@effect/vitest": "^0.27.0", "vitest": "^4.0.8" }
 }

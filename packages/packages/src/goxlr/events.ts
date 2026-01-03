@@ -7,19 +7,13 @@ export function register(pkg: Pkg) {
 		event: "levelsChange",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				channel: io.dataOutput({
 					name: "Channel",
 					id: "channel",
 					type: t.string(),
 				}),
-				value: io.dataOutput({
-					name: "Value",
-					id: "value",
-					type: t.int(),
-				}),
+				value: io.dataOutput({ name: "Value", id: "value", type: t.int() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -34,19 +28,13 @@ export function register(pkg: Pkg) {
 		event: "buttonDown",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				buttonName: io.dataOutput({
 					name: "Button Name",
 					id: "buttonName",
 					type: t.string(),
 				}),
-				state: io.dataOutput({
-					name: "State",
-					id: "state",
-					type: t.bool(),
-				}),
+				state: io.dataOutput({ name: "State", id: "state", type: t.bool() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -61,19 +49,13 @@ export function register(pkg: Pkg) {
 		event: "effects",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				buttonName: io.dataOutput({
 					name: "Dial",
 					id: "dial",
 					type: t.string(),
 				}),
-				state: io.dataOutput({
-					name: "Amount",
-					id: "amount",
-					type: t.int(),
-				}),
+				state: io.dataOutput({ name: "Amount", id: "amount", type: t.int() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -88,19 +70,13 @@ export function register(pkg: Pkg) {
 		event: "faderStatus",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
+				exec: io.execOutput({ id: "exec" }),
 				channel: io.dataOutput({
 					name: "Channel",
 					id: "channel",
 					type: t.string(),
 				}),
-				state: io.dataOutput({
-					name: "State",
-					id: "state",
-					type: t.bool(),
-				}),
+				state: io.dataOutput({ name: "State", id: "state", type: t.bool() }),
 			};
 		},
 		run({ ctx, data, io }) {

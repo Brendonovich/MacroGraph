@@ -24,10 +24,7 @@ import { clientEnv } from "~/env/client";
 
 const AUTH_URL = `${clientEnv.VITE_VERCEL_URL}/auth`;
 
-export const api = initClient(contract, {
-	baseUrl: "api",
-	baseHeaders: {},
-});
+export const api = initClient(contract, { baseUrl: "api", baseHeaders: {} });
 
 const core = new Core({
 	fetch,
@@ -36,10 +33,7 @@ const core = new Core({
 			const loginWindow = window.open(
 				`${AUTH_URL}/${provider}/login?${new URLSearchParams({
 					state: window.btoa(
-						JSON.stringify({
-							env: "web",
-							targetOrigin: window.origin,
-						}),
+						JSON.stringify({ env: "web", targetOrigin: window.origin }),
 					),
 				})}`,
 			);
@@ -63,10 +57,7 @@ const core = new Core({
 				body: JSON.stringify({ refreshToken }),
 			});
 
-			return {
-				...((await res.json()) as any),
-				issued_at: Date.now() / 1000,
-			};
+			return { ...((await res.json()) as any), issued_at: Date.now() / 1000 };
 		},
 	},
 	api,

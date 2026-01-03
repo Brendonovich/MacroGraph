@@ -4,9 +4,7 @@ import { t } from "@macrograph/typesystem";
 const sounds = new Map<string, HTMLAudioElement>();
 
 export function pkg(args: { prepareURL(url: string): string }) {
-	const pkg = new Package({
-		name: "Audio",
-	});
+	const pkg = new Package({ name: "Audio" });
 
 	pkg.createSchema({
 		name: "Play Audio File",
@@ -18,21 +16,9 @@ export function pkg(args: { prepareURL(url: string): string }) {
 					name: "File Location",
 					type: t.string(),
 				}),
-				id: io.dataInput({
-					id: "id",
-					name: "ID",
-					type: t.string(),
-				}),
-				volume: io.dataInput({
-					id: "volume",
-					name: "Volume",
-					type: t.int(),
-				}),
-				idOut: io.dataOutput({
-					id: "idOut",
-					name: "ID",
-					type: t.string(),
-				}),
+				id: io.dataInput({ id: "id", name: "ID", type: t.string() }),
+				volume: io.dataInput({ id: "volume", name: "Volume", type: t.int() }),
+				idOut: io.dataOutput({ id: "idOut", name: "ID", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -60,15 +46,8 @@ export function pkg(args: { prepareURL(url: string): string }) {
 		name: "Audio Stopped Playing",
 		createIO: ({ io }) => {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-					name: "",
-				}),
-				id: io.dataOutput({
-					id: "id",
-					name: "ID",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec", name: "" }),
+				id: io.dataOutput({ id: "id", name: "ID", type: t.string() }),
 			};
 		},
 		run({ ctx, data, io }) {
@@ -82,11 +61,7 @@ export function pkg(args: { prepareURL(url: string): string }) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				id: io.dataInput({
-					id: "id",
-					name: "Reference ID",
-					type: t.string(),
-				}),
+				id: io.dataInput({ id: "id", name: "Reference ID", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -104,15 +79,8 @@ export function pkg(args: { prepareURL(url: string): string }) {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				id: io.dataInput({
-					id: "id",
-					name: "Reference ID",
-					type: t.string(),
-				}),
-				volume: io.dataInput({
-					id: "volume",
-					type: t.int(),
-				}),
+				id: io.dataInput({ id: "id", name: "Reference ID", type: t.string() }),
+				volume: io.dataInput({ id: "volume", type: t.int() }),
 			};
 		},
 		run({ ctx, io }) {

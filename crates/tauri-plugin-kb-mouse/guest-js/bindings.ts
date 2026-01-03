@@ -26,10 +26,7 @@ export const commands = {
 	},
 };
 
-export const events = __makeEvents__<{
-	keyUp: KeyUp;
-	keyDown: KeyDown;
-}>({
+export const events = __makeEvents__<{ keyUp: KeyUp; keyDown: KeyDown }>({
 	keyUp: "plugin:kb-mouse:key-up",
 	keyDown: "plugin:kb-mouse:key-down",
 });

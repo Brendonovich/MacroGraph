@@ -39,10 +39,7 @@ export function NodeRoot(
 		): void;
 		onPinPointerUp?(event: PointerEvent, type: "i" | "o", id: IO.Id): void;
 		onPinDoubleClick?(type: "i" | "o", id: IO.Id): void;
-		connections?: {
-			in?: IO.Id[];
-			out?: IO.Id[];
-		};
+		connections?: { in?: IO.Id[]; out?: IO.Id[] };
 	}> &
 		Mutable<IO.NodeIO>,
 ) {

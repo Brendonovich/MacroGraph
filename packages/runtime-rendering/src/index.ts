@@ -54,12 +54,7 @@ export function renderSchema(
 		project: new Project({ core: new Core() }),
 	});
 
-	const node = new Node({
-		id: 0,
-		graph,
-		schema,
-		position: { x: 0, y: 0 },
-	});
+	const node = new Node({ id: 0, graph, schema, position: { x: 0, y: 0 } });
 
 	const io = new IOBuilder(node);
 
@@ -68,10 +63,7 @@ export function renderSchema(
 			schema.createIO({
 				io,
 				properties: schema.properties ?? {},
-				ctx: {
-					getProperty: (p) => node.getProperty(p) as any,
-					graph,
-				},
+				ctx: { getProperty: (p) => node.getProperty(p) as any, graph },
 			});
 		},
 		() => {},
@@ -87,31 +79,18 @@ export function renderSchema(
 
 export function renderIO(io: Pin): RenderedIO | undefined {
 	if (io instanceof ExecInput || io instanceof ExecOutput) {
-		return {
-			id: io.id,
-			name: io.name,
-			variant: "exec",
-		};
+		return { id: io.id, name: io.name, variant: "exec" };
 	}
 
 	if (io instanceof DataInput || io instanceof DataOutput) {
 		const type = renderType(io.type);
 		if (!type) return;
 
-		return {
-			id: io.id,
-			name: io.name,
-			variant: "data",
-			type,
-		};
+		return { id: io.id, name: io.name, variant: "data", type };
 	}
 
 	if (io instanceof ScopeInput || io instanceof ScopeOutput) {
-		return {
-			id: io.id,
-			name: io.name,
-			variant: "scope",
-		};
+		return { id: io.id, name: io.name, variant: "scope" };
 	}
 }
 

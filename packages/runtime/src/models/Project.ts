@@ -17,10 +17,10 @@ export interface ProjectArgs {
 	core: Core;
 }
 
-export type ResourceTypeItem = {
-	id: number;
-	name: string;
-} & ({ sourceId: string | null } | { value: string });
+export type ResourceTypeItem = { id: number; name: string } & (
+	| { sourceId: string | null }
+	| { value: string }
+);
 
 export type ResourceTypeEntry = {
 	items: Array<ResourceTypeItem>;
@@ -129,11 +129,7 @@ export class Project {
 	createCustomEvent(args?: { id?: number }) {
 		const id = args?.id ?? this.generateCustomEventId();
 
-		const event = new CustomEvent({
-			name: `Event ${id}`,
-			id,
-			project: this,
-		});
+		const event = new CustomEvent({ name: `Event ${id}`, id, project: this });
 
 		this.customEvents.set(id, event);
 
@@ -157,11 +153,7 @@ export class Project {
 	createCustomEnum(args?: { id?: number }) {
 		const id = args?.id ?? this.generateCustomTypeId();
 
-		const enm = new CustomEnum({
-			id,
-			project: this,
-			name: "New Enum",
-		});
+		const enm = new CustomEnum({ id, project: this, name: "New Enum" });
 
 		this.customEnums.set(id, enm);
 
@@ -178,10 +170,7 @@ export class Project {
 		id?: number;
 	}) {
 		const id = args.id ?? this.idCounter++;
-		const itemBase = {
-			id,
-			name: args.name,
-		};
+		const itemBase = { id, name: args.name };
 
 		let item: ResourceTypeItem;
 

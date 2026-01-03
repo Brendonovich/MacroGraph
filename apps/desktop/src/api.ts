@@ -32,11 +32,7 @@ export const api = initQueryClient(contract, {
 	api: (args) =>
 		fetch(args.path, args).then(async (r) => {
 			const body = await r.json();
-			return {
-				status: r.status,
-				body,
-				headers: r.headers,
-			};
+			return { status: r.status, body, headers: r.headers };
 		}),
 	baseUrl: `${env.VITE_MACROGRAPH_API_URL}/api`,
 	get baseHeaders(): Record<string, string> {

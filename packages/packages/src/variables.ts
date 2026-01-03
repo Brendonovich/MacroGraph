@@ -8,25 +8,18 @@ type Events = {
 };
 
 export function pkg() {
-	const pkg = new Package<Events>({
-		name: "Variables",
-	});
+	const pkg = new Package<Events>({ name: "Variables" });
 
 	const graphVariableProperty = {
 		name: "Variable",
 		source: ({ node }) =>
-			node.graph.variables.map((v) => ({
-				id: v.id,
-				display: v.name,
-			})),
+			node.graph.variables.map((v) => ({ id: v.id, display: v.name })),
 	} satisfies PropertyDef;
 
 	pkg.createSchema({
 		name: "Get Graph Variable",
 		type: "pure",
-		properties: {
-			variable: graphVariableProperty,
-		},
+		properties: { variable: graphVariableProperty },
 		createIO({ io, ctx, properties }) {
 			const variableId = ctx.getProperty(properties.variable);
 			const variable = ctx.graph.variables.find((v) => v.id === variableId);
@@ -51,19 +44,13 @@ export function pkg() {
 	pkg.createSchema({
 		name: "Set Graph Variable",
 		type: "exec",
-		properties: {
-			variable: graphVariableProperty,
-		},
+		properties: { variable: graphVariableProperty },
 		createIO({ io, ctx, properties }) {
 			const variableId = ctx.getProperty(properties.variable);
 			const variable = ctx.graph.variables.find((v) => v.id === variableId);
 			if (!variable) return;
 
-			return io.dataInput({
-				id: "",
-				name: variable.name,
-				type: variable.type,
-			});
+			return io.dataInput({ id: "", name: variable.name, type: variable.type });
 		},
 		run({ ctx, io, properties }) {
 			if (!io) return;
@@ -136,18 +123,13 @@ export function pkg() {
 	const projectVariableProperty = {
 		name: "Variable",
 		source: ({ node }) =>
-			node.graph.project.variables.map((v) => ({
-				id: v.id,
-				display: v.name,
-			})),
+			node.graph.project.variables.map((v) => ({ id: v.id, display: v.name })),
 	} satisfies PropertyDef;
 
 	pkg.createSchema({
 		name: "Get Project Variable",
 		type: "pure",
-		properties: {
-			variable: projectVariableProperty,
-		},
+		properties: { variable: projectVariableProperty },
 		createIO({ io, ctx, properties }) {
 			const variableId = ctx.getProperty(properties.variable);
 			const variable = ctx.graph.project.variables.find(
@@ -173,9 +155,7 @@ export function pkg() {
 	pkg.createSchema({
 		name: "Set Project Variable",
 		type: "exec",
-		properties: {
-			variable: projectVariableProperty,
-		},
+		properties: { variable: projectVariableProperty },
 		createIO({ io, ctx, properties }) {
 			const variableId = ctx.getProperty(properties.variable);
 			const variable = ctx.graph.project.variables.find(
@@ -183,11 +163,7 @@ export function pkg() {
 			);
 			if (!variable) return;
 
-			return io.dataInput({
-				id: "",
-				name: variable.name,
-				type: variable.type,
-			});
+			return io.dataInput({ id: "", name: variable.name, type: variable.type });
 		},
 		run({ ctx, io, properties }) {
 			if (!io) return;

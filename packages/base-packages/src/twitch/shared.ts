@@ -13,15 +13,11 @@ export class ConnectFailed extends Schema.TaggedError<ConnectFailed>()(
 
 export const RPCS = RpcGroup.make().add(
 	Rpc.make("ConnectEventSub", {
-		payload: S.Struct({
-			accountId: S.String,
-		}),
+		payload: S.Struct({ accountId: S.String }),
 		error: S.Union(TwitchAPIError, ConnectFailed),
 	}),
 	Rpc.make("DisconnectEventSub", {
-		payload: S.Struct({
-			accountId: S.String,
-		}),
+		payload: S.Struct({ accountId: S.String }),
 	}),
 );
 
@@ -32,15 +28,9 @@ export const STATE = S.Union(
 				id: S.String,
 				displayName: S.String,
 				eventSubSocket: S.Union(
-					S.Struct({
-						state: S.Literal("disconnected"),
-					}),
-					S.Struct({
-						state: S.Literal("connecting"),
-					}),
-					S.Struct({
-						state: S.Literal("connected"),
-					}),
+					S.Struct({ state: S.Literal("disconnected") }),
+					S.Struct({ state: S.Literal("connecting") }),
+					S.Struct({ state: S.Literal("connected") }),
 				),
 			}),
 		),

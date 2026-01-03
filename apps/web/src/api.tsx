@@ -101,10 +101,7 @@ export const getUser = cache(async () => {
 
 	const res = await db().query.users.findFirst({
 		where: eq(users.id, user.id),
-		columns: {
-			id: true,
-			email: true,
-		},
+		columns: { id: true, email: true },
 	});
 
 	return res ?? null;
@@ -130,22 +127,21 @@ async function addCredentialInner(provider: string, searchParams: string) {
 
 	if (!user) throw { code: "forbidden" };
 
-	await db().insert(oauthCredentials).values({
-		providerId: provider,
-		providerUserId: oauth.user.id,
-		userId: user.id,
-		token: oauth.token,
-		displayName: oauth.user.displayName,
-		issuedAt: new Date(),
-	});
+	await db()
+		.insert(oauthCredentials)
+		.values({
+			providerId: provider,
+			providerUserId: oauth.user.id,
+			userId: user.id,
+			token: oauth.token,
+			displayName: oauth.user.displayName,
+			issuedAt: new Date(),
+		});
 
 	posthogCapture({
 		distinctId: user.id,
 		event: "credential connected",
-		properties: {
-			providerId: provider,
-			providerUserId: oauth.user.id,
-		},
+		properties: { providerId: provider, providerUserId: oauth.user.id },
 	});
 	await posthogShutdown();
 

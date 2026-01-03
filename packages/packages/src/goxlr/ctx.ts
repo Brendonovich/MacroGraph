@@ -32,12 +32,7 @@ export function createCtx(onEvent: OnEvent<Event>) {
 
 					ws.addEventListener("open", () => {
 						setState({ type: "connected", ws });
-						ws.send(
-							JSON.stringify({
-								id: 0,
-								data: "GetStatus",
-							}),
-						);
+						ws.send(JSON.stringify({ id: 0, data: "GetStatus" }));
 					});
 
 					ws.addEventListener("message", (msg) => {

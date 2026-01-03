@@ -23,16 +23,8 @@ export function pkg() {
 		type: "exec",
 		createIO({ io }) {
 			return {
-				ip: io.dataInput({
-					id: "ip",
-					name: "WS IP",
-					type: t.string(),
-				}),
-				data: io.dataInput({
-					id: "data",
-					name: "Data",
-					type: t.string(),
-				}),
+				ip: io.dataInput({ id: "ip", name: "WS IP", type: t.string() }),
+				data: io.dataInput({ id: "data", name: "Data", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -45,19 +37,9 @@ export function pkg() {
 		name: "WS Event",
 		createIO({ io }) {
 			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				ip: io.dataOutput({
-					id: "ip",
-					name: "WS IP",
-					type: t.string(),
-				}),
-				data: io.dataOutput({
-					id: "data",
-					name: "Data",
-					type: t.string(),
-				}),
+				exec: io.execOutput({ id: "exec" }),
+				ip: io.dataOutput({ id: "ip", name: "WS IP", type: t.string() }),
+				data: io.dataOutput({ id: "data", name: "Data", type: t.string() }),
 			};
 		},
 		run({ ctx, data, io }) {

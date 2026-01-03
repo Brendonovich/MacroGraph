@@ -28,9 +28,7 @@ export default defineConfig({
 		nitroV2Plugin({
 			preset: "vercel",
 			prerender: { crawlLinks: true, routes: ["/", "/new-playground"] },
-			externals: {
-				external: nodeOnlyDeps,
-			},
+			externals: { external: nodeOnlyDeps },
 		}),
 		// unfonts({
 		//   fontsource: {

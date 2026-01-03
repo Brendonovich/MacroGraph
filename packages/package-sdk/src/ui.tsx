@@ -48,18 +48,10 @@ const buttonStyles = cva({
 			textDanger:
 				"bg-transparent text-red-10 enabled:(hover:bg-red-3 focus-visible:(bg-red-3 outline-offset-0 outline-1)) disabled:(text-red-9 bg-red-3)",
 		},
-		size: {
-			md: "h-8 px-2.5 y-1 text-sm",
-		},
-		shape: {
-			block: "h-full",
-			rounded: "rounded",
-		},
+		size: { md: "h-8 px-2.5 y-1 text-sm" },
+		shape: { block: "h-full", rounded: "rounded" },
 	},
-	defaultVariants: {
-		variant: "primary",
-		size: "md",
-	},
+	defaultVariants: { variant: "primary", size: "md" },
 });
 
 export function Button(
@@ -123,10 +115,7 @@ export function PromiseButton(
 	});
 
 	const [ref, setRef] = createSignal<HTMLButtonElement | null>(null);
-	const presence = createPresence({
-		show: loading,
-		element: ref,
-	});
+	const presence = createPresence({ show: loading, element: ref });
 
 	return (
 		<Button

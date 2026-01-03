@@ -4,25 +4,15 @@ import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 export function pkg() {
-	const pkg = new Package({
-		name: "Localstorage",
-	});
+	const pkg = new Package({ name: "Localstorage" });
 
 	pkg.createSchema({
 		name: "Set Data",
 		type: "exec",
 		createIO: ({ io }) => {
 			return {
-				key: io.dataInput({
-					id: "key",
-					name: "Key",
-					type: t.string(),
-				}),
-				value: io.dataInput({
-					id: "value",
-					name: "Value",
-					type: t.string(),
-				}),
+				key: io.dataInput({ id: "key", name: "Key", type: t.string() }),
+				value: io.dataInput({ id: "value", name: "Value", type: t.string() }),
 			};
 		},
 		run({ ctx, io }) {
@@ -38,11 +28,7 @@ export function pkg() {
 		type: "exec",
 		createIO: ({ io }) => {
 			return {
-				key: io.dataInput({
-					id: "key",
-					name: "Key",
-					type: t.string(),
-				}),
+				key: io.dataInput({ id: "key", name: "Key", type: t.string() }),
 				value: io.dataInput({
 					id: "value",
 					name: "Value",
@@ -63,11 +49,7 @@ export function pkg() {
 		type: "pure",
 		createIO: ({ io }) => {
 			return {
-				key: io.dataInput({
-					id: "key",
-					name: "Key",
-					type: t.string(),
-				}),
+				key: io.dataInput({ id: "key", name: "Key", type: t.string() }),
 				output: io.dataOutput({
 					id: "output",
 					name: "Data",
@@ -87,11 +69,7 @@ export function pkg() {
 		type: "pure",
 		createIO: ({ io }) => {
 			return {
-				key: io.dataInput({
-					id: "key",
-					name: "Key",
-					type: t.string(),
-				}),
+				key: io.dataInput({ id: "key", name: "Key", type: t.string() }),
 				output: io.dataOutput({
 					id: "output",
 					name: "Data",
@@ -114,11 +92,7 @@ export function pkg() {
 		name: "Remove Data",
 		type: "exec",
 		createIO: ({ io }) => {
-			return io.dataInput({
-				id: "key",
-				name: "Key",
-				type: t.string(),
-			});
+			return io.dataInput({ id: "key", name: "Key", type: t.string() });
 		},
 		run({ ctx, io }) {
 			localStorage.removeItem(`value-${ctx.getInput(io)}`);

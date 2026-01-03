@@ -1,14 +1,8 @@
 {
 	"name": "@macrograph/icons",
 	"type": "module",
-	"dependencies": {
-		"@iconify/json": "^2.2.196",
-		"vite": "^7.1.10"
-	},
-	"exports": {
-		"./vite": "./vite.js",
-		"./types": "./index.d.ts"
-	},
+	"dependencies": { "@iconify/json": "^2.2.196", "vite": "^7.1.10" },
+	"exports": { "./vite": "./vite.js", "./types": "./index.d.ts" },
 	"devDependencies": {
 		"unplugin-auto-import": "^20.2.0",
 		"unplugin-icons": "^0.18.5"

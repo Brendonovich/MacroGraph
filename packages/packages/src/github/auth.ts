@@ -19,9 +19,7 @@ export type StrategyOption = {
 	refresh: () => void | Promise<void>;
 };
 
-export type UnauthenticatedAuthentication = {
-	type: "unauthenticated";
-};
+export type UnauthenticatedAuthentication = { type: "unauthenticated" };
 export type OAuthTokenAuthentication = {
 	type: "token";
 	tokenType: "oauth";
@@ -55,9 +53,7 @@ export async function auth({
 	const result = callback();
 
 	if (!result) {
-		return {
-			type: "unauthenticated",
-		};
+		return { type: "unauthenticated" };
 	}
 
 	const token = result.replace(/^(token|bearer) +/i, "");
@@ -69,11 +65,7 @@ export async function auth({
 				? "installation"
 				: "oauth";
 
-	return {
-		type: "token",
-		token: token,
-		tokenType,
-	};
+	return { type: "token", token: token, tokenType };
 }
 
 export const createCallbackAuth: StrategyInterface =

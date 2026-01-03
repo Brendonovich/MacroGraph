@@ -10,12 +10,7 @@ export const Node = S.Struct({
 	id: Id,
 	name: S.String,
 	schema: S.suspend(() => Schema.Ref),
-	properties: S.optional(
-		S.HashMap({
-			key: S.String,
-			value: S.Unknown,
-		}),
-	),
+	properties: S.optional(S.HashMap({ key: S.String, value: S.Unknown })),
 	position: Position,
 });
 export type Node = typeof Node.Type;

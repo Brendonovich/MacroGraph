@@ -53,6 +53,7 @@
 	},
 	"exports": {
 		".": "./src/index.ts",
-		"./ui": "./src/ui.tsx"
+		"./ui": "./src/ui.tsx",
+		"./updated": "./src/updated.ts"
 	}
 }

@@ -15,24 +15,14 @@ export const CloudLoginEvent = Schema.Union(
 		type: Schema.Literal("started"),
 		verificationUrlComplete: Schema.String,
 	}),
-	Schema.Struct({
-		type: Schema.Literal("finished"),
-		jwt: EncodedJWT,
-	}),
+	Schema.Struct({ type: Schema.Literal("finished"), jwt: EncodedJWT }),
 );
 export type CloudLoginEvent = Schema.Schema.Type<typeof CloudLoginEvent>;
 
 export const Rpcs = RpcGroup.make(
-	Rpc.make("ClientLogin", {
-		stream: true,
-		success: CloudLoginEvent,
-	}),
+	Rpc.make("ClientLogin", { stream: true, success: CloudLoginEvent }),
 	Rpc.make("GetUser", {
-		success: Schema.OptionFromNullOr(
-			Schema.Struct({
-				name: Schema.String,
-			}),
-		),
+		success: Schema.OptionFromNullOr(Schema.Struct({ name: Schema.String })),
 		error: CloudAuth.CloudApiError,
 	}),
 ).middleware(Realtime.ConnectionRpcMiddleware);

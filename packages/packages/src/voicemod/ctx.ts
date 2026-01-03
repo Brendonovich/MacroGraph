@@ -28,17 +28,9 @@ export function createCtx() {
 	type ActionData = {
 		actionID: string;
 		actionId: string;
-		actionObject: {
-			currentVoice: string;
-			voices: Voice[];
-			value: any;
-		};
+		actionObject: { currentVoice: string; voices: Voice[]; value: any };
 		actionType: string;
-		payload: {
-			currentVoice: string;
-			voices: Voice[];
-			value: any;
-		};
+		payload: { currentVoice: string; voices: Voice[]; value: any };
 	};
 
 	const connect = () => {
@@ -50,9 +42,7 @@ export function createCtx() {
 					JSON.stringify({
 						id: crypto.randomUUID(),
 						action: "registerClient",
-						payload: {
-							clientKey: "controlapi-xSVAjWxbl",
-						},
+						payload: { clientKey: "controlapi-xSVAjWxbl" },
 					}),
 				);
 				setTimeout(() => {

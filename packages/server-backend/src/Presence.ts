@@ -94,10 +94,7 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 					yield* SubscriptionRef.update(clients, (c) => ({
 						...c,
 						[connection.id]: c[connection.id]
-							? {
-									...c[connection.id],
-									mouse: { graph: graphId, ...position },
-								}
+							? { ...c[connection.id], mouse: { graph: graphId, ...position } }
 							: undefined,
 					}));
 				}),

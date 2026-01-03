@@ -41,11 +41,9 @@ export function GraphView(
 		nodes: NodeState[];
 		connections?: GraphTwoWayConnections;
 		selection?: Array<Graph.ItemRef>;
-		getSchema: (ref: Schema.Ref) => Option.Option<{
-			name: string;
-			id: Schema.Id;
-			type: Schema.Type;
-		}>;
+		getSchema: (
+			ref: Schema.Ref,
+		) => Option.Option<{ name: string; id: Schema.Id; type: Schema.Type }>;
 		remoteSelections?: Array<{ colour: string; nodes: Set<Node.Id> }>;
 		onSelectionDrag?(
 			items: Array<[Graph.ItemRef, { x: number; y: number }]>,
@@ -320,14 +318,14 @@ export function GraphView(
 			}
 		}
 
-		for (const [outNodeId, outConnections] of Object.entries(
+		for (const [outNodeIdStr, outConnections] of Object.entries(
 			props.connections ?? {},
 		)) {
 			if (!outConnections.out) continue;
-			for (const [outId, inputs] of Object.entries(outConnections.out)) {
-				const outPosition = graphCtx.ioPositions.get(
-					`${Node.Id.make(Number(outNodeId))}:o:${IO.Id.make(outId)}`,
-				);
+			const outNodeId = Node.Id.make(Number(outNodeIdStr));
+			for (const [outIdStr, inputs] of Object.entries(outConnections.out)) {
+				const outId = IO.Id.make(outIdStr);
+				const outPosition = graphCtx.ioPositions.get(`${outNodeId}:o:${outId}`);
 				if (!outPosition) continue;
 
 				for (const [inNodeId, inId] of inputs) {
@@ -369,10 +367,7 @@ export function GraphView(
 	};
 
 	const getEventGraphPosition = (e: MouseEvent) =>
-		graphCtx.getGraphPosition({
-			x: e.clientX,
-			y: e.clientY,
-		});
+		graphCtx.getGraphPosition({ x: e.clientX, y: e.clientY });
 
 	return (
 		<div
@@ -412,14 +407,8 @@ export function GraphView(
 
 					gesture.pointers.push({
 						pointerId: downEvent.pointerId,
-						start: {
-							x: downEvent.clientX,
-							y: downEvent.clientY,
-						},
-						current: {
-							x: downEvent.clientX,
-							y: downEvent.clientY,
-						},
+						start: { x: downEvent.clientX, y: downEvent.clientY },
+						current: { x: downEvent.clientX, y: downEvent.clientY },
 					});
 
 					// Check if we should start monitoring for two-finger gesture
@@ -430,6 +419,8 @@ export function GraphView(
 
 						const left = gesture.pointers[0];
 						const right = gesture.pointers[1];
+
+						if (!left || !right) return;
 
 						// Create root to monitor for movement
 						createRoot((disposeMonitor) => {
@@ -537,11 +528,7 @@ export function GraphView(
 								});
 							});
 
-							return {
-								type: "dragArea",
-								topLeft,
-								bottomRight: topLeft,
-							};
+							return { type: "dragArea", topLeft, bottomRight: topLeft };
 						});
 					});
 				} else if (downEvent.button === 2) {
@@ -689,16 +676,16 @@ export function GraphView(
 												...Object.entries(
 													props.connections?.[node.id]?.in ?? {},
 												),
-											].flatMap(([id, connections]) => {
-												if (connections.length > 0) return IO.Id.make(id);
+											].flatMap(([idStr, connections]) => {
+												if (connections.length > 0) return IO.Id.make(idStr);
 												return [];
 											}),
 											out: [
 												...Object.entries(
 													props.connections?.[node.id]?.out ?? {},
 												),
-											].flatMap(([id, connections]) => {
-												if (connections.length > 0) return IO.Id.make(id);
+											].flatMap(([idStr, connections]) => {
+												if (connections.length > 0) return IO.Id.make(idStr);
 												return [];
 											}),
 										}}

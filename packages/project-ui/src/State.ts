@@ -58,12 +58,7 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 						value?: string;
 					}
 				>;
-			}>({
-				name: "New Project",
-				graphs: {},
-				packages: {},
-				constants: {},
-			});
+			}>({ name: "New Project", graphs: {}, packages: {}, constants: {} });
 
 			const actions = {
 				disconnectIO(
@@ -100,10 +95,7 @@ export class ProjectState extends Effect.Service<ProjectState>()(
 				},
 				deleteNode(
 					prev: typeof state,
-					args: {
-						graph: Graph.Id;
-						nodeId: Node.Id;
-					},
+					args: { graph: Graph.Id; nodeId: Node.Id },
 				) {
 					const graph = prev.graphs[args.graph];
 					if (!graph) return;

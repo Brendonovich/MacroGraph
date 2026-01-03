@@ -35,37 +35,23 @@ export type NodeSchemaVariant =
 	| "event";
 
 export type DataInputBuilder =
-	| {
-			id: string;
-			name?: string;
-			type: AnyType;
-	  }
+	| { id: string; name?: string; type: AnyType }
 	| {
 			id: string;
 			name?: string;
 			type: t.String;
 			fetchSuggestions?(): Promise<string[]>;
 	  };
-export type ExecInputBuilder = {
-	id: string;
-	name?: string;
-};
+export type ExecInputBuilder = { id: string; name?: string };
 
-export type ScopeInputBuilder = {
-	id: string;
-	name?: string;
-};
+export type ScopeInputBuilder = { id: string; name?: string };
 
 export type InputBuilder =
 	| ({ variant: "Data" } & DataInputBuilder)
 	| ({ variant: "Exec" } & ExecInputBuilder)
 	| ({ variant: "Scope" } & ScopeInputBuilder);
 
-export type DataOutputBuilder = {
-	id: string;
-	name?: string;
-	type: AnyType;
-};
+export type DataOutputBuilder = { id: string; name?: string; type: AnyType };
 
 export type ExecOutputBuilder = { id: string; name?: string };
 
@@ -265,9 +251,7 @@ export type inferPropertyDef<TProperty extends PropertyDef> =
 				: never;
 
 export type SchemaProperties<TProperties = Record<string, PropertyDef>> = {
-	[K in keyof TProperties]: {
-		id: K;
-	} & TProperties[K];
+	[K in keyof TProperties]: { id: K } & TProperties[K];
 };
 
 export type GenerateIOCtx = {
@@ -322,11 +306,7 @@ export type EventNodeSchema<
 				ctx: GenerateIOCtx;
 				properties: SchemaProperties<TProperties>;
 		  }) => TEvent | undefined);
-	run: (
-		a: BaseRunArgs<TIO, TProperties> & {
-			data: TEvents[TEvent];
-		},
-	) => void;
+	run: (a: BaseRunArgs<TIO, TProperties> & { data: TEvents[TEvent] }) => void;
 };
 
 // NEW STUFF

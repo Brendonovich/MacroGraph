@@ -14,13 +14,7 @@ export const TOKEN_LOCALSTORAGE = "patreonToken";
 
 export type Requests = {
 	"GET /oauth2/api/current_user": {
-		data: {
-			attributes: {
-				email: string;
-				full_name: string;
-			};
-			id: string;
-		};
+		data: { attributes: { email: string; full_name: string }; id: string };
 	};
 };
 
@@ -67,9 +61,7 @@ export function createCtx(core: Core) {
 		oauth: (() => {
 			const oauth = client.extend("/oauth2/api");
 
-			return {
-				currentUser: oauth.extend("/current_user"),
-			};
+			return { currentUser: oauth.extend("/current_user") };
 		})(),
 	};
 

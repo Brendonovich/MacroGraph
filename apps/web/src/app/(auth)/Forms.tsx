@@ -43,17 +43,12 @@ const signUpAction = action(async (form: FormData) => {
 		const hashedPassword = await new Argon2id().hash(data.password);
 		const userId = generateId(15);
 
-		await db().insert(users).values({
-			id: userId,
-			email: data.email,
-			hashedPassword,
-		});
+		await db()
+			.insert(users)
+			.values({ id: userId, email: data.email, hashedPassword });
 
 		posthogIdentify(userId, { email: data.email });
-		posthogCapture({
-			distinctId: userId,
-			event: "user signed up",
-		});
+		posthogCapture({ distinctId: userId, event: "user signed up" });
 		await posthogShutdown();
 
 		await createSession(userId);
@@ -89,10 +84,7 @@ const loginWithCredentialsAction = action(async (form: FormData) => {
 
 		await createSession(user.id);
 
-		posthogCapture({
-			distinctId: user.id,
-			event: "user logged in",
-		});
+		posthogCapture({ distinctId: user.id, event: "user logged in" });
 		await posthogShutdown();
 
 		return { success: true, userId: user.id } as const;

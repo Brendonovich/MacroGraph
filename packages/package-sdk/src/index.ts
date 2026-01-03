@@ -181,11 +181,7 @@ export namespace Package {
 		engine?: PackageEngine.PackageEngine<TEvents>;
 		builder: PackageBuildFn<TEvents>;
 	}): UnbuiltPackage<TEvents> => {
-		return {
-			name: args.name,
-			engine: args.engine,
-			builder: args.builder,
-		};
+		return { name: args.name, engine: args.engine, builder: args.builder };
 	};
 
 	export type PackageBuildFn<TEvents> = (ctx: {
@@ -235,7 +231,7 @@ export namespace Package {
 	interface Package<
 		Engine extends PackageEngine.PackageEngineDefinition<any, any, any, any>,
 		Schemas extends NodeSchema.Any,
-	> extends PackageDef<Engine, Schemas> {
+	> extends PackageDef<Engine> {
 		toLayer: (
 			build: (
 				builder: PackageBuilder<Schemas, Schema.Schema.Type<Engine["events"]>>,
@@ -245,10 +241,7 @@ export namespace Package {
 
 	export class Tag extends Context.Tag("@macrograph/package-sdk/Package/Tag")<
 		Tag,
-		{
-			def: PackageDef<any, any>;
-			schemas: Map<string, NodeSchema.AnyImpl>;
-		}
+		{ def: PackageDef<any>; schemas: Map<string, NodeSchema.AnyImpl> }
 	>() {}
 
 	export const define = <
@@ -260,7 +253,7 @@ export namespace Package {
 			any
 		> = never,
 	>(
-		def: PackageDef<Engine, Schemas>,
+		def: PackageDef<Engine>,
 	): Package<Engine, Schemas> => ({
 		...def,
 		toLayer: (build) =>
@@ -350,7 +343,7 @@ export namespace NodeSchema {
 		run: (ctx: {
 			io: IO;
 			properties: InferProperties<S["properties"]>;
-		}) => EffectGenerator<SchemaRunGeneratorEffect, void>;
+		}) => EffectGenerator<SchemaRunGeneratorEffect>;
 	}
 
 	export interface EventImpl<S extends Any, IO, Events, Event> {
@@ -359,12 +352,9 @@ export namespace NodeSchema {
 			e: Events,
 		) => Event | undefined;
 		run: (
-			ctx: {
-				io: IO;
-				properties: InferProperties<S["properties"]>;
-			},
+			ctx: { io: IO; properties: InferProperties<S["properties"]> },
 			event: Event,
-		) => EffectGenerator<SchemaRunGeneratorEffect, void>;
+		) => EffectGenerator<SchemaRunGeneratorEffect>;
 	}
 
 	export type AnyImpl<
