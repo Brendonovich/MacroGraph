@@ -51,7 +51,6 @@ jobs:
           file: apps/server/Dockerfile
           push: true
           tags: |
-            ${{ env.TAG != '' && format('{0}-{1}', env.IMAGE_NAME, env.SHORT_SHA) || '' }}
             ${{ env.TAG != '' && format('{0}:{1}', env.IMAGE_NAME, env.TAG) || '' }}
           provenance: false
 
