@@ -164,19 +164,21 @@ function ConstantRenameDialog(props: {
 					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 border border-gray-6 rounded shadow-lg focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-left-2) ui-closed:(animate-out fade-out slide-out-to-left-2)"
 					onOpenAutoFocus={(e) => e.preventDefault()}
 				>
-					<div class="flex flex-col gap-2 p-2 pb-0">
-						<span class="text-xs font-medium text-gray-12">
-							Rename Constant
-						</span>
-						<input
-							type="text"
-							value={editName()}
-							onInput={(e) => setEditName(e.currentTarget.value)}
-							class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-yellow"
-							disabled={props.isRenaming}
-						/>
+					<div class="flex flex-col gap-2">
+						<div class="p-2">
+							<span class="text-xs font-medium text-gray-12">
+								Rename Constant
+							</span>
+							<input
+								type="text"
+								value={editName()}
+								onInput={(e) => setEditName(e.currentTarget.value)}
+								class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-yellow"
+								disabled={props.isRenaming}
+							/>
+						</div>
 					</div>
-					<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center pb-2">
+					<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center">
 						<Popover.CloseButton
 							class={cx(
 								"flex-1 rounded-bl text-gray-11 hover:text-gray-12",
