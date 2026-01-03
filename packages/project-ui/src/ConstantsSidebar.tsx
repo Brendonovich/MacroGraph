@@ -7,11 +7,40 @@ import { focusRingClasses } from "@macrograph/ui";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
 import { createMemo, createSignal, For, Index, Show } from "solid-js";
+import type { ComponentProps } from "solid-js";
 
 import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";
 import { ProjectState } from "./State";
-import { ContextMenuContent, ContextMenuItem } from "@macrograph/interface";
+
+function ContextMenuContent(
+	props: Omit<ComponentProps<typeof ContextMenu.Content<"div">>, "onKeyDown">,
+) {
+	return (
+		<ContextMenu.Portal>
+			<ContextMenu.Content
+				{...props}
+				onKeyDown={(e) => e.stopPropagation()}
+				class={cx(
+					"border border-gray-6 rounded bg-gray-3 min-w-32 text-xs ui-expanded:animate-in ui-expanded:fade-in ui-expanded:zoom-in-95 origin-top-left ui-closed:animate-out ui-closed:fade-out ui-closed:zoom-out-95 p-1 focus:outline-none select-none text-gray-12",
+					props.class,
+				)}
+			>
+				{props.children}
+			</ContextMenu.Content>
+		</ContextMenu.Portal>
+	);
+}
+
+const ContextMenuItem = (props: ComponentProps<typeof ContextMenu.Item>) => (
+	<ContextMenu.Item
+		{...props}
+		class={cx(
+			"px-1.5 py-1 outline-none ui-highlighted:bg-gray-6 rounded-sm flex flex-row items-center gap-2",
+			props.class,
+		)}
+	/>
+);
 
 export function ConstantsSidebar() {
 	const actions = useProjectService(ProjectActions);
