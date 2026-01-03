@@ -3,8 +3,8 @@ import { renderToString } from "solid-js/web";
 
 import { exchangeOAuthToken, validateCallbackSearchParams } from "../actions";
 import { AuthProviders } from "../providers";
-import responderScriptWeb from "../responderScript-web?raw";
 import responderScript from "../responderScript.js?raw";
+import responderScriptWeb from "../responderScript-web?raw";
 
 export const GET: APIHandler = async (event) => {
 	const { provider } = event.params as { provider: string };

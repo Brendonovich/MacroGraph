@@ -5,10 +5,6 @@ import type { ChatCompletionAssistantMessageParam } from "openai/resources";
 import type { Pkg } from ".";
 import type { Ctx } from "./ctx";
 
-type Message = { role: string; content: string };
-
-type Choices = { finish_reason: string; index: number; message: Message };
-
 export function register(pkg: Pkg, state: Ctx) {
 	const Model = pkg.createEnum("ChatGPT Model", (e) => [
 		e.variant("gpt-3.5-turbo"),
@@ -83,7 +79,7 @@ export function register(pkg: Pkg, state: Ctx) {
 			for await (const chunk of stream) {
 				console.log(chunk);
 				if (chunk.choices[0]?.finish_reason === "stop") {
-					const array = [];
+					const _array = [];
 
 					ctx.execScope(io.complete, { response: message });
 					return;

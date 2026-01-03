@@ -2,15 +2,15 @@ import { Polymorphic } from "@kobalte/core/polymorphic";
 import { createContextProvider } from "@solid-primitives/context";
 import clsx from "clsx";
 import {
+	batch,
 	type ComponentProps,
+	createSignal,
 	type JSX,
 	Match,
-	Switch,
-	type ValidComponent,
-	batch,
-	createSignal,
 	onMount,
+	Switch,
 	splitProps,
+	type ValidComponent,
 } from "solid-js";
 
 export function InlineTextEditor<T extends ValidComponent = "span">(

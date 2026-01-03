@@ -1,4 +1,4 @@
-import { type TypeVariant, type Wildcard, t } from ".";
+import { type TypeVariant, t, type Wildcard } from ".";
 import { BaseType } from "./base";
 
 export class ListType<T extends BaseType> extends BaseType<t.infer<T>[]> {

@@ -1,9 +1,9 @@
-import { ParentProps } from "solid-js";
+import { A } from "@solidjs/router";
 import { clientOnly } from "@solidjs/start";
+import type { ParentProps } from "solid-js";
 
 import { HeaderAuthFallback } from "../HeaderAuthSection";
 import { Logo } from "../Logo";
-import { A } from "@solidjs/router";
 
 const AuthSection = clientOnly(() =>
 	import("../HeaderAuthSection").then((i) => ({

@@ -7,15 +7,15 @@ import {
 	EnumType,
 	type EnumVariants,
 	type PrimitiveType,
-	WildcardType,
 	type t,
+	WildcardType,
 } from "@macrograph/typesystem";
-import { createQuery, useQuery } from "@tanstack/solid-query";
+import { useQuery } from "@tanstack/solid-query";
 import { Match, Show, Switch } from "solid-js";
 
-import { DataPin } from ".";
 import { useInterfaceContext } from "../../../context";
 import { CheckBox, EnumInput, FloatInput, IntInput, TextInput } from "../../ui";
+import { DataPin } from ".";
 
 type EnumValue = t.infer<t.Enum<Enum<EnumVariants>>>;
 
@@ -103,7 +103,9 @@ const Input = (props: InputProps) => {
 								<Show when={!props.connected}>
 									<IntInput
 										initialValue={
-											props.value ? Number.parseInt(props.value.toString()) : 0
+											props.value
+												? Number.parseInt(props.value.toString(), 10)
+												: 0
 										}
 										onChange={props.onChange}
 									/>

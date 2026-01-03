@@ -1,4 +1,4 @@
-import { Effect, Layer, ManagedRuntime, Option, Stream } from "effect";
+import { Effect, Layer, type ManagedRuntime, Option, Stream } from "effect";
 import {
 	ProjectEventStream,
 	ProjectRequestHandler,

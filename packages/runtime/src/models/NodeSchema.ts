@@ -3,12 +3,12 @@ import {
 	type AnyType,
 	type BaseType,
 	type PrimitiveType,
-	Wildcard,
 	type t,
+	Wildcard,
 } from "@macrograph/typesystem";
 import type { EventBus } from "@solid-primitives/event-bus";
-
 import { batch } from "solid-js";
+
 import type { Graph } from "./Graph";
 import {
 	DataInput,
@@ -21,7 +21,7 @@ import {
 	ScopeOutput,
 } from "./IO";
 import type { Node } from "./Node";
-import type { Package, ResourceType, inferResourceTypeValue } from "./Package";
+import type { inferResourceTypeValue, Package, ResourceType } from "./Package";
 import type { Variable } from "./Variable";
 
 export type NodeSchemaVariant =

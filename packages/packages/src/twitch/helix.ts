@@ -16,7 +16,7 @@ import type { z } from "zod";
 import { createHTTPClient } from "../httpEndpoint";
 import type { Account } from "./auth";
 import { CLIENT_ID } from "./ctx";
-import { TwitchAccount, TwitchChannel, defaultProperties } from "./resource";
+import { defaultProperties, TwitchAccount, TwitchChannel } from "./resource";
 import type { Types } from "./types";
 
 export const HELIX_USER_ID = "helixUserId";
@@ -269,7 +269,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			}),
 			delay: io.dataOutput({ name: "Delay", id: "delay", type: t.int() }),
 		}),
-		async run({ ctx, io, account, credential }) {
+		async run({ ctx, io, credential }) {
 			const data = await helix.call("GET /channels", credential, {
 				body: new URLSearchParams({
 					broadcaster_id: ctx.getInput(io.broadcasterIdIn),
@@ -359,7 +359,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.option(t.struct(StreamInfo)),
 			}),
 		}),
-		async run({ ctx, io, account, credential }) {
+		async run({ ctx, io, credential }) {
 			const data = await helix.call("GET /streams", credential, {
 				body: new URLSearchParams({ user_id: ctx.getInput(io.broadcasterId) }),
 			});
@@ -844,7 +844,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		},
 	});
 
-	const leaderboardPerson = pkg.createStruct("Leaderboard User", (s) => ({
+	const _leaderboardPerson = pkg.createStruct("Leaderboard User", (s) => ({
 		user_id: s.field("ID", t.string()),
 		user_login: s.field("Login", t.string()),
 		user_name: s.field("Name", t.string()),
@@ -852,7 +852,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		score: s.field("Score", t.int()),
 	}));
 
-	const periodtext = pkg.createEnum("Time Period", (e) => [
+	const _periodtext = pkg.createEnum("Time Period", (e) => [
 		e.variant("day"),
 		e.variant("week"),
 		e.variant("month"),
@@ -1285,7 +1285,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				// }),
 			};
 		},
-		async run({ ctx, io, account, credential }) {
+		async run({ ctx, io, credential }) {
 			const response = await helix.call("GET /users", credential, {
 				body: new URLSearchParams({ login: ctx.getInput(io.userLoginIn) }),
 			});
@@ -1398,7 +1398,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			//   type: t.option(t.struct(User)),
 			// }),
 		}),
-		async run({ ctx, io, account, credential }) {
+		async run({ ctx, io, credential }) {
 			const resp = await helix.call("GET /users", credential, {
 				body: new URLSearchParams({ id: ctx.getInput(io.userIdIn) }),
 			});
@@ -1538,7 +1538,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account, credential }) {
+		async run({ ctx, io, credential }) {
 			const color = await helix.call("GET /chat/color", credential, {
 				body: new URLSearchParams({ user_id: ctx.getInput(io.userId) }),
 			});
@@ -1750,7 +1750,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			};
 		},
 		async run({ ctx, io, account, credential }) {
-			const user = account.data.id;
+			const _user = account.data.id;
 
 			const data = await fetch("https://id.twitch.tv/oauth2/validate", {
 				method: "GET",
@@ -1825,7 +1825,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				}),
 			};
 		},
-		async run({ ctx, io, account, credential }) {
+		async run({ ctx, io, credential }) {
 			const params: any = { broadcaster_id: credential.id };
 
 			console.log("id", ctx.getInput(io.id));

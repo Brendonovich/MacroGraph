@@ -36,7 +36,7 @@ export function createCtx() {
 	const connect = () => {
 		for (const port of ports) {
 			const ws = new WebSocket(`ws://localhost:${port}/v1`);
-			ws.addEventListener("open", (event) => {
+			ws.addEventListener("open", (_event) => {
 				setState(Some(ws));
 				ws.send(
 					JSON.stringify({
@@ -72,7 +72,7 @@ export function createCtx() {
 						}),
 					);
 				}, 2000);
-				ws.addEventListener("close", (event) => {
+				ws.addEventListener("close", (_event) => {
 					console.log(`Port: ${port} Closed.`);
 					setState(None);
 					setTimeout(() => {

@@ -1,8 +1,8 @@
+import type { CreateEventSchema } from "@macrograph/runtime";
+import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { createEventListener } from "@solid-primitives/event-listener";
 
-import type { CreateEventSchema } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
 import { type Pkg, STATUS_BYTES } from "./";
 import { midiInputProperty } from "./resource";
 

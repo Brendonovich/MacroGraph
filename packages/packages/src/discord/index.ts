@@ -5,10 +5,9 @@ import { createStore } from "solid-js/store";
 import * as v from "valibot";
 
 import * as api from "./api";
-import * as gateway from "./gateway";
-
 import { createApi } from "./api";
 import { createAuth } from "./auth";
+import * as gateway from "./gateway";
 import { createGateway } from "./gateway";
 import { DiscordAccount, DiscordBot } from "./resource";
 

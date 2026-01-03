@@ -1,7 +1,7 @@
 import type { APIHandler } from "@solidjs/start/server";
 import * as Jose from "jose";
-import { serverEnv } from "~/env/server";
 
+import { serverEnv } from "~/env/server";
 import { OAUTH_STATE } from "./[provider]/types";
 
 export const GET: APIHandler = async (event) => {

@@ -25,23 +25,6 @@ export class NotFound extends S.TaggedError<NotFound>()("IO.NotFound", {
 }) {}
 
 export namespace T {
-	namespace Data {
-		export class Int extends D.TaggedClass("Int") {}
-		export class Float extends D.TaggedClass("Float") {}
-		export class Bool extends D.TaggedClass("Bool") {}
-		export class String extends D.TaggedClass("String") {}
-
-		export type Primitive = Int | Float | Bool | String;
-
-		export class Option<T extends Primitive> extends D.TaggedClass("List")<{
-			inner: T;
-		}> {}
-
-		export class List<T extends Primitive> extends D.TaggedClass("List")<{
-			inner: T;
-		}> {}
-	}
-
 	export type Any =
 		| Int
 		| Float

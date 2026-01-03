@@ -8,10 +8,10 @@ import {
 import {
 	type Core,
 	type Graph as GraphModel,
-	type Node,
-	type XY,
 	getNodesInRect,
+	type Node,
 	pinIsOutput,
+	type XY,
 } from "@macrograph/runtime";
 import {
 	type serde,
@@ -33,7 +33,6 @@ import { createStore, produce } from "solid-js/store";
 import { toast } from "solid-sonner";
 import type * as v from "valibot";
 
-import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
 import { Graph } from "./components/Graph";
 import { type GraphState, toGraphSpace } from "./components/Graph/Context";
@@ -49,11 +48,12 @@ import {
 } from "./context";
 // import "./global.css";
 import { usePlatform } from "./platform";
+import * as Sidebars from "./Sidebar";
 import { isCtrlEvent } from "./util";
 
-export * from "./platform";
-export * from "./ConnectionsDialog";
 export * from "./ConfigDialog";
+export * from "./ConnectionsDialog";
+export * from "./platform";
 
 const queryClient = new QueryClient();
 
@@ -405,7 +405,7 @@ function ProjectInterface() {
 
 					return (
 						<Solid.Show when={graph()}>
-							{(graph) => (
+							{(_graph) => (
 								<SchemaMenu
 									suggestion={data().suggestion}
 									graphModel={data().graph.model}

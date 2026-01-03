@@ -1,7 +1,7 @@
 import { None, Option } from "@macrograph/option";
 import * as v from "valibot";
 
-import { type TypeVariant, type Wildcard, t } from ".";
+import { type TypeVariant, t, type Wildcard } from ".";
 import { BaseType } from "./base";
 
 export class OptionType<T extends BaseType<any>> extends BaseType<

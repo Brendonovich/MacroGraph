@@ -31,7 +31,7 @@ function createEditorState() {
 	const leftSidebar = createSidebarState("left-sidebar");
 	const rightSidebar = createSidebarState("right-sidebar");
 
-	const [graphStates, setGraphStates] =
+	const [_graphStates, _setGraphStates] =
 		// makePersisted(
 		createStore<GraphState[]>([]);
 	//   ,

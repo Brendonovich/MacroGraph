@@ -1,4 +1,4 @@
-import { Effect, Layer, ManagedRuntime } from "effect";
+import { Effect, Layer } from "effect";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import {
 	ContextualSidebarProvider,
@@ -10,7 +10,7 @@ import { makePersisted } from "@solid-primitives/storage";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { ErrorBoundary, render } from "solid-js/web";
 
-import { EffectRuntime, ProjectRuntimeProvider } from "./EffectRuntime";
+import { type EffectRuntime, ProjectRuntimeProvider } from "./EffectRuntime";
 import { Layout } from "./Layout";
 import { ProjectRealtime } from "./Project/Realtime";
 import { RealtimeContextProvider } from "./Realtime";

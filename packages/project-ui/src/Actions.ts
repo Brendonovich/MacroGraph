@@ -1,10 +1,4 @@
-import {
-	Chunk,
-	Effect,
-	type Request as ERequest,
-	Option,
-	Stream,
-} from "effect";
+import { Effect, type Request as ERequest } from "effect";
 import {
 	type Graph,
 	IO,
@@ -64,9 +58,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						).pipe(
 							Effect.ensuring(
 								Effect.sync(() => {
-									const index = pending.findIndex(
-										(v) => v === (pendingReq as any),
-									);
+									const index = pending.indexOf(pendingReq as any);
 									setPending(
 										produce((draft) => {
 											if (index !== -1) draft.splice(index, 1);
@@ -140,7 +132,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 
 							if (!nodeConnections) return;
 
-							let req;
+							let req: Request.DisconnectIO | undefined;
 
 							if (io.type === "i" && nodeConnections.in) {
 								const conns = nodeConnections.in[io.id];

@@ -1,12 +1,4 @@
-import {
-	Data,
-	Effect,
-	type Mailbox,
-	Option,
-	type Queue,
-	Schedule,
-	Schema,
-} from "effect";
+import { Data, Effect, type Mailbox, Option, Schedule, Schema } from "effect";
 import { CloudApiClient } from "@macrograph/project-runtime";
 import {
 	CloudAuth,
@@ -14,8 +6,8 @@ import {
 	Realtime,
 } from "@macrograph/server-domain";
 
-import { RealtimeConnections } from "../Realtime";
 import { PresenceState } from "../Presence";
+import { RealtimeConnections } from "../Realtime";
 import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 
 export type ClientAuthEvent =

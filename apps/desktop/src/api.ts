@@ -1,10 +1,10 @@
 import { contract } from "@macrograph/api-contract";
 import { makePersisted } from "@solid-primitives/storage";
+import { action } from "@solidjs/router";
 import { initClient } from "@ts-rest/core";
 import { initQueryClient } from "@ts-rest/solid-query";
 import { createSignal } from "solid-js";
 
-import { action } from "@solidjs/router";
 import { env } from "./env";
 import { fetch } from "./http";
 import { queryClient } from "./rspc";

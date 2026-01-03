@@ -1,6 +1,6 @@
 import type { Graph } from "@macrograph/runtime";
-
 import { For } from "solid-js";
+
 import { SidebarSection } from "../../components/Sidebar";
 import { useInterfaceContext } from "../../context";
 

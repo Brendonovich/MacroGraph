@@ -8,11 +8,11 @@ import {
 import type { Graph } from "@macrograph/runtime";
 import { deserializeGraph } from "@macrograph/runtime-serde";
 import {
+	createMemo,
+	createSignal,
 	For,
 	Show,
 	type ValidComponent,
-	createMemo,
-	createSignal,
 } from "solid-js";
 
 import {

@@ -1,6 +1,6 @@
 import { solidStart } from "@solidjs/start/config";
-import { defineConfig } from "vite";
 import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
 
 import interfacePlugin from "../../packages/ui/vite";
 

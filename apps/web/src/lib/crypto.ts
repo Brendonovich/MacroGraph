@@ -59,7 +59,7 @@ export async function pbkdf2Verify(key: string, password: string) {
 	let compositeStr = null; // composite key is salt, iteration count, and derived key
 	try {
 		compositeStr = atob(key);
-	} catch (e) {
+	} catch (_e) {
 		throw new Error("Invalid key");
 	} // decode from base64
 

@@ -106,7 +106,7 @@ export function register(pkg: Pkg, { state }: Ctx) {
 	pkg.createSchema({
 		name: "SpeakerBot Queue Clear",
 		type: "exec",
-		createIO({ io }) {},
+		createIO() {},
 		run() {
 			ws().send(JSON.stringify({ id: "Macrograph", request: "Clear" }));
 		},

@@ -1,41 +1,10 @@
-import {
-	Button,
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogTitle,
-	DialogTrigger,
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@macrograph/ui";
-import {
-	action,
-	cache,
-	createAsync,
-	useAction,
-	useSubmission,
-	useSubmissions,
-} from "@solidjs/router";
-import { For, Show, Suspense } from "solid-js/web";
-import { toast } from "solid-sonner";
+import { cache, createAsync, useSubmissions } from "@solidjs/router";
+import { eq } from "drizzle-orm";
+import { Show, Suspense } from "solid-js/web";
 
-import {
-	PROVIDER_DISPLAY_NAMES,
-	WINDOW_OPEN_FAILED,
-	addCredential,
-	ensureAuthedOrRedirect,
-	ensureAuthedOrThrow,
-	getCredentials,
-	// getServers,
-	removeCredential,
-} from "~/api";
-import type { AuthProvider } from "../../auth/providers";
+import { addCredential, ensureAuthedOrRedirect } from "~/api";
 import { db } from "~/drizzle";
 import { oauthApps } from "~/drizzle/schema";
-import { eq } from "drizzle-orm";
-import { createSignal } from "solid-js";
 
 export default function () {
 	return (

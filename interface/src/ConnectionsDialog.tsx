@@ -1,14 +1,3 @@
-import { createMemo } from "solid-js";
-import {
-	ErrorBoundary,
-	For,
-	Show,
-	Suspense,
-	createSignal,
-	startTransition,
-} from "solid-js";
-import { Dynamic } from "solid-js/web";
-
 import { Tabs } from "@kobalte/core";
 import type { Core } from "@macrograph/runtime";
 import {
@@ -19,6 +8,16 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@macrograph/ui";
+import {
+	createMemo,
+	createSignal,
+	ErrorBoundary,
+	For,
+	Show,
+	Suspense,
+	startTransition,
+} from "solid-js";
+import { Dynamic } from "solid-js/web";
 
 export function ConnectionsDialog(props: { core: Core }) {
 	const [open, setOpen] = createSignal(false);

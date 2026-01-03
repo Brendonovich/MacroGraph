@@ -75,11 +75,3 @@ export type Event = EventsToObject<v.InferOutput<typeof EVENT>>;
 type EventsToObject<T extends { type: string; message: [any] }> = {
 	[K in T["type"]]: Extract<T, { type: K }>["message"][0];
 };
-
-type EventToKey<T extends object> = T extends {
-	type: infer Type extends string;
-}
-	? T extends { for: infer For extends string }
-		? `${For}.${Type}`
-		: `${Type}`
-	: never;

@@ -1,6 +1,6 @@
-import { None, makePersistedOption } from "@macrograph/option";
+import { makePersistedOption, None } from "@macrograph/option";
 import type { Core, OAuthToken, OnEvent } from "@macrograph/runtime";
-import { type Socket, io } from "socket.io-client";
+import { io, type Socket } from "socket.io-client";
 import {
 	createEffect,
 	createMemo,
@@ -11,8 +11,8 @@ import {
 } from "solid-js";
 import * as v from "valibot";
 
-import type { Events } from ".";
 import { createEndpoint } from "../httpEndpoint";
+import type { Events } from ".";
 import { EVENT } from "./events";
 
 export type Ctx = ReturnType<typeof createCtx>;

@@ -1,4 +1,5 @@
 import { createMutable } from "solid-js/store";
+
 import type { BaseType } from ".";
 
 export class Field<Type extends BaseType = BaseType> {

@@ -8,9 +8,7 @@ import {
 	useSubmission,
 } from "@solidjs/router";
 import { eq } from "drizzle-orm";
-import { Switch } from "solid-js";
-import { Match } from "solid-js";
-import { createSignal, onMount } from "solid-js";
+import { createSignal, Match, onMount, Switch } from "solid-js";
 
 import { ensureAuthedOrRedirect } from "~/api";
 import Screenshot from "~/assets/App Logo.png";

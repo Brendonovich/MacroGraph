@@ -1,9 +1,9 @@
 import {
+	createOptionMemo,
+	createOptionSignal,
 	None,
 	type Option,
 	Some,
-	createOptionMemo,
-	createOptionSignal,
 } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 import { ReactiveSet } from "@solid-primitives/set";
@@ -22,9 +22,8 @@ import {
 } from "solid-js";
 import { createMutable } from "solid-js/store";
 
-import { BaseType } from "./base";
-
 import { type TypeVariant, t } from ".";
+import { BaseType } from "./base";
 import { Disposable } from "./utils";
 
 /**

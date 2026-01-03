@@ -2,12 +2,12 @@ import {
 	DataOutput,
 	ExecInput,
 	type Graph,
-	type Pin,
-	type XY,
 	makeIORef,
+	type Pin,
 	pinIsInput,
 	pinIsOutput,
 	pinsCanConnect,
+	type XY,
 } from "@macrograph/runtime";
 import {
 	createEventListener,

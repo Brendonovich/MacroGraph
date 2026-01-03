@@ -11,11 +11,11 @@ import type {
 	SchemaProperties,
 } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
+import { readBinaryFile } from "@tauri-apps/api/fs";
 import type * as v from "valibot";
 
-import { readBinaryFile } from "@tauri-apps/api/fs";
-import type { Ctx } from ".";
 import { createHTTPClient } from "../httpEndpoint";
+import type { Ctx } from ".";
 import type { Account, BotAccount } from "./auth";
 import { botProperty, defaultProperties } from "./resource";
 import type { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
@@ -397,7 +397,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				formData.set(
 					"files[0]",
 					new Blob([await readBinaryFile(v)]),
-					v.split(/[\/\\]/).at(-1),
+					v.split(/[/\\]/).at(-1),
 				);
 			});
 

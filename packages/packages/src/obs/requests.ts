@@ -1,4 +1,4 @@
-import { JSONEnum, jsToJSON, jsonToJS } from "@macrograph/json";
+import { JSONEnum, jsonToJS, jsToJSON } from "@macrograph/json";
 import { Maybe, None, type Option, Some } from "@macrograph/option";
 import type {
 	CreateIOFn,
@@ -14,8 +14,8 @@ import { type InferEnum, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import type OBSWebSocket from "obs-websocket-js";
 import type { EventTypes } from "obs-websocket-js";
-
 import type { Accessor } from "solid-js";
+
 import { alignmentConversion } from "./events";
 import { defaultProperties } from "./resource";
 import type { Types } from "./types";

@@ -47,7 +47,7 @@ export function createActionHistory<TActions extends HistoryActions>(
 	actions: TActions,
 	save: () => void,
 ) {
-	const [state, setState] = createStore<{
+	const [_state, _setState] = createStore<{
 		undo: Array<Array<HistoryItem<TActions, keyof TActions>>>;
 		redo: Array<Array<HistoryItem<TActions, keyof TActions>>>;
 	}>({ undo: [], redo: [] });
@@ -58,7 +58,7 @@ export function createActionHistory<TActions extends HistoryActions>(
 
 	const [nextHistoryIndex, setNextHistoryIndex] = Solid.createSignal(0);
 
-	let queued: HistoryItem<TActions, keyof TActions>[] | undefined = undefined;
+	let queued: HistoryItem<TActions, keyof TActions>[] | undefined;
 
 	function addHistoryItem<T extends keyof TActions>(
 		item: HistoryItem<TActions, T> | HistoryItem<TActions, T>[],

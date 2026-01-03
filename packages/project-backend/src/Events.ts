@@ -1,4 +1,4 @@
-import { Chunk, Effect, Option, PubSub, Stream } from "effect";
+import { Chunk, Effect, Option, Stream } from "effect";
 import type { ProjectEvent } from "@macrograph/project-domain";
 
 import { ProjectPackages } from "./Project";

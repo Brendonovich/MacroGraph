@@ -8,8 +8,9 @@ import {
 	DialogTrigger,
 } from "@macrograph/ui";
 import { makePersisted } from "@solid-primitives/storage";
-import { For, createSignal, startTransition } from "solid-js";
+import { createSignal, For, startTransition } from "solid-js";
 import { createStore } from "solid-js/store";
+
 import { CheckBox, SelectInput } from "./components/ui";
 
 type Config = {
@@ -70,7 +71,7 @@ export function ConfigDialog() {
 	//   ];
 	// });
 
-	const [selectedConfigSection, setSelectedConfigSection] =
+	const [_selectedConfigSection, setSelectedConfigSection] =
 		createSignal<keyof Config>("nodes");
 
 	return (

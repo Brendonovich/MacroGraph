@@ -1,9 +1,10 @@
 "use server";
 
-import * as Jose from "jose";
-
 import { OAUTH_TOKEN } from "@macrograph/api-contract";
+import * as Jose from "jose";
+import { getRequestEvent } from "solid-js/web";
 import type { z } from "zod";
+
 import { serverEnv } from "~/env/server";
 import { CALLBACK_SEARCH_PARAMS, OAUTH_STATE } from "./[provider]/types";
 import {
@@ -11,7 +12,6 @@ import {
 	type AuthProviderConfig,
 	AuthProviders,
 } from "./providers";
-import { getRequestEvent } from "solid-js/web";
 
 type DistributiveOmit<T, K extends keyof any> = T extends any
 	? Omit<T, K>

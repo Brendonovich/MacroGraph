@@ -2,7 +2,6 @@ import { action, cache, query, redirect } from "@solidjs/router";
 import {
 	appendResponseHeader,
 	getCookie,
-	getHeaders,
 	setResponseStatus,
 } from "@solidjs/start/http";
 import { and, eq } from "drizzle-orm";

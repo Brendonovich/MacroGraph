@@ -7,7 +7,6 @@ import {
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
-import { mergeRefs } from "@solid-primitives/refs";
 import { cx } from "cva";
 import type { ValidComponent } from "solid-js";
 import {
@@ -216,7 +215,7 @@ export function GraphView(
 					// Only zoom if distance changed significantly
 					if (Math.abs(distanceDelta) > 0.5) {
 						const currentZoom = graphCtx.scale;
-						const currentTranslate = graphCtx.translate ?? { x: 0, y: 0 };
+						const _currentTranslate = graphCtx.translate ?? { x: 0, y: 0 };
 
 						console.log(
 							"[Touch] Distance delta:",

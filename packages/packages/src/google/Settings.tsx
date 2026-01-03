@@ -1,6 +1,6 @@
 import { None, Some } from "@macrograph/option";
 import { Button } from "@macrograph/ui";
-import { Match, Show, Suspense, Switch, createSignal } from "solid-js";
+import { createSignal, Match, Show, Suspense, Switch } from "solid-js";
 
 import type { Ctx } from "./ctx";
 

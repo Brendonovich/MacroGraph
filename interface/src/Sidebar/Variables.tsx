@@ -1,17 +1,17 @@
+import { ContextMenu } from "@kobalte/core/context-menu";
 import type { Variable } from "@macrograph/runtime";
 import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
 import {
+	createMemo,
+	createSignal,
 	For,
 	type JSX,
 	Match,
 	Show,
 	Switch,
 	type ValidComponent,
-	createMemo,
-	createSignal,
 } from "solid-js";
 
-import { ContextMenu } from "@kobalte/core/context-menu";
 import {
 	ContextMenuContent,
 	ContextMenuItem,

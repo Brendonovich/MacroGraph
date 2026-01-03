@@ -4,12 +4,11 @@ import {
 	HttpClient,
 	HttpClientRequest,
 } from "@effect/platform";
-import { Api, type RawJWT } from "@macrograph/web-domain";
 import { Context, Effect, Layer, Option } from "effect";
+import { Api, type RawJWT } from "@macrograph/web-domain";
 
 const CLIENT_ID = "macrograph-server";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class CloudApiToken extends Context.Tag("CloudApiToken")<
 	CloudApiToken,
 	Effect.Effect<Option.Option<RawJWT | string>>

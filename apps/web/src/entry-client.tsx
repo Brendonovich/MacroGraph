@@ -1,5 +1,6 @@
 import { StartClient } from "@solidjs/start/client";
 import { hydrate } from "solid-js/web";
+
 // import posthog from "posthog-js";
 
 hydrate(() => <StartClient />, document.getElementById("app")!);

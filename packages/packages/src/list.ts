@@ -22,7 +22,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const array = new Array<any>();
+			const array: any[] = [];
 			for (const input of io.inputs) {
 				array.push(ctx.getInput(input.value));
 			}

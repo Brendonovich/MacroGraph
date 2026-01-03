@@ -1,9 +1,8 @@
-import { type ManagedRuntime, Scope } from "effect";
+import type { ManagedRuntime } from "effect";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Either from "effect/Either";
 import * as Exit from "effect/Exit";
-import {} from "@tanstack/query-core";
 import type {
 	MutateOptions,
 	QueryFunctionContext,

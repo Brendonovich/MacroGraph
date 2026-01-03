@@ -1,7 +1,7 @@
 import { Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
 import { createForm } from "@tanstack/solid-form";
-import { Match, Switch, createSignal } from "solid-js";
+import { createSignal, Match, Switch } from "solid-js";
 
 import type { Ctx } from "./ctx";
 

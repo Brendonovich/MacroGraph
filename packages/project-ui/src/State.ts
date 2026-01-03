@@ -12,7 +12,6 @@ import type {
 	Node,
 	Package,
 	Position,
-	Project,
 	Request,
 	Resource,
 	Schema,

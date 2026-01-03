@@ -1,5 +1,6 @@
 import { JSONEnum } from "@macrograph/json";
 import { t } from "@macrograph/typesystem";
+
 import type { Pkg } from ".";
 
 export function createTypes(pkg: Pkg) {

@@ -55,7 +55,6 @@ import {
 import "@macrograph/project-ui/styles.css";
 import { Package } from "@macrograph/project-domain";
 import { focusRingClasses } from "@macrograph/ui";
-import { cx } from "cva";
 import { ErrorBoundary } from "solid-js";
 
 const effectRuntime = ManagedRuntime.make(RuntimeLayers);

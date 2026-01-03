@@ -1,4 +1,5 @@
 import { useNavigate } from "@solidjs/router";
+
 import { SignUpForm } from "./Forms";
 
 export default function () {

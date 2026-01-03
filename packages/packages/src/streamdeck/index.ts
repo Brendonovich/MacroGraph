@@ -1,7 +1,7 @@
 import { Package, type WsProvider } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
-import { type Events, createCtx } from "./ctx";
+import { createCtx, type Events } from "./ctx";
 
 export function pkg<TServer>(ws: WsProvider<TServer>) {
 	const ctx = createCtx(ws, (e) => pkg.emitEvent(e));

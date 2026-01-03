@@ -13,7 +13,7 @@
 		"dev:web": "pnpm web dev",
 		"dev:desktop": "pnpm desktop tauri dev",
 		"format": "biome format --write .",
-		"fix": "biome lint --apply . && biome format --write . && biome check . --apply"
+		"fix": "biome lint --write --unsafe . && biome format --write . && biome check . --write"
 	},
 	"devDependencies": {
 		"@testing-library/jest-dom": "^6.4.8",

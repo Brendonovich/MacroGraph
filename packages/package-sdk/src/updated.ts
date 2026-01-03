@@ -123,7 +123,7 @@ export namespace PackageEngine {
 			events: opts.events ?? [],
 			clientState: opts.clientState,
 			resources: opts.resources ?? [],
-			toLayer(build) {},
+			toLayer(_build) {},
 		} as PackageEngineObj<
 			ClientRpcs,
 			RuntimeRpcs,

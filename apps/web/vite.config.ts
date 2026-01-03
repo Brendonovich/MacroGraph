@@ -8,8 +8,6 @@ import { defineConfig } from "vite";
 // import { nitro } from "nitro/vite";
 // import unfonts from "unplugin-fonts/vite";
 
-import interfacePlugin from "../../packages/ui/vite";
-
 const nodeOnlyDeps = ["@node-rs/bcrypt", "@node-rs/argon2"];
 
 export default defineConfig({

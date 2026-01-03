@@ -1,28 +1,28 @@
 import { ContextMenu } from "@kobalte/core";
+import {
+	nodeToClipboardItem,
+	serializeClipboardItem,
+} from "@macrograph/clipboard";
 import type { Option } from "@macrograph/option";
 import {
 	DataInput as DataInputModel,
 	DataOutput as DataOutputModel,
 	ExecInput as ExecInputModel,
 	ExecOutput as ExecOutputModel,
+	hasConnection,
 	NODE_EMIT,
 	type Node as NodeModel,
 	type NodeSchemaVariant,
 	type OutputPin,
 	ScopeInput as ScopeInputModel,
 	ScopeOutput as ScopeOutputModel,
-	hasConnection,
 	splitIORef,
 } from "@macrograph/runtime";
 import clsx from "clsx";
 import * as Solid from "solid-js";
 import { createContext, useContext } from "solid-js";
-
-import {
-	nodeToClipboardItem,
-	serializeClipboardItem,
-} from "@macrograph/clipboard";
 import { toast } from "solid-sonner";
+
 import { config } from "../../ConfigDialog";
 import { useInterfaceContext } from "../../context";
 import { usePlatform } from "../../platform";
@@ -38,6 +38,7 @@ import {
 	ScopeOutput,
 } from "./IO";
 import "./Node.css";
+
 import { GRID_SIZE, handleSelectableItemPointerDown } from "./util";
 
 interface Props {
@@ -240,7 +241,7 @@ export const Node = (props: Props) => {
 					}px)`,
 					"min-width": minWidth() !== undefined ? `${minWidth()}px` : "auto",
 				}}
-				onMouseUp={(e) => {
+				onMouseUp={(_e) => {
 					// #418
 					if (
 						interfaceCtx.state.status === "pinDragMode" &&

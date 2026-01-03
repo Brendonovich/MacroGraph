@@ -1,5 +1,6 @@
 import { type Option, Some } from "@macrograph/option";
 import { getOptionDepth, t, typesCanConnect } from "@macrograph/typesystem";
+
 import {
 	DataInput,
 	DataOutput,

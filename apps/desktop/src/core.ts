@@ -1,7 +1,7 @@
 import {
 	Core,
-	type RefreshedOAuthToken,
 	createWsProvider,
+	type RefreshedOAuthToken,
 } from "@macrograph/runtime";
 import "tauri-plugin-midi";
 

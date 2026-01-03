@@ -1,5 +1,6 @@
 import * as v from "valibot";
-import { type TypeVariant, type Wildcard, t } from ".";
+
+import { type TypeVariant, t, type Wildcard } from ".";
 import { BaseType } from "./base";
 import { Field } from "./field";
 
@@ -89,8 +90,11 @@ export class StructType<
 
 	default(): InferStruct<TStruct> {
 		return Object.entries(this.struct.fields).reduce(
-			(acc, [key, value]) => Object.assign(acc, { [key]: value.default() }),
-			{},
+			(acc, [key, value]) => {
+				acc[key] = value.default();
+				return acc;
+			},
+			{} as Record<string, any>,
 		) as any;
 	}
 

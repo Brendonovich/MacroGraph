@@ -1,4 +1,4 @@
-import { JSONEnum, jsToJSON, jsonToJS } from "@macrograph/json";
+import { JSONEnum, jsonToJS, jsToJSON } from "@macrograph/json";
 import { Maybe, None } from "@macrograph/option";
 import { type Core, Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";

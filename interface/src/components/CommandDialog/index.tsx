@@ -1,15 +1,16 @@
 import { Dialog } from "@kobalte/core";
 import { createEventListener } from "@solid-primitives/event-listener";
 import clsx from "clsx";
+import type { Accessor } from "solid-js";
 import {
-	For,
 	batch,
 	createEffect,
 	createMemo,
 	createSignal,
+	For,
 	on,
 } from "solid-js";
-import type { Accessor } from "solid-js";
+
 import { useInterfaceContext } from "../../context";
 
 export function createSection(args: {
@@ -154,7 +155,7 @@ export function CommandDialog(props: { sections: Section[] }) {
 		}),
 	);
 
-	const ctx = useInterfaceContext();
+	const _ctx = useInterfaceContext();
 
 	return (
 		<Dialog.Root open={control.open()} onOpenChange={control.setOpen}>

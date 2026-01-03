@@ -1,5 +1,5 @@
 import { it } from "@effect/vitest";
-import { Effect, Layer, Schema as S, Stream } from "effect";
+import { Effect, Layer, Stream } from "effect";
 import * as PackageSDK from "@macrograph/package-sdk";
 import { t } from "@macrograph/package-sdk";
 import { IO, Package, Request, Schema } from "@macrograph/project-domain";

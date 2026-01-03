@@ -1,8 +1,8 @@
 // @refresh reload
 import { MetaProvider, Title } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
-import { FileRoutes } from "@solidjs/start/router";
 import { clientOnly } from "@solidjs/start";
+import { FileRoutes } from "@solidjs/start/router";
 import { ErrorBoundary, Suspense } from "solid-js";
 import { Toaster } from "solid-sonner";
 

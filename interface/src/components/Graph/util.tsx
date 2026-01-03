@@ -1,9 +1,9 @@
 import {
 	type CommentBox,
-	type Node,
-	type XY,
 	getCommentBoxesInRect,
 	getNodesInRect,
+	type Node,
+	type XY,
 } from "@macrograph/runtime";
 import {
 	type AnyType,
@@ -11,9 +11,9 @@ import {
 	type PrimitiveVariant,
 	t,
 } from "@macrograph/typesystem";
-
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createRoot } from "solid-js";
+
 import type { GraphItemPositionInput } from "../../actions";
 import type { InterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
@@ -123,7 +123,7 @@ export function handleSelectableItemPointerDown(
 		}
 	}
 
-	for (const [box, ns] of commentBoxNodes) {
+	for (const [_box, ns] of commentBoxNodes) {
 		for (const node of ns) {
 			nodes.delete(node);
 		}

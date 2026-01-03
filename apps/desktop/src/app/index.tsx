@@ -16,13 +16,13 @@ import { createAsync, useAction } from "@solidjs/router";
 import { useQueryClient } from "@tanstack/solid-query";
 import { open as openURL } from "@tauri-apps/api/shell";
 import {
+	createSignal,
 	ErrorBoundary,
 	type ParentProps,
 	Show,
 	Suspense,
 	type ValidComponent,
 } from "solid-js";
-import { createSignal } from "solid-js";
 import { toast } from "solid-sonner";
 
 import { api, logOutAction, sessionToken, setSessionToken } from "../api";
@@ -121,7 +121,7 @@ function UserDropdown(props: ParentProps<{ user: { email: string } }>) {
 	);
 }
 
-function LogInDialog(props: ParentProps) {
+function LogInDialog(_props: ParentProps) {
 	const [open, setOpen] = createSignal(false);
 	const queryClient = useQueryClient();
 

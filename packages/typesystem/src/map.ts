@@ -1,6 +1,6 @@
 import { ReactiveMap } from "@solid-primitives/map";
 
-import { type TypeVariant, type Wildcard, t } from ".";
+import { type TypeVariant, t, type Wildcard } from ".";
 import { BaseType } from "./base";
 
 export type MapValue<T> = ReactiveMap<string, T>;

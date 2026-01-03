@@ -7,7 +7,7 @@ export class NodeIORegistry extends Effect.Service<NodeIORegistry>()(
 	{
 		effect: Effect.sync(() => {
 			const generateNodeIO = Effect.fnUntraced(function* () {
-				const runtime = yield* ProjectRuntime.Current;
+				const _runtime = yield* ProjectRuntime.Current;
 			});
 
 			return { generateNodeIO };

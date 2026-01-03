@@ -7,16 +7,16 @@ import {
 	type NodeSchema,
 	type NodeSchemaVariant,
 	type Pin,
+	pinIsOutput,
 	ScopeInput,
 	ScopeOutput,
 	type XY,
-	pinIsOutput,
 } from "@macrograph/runtime";
 import {
 	type RenderedSchema,
+	renderedTypesCompatible,
 	renderSchema,
 	renderType,
-	renderedTypesCompatible,
 } from "@macrograph/runtime-rendering";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createWritableMemo } from "@solid-primitives/memo";
@@ -24,11 +24,11 @@ import { isMobile } from "@solid-primitives/platform";
 import clsx from "clsx";
 import {
 	type ComponentProps,
-	For,
-	Show,
 	createMemo,
 	createSignal,
+	For,
 	onMount,
+	Show,
 } from "solid-js";
 
 import { useInterfaceContext } from "../../context";

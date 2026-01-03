@@ -1,13 +1,13 @@
 import { Tabs } from "@kobalte/core";
+import { ContextMenu } from "@kobalte/core/context-menu";
 import {
+	createMemo,
+	createSignal,
 	For,
 	Show,
 	type ValidComponent,
-	createMemo,
-	createSignal,
 } from "solid-js";
 
-import { ContextMenu } from "@kobalte/core/context-menu";
 import {
 	ContextMenuContent,
 	ContextMenuItem,

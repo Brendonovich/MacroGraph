@@ -1,21 +1,21 @@
 import {
-	Option,
 	Config,
 	ConfigProvider,
 	Effect,
 	Layer,
 	ManagedRuntime,
+	Option,
 } from "effect";
 import { Package } from "@macrograph/project-domain";
 import { PackageClients } from "@macrograph/project-ui";
-import { UILive, EffectRuntime } from "@macrograph/server-frontend";
+import { EffectRuntime, UILive } from "@macrograph/server-frontend";
 
 import "@unocss/reset/tailwind.css";
 import "virtual:uno.css";
-import { OTLPExporterNodeConfigBase } from "@opentelemetry/otlp-exporter-base";
 import { WebSdk } from "@effect/opentelemetry";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import type { OTLPExporterNodeConfigBase } from "@opentelemetry/otlp-exporter-base";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
 const RegisterPackages = Layer.scopedDiscard(
 	Effect.gen(function* () {

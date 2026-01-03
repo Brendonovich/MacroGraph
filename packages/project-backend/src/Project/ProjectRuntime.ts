@@ -1,8 +1,8 @@
 import { Context, Effect, Iterable, Option, pipe, Schema } from "effect";
 import {
-	SchemaNotFound,
 	type Graph,
 	type Node,
+	SchemaNotFound,
 	type SchemaRef,
 	type SchemaType,
 } from "@macrograph/project-domain";
@@ -16,7 +16,7 @@ export class NodeSchemas extends Context.Tag("NodeSchemas")<
 
 class ProjectRuntime {
 	constructor(
-		private state: ProjectShape,
+		_state: ProjectShape,
 		private eventNodes: EventNodeRegistry,
 	) {}
 
@@ -41,11 +41,11 @@ class ProjectRuntime {
 			return new ProjectRuntime(state, eventNodes);
 		});
 
-	handleEvent = (pkgId: string, event: any) => {
+	handleEvent = (pkgId: string, _event: any) => {
 		const eventNodes = this.eventNodes;
 
 		return Effect.gen(function* () {
-			for (const { graphId, nodes } of eventNodes.lookup(pkgId)) {
+			for (const { nodes } of eventNodes.lookup(pkgId)) {
 				for (const nodeId of nodes) {
 					yield* Effect.log({ nodeId });
 					// yield* Effect.void;

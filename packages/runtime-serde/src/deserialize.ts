@@ -1,9 +1,9 @@
 import * as runtime from "@macrograph/runtime";
 import {
-	type EnumVariantFields,
-	Field,
 	deserializeType,
 	deserializeValue,
+	type EnumVariantFields,
+	Field,
 } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
@@ -333,13 +333,13 @@ export function deserializeNode(
 		position: data.position,
 		schema: schema as any,
 		graph,
-		properties: Object.entries(data.properties).reduce(
-			(acc, [k, v]) =>
-				Object.assign(acc, {
-					[k]: typeof v === "object" ? runtime.DEFAULT : v,
-				}),
-			{},
-		),
+		properties: (() => {
+			const props: any = {};
+			for (const [k, v] of Object.entries(data.properties)) {
+				props[k] = typeof v === "object" ? runtime.DEFAULT : v;
+			}
+			return props;
+		})(),
 		foldPins: data.foldPins,
 	});
 

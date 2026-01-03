@@ -1,10 +1,5 @@
 import type { HttpApp } from "@effect/platform";
 import type { Rpc, RpcGroup } from "@effect/rpc";
-import type {
-	Package,
-	Resource,
-	SubscribableCache,
-} from "@macrograph/project-domain";
 import {
 	Effect,
 	type Layer,
@@ -12,6 +7,11 @@ import {
 	type Queue,
 	type Scope,
 } from "effect";
+import type {
+	Package,
+	Resource,
+	SubscribableCache,
+} from "@macrograph/project-domain";
 
 export type PackageEntry = {
 	pkg: Package;

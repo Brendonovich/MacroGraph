@@ -5,12 +5,12 @@ import {
 	ExecInput,
 	type GetNodeSize,
 	Graph,
+	getNodesInRect,
 	type InputPin,
 	Node,
 	type OutputPin,
 	Project,
 	type ScopeOutput,
-	getNodesInRect,
 } from "@macrograph/runtime";
 import {
 	serde,

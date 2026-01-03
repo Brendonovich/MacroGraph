@@ -1,13 +1,11 @@
-import { identity, Option, pipe, Record } from "effect";
+import { Option, pipe, Record } from "effect";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Iterable from "effect/Iterable";
 import * as Ref from "effect/Ref";
 import * as RequestResolver from "effect/RequestResolver";
 import {
-	Credential,
 	Graph,
-	IO,
 	Package,
 	Project,
 	ProjectEvent,

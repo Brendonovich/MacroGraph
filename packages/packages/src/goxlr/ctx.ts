@@ -1,4 +1,4 @@
-import { None, makePersistedOption } from "@macrograph/option";
+import { makePersistedOption, None } from "@macrograph/option";
 import type { OnEvent } from "@macrograph/runtime";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import * as v from "valibot";

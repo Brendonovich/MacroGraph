@@ -16,7 +16,6 @@ import { createContext, useContext } from "solid-js";
 
 import { BackendLive } from "./backend";
 import { FrontendLive } from "./frontend";
-import { PlaygroundRpc } from "./rpc";
 
 const GetPackageRpcClientLive = Layer.effect(
 	GetPackageRpcClient,

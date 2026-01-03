@@ -84,14 +84,14 @@ const RuntimeLive = Layer.scoped(
 		const runtime = yield* ProjectRuntime.make();
 
 		yield* Effect.gen(function* () {
-			const allPackages: Array<keyof typeof Packages> = [
-				"util",
-				"twitch",
-				"obs",
-			];
+			const packagesToLoad = {
+				util: Packages.util,
+				twitch: Packages.twitch,
+				obs: Packages.obs,
+			};
 			const packages = yield* PackageActions;
-			for (const p of allPackages) {
-				yield* packages.loadPackage(p, Packages[p] as any);
+			for (const [name, pkg] of Object.entries(packagesToLoad)) {
+				yield* packages.loadPackage(name, pkg as any);
 			}
 
 			const runtimeActions = yield* RuntimeActions;
@@ -102,7 +102,7 @@ const RuntimeLive = Layer.scoped(
 			(e) => Stream.fromPubSub(e),
 			Stream.throttle({ cost: Chunk.size, duration: "100 millis", units: 1 }),
 			Stream.runForEach(
-				Effect.fn(function* (e) {
+				Effect.fn(function* (_e) {
 					// console.log(e);
 
 					const project = yield* runtime.projectRef;

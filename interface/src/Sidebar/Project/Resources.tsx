@@ -1,6 +1,6 @@
 import { DropdownMenu } from "@kobalte/core";
 import type { ResourceType, ResourceTypeEntry } from "@macrograph/runtime";
-import { For, Match, Switch, createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, For, Match, Switch } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton, SelectInput, TextInput } from "../../components/ui";

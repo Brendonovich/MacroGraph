@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 
-import { Field, type TypeVariant, type Wildcard, t } from ".";
+import { Field, type TypeVariant, t, type Wildcard } from ".";
 import { BaseType } from "./base";
 
 export type EnumVariantFields = Record<string, Field>;
@@ -27,9 +27,11 @@ export class EnumVariant<
 			: {
 					variant: this.id,
 					data: Object.entries(data).reduce(
-						(acc, [name, type]) =>
-							Object.assign(acc, { [name]: type.default() }),
-						{},
+						(acc, [name, type]) => {
+							acc[name] = type.default();
+							return acc;
+						},
+						{} as Record<string, any>,
 					),
 				};
 	}

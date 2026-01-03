@@ -95,11 +95,11 @@ export function pkg(args: { prepareURL(url: string): string }) {
 	pkg.createSchema({
 		name: "Stop All Audio",
 		type: "exec",
-		createIO({ io }) {
+		createIO() {
 			return {};
 		},
-		run({ ctx, io }) {
-			for (const [key, value] of sounds.entries()) {
+		run() {
+			for (const [_key, value] of sounds.entries()) {
 				value.pause();
 			}
 		},

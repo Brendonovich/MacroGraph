@@ -5,8 +5,9 @@ import {
 	DropdownMenuItem,
 } from "@macrograph/ui";
 import { cache, createAsync } from "@solidjs/router";
-import { type ComponentProps, For, type JSX, Suspense } from "solid-js";
 import { appendResponseHeader } from "@solidjs/start/http";
+import { type ComponentProps, For, type JSX, Suspense } from "solid-js";
+
 import {
 	type DownloadTarget,
 	getDownloadURL,
@@ -32,7 +33,7 @@ const getLatestVersion_cached = cache(() => {
 export function DesktopDownloadDropdown(
 	props: ComponentProps<typeof DropdownMenu>,
 ) {
-	const latestVersion = createAsync(() => getLatestVersion_cached());
+	const _latestVersion = createAsync(() => getLatestVersion_cached());
 
 	return (
 		<DropdownMenu {...props}>

@@ -2,7 +2,6 @@ import { Option, pipe, Schema as S } from "effect";
 import * as Effect from "effect/Effect";
 import {
 	getInput,
-	NodeSchema,
 	Package,
 	PackageEngine,
 	Resource,
@@ -813,7 +812,7 @@ export default Package.make({
 			type: "exec",
 			description: "Starts the stream.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("StartStream"));
 			},
@@ -824,7 +823,7 @@ export default Package.make({
 			type: "exec",
 			description: "Stops the stream.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("StopStream"));
 			},
@@ -907,7 +906,7 @@ export default Package.make({
 			type: "exec",
 			description: "Starts the record.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("StartRecord"));
 			},
@@ -934,7 +933,7 @@ export default Package.make({
 			type: "exec",
 			description: "Toggles pause on the record.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("ToggleRecordPause"));
 			},
@@ -945,7 +944,7 @@ export default Package.make({
 			type: "exec",
 			description: "Pauses the record.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("PauseRecord"));
 			},
@@ -956,7 +955,7 @@ export default Package.make({
 			type: "exec",
 			description: "Resumes the record.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("ResumeRecord"));
 			},
@@ -1005,7 +1004,7 @@ export default Package.make({
 			type: "exec",
 			description: "Starts the virtual camera.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("StartVirtualCam"));
 			},
@@ -1016,7 +1015,7 @@ export default Package.make({
 			type: "exec",
 			description: "Stops the virtual camera.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("StopVirtualCam"));
 			},
@@ -1065,7 +1064,7 @@ export default Package.make({
 			type: "exec",
 			description: "Starts the replay buffer.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("StartReplayBuffer"));
 			},
@@ -1076,7 +1075,7 @@ export default Package.make({
 			type: "exec",
 			description: "Stops the replay buffer.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("StopReplayBuffer"));
 			},
@@ -1087,7 +1086,7 @@ export default Package.make({
 			type: "exec",
 			description: "Saves the replay buffer.",
 			properties: { connection: OBSConnectionProperty },
-			io: (c) => ({}),
+			io: (_c) => ({}),
 			run: function* ({ properties: { connection } }) {
 				yield* Effect.promise(() => connection.ws.call("SaveReplayBuffer"));
 			},

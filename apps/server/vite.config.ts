@@ -1,6 +1,6 @@
 import basePackagesPlugin from "@macrograph/base-packages/vite";
-import UnoCSS from "unocss/vite";
 import { Icons } from "@macrograph/icons/vite";
+import UnoCSS from "unocss/vite";
 import { defineConfig, isRunnableDevEnvironment } from "vite";
 import solid from "vite-plugin-solid";
 
@@ -46,8 +46,8 @@ export default defineConfig({
 	builder: {
 		sharedPlugins: true,
 		async buildApp(builder) {
-			const clientEnv = builder.environments["client"];
-			const serverEnv = builder.environments["server"];
+			const clientEnv = builder.environments.client;
+			const serverEnv = builder.environments.server;
 
 			if (!clientEnv) throw new Error("Client environment not found");
 			if (!serverEnv) throw new Error("SSR environment not found");

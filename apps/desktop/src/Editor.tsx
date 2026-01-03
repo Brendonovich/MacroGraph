@@ -8,12 +8,12 @@ import * as pkgs from "@macrograph/packages";
 import { deserializeProject, serde } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { Show, createSignal, onMount } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import "tauri-plugin-midi";
-import * as v from "valibot";
-
 import { Button } from "@macrograph/ui";
+import * as v from "valibot";
 import "./app.css";
+
 import { core, wsProvider } from "./core";
 import { createPlatform } from "./platform";
 import { client } from "./rspc";

@@ -1,10 +1,10 @@
 import { Button, Input } from "@macrograph/ui";
 import { action, useAction, useSubmission } from "@solidjs/router";
+import { appendResponseHeader, setCookie } from "@solidjs/start/http";
 import { eq } from "drizzle-orm";
 import { generateId } from "lucia";
 import { Argon2id } from "oslo/password";
 import * as v from "valibot";
-import { appendResponseHeader, setCookie } from "@solidjs/start/http";
 
 import { db } from "~/drizzle";
 import { users } from "~/drizzle/schema";

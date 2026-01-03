@@ -4,7 +4,7 @@ import {
 	type PropertyValue,
 	type SchemaProperties,
 } from "@macrograph/runtime";
-import { For, Match, Show, Switch, createMemo } from "solid-js";
+import { createMemo, For, Match, Show, Switch } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import {

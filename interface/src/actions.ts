@@ -7,19 +7,19 @@ import {
 	DataOutput,
 	ExecInput,
 	ExecOutput,
-	type IORef,
 	type InputPin,
+	type IORef,
+	makeIORef,
 	type NodeSchema,
 	type OutputPin,
+	pinConnections,
+	pinIsOutput,
 	type ResourceType,
 	ScopeInput,
 	ScopeOutput,
+	splitIORef,
 	type Variable,
 	type XY,
-	makeIORef,
-	pinConnections,
-	pinIsOutput,
-	splitIORef,
 } from "@macrograph/runtime";
 import {
 	createDeferrer,
@@ -50,6 +50,7 @@ import { type PrimitiveType, t } from "@macrograph/typesystem";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
+
 import type {
 	SelectedItemID,
 	// makeGraphState,
@@ -104,12 +105,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		if (!graph) abort();
 		return graph;
 	}
-	function getNode(input: NodeRef) {
+	function _getNode(input: NodeRef) {
 		const node = getGraph(input).nodes.get(input.nodeId);
 		if (!node) abort();
 		return node;
 	}
-	function getCommentBox(input: CommentBoxRef) {
+	function _getCommentBox(input: CommentBoxRef) {
 		const node = getGraph(input).commentBoxes.get(input.commentBoxId);
 		if (!node) abort();
 		return node;
@@ -119,13 +120,13 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		if (!struct) abort();
 		return struct;
 	}
-	function getCustomStructField(input: CustomStructFieldRef) {
+	function _getCustomStructField(input: CustomStructFieldRef) {
 		const struct = getCustomStruct(input);
 		const field = struct.fields[input.fieldId];
 		if (!field) abort();
 		return field;
 	}
-	function getCustomEnum(input: CustomEnumRef) {
+	function _getCustomEnum(input: CustomEnumRef) {
 		const struct = core.project.customEnums.get(input.enumId);
 		if (!struct) abort();
 		return struct;
@@ -135,7 +136,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		if (!event) abort();
 		return event;
 	}
-	function getCustomEventField(input: CustomEventFieldRef) {
+	function _getCustomEventField(input: CustomEventFieldRef) {
 		const event = getCustomEvent(input);
 		const field = event.field(input.fieldId.toString());
 		if (!field) abort();
@@ -1517,9 +1518,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const outConnections = graph.connections.get(makeIORef(outPin));
 				if (!outConnections) return;
 
-				const index = outConnections.findIndex(
-					(ref) => ref === makeIORef(inPin),
-				);
+				const index = outConnections.indexOf(makeIORef(inPin));
 				outConnections.splice(index, 1);
 
 				const prevConnections = v.parse(

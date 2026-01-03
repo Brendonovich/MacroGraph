@@ -1,5 +1,4 @@
-import { useContext } from "solid-js";
-import { createContext } from "solid-js";
+import { createContext, useContext } from "solid-js";
 
 export interface Platform {
 	projectPersistence?: {

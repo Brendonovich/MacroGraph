@@ -1,7 +1,7 @@
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { type EventBus, createEventBus } from "@solid-primitives/event-bus";
-import { events, type Key, commands } from "tauri-plugin-kb-mouse";
+import { createEventBus, type EventBus } from "@solid-primitives/event-bus";
+import { commands, events, type Key } from "tauri-plugin-kb-mouse";
 
 export function pkg() {
 	const pkg = new Package({ name: "Global Mouse & Keyboard" });

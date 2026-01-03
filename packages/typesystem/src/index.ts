@@ -2,19 +2,19 @@ import type { BaseType } from "./base";
 import { BasePrimitiveType } from "./primitive";
 import * as t from "./t";
 
-export * from "./list";
-export * from "./option";
 export * from "./base";
-export * from "./primitive";
-export * from "./wildcard";
 export * from "./enum";
-export * from "./struct";
-export * from "./map";
-export * as t from "./t";
-export * from "./serialized";
-export * from "./value";
 export * from "./field";
+export * from "./list";
+export * from "./map";
+export * from "./option";
+export * from "./primitive";
+export * from "./serialized";
+export * from "./struct";
+export * as t from "./t";
 export { Disposable } from "./utils";
+export * from "./value";
+export * from "./wildcard";
 
 export type TypeVariant =
 	| "primitive"

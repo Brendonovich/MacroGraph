@@ -38,8 +38,3 @@ export const JSONEnum = createEnum<JSONVariantTypes>("JSON", (e) =>
 		e.variant("Map", { value: t.map(t.enum(JSONEnum)) }),
 	]),
 ) as Enum<JSONVariantTypes>;
-
-type Bruh = Extract<
-	InferEnumVariant<JSONVariantTypes[number]>,
-	{ variant: "Map" }
->;

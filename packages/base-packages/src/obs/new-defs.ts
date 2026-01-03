@@ -1666,8 +1666,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Start Stream",
 		description: "Starts streaming.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.StartStream({ address: socket.value });
 		},
 	})
@@ -1676,8 +1676,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Stop Stream",
 		description: "Stops streaming.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.StopStream({ address: socket.value });
 		},
 	})
@@ -1732,8 +1732,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Start Record",
 		description: "Starts recording.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.StartRecord({ address: socket.value });
 		},
 	})
@@ -1755,8 +1755,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Toggle Record Pause",
 		description: "Toggles record pause.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.ToggleRecordPause({ address: socket.value });
 		},
 	})
@@ -1765,8 +1765,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Pause Record",
 		description: "Pauses recording.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.PauseRecord({ address: socket.value });
 		},
 	})
@@ -1775,8 +1775,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Resume Record",
 		description: "Resumes recording.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.ResumeRecord({ address: socket.value });
 		},
 	})
@@ -1785,8 +1785,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Split Record File",
 		description: "Splits the current record file.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.SplitRecordFile({ address: socket.value });
 		},
 	})
@@ -1837,8 +1837,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Start Replay Buffer",
 		description: "Starts replay buffer.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.StartReplayBuffer({ address: socket.value });
 		},
 	})
@@ -1847,8 +1847,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Stop Replay Buffer",
 		description: "Stops replay buffer.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.StopReplayBuffer({ address: socket.value });
 		},
 	})
@@ -1857,8 +1857,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Save Replay Buffer",
 		description: "Saves the replay buffer.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.SaveReplayBuffer({ address: socket.value });
 		},
 	})
@@ -1907,8 +1907,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Start Virtual Cam",
 		description: "Starts virtual camera.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.StartVirtualCam({ address: socket.value });
 		},
 	})
@@ -1917,8 +1917,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Stop Virtual Cam",
 		description: "Stops virtual camera.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.StopVirtualCam({ address: socket.value });
 		},
 	})
@@ -3601,8 +3601,8 @@ export const PackageDef = Package.define({
 		properties: { socket: OBSSocketProperty },
 		name: "Trigger Studio Mode Transition",
 		description: "Triggers a studio mode transition.",
-		io: (c) => ({}),
-		run: function* ({ io, properties: { socket } }) {
+		io: (_c) => ({}),
+		run: function* ({ properties: { socket } }) {
 			yield* socket.engine.TriggerStudioModeTransition({
 				address: socket.value,
 			});

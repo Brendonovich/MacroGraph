@@ -1,5 +1,6 @@
-import type { Graph } from "@macrograph/project-domain";
 import { Effect, Option } from "effect";
+import type { Graph } from "@macrograph/project-domain";
+
 import { ProjectData } from "./Project";
 
 export class Graphs extends Effect.Service<Graphs>()("Graphs", {

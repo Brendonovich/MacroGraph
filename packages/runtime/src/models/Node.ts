@@ -27,9 +27,9 @@ import {
 } from "./IO";
 import {
 	IOBuilder,
+	type inferPropertyDef,
 	type NodeSchema,
 	type Property,
-	type inferPropertyDef,
 } from "./NodeSchema";
 
 export interface NodeArgs {

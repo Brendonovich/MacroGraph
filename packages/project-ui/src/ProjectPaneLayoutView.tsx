@@ -2,7 +2,6 @@ import { PaneLayoutView, type TabLayout } from "@macrograph/ui";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { type Accessor, createSignal, Show } from "solid-js";
 
-import { GraphContextMenu } from "./Graph/GraphContextMenu";
 import {
 	type PaneState,
 	type TabState,

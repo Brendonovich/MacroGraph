@@ -1,4 +1,5 @@
 import "@total-typescript/ts-reset";
+
 export * as json from "@macrograph/json";
 
 export * as audio from "./audio";
@@ -27,8 +28,8 @@ export * as streamdeck from "./streamdeck";
 export * as streamlabs from "./streamlabs";
 export * as twitch from "./twitch";
 export * as utils from "./utils";
+export * as variables from "./variables";
+export * as voicemod from "./voicemod";
 export * as vtubeStudio from "./vtubeStudio";
 export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
-export * as variables from "./variables";
-export * as voicemod from "./voicemod";

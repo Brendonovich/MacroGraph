@@ -2,9 +2,9 @@ import { Maybe } from "@macrograph/option";
 import {
 	DataInput,
 	DataOutput,
-	type XY,
 	pinIsOutput,
 	splitIORef,
+	type XY,
 } from "@macrograph/runtime";
 import type { t } from "@macrograph/typesystem";
 import { createMousePosition } from "@solid-primitives/mouse";

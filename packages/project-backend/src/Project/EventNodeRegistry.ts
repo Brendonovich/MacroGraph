@@ -1,5 +1,5 @@
-import type { Graph, Node } from "@macrograph/project-domain";
 import { Effect } from "effect";
+import type { Graph, Node } from "@macrograph/project-domain";
 
 export class EventNodeRegistry extends Effect.Service<EventNodeRegistry>()(
 	"EventNodeRegistry",

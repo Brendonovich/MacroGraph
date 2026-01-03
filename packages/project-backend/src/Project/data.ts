@@ -1,5 +1,5 @@
-import { Graph, IOId, Node } from "@macrograph/project-domain";
 import { Context, Schema } from "effect";
+import { Graph, IOId, Node } from "@macrograph/project-domain";
 
 export type NodeConnections = {
 	in?: Map<string, Array<[Node.Id, string]>>;

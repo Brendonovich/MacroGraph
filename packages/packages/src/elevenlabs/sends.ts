@@ -1,14 +1,10 @@
+import { Maybe } from "@macrograph/option";
+import { createStruct } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { writeBinaryFile } from "@tauri-apps/api/fs";
 
-import { Maybe } from "@macrograph/option";
-import { createStruct } from "@macrograph/runtime";
 import type { Pkg } from ".";
 import type { Ctx } from "./ctx";
-
-type Message = { role: string; content: string };
-
-type Choices = { finish_reason: string; index: number; message: Message };
 
 export async function streamToArrayBuffer(
 	stream: ReadableStream<Uint8Array>,
@@ -120,7 +116,7 @@ export function register(pkg: Pkg, state: Ctx) {
 			};
 		},
 		async run({ ctx, io }) {
-			const voiceSettings = {};
+			const _voiceSettings = {};
 			const body = {} as elevenBodyType;
 
 			if (ctx.getInput(io.body).isSome()) {

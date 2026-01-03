@@ -1,4 +1,5 @@
 import { t } from "@macrograph/typesystem";
+
 import type { Pkg } from ".";
 
 export function register(pkg: Pkg) {

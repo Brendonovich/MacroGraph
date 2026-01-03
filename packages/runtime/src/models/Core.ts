@@ -3,8 +3,8 @@ import { Maybe, type Option } from "@macrograph/option";
 import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
-
 import type { z } from "zod";
+
 import { implicitConversions } from "../utils";
 import { DataInput, type DataOutput, type ScopeOutput } from "./IO";
 import type { Node } from "./Node";
@@ -120,8 +120,8 @@ export class Core {
 		api?: InitClientReturn<typeof contract, any>;
 	}) {
 		this.fetch = args?.fetch ?? fetch;
-		this.oauth = args?.oauth!;
-		this.api = args?.api!;
+		this.oauth = args!.oauth!;
+		this.api = args!.api!;
 
 		return createMutable(this);
 	}

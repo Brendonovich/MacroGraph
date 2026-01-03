@@ -1,11 +1,11 @@
 import {
 	type Graph as GraphModel,
-	type Size,
-	type XY,
 	getCommentBoxesInRect,
 	getNodesInRect,
 	pinIsInput,
 	pinIsOutput,
+	type Size,
+	type XY,
 } from "@macrograph/runtime";
 import { createBodyCursor } from "@solid-primitives/cursor";
 import {

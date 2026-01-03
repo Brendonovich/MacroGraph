@@ -1,13 +1,13 @@
 import { Record } from "effect";
-import { Popover } from "@kobalte/core/popover";
-import { DropdownMenu } from "@kobalte/core/dropdown-menu";
-import { Select } from "@kobalte/core/select";
 import { ContextMenu } from "@kobalte/core/context-menu";
+import { DropdownMenu } from "@kobalte/core/dropdown-menu";
+import { Popover } from "@kobalte/core/popover";
+import { Select } from "@kobalte/core/select";
 import { focusRingClasses } from "@macrograph/ui";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
-import { createMemo, createSignal, For, Index, Show } from "solid-js";
 import type { ComponentProps } from "solid-js";
+import { createMemo, createSignal, For, Index, Show } from "solid-js";
 
 import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";

@@ -54,7 +54,7 @@ const doDesktopAuth = action(async () => {
 		);
 
 		return id;
-	} catch (e) {
+	} catch (_e) {
 		return undefined;
 	}
 });

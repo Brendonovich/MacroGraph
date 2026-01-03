@@ -1371,11 +1371,10 @@ export function pkg(core: Core) {
 		},
 		run({ ctx, io }) {
 			io.map((io) => {
-				const data = io.inputs.reduce(
-					(acc, input) =>
-						Object.assign(acc, { [input.id]: ctx.getInput(input) }),
-					{} as any,
-				);
+				const data: any = {};
+				for (const input of io.inputs) {
+					data[input.id] = ctx.getInput(input);
+				}
 
 				ctx.setOutput(io.output, data);
 			});
@@ -1411,11 +1410,10 @@ export function pkg(core: Core) {
 		},
 		run({ ctx, io }) {
 			io.map((io) => {
-				const data = io.inputs.reduce(
-					(acc, input) =>
-						Object.assign(acc, { [input.id]: ctx.getInput(input) }),
-					{} as any,
-				);
+				const data: any = {};
+				for (const input of io.inputs) {
+					data[input.id] = ctx.getInput(input);
+				}
 
 				ctx.setOutput(io.output, data);
 			});
@@ -1454,15 +1452,12 @@ export function pkg(core: Core) {
 		},
 		run({ ctx, io }) {
 			io.map((io) => {
-				const data = io.inputs.reduce(
-					(acc, input) =>
-						Object.assign(acc, {
-							[input.id]: (ctx.getInput(input) as Option<any>).unwrapOr(
-								(ctx.getInput(io.input) as any)[input.id],
-							),
-						}),
-					{} as any,
-				);
+				const data: any = {};
+				for (const input of io.inputs) {
+					data[input.id] = (ctx.getInput(input) as Option<any>).unwrapOr(
+						(ctx.getInput(io.input) as any)[input.id],
+					);
+				}
 
 				ctx.setOutput(io.output, data);
 			});
@@ -1523,16 +1518,15 @@ export function pkg(core: Core) {
 		run({ ctx, io }) {
 			if (!io) return;
 
-			const data = {
-				variant: io.variant.id,
-				data: io.variant
-					? Object.values(io.inputs).reduce(
-							(acc, input) =>
-								Object.assign(acc, { [input.id]: ctx.getInput(input) }),
-							{} as any,
-						)
-					: undefined,
-			};
+			let variantData: any;
+			if (io.variant) {
+				variantData = {};
+				for (const input of Object.values(io.inputs)) {
+					variantData[input.id] = ctx.getInput(input);
+				}
+			}
+
+			const data = { variant: io.variant.id, data: variantData };
 
 			ctx.setOutput(io.output, data);
 		},
@@ -1629,16 +1623,15 @@ export function pkg(core: Core) {
 		run({ ctx, io }) {
 			if (!io) return;
 
-			const data = {
-				variant: io.variant.id,
-				data: io.variant
-					? Object.values(io.inputs).reduce(
-							(acc, input) =>
-								Object.assign(acc, { [input.id]: ctx.getInput(input) }),
-							{} as any,
-						)
-					: undefined,
-			};
+			let variantData: any;
+			if (io.variant) {
+				variantData = {};
+				for (const input of Object.values(io.inputs)) {
+					variantData[input.id] = ctx.getInput(input);
+				}
+			}
+
+			const data = { variant: io.variant.id, data: variantData };
 
 			ctx.setOutput(io.output, data);
 		},
@@ -1762,7 +1755,7 @@ export function pkg(core: Core) {
 		createIO({ io }) {
 			return { exec: io.execOutput({ id: "exec", name: "" }) };
 		},
-		run({ ctx, data, io }) {
+		run({ ctx, io }) {
 			ctx.exec(io.exec);
 		},
 	});

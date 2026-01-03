@@ -1,9 +1,9 @@
 import {
+	createMemo,
+	createSignal,
 	type EffectFunction,
 	type MemoOptions,
 	type SignalOptions,
-	createMemo,
-	createSignal,
 } from "solid-js";
 
 /**
@@ -478,7 +478,6 @@ export type SomeValue<T> = T extends null | undefined | Option<null>
 	? never
 	: T;
 
-type None = Option<any>;
 declare type Some<T> = Option<SomeValue<T>>;
 
 /**

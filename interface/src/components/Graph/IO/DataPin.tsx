@@ -4,8 +4,8 @@ import {
 	type AnyType,
 	type BaseType,
 	ListType,
-	WildcardType,
 	t,
+	WildcardType,
 } from "@macrograph/typesystem";
 import clsx from "clsx";
 import { Match, Switch } from "solid-js";

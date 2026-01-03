@@ -3,10 +3,10 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { makePersisted } from "@solid-primitives/storage";
 import clsx from "clsx";
 import {
-	type ParentProps,
 	createRoot,
 	createSignal,
 	onCleanup,
+	type ParentProps,
 } from "solid-js";
 
 export type Side = "left" | "right";

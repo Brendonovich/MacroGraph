@@ -3,14 +3,14 @@ import { t } from "@macrograph/typesystem";
 import clsx from "clsx";
 import {
 	type Accessor,
+	children,
+	createContext,
+	createSignal,
 	For,
 	Match,
 	type ParentProps,
 	Show,
 	Switch,
-	children,
-	createContext,
-	createSignal,
 	useContext,
 } from "solid-js";
 
@@ -88,11 +88,9 @@ export function TypeEditor(props: {
 								<TypeItem
 									type="button"
 									onClick={() => {
-										ctx
-											.typeDialogState()
-											?.onTypeSelected(
-												apply(ctx.typeDialogState()?.innerType!),
-											);
+										const innerType = ctx.typeDialogState()?.innerType;
+										if (!innerType) return;
+										ctx.typeDialogState()?.onTypeSelected(apply(innerType));
 										ctx.setTypeDialogState(null);
 									}}
 								>

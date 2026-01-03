@@ -2,7 +2,7 @@ import { Maybe, None, Some } from "@macrograph/option";
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
-import { jsToJSON, jsonToJS, toJSON } from "./conversion";
+import { jsonToJS, jsToJSON, toJSON } from "./conversion";
 import { JSONEnum } from "./type";
 
 export function pkg() {

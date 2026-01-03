@@ -1,51 +1,47 @@
 /**
  * @since 1.0.0
  */
-import type * as Atom from "@effect-atom/atom/Atom";
-import type * as AtomRef from "@effect-atom/atom/AtomRef";
-import * as Registry from "@effect-atom/atom/Registry";
-import * as Result from "@effect-atom/atom/Result";
+
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { globalValue } from "effect/GlobalValue";
+import type * as Atom from "@effect-atom/atom/Atom";
+import type * as AtomRef from "@effect-atom/atom/AtomRef";
+import * as Registry from "@effect-atom/atom/Registry";
+import type * as Result from "@effect-atom/atom/Result";
 import * as Solid from "solid-js";
 
 /**
  * @since 1.0.0
  * @category modules
  */
-export * as Registry from "@effect-atom/atom/Registry";
-
-/**
- * @since 1.0.0
- * @category modules
- */
-export * as Result from "@effect-atom/atom/Result";
-
-/**
- * @since 1.0.0
- * @category modules
- */
 export * as Atom from "@effect-atom/atom/Atom";
-
-/**
- * @since 1.0.0
- * @category modules
- */
-export * as AtomRef from "@effect-atom/atom/AtomRef";
-
 /**
  * @since 1.0.0
  * @category re-exports
  */
 export * as AtomHttpApi from "@effect-atom/atom/AtomHttpApi";
-
+/**
+ * @since 1.0.0
+ * @category modules
+ */
+export * as AtomRef from "@effect-atom/atom/AtomRef";
 /**
  * @since 1.0.0
  * @category modules
  */
 export * as AtomRpc from "@effect-atom/atom/AtomRpc";
+/**
+ * @since 1.0.0
+ * @category modules
+ */
+export * as Registry from "@effect-atom/atom/Registry";
+/**
+ * @since 1.0.0
+ * @category modules
+ */
+export * as Result from "@effect-atom/atom/Result";
 
 /**
  * @since 1.0.0

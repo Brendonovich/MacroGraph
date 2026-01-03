@@ -4,7 +4,6 @@ import type { UnknownException } from "effect/Cause";
 import {
 	type CreateDataIn,
 	type CreateDataOut,
-	type CreateExecOut,
 	type Credential,
 	type EffectGenerator,
 	ExecutionContext,
@@ -108,7 +107,7 @@ export namespace PackageEngine {
 		TState,
 		TRpcs extends RpcGroup.RpcGroup<any>,
 		TResources extends Resource.Resource<any, any>,
-		TSuggestions extends string,
+		_TSuggestions extends string,
 	> = Schema.Simplify<
 		([TRpcs] extends [never]
 			? { rpc?: never }
@@ -256,7 +255,7 @@ export namespace Package {
 		def: PackageDef<Engine>,
 	): Package<Engine, Schemas> => ({
 		...def,
-		toLayer: (build) =>
+		toLayer: (_build) =>
 			Layer.effect(
 				Tag,
 				Effect.sync(() => {
@@ -273,8 +272,8 @@ export namespace Property {
 	};
 
 	export const resource = <TValue>(
-		name: string,
-		resource: Resource.Resource<any, TValue>,
+		_name: string,
+		_resource: Resource.Resource<any, TValue>,
 	) => {};
 }
 
@@ -333,10 +332,6 @@ export namespace NodeSchema {
 	interface ExecIOCtx<Suggestions extends string> {
 		in: { data: CreateDataIn<Suggestions> };
 		out: { data: CreateDataOut };
-	}
-
-	interface EventIOCtx {
-		out: { exec: CreateExecOut; data: CreateDataOut };
 	}
 
 	export interface ExecImpl<S extends Any, IO> {

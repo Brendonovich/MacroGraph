@@ -1,5 +1,5 @@
-import type { ProjectEvent } from "@macrograph/project-domain";
 import { Effect, PubSub, Stream } from "effect";
+import type { ProjectEvent } from "@macrograph/project-domain";
 
 export class EventsPubSub extends Effect.Service<EventsPubSub>()(
 	"EventsPubSub",

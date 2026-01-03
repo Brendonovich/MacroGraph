@@ -90,7 +90,7 @@ function CopyProjectButton() {
 	);
 }
 
-const Section = (props: { title: string } & ParentProps) => {
+const _Section = (props: { title: string } & ParentProps) => {
 	return (
 		<section class="bg-neutral-900 rounded-md divide-y divide-neutral-600 border border-neutral-600">
 			<h3 class="p-3 font-medium text-xl">{props.title}</h3>

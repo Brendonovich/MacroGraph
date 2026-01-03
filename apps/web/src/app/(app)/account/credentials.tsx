@@ -15,11 +15,11 @@ import { For, Show, Suspense } from "solid-js/web";
 import { toast } from "solid-sonner";
 
 import {
-	PROVIDER_DISPLAY_NAMES,
-	WINDOW_OPEN_FAILED,
 	addCredential,
 	getCredentials,
+	PROVIDER_DISPLAY_NAMES,
 	removeCredential,
+	WINDOW_OPEN_FAILED,
 } from "~/api";
 import type { AuthProvider } from "../../auth/providers";
 

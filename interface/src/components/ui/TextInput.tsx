@@ -2,13 +2,13 @@ import { Listbox } from "@kobalte/core/listbox";
 import { Popover } from "@kobalte/core/popover";
 import type { CreateQueryResult } from "@tanstack/solid-query";
 import {
-	Show,
-	Suspense,
 	createEffect,
 	createMemo,
 	createSignal,
 	on,
 	onMount,
+	Show,
+	Suspense,
 } from "solid-js";
 
 import { Input } from "./Input";

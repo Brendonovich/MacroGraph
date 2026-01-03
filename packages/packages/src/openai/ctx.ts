@@ -1,8 +1,8 @@
 import {
+	makePersistedOption,
 	None,
 	type Option,
 	Some,
-	makePersistedOption,
 } from "@macrograph/option";
 import OpenAI from "openai";
 import { createEffect, createSignal, on } from "solid-js";

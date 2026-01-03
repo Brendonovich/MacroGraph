@@ -1,10 +1,10 @@
 import { action, reload } from "@solidjs/router";
+import { deleteCookie } from "@solidjs/start/http";
+import { getRequestEvent } from "solid-js/web";
 import * as v from "valibot";
 
 import { getAuthState, getUser } from "~/api";
 import { lucia } from "~/lucia";
-import { getRequestEvent } from "solid-js/web";
-import { deleteCookie } from "@solidjs/start/http";
 
 export const CREDENTIALS = v.object({
 	email: v.pipe(v.string(), v.email()),

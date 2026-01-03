@@ -1,4 +1,4 @@
-import { type PropertyDef, createResourceType } from "@macrograph/runtime";
+import { createResourceType, type PropertyDef } from "@macrograph/runtime";
 
 import type { Pkg } from ".";
 
