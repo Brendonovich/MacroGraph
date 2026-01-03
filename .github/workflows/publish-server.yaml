@@ -53,6 +53,8 @@ jobs:
           tags: |
             ${{format('{0}:{1}', env.IMAGE_NAME, env.TAG) }}
           provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Publish SHA to checks
         if: github.event_name == 'pull_request'
