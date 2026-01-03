@@ -32,9 +32,15 @@ jobs:
         id: determine-tag
         run: |
           echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
+          echo "IMAGE_SHA=${GITHUB_SHA}" >> $GITHUB_OUTPUT
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
             echo "TAG=main" >> $GITHUB_ENV
           fi
+
+      - name: Report image SHA
+        run: |
+          echo "Image SHA: ${{ env.SHORT_SHA }}"
+          echo "image-sha=${{ env.SHORT_SHA }}" >> $GITHUB_OUTPUT
 
       - uses: docker/build-push-action@v5
         with:
