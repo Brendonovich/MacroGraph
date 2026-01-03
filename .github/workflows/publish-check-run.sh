@@ -31,7 +31,8 @@ jq -n \
   --arg name "Docker Image" \
   --arg head_sha "$SHA" \
   --arg title "Docker Image Built" \
-  --arg summary "$SUMMARY" \
+  --arg summary "Docker image published with SHA: ${SHORT_SHA}" \
+  --arg text "$SUMMARY" \
   '{
     name: $name,
     head_sha: $head_sha,
@@ -39,7 +40,8 @@ jq -n \
     conclusion: "success",
     output: {
       title: $title,
-      summary: $summary
+      summary: $summary,
+      text: $text
     }
   }' | curl -s -X POST "https://api.github.com/repos/${REPO}/check-runs" \
   -H "Authorization: Bearer ${TOKEN}" \
