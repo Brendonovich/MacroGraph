@@ -164,7 +164,7 @@ function ConstantRenameDialog(props: {
 					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 border border-gray-6 rounded shadow-lg focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-left-2) ui-closed:(animate-out fade-out slide-out-to-left-2)"
 					onOpenAutoFocus={(e) => e.preventDefault()}
 				>
-					<div class="flex flex-col gap-2 p-2">
+					<div class="flex flex-col gap-2 p-2 pb-0">
 						<span class="text-xs font-medium text-gray-12">
 							Rename Constant
 						</span>
@@ -190,7 +190,7 @@ function ConstantRenameDialog(props: {
 									props.onRename(editName());
 								}}
 								class={cx(
-									"flex-1 rounded-br text-gray-11 hover:text-gray-12 hover:bg-gray-6",
+									"flex-1 rounded-br bg-gray-12 text-gray-3 hover:text-gray-12 hover:bg-gray-6",
 									focusRingClasses("inset"),
 								)}
 								disabled={props.isRenaming || !editName().trim()}
