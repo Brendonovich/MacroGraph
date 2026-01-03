@@ -101,84 +101,84 @@ export function ConstantsSidebar() {
 									};
 									return (
 										<ContextMenu>
-											<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
-												<div class="flex flex-row justify-between items-baseline">
-													<ConstantRenameDialog
-														name={data().constant.name}
-														onRename={(name) => renameMutation.mutate({ name })}
-														isRenaming={renameMutation.isPending}
-													/>
-													<span class="text-xs text-gray-11">
-														{data().resource.name}
-													</span>
+											<ContextMenu.Trigger>
+												<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
+													<div class="flex flex-row justify-between items-baseline">
+														<ConstantRenameDialog
+															name={data().constant.name}
+															onRename={(name) =>
+																renameMutation.mutate({ name })
+															}
+															isRenaming={renameMutation.isPending}
+														/>
+														<span class="text-xs text-gray-11">
+															{data().resource.name}
+														</span>
+													</div>
+													<Select<Option>
+														value={option()}
+														options={options()}
+														optionValue="id"
+														optionTextValue="display"
+														placeholder={
+															<i class="text-gray-11">
+																{options().length === 0
+																	? "No Options"
+																	: "No Value"}
+															</i>
+														}
+														gutter={4}
+														disabled={options().length === 0}
+														onChange={(v) => {
+															if (!v) return;
+															updateValue.mutate(v.id);
+														}}
+														itemComponent={(props) => (
+															<Show when={props.item.rawValue.id !== ""}>
+																<Select.Item
+																	item={props.item}
+																	class="p-1 py-0.5 block w-full text-left focus-visible:outline-none ui-highlighted:bg-blue-6 rounded-[0.125rem]"
+																>
+																	<Select.ItemLabel>
+																		{props.item.rawValue.display}
+																	</Select.ItemLabel>
+																</Select.Item>
+															</Show>
+														)}
+													>
+														<Select.Trigger
+															class={cx(
+																"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 appearance-none rounded-sm",
+																!option() && "ring-1 ring-red-9 outline-none",
+																focusRingClasses("outline"),
+															)}
+														>
+															<Select.Value<Option> class="flex-1 text-left">
+																{(state) => state.selectedOption().display}
+															</Select.Value>
+															{options().length > 0 && (
+																<Select.Icon
+																	as={IconMaterialSymbolsArrowRightRounded}
+																	class="size-4 ui-closed:rotate-90 ui-expanded:-rotate-90 transition-transform"
+																/>
+															)}
+														</Select.Trigger>
+														<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-gray-6 rounded space-y-1 p-1">
+															<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
+														</Select.Content>
+													</Select>
 												</div>
-												<Select<Option>
-													value={option()}
-													options={options()}
-													optionValue="id"
-													optionTextValue="display"
-													placeholder={
-														<i class="text-gray-11">
-															{options().length === 0
-																? "No Options"
-																: "No Value"}
-														</i>
-													}
-													gutter={4}
-													disabled={
-														// !setProperty ||
-														// setProperty.isPending ||
-														options().length === 0
-													}
-													onChange={(v) => {
-														if (!v) return;
-														updateValue.mutate(v.id);
-													}}
-													itemComponent={(props) => (
-														<Show when={props.item.rawValue.id !== ""}>
-															<Select.Item
-																item={props.item}
-																class="p-1 py-0.5 block w-full text-left focus-visible:outline-none ui-highlighted:bg-blue-6 rounded-[0.125rem]"
-															>
-																<Select.ItemLabel>
-																	{props.item.rawValue.display}
-																</Select.ItemLabel>
-															</Select.Item>
-														</Show>
-													)}
+											</ContextMenu.Trigger>
+											<ContextMenuContent>
+												<ContextMenuItem
+													class="text-red-500"
+													disabled={deleteMutation.isPending}
+													onSelect={() => deleteMutation.mutate()}
 												>
-													<Select.Trigger
-														class={cx(
-															"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 appearance-none rounded-sm",
-															!option() && "ring-1 ring-red-9 outline-none",
-															focusRingClasses("outline"),
-														)}
-													>
-														<Select.Value<Option> class="flex-1 text-left">
-															{(state) => state.selectedOption().display}
-														</Select.Value>
-														{options().length > 0 && (
-															<Select.Icon
-																as={IconMaterialSymbolsArrowRightRounded}
-																class="size-4 ui-closed:rotate-90 ui-expanded:-rotate-90 transition-transform"
-															/>
-														)}
-													</Select.Trigger>
-													<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-gray-6 rounded space-y-1 p-1">
-														<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
-													</Select.Content>
-												</Select>
-												<ContextMenuContent>
-													<ContextMenuItem
-														class="text-red-500"
-														disabled={deleteMutation.isPending}
-														onSelect={() => deleteMutation.mutate()}
-													>
-														<IconMaterialSymbolsDeleteOutline />
-														Delete
-													</ContextMenuItem>
-												</ContextMenuContent>
-											</div>
+													<IconMaterialSymbolsDeleteOutline />
+													Delete
+												</ContextMenuItem>
+											</ContextMenuContent>
 										</ContextMenu>
 									);
 								}}
