@@ -57,11 +57,4 @@ jobs:
 
       - name: Publish SHA to checks
         if: github.event_name == 'pull_request'
-        run: |
-          IMAGE_NAME="${{ env.IMAGE_NAME }}"
-          SHORT_SHA="${{ env.SHORT_SHA }}"
-          SUMMARY="## Docker Image Published\\n\\nThe Docker image for this PR has been built and published to GitHub Container Registry.\\n\\n### Image Details\\n\\n- **Registry**: GitHub Container Registry (ghcr.io)\\n- **Repository**: ${IMAGE_NAME}\\n- **Image SHA**: \\\`${SHORT_SHA}\\\`\\n\\n### Using this Image\\n\\nTo pull this image, use:\\n\\n\\\`\\\`\\\`\\ndocker pull ${IMAGE_NAME}:${SHORT_SHA}\\n\\\`\\\`\\\`\\n\\nThis SHA can be used to reference this specific build in deployments or other workflows."
-          curl -s -X POST "https://api.github.com/repos/${{ github.repository }}/check-runs" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d "{\"name\":\"Docker Image\",\"head_sha\":\"${{ github.sha }}\",\"status\":\"completed\",\"conclusion\":\"success\",\"output\":{\"title\":\"Docker Image Built\",\"summary\":\"${SUMMARY}\"}}"
+        run: ./.github/workflows/publish-check-run.sh "${{ env.IMAGE_NAME }}" "${{ env.SHORT_SHA }}" "${{ github.repository }}" "${{ secrets.GITHUB_TOKEN }}" "${{ github.sha }}"
