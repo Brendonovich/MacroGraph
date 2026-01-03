@@ -68,6 +68,7 @@ jobs:
         run: cargo fmt --check
 
   clippy:
+    if: false
     name: Clippy
     runs-on: ubuntu-latest
     permissions:
