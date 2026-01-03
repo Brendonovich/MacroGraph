@@ -16,7 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'Brendonovich/MacroGraph'
     permissions:
+      contents: read
+      packages: write
       checks: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -47,7 +50,8 @@ jobs:
           file: apps/server/Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.TAG != '' && format('{0}-{1}', env.TAG, env.SHORT_SHA) || env.SHORT_SHA }}
+            ${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
+            ${{ env.TAG != '' && format('{0}-{1}', env.IMAGE_NAME, env.SHORT_SHA) || '' }}
             ${{ env.TAG != '' && format('{0}:{1}', env.IMAGE_NAME, env.TAG) || '' }}
           provenance: false
 
