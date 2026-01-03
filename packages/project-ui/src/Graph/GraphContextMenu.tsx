@@ -157,6 +157,8 @@ export const GraphContextMenu = Object.assign(
 									placeholder="Search Nodes..."
 									value={search()}
 									onInput={(e) => setSearch(e.currentTarget.value)}
+									onKeyDown={(e) => e.stopPropagation()}
+									onKeyUp={(e) => e.stopPropagation()}
 								/>
 								<div class="overflow-y-auto">
 									<div class="p-1">
