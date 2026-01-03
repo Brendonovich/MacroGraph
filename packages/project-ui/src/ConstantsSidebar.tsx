@@ -118,7 +118,7 @@ export function ConstantsSidebar() {
 														disabled={deleteMutation.isPending}
 														onSelect={() => deleteMutation.mutate()}
 													>
-														<IconAntDesignDeleteOutlined />
+														<IconMaterialSymbolsDeleteOutline />
 														Delete
 													</ContextMenuItem>
 												</ContextMenuContent>
