@@ -165,7 +165,7 @@ function ConstantRenameDialog(props: {
 					onOpenAutoFocus={(e) => e.preventDefault()}
 				>
 					<div class="flex flex-col gap-2">
-						<div class="p-2">
+						<div class="flex flex-col gap-2 p-2">
 							<span class="text-xs font-medium text-gray-12">
 								Rename Constant
 							</span>
