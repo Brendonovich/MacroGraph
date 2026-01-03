@@ -29,6 +29,7 @@ export const RequestRpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.SetNodeProperty),
 	Rpc.fromTaggedRequest(Request.CreateResourceConstant),
 	Rpc.fromTaggedRequest(Request.UpdateResourceConstant),
+	Rpc.fromTaggedRequest(Request.DeleteResourceConstant),
 ).middleware(CurrentActorRpcMiddleware);
 
 export const Rpcs = RequestRpcs.merge(

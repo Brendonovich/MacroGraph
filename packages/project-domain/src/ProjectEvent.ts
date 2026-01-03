@@ -100,6 +100,13 @@ export class ResourceConstantUpdated extends S.TaggedClass<ResourceConstantUpdat
 	},
 ) {}
 
+export class ResourceConstantDeleted extends S.TaggedClass<ResourceConstantDeleted>()(
+	"ResourceConstantDeleted",
+	{
+		id: S.String,
+	},
+) {}
+
 export const ProjectEvent = S.Union(
 	PackageAdded,
 	PackageStateChanged,
@@ -112,5 +119,6 @@ export const ProjectEvent = S.Union(
 	NodeIOUpdated,
 	ResourceConstantCreated,
 	ResourceConstantUpdated,
+	ResourceConstantDeleted,
 );
 export type ProjectEvent = typeof ProjectEvent.Type;

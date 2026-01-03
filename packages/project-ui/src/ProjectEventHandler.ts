@@ -105,6 +105,14 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 								value: Option.getOrUndefined(e.value),
 							});
 						}),
+					ResourceConstantDeleted: (e) =>
+						Effect.sync(() => {
+							setState(
+								produce((prev) => {
+									delete prev.constants[e.id];
+								}),
+							);
+						}),
 					NodeIOUpdated: (e) =>
 						Effect.sync(() => {
 							batch(() => {

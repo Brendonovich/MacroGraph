@@ -147,6 +147,17 @@ export class UpdateResourceConstant extends S.TaggedRequest<UpdateResourceConsta
 	},
 ) {}
 
+export class DeleteResourceConstant extends S.TaggedRequest<DeleteResourceConstant>()(
+	"DeleteResourceConstant",
+	{
+		payload: {
+			id: S.String,
+		},
+		success: ProjectEvent.ResourceConstantDeleted,
+		failure: S.Never,
+	},
+) {}
+
 export type Request =
 	| GetProject
 	| GetPackageSettings
@@ -158,4 +169,5 @@ export type Request =
 	| DeleteGraphItems
 	| SetNodeProperty
 	| CreateResourceConstant
-	| UpdateResourceConstant;
+	| UpdateResourceConstant
+	| DeleteResourceConstant;

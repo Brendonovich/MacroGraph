@@ -2,6 +2,7 @@ import { Record } from "effect";
 import { Popover } from "@kobalte/core/popover";
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import { Select } from "@kobalte/core/select";
+import { ContextMenu } from "@kobalte/core/context-menu";
 import { focusRingClasses } from "@macrograph/ui";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
@@ -10,6 +11,7 @@ import { createMemo, createSignal, For, Index, Show } from "solid-js";
 import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";
 import { ProjectState } from "./State";
+import { ContextMenuContent, ContextMenuItem } from "@macrograph/interface";
 
 export function ConstantsSidebar() {
 	const actions = useProjectService(ProjectActions);
@@ -41,6 +43,10 @@ export function ConstantsSidebar() {
 							}) => actions.UpdateResourceConstant(constantId, value, name),
 						}));
 
+						const deleteMutation = useMutation(() => ({
+							mutationFn: () => actions.DeleteResourceConstant(constantId),
+						}));
+
 						const data = () => {
 							const c = constant();
 							if (!c) return null;
@@ -66,16 +72,28 @@ export function ConstantsSidebar() {
 									};
 									return (
 										<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
-											<div class="flex flex-row justify-between items-baseline">
-												<ConstantRenameDialog
-													name={data().constant.name}
-													onRename={(name) => renameMutation.mutate({ name })}
-													isRenaming={renameMutation.isPending}
-												/>
-												<span class="text-xs text-gray-11">
-													{data().resource.name}
-												</span>
-											</div>
+											<ContextMenu>
+												<div class="flex flex-row justify-between items-baseline">
+													<ConstantRenameDialog
+														name={data().constant.name}
+														onRename={(name) => renameMutation.mutate({ name })}
+														isRenaming={renameMutation.isPending}
+													/>
+													<span class="text-xs text-gray-11">
+														{data().resource.name}
+													</span>
+												</div>
+												<ContextMenuContent>
+													<ContextMenuItem
+														class="text-red-500"
+														disabled={deleteMutation.isPending}
+														onSelect={() => deleteMutation.mutate()}
+													>
+														<IconAntDesignDeleteOutlined />
+														Delete
+													</ContextMenuItem>
+												</ContextMenuContent>
+											</ContextMenu>
 											<Select<Option>
 												value={option()}
 												options={options()}

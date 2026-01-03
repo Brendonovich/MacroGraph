@@ -71,6 +71,7 @@ const RequestRpcsLive = RequestRpcs.toLayer(
 			SetNodeProperty: nodeRequests.setNodeProperty,
 			CreateResourceConstant: projectRequests.createResourceConstant,
 			UpdateResourceConstant: projectRequests.updateResourceConstant,
+			DeleteResourceConstant: projectRequests.deleteResourceConstant,
 		};
 	}),
 );
