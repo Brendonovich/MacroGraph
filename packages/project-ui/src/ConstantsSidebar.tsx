@@ -176,7 +176,7 @@ function ConstantRenameDialog(props: {
 							disabled={props.isRenaming}
 						/>
 					</div>
-					<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center">
+					<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center pb-2">
 						<Popover.CloseButton
 							class={cx(
 								"flex-1 rounded-bl text-gray-11 hover:text-gray-12",
