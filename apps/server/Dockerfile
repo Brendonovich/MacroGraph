@@ -10,12 +10,12 @@ WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY patches patches
 
-RUN pnpm fetch
+RUN --mount=type=cache,target=/root/.local/share/pnpm,sharing=locked pnpm fetch
 
 COPY . ./
 
-# Install dependencies
-RUN pnpm install -r --offline
+# Install dependencies with cache mounting
+RUN --mount=type=cache,target=/root/.local/share/pnpm,sharing=locked pnpm install -r --offline
 
 WORKDIR apps/server
 
