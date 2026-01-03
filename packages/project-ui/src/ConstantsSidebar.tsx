@@ -2,14 +2,45 @@ import { Record } from "effect";
 import { Popover } from "@kobalte/core/popover";
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
 import { Select } from "@kobalte/core/select";
+import { ContextMenu } from "@kobalte/core/context-menu";
 import { focusRingClasses } from "@macrograph/ui";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
 import { createMemo, createSignal, For, Index, Show } from "solid-js";
+import type { ComponentProps } from "solid-js";
 
 import { ProjectActions } from "./Actions";
 import { useProjectService } from "./EffectRuntime";
 import { ProjectState } from "./State";
+
+function ContextMenuContent(
+	props: Omit<ComponentProps<typeof ContextMenu.Content<"div">>, "onKeyDown">,
+) {
+	return (
+		<ContextMenu.Portal>
+			<ContextMenu.Content
+				{...props}
+				onKeyDown={(e) => e.stopPropagation()}
+				class={cx(
+					"border border-gray-6 rounded bg-gray-3 min-w-32 text-xs ui-expanded:animate-in ui-expanded:fade-in ui-expanded:zoom-in-95 origin-top-left ui-closed:animate-out ui-closed:fade-out ui-closed:zoom-out-95 p-1 focus:outline-none select-none text-gray-12",
+					props.class,
+				)}
+			>
+				{props.children}
+			</ContextMenu.Content>
+		</ContextMenu.Portal>
+	);
+}
+
+const ContextMenuItem = (props: ComponentProps<typeof ContextMenu.Item>) => (
+	<ContextMenu.Item
+		{...props}
+		class={cx(
+			"px-1.5 py-1 outline-none ui-highlighted:bg-gray-6 rounded-sm flex flex-row items-center gap-2",
+			props.class,
+		)}
+	/>
+);
 
 export function ConstantsSidebar() {
 	const actions = useProjectService(ProjectActions);
@@ -41,6 +72,10 @@ export function ConstantsSidebar() {
 							}) => actions.UpdateResourceConstant(constantId, value, name),
 						}));
 
+						const deleteMutation = useMutation(() => ({
+							mutationFn: () => actions.DeleteResourceConstant(constantId),
+						}));
+
 						const data = () => {
 							const c = constant();
 							if (!c) return null;
@@ -65,72 +100,86 @@ export function ConstantsSidebar() {
 										display: string;
 									};
 									return (
-										<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
-											<div class="flex flex-row justify-between items-baseline">
-												<ConstantRenameDialog
-													name={data().constant.name}
-													onRename={(name) => renameMutation.mutate({ name })}
-													isRenaming={renameMutation.isPending}
-												/>
-												<span class="text-xs text-gray-11">
-													{data().resource.name}
-												</span>
-											</div>
-											<Select<Option>
-												value={option()}
-												options={options()}
-												optionValue="id"
-												optionTextValue="display"
-												placeholder={
-													<i class="text-gray-11">
-														{options().length === 0 ? "No Options" : "No Value"}
-													</i>
-												}
-												gutter={4}
-												disabled={
-													// !setProperty ||
-													// setProperty.isPending ||
-													options().length === 0
-												}
-												onChange={(v) => {
-													if (!v) return;
-													updateValue.mutate(v.id);
-												}}
-												itemComponent={(props) => (
-													<Show when={props.item.rawValue.id !== ""}>
-														<Select.Item
-															item={props.item}
-															class="p-1 py-0.5 block w-full text-left focus-visible:outline-none ui-highlighted:bg-blue-6 rounded-[0.125rem]"
-														>
-															<Select.ItemLabel>
-																{props.item.rawValue.display}
-															</Select.ItemLabel>
-														</Select.Item>
-													</Show>
-												)}
-											>
-												<Select.Trigger
-													class={cx(
-														"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 appearance-none rounded-sm",
-														!option() && "ring-1 ring-red-9 outline-none",
-														focusRingClasses("outline"),
-													)}
-												>
-													<Select.Value<Option> class="flex-1 text-left">
-														{(state) => state.selectedOption().display}
-													</Select.Value>
-													{options().length > 0 && (
-														<Select.Icon
-															as={IconMaterialSymbolsArrowRightRounded}
-															class="size-4 ui-closed:rotate-90 ui-expanded:-rotate-90 transition-transform"
+										<ContextMenu>
+											<ContextMenu.Trigger>
+												<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
+													<div class="flex flex-row justify-between items-baseline">
+														<ConstantRenameDialog
+															name={data().constant.name}
+															onRename={(name) =>
+																renameMutation.mutate({ name })
+															}
+															isRenaming={renameMutation.isPending}
 														/>
-													)}
-												</Select.Trigger>
-												<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-gray-6 rounded space-y-1 p-1">
-													<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
-												</Select.Content>
-											</Select>
-										</div>
+														<span class="text-xs text-gray-11">
+															{data().resource.name}
+														</span>
+													</div>
+													<Select<Option>
+														value={option()}
+														options={options()}
+														optionValue="id"
+														optionTextValue="display"
+														placeholder={
+															<i class="text-gray-11">
+																{options().length === 0
+																	? "No Options"
+																	: "No Value"}
+															</i>
+														}
+														gutter={4}
+														disabled={options().length === 0}
+														onChange={(v) => {
+															if (!v) return;
+															updateValue.mutate(v.id);
+														}}
+														itemComponent={(props) => (
+															<Show when={props.item.rawValue.id !== ""}>
+																<Select.Item
+																	item={props.item}
+																	class="p-1 py-0.5 block w-full text-left focus-visible:outline-none ui-highlighted:bg-blue-6 rounded-[0.125rem]"
+																>
+																	<Select.ItemLabel>
+																		{props.item.rawValue.display}
+																	</Select.ItemLabel>
+																</Select.Item>
+															</Show>
+														)}
+													>
+														<Select.Trigger
+															class={cx(
+																"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 appearance-none rounded-sm",
+																!option() && "ring-1 ring-red-9 outline-none",
+																focusRingClasses("outline"),
+															)}
+														>
+															<Select.Value<Option> class="flex-1 text-left">
+																{(state) => state.selectedOption().display}
+															</Select.Value>
+															{options().length > 0 && (
+																<Select.Icon
+																	as={IconMaterialSymbolsArrowRightRounded}
+																	class="size-4 ui-closed:rotate-90 ui-expanded:-rotate-90 transition-transform"
+																/>
+															)}
+														</Select.Trigger>
+														<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-gray-6 rounded space-y-1 p-1">
+															<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
+														</Select.Content>
+													</Select>
+												</div>
+											</ContextMenu.Trigger>
+											<ContextMenuContent>
+												<ContextMenuItem
+													class="text-red-500"
+													disabled={deleteMutation.isPending}
+													onSelect={() => deleteMutation.mutate()}
+												>
+													<IconMaterialSymbolsDeleteOutline />
+													Delete
+												</ContextMenuItem>
+											</ContextMenuContent>
+										</ContextMenu>
 									);
 								}}
 							</Show>

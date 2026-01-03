@@ -225,6 +225,28 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 					}),
 			).pipe(requestResolverServices);
 
+			const DeleteResourceConstantResolver = RequestResolver.fromEffect(
+				(r: Request.DeleteResourceConstant) =>
+					Effect.gen(function* () {
+						const runtime = yield* ProjectRuntime.Current;
+						const project = yield* runtime.projectRef;
+
+						yield* Ref.set(
+							runtime.projectRef,
+							new Project.Project({
+								...project,
+								constants: HashMap.remove(project.constants, r.id),
+							}),
+						);
+
+						const event = new ProjectEvent.ResourceConstantDeleted({
+							id: r.id,
+						});
+						yield* ProjectRuntime.publishEvent(event);
+						return event;
+					}),
+			).pipe(requestResolverServices);
+
 			return {
 				createGraph: Effect.request<
 					Request.CreateGraph,
@@ -250,6 +272,11 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 					Request.UpdateResourceConstant,
 					typeof UpdateResourceConstant
 				>(UpdateResourceConstant),
+
+				deleteResourceConstant: Effect.request<
+					Request.DeleteResourceConstant,
+					typeof DeleteResourceConstantResolver
+				>(DeleteResourceConstantResolver),
 			};
 		}),
 	},

@@ -228,6 +228,14 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							}),
 						).pipe(Effect.andThen(handleProjectEvent)),
 				),
+				DeleteResourceConstant: withRequest<Request.DeleteResourceConstant>()(
+					(run, constantId: string) =>
+						run(
+							new Request.DeleteResourceConstant({
+								id: constantId,
+							}),
+						).pipe(Effect.andThen(handleProjectEvent)),
+				),
 			};
 		}),
 		dependencies: [ProjectState.Default, ProjectEventHandler.Default],

@@ -38,6 +38,7 @@ const RpcsLive = Rpcs.toLayer(
 			SetNodeProperty: nodeRequests.setNodeProperty,
 			CreateResourceConstant: projectRequests.createResourceConstant,
 			UpdateResourceConstant: projectRequests.updateResourceConstant,
+			DeleteResourceConstant: projectRequests.deleteResourceConstant,
 			GetCredentials: () =>
 				credentials.get.pipe(
 					Effect.map((v) =>
