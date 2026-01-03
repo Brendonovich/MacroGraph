@@ -115,8 +115,8 @@ export function GraphView(
 
 			if (position) {
 				const mousePos = {
-					x: mouse.x - (bounds.left ?? 0),
-					y: mouse.y - (bounds.top ?? 0),
+					x: mouse.x - (bounds.left ?? 0) - (graphCtx.translate?.x ?? 0),
+					y: mouse.y - (bounds.top ?? 0) - (graphCtx.translate?.y ?? 0),
 				};
 
 				ret.push(
