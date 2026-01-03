@@ -40,6 +40,7 @@ export function makeGraphTabSchema(
 			const graphCtx = createGraphContext(
 				() => bounds,
 				() => tab().transform?.translate,
+				() => tab().transform?.zoom ?? 1,
 				ref,
 				() => tab().graph.id,
 				() => tab().selection,
@@ -108,6 +109,17 @@ export function makeGraphTabSchema(
 										zoom: 1,
 									};
 									tab.transform.translate = translate;
+								}),
+							);
+						}}
+						onScaleChange={(zoom) => {
+							updateTab(
+								produce((tab) => {
+									tab.transform ??= {
+										translate: { x: 0, y: 0 },
+										zoom: 1,
+									};
+									tab.transform.zoom = zoom;
 								}),
 							);
 						}}

@@ -22,8 +22,8 @@ export class SchemaNotFound extends S.TaggedError<SchemaNotFound>()(
 	},
 ) {}
 
-export type SchemaRunGeneratorEffect = Effect.Effect<
-	any,
+export type SchemaRunGeneratorEffect<Ret = any> = Effect.Effect<
+	Ret,
 	NotComputationNode,
 	RunFunctionAvailableRequirements
 >;
@@ -73,25 +73,19 @@ export type NodeSchema<
 	| PureSchema<TIO, TProperties>
 	| EventSchema<TIO, TProperties, TEvents, TEvent>;
 
-export type EffectGenerator<
-	Eff extends Effect.Effect<any, any, any>,
-	Ret = void,
-> = Generator<YieldWrap<Eff>, Ret, never>;
+export type EffectGenerator<Eff extends Effect.Effect<any, any, any>> =
+	Generator<YieldWrap<Eff>, Effect.Effect.Success<Eff>, never>;
 
 export type CreateExecIn = (
 	id: string,
 	options?: { name?: string },
 ) => ExecInput;
-export type CreateDataIn<
-	TProperties extends Record<string, any> = Record<string, never>,
-> = <T extends T.Any_>(
+export type CreateDataIn<Suggestions extends string> = <T extends T.Any_>(
 	id: string,
 	type: T,
 	options?: {
 		name?: string;
-		suggestions?: (_: {
-			properties: InferProperties<TProperties>;
-		}) => Effect.Effect<Array<T.Infer_<T>>, any>;
+		suggestions?: Suggestions;
 	},
 ) => DataInput<T>;
 
@@ -105,12 +99,10 @@ export type CreateDataOut = <T extends T.Any_>(
 	options?: { name?: string },
 ) => DataOutput<T>;
 
-export interface IOFunctionContext<
-	TProperties extends Record<string, any> = Record<string, never>,
-> {
+export interface IOFunctionContext<Suggestions extends string = never> {
 	in: {
 		exec: CreateExecIn;
-		data: CreateDataIn<TProperties>;
+		data: CreateDataIn<Suggestions>;
 	};
 	out: {
 		exec: CreateExecOut;
@@ -171,7 +163,7 @@ export interface ExecSchemaDefinition<TIO, TProperties extends PropertiesSchema>
 	run: (ctx: {
 		io: TIO;
 		properties: InferProperties<TProperties>;
-	}) => EffectGenerator<SchemaRunGeneratorEffect, void>;
+	}) => EffectGenerator<SchemaRunGeneratorEffect<void>>;
 }
 
 export interface ExecSchema<
@@ -206,7 +198,7 @@ export interface EventSchemaDefinition<
 			properties: InferProperties<TProperties>;
 		},
 		data: TEvent,
-	) => EffectGenerator<SchemaRunGeneratorEffect, void>;
+	) => EffectGenerator<SchemaRunGeneratorEffect<void>>;
 }
 
 export interface EventSchema<

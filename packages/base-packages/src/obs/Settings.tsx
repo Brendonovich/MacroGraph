@@ -13,7 +13,7 @@ import {
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import { RPCS, type STATE } from "./shared";
+import { CLIENT_RPCS, type STATE } from "./shared";
 
 const CONNECTION_INDICATOR = {
 	connected: {
@@ -31,7 +31,7 @@ const CONNECTION_INDICATOR = {
 };
 
 export default function Settings(
-	props: SettingsProps<typeof RPCS, typeof STATE>,
+	props: SettingsProps<typeof CLIENT_RPCS, typeof STATE>,
 ) {
 	return (
 		<div class="flex flex-col gap-4">
@@ -57,7 +57,7 @@ export default function Settings(
 	);
 }
 
-function AddSocketForm(props: SettingsProps<typeof RPCS, typeof STATE>) {
+function AddSocketForm(props: SettingsProps<typeof CLIENT_RPCS, typeof STATE>) {
 	const [addSocket, setAddSocket] = createStore({
 		name: "",
 		address: "ws://localhost:4455",
@@ -97,7 +97,7 @@ function AddSocketForm(props: SettingsProps<typeof RPCS, typeof STATE>) {
 }
 
 function SocketListItem(
-	props: SettingsProps<typeof RPCS, typeof STATE> & {
+	props: SettingsProps<typeof CLIENT_RPCS, typeof STATE> & {
 		conn: (typeof STATE)["Encoded"]["sockets"][number];
 	},
 ) {
@@ -157,4 +157,4 @@ function InputField(props: { label: string } & ComponentProps<"input">) {
 	);
 }
 
-export const Rpcs = RPCS;
+export const Rpcs = CLIENT_RPCS;

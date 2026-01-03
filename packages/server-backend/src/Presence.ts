@@ -119,6 +119,15 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 							: c[connection.id],
 					}));
 				}),
+				updatePresenceName: Effect.fn(function* (name: string) {
+					const connection = yield* Realtime.Connection;
+					yield* SubscriptionRef.update(clients, (c) => ({
+						...c,
+						[connection.id]: c[connection.id]
+							? { ...c[connection.id], name }
+							: undefined,
+					}));
+				}),
 			};
 		}),
 	},

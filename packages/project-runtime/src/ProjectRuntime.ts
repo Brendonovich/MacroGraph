@@ -43,13 +43,13 @@ export interface RuntimePackage {
 }
 
 export interface RuntimePackageEngine
-	extends PackageEngine.BuiltEngine<any, any, any> {
+	extends PackageEngine.BuiltEngine<any, any, any, any> {
 	events: PubSub.PubSub<any>;
 	def: PackageEngine.PackageEngineDefinition<
 		any,
 		any,
-		any,
-		Resource.Resource<string, any>
+		Resource.Resource<string, any>,
+		any
 	>;
 	readonly getResourceValues: (
 		id: string,

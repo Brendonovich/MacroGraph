@@ -6,7 +6,7 @@ export class ConnectionFailed extends S.TaggedError<ConnectionFailed>()(
 	{},
 ) {}
 
-export const RPCS = RpcGroup.make(
+export const CLIENT_RPCS = RpcGroup.make(
 	Rpc.make("AddSocket", {
 		payload: S.Struct({
 			address: S.String,

@@ -66,11 +66,11 @@ const buildCondition = <T extends SubscriptionTypeDefinition>(
 
 class RetryRequest extends Data.TaggedError("RetryRequest")<{}> {}
 
-const Engine = PackageEngine.define<State>()({
+const Engine = PackageEngine.define({
 	rpc: RPCS,
 	events: EVENTSUB_MESSAGE,
 	resources: [TwitchAccount],
-}).build((ctx) => {
+}).build<State>((ctx) => {
 	type Socket = {
 		lock: Effect.Semaphore;
 		state: "connecting" | "connected";
@@ -206,8 +206,8 @@ const Engine = PackageEngine.define<State>()({
 					yield* Effect.log("Creating subscriptions");
 					yield* Effect.all(
 						Object.values(subscriptionTypes).map((def) =>
-							helixClient.eventSub
-								.createSubscription({
+							helixClient
+								.createEventSubSubscription({
 									payload: {
 										type: def.type,
 										version: def.version.toString(),

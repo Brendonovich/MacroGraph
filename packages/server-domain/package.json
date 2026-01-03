@@ -22,7 +22,7 @@
 		"effect": "^3.19.13",
 		"hono": "^4.7.5",
 		"jose": "^4.15.9",
-		"obs-websocket-js": "^5.0.5"
+		"obs-websocket-js": "^5.0.7"
 	},
 	"exports": {
 		".": "./src/index.ts",

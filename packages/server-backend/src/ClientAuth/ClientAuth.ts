@@ -15,6 +15,7 @@ import {
 } from "@macrograph/server-domain";
 
 import { RealtimeConnections } from "../Realtime";
+import { PresenceState } from "../Presence";
 import { ClientAuthJWT, ClientAuthJWTFromEncoded } from "./ClientAuthJWT";
 
 export type ClientAuthEvent =
@@ -115,11 +116,19 @@ export class ClientAuth extends Effect.Service<ClientAuth>()(
 					})),
 				});
 
+				const presenceState = yield* PresenceState;
+				yield* presenceState.updatePresenceName(
+					Option.map(user, (u) => {
+						const atIndex = u.email.indexOf("@");
+						return atIndex !== -1 ? u.email.slice(0, atIndex) : u.email;
+					}).pipe(Option.getOrElse(() => "unknown")),
+				);
+
 				yield* events.offer({ type: "finished", jwt: encodedJwt });
 			});
 
 			return { start };
 		}),
-		dependencies: [RealtimeConnections.Default],
+		dependencies: [RealtimeConnections.Default, PresenceState.Default],
 	},
 ) {}

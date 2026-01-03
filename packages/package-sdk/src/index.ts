@@ -47,16 +47,19 @@ export const setOutput = <T extends IO.T.Any_>(
 
 export namespace PackageEngine {
 	export class PackageEngineDefinition<
-		TState,
 		TEvents,
 		TRpcs extends RpcGroup.RpcGroup<any>,
 		TResources extends Resource.Resource<string, any>,
+		TSuggestions extends string,
 	> extends Data.Class<{
 		events?: Schema.Schema<TEvents>;
 		rpc?: TRpcs;
 		resources?: Array<TResources>;
+		suggestions?: ReadonlyArray<TSuggestions>;
 	}> {
-		build(builder: BuildEngineFn<TState, TEvents, TRpcs, TResources>) {
+		build<TState>(
+			builder: BuildEngineFn<TState, TEvents, TRpcs, TResources, TSuggestions>,
+		) {
 			return new PackageEngine({ def: this, builder });
 		}
 	}
@@ -80,22 +83,32 @@ export namespace PackageEngine {
 		TEvents,
 		TRpcs extends RpcGroup.RpcGroup<any>,
 		TResources extends Resource.Resource<any, any>,
-	> = (ctx: BuildEngineCtx<TEvents>) => BuiltEngine<TState, TRpcs, TResources>;
+		TSuggestions extends string,
+	> = (
+		ctx: BuildEngineCtx<TEvents>,
+	) => BuiltEngine<TState, TRpcs, TResources, TSuggestions>;
 
 	export class PackageEngine<TEvents> extends Data.Class<{
 		def: PackageEngineDefinition<
+			TEvents,
+			RpcGroup.RpcGroup<Rpc.Any>,
+			Resource.Resource<string, any>,
+			string
+		>;
+		builder: BuildEngineFn<
 			any,
 			TEvents,
 			RpcGroup.RpcGroup<Rpc.Any>,
-			Resource.Resource<string, any>
+			any,
+			string
 		>;
-		builder: BuildEngineFn<any, TEvents, RpcGroup.RpcGroup<Rpc.Any>, any>;
 	}> {}
 
 	export type BuiltEngine<
 		TState,
 		TRpcs extends RpcGroup.RpcGroup<any>,
 		TResources extends Resource.Resource<any, any>,
+		TSuggestions extends string,
 	> = Schema.Simplify<
 		([TRpcs] extends [never]
 			? { rpc?: never }
@@ -106,22 +119,26 @@ export namespace PackageEngine {
 			([TResources] extends [never]
 				? { resources?: never }
 				: { resources: Layer.Layer<Resource.ToHandler<TResources>> })
+		// &
+		// ([TSuggestions] extends [never]
+		// 	? { suggestions?: never }
+		// 	: { suggestions: Record<string, Effect.Effect<string>> })
 	>;
 
-	export const define =
-		<TState = never>() =>
-		<
-			TEvents = never,
-			TRpcs extends RpcGroup.RpcGroup<any> = never,
-			TResources extends Resource.Resource<any, any> = never,
-		>(value?: {
-			events?: Schema.Schema<TEvents, any, any>;
-			rpc?: TRpcs;
-			resources?: Array<TResources>;
-		}) =>
-			new PackageEngineDefinition<TState, TEvents, TRpcs, TResources>(
-				value ?? ({} as any),
-			);
+	export const define = <
+		TEvents = never,
+		TRpcs extends RpcGroup.RpcGroup<any> = never,
+		TResources extends Resource.Resource<any, any> = never,
+		TSuggestions extends string = never,
+	>(value?: {
+		events?: Schema.Schema<TEvents, any, any>;
+		rpc?: TRpcs;
+		resources?: Array<TResources>;
+		suggestions?: ReadonlyArray<TSuggestions>;
+	}) =>
+		new PackageEngineDefinition<TEvents, TRpcs, TResources, TSuggestions>(
+			value ?? ({} as any),
+		);
 
 	export type PackageEngineBuilder<
 		TEvents,
@@ -209,18 +226,16 @@ export namespace Package {
 	}
 
 	interface PackageDef<
-		Schemas extends NodeSchema.Any,
 		Engine extends PackageEngine.PackageEngineDefinition<any, any, any, any>,
 	> {
 		name: string;
-		schemas: Schemas[];
 		engine?: Engine;
 	}
 
 	interface Package<
-		Schemas extends NodeSchema.Any,
 		Engine extends PackageEngine.PackageEngineDefinition<any, any, any, any>,
-	> extends PackageDef<Schemas, Engine> {
+		Schemas extends NodeSchema.Any,
+	> extends PackageDef<Engine, Schemas> {
 		toLayer: (
 			build: (
 				builder: PackageBuilder<Schemas, Schema.Schema.Type<Engine["events"]>>,
@@ -236,7 +251,7 @@ export namespace Package {
 		}
 	>() {}
 
-	export const _make = <
+	export const define = <
 		const Schemas extends NodeSchema.Any,
 		const Engine extends PackageEngine.PackageEngineDefinition<
 			any,
@@ -245,8 +260,8 @@ export namespace Package {
 			any
 		> = never,
 	>(
-		def: PackageDef<Schemas, Engine>,
-	): Package<Schemas, Engine> => ({
+		def: PackageDef<Engine, Schemas>,
+	): Package<Engine, Schemas> => ({
 		...def,
 		toLayer: (build) =>
 			Layer.effect(
@@ -291,31 +306,39 @@ export namespace NodeSchema {
 		Id extends string,
 		Type extends "exec" | "base" | "pure" | "event",
 		Properties extends PropertiesSchema,
+		IO,
+		Suggestions extends string,
 	> = {
 		id: Id;
 		type: Type;
 		properties: Properties;
 		name: string;
 		description: string;
+		io: (_: ExecIOCtx<Suggestions>) => IO;
 	};
 
-	export type Any = Schema<
+	export type Any<Suggestions extends string = string> = Schema<
 		string,
 		"exec" | "base" | "pure" | "event",
-		PropertiesSchema
+		PropertiesSchema,
+		any,
+		Suggestions
 	>;
 
 	export const make = <
 		const Id extends string,
 		const Type extends "exec" | "base" | "pure" | "event",
 		const Properties extends PropertiesSchema,
+		const IO,
+		const Suggestions extends string,
 	>(
 		id: Id,
-		value: Omit<Schema<Id, Type, Properties>, "id">,
-	) => Object.assign(value, { id });
+		value: Omit<Schema<Id, Type, Properties, IO, Suggestions>, "id">,
+	): Schema<Id, Type, Properties, IO, Suggestions> =>
+		Object.assign(value, { id });
 
-	interface ExecIOCtx<S extends Any> {
-		in: { data: CreateDataIn<S["properties"]> };
+	interface ExecIOCtx<Suggestions extends string> {
+		in: { data: CreateDataIn<Suggestions> };
 		out: { data: CreateDataOut };
 	}
 
@@ -324,7 +347,6 @@ export namespace NodeSchema {
 	}
 
 	export interface ExecImpl<S extends Any, IO> {
-		io: (_: ExecIOCtx<S>) => IO;
 		run: (ctx: {
 			io: IO;
 			properties: InferProperties<S["properties"]>;
@@ -332,7 +354,6 @@ export namespace NodeSchema {
 	}
 
 	export interface EventImpl<S extends Any, IO, Events, Event> {
-		io: (_: EventIOCtx) => IO;
 		event: (
 			ctx: { properties: InferProperties<S["properties"]> },
 			e: Events,

@@ -26,10 +26,15 @@ import type { NodeState } from "../State";
 import { useGraphContext } from "./Context";
 // import { useProjectService } from "../AppRuntime";
 import { NodeHeader, NodeRoot } from "./Node";
+import { Viewport } from "./panzoom";
 // import { ProjectActions } from "../Project/Actions";
 import type { GraphTwoWayConnections } from "./types";
 
 const PAN_THRESHOLD = 5;
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 5;
+const TOUCH_MOVE_THRESHOLD = 3; // NEW
+const TOUCH_ZOOM_SENSITIVITY = 15; // NEW - divisor for pinch zoom speed
 
 export function GraphView(
 	props: {
@@ -55,6 +60,7 @@ export function GraphView(
 		onContextMenuClose?(): void;
 		onDeleteSelection?(): void;
 		onTranslateChange?(translate: { x: number; y: number }): void;
+		onScaleChange?(zoom: number): void;
 	} & Pick<ComponentProps<"div">, "ref" | "children">,
 ) {
 	const [dragState, setDragState] = createSignal<
@@ -74,10 +80,192 @@ export function GraphView(
 	const [isPanning, setIsPanning] = createSignal(false);
 	const [rightClickPending, setRightClickPending] = createSignal(false);
 
+	// NEW: Touch gesture state
+	const gesture = {
+		dragStarted: false,
+		pointers: [] as Array<{
+			pointerId: number;
+			start: { x: number; y: number };
+			current: { x: number; y: number };
+		}>,
+	};
+
 	const graphCtx = useGraphContext();
 	const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
 	const bounds = createElementBounds(ref);
 	const mouse = createMousePosition();
+
+	// Convert screen coordinates to graph coordinates
+	function screenToGraph(screenPos: { x: number; y: number }) {
+		const s = graphCtx.scale;
+		const translate = graphCtx.translate ?? { x: 0, y: 0 };
+		const b = bounds;
+		return {
+			x: (screenPos.x - (b.left ?? 0)) / s + translate.x,
+			y: (screenPos.y - (b.top ?? 0)) / s + translate.y,
+		};
+	}
+
+	// Convert graph coordinates to screen coordinates
+	function graphToScreen(graphPos: { x: number; y: number }) {
+		const s = graphCtx.scale;
+		const translate = graphCtx.translate ?? { x: 0, y: 0 };
+		const b = bounds;
+		return {
+			x: (graphPos.x - translate.x) * s + (b.left ?? 0),
+			y: (graphPos.y - translate.y) * s + (b.top ?? 0),
+		};
+	}
+
+	function handleZoom(delta: number, screenOrigin: { x: number; y: number }) {
+		const currentZoom = graphCtx.scale;
+		const currentTranslate = graphCtx.translate ?? { x: 0, y: 0 };
+
+		// Simple linear zoom for now
+		let newZoom = currentZoom + delta;
+		newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+
+		if (Math.abs(newZoom - currentZoom) < 0.001) return;
+
+		const zoomDelta = newZoom / currentZoom;
+
+		// Convert screen position to viewport-relative position
+		const cursor = {
+			x: screenOrigin.x - (bounds.left ?? 0),
+			y: screenOrigin.y - (bounds.top ?? 0),
+		};
+
+		// Use Viewport.zoomAt to calculate new viewport state
+		const viewport: Viewport.Viewport = {
+			origin: currentTranslate,
+			scale: currentZoom,
+		};
+
+		const newViewport = Viewport.zoomAt(viewport, cursor, zoomDelta);
+
+		// Update scale and translate
+		props.onScaleChange?.(newViewport.scale);
+		props.onTranslateChange?.(newViewport.origin);
+	}
+
+	function startTwoFingerGesture(
+		left: {
+			pointerId: number;
+			start: { x: number; y: number };
+			current: { x: number; y: number };
+		},
+		right: {
+			pointerId: number;
+			start: { x: number; y: number };
+			current: { x: number; y: number };
+		},
+	) {
+		console.log("[Touch] Starting two-finger gesture");
+
+		createRoot((dispose) => {
+			createEventListenerMap(window, {
+				pointerup: (e) => {
+					// End gesture if either pointer lifts
+					if (
+						left.pointerId === e.pointerId ||
+						right.pointerId === e.pointerId
+					) {
+						console.log("[Touch] Ending two-finger gesture - pointer lifted");
+						gesture.dragStarted = false;
+						dispose();
+					}
+				},
+
+				pointermove: (e) => {
+					// Only process if this is one of our two pointers
+					if (
+						e.pointerId !== left.pointerId &&
+						e.pointerId !== right.pointerId
+					) {
+						return;
+					}
+
+					// 1. Calculate previous state
+					const lastPointerDistance = Math.hypot(
+						left.current.x - right.current.x,
+						left.current.y - right.current.y,
+					);
+					const lastCenter = {
+						x: (left.current.x + right.current.x) / 2,
+						y: (left.current.y + right.current.y) / 2,
+					};
+
+					// 2. Update the pointer that moved
+					if (left.pointerId === e.pointerId) {
+						left.current = { x: e.clientX, y: e.clientY };
+					} else if (right.pointerId === e.pointerId) {
+						right.current = { x: e.clientX, y: e.clientY };
+					}
+
+					// 3. Calculate new state
+					const newCenter = {
+						x: (left.current.x + right.current.x) / 2,
+						y: (left.current.y + right.current.y) / 2,
+					};
+					const newPointerDistance = Math.hypot(
+						left.current.x - right.current.x,
+						left.current.y - right.current.y,
+					);
+
+					// 4. Calculate and apply zoom
+					const distanceDelta = newPointerDistance - lastPointerDistance;
+
+					// Only zoom if distance changed significantly
+					if (Math.abs(distanceDelta) > 0.5) {
+						const currentZoom = graphCtx.scale;
+						const currentTranslate = graphCtx.translate ?? { x: 0, y: 0 };
+
+						console.log(
+							"[Touch] Distance delta:",
+							distanceDelta,
+							"Current zoom:",
+							currentZoom,
+						);
+
+						// Save graph position under new center BEFORE zoom
+						const centerGraphPos = screenToGraph(newCenter);
+
+						// Apply zoom with linear scaling for 1:1 feel
+						const zoomDelta =
+							(distanceDelta / TOUCH_ZOOM_SENSITIVITY) * currentZoom;
+						let newZoom = currentZoom + zoomDelta;
+
+						// Clamp to bounds
+						newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+
+						console.log("[Touch] New zoom:", newZoom);
+
+						// Apply new zoom
+						props.onScaleChange?.(newZoom);
+
+						// Calculate where that graph point is now on screen AFTER zoom
+						const centerScreenPos = graphToScreen(centerGraphPos);
+
+						// 5. Apply compensating pan to keep center stationary
+						const translateAtStart = graphCtx.translate ?? { x: 0, y: 0 };
+						const scaleAtStart = graphCtx.scale;
+						const newTranslate = {
+							x:
+								translateAtStart.x +
+								(lastCenter.x - centerScreenPos.x) / scaleAtStart,
+							y:
+								translateAtStart.y +
+								(lastCenter.y - centerScreenPos.y) / scaleAtStart,
+						};
+
+						console.log("[Touch] New translate:", newTranslate);
+
+						props.onTranslateChange?.(newTranslate);
+					}
+				},
+			});
+		});
+	}
 
 	createEventListener(ref, "wheel", (e) => {
 		e.preventDefault();
@@ -92,10 +280,15 @@ export function GraphView(
 			isTouchpad = true;
 		}
 
-		props.onTranslateChange?.({
-			x: (graphCtx.translate?.x ?? 0) + deltaX,
-			y: (graphCtx.translate?.y ?? 0) + deltaY,
-		});
+		if (e.ctrlKey) {
+			const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
+			handleZoom(delta, { x: e.clientX, y: e.clientY });
+		} else {
+			props.onTranslateChange?.({
+				x: (graphCtx.translate?.x ?? 0) + deltaX,
+				y: (graphCtx.translate?.y ?? 0) + deltaY,
+			});
+		}
 	});
 
 	const connections = () => {
@@ -183,12 +376,116 @@ export function GraphView(
 
 	return (
 		<div
-			ref={mergeRefs(setRef, props.ref)}
+			ref={(el) => {
+				if (!el) return;
+
+				// Prevent default touch scroll/zoom
+				el.addEventListener("touchmove", (e) => e.preventDefault(), {
+					passive: false,
+				});
+
+				console.log("[Touch] Initialized touch event prevention");
+
+				// Set our ref
+				setRef(el);
+
+				// Handle props.ref if it exists
+				if (typeof props.ref === "function") {
+					props.ref(el);
+				} else if (props.ref) {
+					(props.ref as any).current = el;
+				}
+			}}
 			class={cx(
-				"relative flex-1 flex flex-col gap-4 items-start w-full touch-none select-none",
+				"relative flex-1 flex flex-col gap-4 items-start w-full select-none",
 				isPanning() && "cursor-grabbing",
 			)}
 			onPointerDown={(downEvent) => {
+				// ============ NEW: Touch Gesture Tracking ============
+				if (downEvent.pointerType === "touch") {
+					console.log(
+						"[Touch] Pointer down:",
+						downEvent.pointerId,
+						"Total pointers:",
+						gesture.pointers.length + 1,
+					);
+
+					gesture.pointers.push({
+						pointerId: downEvent.pointerId,
+						start: {
+							x: downEvent.clientX,
+							y: downEvent.clientY,
+						},
+						current: {
+							x: downEvent.clientX,
+							y: downEvent.clientY,
+						},
+					});
+
+					// Check if we should start monitoring for two-finger gesture
+					if (gesture.pointers.length === 2 && !gesture.dragStarted) {
+						console.log(
+							"[Touch] Two pointers detected, monitoring for gesture",
+						);
+
+						const left = gesture.pointers[0];
+						const right = gesture.pointers[1];
+
+						// Create root to monitor for movement
+						createRoot((disposeMonitor) => {
+							createEventListener(window, "pointermove", (moveEvent) => {
+								if (gesture.dragStarted) {
+									disposeMonitor();
+									return;
+								}
+
+								// Update current position for the moving pointer
+								const movingPointer = gesture.pointers.find(
+									(p) => p.pointerId === moveEvent.pointerId,
+								);
+								if (!movingPointer) return;
+
+								const diff = {
+									x: movingPointer.start.x - moveEvent.clientX,
+									y: movingPointer.start.y - moveEvent.clientY,
+								};
+
+								// Check movement threshold
+								if (
+									Math.abs(diff.x) > TOUCH_MOVE_THRESHOLD ||
+									Math.abs(diff.y) > TOUCH_MOVE_THRESHOLD
+								) {
+									console.log(
+										"[Touch] Movement threshold exceeded, starting gesture",
+									);
+									disposeMonitor();
+									gesture.dragStarted = true;
+
+									// Start two-finger gesture
+									startTwoFingerGesture(left, right);
+								}
+							});
+
+							// Clean up if pointers lift before threshold
+							createEventListener(window, "pointerup", (e) => {
+								if (
+									left.pointerId === e.pointerId ||
+									right.pointerId === e.pointerId
+								) {
+									console.log("[Touch] Pointer lifted before threshold");
+									disposeMonitor();
+								}
+							});
+						});
+					}
+
+					// Don't process further if we're in a multi-touch gesture
+					if (gesture.pointers.length > 1) {
+						return;
+					}
+				}
+				// ============ END NEW CODE ============
+
 				if (downEvent.button === 0) {
 					downEvent.preventDefault();
 					props.onContextMenuClose?.();
@@ -303,7 +600,6 @@ export function GraphView(
 						onCleanup(() => {
 							setIsPanning(false);
 							setRightClickPending(false);
-							dispose();
 						});
 					});
 				}

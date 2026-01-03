@@ -313,8 +313,8 @@ importers:
         specifier: ^4.15.9
         version: 4.15.9
       obs-websocket-js:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.7
+        version: 5.0.7
       solid-presence:
         specifier: ^0.2.0
         version: 0.2.0(solid-js@1.9.10)
@@ -844,6 +844,9 @@ importers:
       '@macrograph/package-sdk':
         specifier: workspace:*
         version: link:../package-sdk
+      '@macrograph/project-domain':
+        specifier: workspace:*
+        version: link:../project-domain
       '@macrograph/web-domain':
         specifier: workspace:*
         version: link:../web-domain
@@ -899,8 +902,8 @@ importers:
         specifier: ^4.15.9
         version: 4.15.9
       obs-websocket-js:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.7
+        version: 5.0.7
       solid-presence:
         specifier: ^0.2.0
         version: 0.2.0(solid-js@1.9.10)
@@ -1158,8 +1161,8 @@ importers:
         specifier: ^4.15.9
         version: 4.15.9
       obs-websocket-js:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.7
+        version: 5.0.7
       solid-presence:
         specifier: ^0.2.0
         version: 0.2.0(solid-js@1.9.10)
@@ -1273,8 +1276,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
       obs-websocket-js:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.7
+        version: 5.0.7
       octokit:
         specifier: ^3.1.2
         version: 3.2.1
@@ -1731,8 +1734,8 @@ importers:
         specifier: ^4.15.9
         version: 4.15.9
       obs-websocket-js:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.7
+        version: 5.0.7
     devDependencies:
       unplugin-icons:
         specifier: ^0.18.5
@@ -1801,8 +1804,8 @@ importers:
         specifier: ^4.15.9
         version: 4.15.9
       obs-websocket-js:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.7
+        version: 5.0.7
 
   packages/server-frontend:
     dependencies:
@@ -1933,8 +1936,8 @@ importers:
         specifier: ^4.15.9
         version: 4.15.9
       obs-websocket-js:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.7
+        version: 5.0.7
       solid-presence:
         specifier: ^0.2.0
         version: 0.2.0(solid-js@1.9.10)
@@ -9767,9 +9770,9 @@ packages:
     resolution: {integrity: sha512-byy+U7gp+FVwmyzKPYhW2h5l3crpmGsxl7X2s8y43IgxvG4g3QZ6CffDtsNQy1WsmZpQbO+ybo0AlW7TY6DcBQ==}
     engines: {node: '>= 0.4'}
 
-  obs-websocket-js@5.0.5:
-    resolution: {integrity: sha512-mSMqLXJ4z28jgwy7Ecv8CtpYh/xdbcn524kq0n6wT3kN6xkgWU/Zc6OtiVZo+gyyylC0anjehMLEVF+CDSwccw==}
-    engines: {node: '>12.0'}
+  obs-websocket-js@5.0.7:
+    resolution: {integrity: sha512-SdSNSyrLVR6F0ogInKr7qcadV1tYaTUse/vbabxjkUL8hU3P3dyifxkZ7pEkDDrtCp3TkQ53Enx23kgZO0Cjcw==}
+    engines: {node: '>16.0'}
 
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
@@ -19470,9 +19473,9 @@ snapshots:
 
   isobject@3.0.1: {}
 
-  isomorphic-ws@5.0.0(ws@8.18.0):
+  isomorphic-ws@5.0.0(ws@8.18.3):
     dependencies:
-      ws: 8.18.0
+      ws: 8.18.3
 
   jackspeak@3.4.3:
     dependencies:
@@ -20698,15 +20701,15 @@ snapshots:
       has-symbols: 1.1.0
       object-keys: 1.1.1
 
-  obs-websocket-js@5.0.5:
+  obs-websocket-js@5.0.7:
     dependencies:
       '@msgpack/msgpack': 2.8.0
       crypto-js: 4.2.0
       debug: 4.4.3
       eventemitter3: 5.0.1
-      isomorphic-ws: 5.0.0(ws@8.18.0)
+      isomorphic-ws: 5.0.0(ws@8.18.3)
       type-fest: 3.13.1
-      ws: 8.18.0
+      ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
       - supports-color
