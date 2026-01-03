@@ -39,8 +39,10 @@ jobs:
         run: |
           echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
           echo "IMAGE_SHA=${GITHUB_SHA}" >> $GITHUB_OUTPUT
-          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-            echo "TAG=main" >> $GITHUB_ENV
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "TAG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "TAG=latest" >> $GITHUB_ENV
           fi
 
       - name: Build and push
@@ -50,6 +52,7 @@ jobs:
           file: apps/server/Dockerfile
           push: true
           tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}
             ${{ env.TAG != '' && format('{0}-{1}', env.IMAGE_NAME, env.SHORT_SHA) || '' }}
             ${{ env.TAG != '' && format('{0}:{1}', env.IMAGE_NAME, env.TAG) || '' }}
           provenance: false
