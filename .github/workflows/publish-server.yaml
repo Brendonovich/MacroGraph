@@ -15,6 +15,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: github.repository == 'Brendonovich/MacroGraph'
+    permissions:
+      checks: write
     steps:
       - uses: actions/checkout@v4
 
@@ -52,7 +54,7 @@ jobs:
       - name: Publish SHA to checks
         if: github.event_name == 'pull_request'
         run: |
-          IMAGE_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          IMAGE_URL="ghcr.io/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}"
           curl -s -X POST "https://api.github.com/repos/${{ github.repository }}/check-runs" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
@@ -62,14 +64,7 @@ jobs:
               "status": "completed",
               "conclusion": "success",
               "output": {
-                "title": "Docker Image",
-                "summary": "Image built and published",
-                "annotations": [{
-                  "path": "Dockerfile",
-                  "start_line": 1,
-                  "end_line": 1,
-                  "annotation_level": "notice",
-                  "message": "Image published with SHA: ${{ env.SHORT_SHA }}"
-                }]
+                "title": "Docker Image Built",
+                "summary": "## Docker Image Published\n\nThe Docker image for this PR has been built and published to GitHub Container Registry.\n\n### Image Details\n\n- **Registry**: GitHub Container Registry (ghcr.io)\n- **Repository**: ${{ env.IMAGE_NAME }}\n- **Image SHA**: \`${{ env.SHORT_SHA }}\`\n\n### Using this Image\n\nTo pull this image, use:\n\n\`\`\`\ndocker pull ${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}\n\`\`\`\n\nThis SHA can be used to reference this specific build in deployments or other workflows."
               }
             }'
