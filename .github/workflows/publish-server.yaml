@@ -43,7 +43,9 @@ jobs:
           context: .
           file: apps/server/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}-${{ env.SHORT_SHA }}${{ env.TAG != '' && format(' ${{ env.IMAGE_NAME }}:${{ env.TAG }}') || '' }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.TAG != '' && format('{0}-{1}', env.TAG, env.SHORT_SHA) || env.SHORT_SHA }}
+            ${{ env.TAG != '' && format('{0}:{1}', env.IMAGE_NAME, env.TAG) || '' }}
           provenance: false
 
       - name: Publish SHA to checks
