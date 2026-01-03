@@ -3,14 +3,23 @@ name: Publish Server
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
   packages: write
+  checks: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.repository == 'Brendonovich/MacroGraph'
+    permissions:
+      contents: read
+      packages: write
+      checks: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -25,9 +34,27 @@ jobs:
       - name: Set image name
         run: echo "IMAGE_NAME=ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/macrograph-server" >> $GITHUB_ENV
 
-      - uses: docker/build-push-action@v5
+      - name: Determine tag
+        id: determine-tag
+        run: |
+          echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "TAG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "TAG=latest" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: apps/server/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:main
+          tags: |
+            ${{ env.TAG != '' && format('{0}-{1}', env.IMAGE_NAME, env.SHORT_SHA) || '' }}
+            ${{ env.TAG != '' && format('{0}:{1}', env.IMAGE_NAME, env.TAG) || '' }}
+          provenance: false
+
+      - name: Publish SHA to checks
+        if: github.event_name == 'pull_request'
+        run: ./.github/workflows/publish-check-run.sh "${{ env.IMAGE_NAME }}" "${{ env.SHORT_SHA }}" "${{ github.repository }}" "${{ secrets.GITHUB_TOKEN }}" "${{ github.sha }}"
