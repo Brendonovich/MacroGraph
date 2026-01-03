@@ -13,7 +13,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    if: github.repository == 'MacroGraph/MacroGraph'
+    if: github.repository == 'Brendonovich/MacroGraph'
     steps:
       - uses: actions/checkout@v4
 
