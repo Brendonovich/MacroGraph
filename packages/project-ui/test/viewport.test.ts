@@ -342,6 +342,144 @@ describe("Viewport", () => {
 		});
 	});
 
+	describe("panAndZoom", () => {
+		const minZoom = 0.1;
+		const maxZoom = 5;
+
+		it("applies pan only when scale ratio is 1", () => {
+			const viewport: Viewport.Viewport = {
+				origin: { x: 100, y: 100 },
+				scale: 1,
+			};
+			const result = Viewport.panAndZoom(
+				viewport,
+				{ x: 50, y: 30 },
+				1,
+				{ x: 0, y: 0 },
+				minZoom,
+				maxZoom,
+			);
+
+			// Pan of (50, 30) at scale 1 should add (50, 30) to origin
+			expect(result.origin.x).toBeCloseTo(150);
+			expect(result.origin.y).toBeCloseTo(130);
+			expect(result.scale).toBeCloseTo(1);
+		});
+
+		it("applies zoom only when pan delta is zero", () => {
+			const viewport: Viewport.Viewport = { origin: { x: 0, y: 0 }, scale: 1 };
+			const anchor = { x: 100, y: 100 };
+			const result = Viewport.panAndZoom(
+				viewport,
+				{ x: 0, y: 0 },
+				2,
+				anchor,
+				minZoom,
+				maxZoom,
+			);
+
+			expect(result.scale).toBeCloseTo(2);
+			// Zooming at (100, 100) with factor 2 should adjust origin
+			expect(result.origin.x).toBeCloseTo(50);
+			expect(result.origin.y).toBeCloseTo(50);
+		});
+
+		it("applies both pan and zoom simultaneously", () => {
+			const viewport: Viewport.Viewport = { origin: { x: 0, y: 0 }, scale: 1 };
+			const anchor = { x: 100, y: 100 };
+			const result = Viewport.panAndZoom(
+				viewport,
+				{ x: 20, y: 20 },
+				1.5,
+				anchor,
+				minZoom,
+				maxZoom,
+			);
+
+			expect(result.scale).toBeCloseTo(1.5);
+			// Should apply zoom first, then pan using OLD scale
+		});
+
+		it("clamps scale to minimum bound", () => {
+			const viewport: Viewport.Viewport = {
+				origin: { x: 0, y: 0 },
+				scale: 0.2,
+			};
+			const result = Viewport.panAndZoom(
+				viewport,
+				{ x: 0, y: 0 },
+				0.1, // Would result in 0.02, below min
+				{ x: 0, y: 0 },
+				minZoom,
+				maxZoom,
+			);
+
+			expect(result.scale).toBeCloseTo(minZoom);
+		});
+
+		it("clamps scale to maximum bound", () => {
+			const viewport: Viewport.Viewport = { origin: { x: 0, y: 0 }, scale: 4 };
+			const result = Viewport.panAndZoom(
+				viewport,
+				{ x: 0, y: 0 },
+				2, // Would result in 8, above max
+				{ x: 0, y: 0 },
+				minZoom,
+				maxZoom,
+			);
+
+			expect(result.scale).toBeCloseTo(maxZoom);
+		});
+
+		it("uses old scale for pan calculation", () => {
+			const viewport: Viewport.Viewport = { origin: { x: 0, y: 0 }, scale: 2 };
+			// Pan delta of 100 screen pixels at scale 2 = 50 canvas units
+			const result = Viewport.panAndZoom(
+				viewport,
+				{ x: 100, y: 0 },
+				1, // No zoom
+				{ x: 0, y: 0 },
+				minZoom,
+				maxZoom,
+			);
+
+			expect(result.origin.x).toBeCloseTo(50);
+			expect(result.scale).toBeCloseTo(2);
+		});
+
+		it("preserves anchor point during zoom", () => {
+			const viewport: Viewport.Viewport = {
+				origin: { x: 50, y: 50 },
+				scale: 1,
+			};
+			const anchor = { x: 200, y: 150 };
+
+			// Calculate canvas point at anchor before zoom
+			const canvasBefore = {
+				x: viewport.origin.x + anchor.x / viewport.scale,
+				y: viewport.origin.y + anchor.y / viewport.scale,
+			};
+
+			const result = Viewport.panAndZoom(
+				viewport,
+				{ x: 0, y: 0 },
+				1.5,
+				anchor,
+				minZoom,
+				maxZoom,
+			);
+
+			// Calculate canvas point at anchor after zoom
+			const canvasAfter = {
+				x: result.origin.x + anchor.x / result.scale,
+				y: result.origin.y + anchor.y / result.scale,
+			};
+
+			expect(canvasAfter.x).toBeCloseTo(canvasBefore.x);
+			expect(canvasAfter.y).toBeCloseTo(canvasBefore.y);
+		});
+	});
+
 	describe("fitBounds", () => {
 		it("fits content within viewport", () => {
 			const viewportBounds: Viewport.SizedBounds = {

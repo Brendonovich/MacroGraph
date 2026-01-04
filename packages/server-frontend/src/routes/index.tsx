@@ -192,6 +192,12 @@ const usePaneTabController = (
 				const graphCtx = useGraphContext();
 				const layoutState = useLayoutState();
 
+				const activePointerId: { current: number | null } = { current: null };
+
+				const isTouchDevice =
+					typeof window !== "undefined" &&
+					("ontouchstart" in window || navigator.maxTouchPoints > 0);
+
 				createEffect(() => {
 					if (layoutState.focusedPaneId() !== pane().id) return;
 
@@ -215,6 +221,12 @@ const usePaneTabController = (
 					() => graphCtx.ref() ?? undefined,
 					"pointermove",
 					(e) => {
+						if (
+							isTouchDevice &&
+							activePointerId.current !== null &&
+							e.pointerId !== activePointerId.current
+						)
+							return;
 						rpc
 							.SetMousePosition({
 								graph: props.graph.id,
@@ -224,6 +236,39 @@ const usePaneTabController = (
 								}),
 							})
 							.pipe(Effect.runPromise);
+					},
+				);
+
+				createEventListener(
+					() => graphCtx.ref() ?? undefined,
+					"pointerdown",
+					(e) => {
+						if (!isTouchDevice) return;
+						if (activePointerId.current === null) {
+							activePointerId.current = e.pointerId;
+						}
+					},
+				);
+
+				createEventListener(
+					() => graphCtx.ref() ?? undefined,
+					"pointerup",
+					(e) => {
+						if (!isTouchDevice) return;
+						if (activePointerId.current === e.pointerId) {
+							activePointerId.current = null;
+						}
+					},
+				);
+
+				createEventListener(
+					() => graphCtx.ref() ?? undefined,
+					"pointercancel",
+					(e) => {
+						if (!isTouchDevice) return;
+						if (activePointerId.current === e.pointerId) {
+							activePointerId.current = null;
+						}
 					},
 				);
 

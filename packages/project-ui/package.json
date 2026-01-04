@@ -20,9 +20,11 @@
 		"@solid-primitives/refs": "^1.0.8",
 		"@tanstack/solid-query": "^5.90.15",
 		"@total-typescript/ts-reset": "^0.4.2",
+		"@xstate/solid": "^2.0.0",
 		"cva": "1.0.0-beta.4",
 		"effect": "^3.19.13",
-		"solid-presence": "^0.2.0"
+		"solid-presence": "^0.2.0",
+		"xstate": "^5.25.0"
 	},
 	"exports": { ".": "./src/index.ts", "./styles.css": "./src/styles.css" },
 	"devDependencies": { "vitest": "^4.0.14" }

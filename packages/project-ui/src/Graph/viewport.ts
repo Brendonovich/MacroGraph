@@ -89,6 +89,26 @@ export namespace Viewport {
 		};
 	}
 
+	/**
+	 * Convert canvas coordinates to viewport-relative screen coordinates.
+	 *
+	 * Unlike canvasToScreen, this does not add bounds offset, making it suitable
+	 * for rendering within a canvas or element that's already positioned at the bounds.
+	 *
+	 * @param viewport - Current viewport state
+	 * @param canvasPos - Canvas coordinates in the virtual canvas space
+	 * @returns Viewport-relative screen coordinates
+	 */
+	export function canvasToViewportRelative(
+		viewport: Viewport,
+		canvasPos: Point,
+	): Point {
+		return {
+			x: (canvasPos.x - viewport.origin.x) * viewport.scale,
+			y: (canvasPos.y - viewport.origin.y) * viewport.scale,
+		};
+	}
+
 	// ============ Viewport Transformations ============
 
 	/**
@@ -164,6 +184,55 @@ export namespace Viewport {
 	 */
 	export function clampScale(scale: number, min: number, max: number): number {
 		return Math.min(max, Math.max(min, scale));
+	}
+
+	/**
+	 * Apply simultaneous pan and zoom to the viewport (for two-finger gestures).
+	 *
+	 * This function handles the case where pan and zoom happen together, ensuring
+	 * the pan is applied using the original scale (before zoom) for correct 1:1
+	 * screen-space movement.
+	 *
+	 * @param viewport - Current viewport state
+	 * @param screenDelta - Pan amount in screen pixels (measured before zoom)
+	 * @param scaleRatio - Zoom multiplier (newScale / oldScale)
+	 * @param anchor - Screen-relative point to zoom around (e.g., midpoint between fingers)
+	 * @param minZoom - Minimum allowed zoom level
+	 * @param maxZoom - Maximum allowed zoom level
+	 * @returns New viewport with both pan and zoom applied
+	 */
+	export function panAndZoom(
+		viewport: Viewport,
+		screenDelta: Point,
+		scaleRatio: number,
+		anchor: Point,
+		minZoom: number,
+		maxZoom: number,
+	): Viewport {
+		const oldScale = viewport.scale;
+
+		// Apply zoom
+		let result = viewport;
+		const newScale = clampScale(oldScale * scaleRatio, minZoom, maxZoom);
+
+		if (newScale !== viewport.scale) {
+			const actualScaleRatio = newScale / viewport.scale;
+			result = zoomAt(result, anchor, actualScaleRatio);
+		}
+
+		// Apply pan using the OLD scale for correct screen-space movement
+		// (the delta was measured before the zoom occurred)
+		if (screenDelta.x !== 0 || screenDelta.y !== 0) {
+			result = {
+				origin: {
+					x: result.origin.x + screenDelta.x / oldScale,
+					y: result.origin.y + screenDelta.y / oldScale,
+				},
+				scale: result.scale,
+			};
+		}
+
+		return result;
 	}
 
 	// ============ Point Utilities ============

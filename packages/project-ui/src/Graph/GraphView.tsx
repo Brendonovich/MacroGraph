@@ -2,10 +2,7 @@ import { Option } from "effect";
 import { ContextMenu } from "@kobalte/core/context-menu";
 import { type Graph, IO, Node, type Schema } from "@macrograph/project-domain";
 import { createElementBounds } from "@solid-primitives/bounds";
-import {
-	createEventListener,
-	createEventListenerMap,
-} from "@solid-primitives/event-listener";
+import { createEventListener } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { cx } from "cva";
 import type { ValidComponent } from "solid-js";
@@ -13,26 +10,36 @@ import {
 	batch,
 	type ComponentProps,
 	createEffect,
-	createRoot,
 	createSignal,
 	For,
-	onCleanup,
 	Show,
 } from "solid-js";
 
-import { isTouchDevice } from "../platform";
 import type { NodeState } from "../State";
 import { useGraphContext } from "./Context";
-// import { useProjectService } from "../AppRuntime";
+import {
+	createLongPress,
+	createPointerDrag,
+	createTwoPointerGesture,
+	createWheelHandler,
+} from "./hooks";
+import {
+	getAreaSelectionBounds,
+	getDraggingIO,
+	getLongPressTimerId,
+	getPanOrigin,
+	getSelectionDragPositions,
+	type InteractionState,
+	InteractionState as IS,
+	isPanning,
+	LONG_PRESS_TIMEOUT_MS,
+	MAX_ZOOM,
+	MIN_ZOOM,
+	TOUCH_MOVE_THRESHOLD,
+} from "./interaction-state";
 import { NodeHeader, NodeRoot } from "./Node";
-// import { ProjectActions } from "../Project/Actions";
 import type { GraphTwoWayConnections } from "./types";
 import { Viewport } from "./viewport";
-
-const PAN_THRESHOLD = 5;
-const MIN_ZOOM = 0.4;
-const MAX_ZOOM = 3;
-const TOUCH_MOVE_THRESHOLD = 3;
 
 export function GraphView(
 	props: {
@@ -52,46 +59,22 @@ export function GraphView(
 		onItemsSelected?(selection: Array<Graph.ItemRef>): void;
 		onConnectIO?(from: IO.RefString, to: IO.RefString): void;
 		onDisconnectIO?(io: IO.RefString): void;
-		onContextMenu?(e: MouseEvent): void;
+		onContextMenu?(e: MouseEvent | PointerEvent): void;
 		onContextMenuClose?(): void;
 		onDeleteSelection?(): void;
 		onTranslateChange?(translate: { x: number; y: number }): void;
 		onScaleChange?(zoom: number): void;
 	} & Pick<ComponentProps<"div">, "ref" | "children">,
 ) {
-	const [dragState, setDragState] = createSignal<
-		| { type: "idle" }
-		| {
-				type: "dragArea";
-				topLeft: { x: number; y: number };
-				bottomRight: { x: number; y: number };
-		  }
-		| { type: "dragIO"; ioRef: IO.RefString; pointerId: number }
-		| {
-				type: "dragSelection";
-				positions: Array<[Graph.ItemRef, { x: number; y: number }]>;
-		  }
-	>({ type: "idle" });
-
-	const [isPanning, setIsPanning] = createSignal(false);
-	const [rightClickPending, setRightClickPending] = createSignal(false);
-
-	// NEW: Touch gesture state
-	const gesture = {
-		dragStarted: false,
-		pointers: [] as Array<{
-			pointerId: number;
-			start: { x: number; y: number };
-			current: { x: number; y: number };
-		}>,
-	};
+	const [state, setState] = createSignal<InteractionState>(IS.idle());
 
 	const graphCtx = useGraphContext();
 	const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
 	const bounds = createElementBounds(ref);
 	const mouse = createMousePosition();
 
-	// Helper to get current viewport state
+	// ============ Viewport Helpers ============
+
 	function getViewport(): Viewport.Viewport {
 		return {
 			origin: graphCtx.translate ?? { x: 0, y: 0 },
@@ -99,227 +82,381 @@ export function GraphView(
 		};
 	}
 
-	// Helper to get bounds (handling nullability from createElementBounds)
 	function getBounds(): Viewport.Bounds {
 		return { left: bounds.left ?? 0, top: bounds.top ?? 0 };
 	}
 
-	// Convert screen coordinates to canvas/graph coordinates
-	function screenToGraph(screenPos: Viewport.Point): Viewport.Point {
-		return Viewport.screenToCanvas(getViewport(), getBounds(), screenPos);
+	function getScreenRelativePosition(pos: { x: number; y: number }): {
+		x: number;
+		y: number;
+	};
+	function getScreenRelativePosition(e: { clientX: number; clientY: number }): {
+		x: number;
+		y: number;
+	};
+	function getScreenRelativePosition(
+		input: { x: number; y: number } | { clientX: number; clientY: number },
+	) {
+		const x = "clientX" in input ? input.clientX : input.x;
+		const y = "clientY" in input ? input.clientY : input.y;
+		return { x: x - (bounds.left ?? 0), y: y - (bounds.top ?? 0) };
 	}
 
-	// Convert canvas/graph coordinates to screen coordinates
-	function graphToScreen(graphPos: Viewport.Point): Viewport.Point {
-		return Viewport.canvasToScreen(getViewport(), getBounds(), graphPos);
-	}
+	const getEventGraphPosition = (e: MouseEvent) =>
+		graphCtx.getGraphPosition({ x: e.clientX, y: e.clientY });
 
-	function handleZoom(delta: number, screenOrigin: Viewport.Point) {
-		const viewport = getViewport();
-		const b = getBounds();
+	// ============ Wheel Handler ============
 
-		// Apply delta and clamp
-		const newScale = Viewport.clampScale(
-			viewport.scale + delta,
-			MIN_ZOOM,
-			MAX_ZOOM,
-		);
+	const handleWheel = createWheelHandler({
+		getViewport,
+		getBounds,
+		getZoomAnchor: () => getPanOrigin(state()),
+		onScaleChange: (scale) => props.onScaleChange?.(scale),
+		onTranslateChange: (origin) => props.onTranslateChange?.(origin),
+	});
 
-		if (Math.abs(newScale - viewport.scale) < 0.001) return;
+	createEventListener(ref, "wheel", handleWheel);
 
-		const zoomDelta = newScale / viewport.scale;
-
-		// Cursor position relative to viewport container
-		const cursor = { x: screenOrigin.x - b.left, y: screenOrigin.y - b.top };
-
-		const newViewport = Viewport.zoomAt(viewport, cursor, zoomDelta);
-
-		props.onScaleChange?.(newViewport.scale);
-		props.onTranslateChange?.(newViewport.origin);
-	}
+	// ============ Touch Gesture Handlers ============
 
 	function startTwoFingerGesture(
-		left: {
-			pointerId: number;
-			start: { x: number; y: number };
-			current: { x: number; y: number };
-		},
-		right: {
-			pointerId: number;
-			start: { x: number; y: number };
-			current: { x: number; y: number };
-		},
+		left: { pointerId: number; position: { x: number; y: number } },
+		right: { pointerId: number; position: { x: number; y: number } },
 	) {
-		// Track raw (unclamped) scale to allow pinching past limits
-		// This prevents "sticking" at min/max zoom
-		let rawScale = graphCtx.scale;
+		// Capture initial viewport state - cumulative deltas will be applied to this
+		const initialViewport = getViewport();
+		const initialScale = initialViewport.scale;
 
-		createRoot((dispose) => {
-			createEventListenerMap(window, {
-				pointerup: (e) => {
-					// End gesture if either pointer lifts
-					if (
-						left.pointerId === e.pointerId ||
-						right.pointerId === e.pointerId
-					) {
-						gesture.dragStarted = false;
-						gesture.pointers = [];
-						dispose();
-					}
+		setState(
+			IS.touchTwoFingerGesture(
+				{
+					pointerId: left.pointerId,
+					start: left.position,
+					current: left.position,
 				},
+				{
+					pointerId: right.pointerId,
+					start: right.position,
+					current: right.position,
+				},
+				initialScale,
+			),
+		);
 
-				pointermove: (e) => {
-					// Only process if this is one of our two pointers
-					if (
-						e.pointerId !== left.pointerId &&
-						e.pointerId !== right.pointerId
-					) {
-						return;
-					}
-
-					// 1. Calculate previous state using helper functions
-					const lastDistance = Viewport.getDistance(
-						left.current,
-						right.current,
-					);
-					const lastMidpoint = Viewport.getMidpoint(
-						left.current,
-						right.current,
-					);
-
-					// 2. Update the pointer that moved
-					if (left.pointerId === e.pointerId) {
-						left.current = { x: e.clientX, y: e.clientY };
-					} else if (right.pointerId === e.pointerId) {
-						right.current = { x: e.clientX, y: e.clientY };
-					}
-
-					// 3. Calculate new state
-					const newDistance = Viewport.getDistance(left.current, right.current);
-					const newMidpoint = Viewport.getMidpoint(left.current, right.current);
-
-					// 4. Calculate deltas
-					const midpointDelta = {
-						x: lastMidpoint.x - newMidpoint.x,
-						y: lastMidpoint.y - newMidpoint.y,
-					};
-
-					// 5. Apply transformations
-					let viewport = getViewport();
+		createTwoPointerGesture({
+			left,
+			right,
+			callbacks: {
+				onGestureMove: (cumulativePanDelta, cumulativeScaleRatio, midpoint) => {
 					const b = getBounds();
 
-					// Apply zoom based on distance ratio (pinch-to-zoom)
-					// Track raw scale to allow going past limits, then clamp for display
-					if (lastDistance > 0 && newDistance > 0) {
-						const scaleRatio = newDistance / lastDistance;
-						rawScale = rawScale * scaleRatio;
+					// Apply cumulative pan and zoom to the INITIAL viewport state
+					// This ensures that multiple callback invocations (one per finger)
+					// produce the same result, preventing double-panning
+					const viewport = Viewport.panAndZoom(
+						initialViewport,
+						cumulativePanDelta,
+						cumulativeScaleRatio,
+						{ x: midpoint.x - b.left, y: midpoint.y - b.top },
+						MIN_ZOOM,
+						MAX_ZOOM,
+					);
 
-						// Clamp for the actual displayed scale
-						const clampedScale = Viewport.clampScale(
-							rawScale,
-							MIN_ZOOM,
-							MAX_ZOOM,
-						);
-
-						if (Math.abs(clampedScale - viewport.scale) >= 0.001) {
-							const actualScaleRatio = clampedScale / viewport.scale;
-
-							// Zoom at the new midpoint (viewport-relative coordinates)
-							const cursor = {
-								x: newMidpoint.x - b.left,
-								y: newMidpoint.y - b.top,
-							};
-
-							viewport = Viewport.zoomAt(viewport, cursor, actualScaleRatio);
-						}
-					}
-
-					// Apply pan based on midpoint movement
-					if (
-						Math.abs(midpointDelta.x) > 0.5 ||
-						Math.abs(midpointDelta.y) > 0.5
-					) {
-						viewport = Viewport.panByScreenDelta(viewport, midpointDelta);
-					}
-
-					// Update viewport state
 					props.onScaleChange?.(viewport.scale);
 					props.onTranslateChange?.(viewport.origin);
 				},
-			});
+				onGestureEnd: () => {
+					setState(IS.idle());
+				},
+			},
 		});
 	}
 
-	function startSingleFingerDragArea(
-		pointer: {
-			pointerId: number;
-			start: { x: number; y: number };
-			current: { x: number; y: number };
-		},
+	function startSingleFingerDrag(
+		pointerId: number,
 		startPos: { x: number; y: number },
 	) {
-		const topLeft = {
-			x: startPos.x - (bounds.left ?? 0),
-			y: startPos.y - (bounds.top ?? 0),
-		};
+		const startGraphPosition = graphCtx.getGraphPosition(startPos);
+		const currentScreenPosition = getScreenRelativePosition(startPos);
 
 		batch(() => {
 			props.onItemsSelected?.([]);
-			setDragState({ type: "dragArea", topLeft, bottomRight: topLeft });
+			setState(
+				IS.touchSingleFingerDrag(
+					{ pointerId, start: startPos, current: startPos },
+					startGraphPosition,
+					currentScreenPosition,
+				),
+			);
 		});
 
-		createRoot((dispose) => {
-			createEventListenerMap(window, {
-				pointermove: (moveEvent) => {
-					if (pointer.pointerId !== moveEvent.pointerId) return;
-
-					setDragState((s) => {
-						if (s.type !== "dragArea") return s;
-						return {
-							...s,
-							bottomRight: {
-								x: moveEvent.clientX - (bounds.left ?? 0),
-								y: moveEvent.clientY - (bounds.top ?? 0),
+		createPointerDrag({
+			pointerId,
+			startPosition: startPos,
+			callbacks: {
+				onMove: (e) => {
+					const currentScreenPosition = getScreenRelativePosition(e);
+					setState(
+						IS.touchSingleFingerDrag(
+							{
+								pointerId,
+								start: startPos,
+								current: { x: e.clientX, y: e.clientY },
 							},
-						};
-					});
+							startGraphPosition,
+							currentScreenPosition,
+						),
+					);
 				},
-				pointerup: (upEvent) => {
-					if (pointer.pointerId !== upEvent.pointerId) return;
-
-					gesture.dragStarted = false;
-					gesture.pointers = [];
-					setDragState({ type: "idle" });
-					dispose();
+				onUp: () => {
+					setState(IS.idle());
 				},
-			});
+			},
 		});
 	}
 
-	createEventListener(ref, "wheel", (e) => {
-		e.preventDefault();
+	// ============ Touch Pointer Down Handler ============
 
-		let deltaX = e.deltaX;
-		let deltaY = e.deltaY;
-		let isTouchpad = false;
+	function handleTouchPointerDown(downEvent: PointerEvent) {
+		const currentState = state();
 
-		if (Math.abs((e as any).wheelDeltaY) === Math.abs(e.deltaY) * 3) {
-			deltaX = -(e as any).wheelDeltaX / 3;
-			deltaY = -(e as any).wheelDeltaY / 3;
-			isTouchpad = true;
+		// Ignore additional touches if already in an active gesture
+		// Only allow adding touches in awaiting state, and max 2 fingers
+		if (
+			currentState.type === "touch" &&
+			(currentState.gesture.type !== "awaiting" ||
+				currentState.gesture.pointers.length >= 2)
+		)
+			return;
+
+		// Get existing pointers if we're already in touch awaiting state
+		const existingPointers =
+			currentState.type === "touch" && currentState.gesture.type === "awaiting"
+				? currentState.gesture.pointers
+				: [];
+
+		const newPointer = {
+			pointerId: downEvent.pointerId,
+			start: { x: downEvent.clientX, y: downEvent.clientY },
+			current: { x: downEvent.clientX, y: downEvent.clientY },
+		};
+		const pointers = [...existingPointers, newPointer];
+
+		// Close context menu on touch (if not already in a gesture)
+		if (existingPointers.length === 0) {
+			props.onContextMenuClose?.();
 		}
 
-		if (e.ctrlKey) {
-			const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
-			handleZoom(delta, { x: e.clientX, y: e.clientY });
-		} else {
-			const newViewport = Viewport.panByScreenDelta(getViewport(), {
-				x: deltaX,
-				y: deltaY,
+		// Cancel any existing long-press timer when adding a new pointer
+		const existingTimerId = getLongPressTimerId(currentState);
+		if (existingTimerId !== null) {
+			clearTimeout(existingTimerId);
+		}
+
+		if (pointers.length === 2) {
+			// Two fingers - wait for movement to start two-finger gesture
+			const left = pointers[0]!;
+			const right = pointers[1]!;
+
+			setState(IS.touchAwaiting(pointers, null));
+
+			// Track movement to detect gesture start
+			createPointerDrag({
+				pointerId: left.pointerId,
+				startPosition: left.start,
+				threshold: TOUCH_MOVE_THRESHOLD,
+				callbacks: {
+					onMove: () => {
+						startTwoFingerGesture(
+							{ pointerId: left.pointerId, position: left.current },
+							{ pointerId: right.pointerId, position: right.current },
+						);
+						return false; // Stop this drag tracker
+					},
+					onUp: () => {
+						setState(IS.idle());
+					},
+				},
 			});
-			props.onTranslateChange?.(newViewport.origin);
+
+			// Also track the right pointer
+			createPointerDrag({
+				pointerId: right.pointerId,
+				startPosition: right.start,
+				threshold: TOUCH_MOVE_THRESHOLD,
+				callbacks: {
+					onMove: () => {
+						startTwoFingerGesture(
+							{ pointerId: left.pointerId, position: left.current },
+							{ pointerId: right.pointerId, position: right.current },
+						);
+						return false;
+					},
+					onUp: () => {
+						setState(IS.idle());
+					},
+				},
+			});
+
+			return;
 		}
-	});
+
+		if (pointers.length === 1) {
+			// Single finger - start long-press timer and wait for movement
+			const startPos = { x: downEvent.clientX, y: downEvent.clientY };
+			const pointer = pointers[0]!;
+
+			setState(IS.touchAwaiting(pointers, null));
+
+			const { dispose: disposeLongPress } = createLongPress(downEvent, {
+				timeout: LONG_PRESS_TIMEOUT_MS,
+				moveThreshold: TOUCH_MOVE_THRESHOLD,
+				onLongPress: () => {
+					props.onContextMenu?.(downEvent);
+					setState(IS.idle());
+				},
+				onCancel: () => {
+					// Long press cancelled - movement detected
+				},
+			});
+
+			createPointerDrag({
+				pointerId: pointer.pointerId,
+				startPosition: startPos,
+				threshold: TOUCH_MOVE_THRESHOLD,
+				callbacks: {
+					onMove: () => {
+						disposeLongPress();
+						// Check if we're still in awaiting state with only 1 finger
+						const s = state();
+						if (
+							s.type === "touch" &&
+							s.gesture.type === "awaiting" &&
+							s.gesture.pointers.length === 1
+						) {
+							// Still single finger - start drag
+							startSingleFingerDrag(pointer.pointerId, startPos);
+						}
+						// Otherwise a second finger was added, so stop tracking
+						return false;
+					},
+					onUp: () => {
+						disposeLongPress();
+						setState(IS.idle());
+					},
+				},
+			});
+
+			return;
+		}
+
+		// More than 2 fingers - ignore
+	}
+
+	// ============ Mouse Left-Click Handler (Area Selection) ============
+
+	function handleLeftClickCanvas(downEvent: PointerEvent) {
+		if (state().type !== "idle") return;
+
+		downEvent.preventDefault();
+		props.onContextMenuClose?.();
+
+		const startGraphPosition = getEventGraphPosition(downEvent);
+		const currentScreenPosition = getScreenRelativePosition(downEvent);
+
+		batch(() => {
+			props.onItemsSelected?.([]);
+			setState(
+				IS.areaSelection(
+					downEvent.pointerId,
+					startGraphPosition,
+					currentScreenPosition,
+				),
+			);
+		});
+
+		createPointerDrag({
+			pointerId: downEvent.pointerId,
+			startPosition: { x: downEvent.clientX, y: downEvent.clientY },
+			callbacks: {
+				onMove: (e) => {
+					const currentScreenPosition = getScreenRelativePosition(e);
+					setState(
+						IS.areaSelection(
+							downEvent.pointerId,
+							startGraphPosition,
+							currentScreenPosition,
+						),
+					);
+				},
+				onUp: () => {
+					setState(IS.idle());
+				},
+			},
+		});
+	}
+
+	// ============ Mouse Right-Click Handler (Pan/Context Menu) ============
+
+	function handleRightClickCanvas(downEvent: PointerEvent) {
+		downEvent.preventDefault();
+
+		const startScreenPosition = { x: downEvent.clientX, y: downEvent.clientY };
+
+		setState(IS.rightClickPending(downEvent.pointerId, startScreenPosition));
+
+		let lastMousePosition = { ...startScreenPosition };
+
+		createPointerDrag({
+			pointerId: downEvent.pointerId,
+			startPosition: startScreenPosition,
+			callbacks: {
+				onMove: (e, incrementalDelta) => {
+					const currentState = state();
+					if (currentState.type !== "right-click") return;
+
+					const distance = Math.hypot(
+						e.clientX - startScreenPosition.x,
+						e.clientY - startScreenPosition.y,
+					);
+
+					if (distance > 5) {
+						// Pan threshold
+						// Apply pan
+						const currentViewport = getViewport();
+						const newViewport = Viewport.panByScreenDelta(currentViewport, {
+							x: -incrementalDelta.x,
+							y: -incrementalDelta.y,
+						});
+						props.onTranslateChange?.(newViewport.origin);
+
+						lastMousePosition = { x: e.clientX, y: e.clientY };
+
+						setState(
+							IS.rightClickPanning(
+								downEvent.pointerId,
+								startScreenPosition,
+								lastMousePosition,
+								{ x: e.clientX, y: e.clientY },
+							),
+						);
+					}
+				},
+				onUp: (e) => {
+					const currentState = state();
+					if (
+						currentState.type === "right-click" &&
+						currentState.mode.type === "pending"
+					) {
+						props.onContextMenu?.(e);
+					}
+					setState(IS.idle());
+				},
+			},
+		});
+	}
+
+	// ============ Connections Rendering ============
 
 	const connections = () => {
 		const ret: {
@@ -328,20 +465,13 @@ export function GraphView(
 			opacity?: number;
 		}[] = [];
 
-		const draggingIO = (() => {
-			const s = dragState();
-			if (s.type === "dragIO") return s.ioRef;
-		})();
+		const draggingIO = getDraggingIO(state());
 
 		if (draggingIO) {
 			const position = graphCtx.ioPositions.get(draggingIO);
 
 			if (position) {
-				// Mouse position in viewport-relative screen coordinates
-				const mousePos = {
-					x: mouse.x - (bounds.left ?? 0),
-					y: mouse.y - (bounds.top ?? 0),
-				};
+				const mousePos = getScreenRelativePosition(mouse);
 
 				ret.push(
 					draggingIO.includes(":o:")
@@ -373,34 +503,99 @@ export function GraphView(
 		// Convert IO positions from canvas coords to viewport-relative screen coords
 		const viewport = getViewport();
 		for (const val of ret) {
-			val.from.x = (val.from.x - viewport.origin.x) * viewport.scale;
-			val.from.y = (val.from.y - viewport.origin.y) * viewport.scale;
-			val.to.x = (val.to.x - viewport.origin.x) * viewport.scale;
-			val.to.y = (val.to.y - viewport.origin.y) * viewport.scale;
+			val.from = Viewport.canvasToViewportRelative(viewport, val.from);
+			val.to = Viewport.canvasToViewportRelative(viewport, val.to);
 		}
-
-		//   if (name !== "ConnectIO") continue;
-
-		//   const outPosition = ioPositions.get(
-		//     `${Node.Id.make(Number(payload.output.nodeId))}:o:${
-		//       payload.output.ioId
-		//     }`,
-		//   );
-		//   if (!outPosition) continue;
-
-		//   const inPosition = ioPositions.get(
-		//     `${Node.Id.make(Number(payload.input.nodeId))}:i:${payload.input.ioId}`,
-		//   );
-		//   if (!inPosition) continue;
-
-		//   ret.push({ from: outPosition, to: inPosition, opacity: 0.5 });
-		// }
 
 		return ret;
 	};
 
-	const getEventGraphPosition = (e: MouseEvent) =>
-		graphCtx.getGraphPosition({ x: e.clientX, y: e.clientY });
+	// ============ Node Header Drag Handler ============
+
+	function handleNodeHeaderDrag(downEvent: PointerEvent, node: NodeState) {
+		downEvent.stopPropagation();
+
+		// Handle selection
+		if (downEvent.shiftKey) {
+			const index = props.selection?.findIndex(
+				(ref) => ref[0] === "Node" && ref[1] === node.id,
+			);
+			if (index !== -1) {
+				props.onItemsSelected?.(
+					props.selection?.filter(
+						(ref) => !(ref[0] === "Node" && ref[1] === node.id),
+					) ?? [],
+				);
+			} else {
+				props.onItemsSelected?.([
+					...(props.selection ?? []),
+					["Node", node.id],
+				]);
+			}
+		} else if ((props.selection?.length ?? 0) <= 1) {
+			props.onItemsSelected?.([["Node", node.id]]);
+		}
+
+		// Collect start positions
+		const startPositions: Array<[Graph.ItemRef, { x: number; y: number }]> = [];
+		for (const nodeId of props.selection ?? []) {
+			if (nodeId[0] !== "Node") continue;
+			const n = props.nodes.find((n) => n.id === nodeId[1]);
+			if (!n) return;
+			startPositions.push([nodeId, { ...n.position }]);
+		}
+
+		const downPosition = getEventGraphPosition(downEvent);
+
+		createPointerDrag({
+			pointerId: downEvent.pointerId,
+			startPosition: { x: downEvent.clientX, y: downEvent.clientY },
+			callbacks: {
+				onMove: (e) => {
+					e.preventDefault();
+					const movePosition = getEventGraphPosition(e);
+					const delta = {
+						x: movePosition.x - downPosition.x,
+						y: movePosition.y - downPosition.y,
+					};
+
+					const positions = startPositions.map(
+						([ref, startPosition]) =>
+							[
+								ref,
+								{ x: startPosition.x + delta.x, y: startPosition.y + delta.y },
+							] satisfies [any, any],
+					);
+
+					props.onSelectionDrag?.(positions);
+					setState(
+						IS.selectionDrag(
+							downEvent.pointerId,
+							downPosition,
+							startPositions,
+							positions,
+						),
+					);
+				},
+				onUp: (e) => {
+					const upPosition = getEventGraphPosition(e);
+					const delta = {
+						x: upPosition.x - downPosition.x,
+						y: upPosition.y - downPosition.y,
+					};
+
+					props.onSelectionDragEnd?.(
+						startPositions.map(([ref, startPosition]) => [
+							ref,
+							{ x: startPosition.x + delta.x, y: startPosition.y + delta.y },
+						]),
+					);
+
+					setState(IS.idle());
+				},
+			},
+		});
+	}
 
 	return (
 		<div
@@ -412,10 +607,8 @@ export function GraphView(
 					passive: false,
 				});
 
-				// Set our ref
 				setRef(el);
 
-				// Handle props.ref if it exists
 				if (typeof props.ref === "function") {
 					props.ref(el);
 				} else if (props.ref) {
@@ -423,250 +616,29 @@ export function GraphView(
 				}
 			}}
 			class={cx(
-				"relative flex-1 flex flex-col gap-4 items-start w-full select-none",
-				isPanning() && "cursor-grabbing",
+				"relative flex-1 flex flex-col gap-4 items-start w-full select-none overflow-hidden",
+				isPanning(state()) && "cursor-grabbing",
 			)}
 			onPointerDown={(downEvent) => {
-				// ============ Touch Gesture Tracking ============
 				if (downEvent.pointerType === "touch") {
-					const pointer = {
-						pointerId: downEvent.pointerId,
-						start: { x: downEvent.clientX, y: downEvent.clientY },
-						current: { x: downEvent.clientX, y: downEvent.clientY },
-					};
-					gesture.pointers.push(pointer);
-
-					// If this is the second finger, start monitoring for two-finger gesture
-					if (gesture.pointers.length === 2 && !gesture.dragStarted) {
-						const left = gesture.pointers[0];
-						const right = gesture.pointers[1];
-
-						if (!left || !right) return;
-
-						// Create root to monitor for movement
-						createRoot((disposeMonitor) => {
-							createEventListener(window, "pointermove", (moveEvent) => {
-								if (gesture.dragStarted) {
-									disposeMonitor();
-									return;
-								}
-
-								// Update current position for the moving pointer
-								const movingPointer = gesture.pointers.find(
-									(p) => p.pointerId === moveEvent.pointerId,
-								);
-								if (!movingPointer) return;
-
-								const diff = {
-									x: movingPointer.start.x - moveEvent.clientX,
-									y: movingPointer.start.y - moveEvent.clientY,
-								};
-
-								// Check movement threshold
-								if (
-									Math.abs(diff.x) > TOUCH_MOVE_THRESHOLD ||
-									Math.abs(diff.y) > TOUCH_MOVE_THRESHOLD
-								) {
-									disposeMonitor();
-									gesture.dragStarted = true;
-
-									// Start two-finger gesture
-									startTwoFingerGesture(left, right);
-								}
-							});
-
-							// Clean up if pointers lift before threshold
-							createEventListener(window, "pointerup", (e) => {
-								if (
-									left.pointerId === e.pointerId ||
-									right.pointerId === e.pointerId
-								) {
-									gesture.pointers = [];
-									disposeMonitor();
-								}
-							});
-						});
-
-						// Don't process further - we're waiting for two-finger gesture
-						return;
-					}
-
-					// If this is the first finger, wait briefly for a possible second finger
-					// before starting single-finger drag area selection
-					if (gesture.pointers.length === 1) {
-						createRoot((disposeMonitor) => {
-							const startPos = { x: downEvent.clientX, y: downEvent.clientY };
-
-							createEventListenerMap(window, {
-								pointermove: (moveEvent) => {
-									// Only track this pointer
-									if (moveEvent.pointerId !== downEvent.pointerId) return;
-
-									// If gesture already started (two-finger), abort
-									if (gesture.dragStarted) {
-										disposeMonitor();
-										return;
-									}
-
-									// If a second finger was added, don't start drag area
-									if (gesture.pointers.length > 1) {
-										disposeMonitor();
-										return;
-									}
-
-									const diff = {
-										x: startPos.x - moveEvent.clientX,
-										y: startPos.y - moveEvent.clientY,
-									};
-
-									// Check movement threshold for single-finger drag
-									if (
-										Math.abs(diff.x) > TOUCH_MOVE_THRESHOLD ||
-										Math.abs(diff.y) > TOUCH_MOVE_THRESHOLD
-									) {
-										disposeMonitor();
-										gesture.dragStarted = true;
-
-										// Start single-finger drag area selection
-										startSingleFingerDragArea(pointer, startPos);
-									}
-								},
-								pointerup: (upEvent) => {
-									if (upEvent.pointerId !== downEvent.pointerId) return;
-									gesture.pointers = [];
-									disposeMonitor();
-								},
-							});
-						});
-
-						// Don't process further - we're monitoring for gesture type
-						return;
-					}
-
-					// More than 2 fingers - ignore
+					handleTouchPointerDown(downEvent);
 					return;
 				}
-				// ============ END Touch Gesture Tracking ============
 
 				if (downEvent.button === 0) {
-					downEvent.preventDefault();
-					props.onContextMenuClose?.();
-					const topLeft = {
-						x: downEvent.clientX - (bounds.left ?? 0),
-						y: downEvent.clientY - (bounds.top ?? 0),
-					};
-
-					batch(() => {
-						props.onItemsSelected?.([]);
-						setDragState((s) => {
-							if (s.type !== "idle") return s;
-
-							createRoot((dispose) => {
-								const timeout = setTimeout(() => {
-									if (isTouchDevice) {
-										props.onContextMenu?.(downEvent);
-									}
-								}, 300);
-
-								createEventListenerMap(window, {
-									pointermove: (moveEvent) => {
-										if (downEvent.pointerId !== moveEvent.pointerId) return;
-										clearTimeout(timeout);
-
-										setDragState((s) => {
-											if (s.type !== "dragArea") return s;
-											return {
-												...s,
-												bottomRight: {
-													x: moveEvent.clientX - (bounds.left ?? 0),
-													y: moveEvent.clientY - (bounds.top ?? 0),
-												},
-											};
-										});
-									},
-									pointerup: (upEvent) => {
-										if (downEvent.pointerId !== upEvent.pointerId) return;
-
-										dispose();
-									},
-								});
-
-								onCleanup(() => {
-									try {
-										clearTimeout(timeout);
-									} catch {}
-									setDragState({ type: "idle" });
-								});
-							});
-
-							return { type: "dragArea", topLeft, bottomRight: topLeft };
-						});
-					});
+					handleLeftClickCanvas(downEvent);
 				} else if (downEvent.button === 2) {
-					downEvent.preventDefault();
-					setRightClickPending(true);
-
-					const startScreenPosition = {
-						x: downEvent.clientX,
-						y: downEvent.clientY,
-					};
-					const startTranslate = graphCtx.translate ?? { x: 0, y: 0 };
-					let isDragging = false;
-
-					createRoot((dispose) => {
-						const handlePointerMove = (moveEvent: PointerEvent) => {
-							if (downEvent.pointerId !== moveEvent.pointerId) return;
-
-							const distance = Math.hypot(
-								moveEvent.clientX - startScreenPosition.x,
-								moveEvent.clientY - startScreenPosition.y,
-							);
-
-							if (distance > PAN_THRESHOLD) {
-								isDragging = true;
-								setIsPanning(true);
-								setRightClickPending(false);
-
-								const screenDelta = {
-									x: startScreenPosition.x - moveEvent.clientX,
-									y: startScreenPosition.y - moveEvent.clientY,
-								};
-
-								const newViewport = Viewport.panByScreenDelta(
-									{ origin: startTranslate, scale: graphCtx.scale },
-									screenDelta,
-								);
-								props.onTranslateChange?.(newViewport.origin);
-							}
-						};
-
-						const handlePointerUp = (upEvent: PointerEvent) => {
-							if (downEvent.pointerId !== upEvent.pointerId) return;
-
-							if (!isDragging) {
-								props.onContextMenu?.(upEvent);
-							}
-
-							setRightClickPending(false);
-							dispose();
-						};
-
-						createEventListenerMap(window, {
-							pointermove: handlePointerMove,
-							pointerup: handlePointerUp,
-						});
-
-						onCleanup(() => {
-							setIsPanning(false);
-							setRightClickPending(false);
-						});
-					});
+					handleRightClickCanvas(downEvent);
 				}
 			}}
 			onContextMenu={(e) => {
-				if (!props.onContextMenu || isPanning()) return;
+				if (!props.onContextMenu || isPanning(state())) return;
 				e.preventDefault();
-				if (!rightClickPending()) {
+				const currentState = state();
+				if (
+					currentState.type !== "right-click" ||
+					currentState.mode.type !== "pending"
+				) {
 					props.onContextMenu?.(e);
 				}
 			}}
@@ -680,7 +652,7 @@ export function GraphView(
 			/>
 			<ContextMenu>
 				<div
-					class="absolute inset-0 origin-top-left"
+					class="absolute inset-0 w-full h-full origin-top-left"
 					style={{ transform: `scale(${graphCtx.scale})` }}
 				>
 					<div
@@ -703,11 +675,10 @@ export function GraphView(
 												left: bounds.left ?? 0,
 											}}
 											position={(() => {
-												const ds = dragState();
-
-												if (ds.type !== "dragSelection") return node.position;
+												const positions = getSelectionDragPositions(state());
+												if (!positions) return node.position;
 												return (
-													ds.positions.find(
+													positions.find(
 														(p) => p[0][0] === "Node" && p[0][1] === node.id,
 													)?.[1] ?? node.position
 												);
@@ -721,28 +692,24 @@ export function GraphView(
 												)?.colour
 											}
 											onPinDragStart={(e, type, id) => {
-												if (dragState().type !== "idle") return false;
+												if (state().type !== "idle") return false;
 
-												setDragState({
-													type: "dragIO",
-													ioRef: `${node.id}:${type}:${id}`,
-													pointerId: e.pointerId,
-												});
+												setState(
+													IS.ioDrag(e.pointerId, `${node.id}:${type}:${id}`),
+												);
 
 												return true;
 											}}
 											onPinDragEnd={() => {
-												setDragState({ type: "idle" });
+												setState(IS.idle());
 											}}
 											onPinPointerUp={(e, type, id) => {
-												const dragIO = (() => {
-													const s = dragState();
-													if (s.type === "dragIO") return s;
-												})();
-												if (!dragIO || e.pointerId !== dragIO.pointerId) return;
+												const currentState = state();
+												if (currentState.type !== "io-drag") return;
+												if (e.pointerId !== currentState.pointerId) return;
 
 												props.onConnectIO?.(
-													dragIO.ioRef,
+													currentState.ioRef,
 													`${node.id}:${type}:${id}`,
 												);
 											}}
@@ -776,119 +743,7 @@ export function GraphView(
 														variant={schema().type}
 														onPointerDown={(downEvent) => {
 															if (downEvent.button === 0) {
-																downEvent.stopPropagation();
-
-																if (downEvent.shiftKey) {
-																	const index = props.selection?.findIndex(
-																		(ref) =>
-																			ref[0] === "Node" && ref[1] === node.id,
-																	);
-																	if (index !== -1) {
-																		props.onItemsSelected?.(
-																			props.selection?.filter(
-																				(ref) =>
-																					ref[0] === "Node" &&
-																					ref[1] === node.id,
-																			) ?? [],
-																		);
-																	} else {
-																		props.onItemsSelected?.([
-																			...(props.selection ?? []),
-																			["Node", node.id],
-																		]);
-																	}
-																} else if ((props.selection?.length ?? 0) <= 1)
-																	props.onItemsSelected?.([["Node", node.id]]);
-
-																const startPositions: Array<
-																	[Graph.ItemRef, { x: number; y: number }]
-																> = [];
-																for (const nodeId of props.selection ?? []) {
-																	if (nodeId[0] !== "Node") continue;
-
-																	const node = props.nodes.find(
-																		(n) => n.id === nodeId[1],
-																	);
-																	if (!node) return;
-																	startPositions.push([
-																		nodeId,
-																		{ ...node.position },
-																	]);
-																}
-
-																const downPosition =
-																	getEventGraphPosition(downEvent);
-
-																createRoot((dispose) => {
-																	createEventListenerMap(window, {
-																		pointermove: (moveEvent) => {
-																			if (
-																				downEvent.pointerId !==
-																				moveEvent.pointerId
-																			)
-																				return;
-
-																			moveEvent.preventDefault();
-
-																			const movePosition =
-																				getEventGraphPosition(moveEvent);
-
-																			const delta = {
-																				x: movePosition.x - downPosition.x,
-																				y: movePosition.y - downPosition.y,
-																			};
-
-																			const positions = startPositions.map(
-																				([ref, startPosition]) =>
-																					[
-																						ref,
-																						{
-																							x: startPosition.x + delta.x,
-																							y: startPosition.y + delta.y,
-																						},
-																					] satisfies [any, any],
-																			);
-
-																			props.onSelectionDrag?.(positions);
-
-																			setDragState({
-																				type: "dragSelection",
-																				positions,
-																			});
-																		},
-																		pointerup: (upEvent) => {
-																			if (
-																				downEvent.pointerId !==
-																				upEvent.pointerId
-																			)
-																				return;
-
-																			const upPosition =
-																				getEventGraphPosition(upEvent);
-
-																			const delta = {
-																				x: upPosition.x - downPosition.x,
-																				y: upPosition.y - downPosition.y,
-																			};
-
-																			props.onSelectionDragEnd?.(
-																				startPositions.map(
-																					([ref, startPosition]) => [
-																						ref,
-																						{
-																							x: startPosition.x + delta.x,
-																							y: startPosition.y + delta.y,
-																						},
-																					],
-																				),
-																			);
-
-																			setDragState({ type: "idle" });
-
-																			dispose();
-																		},
-																	});
-																});
+																handleNodeHeaderDrag(downEvent, node);
 															} else if (downEvent.button === 2) {
 																downEvent.preventDefault();
 
@@ -931,32 +786,31 @@ export function GraphView(
 					</ContextMenu.Content>
 				</ContextMenu.Portal>
 			</ContextMenu>
-			<Show
-				when={(() => {
-					const s = dragState();
-					if (s.type === "dragArea") return s;
-				})()}
-			>
-				{(dragState) => (
-					<div
-						class="absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10"
-						style={{
-							width: `${Math.abs(
-								dragState().bottomRight.x - dragState().topLeft.x,
-							)}px`,
-							height: `${Math.abs(
-								dragState().bottomRight.y - dragState().topLeft.y,
-							)}px`,
-							transform: `translate(${Math.min(
-								dragState().topLeft.x,
-								dragState().bottomRight.x,
-							)}px, ${Math.min(
-								dragState().topLeft.y,
-								dragState().bottomRight.y,
-							)}px)`,
-						}}
-					/>
-				)}
+			<Show when={getAreaSelectionBounds(state())}>
+				{(selectionBounds) => {
+					// Convert graph-space start position to screen-relative coordinates
+					const startScreenPosition = () =>
+						Viewport.canvasToViewportRelative(
+							getViewport(),
+							selectionBounds().startGraphPosition,
+						);
+					const currentScreenPosition = () =>
+						selectionBounds().currentScreenPosition;
+
+					return (
+						<div
+							class="absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10"
+							style={{
+								width: `${Math.abs(currentScreenPosition().x - startScreenPosition().x)}px`,
+								height: `${Math.abs(currentScreenPosition().y - startScreenPosition().y)}px`,
+								transform: `translate(${Math.min(
+									startScreenPosition().x,
+									currentScreenPosition().x,
+								)}px, ${Math.min(startScreenPosition().y, currentScreenPosition().y)}px)`,
+							}}
+						/>
+					);
+				}}
 			</Show>
 			{props.children}
 		</div>
@@ -987,7 +841,6 @@ function Connections(props: {
 		const scaledWidth = Math.floor(props.width * scale);
 		const scaledHeight = Math.floor(props.height * scale);
 
-		// Only set if changed
 		if (canvas.width !== scaledWidth) canvas.width = scaledWidth;
 		if (canvas.height !== scaledHeight) canvas.height = scaledHeight;
 
