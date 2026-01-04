@@ -17,7 +17,7 @@ import * as Credential from "./Credential";
 import * as Presence from "./Presence";
 import { ConnectionRpcMiddleware, CurrentActorRpcMiddleware } from "./Realtime";
 
-export const RequestRpcs = RpcGroup.make(
+export const EditorRpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.GetProject),
 	Rpc.fromTaggedRequest(Request.CreateGraph),
 	Rpc.fromTaggedRequest(Request.CreateNode),
@@ -34,8 +34,7 @@ export const RequestRpcs = RpcGroup.make(
 	.middleware(CurrentActorRpcMiddleware)
 	.middleware(ConnectionRpcMiddleware);
 
-export const Rpcs = RequestRpcs.merge(
-	Presence.Rpcs,
+export const ServerRpcs = Presence.Rpcs.merge(
 	CloudAuth.Rpcs,
 	ClientAuth.Rpcs,
 	Credential.Rpcs,

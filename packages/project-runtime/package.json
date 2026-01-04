@@ -10,10 +10,14 @@
 		"effect": "^3.19.13"
 	},
 	"exports": {
-		".": { "types": "./dist/src/index.d.ts", "default": "./src/index.ts" },
+		".": { "default": "./src/index.ts", "types": "./dist/src/index.d.ts" },
 		"./CloudApiClient": {
-			"types": "./dist/src/CloudApiClient.d.ts",
-			"default": "./src/CloudApiClient.ts"
+			"default": "./src/Runtime/CloudApiClient.ts",
+			"types": "./dist/src/Runtime/CloudApiClient.d.ts"
+		},
+		"./NodesIOStore": {
+			"default": "./src/NodesIOStore.ts",
+			"types": "./dist/src/NodesIOStore.d.ts"
 		}
 	},
 	"devDependencies": { "@effect/vitest": "^0.27.0", "vitest": "^4.0.8" }

@@ -3,7 +3,7 @@ import {
 	type Credential,
 	ExecutionContext,
 	Graph,
-	IO,
+	type IO,
 	Node,
 	NodeExecutionContext,
 	type NodeSchema,
@@ -13,6 +13,7 @@ import {
 	Schema,
 } from "@macrograph/project-domain";
 
+import { NodesIOStore } from "../NodesIOStore.ts";
 import * as ProjectRuntime from "./ProjectRuntime.ts";
 
 export class NodeExecution extends Effect.Service<NodeExecution>()(
@@ -87,7 +88,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 				return properties;
 			});
 
-			const resolveExecConnection = Effect.fnUntraced(function* (
+			const _resolveExecConnection = Effect.fnUntraced(function* (
 				graph: Graph.Graph,
 				node: Node.Node,
 				output: IO.ExecOutput,
@@ -150,9 +151,10 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 			});
 
 			const getNodeIO = Effect.fnUntraced(function* (id: Node.Id) {
-				const { nodesIORef } = yield* ProjectRuntime.Current;
+				const nodesIO = yield* NodesIOStore;
 
-				return yield* HashMap.get(yield* nodesIORef, id).pipe(
+				return yield* nodesIO.getForNode(id).pipe(
+					Effect.flatten,
 					Effect.catchTag(
 						"NoSuchElementException",
 						() => new Node.NotFound({ id }),
@@ -170,7 +172,7 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 				| Schema.InvalidPropertyValue
 				| Credential.FetchFailed
 				| NotComputationNode,
-				ProjectRuntime.Current | ExecutionContext
+				ProjectRuntime.Current | ExecutionContext | NodesIOStore
 			> = Effect.fnUntraced(function* (node: Node.Node) {
 				const { graph } = yield* ExecutionContext;
 
@@ -206,14 +208,14 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 						return;
 					}
 
-					const [pkg, schema] = yield* getSchema(connectedNode.value.schema);
-					if (schema.type === "pure") {
-						yield* runNode(connectedNode.value, pkg, schema);
-					}
+					// const [pkg, schema] = yield* getSchema(connectedNode.value.schema);
+					// if (schema.type === "pure") {
+					// 	yield* runNode(connectedNode.value, pkg, schema);
+					// }
 				}
 			});
 
-			const runNode = Effect.fnUntraced(function* (
+			const _runNode = Effect.fnUntraced(function* (
 				node: Node.Node,
 				pkg: ProjectRuntime.RuntimePackage,
 				schema: Exclude<NodeSchema, { type: "event" }>,
@@ -236,12 +238,12 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 			const fireEventNode = Effect.fn(function* (
 				graphId: Graph.Id,
 				nodeId: Node.Id,
-				event: any,
+				_event: any,
 			) {
 				const runtime = yield* ProjectRuntime.Current;
 				const project = yield* runtime.projectRef;
 
-				const [graph, node] = yield* HashMap.get(project.graphs, graphId).pipe(
+				const [_graph, node] = yield* HashMap.get(project.graphs, graphId).pipe(
 					Effect.catchTag(
 						"NoSuchElementException",
 						() => new Graph.NotFound({ id: graphId }),
@@ -257,108 +259,108 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 					),
 				);
 
-				const [pkg, schema] = yield* getSchema(node.schema);
+				const [_pkg, schema] = yield* getSchema(node.schema);
 
 				if (schema.type !== "event") return yield* new NotEventNode();
 
-				const io = yield* getNodeIO(node.id);
-				const properties = yield* collectNodeProperties(pkg, node, schema);
+				// const io = yield* getNodeIO(node.id);
+				// const properties = yield* collectNodeProperties(pkg, node, schema);
 
-				const eventData = schema.event({ properties }, event);
-				if (eventData === undefined) return false;
+				// const eventData = schema.event({ properties }, event);
+				// if (eventData === undefined) return false;
 
-				const outputData = new Map<Node.Id, Map<string, any>>();
+				// const outputData = new Map<Node.Id, Map<string, any>>();
 
-				const execCtx = ExecutionContext.context({
-					traceId: Math.random().toString(),
-					getInput: Effect.fn(
-						function* (input) {
-							const { node } = yield* NodeExecutionContext;
+				// const execCtx = ExecutionContext.context({
+				// 	traceId: Math.random().toString(),
+				// 	getInput: Effect.fn(
+				// 		function* (input) {
+				// 			const { node } = yield* NodeExecutionContext;
 
-							const [connection] = pipe(
-								graph.connections,
-								HashMap.entries,
-								Iterable.flatMap(([outNodeId, conns]) =>
-									pipe(
-										conns,
-										Record.toEntries,
-										Iterable.flatMap(([outId, conns]) =>
-											pipe(
-												conns,
-												Iterable.filterMap(([inNodeId, inId]) => {
-													// TODO: Fix type
-													if (
-														inNodeId === node.id &&
-														inId === (input.id as any)
-													)
-														return Option.some([outNodeId, outId] as const);
-													return Option.none();
-												}),
-											),
-										),
-									),
-								),
-								Array.fromIterable,
-							);
+				// 			const [connection] = pipe(
+				// 				graph.connections,
+				// 				HashMap.entries,
+				// 				Iterable.flatMap(([outNodeId, conns]) =>
+				// 					pipe(
+				// 						conns,
+				// 						Record.toEntries,
+				// 						Iterable.flatMap(([outId, conns]) =>
+				// 							pipe(
+				// 								conns,
+				// 								Iterable.filterMap(([inNodeId, inId]) => {
+				// 									// TODO: Fix type
+				// 									if (
+				// 										inNodeId === node.id &&
+				// 										inId === (input.id as any)
+				// 									)
+				// 										return Option.some([outNodeId, outId] as const);
+				// 									return Option.none();
+				// 								}),
+				// 							),
+				// 						),
+				// 					),
+				// 				),
+				// 				Array.fromIterable,
+				// 			);
 
-							if (connection) {
-								return outputData.get(connection[0])?.get(connection[1]);
-							} else {
-								return yield* Effect.die("TODO");
-							}
-						},
-						Effect.provideService(ProjectRuntime.Current, runtime),
-					),
-					setOutput: Effect.fn(function* (output, data) {
-						const { node } = yield* NodeExecutionContext;
-						const outMap = outputData.get(node.id) ?? new Map();
-						outMap.set(output.id, data);
-						outputData.set(node.id, outMap);
-					}),
-					graph,
-				});
+				// 			if (connection) {
+				// 				return outputData.get(connection[0])?.get(connection[1]);
+				// 			} else {
+				// 				return yield* Effect.die("TODO");
+				// 			}
+				// 		},
+				// 		Effect.provideService(ProjectRuntime.Current, runtime),
+				// 	),
+				// 	setOutput: Effect.fn(function* (output, data) {
+				// 		const { node } = yield* NodeExecutionContext;
+				// 		const outMap = outputData.get(node.id) ?? new Map();
+				// 		outMap.set(output.id, data);
+				// 		outputData.set(node.id, outMap);
+				// 	}),
+				// 	graph,
+				// });
 
-				yield* Effect.log("running event node");
+				// yield* Effect.log("running event node");
 
-				yield* Effect.gen(function* () {
-					let nextOutput = yield* schema
-						.run({ io: io.shape, properties }, event)
-						.pipe(
-							Effect.map((v) =>
-								Option.fromNullable(v).pipe(
-									Option.filter((v) => v instanceof IO.ExecOutput),
-									Option.map((v) => [node, v] as const),
-								),
-							),
-							Effect.provideService(NodeExecutionContext, {
-								node: { id: node.id },
-							}),
-						);
+				// yield* Effect.gen(function* () {
+				// 	let nextOutput = yield* schema
+				// 		.run({ io: io.shape, properties }, event)
+				// 		.pipe(
+				// 			Effect.map((v) =>
+				// 				Option.fromNullable(v).pipe(
+				// 					Option.filter((v) => v instanceof IO.ExecOutput),
+				// 					Option.map((v) => [node, v] as const),
+				// 				),
+				// 			),
+				// 			Effect.provideService(NodeExecutionContext, {
+				// 				node: { id: node.id },
+				// 			}),
+				// 		);
 
-					while (Option.isSome(nextOutput)) {
-						const nextNode = yield* resolveExecConnection(
-							graph,
-							nextOutput.value[0],
-							nextOutput.value[1],
-						);
+				// 	while (Option.isSome(nextOutput)) {
+				// 		const nextNode = yield* resolveExecConnection(
+				// 			graph,
+				// 			nextOutput.value[0],
+				// 			nextOutput.value[1],
+				// 		);
 
-						if (Option.isNone(nextNode)) break;
+				// 		if (Option.isNone(nextNode)) break;
 
-						const [pkg, schema] = yield* getSchema(nextNode.value.schema);
+				// 		const [pkg, schema] = yield* getSchema(nextNode.value.schema);
 
-						if (schema.type === "event" || schema.type === "pure")
-							return yield* new Node.NotExecutable();
+				// 		if (schema.type === "event" || schema.type === "pure")
+				// 			return yield* new Node.NotExecutable();
 
-						nextOutput = yield* runNode(nextNode.value, pkg, schema).pipe(
-							Effect.map((v) =>
-								Option.fromNullable(v).pipe(
-									Option.filter((v) => v instanceof IO.ExecOutput),
-									Option.map((v) => [nextNode.value, v] as const),
-								),
-							),
-						);
-					}
-				}).pipe(Effect.provide(execCtx));
+				// 		nextOutput = yield* runNode(nextNode.value, pkg, schema).pipe(
+				// 			Effect.map((v) =>
+				// 				Option.fromNullable(v).pipe(
+				// 					Option.filter((v) => v instanceof IO.ExecOutput),
+				// 					Option.map((v) => [nextNode.value, v] as const),
+				// 				),
+				// 			),
+				// 		);
+				// 	}
+				// }).pipe(Effect.provide(execCtx));
 			});
 
 			return { fireEventNode };

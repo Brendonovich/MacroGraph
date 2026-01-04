@@ -3,6 +3,7 @@ import {
 	ConfigProvider,
 	Effect,
 	Layer,
+	Logger,
 	ManagedRuntime,
 	Option,
 } from "effect";
@@ -29,13 +30,18 @@ const RegisterPackages = Layer.scopedDiscard(
 			() => import("@macrograph/base-packages/Settings"),
 		);
 
+		yield* Effect.log("Loaded packages meta and settings");
+
 		for (const [id, getSettings] of Object.entries(packageSettings.default)) {
+			yield* Effect.log(`Registering package client ${id}`);
 			yield* packageClients.registerPackageClient(
 				Package.Id.make(id),
 				yield* Effect.promise(getSettings),
 				packageMeta.default[id]!,
 			);
 		}
+
+		yield* Effect.log("Registered packages");
 	}),
 );
 
@@ -73,6 +79,7 @@ const runtime = ManagedRuntime.make(
 );
 
 Layer.mergeAll(RegisterPackages, UILive(runtime)).pipe(
+	Layer.provide(Logger.pretty),
 	Layer.launch,
 	runtime.runPromise,
 );

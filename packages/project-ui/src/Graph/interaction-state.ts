@@ -23,32 +23,32 @@ import type { Graph, IO } from "@macrograph/project-domain";
 // ============ Re-exports from XState machine ============
 
 export {
-	// Constants
-	PAN_THRESHOLD,
-	MIN_ZOOM,
-	MAX_ZOOM,
-	TOUCH_MOVE_THRESHOLD,
-	LONG_PRESS_TIMEOUT_MS,
-	// Types
-	type Point,
-	type TouchPointer,
+	getAreaSelectionBounds as xstateGetAreaSelectionBounds,
+	getDraggingIO as xstateGetDraggingIO,
+	getPanOrigin as xstateGetPanOrigin,
+	getSelectionDragPositions as xstateGetSelectionDragPositions,
+	getTouchPointers,
+	getTwoFingerRawScale,
+	type InteractionActorRef,
 	type InteractionContext,
 	type InteractionEvent,
 	type InteractionMachine,
 	type InteractionSnapshot,
-	type InteractionActorRef,
 	type InteractionStateValue,
 	// Machine
 	interactionMachine,
+	isAwaitingSingleFinger,
 	// Query functions (XState versions) - renamed to avoid conflict with legacy
 	isPanning as xstateIsPanning,
-	getPanOrigin as xstateGetPanOrigin,
-	getDraggingIO as xstateGetDraggingIO,
-	getAreaSelectionBounds as xstateGetAreaSelectionBounds,
-	getSelectionDragPositions as xstateGetSelectionDragPositions,
-	getTouchPointers,
-	isAwaitingSingleFinger,
-	getTwoFingerRawScale,
+	LONG_PRESS_TIMEOUT_MS,
+	MAX_ZOOM,
+	MIN_ZOOM,
+	// Constants
+	PAN_THRESHOLD,
+	// Types
+	type Point,
+	TOUCH_MOVE_THRESHOLD,
+	type TouchPointer,
 } from "./interaction-machine";
 
 // ============ Legacy Types (for backward compatibility during migration) ============

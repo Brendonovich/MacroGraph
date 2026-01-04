@@ -1,6 +1,0 @@
-{
-	"extends": "./tsconfig.base.json",
-	"compilerOptions": { "lib": ["ES2021", "DOM", "DOM.Iterable"] },
-	"include": ["test"],
-	"references": [{ "path": "tsconfig.src.json" }]
-}

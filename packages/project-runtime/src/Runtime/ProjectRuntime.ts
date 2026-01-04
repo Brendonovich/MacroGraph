@@ -6,9 +6,13 @@ import * as HashMap from "effect/HashMap";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 import type { PackageEngine } from "@macrograph/package-sdk";
+import type {
+	Package as SDKPackage,
+	PackageEngine as SDKPackageEngine,
+} from "@macrograph/package-sdk/updated";
 import type { NodeSchema, Resource } from "@macrograph/project-domain";
 import {
-	Actor,
+	type Actor,
 	type Credential,
 	type Resource as DResource,
 	Graph,
@@ -31,8 +35,7 @@ export class ProjectRuntime extends Data.Class<{
 	readonly events: PubSub.PubSub<
 		ProjectEvent.ProjectEvent & { actor: Actor.Actor }
 	>;
-	readonly nodesIORef: Ref.Ref<HashMap.HashMap<Node.Id, NodeIO>>;
-	readonly packages: Map<Package.Id, RuntimePackage>;
+	readonly packages: Map<Package.Id, SDKPackage.Package<SDKPackageEngine.Any>>;
 }> {}
 
 export interface RuntimePackage {
@@ -78,15 +81,7 @@ export const make = () =>
 	Effect.gen(function* () {
 		return new ProjectRuntime({
 			projectRef: yield* Ref.make(defaultProject),
-			nodesIORef: yield* Ref.make(HashMap.empty<Node.Id, NodeIO>()),
 			events: (yield* PubSub.unbounded()) as any,
 			packages: new Map(),
 		});
-	});
-
-export const publishEvent = (event: ProjectEvent.ProjectEvent) =>
-	Effect.gen(function* () {
-		const runtime = yield* Current;
-		const actor = yield* Actor.Current;
-		yield* runtime.events.publish({ ...event, actor });
 	});

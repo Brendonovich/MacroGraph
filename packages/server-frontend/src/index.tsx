@@ -27,14 +27,18 @@ export { EffectRuntime } from "./EffectRuntime";
 export const UILive = (runtime: EffectRuntime.EffectRuntime) =>
 	Layer.scopedDiscard(
 		Effect.gen(function* () {
-			yield* Effect.log("Starting");
-
 			const realtime = yield* ProjectRealtime;
 
 			const { actions } = yield* ProjectState;
 			const rpc = yield* ServerRpc.client;
 
-			actions.setProject(yield* rpc.GetProject({}));
+			actions.setProject(
+				yield* rpc
+					.GetProject({})
+					.pipe(
+						Effect.tapDefect(() => Effect.logError("Failed to get project")),
+					),
+			);
 
 			const layoutState = createLayoutState({
 				wrapPaneLayoutStore: (s) =>

@@ -1,15 +1,12 @@
 import { Effect } from "effect";
-import {
-	IO,
-	type IOFunctionContext,
-	type NodeSchema,
-} from "@macrograph/project-domain";
+import type { Schema } from "@macrograph/package-sdk/updated";
+import { IO, type IOFunctionContext } from "@macrograph/project-domain";
 
 export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 	"NodeIOActions",
 	{
 		effect: Effect.sync(() => {
-			const generateNodeIO = Effect.fnUntraced(function* (schema: NodeSchema) {
+			const generateNodeIO = Effect.fnUntraced(function* (schema: Schema.Any) {
 				const io = {
 					inputs: [] as Array<IO.InputPort>,
 					outputs: [] as Array<IO.OutputPort>,
@@ -58,7 +55,7 @@ export class NodeIOActions extends Effect.Service<NodeIOActions>()(
 					},
 				} as IOFunctionContext);
 
-				return Object.assign(io, { shape });
+				return { ...io, shape };
 			});
 
 			return { generateNodeIO };

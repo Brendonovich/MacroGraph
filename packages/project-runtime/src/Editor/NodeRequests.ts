@@ -7,8 +7,8 @@ import {
 	type Request,
 } from "@macrograph/project-domain";
 
-import * as ProjectRuntime from "./ProjectRuntime";
-import { requestResolverServices } from "./Requests";
+import { requestResolverServices } from "../Requests";
+import { ProjectEditor } from "./ProjectEditor";
 
 export class NodeRequests extends Effect.Service<NodeRequests>()(
 	"NodeRequests",
@@ -17,9 +17,9 @@ export class NodeRequests extends Effect.Service<NodeRequests>()(
 			const SetNodePropertyResolver = RequestResolver.fromEffect(
 				(r: Request.SetNodeProperty) =>
 					Effect.gen(function* () {
-						const runtime = yield* ProjectRuntime.Current;
+						const editor = yield* ProjectEditor;
 
-						const project = yield* Ref.get(runtime.projectRef);
+						const project = yield* editor.project;
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 						);
@@ -42,14 +42,12 @@ export class NodeRequests extends Effect.Service<NodeRequests>()(
 							}),
 							(graph) => HashMap.set(project.graphs, r.graph, graph),
 							(graphs) => new Project.Project({ ...project, graphs }),
-							(p) => Ref.set(runtime.projectRef, p),
+							(p) => editor.modifyProject(() => p),
 						);
 
-						const e = new ProjectEvent.NodePropertyUpdated(r);
-
-						yield* ProjectRuntime.publishEvent(e);
-
-						return e;
+						return yield* editor.publishEvent(
+							new ProjectEvent.NodePropertyUpdated(r),
+						);
 					}),
 			).pipe(requestResolverServices);
 

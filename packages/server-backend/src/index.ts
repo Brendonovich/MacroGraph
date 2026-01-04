@@ -6,29 +6,44 @@ import {
 	HttpServerResponse,
 } from "@effect/platform";
 import type { Route } from "@effect/platform/HttpRouter";
-import { RpcSerialization, RpcServer } from "@effect/rpc";
-import { Context, FiberRef, Layer, Option, Schema, Stream } from "effect";
-import * as Effect from "effect/Effect";
+import { RpcMiddleware, RpcServer } from "@effect/rpc";
+import {
+	Context,
+	Effect,
+	FiberRef,
+	HashMap,
+	Layer,
+	Option,
+	Schema,
+	Stream,
+} from "effect";
 import { getCurrentFiber } from "effect/Fiber";
 import * as Packages from "@macrograph/base-packages";
-import { Package, Policy, type ProjectEvent } from "@macrograph/project-domain";
+import {
+	Graph,
+	Node,
+	Package,
+	Project,
+	type ProjectEvent,
+} from "@macrograph/project-domain";
 import {
 	CloudApiClient,
 	CredentialsStore,
 	GraphRequests,
 	NodeRequests,
+	NodesIOStore,
 	PackageActions,
+	ProjectEditor,
 	ProjectRequests,
-	ProjectRuntime,
 	RuntimeActions,
 } from "@macrograph/project-runtime";
 import {
 	ClientAuth as DClientAuth,
+	EditorRpcs as RawEditorRpcs,
 	Realtime,
-	RequestRpcs,
-	Rpcs,
 	RpcsSerialization,
 	ServerEvent,
+	ServerRpcs,
 } from "@macrograph/server-domain";
 import * as Jose from "jose";
 
@@ -49,22 +64,29 @@ import { ServerRegistration } from "./ServerRegistration";
 export * from "./ServerConfig";
 export * from "./ServerRegistration";
 
-const RequestRpcsLive = RequestRpcs.toLayer(
+class ProjectEditorRpcMiddleware extends RpcMiddleware.Tag<ProjectEditorRpcMiddleware>()(
+	"ProjectEditorRpcMiddleware",
+	{ provides: ProjectEditor.ProjectEditor },
+) {}
+
+const EditorRpcs = RawEditorRpcs.middleware(ProjectEditorRpcMiddleware);
+
+const EditorRpcsLive = EditorRpcs.toLayer(
 	Effect.gen(function* () {
 		const projectRequests = yield* ProjectRequests;
 		const graphRequests = yield* GraphRequests;
 		const nodeRequests = yield* NodeRequests;
-		const serverPolicy = yield* ServerPolicy;
+		// const serverPolicy = yield* ServerPolicy;
 
 		return {
 			GetProject: () => projectRequests.getProject,
 			CreateNode: graphRequests.createNode,
 			ConnectIO: graphRequests.connectIO,
 			SetItemPositions: graphRequests.setItemPositions,
-			GetPackageSettings: (req) =>
-				projectRequests
-					.getPackageSettings(req)
-					.pipe(Policy.withPolicy(serverPolicy.isOwner)),
+			GetPackageSettings: (req) => new Package.NotFound({ id: req.package }),
+			// projectRequests
+			// 	.getPackageSettings(req)
+			// 	.pipe(Policy.withPolicy(serverPolicy.isOwner)),
 			CreateGraph: projectRequests.createGraph,
 			DeleteGraphItems: graphRequests.deleteItems,
 			DisconnectIO: graphRequests.disconnectIO,
@@ -77,16 +99,17 @@ const RequestRpcsLive = RequestRpcs.toLayer(
 );
 
 const RpcsLive = Layer.mergeAll(
-	RequestRpcsLive,
+	EditorRpcsLive,
 	PresenceRpcsLive,
 	CloudRpcsLive,
 	ClientAuthRpcsLive,
 	CredentialRpcsLive,
 );
 
+const Rpcs = EditorRpcs.merge(ServerRpcs);
+
 export class Server extends Effect.Service<Server>()("Server", {
 	scoped: Effect.gen(function* () {
-		const runtime = yield* ProjectRuntime.Current;
 		const packages = yield* PackageActions;
 		const realtimeConnections = yield* RealtimeConnections;
 
@@ -102,6 +125,16 @@ export class Server extends Effect.Service<Server>()("Server", {
 		const realtimeSecretKey = yield* Effect.promise(() =>
 			Jose.generateSecret("HS256"),
 		);
+
+		const editor = ProjectEditor.layer({
+			project: new Project.Project({
+				name: "New Project",
+				graphs: HashMap.empty(),
+				constants: HashMap.empty(),
+				nextGraphId: Graph.Id.make(0),
+				nextNodeId: Node.Id.make(0),
+			}),
+		});
 
 		const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs).pipe(
 			Effect.provide(RpcsLive),
@@ -123,6 +156,11 @@ export class Server extends Effect.Service<Server>()("Server", {
 			Effect.provide(
 				DClientAuth.ClientAuthRpcMiddleware.context(() =>
 					Effect.succeed({ userId: "", permissions: new Set() }),
+				),
+			),
+			Effect.provide(
+				ProjectEditorRpcMiddleware.context(() =>
+					ProjectEditor.ProjectEditor.pipe(Effect.provide(editor)),
 				),
 			),
 			Effect.provide(RpcsSerialization),
@@ -230,6 +268,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 						);
 					}).pipe(
 						Effect.provide(Realtime.Connection.context({ id: connectionId })),
+						Effect.provide(editor),
 						Effect.forkScoped,
 					);
 
@@ -241,41 +280,37 @@ export class Server extends Effect.Service<Server>()("Server", {
 			allAsMounted(
 				"/package/:package/rpc",
 				Effect.gen(function* () {
-					const { package: pkgId } = yield* HttpRouter.schemaPathParams(
-						Schema.Struct({ package: Package.Id }),
-					);
-					const engine = runtime.packages
-						.get(pkgId)
-						?.engine.pipe(Option.getOrUndefined);
+					// const { package: pkgId } = yield* HttpRouter.schemaPathParams(
+					// 	Schema.Struct({ package: Package.Id }),
+					// );
+					// const engine = runtime.packages.get(pkgId)?.engine;
 
-					if (!engine)
-						return HttpServerResponse.text("Package not found", {
-							status: 404,
-						});
+					// if (!engine)
+					// 	return HttpServerResponse.text("Package not found", {
+					// 		status: 404,
+					// 	});
 
-					const httpApp = yield* RpcServer.toHttpApp(engine.def.rpc, {
-						spanPrefix: `PackageRpc.${pkgId}`,
-					}).pipe(
-						Effect.provide(
-							Layer.mergeAll(
-								engine.rpc,
-								RpcServer.layerProtocolHttp({ path: "/" }),
-							),
-						),
-						Effect.provide(RpcSerialization.layerJson),
-					);
+					return HttpServerResponse.text("Not Implemented", { status: 501 });
 
-					return yield* httpApp;
+					// const httpApp = yield* RpcServer.toHttpApp(engine.def.rpc, {
+					// 	spanPrefix: `PackageRpc.${pkgId}`,
+					// }).pipe(
+					// 	Effect.provide(
+					// 		Layer.mergeAll(
+					// 			engine.rpc,
+					// 			RpcServer.layerProtocolHttp({ path: "/" }),
+					// 		),
+					// 	),
+					// 	Effect.provide(RpcSerialization.layerJson),
+					// );
+
+					// return yield* httpApp;
 				}),
 			),
 			Effect.provideService(RealtimeConnections, yield* RealtimeConnections),
 			Effect.provideService(RealtimePubSub, yield* RealtimePubSub),
 			Effect.provideService(PresenceState, yield* PresenceState),
 			Effect.provideService(JwtKeys, yield* JwtKeys),
-			Effect.provideService(
-				ProjectRuntime.Current,
-				yield* ProjectRuntime.Current,
-			),
 			Effect.provideService(
 				HttpClient.HttpClient,
 				yield* HttpClient.HttpClient,
@@ -297,7 +332,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 		ServerPolicy.Default,
 		CredentialsStore.layer,
 		ClientAuth.Default,
-		Layer.effect(ProjectRuntime.Current, ProjectRuntime.make()),
+		NodesIOStore.Default,
 	],
 }) {}
 
@@ -333,7 +368,7 @@ const allAsMounted =
 		HttpRouter.all(self, path, executeAppAsMounted(handler));
 
 const createEventStream = Effect.gen(function* () {
-	const runtime = yield* ProjectRuntime.Current;
+	const editor = yield* ProjectEditor.ProjectEditor;
 	const realtimeConnection = yield* Realtime.Connection;
 
 	const presence = yield* PresenceState;
@@ -341,7 +376,7 @@ const createEventStream = Effect.gen(function* () {
 
 	return Stream.mergeAll(
 		[
-			Stream.fromPubSub(runtime.events).pipe(
+			(yield* editor.subscribe).pipe(
 				Stream.filter(
 					(e) =>
 						!(

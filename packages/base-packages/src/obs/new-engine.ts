@@ -2,7 +2,7 @@ import { Effect, pipe } from "effect";
 import type { PackageEngine } from "@macrograph/package-sdk/updated";
 import OBSWebsocket, { type OBSRequestTypes } from "obs-websocket-js";
 
-import { EngineDef } from "./new-defs";
+import { EngineDef } from "./index";
 import { ConnectionFailed } from "./new-shared";
 import { Event, type SocketAddress } from "./types";
 
@@ -713,7 +713,7 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 				TriggerStudioModeTransition: ({ address }) =>
 					callSocket(address, "TriggerStudioModeTransition"),
 			},
-		} satisfies PackageEngine.LayerBuilderRet<typeof EngineDef>;
+		} satisfies PackageEngine.Built<typeof EngineDef>;
 	}),
 );
 

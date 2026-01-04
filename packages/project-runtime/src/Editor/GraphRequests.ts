@@ -2,7 +2,6 @@ import { Iterable, pipe, Record } from "effect";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
-import * as Ref from "effect/Ref";
 import * as RequestResolver from "effect/RequestResolver";
 import {
 	Comment,
@@ -11,30 +10,39 @@ import {
 	Project,
 	ProjectEvent,
 	type Request,
+	Schema,
 } from "@macrograph/project-domain";
 
-import { NodeIOActions } from "./NodeIOActions";
-import { PackageActions } from "./PackageActions";
-import * as ProjectRuntime from "./ProjectRuntime";
-import { requestResolverServices } from "./Requests.ts";
+import { NodeIOActions } from "../NodeIOActions";
+import { NodesIOStore } from "../NodesIOStore.ts";
+import { requestResolverServices } from "../Requests.ts";
+import { PackageActions } from "../Runtime/PackageActions";
+import { ProjectEditor } from "./ProjectEditor.ts";
 
 export class GraphRequests extends Effect.Service<GraphRequests>()(
 	"GraphRequests",
 	{
 		effect: Effect.gen(function* () {
-			const projectActions = yield* PackageActions;
 			const nodeIOActions = yield* NodeIOActions;
 
 			const CreateNodeResolver = RequestResolver.fromEffect(
 				(r: Request.CreateNode) =>
 					Effect.gen(function* () {
-						const runtime = yield* ProjectRuntime.Current;
-						const project = yield* Ref.get(runtime.projectRef);
+						const editor = yield* ProjectEditor;
+						const nodesIO = yield* NodesIOStore;
+
+						const project = yield* editor.project;
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 						);
 
-						const schema = yield* projectActions.getSchema(r.schema);
+						const schema = yield* editor.getSchema(r.schema).pipe(
+							Effect.flatten,
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new Schema.NotFound(r.schema),
+							),
+						);
 
 						const nodeId = project.nextNodeId;
 						const node = Node.Node.make({
@@ -44,44 +52,38 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 							position: r.position,
 						});
 
-						yield* Ref.set(
-							runtime.projectRef,
-							new Project.Project({
-								...project,
-								graphs: HashMap.set(
-									project.graphs,
-									graph.id,
-									new Graph.Graph({
-										...graph,
-										nodes: HashMap.set(graph.nodes, nodeId, node),
-									}),
-								),
-								nextNodeId: Node.Id.make(nodeId + 1),
-							}),
+						yield* editor.modifyProject(
+							() =>
+								new Project.Project({
+									...project,
+									graphs: HashMap.set(
+										project.graphs,
+										graph.id,
+										new Graph.Graph({
+											...graph,
+											nodes: HashMap.set(graph.nodes, nodeId, node),
+										}),
+									),
+									nextNodeId: Node.Id.make(nodeId + 1),
+								}),
 						);
 
 						const io = yield* nodeIOActions.generateNodeIO(schema);
-						yield* Ref.update(runtime.nodesIORef, HashMap.set(node.id, io));
+						yield* nodesIO.setForNode(node.id, io);
 
-						const event = new ProjectEvent.NodeCreated({
-							graph: graph.id,
-							node,
-							io,
-						});
-
-						yield* ProjectRuntime.publishEvent(event);
-
-						return event;
+						return yield* editor.publishEvent(
+							new ProjectEvent.NodeCreated({ graph: graph.id, node, io }),
+						);
 					}),
 			).pipe(requestResolverServices);
 
 			const SetItemPositionsResolver = RequestResolver.fromEffect(
 				(r: Request.SetItemPositions) =>
 					Effect.gen(function* () {
-						const runtime = yield* ProjectRuntime.Current;
+						const editor = yield* ProjectEditor;
 
 						if (!r.ephemeral) {
-							const project = yield* Ref.get(runtime.projectRef);
+							const project = yield* editor.project;
 							const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 								Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 							);
@@ -120,32 +122,25 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 								}),
 								(graph) => HashMap.set(project.graphs, r.graph, graph),
 								(graphs) => new Project.Project({ ...project, graphs }),
-								(p) => Ref.set(runtime.projectRef, p),
-							);
-
-							yield* ProjectRuntime.publishEvent(
-								new ProjectEvent.GraphItemsMoved({
-									graph: r.graph,
-									items: r.items,
-								}),
-							);
-						} else {
-							yield* ProjectRuntime.publishEvent(
-								new ProjectEvent.GraphItemsMoved({
-									graph: r.graph,
-									items: r.items,
-								}),
+								(p) => editor.modifyProject(() => p),
 							);
 						}
+
+						yield* editor.publishEvent(
+							new ProjectEvent.GraphItemsMoved({
+								graph: r.graph,
+								items: r.items,
+							}),
+						);
 					}),
 			).pipe(requestResolverServices);
 
 			const DeleteItemsResolver = RequestResolver.fromEffect(
 				(r: Request.DeleteGraphItems) =>
 					Effect.gen(function* () {
-						const runtime = yield* ProjectRuntime.Current;
+						const editor = yield* ProjectEditor;
 
-						const project = yield* Ref.get(runtime.projectRef);
+						const project = yield* editor.project;
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 						);
@@ -161,25 +156,24 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 							new Graph.Graph({ ...graph, nodes }),
 							(graph) => HashMap.set(project.graphs, r.graph, graph),
 							(graphs) => new Project.Project({ ...project, graphs }),
-							(p) => Ref.set(runtime.projectRef, p),
+							(p) => editor.modifyProject(() => p),
 						);
 
-						const e = new ProjectEvent.GraphItemsDeleted({
-							graph: r.graph,
-							items: r.items,
-						});
-
-						yield* ProjectRuntime.publishEvent(e);
-
-						return e;
+						return yield* editor.publishEvent(
+							new ProjectEvent.GraphItemsDeleted({
+								graph: r.graph,
+								items: r.items,
+							}),
+						);
 					}),
 			).pipe(requestResolverServices);
 
 			const ConnectIOResolver = RequestResolver.fromEffect(
 				(r: Request.ConnectIO) =>
 					Effect.gen(function* () {
-						const runtime = yield* ProjectRuntime.Current;
-						const project = yield* Ref.get(runtime.projectRef);
+						const editor = yield* ProjectEditor;
+
+						const project = yield* editor.project;
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 						);
@@ -205,40 +199,36 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 							[r.output[1]]: [...outConnections, r.input],
 						};
 
-						const connections = HashMap.set(
+						yield* pipe(
 							graph.connections,
-							outNode.id,
-							newOutNodeConnections,
+							HashMap.set(outNode.id, newOutNodeConnections),
+							(connections) =>
+								new Project.Project({
+									...project,
+									graphs: HashMap.set(
+										project.graphs,
+										graph.id,
+										new Graph.Graph({ ...graph, connections }),
+									),
+								}),
+							(p) => editor.modifyProject(() => p),
 						);
 
-						const updated = new Project.Project({
-							...project,
-							graphs: HashMap.set(
-								project.graphs,
-								graph.id,
-								new Graph.Graph({ ...graph, connections }),
-							),
-						});
-
-						yield* Ref.set(runtime.projectRef, updated);
-
-						const event = new ProjectEvent.NodeIOUpdated({
-							graph: r.graph,
-							node: outNode.id,
-							outConnections: newOutNodeConnections,
-						});
-
-						yield* ProjectRuntime.publishEvent(event);
-
-						return event;
+						return yield* editor.publishEvent(
+							new ProjectEvent.NodeIOUpdated({
+								graph: r.graph,
+								node: outNode.id,
+								outConnections: newOutNodeConnections,
+							}),
+						);
 					}),
 			).pipe(requestResolverServices);
 
 			const DisconnectIOResolver = RequestResolver.fromEffect(
 				(r: Request.DisconnectIO) =>
 					Effect.gen(function* () {
-						const runtime = yield* ProjectRuntime.Current;
-						const project = yield* Ref.get(runtime.projectRef);
+						const editor = yield* ProjectEditor;
+						const project = yield* editor.project;
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 						);
@@ -275,34 +265,32 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 									)
 								: Record.remove(outNodeConnections, r.output.io);
 
-						yield* Ref.set(
-							runtime.projectRef,
-							new Project.Project({
-								...project,
-								graphs: HashMap.set(
-									project.graphs,
-									graph.id,
-									new Graph.Graph({
-										...graph,
-										connections: HashMap.set(
-											graph.connections,
-											outNode.id,
-											newOutNodeConnections,
-										),
-									}),
-								),
-							}),
+						yield* editor.modifyProject(
+							() =>
+								new Project.Project({
+									...project,
+									graphs: HashMap.set(
+										project.graphs,
+										graph.id,
+										new Graph.Graph({
+											...graph,
+											connections: HashMap.set(
+												graph.connections,
+												outNode.id,
+												newOutNodeConnections,
+											),
+										}),
+									),
+								}),
 						);
 
-						const event = new ProjectEvent.NodeIOUpdated({
-							graph: r.graph,
-							node: outNode.id,
-							outConnections: newOutNodeConnections,
-						});
-
-						yield* ProjectRuntime.publishEvent(event);
-
-						return event;
+						return yield* editor.publishEvent(
+							new ProjectEvent.NodeIOUpdated({
+								graph: r.graph,
+								node: outNode.id,
+								outConnections: newOutNodeConnections,
+							}),
+						);
 					}),
 			).pipe(requestResolverServices);
 
@@ -332,6 +320,10 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 				>(DisconnectIOResolver),
 			};
 		}),
-		dependencies: [PackageActions.Default, NodeIOActions.Default],
+		dependencies: [
+			PackageActions.Default,
+			NodeIOActions.Default,
+			NodesIOStore.Default,
+		],
 	},
 ) {}

@@ -13,8 +13,6 @@ export const CloudRpcsLive = CloudAuth.Rpcs.toLayer(
 		return {
 			StartServerRegistration: () =>
 				Effect.gen(function* () {
-					yield* Effect.log("Bruh?");
-
 					if (yield* serverRegistration.get.pipe(Effect.map(Option.isSome)))
 						return yield* new Policy.PolicyDeniedError();
 

@@ -7,29 +7,15 @@ import {
 	Socket,
 } from "@effect/platform";
 import { Data, Deferred, Effect, Exit, Option, pipe, Scope } from "effect";
-import { PackageEngine } from "@macrograph/package-sdk/updated";
+import type { PackageEngine } from "@macrograph/package-sdk/updated";
 
+import { EngineDef } from ".";
 import { HelixApi } from "./new-helix";
-import {
-	ClientRpcs,
-	ClientState,
-	MissingCredential,
-	RuntimeRpcs,
-	TwitchAPIError,
-} from "./new-shared";
-import { EventSubEvent } from "./new-types";
+import { MissingCredential, TwitchAPIError } from "./new-shared";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 class RetryRequest extends Data.TaggedError("RetryRequest") {}
-
-export class EngineDef extends PackageEngine.define({
-	clientRpcs: ClientRpcs,
-	runtimeRpcs: RuntimeRpcs,
-	events: EventSubEvent.Any.members,
-	clientState: ClientState,
-	resources: [],
-}) {}
 
 export const EngineLive = EngineDef.toLayer((ctx) =>
 	Effect.gen(function* () {
@@ -182,7 +168,7 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 
 		return {
 			clientState: Effect.succeed({ accounts: [] }),
-			resources: {},
+			resources: { TwitchAccount: Effect.succeed([]) },
 			clientRpcs: {
 				ConnectEventSub: (opts) =>
 					connectEventSub(opts).pipe(
@@ -302,6 +288,6 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 				UpdateUser: callHelix((client) => client.updateUser),
 				UpdateUserChatColor: callHelix((client) => client.updateUserChatColor),
 			},
-		} satisfies PackageEngine.LayerBuilderRet<typeof EngineDef>;
+		} satisfies PackageEngine.Built<typeof EngineDef>;
 	}),
 );

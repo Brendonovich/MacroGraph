@@ -2,9 +2,16 @@ import { Headers, Socket } from "@effect/platform";
 import { BrowserSocket } from "@effect/platform-browser";
 import { RpcClient, RpcMiddleware } from "@effect/rpc";
 import { Effect } from "effect";
-import { Realtime, Rpcs, RpcsSerialization } from "@macrograph/server-domain";
+import {
+	EditorRpcs,
+	Realtime,
+	RpcsSerialization,
+	ServerRpcs,
+} from "@macrograph/server-domain";
 
 import { ProjectRealtime } from "./Project/Realtime";
+
+const Rpcs = EditorRpcs.merge(ServerRpcs);
 
 export class ServerRpc extends Effect.Service<ServerRpc>()("ServerRpc", {
 	accessors: true,

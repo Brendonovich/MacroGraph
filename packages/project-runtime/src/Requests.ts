@@ -1,9 +1,11 @@
 import { RequestResolver } from "effect";
 import { Actor } from "@macrograph/project-domain";
 
-import * as ProjectRuntime from "./ProjectRuntime";
+import { ProjectEditor } from "./Editor/ProjectEditor";
+import { NodesIOStore } from "./NodesIOStore";
 
 export const requestResolverServices = RequestResolver.contextFromServices(
-	ProjectRuntime.Current,
 	Actor.Current,
+	NodesIOStore,
+	ProjectEditor,
 );
