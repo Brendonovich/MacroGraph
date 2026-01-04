@@ -25,14 +25,15 @@
 				"noConfusingVoidType": "off",
 				"noShadowRestrictedNames": "off",
 				"noAssignInExpressions": "off",
-				"useIterableCallbackReturn": "off"
+				"useIterableCallbackReturn": "off",
 				"noNonNullAssertedOptionalChain": "off"
 			},
 			"style": { "noNonNullAssertion": "off" },
 			"correctness": {
 				"noConstructorReturn": "off",
 				"noChildrenProp": "off",
-				"noUnusedImports": "warn"
+				"noUnusedImports": "warn",
+				"useYield": "off"
 			},
 			"complexity": { "noBannedTypes": "off" },
 			"a11y": "off"

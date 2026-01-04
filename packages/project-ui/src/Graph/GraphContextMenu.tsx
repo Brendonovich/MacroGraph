@@ -192,8 +192,8 @@ export const GraphContextMenu = Object.assign(
 																					props.onSchemaClick(
 																						{ pkg: pkg.id, id: schemaId },
 																						graphCtx.getGraphPosition({
-																							x: position().x - 16,
-																							y: position().y - 16,
+																							x: position().x,
+																							y: position().y,
 																						}),
 																					);
 																					setState({ open: false });

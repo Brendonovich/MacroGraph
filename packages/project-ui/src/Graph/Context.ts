@@ -3,6 +3,8 @@ import type { NullableBounds } from "@solid-primitives/bounds";
 import { ReactiveMap } from "@solid-primitives/map";
 import { type Accessor, createContext, useContext } from "solid-js";
 
+import { Viewport } from "./viewport";
+
 export const createGraphContext = (
 	bounds: Accessor<Readonly<NullableBounds>>,
 	translate: Accessor<{ x: number; y: number } | undefined>,
@@ -12,6 +14,18 @@ export const createGraphContext = (
 	selection: () => Graph.ItemRef[],
 ) => {
 	const ioPositions = new ReactiveMap<IO.RefString, { x: number; y: number }>();
+
+	// Helper to get current viewport state
+	const getViewport = (): Viewport.Viewport => ({
+		origin: translate() ?? { x: 0, y: 0 },
+		scale: scale(),
+	});
+
+	// Helper to get bounds (handling nullability)
+	const getBounds = (): Viewport.Bounds => ({
+		left: bounds().left ?? 0,
+		top: bounds().top ?? 0,
+	});
 
 	return {
 		id,
@@ -27,21 +41,11 @@ export const createGraphContext = (
 		get scale() {
 			return scale();
 		},
-		getScreenPosition(position: { x: number; y: number }) {
-			const s = scale();
-			const t = translate() ?? { x: 0, y: 0 };
-			return {
-				x: (position.x - t.x) * s + (bounds().left ?? 0),
-				y: (position.y - t.y) * s + (bounds().top ?? 0),
-			};
+		getScreenPosition(position: Viewport.Point): Viewport.Point {
+			return Viewport.canvasToScreen(getViewport(), getBounds(), position);
 		},
-		getGraphPosition(position: { x: number; y: number }) {
-			const s = scale();
-			const t = translate() ?? { x: 0, y: 0 };
-			return {
-				x: (position.x - (bounds().left ?? 0) - t.x) / s + t.x,
-				y: (position.y - (bounds().top ?? 0) - t.y) / s + t.y,
-			};
+		getGraphPosition(position: Viewport.Point): Viewport.Point {
+			return Viewport.screenToCanvas(getViewport(), getBounds(), position);
 		},
 	};
 };

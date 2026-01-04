@@ -25,15 +25,14 @@ import type { NodeState } from "../State";
 import { useGraphContext } from "./Context";
 // import { useProjectService } from "../AppRuntime";
 import { NodeHeader, NodeRoot } from "./Node";
-import { Viewport } from "./panzoom";
 // import { ProjectActions } from "../Project/Actions";
 import type { GraphTwoWayConnections } from "./types";
+import { Viewport } from "./viewport";
 
 const PAN_THRESHOLD = 5;
-const MIN_ZOOM = 0.1;
-const MAX_ZOOM = 5;
-const TOUCH_MOVE_THRESHOLD = 3; // NEW
-const TOUCH_ZOOM_SENSITIVITY = 15; // NEW - divisor for pinch zoom speed
+const MIN_ZOOM = 0.4;
+const MAX_ZOOM = 3;
+const TOUCH_MOVE_THRESHOLD = 3;
 
 export function GraphView(
 	props: {
@@ -92,55 +91,49 @@ export function GraphView(
 	const bounds = createElementBounds(ref);
 	const mouse = createMousePosition();
 
-	// Convert screen coordinates to graph coordinates
-	function screenToGraph(screenPos: { x: number; y: number }) {
-		const s = graphCtx.scale;
-		const translate = graphCtx.translate ?? { x: 0, y: 0 };
-		const b = bounds;
+	// Helper to get current viewport state
+	function getViewport(): Viewport.Viewport {
 		return {
-			x: (screenPos.x - (b.left ?? 0)) / s + translate.x,
-			y: (screenPos.y - (b.top ?? 0)) / s + translate.y,
+			origin: graphCtx.translate ?? { x: 0, y: 0 },
+			scale: graphCtx.scale,
 		};
 	}
 
-	// Convert graph coordinates to screen coordinates
-	function graphToScreen(graphPos: { x: number; y: number }) {
-		const s = graphCtx.scale;
-		const translate = graphCtx.translate ?? { x: 0, y: 0 };
-		const b = bounds;
-		return {
-			x: (graphPos.x - translate.x) * s + (b.left ?? 0),
-			y: (graphPos.y - translate.y) * s + (b.top ?? 0),
-		};
+	// Helper to get bounds (handling nullability from createElementBounds)
+	function getBounds(): Viewport.Bounds {
+		return { left: bounds.left ?? 0, top: bounds.top ?? 0 };
 	}
 
-	function handleZoom(delta: number, screenOrigin: { x: number; y: number }) {
-		const currentZoom = graphCtx.scale;
-		const currentTranslate = graphCtx.translate ?? { x: 0, y: 0 };
+	// Convert screen coordinates to canvas/graph coordinates
+	function screenToGraph(screenPos: Viewport.Point): Viewport.Point {
+		return Viewport.screenToCanvas(getViewport(), getBounds(), screenPos);
+	}
 
-		// Simple linear zoom for now
-		let newZoom = currentZoom + delta;
-		newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+	// Convert canvas/graph coordinates to screen coordinates
+	function graphToScreen(graphPos: Viewport.Point): Viewport.Point {
+		return Viewport.canvasToScreen(getViewport(), getBounds(), graphPos);
+	}
 
-		if (Math.abs(newZoom - currentZoom) < 0.001) return;
+	function handleZoom(delta: number, screenOrigin: Viewport.Point) {
+		const viewport = getViewport();
+		const b = getBounds();
 
-		const zoomDelta = newZoom / currentZoom;
+		// Apply delta and clamp
+		const newScale = Viewport.clampScale(
+			viewport.scale + delta,
+			MIN_ZOOM,
+			MAX_ZOOM,
+		);
 
-		// Convert screen position to viewport-relative position
-		const cursor = {
-			x: screenOrigin.x - (bounds.left ?? 0),
-			y: screenOrigin.y - (bounds.top ?? 0),
-		};
+		if (Math.abs(newScale - viewport.scale) < 0.001) return;
 
-		// Use Viewport.zoomAt to calculate new viewport state
-		const viewport: Viewport.Viewport = {
-			origin: currentTranslate,
-			scale: currentZoom,
-		};
+		const zoomDelta = newScale / viewport.scale;
+
+		// Cursor position relative to viewport container
+		const cursor = { x: screenOrigin.x - b.left, y: screenOrigin.y - b.top };
 
 		const newViewport = Viewport.zoomAt(viewport, cursor, zoomDelta);
 
-		// Update scale and translate
 		props.onScaleChange?.(newViewport.scale);
 		props.onTranslateChange?.(newViewport.origin);
 	}
@@ -157,7 +150,9 @@ export function GraphView(
 			current: { x: number; y: number };
 		},
 	) {
-		console.log("[Touch] Starting two-finger gesture");
+		// Track raw (unclamped) scale to allow pinching past limits
+		// This prevents "sticking" at min/max zoom
+		let rawScale = graphCtx.scale;
 
 		createRoot((dispose) => {
 			createEventListenerMap(window, {
@@ -167,8 +162,8 @@ export function GraphView(
 						left.pointerId === e.pointerId ||
 						right.pointerId === e.pointerId
 					) {
-						console.log("[Touch] Ending two-finger gesture - pointer lifted");
 						gesture.dragStarted = false;
+						gesture.pointers = [];
 						dispose();
 					}
 				},
@@ -182,15 +177,15 @@ export function GraphView(
 						return;
 					}
 
-					// 1. Calculate previous state
-					const lastPointerDistance = Math.hypot(
-						left.current.x - right.current.x,
-						left.current.y - right.current.y,
+					// 1. Calculate previous state using helper functions
+					const lastDistance = Viewport.getDistance(
+						left.current,
+						right.current,
 					);
-					const lastCenter = {
-						x: (left.current.x + right.current.x) / 2,
-						y: (left.current.y + right.current.y) / 2,
-					};
+					const lastMidpoint = Viewport.getMidpoint(
+						left.current,
+						right.current,
+					);
 
 					// 2. Update the pointer that moved
 					if (left.pointerId === e.pointerId) {
@@ -200,65 +195,102 @@ export function GraphView(
 					}
 
 					// 3. Calculate new state
-					const newCenter = {
-						x: (left.current.x + right.current.x) / 2,
-						y: (left.current.y + right.current.y) / 2,
+					const newDistance = Viewport.getDistance(left.current, right.current);
+					const newMidpoint = Viewport.getMidpoint(left.current, right.current);
+
+					// 4. Calculate deltas
+					const midpointDelta = {
+						x: lastMidpoint.x - newMidpoint.x,
+						y: lastMidpoint.y - newMidpoint.y,
 					};
-					const newPointerDistance = Math.hypot(
-						left.current.x - right.current.x,
-						left.current.y - right.current.y,
-					);
 
-					// 4. Calculate and apply zoom
-					const distanceDelta = newPointerDistance - lastPointerDistance;
+					// 5. Apply transformations
+					let viewport = getViewport();
+					const b = getBounds();
 
-					// Only zoom if distance changed significantly
-					if (Math.abs(distanceDelta) > 0.5) {
-						const currentZoom = graphCtx.scale;
-						const _currentTranslate = graphCtx.translate ?? { x: 0, y: 0 };
+					// Apply zoom based on distance ratio (pinch-to-zoom)
+					// Track raw scale to allow going past limits, then clamp for display
+					if (lastDistance > 0 && newDistance > 0) {
+						const scaleRatio = newDistance / lastDistance;
+						rawScale = rawScale * scaleRatio;
 
-						console.log(
-							"[Touch] Distance delta:",
-							distanceDelta,
-							"Current zoom:",
-							currentZoom,
+						// Clamp for the actual displayed scale
+						const clampedScale = Viewport.clampScale(
+							rawScale,
+							MIN_ZOOM,
+							MAX_ZOOM,
 						);
 
-						// Save graph position under new center BEFORE zoom
-						const centerGraphPos = screenToGraph(newCenter);
+						if (Math.abs(clampedScale - viewport.scale) >= 0.001) {
+							const actualScaleRatio = clampedScale / viewport.scale;
 
-						// Apply zoom with linear scaling for 1:1 feel
-						const zoomDelta =
-							(distanceDelta / TOUCH_ZOOM_SENSITIVITY) * currentZoom;
-						let newZoom = currentZoom + zoomDelta;
+							// Zoom at the new midpoint (viewport-relative coordinates)
+							const cursor = {
+								x: newMidpoint.x - b.left,
+								y: newMidpoint.y - b.top,
+							};
 
-						// Clamp to bounds
-						newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
-
-						console.log("[Touch] New zoom:", newZoom);
-
-						// Apply new zoom
-						props.onScaleChange?.(newZoom);
-
-						// Calculate where that graph point is now on screen AFTER zoom
-						const centerScreenPos = graphToScreen(centerGraphPos);
-
-						// 5. Apply compensating pan to keep center stationary
-						const translateAtStart = graphCtx.translate ?? { x: 0, y: 0 };
-						const scaleAtStart = graphCtx.scale;
-						const newTranslate = {
-							x:
-								translateAtStart.x +
-								(lastCenter.x - centerScreenPos.x) / scaleAtStart,
-							y:
-								translateAtStart.y +
-								(lastCenter.y - centerScreenPos.y) / scaleAtStart,
-						};
-
-						console.log("[Touch] New translate:", newTranslate);
-
-						props.onTranslateChange?.(newTranslate);
+							viewport = Viewport.zoomAt(viewport, cursor, actualScaleRatio);
+						}
 					}
+
+					// Apply pan based on midpoint movement
+					if (
+						Math.abs(midpointDelta.x) > 0.5 ||
+						Math.abs(midpointDelta.y) > 0.5
+					) {
+						viewport = Viewport.panByScreenDelta(viewport, midpointDelta);
+					}
+
+					// Update viewport state
+					props.onScaleChange?.(viewport.scale);
+					props.onTranslateChange?.(viewport.origin);
+				},
+			});
+		});
+	}
+
+	function startSingleFingerDragArea(
+		pointer: {
+			pointerId: number;
+			start: { x: number; y: number };
+			current: { x: number; y: number };
+		},
+		startPos: { x: number; y: number },
+	) {
+		const topLeft = {
+			x: startPos.x - (bounds.left ?? 0),
+			y: startPos.y - (bounds.top ?? 0),
+		};
+
+		batch(() => {
+			props.onItemsSelected?.([]);
+			setDragState({ type: "dragArea", topLeft, bottomRight: topLeft });
+		});
+
+		createRoot((dispose) => {
+			createEventListenerMap(window, {
+				pointermove: (moveEvent) => {
+					if (pointer.pointerId !== moveEvent.pointerId) return;
+
+					setDragState((s) => {
+						if (s.type !== "dragArea") return s;
+						return {
+							...s,
+							bottomRight: {
+								x: moveEvent.clientX - (bounds.left ?? 0),
+								y: moveEvent.clientY - (bounds.top ?? 0),
+							},
+						};
+					});
+				},
+				pointerup: (upEvent) => {
+					if (pointer.pointerId !== upEvent.pointerId) return;
+
+					gesture.dragStarted = false;
+					gesture.pointers = [];
+					setDragState({ type: "idle" });
+					dispose();
 				},
 			});
 		});
@@ -281,10 +313,11 @@ export function GraphView(
 			const delta = ((isTouchpad ? 1 : -1) * deltaY) / 100;
 			handleZoom(delta, { x: e.clientX, y: e.clientY });
 		} else {
-			props.onTranslateChange?.({
-				x: (graphCtx.translate?.x ?? 0) + deltaX,
-				y: (graphCtx.translate?.y ?? 0) + deltaY,
+			const newViewport = Viewport.panByScreenDelta(getViewport(), {
+				x: deltaX,
+				y: deltaY,
 			});
+			props.onTranslateChange?.(newViewport.origin);
 		}
 	});
 
@@ -304,9 +337,10 @@ export function GraphView(
 			const position = graphCtx.ioPositions.get(draggingIO);
 
 			if (position) {
+				// Mouse position in viewport-relative screen coordinates
 				const mousePos = {
-					x: mouse.x - (bounds.left ?? 0) - (graphCtx.translate?.x ?? 0),
-					y: mouse.y - (bounds.top ?? 0) - (graphCtx.translate?.y ?? 0),
+					x: mouse.x - (bounds.left ?? 0),
+					y: mouse.y - (bounds.top ?? 0),
 				};
 
 				ret.push(
@@ -336,13 +370,13 @@ export function GraphView(
 			}
 		}
 
-		if (graphCtx.translate) {
-			for (const val of ret) {
-				val.from.x -= graphCtx.translate.x;
-				val.from.y -= graphCtx.translate.y;
-				val.to.x -= graphCtx.translate.x;
-				val.to.y -= graphCtx.translate.y;
-			}
+		// Convert IO positions from canvas coords to viewport-relative screen coords
+		const viewport = getViewport();
+		for (const val of ret) {
+			val.from.x = (val.from.x - viewport.origin.x) * viewport.scale;
+			val.from.y = (val.from.y - viewport.origin.y) * viewport.scale;
+			val.to.x = (val.to.x - viewport.origin.x) * viewport.scale;
+			val.to.y = (val.to.y - viewport.origin.y) * viewport.scale;
 		}
 
 		//   if (name !== "ConnectIO") continue;
@@ -378,8 +412,6 @@ export function GraphView(
 					passive: false,
 				});
 
-				console.log("[Touch] Initialized touch event prevention");
-
 				// Set our ref
 				setRef(el);
 
@@ -395,27 +427,17 @@ export function GraphView(
 				isPanning() && "cursor-grabbing",
 			)}
 			onPointerDown={(downEvent) => {
-				// ============ NEW: Touch Gesture Tracking ============
+				// ============ Touch Gesture Tracking ============
 				if (downEvent.pointerType === "touch") {
-					console.log(
-						"[Touch] Pointer down:",
-						downEvent.pointerId,
-						"Total pointers:",
-						gesture.pointers.length + 1,
-					);
-
-					gesture.pointers.push({
+					const pointer = {
 						pointerId: downEvent.pointerId,
 						start: { x: downEvent.clientX, y: downEvent.clientY },
 						current: { x: downEvent.clientX, y: downEvent.clientY },
-					});
+					};
+					gesture.pointers.push(pointer);
 
-					// Check if we should start monitoring for two-finger gesture
+					// If this is the second finger, start monitoring for two-finger gesture
 					if (gesture.pointers.length === 2 && !gesture.dragStarted) {
-						console.log(
-							"[Touch] Two pointers detected, monitoring for gesture",
-						);
-
 						const left = gesture.pointers[0];
 						const right = gesture.pointers[1];
 
@@ -445,9 +467,6 @@ export function GraphView(
 									Math.abs(diff.x) > TOUCH_MOVE_THRESHOLD ||
 									Math.abs(diff.y) > TOUCH_MOVE_THRESHOLD
 								) {
-									console.log(
-										"[Touch] Movement threshold exceeded, starting gesture",
-									);
 									disposeMonitor();
 									gesture.dragStarted = true;
 
@@ -462,19 +481,72 @@ export function GraphView(
 									left.pointerId === e.pointerId ||
 									right.pointerId === e.pointerId
 								) {
-									console.log("[Touch] Pointer lifted before threshold");
+									gesture.pointers = [];
 									disposeMonitor();
 								}
 							});
 						});
-					}
 
-					// Don't process further if we're in a multi-touch gesture
-					if (gesture.pointers.length > 1) {
+						// Don't process further - we're waiting for two-finger gesture
 						return;
 					}
+
+					// If this is the first finger, wait briefly for a possible second finger
+					// before starting single-finger drag area selection
+					if (gesture.pointers.length === 1) {
+						createRoot((disposeMonitor) => {
+							const startPos = { x: downEvent.clientX, y: downEvent.clientY };
+
+							createEventListenerMap(window, {
+								pointermove: (moveEvent) => {
+									// Only track this pointer
+									if (moveEvent.pointerId !== downEvent.pointerId) return;
+
+									// If gesture already started (two-finger), abort
+									if (gesture.dragStarted) {
+										disposeMonitor();
+										return;
+									}
+
+									// If a second finger was added, don't start drag area
+									if (gesture.pointers.length > 1) {
+										disposeMonitor();
+										return;
+									}
+
+									const diff = {
+										x: startPos.x - moveEvent.clientX,
+										y: startPos.y - moveEvent.clientY,
+									};
+
+									// Check movement threshold for single-finger drag
+									if (
+										Math.abs(diff.x) > TOUCH_MOVE_THRESHOLD ||
+										Math.abs(diff.y) > TOUCH_MOVE_THRESHOLD
+									) {
+										disposeMonitor();
+										gesture.dragStarted = true;
+
+										// Start single-finger drag area selection
+										startSingleFingerDragArea(pointer, startPos);
+									}
+								},
+								pointerup: (upEvent) => {
+									if (upEvent.pointerId !== downEvent.pointerId) return;
+									gesture.pointers = [];
+									disposeMonitor();
+								},
+							});
+						});
+
+						// Don't process further - we're monitoring for gesture type
+						return;
+					}
+
+					// More than 2 fingers - ignore
+					return;
 				}
-				// ============ END NEW CODE ============
+				// ============ END Touch Gesture Tracking ============
 
 				if (downEvent.button === 0) {
 					downEvent.preventDefault();
@@ -555,15 +627,16 @@ export function GraphView(
 								setIsPanning(true);
 								setRightClickPending(false);
 
-								const delta = {
+								const screenDelta = {
 									x: startScreenPosition.x - moveEvent.clientX,
 									y: startScreenPosition.y - moveEvent.clientY,
 								};
 
-								props.onTranslateChange?.({
-									x: startTranslate.x + delta.x,
-									y: startTranslate.y + delta.y,
-								});
+								const newViewport = Viewport.panByScreenDelta(
+									{ origin: startTranslate, scale: graphCtx.scale },
+									screenDelta,
+								);
+								props.onTranslateChange?.(newViewport.origin);
 							}
 						};
 
@@ -607,227 +680,236 @@ export function GraphView(
 			/>
 			<ContextMenu>
 				<div
-					class="origin-[0,0]"
-					style={{
-						transform: `translate(${(graphCtx.translate?.x ?? 0) * -1}px, ${
-							(graphCtx.translate?.y ?? 0) * -1
-						}px)`,
-					}}
+					class="absolute inset-0 origin-top-left"
+					style={{ transform: `scale(${graphCtx.scale})` }}
 				>
-					<For each={props.nodes}>
-						{(node) => (
-							<Show when={Option.getOrUndefined(props.getSchema(node.schema))}>
-								{(schema) => (
-									<NodeRoot
-										{...node}
-										graphBounds={{
-											top: bounds.top ?? 0,
-											left: bounds.left ?? 0,
-										}}
-										position={(() => {
-											const ds = dragState();
+					<div
+						style={{
+							transform: `translate(${(graphCtx.translate?.x ?? 0) * -1}px, ${
+								(graphCtx.translate?.y ?? 0) * -1
+							}px)`,
+						}}
+					>
+						<For each={props.nodes}>
+							{(node) => (
+								<Show
+									when={Option.getOrUndefined(props.getSchema(node.schema))}
+								>
+									{(schema) => (
+										<NodeRoot
+											{...node}
+											graphBounds={{
+												top: bounds.top ?? 0,
+												left: bounds.left ?? 0,
+											}}
+											position={(() => {
+												const ds = dragState();
 
-											if (ds.type !== "dragSelection") return node.position;
-											return (
-												ds.positions.find(
-													(p) => p[0][0] === "Node" && p[0][1] === node.id,
-												)?.[1] ?? node.position
-											);
-										})()}
-										selected={
-											props.selection?.some(
-												(ref) => ref[0] === "Node" && ref[1] === node.id,
-											) ||
-											props.remoteSelections?.find((s) => s.nodes.has(node.id))
-												?.colour
-										}
-										onPinDragStart={(e, type, id) => {
-											if (dragState().type !== "idle") return false;
+												if (ds.type !== "dragSelection") return node.position;
+												return (
+													ds.positions.find(
+														(p) => p[0][0] === "Node" && p[0][1] === node.id,
+													)?.[1] ?? node.position
+												);
+											})()}
+											selected={
+												props.selection?.some(
+													(ref) => ref[0] === "Node" && ref[1] === node.id,
+												) ||
+												props.remoteSelections?.find((s) =>
+													s.nodes.has(node.id),
+												)?.colour
+											}
+											onPinDragStart={(e, type, id) => {
+												if (dragState().type !== "idle") return false;
 
-											setDragState({
-												type: "dragIO",
-												ioRef: `${node.id}:${type}:${id}`,
-												pointerId: e.pointerId,
-											});
+												setDragState({
+													type: "dragIO",
+													ioRef: `${node.id}:${type}:${id}`,
+													pointerId: e.pointerId,
+												});
 
-											return true;
-										}}
-										onPinDragEnd={() => {
-											setDragState({ type: "idle" });
-										}}
-										onPinPointerUp={(e, type, id) => {
-											const dragIO = (() => {
-												const s = dragState();
-												if (s.type === "dragIO") return s;
-											})();
-											if (!dragIO || e.pointerId !== dragIO.pointerId) return;
+												return true;
+											}}
+											onPinDragEnd={() => {
+												setDragState({ type: "idle" });
+											}}
+											onPinPointerUp={(e, type, id) => {
+												const dragIO = (() => {
+													const s = dragState();
+													if (s.type === "dragIO") return s;
+												})();
+												if (!dragIO || e.pointerId !== dragIO.pointerId) return;
 
-											props.onConnectIO?.(
-												dragIO.ioRef,
-												`${node.id}:${type}:${id}`,
-											);
-										}}
-										onPinDoubleClick={(type, id) => {
-											props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
-										}}
-										connections={{
-											in: [
-												...Object.entries(
-													props.connections?.[node.id]?.in ?? {},
-												),
-											].flatMap(([idStr, connections]) => {
-												if (connections.length > 0) return IO.Id.make(idStr);
-												return [];
-											}),
-											out: [
-												...Object.entries(
-													props.connections?.[node.id]?.out ?? {},
-												),
-											].flatMap(([idStr, connections]) => {
-												if (connections.length > 0) return IO.Id.make(idStr);
-												return [];
-											}),
-										}}
-									>
-										<ContextMenu.Trigger<ValidComponent>
-											as={(cmProps) => (
-												<NodeHeader
-													{...cmProps}
-													name={node.name}
-													variant={schema().type}
-													onPointerDown={(downEvent) => {
-														if (downEvent.button === 0) {
-															downEvent.stopPropagation();
+												props.onConnectIO?.(
+													dragIO.ioRef,
+													`${node.id}:${type}:${id}`,
+												);
+											}}
+											onPinDoubleClick={(type, id) => {
+												props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
+											}}
+											connections={{
+												in: [
+													...Object.entries(
+														props.connections?.[node.id]?.in ?? {},
+													),
+												].flatMap(([idStr, connections]) => {
+													if (connections.length > 0) return IO.Id.make(idStr);
+													return [];
+												}),
+												out: [
+													...Object.entries(
+														props.connections?.[node.id]?.out ?? {},
+													),
+												].flatMap(([idStr, connections]) => {
+													if (connections.length > 0) return IO.Id.make(idStr);
+													return [];
+												}),
+											}}
+										>
+											<ContextMenu.Trigger<ValidComponent>
+												as={(cmProps) => (
+													<NodeHeader
+														{...cmProps}
+														name={node.name}
+														variant={schema().type}
+														onPointerDown={(downEvent) => {
+															if (downEvent.button === 0) {
+																downEvent.stopPropagation();
 
-															if (downEvent.shiftKey) {
-																const index = props.selection?.findIndex(
-																	(ref) =>
-																		ref[0] === "Node" && ref[1] === node.id,
-																);
-																if (index !== -1) {
-																	props.onItemsSelected?.(
-																		props.selection?.filter(
-																			(ref) =>
-																				ref[0] === "Node" && ref[1] === node.id,
-																		) ?? [],
+																if (downEvent.shiftKey) {
+																	const index = props.selection?.findIndex(
+																		(ref) =>
+																			ref[0] === "Node" && ref[1] === node.id,
 																	);
-																} else {
-																	props.onItemsSelected?.([
-																		...(props.selection ?? []),
-																		["Node", node.id],
+																	if (index !== -1) {
+																		props.onItemsSelected?.(
+																			props.selection?.filter(
+																				(ref) =>
+																					ref[0] === "Node" &&
+																					ref[1] === node.id,
+																			) ?? [],
+																		);
+																	} else {
+																		props.onItemsSelected?.([
+																			...(props.selection ?? []),
+																			["Node", node.id],
+																		]);
+																	}
+																} else if ((props.selection?.length ?? 0) <= 1)
+																	props.onItemsSelected?.([["Node", node.id]]);
+
+																const startPositions: Array<
+																	[Graph.ItemRef, { x: number; y: number }]
+																> = [];
+																for (const nodeId of props.selection ?? []) {
+																	if (nodeId[0] !== "Node") continue;
+
+																	const node = props.nodes.find(
+																		(n) => n.id === nodeId[1],
+																	);
+																	if (!node) return;
+																	startPositions.push([
+																		nodeId,
+																		{ ...node.position },
 																	]);
 																}
-															} else if ((props.selection?.length ?? 0) <= 1)
-																props.onItemsSelected?.([["Node", node.id]]);
 
-															const startPositions: Array<
-																[Graph.ItemRef, { x: number; y: number }]
-															> = [];
-															for (const nodeId of props.selection ?? []) {
-																if (nodeId[0] !== "Node") continue;
+																const downPosition =
+																	getEventGraphPosition(downEvent);
 
-																const node = props.nodes.find(
-																	(n) => n.id === nodeId[1],
-																);
-																if (!node) return;
-																startPositions.push([
-																	nodeId,
-																	{ ...node.position },
-																]);
-															}
+																createRoot((dispose) => {
+																	createEventListenerMap(window, {
+																		pointermove: (moveEvent) => {
+																			if (
+																				downEvent.pointerId !==
+																				moveEvent.pointerId
+																			)
+																				return;
 
-															const downPosition =
-																getEventGraphPosition(downEvent);
+																			moveEvent.preventDefault();
 
-															createRoot((dispose) => {
-																createEventListenerMap(window, {
-																	pointermove: (moveEvent) => {
-																		if (
-																			downEvent.pointerId !==
-																			moveEvent.pointerId
-																		)
-																			return;
+																			const movePosition =
+																				getEventGraphPosition(moveEvent);
 
-																		moveEvent.preventDefault();
+																			const delta = {
+																				x: movePosition.x - downPosition.x,
+																				y: movePosition.y - downPosition.y,
+																			};
 
-																		const movePosition =
-																			getEventGraphPosition(moveEvent);
+																			const positions = startPositions.map(
+																				([ref, startPosition]) =>
+																					[
+																						ref,
+																						{
+																							x: startPosition.x + delta.x,
+																							y: startPosition.y + delta.y,
+																						},
+																					] satisfies [any, any],
+																			);
 
-																		const delta = {
-																			x: movePosition.x - downPosition.x,
-																			y: movePosition.y - downPosition.y,
-																		};
+																			props.onSelectionDrag?.(positions);
 
-																		const positions = startPositions.map(
-																			([ref, startPosition]) =>
-																				[
-																					ref,
-																					{
-																						x: startPosition.x + delta.x,
-																						y: startPosition.y + delta.y,
-																					},
-																				] satisfies [any, any],
-																		);
+																			setDragState({
+																				type: "dragSelection",
+																				positions,
+																			});
+																		},
+																		pointerup: (upEvent) => {
+																			if (
+																				downEvent.pointerId !==
+																				upEvent.pointerId
+																			)
+																				return;
 
-																		props.onSelectionDrag?.(positions);
+																			const upPosition =
+																				getEventGraphPosition(upEvent);
 
-																		setDragState({
-																			type: "dragSelection",
-																			positions,
-																		});
-																	},
-																	pointerup: (upEvent) => {
-																		if (
-																			downEvent.pointerId !== upEvent.pointerId
-																		)
-																			return;
+																			const delta = {
+																				x: upPosition.x - downPosition.x,
+																				y: upPosition.y - downPosition.y,
+																			};
 
-																		const upPosition =
-																			getEventGraphPosition(upEvent);
+																			props.onSelectionDragEnd?.(
+																				startPositions.map(
+																					([ref, startPosition]) => [
+																						ref,
+																						{
+																							x: startPosition.x + delta.x,
+																							y: startPosition.y + delta.y,
+																						},
+																					],
+																				),
+																			);
 
-																		const delta = {
-																			x: upPosition.x - downPosition.x,
-																			y: upPosition.y - downPosition.y,
-																		};
+																			setDragState({ type: "idle" });
 
-																		props.onSelectionDragEnd?.(
-																			startPositions.map(
-																				([ref, startPosition]) => [
-																					ref,
-																					{
-																						x: startPosition.x + delta.x,
-																						y: startPosition.y + delta.y,
-																					},
-																				],
-																			),
-																		);
-
-																		setDragState({ type: "idle" });
-
-																		dispose();
-																	},
+																			dispose();
+																		},
+																	});
 																});
-															});
-														} else if (downEvent.button === 2) {
-															downEvent.preventDefault();
+															} else if (downEvent.button === 2) {
+																downEvent.preventDefault();
 
-															if (
-																!props.selection?.some(
-																	(ref) =>
-																		ref[0] === "Node" && ref[1] === node.id,
+																if (
+																	!props.selection?.some(
+																		(ref) =>
+																			ref[0] === "Node" && ref[1] === node.id,
+																	)
 																)
-															)
-																props.onItemsSelected?.([["Node", node.id]]);
-														}
-													}}
-												/>
-											)}
-										/>
-									</NodeRoot>
-								)}
-							</Show>
-						)}
-					</For>
+																	props.onItemsSelected?.([["Node", node.id]]);
+															}
+														}}
+													/>
+												)}
+											/>
+										</NodeRoot>
+									)}
+								</Show>
+							)}
+						</For>
+					</div>
 				</div>
 				<ContextMenu.Portal>
 					<ContextMenu.Content<"div">
