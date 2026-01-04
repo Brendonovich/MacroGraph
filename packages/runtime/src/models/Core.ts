@@ -120,8 +120,8 @@ export class Core {
 		api?: InitClientReturn<typeof contract, any>;
 	}) {
 		this.fetch = args?.fetch ?? fetch;
-		this.oauth = args!.oauth!;
-		this.api = args!.api!;
+		this.oauth = args?.oauth!;
+		this.api = args?.api!;
 
 		return createMutable(this);
 	}
