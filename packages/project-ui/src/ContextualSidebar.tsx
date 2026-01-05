@@ -323,7 +323,6 @@ function SchemaInfoButton(props: {
 					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 border border-gray-6 rounded shadow-lg max-w-xs focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-right-2) ui-closed:(animate-out fade-out slide-out-to-right-2)"
 					onOpenAutoFocus={(e) => {
 						e.preventDefault();
-						console.log(e);
 						closeButton.focus();
 					}}
 				>

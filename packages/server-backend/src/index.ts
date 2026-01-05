@@ -110,12 +110,22 @@ const Rpcs = EditorRpcs.merge(ServerRpcs);
 
 export class Server extends Effect.Service<Server>()("Server", {
 	scoped: Effect.gen(function* () {
+		const editor = yield* ProjectEditor.make({
+			project: new Project.Project({
+				name: "New Project",
+				graphs: HashMap.empty(),
+				constants: HashMap.empty(),
+				nextGraphId: Graph.Id.make(0),
+				nextNodeId: Node.Id.make(0),
+			}),
+		});
+
 		const packages = yield* PackageActions;
 		const realtimeConnections = yield* RealtimeConnections;
 
-		yield* packages.loadPackage("util", Packages.util).pipe(Effect.orDie);
-		yield* packages.loadPackage("twitch", Packages.twitch).pipe(Effect.orDie);
-		yield* packages.loadPackage("obs", Packages.obs).pipe(Effect.orDie);
+		yield* editor.loadPackage("util", Packages.util);
+		yield* editor.loadPackage("twitch", Packages.twitch);
+		yield* editor.loadPackage("obs", Packages.obs);
 
 		const nextRealtimeClient = (() => {
 			let i = 0;
@@ -125,16 +135,6 @@ export class Server extends Effect.Service<Server>()("Server", {
 		const realtimeSecretKey = yield* Effect.promise(() =>
 			Jose.generateSecret("HS256"),
 		);
-
-		const editor = ProjectEditor.layer({
-			project: new Project.Project({
-				name: "New Project",
-				graphs: HashMap.empty(),
-				constants: HashMap.empty(),
-				nextGraphId: Graph.Id.make(0),
-				nextNodeId: Node.Id.make(0),
-			}),
-		});
 
 		const rpcsWebApp = yield* RpcServer.toHttpAppWebsocket(Rpcs).pipe(
 			Effect.provide(RpcsLive),
@@ -159,9 +159,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 				),
 			),
 			Effect.provide(
-				ProjectEditorRpcMiddleware.context(() =>
-					ProjectEditor.ProjectEditor.pipe(Effect.provide(editor)),
-				),
+				ProjectEditorRpcMiddleware.context(() => Effect.succeed(editor)),
 			),
 			Effect.provide(RpcsSerialization),
 		);
@@ -268,7 +266,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 						);
 					}).pipe(
 						Effect.provide(Realtime.Connection.context({ id: connectionId })),
-						Effect.provide(editor),
+						Effect.provideService(ProjectEditor.ProjectEditor, editor),
 						Effect.forkScoped,
 					);
 
