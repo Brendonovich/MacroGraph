@@ -11,7 +11,6 @@ import {
 	Context,
 	Effect,
 	FiberRef,
-	HashMap,
 	Layer,
 	Option,
 	Schema,
@@ -19,23 +18,20 @@ import {
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
 import * as Packages from "@macrograph/base-packages";
+import { Package, type ProjectEvent } from "@macrograph/project-domain";
 import {
-	Graph,
-	Node,
-	Package,
-	Project,
-	type ProjectEvent,
-} from "@macrograph/project-domain";
+	GraphRequests,
+	NodeIOActions,
+	NodeRequests,
+	NodesIOStore,
+	ProjectEditor,
+	ProjectRequests,
+} from "@macrograph/project-editor";
 import {
 	CloudApiClient,
 	CredentialsStore,
-	GraphRequests,
-	NodeRequests,
-	NodesIOStore,
-	PackageActions,
-	ProjectEditor,
-	ProjectRequests,
-	RuntimeActions,
+	// 	PackageActions,
+	// 	RuntimeActions,
 } from "@macrograph/project-runtime";
 import {
 	ClientAuth as DClientAuth,
@@ -79,21 +75,27 @@ const EditorRpcsLive = EditorRpcs.toLayer(
 		// const serverPolicy = yield* ServerPolicy;
 
 		return {
-			GetProject: () => projectRequests.getProject,
-			CreateNode: graphRequests.createNode,
-			ConnectIO: graphRequests.connectIO,
-			SetItemPositions: graphRequests.setItemPositions,
+			GetProject: Effect.request(projectRequests.GetProjectResolver),
+			CreateNode: Effect.request(graphRequests.CreateNodeResolver),
+			ConnectIO: Effect.request(graphRequests.ConnectIOResolver),
+			SetItemPositions: Effect.request(graphRequests.SetItemPositionsResolver),
+			CreateGraph: Effect.request(projectRequests.CreateGraphResolver),
+			DeleteGraphItems: Effect.request(graphRequests.DeleteGraphItemsResolver),
+			DisconnectIO: Effect.request(graphRequests.DisconnectIOResolver),
+			SetNodeProperty: Effect.request(nodeRequests.SetNodePropertyResolver),
+			CreateResourceConstant: Effect.request(
+				projectRequests.CreateResourceConstantResolver,
+			),
+			UpdateResourceConstant: Effect.request(
+				projectRequests.UpdateResourceConstantResolver,
+			),
+			DeleteResourceConstant: Effect.request(
+				projectRequests.DeleteResourceConstantResolver,
+			),
 			GetPackageSettings: (req) => new Package.NotFound({ id: req.package }),
 			// projectRequests
 			// 	.getPackageSettings(req)
 			// 	.pipe(Policy.withPolicy(serverPolicy.isOwner)),
-			CreateGraph: projectRequests.createGraph,
-			DeleteGraphItems: graphRequests.deleteItems,
-			DisconnectIO: graphRequests.disconnectIO,
-			SetNodeProperty: nodeRequests.setNodeProperty,
-			CreateResourceConstant: projectRequests.createResourceConstant,
-			UpdateResourceConstant: projectRequests.updateResourceConstant,
-			DeleteResourceConstant: projectRequests.deleteResourceConstant,
 		};
 	}),
 );
@@ -110,22 +112,13 @@ const Rpcs = EditorRpcs.merge(ServerRpcs);
 
 export class Server extends Effect.Service<Server>()("Server", {
 	scoped: Effect.gen(function* () {
-		const editor = yield* ProjectEditor.make({
-			project: new Project.Project({
-				name: "New Project",
-				graphs: HashMap.empty(),
-				constants: HashMap.empty(),
-				nextGraphId: Graph.Id.make(0),
-				nextNodeId: Node.Id.make(0),
-			}),
-		});
+		const editor = yield* ProjectEditor.make();
 
-		const packages = yield* PackageActions;
 		const realtimeConnections = yield* RealtimeConnections;
 
-		yield* editor.loadPackage("util", Packages.util);
-		yield* editor.loadPackage("twitch", Packages.twitch);
-		yield* editor.loadPackage("obs", Packages.obs);
+		yield* editor.loadPackage(Package.Id.make("util"), Packages.util);
+		yield* editor.loadPackage(Package.Id.make("twitch"), Packages.twitch);
+		yield* editor.loadPackage(Package.Id.make("obs"), Packages.obs);
 
 		const nextRealtimeClient = (() => {
 			let i = 0;
@@ -323,14 +316,14 @@ export class Server extends Effect.Service<Server>()("Server", {
 		ProjectRequests.Default,
 		GraphRequests.Default,
 		NodeRequests.Default,
-		PackageActions.Default,
-		RuntimeActions.Default,
-		CredentialsStore.layer,
+		// PackageActions.Default,
+		// RuntimeActions.Default,
 		ServerRegistration.Default,
 		ServerPolicy.Default,
 		CredentialsStore.layer,
 		ClientAuth.Default,
 		NodesIOStore.Default,
+		NodeIOActions.Default,
 	],
 }) {}
 

@@ -1,9 +1,16 @@
-import type { Graph, IO } from "@macrograph/project-domain";
+import type { Graph, IO, Node } from "@macrograph/project-domain";
 import type { NullableBounds } from "@solid-primitives/bounds";
 import { ReactiveMap } from "@solid-primitives/map";
 import { type Accessor, createContext, useContext } from "solid-js";
 
 import { Viewport } from "./viewport";
+
+export type NodeBounds = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+};
 
 export const createGraphContext = (
 	bounds: Accessor<Readonly<NullableBounds>>,
@@ -14,6 +21,7 @@ export const createGraphContext = (
 	selection: () => Graph.ItemRef[],
 ) => {
 	const ioPositions = new ReactiveMap<IO.RefString, { x: number; y: number }>();
+	const nodeBounds = new ReactiveMap<Node.Id, NodeBounds>();
 
 	// Helper to get current viewport state
 	const getViewport = (): Viewport.Viewport => ({
@@ -32,6 +40,7 @@ export const createGraphContext = (
 		ref,
 		selection,
 		ioPositions,
+		nodeBounds,
 		get bounds() {
 			return bounds();
 		},

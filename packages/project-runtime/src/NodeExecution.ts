@@ -13,7 +13,7 @@ import {
 	Schema,
 } from "@macrograph/project-domain";
 
-import { NodesIOStore } from "../NodesIOStore.ts";
+// import { NodesIOStore } from "../NodesIOStore.ts";
 import * as ProjectRuntime from "./ProjectRuntime.ts";
 
 export class NodeExecution extends Effect.Service<NodeExecution>()(
@@ -151,15 +151,16 @@ export class NodeExecution extends Effect.Service<NodeExecution>()(
 			});
 
 			const getNodeIO = Effect.fnUntraced(function* (id: Node.Id) {
-				const nodesIO = yield* NodesIOStore;
+				return yield* new Node.NotFound({ id });
+				// const nodesIO = yield* NodesIOStore;
 
-				return yield* nodesIO.getForNode(id).pipe(
-					Effect.flatten,
-					Effect.catchTag(
-						"NoSuchElementException",
-						() => new Node.NotFound({ id }),
-					),
-				);
+				// return yield* nodesIO.getForNode(id).pipe(
+				// 	Effect.flatten,
+				// 	Effect.catchTag(
+				// 		"NoSuchElementException",
+				// 		() => new Node.NotFound({ id }),
+				// 	),
+				// );
 			});
 
 			const processNodeInputs: (

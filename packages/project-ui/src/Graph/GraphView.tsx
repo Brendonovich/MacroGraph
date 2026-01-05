@@ -66,7 +66,7 @@ export function GraphView(
 		onScaleChange?(zoom: number): void;
 	} & Pick<ComponentProps<"div">, "ref" | "children">,
 ) {
-	const [state, setState] = createSignal<InteractionState>(IS.idle());
+	const [state, setState] = createSignal<InteractionState>( /* IS.areaSelection(0, {x: 0,y: 0}, {x:1,y:1}) */ IS.idle() );
 
 	const graphCtx = useGraphContext();
 	const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
@@ -104,6 +104,119 @@ export function GraphView(
 
 	const getEventGraphPosition = (e: MouseEvent) =>
 		graphCtx.getGraphPosition({ x: e.clientX, y: e.clientY });
+
+	// ============ Area Selection Helpers ============
+
+	type Rectangle = { x: number; y: number; width: number; height: number };
+
+	function getSelectionRectangle(
+		startGraphPosition: { x: number; y: number },
+		currentScreenPosition: { x: number; y: number },
+	): Rectangle {
+		// Convert current screen position (viewport-relative) to canvas coordinates
+		const b = getBounds();
+		const currentGraphPosition = graphCtx.getGraphPosition({
+			x: currentScreenPosition.x + b.left,
+			y: currentScreenPosition.y + b.top,
+		});
+
+		// Normalize rectangle to handle dragging in any direction
+		const x = Math.min(startGraphPosition.x, currentGraphPosition.x);
+		const y = Math.min(startGraphPosition.y, currentGraphPosition.y);
+		const width = Math.abs(currentGraphPosition.x - startGraphPosition.x);
+		const height = Math.abs(currentGraphPosition.y - startGraphPosition.y);
+
+		return { x, y, width, height };
+	}
+
+	function calculateOverlapPercentage(
+		selectionRect: Rectangle,
+		nodeRect: Rectangle,
+	): { widthPercent: number; heightPercent: number } {
+		// Calculate intersection rectangle
+		const intersectionLeft = Math.max(selectionRect.x, nodeRect.x);
+		const intersectionRight = Math.min(
+			selectionRect.x + selectionRect.width,
+			nodeRect.x + nodeRect.width,
+		);
+		const intersectionTop = Math.max(selectionRect.y, nodeRect.y);
+		const intersectionBottom = Math.min(
+			selectionRect.y + selectionRect.height,
+			nodeRect.y + nodeRect.height,
+		);
+
+		const intersectionWidth = Math.max(0, intersectionRight - intersectionLeft);
+		const intersectionHeight = Math.max(
+			0,
+			intersectionBottom - intersectionTop,
+		);
+
+		const widthPercent = intersectionWidth / nodeRect.width;
+		const heightPercent = intersectionHeight / nodeRect.height;
+
+		return { widthPercent, heightPercent };
+	}
+
+	function getNodesInSelection(
+		selectionRect: Rectangle,
+		nodes: NodeState[],
+		threshold = 0.8,
+	): Node.Id[] {
+		const selectedNodes: Node.Id[] = [];
+
+		for (const node of nodes) {
+			const bounds = graphCtx.nodeBounds.get(node.id);
+			if (!bounds) continue;
+
+			const { widthPercent, heightPercent } = calculateOverlapPercentage(
+				selectionRect,
+				bounds,
+			);
+
+			// Node must meet threshold for BOTH width AND height
+			if (widthPercent >= threshold && heightPercent >= threshold) {
+				selectedNodes.push(node.id);
+			}
+		}
+
+		return selectedNodes;
+	}
+
+	function updateAreaSelection(
+		startGraphPosition: { x: number; y: number },
+		currentScreenPosition: { x: number; y: number },
+		additive: boolean,
+	): void {
+		const selectionRect = getSelectionRectangle(
+			startGraphPosition,
+			currentScreenPosition,
+		);
+		const nodesInArea = getNodesInSelection(selectionRect, props.nodes);
+
+		let newSelection: Graph.ItemRef[];
+
+		if (additive) {
+			// Start with existing selection
+			const existing = new Set<Node.Id>(
+				props.selection
+					?.map((ref) => (ref[0] === "Node" ? ref[1] : null))
+					.filter((id): id is Node.Id => id !== null) ?? [],
+			);
+			// Add nodes in area
+			for (const nodeId of nodesInArea) {
+				existing.add(nodeId);
+			}
+			// Convert back to ItemRef format
+			newSelection = Array.from(existing).map(
+				(id) => ["Node", id] as Graph.ItemRef,
+			);
+		} else {
+			// Replace selection with only nodes in area
+			newSelection = nodesInArea.map((id) => ["Node", id] as Graph.ItemRef);
+		}
+
+		props.onItemsSelected?.(newSelection);
+	}
 
 	// ============ Wheel Handler ============
 
@@ -207,8 +320,18 @@ export function GraphView(
 							currentScreenPosition,
 						),
 					);
+					updateAreaSelection(startGraphPosition, currentScreenPosition, false);
 				},
 				onUp: () => {
+					const currentState = state();
+					const bounds = getAreaSelectionBounds(currentState);
+					if (bounds) {
+						updateAreaSelection(
+							bounds.startGraphPosition,
+							bounds.currentScreenPosition,
+							false,
+						);
+					}
 					setState(IS.idle());
 				},
 			},
@@ -363,9 +486,12 @@ export function GraphView(
 
 		const startGraphPosition = getEventGraphPosition(downEvent);
 		const currentScreenPosition = getScreenRelativePosition(downEvent);
+		const additive = downEvent.shiftKey;
 
 		batch(() => {
-			props.onItemsSelected?.([]);
+			if (!additive) {
+				props.onItemsSelected?.([]);
+			}
 			setState(
 				IS.areaSelection(
 					downEvent.pointerId,
@@ -388,8 +514,22 @@ export function GraphView(
 							currentScreenPosition,
 						),
 					);
+					updateAreaSelection(
+						startGraphPosition,
+						currentScreenPosition,
+						additive,
+					);
 				},
 				onUp: () => {
+					const currentState = state();
+					const bounds = getAreaSelectionBounds(currentState);
+					if (bounds) {
+						updateAreaSelection(
+							bounds.startGraphPosition,
+							bounds.currentScreenPosition,
+							additive,
+						);
+					}
 					setState(IS.idle());
 				},
 			},
@@ -471,12 +611,18 @@ export function GraphView(
 			const position = graphCtx.ioPositions.get(draggingIO);
 
 			if (position) {
-				const mousePos = getScreenRelativePosition(mouse);
+				const mouseScreenRelative = getScreenRelativePosition(mouse);
+				const b = getBounds();
+				// Convert mouse position from viewport-relative screen coords to canvas coords
+				const mouseCanvasPos = graphCtx.getGraphPosition({
+					x: mouseScreenRelative.x + b.left,
+					y: mouseScreenRelative.y + b.top,
+				});
 
 				ret.push(
 					draggingIO.includes(":o:")
-						? { from: { ...position }, to: mousePos, opacity: 0.5 }
-						: { to: { ...position }, from: mousePos, opacity: 0.5 },
+						? { from: { ...position }, to: mouseCanvasPos, opacity: 0.5 }
+						: { to: { ...position }, from: mouseCanvasPos, opacity: 0.5 },
 				);
 			}
 		}
@@ -787,19 +933,28 @@ export function GraphView(
 				</ContextMenu.Portal>
 			</ContextMenu>
 			<Show when={getAreaSelectionBounds(state())}>
-				{(selectionBounds) => {
+				{(currentBounds) => {
 					// Convert graph-space start position to screen-relative coordinates
-					const startScreenPosition = () =>
-						Viewport.canvasToViewportRelative(
+					const startScreenPosition = () => {
+						const bounds = currentBounds();
+						if (!bounds) return { x: 0, y: 0 };
+						return Viewport.canvasToViewportRelative(
 							getViewport(),
-							selectionBounds().startGraphPosition,
+							bounds.startGraphPosition,
 						);
-					const currentScreenPosition = () =>
-						selectionBounds().currentScreenPosition;
+					};
+
+					const currentScreenPosition = () => {
+						const bounds = currentBounds();
+						if (!bounds) return { x: 0, y: 0 };
+						return bounds.currentScreenPosition;
+					};
 
 					return (
 						<div
-							class="absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10"
+							class=
+								"absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10"
+
 							style={{
 								width: `${Math.abs(currentScreenPosition().x - startScreenPosition().x)}px`,
 								height: `${Math.abs(currentScreenPosition().y - startScreenPosition().y)}px`,

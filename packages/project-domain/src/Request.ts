@@ -104,7 +104,7 @@ export class SetNodeProperty extends S.TaggedRequest<SetNodeProperty>()(
 			graph: Graph.Id,
 			node: Node.Id,
 			property: S.String,
-			value: S.String,
+			value: S.Unknown,
 		},
 		success: ProjectEvent.NodePropertyUpdated,
 		failure: S.Union(Graph.NotFound, Node.NotFound),

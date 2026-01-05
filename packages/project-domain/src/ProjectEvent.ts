@@ -55,7 +55,7 @@ export class GraphItemsDeleted extends S.TaggedClass<GraphItemsDeleted>()(
 
 export class NodePropertyUpdated extends S.TaggedClass<NodePropertyUpdated>()(
 	"NodePropertyUpdated",
-	{ graph: Graph.Id, node: Node.Id, property: S.String, value: S.String },
+	{ graph: Graph.Id, node: Node.Id, property: S.String, value: S.Unknown },
 ) {}
 
 export class PackageResourcesUpdated extends S.TaggedClass<PackageResourcesUpdated>()(

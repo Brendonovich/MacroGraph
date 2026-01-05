@@ -51,8 +51,8 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 								}),
 							);
 						}),
-					NodePropertyUpdated: (e) =>
-						Effect.sync(() => {
+					NodePropertyUpdated: (e) => {
+						return Effect.sync(() => {
 							setState(
 								"graphs",
 								e.graph,
@@ -63,7 +63,8 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 									node.properties[e.property] = e.value;
 								}),
 							);
-						}),
+						});
+					},
 					PackageResourcesUpdated: (e) =>
 						Effect.sync(() => {
 							setState(
@@ -115,6 +116,8 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 						}),
 					NodeIOUpdated: (e) =>
 						Effect.sync(() => {
+							console.log(e);
+
 							batch(() => {
 								if (e.outConnections) {
 									const { outConnections } = e;
@@ -164,6 +167,13 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 											}
 										}),
 									);
+								}
+
+								if (e.io) {
+									setState("graphs", e.graph, "nodes", (n) => n.id === e.node, {
+										inputs: e.io.inputs,
+										outputs: e.io.outputs,
+									});
 								}
 							});
 						}),

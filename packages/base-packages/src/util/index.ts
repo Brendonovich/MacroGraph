@@ -46,4 +46,70 @@ export default Package.define({ name: "Utilities" })
 		run: function* ({ io }) {
 			return io.condition ? io.trueOut : io.falseOut;
 		},
+	})
+	.addSchema("FormatString", {
+		type: "pure",
+		name: "Format String",
+		properties: { string: { name: "String", type: t.String } },
+		io: (c) => {
+			const value = c.properties.string ?? "";
+			const blocks = parseFormatString(value);
+
+			return {
+				blocks: blocks.map((block) => {
+					if ("text" in block) return block.text;
+
+					return c.in.data(block.variable, t.String, { name: block.variable });
+				}),
+				output: c.out.data("", t.String),
+			};
+		},
+		run: ({ io }) => {
+			io.output(io.blocks.join(""));
+		},
 	});
+
+function parseFormatString(input: string) {
+	const chars = input.split("");
+
+	const blocks: Array<{ text: string } | { variable: string }> = [];
+
+	let buffer = "";
+	let isInVariable = false;
+
+	for (let i = 0; i < chars.length; i++) {
+		const char = chars[i];
+
+		if (char === "{") {
+			if (chars[i + 1] === "{") {
+				buffer += "{";
+				i++;
+				continue;
+			}
+
+			if (buffer !== "") blocks.push({ text: buffer });
+
+			buffer = "";
+			isInVariable = true;
+		} else if (chars[i] === "}") {
+			if (isInVariable) {
+				blocks.push({ variable: buffer });
+			} else {
+				if (chars[i + 1] === "}") {
+					buffer += "}";
+					i++;
+					continue;
+				}
+
+				blocks.push({ text: buffer });
+			}
+
+			isInVariable = false;
+			buffer = "";
+		} else buffer += chars[i];
+	}
+
+	if (buffer !== "") blocks.push({ text: buffer });
+
+	return blocks;
+}

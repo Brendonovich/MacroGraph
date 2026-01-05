@@ -1,19 +1,29 @@
 import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
-import { Chunk, Stream } from "effect";
+import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
+import * as Stream from "effect/Stream";
 import * as Packages from "@macrograph/base-packages";
-import { Actor, Credential, Project } from "@macrograph/project-domain";
+import {
+	Actor,
+	Credential,
+	Package,
+	Project,
+} from "@macrograph/project-domain";
+import {
+	GraphRequests,
+	NodeIOActions,
+	NodeRequests,
+	NodesIOStore,
+	ProjectEditor,
+	ProjectRequests,
+} from "@macrograph/project-editor";
 import {
 	CloudApiClient,
 	CredentialsStore,
-	GraphRequests,
-	NodeRequests,
 	PackageActions,
-	ProjectRequests,
-	ProjectRuntime,
 	RuntimeActions,
 } from "@macrograph/project-runtime";
 
@@ -27,18 +37,25 @@ const RpcsLive = Rpcs.toLayer(
 		const credentials = yield* CredentialsStore.CredentialsStore;
 
 		return {
-			GetProject: () => projectRequests.getProject,
-			CreateNode: graphRequests.createNode,
-			ConnectIO: graphRequests.connectIO,
-			SetItemPositions: graphRequests.setItemPositions,
-			GetPackageSettings: projectRequests.getPackageSettings,
-			CreateGraph: projectRequests.createGraph,
-			DeleteGraphItems: graphRequests.deleteItems,
-			DisconnectIO: graphRequests.disconnectIO,
-			SetNodeProperty: nodeRequests.setNodeProperty,
-			CreateResourceConstant: projectRequests.createResourceConstant,
-			UpdateResourceConstant: projectRequests.updateResourceConstant,
-			DeleteResourceConstant: projectRequests.deleteResourceConstant,
+			GetProject: Effect.request(projectRequests.GetProjectResolver),
+			CreateNode: Effect.request(graphRequests.CreateNodeResolver),
+			ConnectIO: Effect.request(graphRequests.ConnectIOResolver),
+			SetItemPositions: Effect.request(graphRequests.SetItemPositionsResolver),
+			CreateGraph: Effect.request(projectRequests.CreateGraphResolver),
+			DeleteGraphItems: Effect.request(graphRequests.DeleteGraphItemsResolver),
+			DisconnectIO: Effect.request(graphRequests.DisconnectIOResolver),
+			SetNodeProperty: Effect.request(nodeRequests.SetNodePropertyResolver),
+			CreateResourceConstant: Effect.request(
+				projectRequests.CreateResourceConstantResolver,
+			),
+			UpdateResourceConstant: Effect.request(
+				projectRequests.UpdateResourceConstantResolver,
+			),
+			DeleteResourceConstant: Effect.request(
+				projectRequests.DeleteResourceConstantResolver,
+			),
+			GetPackageSettings: (req) => new Package.NotFound({ id: req.package }),
+			// GetPackageSettings: projectRequests.getPackageSettings,
 			GetCredentials: () =>
 				credentials.get.pipe(
 					Effect.map((v) =>
@@ -73,39 +90,33 @@ const RpcsLive = Rpcs.toLayer(
 );
 
 const RuntimeLive = Layer.scoped(
-	ProjectRuntime.Current,
+	ProjectEditor.ProjectEditor,
 	Effect.gen(function* () {
 		const storedProject = localStorage.getItem("mg-project.0");
 
-		const proj = yield* storedProject
+		const project = yield* storedProject
 			? S.decode(S.parseJson(Project.Project))(storedProject)
 			: Effect.succeed(undefined);
 
-		const runtime = yield* ProjectRuntime.make();
+		const editor = yield* ProjectEditor.make();
 
-		yield* Effect.gen(function* () {
-			const packagesToLoad = {
-				util: Packages.util,
-				twitch: Packages.twitch,
-				obs: Packages.obs,
-			};
-			const packages = yield* PackageActions;
-			for (const [name, pkg] of Object.entries(packagesToLoad)) {
-				yield* packages.loadPackage(name, pkg as any);
-			}
+		const packagesToLoad = {
+			util: Packages.util,
+			twitch: Packages.twitch,
+			obs: Packages.obs,
+		};
 
-			const runtimeActions = yield* RuntimeActions;
-			if (proj) yield* runtimeActions.loadProject(proj);
-		}).pipe(Effect.provideService(ProjectRuntime.Current, runtime));
+		for (const [id, pkg] of Object.entries(packagesToLoad)) {
+			yield* editor.loadPackage(Package.Id.make(id), pkg);
+		}
 
-		yield* runtime.events.pipe(
-			(e) => Stream.fromPubSub(e),
+		if (project) yield* editor.loadProject(project);
+
+		yield* (yield* editor.subscribe).pipe(
 			Stream.throttle({ cost: Chunk.size, duration: "100 millis", units: 1 }),
 			Stream.runForEach(
 				Effect.fn(function* (_e) {
-					// console.log(e);
-
-					const project = yield* runtime.projectRef;
+					const project = yield* editor.project;
 
 					localStorage.setItem(
 						"mg-project.0",
@@ -116,7 +127,7 @@ const RuntimeLive = Layer.scoped(
 			Effect.forkScoped,
 		);
 
-		return runtime;
+		return editor;
 	}),
 );
 
@@ -135,6 +146,8 @@ export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 			PackageActions.Default,
 			RuntimeActions.Default,
 			CredentialsStore.layer,
+			NodesIOStore.Default,
+			NodeIOActions.Default,
 		),
 	),
 	Layer.provideMerge(CloudApiClient.layer()),

@@ -939,3 +939,24 @@ export namespace EventSubEvent {
 
 export const EVENTSUB_MESSAGE = EventSubEvent.Any;
 export type EventSubMessage = EventSubEvent.Any;
+
+// ============================================================================
+// Error Classes
+// ============================================================================
+
+export class TwitchAPIError extends S.TaggedError<TwitchAPIError>()(
+	"TwitchAPIError",
+	{ cause: S.Unknown },
+) {}
+
+export class MissingCredential extends S.TaggedError<MissingCredential>()(
+	"MissingCredential",
+	{},
+) {}
+
+export const RpcError = S.Union(TwitchAPIError, MissingCredential);
+
+export class ConnectionFailed extends S.TaggedError<ConnectionFailed>()(
+	"ConnectionFailed",
+	{ cause: S.Literal("session-welcome-expected") },
+) {}

@@ -3,7 +3,7 @@ import { Schema as S } from "effect";
 
 import { Pagination } from "./helix/schemas/common";
 import { ChannelVips, UserBlocked } from "./new-helix";
-import { RpcError } from "./new-shared";
+import { RpcError } from "./new-types";
 
 export const ModerationRpcs = [
 	Rpc.make("AddChannelVip", {

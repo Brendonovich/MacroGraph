@@ -1,18 +1,18 @@
 import { Effect, HashMap, Ref } from "effect";
 import type { Project } from "@macrograph/project-domain";
 
-import { NodeIOActions } from "../NodeIOActions.ts";
-import { NodesIOStore } from "../NodesIOStore.ts";
-import { PackageActions } from "./PackageActions.ts";
-import * as ProjectRuntime from "./ProjectRuntime.ts";
+// import { NodeIOActions } from "../NodeIOActions.ts";
+// import { NodesIOStore } from "../NodesIOStore.ts";
+// import { PackageActions } from "./PackageActions.ts";
+// import * as ProjectRuntime from "./ProjectRuntime.ts";
 
 export class RuntimeActions extends Effect.Service<RuntimeActions>()(
 	"RuntimeActions",
 	{
 		effect: Effect.gen(function* () {
-			const packageActions = yield* PackageActions;
-			const nodeIOActions = yield* NodeIOActions;
-			const nodesIO = yield* NodesIOStore;
+			// const packageActions = yield* PackageActions;
+			// const nodeIOActions = yield* NodeIOActions;
+			// const nodesIO = yield* NodesIOStore;
 
 			return {
 				loadProject: Effect.fn(function* (project: Project.Project) {
@@ -31,9 +31,9 @@ export class RuntimeActions extends Effect.Service<RuntimeActions>()(
 			};
 		}),
 		dependencies: [
-			PackageActions.Default,
-			NodeIOActions.Default,
-			NodesIOStore.Default,
+			// PackageActions.Default,
+			// NodeIOActions.Default,
+			// NodesIOStore.Default,
 		],
 	},
 ) {}

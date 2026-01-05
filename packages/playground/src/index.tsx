@@ -147,11 +147,11 @@ function Inner() {
 				for (const [id, getSettings] of Object.entries(
 					packageSettings.default,
 				)) {
-					yield* packageClients.registerPackageClient(
-						Package.Id.make(id),
-						yield* Effect.promise(getSettings),
-						packageMeta.default[id],
-					);
+					// yield* packageClients.registerPackageClient(
+					// 	Package.Id.make(id),
+					// 	yield* Effect.promise(getSettings),
+					// 	packageMeta.default[id],
+					// );
 				}
 
 				stateActions.setProject(project);

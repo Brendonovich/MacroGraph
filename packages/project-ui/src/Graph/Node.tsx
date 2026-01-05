@@ -6,6 +6,7 @@ import {
 	type Node,
 	type Schema,
 } from "@macrograph/project-domain";
+import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { cx } from "cva";
 import {
@@ -44,6 +45,8 @@ export function NodeRoot(
 		Mutable<IO.NodeIO>,
 ) {
 	const graphCtx = useGraphContext();
+	const [nodeRef, setNodeRef] = createSignal<HTMLDivElement>();
+	const nodeElementBounds = createElementBounds(nodeRef);
 
 	const nodeBounds = () => {
 		return {
@@ -55,6 +58,25 @@ export function NodeRoot(
 				props.position.y + props.graphBounds.top - (graphCtx.translate?.y ?? 0),
 		};
 	};
+
+	// Track node dimensions in canvas coordinates
+	createEffect(() => {
+		const bounds = nodeElementBounds;
+		const scale = graphCtx.scale;
+
+		if (bounds.width && bounds.height) {
+			graphCtx.nodeBounds.set(props.id, {
+				x: props.position.x,
+				y: props.position.y,
+				width: bounds.width / scale,
+				height: bounds.height / scale,
+			});
+		}
+	});
+
+	onCleanup(() => {
+		graphCtx.nodeBounds.delete(props.id);
+	});
 
 	function useIOPositionTrack(
 		index: Accessor<number>,
@@ -70,9 +92,10 @@ export function NodeRoot(
 
 			const rect = element.getBoundingClientRect();
 
-			const position = GraphPosition.make({
-				x: props.position.x + (rect.left - nodeBounds().left) + rect.width / 2,
-				y: props.position.y + (rect.top - nodeBounds().top) + rect.height / 2,
+			// Convert the pin's screen position (center of the element) to canvas coordinates
+			const position = graphCtx.getGraphPosition({
+				x: rect.left + rect.width / 2,
+				y: rect.top + rect.height / 2,
 			});
 
 			graphCtx.ioPositions.set(`${props.id}:${type}:${id}`, position);
@@ -112,6 +135,7 @@ export function NodeRoot(
 
 	return (
 		<div
+			ref={setNodeRef}
 			class={cx(
 				"absolute rounded-lg overflow-hidden text-xs whitespace-nowrap",
 				"bg-black/75 border-black/75 border-2",

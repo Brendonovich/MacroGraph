@@ -7,7 +7,7 @@ import {
 	type Scope,
 	Stream,
 } from "effect";
-import { ProjectRuntime } from "@macrograph/project-runtime";
+import { ProjectEditor } from "@macrograph/project-editor";
 import {
 	GetPackageRpcClient,
 	ProjectEventStream,
@@ -20,43 +20,44 @@ import { FrontendLive } from "./frontend";
 const GetPackageRpcClientLive = Layer.effect(
 	GetPackageRpcClient,
 	Effect.gen(function* () {
-		const runtime = yield* ProjectRuntime.Current;
+		// const runtime = yield* ProjectRuntime.Current;
 		const clients = new Map<string, RpcClient.RpcClient<Rpc.Any>>();
 
 		return (id) =>
 			Effect.gen(function* () {
-				if (clients.get(id)) return clients.get(id)! as any;
+				return Option.none();
 
-				return runtime.packages.get(id)?.engine.pipe(
-					Effect.flatMap(
-						Effect.fn(function* (e) {
-							const [rpcs, layer] = yield* Option.fromNullable(e.def.rpc).pipe(
-								Option.zipWith(
-									Option.fromNullable(e.rpc),
-									(a, b) => [a, b] as const,
-								),
-							);
+				// if (clients.get(id)) return clients.get(id)! as any;
 
-							const client = yield* RpcTest.makeClient(rpcs).pipe(
-								Effect.provide(layer),
-							);
+				// return runtime.packages.get(id)?.engine.pipe(
+				// 	Effect.flatMap(
+				// 		Effect.fn(function* (e) {
+				// 			const [rpcs, layer] = yield* Option.fromNullable(e.def.rpc).pipe(
+				// 				Option.zipWith(
+				// 					Option.fromNullable(e.rpc),
+				// 					(a, b) => [a, b] as const,
+				// 				),
+				// 			);
 
-							clients.set(id, client);
+				// 			const client = yield* RpcTest.makeClient(rpcs).pipe(
+				// 				Effect.provide(layer),
+				// 			);
 
-							return client;
-						}),
-					),
-				);
+				// 			clients.set(id, client);
+
+				// 			return client;
+				// 		}),
+				// 	),
+				// );
 			});
 	}),
 );
 
-const ProjectEventStreamLive = Layer.effect(
+const ProjectEventStreamLive = Layer.scoped(
 	ProjectEventStream,
-	Effect.map(ProjectRuntime.Current, (r) =>
-		Stream.fromPubSub(r.events).pipe(
-			Stream.filter((e) => e.actor.type === "SYSTEM"),
-		),
+	ProjectEditor.ProjectEditor.pipe(
+		Effect.flatMap((r) => r.subscribe),
+		Effect.map(Stream.filter((e) => e.actor.type === "SYSTEM")),
 	),
 );
 

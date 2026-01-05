@@ -371,6 +371,15 @@ export namespace Schema {
 		out: { data: CreateDataOut; exec: CreateExecOut };
 	};
 
+	type IOProperties<
+		Properties extends PropertiesSchema.Any,
+		Engine extends PackageEngine.Any,
+	> = {
+		[K in keyof Properties]: Properties[K] extends Property.ValueSource
+			? Property.Infer<Properties[K], Engine>
+			: never;
+	};
+
 	export interface Base<
 		Engine extends PackageEngine.Any,
 		Id extends string,
@@ -381,6 +390,7 @@ export namespace Schema {
 		io: (ctx: {
 			in: { data: CreateDataIn<Engine, Properties>; exec: CreateExecIn };
 			out: { data: CreateDataOut; exec: CreateExecOut };
+			properties: IOProperties<Properties, Engine>;
 		}) => IO;
 		run: (ctx: {
 			io: InferIO<IO>;
@@ -400,6 +410,7 @@ export namespace Schema {
 		io: (ctx: {
 			in: { data: CreateDataIn<Engine, Properties> };
 			out: { data: CreateDataOut };
+			properties: IOProperties<Properties, Engine>;
 		}) => IO;
 		run: (ctx: {
 			io: InferIO<IO>;
@@ -419,6 +430,7 @@ export namespace Schema {
 		io: (ctx: {
 			in: { data: CreateDataIn<Engine, Properties> };
 			out: { data: CreateDataOut };
+			properties: IOProperties<Properties, Engine>;
 		}) => IO;
 		run: (ctx: {
 			io: InferIO<IO>;

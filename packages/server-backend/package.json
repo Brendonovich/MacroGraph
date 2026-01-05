@@ -16,6 +16,7 @@
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
 		"@macrograph/project-runtime": "workspace:*",
+		"@macrograph/project-editor": "workspace:*",
 		"@macrograph/server-domain": "workspace:*",
 		"@macrograph/web-domain": "workspace:*",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.208.0",

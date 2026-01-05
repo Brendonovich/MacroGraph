@@ -11,6 +11,7 @@
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
 		"@macrograph/project-runtime": "workspace:*",
+		"@macrograph/project-editor": "workspace:*",
 		"@macrograph/project-ui": "workspace:*",
 		"@macrograph/ui": "workspace:*",
 		"@solid-primitives/bounds": "^0.0.118",

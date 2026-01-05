@@ -1,5 +1,6 @@
 import * as S from "effect/Schema";
 
+import { T } from "./IO";
 import { Resource } from "./NodeSchema";
 import * as Schema from "./Schema";
 
@@ -22,7 +23,10 @@ export class Package extends S.Class<Package>("Package")({
 				name: S.String,
 				description: S.optional(S.String),
 				properties: S.Array(
-					S.Struct({ id: S.String, name: S.String, resource: S.String }),
+					S.Union(
+						S.Struct({ type: T.AnySchema_ }),
+						S.Struct({ resource: S.String }),
+					).pipe(S.extend(S.Struct({ id: S.String, name: S.String }))),
 				),
 			}),
 		}),

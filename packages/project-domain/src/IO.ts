@@ -1,6 +1,6 @@
 import * as D from "effect/Data";
-import type * as DT from "effect/DateTime";
-import type * as O from "effect/Option";
+import * as DT from "effect/DateTime";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 import type { IO } from ".";
@@ -127,6 +127,24 @@ export namespace T {
 			S.suspend(() => AnySchema_),
 		),
 	);
+
+	export const default_ = (t: Any_) => {
+		switch (t._tag) {
+			case "Int":
+			case "Float":
+				return 0;
+			case "Bool":
+				return false;
+			case "String":
+				return "";
+			case "DateTime":
+				return DT.unsafeMake(0);
+			case "List":
+				return [];
+			case "Option":
+				return O.none();
+		}
+	};
 
 	export const serialize = (t: Any_): AnySchema_ => {
 		switch (t._tag) {

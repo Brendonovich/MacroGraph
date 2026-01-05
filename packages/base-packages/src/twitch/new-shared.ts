@@ -2,33 +2,13 @@ import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
 import { Resource } from "@macrograph/package-sdk/updated";
 
+import { ConnectionFailed, TwitchAPIError } from "./new-types";
 import { ChannelRpcs } from "./rpcs-channel";
 // Import all RPC groups
 import { ChatRpcs } from "./rpcs-chat";
 import { MiscRpcs } from "./rpcs-misc";
 import { ModerationRpcs } from "./rpcs-moderation";
 import { StreamRpcs } from "./rpcs-stream";
-
-// ============================================================================
-// Error Classes
-// ============================================================================
-
-export class TwitchAPIError extends S.TaggedError<TwitchAPIError>()(
-	"TwitchAPIError",
-	{ cause: S.Unknown },
-) {}
-
-export class MissingCredential extends S.TaggedError<MissingCredential>()(
-	"MissingCredential",
-	{},
-) {}
-
-export const RpcError = S.Union(TwitchAPIError, MissingCredential);
-
-export class ConnectionFailed extends S.TaggedError<ConnectionFailed>()(
-	"ConnectionFailed",
-	{ cause: S.Literal("session-welcome-expected") },
-) {}
 
 // ============================================================================
 // Client RPCs (EventSub Connection Management)

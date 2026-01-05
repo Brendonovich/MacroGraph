@@ -12,7 +12,7 @@ import {
 	EmoteWithOwner,
 	GetUserChatColorUser,
 } from "./new-helix";
-import { RpcError } from "./new-shared";
+import { RpcError } from "./new-types";
 
 export const ChatRpcs = [
 	Rpc.make("SendChatMessage", {

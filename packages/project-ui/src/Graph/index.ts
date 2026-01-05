@@ -5,3 +5,4 @@ export * from "./Node";
 export * from "./Sidebar";
 export * from "./TabSchema";
 export * from "./types";
+export { Viewport } from "./viewport";

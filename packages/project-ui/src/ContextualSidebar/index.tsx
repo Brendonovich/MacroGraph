@@ -1,21 +1,21 @@
-import { Array, Iterable, identity, Option, pipe } from "effect";
+import { Array, Iterable, Option, pipe } from "effect";
 import { Popover } from "@kobalte/core/popover";
 import { Select } from "@kobalte/core/select";
-import type { Graph, Node, Package, Schema } from "@macrograph/project-domain";
+import type { Package, Schema } from "@macrograph/project-domain";
 import { focusRingClasses } from "@macrograph/ui";
-import { createContextProvider } from "@solid-primitives/context";
-import { isMobile } from "@solid-primitives/platform";
 import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
-import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
+import { createMemo, For, Match, Show, Switch } from "solid-js";
 
-import { ProjectActions } from "./Actions";
-import { useProjectService } from "./EffectRuntime";
-import { matchSchemaTypeBackgroundColour } from "./Graph/Node";
-import { useLayoutStateRaw } from "./LayoutState";
-import { PackageClients } from "./Packages/Clients";
-import { Sidebar } from "./Sidebar";
-import { ProjectState } from "./State";
+import { ProjectActions } from "../Actions";
+import { useProjectService } from "../EffectRuntime";
+import { matchSchemaTypeBackgroundColour } from "../Graph/Node";
+import { PackageClients } from "../Packages/Clients";
+import { Sidebar } from "../Sidebar";
+import { ProjectState } from "../State";
+import { useContextualSidebar } from "./Context";
+
+export { ContextualSidebarProvider } from "./Context";
 
 export function ContextualSidebar() {
 	const contextualSidebar = useContextualSidebar();
@@ -118,95 +118,156 @@ export function ContextualSidebarContent() {
 																			),
 																	}));
 
-																	const options = createMemo(() =>
-																		pipe(
-																			state.constants,
-																			Iterable.fromRecord,
-																			Iterable.filterMap(([id, constant]) => {
-																				if (
-																					constant.type === "resource" &&
-																					constant.resource ===
-																						property.resource
-																				)
-																					return Option.some({
-																						id,
-																						display: constant.name,
-																					} as const);
-																				return Option.none();
-																			}),
-																			Array.fromIterable,
-																		),
-																	);
-
-																	const option = () =>
-																		options().find(
-																			(o) =>
-																				o.id ===
-																				node().properties?.[property.id],
-																		) ?? null;
-
-																	type Option = { id: string; display: string };
-
 																	return (
 																		<>
 																			<span class="text-xs font-medium text-gray-11 mb-1">
 																				{property.name}
 																			</span>
-																			<Select<Option>
-																				value={option()}
-																				options={options()}
-																				optionValue="id"
-																				optionTextValue="display"
-																				placeholder={
-																					<i class="text-gray-11">No Value</i>
+																			<Show
+																				when={
+																					"resource" in property && property
 																				}
-																				gutter={4}
-																				disabled={
-																					!setProperty || setProperty.isPending
-																				}
-																				onChange={(v) => {
-																					if (!v) return;
-																					setProperty?.mutate(v.id);
-																				}}
-																				itemComponent={(props) => (
-																					<Show
-																						when={props.item.rawValue.id !== ""}
-																					>
-																						<Select.Item
-																							item={props.item}
-																							class="p-1 py-0.5 block w-full text-left focus-visible:outline-none ui-highlighted:bg-blue-6 rounded-[0.125rem]"
-																						>
-																							<Select.ItemLabel>
-																								{props.item.rawValue.display}
-																							</Select.ItemLabel>
-																						</Select.Item>
-																					</Show>
-																				)}
 																			>
-																				<Select.Trigger
-																					class={cx(
-																						"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 appearance-none rounded-sm",
-																						focusRingClasses("outline"),
-																						!option() &&
-																							"ring-1 ring-red-9 outline-none",
-																					)}
-																				>
-																					<Select.Value<Option> class="flex-1 text-left">
-																						{(state) =>
-																							state.selectedOption().display
-																						}
-																					</Select.Value>
-																					<Select.Icon
-																						as={
-																							IconMaterialSymbolsArrowRightRounded
-																						}
-																						class="size-4 ui-closed:rotate-90 ui-expanded:-rotate-90 transition-transform"
-																					/>
-																				</Select.Trigger>
-																				<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-gray-6 rounded space-y-1 p-1">
-																					<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
-																				</Select.Content>
-																			</Select>
+																				{(property) => {
+																					const options = createMemo(() =>
+																						pipe(
+																							state.constants,
+																							Iterable.fromRecord,
+																							Iterable.filterMap(
+																								([id, constant]) => {
+																									if (
+																										constant.type ===
+																											"resource" &&
+																										constant.resource ===
+																											property().resource
+																									)
+																										return Option.some({
+																											id,
+																											display: constant.name,
+																										} as const);
+																									return Option.none();
+																								},
+																							),
+																							Array.fromIterable,
+																						),
+																					);
+
+																					const option = () =>
+																						options().find(
+																							(o) =>
+																								o.id ===
+																								node().properties?.[
+																									property().id
+																								],
+																						) ?? null;
+
+																					type Option = {
+																						id: string;
+																						display: string;
+																					};
+
+																					return (
+																						<Select<Option>
+																							value={option()}
+																							options={options()}
+																							optionValue="id"
+																							optionTextValue="display"
+																							placeholder={
+																								<i class="text-gray-11">
+																									No Value
+																								</i>
+																							}
+																							gutter={4}
+																							disabled={
+																								!setProperty ||
+																								setProperty.isPending
+																							}
+																							onChange={(v) => {
+																								if (!v) return;
+																								setProperty?.mutate(v.id);
+																							}}
+																							itemComponent={(props) => (
+																								<Show
+																									when={
+																										props.item.rawValue.id !==
+																										""
+																									}
+																								>
+																									<Select.Item
+																										item={props.item}
+																										class="p-1 py-0.5 block w-full text-left focus-visible:outline-none ui-highlighted:bg-blue-6 rounded-[0.125rem]"
+																									>
+																										<Select.ItemLabel>
+																											{
+																												props.item.rawValue
+																													.display
+																											}
+																										</Select.ItemLabel>
+																									</Select.Item>
+																								</Show>
+																							)}
+																						>
+																							<Select.Trigger
+																								class={cx(
+																									"flex flex-row items-center w-full text-gray-12 text-xs bg-gray-6 pl-1.5 pr-1 py-0.5 appearance-none rounded-sm",
+																									focusRingClasses("outline"),
+																									!option() &&
+																										"ring-1 ring-red-9 outline-none",
+																								)}
+																							>
+																								<Select.Value<Option> class="flex-1 text-left">
+																									{(state) =>
+																										state.selectedOption()
+																											.display
+																									}
+																								</Select.Value>
+																								<Select.Icon
+																									as={
+																										IconMaterialSymbolsArrowRightRounded
+																									}
+																									class="size-4 ui-closed:rotate-90 ui-expanded:-rotate-90 transition-transform"
+																								/>
+																							</Select.Trigger>
+																							<Select.Content class="z-50 ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 overflow-y-hidden text-xs bg-gray-6 rounded space-y-1 p-1">
+																								<Select.Listbox class="focus-visible:outline-none max-h-[12rem] overflow-y-auto" />
+																							</Select.Content>
+																						</Select>
+																					);
+																				}}
+																			</Show>
+																			<Show
+																				when={"type" in property && property}
+																			>
+																				{(property) => (
+																					<Switch>
+																						<Match
+																							when={property().type === "S"}
+																						>
+																							<input
+																								class={cx(
+																									"bg-gray-2 h-6 text-xs px-1 ring-1 ring-gray-6 rounded-sm",
+																									focusRingClasses("inset"),
+																								)}
+																								onKeyDown={(e) => {
+																									e.stopPropagation();
+
+																									if (e.key === "Enter") {
+																										setProperty.mutate(
+																											e.currentTarget.value,
+																										);
+																										e.currentTarget.blur();
+																									}
+																								}}
+																								value={
+																									(node().properties?.[
+																										property().id
+																									] as string) ?? ""
+																								}
+																							/>
+																						</Match>
+																					</Switch>
+																				)}
+																			</Show>
 																		</>
 																	);
 																}}
@@ -236,54 +297,6 @@ export function ContextualSidebarContent() {
 	);
 }
 
-type IdentityFn<T> = (t: T) => T;
-
-function createContextualSidebar(opts?: {
-	wrapOpenSignal?: IdentityFn<ReturnType<typeof createSignal<boolean>>>;
-}) {
-	const { focusedPane } = useLayoutStateRaw();
-
-	const state = createMemo<
-		| null
-		| { type: "graph"; graph: Graph.Id }
-		| { type: "node"; graph: Graph.Id; node: Node.Id }
-	>((_) => {
-		const prevRet = null;
-		const pane = focusedPane();
-		if (!pane) return prevRet;
-		const tab = pane.tabs.find((t) => t.tabId === pane.selectedTab);
-		if (tab?.tabId !== pane.selectedTab) return prevRet;
-		if (tab.type !== "graph") return prevRet;
-		if (tab.selection.length < 1) return { type: "graph", graph: tab.graphId };
-		if (tab.selection.length === 1 && tab.selection[0]?.[0] === "Node")
-			return { type: "node", graph: tab.graphId, node: tab.selection[0][1] };
-		return prevRet;
-	}, null);
-
-	const [open, setOpen] = (opts?.wrapOpenSignal ?? identity)(
-		createSignal(!isMobile),
-	);
-
-	return { state, open, setOpen };
-}
-
-const [ContextualSidebarProvider, useContextualSidebar_] =
-	createContextProvider(
-		(opts: NonNullable<Parameters<typeof createContextualSidebar>[0]>) =>
-			createContextualSidebar(opts),
-	);
-
-const useContextualSidebar = () => {
-	const ctx = useContextualSidebar_();
-	if (!ctx)
-		throw new Error(
-			"useNavSidebar must be called underneath a NavSidebarProvider",
-		);
-	return ctx;
-};
-
-export { ContextualSidebarProvider, useContextualSidebar };
-
 function SchemaInfoButton(props: {
 	schema: { name: string; id: string; type: Schema.Type };
 	package: { id: Package.Id; name: string } | undefined;
@@ -298,17 +311,17 @@ function SchemaInfoButton(props: {
 			: undefined;
 
 	return (
-		<Popover placement="left-start" gutter={4}>
+		<Popover placement="left-start" gutter={6}>
 			<Popover.Trigger
 				class={cx(
-					"flex items-center gap-1.5 cursor-pointer group relative border border-gray-6 rounded overflow-hidden text-left",
+					"flex h-9 items-center cursor-pointer group relative border border-gray-6 rounded-sm overflow-hidden text-left",
 					focusRingClasses("outline"),
 				)}
 			>
 				<Show when={pkg()?.packageIcon}>
 					{(src) => <img src={src()} alt="Schema" class="size-9" />}
 				</Show>
-				<div class="flex-1 min-w-0 pr-1.5">
+				<div class="flex-1 min-w-0 px-1">
 					<span class="block text-xs font-medium text-gray-12 truncate">
 						{props.schema.name}
 					</span>
@@ -343,14 +356,14 @@ function SchemaInfoButton(props: {
 								type="button"
 								disabled
 								class={cx(
-									"flex items-center flex-1 gap-1.5 cursor-pointer group relative border border-gray-6 rounded overflow-hidden text-left",
+									"flex items-center flex-1 cursor-pointer group relative border border-gray-6 rounded overflow-hidden text-left",
 									focusRingClasses("outline"),
 								)}
 							>
 								<Show when={pkg()?.packageIcon}>
 									{(src) => <img src={src()} alt="Schema" class="size-5" />}
 								</Show>
-								<div class="flex-1 min-w-0 pr-1.5">
+								<div class="flex-1 min-w-0 pl-1 pr-1.5">
 									<span class="block text-xs font-normal text-gray-12 truncate">
 										{props.package?.name}
 									</span>

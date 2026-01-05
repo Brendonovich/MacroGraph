@@ -13,10 +13,9 @@ import {
 	Schema,
 } from "@macrograph/project-domain";
 
-import { NodeIOActions } from "../NodeIOActions";
-import { NodesIOStore } from "../NodesIOStore.ts";
-import { requestResolverServices } from "../Requests.ts";
-import { PackageActions } from "../Runtime/PackageActions";
+import { NodeIOActions } from "./NodeIOActions.ts";
+import { NodesIOStore } from "./NodesIOStore.ts";
+import { requestResolverServices } from "./Requests.ts";
 import { ProjectEditor } from "./ProjectEditor.ts";
 
 export class GraphRequests extends Effect.Service<GraphRequests>()(
@@ -68,7 +67,7 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 								}),
 						);
 
-						const io = yield* nodeIOActions.generateNodeIO(schema);
+						const io = yield* nodeIOActions.generateNodeIO(schema, node);
 						yield* nodesIO.setForNode(node.id, io);
 
 						return yield* editor.publishEvent(
@@ -135,7 +134,7 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 					}),
 			).pipe(requestResolverServices);
 
-			const DeleteItemsResolver = RequestResolver.fromEffect(
+			const DeleteGraphItemsResolver = RequestResolver.fromEffect(
 				(r: Request.DeleteGraphItems) =>
 					Effect.gen(function* () {
 						const editor = yield* ProjectEditor;
@@ -295,33 +294,14 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 			).pipe(requestResolverServices);
 
 			return {
-				createNode: Effect.request<
-					Request.CreateNode,
-					typeof CreateNodeResolver
-				>(CreateNodeResolver),
-
-				connectIO: Effect.request<Request.ConnectIO, typeof ConnectIOResolver>(
-					ConnectIOResolver,
-				),
-
-				setItemPositions: Effect.request<
-					Request.SetItemPositions,
-					typeof SetItemPositionsResolver
-				>(SetItemPositionsResolver),
-
-				deleteItems: Effect.request<
-					Request.DeleteGraphItems,
-					typeof DeleteItemsResolver
-				>(DeleteItemsResolver),
-
-				disconnectIO: Effect.request<
-					Request.DisconnectIO,
-					typeof DisconnectIOResolver
-				>(DisconnectIOResolver),
+				CreateNodeResolver,
+				ConnectIOResolver,
+				SetItemPositionsResolver,
+				DeleteGraphItemsResolver,
+				DisconnectIOResolver,
 			};
 		}),
 		dependencies: [
-			PackageActions.Default,
 			NodeIOActions.Default,
 			NodesIOStore.Default,
 		],

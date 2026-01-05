@@ -30,7 +30,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatMessage", {
 		type: "event",
-		name: "Channel Chat Message",
+		name: "Chat Message",
 		description: "Fires when a message is sent in a channel's chat.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -80,7 +80,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatClear", {
 		type: "event",
-		name: "Channel Chat Clear",
+		name: "Chat Clear",
 		description: "Fires when all chat messages are cleared.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -106,7 +106,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatClearUserMessages", {
 		type: "event",
-		name: "Channel Chat Clear User Messages",
+		name: "Chat Clear User Messages",
 		description: "Fires when a user's messages are cleared.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -146,7 +146,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatMessageDelete", {
 		type: "event",
-		name: "Channel Chat Message Delete",
+		name: "Chat Message Delete",
 		description: "Fires when a chat message is deleted.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -186,7 +186,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatNotification", {
 		type: "event",
-		name: "Channel Chat Notification",
+		name: "Chat Notification",
 		description: "Fires when a chat notification occurs.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -236,7 +236,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatSettingsUpdate", {
 		type: "event",
-		name: "Channel Chat Settings Update",
+		name: "Chat Settings Update",
 		description: "Fires when chat settings are updated.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -278,7 +278,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatUserMessageHold", {
 		type: "event",
-		name: "Channel Chat User Message Hold",
+		name: "Chat User Message Hold",
 		description: "Fires when a user's message is held for review.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -316,7 +316,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelChatUserMessageUpdate", {
 		type: "event",
-		name: "Channel Chat User Message Update",
+		name: "Chat User Message Update",
 		description: "Fires when a held message is approved or denied.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -356,7 +356,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelBan", {
 		type: "event",
-		name: "Channel Ban",
+		name: "User Banned",
 		description: "Fires when a user is banned from a channel.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -404,7 +404,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelUnban", {
 		type: "event",
-		name: "Channel Unban",
+		name: "User Unbanned",
 		description: "Fires when a user is unbanned from a channel.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -448,7 +448,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelUpdate", {
 		type: "event",
-		name: "Channel Update",
+		name: "Updated",
 		description: "Fires when channel information is updated.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -484,7 +484,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelRaid", {
 		type: "event",
-		name: "Channel Raid",
+		name: "Raid",
 		description: "Fires when a channel raids another channel.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -528,7 +528,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSubscribe", {
 		type: "event",
-		name: "Channel Subscribe",
+		name: "Subscribed",
 		description: "Fires when a user subscribes to a channel.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -564,7 +564,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSubscriptionEnd", {
 		type: "event",
-		name: "Channel Subscription End",
+		name: "Subscription Ended",
 		description: "Fires when a user's subscription ends.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -600,7 +600,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSubscriptionGift", {
 		type: "event",
-		name: "Channel Subscription Gift",
+		name: "Subscription Gifted",
 		description: "Fires when a user gifts subscriptions.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -632,7 +632,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSubscriptionMessage", {
 		type: "event",
-		name: "Channel Subscription Message",
+		name: "Subscription Message",
 		description: "Fires when a user resubscribes with a message.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -678,7 +678,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelCheer", {
 		type: "event",
-		name: "Channel Cheer",
+		name: "Cheered",
 		description: "Fires when a user cheers bits in a channel.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -712,7 +712,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelModeratorAdd", {
 		type: "event",
-		name: "Channel Moderator Add",
+		name: "Moderator Added",
 		description: "Fires when a moderator is added.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -744,7 +744,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelModeratorRemove", {
 		type: "event",
-		name: "Channel Moderator Remove",
+		name: "Moderator Removed",
 		description: "Fires when a moderator is removed.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -776,7 +776,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelVipAdd", {
 		type: "event",
-		name: "Channel VIP Add",
+		name: "VIP Added",
 		description: "Fires when a VIP is added.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -808,7 +808,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelVipRemove", {
 		type: "event",
-		name: "Channel VIP Remove",
+		name: "VIP Removed",
 		description: "Fires when a VIP is removed.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -840,7 +840,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelModerate", {
 		type: "event",
-		name: "Channel Moderate",
+		name: "Moderated",
 		description: "Fires when a moderation action occurs.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -880,7 +880,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelUnbanRequestCreate", {
 		type: "event",
-		name: "Channel Unban Request Create",
+		name: "Unban Request Created",
 		description: "Fires when an unban request is created.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -916,7 +916,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelUnbanRequestResolve", {
 		type: "event",
-		name: "Channel Unban Request Resolve",
+		name: "Unban Request Resolved",
 		description: "Fires when an unban request is resolved.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -952,7 +952,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSuspiciousUserUpdate", {
 		type: "event",
-		name: "Channel Suspicious User Update",
+		name: "Suspicious User Update",
 		description: "Fires when a suspicious user's status is updated.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1000,7 +1000,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSuspiciousUserMessage", {
 		type: "event",
-		name: "Channel Suspicious User Message",
+		name: "Suspicious User Message",
 		description: "Fires when a suspicious user sends a message.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1048,7 +1048,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelWarningAcknowledge", {
 		type: "event",
-		name: "Channel Warning Acknowledge",
+		name: "Warning Acknowledged",
 		description: "Fires when a user acknowledges a warning.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1080,7 +1080,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelWarningSend", {
 		type: "event",
-		name: "Channel Warning Send",
+		name: "Warning Sent",
 		description: "Fires when a warning is sent to a user.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1218,7 +1218,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPollBegin", {
 		type: "event",
-		name: "Channel Poll Begin",
+		name: "Poll Began",
 		description: "Fires when a poll begins.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1248,7 +1248,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPollProgress", {
 		type: "event",
-		name: "Channel Poll Progress",
+		name: "Poll Progress",
 		description: "Fires when a poll progresses.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1278,7 +1278,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPollEnd", {
 		type: "event",
-		name: "Channel Poll End",
+		name: "Poll End",
 		description: "Fires when a poll ends.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1312,7 +1312,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPredictionBegin", {
 		type: "event",
-		name: "Channel Prediction Begin",
+		name: "Prediction Began",
 		description: "Fires when a prediction begins.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1342,7 +1342,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPredictionProgress", {
 		type: "event",
-		name: "Channel Prediction Progress",
+		name: "Prediction Progress",
 		description: "Fires when a prediction progresses.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1372,7 +1372,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPredictionLock", {
 		type: "event",
-		name: "Channel Prediction Lock",
+		name: "Prediction Locked",
 		description: "Fires when a prediction locks.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1402,7 +1402,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPredictionEnd", {
 		type: "event",
-		name: "Channel Prediction End",
+		name: "Prediction End",
 		description: "Fires when a prediction ends.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1436,7 +1436,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelPointsAutomaticRewardRedemptionAdd", {
 		type: "event",
-		name: "Channel Points Automatic Reward Redemption Add",
+		name: "Points Reward Redeemed",
 		description: "Fires when a channel points automatic reward is redeemed.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1586,7 +1586,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelCharityCampaignDonate", {
 		type: "event",
-		name: "Channel Charity Campaign Donate",
+		name: "Charity Donation",
 		description: "Fires when a donation is made to a charity campaign.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1630,7 +1630,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelCharityCampaignStart", {
 		type: "event",
-		name: "Channel Charity Campaign Start",
+		name: "Charity Campaign Started",
 		description: "Fires when a charity campaign starts.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1670,7 +1670,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelCharityCampaignProgress", {
 		type: "event",
-		name: "Channel Charity Campaign Progress",
+		name: "Charity Campaign Progress",
 		description: "Fires when a charity campaign progresses.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1712,7 +1712,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelCharityCampaignStop", {
 		type: "event",
-		name: "Channel Charity Campaign Stop",
+		name: "Charity Campaign Stopped",
 		description: "Fires when a charity campaign stops.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1754,7 +1754,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSharedChatSessionBegin", {
 		type: "event",
-		name: "Channel Shared Chat Session Begin",
+		name: "Shared Chat Session Began",
 		description: "Fires when a shared chat session begins.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1798,7 +1798,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSharedChatSessionUpdate", {
 		type: "event",
-		name: "Channel Shared Chat Session Update",
+		name: "Shared Chat Session Update",
 		description: "Fires when a shared chat session updates.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1842,7 +1842,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelSharedChatSessionEnd", {
 		type: "event",
-		name: "Channel Shared Chat Session End",
+		name: "Shared Chat Session End",
 		description: "Fires when a shared chat session ends.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1888,7 +1888,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelGuestStarSessionBegin", {
 		type: "event",
-		name: "Channel Guest Star Session Begin",
+		name: "Guest Star Session Began",
 		description: "Fires when a Guest Star session begins.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1918,7 +1918,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelGuestStarSessionEnd", {
 		type: "event",
-		name: "Channel Guest Star Session End",
+		name: "Guest Star Session End",
 		description: "Fires when a Guest Star session ends.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1956,7 +1956,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelGuestStarGuestUpdate", {
 		type: "event",
-		name: "Channel Guest Star Guest Update",
+		name: "Guest Star Guest Update",
 		description: "Fires when a Guest Star guest is updated.",
 		event: (data) =>
 			Option.some(data).pipe(
@@ -1998,7 +1998,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	.addSchema("ChannelAdBreakBegin", {
 		type: "event",
-		name: "Channel Ad Break Begin",
+		name: "Ad Break Begin",
 		description: "Fires when an ad break begins.",
 		event: (data) =>
 			Option.some(data).pipe(

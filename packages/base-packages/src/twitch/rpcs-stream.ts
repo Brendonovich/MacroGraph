@@ -11,7 +11,7 @@ import {
 	StreamMarker,
 	Video,
 } from "./new-helix";
-import { RpcError } from "./new-shared";
+import { RpcError } from "./new-types";
 
 const IntFromString = S.NumberFromString.pipe(S.int());
 

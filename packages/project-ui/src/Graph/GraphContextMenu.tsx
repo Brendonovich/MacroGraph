@@ -38,6 +38,7 @@ export const GraphContextMenu = Object.assign(
 			position: { x: number; y: number },
 		) => void;
 		packages: Record<string, Package.Package>;
+		onClose: () => void;
 	}) => {
 		const [state, setState] = useContext();
 
@@ -154,7 +155,12 @@ export const GraphContextMenu = Object.assign(
 									placeholder="Search Nodes..."
 									value={search()}
 									onInput={(e) => setSearch(e.currentTarget.value)}
-									onKeyDown={(e) => e.stopPropagation()}
+									onKeyDown={(e) => {
+										e.stopPropagation();
+										if (e.key === "Escape") {
+											props.onClose();
+										}
+									}}
 									onKeyUp={(e) => e.stopPropagation()}
 								/>
 								<div class="overflow-y-auto">

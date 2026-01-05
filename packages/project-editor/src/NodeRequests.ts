@@ -7,8 +7,8 @@ import {
 	type Request,
 } from "@macrograph/project-domain";
 
-import { requestResolverServices } from "../Requests";
-import { ProjectEditor } from "./ProjectEditor";
+import * as ProjectEditor from "./ProjectEditor";
+import { requestResolverServices } from "./Requests";
 
 export class NodeRequests extends Effect.Service<NodeRequests>()(
 	"NodeRequests",
@@ -17,7 +17,7 @@ export class NodeRequests extends Effect.Service<NodeRequests>()(
 			const SetNodePropertyResolver = RequestResolver.fromEffect(
 				(r: Request.SetNodeProperty) =>
 					Effect.gen(function* () {
-						const editor = yield* ProjectEditor;
+						const editor = yield* ProjectEditor.ProjectEditor;
 
 						const project = yield* editor.project;
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
@@ -28,22 +28,20 @@ export class NodeRequests extends Effect.Service<NodeRequests>()(
 							Effect.catchAll(() => new Node.NotFound({ id: r.node })),
 						);
 
+						const newNode = (node.properties ?? HashMap.empty()).pipe(
+							HashMap.set(r.property, r.value),
+							(properties) => Node.Node.make({ ...node, properties }),
+						);
+
 						yield* pipe(
-							new Graph.Graph({
-								...graph,
-								nodes: HashMap.set(graph.nodes, r.node, {
-									...node,
-									properties: HashMap.set(
-										node.properties ?? HashMap.empty(),
-										r.property,
-										r.value,
-									),
-								}),
-							}),
+							HashMap.set(graph.nodes, r.node, newNode),
+							(nodes) => new Graph.Graph({ ...graph, nodes }),
 							(graph) => HashMap.set(project.graphs, r.graph, graph),
 							(graphs) => new Project.Project({ ...project, graphs }),
 							(p) => editor.modifyProject(() => p),
 						);
+
+						yield* editor.generateNodeIO(graph.id, newNode);
 
 						return yield* editor.publishEvent(
 							new ProjectEvent.NodePropertyUpdated(r),
@@ -51,12 +49,7 @@ export class NodeRequests extends Effect.Service<NodeRequests>()(
 					}),
 			).pipe(requestResolverServices);
 
-			return {
-				setNodeProperty: Effect.request<
-					Request.SetNodeProperty,
-					typeof SetNodePropertyResolver
-				>(SetNodePropertyResolver),
-			};
+			return { SetNodePropertyResolver };
 		}),
 	},
 ) {}

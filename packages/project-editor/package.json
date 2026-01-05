@@ -1,5 +1,5 @@
 {
-	"name": "@macrograph/project-runtime",
+	"name": "@macrograph/project-editor",
 	"type": "module",
 	"dependencies": {
 		"@effect/platform": "^0.94.0",
@@ -12,10 +12,6 @@
 	},
 	"exports": {
 		".": { "default": "./src/index.ts", "types": "./dist/src/index.d.ts" },
-		"./CloudApiClient": {
-			"default": "./src/Runtime/CloudApiClient.ts",
-			"types": "./dist/src/Runtime/CloudApiClient.d.ts"
-		},
 		"./NodesIOStore": {
 			"default": "./src/NodesIOStore.ts",
 			"types": "./dist/src/NodesIOStore.d.ts"

@@ -118,6 +118,9 @@ export function makeGraphTabSchema(
 						onSchemaClick={(schemaRef, position) => {
 							actions.CreateNode(tab().graph.id, schemaRef, position);
 						}}
+						onClose={() => {
+							setGraphCtxMenu({ open: false });
+						}}
 					/>
 				</GraphContext.Provider>
 			);

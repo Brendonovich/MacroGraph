@@ -24,7 +24,7 @@ import {
 	type Schema,
 } from "@macrograph/project-domain";
 
-import { requestResolverServices } from "../Requests";
+// import { requestResolverServices } from "../Requests";
 // import { CloudApiClient } from "./CloudApi.ts";
 // import * as CredentialsStore from "./CredentialsStore.ts";
 import { NodeExecution } from "./NodeExecution.ts";
@@ -68,7 +68,8 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 						// 	),
 						// );
 					}),
-			).pipe(requestResolverServices);
+			);
+			// .pipe(requestResolverServices);
 
 			return {
 				getSchema,

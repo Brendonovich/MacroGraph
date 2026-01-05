@@ -1,3 +1,4 @@
+import { HashMap } from "effect";
 import * as S from "effect/Schema";
 
 import * as Graph from "./Graph.ts";
@@ -25,3 +26,12 @@ export class Project extends S.Class<Project>("Project")({
 	nextGraphId: Graph.Id,
 	nextNodeId: Node.Id,
 }) {}
+
+export const empty = () =>
+	new Project({
+		name: "New Project",
+		graphs: HashMap.empty(),
+		constants: HashMap.empty(),
+		nextGraphId: Graph.Id.make(0),
+		nextNodeId: Node.Id.make(0),
+	});

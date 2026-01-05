@@ -9,7 +9,7 @@ import {
 	ChannelInformation,
 	FollowedChannel,
 } from "./new-helix";
-import { RpcError } from "./new-shared";
+import { RpcError } from "./new-types";
 
 export const ChannelRpcs = [
 	Rpc.make("GetChannelInformation", {

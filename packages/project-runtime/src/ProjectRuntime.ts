@@ -64,10 +64,10 @@ export interface RuntimePackageEngine
 }
 
 // @effect-leakable-service
-export class Current extends Context.Tag("ProjectRuntime/Current")<
-	Current,
-	ProjectRuntime
->() {}
+// export class Current extends Context.Tag("ProjectRuntime/Current")<
+// 	Current,
+// 	ProjectRuntime
+// >() {}
 
 const defaultProject = new Project.Project({
 	name: "Untitled Project",

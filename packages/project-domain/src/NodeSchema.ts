@@ -96,6 +96,7 @@ export type CreateDataOut = <T extends T.Any_>(
 export interface IOFunctionContext<Suggestions extends string = never> {
 	in: { exec: CreateExecIn; data: CreateDataIn<Suggestions> };
 	out: { exec: CreateExecOut; data: CreateDataOut };
+	properties: Record<string, any>;
 }
 
 export interface SchemaDefinitionBase<TProperties extends PropertiesSchema> {

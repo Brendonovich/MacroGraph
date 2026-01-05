@@ -57,9 +57,6 @@ export {
 import type { Point, TouchPointer } from "./interaction-machine";
 
 /**
- * @deprecated Use XState machine with `InteractionSnapshot` instead.
- * Kept for backward compatibility during migration.
- *
  * ## State Transitions (documented for reference)
  *
  * ```

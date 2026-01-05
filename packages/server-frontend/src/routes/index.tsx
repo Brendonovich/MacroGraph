@@ -20,6 +20,7 @@ import {
 	useEditorKeybinds,
 	useGraphContext,
 	useNavSidebar,
+	Viewport,
 	ZoomedPaneWrapper,
 } from "@macrograph/project-ui";
 import { focusRingClasses } from "@macrograph/ui";
@@ -229,11 +230,13 @@ const usePaneTabController = (
 							return;
 						rpc
 							.SetMousePosition({
-								graph: props.graph.id,
-								position: graphCtx.getGraphPosition({
-									x: e.clientX,
-									y: e.clientY,
-								}),
+								value: {
+									graph: props.graph.id,
+									position: graphCtx.getGraphPosition({
+										x: e.clientX,
+										y: e.clientY,
+									}),
+								},
 							})
 							.pipe(Effect.runPromise);
 					},
@@ -257,6 +260,8 @@ const usePaneTabController = (
 						if (!isTouchDevice) return;
 						if (activePointerId.current === e.pointerId) {
 							activePointerId.current = null;
+							// Clear mouse position when pointer is removed
+							rpc.SetMousePosition({ value: null }).pipe(Effect.runPromise);
 						}
 					},
 				);
@@ -268,7 +273,19 @@ const usePaneTabController = (
 						if (!isTouchDevice) return;
 						if (activePointerId.current === e.pointerId) {
 							activePointerId.current = null;
+							// Clear mouse position when pointer is cancelled
+							rpc.SetMousePosition({ value: null }).pipe(Effect.runPromise);
 						}
+					},
+				);
+
+				createEventListener(
+					() => graphCtx.ref() ?? undefined,
+					"pointerleave",
+					() => {
+						if (isTouchDevice) return;
+						// Clear mouse position when cursor leaves viewport on desktop
+						rpc.SetMousePosition({ value: null }).pipe(Effect.runPromise);
 					},
 				);
 
@@ -282,15 +299,26 @@ const usePaneTabController = (
 									item[1].mouse
 								}
 							>
-								{(mouse) => (
-									<PresencePointer
-										style={{
-											transform: `translate(${mouse().x - (graphCtx.translate?.x ?? 0)}px, ${mouse().y - (graphCtx.translate?.y ?? 0)}px)`,
-										}}
-										name={item[1].name}
-										colour={item[1].colour}
-									/>
-								)}
+								{(mouse) => {
+									// Make viewport position reactive to mouse updates and graph transform changes
+									const viewportPos = () =>
+										Viewport.canvasToViewportRelative(
+											{
+												origin: graphCtx.translate ?? { x: 0, y: 0 },
+												scale: graphCtx.scale,
+											},
+											{ x: mouse().x, y: mouse().y },
+										);
+									return (
+										<PresencePointer
+											style={{
+												transform: `translate(${viewportPos().x}px, ${viewportPos().y}px)`,
+											}}
+											name={item[1].name}
+											colour={item[1].colour}
+										/>
+									);
+								}}
 							</Show>
 						)}
 					</For>

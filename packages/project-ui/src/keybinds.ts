@@ -1,6 +1,6 @@
 import { createEventListener } from "@solid-primitives/event-listener";
 
-import { useContextualSidebar } from "./ContextualSidebar";
+import { useContextualSidebar } from "./ContextualSidebar/Context";
 import { useLayoutStateRaw } from "./LayoutState";
 import { useNavSidebar } from "./NavSidebar";
 

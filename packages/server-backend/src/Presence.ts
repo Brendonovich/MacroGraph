@@ -89,13 +89,21 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 						strategy: "enforce",
 					}),
 				),
-				setMouse: Effect.fn(function* (graphId: Graph.Id, position: Position) {
+				setMouse: Effect.fn(function* (
+					...args: [] | [graphId: Graph.Id, position: Position]
+				) {
 					const connection = yield* Realtime.Connection;
 					yield* SubscriptionRef.update(clients, (c) => ({
 						...c,
 						[connection.id]: c[connection.id]
-							? { ...c[connection.id], mouse: { graph: graphId, ...position } }
-							: undefined,
+							? {
+									...c[connection.id],
+									mouse:
+										args.length === 0
+											? undefined
+											: { graph: args[0], ...args[1] },
+								}
+							: c[connection.id],
 					}));
 				}),
 				setSelection: Effect.fn(function* (
@@ -135,8 +143,9 @@ export const PresenceRpcsLive = Presence.Rpcs.toLayer(
 		const presence = yield* PresenceState;
 
 		return {
-			SetMousePosition: Effect.fn(function* (payload) {
-				yield* presence.setMouse(payload.graph, payload.position);
+			SetMousePosition: Effect.fn(function* ({ value }) {
+				if (value === null) yield* presence.setMouse();
+				else yield* presence.setMouse(value.graph, value.position);
 			}),
 			SetSelection: Effect.fn(function* ({ value }) {
 				if (value === null) yield* presence.setSelection();

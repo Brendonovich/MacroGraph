@@ -2,20 +2,21 @@ import { Option, pipe, Record } from "effect";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Iterable from "effect/Iterable";
-import * as Ref from "effect/Ref";
 import * as RequestResolver from "effect/RequestResolver";
 import {
 	Graph,
+	IO,
 	Package,
 	Project,
 	ProjectEvent,
-	Request,
+	type Request,
 	Schema,
 } from "@macrograph/project-domain";
+import "@total-typescript/ts-reset/filter-boolean";
 
-import { NodesIOStore } from "../NodesIOStore";
-import { requestResolverServices } from "../Requests";
+import { NodesIOStore } from "./NodesIOStore";
 import { ProjectEditor } from "./ProjectEditor";
+import { requestResolverServices } from "./Requests";
 
 export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 	"ProjectRequests",
@@ -74,14 +75,17 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 															id: Schema.Id.make(id),
 															name: schema.name,
 															type: schema.type,
-															properties: [],
-															// Object.entries(
-															// 	schema.properties ?? {},
-															// ).map(([id, property]) => ({
-															// 	id,
-															// 	name: property.name,
-															// 	resource: property.resource.id,
-															// })),
+															properties: Object.entries(
+																schema.properties ?? {},
+															)
+																.map(([id, property]) => ({
+																	id,
+																	name: property.name,
+																	...("resource" in property
+																		? { resource: property.resource.id }
+																		: { type: IO.T.serialize(property.type) }),
+																}))
+																.filter(Boolean),
 														},
 													] as const,
 											),
@@ -159,7 +163,7 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 					}),
 			).pipe(requestResolverServices);
 
-			const UpdateResourceConstant = RequestResolver.fromEffect(
+			const UpdateResourceConstantResolver = RequestResolver.fromEffect(
 				(r: Request.UpdateResourceConstant) =>
 					Effect.gen(function* () {
 						const editor = yield* ProjectEditor;
@@ -209,30 +213,11 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 			).pipe(requestResolverServices);
 
 			return {
-				createGraph: Effect.request<
-					Request.CreateGraph,
-					typeof CreateGraphResolver
-				>(CreateGraphResolver),
-
-				getProject: Effect.request<
-					Request.GetProject,
-					typeof GetProjectResolver
-				>(GetProjectResolver)(new Request.GetProject()),
-
-				createResourceConstant: Effect.request<
-					Request.CreateResourceConstant,
-					typeof CreateResourceConstantResolver
-				>(CreateResourceConstantResolver),
-
-				updateResourceConstant: Effect.request<
-					Request.UpdateResourceConstant,
-					typeof UpdateResourceConstant
-				>(UpdateResourceConstant),
-
-				deleteResourceConstant: Effect.request<
-					Request.DeleteResourceConstant,
-					typeof DeleteResourceConstantResolver
-				>(DeleteResourceConstantResolver),
+				CreateGraphResolver,
+				GetProjectResolver,
+				CreateResourceConstantResolver,
+				UpdateResourceConstantResolver,
+				DeleteResourceConstantResolver,
 			};
 		}),
 	},

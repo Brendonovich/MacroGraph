@@ -64,7 +64,6 @@
 		"hono": "^4.7.5",
 		"jose": "^4.15.9",
 		"obs-websocket-js": "^5.0.7",
-		"solid-presence": "^0.2.0",
 		"unocss-preset-primitives": "0.0.2-beta.1",
 		"unocss-preset-radix": "^2.8.2",
 		"unocss-preset-scrollbar": "^3.2.0",
