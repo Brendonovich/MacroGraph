@@ -1,16 +1,33 @@
 import { focusRingClasses } from "@macrograph/ui";
 import { cx } from "cva";
-import { For } from "solid-js";
+import { createMemo, createSignal, For } from "solid-js";
 
 import { ProjectActions } from "../Actions";
 import { useProjectService } from "../EffectRuntime";
 import { useLayoutStateRaw } from "../LayoutState";
 import { ProjectState } from "../State";
+import { tokeniseString } from "./search";
 
 export function GraphsSidebar() {
 	const { state } = useProjectService(ProjectState);
 	const actions = useProjectService(ProjectActions);
 	const layoutState = useLayoutStateRaw();
+
+	const [search, setSearch] = createSignal("");
+
+	const tokenisedGraphs = createMemo(() =>
+		Object.values(state.graphs).map(
+			(graph) => [tokeniseString(graph.name), graph] as const,
+		),
+	);
+
+	const filteredGraphs = createMemo(() => {
+		const searchTokens = tokeniseString(search());
+		if (searchTokens.length === 0) return tokenisedGraphs();
+		return tokenisedGraphs().filter(([tokens]) =>
+			searchTokens.every((token) => tokens.some((t) => t.includes(token))),
+		);
+	});
 
 	const selected = () => {
 		const s = layoutState.focusedTab();
@@ -27,7 +44,8 @@ export function GraphsSidebar() {
 							focusRingClasses("inset"),
 						)}
 						placeholder="Search Graphs"
-						disabled
+						value={search()}
+						onInput={(e) => setSearch(e.currentTarget.value)}
 					/>
 				</div>
 				<button
@@ -42,8 +60,8 @@ export function GraphsSidebar() {
 				</button>
 			</div>
 			<ul>
-				<For each={Object.values(state.graphs)}>
-					{(graph) => (
+				<For each={filteredGraphs()}>
+					{([, graph]) => (
 						<li>
 							<button
 								type="button"

@@ -16,6 +16,7 @@ import { Portal } from "solid-js/web";
 import createPresence from "solid-presence";
 
 import { useGraphContext } from "./Context";
+import { tokeniseString } from "./search";
 
 export type GraphContextMenuState =
 	| { open: false }
@@ -91,10 +92,7 @@ export const GraphContextMenu = Object.assign(
 					});
 
 					const lowercaseSearchTokens = createMemo(() =>
-						search()
-							.toLowerCase()
-							.split(" ")
-							.filter((s) => s !== ""),
+						tokeniseString(search()),
 					);
 
 					const filteredPackages = createMemo(() => {
