@@ -42,21 +42,15 @@ export function makeGraphTabSchema(
 				() => tab().selection,
 			);
 
-			const getScreenRelativePosition = (
-				input: { clientX: number; clientY: number } | { x: number; y: number },
-			) => {
-				const x = "clientX" in input ? input.clientX : input.x;
-				const y = "clientY" in input ? input.clientY : input.y;
-				return { x: x - (bounds.left ?? 0), y: y - (bounds.top ?? 0) };
-			};
-
 			createEventListener(window, "keydown", (e) => {
 				if (e.code === "Backspace" || e.code === "Delete") {
 					actions.DeleteGraphItems(tab().graphId, tab().selection);
 				} else if (e.code === "Period") {
 					if (e.metaKey || e.ctrlKey) {
-						const pos = getScreenRelativePosition({ x: mouse.x, y: mouse.y });
-						setGraphCtxMenu({ open: true, position: pos });
+						setGraphCtxMenu({
+							open: true,
+							position: { x: mouse.x, y: mouse.y },
+						});
 					}
 				}
 			});
@@ -74,8 +68,10 @@ export function makeGraphTabSchema(
 							)
 						}
 						onContextMenu={(e) => {
-							const pos = getScreenRelativePosition(e);
-							setGraphCtxMenu({ open: true, position: pos });
+							setGraphCtxMenu({
+								open: true,
+								position: { x: e.clientX, y: e.clientY },
+							});
 						}}
 						onContextMenuClose={() => {
 							setGraphCtxMenu({ open: false });
