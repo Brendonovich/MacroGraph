@@ -99,7 +99,7 @@ export default function () {
 					<AuthSection />
 				</Header>
 				<div class="flex flex-row flex-1 h-full relative">
-					<div class="flex flex-row flex-1 divide-x divide-gray-5 h-full overflow-x-hidden">
+					<div class={cx("flex flex-row flex-1 h-full overflow-x-hidden")}>
 						<NavSidebar />
 
 						<ProjectPaneLayoutView<SettingsPage>
