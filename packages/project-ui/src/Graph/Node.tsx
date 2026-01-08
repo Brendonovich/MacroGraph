@@ -22,10 +22,10 @@ import type { DOMElement } from "solid-js/jsx-runtime";
 import { isTouchDevice } from "../platform";
 import { useGraphContext } from "./Context";
 import {
-	createLongPress,
 	LONG_PRESS_TIMEOUT_MS,
 	TOUCH_MOVE_THRESHOLD,
 } from "./interaction-state";
+import { createLongPress } from "./hooks";
 
 export function NodeRoot(
 	props: ParentProps<{
@@ -283,10 +283,10 @@ export function NodeHeader(
 				)}
 				onPointerDown={(e) => {
 					if (props.onLongPress && e.pointerType === "touch") {
-						const dispose = createLongPress(e, {
+						const { dispose } = createLongPress(e, {
 							timeout: LONG_PRESS_TIMEOUT_MS,
 							moveThreshold: TOUCH_MOVE_THRESHOLD,
-							onLongPress: (event) => {
+							onLongPress: (event: PointerEvent) => {
 								props.onLongPress?.(event);
 							},
 							onCancel: () => {},
