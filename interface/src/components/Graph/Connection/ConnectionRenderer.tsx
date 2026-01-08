@@ -6,7 +6,7 @@ import {
 	splitIORef,
 	type XY,
 } from "@macrograph/runtime";
-import type { t } from "@macrograph/typesystem";
+import type { t } from "@macrograph/typesystem-old";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { createEffect } from "solid-js";
 

@@ -17,7 +17,7 @@
 		"@macrograph/json": "workspace:^",
 		"@macrograph/option": "workspace:^",
 		"@macrograph/runtime": "workspace:*",
-		"@macrograph/typesystem": "workspace:*",
+		"@macrograph/typesystem-old": "workspace:*",
 		"@macrograph/ui": "workspace:*",
 		"@macrograph/utils": "workspace:^",
 		"@octokit/auth-callback": "^4.0.0",

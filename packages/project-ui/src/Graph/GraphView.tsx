@@ -66,7 +66,9 @@ export function GraphView(
 		onScaleChange?(zoom: number): void;
 	} & Pick<ComponentProps<"div">, "ref" | "children">,
 ) {
-	const [state, setState] = createSignal<InteractionState>( /* IS.areaSelection(0, {x: 0,y: 0}, {x:1,y:1}) */ IS.idle() );
+	const [state, setState] = createSignal<InteractionState>(
+		/* IS.areaSelection(0, {x: 0,y: 0}, {x:1,y:1}) */ IS.idle(),
+	);
 
 	const graphCtx = useGraphContext();
 	const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
@@ -952,9 +954,7 @@ export function GraphView(
 
 					return (
 						<div
-							class=
-								"absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10"
-
+							class="absolute left-0 top-0 ring-1 ring-yellow-500 bg-yellow-500/10"
 							style={{
 								width: `${Math.abs(currentScreenPosition().x - startScreenPosition().x)}px`,
 								height: `${Math.abs(currentScreenPosition().y - startScreenPosition().y)}px`,

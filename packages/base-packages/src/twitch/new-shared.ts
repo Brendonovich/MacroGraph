@@ -1,6 +1,6 @@
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
-import { Resource } from "@macrograph/package-sdk/updated";
+import { Resource } from "@macrograph/package-sdk";
 
 import { ConnectionFailed, TwitchAPIError } from "./new-types";
 import { ChannelRpcs } from "./rpcs-channel";

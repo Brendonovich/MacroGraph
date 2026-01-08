@@ -1,10 +1,10 @@
 import { Effect, pipe } from "effect";
-import type { PackageEngine } from "@macrograph/package-sdk/updated";
+import type { PackageEngine } from "@macrograph/package-sdk";
 import OBSWebsocket, { type OBSRequestTypes } from "obs-websocket-js";
 
 import { EngineDef } from "./index";
 import { ConnectionFailed } from "./new-shared";
-import { Event, type SocketAddress } from "./types";
+import { Event, SocketAddress } from "./types";
 
 type Socket = {
 	address: SocketAddress;
@@ -74,14 +74,19 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 						}).pipe(runSocketEdit),
 					);
 
-					addWsEventListeners(ws, opts.address, ctx.emitEvent);
+					addWsEventListeners(
+						ws,
+						SocketAddress.make(opts.address),
+						ctx.emitEvent,
+					);
 
 					yield* Effect.tryPromise({
 						try: () => socket.ws.connect(opts.address, opts.password),
 						catch: () => new ConnectionFailed(),
 					});
 				}),
-				RemoveSocket: Effect.fnUntraced(function* ({ address }) {
+				RemoveSocket: Effect.fnUntraced(function* ({ address: address_ }) {
+					const address = SocketAddress.make(address_);
 					const socket = sockets.get(address);
 					if (!socket) return;
 
@@ -91,7 +96,11 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 
 					sockets.delete(address);
 				}),
-				ConnectSocket: Effect.fnUntraced(function* ({ address, password }) {
+				ConnectSocket: Effect.fnUntraced(function* ({
+					address: address_,
+					password,
+				}) {
+					const address = SocketAddress.make(address_);
 					const socket = sockets.get(address);
 					if (!socket) return;
 
@@ -102,7 +111,8 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 
 					socket.state = "connecting";
 				}),
-				DisconnectSocket: Effect.fnUntraced(function* ({ address }) {
+				DisconnectSocket: Effect.fnUntraced(function* ({ address: address_ }) {
+					const address = SocketAddress.make(address_);
 					const socket = sockets.get(address);
 					if (!socket) return;
 

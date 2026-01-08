@@ -1,4 +1,4 @@
-import { Disposable, type t } from "@macrograph/typesystem";
+import { Disposable, type t } from "@macrograph/typesystem-old";
 import { trackDeep } from "@solid-primitives/deep";
 import { createEffect, createRoot, getOwner, on, runWithOwner } from "solid-js";
 import { createMutable } from "solid-js/store";

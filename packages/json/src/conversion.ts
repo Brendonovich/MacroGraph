@@ -5,7 +5,7 @@ import {
 	type MapValue,
 	type Struct,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { ReactiveMap } from "@solid-primitives/map";
 
 import { JSONEnum, type JSONValue } from "./type";

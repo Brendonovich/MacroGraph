@@ -13,7 +13,7 @@ import {
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import { CLIENT_RPCS, type STATE } from "./shared";
+import { ClientRpcs, type ClientState } from "./new-shared";
 
 const CONNECTION_INDICATOR = {
 	connected: { class: "bg-green-600", label: "Connected" },
@@ -22,7 +22,7 @@ const CONNECTION_INDICATOR = {
 };
 
 export default function Settings(
-	props: SettingsProps<typeof CLIENT_RPCS, typeof STATE>,
+	props: SettingsProps<typeof ClientRpcs, typeof ClientState>,
 ) {
 	return (
 		<div class="flex flex-col gap-4">
@@ -48,7 +48,9 @@ export default function Settings(
 	);
 }
 
-function AddSocketForm(props: SettingsProps<typeof CLIENT_RPCS, typeof STATE>) {
+function AddSocketForm(
+	props: SettingsProps<typeof ClientRpcs, typeof ClientState>,
+) {
 	const [addSocket, setAddSocket] = createStore({
 		name: "",
 		address: "ws://localhost:4455",
@@ -88,8 +90,8 @@ function AddSocketForm(props: SettingsProps<typeof CLIENT_RPCS, typeof STATE>) {
 }
 
 function SocketListItem(
-	props: SettingsProps<typeof CLIENT_RPCS, typeof STATE> & {
-		conn: (typeof STATE)["Encoded"]["sockets"][number];
+	props: SettingsProps<typeof ClientRpcs, typeof ClientState> & {
+		conn: (typeof ClientState)["Encoded"]["sockets"][number];
 	},
 ) {
 	const conn = () => props.conn;
@@ -148,4 +150,4 @@ function InputField(props: { label: string } & ComponentProps<"input">) {
 	);
 }
 
-export const Rpcs = CLIENT_RPCS;
+export const Rpcs = ClientRpcs;

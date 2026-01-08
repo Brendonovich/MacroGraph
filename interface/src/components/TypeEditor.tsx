@@ -1,5 +1,5 @@
 import { DropdownMenu } from "@kobalte/core";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import clsx from "clsx";
 import {
 	type Accessor,

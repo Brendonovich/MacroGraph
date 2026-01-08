@@ -10,7 +10,7 @@ import type {
 	RunProps,
 	SchemaProperties,
 } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import { readBinaryFile } from "@tauri-apps/api/fs";
 import type * as v from "valibot";
 

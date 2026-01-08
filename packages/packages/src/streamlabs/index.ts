@@ -1,5 +1,5 @@
 import { type Core, Package } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 
 import { createCtx } from "./ctx";
 import type { Event } from "./events";

@@ -8,6 +8,7 @@
 		"@macrograph/icons": "workspace:*",
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
+		"@macrograph/typesystem": "workspace:*",
 		"@macrograph/ui": "workspace:*",
 		"@radix-ui/colors": "^3.0.0",
 		"@solid-primitives/bounds": "^0.0.118",
@@ -26,6 +27,9 @@
 		"solid-presence": "^0.2.0",
 		"xstate": "^5.25.0"
 	},
-	"exports": { ".": "./src/index.ts", "./styles.css": "./src/styles.css" },
+	"exports": {
+		".": { "default": "./src/index.ts", "types": "./dist/src/index.d.ts" },
+		"./styles.css": "./src/styles.css"
+	},
 	"devDependencies": { "vitest": "^4.0.14" }
 }

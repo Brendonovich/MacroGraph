@@ -1,5 +1,5 @@
 import { Package, type WsProvider } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 
 import { createCtx, type Events } from "./ctx";
 

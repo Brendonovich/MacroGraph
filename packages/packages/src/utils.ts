@@ -13,7 +13,7 @@ import {
 	type Struct,
 	type StructFields,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 

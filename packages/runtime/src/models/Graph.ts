@@ -1,5 +1,5 @@
 import { Maybe, None, type Option } from "@macrograph/option";
-import { Disposable } from "@macrograph/typesystem";
+import { Disposable } from "@macrograph/typesystem-old";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";

@@ -9,20 +9,6 @@
 		"test": "vitest",
 		"typecheck": "tsc -b"
 	},
-	"dependencies": {
-		"@macrograph/option": "workspace:^",
-		"@solid-primitives/deep": "^0.2.7",
-		"@solid-primitives/map": "^0.4.11",
-		"@solid-primitives/set": "^0.4.11",
-		"@tanstack/solid-query": "^5.90.15",
-		"valibot": "^0.37.0"
-	},
-	"devDependencies": {
-		"@macrograph/config": "workspace:*",
-		"@total-typescript/ts-reset": "^0.4.2",
-		"safaridriver": "^0.0.5",
-		"solid-js": "^1.9.10",
-		"type-fest": "^2.19.0",
-		"webdriverio": "^8.35.1"
-	}
+	"dependencies": { "effect": "^3.19.13" },
+	"devDependencies": { "@macrograph/config": "workspace:*" }
 }

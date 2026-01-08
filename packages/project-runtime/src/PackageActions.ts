@@ -15,7 +15,7 @@ import {
 import type {
 	PackageEngine,
 	Package as SDKPackage,
-} from "@macrograph/package-sdk/updated";
+} from "@macrograph/package-sdk";
 import {
 	Actor,
 	Package,

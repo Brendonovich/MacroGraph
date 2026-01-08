@@ -1,5 +1,5 @@
 import type { CreateEventSchema } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { createEventListener } from "@solid-primitives/event-listener";
 

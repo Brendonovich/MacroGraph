@@ -1,5 +1,5 @@
 import type { CreateNonEventSchema, RunProps } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 
 import { type Pkg, STATUS_BYTES } from "./";
 import { MIDIOutput } from "./resource";

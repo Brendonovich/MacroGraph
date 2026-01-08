@@ -12,7 +12,7 @@
 	"dependencies": {
 		"@macrograph/option": "workspace:*",
 		"@macrograph/runtime": "workspace:*",
-		"@macrograph/typesystem": "workspace:*",
+		"@macrograph/typesystem-old": "workspace:*",
 		"@solid-primitives/map": "^0.4.11",
 		"valibot": "^0.37.0"
 	},

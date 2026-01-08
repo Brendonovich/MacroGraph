@@ -5,7 +5,7 @@ import {
 	connectWildcardsInTypes,
 	disconnectWildcardsInTypes,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { ReactiveSet } from "@solid-primitives/set";
 import "@total-typescript/ts-reset/filter-boolean";
 import {

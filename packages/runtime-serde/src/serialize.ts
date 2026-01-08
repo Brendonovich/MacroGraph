@@ -3,7 +3,7 @@ import {
 	type EnumVariantFields,
 	type Field,
 	serializeValue,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import type * as v from "valibot";
 
 import type * as serde from "./serde";

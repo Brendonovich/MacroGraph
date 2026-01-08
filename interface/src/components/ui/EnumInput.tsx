@@ -1,5 +1,5 @@
 import { Select } from "@kobalte/core";
-import type { Enum, EnumVariants } from "@macrograph/typesystem";
+import type { Enum, EnumVariants } from "@macrograph/typesystem-old";
 import clsx from "clsx";
 import type { ComponentProps } from "solid-js";
 

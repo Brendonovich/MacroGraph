@@ -6,7 +6,7 @@ import type {
 	PropertyDef,
 	SchemaProperties,
 } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
 import {

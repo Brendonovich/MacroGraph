@@ -4,7 +4,7 @@ import {
 	type EnumVariantFields,
 	Field,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";

@@ -5,7 +5,7 @@ import {
 	type PrimitiveType,
 	type t,
 	Wildcard,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import type { EventBus } from "@solid-primitives/event-bus";
 import { batch } from "solid-js";
 

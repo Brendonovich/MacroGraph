@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/correctness/useYield: generator functions in this file intentionally don't always yield */
 import { Effect, Option } from "effect";
-import { t } from "@macrograph/package-sdk";
-import { Package, PackageEngine } from "@macrograph/package-sdk/updated";
+import { Package, PackageEngine, t } from "@macrograph/package-sdk";
 
 import {
 	ClientRpcs,

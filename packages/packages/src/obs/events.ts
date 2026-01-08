@@ -6,7 +6,7 @@ import type {
 	PropertyDef,
 	SchemaProperties,
 } from "@macrograph/runtime";
-import { type InferEnum, t } from "@macrograph/typesystem";
+import { type InferEnum, t } from "@macrograph/typesystem-old";
 import { createEventBus } from "@solid-primitives/event-bus";
 import type { EventEmitter } from "eventemitter3";
 import type { EventTypes } from "obs-websocket-js";

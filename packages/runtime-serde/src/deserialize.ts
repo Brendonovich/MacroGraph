@@ -4,7 +4,7 @@ import {
 	deserializeValue,
 	type EnumVariantFields,
 	Field,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { ReactiveMap } from "@solid-primitives/map";
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";

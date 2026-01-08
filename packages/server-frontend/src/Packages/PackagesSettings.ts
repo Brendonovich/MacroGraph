@@ -13,5 +13,5 @@ export const HttpPackgeRpcClient = Layer.succeed(
 				),
 			),
 			Effect.map(Option.some),
-		),
+		) as any,
 );

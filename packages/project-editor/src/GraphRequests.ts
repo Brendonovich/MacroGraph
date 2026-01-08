@@ -6,24 +6,22 @@ import * as RequestResolver from "effect/RequestResolver";
 import {
 	Comment,
 	Graph,
+	IO,
 	Node,
+	NodesIOStore,
 	Project,
 	ProjectEvent,
 	type Request,
 	Schema,
 } from "@macrograph/project-domain";
 
-import { NodeIOActions } from "./NodeIOActions.ts";
-import { NodesIOStore } from "./NodesIOStore.ts";
-import { requestResolverServices } from "./Requests.ts";
 import { ProjectEditor } from "./ProjectEditor.ts";
+import { requestResolverServices } from "./Requests.ts";
 
 export class GraphRequests extends Effect.Service<GraphRequests>()(
 	"GraphRequests",
 	{
 		effect: Effect.gen(function* () {
-			const nodeIOActions = yield* NodeIOActions;
-
 			const CreateNodeResolver = RequestResolver.fromEffect(
 				(r: Request.CreateNode) =>
 					Effect.gen(function* () {
@@ -67,7 +65,7 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 								}),
 						);
 
-						const io = yield* nodeIOActions.generateNodeIO(schema, node);
+						const io = yield* IO.generateNodeIO(schema, node);
 						yield* nodesIO.setForNode(node.id, io);
 
 						return yield* editor.publishEvent(
@@ -301,9 +299,6 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 				DisconnectIOResolver,
 			};
 		}),
-		dependencies: [
-			NodeIOActions.Default,
-			NodesIOStore.Default,
-		],
+		dependencies: [NodesIOStore.Default],
 	},
 ) {}

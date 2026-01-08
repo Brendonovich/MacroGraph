@@ -9,7 +9,7 @@ import {
 	StructBuilder,
 	type StructFields,
 	type t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createLazyMemo } from "@solid-primitives/memo";
 import { type Component, lazy } from "solid-js";

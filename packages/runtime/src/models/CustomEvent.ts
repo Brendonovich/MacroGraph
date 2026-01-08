@@ -1,4 +1,4 @@
-import { Field, type PrimitiveType, t } from "@macrograph/typesystem";
+import { Field, type PrimitiveType, t } from "@macrograph/typesystem-old";
 import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";

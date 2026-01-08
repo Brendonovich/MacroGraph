@@ -1,5 +1,5 @@
 import { Package } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 
 export function pkg() {
 	const pkg = new Package({ name: "Logic" });

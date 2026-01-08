@@ -23,8 +23,15 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"types": ["unplugin-icons/types/solid"],
-		"plugins": [{ "name": "@effect/language-service" }]
+		"types": ["@macrograph/ui/types"],
+		"plugins": [{ "name": "@effect/language-service" }],
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"references": [
+		{ "path": "../project-ui" },
+		{ "path": "../project-domain" },
+		{ "path": "../package-sdk" },
+		{ "path": "../ui" },
+		{ "path": "../web-domain" },
+	],
 }

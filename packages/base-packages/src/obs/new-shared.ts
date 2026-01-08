@@ -1,6 +1,6 @@
 import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
-import { Resource } from "@macrograph/package-sdk/updated";
+import { Resource } from "@macrograph/package-sdk";
 
 import { SocketAddress } from "./types";
 
@@ -9,29 +9,24 @@ export class ConnectionFailed extends S.TaggedError<ConnectionFailed>()(
 	{},
 ) {}
 
-export class ClientRpcs extends RpcGroup.make(
+export const ClientRpcs = RpcGroup.make(
 	Rpc.make("AddSocket", {
 		payload: S.Struct({
-			address: SocketAddress,
+			address: S.String,
 			password: S.optional(S.String),
 			name: S.optional(S.String),
 		}),
 		error: ConnectionFailed,
 	}),
-	Rpc.make("RemoveSocket", { payload: S.Struct({ address: SocketAddress }) }),
-	Rpc.make("DisconnectSocket", {
-		payload: S.Struct({ address: SocketAddress }),
-	}),
+	Rpc.make("RemoveSocket", { payload: S.Struct({ address: S.String }) }),
+	Rpc.make("DisconnectSocket", { payload: S.Struct({ address: S.String }) }),
 	Rpc.make("ConnectSocket", {
-		payload: S.Struct({
-			address: SocketAddress,
-			password: S.optional(S.String),
-		}),
+		payload: S.Struct({ address: S.String, password: S.optional(S.String) }),
 		error: ConnectionFailed,
 	}),
-) {}
+);
 
-export class RuntimeRpcs extends RpcGroup.make(
+export const RuntimeRpcs = RpcGroup.make(
 	Rpc.make("BroadcastCustomEvent", {
 		payload: S.Struct({ address: SocketAddress, eventData: S.Any }),
 	}),
@@ -959,13 +954,13 @@ export class RuntimeRpcs extends RpcGroup.make(
 	Rpc.make("TriggerStudioModeTransition", {
 		payload: S.Struct({ address: SocketAddress }),
 	}),
-) {}
+);
 
 export class ClientState extends S.Struct({
 	sockets: S.Array(
 		S.Struct({
 			name: S.optional(S.String),
-			address: S.String,
+			address: SocketAddress,
 			password: S.optional(S.String),
 			state: S.Union(
 				S.Literal("connected"),

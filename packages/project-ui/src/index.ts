@@ -19,5 +19,3 @@ export * from "./Sidebar";
 export { ProjectState } from "./State";
 export * from "./tanstack-query";
 export * from "./ZoomedPane";
-
-import "@macrograph/icons/types";

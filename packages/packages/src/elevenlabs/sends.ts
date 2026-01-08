@@ -1,6 +1,6 @@
 import { Maybe } from "@macrograph/option";
 import { createStruct } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import { writeBinaryFile } from "@tauri-apps/api/fs";
 
 import type { Pkg } from ".";

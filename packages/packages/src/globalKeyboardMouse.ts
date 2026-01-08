@@ -1,5 +1,5 @@
 import { Package } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import { createEventBus, type EventBus } from "@solid-primitives/event-bus";
 import { commands, events, type Key } from "tauri-plugin-kb-mouse";
 

@@ -7,11 +7,11 @@ import {
 	Socket,
 } from "@effect/platform";
 import { Data, Deferred, Effect, Exit, Option, pipe, Scope } from "effect";
-import type { PackageEngine } from "@macrograph/package-sdk/updated";
+import type { PackageEngine } from "@macrograph/package-sdk";
 
 import { EngineDef } from ".";
 import { HelixApi } from "./new-helix";
-import { MissingCredential, TwitchAPIError } from "./new-shared";
+import { MissingCredential, TwitchAPIError } from "./new-types";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 

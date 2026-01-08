@@ -17,7 +17,7 @@
 		"@macrograph/runtime": "workspace:*",
 		"@macrograph/runtime-rendering": "workspace:*",
 		"@macrograph/runtime-serde": "workspace:*",
-		"@macrograph/typesystem": "workspace:*",
+		"@macrograph/typesystem-old": "workspace:*",
 		"@macrograph/ui": "workspace:*",
 		"@solid-primitives/bounds": "^0.0.118",
 		"@solid-primitives/context": "^0.2.3",

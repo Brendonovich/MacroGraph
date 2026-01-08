@@ -10,7 +10,7 @@ import type {
 	RunProps,
 	SchemaProperties,
 } from "@macrograph/runtime";
-import { type InferEnum, t } from "@macrograph/typesystem";
+import { type InferEnum, t } from "@macrograph/typesystem-old";
 import type { z } from "zod";
 
 import { createHTTPClient } from "../httpEndpoint";

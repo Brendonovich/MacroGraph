@@ -10,7 +10,7 @@ import type {
 	RunProps,
 	SchemaProperties,
 } from "@macrograph/runtime";
-import { type InferEnum, t } from "@macrograph/typesystem";
+import { type InferEnum, t } from "@macrograph/typesystem-old";
 import { ReactiveMap } from "@solid-primitives/map";
 import type OBSWebSocket from "obs-websocket-js";
 import type { EventTypes } from "obs-websocket-js";

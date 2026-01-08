@@ -1,7 +1,6 @@
 {
 	"name": "@macrograph/package-sdk",
 	"type": "module",
-	"main": "./src/index.ts",
 	"dependencies": {
 		"@effect/experimental": "^0.58.0",
 		"@effect/opentelemetry": "^0.60.0",
@@ -13,9 +12,9 @@
 		"@faker-js/faker": "^9.8.0",
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/icons": "workspace:*",
-		"@macrograph/project-domain": "workspace:*",
 		"@macrograph/ui": "workspace:*",
 		"@macrograph/web-domain": "workspace:*",
+		"@macrograph/typesystem": "workspace:*",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
 		"@opentelemetry/sdk-logs": "^0.208.0",
 		"@opentelemetry/sdk-metrics": "^2.2.0",
@@ -52,8 +51,7 @@
 		"unplugin-icons": "^0.18.5"
 	},
 	"exports": {
-		".": "./src/index.ts",
-		"./ui": "./src/ui.tsx",
-		"./updated": "./src/updated.ts"
+		".": { "types": "./dist/src/index.d.ts", "default": "./src/index.ts" },
+		"./ui": { "types": "./dist/src/ui.d.ts", "default": "./src/ui.tsx" }
 	}
 }

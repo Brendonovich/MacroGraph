@@ -6,7 +6,7 @@ import {
 	ListType,
 	t,
 	WildcardType,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import clsx from "clsx";
 import { Match, Switch } from "solid-js";
 

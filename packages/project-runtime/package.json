@@ -15,10 +15,6 @@
 		"./CloudApiClient": {
 			"default": "./src/Runtime/CloudApiClient.ts",
 			"types": "./dist/src/Runtime/CloudApiClient.d.ts"
-		},
-		"./NodesIOStore": {
-			"default": "./src/NodesIOStore.ts",
-			"types": "./dist/src/NodesIOStore.d.ts"
 		}
 	},
 	"devDependencies": { "@effect/vitest": "^0.27.0", "vitest": "^4.0.8" }

@@ -18,21 +18,18 @@ import {
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
 import * as Packages from "@macrograph/base-packages";
-import { Package, type ProjectEvent } from "@macrograph/project-domain";
+import {
+	NodesIOStore,
+	Package,
+	type ProjectEvent,
+} from "@macrograph/project-domain";
 import {
 	GraphRequests,
-	NodeIOActions,
 	NodeRequests,
-	NodesIOStore,
 	ProjectEditor,
 	ProjectRequests,
 } from "@macrograph/project-editor";
-import {
-	CloudApiClient,
-	CredentialsStore,
-	// 	PackageActions,
-	// 	RuntimeActions,
-} from "@macrograph/project-runtime";
+import { CloudApiClient, CredentialsStore } from "@macrograph/project-runtime";
 import {
 	ClientAuth as DClientAuth,
 	EditorRpcs as RawEditorRpcs,
@@ -323,7 +320,6 @@ export class Server extends Effect.Service<Server>()("Server", {
 		CredentialsStore.layer,
 		ClientAuth.Default,
 		NodesIOStore.Default,
-		NodeIOActions.Default,
 	],
 }) {}
 

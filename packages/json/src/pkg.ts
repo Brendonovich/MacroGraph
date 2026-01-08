@@ -1,6 +1,6 @@
 import { Maybe, None, Some } from "@macrograph/option";
 import { Package } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 
 import { jsonToJS, jsToJSON, toJSON } from "./conversion";
 import { JSONEnum } from "./type";

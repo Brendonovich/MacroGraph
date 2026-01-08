@@ -1,5 +1,5 @@
 import { Maybe, type Option } from "@macrograph/option";
-import type { EnumBase, StructBase } from "@macrograph/typesystem";
+import type { EnumBase, StructBase } from "@macrograph/typesystem-old";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
 import "@total-typescript/ts-reset";

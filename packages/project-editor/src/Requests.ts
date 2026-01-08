@@ -1,7 +1,6 @@
 import { RequestResolver } from "effect";
-import { Actor } from "@macrograph/project-domain";
+import { Actor, NodesIOStore } from "@macrograph/project-domain";
 
-import { NodesIOStore } from "./NodesIOStore";
 import { ProjectEditor } from "./ProjectEditor";
 
 export const requestResolverServices = RequestResolver.contextFromServices(

@@ -1,5 +1,7 @@
 import { Effect, HashMap, Ref } from "effect";
-import type { IO, Node } from "@macrograph/project-domain";
+
+import type * as IO from "./IO";
+import type * as Node from "./Node";
 
 export interface NodeIO {
 	readonly shape: unknown;

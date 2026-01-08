@@ -9,7 +9,7 @@ import {
 	type PrimitiveType,
 	type t,
 	WildcardType,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { useQuery } from "@tanstack/solid-query";
 import { Match, Show, Switch } from "solid-js";
 

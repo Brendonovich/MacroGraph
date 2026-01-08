@@ -7,7 +7,7 @@ import {
 	type Field,
 	type InferEnumVariant,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import type { ReactiveMap } from "@solid-primitives/map";
 
 const JSONLiteralVariants = (e: EnumBuilder) =>

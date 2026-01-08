@@ -7,15 +7,12 @@
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
 		"@macrograph/web-domain": "workspace:*",
+		"@macrograph/typesystem": "workspace:*",
 		"@total-typescript/ts-reset": "^0.4.2",
 		"effect": "^3.19.13"
 	},
 	"exports": {
-		".": { "default": "./src/index.ts", "types": "./dist/src/index.d.ts" },
-		"./NodesIOStore": {
-			"default": "./src/NodesIOStore.ts",
-			"types": "./dist/src/NodesIOStore.d.ts"
-		}
+		".": { "default": "./src/index.ts", "types": "./dist/src/index.d.ts" }
 	},
 	"devDependencies": { "@effect/vitest": "^0.27.0", "vitest": "^4.0.8" }
 }

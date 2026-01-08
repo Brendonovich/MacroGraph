@@ -1,4 +1,4 @@
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 
 import type { Pkg } from "..";
 

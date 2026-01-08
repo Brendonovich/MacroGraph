@@ -10,7 +10,7 @@ import {
 	BasePrimitiveType,
 	type PrimitiveVariant,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { createRoot } from "solid-js";
 

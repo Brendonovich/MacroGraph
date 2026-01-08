@@ -18,7 +18,7 @@ import {
 	type Enum,
 	type StructBase,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { catchError } from "solid-js";
 
 export type RenderedType =

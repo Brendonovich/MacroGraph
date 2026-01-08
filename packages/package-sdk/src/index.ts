@@ -1,290 +1,39 @@
-import type { Rpc, RpcGroup } from "@effect/rpc";
-import { Context, Data, Effect, Layer, type Schema, type Scope } from "effect";
-import type { UnknownException } from "effect/Cause";
+/** biome-ignore-all lint/complexity/noBannedTypes: {} is used by effect and it's fine */
+
+import { type Rpc, type RpcClient, RpcGroup } from "@effect/rpc";
 import {
-	type CreateDataIn,
-	type CreateDataOut,
-	type Credential,
-	type EffectGenerator,
-	ExecutionContext,
-	type InferProperties,
-	IO,
-	type NodeExecutionContext,
-	type PropertiesSchema,
-	type Resource,
-	type RunFunctionAvailableRequirements,
-	type SchemaDefinition,
-	type SchemaProperty,
-	type SchemaRunGeneratorEffect,
-} from "@macrograph/project-domain";
-import type { CREDENTIAL } from "@macrograph/web-domain";
+	Context,
+	Data as D,
+	Effect,
+	Layer,
+	type Option,
+	type Schema as S,
+} from "effect";
+import type { YieldWrap } from "effect/Utils";
+import * as T from "@macrograph/typesystem";
 
-export * as DataTime from "effect/DateTime";
-export * as Option from "effect/Option";
-export { Resource } from "@macrograph/project-domain";
+export class ExecInput extends D.TaggedClass("ExecInput")<{ id: string }> {}
+export class ExecOutput extends D.TaggedClass("ExecOutput")<{ id: string }> {}
 
-export const getInput = <T extends IO.T.Any_>(ref: IO.DataInput<T>) =>
-	Effect.flatMap(ExecutionContext, (ctx) =>
-		ctx.getInput(ref),
-	) satisfies Effect.Effect<any, any, RunFunctionAvailableRequirements>;
+export class DataInput<T extends T.Type_<any>> extends D.TaggedClass(
+	"DataInput",
+)<{ id: string; type: T }> {}
 
-// export const getProperty = <T extends Resource.Resource<any, any>>(
-// 	property: SchemaProperty<T>,
-// ) => Effect.flatMap(ExecutionContext, (ctx) => ctx.getProperty(property));
+export class DataOutput<T extends T.Type_<any>> extends D.TaggedClass(
+	"DataOutput",
+)<{ id: string; type: T }> {}
 
-export const setOutput = <T extends IO.T.Any_>(
-	ref: IO.DataOutput<T>,
-	data: IO.T.Infer_<T>,
-) =>
-	Effect.flatMap(ExecutionContext, (ctx) =>
-		ctx.setOutput(ref, data),
-	) satisfies Effect.Effect<
-		any,
-		any,
-		RunFunctionAvailableRequirements | NodeExecutionContext
-	>;
-
-export namespace PackageEngine {
-	export class PackageEngineDefinition<
-		TEvents,
-		TRpcs extends RpcGroup.RpcGroup<any>,
-		TResources extends Resource.Resource<string, any>,
-		TSuggestions extends string,
-	> extends Data.Class<{
-		events?: Schema.Schema<TEvents>;
-		rpc?: TRpcs;
-		resources?: Array<TResources>;
-		suggestions?: ReadonlyArray<TSuggestions>;
-	}> {
-		build<TState>(
-			builder: BuildEngineFn<TState, TEvents, TRpcs, TResources, TSuggestions>,
-		) {
-			return new PackageEngine({ def: this, builder });
-		}
-	}
-
-	type BuildEngineCtx<TEvents> = {
-		credentials: Effect.Effect<
-			ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>,
-			Credential.FetchFailed
-		>;
-		emitEvent(event: TEvents): Effect.Effect<void>;
-		refreshCredential(
-			providerId: string,
-			providerUserId: string,
-		): Effect.Effect<void, UnknownException>;
-		dirtyState: Effect.Effect<void>;
-		dirtyResources: Effect.Effect<void>;
-	};
-
-	type BuildEngineFn<
-		TState,
-		TEvents,
-		TRpcs extends RpcGroup.RpcGroup<any>,
-		TResources extends Resource.Resource<any, any>,
-		TSuggestions extends string,
-	> = (
-		ctx: BuildEngineCtx<TEvents>,
-	) => BuiltEngine<TState, TRpcs, TResources, TSuggestions>;
-
-	export class PackageEngine<TEvents> extends Data.Class<{
-		def: PackageEngineDefinition<
-			TEvents,
-			RpcGroup.RpcGroup<Rpc.Any>,
-			Resource.Resource<string, any>,
-			string
-		>;
-		builder: BuildEngineFn<
-			any,
-			TEvents,
-			RpcGroup.RpcGroup<Rpc.Any>,
-			any,
-			string
-		>;
-	}> {}
-
-	export type BuiltEngine<
-		TState,
-		TRpcs extends RpcGroup.RpcGroup<any>,
-		TResources extends Resource.Resource<any, any>,
-		_TSuggestions extends string,
-	> = Schema.Simplify<
-		([TRpcs] extends [never]
-			? { rpc?: never }
-			: { rpc: Layer.Layer<Rpc.ToHandler<RpcGroup.Rpcs<TRpcs>>> }) &
-			([TState] extends [never]
-				? { state?: never }
-				: { state: Effect.Effect<TState, Credential.FetchFailed> }) &
-			([TResources] extends [never]
-				? { resources?: never }
-				: { resources: Layer.Layer<Resource.ToHandler<TResources>> })
-		// &
-		// ([TSuggestions] extends [never]
-		// 	? { suggestions?: never }
-		// 	: { suggestions: Record<string, Effect.Effect<string>> })
-	>;
-
-	export const define = <
-		TEvents = never,
-		TRpcs extends RpcGroup.RpcGroup<any> = never,
-		TResources extends Resource.Resource<any, any> = never,
-		TSuggestions extends string = never,
-	>(value?: {
-		events?: Schema.Schema<TEvents, any, any>;
-		rpc?: TRpcs;
-		resources?: Array<TResources>;
-		suggestions?: ReadonlyArray<TSuggestions>;
-	}) =>
-		new PackageEngineDefinition<TEvents, TRpcs, TResources, TSuggestions>(
-			value ?? ({} as any),
-		);
-
-	export type PackageEngineBuilder<
-		TEvents,
-		TState = never,
-		TRpcs extends Rpc.Any = never,
-		TResources = never,
-	> = (ctx: {
-		credentials: Effect.Effect<
-			ReadonlyArray<(typeof CREDENTIAL)["Encoded"]>,
-			Credential.FetchFailed
-		>;
-		emitEvent(event: TEvents): void;
-		refreshCredential(
-			providerId: string,
-			providerUserId: string,
-		): Effect.Effect<never, UnknownException>;
-		dirtyState: Effect.Effect<void>;
-	}) => Effect.Effect<
-		([TState] extends [never]
-			? { state?: undefined }
-			: { state: Effect.Effect<TState> }) &
-			([TRpcs] extends [never]
-				? { rpc?: undefined }
-				: { rpc: Layer.Layer<Rpc.ToHandler<TRpcs>> }) &
-			([TResources] extends [never]
-				? { resources?: undefined }
-				: {
-						resources: Layer.Layer<
-							TResources extends infer T ? Resource.Handler<any, T> : never
-						>;
-					}),
-		never,
-		Scope.Scope
-	>;
-}
-
-export namespace Package {
-	export const make = <TEvents = never>(args: {
-		name: string;
-		engine?: PackageEngine.PackageEngine<TEvents>;
-		builder: PackageBuildFn<TEvents>;
-	}): UnbuiltPackage<TEvents> => {
-		return { name: args.name, engine: args.engine, builder: args.builder };
-	};
-
-	export type PackageBuildFn<TEvents> = (ctx: {
-		schema: <
-			TIO,
-			TProperties extends Record<string, SchemaProperty<any>>,
-			TEvent,
-		>(
-			id: string,
-			schema: SchemaDefinition<TIO, TProperties, TEvents, TEvent>,
-		) => void;
-	}) => void;
-
-	export interface UnbuiltPackage<TEvents> {
-		name: string;
-		engine?: PackageEngine.PackageEngine<TEvents>;
-		builder: PackageBuildFn<TEvents>;
-	}
-
-	// export type SchemaImplsFrom<Schema extends NodeSchema.Any> = {
-	// 	readonly [Current in Schema as Schema["id"]]: NodeSchema.ToImpl<Current>;
-	// };
-
-	export interface PackageBuilder<Schemas extends NodeSchema.Any, Events> {
-		schema<Id extends Extract<Schemas, { type: "exec" }>["id"], TIO>(
-			id: Id,
-			schema: NodeSchema.ExecImpl<Extract<Schemas, { id: Id }>, TIO>,
-		): PackageBuilder<Exclude<Schemas, Extract<Schemas, { id: Id }>>, Events>;
-		schema<Id extends Extract<Schemas, { type: "event" }>["id"], TIO, Event>(
-			id: Id,
-			schema: NodeSchema.EventImpl<
-				Extract<Schemas, { id: Id }>,
-				TIO,
-				Events,
-				Event
-			>,
-		): PackageBuilder<Exclude<Schemas, Extract<Schemas, { id: Id }>>, Events>;
-	}
-
-	interface PackageDef<
-		Engine extends PackageEngine.PackageEngineDefinition<any, any, any, any>,
-	> {
-		name: string;
-		engine?: Engine;
-	}
-
-	interface Package<
-		Engine extends PackageEngine.PackageEngineDefinition<any, any, any, any>,
-		Schemas extends NodeSchema.Any,
-	> extends PackageDef<Engine> {
-		toLayer: (
-			build: (
-				builder: PackageBuilder<Schemas, Schema.Schema.Type<Engine["events"]>>,
-			) => PackageBuilder<never, Schema.Schema.Type<Engine["events"]>>,
-		) => Layer.Layer<never>;
-	}
-
-	export class Tag extends Context.Tag("@macrograph/package-sdk/Package/Tag")<
-		Tag,
-		{ def: PackageDef<any>; schemas: Map<string, NodeSchema.AnyImpl> }
-	>() {}
-
-	export const define = <
-		const Schemas extends NodeSchema.Any,
-		const Engine extends PackageEngine.PackageEngineDefinition<
-			any,
-			any,
-			any,
-			any
-		> = never,
-	>(
-		def: PackageDef<Engine>,
-	): Package<Engine, Schemas> => ({
-		...def,
-		toLayer: (_build) =>
-			Layer.effect(
-				Tag,
-				Effect.sync(() => {
-					return { def, schemas: new Map() };
-				}),
-			),
-	});
-}
-
-export namespace Property {
-	export type Resource<TValue> = {
-		_tag: "Resource";
-		resource: Resource.Resource<any, TValue>;
-	};
-
-	export const resource = <TValue>(
-		_name: string,
-		_resource: Resource.Resource<any, TValue>,
-	) => {};
-}
+export type EffectGenerator<Eff extends Effect.Effect<any, any, any>> =
+	Generator<YieldWrap<Eff>, Effect.Effect.Success<Eff>, never>;
 
 export const t = {
-	String: new IO.T.String_(),
-	Int: new IO.T.Int_(),
-	Bool: new IO.T.Bool_(),
-	Float: new IO.T.Float_(),
-	DateTime: new IO.T.DateTime_(),
-	Option: <T extends IO.T.Type_<any>>(t: T) => new IO.T.Option_({ inner: t }),
-	List: <T extends IO.T.Type_<any>>(t: T) => new IO.T.List_({ item: t }),
+	String: new T.String_(),
+	Int: new T.Int_(),
+	Bool: new T.Bool_(),
+	Float: new T.Float_(),
+	DateTime: new T.DateTime_(),
+	Option: <T extends T.Type_<any>>(t: T) => new T.Option_({ inner: t }),
+	List: <T extends T.Type_<any>>(t: T) => new T.List_({ item: t }),
 	// List: <T extends IO.DataType.Any>(t: T) =>
 	// 	["L", t] satisfies IO.DataType.List<T>,
 	// Map: <K extends IO.DataType.MapKey, V extends IO.DataType.Any>(k: K, v: V) =>
@@ -293,69 +42,512 @@ export const t = {
 	// 	new IO.DataType._List<T>({ value: t }),
 };
 
-export namespace NodeSchema {
-	export type Schema<
-		Id extends string,
-		Type extends "exec" | "base" | "pure" | "event",
-		Properties extends PropertiesSchema,
-		IO,
-		Suggestions extends string,
-	> = {
-		id: Id;
-		type: Type;
-		properties: Properties;
-		name: string;
-		description: string;
-		io: (_: ExecIOCtx<Suggestions>) => IO;
-	};
-
-	export type Any<Suggestions extends string = string> = Schema<
-		string,
-		"exec" | "base" | "pure" | "event",
-		PropertiesSchema,
+export namespace PackageEngine {
+	export type Any = PackageEngine<
 		any,
-		Suggestions
+		any,
+		AnyEvent,
+		S.Schema.Any,
+		Resource.Tag<any, any>
 	>;
 
-	export const make = <
-		const Id extends string,
-		const Type extends "exec" | "base" | "pure" | "event",
-		const Properties extends PropertiesSchema,
-		const IO,
-		const Suggestions extends string,
+	export type LayerCtx<Events extends AnyEvent> = {
+		emitEvent(event: S.Schema.Type<Events>): void;
+		dirtyState(): void;
+		credentials: Effect.Effect<
+			ReadonlyArray<{
+				provider: string;
+				id: string;
+				displayName: string;
+				token: {
+					access_token: string;
+					refresh_token?: string;
+					expires_in: number;
+				};
+			}>
+		>;
+		refreshCredential(provider: string, id: string): Effect.Effect<void>;
+	};
+
+	export type Built<Engine> = Engine extends PackageEngine<
+		infer ClientRpcs,
+		infer RuntimeRpcs,
+		any,
+		infer ClientState,
+		infer Resources
+	>
+		? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
+		: never;
+
+	export type LayerBuilderRet<
+		ClientRpcs extends Rpc.Any,
+		RuntimeRpcs extends Rpc.Any,
+		ClientState extends S.Schema.Any,
+		Resources extends Resource.Tag<any, any>,
+	> = {
+		clientRpcs: RpcGroup.HandlersFrom<ClientRpcs>;
+		runtimeRpcs: RpcGroup.HandlersFrom<RuntimeRpcs>;
+		clientState: Effect.Effect<S.Schema.Type<ClientState>>;
+		resources: {
+			[Id in Resources["id"]]: Effect.Effect<
+				ReadonlyArray<Resource.Value<Extract<Resources, { id: Id }>>>
+			>;
+		};
+	};
+
+	export interface PackageEngineObj<
+		ClientRpcs extends Rpc.Any,
+		RuntimeRpcs extends Rpc.Any,
+		Events extends AnyEvent,
+		ClientState extends S.Schema.Any,
+		Resources extends Resource.Tag<any, any>,
+	> {
+		clientRpcs: RpcGroup.RpcGroup<ClientRpcs>;
+		runtimeRpcs: RpcGroup.RpcGroup<RuntimeRpcs>;
+		events: ReadonlyArray<Events>;
+		clientState: ClientState;
+		resources: ReadonlyArray<Resources>;
+
+		toLayer(
+			_: (
+				ctx: LayerCtx<Events>,
+			) => Effect.Effect<
+				LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
+			>,
+		): Layer.Layer<EngineImpl, never, CtxTag>;
+	}
+
+	export interface PackageEngine<
+		ClientRpcs extends Rpc.Any,
+		RuntimeRpcs extends Rpc.Any,
+		Events extends AnyEvent,
+		ClientState extends S.Schema.Any,
+		Resources extends Resource.Tag<any, any>,
+	> extends PackageEngineObj<
+			ClientRpcs,
+			RuntimeRpcs,
+			Events,
+			ClientState,
+			Resources
+		> {
+		new (_: never): {};
+	}
+
+	export class CtxTag extends Context.Tag("CtxTag")<CtxTag, LayerCtx<any>>() {}
+
+	export class EngineImpl extends Context.Tag("EngineImpl")<
+		EngineImpl,
+		LayerBuilderRet<any, any, any, Resource.Tag<any, any>>
+	>() {}
+
+	export const define = <
+		ClientRpcs extends Rpc.Any,
+		RuntimeRpcs extends Rpc.Any,
+		Events extends AnyEvent,
+		ClientState extends S.Schema.Any = never,
+		Resources extends Resource.Tag<any, any> = never,
+	>(opts: {
+		clientRpcs?: RpcGroup.RpcGroup<ClientRpcs>;
+		runtimeRpcs?: RpcGroup.RpcGroup<RuntimeRpcs>;
+		events?: ReadonlyArray<Events>;
+		clientState?: ClientState;
+		resources?: ReadonlyArray<Resources>;
+	}): PackageEngine<
+		ClientRpcs,
+		RuntimeRpcs,
+		Events,
+		ClientState,
+		Resources
+	> => {
+		return Object.assign(class {}, {
+			clientRpcs: opts.clientRpcs ?? RpcGroup.make(),
+			runtimeRpcs: opts.runtimeRpcs ?? RpcGroup.make(),
+			events: opts.events ?? [],
+			clientState: opts.clientState,
+			resources: opts.resources ?? [],
+			toLayer: (build) =>
+				Layer.unwrapEffect(
+					Effect.gen(function* () {
+						const built = yield* build(yield* CtxTag);
+
+						return Layer.succeed(EngineImpl, built);
+					}),
+				),
+		} as PackageEngineObj<
+			ClientRpcs,
+			RuntimeRpcs,
+			Events,
+			ClientState,
+			Resources
+		>) as any;
+	};
+
+	export type ClientRpcs<Engine> = Engine extends PackageEngine<
+		infer ClientRpcs,
+		any,
+		any,
+		any,
+		any
+	>
+		? ClientRpcs
+		: never;
+
+	export type RuntimeRpcs<Engine> = Engine extends PackageEngine<
+		any,
+		infer RuntimeRpcs,
+		any,
+		any,
+		any
+	>
+		? RuntimeRpcs
+		: never;
+
+	export type RuntimeRpcClient<Engine> = RpcClient.RpcClient<
+		RuntimeRpcs<Engine>
+	>;
+
+	export type Events<Engine> = Engine extends PackageEngine<
+		any,
+		any,
+		infer Events,
+		any,
+		any
+	>
+		? S.Schema.Type<Events>
+		: never;
+
+	export type AnyEvent = { _tag: string } & S.Any;
+}
+
+export namespace Package {
+	export interface Package<Engine extends PackageEngine.Any> {
+		name: string;
+		engine?: Engine;
+		/**
+		 * @internal
+		 */
+		schemas: Map<string, Schema.Any<Engine>>;
+
+		addSchema: Schema.MakeFn<Engine, this>;
+	}
+
+	export type Any = Package<PackageEngine.Any>;
+
+	export const define = <Engine extends PackageEngine.Any = never>(opts: {
+		name: string;
+		engine?: Engine;
+	}): Package<Engine> => {
+		const schemas = new Map<string, Schema.Any>();
+
+		const self: Package<Engine> = {
+			...opts,
+			schemas,
+			addSchema: ((id, schema) => {
+				const effectRun: (ctx: any) => Effect.Effect<any, any, any> =
+					schema.type === "exec"
+						? Effect.fnUntraced(schema.run as any)
+						: (ctx) => Effect.sync(() => schema.run(ctx));
+
+				schemas.set(id, {
+					id,
+					...schema,
+					io: (
+						ctx: Schema.AnyIOCtx<Engine, NonNullable<typeof schema.properties>>,
+					) => {
+						const systemIO: Array<ExecInput | ExecOutput> = [];
+						if (schema.type === "event") {
+							systemIO.push(ctx.out.exec("exec"));
+						} else if (schema.type === "exec") {
+							systemIO.push(ctx.out.exec("exec"));
+							systemIO.push(ctx.in.exec("exec"));
+						}
+
+						return [systemIO, schema.io(ctx)];
+					},
+					run: Effect.fnUntraced(function* (ctx: any) {
+						const ret = yield* effectRun({ ...ctx, io: ctx.io[1] });
+
+						if (schema.type === "event" || schema.type === "exec") {
+							return ctx.io[0][0];
+						}
+
+						return ret;
+					}),
+				} as any);
+				return self;
+			}) as Schema.AnyMakeFn<Engine, Package<Engine>>,
+		};
+
+		return self;
+	};
+}
+
+export namespace Resource {
+	export interface TagObject<Id extends string, Value> {
+		id: Id;
+		name_: string;
+
+		toLayer(
+			handler: Effect.Effect<ReadonlyArray<{ raw: Value; display: string }>>,
+		): Layer.Layer<Handler<Id, Value>>;
+	}
+
+	export interface Tag<Id extends string, Value> extends TagObject<Id, Value> {
+		new (_: never): {};
+	}
+
+	export type Value<Tag extends Resource.Tag<any, any>> =
+		Tag extends Resource.Tag<any, infer Value> ? Value : never;
+
+	export interface Handler<Id extends string, Value> {
+		id: Id;
+		handler: Effect.Effect<{ raw: Value; display: string }>;
+	}
+
+	export const Tag =
+		<const Id extends string>(id: Id) =>
+		<Value extends string = string>(opts: { name: string }): Tag<Id, Value> => {
+			return Object.assign(class {}, {
+				id,
+				name_: opts.name,
+				toLayer(handler) {
+					Context.unsafeMake(new Map([[id, { id, handler }]]));
+					throw new Error("");
+				},
+			} as TagObject<Id, Value>) as any;
+		};
+}
+
+export namespace Property {
+	export type ResourceSource<Id extends string, Value> = {
+		resource: Resource.Tag<Id, Value>;
+	};
+	export type ValueSource = { type: T.Any_ };
+	export type AnySource<Id extends string = any, Value = any> =
+		| ResourceSource<Id, Value>
+		| ValueSource;
+
+	export type Property<Id extends string, Value> = AnySource<Id, Value> & {
+		name: string;
+	};
+
+	export type Infer<
+		T extends Property<any, any>,
+		Engine extends PackageEngine.Any,
+	> = T extends Property.ResourceSource<any, infer Value>
+		? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
+		: T extends ValueSource
+			? T.Infer_<T["type"]>
+			: never;
+}
+
+export namespace PropertiesSchema {
+	export type Any = Record<string, Property.Property<any, any>>;
+}
+
+export namespace Schema {
+	export interface Metadata<
+		Id extends string,
+		Properties extends PropertiesSchema.Any,
+	> {
+		id: Id;
+		name: string;
+		type: string;
+		description?: string;
+		properties?: Properties;
+	}
+
+	export type SuggestionsCtx<
+		Engine extends PackageEngine.Any,
+		Properties extends PropertiesSchema.Any,
+	> = {
+		properties: {
+			[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
+		};
+	};
+
+	export type CreateExecIn = (
+		id: string,
+		options?: { name?: string },
+	) => ExecInput;
+	export type CreateDataIn<
+		Engine extends PackageEngine.Any,
+		Properties extends PropertiesSchema.Any,
+	> = <T extends T.Any_>(
+		id: string,
+		type: T,
+		options?: { name?: string } & (T.Infer_<T> extends string
+			? {
+					suggestions?: (
+						ctx: SuggestionsCtx<Engine, Properties>,
+					) => Effect.Effect<ReadonlyArray<string>>;
+				}
+			: {}),
+	) => DataInput<T>;
+
+	export type CreateExecOut = (
+		id: string,
+		options?: { name?: string },
+	) => ExecOutput;
+	export type CreateDataOut = <T extends T.Any_>(
+		id: string,
+		type: T,
+		options?: { name?: string },
+	) => DataOutput<T>;
+
+	export type InferIO<IO> = IO extends DataInput<infer T>
+		? T.Infer_<T>
+		: IO extends DataOutput<infer T>
+			? (v: T.Infer_<T>) => void
+			: IO extends ExecOutput
+				? IO
+				: IO extends ExecInput
+					? never
+					: IO extends Record<string, any>
+						? { [K in keyof IO]: InferIO<IO[K]> }
+						: IO;
+
+	export type AnyIOCtx<
+		Engine extends PackageEngine.Any,
+		Properties extends PropertiesSchema.Any,
+	> = {
+		in: { data: CreateDataIn<Engine, Properties>; exec: CreateExecIn };
+		out: { data: CreateDataOut; exec: CreateExecOut };
+		properties: IOProperties<Properties, Engine>;
+	};
+
+	type IOProperties<
+		Properties extends PropertiesSchema.Any,
+		Engine extends PackageEngine.Any,
+	> = {
+		[K in keyof Properties]: Properties[K] extends Property.ValueSource
+			? Property.Infer<Properties[K], Engine>
+			: never;
+	};
+
+	export interface Base<
+		Engine extends PackageEngine.Any,
+		Id extends string,
+		Properties extends PropertiesSchema.Any,
+		IO,
+	> extends Metadata<Id, Properties> {
+		type: "base";
+		io: (ctx: {
+			in: { data: CreateDataIn<Engine, Properties>; exec: CreateExecIn };
+			out: { data: CreateDataOut; exec: CreateExecOut };
+			properties: IOProperties<Properties, Engine>;
+		}) => IO;
+		run: (ctx: {
+			io: InferIO<IO>;
+			properties: {
+				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
+			};
+		}) => EffectGenerator<Effect.Effect<void | ExecOutput>>;
+	}
+
+	export interface Exec<
+		Engine extends PackageEngine.Any,
+		Id extends string,
+		Properties extends PropertiesSchema.Any,
+		IO,
+	> extends Metadata<Id, Properties> {
+		type: "exec";
+		io: (ctx: {
+			in: { data: CreateDataIn<Engine, Properties> };
+			out: { data: CreateDataOut };
+			properties: IOProperties<Properties, Engine>;
+		}) => IO;
+		run: (ctx: {
+			io: InferIO<IO>;
+			properties: {
+				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
+			};
+		}) => EffectGenerator<Effect.Effect<void>>;
+	}
+
+	export interface Pure<
+		Engine extends PackageEngine.Any,
+		Id extends string,
+		Properties extends PropertiesSchema.Any,
+		IO,
+	> extends Metadata<Id, Properties> {
+		type: "pure";
+		io: (ctx: {
+			in: { data: CreateDataIn<Engine, Properties> };
+			out: { data: CreateDataOut };
+			properties: IOProperties<Properties, Engine>;
+		}) => IO;
+		run: (ctx: {
+			io: InferIO<IO>;
+			properties: {
+				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
+			};
+		}) => void;
+	}
+
+	export interface Event<
+		Engine extends PackageEngine.Any,
+		Id extends string,
+		Properties extends PropertiesSchema.Any,
+		IO,
+		Event extends PackageEngine.Events<Engine>,
+	> extends Metadata<Id, Properties> {
+		type: "event";
+		io: (ctx: { out: { data: CreateDataOut; exec: CreateExecOut } }) => IO;
+		event: (
+			data: PackageEngine.Events<Engine>,
+			ctx: {
+				properties: {
+					[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
+				};
+			},
+		) => Option.Option<Event>;
+		run: (ctx: { io: InferIO<IO>; event: Event }) => void;
+	}
+
+	export type Any<
+		Engine extends PackageEngine.Any = any,
+		Id extends string = string,
+		Properties extends PropertiesSchema.Any = PropertiesSchema.Any,
+		IO = any,
+		E extends PackageEngine.Events<Engine> = PackageEngine.Events<Engine>,
+	> =
+		| Exec<Engine, Id, Properties, IO>
+		| Pure<Engine, Id, Properties, IO>
+		| Event<Engine, Id, Properties, IO, E>
+		| Base<Engine, Id, Properties, IO>;
+
+	export type AnyMakeFn<Engine extends PackageEngine.Any, Ret> = <
+		Id extends string,
+		Properties extends PropertiesSchema.Any,
+		IO,
+		E extends PackageEngine.Events<Engine>,
 	>(
 		id: Id,
-		value: Omit<Schema<Id, Type, Properties, IO, Suggestions>, "id">,
-	): Schema<Id, Type, Properties, IO, Suggestions> =>
-		Object.assign(value, { id });
+		schema: Omit<Schema.Any<Engine, Id, Properties, IO, E>, "id">,
+	) => Ret;
 
-	interface ExecIOCtx<Suggestions extends string> {
-		in: { data: CreateDataIn<Suggestions> };
-		out: { data: CreateDataOut };
+	export interface MakeFn<Engine extends PackageEngine.Any, Ret> {
+		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
+			id: Id,
+			schema: Omit<Schema.Exec<Engine, Id, Properties, IO>, "id">,
+		): Ret;
+		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
+			id: Id,
+			schema: Omit<Schema.Pure<Engine, Id, Properties, IO>, "id">,
+		): Ret;
+		<
+			Id extends string,
+			IO,
+			Event extends PackageEngine.Events<Engine>,
+			Properties extends PropertiesSchema.Any = never,
+		>(
+			id: Id,
+			schema: Omit<Schema.Event<Engine, Id, Properties, IO, Event>, "id">,
+		): Ret;
+		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
+			id: Id,
+			schema: Omit<Schema.Base<Engine, Id, Properties, IO>, "id">,
+		): Ret;
 	}
-
-	export interface ExecImpl<S extends Any, IO> {
-		run: (ctx: {
-			io: IO;
-			properties: InferProperties<S["properties"]>;
-		}) => EffectGenerator<SchemaRunGeneratorEffect>;
-	}
-
-	export interface EventImpl<S extends Any, IO, Events, Event> {
-		event: (
-			ctx: { properties: InferProperties<S["properties"]> },
-			e: Events,
-		) => Event | undefined;
-		run: (
-			ctx: { io: IO; properties: InferProperties<S["properties"]> },
-			event: Event,
-		) => EffectGenerator<SchemaRunGeneratorEffect>;
-	}
-
-	export type AnyImpl<
-		S extends Any = Any,
-		IO = any,
-		Events = any,
-		Event extends Events = any,
-	> = ExecImpl<S, IO> | EventImpl<S, IO, Events, Event>;
 }

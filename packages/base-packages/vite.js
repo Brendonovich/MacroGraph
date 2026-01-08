@@ -41,7 +41,6 @@ export default {
 
 			for (const folder of files) {
 				if (!folder.isDirectory()) continue;
-				console.log(folder);
 
 				const iconUrl = new URL(
 					`./src/${folder.name}/package-icon.png`,
@@ -65,8 +64,6 @@ export default {
 						.replaceAll(`$"`, ""),
 				);
 			}
-
-			console.log(packages);
 
 			return `
       	${imports.join("\n")}

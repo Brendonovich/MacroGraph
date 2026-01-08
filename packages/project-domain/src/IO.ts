@@ -1,9 +1,14 @@
-import * as D from "effect/Data";
-import * as DT from "effect/DateTime";
-import * as O from "effect/Option";
+import { Effect, Iterable, Option } from "effect";
 import * as S from "effect/Schema";
+import {
+	DataInput,
+	DataOutput,
+	ExecInput,
+	ExecOutput,
+	type Schema,
+} from "@macrograph/package-sdk";
+import * as T from "@macrograph/typesystem";
 
-import type { IO } from ".";
 import * as Node from "./Node";
 
 export const Id = S.String.pipe(S.brand("IO/Id"));
@@ -23,273 +28,6 @@ export function parseRef(ioRef: RefString) {
 export class NotFound extends S.TaggedError<NotFound>()("IO.NotFound", {
 	id: Id,
 }) {}
-
-export namespace T {
-	export type Any =
-		| Int
-		| Float
-		| String
-		| Bool
-		| DateTime
-		// | Wildcard
-		| List<Any>
-		| Option<Any>;
-	export const Any: S.Schema<Any> = S.suspend(() =>
-		S.Union(Int, Float, String, Bool, DateTime, /*Wildcard,*/ List, Option),
-	);
-
-	const TypeId = Symbol("TypeId");
-
-	export interface Type_<O> {
-		readonly [TypeId]: O;
-	}
-	const Type_ = <TTag extends string>(
-		tag: TTag,
-	): (new <O, D extends Record<string, any> | void = void>(
-		data: D,
-	) => Readonly<
-		Type_<O> & { readonly _tag: TTag } & (D extends void
-				? Record<string, never>
-				: D)
-	>) => {
-		return class {
-			readonly [TypeId] = null!;
-			readonly _tag = tag;
-
-			constructor(data: any) {
-				if (data) Object.assign(this, data);
-			}
-		} as any;
-	};
-
-	export class Int_ extends Type_("Int")<number> {}
-	export class Float_ extends Type_("Float")<number> {}
-	export class String_ extends Type_("String")<string> {}
-	export class Bool_ extends Type_("Bool")<boolean> {}
-	export class DateTime_ extends Type_("DateTime")<DT.DateTime> {}
-
-	export type Primitive_ = Int_ | Float_ | String_ | Bool_ | DateTime_;
-
-	export class List_<T extends Type_<any>> extends Type_("List")<
-		Array<Infer_<T>>,
-		{ item: T }
-	> {}
-
-	export class Option_<T extends Type_<any>> extends Type_("Option")<
-		O.Option<Infer_<T>>,
-		{ inner: T }
-	> {}
-
-	export type Any_ =
-		| Int_
-		| Float_
-		| String_
-		| Bool_
-		| DateTime_
-		| List_<Any_>
-		| Option_<Any_>;
-
-	export const primaryTypeOf_ = (t: Any_): Primitive_ => {
-		switch (t._tag) {
-			case "Int":
-			case "Bool":
-			case "DateTime":
-			case "Float":
-			case "String":
-				return t;
-			case "List":
-				return primaryTypeOf_(t.item);
-			case "Option":
-				return primaryTypeOf_(t.inner);
-		}
-	};
-
-	export type Infer_<T extends Type_<any>> = T extends Type_<infer O>
-		? O
-		: never;
-
-	type AnySchema_ =
-		| "I"
-		| "F"
-		| "S"
-		| "B"
-		| "DT"
-		| readonly ["L", AnySchema_]
-		| readonly ["O", AnySchema_];
-	export const AnySchema_: S.Schema<AnySchema_> = S.Union(
-		S.Literal("I", "F", "S", "B", "DT"),
-		S.Tuple(
-			S.Literal("L"),
-			S.suspend(() => AnySchema_),
-		),
-		S.Tuple(
-			S.Literal("O"),
-			S.suspend(() => AnySchema_),
-		),
-	);
-
-	export const default_ = (t: Any_) => {
-		switch (t._tag) {
-			case "Int":
-			case "Float":
-				return 0;
-			case "Bool":
-				return false;
-			case "String":
-				return "";
-			case "DateTime":
-				return DT.unsafeMake(0);
-			case "List":
-				return [];
-			case "Option":
-				return O.none();
-		}
-	};
-
-	export const serialize = (t: Any_): AnySchema_ => {
-		switch (t._tag) {
-			case "Int":
-				return "I";
-			case "Bool":
-				return "B";
-			case "Float":
-				return "F";
-			case "String":
-				return "S";
-			case "DateTime":
-				return "DT";
-			case "List":
-				return ["L", serialize(t.item)];
-			case "Option":
-				return ["O", serialize(t.inner)];
-		}
-	};
-
-	export const deserialize = (t: AnySchema_): Any_ => {
-		if (typeof t === "string") {
-			switch (t) {
-				case "I":
-					return new Int_();
-				case "B":
-					return new Bool_();
-				case "F":
-					return new Float_();
-				case "S":
-					return new String_();
-				case "DT":
-					return new DateTime_();
-			}
-		}
-
-		switch (t[0]) {
-			case "L":
-				return new List_({ item: deserialize(t[1]) });
-			case "O":
-				return new Option_({ inner: deserialize(t[1]) });
-		}
-	};
-
-	export class Int extends S.TaggedClass<Int>()("Int", {}) {}
-	export class Float extends S.TaggedClass<Float>()("Float", {}) {}
-	export class String extends S.TaggedClass<String>()("String", {}) {}
-	export class Bool extends S.TaggedClass<Bool>()("Bool", {}) {}
-	export class DateTime extends S.TaggedClass<DateTime>()("DateTime", {}) {}
-
-	export const Primitive = S.Union(Int, Float, String, Bool, DateTime);
-	export type Primitive = typeof Primitive.Type;
-
-	export const primaryTypeOf = (t: Any): Primitive => {
-		switch (t._tag) {
-			case "Int":
-			case "Bool":
-			case "DateTime":
-			case "Float":
-			case "String":
-				return t;
-			case "List":
-				return primaryTypeOf(t.inner);
-		}
-	};
-
-	// export class Wildcard extends S.TaggedClass<Wildcard>()("Wildcard", {}) {}
-
-	export class List<_T> extends S.TaggedClass<List<any>>()("List", {
-		inner: Any,
-	}) {}
-
-	export class Option<_T> extends S.TaggedClass<Option<any>>()("List", {
-		inner: Any,
-	}) {}
-
-	export type InferPrimitive<T> = T extends Int | Float
-		? number
-		: T extends String
-			? string
-			: T extends Bool
-				? boolean
-				: T extends DateTime
-					? DT.DateTime
-					: never;
-
-	export type Infer<T> = T extends Primitive
-		? InferPrimitive<T>
-		: T extends Option<infer T>
-			? O.Option<Infer<T>>
-			: never;
-
-	export namespace Encoded {
-		export const Int = S.Literal("I");
-		export type Int = typeof Int.Type;
-
-		export const Float = S.Literal("F");
-		export type Float = typeof Float.Type;
-
-		export const String = S.Literal("S");
-		export type String = typeof String.Type;
-
-		export const Bool = S.Literal("B");
-		export type Bool = typeof Bool.Type;
-
-		export const DateTime = S.Literal("DT");
-		export type DateTime = typeof DateTime.Type;
-
-		export const Primitive = S.Union(Int, Float, String, Bool, DateTime);
-		export type Primitive = typeof Primitive.Type;
-
-		// type InferPrimitive<T extends Primitive> = T extends Int | Float
-		// 	? number
-		// 	: T extends String
-		// 		? string
-		// 		: boolean;
-
-		export const MapKey = S.Union(Int, Float, String);
-		export type MapKey = typeof MapKey.Type;
-
-		export type Any = Primitive | Option<any> | List<any> | Map<MapKey, any>;
-		export const Any: S.Schema<Any> = S.suspend(() =>
-			S.Union(Primitive, Option, List, Map),
-		);
-
-		export const Option = S.Tuple(S.Literal("O"), Any);
-		export type Option<T extends Any> = readonly ["O", T];
-
-		export const List = S.Tuple(S.Literal("L"), Any);
-		export type List<T extends Any> = readonly ["L", T];
-
-		export const Map = S.Tuple(S.Literal("M"), MapKey, Any);
-		export type Map<K extends MapKey, V extends Any> = readonly ["M", K, V];
-
-		// export type Infer<T extends Any> = T extends Primitive
-		// 	? InferPrimitive<T>
-		// 	: T extends Option<infer T>
-		// 		? O.Option<Infer<T>>
-		// 		: T extends List<infer T>
-		// 			? Array<Infer<T>>
-		// 			: T extends Map<infer K, infer V>
-		// 				? Record<K, V>
-		// 				: never;
-	}
-}
 
 export class Exec extends S.TaggedClass<Exec>()("Exec", {}) {}
 export class Data extends S.TaggedClass<Data>()("Data", {
@@ -327,14 +65,58 @@ export class PortConections extends S.Class<PortConections>("PortConections")({
 	to: S.Array(PortRef),
 }) {}
 
-export class ExecInput extends D.TaggedClass("ExecInput")<{ id: IO.Id }> {}
+export const generateNodeIO = Effect.fnUntraced(function* (
+	schema: Schema.Any,
+	node: Node.Node,
+) {
+	const io = {
+		inputs: [] as Array<InputPort>,
+		outputs: [] as Array<OutputPort>,
+	};
 
-export class ExecOutput extends D.TaggedClass("ExecOutput")<{ id: IO.Id }> {}
+	const shape = schema.io({
+		out: {
+			exec: (_id, options) => {
+				const id = Id.make(_id);
+				io.outputs.push({ id, name: options?.name, variant: new Exec() });
+				return new ExecOutput({ id });
+			},
+			data: (_id, type, options) => {
+				const id = Id.make(_id);
+				io.outputs.push({
+					id,
+					name: options?.name,
+					variant: new Data({ type: T.serialize(type) }),
+				});
+				return new DataOutput({ id, type });
+			},
+		},
+		in: {
+			exec: (_id, options) => {
+				const id = Id.make(_id);
+				io.inputs.push({ id, name: options?.name, variant: new Exec() });
+				return new ExecInput({ id });
+			},
+			data: (_id, type, options) => {
+				const id = Id.make(_id);
+				io.inputs.push({
+					id,
+					name: options?.name,
+					variant: new Data({ type: T.serialize(type) }),
+				});
+				return new DataInput({ id, type });
+			},
+		},
+		properties:
+			node.properties?.pipe(
+				Iterable.filterMap(([key, value]) => {
+					const def = schema.properties?.[key];
+					if (!def || !("type" in def)) return Option.none();
+					return Option.some([key, value ?? T.default_(def.type)] as const);
+				}),
+				Object.fromEntries,
+			) ?? ({} as any),
+	});
 
-export class DataInput<T extends T.Type_<any>> extends D.TaggedClass(
-	"DataInput",
-)<{ id: IO.Id; type: T }> {}
-
-export class DataOutput<T extends T.Type_<any>> extends D.TaggedClass(
-	"DataOutput",
-)<{ id: IO.Id; type: T }> {}
+	return { ...io, shape };
+});

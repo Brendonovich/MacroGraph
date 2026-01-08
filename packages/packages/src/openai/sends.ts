@@ -1,5 +1,5 @@
 import { Maybe } from "@macrograph/option";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import type { ChatCompletionAssistantMessageParam } from "openai/resources";
 
 import type { Pkg } from ".";

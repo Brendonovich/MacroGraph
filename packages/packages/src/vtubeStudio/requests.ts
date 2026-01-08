@@ -7,7 +7,7 @@ import type {
 	RunProps,
 	SchemaProperties,
 } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import type { ApiClient } from "vtubestudio";
 
 import type { Pkg } from ".";

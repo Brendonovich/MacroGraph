@@ -3,7 +3,7 @@ import {
 	StructBase,
 	type StructFields,
 	t,
-} from "@macrograph/typesystem";
+} from "@macrograph/typesystem-old";
 import { createMutable } from "solid-js/store";
 
 import type { Project } from "./Project";

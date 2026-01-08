@@ -21,7 +21,16 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"plugins": [{ "name": "@effect/language-service" }]
+		"plugins": [{ "name": "@effect/language-service" }],
+		"types": ["@macrograph/ui/types"],
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"references": [
+		{ "path": "../base-packages" },
+		{ "path": "../package-sdk" },
+		{ "path": "../project-domain" },
+		{ "path": "../project-runtime" },
+		{ "path": "../project-editor" },
+		{ "path": "../project-ui" },
+	],
 }

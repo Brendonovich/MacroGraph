@@ -1,5 +1,5 @@
 import { Maybe, None, type Option, Some } from "@macrograph/option";
-import { Disposable } from "@macrograph/typesystem";
+import { Disposable } from "@macrograph/typesystem-old";
 import {
 	type Accessor,
 	catchError,

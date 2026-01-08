@@ -12,19 +12,18 @@ import {
 import type {
 	Package as SDKPackage,
 	Schema as SDKSchema,
-} from "@macrograph/package-sdk/updated";
+} from "@macrograph/package-sdk";
 import {
 	Actor,
 	type Graph,
+	IO,
 	type Node,
+	NodesIOStore,
 	type Package,
 	Project,
 	ProjectEvent,
 	type Schema,
 } from "@macrograph/project-domain";
-
-import { NodeIOActions } from "./NodeIOActions";
-import { NodesIOStore } from "./NodesIOStore";
 
 export interface ProjectEditor {
 	project: Effect.Effect<Project.Project>;
@@ -62,7 +61,6 @@ export const make = () =>
 			ProjectEvent.ProjectEvent & { actor: Actor.Actor }
 		>();
 
-		const nodeIOActions = yield* NodeIOActions;
 		const nodesIO = yield* NodesIOStore;
 
 		const editor = {
@@ -75,10 +73,7 @@ export const make = () =>
 							const schema = yield* editor.getSchema(node.schema);
 							if (Option.isNone(schema)) continue;
 
-							const io = yield* nodeIOActions.generateNodeIO(
-								schema.value,
-								node,
-							);
+							const io = yield* IO.generateNodeIO(schema.value, node);
 							yield* nodesIO.setForNode(node.id, io);
 						}
 					}
@@ -107,7 +102,7 @@ export const make = () =>
 					const schema = yield* editor.getSchema(node.schema);
 					if (Option.isNone(schema)) return;
 
-					const io = yield* nodeIOActions.generateNodeIO(schema.value, node);
+					const io = yield* IO.generateNodeIO(schema.value, node);
 					yield* nodesIO.setForNode(node.id, io);
 
 					yield* editor.publishEvent(

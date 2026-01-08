@@ -1,5 +1,5 @@
 {
-	"name": "@macrograph/json",
+	"name": "@macrograph/typesystem-old",
 	"private": true,
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -10,15 +10,12 @@
 		"typecheck": "tsc -b"
 	},
 	"dependencies": {
-		"@macrograph/option": "workspace:*",
-		"@macrograph/runtime": "workspace:*",
-		"@macrograph/runtime-serde": "workspace:*",
-		"@macrograph/typesystem-old": "workspace:*",
+		"@macrograph/option": "workspace:^",
 		"@solid-primitives/deep": "^0.2.7",
 		"@solid-primitives/map": "^0.4.11",
 		"@solid-primitives/set": "^0.4.11",
 		"@tanstack/solid-query": "^5.90.15",
-		"zod": "^3.25.36"
+		"valibot": "^0.37.0"
 	},
 	"devDependencies": {
 		"@macrograph/config": "workspace:*",

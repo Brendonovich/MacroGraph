@@ -1,6 +1,10 @@
 import { ContextMenu } from "@kobalte/core/context-menu";
 import type { Variable } from "@macrograph/runtime";
-import { BasePrimitiveType, serializeValue, t } from "@macrograph/typesystem";
+import {
+	BasePrimitiveType,
+	serializeValue,
+	t,
+} from "@macrograph/typesystem-old";
 import {
 	createMemo,
 	createSignal,

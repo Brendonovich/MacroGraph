@@ -10,14 +10,10 @@
 		"allowJs": true,
 		"strict": true,
 		"noEmit": true,
-		"types": [
-			"vite/client",
-			"unplugin-icons/types/solid",
-			"@macrograph/icons/types"
-		],
+		"types": ["vite/client", "unplugin-icons/types/solid"],
 		"isolatedModules": true,
 		"skipLibCheck": true,
 		"paths": { "~/*": ["./src/*"] },
-		"plugins": [{ "name": "@effect/language-service" }]
-	}
+		"plugins": [{ "name": "@effect/language-service" }],
+	},
 }

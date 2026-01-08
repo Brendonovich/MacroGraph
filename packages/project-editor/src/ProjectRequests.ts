@@ -5,16 +5,16 @@ import * as Iterable from "effect/Iterable";
 import * as RequestResolver from "effect/RequestResolver";
 import {
 	Graph,
-	IO,
+	NodesIOStore,
 	Package,
 	Project,
 	ProjectEvent,
 	type Request,
 	Schema,
 } from "@macrograph/project-domain";
+import * as T from "@macrograph/typesystem";
 import "@total-typescript/ts-reset/filter-boolean";
 
-import { NodesIOStore } from "./NodesIOStore";
 import { ProjectEditor } from "./ProjectEditor";
 import { requestResolverServices } from "./Requests";
 
@@ -83,7 +83,7 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 																	name: property.name,
 																	...("resource" in property
 																		? { resource: property.resource.id }
-																		: { type: IO.T.serialize(property.type) }),
+																		: { type: T.serialize(property.type) }),
 																}))
 																.filter(Boolean),
 														},

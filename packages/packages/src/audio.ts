@@ -1,5 +1,5 @@
 import { Package } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 
 const sounds = new Map<string, HTMLAudioElement>();
 

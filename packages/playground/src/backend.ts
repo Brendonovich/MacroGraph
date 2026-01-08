@@ -9,14 +9,13 @@ import * as Packages from "@macrograph/base-packages";
 import {
 	Actor,
 	Credential,
+	NodesIOStore,
 	Package,
 	Project,
 } from "@macrograph/project-domain";
 import {
 	GraphRequests,
-	NodeIOActions,
 	NodeRequests,
-	NodesIOStore,
 	ProjectEditor,
 	ProjectRequests,
 } from "@macrograph/project-editor";
@@ -147,7 +146,6 @@ export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 			RuntimeActions.Default,
 			CredentialsStore.layer,
 			NodesIOStore.Default,
-			NodeIOActions.Default,
 		),
 	),
 	Layer.provideMerge(CloudApiClient.layer()),

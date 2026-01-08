@@ -1,7 +1,7 @@
 import { JSONEnum, jsonToJS, jsToJSON } from "@macrograph/json";
 import { Maybe, None } from "@macrograph/option";
 import { type Core, Package } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem-old";
 import { ReactiveMap } from "@solid-primitives/map";
 import { writeBinaryFile } from "@tauri-apps/api/fs";
 

@@ -1,6 +1,5 @@
 import { Effect } from "effect";
-import { t } from "@macrograph/package-sdk";
-import { Package } from "@macrograph/package-sdk/updated";
+import { Package, t } from "@macrograph/package-sdk";
 
 export default Package.define({ name: "Utilities" })
 	.addSchema("Print", {

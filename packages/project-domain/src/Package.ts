@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
+import * as T from "@macrograph/typesystem";
 
-import { T } from "./IO";
 import { Resource } from "./NodeSchema";
 import * as Schema from "./Schema";
 
