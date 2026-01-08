@@ -24,12 +24,12 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"customConditions": ["@macrograph/source"],
+		"customConditions": ["@macrograph/source"]
 	},
 	"include": ["src"],
 	"references": [
 		{ "path": "../web-domain" },
 		{ "path": "../typesystem" },
-		{ "path": "../package-sdk" },
-	],
+		{ "path": "../package-sdk" }
+	]
 }

@@ -24,7 +24,7 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"types": ["unplugin-icons/types/solid"],
+		"types": ["unplugin-icons/types/solid"]
 	},
-	"include": ["auto-imports.d.ts", "index.d.ts"],
+	"include": ["auto-imports.d.ts", "index.d.ts"]
 }

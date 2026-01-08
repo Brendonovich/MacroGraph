@@ -24,8 +24,8 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"types": ["@macrograph/icons/types"],
+		"types": ["@macrograph/icons/types"]
 	},
 	"include": ["src"],
-	"references": [{ "path": "../package-sdk" }],
+	"references": [{ "path": "../package-sdk" }]
 }

@@ -8,20 +8,20 @@ export {}
 declare global {
   const IconBiX: typeof import('~icons/bi/x.jsx').default
   const IconGgSpinner: typeof import('~icons/gg/spinner.jsx').default
-  const IconIcBaselineDiscord: typeof import('~icons/ic/baseline-discord.jsx').default
-  const IconLucideChevronDown: typeof import('~icons/lucide/chevron-down.jsx').default
+  const IconIcBaselineDiscord: typeof import("~icons/ic/baseline-discord.jsx").default
+  const IconLucideChevronDown: typeof import("~icons/lucide/chevron-down.jsx").default
   const IconMaterialSymbolsArrowRightRounded: typeof import('~icons/material-symbols/arrow-right-rounded.jsx').default
   const IconMaterialSymbolsDeleteOutline: typeof import('~icons/material-symbols/delete-outline.jsx').default
-  const IconMdiGithub: typeof import('~icons/mdi/github.jsx').default
+  const IconMdiGithub: typeof import("~icons/mdi/github.jsx").default
   const IconPhSquareSplitHorizontal: typeof import('~icons/ph/square-split-horizontal.jsx').default
-  const IconRadixIconsExternalLink: typeof import('~icons/radix-icons/external-link.jsx').default
-  const IconRiTwitterXFill: typeof import('~icons/ri/twitter-x-fill.jsx').default
+  const IconRadixIconsExternalLink: typeof import("~icons/radix-icons/external-link.jsx").default
+  const IconRiTwitterXFill: typeof import("~icons/ri/twitter-x-fill.jsx").default
   const IconTablerArrowsDiagonal: typeof import('~icons/tabler/arrows-diagonal.jsx').default
   const IconTablerArrowsDiagonalMinimize2: typeof import('~icons/tabler/arrows-diagonal-minimize2.jsx').default
   const IconTablerCheck: typeof import('~icons/tabler/check.jsx').default
-  const IconTablerChevronDown: typeof import('~icons/tabler/chevron-down.jsx').default
+  const IconTablerChevronDown: typeof import("~icons/tabler/chevron-down.jsx").default
   const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx').default
   const IconTablerCircle: typeof import('~icons/tabler/circle.jsx').default
-  const IconTablerDeviceDesktopDown: typeof import('~icons/tabler/device-desktop-down.jsx').default
-  const IconTablerSandbox: typeof import('~icons/tabler/sandbox.jsx').default
+  const IconTablerDeviceDesktopDown: typeof import("~icons/tabler/device-desktop-down.jsx").default
+  const IconTablerSandbox: typeof import("~icons/tabler/sandbox.jsx").default
 }

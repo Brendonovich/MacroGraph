@@ -14,6 +14,6 @@
 		"isolatedModules": true,
 		"skipLibCheck": true,
 		"paths": { "~/*": ["./src/*"] },
-		"plugins": [{ "name": "@effect/language-service" }],
-	},
+		"plugins": [{ "name": "@effect/language-service" }]
+	}
 }

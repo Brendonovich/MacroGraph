@@ -24,13 +24,13 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"types": ["@macrograph/ui/types"],
-		"plugins": [{ "name": "@effect/language-service" }],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
 	"references": [
 		{ "path": "../ui" },
 		{ "path": "../web-domain" },
 		{ "path": "../typesystem" },
-		{ "path": "../icons" },
-	],
+		{ "path": "../icons" }
+	]
 }

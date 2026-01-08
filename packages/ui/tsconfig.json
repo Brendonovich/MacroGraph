@@ -24,7 +24,7 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"types": ["unplugin-icons/types/solid", "@macrograph/icons/types"],
+		"types": ["unplugin-icons/types/solid", "@macrograph/icons/types"]
 	},
-	"include": ["src"],
+	"include": ["src"]
 }
