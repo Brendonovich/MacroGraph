@@ -15,6 +15,7 @@ declare global {
   const IconHeroiconsXMarkSolid: typeof import('~icons/heroicons/x-mark-solid.jsx').default
   const IconIcBaselineDiscord: typeof import('~icons/ic/baseline-discord.jsx').default
   const IconIcRoundShare: typeof import('~icons/ic/round-share.jsx').default
+  const IconLucideChevronDown: typeof import('~icons/lucide/chevron-down.jsx').default
   const IconMaterialSymbolsAddRounded: typeof import('~icons/material-symbols/add-rounded.jsx').default
   const IconMaterialSymbolsArrowDropDownRounded: typeof import('~icons/material-symbols/arrow-drop-down-rounded.jsx').default
   const IconMaterialSymbolsArrowDropUpRounded: typeof import('~icons/material-symbols/arrow-drop-up-rounded.jsx').default

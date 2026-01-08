@@ -41,7 +41,7 @@ jobs:
       - uses: ./.github/actions/setup-js
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm tsgo -b
 
   format-lint-biome:
     name: Format & Lint (Biome)
