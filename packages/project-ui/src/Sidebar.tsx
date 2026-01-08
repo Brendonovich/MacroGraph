@@ -18,14 +18,16 @@ export function Sidebar(
 	return (
 		<Switch>
 			<Match when={!isMobile}>
-				<div
-					class={cx(
-						BASE_CLASS,
-						props.side === "left" ? "border-r" : "border-l",
-					)}
-				>
-					{props.children}
-				</div>
+				<Show when={props.open}>
+					<div
+						class={cx(
+							BASE_CLASS,
+							props.side === "left" ? "border-r" : "border-l",
+						)}
+					>
+						{props.children}
+					</div>
+				</Show>
 			</Match>
 			<Match when={isMobile}>
 				<Show when={props.open}>
