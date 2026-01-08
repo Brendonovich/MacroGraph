@@ -6,12 +6,7 @@ import { ProjectActions } from "../Actions";
 import { useProjectService } from "../EffectRuntime";
 import { useLayoutStateRaw } from "../LayoutState";
 import { ProjectState } from "../State";
-
-const tokeniseString = (s: string) =>
-	s
-		.toLowerCase()
-		.split(" ")
-		.filter((s) => s !== "");
+import { tokeniseString } from "./search";
 
 export function GraphsSidebar() {
 	const { state } = useProjectService(ProjectState);
