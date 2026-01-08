@@ -20,18 +20,20 @@ export function GraphsSidebar() {
 	return (
 		<>
 			<div class="h-8 flex flex-row">
-				<input
-					class={cx(
-						"h-full flex-1 px-2 bg-gray-3 dark:bg-gray-2",
-						focusRingClasses("inset"),
-					)}
-					placeholder="Search Graphs"
-					disabled
-				/>
+				<div class="h-full flex-1">
+					<input
+						class={cx(
+							"w-full h-full px-2 bg-gray-3 dark:bg-gray-2",
+							focusRingClasses("inset"),
+						)}
+						placeholder="Search Graphs"
+						disabled
+					/>
+				</div>
 				<button
 					type="button"
 					class={cx(
-						"bg-transparent h-full disabled:text-gray-10 px-2 not-disabled:hover:bg-gray-3",
+						"bg-transparent h-full disabled:text-gray-10 px-2 not-disabled:hover:bg-gray-3 shrink-0",
 						focusRingClasses("inset"),
 					)}
 					onClick={() => actions.CreateGraph()}
