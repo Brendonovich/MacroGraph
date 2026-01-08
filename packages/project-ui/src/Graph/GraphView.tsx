@@ -893,7 +893,18 @@ export function GraphView(
 														{...cmProps}
 														name={node.name}
 														variant={schema().type}
+														onLongPress={(e) => {
+															if (
+																!props.selection?.some(
+																	(ref) =>
+																		ref[0] === "Node" && ref[1] === node.id,
+																)
+															)
+																props.onItemsSelected?.([["Node", node.id]]);
+															props.onContextMenu?.(e);
+														}}
 														onPointerDown={(downEvent) => {
+															if (downEvent.pointerType === "touch") return;
 															if (downEvent.button === 0) {
 																handleNodeHeaderDrag(downEvent, node);
 															} else if (downEvent.button === 2) {
