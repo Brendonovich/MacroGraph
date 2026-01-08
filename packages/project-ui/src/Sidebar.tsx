@@ -5,6 +5,9 @@ import { Match, Show, Switch } from "solid-js";
 
 import { isTouchDevice } from "./platform";
 
+const BASE_CLASS =
+	"w-56 flex flex-col items-stretch justify-start divide-y divide-gray-5 bg-gray-3 border-gray-5";
+
 export function Sidebar(
 	props: ParentProps<{
 		side: "left" | "right";
@@ -15,7 +18,12 @@ export function Sidebar(
 	return (
 		<Switch>
 			<Match when={!isMobile}>
-				<div class="w-56 flex flex-col items-stretch justify-start divide-y divide-gray-5 bg-gray-3">
+				<div
+					class={cx(
+						BASE_CLASS,
+						props.side === "left" ? "border-r" : "border-l",
+					)}
+				>
 					{props.children}
 				</div>
 			</Match>
@@ -27,8 +35,8 @@ export function Sidebar(
 					/>
 					<div
 						class={cx(
-							"w-56 flex flex-col items-stretch justify-start divide-y divide-gray-5 bg-gray-3 z-10",
-							"absolute  inset-y-0 animate-in fade-in border-gray-5",
+							BASE_CLASS,
+							"absolute inset-y-0 animate-in fade-in z-10",
 							props.side === "left"
 								? "left-0 slide-in-from-left-2 border-r"
 								: "right-0 slide-in-from-right-2 border-l",
