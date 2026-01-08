@@ -431,12 +431,16 @@ export function GraphView(
 			const startPos = { x: downEvent.clientX, y: downEvent.clientY };
 			const pointer = pointers[0]!;
 
+			// Clear selection on background touch
+			props.onItemsSelected?.([]);
+
 			setState(IS.touchAwaiting(pointers, null));
 
 			const { dispose: disposeLongPress } = createLongPress(downEvent, {
 				timeout: LONG_PRESS_TIMEOUT_MS,
 				moveThreshold: TOUCH_MOVE_THRESHOLD,
 				onLongPress: () => {
+					props.onItemsSelected?.([]);
 					props.onContextMenu?.(downEvent);
 					setState(IS.idle());
 				},
