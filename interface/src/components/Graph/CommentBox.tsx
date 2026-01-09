@@ -124,6 +124,7 @@ export function CommentBox(props: Props) {
 
 	return (
 		<div
+			data-commentbox-id={box().id}
 			class={clsx(
 				"rounded border-black/75 border absolute top-0 left-0",
 				isSelected() && "ring-2 ring-mg-focus",

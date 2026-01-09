@@ -92,12 +92,10 @@ export namespace Resource {
 		}
 	}
 
-	export type ToHandler<T> = T extends Resource.Resource<
-		infer TId,
-		infer TValue
-	>
-		? Handler<TId, TValue>
-		: never;
+	export type ToHandler<T> =
+		T extends Resource.Resource<infer TId, infer TValue>
+			? Handler<TId, TValue>
+			: never;
 
 	export const make =
 		<T>() =>

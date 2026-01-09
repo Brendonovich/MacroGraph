@@ -27,9 +27,10 @@ import {
 	type GraphState,
 	toGraphSpace,
 	toScreenSpace,
+	type SelectedItemID,
 } from "./Context";
 import { Node } from "./Node";
-import { GRID_SIZE } from "./util";
+import { GRID_SIZE, handleSelectableItemPointerDown } from "./util";
 
 type PanState = "none" | "waiting" | "active";
 
@@ -514,6 +515,48 @@ export const Graph = (props: Props) => {
 												});
 
 												if (gesture.pointers.length === 1) {
+													const target = e.target as HTMLElement;
+													const button = target.closest("button");
+
+													if (
+														button?.classList.contains("cursor-pointer") &&
+														button.classList.contains("outline-none") &&
+														button.classList.contains("h-full")
+													) {
+														const nodeElement = button.closest(
+															"[class*='absolute']",
+														);
+
+														if (nodeElement) {
+															const nodeIdAttr =
+																nodeElement.getAttribute("data-node-id");
+															if (nodeIdAttr) {
+																handleSelectableItemPointerDown(
+																	e as unknown as MouseEvent,
+																	ctx,
+																	interfaceCtx,
+																	{ type: "node", id: parseInt(nodeIdAttr) },
+																);
+																return;
+															}
+
+															const boxIdAttr =
+																nodeElement.getAttribute("data-commentbox-id");
+															if (boxIdAttr) {
+																handleSelectableItemPointerDown(
+																	e as unknown as MouseEvent,
+																	ctx,
+																	interfaceCtx,
+																	{
+																		type: "commentBox",
+																		id: parseInt(boxIdAttr),
+																	},
+																);
+																return;
+															}
+														}
+													}
+
 													createDragAreaSession(start);
 												} else if (gesture.pointers.length === 2) {
 													const left = gesture.pointers[0]!;
