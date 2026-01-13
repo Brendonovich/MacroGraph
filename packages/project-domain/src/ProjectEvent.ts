@@ -38,11 +38,6 @@ export class PackageAdded extends S.TaggedClass<PackageAdded>()(
 	{ pkg: Package.Package },
 ) {}
 
-export class PackageStateChanged extends S.TaggedClass<PackageStateChanged>()(
-	"PackageStateChanged",
-	{ pkg: Package.Id },
-) {}
-
 export class GraphItemsMoved extends S.TaggedClass<GraphItemsMoved>()(
 	"GraphItemsMoved",
 	{ graph: Graph.Id, items: S.Array(S.Tuple(Graph.ItemRef, Position)) },
@@ -90,9 +85,8 @@ export class ResourceConstantDeleted extends S.TaggedClass<ResourceConstantDelet
 	{ id: S.String },
 ) {}
 
-export const ProjectEvent = S.Union(
+export const EditorEvent = S.Union(
 	PackageAdded,
-	PackageStateChanged,
 	PackageResourcesUpdated,
 	GraphCreated,
 	GraphItemsMoved,
@@ -103,5 +97,21 @@ export const ProjectEvent = S.Union(
 	ResourceConstantCreated,
 	ResourceConstantUpdated,
 	ResourceConstantDeleted,
+);
+export type EditorEvent = typeof EditorEvent.Type;
+
+export class PackageStateChanged extends S.TaggedClass<PackageStateChanged>()(
+	"PackageStateChanged",
+	{ pkg: Package.Id },
+) {}
+
+export const RuntimeEvent = S.Union(
+	PackageStateChanged,
+)
+export type RuntimeEvent = typeof RuntimeEvent.Type;
+
+export const ProjectEvent = S.Union(
+	EditorEvent,
+	RuntimeEvent
 );
 export type ProjectEvent = typeof ProjectEvent.Type;

@@ -17,7 +17,7 @@ const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
 class RetryRequest extends Data.TaggedError("RetryRequest") {}
 
-export const EngineLive = EngineDef.toLayer((ctx) =>
+export default EngineDef.toLayer((ctx) =>
 	Effect.gen(function* () {
 		type SocketState = {
 			lock: Effect.Semaphore;

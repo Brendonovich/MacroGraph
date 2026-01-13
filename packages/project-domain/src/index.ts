@@ -10,7 +10,7 @@ export * as Package from "./Package.ts";
 export * as Policy from "./Policy.ts";
 export * from "./Position.ts";
 export * as Project from "./Project.ts";
-export * as ProjectEvent from "./ProjectEvent.ts";
 export * as Request from "./Request.ts";
 export * as Schema from "./Schema.ts";
 export * as SubscribableCache from "./SubscribableCache.ts";
+export * as ProjectEvent from "./ProjectEvent.ts";

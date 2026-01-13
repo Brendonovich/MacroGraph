@@ -12,7 +12,7 @@ type Socket = {
 	state: "disconnected" | "connecting" | "connected";
 };
 
-export const EngineLive = EngineDef.toLayer((ctx) =>
+export default EngineDef.toLayer((ctx) =>
 	Effect.gen(function* () {
 		const sockets = new Map<SocketAddress, Socket>();
 
@@ -48,13 +48,11 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 					const ws = new OBSWebsocket();
 
 					const socket = { address: opts.address, ws, state: "disconnected" };
+					sockets.set(opts.address, socket);
+					yield* ctx.dirtyState;
 
 					const runSocketEdit = <A, E>(e: Effect.Effect<A, E>) =>
-						pipe(
-							e,
-							Effect.andThen(Effect.sync(ctx.dirtyState)),
-							Effect.runFork,
-						);
+						pipe(e, Effect.andThen(ctx.dirtyState), Effect.runFork);
 
 					ws.on("ConnectionError", () =>
 						Effect.sync(() => {
@@ -95,6 +93,7 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 					);
 
 					sockets.delete(address);
+					yield* ctx.dirtyState;
 				}),
 				ConnectSocket: Effect.fnUntraced(function* ({
 					address: address_,
@@ -104,12 +103,13 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 					const socket = sockets.get(address);
 					if (!socket) return;
 
+					socket.state = "connecting";
+					yield* ctx.dirtyState;
+
 					yield* Effect.tryPromise({
 						try: () => socket.ws.connect(address, password),
 						catch: () => new ConnectionFailed(),
 					});
-
-					socket.state = "connecting";
 				}),
 				DisconnectSocket: Effect.fnUntraced(function* ({ address: address_ }) {
 					const address = SocketAddress.make(address_);
@@ -119,8 +119,6 @@ export const EngineLive = EngineDef.toLayer((ctx) =>
 					yield* Effect.promise(() => socket.ws.disconnect()).pipe(
 						Effect.ignore,
 					);
-
-					sockets.delete(address);
 				}),
 			},
 			runtimeRpcs: {

@@ -7,6 +7,7 @@
 		".": "./src/index.ts",
 		"./vite": "./vite.js",
 		"./Settings": "./src/Settings.tsx",
+		"./engines": "./src/engines.ts",
 		"./meta": "./src/meta.ts"
 	},
 	"dependencies": {

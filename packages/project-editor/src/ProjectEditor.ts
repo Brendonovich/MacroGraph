@@ -38,11 +38,11 @@ export interface ProjectEditor {
 
 	getSchema: (ref: Schema.Ref) => Effect.Effect<Option.Option<SDKSchema.Any>>;
 
-	publishEvent: <Event extends ProjectEvent.ProjectEvent>(
+	publishEvent: <Event extends ProjectEvent.EditorEvent>(
 		event: Event,
 	) => Effect.Effect<Event, never, Actor.Current>;
 	subscribe: Effect.Effect<
-		Stream.Stream<ProjectEvent.ProjectEvent & { actor: Actor.Actor }>,
+		Stream.Stream<ProjectEvent.EditorEvent & { actor: Actor.Actor }>,
 		never,
 		Scope.Scope
 	>;
@@ -58,7 +58,7 @@ export const make = () =>
 		const projectRef = yield* Ref.make(Project.empty());
 		const packages = new Map<Package.Id, SDKPackage.Any>();
 		const events = yield* PubSub.unbounded<
-			ProjectEvent.ProjectEvent & { actor: Actor.Actor }
+			ProjectEvent.EditorEvent & { actor: Actor.Actor }
 		>();
 
 		const nodesIO = yield* NodesIOStore;

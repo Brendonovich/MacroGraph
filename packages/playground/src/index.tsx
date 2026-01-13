@@ -34,8 +34,13 @@ import {
 } from "@tanstack/solid-query";
 import type { Accessor } from "solid-js";
 import "@total-typescript/ts-reset";
-import { Effect, ManagedRuntime } from "effect";
-import { createResource, onMount, Show } from "solid-js";
+import { Effect, Layer, ManagedRuntime } from "effect";
+import * as Packages from "@macrograph/base-packages";
+import { PackageEngine } from "@macrograph/package-sdk";
+import { Actor, Package, ProjectEvent } from "@macrograph/project-domain";
+import { EngineHost, ProjectRuntime } from "@macrograph/project-runtime";
+import { focusRingClasses } from "@macrograph/ui";
+import { createResource, ErrorBoundary, onMount, Show } from "solid-js";
 import { produce, type StoreSetter } from "solid-js/store";
 
 import {
@@ -53,9 +58,6 @@ import {
 } from "./runtime";
 
 import "@macrograph/project-ui/styles.css";
-import { Package } from "@macrograph/project-domain";
-import { focusRingClasses } from "@macrograph/ui";
-import { ErrorBoundary } from "solid-js";
 
 const effectRuntime = ManagedRuntime.make(RuntimeLayers);
 
@@ -123,7 +125,39 @@ function Inner() {
 	const initialize = useMutation(() => ({
 		mutationFn: () =>
 			Effect.gen(function* () {
+				const runtime = yield* ProjectRuntime.ProjectRuntime_;
 				const project = yield* rpc.GetProject({});
+
+				const packageEngines = yield* Effect.promise(
+					() => import("@macrograph/base-packages/engines"),
+				);
+
+				for (const [id, engineLayer] of Object.entries(packageEngines)) {
+					const layer = engineLayer.pipe(
+						Layer.provide(
+							Layer.succeed(PackageEngine.CtxTag, {
+								emitEvent: () => {
+									console.log("emitEvent");
+								},
+								credentials: Effect.succeed([]),
+								dirtyState: runtime
+									.publishEvent(
+										new ProjectEvent.PackageStateChanged({
+											pkg: Package.Id.make(id),
+										}),
+									)
+									.pipe(Effect.provide(Actor.layerSystem)),
+								refreshCredential: () => Effect.void,
+							}),
+						),
+					);
+
+					const engineHost = yield* EngineHost.makeMemory(
+						(Packages as any)[id].engine,
+					).pipe(Effect.provide(layer));
+
+					runtime.engines.set(id, engineHost);
+				}
 
 				const packageClients = yield* PackageClients;
 				const packageSettings = yield* Effect.promise(
@@ -134,24 +168,14 @@ function Inner() {
 					() => import("@macrograph/base-packages/meta"),
 				);
 
-				// for (const p of project.packages) {
-				// 	const getSettings = packageSettings.default[p.id];
-				// 	if (!getSettings) continue;
-				// 	yield* packageClients.registerPackageClient(
-				// 		p.id,
-				// 		yield* Effect.promise(getSettings),
-				// 		packageMeta.default[.id],
-				// 	);
-				// }
-
 				for (const [id, getSettings] of Object.entries(
 					packageSettings.default,
 				)) {
-					// yield* packageClients.registerPackageClient(
-					// 	Package.Id.make(id),
-					// 	yield* Effect.promise(getSettings),
-					// 	packageMeta.default[id],
-					// );
+					yield* packageClients.registerPackageClient(
+						Package.Id.make(id),
+						yield* Effect.promise(getSettings),
+						packageMeta.default[id],
+					);
 				}
 
 				stateActions.setProject(project);
@@ -285,7 +309,7 @@ const usePaneTabController = (
 				else setGraphCtxMenu(state);
 			},
 		),
-		package: makePackageTabSchema(rpc.GetPackageSettings),
+		package: makePackageTabSchema(rpc.GetPackageEngineState),
 		settings: {
 			getMeta: (tab) => ({ title: "Settings", desc: tab.page }),
 			Component: (tab) => (

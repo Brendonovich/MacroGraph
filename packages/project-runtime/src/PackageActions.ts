@@ -51,25 +51,19 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 				// );
 			});
 
-			const GetPackageSettingsResolver = RequestResolver.fromEffect(
-				(r: Request.GetPackageSettings) =>
+			const GetPackageEngineStateResolver = RequestResolver.fromEffect(
+				(r: Request.GetPackageEngineState) =>
 					Effect.gen(function* () {
-						return new Package.NotFound({ id: r.package });
-						// const runtime = yield* ProjectRuntime.Current;
+						const runtime = yield* ProjectRuntime.ProjectRuntime_;
 
-						// return yield* Option.fromNullable(
-						// 	runtime.packages.get(r.package),
-						// ).pipe(
-						// 	Option.flatMap((p) => p.engine),
-						// 	Effect.flatMap((e) => e.state),
-						// 	Effect.catchTag(
-						// 		"NoSuchElementException",
-						// 		() => new Package.NotFound({ id: r.package }),
-						// 	),
-						// );
+						const getState = runtime.engines.get(r.package)?.state;
+						if (!getState) return new Package.NotFound({ id: r.package });
+
+						return yield* getState;
 					}),
+			).pipe(
+				RequestResolver.contextFromServices(ProjectRuntime.ProjectRuntime_),
 			);
-			// .pipe(requestResolverServices);
 
 			return {
 				getSchema,
@@ -252,10 +246,7 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 					// 	Effect.provideService(ProjectRuntime.Current, runtime),
 					// );
 				}),
-				getPackageSettings: Effect.request<
-					Request.GetPackageSettings,
-					typeof GetPackageSettingsResolver
-				>(GetPackageSettingsResolver),
+				GetPackageEngineStateResolver,
 			};
 		}),
 		dependencies: [NodeExecution.Default],

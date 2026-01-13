@@ -9,7 +9,7 @@ export const Rpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.ConnectIO),
 	Rpc.fromTaggedRequest(Request.DisconnectIO),
 	Rpc.fromTaggedRequest(Request.SetItemPositions),
-	Rpc.fromTaggedRequest(Request.GetPackageSettings),
+	Rpc.fromTaggedRequest(Request.GetPackageEngineState),
 	Rpc.fromTaggedRequest(Request.DeleteGraphItems),
 	Rpc.fromTaggedRequest(Request.SetNodeProperty),
 	Rpc.fromTaggedRequest(Request.CreateResourceConstant),

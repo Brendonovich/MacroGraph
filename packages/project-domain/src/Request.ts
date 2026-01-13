@@ -21,8 +21,8 @@ export class GetProject extends S.TaggedRequest<GetProject>()("GetProject", {
 	failure: Credential.FetchFailed,
 }) {}
 
-export class GetPackageSettings extends S.TaggedRequest<GetPackageSettings>()(
-	"GetPackageSettings",
+export class GetPackageEngineState extends S.TaggedRequest<GetPackageEngineState>()(
+	"GetPackageEngineState",
 	{
 		payload: { package: Package.Id },
 		success: S.Any,
@@ -144,7 +144,7 @@ export class DeleteResourceConstant extends S.TaggedRequest<DeleteResourceConsta
 
 export type Request =
 	| GetProject
-	| GetPackageSettings
+	| GetPackageEngineState
 	| SetItemPositions
 	| ConnectIO
 	| DisconnectIO

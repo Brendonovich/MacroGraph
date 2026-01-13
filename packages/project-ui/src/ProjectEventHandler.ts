@@ -116,8 +116,6 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 						}),
 					NodeIOUpdated: (e) =>
 						Effect.sync(() => {
-							console.log(e);
-
 							batch(() => {
 								if (e.outConnections) {
 									const { outConnections } = e;
@@ -160,10 +158,7 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 													const inNodeIns = (inNodeConns.in ??= {});
 													const inNodeIn = (inNodeIns[inIoId] ??= []);
 													inNodeIn.push([e.node, outIoId]);
-													console.log(inNodeIn);
 												}
-
-												// console.log(outIoOuts);
 											}
 										}),
 									);

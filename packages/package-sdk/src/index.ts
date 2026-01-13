@@ -53,7 +53,7 @@ export namespace PackageEngine {
 
 	export type LayerCtx<Events extends AnyEvent> = {
 		emitEvent(event: S.Schema.Type<Events>): void;
-		dirtyState(): void;
+		dirtyState: Effect.Effect<void>;
 		credentials: Effect.Effect<
 			ReadonlyArray<{
 				provider: string;

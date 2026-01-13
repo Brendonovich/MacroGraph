@@ -12,7 +12,7 @@ import type { PackageClient } from "./Clients";
 export function PackageSettings(props: {
 	packageClient: PackageClient;
 	settingsQuery: UseQueryResult<
-		ERequest.Request.Success<Request.GetPackageSettings>
+		ERequest.Request.Success<Request.GetPackageEngineState>
 	>;
 }) {
 	createScopedEffect(() =>
@@ -46,12 +46,12 @@ export function PackageSettings(props: {
 export const packageSettingsQueryOptions = (
 	packageId: Package.Id,
 	execute: (
-		r: Request.GetPackageSettings,
-	) => Promise<ERequest.Request.Success<Request.GetPackageSettings>>,
+		r: Request.GetPackageEngineState,
+	) => Promise<ERequest.Request.Success<Request.GetPackageEngineState>>,
 ) =>
 	queryOptions({
 		queryKey: ["package-settings", packageId] as const,
 		queryFn: ({ queryKey }) =>
-			execute(new Request.GetPackageSettings({ package: queryKey[1] })),
+			execute(new Request.GetPackageEngineState({ package: queryKey[1] })),
 		reconcile: (o, n) => reconcile(n)(o),
 	});

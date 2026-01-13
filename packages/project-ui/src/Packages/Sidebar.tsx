@@ -24,7 +24,7 @@ export function PackagesSidebar() {
 					"px-2 bg-gray-3 dark:bg-gray-2 h-8 text-sm",
 					focusRingClasses("inset"),
 				)}
-				placeholder="Search Packages"
+				placeholder="Search Packages..."
 				disabled
 			/>
 			<ul>

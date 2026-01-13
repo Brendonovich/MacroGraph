@@ -51,7 +51,7 @@
 		"unplugin-icons": "^0.18.5"
 	},
 	"exports": {
-		".": { "types": "./dist/src/index.d.ts", "default": "./src/index.ts" },
+		".": { "default": "./src/index.ts", "types": "./dist/src/index.d.ts" },
 		"./ui": { "types": "./dist/src/ui.d.ts", "default": "./src/ui.tsx" }
 	}
 }

@@ -325,7 +325,7 @@ const usePaneTabController = (
 				);
 			},
 		),
-		package: makePackageTabSchema(rpc.GetPackageSettings),
+		package: makePackageTabSchema(rpc.GetPackageEngineState),
 		settings: {
 			getMeta: (tab) => ({ title: "Settings", desc: tab.page }),
 			Component: (tab) => (

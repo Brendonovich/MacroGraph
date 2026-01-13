@@ -8,6 +8,7 @@ import {
 	Stream,
 } from "effect";
 import { ProjectEditor } from "@macrograph/project-editor";
+import { ProjectRuntime } from "@macrograph/project-runtime";
 import {
 	GetPackageRpcClient,
 	ProjectEventStream,
@@ -20,45 +21,44 @@ import { FrontendLive } from "./frontend";
 const GetPackageRpcClientLive = Layer.effect(
 	GetPackageRpcClient,
 	Effect.gen(function* () {
-		// const runtime = yield* ProjectRuntime.Current;
+		const runtime = yield* ProjectRuntime.ProjectRuntime_;
 		const clients = new Map<string, RpcClient.RpcClient<Rpc.Any>>();
 
 		return (id) =>
 			Effect.gen(function* () {
-				return Option.none();
+				if (clients.get(id)) return clients.get(id)! as any;
 
-				// if (clients.get(id)) return clients.get(id)! as any;
+				const pkg = yield* runtime.package(id);
 
-				// return runtime.packages.get(id)?.engine.pipe(
-				// 	Effect.flatMap(
-				// 		Effect.fn(function* (e) {
-				// 			const [rpcs, layer] = yield* Option.fromNullable(e.def.rpc).pipe(
-				// 				Option.zipWith(
-				// 					Option.fromNullable(e.rpc),
-				// 					(a, b) => [a, b] as const,
-				// 				),
-				// 			);
+				const data = pkg.pipe(
+					Option.flatMap((o) => Option.fromNullable(o.engine?.clientRpcs)),
+					Option.zipWith(
+						Option.fromNullable(runtime.engines.get(id)?.clientRpcs),
+						(a, b) => [a, b] as const,
+					),
+				);
+				if (Option.isNone(data)) return Option.none();
 
-				// 			const client = yield* RpcTest.makeClient(rpcs).pipe(
-				// 				Effect.provide(layer),
-				// 			);
+				const [rpcs, layer] = data.value;
 
-				// 			clients.set(id, client);
+				const client = yield* RpcTest.makeClient(rpcs).pipe(
+					Effect.provide(layer),
+				);
 
-				// 			return client;
-				// 		}),
-				// 	),
-				// );
+				clients.set(id, client as any);
+
+				return Option.some(client);
 			});
 	}),
 );
 
 const ProjectEventStreamLive = Layer.scoped(
 	ProjectEventStream,
-	ProjectEditor.ProjectEditor.pipe(
-		Effect.flatMap((r) => r.subscribe),
-		Effect.map(Stream.filter((e) => e.actor.type === "SYSTEM")),
-	),
+	Effect.zipWith(
+		ProjectEditor.ProjectEditor.pipe(Effect.flatMap((r) => r.subscribe)),
+		ProjectRuntime.ProjectRuntime_.pipe(Effect.flatMap((r) => r.subscribe)),
+		(editor, runtime) => Stream.merge(editor, runtime),
+	).pipe(Effect.map(Stream.filter((e) => e.actor.type === "SYSTEM"))),
 );
 
 export const RuntimeLayers = Layer.empty.pipe(

@@ -23,6 +23,7 @@ import {
 	CloudApiClient,
 	CredentialsStore,
 	PackageActions,
+	ProjectRuntime,
 	RuntimeActions,
 } from "@macrograph/project-runtime";
 
@@ -34,6 +35,7 @@ const RpcsLive = Rpcs.toLayer(
 		const graphRequests = yield* GraphRequests;
 		const nodeRequests = yield* NodeRequests;
 		const credentials = yield* CredentialsStore.CredentialsStore;
+		const packageActions = yield* PackageActions;
 
 		return {
 			GetProject: Effect.request(projectRequests.GetProjectResolver),
@@ -53,8 +55,10 @@ const RpcsLive = Rpcs.toLayer(
 			DeleteResourceConstant: Effect.request(
 				projectRequests.DeleteResourceConstantResolver,
 			),
-			GetPackageSettings: (req) => new Package.NotFound({ id: req.package }),
-			// GetPackageSettings: projectRequests.getPackageSettings,
+			// GetPackageSettings: (req) => new Package.NotFound({ id: req.package }),
+			GetPackageEngineState: Effect.request(
+				packageActions.GetPackageEngineStateResolver,
+			),
 			GetCredentials: () =>
 				credentials.get.pipe(
 					Effect.map((v) =>
@@ -88,7 +92,7 @@ const RpcsLive = Rpcs.toLayer(
 	}),
 );
 
-const RuntimeLive = Layer.scoped(
+const EditorLive = Layer.scoped(
 	ProjectEditor.ProjectEditor,
 	Effect.gen(function* () {
 		const storedProject = localStorage.getItem("mg-project.0");
@@ -99,13 +103,7 @@ const RuntimeLive = Layer.scoped(
 
 		const editor = yield* ProjectEditor.make();
 
-		const packagesToLoad = {
-			util: Packages.util,
-			twitch: Packages.twitch,
-			obs: Packages.obs,
-		};
-
-		for (const [id, pkg] of Object.entries(packagesToLoad)) {
+		for (const [id, pkg] of Object.entries(Packages)) {
 			yield* editor.loadPackage(Package.Id.make(id), pkg);
 		}
 
@@ -130,10 +128,23 @@ const RuntimeLive = Layer.scoped(
 	}),
 );
 
+const RuntimeLive = Layer.scoped(
+	ProjectRuntime.ProjectRuntime_,
+	Effect.gen(function* () {
+		const runtime = yield* ProjectRuntime.make();
+
+		for (const [id, pkg] of Object.entries(Packages)) {
+			yield* runtime.loadPackage(Package.Id.make(id), pkg);
+		}
+
+		return runtime;
+	}),
+);
+
 export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 	Layer.provideMerge(
 		Layer.mergeAll(
-			RuntimeLive,
+			EditorLive,
 			Layer.succeed(Actor.Current, { type: "CLIENT", id: "PLAYGROUND" }),
 		),
 	),
@@ -146,6 +157,7 @@ export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 			RuntimeActions.Default,
 			CredentialsStore.layer,
 			NodesIOStore.Default,
+			RuntimeLive,
 		),
 	),
 	Layer.provideMerge(CloudApiClient.layer()),
