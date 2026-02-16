@@ -9,12 +9,12 @@ import {
 	ChannelInformation,
 	FollowedChannel,
 } from "./new-helix";
-import { RpcError } from "./new-types";
+import { AccountId, RpcError } from "./new-types";
 
 export const ChannelRpcs = [
 	Rpc.make("GetChannelInformation", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.optional(S.Array(S.String)),
 		}),
 		success: S.Struct({ data: S.Array(ChannelInformation) }),
@@ -23,7 +23,7 @@ export const ChannelRpcs = [
 
 	Rpc.make("ModifyChannelInformation", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			gameId: S.optional(S.String),
 			broadcasterLanguage: S.optional(S.String),
@@ -36,14 +36,14 @@ export const ChannelRpcs = [
 	}),
 
 	Rpc.make("GetChannelEditors", {
-		payload: S.Struct({ accountId: S.String, broadcasterId: S.String }),
+		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
 		success: S.Struct({ data: S.Array(ChannelEditor) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetChannelFollowers", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			userId: S.optional(S.String),
 			first: S.optional(S.String),
@@ -59,7 +59,7 @@ export const ChannelRpcs = [
 
 	Rpc.make("GetFollowedChannels", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			userId: S.String,
 			broadcasterId: S.optional(S.String),
 			first: S.optional(S.String),
@@ -75,7 +75,7 @@ export const ChannelRpcs = [
 
 	Rpc.make("SearchChannels", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			query: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),

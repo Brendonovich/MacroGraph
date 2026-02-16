@@ -21,8 +21,8 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"types": ["unplugin-icons/types/solid"]
-		// "plugins": [{ "name": "@effect/language-service" }]
+		"types": ["unplugin-icons/types/solid"],
+		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
 	"references": [

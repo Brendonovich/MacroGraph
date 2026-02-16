@@ -1,17 +1,38 @@
 import {
 	FetchHttpClient,
 	Headers,
+	type HttpApi,
 	HttpApiClient,
 	HttpClient,
 	HttpClientRequest,
 	Socket,
 } from "@effect/platform";
-import { Data, Deferred, Effect, Exit, Option, pipe, Scope } from "effect";
+import {
+	Array,
+	Chunk,
+	Data,
+	Deferred,
+	Effect,
+	Exit,
+	Option,
+	pipe,
+	Schema as S,
+	Scope,
+	Stream,
+} from "effect";
 import type { PackageEngine } from "@macrograph/package-sdk";
 
 import { EngineDef } from ".";
+import { type SubscriptionTypeDefinition, subscriptionTypes } from "./eventSub";
 import { HelixApi } from "./new-helix";
-import { MissingCredential, TwitchAPIError } from "./new-types";
+import {
+	AccountId,
+	EventSubMessage,
+	EventSubNotification,
+	MissingCredential,
+	TwitchAPIError,
+} from "./new-types";
+import { ConnectFailed } from "./shared";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -20,18 +41,19 @@ class RetryRequest extends Data.TaggedError("RetryRequest") {}
 export default EngineDef.toLayer((ctx) =>
 	Effect.gen(function* () {
 		type SocketState = {
+			displayName: string;
 			lock: Effect.Semaphore;
 			state: "connecting" | "connected";
 			closed: Deferred.Deferred<void>;
 			scope: Scope.CloseableScope;
 		};
 
-		const sockets = new Map<string, SocketState>();
+		const sockets = new Map<AccountId, SocketState>();
 
 		const runSocketEdit = <A, E>(e: Effect.Effect<A, E>) =>
-			pipe(e, Effect.andThen(Effect.sync(ctx.dirtyState)), Effect.runFork);
+			pipe(e, Effect.andThen(ctx.dirtyState), Effect.forkDaemon);
 
-		const getCredential = (accountId: string) =>
+		const getCredential = (accountId: AccountId) =>
 			ctx.credentials.pipe(
 				Effect.map((c) =>
 					c.find((c) => c.provider === "twitch" && c.id === accountId),
@@ -39,7 +61,7 @@ export default EngineDef.toLayer((ctx) =>
 				Effect.map(Option.fromNullable),
 			);
 
-		const createHelixClient = (accountId: string) =>
+		const createHelixClient = (accountId: AccountId) =>
 			Effect.gen(function* () {
 				const CredentialRefresh = (c: HttpClient.HttpClient) =>
 					c.pipe(
@@ -109,38 +131,193 @@ export default EngineDef.toLayer((ctx) =>
 		const connectEventSub = Effect.fnUntraced(function* ({
 			accountId,
 		}: {
-			accountId: string;
+			accountId: AccountId;
 		}) {
 			if (sockets.get(accountId)) return;
+			const credential = yield* getCredential(accountId);
+			if (Option.isNone(credential)) return;
 
 			const lock = Effect.unsafeMakeSemaphore(1);
 			const closed = yield* Deferred.make<void>();
 			const scope = yield* Scope.make();
 
-			const socket: SocketState = { lock, state: "connecting", closed, scope };
+			const CredentialRefresh = (c: HttpClient.HttpClient) =>
+				c.pipe(
+					HttpClient.filterStatusOk,
+					HttpClient.catchTags({
+						ResponseError: Effect.fnUntraced(function* (e) {
+							if (e.response.status === 401) {
+								yield* ctx.refreshCredential("twitch", accountId);
+								return yield* new RetryRequest();
+							}
+							return yield* Effect.fail(e);
+						}),
+					}),
+					HttpClient.retry({
+						times: 1,
+						while: (e) => e._tag === "RetryRequest",
+					}),
+				);
+
+			const httpClient = yield* HttpClient.HttpClient.pipe(
+				Effect.map((client) =>
+					pipe(
+						client,
+						HttpClient.mapRequestEffect((req) =>
+							Effect.succeed(
+								HttpClientRequest.make(req.method)(req.url, {
+									urlParams: req.urlParams,
+									hash: Option.getOrUndefined(req.hash),
+									headers: Headers.fromInput({
+										Authorization: pipe(
+											req.headers,
+											Headers.get("authorization"),
+											Option.getOrUndefined,
+										),
+										"Client-Id": CLIENT_ID,
+										"Content-Type": "application/json",
+									}),
+									body: req.body,
+								}),
+							),
+						),
+						HttpClient.mapRequestEffect((req) =>
+							Effect.gen(function* () {
+								const credentials = yield* ctx.credentials.pipe(Effect.orDie);
+								const credential = Option.fromNullable(
+									credentials.find((c) => c.id === accountId),
+								);
+								return Option.match(credential, {
+									onNone: () => req,
+									onSome: (credential) =>
+										HttpClientRequest.bearerToken(
+											req,
+											credential.token.access_token,
+										),
+								});
+							}),
+						),
+						CredentialRefresh,
+						HttpClient.withTracerPropagation(false),
+					),
+				),
+				Effect.provide(FetchHttpClient.layer),
+			);
+
+			const helixClient = yield* HttpApiClient.makeWith(HelixApi, {
+				baseUrl: "https://api.twitch.tv/helix",
+				httpClient,
+			});
+
+			const socket: SocketState = {
+				displayName: credential.value.displayName ?? accountId,
+				lock,
+				state: "connecting",
+				closed,
+				scope,
+			};
 
 			yield* Effect.sync(() => {
 				sockets.set(accountId, socket);
 			}).pipe(runSocketEdit);
 
-			// TODO: Implement full WebSocket connection logic
-			// 1. Connect to wss://eventsub.wss.twitch.tv/ws
-			// 2. Wait for session_welcome message
-			// 3. Create EventSub subscriptions using Helix API
-			// 4. Process incoming events and emit them via ctx.emitEvent()
-			// 5. Handle disconnection and cleanup
+			const getEvent = yield* Stream.never.pipe(
+				Stream.pipeThroughChannel(
+					Socket.makeWebSocketChannel("wss://eventsub.wss.twitch.tv/ws"),
+				),
+				Stream.decodeText(),
+				Stream.mapEffect((s) =>
+					S.decodeUnknown(S.parseJson(EventSubMessage.EventSubMessage))(s),
+				),
+				Stream.toPull,
+				Effect.provideService(Scope.Scope, scope),
+			);
 
-			socket.state = "connected";
-			yield* Effect.sync(() => {}).pipe(runSocketEdit);
+			const firstEvent = yield* getEvent.pipe(
+				Effect.map(Chunk.get(0)),
+				Effect.map(
+					Option.getOrThrowWith(() => new Error("Welcome event not received")),
+				),
+			);
 
-			// Placeholder cleanup logic
-			yield* Effect.sync(() => sockets.delete(accountId));
+			if (!EventSubMessage.isType(firstEvent, "session_welcome"))
+				return yield* new ConnectFailed({ cause: "session-welcome-expected" });
+
+			yield* Effect.gen(function* () {
+				yield* deleteOldSubscriptions(helixClient);
+
+				yield* Effect.log("Creating subscriptions");
+				yield* Effect.all(
+					pipe(
+						Object.values(subscriptionTypes),
+						Array.take(10),
+						Array.map((def) =>
+							helixClient
+								.createEventSubSubscription({
+									payload: {
+										type: def.type,
+										version: def.version.toString(),
+										condition: buildCondition(def, accountId),
+										transport: {
+											method: "websocket",
+											session_id: firstEvent.payload.session.id,
+										},
+									} as any,
+								})
+								.pipe(
+									Effect.withSpan("createSubscription", {
+										attributes: { "eventsub.type": def.type },
+									}),
+								),
+						),
+					),
+					{ concurrency: 2 },
+				).pipe(Effect.withSpan("createTestSubscriptions"));
+				socket.state = "connected";
+				yield* Effect.log("Socket Connected");
+			}).pipe(Effect.ensuring(ctx.dirtyState));
+
+			yield* Stream.fromPull(Effect.succeed(getEvent)).pipe(
+				Stream.runForEach((event) => {
+					const spanName = `Message.${event.metadata.message_type}`;
+
+					return Effect.gen(function* () {
+						if (EventSubMessage.isType(event, "session_welcome"))
+							throw new Error("Unexpected session welcome");
+
+						if (EventSubMessage.isType(event, "notification")) {
+							const notif = yield* S.decode(EventSubNotification.Any)({
+								_tag: event.payload.subscription.type as any,
+								...event.payload.event,
+							}).pipe(Effect.option);
+
+							if (Option.isSome(notif)) ctx.emitEvent(notif.value);
+						}
+					}).pipe(
+						Effect.withSpan(spanName, { attributes: flattenObject(event) }),
+					);
+				}),
+				Effect.withSpan(`twitch.EventSub{${accountId}}`, { root: true }),
+				Effect.ensuring(
+					Effect.all([
+						Effect.sync(() => sockets.delete(accountId)).pipe(
+							lock.withPermits(1),
+						),
+						Scope.close(scope, Exit.succeed(null)),
+						ctx.dirtyState,
+						Effect.log("Socket Disconnected"),
+						Deferred.complete(closed, Effect.void),
+					]),
+				),
+				Effect.forkScoped,
+				Scope.extend(scope),
+			);
 		});
 
 		const disconnectEventSub = Effect.fnUntraced(function* ({
 			accountId,
 		}: {
-			accountId: string;
+			accountId: AccountId;
 		}) {
 			const socket = sockets.get(accountId);
 			if (!socket) return;
@@ -150,7 +327,7 @@ export default EngineDef.toLayer((ctx) =>
 		});
 
 		// Helper to wrap Helix API calls with error handling
-		const callHelix = <Args extends { accountId: string }, Ret>(
+		const callHelix = <Args extends { accountId: AccountId }, Ret>(
 			fn: (
 				client: any,
 			) => (
@@ -167,8 +344,31 @@ export default EngineDef.toLayer((ctx) =>
 			});
 
 		return {
-			clientState: Effect.succeed({ accounts: [] }),
-			resources: { TwitchAccount: Effect.succeed([]) },
+			clientState: Effect.gen(function* () {
+				const creds = yield* ctx.credentials;
+				return {
+					accounts: creds
+						.filter((c) => c.provider === "twitch")
+						.map((c) => {
+							const id = AccountId.make(c.id);
+							return {
+								id,
+								displayName: c.displayName ?? c.id,
+								eventSubSocket: {
+									state: sockets.get(id)?.state ?? "disconnected",
+								},
+							};
+						}),
+				};
+			}),
+			resources: {
+				TwitchAccount: Effect.gen(function* () {
+					return [...sockets.entries()].map(([id, socket]) => ({
+						id,
+						display: socket.displayName,
+					}));
+				}),
+			},
 			clientRpcs: {
 				ConnectEventSub: (opts) =>
 					connectEventSub(opts).pipe(
@@ -291,3 +491,54 @@ export default EngineDef.toLayer((ctx) =>
 		} satisfies PackageEngine.Built<typeof EngineDef>;
 	}),
 );
+
+type Groups<T extends HttpApi.HttpApi<any, any, any, any>> =
+	T extends HttpApi.HttpApi<any, infer TGroups, any, any> ? TGroups : never;
+
+const deleteOldSubscriptions = Effect.fn("deleteOldSubscriptions")(function* <
+	E,
+	R,
+>(helixClient: HttpApiClient.Client<Groups<typeof HelixApi>, E, R>) {
+	const subs = yield* helixClient.getEventSubSubscriptions({ urlParams: {} });
+	yield* Effect.log(`Found ${subs.data.length} existing subscriptions`);
+	yield* Effect.all(
+		subs.data.map((sub) =>
+			sub.status === "websocket_disconnected"
+				? helixClient.deleteEventSubSubscription({ urlParams: { id: sub.id } })
+				: Effect.void,
+		),
+		{ concurrency: 10 },
+	);
+});
+
+function flattenObject(
+	obj: Record<string, any>,
+	prefix = "",
+	res: Record<string, any> = {},
+): Record<string, any> {
+	for (const key in obj) {
+		if (key in obj) {
+			const newKey = prefix ? `${prefix}.${key}` : key;
+
+			if (
+				typeof obj[key] === "object" &&
+				obj[key] !== null &&
+				!Array.isArray(obj[key])
+			) {
+				flattenObject(obj[key], newKey, res);
+			} else {
+				res[newKey] = obj[key];
+			}
+		}
+	}
+	return res;
+}
+
+const buildCondition = <T extends SubscriptionTypeDefinition>(
+	def: T,
+	accountId: string,
+): Record<keyof SubscriptionTypeDefinition["condition"], string> => {
+	return Object.fromEntries(
+		Object.keys(def.condition).map((key) => [key, accountId]),
+	) as any;
+};

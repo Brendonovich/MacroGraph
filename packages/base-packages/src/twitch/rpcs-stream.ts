@@ -11,14 +11,14 @@ import {
 	StreamMarker,
 	Video,
 } from "./new-helix";
-import { RpcError } from "./new-types";
+import { AccountId, RpcError } from "./new-types";
 
 const IntFromString = S.NumberFromString.pipe(S.int());
 
 export const StreamRpcs = [
 	Rpc.make("GetStreams", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(IntFromString),
@@ -35,7 +35,7 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("GetFollowedStreams", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(IntFromString),
@@ -47,13 +47,13 @@ export const StreamRpcs = [
 		error: RpcError,
 	}),
 	Rpc.make("GetStreamKey", {
-		payload: S.Struct({ accountId: S.String, broadcasterId: S.String }),
+		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
 		success: S.Struct({ data: S.Struct({ data: S.Array(StreamKey) }) }),
 		error: RpcError,
 	}),
 	Rpc.make("GetStreamMarkers", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			userId: S.optional(S.String),
 			videoId: S.optional(S.String),
 			after: S.optional(S.String),
@@ -67,7 +67,7 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("CreateStreamMarker", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			userId: S.String,
 			description: S.optional(S.String),
 		}),
@@ -78,7 +78,7 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("GetVideos", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			id: S.optional(S.Array(S.String)),
 			userId: S.optional(S.String),
 			gameId: S.optional(S.String),
@@ -96,13 +96,13 @@ export const StreamRpcs = [
 		error: RpcError,
 	}),
 	Rpc.make("DeleteVideos", {
-		payload: S.Struct({ accountId: S.String, id: S.Array(S.String) }),
+		payload: S.Struct({ accountId: AccountId, id: S.Array(S.String) }),
 		success: S.Void,
 		error: RpcError,
 	}),
 	Rpc.make("GetClips", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.optional(S.String),
 			gameId: S.optional(S.String),
 			id: S.optional(S.Array(S.String)),
@@ -120,7 +120,7 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("CreateClip", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			hasDelay: S.optional(S.String),
 		}),

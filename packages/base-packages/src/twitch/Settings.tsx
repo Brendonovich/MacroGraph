@@ -6,7 +6,8 @@ import {
 import { cx } from "cva";
 import { Index, Suspense } from "solid-js";
 
-import { RPCS, type STATE } from "./shared";
+import type { ClientRpcs, ClientState } from "./new-shared";
+import { RPCS } from "./shared";
 
 const EVENTSUB_CONNECTION_INDICATOR = {
 	connected: { class: "bg-green-600", label: "EventSub Connected" },
@@ -15,7 +16,7 @@ const EVENTSUB_CONNECTION_INDICATOR = {
 };
 
 export default function Settings(
-	props: SettingsProps<typeof RPCS, typeof STATE>,
+	props: SettingsProps<typeof ClientRpcs, typeof ClientState>,
 ) {
 	return (
 		<div class="w-full -mt-1">

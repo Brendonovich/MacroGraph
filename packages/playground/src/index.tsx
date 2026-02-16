@@ -34,11 +34,14 @@ import {
 } from "@tanstack/solid-query";
 import type { Accessor } from "solid-js";
 import "@total-typescript/ts-reset";
-import { Effect, Layer, ManagedRuntime } from "effect";
+import { Effect, ManagedRuntime } from "effect";
 import * as Packages from "@macrograph/base-packages";
-import { PackageEngine } from "@macrograph/package-sdk";
-import { Actor, Package, ProjectEvent } from "@macrograph/project-domain";
-import { EngineHost, ProjectRuntime } from "@macrograph/project-runtime";
+import { Package } from "@macrograph/project-domain";
+import { ProjectEditor } from "@macrograph/project-editor";
+import {
+	EngineInstanceClient,
+	EngineRegistry,
+} from "@macrograph/project-runtime";
 import { focusRingClasses } from "@macrograph/ui";
 import { createResource, ErrorBoundary, onMount, Show } from "solid-js";
 import { produce, type StoreSetter } from "solid-js/store";
@@ -125,38 +128,24 @@ function Inner() {
 	const initialize = useMutation(() => ({
 		mutationFn: () =>
 			Effect.gen(function* () {
-				const runtime = yield* ProjectRuntime.ProjectRuntime_;
-				const project = yield* rpc.GetProject({});
-
 				const packageEngines = yield* Effect.promise(
 					() => import("@macrograph/base-packages/engines"),
 				);
 
-				for (const [id, engineLayer] of Object.entries(packageEngines)) {
-					const layer = engineLayer.pipe(
-						Layer.provide(
-							Layer.succeed(PackageEngine.CtxTag, {
-								emitEvent: () => {
-									console.log("emitEvent");
-								},
-								credentials: Effect.succeed([]),
-								dirtyState: runtime
-									.publishEvent(
-										new ProjectEvent.PackageStateChanged({
-											pkg: Package.Id.make(id),
-										}),
-									)
-									.pipe(Effect.provide(Actor.layerSystem)),
-								refreshCredential: () => Effect.void,
-							}),
-						),
+				const engineRegistry = yield* EngineRegistry.EngineRegistry;
+				const editor = yield* ProjectEditor.ProjectEditor;
+
+				for (const [_id, engineLayer] of Object.entries(packageEngines)) {
+					const id = Package.Id.make(_id);
+					engineRegistry.engines.set(
+						id,
+						yield* EngineInstanceClient.makeLocal({
+							pkgId: id,
+							engine: (Packages as any)[id].engine!,
+							layer: engineLayer as any,
+							getProject: editor.project,
+						}),
 					);
-
-					const engineHost = yield* EngineHost.makeMemory(
-						(Packages as any)[id].engine,
-					).pipe(Effect.provide(layer));
-
-					runtime.engines.set(id, engineHost);
 				}
 
 				const packageClients = yield* PackageClients;
@@ -174,9 +163,11 @@ function Inner() {
 					yield* packageClients.registerPackageClient(
 						Package.Id.make(id),
 						yield* Effect.promise(getSettings),
-						packageMeta.default[id],
+						packageMeta.default[id]!,
 					);
 				}
+
+				const project = yield* rpc.GetProject({});
 
 				stateActions.setProject(project);
 			}).pipe(runtime.runPromise),

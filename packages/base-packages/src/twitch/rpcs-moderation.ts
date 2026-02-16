@@ -3,12 +3,12 @@ import { Schema as S } from "effect";
 
 import { Pagination } from "./helix/schemas/common";
 import { ChannelVips, UserBlocked } from "./new-helix";
-import { RpcError } from "./new-types";
+import { AccountId, RpcError } from "./new-types";
 
 export const ModerationRpcs = [
 	Rpc.make("AddChannelVip", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			userId: S.String,
 		}),
@@ -16,7 +16,7 @@ export const ModerationRpcs = [
 	}),
 	Rpc.make("RemoveChannelVip", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			userId: S.String,
 		}),
@@ -24,7 +24,7 @@ export const ModerationRpcs = [
 	}),
 	Rpc.make("GetChannelVips", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			userId: S.optional(S.String),
 			first: S.optional(S.String),
@@ -38,7 +38,7 @@ export const ModerationRpcs = [
 	}),
 	Rpc.make("BlockUser", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			targetUserId: S.String,
 			sourceContext: S.optional(
 				S.Union(S.Literal("chat"), S.Literal("whisper")),
@@ -50,12 +50,12 @@ export const ModerationRpcs = [
 		error: RpcError,
 	}),
 	Rpc.make("UnblockUser", {
-		payload: S.Struct({ accountId: S.String, targetUserId: S.String }),
+		payload: S.Struct({ accountId: AccountId, targetUserId: S.String }),
 		error: RpcError,
 	}),
 	Rpc.make("GetUsersBlocked", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),

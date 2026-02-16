@@ -207,7 +207,7 @@ export const subscriptionTypes = {
 	channelChatClearUserMessages: {
 		type: "channel.chat.clear_user_messages",
 		version: 1,
-		condition: { broadcaster_user_id: S.String },
+		condition: { broadcaster_user_id: S.String, user_id: S.String },
 		event: {
 			broadcaster_user_id: S.String,
 			broadcaster_user_name: S.String,
@@ -308,7 +308,7 @@ export const subscriptionTypes = {
 	channelChatMessageDelete: {
 		type: "channel.chat.message_delete",
 		version: 1,
-		condition: { broadcaster_user_id: S.String },
+		condition: { broadcaster_user_id: S.String, user_id: S.String },
 		event: {
 			broadcaster_user_id: S.String,
 			broadcaster_user_name: S.String,
@@ -558,7 +558,7 @@ export const subscriptionTypes = {
 	channelChatSettingsUpdate: {
 		type: "channel.chat_settings.update",
 		version: 1,
-		condition: { broadcaster_user_id: S.String },
+		condition: { broadcaster_user_id: S.String, user_id: S.String },
 		event: {
 			broadcaster_user_id: S.String,
 			broadcaster_user_login: S.String,
@@ -2382,132 +2382,132 @@ export const subscriptionTypes = {
 		},
 	},
 
-	automodMessageHoldV2: {
-		type: "automod.message.hold",
-		version: 2,
-		condition: { broadcaster_user_id: S.String, moderator_user_id: S.String },
-		event: {
-			broadcaster_user_id: S.String,
-			broadcaster_user_login: S.String,
-			broadcaster_user_name: S.String,
+	// automodMessageHoldV2: {
+	// 	type: "automod.message.hold",
+	// 	version: 2,
+	// 	condition: { broadcaster_user_id: S.String, moderator_user_id: S.String },
+	// 	event: {
+	// 		broadcaster_user_id: S.String,
+	// 		broadcaster_user_login: S.String,
+	// 		broadcaster_user_name: S.String,
 
-			user_id: S.String,
-			user_login: S.String,
-			user_name: S.String,
+	// 		user_id: S.String,
+	// 		user_login: S.String,
+	// 		user_name: S.String,
 
-			message_id: S.String,
+	// 		message_id: S.String,
 
-			message: S.Struct({
-				text: S.String,
-				fragments: S.Array(
-					S.Struct({
-						type: S.String, // text | emote | cheermote
-						text: S.String,
+	// 		message: S.Struct({
+	// 			text: S.String,
+	// 			fragments: S.Array(
+	// 				S.Struct({
+	// 					type: S.String, // text | emote | cheermote
+	// 					text: S.String,
 
-						emote: S.NullOr(S.Struct({ id: S.String, emote_set_id: S.String })),
+	// 					emote: S.NullOr(S.Struct({ id: S.String, emote_set_id: S.String })),
 
-						cheermote: S.NullOr(
-							S.Struct({ prefix: S.String, bits: S.Number, tier: S.Number }),
-						),
-					}),
-				),
-			}),
+	// 					cheermote: S.NullOr(
+	// 						S.Struct({ prefix: S.String, bits: S.Number, tier: S.Number }),
+	// 					),
+	// 				}),
+	// 			),
+	// 		}),
 
-			held_at: S.DateTimeUtc,
+	// 		held_at: S.DateTimeUtc,
 
-			reason: S.String, // automod | blocked_term
+	// 		reason: S.String, // automod | blocked_term
 
-			automod: S.NullOr(
-				S.Struct({
-					category: S.String,
-					level: S.Number,
-					boundaries: S.Array(
-						S.Struct({ start_pos: S.Number, end_pos: S.Number }),
-					),
-				}),
-			),
+	// 		automod: S.NullOr(
+	// 			S.Struct({
+	// 				category: S.String,
+	// 				level: S.Number,
+	// 				boundaries: S.Array(
+	// 					S.Struct({ start_pos: S.Number, end_pos: S.Number }),
+	// 				),
+	// 			}),
+	// 		),
 
-			blocked_term: S.NullOr(
-				S.Struct({
-					terms_found: S.Array(
-						S.Struct({
-							term_id: S.String,
-							boundary: S.Struct({ start_pos: S.Number, end_pos: S.Number }),
-							owner_broadcaster_user_id: S.String,
-							owner_broadcaster_user_login: S.String,
-							owner_broadcaster_user_name: S.String,
-						}),
-					),
-				}),
-			),
-		},
-	},
-	automodMessageUpdateV2: {
-		type: "automod.message.update",
-		version: 2,
-		condition: { broadcaster_user_id: S.String, moderator_user_id: S.String },
-		event: {
-			broadcaster_user_id: S.String,
-			broadcaster_user_login: S.String,
-			broadcaster_user_name: S.String,
+	// 		blocked_term: S.NullOr(
+	// 			S.Struct({
+	// 				terms_found: S.Array(
+	// 					S.Struct({
+	// 						term_id: S.String,
+	// 						boundary: S.Struct({ start_pos: S.Number, end_pos: S.Number }),
+	// 						owner_broadcaster_user_id: S.String,
+	// 						owner_broadcaster_user_login: S.String,
+	// 						owner_broadcaster_user_name: S.String,
+	// 					}),
+	// 				),
+	// 			}),
+	// 		),
+	// 	},
+	// },
+	// automodMessageUpdateV2: {
+	// 	type: "automod.message.update",
+	// 	version: 2,
+	// 	condition: { broadcaster_user_id: S.String, moderator_user_id: S.String },
+	// 	event: {
+	// 		broadcaster_user_id: S.String,
+	// 		broadcaster_user_login: S.String,
+	// 		broadcaster_user_name: S.String,
 
-			user_id: S.String,
-			user_login: S.String,
-			user_name: S.String,
+	// 		user_id: S.String,
+	// 		user_login: S.String,
+	// 		user_name: S.String,
 
-			moderator_user_id: S.String,
-			moderator_user_login: S.String,
-			moderator_user_name: S.String,
+	// 		moderator_user_id: S.String,
+	// 		moderator_user_login: S.String,
+	// 		moderator_user_name: S.String,
 
-			message_id: S.String,
+	// 		message_id: S.String,
 
-			message: S.Struct({
-				text: S.String,
-				fragments: S.Array(
-					S.Struct({
-						type: S.String, // text | emote | cheermote
-						text: S.String,
+	// 		message: S.Struct({
+	// 			text: S.String,
+	// 			fragments: S.Array(
+	// 				S.Struct({
+	// 					type: S.String, // text | emote | cheermote
+	// 					text: S.String,
 
-						emote: S.NullOr(S.Struct({ id: S.String, emote_set_id: S.String })),
+	// 					emote: S.NullOr(S.Struct({ id: S.String, emote_set_id: S.String })),
 
-						cheermote: S.NullOr(
-							S.Struct({ prefix: S.String, bits: S.Number, tier: S.Number }),
-						),
-					}),
-				),
-			}),
+	// 					cheermote: S.NullOr(
+	// 						S.Struct({ prefix: S.String, bits: S.Number, tier: S.Number }),
+	// 					),
+	// 				}),
+	// 			),
+	// 		}),
 
-			status: S.String, // Approved | Denied | Expired
+	// 		status: S.String, // Approved | Denied | Expired
 
-			held_at: S.DateTimeUtc,
+	// 		held_at: S.DateTimeUtc,
 
-			reason: S.String, // automod | blocked_term
+	// 		reason: S.String, // automod | blocked_term
 
-			automod: S.NullOr(
-				S.Struct({
-					category: S.String,
-					level: S.Number,
-					boundaries: S.Array(
-						S.Struct({ start_pos: S.Number, end_pos: S.Number }),
-					),
-				}),
-			),
+	// 		automod: S.NullOr(
+	// 			S.Struct({
+	// 				category: S.String,
+	// 				level: S.Number,
+	// 				boundaries: S.Array(
+	// 					S.Struct({ start_pos: S.Number, end_pos: S.Number }),
+	// 				),
+	// 			}),
+	// 		),
 
-			blocked_term: S.NullOr(
-				S.Struct({
-					terms_found: S.Array(
-						S.Struct({
-							term_id: S.String,
-							boundary: S.Struct({ start_pos: S.Number, end_pos: S.Number }),
-							owner_broadcaster_user_id: S.String,
-							owner_broadcaster_user_login: S.String,
-							owner_broadcaster_user_name: S.String,
-						}),
-					),
-				}),
-			),
-		},
-	},
+	// 		blocked_term: S.NullOr(
+	// 			S.Struct({
+	// 				terms_found: S.Array(
+	// 					S.Struct({
+	// 						term_id: S.String,
+	// 						boundary: S.Struct({ start_pos: S.Number, end_pos: S.Number }),
+	// 						owner_broadcaster_user_id: S.String,
+	// 						owner_broadcaster_user_login: S.String,
+	// 						owner_broadcaster_user_name: S.String,
+	// 					}),
+	// 				),
+	// 			}),
+	// 		),
+	// 	},
+	// },
 	channelFollow: {
 		type: "channel.follow",
 		version: 2,

@@ -12,12 +12,12 @@ import {
 	EmoteWithOwner,
 	GetUserChatColorUser,
 } from "./new-helix";
-import { RpcError } from "./new-types";
+import { AccountId, RpcError } from "./new-types";
 
 export const ChatRpcs = [
 	Rpc.make("SendChatMessage", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			senderId: S.String,
 			message: S.String,
@@ -29,7 +29,7 @@ export const ChatRpcs = [
 
 	Rpc.make("SendChatAnnouncement", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			moderatorId: S.String,
 			message: S.String,
@@ -46,7 +46,7 @@ export const ChatRpcs = [
 
 	Rpc.make("GetChatSettings", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			moderatorId: S.optional(S.String),
 		}),
@@ -56,7 +56,7 @@ export const ChatRpcs = [
 
 	Rpc.make("UpdateChatSettings", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			moderatorId: S.String,
 			emoteMode: S.optional(S.Boolean),
@@ -77,7 +77,7 @@ export const ChatRpcs = [
 
 	Rpc.make("GetChatChatters", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			moderatorId: S.String,
 			after: S.optional(S.String),
@@ -94,38 +94,38 @@ export const ChatRpcs = [
 	}),
 
 	Rpc.make("GetChannelChatBadges", {
-		payload: S.Struct({ accountId: S.String, broadcasterId: S.String }),
+		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
 		success: S.Struct({ data: S.Array(ChatBadge) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetGlobalChatBadges", {
-		payload: S.Struct({ accountId: S.String }),
+		payload: S.Struct({ accountId: AccountId }),
 		success: S.Struct({ data: S.Array(ChatBadge) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetChannelEmotes", {
-		payload: S.Struct({ accountId: S.String, broadcasterId: S.String }),
+		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
 		success: S.Struct({ data: S.Array(Emote) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetGlobalEmotes", {
-		payload: S.Struct({ accountId: S.String }),
+		payload: S.Struct({ accountId: AccountId }),
 		success: S.Struct({ data: S.Array(Emote) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetEmoteSets", {
-		payload: S.Struct({ accountId: S.String, emoteSetId: S.Array(S.String) }),
+		payload: S.Struct({ accountId: AccountId, emoteSetId: S.Array(S.String) }),
 		success: S.Struct({ data: S.Array(EmoteWithOwner) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetCheermotes", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(Cheermotes) }),
@@ -133,7 +133,7 @@ export const ChatRpcs = [
 	}),
 
 	Rpc.make("GetUserChatColor", {
-		payload: S.Struct({ accountId: S.String, userId: S.String }),
+		payload: S.Struct({ accountId: AccountId, userId: S.String }),
 		success: S.Struct({
 			data: S.Struct({ data: S.Array(GetUserChatColorUser) }),
 		}),
@@ -142,7 +142,7 @@ export const ChatRpcs = [
 
 	Rpc.make("UpdateUserChatColor", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			userId: S.String,
 			color: S.String,
 		}),

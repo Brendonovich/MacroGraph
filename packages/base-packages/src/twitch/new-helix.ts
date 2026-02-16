@@ -6,6 +6,7 @@ import {
 } from "@effect/platform";
 import { Schema as S } from "effect";
 
+import { EVENTSUB_CREATE_SUBSCRIPTION_BODY } from "./eventSub";
 import {
 	CharityCampaignAmount,
 	DateRange,
@@ -1681,21 +1682,21 @@ export const HelixApi = HttpApi.make("HELIX")
 				).setUrlParams(S.Struct({ id: S.String })),
 			)
 			// TODO: Re-add createEventSubSubscription after implementing subscription types
-			// .add(
-			// 	HttpApiEndpoint.post(
-			// 		"createEventSubSubscription",
-			// 		"/eventsub/subscriptions",
-			// 	)
-			// 		.setPayload(
-			// 			S.extend(
-			// 				EVENTSUB_CREATE_SUBSCRIPTION_BODY,
-			// 				S.Struct({ transport: EventSubTransportInput }),
-			// 			),
-			// 		)
-			// 		.addSuccess(S.Struct({ data: S.Array(S.Struct({})) }), {
-			// 			status: 202,
-			// 		}),
-			// )
+			.add(
+				HttpApiEndpoint.post(
+					"createEventSubSubscription",
+					"/eventsub/subscriptions",
+				)
+					.setPayload(
+						S.extend(
+							EVENTSUB_CREATE_SUBSCRIPTION_BODY,
+							S.Struct({ transport: EventSubTransportInput }),
+						),
+					)
+					.addSuccess(S.Struct({ data: S.Array(S.Struct({})) }), {
+						status: 202,
+					}),
+			)
 			.add(
 				HttpApiEndpoint.get("getEntitlementCodeStatus", "/entitlements/codes")
 					.setUrlParams(

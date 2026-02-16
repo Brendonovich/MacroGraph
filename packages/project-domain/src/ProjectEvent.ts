@@ -87,7 +87,6 @@ export class ResourceConstantDeleted extends S.TaggedClass<ResourceConstantDelet
 
 export const EditorEvent = S.Union(
 	PackageAdded,
-	PackageResourcesUpdated,
 	GraphCreated,
 	GraphItemsMoved,
 	GraphItemsDeleted,
@@ -107,11 +106,9 @@ export class PackageStateChanged extends S.TaggedClass<PackageStateChanged>()(
 
 export const RuntimeEvent = S.Union(
 	PackageStateChanged,
-)
+	PackageResourcesUpdated,
+);
 export type RuntimeEvent = typeof RuntimeEvent.Type;
 
-export const ProjectEvent = S.Union(
-	EditorEvent,
-	RuntimeEvent
-);
+export const ProjectEvent = S.Union(EditorEvent, RuntimeEvent);
 export type ProjectEvent = typeof ProjectEvent.Type;

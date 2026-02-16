@@ -1,4 +1,4 @@
-import type { RpcClient, RpcGroup } from "@effect/rpc";
+import type { Rpc, RpcClient, RpcGroup } from "@effect/rpc";
 import {
 	type Effect,
 	Exit,
@@ -30,12 +30,9 @@ export type GlobalAppState = {
 	logsPanelOpen: boolean;
 };
 
-export type SettingsProps<
-	TRpcs extends RpcGroup.RpcGroup<any>,
-	TState extends Schema.Schema<any>,
-> = {
+export type SettingsProps<TRpcs, TState extends Schema.Schema<any>> = {
 	rpc: RpcClient.RpcClient<RpcGroup.Rpcs<TRpcs>>;
-	state?: TState["Encoded"];
+	state?: TState["Type"];
 };
 
 const buttonStyles = cva({

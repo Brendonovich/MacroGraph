@@ -2,7 +2,7 @@ import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
 import { Resource } from "@macrograph/package-sdk";
 
-import { ConnectionFailed, TwitchAPIError } from "./new-types";
+import { AccountId, ConnectionFailed, TwitchAPIError } from "./new-types";
 import { ChannelRpcs } from "./rpcs-channel";
 // Import all RPC groups
 import { ChatRpcs } from "./rpcs-chat";
@@ -16,11 +16,11 @@ import { StreamRpcs } from "./rpcs-stream";
 
 export class ClientRpcs extends RpcGroup.make(
 	Rpc.make("ConnectEventSub", {
-		payload: S.Struct({ accountId: S.String }),
+		payload: S.Struct({ accountId: AccountId }),
 		error: S.Union(TwitchAPIError, ConnectionFailed),
 	}),
 	Rpc.make("DisconnectEventSub", {
-		payload: S.Struct({ accountId: S.String }),
+		payload: S.Struct({ accountId: AccountId }),
 	}),
 ) {}
 
@@ -55,7 +55,7 @@ export class RuntimeRpcs extends RpcGroup.make(
 export class ClientState extends S.Struct({
 	accounts: S.Array(
 		S.Struct({
-			id: S.String,
+			id: AccountId,
 			displayName: S.String,
 			eventSubSocket: S.Union(
 				S.Struct({ state: S.Literal("disconnected") }),
@@ -66,6 +66,6 @@ export class ClientState extends S.Struct({
 	),
 }) {}
 
-export class TwitchAccount extends Resource.Tag("TwitchAccount")({
+export class TwitchAccount extends Resource.Tag("TwitchAccount")<AccountId>({
 	name: "Twitch Account",
 }) {}

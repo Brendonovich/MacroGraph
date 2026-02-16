@@ -1,14 +1,16 @@
-import { type Rpc, type RpcClient, RpcTest } from "@effect/rpc";
+import type { Rpc, RpcClient, RpcGroup } from "@effect/rpc";
 import {
 	Effect,
 	Layer,
+	Logger,
 	type ManagedRuntime,
 	Option,
 	type Scope,
 	Stream,
 } from "effect";
+import type { Package } from "@macrograph/project-domain";
 import { ProjectEditor } from "@macrograph/project-editor";
-import { ProjectRuntime } from "@macrograph/project-runtime";
+import { EngineRegistry, ProjectRuntime } from "@macrograph/project-runtime";
 import {
 	GetPackageRpcClient,
 	ProjectEventStream,
@@ -21,33 +23,20 @@ import { FrontendLive } from "./frontend";
 const GetPackageRpcClientLive = Layer.effect(
 	GetPackageRpcClient,
 	Effect.gen(function* () {
-		const runtime = yield* ProjectRuntime.ProjectRuntime_;
+		const engineRegistry = yield* EngineRegistry.EngineRegistry;
 		const clients = new Map<string, RpcClient.RpcClient<Rpc.Any>>();
 
-		return (id) =>
-			Effect.gen(function* () {
-				if (clients.get(id)) return clients.get(id)! as any;
+		return (id, _rpcs) =>
+			Effect.sync(() => {
+				const existing = clients.get(id);
+				if (existing) return Option.some(existing as any);
 
-				const pkg = yield* runtime.package(id);
+				const engineClient = engineRegistry.engines.get(id)?.client;
+				if (!engineClient) return Option.none();
 
-				const data = pkg.pipe(
-					Option.flatMap((o) => Option.fromNullable(o.engine?.clientRpcs)),
-					Option.zipWith(
-						Option.fromNullable(runtime.engines.get(id)?.clientRpcs),
-						(a, b) => [a, b] as const,
-					),
-				);
-				if (Option.isNone(data)) return Option.none();
+				clients.set(id, engineClient as any);
 
-				const [rpcs, layer] = data.value;
-
-				const client = yield* RpcTest.makeClient(rpcs).pipe(
-					Effect.provide(layer),
-				);
-
-				clients.set(id, client as any);
-
-				return Option.some(client);
+				return Option.some(engineClient as any);
 			});
 	}),
 );
@@ -56,7 +45,7 @@ const ProjectEventStreamLive = Layer.scoped(
 	ProjectEventStream,
 	Effect.zipWith(
 		ProjectEditor.ProjectEditor.pipe(Effect.flatMap((r) => r.subscribe)),
-		ProjectRuntime.ProjectRuntime_.pipe(Effect.flatMap((r) => r.subscribe)),
+		ProjectRuntime.ProjectRuntime.pipe(Effect.flatMap((r) => r.subscribe)),
 		(editor, runtime) => Stream.merge(editor, runtime),
 	).pipe(Effect.map(Stream.filter((e) => e.actor.type === "SYSTEM"))),
 );
@@ -68,6 +57,7 @@ export const RuntimeLayers = Layer.empty.pipe(
 	),
 	Layer.provideMerge(BackendLive),
 	Layer.provideMerge(Layer.scope),
+	Layer.provide(Logger.pretty),
 ) satisfies Layer.Layer<any, any, Scope.Scope>;
 
 export type EffectRuntime = ManagedRuntime.ManagedRuntime<

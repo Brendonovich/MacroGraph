@@ -1,73 +1,129 @@
-import { Option, PubSub, type Ref, type Scope, Stream } from "effect";
-import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
-import type { Package as SDKPackage } from "@macrograph/package-sdk";
+import type { Scope } from "effect";
+import { Context, Effect, Option, PubSub, Stream } from "effect";
+import type {
+	Package as SDKPackage,
+	Schema as SDKSchema,
+} from "@macrograph/package-sdk";
 import {
-	Actor,
+	type Actor,
 	type IO,
-	type Package,
+	Package,
 	type Project,
 	type ProjectEvent,
+	Schema,
 } from "@macrograph/project-domain";
 
-import type { EngineHost } from "./EngineHost";
+import type { EngineInstanceClient } from "./EngineInstance";
+import { fireEventNode } from "./NodeExecution";
 
 export interface NodeIO {
 	readonly shape: unknown;
-	readonly inputs: Array<IO.InputPort>;
-	readonly outputs: Array<IO.OutputPort>;
+	readonly inputs: ReadonlyArray<IO.InputPort>;
+	readonly outputs: ReadonlyArray<IO.OutputPort>;
 }
 
-export class CurrentProject extends Context.Tag("CurrentProject")<
-	CurrentProject,
-	Project.Project
->() {}
+export namespace ProjectRuntime {
+	export interface ProjectRuntime {
+		package: (
+			id: Package.Id,
+		) => Effect.Effect<SDKPackage.Any, Package.NotFound>;
+		schema: (
+			ref: Schema.Ref,
+		) => Effect.Effect<SDKSchema.Any, Package.NotFound | Schema.NotFound>;
+		loadPackage: (id: Package.Id, pkg: SDKPackage.Any) => Effect.Effect<void>;
 
-export interface ProjectRuntime_ {
-	package: (id: Package.Id) => Effect.Effect<Option.Option<SDKPackage.Any>>;
-	packages: Effect.Effect<Iterable<[Package.Id, SDKPackage.Any]>>;
-	loadPackage: (id: Package.Id, pkg: SDKPackage.Any) => Effect.Effect<void>;
+		publishEvent: <Event extends ProjectEvent.RuntimeEvent>(
+			event: Event,
+		) => Effect.Effect<Event>;
+		/** Runtime events; always emitted as SYSTEM actor. */
+		subscribe: Effect.Effect<
+			Stream.Stream<ProjectEvent.RuntimeEvent & { actor: Actor.Actor }>,
+			never,
+			Scope.Scope
+		>;
+	}
 
-	engines: Map<string, EngineHost.EngineHost>;
+	const tag = Context.GenericTag<ProjectRuntime>(
+		"@macrograph/project-runtime/ProjectRuntime",
+	);
+	export const ProjectRuntime = tag;
 
-	publishEvent: <Event extends ProjectEvent.RuntimeEvent>(
-		event: Event,
-	) => Effect.Effect<Event, never, Actor.Current>;
-	subscribe: Effect.Effect<
-		Stream.Stream<ProjectEvent.RuntimeEvent & { actor: Actor.Actor }>,
-		never,
-		Scope.Scope
-	>;
-}
+	export class CurrentProject extends Context.Tag(
+		"@macrograph/project-runtime/CurrentProject",
+	)<CurrentProject, Project.Project>() {}
 
-const tag = Context.GenericTag<ProjectRuntime_>("ProjectRuntime_");
-export const ProjectRuntime_ = tag;
+	export const make = () =>
+		Effect.gen(function* () {
+			const packages = new Map<Package.Id, SDKPackage.Any>();
+			const events = yield* PubSub.unbounded<
+				ProjectEvent.RuntimeEvent & { actor: Actor.Actor }
+			>();
 
-export const make = () =>
-	Effect.gen(function* () {
-		const packages = new Map<Package.Id, SDKPackage.Any>();
-		const engines = new Map<string, EngineHost.EngineHost>();
-
-		const events = yield* PubSub.unbounded<
-			ProjectEvent.RuntimeEvent & { actor: Actor.Actor }
-		>();
-
-		const editor = {
-			package: (id) => Effect.sync(() => Option.fromNullable(packages.get(id))),
-			packages: Effect.sync(() => packages.entries()),
-			loadPackage: (id, pkg) =>
-				Effect.sync(() => {
-					packages.set(id, pkg);
-				}),
-			engines,
-
-			publishEvent: (e) =>
+			const publishEvent = <Event extends ProjectEvent.RuntimeEvent>(
+				event: Event,
+			) =>
 				Effect.gen(function* () {
-					yield* events.offer({ ...e, actor: yield* Actor.Current });
-					return e;
-				}),
-			subscribe: Stream.fromPubSub(events, { scoped: true }),
-		} as ProjectRuntime_;
+					yield* events.offer({ ...event, actor: { type: "SYSTEM" } });
+					return event;
+				});
 
-		return editor;
-	});
+			const pkgLookup = (id: Package.Id) =>
+				Option.fromNullable(packages.get(id)).pipe(
+					Effect.catchTag(
+						"NoSuchElementException",
+						() => new Package.NotFound({ id }),
+					),
+				);
+			const schemaLookup = (ref: Schema.Ref) =>
+				pkgLookup(ref.pkg).pipe(
+					Effect.flatMap((pkg) =>
+						Option.fromNullable(pkg.schemas.get(ref.id)).pipe(
+							Effect.catchTag(
+								"NoSuchElementException",
+								() => new Schema.NotFound(ref),
+							),
+						),
+					),
+				);
+
+			const runtime: ProjectRuntime = {
+				package: pkgLookup,
+				schema: schemaLookup,
+				loadPackage: (id, pkg) =>
+					Effect.gen(function* () {
+						packages.set(id, pkg);
+					}),
+				publishEvent,
+				subscribe: Stream.fromPubSub(events, { scoped: true }),
+			};
+
+			return runtime;
+		});
+
+	export const handleEvent = (pkg: Package.Id, event: unknown) =>
+		Effect.gen(function* () {
+			const runtime = yield* ProjectRuntime;
+			const project = yield* CurrentProject;
+
+			const tasks = [];
+
+			for (const [graphId, graph] of project.graphs) {
+				for (const [nodeId, node] of graph.nodes) {
+					if (node.schema.pkg !== pkg) continue;
+
+					const s = yield* runtime.schema(node.schema).pipe(Effect.option);
+
+					if (Option.isSome(s) && s.value.type === "event") {
+						yield* Effect.log(`Firing event node ${graphId}:${nodeId}`);
+						tasks.push(
+							yield* fireEventNode(project, graphId, nodeId, event).pipe(
+								Effect.fork,
+							),
+						);
+					}
+				}
+			}
+
+			return tasks;
+		});
+}

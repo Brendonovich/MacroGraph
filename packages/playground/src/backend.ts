@@ -3,7 +3,6 @@ import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import type * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Packages from "@macrograph/base-packages";
 import {
@@ -22,6 +21,8 @@ import {
 import {
 	CloudApiClient,
 	CredentialsStore,
+	EngineRegistry,
+	NodeExecution,
 	PackageActions,
 	ProjectRuntime,
 	RuntimeActions,
@@ -129,7 +130,7 @@ const EditorLive = Layer.scoped(
 );
 
 const RuntimeLive = Layer.scoped(
-	ProjectRuntime.ProjectRuntime_,
+	ProjectRuntime.ProjectRuntime,
 	Effect.gen(function* () {
 		const runtime = yield* ProjectRuntime.make();
 
@@ -142,6 +143,7 @@ const RuntimeLive = Layer.scoped(
 );
 
 export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
+	Layer.provideMerge(RuntimeLive),
 	Layer.provideMerge(
 		Layer.mergeAll(
 			EditorLive,
@@ -157,9 +159,10 @@ export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 			RuntimeActions.Default,
 			CredentialsStore.layer,
 			NodesIOStore.Default,
-			RuntimeLive,
+			EngineRegistry.EngineRegistry.Default,
 		),
 	),
-	Layer.provideMerge(CloudApiClient.layer()),
+	Layer.provideMerge(CloudApiClient.layer({ baseUrl: "/" })),
 	Layer.provideMerge(FetchHttpClient.layer),
-) satisfies Layer.Layer<any, any, Scope.Scope>;
+	Layer.provide(NodeExecution.Default),
+) satisfies Layer.Layer<any, any, any>;

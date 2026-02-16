@@ -1,12 +1,17 @@
-import { Effect } from "effect";
-import { Package, t } from "@macrograph/package-sdk";
+import { Effect, Option } from "effect";
+import { Package, PackageEngine, t } from "@macrograph/package-sdk";
 
-export default Package.define({ name: "Utilities" })
+import { TickEvent } from "./types";
+
+export class EngineDef extends PackageEngine.define({ events: [TickEvent] }) {}
+
+export default Package.define({ name: "Utilities", engine: EngineDef })
 	.addSchema("Print", {
 		type: "exec",
 		name: "Print",
 		io: (c) => ({ in: c.in.data("in", t.String, { name: "Input" }) }),
 		run: function* ({ io }) {
+			console.log({ io });
 			yield* Effect.log(`Log: ${io.in}`);
 		},
 	})
@@ -65,6 +70,17 @@ export default Package.define({ name: "Utilities" })
 		},
 		run: ({ io }) => {
 			io.output(io.blocks.join(""));
+		},
+	})
+	.addSchema("Tick", {
+		type: "event",
+		name: "Tick",
+		event: (e) => Option.some(e),
+		io: (c) => {
+			return c.out.data("tick", t.Int);
+		},
+		run: ({ io, event }) => {
+			io(event.tick);
 		},
 	});
 

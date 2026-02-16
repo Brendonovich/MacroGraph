@@ -12,7 +12,7 @@ export class ConnectionFailed extends S.TaggedError<ConnectionFailed>()(
 export const ClientRpcs = RpcGroup.make(
 	Rpc.make("AddSocket", {
 		payload: S.Struct({
-			address: S.String,
+			address: SocketAddress,
 			password: S.optional(S.String),
 			name: S.optional(S.String),
 		}),
@@ -21,7 +21,10 @@ export const ClientRpcs = RpcGroup.make(
 	Rpc.make("RemoveSocket", { payload: S.Struct({ address: S.String }) }),
 	Rpc.make("DisconnectSocket", { payload: S.Struct({ address: S.String }) }),
 	Rpc.make("ConnectSocket", {
-		payload: S.Struct({ address: S.String, password: S.optional(S.String) }),
+		payload: S.Struct({
+			address: SocketAddress,
+			password: S.optional(S.String),
+		}),
 		error: ConnectionFailed,
 	}),
 );

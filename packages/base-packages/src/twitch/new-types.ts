@@ -1,5 +1,8 @@
 import { Schema as S } from "effect";
 
+export const AccountId = S.String.pipe(S.brand("AccountId"));
+export type AccountId = typeof AccountId.Type;
+
 // ============================================================================
 // Twitch EventSub Event Type Definitions
 // ============================================================================
@@ -14,19 +17,7 @@ import { Schema as S } from "effect";
 // EventSub Message Namespace
 // ----------------------------------------------------------------------------
 
-export namespace EventSubEvent {
-	// ===== Control Messages =====
-
-	export class SessionWelcome extends S.TaggedClass<SessionWelcome>()(
-		"session_welcome",
-		{ session_id: S.String, session_status: S.Literal("connected") },
-	) {}
-
-	export class SessionKeepalive extends S.TaggedClass<SessionKeepalive>()(
-		"session_keepalive",
-		{},
-	) {}
-
+export namespace EventSubNotification {
 	// ===== Channel Events =====
 
 	export class ChannelBan extends S.TaggedClass<ChannelBan>()("channel.ban", {
@@ -874,8 +865,6 @@ export namespace EventSubEvent {
 	// ===== Event Union =====
 
 	export const Any = S.Union(
-		SessionWelcome,
-		SessionKeepalive,
 		ChannelBan,
 		ChannelUnban,
 		ChannelUpdate,
@@ -933,12 +922,54 @@ export namespace EventSubEvent {
 	export type Any = S.Schema.Type<typeof Any>;
 }
 
-// ----------------------------------------------------------------------------
-// Convenience Re-exports
-// ----------------------------------------------------------------------------
+export namespace EventSubMessage {
+	function makeMessageSchema<
+		TType extends string,
+		TPayload extends S.Struct.Fields,
+	>(value: { message_type: TType; payload: TPayload }) {
+		return S.Struct({
+			metadata: S.Struct({
+				message_id: S.String,
+				message_timestamp: S.DateFromString,
+				message_type: S.Literal(value.message_type),
+			}),
+			payload: S.Struct(value.payload),
+		});
+	}
 
-export const EVENTSUB_MESSAGE = EventSubEvent.Any;
-export type EventSubMessage = EventSubEvent.Any;
+	export const EventSubMessage = S.Union(
+		makeMessageSchema({
+			message_type: "session_welcome",
+			payload: {
+				session: S.Struct({
+					id: S.String,
+					status: S.Literal("connected"),
+					// connected_at: S.DateFromString,
+				}),
+			},
+		}),
+		makeMessageSchema({ message_type: "session_keepalive", payload: {} }),
+		makeMessageSchema({
+			message_type: "notification",
+			payload: {
+				subscription: S.Struct({
+					id: S.String,
+					type: S.String,
+					created_at: S.DateFromString,
+				}),
+				event: S.Any,
+			},
+		}),
+	);
+	export type EventSubMessage = S.Schema.Type<typeof EventSubMessage>;
+
+	export function isType<T extends EventSubMessage["metadata"]["message_type"]>(
+		msg: EventSubMessage,
+		type: T,
+	): msg is Extract<EventSubMessage, { metadata: { message_type: T } }> {
+		return msg.metadata.message_type === type;
+	}
+}
 
 // ============================================================================
 // Error Classes

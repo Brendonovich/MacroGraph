@@ -1,6 +1,9 @@
 export * from "./CloudApi.ts";
 export * as CredentialsStore from "./CredentialsStore.ts";
-export * from "./EngineHost.ts";
+export * from "./EngineInstance.ts";
+export * from "./EngineRegistry.ts";
+export { NodeExecution } from "./NodeExecution.ts";
 export { PackageActions } from "./PackageActions.ts";
-export * as ProjectRuntime from "./ProjectRuntime.ts";
+export * from "./ProjectRuntime.ts";
 export { RuntimeActions } from "./RuntimeActions.ts";
+export * from "./RuntimeHost.ts";

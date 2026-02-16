@@ -29,13 +29,13 @@ import {
 	UserFollow,
 	UserSubscription,
 } from "./new-helix";
-import { RpcError } from "./new-types";
+import { AccountId, RpcError } from "./new-types";
 
 export const MiscRpcs = [
 	// Polls
 	Rpc.make("CreatePoll", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			title: S.String,
 			choices: S.Array(PollChoiceParam),
@@ -51,7 +51,7 @@ export const MiscRpcs = [
 
 	Rpc.make("EndPoll", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.String,
 			status: S.Union(S.Literal("TERMINATED"), S.Literal("ARCHIVED")),
@@ -62,7 +62,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetPolls", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.optional(S.String),
 			after: S.optional(S.String),
@@ -78,7 +78,7 @@ export const MiscRpcs = [
 	// Predictions
 	Rpc.make("CreatePrediction", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			title: S.String,
 			outcomes: S.Array(S.Struct({ title: S.String })),
@@ -90,7 +90,7 @@ export const MiscRpcs = [
 
 	Rpc.make("EndPrediction", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.String,
 			status: S.Union(S.Literal("RESOLVED"), S.Literal("CANCELED")),
@@ -102,7 +102,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetPredictions", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.optional(S.String),
 			after: S.optional(S.String),
@@ -118,7 +118,7 @@ export const MiscRpcs = [
 	// Custom Rewards
 	Rpc.make("GetCustomRewards", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.optional(S.String),
 			onlyManageableRewards: S.optional(S.String),
@@ -129,7 +129,7 @@ export const MiscRpcs = [
 
 	Rpc.make("CreateCustomReward", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			title: S.String,
 			cost: S.Int,
@@ -151,7 +151,7 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateCustomReward", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.String,
 			title: S.optional(S.String),
@@ -174,7 +174,7 @@ export const MiscRpcs = [
 
 	Rpc.make("DeleteCustomRewards", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.String,
 		}),
@@ -184,7 +184,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetCustomRewardsRedemptions", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			rewardId: S.String,
 			status: S.optional(S.String),
@@ -199,7 +199,7 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateChannelCustomRewardsRedemptionStatus", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			id: S.String,
 			broadcasterId: S.String,
 			rewardId: S.String,
@@ -212,7 +212,7 @@ export const MiscRpcs = [
 	// Raids
 	Rpc.make("StartRaid", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			fromBroadcasterId: S.String,
 			toBroadcasterId: S.String,
 		}),
@@ -221,7 +221,7 @@ export const MiscRpcs = [
 	}),
 
 	Rpc.make("CancelRaid", {
-		payload: S.Struct({ accountId: S.String, broadcasterId: S.String }),
+		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
 		success: S.Void,
 		error: RpcError,
 	}),
@@ -229,7 +229,7 @@ export const MiscRpcs = [
 	// Ads
 	Rpc.make("StartCommercial", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			length: S.String,
 		}),
@@ -240,7 +240,7 @@ export const MiscRpcs = [
 	// Schedule
 	Rpc.make("GetSchedule", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.optional(S.String),
 			id: S.optional(S.String),
 			startTime: S.optional(S.String),
@@ -256,7 +256,7 @@ export const MiscRpcs = [
 
 	Rpc.make("CreateScheduleSegment", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			startTime: S.String,
 			timezone: S.String,
@@ -271,7 +271,7 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateScheduleSegment", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.String,
 			startTime: S.optional(S.String),
@@ -287,7 +287,7 @@ export const MiscRpcs = [
 
 	Rpc.make("DeleteScheduleSegment", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			id: S.String,
 		}),
@@ -297,7 +297,7 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateSchedule", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			isVacationEnabled: S.optional(S.Boolean),
 			vacationStartTime: S.optional(S.String),
@@ -311,7 +311,7 @@ export const MiscRpcs = [
 	// Games/Categories
 	Rpc.make("GetGames", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			id: S.optional(S.Array(S.String)),
 			name: S.optional(S.Array(S.String)),
 		}),
@@ -326,7 +326,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetTopGames", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(S.String),
@@ -342,7 +342,7 @@ export const MiscRpcs = [
 
 	Rpc.make("SearchCategories", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			query: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
@@ -359,7 +359,7 @@ export const MiscRpcs = [
 	// Users
 	Rpc.make("GetUsers", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			id: S.optional(S.Array(S.String)),
 			login: S.optional(S.Array(S.String)),
 		}),
@@ -369,7 +369,7 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateUser", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			description: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(User) }),
@@ -378,7 +378,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetUsersFollows", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			fromId: S.optional(S.String),
 			toId: S.optional(S.String),
 			after: S.optional(S.String),
@@ -395,7 +395,7 @@ export const MiscRpcs = [
 	// Subscriptions
 	Rpc.make("GetSubscriptions", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			userId: S.optional(S.Array(S.String)),
 			after: S.optional(S.String),
@@ -415,7 +415,7 @@ export const MiscRpcs = [
 
 	Rpc.make("CheckUserSubscription", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			userId: S.String,
 		}),
@@ -426,7 +426,7 @@ export const MiscRpcs = [
 	// Bits
 	Rpc.make("GetBitsLeaderboard", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			count: S.optional(S.String),
 			period: S.optional(
 				S.Union(
@@ -453,7 +453,7 @@ export const MiscRpcs = [
 	// Charity
 	Rpc.make("GetCharityCampaigns", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
@@ -467,7 +467,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetCharityDonations", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
@@ -481,7 +481,7 @@ export const MiscRpcs = [
 
 	// Goals
 	Rpc.make("GetCreatorGoals", {
-		payload: S.Struct({ accountId: S.String, broadcasterId: S.String }),
+		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
 		success: S.Struct({
 			data: S.Struct({
 				data: S.Array(Goal),
@@ -494,7 +494,7 @@ export const MiscRpcs = [
 	// HypeTrain
 	Rpc.make("GetHypeTrainEvents", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			broadcasterId: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
@@ -510,7 +510,7 @@ export const MiscRpcs = [
 	// Whispers
 	Rpc.make("SendWhisper", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			fromUserId: S.String,
 			toUserId: S.String,
 			message: S.String,
@@ -522,7 +522,7 @@ export const MiscRpcs = [
 	// EventSub
 	Rpc.make("GetEventSubSubscriptions", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			status: S.optional(S.String),
 			type: S.optional(S.String),
 			userId: S.optional(S.String),
@@ -540,7 +540,7 @@ export const MiscRpcs = [
 	}),
 
 	Rpc.make("DeleteEventSubSubscription", {
-		payload: S.Struct({ accountId: S.String, id: S.String }),
+		payload: S.Struct({ accountId: AccountId, id: S.String }),
 		success: S.Void,
 		error: RpcError,
 	}),
@@ -548,7 +548,7 @@ export const MiscRpcs = [
 	// Analytics
 	Rpc.make("GetExtensionAnalytics", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			extensionId: S.String,
 			first: S.optional(S.String),
 			after: S.optional(S.String),
@@ -567,7 +567,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetGameAnalytics", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			gameId: S.String,
 			first: S.optional(S.String),
 			after: S.optional(S.String),
@@ -584,7 +584,7 @@ export const MiscRpcs = [
 	// Entitlements/Drops
 	Rpc.make("GetDropsEntitlements", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			id: S.optional(S.String),
 			userId: S.optional(S.String),
 			gameId: S.optional(S.String),
@@ -603,7 +603,7 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateDropsEntitlements", {
 		payload: S.Struct({
-			accountId: S.String,
+			accountId: AccountId,
 			entitlementIds: S.Array(S.String),
 			fulfillmentStatus: S.Literal("CLAIMED", "FULFILLED"),
 		}),

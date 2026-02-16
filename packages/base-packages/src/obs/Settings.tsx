@@ -14,6 +14,7 @@ import {
 import { createStore } from "solid-js/store";
 
 import { ClientRpcs, type ClientState } from "./new-shared";
+import type { SocketAddress } from "./types";
 
 const CONNECTION_INDICATOR = {
 	connected: { class: "bg-green-600", label: "Connected" },
@@ -53,7 +54,7 @@ function AddSocketForm(
 ) {
 	const [addSocket, setAddSocket] = createStore({
 		name: "",
-		address: "ws://localhost:4455",
+		address: "ws://localhost:4455" as SocketAddress,
 		password: undefined as undefined | string,
 	});
 
@@ -91,7 +92,7 @@ function AddSocketForm(
 
 function SocketListItem(
 	props: SettingsProps<typeof ClientRpcs, typeof ClientState> & {
-		conn: (typeof ClientState)["Encoded"]["sockets"][number];
+		conn: (typeof ClientState.Type)["sockets"][number];
 	},
 ) {
 	const conn = () => props.conn;

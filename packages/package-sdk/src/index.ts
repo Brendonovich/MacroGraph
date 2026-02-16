@@ -15,11 +15,11 @@ import * as T from "@macrograph/typesystem";
 export class ExecInput extends D.TaggedClass("ExecInput")<{ id: string }> {}
 export class ExecOutput extends D.TaggedClass("ExecOutput")<{ id: string }> {}
 
-export class DataInput<T extends T.Type_<any>> extends D.TaggedClass(
+export class DataInput<T extends T.Any_ = T.Any_> extends D.TaggedClass(
 	"DataInput",
 )<{ id: string; type: T }> {}
 
-export class DataOutput<T extends T.Type_<any>> extends D.TaggedClass(
+export class DataOutput<T extends T.Any_ = T.Any_> extends D.TaggedClass(
 	"DataOutput",
 )<{ id: string; type: T }> {}
 
@@ -44,8 +44,8 @@ export const t = {
 
 export namespace PackageEngine {
 	export type Any = PackageEngine<
-		any,
-		any,
+		Rpc.Rpc<any, any, any, any>,
+		Rpc.Rpc<any, any, any, any>,
 		AnyEvent,
 		S.Schema.Any,
 		Resource.Tag<any, any>
@@ -58,7 +58,7 @@ export namespace PackageEngine {
 			ReadonlyArray<{
 				provider: string;
 				id: string;
-				displayName: string;
+				displayName: string | null;
 				token: {
 					access_token: string;
 					refresh_token?: string;
@@ -69,15 +69,16 @@ export namespace PackageEngine {
 		refreshCredential(provider: string, id: string): Effect.Effect<void>;
 	};
 
-	export type Built<Engine> = Engine extends PackageEngine<
-		infer ClientRpcs,
-		infer RuntimeRpcs,
-		any,
-		infer ClientState,
-		infer Resources
-	>
-		? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
-		: never;
+	export type Built<Engine> =
+		Engine extends PackageEngine<
+			infer ClientRpcs,
+			infer RuntimeRpcs,
+			any,
+			infer ClientState,
+			infer Resources
+		>
+			? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
+			: never;
 
 	export type LayerBuilderRet<
 		ClientRpcs extends Rpc.Any,
@@ -88,11 +89,7 @@ export namespace PackageEngine {
 		clientRpcs: RpcGroup.HandlersFrom<ClientRpcs>;
 		runtimeRpcs: RpcGroup.HandlersFrom<RuntimeRpcs>;
 		clientState: Effect.Effect<S.Schema.Type<ClientState>>;
-		resources: {
-			[Id in Resources["id"]]: Effect.Effect<
-				ReadonlyArray<Resource.Value<Extract<Resources, { id: Id }>>>
-			>;
-		};
+		resources: Record<Resources["id"], Effect.Effect<Array<Resource.Value>>>;
 	};
 
 	export interface PackageEngineObj<
@@ -124,12 +121,12 @@ export namespace PackageEngine {
 		ClientState extends S.Schema.Any,
 		Resources extends Resource.Tag<any, any>,
 	> extends PackageEngineObj<
-			ClientRpcs,
-			RuntimeRpcs,
-			Events,
-			ClientState,
-			Resources
-		> {
+		ClientRpcs,
+		RuntimeRpcs,
+		Events,
+		ClientState,
+		Resources
+	> {
 		new (_: never): {};
 	}
 
@@ -137,12 +134,12 @@ export namespace PackageEngine {
 
 	export class EngineImpl extends Context.Tag("EngineImpl")<
 		EngineImpl,
-		LayerBuilderRet<any, any, any, Resource.Tag<any, any>>
+		LayerBuilderRet<Rpc.Any, Rpc.Any, any, Resource.Tag<string, string>>
 	>() {}
 
 	export const define = <
-		ClientRpcs extends Rpc.Any,
-		RuntimeRpcs extends Rpc.Any,
+		ClientRpcs extends Rpc.Rpc<any, any, any, any>,
+		RuntimeRpcs extends Rpc.Rpc<any, any, any, any>,
 		Events extends AnyEvent,
 		ClientState extends S.Schema.Any = never,
 		Resources extends Resource.Tag<any, any> = never,
@@ -182,39 +179,24 @@ export namespace PackageEngine {
 		>) as any;
 	};
 
-	export type ClientRpcs<Engine> = Engine extends PackageEngine<
-		infer ClientRpcs,
-		any,
-		any,
-		any,
-		any
-	>
-		? ClientRpcs
-		: never;
+	export type ClientRpcs<Engine> =
+		Engine extends PackageEngine<infer ClientRpcs, any, any, any, any>
+			? ClientRpcs
+			: never;
 
-	export type RuntimeRpcs<Engine> = Engine extends PackageEngine<
-		any,
-		infer RuntimeRpcs,
-		any,
-		any,
-		any
-	>
-		? RuntimeRpcs
-		: never;
+	export type RuntimeRpcs<Engine> =
+		Engine extends PackageEngine<any, infer RuntimeRpcs, any, any, any>
+			? RuntimeRpcs
+			: never;
 
 	export type RuntimeRpcClient<Engine> = RpcClient.RpcClient<
 		RuntimeRpcs<Engine>
 	>;
 
-	export type Events<Engine> = Engine extends PackageEngine<
-		any,
-		any,
-		infer Events,
-		any,
-		any
-	>
-		? S.Schema.Type<Events>
-		: never;
+	export type Events<Engine> =
+		Engine extends PackageEngine<any, any, infer Events, any, any>
+			? S.Schema.Type<Events>
+			: never;
 
 	export type AnyEvent = { _tag: string } & S.Any;
 }
@@ -243,10 +225,22 @@ export namespace Package {
 			...opts,
 			schemas,
 			addSchema: ((id, schema) => {
-				const effectRun: (ctx: any) => Effect.Effect<any, any, any> =
-					schema.type === "exec"
-						? Effect.fnUntraced(schema.run as any)
-						: (ctx) => Effect.sync(() => schema.run(ctx));
+				const run = (() => {
+					if (schema.type === "exec") {
+						return Effect.fnUntraced(function* (ctx: any) {
+							const res = schema.run({ ...ctx, io: ctx.io[1] });
+							if (res) yield* res as any;
+							return ctx.io[0][0];
+						});
+					} else {
+						return (ctx: any) => {
+							const ret = schema.run({ ...ctx, io: ctx.io[1] });
+
+							if (schema.type === "event") return ctx.io[0][0];
+							else return ret;
+						};
+					}
+				})();
 
 				schemas.set(id, {
 					id,
@@ -264,15 +258,7 @@ export namespace Package {
 
 						return [systemIO, schema.io(ctx)];
 					},
-					run: Effect.fnUntraced(function* (ctx: any) {
-						const ret = yield* effectRun({ ...ctx, io: ctx.io[1] });
-
-						if (schema.type === "event" || schema.type === "exec") {
-							return ctx.io[0][0];
-						}
-
-						return ret;
-					}),
+					run,
 				} as any);
 				return self;
 			}) as Schema.AnyMakeFn<Engine, Package<Engine>>,
@@ -288,7 +274,7 @@ export namespace Resource {
 		name_: string;
 
 		toLayer(
-			handler: Effect.Effect<ReadonlyArray<{ raw: Value; display: string }>>,
+			handler: Effect.Effect<Array<Value>>,
 		): Layer.Layer<Handler<Id, Value>>;
 	}
 
@@ -296,12 +282,19 @@ export namespace Resource {
 		new (_: never): {};
 	}
 
-	export type Value<Tag extends Resource.Tag<any, any>> =
-		Tag extends Resource.Tag<any, infer Value> ? Value : never;
+	export namespace Tag {
+		export type Value<Tag extends Resource.Tag<any, any>> =
+			Tag extends Resource.Tag<any, infer Value> ? Value : never;
+	}
+
+	export interface Value<TId extends string = string> {
+		id: TId;
+		display: string;
+	}
 
 	export interface Handler<Id extends string, Value> {
 		id: Id;
-		handler: Effect.Effect<{ raw: Value; display: string }>;
+		handler: Effect.Effect<Array<Value>>;
 	}
 
 	export const Tag =
@@ -334,11 +327,12 @@ export namespace Property {
 	export type Infer<
 		T extends Property<any, any>,
 		Engine extends PackageEngine.Any,
-	> = T extends Property.ResourceSource<any, infer Value>
-		? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
-		: T extends ValueSource
-			? T.Infer_<T["type"]>
-			: never;
+	> =
+		T extends Property.ResourceSource<any, infer Value>
+			? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
+			: T extends ValueSource
+				? T.Infer_<T["type"]>
+				: never;
 }
 
 export namespace PropertiesSchema {
@@ -395,17 +389,18 @@ export namespace Schema {
 		options?: { name?: string },
 	) => DataOutput<T>;
 
-	export type InferIO<IO> = IO extends DataInput<infer T>
-		? T.Infer_<T>
-		: IO extends DataOutput<infer T>
-			? (v: T.Infer_<T>) => void
-			: IO extends ExecOutput
-				? IO
-				: IO extends ExecInput
-					? never
-					: IO extends Record<string, any>
-						? { [K in keyof IO]: InferIO<IO[K]> }
-						: IO;
+	export type InferIO<IO> =
+		IO extends DataInput<infer T>
+			? T.Infer_<T>
+			: IO extends DataOutput<infer T>
+				? (v: T.Infer_<T>) => void
+				: IO extends ExecOutput
+					? IO
+					: IO extends ExecInput
+						? never
+						: IO extends Record<string, any>
+							? { [K in keyof IO]: InferIO<IO[K]> }
+							: IO;
 
 	export type AnyIOCtx<
 		Engine extends PackageEngine.Any,
@@ -442,7 +437,7 @@ export namespace Schema {
 			properties: {
 				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
 			};
-		}) => EffectGenerator<Effect.Effect<void | ExecOutput>>;
+		}) => Effect.Effect<void | ExecOutput>;
 	}
 
 	export interface Exec<
@@ -462,7 +457,7 @@ export namespace Schema {
 			properties: {
 				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
 			};
-		}) => EffectGenerator<Effect.Effect<void>>;
+		}) => Effect.Effect<void>;
 	}
 
 	export interface Pure<
@@ -493,7 +488,7 @@ export namespace Schema {
 		Event extends PackageEngine.Events<Engine>,
 	> extends Metadata<Id, Properties> {
 		type: "event";
-		io: (ctx: { out: { data: CreateDataOut; exec: CreateExecOut } }) => IO;
+		io: (ctx: { out: { data: CreateDataOut } }) => IO;
 		event: (
 			data: PackageEngine.Events<Engine>,
 			ctx: {
@@ -527,10 +522,20 @@ export namespace Schema {
 		schema: Omit<Schema.Any<Engine, Id, Properties, IO, E>, "id">,
 	) => Ret;
 
+	type GeneratorifyEffectFn<T> = T extends ((
+		...params: infer P
+	) => infer R extends Effect.Effect<any, any, any>)
+		? (...params: P) => EffectGenerator<R>
+		: never;
+
 	export interface MakeFn<Engine extends PackageEngine.Any, Ret> {
 		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
 			id: Id,
-			schema: Omit<Schema.Exec<Engine, Id, Properties, IO>, "id">,
+			schema: Omit<Schema.Exec<Engine, Id, Properties, IO>, "id" | "run"> & {
+				run: GeneratorifyEffectFn<
+					Schema.Exec<Engine, Id, Properties, IO>["run"]
+				>;
+			},
 		): Ret;
 		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
 			id: Id,
@@ -547,7 +552,11 @@ export namespace Schema {
 		): Ret;
 		<Id extends string, IO, Properties extends PropertiesSchema.Any = never>(
 			id: Id,
-			schema: Omit<Schema.Base<Engine, Id, Properties, IO>, "id">,
+			schema: Omit<Schema.Base<Engine, Id, Properties, IO>, "id" | "run"> & {
+				run: GeneratorifyEffectFn<
+					Schema.Base<Engine, Id, Properties, IO>["run"]
+				>;
+			},
 		): Ret;
 	}
 }

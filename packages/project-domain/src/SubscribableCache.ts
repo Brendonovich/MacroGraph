@@ -10,7 +10,7 @@ export const make = <A, E, R>(options: {
 	readonly capacity: number;
 	readonly timeToLive: Duration.DurationInput;
 	readonly lookup: Effect.Effect<A, E, R>;
-}) =>
+}): Effect.Effect<SubscribableCache<A, E>, never, R> =>
 	Effect.gen(function* () {
 		const changeNotifications = yield* PubSub.unbounded<void>();
 
@@ -25,6 +25,9 @@ export const make = <A, E, R>(options: {
 			changes: () => Stream.fromPubSub(changeNotifications),
 			refresh: cache
 				.refresh()
-				.pipe(Effect.zipLeft(changeNotifications.offer())),
-		} as SubscribableCache<A, E>;
+				.pipe(
+					Effect.zipLeft(changeNotifications.offer()),
+					Effect.zipRight(cache.get()),
+				),
+		};
 	});

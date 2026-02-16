@@ -19,7 +19,10 @@ type Schema<TType extends string> = {
 export function makePackageTabSchema<TType extends string>(
 	getSettings: (
 		req: Request.GetPackageEngineState,
-	) => Effect.Effect<ERequest.Request.Success<Request.GetPackageEngineState>, any>,
+	) => Effect.Effect<
+		ERequest.Request.Success<Request.GetPackageEngineState>,
+		any
+	>,
 ): TabLayout.Schema<Schema<TType>> {
 	return {
 		getMeta: (tab) => ({ title: tab.package.name, desc: "Package" }),

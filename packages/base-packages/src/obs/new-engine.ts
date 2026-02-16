@@ -42,12 +42,23 @@ export default EngineDef.toLayer((ctx) =>
 					),
 				};
 			}),
-			resources: { OBSWebSocket: Effect.sync(() => [...sockets.keys()]) },
+			resources: {
+				OBSWebSocket: Effect.sync(() =>
+					[...sockets.keys()].map((address) => ({
+						id: address,
+						display: address,
+					})),
+				),
+			},
 			clientRpcs: {
 				AddSocket: Effect.fnUntraced(function* (opts) {
 					const ws = new OBSWebsocket();
 
-					const socket = { address: opts.address, ws, state: "disconnected" };
+					const socket: Socket = {
+						address: opts.address,
+						ws,
+						state: "disconnected",
+					};
 					sockets.set(opts.address, socket);
 					yield* ctx.dirtyState;
 

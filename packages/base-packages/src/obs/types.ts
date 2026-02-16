@@ -1,7 +1,7 @@
 import { Schema as S } from "effect";
 
-export const SocketAddress = S.String.pipe(S.brand("SocketID"));
-export type SocketAddress = S.Schema.Type<typeof SocketAddress>;
+export const SocketAddress = S.String.pipe(S.brand("SocketAddress"));
+export type SocketAddress = typeof SocketAddress.Type;
 
 export namespace Event {
 	// ===== General Events =====
