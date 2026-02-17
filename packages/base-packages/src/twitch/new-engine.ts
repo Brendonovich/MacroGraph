@@ -362,11 +362,20 @@ export default EngineDef.toLayer((ctx) =>
 				};
 			}),
 			resources: {
-				TwitchAccount: Effect.gen(function* () {
+				TwitchEventSub: Effect.gen(function* () {
 					return [...sockets.entries()].map(([id, socket]) => ({
 						id,
 						display: socket.displayName,
 					}));
+				}),
+				TwitchAccount: Effect.gen(function* () {
+					const creds = yield* ctx.credentials;
+					return creds
+						.filter((c) => c.provider === "twitch")
+						.map((c) => ({
+							id: AccountId.make(c.id),
+							display: c.displayName ?? c.id,
+						}));
 				}),
 			},
 			clientRpcs: {

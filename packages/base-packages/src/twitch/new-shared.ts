@@ -66,6 +66,10 @@ export class ClientState extends S.Struct({
 	),
 }) {}
 
+export class TwitchEventSub extends Resource.Tag("TwitchEventSub")<AccountId>({
+	name: "Twitch EventSub",
+}) {}
+
 export class TwitchAccount extends Resource.Tag("TwitchAccount")<AccountId>({
 	name: "Twitch Account",
 }) {}
