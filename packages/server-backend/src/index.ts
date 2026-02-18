@@ -363,7 +363,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 							status: 404,
 						});
 
-					return yield* httpApp.value.pipe(Effect.tap(Effect.log));
+					return yield* httpApp.value;
 				}),
 			),
 			Effect.provideService(RealtimeConnections, yield* RealtimeConnections),
