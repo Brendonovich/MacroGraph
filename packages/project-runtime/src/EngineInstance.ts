@@ -93,13 +93,7 @@ export namespace EngineInstanceClient {
 					yield* refreshState;
 					yield* refreshResources;
 				}),
-				credentials: credentials.get.pipe(
-					Effect.catchAll(
-						(): Effect.Effect<ReadonlyArray<PackageEngine.Credential>> =>
-							Effect.succeed([]),
-					),
-				),
-				credentialsRef,
+				credentials: credentialsRef,
 				refreshCredential: (provider, id) =>
 					cloud
 						.refreshCredential({
