@@ -386,9 +386,12 @@ export class Server extends Effect.Service<Server>()("Server", {
 		NodeRequests.Default,
 		PackageActions.Default,
 		// RuntimeActions.Default,
-		ServerRegistration.Default,
+		ServerRegistration.Default.pipe(
+			Layer.provideMerge(
+				CredentialsStore.Default
+			)
+		),
 		ServerPolicy.Default,
-		CredentialsStore.layer,
 		ClientAuth.Default,
 		EngineRegistry.EngineRegistry.Default,
 		RuntimeLive,

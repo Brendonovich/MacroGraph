@@ -8,7 +8,7 @@ import {
 	Option,
 	Schedule,
 } from "effect";
-import { CloudApiClient } from "@macrograph/project-runtime";
+import { CloudApiClient, CredentialsStore } from "@macrograph/project-runtime";
 import type { RawJWT } from "@macrograph/web-domain";
 
 import { ServerConfig } from "./ServerConfig";
@@ -51,6 +51,7 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 		effect: Effect.gen(function* () {
 			const registrationToken = yield* ServerRegistrationToken;
 			const cloud = yield* CloudApiClient.CloudApiClient;
+			const credentials = yield* CredentialsStore;
 
 			const registration = yield* Cache.make({
 				capacity: 1,
@@ -116,7 +117,11 @@ export class ServerRegistration extends Effect.Service<ServerRegistration>()(
 					yield* Effect.log("Access token grant performed");
 
 					yield* registrationToken.set(Option.some(grant.token));
-					yield* registration.refresh();
+
+					yield* Effect.gen(function* () {
+						yield* registration.refresh();
+						yield* credentials.refresh;
+					}).pipe(Effect.asVoid);
 
 					yield* mailbox.offer({ type: "completed" });
 				}).pipe(Effect.forkScoped);

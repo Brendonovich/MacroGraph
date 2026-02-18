@@ -19,7 +19,7 @@ export namespace LookupRef {
 
 	export interface LookupRef<A, E = never> {
 		readonly get: Effect.Effect<A, E>;
-		readonly changes: Stream.Stream<A, E>;
+		readonly changes: Stream.Stream<A, never>;
 		readonly refresh: Effect.Effect<void, E>;
 	}
 
@@ -127,7 +127,7 @@ export namespace LookupRef {
 				},
 			).pipe(Effect.flatten);
 
-			const changes: Stream.Stream<A, E> = Stream.unwrapScoped(
+			const changes: Stream.Stream<A, never> = Stream.unwrapScoped(
 				semaphore.withPermits(1)(
 					Effect.gen(function* () {
 						const state = yield* SynchronizedRef.get(stateRef);
@@ -145,11 +145,14 @@ export namespace LookupRef {
 							}
 						})();
 
-						const current = yield* currentValue;
+						// Subscribe before awaiting current value to avoid missing emissions
 						const subscription = yield* PubSub.subscribe(pubsub);
+						const currentResult = yield* Effect.either(currentValue);
 
 						return Stream.concat(
-							Stream.make(current),
+							Either.isRight(currentResult)
+								? Stream.make(currentResult.right)
+								: Stream.empty,
 							Stream.fromQueue(subscription),
 						);
 					}),
@@ -186,7 +189,10 @@ export namespace LookupRef {
 			f: (a: A) => Effect.Effect<B, E2>,
 		): LookupRef<B, E | E2> => ({
 			get: self.get.pipe(Effect.flatMap(f)),
-			changes: self.changes.pipe(Stream.mapEffect(f)),
+			changes: self.changes.pipe(
+				Stream.mapEffect(f),
+				Stream.catchAll(() => Stream.make()),
+			),
 			refresh: self.refresh,
 		}),
 	);
@@ -292,6 +298,7 @@ export namespace LookupRef {
 						onRight: (a) => f(Effect.succeed(a)),
 					}),
 				),
+				Stream.catchAll(() => Stream.make()),
 			),
 			refresh: self.refresh.pipe(Effect.catchAllCause(() => Effect.void)),
 		}),

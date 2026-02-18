@@ -35,7 +35,7 @@ const RpcsLive = Rpcs.toLayer(
 		const projectRequests = yield* ProjectRequests;
 		const graphRequests = yield* GraphRequests;
 		const nodeRequests = yield* NodeRequests;
-		const credentials = yield* CredentialsStore.CredentialsStore;
+		const credentials = yield* CredentialsStore;
 		const packageActions = yield* PackageActions;
 
 		return {
@@ -157,7 +157,7 @@ export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 			NodeRequests.Default,
 			PackageActions.Default,
 			RuntimeActions.Default,
-			CredentialsStore.layer,
+			CredentialsStore.Default,
 			NodesIOStore.Default,
 			EngineRegistry.EngineRegistry.Default,
 		),

@@ -7,7 +7,7 @@ import { ServerPolicy } from "./ServerPolicy";
 
 export const CredentialsRpcsLive = Credential.Rpcs.toLayer(
 	Effect.gen(function* () {
-		const credentials = yield* CredentialsStore.CredentialsStore;
+		const credentials = yield* CredentialsStore;
 		const serverPolicy = yield* ServerPolicy;
 
 		const transformCredentialRequest = (e: typeof credentials.get) =>

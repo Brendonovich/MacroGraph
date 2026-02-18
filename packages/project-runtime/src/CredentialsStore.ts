@@ -1,17 +1,19 @@
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { LookupRef } from "@macrograph/project-domain";
 
 import { CloudApiClient } from "./CloudApi";
 
-export const make = Effect.gen(function* () {
-	const cloud = yield* CloudApiClient.CloudApiClient;
+export class CredentialsStore extends Effect.Service<CredentialsStore>()(
+	"@macrograph/project-runtime/CredentialsStore",
+	{
+		scoped: Effect.gen(function* () {
+			const cloud = yield* CloudApiClient.CloudApiClient;
 
-	return yield* LookupRef.make(cloud.getCredentials());
-});
+			const ref = yield* LookupRef.make(
+				Effect.zipRight(Effect.log("getCredentials"), cloud.getCredentials()),
+			);
 
-export class CredentialsStore extends Effect.Tag("CredentialsStore")<
-	CredentialsStore,
-	Effect.Effect.Success<typeof make>
->() {}
-
-export const layer = Layer.scoped(CredentialsStore, make);
+			return ref;
+		}),
+	},
+) {}

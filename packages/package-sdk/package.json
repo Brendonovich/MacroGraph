@@ -47,8 +47,10 @@
 		"vite-plugin-solid": "^2.11.8"
 	},
 	"devDependencies": {
+		"@effect/vitest": "^0.27.0",
 		"tsgo": "npm:@typescript/native-preview",
-		"unplugin-icons": "^0.18.5"
+		"unplugin-icons": "^0.18.5",
+		"vitest": "^4.0.8"
 	},
 	"exports": {
 		".": { "default": "./src/index.ts", "types": "./dist/src/index.d.ts" },

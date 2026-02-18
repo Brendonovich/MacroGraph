@@ -1,5 +1,5 @@
 export * from "./CloudApi.ts";
-export * as CredentialsStore from "./CredentialsStore.ts";
+export * from "./CredentialsStore.ts";
 export * from "./EngineInstance.ts";
 export * from "./EngineRegistry.ts";
 export { NodeExecution } from "./NodeExecution.ts";
