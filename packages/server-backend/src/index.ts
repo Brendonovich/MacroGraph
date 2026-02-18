@@ -444,8 +444,6 @@ const createEventStream = Effect.gen(function* () {
 					Record.map(engine.resources, (resource) => resource.get),
 				);
 
-				yield* Effect.log(resources);
-
 				return new ProjectEvent.PackageResourcesUpdated({
 					package: pkgId,
 					resources,
