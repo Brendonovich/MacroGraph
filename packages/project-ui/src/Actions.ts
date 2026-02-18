@@ -21,7 +21,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 		accessors: true,
 		effect: Effect.gen(function* () {
 			const { state } = yield* EditorState;
-			const handleEditorEvent = yield* EditorEventHandler;
+			const handleEvent = yield* EditorEventHandler;
 			const reqHandler = yield* ProjectRequestHandler;
 
 			type PendingRequest = Request.CreateNode | Request.ConnectIO;
@@ -81,7 +81,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						ephemeral = true,
 					) =>
 						Effect.gen(function* () {
-							yield* handleEditorEvent(
+							yield* handleEvent(
 								new ProjectEvent.GraphItemsMoved({ graph, items }),
 							);
 
@@ -92,13 +92,13 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				),
 				CreateGraph: withRequest<Request.CreateGraph>()((run) =>
 					run(new Request.CreateGraph({ name: "New Graph" })).pipe(
-						Effect.andThen(handleEditorEvent),
+						Effect.andThen(handleEvent),
 					),
 				),
 				CreateNode: withRequest<Request.CreateNode>({ pending: true })(
 					(run, graph: Graph.Id, schema: Schema.Ref, position: Position) =>
 						run(new Request.CreateNode({ schema, graph, position })).pipe(
-							Effect.andThen(handleEditorEvent),
+							Effect.andThen(handleEvent),
 						),
 				),
 				ConnectIO: withRequest<Request.ConnectIO>({ pending: true })(
@@ -118,7 +118,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							} else return;
 
 							yield* run(new Request.ConnectIO({ graph, output, input })).pipe(
-								Effect.andThen(handleEditorEvent),
+								Effect.andThen(handleEvent),
 							);
 						}),
 				),
@@ -155,13 +155,13 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							} else return;
 
 							const e = yield* run(req);
-							if (e) yield* handleEditorEvent(e);
+							if (e) yield* handleEvent(e);
 						}),
 				),
 				DeleteGraphItems: withRequest<Request.DeleteGraphItems>()(
 					(run, graphId: Graph.Id, items: ReadonlyArray<Graph.ItemRef>) =>
 						run(new Request.DeleteGraphItems({ graph: graphId, items })).pipe(
-							Effect.andThen(handleEditorEvent),
+							Effect.andThen(handleEvent),
 						),
 				),
 				SetNodeProperty: withRequest<Request.SetNodeProperty>()(
@@ -179,12 +179,12 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								property,
 								value,
 							}),
-						).pipe(Effect.andThen(handleEditorEvent)),
+						).pipe(Effect.andThen(handleEvent)),
 				),
 				CreateResourceConstant: withRequest<Request.CreateResourceConstant>()(
 					(run, pkg: Package.Id, resource: string) =>
 						run(new Request.CreateResourceConstant({ pkg, resource })).pipe(
-							Effect.andThen(handleEditorEvent),
+							Effect.andThen(handleEvent),
 						),
 				),
 				UpdateResourceConstant: withRequest<Request.UpdateResourceConstant>()(
@@ -195,12 +195,12 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								value,
 								name,
 							}),
-						).pipe(Effect.andThen(handleEditorEvent)),
+						).pipe(Effect.andThen(handleEvent)),
 				),
 				DeleteResourceConstant: withRequest<Request.DeleteResourceConstant>()(
 					(run, constantId: string) =>
 						run(new Request.DeleteResourceConstant({ id: constantId })).pipe(
-							Effect.andThen(handleEditorEvent),
+							Effect.andThen(handleEvent),
 						),
 				),
 			};
