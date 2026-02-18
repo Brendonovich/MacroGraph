@@ -1,8 +1,9 @@
 import { Effect, Layer, type ManagedRuntime, Option, Stream } from "effect";
 import {
-	ProjectEventStream,
+	EditorEventStream,
 	ProjectRequestHandler,
 	ProjectUILayers,
+	RuntimeEventStream,
 } from "@macrograph/project-ui";
 import type { ServerEvent } from "@macrograph/server-domain";
 import { createContext, useContext } from "solid-js";
@@ -20,22 +21,47 @@ import {
 import { ServerRegistration } from "./ServerRegistration";
 import { ServerRpc } from "./ServerRpc";
 
-const ProjectEventStreamLive = Layer.effect(
-	ProjectEventStream,
+const EditorEventStreamLive = Layer.effect(
+	EditorEventStream,
 	Effect.gen(function* () {
 		const realtime = yield* ProjectRealtime;
 
 		return realtime.stream().pipe(
 			Stream.filterMap((e) => {
 				if (!("_tag" in e)) return Option.none();
-				// Filter for ProjectEvent tags (not ServerEvent tags)
 				const serverEventTags = [
 					"AuthChanged",
 					"ConnectedClientsChanged",
 					"PresenceUpdated",
 				];
 				if (serverEventTags.includes(e._tag)) return Option.none();
+				// Runtime events are also filtered out for the editor stream
+				const runtimeEventTags = [
+					"PackageStateChanged",
+					"PackageResourcesUpdated",
+				];
+				if (runtimeEventTags.includes(e._tag)) return Option.none();
 				return Option.some(e as any);
+			}),
+			Stream.orDie,
+		);
+	}),
+);
+
+const RuntimeEventStreamLive = Layer.effect(
+	RuntimeEventStream,
+	Effect.gen(function* () {
+		const realtime = yield* ProjectRealtime;
+
+		return realtime.stream().pipe(
+			Stream.filterMap((e) => {
+				if (!("_tag" in e)) return Option.none();
+				const runtimeEventTags = [
+					"PackageStateChanged",
+					"PackageResourcesUpdated",
+				];
+				if (runtimeEventTags.includes(e._tag)) return Option.some(e as any);
+				return Option.none();
 			}),
 			Stream.orDie,
 		);
@@ -86,7 +112,8 @@ const FrontendLive = ServerEventStreamHandlerLive.pipe(
 	Layer.provideMerge(
 		Layer.mergeAll(
 			HttpPackgeRpcClient,
-			ProjectEventStreamLive,
+			EditorEventStreamLive,
+			RuntimeEventStreamLive,
 			ServerEventStreamLive,
 			RequestHandlersLive,
 		),

@@ -11,8 +11,9 @@ import {
 import { ProjectEditor } from "@macrograph/project-editor";
 import { EngineRegistry, ProjectRuntime } from "@macrograph/project-runtime";
 import {
+	EditorEventStream,
 	GetPackageRpcClient,
-	ProjectEventStream,
+	RuntimeEventStream,
 } from "@macrograph/project-ui";
 import { createContext, useContext } from "solid-js";
 
@@ -40,19 +41,30 @@ const GetPackageRpcClientLive = Layer.effect(
 	}),
 );
 
-const ProjectEventStreamLive = Layer.scoped(
-	ProjectEventStream,
-	Effect.zipWith(
-		ProjectEditor.ProjectEditor.pipe(Effect.flatMap((r) => r.subscribe)),
-		ProjectRuntime.ProjectRuntime.pipe(Effect.flatMap((r) => r.subscribe)),
-		(editor, runtime) => Stream.merge(editor, runtime),
-	).pipe(Effect.map(Stream.filter((e) => e.actor.type === "SYSTEM"))),
+const EditorEventStreamLive = Layer.scoped(
+	EditorEventStream,
+	ProjectEditor.ProjectEditor.pipe(
+		Effect.flatMap((r) => r.subscribe),
+		Effect.map(Stream.filter((e) => e.actor.type === "SYSTEM")),
+	),
+);
+
+const RuntimeEventStreamLive = Layer.scoped(
+	RuntimeEventStream,
+	ProjectRuntime.ProjectRuntime.pipe(
+		Effect.flatMap((r) => r.subscribe),
+		Effect.map(Stream.filter((e) => e.actor.type === "SYSTEM")),
+	),
 );
 
 export const RuntimeLayers = Layer.empty.pipe(
 	Layer.provideMerge(FrontendLive),
 	Layer.provideMerge(
-		Layer.mergeAll(GetPackageRpcClientLive, ProjectEventStreamLive),
+		Layer.mergeAll(
+			GetPackageRpcClientLive,
+			EditorEventStreamLive,
+			RuntimeEventStreamLive,
+		),
 	),
 	Layer.provideMerge(BackendLive),
 	Layer.provideMerge(Layer.scope),

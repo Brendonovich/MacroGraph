@@ -8,7 +8,6 @@ import { useMutation } from "@tanstack/solid-query";
 import { cx } from "cva";
 import {
 	type ComponentProps,
-	createEffect,
 	createMemo,
 	createSignal,
 	For,
@@ -17,8 +16,9 @@ import {
 } from "solid-js";
 
 import { ProjectActions } from "./Actions";
+import { EditorState } from "./EditorState";
 import { useProjectService } from "./EffectRuntime";
-import { ProjectState } from "./State";
+import { RuntimeState } from "./RuntimeState";
 
 function ContextMenuContent(
 	props: Omit<ComponentProps<typeof ContextMenu.Content<"div">>, "onKeyDown">,
@@ -51,7 +51,8 @@ const ContextMenuItem = (props: ComponentProps<typeof ContextMenu.Item>) => (
 
 export function ConstantsSidebar() {
 	const actions = useProjectService(ProjectActions);
-	const { state } = useProjectService(ProjectState);
+	const { state: editorState } = useProjectService(EditorState);
+	const { state: runtimeState } = useProjectService(RuntimeState);
 
 	return (
 		<div class="pt-2">
@@ -60,9 +61,9 @@ export function ConstantsSidebar() {
 				<AddResourceConstantButton />
 			</div>
 			<div class="p-2 divide-y divide-gray-5 flex flex-col *:pt-1.5 *:pb-2.5">
-				<For each={Object.keys(state.constants)}>
+				<For each={Object.keys(editorState.constants)}>
 					{(constantId) => {
-						const constant = () => state.constants[constantId];
+						const constant = () => editorState.constants[constantId];
 
 						const updateValue = useMutation(() => ({
 							mutationFn: (value: string) =>
@@ -86,7 +87,7 @@ export function ConstantsSidebar() {
 						const data = () => {
 							const c = constant();
 							if (!c) return null;
-							const pkg = state.packages[c.pkg];
+							const pkg = editorState.packages[c.pkg];
 							if (!pkg) return null;
 							const resource = pkg.resources[c.resource];
 							if (!resource) return null;
@@ -96,7 +97,10 @@ export function ConstantsSidebar() {
 						return (
 							<Show when={data()}>
 								{(data) => {
-									const options = () => data()?.resource.values;
+									const options = () =>
+										runtimeState.packageResources[data().pkg.id]?.[
+											data().constant.resource
+										] ?? [];
 
 									const option = () =>
 										options().find((o) => o.id === data().constant.value) ??
@@ -262,7 +266,7 @@ function ConstantRenameDialog(props: {
 
 function AddResourceConstantButton() {
 	const actions = useProjectService(ProjectActions);
-	const { state } = useProjectService(ProjectState);
+	const { state: editorState } = useProjectService(EditorState);
 
 	return (
 		<DropdownMenu placement="bottom">
@@ -278,12 +282,12 @@ function AddResourceConstantButton() {
 			<DropdownMenu.Portal>
 				<DropdownMenu.Content class="p-1 bg-gray-3 flex flex-col gap-1 z-10 text-xs border border-gray-5 animate-in fade-in slide-in-from-top-1 focus-visible:outline-none">
 					<Index
-						each={Record.toEntries(state.packages).filter(
+						each={Record.toEntries(editorState.packages).filter(
 							(p) => Record.size(p[1].resources) > 0,
 						)}
 					>
 						{(pkg) => (
-							<Show when={state.packages[pkg()[0]]}>
+							<Show when={editorState.packages[pkg()[0]]}>
 								{(pkg) => {
 									const resources = createMemo(() =>
 										Record.toEntries(pkg().resources),

@@ -17,9 +17,9 @@ import {
 	unwrap,
 } from "solid-js/store";
 
+import { EditorState } from "./EditorState";
 import { useProjectService } from "./EffectRuntime";
 import { PackageClients } from "./Packages/Clients";
-import { ProjectState } from "./State";
 
 export namespace TabState {
 	export type TabState<TSettingsPage extends string = string> =
@@ -289,7 +289,7 @@ export function usePaneTabs<TSettingsPage extends string>(
 	pane: Accessor<PaneState<TSettingsPage>>,
 ) {
 	const packageClients = useProjectService(PackageClients);
-	const { state } = useProjectService(ProjectState);
+	const { state } = useProjectService(EditorState);
 
 	return pane()
 		.tabs.map((tab) => {

@@ -12,30 +12,21 @@ import type { ProjectEvent } from "@macrograph/project-domain";
 import { batch } from "solid-js";
 import { produce } from "solid-js/store";
 
-import { PackageClients } from "./Packages/Clients";
-import { ProjectState } from "./State";
+import { EditorState } from "./EditorState";
 
-export class ProjectEventStream extends Context.Tag("ProjectEventStream")<
-	ProjectEventStream,
-	Stream.Stream<ProjectEvent.ProjectEvent>
+export class EditorEventStream extends Context.Tag("EditorEventStream")<
+	EditorEventStream,
+	Stream.Stream<ProjectEvent.EditorEvent>
 >() {}
 
-export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
-	"ProjectEventHandler",
+export class EditorEventHandler extends Effect.Service<EditorEventHandler>()(
+	"EditorEventHandler",
 	{
 		effect: Effect.gen(function* () {
-			const { setState, actions } = yield* ProjectState;
-			const pkgClients = yield* PackageClients;
+			const { setState, actions } = yield* EditorState;
 
-			return Match.type<ProjectEvent.ProjectEvent>().pipe(
+			return Match.type<ProjectEvent.EditorEvent>().pipe(
 				Match.tags({
-					PackageStateChanged: (e) =>
-						Effect.gen(function* () {
-							yield* pkgClients.getPackage(e.pkg).pipe(
-								Effect.flatMap((p) => p.notifySettingsChange),
-								Effect.catchAll(() => Effect.void),
-							);
-						}),
 					GraphItemsDeleted: (e) =>
 						Effect.sync(() => {
 							setState(
@@ -65,26 +56,6 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 							);
 						});
 					},
-					PackageResourcesUpdated: (e) =>
-						Effect.sync(() => {
-							setState(
-								"packages",
-								e.package,
-								"resources",
-								produce((resources) => {
-									for (const [resource, values] of Object.entries(
-										e.resources,
-									)) {
-										const resourceState = resources[resource];
-										if (!resourceState) continue;
-										resources[resource] = {
-											...resourceState,
-											values: [...values],
-										};
-									}
-								}),
-							);
-						}),
 					ResourceConstantUpdated: (e) =>
 						Effect.sync(() => {
 							setState(
@@ -219,15 +190,15 @@ export class ProjectEventHandler extends Effect.Service<ProjectEventHandler>()(
 				Match.orElse(() => Effect.void),
 			);
 		}),
-		dependencies: [ProjectState.Default, PackageClients.Default],
+		dependencies: [EditorState.Default],
 	},
 ) {}
 
-export const ProjectEventStreamHandlerLive = Layer.scopedDiscard(
+export const EditorEventStreamHandlerLive = Layer.scopedDiscard(
 	Effect.gen(function* () {
-		const stream = yield* ProjectEventStream;
+		const stream = yield* EditorEventStream;
 		yield* stream.pipe(
-			Stream.runForEach(yield* ProjectEventHandler),
+			Stream.runForEach(yield* EditorEventHandler),
 			Effect.forkScoped,
 		);
 	}),

@@ -7,10 +7,10 @@ import { createMousePosition } from "@solid-primitives/mouse";
 import { type ComponentProps, createSignal, type JSX } from "solid-js";
 import { produce, type StoreSetter } from "solid-js/store";
 
-import { GraphContextMenu, GraphView, ProjectActions, ProjectState } from "..";
+import { GraphContextMenu, GraphView, ProjectActions } from "..";
+import { EditorState, type GraphState } from "../EditorState";
 import { useProjectService } from "../EffectRuntime";
 import type { TabState } from "../LayoutState";
-import type { GraphState } from "../State";
 import { createGraphContext, GraphContext } from "./Context";
 
 export function makeGraphTabSchema(
@@ -30,7 +30,7 @@ export function makeGraphTabSchema(
 			const [ref, setRef] = createSignal<HTMLDivElement | null>(null);
 			const bounds = createElementBounds(ref);
 			const actions = useProjectService(ProjectActions);
-			const { state } = useProjectService(ProjectState);
+			const { state } = useProjectService(EditorState);
 			const mouse = createMousePosition();
 
 			const graphCtx = createGraphContext(

@@ -2,14 +2,14 @@ import { focusRingClasses } from "@macrograph/ui";
 import { cx } from "cva";
 import { For, Show } from "solid-js";
 
+import { EditorState } from "../EditorState";
 import { useProjectService } from "../EffectRuntime";
 import { useLayoutStateRaw } from "../LayoutState";
-import { ProjectState } from "../State";
 import { PackageClients } from "./Clients";
 
 export function PackagesSidebar() {
 	const packageClients = useProjectService(PackageClients);
-	const { state } = useProjectService(ProjectState);
+	const { state } = useProjectService(EditorState);
 	const layoutState = useLayoutStateRaw();
 
 	const selected = () => {

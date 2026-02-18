@@ -1,21 +1,16 @@
-/** biome-ignore-all lint/complexity/noBannedTypes: {} is used by effect and it's fine */
-
 import { type Rpc, type RpcClient, RpcGroup } from "@effect/rpc";
 import {
 	Context,
 	Data as D,
 	Effect,
 	Layer,
-	Scope,
 	type Option,
 	type Schema as S,
 } from "effect";
 import type { YieldWrap } from "effect/Utils";
 import * as T from "@macrograph/typesystem";
 
-export { LookupRef } from "./LookupRef.ts";
-
-import type { LookupRef as LookupRefNS } from "./LookupRef.ts";
+import type { LookupRef } from "./LookupRef.ts";
 
 export class ExecInput extends D.TaggedClass("ExecInput")<{ id: string }> {}
 export class ExecOutput extends D.TaggedClass("ExecOutput")<{ id: string }> {}
@@ -66,8 +61,7 @@ export namespace PackageEngine {
 	export type LayerCtx<Events extends AnyEvent> = {
 		emitEvent(event: S.Schema.Type<Events>): void;
 		dirtyState: Effect.Effect<void>;
-		credentials: Effect.Effect<ReadonlyArray<Credential>>;
-		credentialsRef: LookupRefNS.LookupRef<ReadonlyArray<Credential>>;
+		credentialsRef: LookupRef.LookupRef<ReadonlyArray<Credential>>;
 		refreshCredential(provider: string, id: string): Effect.Effect<void>;
 	};
 
@@ -92,7 +86,7 @@ export namespace PackageEngine {
 		clientState: Effect.Effect<S.Schema.Type<ClientState>>;
 		resources: Record<
 			Resources["id"],
-			LookupRefNS.LookupRef<Array<Resource.Value>>
+			LookupRef.LookupRef<Array<Resource.Value>>
 		>;
 	};
 
@@ -113,9 +107,7 @@ export namespace PackageEngine {
 			_: (
 				ctx: LayerCtx<Events>,
 			) => Effect.Effect<
-				LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>,
-				never,
-				Scope.Scope
+				LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
 			>,
 		): Layer.Layer<EngineImpl, never, CtxTag>;
 	}

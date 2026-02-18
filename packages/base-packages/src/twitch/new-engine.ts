@@ -20,7 +20,7 @@ import {
 	Scope,
 	Stream,
 } from "effect";
-import type { PackageEngine } from "@macrograph/package-sdk";
+import { LookupRef, type PackageEngine } from "@macrograph/package-sdk";
 
 import { EngineDef } from ".";
 import { type SubscriptionTypeDefinition, subscriptionTypes } from "./eventSub";
@@ -362,14 +362,15 @@ export default EngineDef.toLayer((ctx) =>
 				};
 			}),
 			resources: {
-				TwitchEventSub: Effect.gen(function* () {
-					return [...sockets.entries()].map(([id, socket]) => ({
-						id,
-						display: socket.displayName,
-					}));
-				}),
-				TwitchAccount: Effect.gen(function* () {
-					const creds = yield* ctx.credentials;
+				TwitchEventSub: yield* LookupRef.make(
+					Effect.sync(() =>
+						[...sockets.entries()].map(([id, socket]) => ({
+							id,
+							display: socket.displayName,
+						})),
+					),
+				),
+				TwitchAccount: yield* LookupRef.derive(ctx.credentialsRef, (creds) => {
 					return creds
 						.filter((c) => c.provider === "twitch")
 						.map((c) => ({

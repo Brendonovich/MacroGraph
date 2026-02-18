@@ -1,7 +1,6 @@
 import * as S from "effect/Schema";
 import * as T from "@macrograph/typesystem";
 
-import { Resource } from "./NodeSchema";
 import * as Schema from "./Schema";
 
 export const Id = S.String.pipe(S.brand("Package.Id"));
@@ -31,11 +30,5 @@ export class Package extends S.Class<Package>("Package")({
 			}),
 		}),
 	),
-	resources: S.Record({
-		key: S.String,
-		value: S.Struct({
-			name: S.String,
-			values: S.Array(Resource.ResourceValue),
-		}),
-	}),
+	resources: S.Record({ key: S.String, value: S.Struct({ name: S.String }) }),
 }) {}

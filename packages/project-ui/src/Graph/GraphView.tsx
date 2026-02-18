@@ -15,7 +15,7 @@ import {
 	Show,
 } from "solid-js";
 
-import type { NodeState } from "../State";
+import type { NodeState } from "../EditorState";
 import { useGraphContext } from "./Context";
 import {
 	createLongPress,

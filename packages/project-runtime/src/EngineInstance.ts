@@ -1,13 +1,13 @@
 import { FetchHttpClient } from "@effect/platform";
 import { RpcClient, RpcSerialization, RpcServer } from "@effect/rpc";
-import { Effect, Layer, Record, type Scope } from "effect";
+import { Array, Effect, Layer, pipe, Record, type Scope, Stream } from "effect";
 import { PackageEngine, type Resource } from "@macrograph/package-sdk";
 import {
+	LookupRef,
 	NodesIOStore,
 	type Package,
 	type Project,
 	ProjectEvent,
-	SubscribableCache,
 } from "@macrograph/project-domain";
 
 import { CloudApiClient } from "./CloudApi";
@@ -39,10 +39,10 @@ const makeHttpClient = (rpcs: any, url: string) =>
 export type EngineInstanceClient = {
 	readonly client: Layer.Layer<never, never, RpcServer.Protocol>;
 	readonly runtime: Layer.Layer<never, never, RpcServer.Protocol>;
-	readonly state: SubscribableCache.SubscribableCache<unknown, never>;
+	readonly state: LookupRef.LookupRef<unknown, never>;
 	readonly resources: Record<
 		string,
-		SubscribableCache.SubscribableCache<ReadonlyArray<any>, never>
+		LookupRef.LookupRef<ReadonlyArray<Resource.Value>, never>
 	>;
 };
 
@@ -65,6 +65,10 @@ export namespace EngineInstanceClient {
 			const runtime = yield* ProjectRuntime.ProjectRuntime;
 			const nodesIOStore = yield* NodesIOStore;
 			const engines = yield* EngineRegistry.EngineRegistry;
+
+			const credentialsRef = LookupRef.mapGet(credentials, (get) =>
+				get.pipe(Effect.catchAll(() => Effect.succeed([]))),
+			);
 
 			const ctxLayer = Layer.succeed(PackageEngine.CtxTag, {
 				emitEvent: (e) =>
@@ -90,8 +94,12 @@ export namespace EngineInstanceClient {
 					yield* refreshResources;
 				}),
 				credentials: credentials.get.pipe(
-					Effect.catchAll(() => Effect.succeed([])),
+					Effect.catchAll(
+						(): Effect.Effect<ReadonlyArray<PackageEngine.Credential>> =>
+							Effect.succeed([]),
+					),
 				),
+				credentialsRef,
 				refreshCredential: (provider, id) =>
 					cloud
 						.refreshCredential({
@@ -110,20 +118,26 @@ export namespace EngineInstanceClient {
 				layer: args.layer,
 			}).pipe(Effect.provide(ctxLayer));
 
-			const refreshResources: Effect.Effect<void> = Effect.all(
-				Record.map(instance.resources, (cache, key) =>
-					cache.refresh.pipe(
-						Effect.tap((values) =>
-							runtime.publishEvent(
+			yield* pipe(
+				Record.toEntries(instance.resources),
+				Array.map(([key, cache]) =>
+					cache.changes.pipe(
+						Stream.map(
+							(values) =>
 								new ProjectEvent.PackageResourcesUpdated({
 									package: args.pkgId,
 									resources: { [key]: values },
 								}),
-							),
 						),
-						Effect.asVoid,
 					),
 				),
+				Stream.mergeAll({ concurrency: "unbounded" }),
+				Stream.runForEach(runtime.publishEvent),
+				Effect.forkScoped,
+			);
+
+			const refreshResources: Effect.Effect<void> = Effect.all(
+				Record.map(instance.resources, (cache) => cache.refresh),
 			).pipe(Effect.asVoid);
 			const refreshState: Effect.Effect<void> = instance.state.refresh;
 
@@ -147,10 +161,10 @@ export namespace EngineInstance {
 	export interface EngineInstance {
 		readonly client: Layer.Layer<never, never, RpcServer.Protocol>;
 		readonly runtime: Layer.Layer<never, never, RpcServer.Protocol>;
-		readonly state: SubscribableCache.SubscribableCache<unknown, never>;
+		readonly state: LookupRef.LookupRef<unknown, never>;
 		readonly resources: Record<
 			string,
-			SubscribableCache.SubscribableCache<Array<Resource.Value>, never>
+			LookupRef.LookupRef<Array<Resource.Value>, never>
 		>;
 	}
 
@@ -176,21 +190,13 @@ export namespace EngineInstance {
 				Layer.provide(runtimeRpcs),
 			);
 
-			const resources = yield* Effect.all(
-				Record.map(built.resources, (get) =>
-					SubscribableCache.make({
-						capacity: 1,
-						timeToLive: "1 minute",
-						lookup: get,
-					}).pipe(Effect.tap((c) => c.get)),
-				),
+			yield* Effect.all(
+				Record.map(built.resources, (ref) => ref.get),
+				{ discard: true },
 			);
+			const resources = built.resources;
 
-			const state = yield* SubscribableCache.make({
-				capacity: 1,
-				lookup: built.clientState,
-				timeToLive: "1 minute",
-			});
+			const state = yield* LookupRef.make(built.clientState);
 
 			return { client, runtime, state, resources };
 		});

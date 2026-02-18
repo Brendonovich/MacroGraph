@@ -8,11 +8,11 @@ import { cx } from "cva";
 import { createMemo, For, Match, Show, Switch } from "solid-js";
 
 import { ProjectActions } from "../Actions";
+import { EditorState } from "../EditorState";
 import { useProjectService } from "../EffectRuntime";
 import { matchSchemaTypeBackgroundColour } from "../Graph/Node";
 import { PackageClients } from "../Packages/Clients";
 import { Sidebar } from "../Sidebar";
-import { ProjectState } from "../State";
 import { useContextualSidebar } from "./Context";
 
 export { ContextualSidebarProvider } from "./Context";
@@ -35,7 +35,7 @@ export function ContextualSidebar() {
 
 export function ContextualSidebarContent() {
 	const self = useContextualSidebar();
-	const { state } = useProjectService(ProjectState);
+	const { state } = useProjectService(EditorState);
 	const actions = useProjectService(ProjectActions);
 
 	return (

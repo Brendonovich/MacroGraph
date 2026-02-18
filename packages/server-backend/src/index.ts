@@ -15,8 +15,8 @@ import {
 	FiberRef,
 	Layer,
 	Option,
+	Record,
 	Schema,
-	Scope,
 	Stream,
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
@@ -24,7 +24,7 @@ import * as Packages from "@macrograph/base-packages";
 import {
 	NodesIOStore,
 	Package,
-	type ProjectEvent,
+	ProjectEvent,
 } from "@macrograph/project-domain";
 import {
 	GraphRequests,
@@ -338,6 +338,10 @@ export class Server extends Effect.Service<Server>()("Server", {
 						Effect.provide(Realtime.Connection.context({ id: connectionId })),
 						Effect.provideService(ProjectEditor.ProjectEditor, editor),
 						Effect.provideService(ProjectRuntime.ProjectRuntime, runtime),
+						Effect.provideService(
+							EngineRegistry.EngineRegistry,
+							engineRegistry,
+						),
 						Effect.forkScoped,
 					);
 
@@ -427,11 +431,30 @@ const createEventStream = Effect.gen(function* () {
 	const editor = yield* ProjectEditor.ProjectEditor;
 	const runtime = yield* ProjectRuntime.ProjectRuntime;
 	const realtimeConnection = yield* Realtime.Connection;
+	const engineRegistry = yield* EngineRegistry.EngineRegistry;
 
 	const presence = yield* PresenceState;
 	yield* presence.registerToScope;
 
-	return Stream.mergeAll(
+	const initialResourceEvents = yield* Effect.forEach(
+		Array.from(engineRegistry.engines.entries()),
+		([pkgId, engine]) =>
+			Effect.gen(function* () {
+				const resources = yield* Effect.all(
+					Record.map(engine.resources, (resource) => resource.get),
+				);
+
+				yield* Effect.log(resources);
+
+				return new ProjectEvent.PackageResourcesUpdated({
+					package: pkgId,
+					resources,
+				});
+			}),
+	);
+
+	const initialStream = Stream.make(...initialResourceEvents);
+	const updatesStream = Stream.mergeAll(
 		[
 			(yield* editor.subscribe).pipe(
 				Stream.filter(
@@ -468,4 +491,6 @@ const createEventStream = Effect.gen(function* () {
 		],
 		{ concurrency: "unbounded" },
 	);
+
+	return Stream.concat(initialStream, updatesStream);
 });
