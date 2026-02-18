@@ -3,15 +3,15 @@ import type { Package, Request } from "@macrograph/project-domain";
 import type { TabLayout } from "@macrograph/ui";
 import { useQuery } from "@tanstack/solid-query";
 
+import type { EditorPackageState } from "../EditorState";
 import { useEffectRuntime } from "../EffectRuntime";
-import type { PackageState } from "../State";
 import type { PackageClient } from "./Clients";
 import { PackageSettings, packageSettingsQueryOptions } from "./Settings";
 
 type Schema<TType extends string> = {
 	type: TType;
 	tabId: number;
-	package: PackageState;
+	package: EditorPackageState;
 	packageId: Package.Id;
 	client: PackageClient;
 };

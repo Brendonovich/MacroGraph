@@ -2,9 +2,9 @@ import { Effect, Layer } from "effect";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import {
 	ContextualSidebarProvider,
+	EditorState,
 	NavSidebarProvider,
 	ProjectEffectRuntimeContext,
-	ProjectState,
 } from "@macrograph/project-ui";
 import { makePersisted } from "@solid-primitives/storage";
 import { QueryClientProvider } from "@tanstack/solid-query";
@@ -29,7 +29,7 @@ export const UILive = (runtime: EffectRuntime.EffectRuntime) =>
 		Effect.gen(function* () {
 			const realtime = yield* ProjectRealtime;
 
-			const { actions } = yield* ProjectState;
+			const { actions } = yield* EditorState;
 			const rpc = yield* ServerRpc.client;
 
 			actions.setProject(

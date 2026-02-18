@@ -2,13 +2,13 @@ import { it } from "@effect/vitest";
 import { Effect, HashMap, Option } from "effect";
 import * as PackageSDK from "@macrograph/package-sdk";
 import {
-    Graph,
-    IO,
-    Node,
-    NodesIOStore,
-    Package,
-    Project,
-    Schema,
+	Graph,
+	IO,
+	Node,
+	NodesIOStore,
+	Package,
+	Project,
+	Schema,
 } from "@macrograph/project-domain";
 import { expect } from "vitest";
 
@@ -141,10 +141,7 @@ it.effect(
 			.pipe(Effect.flatMap(Effect.all))
 			.pipe(
 				Effect.provide(NodesIOStore.Default),
-				Effect.provideService(
-					ProjectRuntime.CurrentProject,
-					project,
-				),
+				Effect.provideService(ProjectRuntime.CurrentProject, project),
 				Effect.provideService(ProjectRuntime.ProjectRuntime, runtime),
 			);
 

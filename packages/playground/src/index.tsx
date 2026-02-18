@@ -5,6 +5,7 @@ import {
 	CredentialsPage,
 	credentialsQueryOptions,
 	defineBasePaneTabController,
+	EditorState,
 	GraphContextMenu,
 	Header,
 	makeGraphTabSchema,
@@ -16,7 +17,6 @@ import {
 	ProjectEffectRuntimeContext,
 	ProjectPaneLayoutView,
 	ProjectPaneTabView,
-	ProjectState,
 	refetchCredentialsMutationOptions,
 	SettingsLayout,
 	type TabState,
@@ -122,7 +122,7 @@ export default function NewPlayground() {
 }
 
 function Inner() {
-	const { actions: stateActions } = useService(ProjectState);
+	const { actions: stateActions } = useService(EditorState);
 	const rpc = useService(PlaygroundRpc);
 
 	const initialize = useMutation(() => ({

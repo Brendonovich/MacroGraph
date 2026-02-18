@@ -2,12 +2,17 @@ import type { Effect, ManagedRuntime } from "effect";
 import { createContext, useContext } from "solid-js";
 
 import type { ProjectActions } from "./Actions";
+import type { EditorState } from "./EditorState";
 import type { PackageClients } from "./Packages/Clients";
 import type { ProjectRequestHandler } from "./RequestHandler";
-import type { ProjectState } from "./State";
+import type { RuntimeState } from "./RuntimeState";
 
 export type EffectRuntime = ManagedRuntime.ManagedRuntime<
-	PackageClients | ProjectState | ProjectActions | ProjectRequestHandler,
+	| PackageClients
+	| EditorState
+	| RuntimeState
+	| ProjectActions
+	| ProjectRequestHandler,
 	any
 >;
 

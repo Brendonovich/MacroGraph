@@ -101,10 +101,7 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 											).pipe(
 												Option.map((resources) =>
 													Record.fromEntries(
-														resources.map((r) => [
-															r.id,
-															{ name: r.name_, values: [] },
-														]),
+														resources.map((r) => [r.id, { name: r.name_ }]),
 													),
 												),
 												Option.getOrElse(() => ({})),

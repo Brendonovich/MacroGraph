@@ -1,19 +1,26 @@
 import { Layer } from "effect";
 
 import { ProjectActions } from "./Actions";
+import {
+	EditorEventHandler,
+	EditorEventStreamHandlerLive,
+} from "./EditorEventHandler";
+import { EditorState } from "./EditorState";
 import { PackageClients } from "./Packages/Clients";
 import {
-	ProjectEventHandler,
-	ProjectEventStreamHandlerLive,
-} from "./ProjectEventHandler";
-import { ProjectState } from "./State";
+	RuntimeEventHandler,
+	RuntimeEventStreamHandlerLive,
+} from "./RuntimeEventHandler";
+import { RuntimeState } from "./RuntimeState";
 
 export const ProjectUILayers = Layer.provideMerge(
-	ProjectEventStreamHandlerLive,
+	Layer.mergeAll(EditorEventStreamHandlerLive, RuntimeEventStreamHandlerLive),
 	Layer.mergeAll(
 		PackageClients.Default,
 		ProjectActions.Default,
-		ProjectState.Default,
-		ProjectEventHandler.Default,
+		EditorState.Default,
+		RuntimeState.Default,
+		EditorEventHandler.Default,
+		RuntimeEventHandler.Default,
 	),
 );

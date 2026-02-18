@@ -1,16 +1,12 @@
 import { Effect, Layer } from "effect";
-import { SubscribableCache } from "@macrograph/project-domain";
+import { LookupRef } from "@macrograph/project-domain";
 
 import { CloudApiClient } from "./CloudApi";
 
 export const make = Effect.gen(function* () {
 	const cloud = yield* CloudApiClient.CloudApiClient;
 
-	return yield* SubscribableCache.make({
-		capacity: 1,
-		timeToLive: "1 minute",
-		lookup: cloud.getCredentials(),
-	});
+	return yield* LookupRef.make(cloud.getCredentials());
 });
 
 export class CredentialsStore extends Effect.Tag("CredentialsStore")<
@@ -18,4 +14,4 @@ export class CredentialsStore extends Effect.Tag("CredentialsStore")<
 	Effect.Effect.Success<typeof make>
 >() {}
 
-export const layer = Layer.effect(CredentialsStore, make);
+export const layer = Layer.scoped(CredentialsStore, make);

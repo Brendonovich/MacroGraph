@@ -3,13 +3,13 @@ import { cx } from "cva";
 import { createMemo, createSignal, For } from "solid-js";
 
 import { ProjectActions } from "../Actions";
+import { EditorState } from "../EditorState";
 import { useProjectService } from "../EffectRuntime";
 import { useLayoutStateRaw } from "../LayoutState";
-import { ProjectState } from "../State";
 import { tokeniseString } from "./search";
 
 export function GraphsSidebar() {
-	const { state } = useProjectService(ProjectState);
+	const { state } = useProjectService(EditorState);
 	const actions = useProjectService(ProjectActions);
 	const layoutState = useLayoutStateRaw();
 

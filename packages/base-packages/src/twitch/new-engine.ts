@@ -20,7 +20,7 @@ import {
 	Scope,
 	Stream,
 } from "effect";
-import type { PackageEngine } from "@macrograph/package-sdk";
+import { LookupRef, type PackageEngine } from "@macrograph/package-sdk";
 
 import { EngineDef } from ".";
 import { type SubscriptionTypeDefinition, subscriptionTypes } from "./eventSub";
@@ -54,7 +54,7 @@ export default EngineDef.toLayer((ctx) =>
 			pipe(e, Effect.andThen(ctx.dirtyState), Effect.forkDaemon);
 
 		const getCredential = (accountId: AccountId) =>
-			ctx.credentials.pipe(
+			ctx.credentials.get.pipe(
 				Effect.map((c) =>
 					c.find((c) => c.provider === "twitch" && c.id === accountId),
 				),
@@ -183,7 +183,9 @@ export default EngineDef.toLayer((ctx) =>
 						),
 						HttpClient.mapRequestEffect((req) =>
 							Effect.gen(function* () {
-								const credentials = yield* ctx.credentials.pipe(Effect.orDie);
+								const credentials = yield* ctx.credentials.get.pipe(
+									Effect.orDie,
+								);
 								const credential = Option.fromNullable(
 									credentials.find((c) => c.id === accountId),
 								);
@@ -345,7 +347,7 @@ export default EngineDef.toLayer((ctx) =>
 
 		return {
 			clientState: Effect.gen(function* () {
-				const creds = yield* ctx.credentials;
+				const creds = yield* ctx.credentials.get;
 				return {
 					accounts: creds
 						.filter((c) => c.provider === "twitch")
@@ -362,14 +364,15 @@ export default EngineDef.toLayer((ctx) =>
 				};
 			}),
 			resources: {
-				TwitchEventSub: Effect.gen(function* () {
-					return [...sockets.entries()].map(([id, socket]) => ({
-						id,
-						display: socket.displayName,
-					}));
-				}),
-				TwitchAccount: Effect.gen(function* () {
-					const creds = yield* ctx.credentials;
+				TwitchEventSub: yield* LookupRef.make(
+					Effect.sync(() =>
+						[...sockets.entries()].map(([id, socket]) => ({
+							id,
+							display: socket.displayName,
+						})),
+					),
+				),
+				TwitchAccount: yield* LookupRef.derive(ctx.credentials, (creds) => {
 					return creds
 						.filter((c) => c.provider === "twitch")
 						.map((c) => ({

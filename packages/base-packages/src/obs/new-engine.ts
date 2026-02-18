@@ -1,5 +1,5 @@
 import { Effect, pipe } from "effect";
-import type { PackageEngine } from "@macrograph/package-sdk";
+import { LookupRef, type PackageEngine } from "@macrograph/package-sdk";
 import OBSWebsocket, { type OBSRequestTypes } from "obs-websocket-js";
 
 import { EngineDef } from "./index";
@@ -33,21 +33,21 @@ export default EngineDef.toLayer((ctx) =>
 		return {
 			clientState: Effect.gen(function* () {
 				return {
-					sockets: yield* Effect.all(
-						[...sockets.entries()].map(([address, socket]) =>
-							Effect.sync(() => {
-								return { name: address, address, state: socket.state };
-							}),
-						),
-					),
+					sockets: [...sockets.entries()].map(([address, socket]) => ({
+						name: address,
+						address,
+						state: socket.state,
+					})),
 				};
 			}),
 			resources: {
-				OBSWebSocket: Effect.sync(() =>
-					[...sockets.keys()].map((address) => ({
-						id: address,
-						display: address,
-					})),
+				OBSWebSocket: yield* LookupRef.make(
+					Effect.sync(() =>
+						[...sockets.keys()].map((address) => ({
+							id: address,
+							display: address,
+						})),
+					),
 				),
 			},
 			clientRpcs: {
