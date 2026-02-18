@@ -147,6 +147,24 @@ const EditorLive = Layer.scoped(
 	}),
 );
 
+const Deps = Layer.mergeAll(
+	PresenceState.Default,
+	RealtimePubSub.Default,
+	RealtimeConnections.Default,
+	JwtKeys.Default,
+	ProjectRequests.Default,
+	GraphRequests.Default,
+	NodeRequests.Default,
+	PackageActions.Default,
+	// RuntimeActions.Default,
+	ServerRegistration.Default,
+	ServerPolicy.Default,
+	ClientAuth.Default,
+	EngineRegistry.EngineRegistry.Default,
+	RuntimeLive,
+	EditorLive,
+).pipe(Layer.provideMerge(Layer.mergeAll(CredentialsStore.Default, NodesIOStore.Default)));
+
 export class Server extends Effect.Service<Server>()("Server", {
 	scoped: Effect.gen(function* () {
 		const editor = yield* ProjectEditor.ProjectEditor;
@@ -377,25 +395,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 		);
 	}),
 	dependencies: [
-		PresenceState.Default,
-		RealtimePubSub.Default,
-		RealtimeConnections.Default,
-		JwtKeys.Default,
-		ProjectRequests.Default,
-		GraphRequests.Default,
-		NodeRequests.Default,
-		PackageActions.Default,
-		// RuntimeActions.Default,
-		ServerRegistration.Default.pipe(
-			Layer.provideMerge(
-				CredentialsStore.Default
-			)
-		),
-		ServerPolicy.Default,
-		ClientAuth.Default,
-		EngineRegistry.EngineRegistry.Default,
-		RuntimeLive,
-		EditorLive.pipe(Layer.provideMerge(NodesIOStore.Default)),
+		Deps
 	],
 }) {}
 
