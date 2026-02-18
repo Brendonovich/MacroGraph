@@ -134,15 +134,25 @@ const RuntimeLive = Layer.scoped(
 	}),
 );
 
-export class Server extends Effect.Service<Server>()("Server", {
-	scoped: Effect.gen(function* () {
+const EditorLive = Layer.scoped(
+	ProjectEditor.ProjectEditor,
+	Effect.gen(function* () {
 		const editor = yield* ProjectEditor.make();
-
-		const realtimeConnections = yield* RealtimeConnections;
 
 		yield* editor.loadPackage(Package.Id.make("util"), Packages.util);
 		yield* editor.loadPackage(Package.Id.make("twitch"), Packages.twitch);
 		yield* editor.loadPackage(Package.Id.make("obs"), Packages.obs);
+
+		return editor;
+	}),
+);
+
+export class Server extends Effect.Service<Server>()("Server", {
+	scoped: Effect.gen(function* () {
+		const editor = yield* ProjectEditor.ProjectEditor;
+		const runtime = yield* ProjectRuntime.ProjectRuntime;
+
+		const realtimeConnections = yield* RealtimeConnections;
 
 		const packageEngines = yield* Effect.promise(
 			() => import("@macrograph/base-packages/engines"),
@@ -327,6 +337,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 					}).pipe(
 						Effect.provide(Realtime.Connection.context({ id: connectionId })),
 						Effect.provideService(ProjectEditor.ProjectEditor, editor),
+						Effect.provideService(ProjectRuntime.ProjectRuntime, runtime),
 						Effect.forkScoped,
 					);
 
@@ -375,9 +386,9 @@ export class Server extends Effect.Service<Server>()("Server", {
 		ServerPolicy.Default,
 		CredentialsStore.layer,
 		ClientAuth.Default,
-		NodesIOStore.Default,
 		EngineRegistry.EngineRegistry.Default,
 		RuntimeLive,
+		EditorLive.pipe(Layer.provideMerge(NodesIOStore.Default)),
 	],
 }) {}
 
@@ -414,6 +425,7 @@ const allAsMounted =
 
 const createEventStream = Effect.gen(function* () {
 	const editor = yield* ProjectEditor.ProjectEditor;
+	const runtime = yield* ProjectRuntime.ProjectRuntime;
 	const realtimeConnection = yield* Realtime.Connection;
 
 	const presence = yield* PresenceState;
@@ -429,6 +441,20 @@ const createEventStream = Effect.gen(function* () {
 							e.actor.id === realtimeConnection.id.toString()
 						),
 				),
+
+				Stream.map(
+					(v): ServerEvent.ServerEvent | ProjectEvent.ProjectEvent => v,
+				),
+			),
+			(yield* runtime.subscribe).pipe(
+				Stream.filter(
+					(e) =>
+						!(
+							e.actor.type === "CLIENT" &&
+							e.actor.id === realtimeConnection.id.toString()
+						),
+				),
+
 				Stream.map(
 					(v): ServerEvent.ServerEvent | ProjectEvent.ProjectEvent => v,
 				),

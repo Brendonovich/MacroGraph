@@ -1,11 +1,5 @@
 import { FetchHttpClient } from "@effect/platform";
-import {
-	type Rpc,
-	RpcClient,
-	RpcSerialization,
-	RpcServer,
-	RpcTest,
-} from "@effect/rpc";
+import { RpcClient, RpcSerialization, RpcServer } from "@effect/rpc";
 import { Effect, Layer, Record, type Scope } from "effect";
 import { PackageEngine, type Resource } from "@macrograph/package-sdk";
 import {
@@ -95,7 +89,9 @@ export namespace EngineInstanceClient {
 					yield* refreshState;
 					yield* refreshResources;
 				}),
-				credentials: credentials.get.pipe(Effect.orDie),
+				credentials: credentials.get.pipe(
+					Effect.catchAll(() => Effect.succeed([])),
+				),
 				refreshCredential: (provider, id) =>
 					cloud
 						.refreshCredential({
