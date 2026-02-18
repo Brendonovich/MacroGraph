@@ -112,6 +112,11 @@ export namespace EngineInstanceClient {
 				layer: args.layer,
 			}).pipe(Effect.provide(ctxLayer));
 
+			yield* credentials.changes.pipe(
+				Stream.runForEach(() => instance.state.refresh),
+				Effect.forkScoped,
+			);
+
 			yield* pipe(
 				Record.toEntries(instance.resources),
 				Array.map(([key, cache]) =>
