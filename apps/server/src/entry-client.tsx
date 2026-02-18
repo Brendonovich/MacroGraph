@@ -33,12 +33,11 @@ const RegisterPackages = Layer.scopedDiscard(
 		yield* Effect.log("Loaded packages meta and settings");
 
 		for (const [id, getSettings] of Object.entries(packageSettings.default)) {
-			yield* Effect.log(`Registering package client ${id}`);
-			// yield* packageClients.registerPackageClient(
-			// 	Package.Id.make(id),
-			// 	yield* Effect.promise(getSettings),
-			// 	packageMeta.default[id]!,
-			// );
+			yield* packageClients.registerPackageClient(
+				Package.Id.make(id),
+				yield* Effect.promise(getSettings),
+				packageMeta.default[id]!,
+			);
 		}
 
 		yield* Effect.log("Registered packages");

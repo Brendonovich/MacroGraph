@@ -1,5 +1,11 @@
 import { FetchHttpClient } from "@effect/platform";
-import { type Rpc, RpcClient, RpcSerialization, RpcTest } from "@effect/rpc";
+import {
+	type Rpc,
+	RpcClient,
+	RpcSerialization,
+	RpcServer,
+	RpcTest,
+} from "@effect/rpc";
 import { Effect, Layer, Record, type Scope } from "effect";
 import { PackageEngine, type Resource } from "@macrograph/package-sdk";
 import {
@@ -37,10 +43,10 @@ const makeHttpClient = (rpcs: any, url: string) =>
 	);
 
 export type EngineInstanceClient = {
-	client: RpcClient.RpcClient<Rpc.Any>;
-	runtime: RpcClient.RpcClient<Rpc.Any>;
-	state: SubscribableCache.SubscribableCache<unknown, never>;
-	resources: Record<
+	readonly client: Layer.Layer<never, never, RpcServer.Protocol>;
+	readonly runtime: Layer.Layer<never, never, RpcServer.Protocol>;
+	readonly state: SubscribableCache.SubscribableCache<unknown, never>;
+	readonly resources: Record<
 		string,
 		SubscribableCache.SubscribableCache<ReadonlyArray<any>, never>
 	>;
@@ -50,7 +56,7 @@ export namespace EngineInstanceClient {
 	export const makeLocal = (
 		args: EngineMakeArgs & { layer: EngineImplementationLayer },
 	): Effect.Effect<
-		EngineInstanceClient,
+		EngineInstance.EngineInstance,
 		never,
 		| CredentialsStore
 		| CloudApiClient.CloudApiClient
@@ -143,8 +149,8 @@ export namespace EngineInstanceClient {
 
 export namespace EngineInstance {
 	export interface EngineInstance {
-		readonly client: RpcClient.RpcClient<Rpc.Rpc<any>>;
-		readonly runtime: RpcClient.RpcClient<Rpc.Rpc<any>>;
+		readonly client: Layer.Layer<never, never, RpcServer.Protocol>;
+		readonly runtime: Layer.Layer<never, never, RpcServer.Protocol>;
 		readonly state: SubscribableCache.SubscribableCache<unknown, never>;
 		readonly resources: Record<
 			string,
@@ -167,11 +173,11 @@ export namespace EngineInstance {
 
 			const clientRpcs = opts.def.clientRpcs.toLayer(built.clientRpcs);
 			const runtimeRpcs = opts.def.runtimeRpcs.toLayer(built.runtimeRpcs);
-			const client = yield* RpcTest.makeClient(opts.def.clientRpcs).pipe(
-				Effect.provide(clientRpcs),
+			const client = RpcServer.layer(opts.def.clientRpcs).pipe(
+				Layer.provide(clientRpcs),
 			);
-			const runtime = yield* RpcTest.makeClient(opts.def.runtimeRpcs).pipe(
-				Effect.provide(runtimeRpcs),
+			const runtime = RpcServer.layer(opts.def.runtimeRpcs).pipe(
+				Layer.provide(runtimeRpcs),
 			);
 
 			const resources = yield* Effect.all(

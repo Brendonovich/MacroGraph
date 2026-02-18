@@ -14,6 +14,7 @@ export class PackageActions extends Effect.Service<PackageActions>()(
 						const { engines } = yield* EngineRegistry.EngineRegistry;
 
 						const getState = engines.get(r.package)?.state;
+						yield* Effect.log({ engines });
 						if (!getState)
 							return yield* new Package.NotFound({ id: r.package });
 

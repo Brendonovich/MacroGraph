@@ -9,7 +9,7 @@
 		{ "path": "./packages/server-frontend" },
 		{ "path": "./packages/project-ui" },
 		{ "path": "./packages/project-runtime" },
-		{ "path": "./apps/server" }
+		{ "path": "./apps/server" },
 	],
-	"compilerOptions": { "plugins": [{ "name": "@effect/language-service" }] }
+	"compilerOptions": { "plugins": [{ "name": "@effect/language-service" }] },
 }

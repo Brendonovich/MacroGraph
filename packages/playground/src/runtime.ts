@@ -8,7 +8,6 @@ import {
 	type Scope,
 	Stream,
 } from "effect";
-import type { Package } from "@macrograph/project-domain";
 import { ProjectEditor } from "@macrograph/project-editor";
 import { EngineRegistry, ProjectRuntime } from "@macrograph/project-runtime";
 import {
