@@ -372,14 +372,14 @@ export default EngineDef.toLayer((ctx) =>
 						})),
 					),
 				),
-				TwitchAccount: yield* LookupRef.derive(ctx.credentials, (creds) => {
-					return creds
+				TwitchAccount: yield* LookupRef.derive(ctx.credentials, (creds) =>
+					 creds
 						.filter((c) => c.provider === "twitch")
 						.map((c) => ({
 							id: AccountId.make(c.id),
 							display: c.displayName ?? c.id,
-						}));
-				}),
+						}))
+				),
 			},
 			clientRpcs: {
 				ConnectEventSub: (opts) =>

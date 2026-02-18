@@ -54,6 +54,7 @@ Layer.unwrapEffect(
 	Layer.provide(SharedDepsLive),
 	Layer.provide(ServerConfigPersistence.jsonFile("./server-state.json")),
 	Layer.provide(Layer.mergeAll(NodeContext.layer, ServerEnv.Default)),
+	HttpServer.withLogAddress,
 	Layer.provide(NodeHttpServer.layer(createServer, { port: 23456 })),
 	Layer.launch,
 	Effect.scoped,

@@ -116,6 +116,11 @@ export namespace EngineInstanceClient {
 				Record.toEntries(instance.resources),
 				Array.map(([key, cache]) =>
 					cache.changes.pipe(
+						Stream.tap((values) =>
+							Effect.log(
+								`Resource '${args.pkgId}:${key}' changed with ${values.length} values`,
+							),
+						),
 						Stream.map(
 							(values) =>
 								new ProjectEvent.PackageResourcesUpdated({
