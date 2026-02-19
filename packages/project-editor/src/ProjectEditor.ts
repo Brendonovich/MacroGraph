@@ -109,7 +109,10 @@ export const make = () =>
 						new ProjectEvent.NodeIOUpdated({
 							graph,
 							node: node.id,
-							io: { inputs: io.inputs, outputs: io.outputs },
+							io: {
+								inputs: io.inputs.map((i) => i[0]),
+								outputs: io.outputs.map((o) => o[0]),
+							},
 						}),
 					);
 				}).pipe(

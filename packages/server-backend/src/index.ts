@@ -81,6 +81,7 @@ const EditorRpcsLive = EditorRpcs.toLayer(
 		const nodeRequests = yield* NodeRequests;
 		// const serverPolicy = yield* ServerPolicy;
 		const packageActions = yield* PackageActions;
+		const editor = yield* ProjectEditor.ProjectEditor;
 
 		return {
 			GetProject: Effect.request(projectRequests.GetProjectResolver),
@@ -103,6 +104,13 @@ const EditorRpcsLive = EditorRpcs.toLayer(
 			),
 			GetPackageEngineState: Effect.request(
 				packageActions.GetPackageEngineStateResolver,
+			),
+			FetchSuggestions: Effect.request(
+				packageActions.FetchSuggestionsResolver.pipe(
+					Effect.provide(
+						Layer.effect(ProjectRuntime.CurrentProject, editor.project),
+					),
+				),
 			),
 			// GetPackageSettings: (req) => new Package.NotFound({ id: req.package }),
 			// projectRequests

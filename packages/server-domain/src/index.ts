@@ -31,6 +31,7 @@ export const EditorRpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.CreateResourceConstant),
 	Rpc.fromTaggedRequest(Request.UpdateResourceConstant),
 	Rpc.fromTaggedRequest(Request.DeleteResourceConstant),
+	Rpc.fromTaggedRequest(Request.FetchSuggestions),
 )
 	.middleware(CurrentActorRpcMiddleware)
 	.middleware(ConnectionRpcMiddleware);

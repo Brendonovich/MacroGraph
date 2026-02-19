@@ -43,6 +43,8 @@ export function makeGraphTabSchema(
 			);
 
 			createEventListener(window, "keydown", (e) => {
+				if (e.target instanceof HTMLInputElement) return;
+
 				if (e.code === "Backspace" || e.code === "Delete") {
 					actions.DeleteGraphItems(tab().graphId, tab().selection);
 				} else if (e.code === "Period") {

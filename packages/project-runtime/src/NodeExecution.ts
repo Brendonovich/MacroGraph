@@ -101,7 +101,7 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 
 	const { shape: eventShape, properties } = yield* getNodeExecutionData(
 		node,
-		pkg,
+
 		schema,
 	);
 
@@ -170,7 +170,7 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 
 						const { shape, properties } = yield* getNodeExecutionData(
 							node,
-							pkg,
+
 							schema,
 						);
 
@@ -190,7 +190,6 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 
 			const { shape, properties } = yield* getNodeExecutionData(
 				nextNode.value,
-				pkg,
 				schema,
 			);
 			nextOutput = yield* runNode({
@@ -210,13 +209,11 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 	);
 });
 
-const collectNodeProperties = Effect.fnUntraced(function* (
-	pkg: SDKPackage.Any,
+export const collectNodeProperties = Effect.fnUntraced(function* (
 	node: Node.Node,
 	schema: SDKSchema.Any,
 ) {
 	const project = yield* ProjectRuntime.CurrentProject;
-	const runtime = yield* ProjectRuntime.ProjectRuntime;
 
 	const properties: Record<string, any> = {};
 
@@ -298,11 +295,10 @@ const resolveExecConnection = Effect.fnUntraced(function* (
 
 const getNodeExecutionData = Effect.fnUntraced(function* (
 	node: Node.Node,
-	pkg: SDKPackage.Any,
 	schema: SDKSchema.Any,
 ) {
 	const { shape } = yield* IO.generateNodeIO(schema, node);
-	const properties = yield* collectNodeProperties(pkg, node, schema);
+	const properties = yield* collectNodeProperties(node, schema);
 	return { shape, properties };
 });
 

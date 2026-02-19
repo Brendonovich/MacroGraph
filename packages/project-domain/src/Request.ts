@@ -151,6 +151,21 @@ export class DeleteResourceConstant extends S.TaggedRequest<DeleteResourceConsta
 	},
 ) {}
 
+export class FetchSuggestions extends S.TaggedRequest<FetchSuggestions>()(
+	"FetchSuggestions",
+	{
+		payload: { graph: Graph.Id, node: Node.Id, input: IO.Id },
+		success: S.Array(S.String),
+		failure: S.Union(
+			Graph.NotFound,
+			Node.NotFound,
+			IO.NotFound,
+			Package.NotFound,
+			Schema.NotFound,
+		),
+	},
+) {}
+
 export type Request =
 	| GetProject
 	| GetPackageEngineState
@@ -164,4 +179,5 @@ export type Request =
 	| SetInputDefault
 	| CreateResourceConstant
 	| UpdateResourceConstant
-	| DeleteResourceConstant;
+	| DeleteResourceConstant
+	| FetchSuggestions;

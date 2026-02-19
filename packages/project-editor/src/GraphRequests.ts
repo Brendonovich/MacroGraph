@@ -69,7 +69,14 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 						yield* nodesIO.setForNode(node.id, io);
 
 						return yield* editor.publishEvent(
-							new ProjectEvent.NodeCreated({ graph: graph.id, node, io }),
+							new ProjectEvent.NodeCreated({
+								graph: graph.id,
+								node,
+								io: {
+									inputs: io.inputs.map((i) => i[0]),
+									outputs: io.outputs.map((o) => o[0]),
+								},
+							}),
 						);
 					}),
 			).pipe(requestResolverServices);

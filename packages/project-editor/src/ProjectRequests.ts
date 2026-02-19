@@ -112,7 +112,20 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 								Effect.all,
 							),
 							nodesIO: yield* nodesIO.getAll.pipe(
-								Effect.map((v) => new Map(HashMap.entries(v))),
+								Effect.map(
+									(v) =>
+										new Map(
+											Iterable.map(HashMap.entries(v), ([key, value]) => {
+												return [
+													key,
+													{
+														inputs: value.inputs.map((i) => i[0]),
+														outputs: value.outputs.map((o) => o[0]),
+													},
+												];
+											}),
+										),
+								),
 							),
 						};
 					}),

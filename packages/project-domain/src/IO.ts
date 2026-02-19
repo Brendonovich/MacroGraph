@@ -65,57 +65,88 @@ export class PortConections extends S.Class<PortConections>("PortConections")({
 	to: S.Array(PortRef),
 }) {}
 
-export const generateNodeIO = Effect.fnUntraced(function* (
+export interface GeneratedNodeIO {
+	readonly inputs: Array<[InputPort, DataInput<any> | ExecInput]>;
+	readonly outputs: Array<[OutputPort, DataOutput<any> | ExecOutput]>;
+	readonly shape: unknown;
+}
+
+export const generateNodeIO: (
+	schema: Schema.Any,
+	node: Node.Node,
+) => Effect.Effect<GeneratedNodeIO> = Effect.fnUntraced(function* (
 	schema: Schema.Any,
 	node: Node.Node,
 ) {
 	const io = {
-		inputs: [] as Array<InputPort>,
-		outputs: [] as Array<OutputPort>,
+		inputs: [] as Array<[InputPort, DataInput<any> | ExecInput]>,
+		outputs: [] as Array<[OutputPort, DataOutput<any> | ExecOutput]>,
 	};
+
+	const properties =
+		node.properties?.pipe(
+			Iterable.filterMap(([key, value]) => {
+				const def = schema.properties?.[key];
+				if (!def || !("type" in def)) return Option.none();
+				return Option.some([key, value ?? T.default_(def.type)] as const);
+			}),
+			Object.fromEntries,
+		) ?? ({} as any);
 
 	const shape = schema.io({
 		out: {
 			exec: (_id, options) => {
 				const id = Id.make(_id);
-				io.outputs.push({ id, name: options?.name, variant: new Exec() });
-				return new ExecOutput({ id });
+				const sdk = new ExecOutput({ id });
+				io.outputs.push([
+					{ id, name: options?.name, variant: new Exec() },
+					sdk,
+				]);
+				return sdk;
 			},
 			data: (_id, type, options) => {
 				const id = Id.make(_id);
-				io.outputs.push({
-					id,
-					name: options?.name,
-					variant: new Data({ type: T.serialize(type) }),
-				});
-				return new DataOutput({ id, type });
+				const sdk = new DataOutput({ id, type });
+				io.outputs.push([
+					{
+						id,
+						name: options?.name,
+						variant: new Data({ type: T.serialize(type) }),
+					},
+					sdk,
+				]);
+				return sdk;
 			},
 		},
 		in: {
 			exec: (_id, options) => {
 				const id = Id.make(_id);
-				io.inputs.push({ id, name: options?.name, variant: new Exec() });
-				return new ExecInput({ id });
+				const sdk = new ExecInput({ id });
+				io.inputs.push([{ id, name: options?.name, variant: new Exec() }, sdk]);
+				return sdk;
 			},
 			data: (_id, type, options) => {
 				const id = Id.make(_id);
-				io.inputs.push({
+				const sdk = new DataInput({
 					id,
-					name: options?.name,
-					variant: new Data({ type: T.serialize(type) }),
+					type,
+					suggestions:
+						options && "suggestions" in options
+							? options.suggestions
+							: undefined,
 				});
-				return new DataInput({ id, type });
+				io.inputs.push([
+					{
+						id,
+						name: options?.name,
+						variant: new Data({ type: T.serialize(type) }),
+					},
+					sdk,
+				]);
+				return sdk;
 			},
 		},
-		properties:
-			node.properties?.pipe(
-				Iterable.filterMap(([key, value]) => {
-					const def = schema.properties?.[key];
-					if (!def || !("type" in def)) return Option.none();
-					return Option.some([key, value ?? T.default_(def.type)] as const);
-				}),
-				Object.fromEntries,
-			) ?? ({} as any),
+		properties,
 	});
 
 	return { ...io, shape };

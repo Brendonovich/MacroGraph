@@ -27,9 +27,9 @@ function ContextMenuContent(
 		<ContextMenu.Portal>
 			<ContextMenu.Content
 				{...props}
-				onKeyDown={(e) => e.stopPropagation()}
 				class={cx(
-					"border border-gray-6 rounded bg-gray-3 min-w-32 text-xs ui-expanded:animate-in ui-expanded:fade-in ui-expanded:zoom-in-95 origin-top-left ui-closed:animate-out ui-closed:fade-out ui-closed:zoom-out-95 p-1 focus:outline-none select-none text-gray-12",
+					// ui-expanded:animate-in ui-expanded:fade-in ui-expanded:zoom-in-95
+					"border border-gray-6 rounded bg-gray-3 min-w-16 text-xs origin-top-left ui-closed:animate-out ui-closed:fade-out ui-closed:zoom-out-95 p-1 focus:outline-none select-none text-gray-12",
 					props.class,
 				)}
 			>
@@ -70,16 +70,6 @@ export function ConstantsSidebar() {
 								actions.UpdateResourceConstant(constantId, value),
 						}));
 
-						const renameMutation = useMutation(() => ({
-							mutationFn: ({
-								name,
-								value,
-							}: {
-								name?: string;
-								value?: string;
-							}) => actions.UpdateResourceConstant(constantId, value, name),
-						}));
-
 						const deleteMutation = useMutation(() => ({
 							mutationFn: () => actions.DeleteResourceConstant(constantId),
 						}));
@@ -97,6 +87,12 @@ export function ConstantsSidebar() {
 						return (
 							<Show when={data()}>
 								{(data) => {
+									const [renameOpen, setRenameOpen] = createSignal(false);
+									// after clicking the Rename item, onPointerLeave focuses the content
+									// which would normally cause the popover to close.
+									// we ignore onOpenChange until onCloseAutoFocus is called to prevent this
+									let ignoreOpenChange = false;
+
 									const options = () =>
 										runtimeState.packageResources[data().pkg.id]?.[
 											data().constant.resource
@@ -113,11 +109,12 @@ export function ConstantsSidebar() {
 												<div class="flex flex-col gap-1 first:pt-0 last:pb-0">
 													<div class="flex flex-row justify-between items-baseline">
 														<ConstantRenameDialog
+															constantId={constantId}
 															name={data().constant.name}
-															onRename={(name) =>
-																renameMutation.mutate({ name })
-															}
-															isRenaming={renameMutation.isPending}
+															open={renameOpen()}
+															onOpenChange={(open) => {
+																if (!ignoreOpenChange) setRenameOpen(open);
+															}}
 														/>
 														<span class="text-xs text-gray-11">
 															{data().resource.name}
@@ -177,13 +174,26 @@ export function ConstantsSidebar() {
 													</Select>
 												</div>
 											</ContextMenu.Trigger>
-											<ContextMenuContent>
+											<ContextMenuContent
+												onCloseAutoFocus={(e) => {
+													e.preventDefault();
+													ignoreOpenChange = false;
+												}}
+											>
+												<ContextMenuItem
+													onSelect={() => {
+														ignoreOpenChange = true;
+														setRenameOpen(true);
+													}}
+												>
+													Rename
+												</ContextMenuItem>
+
 												<ContextMenuItem
 													class="text-red-500"
 													disabled={deleteMutation.isPending}
 													onSelect={() => deleteMutation.mutate()}
 												>
-													<IconMaterialSymbolsDeleteOutline />
 													Delete
 												</ContextMenuItem>
 											</ContextMenuContent>
@@ -200,17 +210,36 @@ export function ConstantsSidebar() {
 }
 
 function ConstantRenameDialog(props: {
+	constantId: string;
 	name: string;
-	onRename: (name: string) => void;
-	isRenaming: boolean;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
 }) {
 	const [editName, setEditName] = createSignal(props.name);
 
+	const actions = useProjectService(ProjectActions);
+	const renameMutation = useMutation(() => ({
+		mutationFn: ({ name, value }: { name?: string; value?: string }) =>
+			actions
+				.UpdateResourceConstant(props.constantId, value, name)
+				.then(() => props.onOpenChange(false)),
+	}));
+
+	let inputRef: HTMLInputElement | undefined;
+
 	return (
-		<Popover placement="right-start" gutter={8}>
+		<Popover
+			placement="bottom-start"
+			gutter={8}
+			open={props.open}
+			onOpenChange={(open) => {
+				props.onOpenChange(open);
+				if (props.open) setEditName(props.name);
+			}}
+		>
 			<Popover.Trigger
 				class={cx(
-					"text-xs text-gray-12 hover:text-gray-11 focus-visible:outline-none",
+					"text-xs text-gray-12 hover:text-gray-11 focus-visible:outline-none px-1 -mx-1 rounded",
 					focusRingClasses("outline"),
 				)}
 			>
@@ -218,45 +247,50 @@ function ConstantRenameDialog(props: {
 			</Popover.Trigger>
 			<Popover.Portal>
 				<Popover.Content
-					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 border border-gray-6 rounded shadow-lg focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-left-2) ui-closed:(animate-out fade-out slide-out-to-left-2)"
-					onOpenAutoFocus={(e) => e.preventDefault()}
+					class="z-50 w-52 text-xs overflow-hidden bg-gray-3 rounded shadow-lg focus-visible:outline-none ui-expanded:(animate-in fade-in slide-in-from-top-2) ui-closed:(animate-out fade-out slide-out-to-top-2)"
+					onOpenAutoFocus={(e) => {
+						e.preventDefault();
+						inputRef?.focus();
+						setTimeout(() => inputRef?.focus(), 20);
+					}}
 				>
 					<div class="flex flex-col gap-2">
-						<div class="flex flex-col gap-2 p-2">
-							<span class="text-xs font-medium text-gray-12">
-								Rename Constant
-							</span>
+						<div class="flex flex-col gap-2">
 							<input
+								ref={inputRef}
 								type="text"
 								value={editName()}
 								onInput={(e) => setEditName(e.currentTarget.value)}
-								class="border border-gray-5 bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-yellow"
-								disabled={props.isRenaming}
+								class={cx(
+									"bg-gray-3 px-2 py-1 text-xs text-gray-12 rounded-t-[0.25rem] ring-1 ring-gray-6",
+									focusRingClasses("inset"),
+								)}
+								disabled={renameMutation.isPending}
 							/>
 						</div>
 					</div>
-					<div class="flex flex-row h-7 border-t border-gray-5 divide-x divide-gray-5 text-center">
+					<div class="flex flex-row h-7 text-center border-x border-y border-gray-6 rounded-b">
+						<button
+							onClick={() => {
+								renameMutation.mutate({ name: editName() });
+							}}
+							class={cx(
+								"flex-1 rounded-bl bg-gray-12 focus-visible:bg-gray-11 transition-colors text-gray-3 hover:text-gray-12 hover:bg-gray-6",
+								focusRingClasses("outline"),
+							)}
+							disabled={renameMutation.isPending || !editName().trim()}
+						>
+							{renameMutation.isPending ? "Saving..." : "Save"}
+						</button>
 						<Popover.CloseButton
 							class={cx(
-								"flex-1 rounded-bl text-gray-11 hover:text-gray-12",
-								focusRingClasses("inset"),
+								"flex-1 rounded-br text-gray-11 hover:text-gray-12",
+								focusRingClasses("outline"),
 							)}
-							disabled={props.isRenaming}
+							disabled={renameMutation.isPending}
 						>
 							Cancel
 						</Popover.CloseButton>
-						<button
-							onClick={() => {
-								props.onRename(editName());
-							}}
-							class={cx(
-								"flex-1 rounded-br bg-gray-12 text-gray-3 hover:text-gray-12 hover:bg-gray-6",
-								focusRingClasses("inset"),
-							)}
-							disabled={props.isRenaming || !editName().trim()}
-						>
-							{props.isRenaming ? "Saving..." : "Save"}
-						</button>
 					</div>
 				</Popover.Content>
 			</Popover.Portal>

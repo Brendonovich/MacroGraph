@@ -1,6 +1,8 @@
 import { Match } from "effect";
 import type { Mutable } from "effect/Types";
-import type { IO, Node, Schema } from "@macrograph/project-domain";
+import { Listbox } from "@kobalte/core/listbox";
+import { Popover } from "@kobalte/core/popover";
+import type { Graph, IO, Node, Schema } from "@macrograph/project-domain";
 import * as T from "@macrograph/typesystem";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -17,9 +19,12 @@ import {
 	onCleanup,
 	type ParentProps,
 	Show,
+	ValidComponent,
 } from "solid-js";
 import type { DOMElement } from "solid-js/jsx-runtime";
 
+import { ProjectActions } from "../Actions";
+import { useProjectService } from "../EffectRuntime";
 import { isTouchDevice } from "../platform";
 import { useGraphContext } from "./Context";
 
@@ -175,6 +180,7 @@ export function NodeIO(
 
 		return true;
 	}
+
 	return (
 		<div class="flex flex-row gap-2 text-xs text-sm">
 			<div class="px-1.5 py-2 flex flex-col gap-2 items-start">
@@ -242,6 +248,9 @@ export function NodeIO(
 											""
 										}
 										onChange={(v) => props.onDefaultValueChange?.(input.id, v)}
+										graphId={graphCtx.id()}
+										nodeId={props.id}
+										inputId={input.id}
 									/>
 								</Show>
 							</div>
@@ -392,11 +401,18 @@ const DataPin = (
 const DefaultStringInput = (props: {
 	value: string;
 	onChange(v: string): void;
+	graphId: Graph.Id;
+	nodeId: Node.Id;
+	inputId: IO.Id;
 }) => {
+	const actions = useProjectService(ProjectActions);
+
 	const [localValue, setLocalValue] = createSignal(props.value);
+	const [open, setOpen] = createSignal(false);
+	const [suggestions, setSuggestions] = createSignal<string[]>([]);
 
 	createEffect(() => {
-		setLocalValue(props.value);
+		if (!open()) setLocalValue(props.value);
 	});
 
 	const commit = (el: HTMLInputElement) => {
@@ -404,24 +420,83 @@ const DefaultStringInput = (props: {
 		if (v !== props.value) props.onChange(v);
 	};
 
+	const fetchAndOpen = async () => {
+		const results = await actions
+			.FetchSuggestions(props.graphId, props.nodeId, props.inputId)
+			.catch(() => []);
+		setSuggestions(results as string[]);
+		setOpen(true);
+	};
+
+	const filteredSuggestions = createMemo(() => {
+		const q = localValue().toLowerCase();
+		return suggestions().filter((s) => s.toLowerCase().includes(q));
+	});
+
 	return (
-		<input
-			class="w-16 px-1 h-full bg-white/10 rounded text-xs text-white border border-white/20 focus:outline-none focus:border-white/50"
-			value={localValue()}
-			onInput={(e) => setLocalValue(e.currentTarget.value)}
-			onBlur={(e) => commit(e.currentTarget)}
-			onKeyDown={(e) => {
-				if (e.key === "Enter") {
-					commit(e.currentTarget);
-					e.currentTarget.blur();
-				} else if (e.key === "Escape") {
-					setLocalValue(props.value);
-					e.currentTarget.blur();
-				}
+		<Popover
+			open={open() && filteredSuggestions().length > 0}
+			onOpenChange={(o) => {
+				if (!o) setOpen(false);
 			}}
-			onPointerDown={(e) => e.stopPropagation()}
-			onClick={(e) => e.stopPropagation()}
-		/>
+			placement="bottom-start"
+			gutter={4}
+		>
+			<Popover.Anchor<ValidComponent>
+				as={(props) => (
+					<input
+						{...props}
+						class="w-16 px-1 h-full bg-white/10 rounded text-xs text-white border border-white/20 focus:outline-none focus:border-yellow-500"
+						value={localValue()}
+						onInput={(e) => setLocalValue(e.currentTarget.value)}
+						onFocus={() => fetchAndOpen()}
+						onBlur={(e) => {
+							commit(e.currentTarget);
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								commit(e.currentTarget);
+								e.currentTarget.blur();
+								setOpen(false);
+							} else if (e.key === "Escape") {
+								setLocalValue(props.value);
+								e.currentTarget.blur();
+								setOpen(false);
+							}
+						}}
+						onPointerDown={(e) => e.stopPropagation()}
+						onClick={(e) => e.stopPropagation()}
+					/>
+				)}
+			/>
+			<Popover.Portal>
+				<Popover.Content
+					class="w-40 max-h-48 overflow-y-auto text-xs bg-neutral-700 rounded space-y-1 p-1 z-50"
+					onOpenAutoFocus={(e) => e.preventDefault()}
+					onInteractOutside={() => setOpen(false)}
+				>
+					<Listbox
+						options={filteredSuggestions()}
+						onChange={(options) => {
+							const option = [...options][0];
+							if (!option) return;
+							props.onChange(option);
+							setLocalValue(option);
+							setOpen(false);
+						}}
+						renderItem={(option) => (
+							<Listbox.Item
+								as="button"
+								item={option}
+								class="p-1 py-0.5 block w-full text-left text-white focus-visible:outline-none hover:bg-blue-600 rounded-[0.125rem]"
+							>
+								<Listbox.ItemLabel>{option.rawValue}</Listbox.ItemLabel>
+							</Listbox.Item>
+						)}
+					/>
+				</Popover.Content>
+			</Popover.Portal>
+		</Popover>
 	);
 };
 

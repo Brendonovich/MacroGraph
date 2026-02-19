@@ -18,7 +18,11 @@ export class ExecOutput extends D.TaggedClass("ExecOutput")<{ id: string }> {}
 
 export class DataInput<T extends T.Any_ = T.Any_> extends D.TaggedClass(
 	"DataInput",
-)<{ id: string; type: T }> {}
+)<{
+	id: string;
+	type: T;
+	suggestions?: Schema.SuggestionsFn;
+}> {}
 
 export class DataOutput<T extends T.Any_ = T.Any_> extends D.TaggedClass(
 	"DataOutput",
@@ -66,15 +70,16 @@ export namespace PackageEngine {
 		refreshCredential(provider: string, id: string): Effect.Effect<void>;
 	};
 
-	export type Built<Engine> = Engine extends PackageEngine<
-		infer ClientRpcs,
-		infer RuntimeRpcs,
-		any,
-		infer ClientState,
-		infer Resources
-	>
-		? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
-		: never;
+	export type Built<Engine> =
+		Engine extends PackageEngine<
+			infer ClientRpcs,
+			infer RuntimeRpcs,
+			any,
+			infer ClientState,
+			infer Resources
+		>
+			? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
+			: never;
 
 	export type LayerBuilderRet<
 		ClientRpcs extends Rpc.Any,
@@ -122,12 +127,12 @@ export namespace PackageEngine {
 		ClientState extends S.Schema.Any,
 		Resources extends Resource.Tag<any, any>,
 	> extends PackageEngineObj<
-			ClientRpcs,
-			RuntimeRpcs,
-			Events,
-			ClientState,
-			Resources
-		> {
+		ClientRpcs,
+		RuntimeRpcs,
+		Events,
+		ClientState,
+		Resources
+	> {
 		new (_: never): {};
 	}
 
@@ -183,39 +188,24 @@ export namespace PackageEngine {
 		>) as any;
 	};
 
-	export type ClientRpcs<Engine> = Engine extends PackageEngine<
-		infer ClientRpcs,
-		any,
-		any,
-		any,
-		any
-	>
-		? ClientRpcs
-		: never;
+	export type ClientRpcs<Engine> =
+		Engine extends PackageEngine<infer ClientRpcs, any, any, any, any>
+			? ClientRpcs
+			: never;
 
-	export type RuntimeRpcs<Engine> = Engine extends PackageEngine<
-		any,
-		infer RuntimeRpcs,
-		any,
-		any,
-		any
-	>
-		? RuntimeRpcs
-		: never;
+	export type RuntimeRpcs<Engine> =
+		Engine extends PackageEngine<any, infer RuntimeRpcs, any, any, any>
+			? RuntimeRpcs
+			: never;
 
 	export type RuntimeRpcClient<Engine> = RpcClient.RpcClient<
 		RuntimeRpcs<Engine>
 	>;
 
-	export type Events<Engine> = Engine extends PackageEngine<
-		any,
-		any,
-		infer Events,
-		any,
-		any
-	>
-		? S.Schema.Type<Events>
-		: never;
+	export type Events<Engine> =
+		Engine extends PackageEngine<any, any, infer Events, any, any>
+			? S.Schema.Type<Events>
+			: never;
 
 	export type AnyEvent = { _tag: string } & S.Any;
 }
@@ -350,11 +340,12 @@ export namespace Property {
 	export type Infer<
 		T extends Property<any, any>,
 		Engine extends PackageEngine.Any,
-	> = T extends Property.ResourceSource<any, infer Value>
-		? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
-		: T extends ValueSource
-			? T.Infer_<T["type"]>
-			: never;
+	> =
+		T extends Property.ResourceSource<any, infer Value>
+			? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
+			: T extends ValueSource
+				? T.Infer_<T["type"]>
+				: never;
 }
 
 export namespace PropertiesSchema {
@@ -382,6 +373,13 @@ export namespace Schema {
 		};
 	};
 
+	export type SuggestionsFn<
+		Engine extends PackageEngine.Any = PackageEngine.Any,
+		Properties extends PropertiesSchema.Any = PropertiesSchema.Any,
+	> = (
+		ctx: SuggestionsCtx<Engine, Properties>,
+	) => Effect.Effect<ReadonlyArray<string>>;
+
 	export type CreateExecIn = (
 		id: string,
 		options?: { name?: string },
@@ -393,11 +391,7 @@ export namespace Schema {
 		id: string,
 		type: T,
 		options?: { name?: string } & (T.Infer_<T> extends string
-			? {
-					suggestions?: (
-						ctx: SuggestionsCtx<Engine, Properties>,
-					) => Effect.Effect<ReadonlyArray<string>>;
-				}
+			? { suggestions?: SuggestionsFn<Engine, Properties> }
 			: {}),
 	) => DataInput<T>;
 
@@ -411,17 +405,18 @@ export namespace Schema {
 		options?: { name?: string },
 	) => DataOutput<T>;
 
-	export type InferIO<IO> = IO extends DataInput<infer T>
-		? T.Infer_<T>
-		: IO extends DataOutput<infer T>
-			? (v: T.Infer_<T>) => void
-			: IO extends ExecOutput
-				? IO
-				: IO extends ExecInput
-					? never
-					: IO extends Record<string, any>
-						? { [K in keyof IO]: InferIO<IO[K]> }
-						: IO;
+	export type InferIO<IO> =
+		IO extends DataInput<infer T>
+			? T.Infer_<T>
+			: IO extends DataOutput<infer T>
+				? (v: T.Infer_<T>) => void
+				: IO extends ExecOutput
+					? IO
+					: IO extends ExecInput
+						? never
+						: IO extends Record<string, any>
+							? { [K in keyof IO]: InferIO<IO[K]> }
+							: IO;
 
 	export type AnyIOCtx<
 		Engine extends PackageEngine.Any,

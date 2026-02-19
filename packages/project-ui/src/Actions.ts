@@ -220,6 +220,16 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							Effect.andThen(handleEvent),
 						),
 				),
+				FetchSuggestions: withRequest<Request.FetchSuggestions>()(
+					(run, graphId: Graph.Id, nodeId: Node.Id, inputId: IO.Id) =>
+						run(
+							new Request.FetchSuggestions({
+								graph: graphId,
+								node: nodeId,
+								input: inputId,
+							}),
+						),
+				),
 			};
 		}),
 		dependencies: [EditorState.Default, EditorEventHandler.Default],
