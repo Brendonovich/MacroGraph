@@ -12,7 +12,8 @@ import {
 } from "@macrograph/project-domain";
 import { expect } from "vitest";
 
-import * as ProjectRuntime from "../src/ProjectRuntime.ts";
+import { EngineRegistry } from "../src/EngineRegistry.ts";
+import { ProjectRuntime } from "../src/ProjectRuntime.ts";
 
 it.effect(
 	"runs pure nodes once per exec step",
@@ -143,6 +144,7 @@ it.effect(
 				Effect.provide(NodesIOStore.Default),
 				Effect.provideService(ProjectRuntime.CurrentProject, project),
 				Effect.provideService(ProjectRuntime.ProjectRuntime, runtime),
+				Effect.provide(EngineRegistry.EngineRegistry.Default),
 			);
 
 		expect(result).not.toBe(false);

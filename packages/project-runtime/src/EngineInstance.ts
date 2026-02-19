@@ -10,6 +10,7 @@ import {
 	Effect,
 	Layer,
 	pipe,
+	Queue,
 	Record,
 	type Schema as S,
 	type Scope,
@@ -18,7 +19,7 @@ import {
 import { PackageEngine, type Resource } from "@macrograph/package-sdk";
 import {
 	LookupRef,
-	NodesIOStore,
+	type NodesIOStore,
 	type Package,
 	type Project,
 	ProjectEvent,
@@ -26,7 +27,7 @@ import {
 
 import { CloudApiClient } from "./CloudApi";
 import { CredentialsStore } from "./CredentialsStore";
-import { EngineRegistry } from "./EngineRegistry";
+import type { EngineRegistry } from "./EngineRegistry";
 import { ProjectRuntime } from "./ProjectRuntime";
 
 export type EngineImplementationLayer = Layer.Layer<
@@ -77,26 +78,30 @@ export namespace EngineInstanceClient {
 			const credentials = yield* CredentialsStore;
 			const cloud = yield* CloudApiClient.CloudApiClient;
 			const runtime = yield* ProjectRuntime.ProjectRuntime;
-			const nodesIOStore = yield* NodesIOStore;
-			const engines = yield* EngineRegistry.EngineRegistry;
 
 			const credentialsRef = LookupRef.mapGet(credentials, (get) =>
 				get.pipe(Effect.catchAll(() => Effect.succeed([]))),
 			);
 
-			const ctxLayer = Layer.succeed(PackageEngine.CtxTag, {
-				emitEvent: (e) =>
+			const events = yield* Queue.unbounded<PackageEngine.AnyEvent>();
+
+			yield* events.pipe(
+				Stream.fromQueue,
+				Stream.runForEach((e) =>
 					Effect.gen(function* () {
 						yield* ProjectRuntime.handleEvent(args.pkgId, e).pipe(
 							Effect.provideService(
 								ProjectRuntime.CurrentProject,
 								yield* args.getProject,
 							),
-							Effect.provideService(ProjectRuntime.ProjectRuntime, runtime),
-							Effect.provideService(NodesIOStore, nodesIOStore),
-							Effect.provideService(EngineRegistry.EngineRegistry, engines),
 						);
-					}).pipe(Effect.runPromise),
+					}).pipe(Effect.forkDaemon),
+				),
+				Effect.forkScoped,
+			);
+
+			const ctxLayer = Layer.succeed(PackageEngine.CtxTag, {
+				emitEvent: (e) => events.unsafeOffer(e),
 				dirtyState: Effect.gen(function* () {
 					yield* runtime
 						.publishEvent(

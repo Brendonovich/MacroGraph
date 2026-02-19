@@ -11,7 +11,6 @@ export default Package.define({ name: "Utilities", engine: EngineDef })
 		name: "Print",
 		io: (c) => ({ in: c.in.data("in", t.String, { name: "Input" }) }),
 		run: function* ({ io }) {
-			console.log({ io });
 			yield* Effect.log(`Log: ${io.in}`);
 		},
 	})

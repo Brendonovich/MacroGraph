@@ -1,19 +1,25 @@
 {
 	"name": "@macrograph/playground",
 	"type": "module",
-	"exports": { ".": "./src/index.tsx" },
+	"exports": {
+		".": "./src/index.tsx"
+	},
 	"dependencies": {
 		"@effect-atom/atom-solid": "workspace:*",
+		"@effect/opentelemetry": "^0.60.0",
 		"@effect/platform": "^0.94.0",
 		"@effect/rpc": "^0.73.0",
 		"@kobalte/core": "^0.13.7",
 		"@macrograph/base-packages": "workspace:*",
 		"@macrograph/package-sdk": "workspace:*",
 		"@macrograph/project-domain": "workspace:*",
-		"@macrograph/project-runtime": "workspace:*",
 		"@macrograph/project-editor": "workspace:*",
+		"@macrograph/project-runtime": "workspace:*",
 		"@macrograph/project-ui": "workspace:*",
 		"@macrograph/ui": "workspace:*",
+		"@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
+		"@opentelemetry/otlp-exporter-base": "^0.208.0",
+		"@opentelemetry/sdk-trace-base": "^2.2.0",
 		"@solid-primitives/bounds": "^0.0.118",
 		"@solid-primitives/context": "^0.2.3",
 		"@solid-primitives/event-listener": "^2.3.3",
@@ -28,5 +34,7 @@
 		"effect": "^3.19.13",
 		"tsgo": "npm:@typescript/native-preview"
 	},
-	"devDependencies": { "@total-typescript/ts-reset": "^0.4.2" }
+	"devDependencies": {
+		"@total-typescript/ts-reset": "^0.4.2"
+	}
 }

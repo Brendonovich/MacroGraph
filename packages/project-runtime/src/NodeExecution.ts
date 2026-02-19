@@ -35,7 +35,7 @@ export const getSchema = Effect.fnUntraced(function* (ref: Schema.Ref) {
 	return result;
 });
 
-export const fireEventNode = Effect.fn(function* (
+export const fireEventNode = Effect.fn("fireEventNode")(function* (
 	project: Project.Project,
 	graphId: Graph.Id,
 	nodeId: Node.Id,
@@ -99,7 +99,6 @@ export const fireEventNode = Effect.fn(function* (
 	);
 
 	const eventData = schema.event(event, { properties });
-	yield* Effect.log(eventData);
 	if (Option.isNone(eventData)) return false;
 
 	const execCtx = ExecutionContext.context({

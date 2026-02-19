@@ -1,6 +1,7 @@
 import type { Scope } from "effect";
 import { Context, Effect, Option, PubSub, Stream } from "effect";
 import type {
+	PackageEngine,
 	Package as SDKPackage,
 	Schema as SDKSchema,
 } from "@macrograph/package-sdk";
@@ -99,7 +100,7 @@ export namespace ProjectRuntime {
 			return runtime;
 		});
 
-	export const handleEvent = (pkg: Package.Id, event: unknown) =>
+	export const handleEvent = (pkg: Package.Id, event: PackageEngine.AnyEvent) =>
 		Effect.gen(function* () {
 			const runtime = yield* ProjectRuntime;
 			const project = yield* CurrentProject;
@@ -116,7 +117,7 @@ export namespace ProjectRuntime {
 						yield* Effect.log(`Firing event node ${graphId}:${nodeId}`);
 						tasks.push(
 							yield* fireEventNode(project, graphId, nodeId, event).pipe(
-								Effect.fork,
+								Effect.forkScoped,
 							),
 						);
 					}
@@ -124,5 +125,12 @@ export namespace ProjectRuntime {
 			}
 
 			return tasks;
-		});
+		}).pipe(
+			Effect.withSpan("ProjectRuntime.handleEvent", {
+				attributes: {
+					"package-id": pkg,
+					"event-tag": event._tag,
+				},
+			}),
+		);
 }

@@ -1,3 +1,4 @@
+import { WebSdk } from "@effect/opentelemetry";
 import { type Rpc, type RpcClient, RpcTest } from "@effect/rpc";
 import {
 	Effect,
@@ -15,6 +16,9 @@ import {
 	GetPackageRpcClient,
 	RuntimeEventStream,
 } from "@macrograph/project-ui";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import type { OTLPExporterNodeConfigBase } from "@opentelemetry/otlp-exporter-base";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { createContext, useContext } from "solid-js";
 
 import { BackendLive } from "./backend";
@@ -61,6 +65,26 @@ const RuntimeEventStreamLive = Layer.scoped(
 	),
 );
 
+const TracingLive = Layer.unwrapEffect(
+	Effect.gen(function* () {
+		if (!import.meta.env.DEV) return Layer.empty;
+
+		const exporterConfig: OTLPExporterNodeConfigBase = {};
+		const headers: Record<string, string> = {};
+
+		exporterConfig.headers = headers;
+
+		return WebSdk.layer(() => ({
+			resource: { serviceName: "mg-playground" },
+			// Export span data to the console
+			spanProcessor: [
+				new BatchSpanProcessor(new OTLPTraceExporter()),
+				// new BatchSpanProcessor(new ConsoleSpanExporter()),
+			],
+		}));
+	}),
+);
+
 export const RuntimeLayers = Layer.empty.pipe(
 	Layer.provideMerge(FrontendLive),
 	Layer.provideMerge(
@@ -73,6 +97,7 @@ export const RuntimeLayers = Layer.empty.pipe(
 	Layer.provideMerge(BackendLive),
 	Layer.provideMerge(Layer.scope),
 	Layer.provide(Logger.pretty),
+	Layer.provide(TracingLive),
 ) satisfies Layer.Layer<any, any, Scope.Scope>;
 
 export type EffectRuntime = ManagedRuntime.ManagedRuntime<

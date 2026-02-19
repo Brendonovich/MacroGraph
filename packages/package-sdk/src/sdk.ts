@@ -132,7 +132,10 @@ export namespace PackageEngine {
 		new (_: never): {};
 	}
 
-	export class CtxTag extends Context.Tag("CtxTag")<CtxTag, LayerCtx<any>>() {}
+	export class CtxTag extends Context.Tag("CtxTag")<
+		CtxTag,
+		LayerCtx<AnyEvent>
+	>() {}
 
 	export class EngineImpl extends Context.Tag("EngineImpl")<
 		EngineImpl,
