@@ -1,6 +1,20 @@
 import { FetchHttpClient } from "@effect/platform";
-import { RpcClient, RpcSerialization, RpcServer } from "@effect/rpc";
-import { Array, Effect, Layer, pipe, Record, type Scope, Stream } from "effect";
+import {
+	type Rpc,
+	RpcClient,
+	RpcSerialization,
+	type RpcServer,
+} from "@effect/rpc";
+import {
+	Array,
+	Effect,
+	Layer,
+	pipe,
+	Record,
+	type Schema as S,
+	type Scope,
+	Stream,
+} from "effect";
 import { PackageEngine, type Resource } from "@macrograph/package-sdk";
 import {
 	LookupRef,
@@ -163,8 +177,9 @@ export namespace EngineInstanceClient {
 
 export namespace EngineInstance {
 	export interface EngineInstance {
-		readonly client: Layer.Layer<never, never, RpcServer.Protocol>;
-		readonly runtime: Layer.Layer<never, never, RpcServer.Protocol>;
+		readonly def: PackageEngine.Any;
+		readonly client: Layer.Layer<Rpc.Handler<string>, never, never>;
+		readonly runtime: Layer.Layer<Rpc.Handler<string>, never, never>;
 		readonly state: LookupRef.LookupRef<unknown, never>;
 		readonly resources: Record<
 			string,
@@ -173,7 +188,13 @@ export namespace EngineInstance {
 	}
 
 	export const make = (opts: {
-		def: PackageEngine.Any;
+		def: PackageEngine.PackageEngine<
+			any,
+			any,
+			PackageEngine.AnyEvent,
+			S.Schema.Any,
+			Resource.Tag<any, any>
+		>;
 		layer: EngineImplementationLayer;
 	}): Effect.Effect<
 		EngineInstance,
@@ -185,14 +206,8 @@ export namespace EngineInstance {
 				Effect.provide(opts.layer),
 			);
 
-			const clientRpcs = opts.def.clientRpcs.toLayer(built.clientRpcs);
-			const runtimeRpcs = opts.def.runtimeRpcs.toLayer(built.runtimeRpcs);
-			const client = RpcServer.layer(opts.def.clientRpcs).pipe(
-				Layer.provide(clientRpcs),
-			);
-			const runtime = RpcServer.layer(opts.def.runtimeRpcs).pipe(
-				Layer.provide(runtimeRpcs),
-			);
+			const client = opts.def.clientRpcs.toLayer(built.clientRpcs);
+			const runtime = opts.def.runtimeRpcs.toLayer(built.runtimeRpcs);
 
 			yield* Effect.all(
 				Record.map(built.resources, (ref) => ref.get),
@@ -202,6 +217,6 @@ export namespace EngineInstance {
 
 			const state = yield* LookupRef.make(built.clientState);
 
-			return { client, runtime, state, resources };
+			return { def: opts.def, client, runtime, state, resources };
 		});
 }

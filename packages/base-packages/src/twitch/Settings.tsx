@@ -31,46 +31,48 @@ export default function Settings(
 							</div>
 						}
 					>
-						{(acc) => (
-							<li class="flex flex-row w-full items-center py-2 first:pt-0 last:pb-0">
-								<div class="flex-1 flex flex-col gap-0.5">
-									<span class="font-medium">{acc().displayName}</span>
-									<div class="flex flex-row items-center gap-2">
-										<div
-											class={cx(
-												"size-2 rounded-full",
-												EVENTSUB_CONNECTION_INDICATOR[
-													acc().eventSubSocket.state
-												].class,
-											)}
-										/>
-										<span class="text-xs text-gray-11 italic">
-											{
-												EVENTSUB_CONNECTION_INDICATOR[
-													acc().eventSubSocket.state
-												].label
-											}
-										</span>
+						{(acc) => {
+							return (
+								<li class="flex flex-row w-full items-center py-2 first:pt-0 last:pb-0">
+									<div class="flex-1 flex flex-col gap-0.5">
+										<span class="font-medium">{acc().displayName}</span>
+										<div class="flex flex-row items-center gap-2">
+											<div
+												class={cx(
+													"size-2 rounded-full",
+													EVENTSUB_CONNECTION_INDICATOR[
+														acc().eventSubSocket.state
+													].class,
+												)}
+											/>
+											<span class="text-xs text-gray-11 italic">
+												{
+													EVENTSUB_CONNECTION_INDICATOR[
+														acc().eventSubSocket.state
+													].label
+												}
+											</span>
+										</div>
 									</div>
-								</div>
 
-								<EffectButton
-									variant="text"
-									class="relative"
-									onClick={() => {
-										return acc().eventSubSocket.state === "connected"
-											? props.rpc.DisconnectEventSub({ accountId: acc().id })
-											: props.rpc.ConnectEventSub({ accountId: acc().id });
-									}}
-								>
-									<span>
-										{acc().eventSubSocket.state === "connected"
-											? "Disconnect"
-											: "Connect"}
-									</span>
-								</EffectButton>
-							</li>
-						)}
+									<EffectButton
+										variant="text"
+										class="relative"
+										onClick={() => {
+											return acc().eventSubSocket.state === "connected"
+												? props.rpc.DisconnectEventSub({ accountId: acc().id })
+												: props.rpc.ConnectEventSub({ accountId: acc().id });
+										}}
+									>
+										<span>
+											{acc().eventSubSocket.state === "connected"
+												? "Disconnect"
+												: "Connect"}
+										</span>
+									</EffectButton>
+								</li>
+							);
+						}}
 					</Index>
 				</ul>
 			</Suspense>

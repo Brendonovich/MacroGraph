@@ -13,7 +13,6 @@ import {
 	Schema,
 } from "@macrograph/project-domain";
 
-import type { EngineInstanceClient } from "./EngineInstance";
 import { fireEventNode } from "./NodeExecution";
 
 export interface NodeIO {

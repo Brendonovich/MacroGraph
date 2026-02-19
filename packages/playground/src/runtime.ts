@@ -1,4 +1,4 @@
-import type { Rpc, RpcClient, RpcGroup } from "@effect/rpc";
+import { type Rpc, type RpcClient, RpcTest } from "@effect/rpc";
 import {
 	Effect,
 	Layer,
@@ -26,17 +26,21 @@ const GetPackageRpcClientLive = Layer.effect(
 		const engineRegistry = yield* EngineRegistry.EngineRegistry;
 		const clients = new Map<string, RpcClient.RpcClient<Rpc.Any>>();
 
-		return (id, _rpcs) =>
-			Effect.sync(() => {
+		return (id, rpcs) =>
+			Effect.gen(function* () {
 				const existing = clients.get(id);
 				if (existing) return Option.some(existing as any);
 
-				const engineClient = engineRegistry.engines.get(id)?.client;
-				if (!engineClient) return Option.none();
+				const engine = engineRegistry.engines.get(id);
+				if (!engine) return Option.none();
 
-				clients.set(id, engineClient as any);
+				const client = yield* RpcTest.makeClient(rpcs).pipe(
+					Effect.provide(engine.client),
+				);
 
-				return Option.some(engineClient as any);
+				clients.set(id, client as any);
+
+				return Option.some(client);
 			});
 	}),
 );

@@ -4,9 +4,9 @@ import {
 	Data as D,
 	Effect,
 	Layer,
-	Scope,
 	type Option,
 	type Schema as S,
+	type Scope,
 } from "effect";
 import type { YieldWrap } from "effect/Utils";
 import * as T from "@macrograph/typesystem";
@@ -45,8 +45,8 @@ export const t = {
 
 export namespace PackageEngine {
 	export type Any = PackageEngine<
-		Rpc.Rpc<any, any, any, any>,
-		Rpc.Rpc<any, any, any, any>,
+		Rpc.Any,
+		Rpc.Any,
 		AnyEvent,
 		S.Schema.Any,
 		Resource.Tag<any, any>
@@ -66,15 +66,16 @@ export namespace PackageEngine {
 		refreshCredential(provider: string, id: string): Effect.Effect<void>;
 	};
 
-	export type Built<Engine> = Engine extends PackageEngine<
-		infer ClientRpcs,
-		infer RuntimeRpcs,
-		any,
-		infer ClientState,
-		infer Resources
-	>
-		? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
-		: never;
+	export type Built<Engine> =
+		Engine extends PackageEngine<
+			infer ClientRpcs,
+			infer RuntimeRpcs,
+			any,
+			infer ClientState,
+			infer Resources
+		>
+			? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
+			: never;
 
 	export type LayerBuilderRet<
 		ClientRpcs extends Rpc.Any,
@@ -122,12 +123,12 @@ export namespace PackageEngine {
 		ClientState extends S.Schema.Any,
 		Resources extends Resource.Tag<any, any>,
 	> extends PackageEngineObj<
-			ClientRpcs,
-			RuntimeRpcs,
-			Events,
-			ClientState,
-			Resources
-		> {
+		ClientRpcs,
+		RuntimeRpcs,
+		Events,
+		ClientState,
+		Resources
+	> {
 		new (_: never): {};
 	}
 
@@ -139,8 +140,8 @@ export namespace PackageEngine {
 	>() {}
 
 	export const define = <
-		ClientRpcs extends Rpc.Rpc<any, any, any, any>,
-		RuntimeRpcs extends Rpc.Rpc<any, any, any, any>,
+		ClientRpcs extends Rpc.Any,
+		RuntimeRpcs extends Rpc.Any,
 		Events extends AnyEvent,
 		ClientState extends S.Schema.Any = never,
 		Resources extends Resource.Tag<any, any> = never,
@@ -180,39 +181,24 @@ export namespace PackageEngine {
 		>) as any;
 	};
 
-	export type ClientRpcs<Engine> = Engine extends PackageEngine<
-		infer ClientRpcs,
-		any,
-		any,
-		any,
-		any
-	>
-		? ClientRpcs
-		: never;
+	export type ClientRpcs<Engine> =
+		Engine extends PackageEngine<infer ClientRpcs, any, any, any, any>
+			? ClientRpcs
+			: never;
 
-	export type RuntimeRpcs<Engine> = Engine extends PackageEngine<
-		any,
-		infer RuntimeRpcs,
-		any,
-		any,
-		any
-	>
-		? RuntimeRpcs
-		: never;
+	export type RuntimeRpcs<Engine> =
+		Engine extends PackageEngine<any, infer RuntimeRpcs, any, any, any>
+			? RuntimeRpcs
+			: never;
 
 	export type RuntimeRpcClient<Engine> = RpcClient.RpcClient<
 		RuntimeRpcs<Engine>
 	>;
 
-	export type Events<Engine> = Engine extends PackageEngine<
-		any,
-		any,
-		infer Events,
-		any,
-		any
-	>
-		? S.Schema.Type<Events>
-		: never;
+	export type Events<Engine> =
+		Engine extends PackageEngine<any, any, infer Events, any, any>
+			? S.Schema.Type<Events>
+			: never;
 
 	export type AnyEvent = { _tag: string } & S.Any;
 }
@@ -229,9 +215,13 @@ export namespace Package {
 		addSchema: Schema.MakeFn<Engine, this>;
 	}
 
-	export type Any = Package<PackageEngine.Any>;
+	export type Any = Package<
+		PackageEngine.PackageEngine<any, any, any, any, any>
+	>;
 
-	export const define = <Engine extends PackageEngine.Any = never>(opts: {
+	export const define = <
+		Engine extends PackageEngine.PackageEngine<any, any, any, any, any> = never,
+	>(opts: {
 		name: string;
 		engine?: Engine;
 	}): Package<Engine> => {
@@ -343,11 +333,12 @@ export namespace Property {
 	export type Infer<
 		T extends Property<any, any>,
 		Engine extends PackageEngine.Any,
-	> = T extends Property.ResourceSource<any, infer Value>
-		? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
-		: T extends ValueSource
-			? T.Infer_<T["type"]>
-			: never;
+	> =
+		T extends Property.ResourceSource<any, infer Value>
+			? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
+			: T extends ValueSource
+				? T.Infer_<T["type"]>
+				: never;
 }
 
 export namespace PropertiesSchema {
@@ -404,17 +395,18 @@ export namespace Schema {
 		options?: { name?: string },
 	) => DataOutput<T>;
 
-	export type InferIO<IO> = IO extends DataInput<infer T>
-		? T.Infer_<T>
-		: IO extends DataOutput<infer T>
-			? (v: T.Infer_<T>) => void
-			: IO extends ExecOutput
-				? IO
-				: IO extends ExecInput
-					? never
-					: IO extends Record<string, any>
-						? { [K in keyof IO]: InferIO<IO[K]> }
-						: IO;
+	export type InferIO<IO> =
+		IO extends DataInput<infer T>
+			? T.Infer_<T>
+			: IO extends DataOutput<infer T>
+				? (v: T.Infer_<T>) => void
+				: IO extends ExecOutput
+					? IO
+					: IO extends ExecInput
+						? never
+						: IO extends Record<string, any>
+							? { [K in keyof IO]: InferIO<IO[K]> }
+							: IO;
 
 	export type AnyIOCtx<
 		Engine extends PackageEngine.Any,

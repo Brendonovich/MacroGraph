@@ -1,7 +1,11 @@
 import { Effect, type Request as ERequest, Stream } from "effect";
 import { createScopedEffect, LoadingBlock } from "@macrograph/package-sdk/ui";
 import { type Package, Request } from "@macrograph/project-domain";
-import { queryOptions, type UseQueryResult } from "@tanstack/solid-query";
+import {
+	keepPreviousData,
+	queryOptions,
+	type UseQueryResult,
+} from "@tanstack/solid-query";
 import { Suspense } from "solid-js";
 import { reconcile } from "solid-js/store";
 import { Dynamic } from "solid-js/web";
@@ -54,4 +58,5 @@ export const packageSettingsQueryOptions = (
 		queryFn: ({ queryKey }) =>
 			execute(new Request.GetPackageEngineState({ package: queryKey[1] })),
 		reconcile: (o, n) => reconcile(n)(o),
+		placeholderData: keepPreviousData,
 	});

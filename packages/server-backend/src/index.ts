@@ -16,7 +16,7 @@ import {
 	Layer,
 	Option,
 	Record,
-	Schema,
+	Schema as S,
 	Stream,
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
@@ -163,7 +163,11 @@ const Deps = Layer.mergeAll(
 	EngineRegistry.EngineRegistry.Default,
 	RuntimeLive,
 	EditorLive,
-).pipe(Layer.provideMerge(Layer.mergeAll(CredentialsStore.Default, NodesIOStore.Default)));
+).pipe(
+	Layer.provideMerge(
+		Layer.mergeAll(CredentialsStore.Default, NodesIOStore.Default),
+	),
+);
 
 export class Server extends Effect.Service<Server>()("Server", {
 	scoped: Effect.gen(function* () {
@@ -241,7 +245,8 @@ export class Server extends Effect.Service<Server>()("Server", {
 							Effect.provide(RpcSerialization.layerJson),
 						);
 
-					yield* engine.client.pipe(
+					yield* RpcServer.layer(engine.def.clientRpcs).pipe(
+						Layer.provide(engine.client),
 						Layer.provide(Layer.succeed(RpcServer.Protocol, protocol)),
 						Layer.launch,
 						Effect.forkScoped,
@@ -261,7 +266,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 					const req = yield* HttpServerRequest.HttpServerRequest;
 
 					const searchParams = yield* HttpServerRequest.schemaSearchParams(
-						Schema.Struct({ token: Schema.String }),
+						S.Struct({ token: S.String }),
 					).pipe(
 						Effect.provide(
 							HttpServerRequest.ParsedSearchParams.context(
@@ -295,8 +300,8 @@ export class Server extends Effect.Service<Server>()("Server", {
 					const writer = yield* socket.writer;
 
 					const { jwt } = yield* HttpServerRequest.schemaSearchParams(
-						Schema.Struct({
-							jwt: Schema.OptionFromUndefinedOr(ClientAuthJWTFromEncoded),
+						S.Struct({
+							jwt: S.OptionFromUndefinedOr(ClientAuthJWTFromEncoded),
 						}),
 					).pipe(
 						Effect.catchAll(() =>
@@ -372,7 +377,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 				"/package/:package/rpc",
 				Effect.gen(function* () {
 					const { package: pkgId } = yield* HttpRouter.schemaPathParams(
-						Schema.Struct({ package: Package.Id }),
+						S.Struct({ package: Package.Id }),
 					);
 
 					const httpApp = yield* packageRpc.get(pkgId);
@@ -394,9 +399,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 			),
 		);
 	}),
-	dependencies: [
-		Deps
-	],
+	dependencies: [Deps],
 }) {}
 
 const executeAppAsMounted = <A, E, R>(app: HttpApp.HttpApp<A, E, R>) =>
