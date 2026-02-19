@@ -66,10 +66,17 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 
 	const connectionIndex = buildConnectionIndex(graph.connections);
 	const execOutputs = makeInMemoryOutputStore();
-	const defaultInputValue = (i: DataInput<any>): Effect.Effect<unknown> => {
-		if (i.type._tag === "String") return Effect.succeed("");
-		return Effect.die(`TODO: implement default value for ${i.type._tag}`);
-	};
+	const makeDefaultInputValue =
+		(node: Node.Node) =>
+		(i: DataInput<any>): Effect.Effect<unknown> => {
+			const stored = node.inputDefaults?.pipe(
+				HashMap.get(IO.Id.make(i.id)),
+				Option.getOrUndefined,
+			);
+			if (stored !== undefined) return Effect.succeed(stored);
+			if (i.type._tag === "String") return Effect.succeed("");
+			return Effect.die(`TODO: implement default value for ${i.type._tag}`);
+		};
 	const toExecOutput = (value: unknown) =>
 		value instanceof ExecOutput ? Option.some(value) : Option.none();
 	const defaultExecOutputId = "exec";
@@ -111,7 +118,7 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 			nodeId: node.id,
 			shape: eventShape,
 			properties,
-			getInput: defaultInputValue,
+			getInput: makeDefaultInputValue(node),
 			setOutput: (out, value) => execOutputs.set(node.id, out.id, value),
 			run: ({ io }) =>
 				Effect.sync(() => schema.run({ io, event: eventData.value })),
@@ -178,7 +185,7 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 						});
 					}),
 				execOutputs,
-				defaultValue: defaultInputValue,
+				defaultValue: makeDefaultInputValue(nextNode.value),
 			});
 
 			const { shape, properties } = yield* getNodeExecutionData(

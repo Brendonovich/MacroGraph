@@ -8,25 +8,25 @@ import { AccountId, RpcError } from "./new-types";
 export const ModerationRpcs = [
 	Rpc.make("AddChannelVip", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			userId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			user_id: S.String,
 		}),
 		error: RpcError,
 	}),
 	Rpc.make("RemoveChannelVip", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			userId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			user_id: S.String,
 		}),
 		error: RpcError,
 	}),
 	Rpc.make("GetChannelVips", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			userId: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			user_id: S.optional(S.String),
 			first: S.optional(S.String),
 			after: S.optional(S.String),
 		}),
@@ -38,9 +38,9 @@ export const ModerationRpcs = [
 	}),
 	Rpc.make("BlockUser", {
 		payload: S.Struct({
-			accountId: AccountId,
-			targetUserId: S.String,
-			sourceContext: S.optional(
+			account_id: AccountId,
+			target_user_id: S.String,
+			source_context: S.optional(
 				S.Union(S.Literal("chat"), S.Literal("whisper")),
 			),
 			reason: S.optional(
@@ -50,13 +50,13 @@ export const ModerationRpcs = [
 		error: RpcError,
 	}),
 	Rpc.make("UnblockUser", {
-		payload: S.Struct({ accountId: AccountId, targetUserId: S.String }),
+		payload: S.Struct({ account_id: AccountId, target_user_id: S.String }),
 		error: RpcError,
 	}),
 	Rpc.make("GetUsersBlocked", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
 		}),

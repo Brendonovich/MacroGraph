@@ -91,6 +91,9 @@ export function makeGraphTabSchema(
 						onDisconnectIO={(io) => {
 							actions.DisconnectIO(tab().graph.id, io);
 						}}
+						onDefaultValueChange={(nodeId, inputId, value) => {
+							actions.SetInputDefault(tab().graph.id, nodeId, inputId, value);
+						}}
 						onDeleteSelection={() => {
 							actions.DeleteGraphItems(tab().graph.id, [...tab().selection]);
 						}}

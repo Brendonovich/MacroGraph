@@ -111,6 +111,15 @@ export class SetNodeProperty extends S.TaggedRequest<SetNodeProperty>()(
 	},
 ) {}
 
+export class SetInputDefault extends S.TaggedRequest<SetInputDefault>()(
+	"SetInputDefault",
+	{
+		payload: { graph: Graph.Id, node: Node.Id, input: IO.Id, value: S.Unknown },
+		success: ProjectEvent.InputDefaultUpdated,
+		failure: S.Union(Graph.NotFound, Node.NotFound),
+	},
+) {}
+
 export class CreateResourceConstant extends S.TaggedRequest<CreateResourceConstant>()(
 	"CreateResourceConstant",
 	{
@@ -152,6 +161,7 @@ export type Request =
 	| CreateGraph
 	| DeleteGraphItems
 	| SetNodeProperty
+	| SetInputDefault
 	| CreateResourceConstant
 	| UpdateResourceConstant
 	| DeleteResourceConstant;

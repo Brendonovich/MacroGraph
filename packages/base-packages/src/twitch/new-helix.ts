@@ -407,12 +407,10 @@ export const DropReason = S.Struct({ code: S.String, message: S.String });
 export const ChatMessage = S.Struct({
 	message_id: S.String,
 	is_sent: S.Boolean,
-	drop_reason: DropReason,
+	drop_reason: S.NullOr(DropReason),
 });
 
-export const ChatMessageResponse = S.Struct({
-	data: S.Struct({ data: S.Array(ChatMessage) }),
-});
+export const ChatMessageResponse = S.Struct({ data: S.Array(ChatMessage) });
 
 export const ChatAnnouncementPayload = S.Struct({
 	message: S.String,

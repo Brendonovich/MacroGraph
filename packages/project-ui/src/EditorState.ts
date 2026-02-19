@@ -24,6 +24,7 @@ export type NodeState = {
 	name: string;
 	schema: Schema.Ref;
 	properties?: Record<string, unknown>;
+	inputDefaults?: Record<IO.Id, unknown>;
 	position: Position;
 } & Mutable<IO.NodeIO>;
 
@@ -144,6 +145,10 @@ export class EditorState extends Effect.Service<EditorState>()("EditorState", {
 												inputs: data.nodesIO.get(node.id)?.inputs ?? [],
 												outputs: data.nodesIO.get(node.id)?.outputs ?? [],
 												properties: node.properties?.pipe(
+													HashMap.toEntries,
+													Object.fromEntries,
+												),
+												inputDefaults: node.inputDefaults?.pipe(
 													HashMap.toEntries,
 													Object.fromEntries,
 												),

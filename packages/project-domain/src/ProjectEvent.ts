@@ -53,6 +53,11 @@ export class NodePropertyUpdated extends S.TaggedClass<NodePropertyUpdated>()(
 	{ graph: Graph.Id, node: Node.Id, property: S.String, value: S.Unknown },
 ) {}
 
+export class InputDefaultUpdated extends S.TaggedClass<InputDefaultUpdated>()(
+	"InputDefaultUpdated",
+	{ graph: Graph.Id, node: Node.Id, input: IO.Id, value: S.Unknown },
+) {}
+
 export class PackageResourcesUpdated extends S.TaggedClass<PackageResourcesUpdated>()(
 	"PackageResourcesUpdated",
 	{
@@ -92,6 +97,7 @@ export const EditorEvent = S.Union(
 	GraphItemsDeleted,
 	NodeCreated,
 	NodePropertyUpdated,
+	InputDefaultUpdated,
 	NodeIOUpdated,
 	ResourceConstantCreated,
 	ResourceConstantUpdated,

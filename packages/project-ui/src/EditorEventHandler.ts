@@ -56,6 +56,19 @@ export class EditorEventHandler extends Effect.Service<EditorEventHandler>()(
 							);
 						});
 					},
+					InputDefaultUpdated: (e) =>
+						Effect.sync(() => {
+							setState(
+								"graphs",
+								e.graph,
+								"nodes",
+								(n) => n.id === e.node,
+								produce((node) => {
+									node.inputDefaults ??= {};
+									node.inputDefaults[e.input] = e.value;
+								}),
+							);
+						}),
 					ResourceConstantUpdated: (e) =>
 						Effect.sync(() => {
 							setState(

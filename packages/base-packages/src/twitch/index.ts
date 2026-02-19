@@ -2131,19 +2131,17 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Sends a message to a Twitch channel's chat.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
-			senderId: c.in.data("senderId", t.String, { name: "Sender ID" }),
 			message: c.in.data("message", t.String, { name: "Message" }),
 		}),
 		run: function* ({ io, properties }) {
 			yield* properties.account.engine
 				.SendChatMessage({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
-					senderId: io.senderId,
+					account_id: properties.account.value,
+					broadcaster_id: io.broadcasterId,
+					sender_id: properties.account.value,
 					message: io.message,
 				})
 				.pipe(Effect.orDie);
@@ -2156,7 +2154,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Gets chat settings for a broadcaster's channel.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2174,8 +2171,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 				data: [data],
 			} = yield* properties.account.engine
 				.GetChatSettings({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 				})
 				.pipe(Effect.orDie);
 			if (!data) return;
@@ -2193,7 +2190,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Updates chat settings for a broadcaster's channel.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2212,23 +2208,23 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			yield* properties.account.engine
 				.UpdateChatSettings({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
-					moderatorId: io.moderatorId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
+					moderator_id: io.moderatorId,
 					...Option.match(io.emoteMode, {
-						onSome: (v) => ({ emoteMode: v }),
+						onSome: (v) => ({ emote_mode: v }),
 						onNone: () => ({}),
 					}),
 					...Option.match(io.followerMode, {
-						onSome: (v) => ({ followerMode: v }),
+						onSome: (v) => ({ follower_mode: v }),
 						onNone: () => ({}),
 					}),
 					...Option.match(io.slowMode, {
-						onSome: (v) => ({ slowMode: v }),
+						onSome: (v) => ({ slow_mode: v }),
 						onNone: () => ({}),
 					}),
 					...Option.match(io.subscriberMode, {
-						onSome: (v) => ({ subscriberMode: v }),
+						onSome: (v) => ({ subscriber_mode: v }),
 						onNone: () => ({}),
 					}),
 				})
@@ -2244,7 +2240,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Gets information about one or more channels.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2262,8 +2257,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			const response = yield* properties.account.engine
 				.GetChannelInformation({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: [io.broadcasterId],
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: [io.broadcasterId],
 				})
 				.pipe(Effect.orDie);
 			const result = response.data[0];
@@ -2284,7 +2279,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Modifies channel information for a broadcaster.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2299,10 +2293,10 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			yield* properties.account.engine
 				.ModifyChannelInformation({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 					...Option.match(io.gameId, {
-						onSome: (v) => ({ gameId: v }),
+						onSome: (v) => ({ game_id: v }),
 						onNone: () => ({}),
 					}),
 					...Option.match(io.title, {
@@ -2310,7 +2304,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 						onNone: () => ({}),
 					}),
 					...Option.match(io.broadcasterLanguage, {
-						onSome: (v) => ({ broadcasterLanguage: v }),
+						onSome: (v) => ({ broadcaster_language: v }),
 						onNone: () => ({}),
 					}),
 				})
@@ -2326,7 +2320,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Gets information about active streams.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			userId: c.in.data("userId", t.String, { name: "User ID" }),
 			isLive: c.out.data("isLive", t.Bool, { name: "Is Live" }),
 			viewerCount: c.out.data("viewerCount", t.Int, { name: "Viewer Count" }),
@@ -2336,8 +2329,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			const { data } = yield* properties.account.engine
 				.GetStreams({
-					accountId: AccountId.make(io.accountId),
-					userId: [io.userId],
+					account_id: AccountId.make(properties.account.value),
+					user_id: [io.userId],
 				})
 				.pipe(Effect.orDie);
 
@@ -2362,7 +2355,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Creates a clip from the broadcaster's stream.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2372,8 +2364,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			const response = yield* properties.account.engine
 				.CreateClip({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 				})
 				.pipe(Effect.orDie);
 			const result = response.data[0];
@@ -2392,7 +2384,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Creates a poll for a broadcaster's channel.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2405,8 +2396,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			const response = yield* properties.account.engine
 				.CreatePoll({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 					title: io.title,
 					choices: [{ title: io.choice1 }, { title: io.choice2 }],
 					duration: io.duration,
@@ -2425,7 +2416,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Ends a poll that is currently active.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2438,8 +2428,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			yield* properties.account.engine
 				.EndPoll({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 					id: io.id,
 					status: io.status as any,
 				})
@@ -2455,7 +2445,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Creates a prediction for a broadcaster's channel.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2472,11 +2461,11 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			const response = yield* properties.account.engine
 				.CreatePrediction({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 					title: io.title,
 					outcomes: [{ title: io.outcome1 }, { title: io.outcome2 }],
-					predictionWindow: io.predictionWindow,
+					prediction_window: io.predictionWindow,
 				})
 				.pipe(Effect.orDie);
 
@@ -2492,7 +2481,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Ends a prediction that is currently active.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2508,12 +2496,12 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			yield* properties.account.engine
 				.EndPrediction({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 					id: io.id,
 					status: io.status as any,
 					...Option.match(io.winningOutcomeId, {
-						onSome: (v) => ({ winningOutcomeId: v }),
+						onSome: (v) => ({ winning_outcome_id: v }),
 						onNone: () => ({}),
 					}),
 				})
@@ -2529,7 +2517,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 	// 	description: "Bans a user from a broadcaster's channel.",
 	// 	properties: { account: { name: "Account", resource: TwitchAccount } },
 	// 	io: (c) => ({
-	// 		accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
+	// 		account_id: c.in.data("accountId", t.String, { name: "Account ID" }),
 	// 		broadcasterId: c.in.data("broadcasterId", t.String, {
 	// 			name: "Broadcaster ID",
 	// 		}),
@@ -2571,7 +2559,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 	// 	description: "Unbans a user from a broadcaster's channel.",
 	// 	properties: { account: { name: "Account", resource: TwitchAccount } },
 	// 	io: (c) => ({
-	// 		accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
+	// 		account_id: c.in.data("accountId", t.String, { name: "Account ID" }),
 	// 		broadcasterId: c.in.data("broadcasterId", t.String, {
 	// 			name: "Broadcaster ID",
 	// 		}),
@@ -2596,7 +2584,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 	// 	description: "Deletes one or all messages from a user in chat.",
 	// 	properties: { account: { name: "Account", resource: TwitchAccount } },
 	// 	io: (c) => ({
-	// 		accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
+	// 		account_id: c.in.data("accountId", t.String, { name: "Account ID" }),
 	// 		broadcasterId: c.in.data("broadcasterId", t.String, {
 	// 			name: "Broadcaster ID",
 	// 		}),
@@ -2633,7 +2621,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Gets information about one or more users.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			userId: c.in.data("userId", t.Option(t.String), { name: "User ID" }),
 			login: c.in.data("login", t.Option(t.String), { name: "Login" }),
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -2648,7 +2635,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			const { data } = yield* properties.account.engine
 				.GetUsers({
-					accountId: AccountId.make(io.accountId),
+					account_id: AccountId.make(properties.account.value),
 					...Option.match(io.userId, {
 						onSome: (v) => ({ id: [v] }),
 						onNone: () => ({}),
@@ -2676,7 +2663,6 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Gets a list of users who follow the broadcaster.",
 		properties: { account: { name: "Account", resource: TwitchAccount } },
 		io: (c) => ({
-			accountId: c.in.data("accountId", t.String, { name: "Account ID" }),
 			broadcasterId: c.in.data("broadcasterId", t.String, {
 				name: "Broadcaster ID",
 			}),
@@ -2685,8 +2671,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		run: function* ({ io, properties }) {
 			const result = yield* properties.account.engine
 				.GetChannelFollowers({
-					accountId: AccountId.make(io.accountId),
-					broadcasterId: io.broadcasterId,
+					account_id: AccountId.make(properties.account.value),
+					broadcaster_id: io.broadcasterId,
 				})
 				.pipe(Effect.orDie);
 

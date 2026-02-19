@@ -181,6 +181,23 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 							}),
 						).pipe(Effect.andThen(handleEvent)),
 				),
+				SetInputDefault: withRequest<Request.SetInputDefault>()(
+					(
+						run,
+						graphId: Graph.Id,
+						nodeId: Node.Id,
+						inputId: IO.Id,
+						value: unknown,
+					) =>
+						run(
+							new Request.SetInputDefault({
+								graph: graphId,
+								node: nodeId,
+								input: inputId,
+								value,
+							}),
+						).pipe(Effect.andThen(handleEvent)),
+				),
 				CreateResourceConstant: withRequest<Request.CreateResourceConstant>()(
 					(run, pkg: Package.Id, resource: string) =>
 						run(new Request.CreateResourceConstant({ pkg, resource })).pipe(

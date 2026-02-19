@@ -6,8 +6,7 @@ import {
 import { cx } from "cva";
 import { Index, Suspense } from "solid-js";
 
-import type { ClientRpcs, ClientState } from "./new-shared";
-import { RPCS } from "./shared";
+import { ClientRpcs, type ClientState } from "./new-shared";
 
 const EVENTSUB_CONNECTION_INDICATOR = {
 	connected: { class: "bg-green-600", label: "EventSub Connected" },
@@ -58,11 +57,11 @@ export default function Settings(
 									<EffectButton
 										variant="text"
 										class="relative"
-										onClick={() => {
-											return acc().eventSubSocket.state === "connected"
+										onClick={() =>
+											acc().eventSubSocket.state === "connected"
 												? props.rpc.DisconnectEventSub({ accountId: acc().id })
-												: props.rpc.ConnectEventSub({ accountId: acc().id });
-										}}
+												: props.rpc.ConnectEventSub({ accountId: acc().id })
+										}
 									>
 										<span>
 											{acc().eventSubSocket.state === "connected"
@@ -80,4 +79,4 @@ export default function Settings(
 	);
 }
 
-export const Rpcs = RPCS;
+export const Rpcs = ClientRpcs;

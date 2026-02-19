@@ -127,10 +127,7 @@ export namespace ProjectRuntime {
 			return tasks;
 		}).pipe(
 			Effect.withSpan("ProjectRuntime.handleEvent", {
-				attributes: {
-					"package-id": pkg,
-					"event-tag": event._tag,
-				},
+				attributes: { "package-id": pkg, "event-tag": event._tag },
 			}),
 		);
 }

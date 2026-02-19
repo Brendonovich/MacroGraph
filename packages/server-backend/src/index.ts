@@ -91,6 +91,7 @@ const EditorRpcsLive = EditorRpcs.toLayer(
 			DeleteGraphItems: Effect.request(graphRequests.DeleteGraphItemsResolver),
 			DisconnectIO: Effect.request(graphRequests.DisconnectIOResolver),
 			SetNodeProperty: Effect.request(nodeRequests.SetNodePropertyResolver),
+			SetInputDefault: Effect.request(nodeRequests.SetInputDefaultResolver),
 			CreateResourceConstant: Effect.request(
 				projectRequests.CreateResourceConstantResolver,
 			),

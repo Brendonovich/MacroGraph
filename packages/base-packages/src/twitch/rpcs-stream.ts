@@ -18,15 +18,15 @@ const IntFromString = S.NumberFromString.pipe(S.int());
 export const StreamRpcs = [
 	Rpc.make("GetStreams", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(IntFromString),
-			gameId: S.optional(S.Array(S.String)),
+			game_id: S.optional(S.Array(S.String)),
 			language: S.optional(S.Array(S.String)),
 			type: S.optional(S.Literal("all", "live", "vodcast")),
-			userId: S.optional(S.Array(S.String)),
-			userLogin: S.optional(S.Array(S.String)),
+			user_id: S.optional(S.Array(S.String)),
+			user_login: S.optional(S.Array(S.String)),
 		}),
 		success: S.Struct({
 			data: S.Struct({ data: S.Array(Stream), pagination: Pagination }),
@@ -35,11 +35,11 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("GetFollowedStreams", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(IntFromString),
-			userId: S.String,
+			user_id: S.String,
 		}),
 		success: S.Struct({
 			data: S.Struct({ data: S.Array(Stream), pagination: Pagination }),
@@ -47,15 +47,15 @@ export const StreamRpcs = [
 		error: RpcError,
 	}),
 	Rpc.make("GetStreamKey", {
-		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
+		payload: S.Struct({ account_id: AccountId, broadcaster_id: S.String }),
 		success: S.Struct({ data: S.Struct({ data: S.Array(StreamKey) }) }),
 		error: RpcError,
 	}),
 	Rpc.make("GetStreamMarkers", {
 		payload: S.Struct({
-			accountId: AccountId,
-			userId: S.optional(S.String),
-			videoId: S.optional(S.String),
+			account_id: AccountId,
+			user_id: S.optional(S.String),
+			video_id: S.optional(S.String),
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(IntFromString),
@@ -67,8 +67,8 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("CreateStreamMarker", {
 		payload: S.Struct({
-			accountId: AccountId,
-			userId: S.String,
+			account_id: AccountId,
+			user_id: S.String,
 			description: S.optional(S.String),
 		}),
 		success: S.Struct({
@@ -78,10 +78,10 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("GetVideos", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			id: S.optional(S.Array(S.String)),
-			userId: S.optional(S.String),
-			gameId: S.optional(S.String),
+			user_id: S.optional(S.String),
+			game_id: S.optional(S.String),
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(S.String),
@@ -96,21 +96,21 @@ export const StreamRpcs = [
 		error: RpcError,
 	}),
 	Rpc.make("DeleteVideos", {
-		payload: S.Struct({ accountId: AccountId, id: S.Array(S.String) }),
+		payload: S.Struct({ account_id: AccountId, id: S.Array(S.String) }),
 		success: S.Void,
 		error: RpcError,
 	}),
 	Rpc.make("GetClips", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.optional(S.String),
-			gameId: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.optional(S.String),
+			game_id: S.optional(S.String),
 			id: S.optional(S.Array(S.String)),
 			first: S.optional(S.String),
 			after: S.optional(S.String),
 			before: S.optional(S.String),
-			startedAt: S.optional(S.String),
-			endedAt: S.optional(S.String),
+			started_at: S.optional(S.String),
+			ended_at: S.optional(S.String),
 		}),
 		success: S.Struct({
 			data: S.Array(Clip),
@@ -120,9 +120,9 @@ export const StreamRpcs = [
 	}),
 	Rpc.make("CreateClip", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			hasDelay: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			has_delay: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(ClipEditURL) }),
 		error: RpcError,

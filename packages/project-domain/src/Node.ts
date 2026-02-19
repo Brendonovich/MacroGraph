@@ -1,5 +1,6 @@
 import * as S from "effect/Schema";
 
+import * as IO from "./IO.ts";
 import * as Schema from "./Schema.ts";
 import { Position } from "./types.ts";
 
@@ -11,6 +12,9 @@ export const Node = S.Struct({
 	name: S.String,
 	schema: S.suspend(() => Schema.Ref),
 	properties: S.optional(S.HashMap({ key: S.String, value: S.Unknown })),
+	inputDefaults: S.optional(
+		S.HashMap({ key: S.suspend(() => IO.Id), value: S.Unknown }),
+	),
 	position: Position,
 });
 export type Node = typeof Node.Type;

@@ -27,12 +27,12 @@ import { type SubscriptionTypeDefinition, subscriptionTypes } from "./eventSub";
 import { HelixApi } from "./new-helix";
 import {
 	AccountId,
+	ConnectionFailed,
 	EventSubMessage,
 	EventSubNotification,
 	MissingCredential,
 	TwitchAPIError,
 } from "./new-types";
-import { ConnectFailed } from "./shared";
 
 const CLIENT_ID = "ldbp0fkq9yalf2lzsi146i0cip8y59";
 
@@ -243,7 +243,9 @@ export default EngineDef.toLayer((ctx) =>
 			);
 
 			if (!EventSubMessage.isType(firstEvent, "session_welcome"))
-				return yield* new ConnectFailed({ cause: "session-welcome-expected" });
+				return yield* new ConnectionFailed({
+					cause: "session-welcome-expected",
+				});
 
 			yield* Effect.gen(function* () {
 				yield* deleteOldSubscriptions(helixClient);
@@ -329,7 +331,10 @@ export default EngineDef.toLayer((ctx) =>
 		});
 
 		// Helper to wrap Helix API calls with error handling
-		const callHelix = <Args extends { accountId: AccountId }, Ret>(
+		const callHelix = <
+			Args extends { accountId: AccountId } | { account_id: AccountId },
+			Ret,
+		>(
 			fn: (
 				client: any,
 			) => (
@@ -337,8 +342,10 @@ export default EngineDef.toLayer((ctx) =>
 			) => Effect.Effect<Ret, MissingCredential | TwitchAPIError, any>,
 		) =>
 			Effect.fnUntraced(function* (args: Args) {
-				const client = yield* createHelixClient(args.accountId);
-				return yield* fn(client)(args).pipe(
+				const client = yield* createHelixClient(
+					(args as any).accountId ?? (args as any).account_id,
+				);
+				return yield* fn(client)({ payload: args } as any).pipe(
 					Effect.catchAll((cause) =>
 						Effect.fail(new TwitchAPIError({ cause })),
 					),
@@ -373,12 +380,12 @@ export default EngineDef.toLayer((ctx) =>
 					),
 				),
 				TwitchAccount: yield* LookupRef.derive(ctx.credentials, (creds) =>
-					 creds
+					creds
 						.filter((c) => c.provider === "twitch")
 						.map((c) => ({
 							id: AccountId.make(c.id),
 							display: c.displayName ?? c.id,
-						}))
+						})),
 				),
 			},
 			clientRpcs: {

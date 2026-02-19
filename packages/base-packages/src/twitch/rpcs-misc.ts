@@ -35,15 +35,15 @@ export const MiscRpcs = [
 	// Polls
 	Rpc.make("CreatePoll", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			title: S.String,
 			choices: S.Array(PollChoiceParam),
 			duration: S.Int,
-			bitsVotingEnabled: S.optional(S.Boolean),
-			bitsPerVote: S.optional(S.Int),
-			channelPointsVotingEnabled: S.optional(S.Boolean),
-			channelPointsPerVote: S.optional(S.Int),
+			bits_voting_enabled: S.optional(S.Boolean),
+			bits_per_vote: S.optional(S.Int),
+			channel_points_voting_enabled: S.optional(S.Boolean),
+			channel_points_per_vote: S.optional(S.Int),
 		}),
 		success: S.Struct({ data: S.Array(Poll) }),
 		error: RpcError,
@@ -51,8 +51,8 @@ export const MiscRpcs = [
 
 	Rpc.make("EndPoll", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.String,
 			status: S.Union(S.Literal("TERMINATED"), S.Literal("ARCHIVED")),
 		}),
@@ -62,8 +62,8 @@ export const MiscRpcs = [
 
 	Rpc.make("GetPolls", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.optional(S.String),
 			after: S.optional(S.String),
 			first: S.optional(S.String),
@@ -78,11 +78,11 @@ export const MiscRpcs = [
 	// Predictions
 	Rpc.make("CreatePrediction", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			title: S.String,
 			outcomes: S.Array(S.Struct({ title: S.String })),
-			predictionWindow: S.Int,
+			prediction_window: S.Int,
 		}),
 		success: S.Struct({ data: S.Array(Prediction) }),
 		error: RpcError,
@@ -90,11 +90,11 @@ export const MiscRpcs = [
 
 	Rpc.make("EndPrediction", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.String,
 			status: S.Union(S.Literal("RESOLVED"), S.Literal("CANCELED")),
-			winningOutcomeId: S.optional(S.String),
+			winning_outcome_id: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(Prediction) }),
 		error: RpcError,
@@ -102,8 +102,8 @@ export const MiscRpcs = [
 
 	Rpc.make("GetPredictions", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.optional(S.String),
 			after: S.optional(S.String),
 			first: S.optional(S.String),
@@ -118,10 +118,10 @@ export const MiscRpcs = [
 	// Custom Rewards
 	Rpc.make("GetCustomRewards", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.optional(S.String),
-			onlyManageableRewards: S.optional(S.String),
+			only_manageable_rewards: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(ChannelCustomReward) }),
 		error: RpcError,
@@ -129,21 +129,21 @@ export const MiscRpcs = [
 
 	Rpc.make("CreateCustomReward", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			title: S.String,
 			cost: S.Int,
 			prompt: S.optional(S.String),
-			isEnabled: S.optional(S.Boolean),
-			backgroundColor: S.optional(S.String),
-			isUserInputRequired: S.optional(S.Boolean),
-			isMaxPerStreamEnabled: S.optional(S.Boolean),
-			maxPerStream: S.optional(S.Int),
-			isMaxPerUserPerStreamEnabled: S.optional(S.Boolean),
-			maxPerUserPerStream: S.optional(S.Int),
-			isGlobalCooldownEnabled: S.optional(S.Boolean),
-			globalCooldownSeconds: S.optional(S.Int),
-			shouldRedemptionsSkipRequestQueue: S.optional(S.Boolean),
+			is_enabled: S.optional(S.Boolean),
+			background_color: S.optional(S.String),
+			is_user_input_required: S.optional(S.Boolean),
+			is_max_per_stream_enabled: S.optional(S.Boolean),
+			max_per_stream: S.optional(S.Int),
+			is_max_per_user_per_stream_enabled: S.optional(S.Boolean),
+			max_per_user_per_stream: S.optional(S.Int),
+			is_global_cooldown_enabled: S.optional(S.Boolean),
+			global_cooldown_seconds: S.optional(S.Int),
+			should_redemptions_skip_request_queue: S.optional(S.Boolean),
 		}),
 		success: S.Struct({ data: S.Array(ChannelCustomReward) }),
 		error: RpcError,
@@ -151,22 +151,22 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateCustomReward", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.String,
 			title: S.optional(S.String),
 			cost: S.optional(S.Int),
 			prompt: S.optional(S.String),
-			isEnabled: S.optional(S.Boolean),
-			backgroundColor: S.optional(S.String),
-			isUserInputRequired: S.optional(S.Boolean),
-			isMaxPerStreamEnabled: S.optional(S.Boolean),
-			maxPerStream: S.optional(S.Int),
-			isMaxPerUserPerStreamEnabled: S.optional(S.Boolean),
-			maxPerUserPerStream: S.optional(S.Int),
-			isGlobalCooldownEnabled: S.optional(S.Boolean),
-			globalCooldownSeconds: S.optional(S.Int),
-			shouldRedemptionsSkipRequestQueue: S.optional(S.Boolean),
+			is_enabled: S.optional(S.Boolean),
+			background_color: S.optional(S.String),
+			is_user_input_required: S.optional(S.Boolean),
+			is_max_per_stream_enabled: S.optional(S.Boolean),
+			max_per_stream: S.optional(S.Int),
+			is_max_per_user_per_stream_enabled: S.optional(S.Boolean),
+			max_per_user_per_stream: S.optional(S.Int),
+			is_global_cooldown_enabled: S.optional(S.Boolean),
+			global_cooldown_seconds: S.optional(S.Int),
+			should_redemptions_skip_request_queue: S.optional(S.Boolean),
 		}),
 		success: S.Struct({ data: S.Array(ChannelCustomReward) }),
 		error: RpcError,
@@ -174,8 +174,8 @@ export const MiscRpcs = [
 
 	Rpc.make("DeleteCustomRewards", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.String,
 		}),
 		success: S.Void,
@@ -184,9 +184,9 @@ export const MiscRpcs = [
 
 	Rpc.make("GetCustomRewardsRedemptions", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			rewardId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			reward_id: S.String,
 			status: S.optional(S.String),
 			id: S.optional(S.String),
 			sort: S.optional(S.String),
@@ -199,10 +199,10 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateChannelCustomRewardsRedemptionStatus", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			id: S.String,
-			broadcasterId: S.String,
-			rewardId: S.String,
+			broadcaster_id: S.String,
+			reward_id: S.String,
 			status: S.String,
 		}),
 		success: S.Struct({ data: S.Array(ChannelCustomRewardsRedemption) }),
@@ -212,16 +212,16 @@ export const MiscRpcs = [
 	// Raids
 	Rpc.make("StartRaid", {
 		payload: S.Struct({
-			accountId: AccountId,
-			fromBroadcasterId: S.String,
-			toBroadcasterId: S.String,
+			account_id: AccountId,
+			from_broadcaster_id: S.String,
+			to_broadcaster_id: S.String,
 		}),
 		success: S.Struct({ data: RaidInfo }),
 		error: RpcError,
 	}),
 
 	Rpc.make("CancelRaid", {
-		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
+		payload: S.Struct({ account_id: AccountId, broadcaster_id: S.String }),
 		success: S.Void,
 		error: RpcError,
 	}),
@@ -229,8 +229,8 @@ export const MiscRpcs = [
 	// Ads
 	Rpc.make("StartCommercial", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			length: S.String,
 		}),
 		success: S.Struct({ data: S.Struct({ data: S.Array(AdDetails) }) }),
@@ -240,11 +240,11 @@ export const MiscRpcs = [
 	// Schedule
 	Rpc.make("GetSchedule", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.optional(S.String),
 			id: S.optional(S.String),
-			startTime: S.optional(S.String),
-			utcOffset: S.optional(S.String),
+			start_time: S.optional(S.String),
+			utc_offset: S.optional(S.String),
 			first: S.optional(S.Int),
 			after: S.optional(S.String),
 		}),
@@ -256,13 +256,13 @@ export const MiscRpcs = [
 
 	Rpc.make("CreateScheduleSegment", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			startTime: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			start_time: S.String,
 			timezone: S.String,
 			duration: S.String,
-			isRecurring: S.Boolean,
-			categoryId: S.optional(S.String),
+			is_recurring: S.Boolean,
+			category_id: S.optional(S.String),
 			title: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Struct({ data: ScheduleData }) }),
@@ -271,14 +271,14 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateScheduleSegment", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.String,
-			startTime: S.optional(S.String),
+			start_time: S.optional(S.String),
 			duration: S.optional(S.String),
-			categoryId: S.optional(S.String),
+			category_id: S.optional(S.String),
 			title: S.optional(S.String),
-			isCanceled: S.optional(S.Boolean),
+			is_canceled: S.optional(S.Boolean),
 			timezone: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Struct({ data: ScheduleData }) }),
@@ -287,8 +287,8 @@ export const MiscRpcs = [
 
 	Rpc.make("DeleteScheduleSegment", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			id: S.String,
 		}),
 		success: S.Void,
@@ -297,11 +297,11 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateSchedule", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			isVacationEnabled: S.optional(S.Boolean),
-			vacationStartTime: S.optional(S.String),
-			vacationEndTime: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			is_vacation_enabled: S.optional(S.Boolean),
+			vacation_start_time: S.optional(S.String),
+			vacation_end_time: S.optional(S.String),
 			timezone: S.optional(S.String),
 		}),
 		success: S.Void,
@@ -311,7 +311,7 @@ export const MiscRpcs = [
 	// Games/Categories
 	Rpc.make("GetGames", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			id: S.optional(S.Array(S.String)),
 			name: S.optional(S.Array(S.String)),
 		}),
@@ -326,7 +326,7 @@ export const MiscRpcs = [
 
 	Rpc.make("GetTopGames", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(S.String),
@@ -342,7 +342,7 @@ export const MiscRpcs = [
 
 	Rpc.make("SearchCategories", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			query: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
@@ -359,7 +359,7 @@ export const MiscRpcs = [
 	// Users
 	Rpc.make("GetUsers", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			id: S.optional(S.Array(S.String)),
 			login: S.optional(S.Array(S.String)),
 		}),
@@ -369,7 +369,7 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateUser", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			description: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(User) }),
@@ -378,9 +378,9 @@ export const MiscRpcs = [
 
 	Rpc.make("GetUsersFollows", {
 		payload: S.Struct({
-			accountId: AccountId,
-			fromId: S.optional(S.String),
-			toId: S.optional(S.String),
+			account_id: AccountId,
+			from_id: S.optional(S.String),
+			to_id: S.optional(S.String),
 			after: S.optional(S.String),
 			first: S.optional(S.String),
 		}),
@@ -395,9 +395,9 @@ export const MiscRpcs = [
 	// Subscriptions
 	Rpc.make("GetSubscriptions", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			userId: S.optional(S.Array(S.String)),
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			user_id: S.optional(S.Array(S.String)),
 			after: S.optional(S.String),
 			before: S.optional(S.String),
 			first: S.optional(S.String),
@@ -415,9 +415,9 @@ export const MiscRpcs = [
 
 	Rpc.make("CheckUserSubscription", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			userId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			user_id: S.String,
 		}),
 		success: S.Struct({ data: S.Struct({ data: S.Array(UserSubscription) }) }),
 		error: RpcError,
@@ -426,7 +426,7 @@ export const MiscRpcs = [
 	// Bits
 	Rpc.make("GetBitsLeaderboard", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			count: S.optional(S.String),
 			period: S.optional(
 				S.Union(
@@ -437,8 +437,8 @@ export const MiscRpcs = [
 					S.Literal("year"),
 				),
 			),
-			startedAt: S.optional(S.String),
-			userId: S.optional(S.String),
+			started_at: S.optional(S.String),
+			user_id: S.optional(S.String),
 		}),
 		success: S.Struct({
 			data: S.Struct({
@@ -453,8 +453,8 @@ export const MiscRpcs = [
 	// Charity
 	Rpc.make("GetCharityCampaigns", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
 		}),
@@ -467,8 +467,8 @@ export const MiscRpcs = [
 
 	Rpc.make("GetCharityDonations", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
 		}),
@@ -481,7 +481,7 @@ export const MiscRpcs = [
 
 	// Goals
 	Rpc.make("GetCreatorGoals", {
-		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
+		payload: S.Struct({ account_id: AccountId, broadcaster_id: S.String }),
 		success: S.Struct({
 			data: S.Struct({
 				data: S.Array(Goal),
@@ -494,8 +494,8 @@ export const MiscRpcs = [
 	// HypeTrain
 	Rpc.make("GetHypeTrainEvents", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
 			id: S.optional(S.String),
@@ -510,9 +510,9 @@ export const MiscRpcs = [
 	// Whispers
 	Rpc.make("SendWhisper", {
 		payload: S.Struct({
-			accountId: AccountId,
-			fromUserId: S.String,
-			toUserId: S.String,
+			account_id: AccountId,
+			from_user_id: S.String,
+			to_user_id: S.String,
 			message: S.String,
 		}),
 		success: S.Void,
@@ -522,25 +522,25 @@ export const MiscRpcs = [
 	// EventSub
 	Rpc.make("GetEventSubSubscriptions", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			status: S.optional(S.String),
 			type: S.optional(S.String),
-			userId: S.optional(S.String),
-			subscriptionId: S.optional(S.String),
+			user_id: S.optional(S.String),
+			subscription_id: S.optional(S.String),
 			after: S.optional(S.String),
 		}),
 		success: S.Struct({
 			data: S.Array(EventSubSubscription),
 			total: S.Int,
-			totalCost: S.Int,
-			maxTotalCost: S.Int,
+			total_cost: S.Int,
+			max_total_cost: S.Int,
 			pagination: S.optional(Pagination),
 		}),
 		error: RpcError,
 	}),
 
 	Rpc.make("DeleteEventSubSubscription", {
-		payload: S.Struct({ accountId: AccountId, id: S.String }),
+		payload: S.Struct({ account_id: AccountId, id: S.String }),
 		success: S.Void,
 		error: RpcError,
 	}),
@@ -548,12 +548,12 @@ export const MiscRpcs = [
 	// Analytics
 	Rpc.make("GetExtensionAnalytics", {
 		payload: S.Struct({
-			accountId: AccountId,
-			extensionId: S.String,
+			account_id: AccountId,
+			extension_id: S.String,
 			first: S.optional(S.String),
 			after: S.optional(S.String),
-			startedAt: S.optional(S.String),
-			endedAt: S.optional(S.String),
+			started_at: S.optional(S.String),
+			ended_at: S.optional(S.String),
 			type: S.optional(S.String),
 		}),
 		success: S.Struct({
@@ -567,12 +567,12 @@ export const MiscRpcs = [
 
 	Rpc.make("GetGameAnalytics", {
 		payload: S.Struct({
-			accountId: AccountId,
-			gameId: S.String,
+			account_id: AccountId,
+			game_id: S.String,
 			first: S.optional(S.String),
 			after: S.optional(S.String),
-			startedAt: S.optional(S.String),
-			endedAt: S.optional(S.String),
+			started_at: S.optional(S.String),
+			ended_at: S.optional(S.String),
 			type: S.optional(S.String),
 		}),
 		success: S.Struct({
@@ -584,11 +584,11 @@ export const MiscRpcs = [
 	// Entitlements/Drops
 	Rpc.make("GetDropsEntitlements", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			id: S.optional(S.String),
-			userId: S.optional(S.String),
-			gameId: S.optional(S.String),
-			fulfillmentStatus: S.optional(S.Literal("CLAIMED", "FULFILLED")),
+			user_id: S.optional(S.String),
+			game_id: S.optional(S.String),
+			fulfillment_status: S.optional(S.Literal("CLAIMED", "FULFILLED")),
 			after: S.optional(S.String),
 			first: S.optional(S.String),
 		}),
@@ -603,9 +603,9 @@ export const MiscRpcs = [
 
 	Rpc.make("UpdateDropsEntitlements", {
 		payload: S.Struct({
-			accountId: AccountId,
-			entitlementIds: S.Array(S.String),
-			fulfillmentStatus: S.Literal("CLAIMED", "FULFILLED"),
+			account_id: AccountId,
+			entitlement_ids: S.Array(S.String),
+			fulfillment_status: S.Literal("CLAIMED", "FULFILLED"),
 		}),
 		success: S.Struct({
 			data: S.Struct({ data: S.Array(UpdatedEntitlementSet) }),

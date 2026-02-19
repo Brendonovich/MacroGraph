@@ -14,8 +14,8 @@ import { AccountId, RpcError } from "./new-types";
 export const ChannelRpcs = [
 	Rpc.make("GetChannelInformation", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.optional(S.Array(S.String)),
+			account_id: AccountId,
+			broadcaster_id: S.optional(S.Array(S.String)),
 		}),
 		success: S.Struct({ data: S.Array(ChannelInformation) }),
 		error: RpcError,
@@ -23,10 +23,10 @@ export const ChannelRpcs = [
 
 	Rpc.make("ModifyChannelInformation", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			gameId: S.optional(S.String),
-			broadcasterLanguage: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			game_id: S.optional(S.String),
+			broadcaster_language: S.optional(S.String),
 			title: S.optional(S.String),
 			delay: S.optional(S.Int),
 			tags: S.optional(S.Array(S.String)),
@@ -36,16 +36,16 @@ export const ChannelRpcs = [
 	}),
 
 	Rpc.make("GetChannelEditors", {
-		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
+		payload: S.Struct({ account_id: AccountId, broadcaster_id: S.String }),
 		success: S.Struct({ data: S.Array(ChannelEditor) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetChannelFollowers", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			userId: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			user_id: S.optional(S.String),
 			first: S.optional(S.String),
 			after: S.optional(S.String),
 		}),
@@ -59,9 +59,9 @@ export const ChannelRpcs = [
 
 	Rpc.make("GetFollowedChannels", {
 		payload: S.Struct({
-			accountId: AccountId,
-			userId: S.String,
-			broadcasterId: S.optional(S.String),
+			account_id: AccountId,
+			user_id: S.String,
+			broadcaster_id: S.optional(S.String),
 			first: S.optional(S.String),
 			after: S.optional(S.String),
 		}),
@@ -75,11 +75,11 @@ export const ChannelRpcs = [
 
 	Rpc.make("SearchChannels", {
 		payload: S.Struct({
-			accountId: AccountId,
+			account_id: AccountId,
 			query: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
-			liveOnly: S.optional(S.String),
+			live_only: S.optional(S.String),
 		}),
 		success: S.Struct({
 			data: S.Array(Channel),

@@ -37,7 +37,7 @@ import {
 	MIN_ZOOM,
 	TOUCH_MOVE_THRESHOLD,
 } from "./interaction-state";
-import { NodeHeader, NodeRoot } from "./Node";
+import { NodeHeader, NodeIO, NodeRoot } from "./Node";
 import type { GraphTwoWayConnections } from "./types";
 import { Viewport } from "./viewport";
 
@@ -59,6 +59,11 @@ export function GraphView(
 		onItemsSelected?(selection: Array<Graph.ItemRef>): void;
 		onConnectIO?(from: IO.RefString, to: IO.RefString): void;
 		onDisconnectIO?(io: IO.RefString): void;
+		onDefaultValueChange?(
+			nodeId: Node.Id,
+			inputId: IO.Id,
+			value: unknown,
+		): void;
 		onContextMenu?(e: MouseEvent | PointerEvent): void;
 		onContextMenuClose?(): void;
 		onDeleteSelection?(): void;
@@ -822,10 +827,6 @@ export function GraphView(
 									{(schema) => (
 										<NodeRoot
 											{...node}
-											graphBounds={{
-												top: bounds.top ?? 0,
-												left: bounds.left ?? 0,
-											}}
 											position={(() => {
 												const positions = getSelectionDragPositions(state());
 												if (!positions) return node.position;
@@ -843,49 +844,6 @@ export function GraphView(
 													s.nodes.has(node.id),
 												)?.colour
 											}
-											onPinDragStart={(e, type, id) => {
-												if (state().type !== "idle") return false;
-
-												setState(
-													IS.ioDrag(e.pointerId, `${node.id}:${type}:${id}`),
-												);
-
-												return true;
-											}}
-											onPinDragEnd={() => {
-												setState(IS.idle());
-											}}
-											onPinPointerUp={(e, type, id) => {
-												const currentState = state();
-												if (currentState.type !== "io-drag") return;
-												if (e.pointerId !== currentState.pointerId) return;
-
-												props.onConnectIO?.(
-													currentState.ioRef,
-													`${node.id}:${type}:${id}`,
-												);
-											}}
-											onPinDoubleClick={(type, id) => {
-												props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
-											}}
-											connections={{
-												in: [
-													...Object.entries(
-														props.connections?.[node.id]?.in ?? {},
-													),
-												].flatMap(([idStr, connections]) => {
-													if (connections.length > 0) return IO.Id.make(idStr);
-													return [];
-												}),
-												out: [
-													...Object.entries(
-														props.connections?.[node.id]?.out ?? {},
-													),
-												].flatMap(([idStr, connections]) => {
-													if (connections.length > 0) return IO.Id.make(idStr);
-													return [];
-												}),
-											}}
 										>
 											<ContextMenu.Trigger<ValidComponent>
 												as={(cmProps) => (
@@ -910,6 +868,62 @@ export function GraphView(
 														}}
 													/>
 												)}
+											/>
+											<NodeIO
+												{...node}
+												graphBounds={{
+													top: bounds.top ?? 0,
+													left: bounds.left ?? 0,
+												}}
+												onPinDragStart={(e, type, id) => {
+													if (state().type !== "idle") return false;
+
+													setState(
+														IS.ioDrag(e.pointerId, `${node.id}:${type}:${id}`),
+													);
+
+													return true;
+												}}
+												onPinDragEnd={() => {
+													setState(IS.idle());
+												}}
+												onPinPointerUp={(e, type, id) => {
+													const currentState = state();
+													if (currentState.type !== "io-drag") return;
+													if (e.pointerId !== currentState.pointerId) return;
+
+													props.onConnectIO?.(
+														currentState.ioRef,
+														`${node.id}:${type}:${id}`,
+													);
+												}}
+												onPinDoubleClick={(type, id) => {
+													props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
+												}}
+												defaultValues={node.inputDefaults}
+												onDefaultValueChange={(inputId, value) =>
+													props.onDefaultValueChange?.(node.id, inputId, value)
+												}
+												connections={{
+													in: [
+														...Object.entries(
+															props.connections?.[node.id]?.in ?? {},
+														),
+													].flatMap(([idStr, connections]) => {
+														if (connections.length > 0)
+															return IO.Id.make(idStr);
+														return [];
+													}),
+													out: [
+														...Object.entries(
+															props.connections?.[node.id]?.out ?? {},
+														),
+													].flatMap(([idStr, connections]) => {
+														if (connections.length > 0)
+															return IO.Id.make(idStr);
+														return [];
+													}),
+												}}
 											/>
 										</NodeRoot>
 									)}

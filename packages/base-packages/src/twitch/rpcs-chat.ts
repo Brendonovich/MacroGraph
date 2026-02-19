@@ -17,11 +17,11 @@ import { AccountId, RpcError } from "./new-types";
 export const ChatRpcs = [
 	Rpc.make("SendChatMessage", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			senderId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			sender_id: S.String,
 			message: S.String,
-			replyParentMessageId: S.optional(S.String),
+			reply_parent_message_id: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Struct({ data: S.Array(ChatMessage) }) }),
 		error: RpcError,
@@ -29,9 +29,9 @@ export const ChatRpcs = [
 
 	Rpc.make("SendChatAnnouncement", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			moderatorId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			moderator_id: S.String,
 			message: S.String,
 			color: S.Union(
 				S.Literal("blue"),
@@ -46,9 +46,9 @@ export const ChatRpcs = [
 
 	Rpc.make("GetChatSettings", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			moderatorId: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			moderator_id: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(ChatSettings) }),
 		error: RpcError,
@@ -56,20 +56,20 @@ export const ChatRpcs = [
 
 	Rpc.make("UpdateChatSettings", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			moderatorId: S.String,
-			emoteMode: S.optional(S.Boolean),
-			followerMode: S.optional(S.Boolean),
-			followerModeDuration: S.optional(S.Int),
-			nonModeratorChatDelay: S.optional(S.Boolean),
-			nonModeratorChatDelayDuration: S.optional(
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			moderator_id: S.String,
+			emote_mode: S.optional(S.Boolean),
+			follower_mode: S.optional(S.Boolean),
+			follower_mode_duration: S.optional(S.Int),
+			non_moderator_chat_delay: S.optional(S.Boolean),
+			non_moderator_chat_delay_duration: S.optional(
 				S.Union(S.Literal(2), S.Literal(4), S.Literal(6)),
 			),
-			slowMode: S.optional(S.Boolean),
-			slowModeWaitTime: S.optional(S.Int),
-			subscriberMode: S.optional(S.Boolean),
-			uniqueChatMode: S.optional(S.Boolean),
+			slow_mode: S.optional(S.Boolean),
+			slow_mode_wait_time: S.optional(S.Int),
+			subscriber_mode: S.optional(S.Boolean),
+			unique_chat_mode: S.optional(S.Boolean),
 		}),
 		success: S.Struct({ data: S.Array(ChatSettings) }),
 		error: RpcError,
@@ -77,9 +77,9 @@ export const ChatRpcs = [
 
 	Rpc.make("GetChatChatters", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.String,
-			moderatorId: S.String,
+			account_id: AccountId,
+			broadcaster_id: S.String,
+			moderator_id: S.String,
 			after: S.optional(S.String),
 			first: S.optional(S.String),
 		}),
@@ -94,46 +94,49 @@ export const ChatRpcs = [
 	}),
 
 	Rpc.make("GetChannelChatBadges", {
-		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
+		payload: S.Struct({ account_id: AccountId, broadcaster_id: S.String }),
 		success: S.Struct({ data: S.Array(ChatBadge) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetGlobalChatBadges", {
-		payload: S.Struct({ accountId: AccountId }),
+		payload: S.Struct({ account_id: AccountId }),
 		success: S.Struct({ data: S.Array(ChatBadge) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetChannelEmotes", {
-		payload: S.Struct({ accountId: AccountId, broadcasterId: S.String }),
+		payload: S.Struct({ account_id: AccountId, broadcaster_id: S.String }),
 		success: S.Struct({ data: S.Array(Emote) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetGlobalEmotes", {
-		payload: S.Struct({ accountId: AccountId }),
+		payload: S.Struct({ account_id: AccountId }),
 		success: S.Struct({ data: S.Array(Emote) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetEmoteSets", {
-		payload: S.Struct({ accountId: AccountId, emoteSetId: S.Array(S.String) }),
+		payload: S.Struct({
+			account_id: AccountId,
+			emote_set_id: S.Array(S.String),
+		}),
 		success: S.Struct({ data: S.Array(EmoteWithOwner) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetCheermotes", {
 		payload: S.Struct({
-			accountId: AccountId,
-			broadcasterId: S.optional(S.String),
+			account_id: AccountId,
+			broadcaster_id: S.optional(S.String),
 		}),
 		success: S.Struct({ data: S.Array(Cheermotes) }),
 		error: RpcError,
 	}),
 
 	Rpc.make("GetUserChatColor", {
-		payload: S.Struct({ accountId: AccountId, userId: S.String }),
+		payload: S.Struct({ account_id: AccountId, user_id: S.String }),
 		success: S.Struct({
 			data: S.Struct({ data: S.Array(GetUserChatColorUser) }),
 		}),
@@ -142,8 +145,8 @@ export const ChatRpcs = [
 
 	Rpc.make("UpdateUserChatColor", {
 		payload: S.Struct({
-			accountId: AccountId,
-			userId: S.String,
+			account_id: AccountId,
+			user_id: S.String,
 			color: S.String,
 		}),
 		error: RpcError,

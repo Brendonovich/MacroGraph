@@ -1,9 +1,7 @@
 {
 	"name": "@macrograph/playground",
 	"type": "module",
-	"exports": {
-		".": "./src/index.tsx"
-	},
+	"exports": { ".": "./src/index.tsx" },
 	"dependencies": {
 		"@effect-atom/atom-solid": "workspace:*",
 		"@effect/opentelemetry": "^0.60.0",
@@ -34,7 +32,5 @@
 		"effect": "^3.19.13",
 		"tsgo": "npm:@typescript/native-preview"
 	},
-	"devDependencies": {
-		"@total-typescript/ts-reset": "^0.4.2"
-	}
+	"devDependencies": { "@total-typescript/ts-reset": "^0.4.2" }
 }

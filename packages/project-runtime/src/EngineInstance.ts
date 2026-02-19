@@ -2,8 +2,10 @@ import { FetchHttpClient } from "@effect/platform";
 import {
 	type Rpc,
 	RpcClient,
+	type RpcGroup,
 	RpcSerialization,
 	type RpcServer,
+	RpcTest,
 } from "@effect/rpc";
 import {
 	Array,
@@ -184,7 +186,7 @@ export namespace EngineInstance {
 	export interface EngineInstance {
 		readonly def: PackageEngine.Any;
 		readonly client: Layer.Layer<Rpc.Handler<string>, never, never>;
-		readonly runtime: Layer.Layer<Rpc.Handler<string>, never, never>;
+		readonly runtime: RpcClient.RpcClient<Rpc.Any>; //  Layer.Layer<Rpc.Handler<string>, never, never>;
 		readonly state: LookupRef.LookupRef<unknown, never>;
 		readonly resources: Record<
 			string,
@@ -192,7 +194,10 @@ export namespace EngineInstance {
 		>;
 	}
 
-	export const make = (opts: {
+	export const make = ({
+		def,
+		layer,
+	}: {
 		def: PackageEngine.PackageEngine<
 			any,
 			any,
@@ -207,12 +212,13 @@ export namespace EngineInstance {
 		Scope.Scope | PackageEngine.CtxTag
 	> =>
 		Effect.gen(function* () {
-			const built = yield* PackageEngine.EngineImpl.pipe(
-				Effect.provide(opts.layer),
-			);
+			const built = yield* PackageEngine.EngineImpl.pipe(Effect.provide(layer));
 
-			const client = opts.def.clientRpcs.toLayer(built.clientRpcs);
-			const runtime = opts.def.runtimeRpcs.toLayer(built.runtimeRpcs);
+			const client = def.clientRpcs.toLayer(built.clientRpcs);
+
+			const runtime = yield* RpcTest.makeClient(
+				def.runtimeRpcs as RpcGroup.RpcGroup<Rpc.Any>,
+			).pipe(Effect.provide(def.runtimeRpcs.toLayer(built.runtimeRpcs)));
 
 			yield* Effect.all(
 				Record.map(built.resources, (ref) => ref.get),
@@ -222,6 +228,6 @@ export namespace EngineInstance {
 
 			const state = yield* LookupRef.make(built.clientState);
 
-			return { def: opts.def, client, runtime, state, resources };
+			return { def, client, runtime, state, resources };
 		});
 }
