@@ -138,7 +138,8 @@ export class EditorEventHandler extends Effect.Service<EditorEventHandler>()(
 												for (const [inNodeId, inIoId] of outConns) {
 													outIoOuts.push([inNodeId, inIoId]);
 
-													const inNodeConns = graph.connections[inNodeId] ?? {};
+													const inNodeConns = (graph.connections[inNodeId] ??=
+														{});
 													const inNodeIns = (inNodeConns.in ??= {});
 													const inNodeIn = (inNodeIns[inIoId] ??= []);
 													inNodeIn.push([e.node, outIoId]);
