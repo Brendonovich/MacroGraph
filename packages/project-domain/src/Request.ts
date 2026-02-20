@@ -63,10 +63,14 @@ export class DisconnectIO extends S.TaggedRequest<DisconnectIO>()(
 	{
 		payload: {
 			graph: Graph.Id,
-			output: S.Struct({ node: Node.Id, io: IO.Id }),
-			input: S.Struct({ node: Node.Id, io: IO.Id }),
+			connections: S.Array(
+				S.Struct({
+					output: S.Struct({ node: Node.Id, io: IO.Id }),
+					input: S.Struct({ node: Node.Id, io: IO.Id }),
+				}),
+			),
 		},
-		success: S.UndefinedOr(ProjectEvent.NodeIOUpdated),
+		success: S.Array(ProjectEvent.NodeIOUpdated),
 		failure: S.Union(Graph.NotFound, Node.NotFound),
 	},
 ) {}

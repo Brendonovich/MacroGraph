@@ -19,7 +19,7 @@ import {
 	onCleanup,
 	type ParentProps,
 	Show,
-	ValidComponent,
+	type ValidComponent,
 } from "solid-js";
 import type { DOMElement } from "solid-js/jsx-runtime";
 
@@ -120,6 +120,8 @@ export function NodeIO(
 		connections?: { in?: IO.Id[]; out?: IO.Id[] };
 		defaultValues?: Partial<Record<IO.Id, unknown>>;
 		onDefaultValueChange?(id: IO.Id, value: unknown): void;
+		/** The IO ref currently being snapped to (if any) — highlights the matching pin */
+		snapTarget?: IO.RefString;
 	}> &
 		Mutable<IO.NodeIO>,
 ) {
@@ -236,6 +238,7 @@ export function NodeIO(
 							<div class="flex flex-row items-center space-x-1.5 h-5">
 								<IOPin
 									connected={connected()}
+									highlighted={props.snapTarget === `${props.id}:i:${input.id}`}
 									ref={setRef}
 									variant={input.variant}
 									pointerHandlers={pointerHandlers}
@@ -301,6 +304,9 @@ export function NodeIO(
 								</Show>
 								<IOPin
 									connected={connected()}
+									highlighted={
+										props.snapTarget === `${props.id}:o:${output.id}`
+									}
 									ref={setRef}
 									variant={output.variant}
 									pointerHandlers={pointerHandlers}
@@ -347,6 +353,7 @@ type IOPinPointerHanlders = Pick<
 const IOPin = (
 	props: {
 		connected?: boolean;
+		highlighted?: boolean;
 		variant: IO.Exec | IO.Data;
 		pointerHandlers: IOPinPointerHanlders;
 	} & Pick<ComponentProps<"div">, "ref"> &
@@ -361,12 +368,17 @@ const IOPin = (
 			)}
 		>
 			<Show when={props.variant._tag === "Exec"}>
-				<ExecPin connected={props.connected} {...props.pointerHandlers} />
+				<ExecPin
+					connected={props.connected}
+					highlighted={props.highlighted}
+					{...props.pointerHandlers}
+				/>
 			</Show>
 			<Show when={props.variant._tag === "Data" && props.variant}>
 				{(variant) => (
 					<DataPin
 						connected={props.connected}
+						highlighted={props.highlighted}
 						type={T.deserialize(variant().type)}
 						{...props.pointerHandlers}
 					/>
@@ -377,7 +389,7 @@ const IOPin = (
 };
 
 const DataPin = (
-	props: { connected?: boolean; type: T.Any_ } & Pick<
+	props: { connected?: boolean; highlighted?: boolean; type: T.Any_ } & Pick<
 		ComponentProps<"div">,
 		"onPointerDown" | "onPointerUp" | "onDblClick"
 	>,
@@ -386,7 +398,8 @@ const DataPin = (
 		<div
 			class={cx(
 				"relative size-full border-[2.5px] rounded-full border-current @hover-bg-current",
-				props.connected && "bg-current",
+				(props.connected || props.highlighted) && "bg-current",
+				props.highlighted && "ring-2 ring-white/60",
 				matchTypeColor(T.primaryTypeOf_(props.type)._tag),
 			)}
 		>
@@ -501,7 +514,7 @@ const DefaultStringInput = (props: {
 };
 
 const ExecPin = (
-	props: { connected?: boolean } & Pick<
+	props: { connected?: boolean; highlighted?: boolean } & Pick<
 		ComponentProps<"svg">,
 		"onPointerDown" | "onPointerUp" | "onDblClick"
 	>,
@@ -513,10 +526,13 @@ const ExecPin = (
 			viewBox="0 0 14 17.5"
 			class={cx(
 				"w-full text-white @hover-fill-current pointer-events-[all]",
-				props.connected && "fill-current",
+				(props.connected || props.highlighted) && "fill-current",
+				props.highlighted && "drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]",
 			)}
 			xmlns="http://www.w3.org/2000/svg"
-			{...props}
+			onPointerDown={props.onPointerDown}
+			onPointerUp={props.onPointerUp}
+			onDblClick={props.onDblClick}
 		>
 			<path
 				d="M12.6667 8.53812C13.2689 9.03796 13.2689 9.96204 12.6667 10.4619L5.7983 16.1622C4.98369 16.8383 3.75 16.259 3.75 15.2003L3.75 3.79967C3.75 2.74104 4.98369 2.16171 5.79831 2.83779L12.6667 8.53812Z"

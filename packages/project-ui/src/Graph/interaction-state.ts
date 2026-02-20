@@ -137,6 +137,8 @@ type LegacyIODrag = {
 	pointerId: number;
 	/** Reference to the IO being dragged from */
 	ioRef: IO.RefString;
+	/** Nearest compatible IO to snap/autoconnect to, if within threshold */
+	autoconnectIO?: IO.RefString;
 };
 
 /** @deprecated Right-click interaction - can be context menu or pan */
@@ -235,11 +237,11 @@ export const InteractionState = {
 		currentPositions,
 	}),
 
-	ioDrag: (pointerId: number, ioRef: IO.RefString): InteractionState => ({
-		type: "io-drag",
-		pointerId,
-		ioRef,
-	}),
+	ioDrag: (
+		pointerId: number,
+		ioRef: IO.RefString,
+		autoconnectIO?: IO.RefString,
+	): InteractionState => ({ type: "io-drag", pointerId, ioRef, autoconnectIO }),
 
 	rightClickPending: (
 		pointerId: number,
@@ -313,9 +315,11 @@ export function getPanOrigin(state: InteractionState): Point | null {
 }
 
 /** Get the IO ref being dragged, if in IO drag state */
-export function getDraggingIO(state: InteractionState): IO.RefString | null {
+export function getDraggingIO(
+	state: InteractionState,
+): { ioRef: IO.RefString; autoconnectIO?: IO.RefString } | null {
 	if (state.type === "io-drag") {
-		return state.ioRef;
+		return { ioRef: state.ioRef, autoconnectIO: state.autoconnectIO };
 	}
 	return null;
 }

@@ -80,6 +80,8 @@ export function GraphView(
 	const bounds = createElementBounds(ref);
 	const mouse = createMousePosition();
 
+	let snapMoveCleanup: (() => void) | undefined;
+
 	// ============ Viewport Helpers ============
 
 	function getViewport(): Viewport.Viewport {
@@ -619,21 +621,37 @@ export function GraphView(
 		const draggingIO = getDraggingIO(state());
 
 		if (draggingIO) {
-			const position = graphCtx.ioPositions.get(draggingIO);
+			const { ioRef, autoconnectIO } = draggingIO;
+			const position = graphCtx.ioPositions.get(ioRef);
 
 			if (position) {
-				const mouseScreenRelative = getScreenRelativePosition(mouse);
-				const b = getBounds();
-				// Convert mouse position from viewport-relative screen coords to canvas coords
-				const mouseCanvasPos = graphCtx.getGraphPosition({
-					x: mouseScreenRelative.x + b.left,
-					y: mouseScreenRelative.y + b.top,
-				});
+				// Determine the wire's free end: snap to autoconnectIO if available, else use mouse
+				let freeEnd: { x: number; y: number };
+				if (autoconnectIO) {
+					const snapPosition = graphCtx.ioPositions.get(autoconnectIO);
+					if (snapPosition) {
+						freeEnd = { ...snapPosition };
+					} else {
+						const mouseScreenRelative = getScreenRelativePosition(mouse);
+						const b = getBounds();
+						freeEnd = graphCtx.getGraphPosition({
+							x: mouseScreenRelative.x + b.left,
+							y: mouseScreenRelative.y + b.top,
+						});
+					}
+				} else {
+					const mouseScreenRelative = getScreenRelativePosition(mouse);
+					const b = getBounds();
+					freeEnd = graphCtx.getGraphPosition({
+						x: mouseScreenRelative.x + b.left,
+						y: mouseScreenRelative.y + b.top,
+					});
+				}
 
 				ret.push(
-					draggingIO.includes(":o:")
-						? { from: { ...position }, to: mouseCanvasPos, opacity: 0.5 }
-						: { to: { ...position }, from: mouseCanvasPos, opacity: 0.5 },
+					ioRef.includes(":o:")
+						? { from: { ...position }, to: freeEnd, opacity: 0.5 }
+						: { to: { ...position }, from: freeEnd, opacity: 0.5 },
 				);
 			}
 		}
@@ -788,6 +806,17 @@ export function GraphView(
 					handleRightClickCanvas(downEvent);
 				}
 			}}
+			onPointerUp={(upEvent) => {
+				const currentState = state();
+				if (currentState.type !== "io-drag") return;
+				if (upEvent.pointerId !== currentState.pointerId) return;
+
+				const { autoconnectIO, ioRef } = currentState;
+				if (autoconnectIO) {
+					props.onConnectIO?.(ioRef, autoconnectIO);
+					setState(IS.idle());
+				}
+			}}
 			onContextMenu={(e) => {
 				if (!props.onContextMenu || isPanning(state())) return;
 				e.preventDefault();
@@ -878,13 +907,40 @@ export function GraphView(
 												onPinDragStart={(e, type, id) => {
 													if (state().type !== "idle") return false;
 
-													setState(
-														IS.ioDrag(e.pointerId, `${node.id}:${type}:${id}`),
-													);
+													const pointerId = e.pointerId;
+													const ioRef: IO.RefString = `${node.id}:${type}:${id}`;
+													setState(IS.ioDrag(pointerId, ioRef));
+
+													const onMove = (ev: PointerEvent) => {
+														if (ev.pointerId !== pointerId) return;
+														const mouseCanvasPos = graphCtx.getGraphPosition({
+															x: ev.clientX,
+															y: ev.clientY,
+														});
+														const autoconnectIO = getNearCompatibleIO(
+															props.nodes,
+															graphCtx.ioPositions,
+															ioRef,
+															mouseCanvasPos,
+														);
+														setState(
+															IS.ioDrag(
+																pointerId,
+																ioRef,
+																autoconnectIO ?? undefined,
+															),
+														);
+													};
+
+													window.addEventListener("pointermove", onMove);
+													snapMoveCleanup = () =>
+														window.removeEventListener("pointermove", onMove);
 
 													return true;
 												}}
 												onPinDragEnd={() => {
+													snapMoveCleanup?.();
+													snapMoveCleanup = undefined;
 													setState(IS.idle());
 												}}
 												onPinPointerUp={(e, type, id) => {
@@ -900,6 +956,7 @@ export function GraphView(
 												onPinDoubleClick={(type, id) => {
 													props.onDisconnectIO?.(`${node.id}:${type}:${id}`);
 												}}
+												snapTarget={getDraggingIO(state())?.autoconnectIO}
 												defaultValues={node.inputDefaults}
 												onDefaultValueChange={(inputId, value) =>
 													props.onDefaultValueChange?.(node.id, inputId, value)
@@ -1051,4 +1108,117 @@ function Connections(props: {
 	});
 
 	return <canvas ref={setRef} class="absolute inset-0 w-full h-full" />;
+}
+
+const AUTOCONNECT_MAX_DISTANCE = 30;
+
+/**
+ * Given the IO ref being dragged and the current mouse position in canvas space,
+ * find the nearest compatible IO pin within AUTOCONNECT_MAX_DISTANCE graph units.
+ *
+ * Compatibility rules (mirroring pinsCanConnect from @macrograph/runtime):
+ * - Exec output can snap to Exec input (and vice-versa)
+ * - Data output can snap to Data input with the same serialized type
+ */
+function getNearCompatibleIO(
+	nodes: NodeState[],
+	ioPositions: Map<IO.RefString, { x: number; y: number }>,
+	draggedRef: IO.RefString,
+	mousePosition: { x: number; y: number },
+): IO.RefString | null {
+	const parsed = IO.parseRef(draggedRef);
+	const draggedType = parsed.type; // "i" or "o"
+
+	// Find the variant of the dragged IO from nodes
+	let draggedVariant: IO.Exec | IO.Data | null = null;
+	outer: for (const node of nodes) {
+		if (node.id !== parsed.nodeId) continue;
+		if (draggedType === "o") {
+			for (const output of node.outputs) {
+				if (output.id === parsed.id) {
+					draggedVariant = output.variant;
+					break outer;
+				}
+			}
+		} else {
+			for (const input of node.inputs) {
+				if (input.id === parsed.id) {
+					draggedVariant = input.variant;
+					break outer;
+				}
+			}
+		}
+	}
+
+	if (!draggedVariant) return null;
+
+	let nearest: [number, IO.RefString] | null = null;
+
+	for (const node of nodes) {
+		if (draggedType === "i") {
+			// Dragging from an input → look for compatible outputs
+			for (const output of node.outputs) {
+				if (!ioVariantsCompatible(output.variant, draggedVariant)) continue;
+
+				const ref: IO.RefString = `${node.id}:o:${output.id}`;
+				const pos = ioPositions.get(ref);
+				if (!pos) continue;
+
+				// Directional gate: output should be to the left of (or near) cursor
+				if (mousePosition.x < pos.x - 10) continue;
+
+				const distance = Math.hypot(
+					pos.x - mousePosition.x,
+					pos.y - mousePosition.y,
+				);
+
+				if (nearest) {
+					if (distance < nearest[0]) nearest = [distance, ref];
+				} else if (distance < AUTOCONNECT_MAX_DISTANCE) {
+					nearest = [distance, ref];
+				}
+			}
+		} else {
+			// Dragging from an output → look for compatible inputs
+			for (const input of node.inputs) {
+				if (!ioVariantsCompatible(draggedVariant, input.variant)) continue;
+
+				const ref: IO.RefString = `${node.id}:i:${input.id}`;
+				const pos = ioPositions.get(ref);
+				if (!pos) continue;
+
+				// Directional gate: input should be to the right of (or near) cursor
+				if (mousePosition.x > pos.x + 10) continue;
+
+				const distance = Math.hypot(
+					pos.x - mousePosition.x,
+					pos.y - mousePosition.y,
+				);
+
+				if (nearest) {
+					if (distance < nearest[0]) nearest = [distance, ref];
+				} else if (distance < AUTOCONNECT_MAX_DISTANCE) {
+					nearest = [distance, ref];
+				}
+			}
+		}
+	}
+
+	return nearest ? nearest[1] : null;
+}
+
+/**
+ * Check if an output variant can connect to an input variant.
+ * - Exec ↔ Exec: always compatible
+ * - Data ↔ Data: compatible if they share the same serialized type (JSON equality)
+ */
+function ioVariantsCompatible(
+	output: IO.Exec | IO.Data,
+	input: IO.Exec | IO.Data,
+): boolean {
+	if (output._tag === "Exec" && input._tag === "Exec") return true;
+	if (output._tag === "Data" && input._tag === "Data") {
+		return JSON.stringify(output.type) === JSON.stringify(input.type);
+	}
+	return false;
 }

@@ -30,7 +30,8 @@ const buttonVariants = cva({
 });
 
 export interface ButtonProps
-	extends ComponentProps<"button">, VariantProps<typeof buttonVariants> {}
+	extends ComponentProps<"button">,
+		VariantProps<typeof buttonVariants> {}
 
 const Button: Component<ButtonProps> = (props) => {
 	const [, rest] = splitProps(props, ["variant", "size", "class"]);

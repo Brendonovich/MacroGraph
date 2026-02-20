@@ -232,69 +232,96 @@ export class GraphRequests extends Effect.Service<GraphRequests>()(
 				(r: Request.DisconnectIO) =>
 					Effect.gen(function* () {
 						const editor = yield* ProjectEditor;
-						const project = yield* editor.project;
+						let project = yield* editor.project;
 						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
 							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
 						);
 
-						const outNode = yield* graph.nodes.pipe(
-							HashMap.get(r.output.node),
-							Effect.catchAll(() => new Node.NotFound({ id: r.output.node })),
-						);
-						const inNode = yield* graph.nodes.pipe(
-							HashMap.get(r.input.node),
-							Effect.catchAll(() => new Node.NotFound({ id: r.input.node })),
-						);
+						// Group requested disconnections by output node so we can compute
+						// and persist each output node's updated connection map in one pass.
+						const byOutNode = new Map<
+							Node.Id,
+							Array<{ outIo: IO.Id; inNode: Node.Id; inIo: IO.Id }>
+						>();
+						for (const conn of r.connections) {
+							const outNode = yield* HashMap.get(
+								graph.nodes,
+								conn.output.node,
+							).pipe(
+								Effect.catchAll(
+									() => new Node.NotFound({ id: conn.output.node }),
+								),
+							);
+							const inNode = yield* HashMap.get(
+								graph.nodes,
+								conn.input.node,
+							).pipe(
+								Effect.catchAll(
+									() => new Node.NotFound({ id: conn.input.node }),
+								),
+							);
+							const entry = byOutNode.get(outNode.id) ?? [];
+							entry.push({
+								outIo: conn.output.io,
+								inNode: inNode.id,
+								inIo: conn.input.io,
+							});
+							byOutNode.set(outNode.id, entry);
+						}
 
-						const outNodeConnections = HashMap.get(
-							graph.connections,
-							outNode.id,
-						).pipe(Option.getOrUndefined);
+						const events: ProjectEvent.NodeIOUpdated[] = [];
 
-						if (!outNodeConnections) return;
+						for (const [outNodeId, removals] of byOutNode) {
+							const outNodeConnections = HashMap.get(
+								graph.connections,
+								outNodeId,
+							).pipe(Option.getOrUndefined);
 
-						const outConnections = outNodeConnections[r.output.io];
-						if (!outConnections) return;
-						const filteredConnections = outConnections.filter(
-							([inNodeId, inIO]) =>
-								inNodeId !== inNode.id && inIO !== r.input.io,
-						);
+							if (!outNodeConnections) continue;
 
-						const newOutNodeConnections =
-							filteredConnections.length > 0
-								? Record.set(
-										outNodeConnections,
-										r.output.io,
-										filteredConnections,
-									)
-								: Record.remove(outNodeConnections, r.output.io);
+							// Apply all removals for this output node at once.
+							let newOutNodeConnections = outNodeConnections;
+							for (const { outIo, inNode, inIo } of removals) {
+								const outConns = newOutNodeConnections[outIo];
+								if (!outConns) continue;
+								const filtered = outConns.filter(
+									([inNodeId, inIO]) => inNodeId !== inNode || inIO !== inIo,
+								);
+								newOutNodeConnections =
+									filtered.length > 0
+										? Record.set(newOutNodeConnections, outIo, filtered)
+										: Record.remove(newOutNodeConnections, outIo);
+							}
 
-						yield* editor.modifyProject(
-							() =>
-								new Project.Project({
-									...project,
-									graphs: HashMap.set(
-										project.graphs,
-										graph.id,
-										new Graph.Graph({
-											...graph,
-											connections: HashMap.set(
-												graph.connections,
-												outNode.id,
-												newOutNodeConnections,
-											),
-										}),
-									),
+							project = new Project.Project({
+								...project,
+								graphs: HashMap.set(
+									project.graphs,
+									graph.id,
+									new Graph.Graph({
+										...graph,
+										connections: HashMap.set(
+											graph.connections,
+											outNodeId,
+											newOutNodeConnections,
+										),
+									}),
+								),
+							});
+
+							yield* editor.modifyProject(() => project);
+
+							const event = yield* editor.publishEvent(
+								new ProjectEvent.NodeIOUpdated({
+									graph: r.graph,
+									node: outNodeId,
+									outConnections: newOutNodeConnections,
 								}),
-						);
+							);
+							events.push(event);
+						}
 
-						return yield* editor.publishEvent(
-							new ProjectEvent.NodeIOUpdated({
-								graph: r.graph,
-								node: outNode.id,
-								outConnections: newOutNodeConnections,
-							}),
-						);
+						return events;
 					}),
 			).pipe(requestResolverServices);
 

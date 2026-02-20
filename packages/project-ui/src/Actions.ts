@@ -132,30 +132,28 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 
 							if (!nodeConnections) return;
 
-							let req: Request.DisconnectIO | undefined;
+							let connections: Request.DisconnectIO["connections"];
 
 							if (io.type === "i" && nodeConnections.in) {
 								const conns = nodeConnections.in[io.id];
-								if (conns?.[0]) {
-									req = new Request.DisconnectIO({
-										graph,
-										output: { node: conns[0][0], io: conns[0][1] },
-										input: { node: io.nodeId, io: io.id },
-									});
-								} else return;
+								if (!conns?.length) return;
+								connections = conns.map(([outNodeId, outIoId]) => ({
+									output: { node: outNodeId, io: outIoId },
+									input: { node: io.nodeId, io: io.id },
+								}));
 							} else if (io.type === "o" && nodeConnections.out?.[io.id]) {
 								const conns = nodeConnections.out[io.id];
-								if (conns?.[0]) {
-									req = new Request.DisconnectIO({
-										graph,
-										output: { node: io.nodeId, io: io.id },
-										input: { node: conns[0][0], io: conns[0][1] },
-									});
-								} else return;
+								if (!conns?.length) return;
+								connections = conns.map(([inNodeId, inIoId]) => ({
+									output: { node: io.nodeId, io: io.id },
+									input: { node: inNodeId, io: inIoId },
+								}));
 							} else return;
 
-							const e = yield* run(req);
-							if (e) yield* handleEvent(e);
+							const events = yield* run(
+								new Request.DisconnectIO({ graph, connections }),
+							);
+							yield* Effect.forEach(events, handleEvent);
 						}),
 				),
 				DeleteGraphItems: withRequest<Request.DeleteGraphItems>()(
