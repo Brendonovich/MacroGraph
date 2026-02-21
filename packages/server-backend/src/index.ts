@@ -9,6 +9,7 @@ import type { Route } from "@effect/platform/HttpRouter";
 import { RpcMiddleware, RpcSerialization, RpcServer } from "@effect/rpc";
 import {
 	Cache,
+	Chunk,
 	Context,
 	Duration,
 	Effect,
@@ -62,9 +63,11 @@ import { JwtKeys } from "./JwtKeys";
 import { PresenceRpcsLive, PresenceState } from "./Presence";
 import { RealtimeConnections, RealtimePubSub } from "./Realtime";
 import { ServerPolicy } from "./ServerPolicy";
+import { ServerProjectPersistence } from "./ServerProjectPersistence.ts";
 import { ServerRegistration } from "./ServerRegistration";
 
 export * from "./ServerConfig";
+export * from "./ServerProjectPersistence.ts";
 export * from "./ServerRegistration";
 
 class ProjectEditorRpcMiddleware extends RpcMiddleware.Tag<ProjectEditorRpcMiddleware>()(
@@ -146,11 +149,26 @@ const RuntimeLive = Layer.scoped(
 const EditorLive = Layer.scoped(
 	ProjectEditor.ProjectEditor,
 	Effect.gen(function* () {
+		const persistence = yield* ServerProjectPersistence;
+		const project = yield* persistence.readProject;
+
 		const editor = yield* ProjectEditor.make();
 
 		yield* editor.loadPackage(Package.Id.make("util"), Packages.util);
 		yield* editor.loadPackage(Package.Id.make("twitch"), Packages.twitch);
 		yield* editor.loadPackage(Package.Id.make("obs"), Packages.obs);
+
+		if (Option.isSome(project)) yield* editor.loadProject(project.value);
+
+		yield* (yield* editor.subscribe).pipe(
+			Stream.throttle({ cost: Chunk.size, duration: "100 millis", units: 1 }),
+			Stream.runForEach(
+				Effect.fnUntraced(function* () {
+					yield* persistence.writeProject(yield* editor.project);
+				}),
+			),
+			Effect.forkScoped,
+		);
 
 		return editor;
 	}),

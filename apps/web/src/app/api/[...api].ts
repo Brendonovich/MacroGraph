@@ -278,7 +278,6 @@ const ApiLiveGroup = HttpApiBuilder.group(Api, "api", (handlers) =>
 					const db = yield* Database;
 
 					const providerConfig = AuthProviders()[path.providerId];
-					console.log({ providerConfig });
 					if (!providerConfig) return yield* new HttpApiError.BadRequest();
 
 					const session = yield* Authentication;
