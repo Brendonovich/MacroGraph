@@ -86,7 +86,7 @@ jobs:
                 input: {
                   source: {
                     image: $image,
-                    region: "asia-southeast1-eqsg3a"
+                    region: "asia-southeast1"
                   }
                 }
               }
