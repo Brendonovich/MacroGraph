@@ -85,7 +85,8 @@ jobs:
                 environmentId: $environmentId,
                 input: {
                   source: {
-                    image: $image
+                    image: $image,
+                    region: "asia-southeast1-eqsg3a"
                   }
                 }
               }
