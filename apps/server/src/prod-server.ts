@@ -1,4 +1,5 @@
 import {
+	FileSystem,
 	HttpMiddleware,
 	HttpRouter,
 	HttpServer,
@@ -11,7 +12,11 @@ import {
 	NodeRuntime,
 } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { Server, ServerConfigPersistence, ServerProjectPersistence } from "@macrograph/server-backend";
+import {
+	Server,
+	ServerConfigPersistence,
+	ServerProjectPersistence,
+} from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
 import { ServerEnv, SharedDepsLive } from "./server-deps";
@@ -52,9 +57,19 @@ Layer.unwrapEffect(
 ).pipe(
 	Layer.provide(Server.Default),
 	Layer.provide(SharedDepsLive),
-	Layer.provide(ServerConfigPersistence.jsonFile("./server-state.json")),
 	Layer.provide(
-		ServerProjectPersistence.layerJsonFile("./project.json")
+		ServerConfigPersistence.jsonFile("./.macrograph/server-state.json"),
+	),
+	Layer.provide(
+		ServerProjectPersistence.layerJsonFile("./.macrograph/project.json"),
+	),
+	Layer.provide(
+		Layer.effectDiscard(
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				yield* fs.makeDirectory("./.macrograph");
+			}),
+		),
 	),
 	Layer.provide(Layer.mergeAll(NodeContext.layer, ServerEnv.Default)),
 	HttpServer.withLogAddress,
