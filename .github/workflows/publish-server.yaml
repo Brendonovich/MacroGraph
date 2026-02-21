@@ -46,15 +46,82 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v5
+        id: build-push
         with:
           context: .
           file: apps/server/Dockerfile
           push: true
           tags: |
             ${{format('{0}:{1}', env.IMAGE_NAME, env.TAG) }}
+            ${{ github.event_name != 'pull_request' && format('{0}:{1}', env.IMAGE_NAME, env.SHORT_SHA) || '' }}
           provenance: false
           cache-from: type=gha
           cache-to: type=gha,mode=max,image-manifest=mediatype=application/vnd.oci.image.manifest.v1+json
+
+      - name: Deploy to Railway
+        if: github.event_name != 'pull_request'
+        env:
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_SERVICE_ID: 8e415c89-46c9-4f39-9150-38c2e9d2afc7
+          RAILWAY_ENVIRONMENT_ID: a7feeb4d-4923-4d88-8f96-8526eba8e537
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          SHORT_SHA: ${{ env.SHORT_SHA }}
+        run: |
+          GRAPHQL_ENDPOINT="https://backboard.railway.com/graphql/v2"
+
+          # Step 1: Update the service instance image
+          UPDATE_IMAGE_QUERY='mutation ServiceInstanceUpdate($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) {
+            serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input)
+          }'
+
+          UPDATE_IMAGE_PAYLOAD=$(jq -n \
+            --arg serviceId "$RAILWAY_SERVICE_ID" \
+            --arg environmentId "$RAILWAY_ENVIRONMENT_ID" \
+            --arg image "$IMAGE_NAME:$SHORT_SHA" \
+            --arg query "$UPDATE_IMAGE_QUERY" \
+            '{
+              query: $query,
+              variables: {
+                serviceId: $serviceId,
+                environmentId: $environmentId,
+                input: {
+                  source: {
+                    image: $image
+                  }
+                }
+              }
+            }')
+
+          echo "Updating image to: $IMAGE_NAME:$SHORT_SHA"
+          curl --fail --silent -X POST "$GRAPHQL_ENDPOINT" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
+            -d "$UPDATE_IMAGE_PAYLOAD"
+
+          # Step 2: Trigger a redeploy
+          REDEPLOY_QUERY='mutation serviceInstanceRedeploy($serviceId: String!, $environmentId: String!) {
+            serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId)
+          }'
+
+          REDEPLOY_PAYLOAD=$(jq -n \
+            --arg serviceId "$RAILWAY_SERVICE_ID" \
+            --arg environmentId "$RAILWAY_ENVIRONMENT_ID" \
+            --arg query "$REDEPLOY_QUERY" \
+            '{
+              query: $query,
+              variables: {
+                serviceId: $serviceId,
+                environmentId: $environmentId
+              }
+            }')
+
+          echo "Triggering redeploy..."
+          curl --fail --silent -X POST "$GRAPHQL_ENDPOINT" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
+            -d "$REDEPLOY_PAYLOAD"
+
+          echo "Deployment triggered successfully!"
 
       - name: Publish SHA to checks
         if: github.event_name == 'pull_request'

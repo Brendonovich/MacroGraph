@@ -67,8 +67,10 @@ Layer.unwrapEffect(
 		Layer.effectDiscard(
 			Effect.gen(function* () {
 				const fs = yield* FileSystem.FileSystem;
-				yield* fs.makeDirectory("./.macrograph");
-				yield* Effect.log("Created .macrograph directory");
+				if(!(yield* fs.exists("./.macrograph"))) {
+					yield* fs.makeDirectory("./.macrograph");
+					yield* Effect.log("Created .macrograph directory");
+				}
 			}),
 		),
 	),
