@@ -64,8 +64,7 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_SERVICE_ID: 8e415c89-46c9-4f39-9150-38c2e9d2afc7
           RAILWAY_ENVIRONMENT_ID: a7feeb4d-4923-4d88-8f96-8526eba8e537
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          SHORT_SHA: ${{ env.SHORT_SHA }}
+          IMAGE_SOURCE: ghcr.io/${{ github.owner }}/${{ env.IMAGE_NAME }}@sha256:${{ steps.build-push.outputs.digest }}
         run: |
           GRAPHQL_ENDPOINT="https://backboard.railway.com/graphql/v2"
 
@@ -77,7 +76,7 @@ jobs:
           UPDATE_IMAGE_PAYLOAD=$(jq -n \
             --arg serviceId "$RAILWAY_SERVICE_ID" \
             --arg environmentId "$RAILWAY_ENVIRONMENT_ID" \
-            --arg image "$IMAGE_NAME:$SHORT_SHA" \
+            --arg image "$IMAGE_SOURCE" \
             --arg query "$UPDATE_IMAGE_QUERY" \
             '{
               query: $query,
@@ -92,7 +91,7 @@ jobs:
               }
             }')
 
-          echo "Updating image to: $IMAGE_NAME:$SHORT_SHA"
+          echo "Updating image to: $IMAGE_SOURCE"
           curl --fail --silent -X POST "$GRAPHQL_ENDPOINT" \
             -H "Content-Type: application/json" \
             -H "Project-Access-Token: $RAILWAY_TOKEN" \
