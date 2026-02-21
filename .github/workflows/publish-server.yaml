@@ -95,7 +95,7 @@ jobs:
           echo "Updating image to: $IMAGE_NAME:$SHORT_SHA"
           curl --fail --silent -X POST "$GRAPHQL_ENDPOINT" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Project-Access-Token: $RAILWAY_TOKEN" \
             -d "$UPDATE_IMAGE_PAYLOAD"
 
           # Step 2: Trigger a redeploy
@@ -118,7 +118,7 @@ jobs:
           echo "Triggering redeploy..."
           curl --fail --silent -X POST "$GRAPHQL_ENDPOINT" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Project-Access-Token: $RAILWAY_TOKEN" \
             -d "$REDEPLOY_PAYLOAD"
 
           echo "Deployment triggered successfully!"
