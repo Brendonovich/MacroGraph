@@ -165,6 +165,7 @@ const EditorLive = Layer.scoped(
 			Stream.runForEach(
 				Effect.fnUntraced(function* () {
 					yield* persistence.writeProject(yield* editor.project);
+					yield* Effect.log("Wrote project")
 				}),
 			),
 			Effect.forkScoped,
