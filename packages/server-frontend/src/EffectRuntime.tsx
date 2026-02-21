@@ -10,6 +10,7 @@ import { createContext, useContext } from "solid-js";
 
 import { AuthActions } from "./Auth";
 import { ConnectedClientsState } from "./ConnectedClientsState";
+import { ConnectionState } from "./ConnectionState";
 import { HttpPackgeRpcClient } from "./Packages/PackagesSettings";
 import { PresenceClients } from "./Presence/PresenceClients";
 import { ProjectRealtime } from "./Project/Realtime";
@@ -43,7 +44,6 @@ const EditorEventStreamLive = Layer.effect(
 				if (runtimeEventTags.includes(e._tag)) return Option.none();
 				return Option.some(e as any);
 			}),
-			Stream.orDie,
 		);
 	}),
 );
@@ -63,7 +63,6 @@ const RuntimeEventStreamLive = Layer.effect(
 				if (runtimeEventTags.includes(e._tag)) return Option.some(e as any);
 				return Option.none();
 			}),
-			Stream.orDie,
 		);
 	}),
 );
@@ -87,7 +86,6 @@ const ServerEventStreamLive = Layer.effect(
 				}
 				return Option.none();
 			}),
-			Stream.orDie,
 		);
 	}),
 );
@@ -103,6 +101,7 @@ const FrontendLive = ServerEventStreamHandlerLive.pipe(
 			ProjectUILayers,
 			AuthActions.Default,
 			ConnectedClientsState.Default,
+			ConnectionState.Default,
 			ServerRegistration.Default,
 			PresenceClients.Default,
 			QueryInvalidation.Default,

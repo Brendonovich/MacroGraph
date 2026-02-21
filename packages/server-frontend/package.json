@@ -3,7 +3,7 @@
 	"main": "./src/index.tsx",
 	"types": "./src/index.tsx",
 	"devDependencies": {
-		"@effect/language-service": "^0.62.4",
+		"@effect/language-service": "^0.75.1",
 		"@effect/vitest": "^0.27.0",
 		"typescript": "~5.7.2",
 		"unocss": "^66.1.1",

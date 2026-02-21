@@ -46,6 +46,7 @@ export class RealtimeConnections extends Effect.Service<RealtimeConnections>()(
 				get: (id: number) => Option.fromNullable(realtimeConnections.get(id)),
 				set: (id: number, value: { auth: Option.Option<ConnectionAuth> }) =>
 					realtimeConnections.set(id, value),
+				delete: (id: number) => realtimeConnections.delete(id),
 			};
 		}),
 	},

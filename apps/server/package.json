@@ -9,7 +9,7 @@
 		"preview": "vite preview"
 	},
 	"devDependencies": {
-		"@effect/language-service": "^0.62.4",
+		"@effect/language-service": "^0.75.1",
 		"@effect/vitest": "^0.27.0",
 		"@iconify/json": "^2.2.282",
 		"typescript": "~5.7.2",
@@ -69,5 +69,7 @@
 		"unocss-preset-scrollbar": "^3.2.0",
 		"vite-plugin-solid": "^2.11.8"
 	},
-	"files": ["dist"]
+	"files": [
+		"dist"
+	]
 }

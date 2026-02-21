@@ -348,6 +348,16 @@ export class Server extends Effect.Service<Server>()("Server", {
 
 					realtimeConnections.set(connectionId, { auth });
 
+					yield* Effect.addFinalizer(() =>
+						Effect.sync(() => {
+							realtimeConnections.delete(connectionId);
+						}).pipe(
+							Effect.zipLeft(
+								Effect.log(`Removed realtime connection ${connectionId}`),
+							),
+						),
+					);
+
 					yield* Effect.gen(function* () {
 						yield* writer(
 							JSON.stringify({

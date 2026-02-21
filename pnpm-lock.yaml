@@ -329,8 +329,8 @@ importers:
         version: 2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
     devDependencies:
       '@effect/language-service':
-        specifier: ^0.62.4
-        version: 0.62.4
+        specifier: ^0.75.1
+        version: 0.75.1
       '@effect/vitest':
         specifier: ^0.27.0
         version: 0.27.0(effect@3.19.13)(vitest@4.0.14(@opentelemetry/api@1.9.0)(@types/node@25.0.3)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
@@ -1991,8 +1991,8 @@ importers:
         version: 2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
     devDependencies:
       '@effect/language-service':
-        specifier: ^0.62.4
-        version: 0.62.4
+        specifier: ^0.75.1
+        version: 0.75.1
       '@effect/vitest':
         specifier: ^0.27.0
         version: 0.27.0(effect@3.19.13)(vitest@4.0.14(@opentelemetry/api@1.9.0)(@types/node@25.0.3)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
@@ -2309,6 +2309,11 @@ packages:
 
   '@babel/parser@7.28.5':
     resolution: {integrity: sha512-KKBU1VGYR7ORr3At5HAtUQ+TV3SzRCXmA/8OdDZiLDBIZxVyzXuztPjfLd3BV1PRAQGCMWWSHYhL0F8d5uHBDQ==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
+  '@babel/parser@7.29.0':
+    resolution: {integrity: sha512-IyDgFV5GeDUVX4YdF/3CPULtVGSXXMLh1xVIgdCgxApktqnQV0r7/8Nqthg+8YLGaAtdyIlo2qIdZrbCv4+7ww==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -2828,6 +2833,10 @@ packages:
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
     engines: {node: '>=6.9.0'}
 
+  '@babel/types@7.29.0':
+    resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
+    engines: {node: '>=6.9.0'}
+
   '@biomejs/biome@2.3.5':
     resolution: {integrity: sha512-HvLhNlIlBIbAV77VysRIBEwp55oM/QAjQEin74QQX9Xb259/XP/D5AGGnZMOyF1el4zcvlNYYR3AyTMUV3ILhg==}
     engines: {node: '>=14.21.3'}
@@ -3004,8 +3013,8 @@ packages:
       lmdb:
         optional: true
 
-  '@effect/language-service@0.62.4':
-    resolution: {integrity: sha512-IPe/oGOILtzUIUdhhaz6e2JcnGymPADnjI03f1xOe+LaPLDg/AsRmkY87jhbtb/6qg8NVzlU+ZK4s0JoIMW/yQ==}
+  '@effect/language-service@0.75.1':
+    resolution: {integrity: sha512-g9xD2tAQgRFpYC2YgpZq02VeSL5fBbFJ0B/g1o+14NuNmwtaYJc7SjiLWAA9eyhJHosNrn6h1Ye+Kx6j5mN0AA==}
     hasBin: true
 
   '@effect/opentelemetry@0.60.0':
@@ -5657,10 +5666,10 @@ packages:
       react-dom:
         optional: true
 
-  '@storybook/builder-vite@10.3.0-alpha.6':
-    resolution: {integrity: sha512-wmMJN+Q7E7bhjwfiaXdPkUkDNysd1pjr1GffkoBHq8I2tsmXNKPVEBnw5iZMRjeEckL9nrUUDahuIIQb6KpweQ==}
+  '@storybook/builder-vite@10.3.0-alpha.7':
+    resolution: {integrity: sha512-CwmRck537/nXz64MEjr9Xe0wbaN2IZW/WWRonzA4o37lE+QGPk7BPSLkjw+k8gP/CBb4/COyX3Rj4mm4bKbYgQ==}
     peerDependencies:
-      storybook: ^10.3.0-alpha.6
+      storybook: ^10.3.0-alpha.7
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
   '@storybook/codemod@8.2.7':
@@ -5669,12 +5678,12 @@ packages:
   '@storybook/core@8.2.7':
     resolution: {integrity: sha512-vgw5MYN9Bq2/ZsObCOEHbBHwi4RpbYCHPFtKkr4kTnWID++FCSiSVd7jY3xPvcNxWqCxOyH6dThpBi+SsB/ZAA==}
 
-  '@storybook/csf-plugin@10.3.0-alpha.6':
-    resolution: {integrity: sha512-/elNU26xT748eDS1wpQhlqR86ujHUuPHOrvGGZeW9oRuU5hOzGyj3G9N5ccN+QQSRDeFcsHOC3M51Gk5VDlC0Q==}
+  '@storybook/csf-plugin@10.3.0-alpha.7':
+    resolution: {integrity: sha512-nrA2X5J902ugYIjvQisCrjqJqnNMfFueMl6kWIidsnFKvj8MxyimROs4FrrrWnz9UizeeO0d7y00C4G7jxKLfw==}
     peerDependencies:
       esbuild: '*'
       rollup: '*'
-      storybook: ^10.3.0-alpha.6
+      storybook: ^10.3.0-alpha.7
       vite: '*'
       webpack: '*'
     peerDependenciesMeta:
@@ -6604,6 +6613,11 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  acorn@8.16.0:
+    resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
@@ -7408,8 +7422,8 @@ packages:
   decimal.js@10.4.3:
     resolution: {integrity: sha512-VBBaLc1MgL5XpzgIP7ny5Z6Nx3UrRkIViUkPUdtl9aya5amy3De1gsUUSB1g3+3sExYNjCAsAznmukyxCb1GRA==}
 
-  decode-named-character-reference@1.2.0:
-    resolution: {integrity: sha512-c6fcElNV6ShtZXmsgNgFFV5tVX2PaV4g+MOAkb8eXHvn6sryJBrZa9r0zV6+dtTyoCKxtDy5tyQ5ZwQuidtd+Q==}
+  decode-named-character-reference@1.3.0:
+    resolution: {integrity: sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q==}
 
   decompress-response@6.0.0:
     resolution: {integrity: sha512-aW35yZM6Bb/4oJlZncMH2LCoZtJXTRxES17vE3hoRiowU2kWHaJKFkSBDnDR+cm9J+9QhXmREyIfv0pji9ejCQ==}
@@ -7552,8 +7566,8 @@ packages:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
-  diff@5.2.0:
-    resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
+  diff@5.2.2:
+    resolution: {integrity: sha512-vtcDfH3TOjP8UekytvnHH1o1P4FcUdt4eQ1Y+Abap1tk/OB2MWQvcwS2ClCd1zuIhc3JKOx6p3kod8Vfys3E+A==}
     engines: {node: '>=0.3.1'}
 
   diff@8.0.2:
@@ -8421,6 +8435,9 @@ packages:
 
   h3@1.15.4:
     resolution: {integrity: sha512-z5cFQWDffyOe4vQ9xIqNfCZdV4p//vy6fBnr8Q1AWnVZ0teurKMG66rLj++TKwKPUP3u7iMUvrvKaEUiQw2QWQ==}
+
+  h3@1.15.5:
+    resolution: {integrity: sha512-xEyq3rSl+dhGX2Lm0+eFQIAzlDN6Fs0EcC4f7BNUmzaRX/PTzeuM+Tr2lHB8FoXggsQIeXLj8EDVgs5ywxyxmg==}
 
   h3@2.0.0-beta.4:
     resolution: {integrity: sha512-/JdwHUGuHjbBXAVxQN7T7QeI9cVlhsqMKVNFHebZVs9RoEYH85Ogh9O1DEy/1ZiJkmMwa1gNg6bBcGhc1Itjdg==}
@@ -9722,6 +9739,9 @@ packages:
 
   node-mock-http@1.0.2:
     resolution: {integrity: sha512-zWaamgDUdo9SSLw47we78+zYw/bDr5gH8pH7oRRs8V3KmBtu8GLgGIbV2p/gRPd3LWpEOpjQj7X1FOU3VFMJ8g==}
+
+  node-mock-http@1.0.4:
+    resolution: {integrity: sha512-8DY+kFsDkNXy1sJglUfuODx1/opAGJGyrTuFqEoN90oRc2Vk0ZbD4K2qmKXBBEhZQzdKHIVfEJpDU8Ak2NJEvQ==}
 
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
@@ -11279,6 +11299,9 @@ packages:
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
+  ufo@1.6.3:
+    resolution: {integrity: sha512-yDJTmhydvl5lJzBmy/hyOAA0d+aqCBuwl818haVdYCRrWV84o7YyeVm4QlVHStqNrrJSTb6jKuFAVqAFsr+K3Q==}
+
   ultrahtml@1.6.0:
     resolution: {integrity: sha512-R9fBn90VTJrqqLDwyMph+HGne8eqY1iPfYhPzZrvKpIfwkWZbcYlfpsb8B9dTvBfpy1/hqAD7Wi8EKfP9e8zdw==}
 
@@ -12554,6 +12577,10 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.5
 
+  '@babel/parser@7.29.0':
+    dependencies:
+      '@babel/types': 7.29.0
+
   '@babel/plugin-bugfix-firefox-class-in-computed-class-key@7.25.3(@babel/core@7.28.3)':
     dependencies:
       '@babel/core': 7.28.3
@@ -13208,6 +13235,11 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@babel/types@7.29.0':
+    dependencies:
+      '@babel/helper-string-parser': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
+
   '@biomejs/biome@2.3.5':
     optionalDependencies:
       '@biomejs/cli-darwin-arm64': 2.3.5
@@ -13492,7 +13524,7 @@ snapshots:
     optionalDependencies:
       ioredis: 5.6.1
 
-  '@effect/language-service@0.62.4': {}
+  '@effect/language-service@0.75.1': {}
 
   '@effect/opentelemetry@0.60.0(@effect/platform@0.94.0(effect@3.19.13))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.2.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.208.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.2.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.2.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.2.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.2.0(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.38.0)(effect@3.19.13)':
     dependencies:
@@ -15661,9 +15693,9 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
 
-  '@storybook/builder-vite@10.3.0-alpha.6(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/builder-vite@10.3.0-alpha.7(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
-      '@storybook/csf-plugin': 10.3.0-alpha.6(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/csf-plugin': 10.3.0-alpha.7(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       ts-dedent: 2.2.0
       vite: 7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)
@@ -15710,7 +15742,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@storybook/csf-plugin@10.3.0-alpha.6(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
+  '@storybook/csf-plugin@10.3.0-alpha.7(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       storybook: 8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3))
       unplugin: 2.3.11
@@ -16648,7 +16680,7 @@ snapshots:
       consola: 3.4.2
       defu: 6.1.4
       get-port-please: 3.1.2
-      h3: 1.15.4
+      h3: 1.15.2
       http-shutdown: 1.2.2
       jiti: 1.21.7
       mlly: 1.7.4
@@ -16863,7 +16895,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.22':
     dependencies:
-      '@babel/parser': 7.28.5
+      '@babel/parser': 7.29.0
       '@vue/shared': 3.5.22
       entities: 4.5.0
       estree-walker: 2.0.2
@@ -16876,7 +16908,7 @@ snapshots:
 
   '@vue/compiler-sfc@3.5.22':
     dependencies:
-      '@babel/parser': 7.28.5
+      '@babel/parser': 7.29.0
       '@vue/compiler-core': 3.5.22
       '@vue/compiler-dom': 3.5.22
       '@vue/compiler-ssr': 3.5.22
@@ -17031,11 +17063,13 @@ snapshots:
     dependencies:
       acorn: 8.15.0
 
-  acorn-jsx@5.3.2(acorn@8.15.0):
+  acorn-jsx@5.3.2(acorn@8.16.0):
     dependencies:
-      acorn: 8.15.0
+      acorn: 8.16.0
 
   acorn@8.15.0: {}
+
+  acorn@8.16.0: {}
 
   agent-base@6.0.2:
     dependencies:
@@ -17834,7 +17868,7 @@ snapshots:
 
   decimal.js@10.4.3: {}
 
-  decode-named-character-reference@1.2.0:
+  decode-named-character-reference@1.3.0:
     dependencies:
       character-entities: 2.0.2
 
@@ -17978,7 +18012,7 @@ snapshots:
 
   diff-sequences@29.6.3: {}
 
-  diff@5.2.0: {}
+  diff@5.2.2: {}
 
   diff@8.0.2: {}
 
@@ -19076,6 +19110,18 @@ snapshots:
       ufo: 1.6.1
       uncrypto: 0.1.3
 
+  h3@1.15.5:
+    dependencies:
+      cookie-es: 1.2.2
+      crossws: 0.3.5
+      defu: 6.1.4
+      destr: 2.0.5
+      iron-webcrypto: 1.2.1
+      node-mock-http: 1.0.4
+      radix3: 1.1.2
+      ufo: 1.6.3
+      uncrypto: 0.1.3
+
   h3@2.0.0-beta.4(crossws@0.4.1(srvx@0.8.16)):
     dependencies:
       cookie-es: 2.0.0
@@ -19719,7 +19765,7 @@ snapshots:
       crossws: 0.3.5
       defu: 6.1.4
       get-port-please: 3.1.2
-      h3: 1.15.4
+      h3: 1.15.5
       http-shutdown: 1.2.2
       jiti: 2.6.1
       mlly: 1.7.4
@@ -19916,7 +19962,7 @@ snapshots:
     dependencies:
       '@types/mdast': 3.0.15
       '@types/unist': 2.0.11
-      decode-named-character-reference: 1.2.0
+      decode-named-character-reference: 1.3.0
       mdast-util-to-string: 3.2.0
       micromark: 3.2.0
       micromark-util-decode-numeric-character-reference: 1.1.0
@@ -20068,7 +20114,7 @@ snapshots:
 
   micromark-core-commonmark@1.1.0:
     dependencies:
-      decode-named-character-reference: 1.2.0
+      decode-named-character-reference: 1.3.0
       micromark-factory-destination: 1.1.0
       micromark-factory-label: 1.1.0
       micromark-factory-space: 1.1.0
@@ -20127,8 +20173,8 @@ snapshots:
 
   micromark-extension-mdxjs@1.0.1:
     dependencies:
-      acorn: 8.15.0
-      acorn-jsx: 5.3.2(acorn@8.15.0)
+      acorn: 8.16.0
+      acorn-jsx: 5.3.2(acorn@8.16.0)
       micromark-extension-mdx-expression: 1.0.8
       micromark-extension-mdx-jsx: 1.0.5
       micromark-extension-mdx-md: 1.0.1
@@ -20210,7 +20256,7 @@ snapshots:
 
   micromark-util-decode-string@1.1.0:
     dependencies:
-      decode-named-character-reference: 1.2.0
+      decode-named-character-reference: 1.3.0
       micromark-util-character: 1.2.0
       micromark-util-decode-numeric-character-reference: 1.1.0
       micromark-util-symbol: 1.1.0
@@ -20271,7 +20317,7 @@ snapshots:
     dependencies:
       '@types/debug': 4.1.12
       debug: 4.4.3
-      decode-named-character-reference: 1.2.0
+      decode-named-character-reference: 1.3.0
       micromark-core-commonmark: 1.1.0
       micromark-factory-space: 1.1.0
       micromark-util-character: 1.2.0
@@ -20540,7 +20586,7 @@ snapshots:
       exsolve: 1.0.7
       globby: 14.1.0
       gzip-size: 7.0.0
-      h3: 1.15.4
+      h3: 1.15.5
       hookable: 5.5.3
       httpxy: 0.1.7
       ioredis: 5.6.1
@@ -20638,6 +20684,8 @@ snapshots:
   node-gyp-build@4.8.4: {}
 
   node-mock-http@1.0.2: {}
+
+  node-mock-http@1.0.4: {}
 
   node-releases@2.0.19: {}
 
@@ -20893,7 +20941,7 @@ snapshots:
       '@types/unist': 2.0.11
       character-entities-legacy: 3.0.0
       character-reference-invalid: 2.0.1
-      decode-named-character-reference: 1.2.0
+      decode-named-character-reference: 1.3.0
       is-alphanumerical: 2.0.1
       is-decimal: 2.0.1
       is-hexadecimal: 2.0.1
@@ -21969,7 +22017,7 @@ snapshots:
 
   storybook-solidjs-vite@1.0.0-beta.7(@storybook/test@8.2.7(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vitest@4.0.14(@opentelemetry/api@1.9.0)(@types/node@25.0.3)(@vitest/ui@2.0.5(vitest@2.0.5))(jiti@2.6.1)(jsdom@24.1.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(esbuild@0.21.5)(rollup@4.52.5)(solid-js@1.9.10)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite-plugin-solid@2.11.9(patch_hash=6343d2c7feb2b1dadcf518573736d034c28be5406314a0a737e130a5c971b0ba)(@testing-library/jest-dom@6.4.8)(solid-js@1.9.10)(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1)):
     dependencies:
-      '@storybook/builder-vite': 10.3.0-alpha.6(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
+      '@storybook/builder-vite': 10.3.0-alpha.7(esbuild@0.21.5)(rollup@4.52.5)(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))(vite@7.1.10(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.6.1))
       '@storybook/types': 9.0.0-alpha.1(storybook@8.2.7(@babel/preset-env@7.25.3(@babel/core@7.28.3)))
       magic-string: 0.30.19
       solid-js: 1.9.10
@@ -22420,6 +22468,8 @@ snapshots:
 
   ufo@1.6.1: {}
 
+  ufo@1.6.3: {}
+
   ultrahtml@1.6.0: {}
 
   unbzip2-stream@1.4.3:
@@ -22863,7 +22913,7 @@ snapshots:
   unplugin@2.3.11:
     dependencies:
       '@jridgewell/remapping': 2.3.5
-      acorn: 8.15.0
+      acorn: 8.16.0
       picomatch: 4.0.3
       webpack-virtual-modules: 0.6.2
 
@@ -22966,7 +23016,7 @@ snapshots:
   uvu@0.5.6:
     dependencies:
       dequal: 2.0.3
-      diff: 5.2.0
+      diff: 5.2.2
       kleur: 4.1.5
       sade: 1.8.1
 

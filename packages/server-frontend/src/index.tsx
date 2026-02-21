@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schedule, Stream } from "effect";
 import { EffectRuntimeProvider } from "@macrograph/package-sdk/ui";
 import {
 	ContextualSidebarProvider,
@@ -38,6 +38,36 @@ export const UILive = (runtime: EffectRuntime.EffectRuntime) =>
 					.pipe(
 						Effect.tapDefect(() => Effect.logError("Failed to get project")),
 					),
+			);
+
+			// On reconnection, re-fetch the full project state to ensure consistency.
+			// We add a small delay to allow the RPC client to reconnect with the
+			// new token before making requests. If it still fails, retry.
+			yield* realtime.reconnected().pipe(
+				Stream.runForEach(() =>
+					Effect.gen(function* () {
+						yield* Effect.log("Reconnected — re-fetching project state");
+
+						const data = yield* rpc.GetProject({}).pipe(
+							Effect.retry({ times: 3, schedule: Schedule.spaced("1 second") }),
+							Effect.tapError(() =>
+								Effect.logError(
+									"Failed to re-fetch project after reconnection",
+								),
+							),
+						);
+
+						console.log("Refetched data", data);
+
+						actions.setProject(data);
+						yield* Effect.log("Project state refreshed after reconnection");
+					}).pipe(
+						Effect.catchAllCause((cause) =>
+							Effect.logError("Reconnection state refresh failed", cause),
+						),
+					),
+				),
+				Effect.forkScoped,
 			);
 
 			const layoutState = createLayoutState({

@@ -74,11 +74,11 @@ const runtime = ManagedRuntime.make(
 	EffectRuntime.layer.pipe(
 		Layer.provide(TracingLive),
 		Layer.provide(ImportMetaEnvConfig),
+		Layer.provide(Logger.pretty),
 	),
 );
 
 Layer.mergeAll(RegisterPackages, UILive(runtime)).pipe(
-	Layer.provide(Logger.pretty),
 	Layer.launch,
 	runtime.runPromise,
 );
