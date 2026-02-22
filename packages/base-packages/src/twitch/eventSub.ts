@@ -3,7 +3,7 @@ import { Schema as S } from "effect";
 const SubscriptionType =
 	<Self>() =>
 	<
-		const Type extends string,
+		const Type extends (typeof SUBSCRIPTION_TYPES)[number],
 		Event extends S.Struct.Fields,
 		Condition extends S.Struct.Fields,
 	>(opts: {
@@ -1484,3 +1484,141 @@ export function isEventSubMessageType<
 ): msg is Extract<EventSubMessage, { metadata: { message_type: T } }> {
 	return msg.metadata.message_type === type;
 }
+
+export const SUBSCRIPTION_TYPES = [
+	"channel.ban",
+	"channel.unban",
+	"channel.update",
+	"channel.ad_break.begin",
+	"channel.raid",
+	"channel.chat.clear",
+	"channel.chat.clear_user_messages",
+	"channel.chat.message",
+	"channel.chat.message_delete",
+	"channel.chat.notification",
+	"channel.chat_settings.update",
+	"channel.chat.user_message_hold",
+	"channel.chat.user_message_update",
+	"channel.subscribe",
+	"channel.subscription.end",
+	"channel.subscription.gift",
+	"channel.subscription.message",
+	"channel.cheer",
+	"channel.moderator.add",
+	"channel.moderator.remove",
+	"channel.vip.add",
+	"channel.vip.remove",
+	"channel.moderate",
+	"channel.unban_request.create",
+	"channel.unban_request.resolve",
+	"channel.suspicious_user.update",
+	"channel.suspicious_user.message",
+	"channel.warning.acknowledge",
+	"channel.warning.send",
+	"automod.settings.update",
+	"automod.terms.update",
+	"channel.poll.begin",
+	"channel.poll.progress",
+	"channel.poll.end",
+	"channel.prediction.begin",
+	"channel.prediction.progress",
+	"channel.prediction.lock",
+	"channel.prediction.end",
+	"channel.channel_points_automatic_reward_redemption.add",
+	"channel.hype_train.begin",
+	"channel.hype_train.progress",
+	"channel.hype_train.end",
+	"channel.charity_campaign.donate",
+	"channel.charity_campaign.start",
+	"channel.charity_campaign.progress",
+	"channel.charity_campaign.stop",
+	"channel.shared_chat.session.begin",
+	"channel.shared_chat.session.update",
+	"channel.shared_chat.session.end",
+	"channel.bits.use",
+] as const;
+
+export const SUBSCRIPTION_CATEGORIES = {
+	Chat: [
+		"channel.chat.message",
+		"channel.chat.clear",
+		"channel.chat.clear_user_messages",
+		"channel.chat.message_delete",
+		"channel.chat.notification",
+		"channel.chat_settings.update",
+		"channel.chat.user_message_hold",
+		"channel.chat.user_message_update",
+	],
+	Moderation: [
+		"channel.ban",
+		"channel.unban",
+		"channel.moderate",
+		"channel.unban_request.create",
+		"channel.unban_request.resolve",
+		"channel.suspicious_user.update",
+		"channel.suspicious_user.message",
+		"channel.warning.acknowledge",
+		"channel.warning.send",
+		"channel.moderator.add",
+		"channel.moderator.remove",
+		"channel.vip.add",
+		"channel.vip.remove",
+	],
+	Subscriptions: [
+		"channel.subscribe",
+		"channel.subscription.end",
+		"channel.subscription.gift",
+		"channel.subscription.message",
+	],
+	"Channel Points": ["channel.channel_points_automatic_reward_redemption.add"],
+	Polls: ["channel.poll.begin", "channel.poll.progress", "channel.poll.end"],
+	Predictions: [
+		"channel.prediction.begin",
+		"channel.prediction.progress",
+		"channel.prediction.lock",
+		"channel.prediction.end",
+	],
+	"Hype Train": [
+		"channel.hype_train.begin",
+		"channel.hype_train.progress",
+		"channel.hype_train.end",
+	],
+	Charity: [
+		"channel.charity_campaign.donate",
+		"channel.charity_campaign.start",
+		"channel.charity_campaign.progress",
+		"channel.charity_campaign.stop",
+	],
+	AutoMod: ["automod.settings.update", "automod.terms.update"],
+	"Shared Chat": [
+		"channel.shared_chat.session.begin",
+		"channel.shared_chat.session.update",
+		"channel.shared_chat.session.end",
+	],
+	Other: [
+		"channel.update",
+		"channel.raid",
+		"channel.cheer",
+		"channel.ad_break.begin",
+		"channel.bits.use",
+	],
+} as const;
+
+export type SubscriptionCategory = keyof typeof SUBSCRIPTION_CATEGORIES;
+
+export const SUBSCRIPTION_CATEGORY_OPTIONS: {
+	value: SubscriptionCategory;
+	label: string;
+}[] = [
+	{ value: "Chat", label: "Chat" },
+	{ value: "Moderation", label: "Moderation" },
+	{ value: "Subscriptions", label: "Subscriptions" },
+	{ value: "Channel Points", label: "Channel Points" },
+	{ value: "Polls", label: "Polls" },
+	{ value: "Predictions", label: "Predictions" },
+	{ value: "Hype Train", label: "Hype Train" },
+	{ value: "Charity", label: "Charity" },
+	{ value: "AutoMod", label: "AutoMod" },
+	{ value: "Shared Chat", label: "Shared Chat" },
+	{ value: "Other", label: "Other" },
+];

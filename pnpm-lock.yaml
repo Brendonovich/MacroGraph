@@ -844,6 +844,9 @@ importers:
       '@macrograph/project-domain':
         specifier: workspace:*
         version: link:../project-domain
+      '@macrograph/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@macrograph/web-domain':
         specifier: workspace:*
         version: link:../web-domain

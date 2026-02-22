@@ -16,6 +16,7 @@ import {
 	Exit,
 	Option,
 	pipe,
+	Ref,
 	Schema as S,
 	Scope,
 	Stream,
@@ -42,15 +43,27 @@ export default EngineDef.toLayer((ctx) =>
 		type SocketState = {
 			displayName: string;
 			lock: Effect.Semaphore;
-			state: "connecting" | "connected";
 			closed: Deferred.Deferred<void>;
 			scope: Scope.CloseableScope;
-		};
+		} & ({ state: "connecting" } | { state: "connected"; sessionId: string });
 
 		const sockets = new Map<AccountId, SocketState>();
+		const activeSubscriptions = new Map<AccountId, Map<string, string>>(); // accountId -> (subscriptionType -> subscriptionId)
+
+		// In-memory state for enabled subscriptions per account, initialized from persisted state
+		const enabledSubscriptionsRef = yield* Ref.make<Record<string, string[]>>(
+			(ctx.initialState?.enabledSubscriptions ?? {}) as any,
+		);
 
 		const runSocketEdit = <A, E>(e: Effect.Effect<A, E>) =>
 			pipe(e, Effect.andThen(ctx.dirtyState), Effect.forkDaemon);
+
+		const getEnabledSubscriptions = (
+			accountId: AccountId,
+		): Effect.Effect<string[]> =>
+			Ref.get(enabledSubscriptionsRef).pipe(
+				Effect.map((state) => state[accountId] ?? []),
+			);
 
 		const getCredential = (accountId: AccountId) =>
 			ctx.credentials.get.pipe(
@@ -246,37 +259,64 @@ export default EngineDef.toLayer((ctx) =>
 					cause: "session-welcome-expected",
 				});
 
+			const sessionId = firstEvent.payload.session.id;
 			yield* Effect.gen(function* () {
 				yield* deleteOldSubscriptions(helixClient);
 
-				yield* Effect.log("Creating subscriptions");
-				yield* Effect.all(
-					pipe(
-						Object.values(SubscriptionEvent.Any.members),
-						Array.take(10),
-						Array.map((def) =>
-							helixClient
-								.createEventSubSubscription({
-									payload: {
-										type: def.type,
-										version: def.version.toString(),
-										condition: buildCondition(def, accountId),
-										transport: {
-											method: "websocket",
-											session_id: firstEvent.payload.session.id,
-										},
-									} as any,
-								})
-								.pipe(
-									Effect.withSpan("createSubscription", {
-										attributes: { "eventsub.type": def.type },
-									}),
-								),
+				// Create subscriptions that are enabled for this account
+				const enabledSubs = yield* getEnabledSubscriptions(accountId);
+				const accountActiveSubs = new Map<string, string>();
+				activeSubscriptions.set(accountId, accountActiveSubs);
+
+				if (enabledSubs.length > 0) {
+					yield* Effect.log(
+						`Creating ${enabledSubs.length} enabled subscriptions`,
+					);
+					yield* Effect.all(
+						pipe(
+							enabledSubs,
+							Array.map((subType) => {
+								const def = getSubscriptionDef(subType);
+								if (!def) return Effect.void;
+								return helixClient
+									.createEventSubSubscription({
+										payload: {
+											type: def.type,
+											version: def.version.toString(),
+											condition: buildCondition(def, accountId),
+											transport: { method: "websocket", session_id: sessionId },
+										} as any,
+									})
+									.pipe(
+										Effect.tap((result: any) => {
+											if (result?.data?.[0]?.id) {
+												accountActiveSubs.set(subType, result.data[0].id);
+											}
+										}),
+										Effect.withSpan("createSubscription", {
+											attributes: { "eventsub.type": def.type },
+										}),
+										Effect.catchAll((error) => {
+											Effect.logError(
+												`Failed to create subscription ${subType}:`,
+												error,
+											);
+											return Effect.void;
+										}),
+									);
+							}),
 						),
-					),
-					{ concurrency: 2 },
-				).pipe(Effect.withSpan("createTestSubscriptions"));
-				socket.state = "connected";
+						{ concurrency: 5 },
+					).pipe(Effect.withSpan("createEnabledSubscriptions"));
+				} else {
+					yield* Effect.log("No enabled subscriptions to create");
+				}
+
+				sockets.set(accountId, {
+					...socket,
+					state: "connected",
+					sessionId: sessionId,
+				});
 				yield* Effect.log("Socket Connected");
 			}).pipe(Effect.ensuring(ctx.dirtyState));
 
@@ -325,8 +365,104 @@ export default EngineDef.toLayer((ctx) =>
 			const socket = sockets.get(accountId);
 			if (!socket) return;
 
+			activeSubscriptions.delete(accountId);
 			yield* Scope.close(socket.scope, Exit.succeed(null));
 			yield* Deferred.await(socket.closed);
+		});
+
+		// Helper to get subscription definition by type
+		const getSubscriptionDef = (type: string) => {
+			return Object.values(SubscriptionEvent.Any.members).find(
+				(def: any) => def.type === type,
+			);
+		};
+
+		// Toggle EventSub subscription for an account
+		const toggleEventSubSubscription = Effect.fnUntraced(function* ({
+			accountId,
+			subscriptionType,
+			enabled,
+		}: {
+			accountId: AccountId;
+			subscriptionType: string;
+			enabled: boolean;
+		}) {
+			// Update state
+			const currentEnabled = yield* getEnabledSubscriptions(accountId);
+			const newEnabled = enabled
+				? [...currentEnabled, subscriptionType]
+				: currentEnabled.filter((t: string) => t !== subscriptionType);
+
+			// Update in-memory state
+			yield* Ref.update(enabledSubscriptionsRef, (state) => ({
+				...state,
+				[accountId]: newEnabled,
+			}));
+
+			// Persist state
+			if (ctx.saveState) {
+				const currentState = yield* Ref.get(enabledSubscriptionsRef);
+				yield* ctx.saveState({ enabledSubscriptions: currentState });
+			}
+
+			// If socket is connected, create/delete subscription in real-time
+			const socket = sockets.get(accountId);
+			if (socket?.state === "connected") {
+				const client = yield* createHelixClient(accountId);
+				const accountActiveSubs = activeSubscriptions.get(accountId);
+				if (enabled) {
+					// Create subscription
+					const def = getSubscriptionDef(subscriptionType);
+					if (!def) return;
+					yield* client
+						.createEventSubSubscription({
+							payload: {
+								type: def.type,
+								version: def.version.toString(),
+								condition: buildCondition(def, accountId),
+								transport: {
+									method: "websocket",
+									session_id: socket.sessionId,
+								},
+							},
+						})
+						.pipe(
+							Effect.tap((result: any) => {
+								if (result?.data?.[0]?.id) {
+									accountActiveSubs?.set(subscriptionType, result.data[0].id);
+								}
+							}),
+							Effect.catchAll((error) => {
+								Effect.logError(
+									`Failed to create subscription ${subscriptionType}:`,
+									error,
+								);
+								return Effect.void;
+							}),
+						);
+				} else {
+					// Delete subscription
+					const subId = accountActiveSubs?.get(subscriptionType);
+					if (subId) {
+						yield* client
+							.deleteEventSubSubscription({ urlParams: { id: subId } })
+							.pipe(
+								Effect.tap(() => {
+									accountActiveSubs?.delete(subscriptionType);
+								}),
+								Effect.catchAll((error) => {
+									Effect.logError(
+										`Failed to delete subscription ${subId}:`,
+										error,
+									);
+									return Effect.void;
+								}),
+							);
+					}
+				}
+			}
+
+			yield* ctx.dirtyState;
 		});
 
 		// Helper to wrap Helix API calls with error handling
@@ -354,6 +490,7 @@ export default EngineDef.toLayer((ctx) =>
 		return {
 			clientState: Effect.gen(function* () {
 				const creds = yield* ctx.credentials.get;
+				const subState = yield* Ref.get(enabledSubscriptionsRef);
 				return {
 					accounts: creds
 						.filter((c) => c.provider === "twitch")
@@ -365,6 +502,7 @@ export default EngineDef.toLayer((ctx) =>
 								eventSubSocket: {
 									state: sockets.get(id)?.state ?? "disconnected",
 								},
+								enabledSubscriptions: subState[id] ?? [],
 							};
 						}),
 				};
@@ -396,6 +534,7 @@ export default EngineDef.toLayer((ctx) =>
 						Effect.provide(Socket.layerWebSocketConstructorGlobal),
 					),
 				DisconnectEventSub: disconnectEventSub,
+				ToggleEventSubSubscription: toggleEventSubSubscription,
 			},
 			runtimeRpcs: {
 				// All 75 Helix API RPCs

@@ -1,6 +1,12 @@
 import { Option } from "effect";
 import { ContextMenu } from "@kobalte/core/context-menu";
-import { type Graph, IO, Node, type Schema } from "@macrograph/project-domain";
+import {
+	type Graph,
+	IO,
+	Node,
+	type Request,
+	type Schema,
+} from "@macrograph/project-domain";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
@@ -15,7 +21,9 @@ import {
 	Show,
 } from "solid-js";
 
+import { ProjectActions } from "../Actions";
 import type { NodeState } from "../EditorState";
+import { useProjectService } from "../EffectRuntime";
 import { useGraphContext } from "./Context";
 import {
 	createLongPress,
@@ -76,6 +84,7 @@ export function GraphView(
 	);
 
 	const graphCtx = useGraphContext();
+	const actions = useProjectService(ProjectActions);
 	const [ref, setRef] = createSignal<HTMLDivElement | undefined>();
 	const bounds = createElementBounds(ref);
 	const mouse = createMousePosition();
@@ -653,6 +662,28 @@ export function GraphView(
 						? { from: { ...position }, to: freeEnd, opacity: 0.5 }
 						: { to: { ...position }, from: freeEnd, opacity: 0.5 },
 				);
+			}
+		}
+
+		// Render ghost connections for pending ConnectIO requests
+		const pendingConnects = actions.pending.filter(
+			(req): req is Request.ConnectIO =>
+				req._tag === "ConnectIO" && req.graph === graphCtx.id(),
+		);
+
+		for (const pending of pendingConnects) {
+			const [outNodeId, outId] = pending.output;
+			const [inNodeId, inId] = pending.input;
+
+			const outPosition = graphCtx.ioPositions.get(`${outNodeId}:o:${outId}`);
+			const inPosition = graphCtx.ioPositions.get(`${inNodeId}:i:${inId}`);
+
+			if (outPosition && inPosition) {
+				ret.push({
+					from: { ...outPosition },
+					to: { ...inPosition },
+					opacity: 0.5,
+				});
 			}
 		}
 

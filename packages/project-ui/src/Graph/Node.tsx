@@ -2,7 +2,13 @@ import { Match } from "effect";
 import type { Mutable } from "effect/Types";
 import { Listbox } from "@kobalte/core/listbox";
 import { Popover } from "@kobalte/core/popover";
-import type { Graph, IO, Node, Schema } from "@macrograph/project-domain";
+import type {
+	Graph,
+	IO,
+	Node,
+	Request,
+	Schema,
+} from "@macrograph/project-domain";
 import * as T from "@macrograph/typesystem";
 import { createElementBounds } from "@solid-primitives/bounds";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -126,6 +132,7 @@ export function NodeIO(
 		Mutable<IO.NodeIO>,
 ) {
 	const graphCtx = useGraphContext();
+	const actions = useProjectService(ProjectActions);
 
 	function useIOPositionTrack(
 		index: Accessor<number>,
@@ -195,9 +202,19 @@ export function NodeIO(
 						const [draggingPointers, setDraggingPointers] =
 							createSignal<number[]>();
 
-						const connected = () =>
-							(draggingPointers()?.length ?? 0) > 0 ||
-							props.connections?.in?.includes(input.id);
+						const connected = () => {
+							const isDragging = (draggingPointers()?.length ?? 0) > 0;
+							const hasConnection = props.connections?.in?.includes(input.id);
+
+							const isPendingConnect = actions.pending.some(
+								(req): req is Request.ConnectIO =>
+									req._tag === "ConnectIO" &&
+									req.input[0] === props.id &&
+									req.input[1] === input.id,
+							);
+
+							return isDragging || hasConnection || isPendingConnect;
+						};
 
 						const pointerHandlers: Pick<
 							JSX.CustomEventHandlersCamelCase<any>,
@@ -272,9 +289,19 @@ export function NodeIO(
 						const [draggingPointers, setDraggingPointers] =
 							createSignal<number[]>();
 
-						const connected = () =>
-							(draggingPointers()?.length ?? 0) > 0 ||
-							props.connections?.out?.includes(output.id);
+						const connected = () => {
+							const isDragging = (draggingPointers()?.length ?? 0) > 0;
+							const hasConnection = props.connections?.out?.includes(output.id);
+
+							const isPendingConnect = actions.pending.some(
+								(req): req is Request.ConnectIO =>
+									req._tag === "ConnectIO" &&
+									req.output[0] === props.id &&
+									req.output[1] === output.id,
+							);
+
+							return isDragging || hasConnection || isPendingConnect;
+						};
 
 						const pointerHandlers: Pick<
 							JSX.CustomEventHandlersCamelCase<any>,

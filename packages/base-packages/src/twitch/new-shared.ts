@@ -2,7 +2,12 @@ import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
 import { Resource } from "@macrograph/package-sdk";
 
-import { AccountId, ConnectionFailed, TwitchAPIError } from "./new-types";
+import {
+	AccountId,
+	ConnectionFailed,
+	TwitchAPIError,
+	MissingCredential,
+} from "./new-types";
 import { ChannelRpcs } from "./rpcs-channel";
 // Import all RPC groups
 import { ChatRpcs } from "./rpcs-chat";
@@ -21,6 +26,14 @@ export class ClientRpcs extends RpcGroup.make(
 	}),
 	Rpc.make("DisconnectEventSub", {
 		payload: S.Struct({ accountId: AccountId }),
+	}),
+	Rpc.make("ToggleEventSubSubscription", {
+		payload: S.Struct({
+			accountId: AccountId,
+			subscriptionType: S.String,
+			enabled: S.Boolean,
+		}),
+		error: MissingCredential,
 	}),
 ) {}
 
@@ -62,6 +75,7 @@ export class ClientState extends S.Struct({
 				S.Struct({ state: S.Literal("connecting") }),
 				S.Struct({ state: S.Literal("connected") }),
 			),
+			enabledSubscriptions: S.Array(S.String),
 		}),
 	),
 }) {}

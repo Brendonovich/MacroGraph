@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/correctness/useYield: generator functions in this file intentionally don't always yield */
-import { Effect, Option, pipe } from "effect";
+import { Effect, Option, pipe, Schema as S } from "effect";
 import { Package, PackageEngine, t } from "@macrograph/package-sdk";
 
 import { SubscriptionEvent } from "./eventSub";
@@ -18,6 +18,12 @@ export class EngineDef extends PackageEngine.define({
 	events: SubscriptionEvent.Any.members,
 	clientState: ClientState,
 	resources: [TwitchAccount, TwitchEventSub],
+	engineState: S.Struct({
+		enabledSubscriptions: S.Record({
+			key: AccountId,
+			value: S.Array(S.String),
+		}),
+	}),
 }) {}
 
 const getSocketUserId = (data: SubscriptionEvent.Any) => {

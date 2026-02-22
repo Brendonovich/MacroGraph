@@ -64,12 +64,17 @@ export namespace PackageEngine {
 		Events extends AnyEvent,
 		ClientState extends S.Schema.Any,
 	> = {
-		emitEvent(event: S.Schema.Type<Events>): void;
-		dirtyState: Effect.Effect<void>;
-		credentials: LookupRefNS.LookupRef<ReadonlyArray<Credential>>;
-		refreshCredential(provider: string, id: string): Effect.Effect<void>;
-		initialState?: S.Schema.Type<ClientState>;
-		saveState?: (state: S.Schema.Type<ClientState>) => Effect.Effect<void>;
+		readonly emitEvent: (event: S.Schema.Type<Events>) => void;
+		readonly dirtyState: Effect.Effect<void>;
+		readonly credentials: LookupRefNS.LookupRef<ReadonlyArray<Credential>>;
+		readonly refreshCredential: (
+			provider: string,
+			id: string,
+		) => Effect.Effect<void>;
+		readonly initialState?: S.Schema.Type<ClientState>;
+		readonly saveState?: (
+			state: S.Schema.Type<ClientState>,
+		) => Effect.Effect<void>;
 	};
 
 	export type Built<Engine> = Engine extends PackageEngine<

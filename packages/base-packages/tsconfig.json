@@ -23,7 +23,7 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"types": ["unplugin-icons/types/solid"],
+		"types": ["@macrograph/ui/types"],
 		"plugins": [{ "name": "@effect/language-service" }]
 	},
 	"include": ["src"],
