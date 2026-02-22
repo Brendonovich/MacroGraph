@@ -58,17 +58,6 @@ const matchesSocket =
 	<T>(data: T) =>
 		getSocketUserId(data as any) === properties.socket.value;
 
-// const eventSubEvent =
-// 	<T extends SubscriptionEvent.Any["_tag"]>(tag: T) =>
-// 	(
-// 		data: Extract<SubscriptionEvent.Any, { _tag: T }>,
-// 		{ properties }: { properties: { socket: { value: string } } },
-// 	): Option.Option<Extract<SubscriptionEvent.Any, { _tag: T }>> =>
-// 		Option.some(data).pipe(
-// 			Option.filter((data) => data._tag === tag),
-// 			Option.filter(matchesSocket(properties)),
-// 		);
-
 const filterEvent =
 	<Tag extends SubscriptionEvent.Any["_tag"]>(
 		tag: Tag,

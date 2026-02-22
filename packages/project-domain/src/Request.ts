@@ -170,6 +170,15 @@ export class FetchSuggestions extends S.TaggedRequest<FetchSuggestions>()(
 	},
 ) {}
 
+export class SetNodeFoldPins extends S.TaggedRequest<SetNodeFoldPins>()(
+	"SetNodeFoldPins",
+	{
+		payload: { graph: Graph.Id, node: Node.Id, foldPins: S.Boolean },
+		success: ProjectEvent.NodeFoldPinsUpdated,
+		failure: S.Union(Graph.NotFound, Node.NotFound),
+	},
+) {}
+
 export type Request =
 	| GetProject
 	| GetPackageEngineState
@@ -181,6 +190,7 @@ export type Request =
 	| DeleteGraphItems
 	| SetNodeProperty
 	| SetInputDefault
+	| SetNodeFoldPins
 	| CreateResourceConstant
 	| UpdateResourceConstant
 	| DeleteResourceConstant

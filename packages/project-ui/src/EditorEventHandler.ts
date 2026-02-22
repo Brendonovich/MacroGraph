@@ -69,6 +69,17 @@ export class EditorEventHandler extends Effect.Service<EditorEventHandler>()(
 								}),
 							);
 						}),
+					NodeFoldPinsUpdated: (e) =>
+						Effect.sync(() => {
+							setState(
+								"graphs",
+								e.graph,
+								"nodes",
+								(n) => n.id === e.node,
+								"foldPins",
+								e.foldPins,
+							);
+						}),
 					ResourceConstantUpdated: (e) =>
 						Effect.sync(() => {
 							setState(
@@ -176,6 +187,7 @@ export class EditorEventHandler extends Effect.Service<EditorEventHandler>()(
 										name: e.node.name,
 										schema: e.node.schema,
 										position: e.node.position,
+										foldPins: e.node.foldPins,
 										inputs: e.io.inputs,
 										outputs: e.io.outputs,
 										properties:

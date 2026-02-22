@@ -26,6 +26,7 @@ export type NodeState = {
 	properties?: Record<string, unknown>;
 	inputDefaults?: Record<IO.Id, unknown>;
 	position: Position;
+	foldPins?: boolean;
 } & Mutable<IO.NodeIO>;
 
 export type GraphState = Omit<Graph.Graph, "connections" | "nodes"> & {
@@ -142,6 +143,7 @@ export class EditorState extends Effect.Service<EditorState>()("EditorState", {
 												name: node.name,
 												schema: node.schema,
 												position: node.position,
+												foldPins: node.foldPins,
 												inputs: data.nodesIO.get(node.id)?.inputs ?? [],
 												outputs: data.nodesIO.get(node.id)?.outputs ?? [],
 												properties: node.properties?.pipe(

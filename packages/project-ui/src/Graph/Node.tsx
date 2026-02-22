@@ -33,12 +33,14 @@ import { ProjectActions } from "../Actions";
 import { useProjectService } from "../EffectRuntime";
 import { isTouchDevice } from "../platform";
 import { useGraphContext } from "./Context";
+import { createPointerDrag } from "./hooks";
 
 export function NodeRoot(
 	props: ParentProps<{
 		id: Node.Id;
 		position: { x: number; y: number };
 		selected?: boolean | string;
+		foldPins?: boolean;
 	}>,
 ) {
 	const graphCtx = useGraphContext();
@@ -128,6 +130,8 @@ export function NodeIO(
 		onDefaultValueChange?(id: IO.Id, value: unknown): void;
 		/** The IO ref currently being snapped to (if any) — highlights the matching pin */
 		snapTarget?: IO.RefString;
+		foldPins?: boolean;
+		onExpand?(): void;
 	}> &
 		Mutable<IO.NodeIO>,
 ) {
@@ -169,181 +173,226 @@ export function NodeIO(
 		type: "i" | "o",
 		onPointerUp: () => void,
 	) {
-		const res = props.onPinDragStart?.(event, type, id);
-		if (!res) return false;
-
 		// necessary to avoid touch events going to the orignating element instead of the window on mobile
 		if (event.target.hasPointerCapture(event.pointerId))
 			event.target.releasePointerCapture(event.pointerId);
 
-		createRoot((dispose) => {
-			createEventListener(window, "pointerup", (upEvent) => {
-				props.onPinDragEnd?.(type, id, {
-					x: upEvent.clientX - props.graphBounds.left,
-					y: upEvent.clientY - props.graphBounds.top,
-				});
-				onPointerUp();
-				dispose();
-			});
+		let dragStarted = false;
+
+		createPointerDrag({
+			pointerId: event.pointerId,
+			startPosition: { x: event.clientX, y: event.clientY },
+			threshold: 3, // 3px threshold to distinguish click from drag
+			callbacks: {
+				onMove: (e) => {
+					if (!dragStarted) {
+						// Threshold passed - start the drag
+						const res = props.onPinDragStart?.(e, type, id);
+						if (!res) return false; // Stop tracking if drag start rejected
+						dragStarted = true;
+					}
+				},
+				onUp: (e) => {
+					// Always call onPointerUp to clear local dragging state
+					onPointerUp();
+					// Note: onPinDragEnd is NOT called here - GraphView handles cleanup
+					// in its onPointerUp handler to support context menu flow
+				},
+			},
 		});
 
 		return true;
 	}
 
+	const filteredInputs = () =>
+		props.inputs.filter(
+			(i) => !props.foldPins || props.connections?.in?.includes(i.id),
+		);
+	const filteredOutputs = () =>
+		props.outputs.filter(
+			(o) => !props.foldPins || props.connections?.out?.includes(o.id),
+		);
+
 	return (
-		<div class="flex flex-row gap-2 text-xs text-sm">
-			<div class="px-1.5 py-2 flex flex-col gap-2 items-start">
-				<For each={props.inputs}>
-					{(input, i) => {
-						const [ref, setRef] = createSignal<HTMLDivElement>();
+		<>
+			<div class="flex flex-row gap-2 text-xs text-sm">
+				<div class="px-1.5 py-2 flex flex-col gap-2 items-start">
+					<For each={filteredInputs()}>
+						{(input, i) => {
+							const [ref, setRef] = createSignal<HTMLDivElement>();
 
-						useIOPositionTrack(i, input.id, "i", ref);
+							useIOPositionTrack(i, input.id, "i", ref);
 
-						const [draggingPointers, setDraggingPointers] =
-							createSignal<number[]>();
+							const [draggingPointers, setDraggingPointers] =
+								createSignal<number[]>();
 
-						const connected = () => {
-							const isDragging = (draggingPointers()?.length ?? 0) > 0;
-							const hasConnection = props.connections?.in?.includes(input.id);
+							const connected = () => {
+								const isDragging = (draggingPointers()?.length ?? 0) > 0;
+								const hasConnection = props.connections?.in?.includes(input.id);
 
-							const isPendingConnect = actions.pending.some(
-								(req): req is Request.ConnectIO =>
-									req._tag === "ConnectIO" &&
-									req.input[0] === props.id &&
-									req.input[1] === input.id,
-							);
+								const isPendingConnect = actions.pending.some(
+									(req): req is Request.ConnectIO =>
+										req._tag === "ConnectIO" &&
+										req.input[0] === props.id &&
+										req.input[1] === input.id,
+								);
 
-							return isDragging || hasConnection || isPendingConnect;
-						};
+								return isDragging || hasConnection || isPendingConnect;
+							};
 
-						const pointerHandlers: Pick<
-							JSX.CustomEventHandlersCamelCase<any>,
-							"onPointerDown" | "onPointerUp" | "onDblClick"
-						> = {
-							onPointerDown: (e) => {
-								if (
-									onPinPointerDown(e, input.id, "i", () =>
+							const pointerHandlers: Pick<
+								JSX.CustomEventHandlersCamelCase<any>,
+								"onPointerDown" | "onPointerUp" | "onDblClick"
+							> = {
+								onPointerDown: (e) => {
+									if (
+										onPinPointerDown(e, input.id, "i", () =>
+											setDraggingPointers((s) =>
+												s?.filter((p) => p !== e.pointerId),
+											),
+										)
+									) {
 										setDraggingPointers((s) =>
-											s?.filter((p) => p !== e.pointerId),
-										),
-									)
-								) {
-									setDraggingPointers((s) =>
-										s ? [...s, e.pointerId] : [e.pointerId],
-									);
-								}
-							},
-							onPointerUp: (e) => props.onPinPointerUp?.(e, "i", input.id),
-							onDblClick: () => props.onPinDoubleClick?.("i", input.id),
-						};
-
-						const dataVariant = createMemo(() =>
-							input.variant._tag === "Data" ? input.variant : null,
-						);
-
-						const deserializedType = createMemo(() => {
-							const v = dataVariant();
-							return v ? T.deserialize(v.type) : null;
-						});
-
-						const isStringType = createMemo(() => {
-							const t = deserializedType();
-							return t !== null && T.primaryTypeOf_(t)._tag === "String";
-						});
-
-						return (
-							<div class="flex flex-row items-center space-x-1.5 h-5">
-								<IOPin
-									connected={connected()}
-									highlighted={props.snapTarget === `${props.id}:i:${input.id}`}
-									ref={setRef}
-									variant={input.variant}
-									pointerHandlers={pointerHandlers}
-								/>
-								<span>{input.name}</span>
-								<Show when={isStringType() && !connected()}>
-									<DefaultStringInput
-										value={
-											(props.defaultValues?.[input.id] as string | undefined) ??
-											""
-										}
-										onChange={(v) => props.onDefaultValueChange?.(input.id, v)}
-										graphId={graphCtx.id()}
-										nodeId={props.id}
-										inputId={input.id}
-									/>
-								</Show>
-							</div>
-						);
-					}}
-				</For>
-			</div>
-			<div class="flex-1" />
-			<div class="px-1.5 py-2 flex flex-col gap-2.5 items-end">
-				<For each={props.outputs}>
-					{(output, i) => {
-						const [ref, setRef] = createSignal<HTMLDivElement>();
-
-						useIOPositionTrack(i, output.id, "o", ref);
-
-						const [draggingPointers, setDraggingPointers] =
-							createSignal<number[]>();
-
-						const connected = () => {
-							const isDragging = (draggingPointers()?.length ?? 0) > 0;
-							const hasConnection = props.connections?.out?.includes(output.id);
-
-							const isPendingConnect = actions.pending.some(
-								(req): req is Request.ConnectIO =>
-									req._tag === "ConnectIO" &&
-									req.output[0] === props.id &&
-									req.output[1] === output.id,
-							);
-
-							return isDragging || hasConnection || isPendingConnect;
-						};
-
-						const pointerHandlers: Pick<
-							JSX.CustomEventHandlersCamelCase<any>,
-							"onPointerDown" | "onPointerUp" | "onDblClick"
-						> = {
-							onPointerDown: (e) => {
-								if (
-									onPinPointerDown(e, output.id, "o", () =>
-										setDraggingPointers((s) =>
-											s?.filter((p) => p !== e.pointerId),
-										),
-									)
-								) {
-									setDraggingPointers((s) =>
-										s ? [...s, e.pointerId] : [e.pointerId],
-									);
-								}
-							},
-							onPointerUp: (e) => props.onPinPointerUp?.(e, "o", output.id),
-							onDblClick: () => props.onPinDoubleClick?.("o", output.id),
-						};
-
-						return (
-							<div class="flex flex-row items-center space-x-1.5 h-4.5">
-								<Show when={output.name}>
-									<span>{output.name}</span>
-								</Show>
-								<IOPin
-									connected={connected()}
-									highlighted={
-										props.snapTarget === `${props.id}:o:${output.id}`
+											s ? [...s, e.pointerId] : [e.pointerId],
+										);
 									}
-									ref={setRef}
-									variant={output.variant}
-									pointerHandlers={pointerHandlers}
-								/>
-							</div>
-						);
-					}}
-				</For>
+								},
+								onPointerUp: (e) => props.onPinPointerUp?.(e, "i", input.id),
+								onDblClick: () => props.onPinDoubleClick?.("i", input.id),
+							};
+
+							const dataVariant = createMemo(() =>
+								input.variant._tag === "Data" ? input.variant : null,
+							);
+
+							const deserializedType = createMemo(() => {
+								const v = dataVariant();
+								return v ? T.deserialize(v.type) : null;
+							});
+
+							const isStringType = createMemo(() => {
+								const t = deserializedType();
+								return t !== null && T.primaryTypeOf_(t)._tag === "String";
+							});
+
+							return (
+								<div class="flex flex-row items-center space-x-1.5 h-5">
+									<IOPin
+										connected={connected()}
+										highlighted={
+											props.snapTarget === `${props.id}:i:${input.id}`
+										}
+										ref={setRef}
+										variant={input.variant}
+										pointerHandlers={pointerHandlers}
+									/>
+									<span>{input.name}</span>
+									<Show when={isStringType() && !connected()}>
+										<DefaultStringInput
+											value={
+												(props.defaultValues?.[input.id] as
+													| string
+													| undefined) ?? ""
+											}
+											onChange={(v) =>
+												props.onDefaultValueChange?.(input.id, v)
+											}
+											graphId={graphCtx.id()}
+											nodeId={props.id}
+											inputId={input.id}
+										/>
+									</Show>
+								</div>
+							);
+						}}
+					</For>
+				</div>
+				<div class="flex-1" />
+				<div class="px-1.5 py-2 flex flex-col gap-2.5 items-end">
+					<For each={filteredOutputs()}>
+						{(output, i) => {
+							const [ref, setRef] = createSignal<HTMLDivElement>();
+
+							useIOPositionTrack(i, output.id, "o", ref);
+
+							const [draggingPointers, setDraggingPointers] =
+								createSignal<number[]>();
+
+							const connected = () => {
+								const isDragging = (draggingPointers()?.length ?? 0) > 0;
+								const hasConnection = props.connections?.out?.includes(
+									output.id,
+								);
+
+								const isPendingConnect = actions.pending.some(
+									(req): req is Request.ConnectIO =>
+										req._tag === "ConnectIO" &&
+										req.output[0] === props.id &&
+										req.output[1] === output.id,
+								);
+
+								return isDragging || hasConnection || isPendingConnect;
+							};
+
+							const pointerHandlers: Pick<
+								JSX.CustomEventHandlersCamelCase<any>,
+								"onPointerDown" | "onPointerUp" | "onDblClick"
+							> = {
+								onPointerDown: (e) => {
+									if (
+										onPinPointerDown(e, output.id, "o", () =>
+											setDraggingPointers((s) =>
+												s?.filter((p) => p !== e.pointerId),
+											),
+										)
+									) {
+										setDraggingPointers((s) =>
+											s ? [...s, e.pointerId] : [e.pointerId],
+										);
+									}
+								},
+								onPointerUp: (e) => props.onPinPointerUp?.(e, "o", output.id),
+								onDblClick: () => props.onPinDoubleClick?.("o", output.id),
+							};
+
+							return (
+								<div class="flex flex-row items-center space-x-1.5 h-4.5">
+									<Show when={output.name}>
+										<span>{output.name}</span>
+									</Show>
+									<IOPin
+										connected={connected()}
+										highlighted={
+											props.snapTarget === `${props.id}:o:${output.id}`
+										}
+										ref={setRef}
+										variant={output.variant}
+										pointerHandlers={pointerHandlers}
+									/>
+								</div>
+							);
+						}}
+					</For>
+				</div>
 			</div>
-		</div>
+			<Show
+				when={
+					filteredInputs().length !== props.inputs.length ||
+					filteredOutputs().length !== props.outputs.length
+				}
+			>
+				<div class="text-center w-full h-4 flex flex-row items-center justify-center -mt-1">
+					<button
+						type="button"
+						title="Expand node IO"
+						class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
+						onClick={() => props.onExpand?.()}
+					>
+						<IconMdiDotsHorizontal class="size-4" />
+					</button>
+				</div>
+			</Show>
+		</>
 	);
 }
 

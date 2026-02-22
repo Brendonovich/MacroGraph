@@ -97,6 +97,7 @@ const EditorRpcsLive = EditorRpcs.toLayer(
 			DisconnectIO: Effect.request(graphRequests.DisconnectIOResolver),
 			SetNodeProperty: Effect.request(nodeRequests.SetNodePropertyResolver),
 			SetInputDefault: Effect.request(nodeRequests.SetInputDefaultResolver),
+			SetNodeFoldPins: Effect.request(nodeRequests.SetNodeFoldPinsResolver),
 			CreateResourceConstant: Effect.request(
 				projectRequests.CreateResourceConstantResolver,
 			),

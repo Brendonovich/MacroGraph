@@ -58,6 +58,11 @@ export class InputDefaultUpdated extends S.TaggedClass<InputDefaultUpdated>()(
 	{ graph: Graph.Id, node: Node.Id, input: IO.Id, value: S.Unknown },
 ) {}
 
+export class NodeFoldPinsUpdated extends S.TaggedClass<NodeFoldPinsUpdated>()(
+	"NodeFoldPinsUpdated",
+	{ graph: Graph.Id, node: Node.Id, foldPins: S.Boolean },
+) {}
+
 export class PackageResourcesUpdated extends S.TaggedClass<PackageResourcesUpdated>()(
 	"PackageResourcesUpdated",
 	{
@@ -98,6 +103,7 @@ export const EditorEvent = S.Union(
 	NodeCreated,
 	NodePropertyUpdated,
 	InputDefaultUpdated,
+	NodeFoldPinsUpdated,
 	NodeIOUpdated,
 	ResourceConstantCreated,
 	ResourceConstantUpdated,

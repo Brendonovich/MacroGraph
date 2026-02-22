@@ -295,8 +295,9 @@ const usePaneTabController = (
 					return setter;
 				});
 			},
-			(state) => {
-				if (state.open) setGraphCtxMenu({ ...state, paneId: pane().id });
+			(state, sourcePin, onCancel) => {
+				if (state.open)
+					setGraphCtxMenu({ ...state, paneId: pane().id, sourcePin, onCancel });
 				else setGraphCtxMenu(state);
 			},
 		),

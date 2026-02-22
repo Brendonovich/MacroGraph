@@ -82,7 +82,41 @@ export class NodeRequests extends Effect.Service<NodeRequests>()(
 					}),
 			).pipe(requestResolverServices);
 
-			return { SetNodePropertyResolver, SetInputDefaultResolver };
+			const SetNodeFoldPinsResolver = RequestResolver.fromEffect(
+				(r: Request.SetNodeFoldPins) =>
+					Effect.gen(function* () {
+						const editor = yield* ProjectEditor.ProjectEditor;
+
+						const project = yield* editor.project;
+						const graph = yield* HashMap.get(project.graphs, r.graph).pipe(
+							Effect.catchAll(() => new Graph.NotFound({ id: r.graph })),
+						);
+
+						const node = yield* HashMap.get(graph.nodes, r.node).pipe(
+							Effect.catchAll(() => new Node.NotFound({ id: r.node })),
+						);
+
+						const newNode = Node.Node.make({ ...node, foldPins: r.foldPins });
+
+						yield* pipe(
+							HashMap.set(graph.nodes, r.node, newNode),
+							(nodes) => new Graph.Graph({ ...graph, nodes }),
+							(graph) => HashMap.set(project.graphs, r.graph, graph),
+							(graphs) => new Project.Project({ ...project, graphs }),
+							(p) => editor.modifyProject(() => p),
+						);
+
+						return yield* editor.publishEvent(
+							new ProjectEvent.NodeFoldPinsUpdated(r),
+						);
+					}),
+			).pipe(requestResolverServices);
+
+			return {
+				SetNodePropertyResolver,
+				SetInputDefaultResolver,
+				SetNodeFoldPinsResolver,
+			};
 		}),
 	},
 ) {}

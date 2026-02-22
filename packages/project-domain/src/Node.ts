@@ -16,6 +16,7 @@ export const Node = S.Struct({
 		S.HashMap({ key: S.suspend(() => IO.Id), value: S.Unknown }),
 	),
 	position: Position,
+	foldPins: S.optionalWith(S.Boolean, { default: () => false }),
 });
 export type Node = typeof Node.Type;
 

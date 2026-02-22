@@ -72,7 +72,11 @@ export function GraphView(
 			inputId: IO.Id,
 			value: unknown,
 		): void;
-		onContextMenu?(e: MouseEvent | PointerEvent): void;
+		onContextMenu?(
+			e: MouseEvent | PointerEvent,
+			sourcePin?: { ref: IO.RefString; variant: IO.Exec | IO.Data },
+			onCancel?: () => void,
+		): void;
 		onContextMenuClose?(): void;
 		onDeleteSelection?(): void;
 		onTranslateChange?(translate: { x: number; y: number }): void;
@@ -82,6 +86,12 @@ export function GraphView(
 	const [state, setState] = createSignal<InteractionState>(
 		/* IS.areaSelection(0, {x: 0,y: 0}, {x:1,y:1}) */ IS.idle(),
 	);
+	const [draggedPinVariant, setDraggedPinVariant] = createSignal<
+		IO.Exec | IO.Data | undefined
+	>();
+	const [dragReleasePosition, setDragReleasePosition] = createSignal<
+		{ x: number; y: number } | undefined
+	>();
 
 	const graphCtx = useGraphContext();
 	const actions = useProjectService(ProjectActions);
@@ -247,6 +257,41 @@ export function GraphView(
 	});
 
 	createEventListener(ref, "wheel", handleWheel);
+
+	// ============ Keyboard Handler (Collapse/Expand) ============
+
+	createEventListener(window, "keydown", (e) => {
+		// Check for Ctrl+Cmd+[ or Ctrl+Cmd+]
+		const isCollapseExpand = (e.metaKey || e.ctrlKey) && e.altKey;
+		if (!isCollapseExpand) return;
+
+		switch (e.code) {
+			case "BracketLeft": {
+				// Collapse selected nodes
+				e.preventDefault();
+				for (const item of props.selection ?? []) {
+					if (item[0] !== "Node") continue;
+					const node = props.nodes.find((n) => n.id === item[1]);
+					if (node && !node.foldPins) {
+						actions.SetNodeFoldPins(graphCtx.id(), node.id, true);
+					}
+				}
+				break;
+			}
+			case "BracketRight": {
+				// Expand selected nodes
+				e.preventDefault();
+				for (const item of props.selection ?? []) {
+					if (item[0] !== "Node") continue;
+					const node = props.nodes.find((n) => n.id === item[1]);
+					if (node && node.foldPins) {
+						actions.SetNodeFoldPins(graphCtx.id(), node.id, false);
+					}
+				}
+				break;
+			}
+		}
+	});
 
 	// ============ Touch Gesture Handlers ============
 
@@ -634,7 +679,8 @@ export function GraphView(
 			const position = graphCtx.ioPositions.get(ioRef);
 
 			if (position) {
-				// Determine the wire's free end: snap to autoconnectIO if available, else use mouse
+				// Determine the wire's free end: snap to autoconnectIO if available,
+				// else use release position (when menu open) or mouse position (during drag)
 				let freeEnd: { x: number; y: number };
 				if (autoconnectIO) {
 					const snapPosition = graphCtx.ioPositions.get(autoconnectIO);
@@ -649,12 +695,19 @@ export function GraphView(
 						});
 					}
 				} else {
-					const mouseScreenRelative = getScreenRelativePosition(mouse);
-					const b = getBounds();
-					freeEnd = graphCtx.getGraphPosition({
-						x: mouseScreenRelative.x + b.left,
-						y: mouseScreenRelative.y + b.top,
-					});
+					// Use saved release position if available (context menu is open),
+					// otherwise use current mouse position (still dragging)
+					const releasePos = dragReleasePosition();
+					if (releasePos) {
+						freeEnd = releasePos;
+					} else {
+						const mouseScreenRelative = getScreenRelativePosition(mouse);
+						const b = getBounds();
+						freeEnd = graphCtx.getGraphPosition({
+							x: mouseScreenRelative.x + b.left,
+							y: mouseScreenRelative.y + b.top,
+						});
+					}
 				}
 
 				ret.push(
@@ -845,7 +898,46 @@ export function GraphView(
 				const { autoconnectIO, ioRef } = currentState;
 				if (autoconnectIO) {
 					props.onConnectIO?.(ioRef, autoconnectIO);
+					snapMoveCleanup?.();
+					snapMoveCleanup = undefined;
+					setDraggedPinVariant(undefined);
+					setDragReleasePosition(undefined);
 					setState(IS.idle());
+				} else {
+					// No autoconnect - open context menu to create a node
+					const variant = draggedPinVariant();
+					if (variant) {
+						// Stop the move listener so ghost locks to release position
+						snapMoveCleanup?.();
+						snapMoveCleanup = undefined;
+						// Save the release position for the ghost connection
+						const mouseScreenRelative = getScreenRelativePosition(mouse);
+						const b = getBounds();
+						const releasePos = graphCtx.getGraphPosition({
+							x: mouseScreenRelative.x + b.left,
+							y: mouseScreenRelative.y + b.top,
+						});
+						setDragReleasePosition(releasePos);
+						// Keep the drag state active so ghost connection stays visible
+						// The state will be cleared when the menu closes
+						const clearDragState = () => {
+							setDraggedPinVariant(undefined);
+							setDragReleasePosition(undefined);
+							setState(IS.idle());
+						};
+						props.onContextMenu?.(
+							upEvent,
+							{ ref: ioRef, variant },
+							clearDragState,
+						);
+					} else {
+						// No variant info, just clear state
+						snapMoveCleanup?.();
+						snapMoveCleanup = undefined;
+						setDraggedPinVariant(undefined);
+						setDragReleasePosition(undefined);
+						setState(IS.idle());
+					}
 				}
 			}}
 			onContextMenu={(e) => {
@@ -904,6 +996,7 @@ export function GraphView(
 													s.nodes.has(node.id),
 												)?.colour
 											}
+											foldPins={node.foldPins}
 										>
 											<ContextMenu.Trigger<ValidComponent>
 												as={(cmProps) => (
@@ -935,11 +1028,26 @@ export function GraphView(
 													top: bounds.top ?? 0,
 													left: bounds.left ?? 0,
 												}}
+												foldPins={node.foldPins}
+												onExpand={() => {
+													actions.SetNodeFoldPins(
+														graphCtx.id(),
+														node.id,
+														false,
+													);
+												}}
 												onPinDragStart={(e, type, id) => {
 													if (state().type !== "idle") return false;
 
 													const pointerId = e.pointerId;
 													const ioRef: IO.RefString = `${node.id}:${type}:${id}`;
+
+													// Find and store the variant of the pin being dragged
+													const ioList =
+														type === "i" ? node.inputs : node.outputs;
+													const io = ioList.find((io) => io.id === id);
+													if (io) setDraggedPinVariant(io.variant);
+
 													setState(IS.ioDrag(pointerId, ioRef));
 
 													const onMove = (ev: PointerEvent) => {
@@ -969,11 +1077,7 @@ export function GraphView(
 
 													return true;
 												}}
-												onPinDragEnd={() => {
-													snapMoveCleanup?.();
-													snapMoveCleanup = undefined;
-													setState(IS.idle());
-												}}
+												// Note: cleanup is now handled in GraphView's onPointerUp
 												onPinPointerUp={(e, type, id) => {
 													const currentState = state();
 													if (currentState.type !== "io-drag") return;
@@ -1028,6 +1132,41 @@ export function GraphView(
 						)}
 						onPointerDown={(e) => e.stopPropagation()}
 					>
+						<ContextMenu.Item
+							onSelect={() => {
+								const selectedNode = props.selection?.find(
+									(ref) => ref[0] === "Node",
+								);
+								if (selectedNode) {
+									const node = props.nodes.find(
+										(n) => n.id === selectedNode[1],
+									);
+									if (node) {
+										actions.SetNodeFoldPins(
+											graphCtx.id(),
+											node.id,
+											!node.foldPins,
+										);
+									}
+								}
+							}}
+							class="flex flex-row items-center bg-transparent w-full text-left p-1 rounded @hover-bg-white/10 active:bg-white/10 outline-none"
+						>
+							<span>
+								{(() => {
+									const selectedNode = props.selection?.find(
+										(ref) => ref[0] === "Node",
+									);
+									if (selectedNode) {
+										const node = props.nodes.find(
+											(n) => n.id === selectedNode[1],
+										);
+										return node?.foldPins ? "Expand" : "Collapse";
+									}
+									return "Collapse";
+								})()}
+							</span>
+						</ContextMenu.Item>
 						<ContextMenu.Item
 							onSelect={() => {
 								props.onDeleteSelection?.();

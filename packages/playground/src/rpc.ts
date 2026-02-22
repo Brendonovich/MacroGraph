@@ -13,6 +13,7 @@ export const Rpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.DeleteGraphItems),
 	Rpc.fromTaggedRequest(Request.SetNodeProperty),
 	Rpc.fromTaggedRequest(Request.SetInputDefault),
+	Rpc.fromTaggedRequest(Request.SetNodeFoldPins),
 	Rpc.fromTaggedRequest(Request.CreateResourceConstant),
 	Rpc.fromTaggedRequest(Request.UpdateResourceConstant),
 	Rpc.fromTaggedRequest(Request.DeleteResourceConstant),

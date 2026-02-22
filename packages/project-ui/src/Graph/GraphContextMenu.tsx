@@ -1,4 +1,4 @@
-import type { Package, Schema } from "@macrograph/project-domain";
+import type { IO, Package, Schema } from "@macrograph/project-domain";
 import { focusRingClasses } from "@macrograph/ui";
 import { createContextProvider } from "@solid-primitives/context";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -18,9 +18,20 @@ import createPresence from "solid-presence";
 import { useGraphContext } from "./Context";
 import { tokeniseString } from "./search";
 
+export interface SourcePin {
+	ref: IO.RefString;
+	variant: IO.Exec | IO.Data;
+}
+
 export type GraphContextMenuState =
 	| { open: false }
-	| { open: true; position: { x: number; y: number }; paneId: number };
+	| {
+			open: true;
+			position: { x: number; y: number };
+			paneId: number;
+			sourcePin?: SourcePin;
+			onCancel?: () => void;
+	  };
 
 const [Provider, useContext_] = createContextProvider(() => {
 	return createSignal<GraphContextMenuState>({ open: false });
@@ -37,11 +48,22 @@ export const GraphContextMenu = Object.assign(
 		onSchemaClick: (
 			schema: Schema.Ref,
 			position: { x: number; y: number },
+			sourcePin?: SourcePin,
 		) => void;
 		packages: Record<string, Package.Package>;
 		onClose: () => void;
 	}) => {
 		const [state, setState] = useContext();
+		const sourcePin = () => {
+			const s = state();
+			return s.open ? s.sourcePin : undefined;
+		};
+		const onCancel = () => {
+			const s = state();
+			if (s.open && s.onCancel) {
+				s.onCancel();
+			}
+		};
 
 		const position = () => {
 			const s = state();
@@ -81,6 +103,10 @@ export const GraphContextMenu = Object.assign(
 
 						switch (e.code) {
 							case "Escape": {
+								const s = state();
+								if (s.open && s.onCancel) {
+									s.onCancel();
+								}
 								setState({ open: false });
 								break;
 							}
@@ -156,6 +182,7 @@ export const GraphContextMenu = Object.assign(
 									onKeyDown={(e) => {
 										e.stopPropagation();
 										if (e.key === "Escape") {
+											onCancel();
 											props.onClose();
 										}
 									}}
@@ -193,12 +220,22 @@ export const GraphContextMenu = Object.assign(
 																			<ItemButton
 																				class="gap-1.5 pl-1.5"
 																				onClick={() => {
+																					console.log("Schema clicked!");
+																					// Capture source pin before clearing state
+																					const pin = sourcePin();
+																					console.log("Captured pin:", pin);
+																					if (!pin) {
+																						console.error("No pin captured!");
+																					}
+																					// Clear the drag state before creating the node
+																					onCancel();
 																					props.onSchemaClick(
 																						{ pkg: pkg.id, id: schemaId },
 																						graphCtx.getGraphPosition({
 																							x: position().x,
 																							y: position().y,
 																						}),
+																						pin,
 																					);
 																					setState({ open: false });
 																				}}

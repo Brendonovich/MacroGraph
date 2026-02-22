@@ -98,7 +98,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 				CreateNode: withRequest<Request.CreateNode>({ pending: true })(
 					(run, graph: Graph.Id, schema: Schema.Ref, position: Position) =>
 						run(new Request.CreateNode({ schema, graph, position })).pipe(
-							Effect.andThen(handleEvent),
+							Effect.tap(handleEvent),
 						),
 				),
 				ConnectIO: withRequest<Request.ConnectIO>({ pending: true })(
@@ -227,6 +227,16 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 								input: inputId,
 							}),
 						),
+				),
+				SetNodeFoldPins: withRequest<Request.SetNodeFoldPins>()(
+					(run, graphId: Graph.Id, nodeId: Node.Id, foldPins: boolean) =>
+						run(
+							new Request.SetNodeFoldPins({
+								graph: graphId,
+								node: nodeId,
+								foldPins,
+							}),
+						).pipe(Effect.andThen(handleEvent)),
 				),
 			};
 		}),
