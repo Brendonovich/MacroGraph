@@ -1,7 +1,8 @@
 /** biome-ignore-all lint/correctness/useYield: generator functions in this file intentionally don't always yield */
-import { Effect, Option } from "effect";
+import { Effect, Option, pipe } from "effect";
 import { Package, PackageEngine, t } from "@macrograph/package-sdk";
 
+import { SubscriptionEvent } from "./eventSub";
 import {
 	ClientRpcs,
 	ClientState,
@@ -9,17 +10,17 @@ import {
 	TwitchAccount,
 	TwitchEventSub,
 } from "./new-shared";
-import { AccountId, EventSubNotification } from "./new-types";
+import { AccountId } from "./new-types";
 
 export class EngineDef extends PackageEngine.define({
 	clientRpcs: ClientRpcs,
 	runtimeRpcs: RuntimeRpcs,
-	events: EventSubNotification.Any.members,
+	events: SubscriptionEvent.Any.members,
 	clientState: ClientState,
 	resources: [TwitchAccount, TwitchEventSub],
 }) {}
 
-const getSocketUserId = (data: EventSubNotification.Any) => {
+const getSocketUserId = (data: SubscriptionEvent.Any) => {
 	if (
 		"broadcaster_user_id" in data &&
 		typeof data.broadcaster_user_id === "string"
@@ -48,14 +49,32 @@ const eventSubSocketProperty = {
 
 const matchesSocket =
 	(properties: { socket: { value: string } }) =>
-	(data: EventSubNotification.Any) =>
-		getSocketUserId(data) === properties.socket.value;
+	<T>(data: T) =>
+		getSocketUserId(data as any) === properties.socket.value;
 
-const eventSubEvent =
-	(tag: string) =>
-	(data: any, { properties }: any): Option.Option<any> =>
-		Option.some(data).pipe(
-			Option.filter((data) => data._tag === tag),
+// const eventSubEvent =
+// 	<T extends SubscriptionEvent.Any["_tag"]>(tag: T) =>
+// 	(
+// 		data: Extract<SubscriptionEvent.Any, { _tag: T }>,
+// 		{ properties }: { properties: { socket: { value: string } } },
+// 	): Option.Option<Extract<SubscriptionEvent.Any, { _tag: T }>> =>
+// 		Option.some(data).pipe(
+// 			Option.filter((data) => data._tag === tag),
+// 			Option.filter(matchesSocket(properties)),
+// 		);
+
+const filterEvent =
+	<Tag extends SubscriptionEvent.Any["_tag"]>(
+		tag: Tag,
+		properties: { socket: { value: string } },
+	) =>
+	(value: Option.Option<SubscriptionEvent.Any>) =>
+		pipe(
+			value,
+			Option.filter(
+				(data): data is Extract<SubscriptionEvent.Any, { _tag: Tag }> =>
+					data._tag === tag,
+			),
 			Option.filter(matchesSocket(properties)),
 		);
 
@@ -72,10 +91,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Chat Message",
 		description: "Fires when a message is sent in a channel's chat.",
 		event: (data, { properties }) =>
-			Option.some(data).pipe(
-				Option.filter((d) => d._tag === "channel.chat.message"),
-				Option.filter(matchesSocket(properties)),
-			),
+			Option.some(data).pipe(filterEvent("channel.chat.message", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -97,12 +113,12 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 				name: "Chatter User Login",
 			}),
 			messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
-			messageText: c.out.data("messageText", t.String, {
-				name: "Message Text",
-			}),
-			messageType: c.out.data("messageType", t.String, {
-				name: "Message Type",
-			}),
+			// messageText: c.out.data("messageText", t.String, {
+			// 	name: "Message Text",
+			// }),
+			// messageType: c.out.data("messageType", t.String, {
+			// 	name: "Message Type",
+			// }),
 			color: c.out.data("color", t.String, { name: "Color" }),
 		}),
 		run: ({ io, event }) => {
@@ -113,8 +129,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.chatterUserName(event.chatter_user_name);
 			io.chatterUserLogin(event.chatter_user_login);
 			io.messageId(event.message_id);
-			io.messageText(event.message_text);
-			io.messageType(event.message_type);
+			// io.messageText(event.message_text);
+			// io.messageType(event.message_type);
 			io.color(event.color);
 		},
 	})
@@ -124,10 +140,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Chat Clear",
 		description: "Fires when all chat messages are cleared.",
 		event: (data, { properties }) =>
-			Option.some(data).pipe(
-				Option.filter((data) => data._tag === "channel.chat.clear"),
-				Option.filter(matchesSocket(properties)),
-			),
+			Option.some(data).pipe(filterEvent("channel.chat.clear", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -153,10 +166,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Fires when a user's messages are cleared.",
 		event: (data, { properties }) =>
 			Option.some(data).pipe(
-				Option.filter(
-					(data) => data._tag === "channel.chat.clear_user_messages",
-				),
-				Option.filter(matchesSocket(properties)),
+				filterEvent("channel.chat.clear_user_messages", properties),
 			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
@@ -195,8 +205,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Fires when a chat message is deleted.",
 		event: (data, { properties }) =>
 			Option.some(data).pipe(
-				Option.filter((data) => data._tag === "channel.chat.message_delete"),
-				Option.filter(matchesSocket(properties)),
+				filterEvent("channel.chat.message_delete", properties),
 			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
@@ -237,8 +246,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Fires when a chat notification occurs.",
 		event: (data, { properties }) =>
 			Option.some(data).pipe(
-				Option.filter((data) => data._tag === "channel.chat.notification"),
-				Option.filter(matchesSocket(properties)),
+				filterEvent("channel.chat.notification", properties),
 			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
@@ -260,14 +268,14 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			chatterUserLogin: c.out.data("chatterUserLogin", t.String, {
 				name: "Chatter User Login",
 			}),
-			messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
-			messageText: c.out.data("messageText", t.String, {
-				name: "Message Text",
-			}),
+			// messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
+			// messageText: c.out.data("messageText", t.String, {
+			// 	name: "Message Text",
+			// }),
 			systemMessage: c.out.data("systemMessage", t.String, {
 				name: "System Message",
 			}),
-			noticeType: c.out.data("noticeType", t.String, { name: "Notice Type" }),
+			// noticeType: c.out.data("noticeType", t.String, { name: "Notice Type" }),
 		}),
 		run: ({ io, event }) => {
 			io.broadcasterUserId(event.broadcaster_user_id);
@@ -276,10 +284,10 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.chatterUserId(event.chatter_user_id);
 			io.chatterUserName(event.chatter_user_name);
 			io.chatterUserLogin(event.chatter_user_login);
-			io.messageId(event.message_id);
-			io.messageText(event.message_text);
+			// io.messageId(event.message_id);
+			// io.messageText(event.message.text);
 			io.systemMessage(event.system_message);
-			io.noticeType(event.notice_type);
+			// io.noticeType(event.notice_type);
 		},
 	})
 
@@ -289,8 +297,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Fires when chat settings are updated.",
 		event: (data, { properties }) =>
 			Option.some(data).pipe(
-				Option.filter((data) => data._tag === "channel.chat_settings.update"),
-				Option.filter(matchesSocket(properties)),
+				filterEvent("channel.chat_settings.update", properties),
 			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
@@ -333,8 +340,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Fires when a user's message is held for review.",
 		event: (data, { properties }) =>
 			Option.some(data).pipe(
-				Option.filter((data) => data._tag === "channel.chat.user_message_hold"),
-				Option.filter(matchesSocket(properties)),
+				filterEvent("channel.chat.user_message_hold", properties),
 			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
@@ -350,10 +356,10 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			userId: c.out.data("userId", t.String, { name: "User ID" }),
 			userLogin: c.out.data("userLogin", t.String, { name: "User Login" }),
 			userName: c.out.data("userName", t.String, { name: "User Name" }),
-			messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
-			messageText: c.out.data("messageText", t.String, {
-				name: "Message Text",
-			}),
+			// messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
+			// messageText: c.out.data("messageText", t.String, {
+			// 	name: "Message Text",
+			// }),
 		}),
 		run: ({ io, event }) => {
 			io.broadcasterUserId(event.broadcaster_user_id);
@@ -362,8 +368,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.userId(event.user_id);
 			io.userLogin(event.user_login);
 			io.userName(event.user_name);
-			io.messageId(event.message_id);
-			io.messageText(event.message_text);
+			// io.messageId(event.message_id);
+			// io.messageText(event.message.text);
 		},
 	})
 
@@ -373,10 +379,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		description: "Fires when a held message is approved or denied.",
 		event: (data, { properties }) =>
 			Option.some(data).pipe(
-				Option.filter(
-					(data) => data._tag === "channel.chat.user_message_update",
-				),
-				Option.filter(matchesSocket(properties)),
+				filterEvent("channel.chat.user_message_update", properties),
 			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
@@ -393,7 +396,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			userLogin: c.out.data("userLogin", t.String, { name: "User Login" }),
 			userName: c.out.data("userName", t.String, { name: "User Name" }),
 			status: c.out.data("status", t.String, { name: "Status" }),
-			messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
+			// messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
 		}),
 		run: ({ io, event }) => {
 			io.broadcasterUserId(event.broadcaster_user_id);
@@ -403,7 +406,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.userLogin(event.user_login);
 			io.userName(event.user_name);
 			io.status(event.status);
-			io.messageId(event.message_id);
+			// io.messageId(event.message_id);
 		},
 	})
 
@@ -414,10 +417,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "User Banned",
 		description: "Fires when a user is banned from a channel.",
 		event: (data, { properties }) =>
-			Option.some(data).pipe(
-				Option.filter((data) => data._tag === "channel.ban"),
-				Option.filter(matchesSocket(properties)),
-			),
+			Option.some(data).pipe(filterEvent("channel.ban", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -463,7 +463,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "User Unbanned",
 		description: "Fires when a user is unbanned from a channel.",
-		event: eventSubEvent("channel.unban"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(filterEvent("channel.unban", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -505,7 +506,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "Updated",
 		description: "Fires when channel information is updated.",
-		event: eventSubEvent("channel.update"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(filterEvent("channel.update", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -539,7 +541,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "Raid",
 		description: "Fires when a channel raids another channel.",
-		event: eventSubEvent("channel.raid"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(filterEvent("channel.raid", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			fromBroadcasterUserId: c.out.data("fromBroadcasterUserId", t.String, {
@@ -581,7 +584,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "Subscribed",
 		description: "Fires when a user subscribes to a channel.",
-		event: eventSubEvent("channel.subscribe"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(filterEvent("channel.subscribe", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			userId: c.out.data("userId", t.String, { name: "User ID" }),
@@ -615,7 +619,10 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "Subscription Ended",
 		description: "Fires when a user's subscription ends.",
-		event: eventSubEvent("channel.subscription.end"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(
+				filterEvent("channel.subscription.end", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			userId: c.out.data("userId", t.String, { name: "User ID" }),
@@ -649,7 +656,10 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "Subscription Gifted",
 		description: "Fires when a user gifts subscriptions.",
-		event: eventSubEvent("channel.subscription.gift"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(
+				filterEvent("channel.subscription.gift", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -679,7 +689,10 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "Subscription Message",
 		description: "Fires when a user resubscribes with a message.",
-		event: eventSubEvent("channel.subscription.message"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(
+				filterEvent("channel.subscription.message", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			userId: c.out.data("userId", t.String, { name: "User ID" }),
@@ -695,9 +708,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 				name: "Broadcaster User Name",
 			}),
 			tier: c.out.data("tier", t.String, { name: "Tier" }),
-			messageText: c.out.data("messageText", t.String, {
-				name: "Message Text",
-			}),
+			// messageText: c.out.data("messageText", t.String, {
+			// 	name: "Message Text",
+			// }),
 			cumulativeMonths: c.out.data("cumulativeMonths", t.Int, {
 				name: "Cumulative Months",
 			}),
@@ -713,7 +726,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.broadcasterUserLogin(event.broadcaster_user_login);
 			io.broadcasterUserName(event.broadcaster_user_name);
 			io.tier(event.tier);
-			io.messageText(event.message_text);
+			// io.messageText(event.message.text);
 			io.cumulativeMonths(event.cumulative_months);
 			io.durationMonths(event.duration_months);
 		},
@@ -723,7 +736,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		type: "event",
 		name: "Cheered",
 		description: "Fires when a user cheers bits in a channel.",
-		event: eventSubEvent("channel.cheer"),
+		event: (data, { properties }) =>
+			Option.some(data).pipe(filterEvent("channel.cheer", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			isAnonymous: c.out.data("isAnonymous", t.Bool, { name: "Is Anonymous" }),
@@ -756,9 +770,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Moderator Added",
 		description: "Fires when a moderator is added.",
 		event: (data, { properties }) =>
-			data._tag === "channel.moderator.add" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.moderator.add", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -789,10 +801,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Moderator Removed",
 		description: "Fires when a moderator is removed.",
 		event: (data, { properties }) =>
-			data._tag === "channel.moderator.remove" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.moderator.remove", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -823,9 +834,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "VIP Added",
 		description: "Fires when a VIP is added.",
 		event: (data, { properties }) =>
-			data._tag === "channel.vip.add" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.vip.add", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -856,9 +865,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "VIP Removed",
 		description: "Fires when a VIP is removed.",
 		event: (data, { properties }) =>
-			data._tag === "channel.vip.remove" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.vip.remove", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -889,9 +896,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Moderated",
 		description: "Fires when a moderation action occurs.",
 		event: (data, { properties }) =>
-			data._tag === "channel.moderate" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.moderate", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -930,10 +935,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Unban Request Created",
 		description: "Fires when an unban request is created.",
 		event: (data, { properties }) =>
-			data._tag === "channel.unban_request.create" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.unban_request.create", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -968,10 +972,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Unban Request Resolved",
 		description: "Fires when an unban request is resolved.",
 		event: (data, { properties }) =>
-			data._tag === "channel.unban_request.resolve" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.unban_request.resolve", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1006,10 +1009,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Suspicious User Update",
 		description: "Fires when a suspicious user's status is updated.",
 		event: (data, { properties }) =>
-			data._tag === "channel.suspicious_user.update" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.suspicious_user.update", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -1056,10 +1058,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Suspicious User Message",
 		description: "Fires when a suspicious user sends a message.",
 		event: (data, { properties }) =>
-			data._tag === "channel.suspicious_user.message" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.suspicious_user.message", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -1094,8 +1095,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.userName(event.user_name);
 			io.lowTrustStatus(event.low_trust_status);
 			io.banEvasionEvaluation(event.ban_evasion_evaluation);
-			io.messageId(event.message_id);
-			io.messageText(event.message_text);
+			io.messageId(event.message.message_id);
+			io.messageText(event.message.text);
 		},
 	})
 
@@ -1104,10 +1105,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Warning Acknowledged",
 		description: "Fires when a user acknowledges a warning.",
 		event: (data, { properties }) =>
-			data._tag === "channel.warning.acknowledge" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.warning.acknowledge", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -1138,9 +1138,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Warning Sent",
 		description: "Fires when a warning is sent to a user.",
 		event: (data, { properties }) =>
-			data._tag === "channel.warning.send" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.warning.send", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -1185,9 +1183,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Automod Settings Update",
 		description: "Fires when AutoMod settings are updated.",
 		event: (data, { properties }) =>
-			data._tag === "automod.settings.update" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("automod.settings.update", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -1234,9 +1232,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Automod Terms Update",
 		description: "Fires when AutoMod terms are updated.",
 		event: (data, { properties }) =>
-			data._tag === "automod.terms.update" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("automod.terms.update", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
@@ -1279,9 +1275,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Poll Began",
 		description: "Fires when a poll begins.",
 		event: (data, { properties }) =>
-			data._tag === "channel.poll.begin" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.poll.begin", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1310,9 +1304,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Poll Progress",
 		description: "Fires when a poll progresses.",
 		event: (data, { properties }) =>
-			data._tag === "channel.poll.progress" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.poll.progress", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1341,9 +1333,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Poll End",
 		description: "Fires when a poll ends.",
 		event: (data, { properties }) =>
-			data._tag === "channel.poll.end" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.poll.end", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1376,10 +1366,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Prediction Began",
 		description: "Fires when a prediction begins.",
 		event: (data, { properties }) =>
-			data._tag === "channel.prediction.begin" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.prediction.begin", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1408,10 +1397,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Prediction Progress",
 		description: "Fires when a prediction progresses.",
 		event: (data, { properties }) =>
-			data._tag === "channel.prediction.progress" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.prediction.progress", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1440,9 +1428,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Prediction Locked",
 		description: "Fires when a prediction locks.",
 		event: (data, { properties }) =>
-			data._tag === "channel.prediction.lock" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.prediction.lock", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1471,9 +1459,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Prediction End",
 		description: "Fires when a prediction ends.",
 		event: (data, { properties }) =>
-			data._tag === "channel.prediction.end" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.prediction.end", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1506,10 +1492,12 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Points Reward Redeemed",
 		description: "Fires when a channel points automatic reward is redeemed.",
 		event: (data, { properties }) =>
-			data._tag === "channel.channel_points_automatic_reward_redemption.add" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent(
+					"channel.channel_points_automatic_reward_redemption.add",
+					properties,
+				),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1536,8 +1524,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.userId(event.user_id);
 			io.userLogin(event.user_login);
 			io.userName(event.user_name);
-			io.rewardType(event.reward_type);
-			io.rewardCost(event.reward_cost);
+			io.rewardType(event.reward.type);
+			io.rewardCost(event.reward.cost);
 		},
 	})
 
@@ -1548,10 +1536,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Hype Train Begin",
 		description: "Fires when a hype train begins.",
 		event: (data, { properties }) =>
-			data._tag === "channel.hype_train.begin" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.hype_train.begin", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1586,10 +1573,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Hype Train Progress",
 		description: "Fires when a hype train progresses.",
 		event: (data, { properties }) =>
-			data._tag === "channel.hype_train.progress" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.hype_train.progress", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1624,9 +1610,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Hype Train End",
 		description: "Fires when a hype train ends.",
 		event: (data, { properties }) =>
-			data._tag === "channel.hype_train.end" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.hype_train.end", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1659,10 +1643,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Charity Donation",
 		description: "Fires when a donation is made to a charity campaign.",
 		event: (data, { properties }) =>
-			data._tag === "channel.charity_campaign.donate" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.charity_campaign.donate", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1694,7 +1677,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.userLogin(event.user_login);
 			io.userName(event.user_name);
 			io.charityName(event.charity_name);
-			io.amountValue(event.amount_value);
+			io.amountValue(event.amount.value);
 		},
 	})
 
@@ -1703,10 +1686,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Charity Campaign Started",
 		description: "Fires when a charity campaign starts.",
 		event: (data, { properties }) =>
-			data._tag === "channel.charity_campaign.start" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.charity_campaign.start", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1735,8 +1717,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.broadcasterUserLogin(event.broadcaster_user_login);
 			io.broadcasterUserName(event.broadcaster_user_name);
 			io.charityName(event.charity_name);
-			io.currentAmountValue(event.current_amount_value);
-			io.targetAmountValue(event.target_amount_value);
+			io.currentAmountValue(event.current_amount.value);
+			io.targetAmountValue(event.target_amount.value);
 		},
 	})
 
@@ -1745,10 +1727,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Charity Campaign Progress",
 		description: "Fires when a charity campaign progresses.",
 		event: (data, { properties }) =>
-			data._tag === "channel.charity_campaign.progress" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.charity_campaign.progress", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1777,8 +1758,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.broadcasterUserLogin(event.broadcaster_user_login);
 			io.broadcasterUserName(event.broadcaster_user_name);
 			io.charityName(event.charity_name);
-			io.currentAmountValue(event.current_amount_value);
-			io.targetAmountValue(event.target_amount_value);
+			io.currentAmountValue(event.current_amount.value);
+			io.targetAmountValue(event.target_amount.value);
 		},
 	})
 
@@ -1787,10 +1768,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Charity Campaign Stopped",
 		description: "Fires when a charity campaign stops.",
 		event: (data, { properties }) =>
-			data._tag === "channel.charity_campaign.stop" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.charity_campaign.stop", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			id: c.out.data("id", t.String, { name: "ID" }),
@@ -1819,8 +1799,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.broadcasterUserLogin(event.broadcaster_user_login);
 			io.broadcasterUserName(event.broadcaster_user_name);
 			io.charityName(event.charity_name);
-			io.currentAmountValue(event.current_amount_value);
-			io.targetAmountValue(event.target_amount_value);
+			io.currentAmountValue(event.current_amount.value);
+			io.targetAmountValue(event.target_amount.value);
 		},
 	})
 
@@ -1831,10 +1811,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Shared Chat Session Began",
 		description: "Fires when a shared chat session begins.",
 		event: (data, { properties }) =>
-			data._tag === "channel.shared_chat.session.begin" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.shared_chat.session.begin", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
@@ -1875,10 +1854,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Shared Chat Session Update",
 		description: "Fires when a shared chat session updates.",
 		event: (data, { properties }) =>
-			data._tag === "channel.shared_chat.session.update" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.shared_chat.session.update", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
@@ -1919,10 +1897,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Shared Chat Session End",
 		description: "Fires when a shared chat session ends.",
 		event: (data, { properties }) =>
-			data._tag === "channel.shared_chat.session.end" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(
+				filterEvent("channel.shared_chat.session.end", properties),
+			),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
@@ -1960,115 +1937,115 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 
 	// ===== Guest Star Events =====
 
-	.addSchema("ChannelGuestStarSessionBegin", {
-		type: "event",
-		name: "Guest Star Session Began",
-		description: "Fires when a Guest Star session begins.",
-		event: (data, { properties }) =>
-			data._tag === "channel.guest_star_session.begin" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
-		properties: eventSubSocketProperty,
-		io: (c) => ({
-			sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
-			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
-				name: "Broadcaster User ID",
-			}),
-			broadcasterUserLogin: c.out.data("broadcasterUserLogin", t.String, {
-				name: "Broadcaster User Login",
-			}),
-			broadcasterUserName: c.out.data("broadcasterUserName", t.String, {
-				name: "Broadcaster User Name",
-			}),
-		}),
-		run: ({ io, event }) => {
-			io.sessionId(event.session_id);
-			io.broadcasterUserId(event.broadcaster_user_id);
-			io.broadcasterUserLogin(event.broadcaster_user_login);
-			io.broadcasterUserName(event.broadcaster_user_name);
-		},
-	})
+	// .addSchema("ChannelGuestStarSessionBegin", {
+	// 	type: "event",
+	// 	name: "Guest Star Session Began",
+	// 	description: "Fires when a Guest Star session begins.",
+	// 	event: (data, { properties }) =>
+	// 		data._tag === "channel.guest_star_session.begin" &&
+	// 		matchesSocket(properties)(data)
+	// 			? Option.some(data)
+	// 			: Option.none(),
+	// 	properties: eventSubSocketProperty,
+	// 	io: (c) => ({
+	// 		sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
+	// 		broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
+	// 			name: "Broadcaster User ID",
+	// 		}),
+	// 		broadcasterUserLogin: c.out.data("broadcasterUserLogin", t.String, {
+	// 			name: "Broadcaster User Login",
+	// 		}),
+	// 		broadcasterUserName: c.out.data("broadcasterUserName", t.String, {
+	// 			name: "Broadcaster User Name",
+	// 		}),
+	// 	}),
+	// 	run: ({ io, event }) => {
+	// 		io.sessionId(event.session_id);
+	// 		io.broadcasterUserId(event.broadcaster_user_id);
+	// 		io.broadcasterUserLogin(event.broadcaster_user_login);
+	// 		io.broadcasterUserName(event.broadcaster_user_name);
+	// 	},
+	// })
 
-	.addSchema("ChannelGuestStarSessionEnd", {
-		type: "event",
-		name: "Guest Star Session End",
-		description: "Fires when a Guest Star session ends.",
-		event: (data, { properties }) =>
-			data._tag === "channel.guest_star_session.end" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
-		properties: eventSubSocketProperty,
-		io: (c) => ({
-			sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
-			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
-				name: "Broadcaster User ID",
-			}),
-			broadcasterUserLogin: c.out.data("broadcasterUserLogin", t.String, {
-				name: "Broadcaster User Login",
-			}),
-			broadcasterUserName: c.out.data("broadcasterUserName", t.String, {
-				name: "Broadcaster User Name",
-			}),
-			hostUserId: c.out.data("hostUserId", t.String, { name: "Host User ID" }),
-			hostUserLogin: c.out.data("hostUserLogin", t.String, {
-				name: "Host User Login",
-			}),
-			hostUserName: c.out.data("hostUserName", t.String, {
-				name: "Host User Name",
-			}),
-		}),
-		run: ({ io, event }) => {
-			io.sessionId(event.session_id);
-			io.broadcasterUserId(event.broadcaster_user_id);
-			io.broadcasterUserLogin(event.broadcaster_user_login);
-			io.broadcasterUserName(event.broadcaster_user_name);
-			io.hostUserId(event.host_user_id);
-			io.hostUserLogin(event.host_user_login);
-			io.hostUserName(event.host_user_name);
-		},
-	})
+	// .addSchema("ChannelGuestStarSessionEnd", {
+	// 	type: "event",
+	// 	name: "Guest Star Session End",
+	// 	description: "Fires when a Guest Star session ends.",
+	// 	event: (data, { properties }) =>
+	// 		data._tag === "channel.guest_star_session.end" &&
+	// 		matchesSocket(properties)(data)
+	// 			? Option.some(data)
+	// 			: Option.none(),
+	// 	properties: eventSubSocketProperty,
+	// 	io: (c) => ({
+	// 		sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
+	// 		broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
+	// 			name: "Broadcaster User ID",
+	// 		}),
+	// 		broadcasterUserLogin: c.out.data("broadcasterUserLogin", t.String, {
+	// 			name: "Broadcaster User Login",
+	// 		}),
+	// 		broadcasterUserName: c.out.data("broadcasterUserName", t.String, {
+	// 			name: "Broadcaster User Name",
+	// 		}),
+	// 		hostUserId: c.out.data("hostUserId", t.String, { name: "Host User ID" }),
+	// 		hostUserLogin: c.out.data("hostUserLogin", t.String, {
+	// 			name: "Host User Login",
+	// 		}),
+	// 		hostUserName: c.out.data("hostUserName", t.String, {
+	// 			name: "Host User Name",
+	// 		}),
+	// 	}),
+	// 	run: ({ io, event }) => {
+	// 		io.sessionId(event.session_id);
+	// 		io.broadcasterUserId(event.broadcaster_user_id);
+	// 		io.broadcasterUserLogin(event.broadcaster_user_login);
+	// 		io.broadcasterUserName(event.broadcaster_user_name);
+	// 		io.hostUserId(event.host_user_id);
+	// 		io.hostUserLogin(event.host_user_login);
+	// 		io.hostUserName(event.host_user_name);
+	// 	},
+	// })
 
-	.addSchema("ChannelGuestStarGuestUpdate", {
-		type: "event",
-		name: "Guest Star Guest Update",
-		description: "Fires when a Guest Star guest is updated.",
-		event: (data, { properties }) =>
-			data._tag === "channel.guest_star_guest.update" &&
-			matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
-		properties: eventSubSocketProperty,
-		io: (c) => ({
-			sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
-			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
-				name: "Broadcaster User ID",
-			}),
-			broadcasterUserLogin: c.out.data("broadcasterUserLogin", t.String, {
-				name: "Broadcaster User Login",
-			}),
-			broadcasterUserName: c.out.data("broadcasterUserName", t.String, {
-				name: "Broadcaster User Name",
-			}),
-			hostUserId: c.out.data("hostUserId", t.String, { name: "Host User ID" }),
-			hostUserLogin: c.out.data("hostUserLogin", t.String, {
-				name: "Host User Login",
-			}),
-			hostUserName: c.out.data("hostUserName", t.String, {
-				name: "Host User Name",
-			}),
-		}),
-		run: ({ io, event }) => {
-			io.sessionId(event.session_id);
-			io.broadcasterUserId(event.broadcaster_user_id);
-			io.broadcasterUserLogin(event.broadcaster_user_login);
-			io.broadcasterUserName(event.broadcaster_user_name);
-			io.hostUserId(event.host_user_id);
-			io.hostUserLogin(event.host_user_login);
-			io.hostUserName(event.host_user_name);
-		},
-	})
+	// .addSchema("ChannelGuestStarGuestUpdate", {
+	// 	type: "event",
+	// 	name: "Guest Star Guest Update",
+	// 	description: "Fires when a Guest Star guest is updated.",
+	// 	event: (data, { properties }) =>
+	// 		data._tag === "channel.guest_star_guest.update" &&
+	// 		matchesSocket(properties)(data)
+	// 			? Option.some(data)
+	// 			: Option.none(),
+	// 	properties: eventSubSocketProperty,
+	// 	io: (c) => ({
+	// 		sessionId: c.out.data("sessionId", t.String, { name: "Session ID" }),
+	// 		broadcasterUserId: c.out.data("broadcasterUserId", t.String, {
+	// 			name: "Broadcaster User ID",
+	// 		}),
+	// 		broadcasterUserLogin: c.out.data("broadcasterUserLogin", t.String, {
+	// 			name: "Broadcaster User Login",
+	// 		}),
+	// 		broadcasterUserName: c.out.data("broadcasterUserName", t.String, {
+	// 			name: "Broadcaster User Name",
+	// 		}),
+	// 		hostUserId: c.out.data("hostUserId", t.String, { name: "Host User ID" }),
+	// 		hostUserLogin: c.out.data("hostUserLogin", t.String, {
+	// 			name: "Host User Login",
+	// 		}),
+	// 		hostUserName: c.out.data("hostUserName", t.String, {
+	// 			name: "Host User Name",
+	// 		}),
+	// 	}),
+	// 	run: ({ io, event }) => {
+	// 		io.sessionId(event.session_id);
+	// 		io.broadcasterUserId(event.broadcaster_user_id);
+	// 		io.broadcasterUserLogin(event.broadcaster_user_login);
+	// 		io.broadcasterUserName(event.broadcaster_user_name);
+	// 		io.hostUserId(event.host_user_id);
+	// 		io.hostUserLogin(event.host_user_login);
+	// 		io.hostUserName(event.host_user_name);
+	// 	},
+	// })
 
 	// ===== Bits Events =====
 
@@ -2077,9 +2054,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 		name: "Ad Break Begin",
 		description: "Fires when an ad break begins.",
 		event: (data, { properties }) =>
-			data._tag === "channel.ad_break.begin" && matchesSocket(properties)(data)
-				? Option.some(data)
-				: Option.none(),
+			Option.some(data).pipe(filterEvent("channel.ad_break.begin", properties)),
 		properties: eventSubSocketProperty,
 		io: (c) => ({
 			broadcasterUserId: c.out.data("broadcasterUserId", t.String, {

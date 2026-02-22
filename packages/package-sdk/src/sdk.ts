@@ -72,17 +72,16 @@ export namespace PackageEngine {
 		saveState?: (state: S.Schema.Type<ClientState>) => Effect.Effect<void>;
 	};
 
-	export type Built<Engine> =
-		Engine extends PackageEngine<
-			infer ClientRpcs,
-			infer RuntimeRpcs,
-			any,
-			infer ClientState,
-			infer Resources,
-			any
-		>
-			? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
-			: never;
+	export type Built<Engine> = Engine extends PackageEngine<
+		infer ClientRpcs,
+		infer RuntimeRpcs,
+		any,
+		infer ClientState,
+		infer Resources,
+		any
+	>
+		? LayerBuilderRet<ClientRpcs, RuntimeRpcs, ClientState, Resources>
+		: never;
 
 	export type LayerBuilderRet<
 		ClientRpcs extends Rpc.Any,
@@ -133,13 +132,13 @@ export namespace PackageEngine {
 		Resources extends Resource.Tag<any, any>,
 		EngineState extends S.Schema.AnyNoContext,
 	> extends PackageEngineObj<
-		ClientRpcs,
-		RuntimeRpcs,
-		Events,
-		ClientState,
-		Resources,
-		EngineState
-	> {
+			ClientRpcs,
+			RuntimeRpcs,
+			Events,
+			ClientState,
+			Resources,
+			EngineState
+		> {
 		new (_: never): {};
 	}
 
@@ -200,24 +199,42 @@ export namespace PackageEngine {
 		>) as any;
 	};
 
-	export type ClientRpcs<Engine> =
-		Engine extends PackageEngine<infer ClientRpcs, any, any, any, any, any>
-			? ClientRpcs
-			: never;
+	export type ClientRpcs<Engine> = Engine extends PackageEngine<
+		infer ClientRpcs,
+		any,
+		any,
+		any,
+		any,
+		any
+	>
+		? ClientRpcs
+		: never;
 
-	export type RuntimeRpcs<Engine> =
-		Engine extends PackageEngine<any, infer RuntimeRpcs, any, any, any, any>
-			? RuntimeRpcs
-			: never;
+	export type RuntimeRpcs<Engine> = Engine extends PackageEngine<
+		any,
+		infer RuntimeRpcs,
+		any,
+		any,
+		any,
+		any
+	>
+		? RuntimeRpcs
+		: never;
 
 	export type RuntimeRpcClient<Engine> = RpcClient.RpcClient<
 		RuntimeRpcs<Engine>
 	>;
 
-	export type Events<Engine> =
-		Engine extends PackageEngine<any, any, infer Events, any, any, any>
-			? S.Schema.Type<Events>
-			: never;
+	export type Events<Engine> = Engine extends PackageEngine<
+		any,
+		any,
+		infer Events,
+		any,
+		any,
+		any
+	>
+		? S.Schema.Type<Events>
+		: never;
 
 	export type AnyEvent = { _tag: string } & S.Any;
 }
@@ -239,8 +256,14 @@ export namespace Package {
 	>;
 
 	export const define = <
-		Engine extends PackageEngine.PackageEngine<any, any, any, any, any, any> =
-			never,
+		Engine extends PackageEngine.PackageEngine<
+			any,
+			any,
+			any,
+			any,
+			any,
+			any
+		> = never,
 	>(opts: {
 		name: string;
 		engine?: Engine;
@@ -353,12 +376,11 @@ export namespace Property {
 	export type Infer<
 		T extends Property<any, any>,
 		Engine extends PackageEngine.Any,
-	> =
-		T extends Property.ResourceSource<any, infer Value>
-			? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
-			: T extends ValueSource
-				? T.Infer_<T["type"]>
-				: never;
+	> = T extends Property.ResourceSource<any, infer Value>
+		? { engine: PackageEngine.RuntimeRpcClient<Engine>; value: Value }
+		: T extends ValueSource
+			? T.Infer_<T["type"]>
+			: never;
 }
 
 export namespace PropertiesSchema {
@@ -418,18 +440,17 @@ export namespace Schema {
 		options?: { name?: string },
 	) => DataOutput<T>;
 
-	export type InferIO<IO> =
-		IO extends DataInput<infer T>
-			? T.Infer_<T>
-			: IO extends DataOutput<infer T>
-				? (v: T.Infer_<T>) => void
-				: IO extends ExecOutput
-					? IO
-					: IO extends ExecInput
-						? never
-						: IO extends Record<string, any>
-							? { [K in keyof IO]: InferIO<IO[K]> }
-							: IO;
+	export type InferIO<IO> = IO extends DataInput<infer T>
+		? T.Infer_<T>
+		: IO extends DataOutput<infer T>
+			? (v: T.Infer_<T>) => void
+			: IO extends ExecOutput
+				? IO
+				: IO extends ExecInput
+					? never
+					: IO extends Record<string, any>
+						? { [K in keyof IO]: InferIO<IO[K]> }
+						: IO;
 
 	export type AnyIOCtx<
 		Engine extends PackageEngine.Any,

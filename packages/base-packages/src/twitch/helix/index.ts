@@ -6,7 +6,6 @@ import {
 } from "@effect/platform";
 import { Schema as S } from "effect";
 
-import { EVENTSUB_CREATE_SUBSCRIPTION_BODY } from "../eventSub.ts";
 import {
 	CharityCampaignAmount,
 	DateRange,
@@ -869,6 +868,34 @@ export const StartRaidParams = S.Struct({
 
 export const CancelRaidParams = S.Struct({ broadcaster_id: S.String });
 
+export const Moderator = S.Struct({
+	user_id: S.String,
+	user_login: S.String,
+	user_name: S.String,
+});
+
+export const BanUserParams = S.Struct({
+	broadcaster_id: S.String,
+	moderator_id: S.String,
+	user_id: S.String,
+	reason: S.optional(S.String),
+	duration: S.optional(S.Int),
+});
+
+export const UnbanUserParams = S.Struct({
+	broadcaster_id: S.String,
+	moderator_id: S.String,
+	user_id: S.String,
+});
+
+export const Warning = S.Struct({ user_id: S.String, reason: S.String });
+
+export const WarningParams = S.Struct({
+	broadcaster_id: S.String,
+	moderator_id: S.String,
+	data: S.Struct({ user_id: S.String, reason: S.String }),
+});
+
 export const Game = S.Struct({
 	id: S.String,
 	name: S.String,
@@ -1422,6 +1449,56 @@ export const HelixApi = HttpApi.make("HELIX")
 					.addSuccess(S.Void, { status: 204 }),
 			)
 			.add(
+				HttpApiEndpoint.get("getModerators", "/moderation/moderators")
+					.setUrlParams(
+						S.Struct({
+							broadcaster_id: S.String,
+							user_id: S.optional(S.String),
+							first: S.optional(S.String),
+							after: S.optional(S.String),
+						}),
+					)
+					.addSuccess(
+						S.Struct({
+							data: S.Array(Moderator),
+							pagination: S.optional(Pagination),
+						}),
+					),
+			)
+			.add(
+				HttpApiEndpoint.post("addModerator", "/moderation/moderators")
+					.setUrlParams(
+						S.Struct({ broadcaster_id: S.String, user_id: S.String }),
+					)
+					.addSuccess(S.Void, { status: 204 }),
+			)
+			.add(
+				HttpApiEndpoint.del("removeModerator", "/moderation/moderators")
+					.setUrlParams(
+						S.Struct({ broadcaster_id: S.String, user_id: S.String }),
+					)
+					.addSuccess(S.Void, { status: 204 }),
+			)
+			.add(
+				HttpApiEndpoint.post("banUser", "/moderation/bans")
+					.setPayload(BanUserParams)
+					.addSuccess(S.Void, { status: 204 }),
+			)
+			.add(
+				HttpApiEndpoint.del("unbanUser", "/moderation/bans")
+					.setUrlParams(UnbanUserParams)
+					.addSuccess(S.Void, { status: 204 }),
+			)
+			.add(
+				HttpApiEndpoint.post("warnUser", "/moderation/warnings")
+					.setPayload(WarningParams)
+					.addSuccess(
+						S.Struct({
+							data: S.Array(S.Struct({ user_id: S.String, reason: S.String })),
+						}),
+					),
+			)
+			.add(
 				HttpApiEndpoint.get("getChatChatters", "/chat/chatters")
 					.setUrlParams(
 						S.Struct({
@@ -1685,10 +1762,12 @@ export const HelixApi = HttpApi.make("HELIX")
 					"/eventsub/subscriptions",
 				)
 					.setPayload(
-						S.extend(
-							EVENTSUB_CREATE_SUBSCRIPTION_BODY,
-							S.Struct({ transport: EventSubTransportInput }),
-						),
+						S.Struct({
+							type: S.String,
+							version: S.String,
+							condition: S.Any,
+							transport: EventSubTransportInput,
+						}),
 					)
 					.addSuccess(S.Struct({ data: S.Array(S.Struct({})) }), {
 						status: 202,

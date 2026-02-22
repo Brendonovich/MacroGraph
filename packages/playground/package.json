@@ -1,9 +1,7 @@
 {
 	"name": "@macrograph/playground",
 	"type": "module",
-	"exports": {
-		".": "./src/index.tsx"
-	},
+	"exports": { ".": "./src/index.tsx" },
 	"dependencies": {
 		"@effect-atom/atom-solid": "workspace:*",
 		"@effect/opentelemetry": "^0.60.0",

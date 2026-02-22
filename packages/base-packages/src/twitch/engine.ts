@@ -23,13 +23,12 @@ import {
 import { LookupRef, type PackageEngine } from "@macrograph/package-sdk";
 
 import { EngineDef } from ".";
-import { type SubscriptionTypeDefinition, subscriptionTypes } from "./eventSub";
+import { SubscriptionEvent } from "./eventSub";
 import { HelixApi } from "./helix";
 import {
 	AccountId,
 	ConnectionFailed,
 	EventSubMessage,
-	EventSubNotification,
 	MissingCredential,
 	TwitchAPIError,
 } from "./new-types";
@@ -253,7 +252,8 @@ export default EngineDef.toLayer((ctx) =>
 				yield* Effect.log("Creating subscriptions");
 				yield* Effect.all(
 					pipe(
-						Object.values(subscriptionTypes),
+						Object.values(SubscriptionEvent.Any.members),
+						Array.take(10),
 						Array.map((def) =>
 							helixClient
 								.createEventSubSubscription({
@@ -289,7 +289,7 @@ export default EngineDef.toLayer((ctx) =>
 							throw new Error("Unexpected session welcome");
 
 						if (EventSubMessage.isType(event, "notification")) {
-							const notif = yield* S.decode(EventSubNotification.Any)({
+							const notif = yield* S.decode(SubscriptionEvent.Any)({
 								_tag: event.payload.subscription.type as any,
 								...event.payload.event,
 							}).pipe(Effect.option);
@@ -552,10 +552,10 @@ function flattenObject(
 	return res;
 }
 
-const buildCondition = <T extends SubscriptionTypeDefinition>(
-	def: T,
+const buildCondition = (
+	def: { condition: S.Struct.Fields },
 	accountId: string,
-): Record<keyof SubscriptionTypeDefinition["condition"], string> => {
+): Record<string, string> => {
 	return Object.fromEntries(
 		Object.keys(def.condition).map((key) => [key, accountId]),
 	) as any;
