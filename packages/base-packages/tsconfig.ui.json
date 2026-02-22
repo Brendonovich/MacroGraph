@@ -23,9 +23,9 @@
 		// "noUnusedParameters": true,
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
-		"types": ["unplugin-icons/types/solid", "vite/client"],
-		"plugins": [{ "name": "@effect/language-service" }]
+		"types": ["@macrograph/ui/types", "vite/client"],
+		"plugins": [{ "name": "@effect/language-service" }],
 	},
 	"include": ["src"],
-	"references": [{ "path": "../package-sdk" }, { "path": "../web-domain" }]
+	"references": [{ "path": "../package-sdk" }, { "path": "../web-domain" }],
 }
