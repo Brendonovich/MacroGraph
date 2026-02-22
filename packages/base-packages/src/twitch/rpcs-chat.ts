@@ -1,7 +1,6 @@
 import { Rpc } from "@effect/rpc";
 import { Schema as S } from "effect";
 
-import { Pagination } from "./helix/schemas/common";
 import {
 	ChatBadge,
 	ChatChatter,
@@ -11,7 +10,8 @@ import {
 	Emote,
 	EmoteWithOwner,
 	GetUserChatColorUser,
-} from "./new-helix";
+} from "./helix";
+import { Pagination } from "./helix/schemas/common";
 import { AccountId, RpcError } from "./new-types";
 
 export const ChatRpcs = [

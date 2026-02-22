@@ -1,14 +1,14 @@
 import { Rpc } from "@effect/rpc";
 import { Schema as S } from "effect";
 
-import { Pagination } from "./helix/schemas/common";
 import {
 	Channel,
 	ChannelEditor,
 	ChannelFollow,
 	ChannelInformation,
 	FollowedChannel,
-} from "./new-helix";
+} from "./helix";
+import { Pagination } from "./helix/schemas/common";
 import { AccountId, RpcError } from "./new-types";
 
 export const ChannelRpcs = [

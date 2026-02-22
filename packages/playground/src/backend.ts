@@ -1,4 +1,6 @@
+import { KeyValueStore } from "@effect/platform";
 import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
+import { BrowserKeyValueStore } from "@effect/platform-browser";
 import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -21,6 +23,7 @@ import {
 import {
 	CloudApiClient,
 	CredentialsStore,
+	EnginePersistence,
 	EngineRegistry,
 	NodeExecution,
 	PackageActions,
@@ -37,6 +40,7 @@ const RpcsLive = Rpcs.toLayer(
 		const nodeRequests = yield* NodeRequests;
 		const credentials = yield* CredentialsStore;
 		const packageActions = yield* PackageActions;
+		const editor = yield* ProjectEditor.ProjectEditor;
 
 		return {
 			GetProject: Effect.request(projectRequests.GetProjectResolver),
@@ -90,6 +94,13 @@ const RpcsLive = Rpcs.toLayer(
 					),
 					Effect.catchAll(() => Effect.die(null)),
 				),
+			FetchSuggestions: Effect.request(
+				packageActions.FetchSuggestionsResolver.pipe(
+					Effect.provide(
+						Layer.effect(ProjectRuntime.CurrentProject, editor.project),
+					),
+				),
+			),
 		};
 	}),
 );
@@ -161,9 +172,15 @@ export const BackendLive = Layer.mergeAll(RpcsLive).pipe(
 			CredentialsStore.Default,
 			NodesIOStore.Default,
 			EngineRegistry.EngineRegistry.Default,
+			EnginePersistence.layerKeyValue,
 		),
 	),
-	Layer.provideMerge(CloudApiClient.layer({ baseUrl: "/" })),
+	Layer.provideMerge(
+		Layer.merge(
+			CloudApiClient.layer({ baseUrl: "/" }),
+			BrowserKeyValueStore.layerLocalStorage,
+		),
+	),
 	Layer.provideMerge(FetchHttpClient.layer),
 	Layer.provide(NodeExecution.Default),
 ) satisfies Layer.Layer<any, any, any>;

@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema as S } from "effect";
 import { Package, PackageEngine, t } from "@macrograph/package-sdk";
 
 import {
@@ -7,7 +7,17 @@ import {
 	RuntimeRpcs,
 	SocketResource,
 } from "./new-shared";
-import { Event } from "./types";
+import { Event, SocketAddress } from "./types";
+
+export class EngineState extends S.Class<EngineState>("EngineState")({
+	sockets: S.Record({
+		key: SocketAddress,
+		value: S.Struct({
+			password: S.optional(S.String),
+			connectOnStartup: S.Boolean,
+		}),
+	}),
+}) {}
 
 export class EngineDef extends PackageEngine.define({
 	clientRpcs: ClientRpcs,
@@ -15,6 +25,7 @@ export class EngineDef extends PackageEngine.define({
 	events: Event.Any.members,
 	clientState: ClientState,
 	resources: [SocketResource],
+	engineState: EngineState,
 }) {}
 
 const OBSSocketProperty = { name: "OBS Socket", resource: SocketResource };

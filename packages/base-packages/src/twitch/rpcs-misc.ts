@@ -1,7 +1,6 @@
 import { Rpc } from "@effect/rpc";
 import { Schema as S } from "effect";
 
-import { DateRange, Pagination } from "./helix/schemas/common";
 import {
 	AdDetails,
 	Category,
@@ -28,7 +27,8 @@ import {
 	UserBitTotal,
 	UserFollow,
 	UserSubscription,
-} from "./new-helix";
+} from "./helix";
+import { DateRange, Pagination } from "./helix/schemas/common";
 import { AccountId, RpcError } from "./new-types";
 
 export const MiscRpcs = [

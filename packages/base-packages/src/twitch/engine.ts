@@ -24,7 +24,7 @@ import { LookupRef, type PackageEngine } from "@macrograph/package-sdk";
 
 import { EngineDef } from ".";
 import { type SubscriptionTypeDefinition, subscriptionTypes } from "./eventSub";
-import { HelixApi } from "./new-helix";
+import { HelixApi } from "./helix";
 import {
 	AccountId,
 	ConnectionFailed,
@@ -254,7 +254,6 @@ export default EngineDef.toLayer((ctx) =>
 				yield* Effect.all(
 					pipe(
 						Object.values(subscriptionTypes),
-						Array.take(10),
 						Array.map((def) =>
 							helixClient
 								.createEventSubSubscription({

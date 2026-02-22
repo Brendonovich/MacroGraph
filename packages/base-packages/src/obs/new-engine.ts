@@ -1,13 +1,14 @@
-import { Effect, pipe } from "effect";
+import { Effect, Iterable, pipe, Record } from "effect";
 import { LookupRef, type PackageEngine } from "@macrograph/package-sdk";
 import OBSWebsocket, { type OBSRequestTypes } from "obs-websocket-js";
 
-import { EngineDef } from "./index";
+import { EngineDef, EngineState } from "./index";
 import { ConnectionFailed } from "./new-shared";
 import { Event, SocketAddress } from "./types";
 
 type Socket = {
 	address: SocketAddress;
+	password: string | null;
 	ws: OBSWebsocket;
 	state: "disconnected" | "connecting" | "connected";
 };
@@ -15,6 +16,24 @@ type Socket = {
 export default EngineDef.toLayer((ctx) =>
 	Effect.gen(function* () {
 		const sockets = new Map<SocketAddress, Socket>();
+
+		const saveState = Effect.gen(function* () {
+			if (!ctx.saveState) return;
+
+			yield* pipe(
+				sockets.entries(),
+				Iterable.map(
+					([key, value]) =>
+						[
+							key,
+							{ password: value.password ?? undefined, connectOnStartup: true },
+						] as const,
+				),
+				Record.fromEntries,
+				(sockets) => new EngineState({ sockets }),
+				ctx.saveState,
+			);
+		});
 
 		const callSocket = Effect.fnUntraced(function* <
 			Type extends keyof OBSRequestTypes,
@@ -29,6 +48,79 @@ export default EngineDef.toLayer((ctx) =>
 				socket.ws.call(requestType, requestData),
 			);
 		});
+
+		const createSocket = Effect.fnUntraced(function* (
+			address: SocketAddress,
+			password?: string,
+		) {
+			const ws = new OBSWebsocket();
+
+			const socket: Socket = {
+				address: address,
+				password: password ?? null,
+				ws,
+				state: "disconnected",
+			};
+			sockets.set(address, socket);
+
+			yield* saveState;
+
+			const runSocketEdit = <A, E>(e: Effect.Effect<A, E>) =>
+				pipe(e, Effect.andThen(ctx.dirtyState), Effect.runFork);
+
+			ws.on("ConnectionError", () =>
+				Effect.sync(() => {
+					socket.state = "disconnected";
+				}).pipe(runSocketEdit),
+			);
+
+			ws.on("ConnectionClosed", () =>
+				Effect.sync(() => {
+					socket.state = "disconnected";
+				}).pipe(runSocketEdit),
+			);
+
+			ws.on("ConnectionOpened", () =>
+				Effect.sync(() => {
+					socket.state = "connected";
+				}).pipe(runSocketEdit),
+			);
+
+			addWsEventListeners(ws, address, ctx.emitEvent);
+
+			return socket;
+		});
+
+		const connectSocket = Effect.fnUntraced(function* (address: SocketAddress) {
+			const socket = sockets.get(address);
+			if (!socket) return;
+
+			socket.state = "connecting";
+			yield* ctx.dirtyState;
+
+			yield* Effect.tryPromise({
+				try: () => socket.ws.connect(address, socket.password ?? undefined),
+				catch: () => new ConnectionFailed(),
+			});
+		});
+
+		if (ctx.initialState)
+			yield* Effect.all(
+				pipe(
+					ctx.initialState.sockets,
+					Record.map((value, address) =>
+						createSocket(address, value.password ?? undefined).pipe(
+							Effect.zipLeft(
+								value.connectOnStartup
+									? connectSocket(address).pipe(
+											Effect.catchAll(() => Effect.void),
+										)
+									: Effect.void,
+							),
+						),
+					),
+				),
+			);
 
 		return {
 			clientState: Effect.gen(function* () {
@@ -52,42 +144,8 @@ export default EngineDef.toLayer((ctx) =>
 			},
 			clientRpcs: {
 				AddSocket: Effect.fnUntraced(function* (opts) {
-					const ws = new OBSWebsocket();
-
-					const socket: Socket = {
-						address: opts.address,
-						ws,
-						state: "disconnected",
-					};
-					sockets.set(opts.address, socket);
+					const socket = yield* createSocket(opts.address, opts.password);
 					yield* ctx.dirtyState;
-
-					const runSocketEdit = <A, E>(e: Effect.Effect<A, E>) =>
-						pipe(e, Effect.andThen(ctx.dirtyState), Effect.runFork);
-
-					ws.on("ConnectionError", () =>
-						Effect.sync(() => {
-							socket.state = "disconnected";
-						}).pipe(runSocketEdit),
-					);
-
-					ws.on("ConnectionClosed", () =>
-						Effect.sync(() => {
-							socket.state = "disconnected";
-						}).pipe(runSocketEdit),
-					);
-
-					ws.on("ConnectionOpened", () =>
-						Effect.sync(() => {
-							socket.state = "connected";
-						}).pipe(runSocketEdit),
-					);
-
-					addWsEventListeners(
-						ws,
-						SocketAddress.make(opts.address),
-						ctx.emitEvent,
-					);
 
 					yield* Effect.tryPromise({
 						try: () => socket.ws.connect(opts.address, opts.password),
@@ -105,23 +163,9 @@ export default EngineDef.toLayer((ctx) =>
 
 					sockets.delete(address);
 					yield* ctx.dirtyState;
+					yield* saveState;
 				}),
-				ConnectSocket: Effect.fnUntraced(function* ({
-					address: address_,
-					password,
-				}) {
-					const address = SocketAddress.make(address_);
-					const socket = sockets.get(address);
-					if (!socket) return;
-
-					socket.state = "connecting";
-					yield* ctx.dirtyState;
-
-					yield* Effect.tryPromise({
-						try: () => socket.ws.connect(address, password),
-						catch: () => new ConnectionFailed(),
-					});
-				}),
+				ConnectSocket: ({ address }) => connectSocket(address),
 				DisconnectSocket: Effect.fnUntraced(function* ({ address: address_ }) {
 					const address = SocketAddress.make(address_);
 					const socket = sockets.get(address);

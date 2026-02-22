@@ -6,7 +6,12 @@ import {
 } from "@effect/platform-node";
 import { Fiber, Layer, Option } from "effect";
 import * as Effect from "effect/Effect";
-import { Server, ServerConfigPersistence, ServerProjectPersistence } from "@macrograph/server-backend";
+import { EnginePersistence } from "@macrograph/project-runtime";
+import {
+	Server,
+	ServerConfigPersistence,
+	ServerProjectPersistence,
+} from "@macrograph/server-backend";
 
 import { createServer } from "node:http";
 import { ServerEnv, SharedDepsLive } from "./server-deps";
@@ -45,10 +50,17 @@ Layer.scopedDiscard(
 	Layer.provide(Server.Default),
 	Layer.provide(SharedDepsLive),
 	Layer.provide(
-		ServerConfigPersistence.jsonFile("./node_modules/server-state.json"),
+		ServerConfigPersistence.jsonFile(
+			"./node_modules/.macrograph/server-state.json",
+		),
 	),
 	Layer.provide(
-		ServerProjectPersistence.layerJsonFile("./node_modules/project.json")
+		ServerProjectPersistence.layerJsonFile(
+			"./node_modules/.macrograph/project.json",
+		),
+	),
+	Layer.provide(
+		EnginePersistence.layerFileSystem("./node_modules/.macrograph/engines"),
 	),
 	Layer.provide(Layer.mergeAll(NodeContext.layer, ServerEnv.Default)),
 	Layer.launch,

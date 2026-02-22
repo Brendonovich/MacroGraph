@@ -1,8 +1,8 @@
 import { Rpc } from "@effect/rpc";
 import { Schema as S } from "effect";
 
+import { ChannelVips, UserBlocked } from "./helix";
 import { Pagination } from "./helix/schemas/common";
-import { ChannelVips, UserBlocked } from "./new-helix";
 import { AccountId, RpcError } from "./new-types";
 
 export const ModerationRpcs = [

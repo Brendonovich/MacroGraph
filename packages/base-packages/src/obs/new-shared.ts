@@ -21,10 +21,7 @@ export const ClientRpcs = RpcGroup.make(
 	Rpc.make("RemoveSocket", { payload: S.Struct({ address: S.String }) }),
 	Rpc.make("DisconnectSocket", { payload: S.Struct({ address: S.String }) }),
 	Rpc.make("ConnectSocket", {
-		payload: S.Struct({
-			address: SocketAddress,
-			password: S.optional(S.String),
-		}),
+		payload: S.Struct({ address: SocketAddress }),
 		error: ConnectionFailed,
 	}),
 );

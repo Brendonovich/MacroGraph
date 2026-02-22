@@ -37,6 +37,7 @@ import {
 	CloudApiClient,
 	CredentialsStore,
 	EngineInstanceClient,
+	EnginePersistence,
 	EngineRegistry,
 	PackageActions,
 	ProjectRuntime,
@@ -162,11 +163,8 @@ const EditorLive = Layer.scoped(
 
 		yield* (yield* editor.subscribe).pipe(
 			Stream.throttle({ cost: Chunk.size, duration: "100 millis", units: 1 }),
-			Stream.runForEach(
-				Effect.fnUntraced(function* () {
-					yield* persistence.writeProject(yield* editor.project);
-					yield* Effect.log("Wrote project")
-				}),
+			Stream.runForEach(() =>
+				editor.project.pipe(Effect.flatMap((p) => persistence.writeProject(p))),
 			),
 			Effect.forkScoped,
 		);

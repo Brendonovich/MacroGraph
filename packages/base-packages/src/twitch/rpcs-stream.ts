@@ -1,7 +1,6 @@
 import { Rpc } from "@effect/rpc";
 import { Schema as S } from "effect";
 
-import { Pagination } from "./helix/schemas/common";
 import {
 	Clip,
 	ClipEditURL,
@@ -10,7 +9,8 @@ import {
 	StreamKey,
 	StreamMarker,
 	Video,
-} from "./new-helix";
+} from "./helix";
+import { Pagination } from "./helix/schemas/common";
 import { AccountId, RpcError } from "./new-types";
 
 const IntFromString = S.NumberFromString.pipe(S.int());

@@ -22,7 +22,7 @@
 		"noUncheckedIndexedAccess": true,
 		"noFallthroughCasesInSwitch": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"types": ["@macrograph/ui/types"]
+		"types": ["@macrograph/ui/types", "vite/client"],
 	},
 	"include": ["src"],
 	"references": [
@@ -31,6 +31,6 @@
 		{ "path": "../project-domain" },
 		{ "path": "../project-runtime" },
 		{ "path": "../project-editor" },
-		{ "path": "../project-ui" }
-	]
+		{ "path": "../project-ui" },
+	],
 }

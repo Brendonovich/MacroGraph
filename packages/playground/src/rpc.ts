@@ -16,6 +16,7 @@ export const Rpcs = RpcGroup.make(
 	Rpc.fromTaggedRequest(Request.CreateResourceConstant),
 	Rpc.fromTaggedRequest(Request.UpdateResourceConstant),
 	Rpc.fromTaggedRequest(Request.DeleteResourceConstant),
+	Rpc.fromTaggedRequest(Request.FetchSuggestions),
 	Rpc.make("GetCredentials", { success: S.Array(Credential.Credential) }),
 	Rpc.make("RefetchCredentials", { success: S.Array(Credential.Credential) }),
 );

@@ -1,5 +1,4 @@
 import {
-	FileSystem,
 	HttpMiddleware,
 	HttpRouter,
 	HttpServer,
@@ -12,6 +11,7 @@ import {
 	NodeRuntime,
 } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
+import { EnginePersistence } from "@macrograph/project-runtime";
 import {
 	Server,
 	ServerConfigPersistence,
@@ -63,17 +63,7 @@ Layer.unwrapEffect(
 	Layer.provide(
 		ServerProjectPersistence.layerJsonFile("./.macrograph/project.json"),
 	),
-	Layer.provide(
-		Layer.effectDiscard(
-			Effect.gen(function* () {
-				const fs = yield* FileSystem.FileSystem;
-				if(!(yield* fs.exists("./.macrograph"))) {
-					yield* fs.makeDirectory("./.macrograph");
-					yield* Effect.log("Created .macrograph directory");
-				}
-			}),
-		),
-	),
+	Layer.provide(EnginePersistence.layerFileSystem("./.macrograph/engines")),
 	Layer.provide(Layer.mergeAll(NodeContext.layer, ServerEnv.Default)),
 	HttpServer.withLogAddress,
 	Layer.provide(NodeHttpServer.layer(createServer, { port: 23456 })),

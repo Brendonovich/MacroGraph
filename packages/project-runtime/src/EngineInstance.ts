@@ -1,4 +1,4 @@
-import { FetchHttpClient } from "@effect/platform";
+import { FetchHttpClient, FileSystem, KeyValueStore } from "@effect/platform";
 import {
 	type Rpc,
 	RpcClient,
@@ -9,12 +9,14 @@ import {
 } from "@effect/rpc";
 import {
 	Array,
+	Context,
 	Effect,
 	Layer,
+	Option,
 	pipe,
 	Queue,
 	Record,
-	type Schema as S,
+	Schema as S,
 	type Scope,
 	Stream,
 } from "effect";
@@ -63,6 +65,47 @@ export type EngineInstanceClient = {
 	>;
 };
 
+export class EnginePersistence extends Context.Tag("EnginePersistence")<
+	EnginePersistence,
+	{
+		read: (pkgId: Package.Id) => Effect.Effect<Option.Option<string>>;
+		write: (pkgId: Package.Id, data: string) => Effect.Effect<void>;
+	}
+>() {
+	static layerKeyValue = Layer.effect(
+		EnginePersistence,
+		Effect.gen(function* () {
+			const kv = yield* KeyValueStore.KeyValueStore;
+
+			return {
+				read: (pkgId) => kv.get(`engine-state:${pkgId}`).pipe(Effect.orDie),
+				write: (pkgId, data) =>
+					kv.set(`engine-state:${pkgId}`, data).pipe(Effect.orDie),
+			};
+		}),
+	);
+
+	static layerFileSystem = (directory: string) =>
+		Layer.effect(
+			EnginePersistence,
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+
+				if (!(yield* fs.exists(directory)))
+					yield* fs.makeDirectory(directory, { recursive: true });
+
+				return {
+					read: (pkgId) =>
+						fs.readFileString(`${directory}/${pkgId}.json`).pipe(Effect.option),
+					write: (pkgId, data) =>
+						fs
+							.writeFileString(`${directory}/${pkgId}.json`, data)
+							.pipe(Effect.ignore),
+				};
+			}),
+		);
+}
+
 export namespace EngineInstanceClient {
 	export const makeLocal = (
 		args: EngineMakeArgs & { layer: EngineImplementationLayer },
@@ -75,11 +118,13 @@ export namespace EngineInstanceClient {
 		| NodesIOStore
 		| Scope.Scope
 		| EngineRegistry.EngineRegistry
+		| EnginePersistence
 	> =>
 		Effect.gen(function* () {
 			const credentials = yield* CredentialsStore;
 			const cloud = yield* CloudApiClient.CloudApiClient;
 			const runtime = yield* ProjectRuntime.ProjectRuntime;
+			const persistence = yield* EnginePersistence;
 
 			const credentialsRef = LookupRef.mapGet(credentials, (get) =>
 				get.pipe(Effect.catchAll(() => Effect.succeed([]))),
@@ -101,6 +146,9 @@ export namespace EngineInstanceClient {
 				),
 				Effect.forkScoped,
 			);
+
+			let refreshState: Effect.Effect<void> = Effect.void;
+			let refreshResources: Effect.Effect<void> = Effect.void;
 
 			const ctxLayer = Layer.succeed(PackageEngine.CtxTag, {
 				emitEvent: (e) => events.unsafeOffer(e),
@@ -126,6 +174,27 @@ export namespace EngineInstanceClient {
 								credentials.refresh.pipe(Effect.catchAll(() => Effect.void)),
 							),
 						),
+				saveState: (state) =>
+					Effect.gen(function* () {
+						const serialize = S.encode(args.engine.engineState);
+
+						yield* persistence.write(
+							args.pkgId,
+							JSON.stringify(yield* serialize(state).pipe(Effect.orDie)),
+						);
+					}),
+				initialState: yield* Effect.gen(function* () {
+					if (!args.engine.engineState) return;
+					const saved = yield* persistence
+						.read(args.pkgId)
+						.pipe(Effect.map(Option.getOrNull));
+					if (!saved) return;
+
+					const deserialize = S.decode(S.parseJson(args.engine.engineState));
+					return yield* deserialize(saved).pipe(
+						Effect.catchAll(() => Effect.void),
+					);
+				}),
 			});
 
 			const instance = yield* EngineInstance.make({
@@ -161,10 +230,10 @@ export namespace EngineInstanceClient {
 				Effect.forkScoped,
 			);
 
-			const refreshResources: Effect.Effect<void> = Effect.all(
+			refreshResources = Effect.all(
 				Record.map(instance.resources, (cache) => cache.refresh),
 			).pipe(Effect.asVoid);
-			const refreshState: Effect.Effect<void> = instance.state.refresh;
+			refreshState = instance.state.refresh;
 
 			return instance;
 		});
@@ -203,7 +272,8 @@ export namespace EngineInstance {
 			any,
 			PackageEngine.AnyEvent,
 			S.Schema.Any,
-			Resource.Tag<any, any>
+			Resource.Tag<any, any>,
+			S.Schema.AnyNoContext
 		>;
 		layer: EngineImplementationLayer;
 	}): Effect.Effect<
