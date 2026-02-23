@@ -10,7 +10,8 @@ export class ServerPolicy extends Effect.Service<ServerPolicy>()(
 		effect: Effect.gen(function* () {
 			const serverRegistration = yield* ServerRegistration;
 
-			const adminEnvs = yield* Config.array(Config.string("MG_ADMIN_IDS")).pipe(
+			const adminEnvs = yield* Config.string("MG_ADMIN_IDS").pipe(
+				Config.map((ids) => ids.split(",")),
 				Config.option,
 			);
 
