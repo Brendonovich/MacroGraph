@@ -17,14 +17,17 @@ import {
 	Layer,
 	Option,
 	Record,
+	type Request,
 	Schema as S,
 	Stream,
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
+import type * as RequestResolver from "effect/RequestResolver";
 import * as Packages from "@macrograph/base-packages";
 import {
 	NodesIOStore,
 	Package,
+	Policy,
 	ProjectEvent,
 } from "@macrograph/project-domain";
 import {
@@ -75,6 +78,11 @@ class ProjectEditorRpcMiddleware extends RpcMiddleware.Tag<ProjectEditorRpcMiddl
 	{ provides: ProjectEditor.ProjectEditor },
 ) {}
 
+export class RealtimeConnectionsRpcMiddleware extends RpcMiddleware.Tag<RealtimeConnectionsRpcMiddleware>()(
+	"RealtimeConnectionsRpcMiddleware",
+	{ provides: RealtimeConnections },
+) {}
+
 const EditorRpcs = RawEditorRpcs.middleware(ProjectEditorRpcMiddleware);
 
 const EditorRpcsLive = EditorRpcs.toLayer(
@@ -82,34 +90,47 @@ const EditorRpcsLive = EditorRpcs.toLayer(
 		const projectRequests = yield* ProjectRequests;
 		const graphRequests = yield* GraphRequests;
 		const nodeRequests = yield* NodeRequests;
-		// const serverPolicy = yield* ServerPolicy;
+		const serverPolicy = yield* ServerPolicy;
 		const packageActions = yield* PackageActions;
 		const editor = yield* ProjectEditor.ProjectEditor;
 
+		const adminRequest =
+			<TReq extends Request.Request<any, any>, R>(
+				resolver: Effect.Effect<
+					RequestResolver.RequestResolver<TReq, never>,
+					never,
+					R
+				>,
+			) =>
+			(req: TReq) =>
+				Effect.request(req, resolver).pipe(
+					Policy.withPolicy(serverPolicy.isAdmin),
+				);
+
 		return {
 			GetProject: Effect.request(projectRequests.GetProjectResolver),
-			CreateNode: Effect.request(graphRequests.CreateNodeResolver),
-			ConnectIO: Effect.request(graphRequests.ConnectIOResolver),
-			SetItemPositions: Effect.request(graphRequests.SetItemPositionsResolver),
-			CreateGraph: Effect.request(projectRequests.CreateGraphResolver),
-			DeleteGraphItems: Effect.request(graphRequests.DeleteGraphItemsResolver),
-			DisconnectIO: Effect.request(graphRequests.DisconnectIOResolver),
-			SetNodeProperty: Effect.request(nodeRequests.SetNodePropertyResolver),
-			SetInputDefault: Effect.request(nodeRequests.SetInputDefaultResolver),
-			SetNodeFoldPins: Effect.request(nodeRequests.SetNodeFoldPinsResolver),
-			CreateResourceConstant: Effect.request(
+			CreateNode: adminRequest(graphRequests.CreateNodeResolver),
+			ConnectIO: adminRequest(graphRequests.ConnectIOResolver),
+			SetItemPositions: adminRequest(graphRequests.SetItemPositionsResolver),
+			CreateGraph: adminRequest(projectRequests.CreateGraphResolver),
+			DeleteGraphItems: adminRequest(graphRequests.DeleteGraphItemsResolver),
+			DisconnectIO: adminRequest(graphRequests.DisconnectIOResolver),
+			SetNodeProperty: adminRequest(nodeRequests.SetNodePropertyResolver),
+			SetInputDefault: adminRequest(nodeRequests.SetInputDefaultResolver),
+			SetNodeFoldPins: adminRequest(nodeRequests.SetNodeFoldPinsResolver),
+			CreateResourceConstant: adminRequest(
 				projectRequests.CreateResourceConstantResolver,
 			),
-			UpdateResourceConstant: Effect.request(
+			UpdateResourceConstant: adminRequest(
 				projectRequests.UpdateResourceConstantResolver,
 			),
-			DeleteResourceConstant: Effect.request(
+			DeleteResourceConstant: adminRequest(
 				projectRequests.DeleteResourceConstantResolver,
 			),
-			GetPackageEngineState: Effect.request(
+			GetPackageEngineState: adminRequest(
 				packageActions.GetPackageEngineStateResolver,
 			),
-			FetchSuggestions: Effect.request(
+			FetchSuggestions: adminRequest(
 				packageActions.FetchSuggestionsResolver.pipe(
 					Effect.provide(
 						Layer.effect(ProjectRuntime.CurrentProject, editor.project),

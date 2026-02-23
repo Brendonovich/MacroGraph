@@ -1,6 +1,6 @@
 import { RpcMiddleware } from "@effect/rpc";
 import { Context, Schema } from "effect";
-import { Actor } from "@macrograph/project-domain";
+import { Actor, Policy } from "@macrograph/project-domain";
 
 export const ConnectionId = Schema.Number.pipe(
 	Schema.brand("Realtime/ConnectionId"),
@@ -20,4 +20,9 @@ export class ConnectionRpcMiddleware extends RpcMiddleware.Tag<ConnectionRpcMidd
 export class CurrentActorRpcMiddleware extends RpcMiddleware.Tag<CurrentActorRpcMiddleware>()(
 	"CurrentActorRpcMiddleware",
 	{ provides: Actor.Current },
+) {}
+
+export class PolicyMiddleware extends RpcMiddleware.Tag<PolicyMiddleware>()(
+	"PolicyMiddleware",
+	{ failure: Policy.PolicyDeniedError },
 ) {}

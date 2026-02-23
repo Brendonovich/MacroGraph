@@ -18,7 +18,7 @@ export class GetProject extends S.TaggedRequest<GetProject>()("GetProject", {
 		packages: S.Array(Package.Package),
 		nodesIO: S.Map({ key: Node.Id, value: IO.NodeIO }),
 	}),
-	failure: Credential.FetchFailed,
+	failure: S.Union(Credential.FetchFailed, Policy.PolicyDeniedError),
 }) {}
 
 export class GetPackageEngineState extends S.TaggedRequest<GetPackageEngineState>()(
@@ -44,7 +44,7 @@ export class SetItemPositions extends S.TaggedRequest<SetItemPositions>()(
 			ephemeral: S.optional(S.Boolean),
 		},
 		success: S.Void,
-		failure: Graph.NotFound,
+		failure: S.Union(Graph.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
@@ -55,7 +55,12 @@ export class ConnectIO extends S.TaggedRequest<ConnectIO>()("ConnectIO", {
 		input: S.Tuple(Node.Id, IO.Id),
 	},
 	success: ProjectEvent.NodeIOUpdated,
-	failure: S.Union(Graph.NotFound, Node.NotFound, IO.NotFound),
+	failure: S.Union(
+		Graph.NotFound,
+		Node.NotFound,
+		IO.NotFound,
+		Policy.PolicyDeniedError,
+	),
 }) {}
 
 export class DisconnectIO extends S.TaggedRequest<DisconnectIO>()(
@@ -71,7 +76,7 @@ export class DisconnectIO extends S.TaggedRequest<DisconnectIO>()(
 			),
 		},
 		success: S.Array(ProjectEvent.NodeIOUpdated),
-		failure: S.Union(Graph.NotFound, Node.NotFound),
+		failure: S.Union(Graph.NotFound, Node.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
@@ -83,13 +88,18 @@ export class CreateNode extends S.TaggedRequest<CreateNode>()("CreateNode", {
 		position: Position,
 	},
 	success: ProjectEvent.NodeCreated,
-	failure: S.Union(Graph.NotFound, Package.NotFound, Schema.NotFound),
+	failure: S.Union(
+		Graph.NotFound,
+		Package.NotFound,
+		Schema.NotFound,
+		Policy.PolicyDeniedError,
+	),
 }) {}
 
 export class CreateGraph extends S.TaggedRequest<CreateGraph>()("CreateGraph", {
 	payload: { name: S.String },
 	success: ProjectEvent.GraphCreated,
-	failure: S.Never,
+	failure: Policy.PolicyDeniedError,
 }) {}
 
 export class DeleteGraphItems extends S.TaggedRequest<DeleteGraphItems>()(
@@ -97,7 +107,7 @@ export class DeleteGraphItems extends S.TaggedRequest<DeleteGraphItems>()(
 	{
 		payload: { graph: Graph.Id, items: S.Array(Graph.ItemRef) },
 		success: ProjectEvent.GraphItemsDeleted,
-		failure: Graph.NotFound,
+		failure: S.Union(Graph.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
@@ -111,7 +121,7 @@ export class SetNodeProperty extends S.TaggedRequest<SetNodeProperty>()(
 			value: S.Unknown,
 		},
 		success: ProjectEvent.NodePropertyUpdated,
-		failure: S.Union(Graph.NotFound, Node.NotFound),
+		failure: S.Union(Graph.NotFound, Node.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
@@ -120,7 +130,7 @@ export class SetInputDefault extends S.TaggedRequest<SetInputDefault>()(
 	{
 		payload: { graph: Graph.Id, node: Node.Id, input: IO.Id, value: S.Unknown },
 		success: ProjectEvent.InputDefaultUpdated,
-		failure: S.Union(Graph.NotFound, Node.NotFound),
+		failure: S.Union(Graph.NotFound, Node.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
@@ -129,7 +139,7 @@ export class CreateResourceConstant extends S.TaggedRequest<CreateResourceConsta
 	{
 		payload: { pkg: Package.Id, resource: S.String },
 		success: ProjectEvent.ResourceConstantCreated,
-		failure: S.Union(Package.NotFound),
+		failure: S.Union(Package.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
@@ -142,7 +152,7 @@ export class UpdateResourceConstant extends S.TaggedRequest<UpdateResourceConsta
 			name: S.optional(S.String),
 		},
 		success: ProjectEvent.ResourceConstantUpdated,
-		failure: S.Union(Package.NotFound),
+		failure: S.Union(Package.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
@@ -151,7 +161,7 @@ export class DeleteResourceConstant extends S.TaggedRequest<DeleteResourceConsta
 	{
 		payload: { id: S.String },
 		success: ProjectEvent.ResourceConstantDeleted,
-		failure: S.Never,
+		failure: Policy.PolicyDeniedError,
 	},
 ) {}
 
@@ -166,6 +176,7 @@ export class FetchSuggestions extends S.TaggedRequest<FetchSuggestions>()(
 			IO.NotFound,
 			Package.NotFound,
 			Schema.NotFound,
+			Policy.PolicyDeniedError,
 		),
 	},
 ) {}
@@ -175,7 +186,7 @@ export class SetNodeFoldPins extends S.TaggedRequest<SetNodeFoldPins>()(
 	{
 		payload: { graph: Graph.Id, node: Node.Id, foldPins: S.Boolean },
 		success: ProjectEvent.NodeFoldPinsUpdated,
-		failure: S.Union(Graph.NotFound, Node.NotFound),
+		failure: S.Union(Graph.NotFound, Node.NotFound, Policy.PolicyDeniedError),
 	},
 ) {}
 
