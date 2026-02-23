@@ -108,9 +108,9 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 				name: "Chatter User Login",
 			}),
 			messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
-			// messageText: c.out.data("messageText", t.String, {
-			// 	name: "Message Text",
-			// }),
+			messageText: c.out.data("messageText", t.String, {
+				name: "Message Text",
+			}),
 			// messageType: c.out.data("messageType", t.String, {
 			// 	name: "Message Type",
 			// }),
@@ -124,7 +124,7 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.chatterUserName(event.chatter_user_name);
 			io.chatterUserLogin(event.chatter_user_login);
 			io.messageId(event.message_id);
-			// io.messageText(event.message_text);
+			io.messageText(event.message.text);
 			// io.messageType(event.message_type);
 			io.color(event.color);
 		},
@@ -263,10 +263,10 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			chatterUserLogin: c.out.data("chatterUserLogin", t.String, {
 				name: "Chatter User Login",
 			}),
-			// messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
-			// messageText: c.out.data("messageText", t.String, {
-			// 	name: "Message Text",
-			// }),
+			messageId: c.out.data("messageId", t.String, { name: "Message ID" }),
+			messageText: c.out.data("messageText", t.String, {
+				name: "Message Text",
+			}),
 			systemMessage: c.out.data("systemMessage", t.String, {
 				name: "System Message",
 			}),
@@ -279,8 +279,8 @@ export default Package.define({ name: "Twitch", engine: EngineDef })
 			io.chatterUserId(event.chatter_user_id);
 			io.chatterUserName(event.chatter_user_name);
 			io.chatterUserLogin(event.chatter_user_login);
-			// io.messageId(event.message_id);
-			// io.messageText(event.message.text);
+			io.messageId(event.message_id);
+			io.messageText(event.message.text);
 			io.systemMessage(event.system_message);
 			// io.noticeType(event.notice_type);
 		},

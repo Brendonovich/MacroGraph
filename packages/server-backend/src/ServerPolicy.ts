@@ -42,10 +42,11 @@ export class ServerPolicy extends Effect.Service<ServerPolicy>()(
 							Effect.map(Option.andThen((v) => v.auth)),
 						);
 						if (Option.isSome(connectionAuth)) {
-							if (Option.isSome(registration))
-								return (
-									connectionAuth.value.userId === registration.value.ownerId
-								);
+							if (Option.isSome(registration)) {
+								const isOwner =
+									connectionAuth.value.userId === registration.value.ownerId;
+								if (isOwner) return true;
+							}
 
 							if (Option.isSome(adminEnvs))
 								return adminEnvs.value.includes(connectionAuth.value.userId);
