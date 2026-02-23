@@ -1,13 +1,14 @@
-import { LoadingBlock, PromiseButton } from "@macrograph/package-sdk/ui";
+import type { Exit } from "effect";
+import { PromiseButton } from "@macrograph/package-sdk/ui";
 import type { Credential } from "@macrograph/project-domain";
 import { queryOptions, type UseQueryResult } from "@tanstack/solid-query";
-import { For, Suspense } from "solid-js";
+import { For } from "solid-js";
 
+import { MatchEffectQuery } from "../MatchEffectQuery";
 import { mutationOptions } from "../tanstack-query";
 
-export const credentialsQueryOptions = (
-	queryFn: () => Promise<ReadonlyArray<Credential.Credential>>,
-) => queryOptions({ queryKey: ["credentials"], queryFn });
+export const credentialsQueryOptions = <T,>(queryFn: () => Promise<T>) =>
+	queryOptions({ queryKey: ["credentials"], queryFn });
 
 export const refetchCredentialsMutationOptions = (
 	mutationFn: () => Promise<any>,
@@ -15,7 +16,9 @@ export const refetchCredentialsMutationOptions = (
 
 export function CredentialsPage(props: {
 	description: string;
-	credentials: UseQueryResult<ReadonlyArray<Credential.Credential>>;
+	credentials: UseQueryResult<
+		Exit.Exit<ReadonlyArray<Credential.Credential>, any>
+	>;
 	onRefetch?(): Promise<any>;
 }) {
 	return (
@@ -32,23 +35,31 @@ export function CredentialsPage(props: {
 					Refetch
 				</PromiseButton>
 			</div>
-			<Suspense fallback={<LoadingBlock />}>
-				<ul class="divide-gray-5 divide-y">
-					<For each={props.credentials.data}>
-						{(credential) => (
-							<li class="py-1 flex flex-row justify-between items-center">
-								<div class="flex flex-col items-start">
-									<span class="">
-										{credential.displayName ?? credential.providerUserId}
-									</span>
-									<pre class="text-gray-11">{credential.providerUserId}</pre>
-								</div>
-								<span>{credential.providerId}</span>
-							</li>
-						)}
-					</For>
-				</ul>
-			</Suspense>
+			<MatchEffectQuery
+				query={props.credentials}
+				// onError={() => {
+				// if (Cause.isFailType(e)) {
+				// 	return "Register this server to your account to view credentials";
+				// }
+				// }}
+				onSuccess={(credentials) => (
+					<ul class="divide-gray-5 divide-y">
+						<For each={credentials()}>
+							{(credential) => (
+								<li class="py-1 flex flex-row justify-between items-center">
+									<div class="flex flex-col items-start">
+										<span class="">
+											{credential.displayName ?? credential.providerUserId}
+										</span>
+										<pre class="text-gray-11">{credential.providerUserId}</pre>
+									</div>
+									<span>{credential.providerId}</span>
+								</li>
+							)}
+						</For>
+					</ul>
+				)}
+			/>
 		</>
 	);
 }

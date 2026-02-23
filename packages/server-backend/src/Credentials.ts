@@ -12,7 +12,7 @@ export const CredentialsRpcsLive = Credential.Rpcs.toLayer(
 
 		const transformCredentialRequest = (e: typeof credentials.get) =>
 			e.pipe(
-				Policy.withPolicy(serverPolicy.isOwner),
+				Policy.withPolicy(serverPolicy.isAdmin),
 				Effect.catchIf(
 					(v) => !(v._tag === "PolicyDenied"),
 					() => Effect.die(null),

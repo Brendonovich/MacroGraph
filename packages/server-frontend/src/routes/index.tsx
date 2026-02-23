@@ -341,7 +341,7 @@ const usePaneTabController = (
 
 								const credentials = useQuery(() =>
 									credentialsQueryOptions(() =>
-										rpc.GetCredentials().pipe(runtime.runPromise),
+										rpc.GetCredentials().pipe(runtime.runPromiseExit),
 									),
 								);
 								const refetchCredentials = useMutation(() =>
