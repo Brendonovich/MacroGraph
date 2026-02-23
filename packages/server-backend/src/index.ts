@@ -224,8 +224,9 @@ export class Server extends Effect.Service<Server>()("Server", {
 	scoped: Effect.gen(function* () {
 		const editor = yield* ProjectEditor.ProjectEditor;
 		const runtime = yield* ProjectRuntime.ProjectRuntime;
-
+		const serverPolicy = yield* ServerPolicy;
 		const realtimeConnections = yield* RealtimeConnections;
+		const cloud = yield* CloudApiClient.CloudApiClient;
 
 		const packageEngines = yield* Effect.promise(
 			() => import("@macrograph/base-packages/engines"),
@@ -313,7 +314,6 @@ export class Server extends Effect.Service<Server>()("Server", {
 			HttpRouter.mountApp(
 				"/rpc",
 				Effect.gen(function* () {
-					const realtimeConnections = yield* RealtimeConnections;
 					const req = yield* HttpServerRequest.HttpServerRequest;
 
 					const searchParams = yield* HttpServerRequest.schemaSearchParams(
@@ -345,7 +345,6 @@ export class Server extends Effect.Service<Server>()("Server", {
 			HttpRouter.get(
 				"/realtime",
 				Effect.gen(function* () {
-					const cloud = yield* CloudApiClient.CloudApiClient;
 					const req = yield* HttpServerRequest.HttpServerRequest;
 					const socket = yield* req.upgrade;
 					const writer = yield* socket.writer;
@@ -437,6 +436,21 @@ export class Server extends Effect.Service<Server>()("Server", {
 			allAsMounted(
 				"/package/:package/rpc",
 				Effect.gen(function* () {
+					const headers = yield* HttpServerRequest.schemaHeaders(
+						S.Struct({ Authentication: S.String }),
+					);
+					const authToken = headers.Authentication.split("Bearer ")[1];
+					if (!authToken) throw new Error("Authentication token not found");
+
+					const res = yield* Effect.promise(() =>
+						Jose.jwtVerify(authToken, realtimeSecretKey),
+					);
+
+					const id = Realtime.ConnectionId.make(res.payload.id as number);
+
+					const conn = realtimeConnections.get(id);
+					if (!conn) throw new Error("Connection not found");
+
 					const { package: pkgId } = yield* HttpRouter.schemaPathParams(
 						S.Struct({ package: Package.Id }),
 					);
@@ -447,7 +461,10 @@ export class Server extends Effect.Service<Server>()("Server", {
 							status: 404,
 						});
 
-					return yield* httpApp.value;
+					return yield* httpApp.value.pipe(
+						Policy.withPolicy(serverPolicy.isAdmin),
+						Effect.provide(Realtime.Connection.context({ id })),
+					);
 				}),
 			),
 			Effect.provideService(RealtimeConnections, yield* RealtimeConnections),

@@ -14,6 +14,7 @@ import { EffectRuntime, UILive } from "@macrograph/server-frontend";
 import "@unocss/reset/tailwind.css";
 import "virtual:uno.css";
 import { WebSdk } from "@effect/opentelemetry";
+import { FetchHttpClient } from "@effect/platform";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import type { OTLPExporterNodeConfigBase } from "@opentelemetry/otlp-exporter-base";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
@@ -72,6 +73,7 @@ const ImportMetaEnvConfig = Layer.setConfigProvider(
 
 const runtime = ManagedRuntime.make(
 	EffectRuntime.layer.pipe(
+		Layer.provideMerge(FetchHttpClient.layer),
 		Layer.provide(TracingLive),
 		Layer.provide(ImportMetaEnvConfig),
 		Layer.provide(Logger.pretty),
