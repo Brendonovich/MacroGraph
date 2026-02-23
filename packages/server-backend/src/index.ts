@@ -37,7 +37,6 @@ import {
 	CloudApiClient,
 	CredentialsStore,
 	EngineInstanceClient,
-	EnginePersistence,
 	EngineRegistry,
 	PackageActions,
 	ProjectRuntime,
@@ -159,6 +158,10 @@ const EditorLive = Layer.scoped(
 		yield* editor.loadPackage(Package.Id.make("util"), Packages.util);
 		yield* editor.loadPackage(Package.Id.make("twitch"), Packages.twitch);
 		yield* editor.loadPackage(Package.Id.make("obs"), Packages.obs);
+		yield* editor.loadPackage(
+			Package.Id.make("http-client"),
+			Packages["http-client"],
+		);
 
 		if (Option.isSome(project)) yield* editor.loadProject(project.value);
 

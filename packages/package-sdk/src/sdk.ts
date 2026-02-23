@@ -1,3 +1,4 @@
+import type { HttpClient } from "@effect/platform/HttpClient";
 import { type Rpc, type RpcClient, RpcGroup } from "@effect/rpc";
 import {
 	Context,
@@ -475,6 +476,8 @@ export namespace Schema {
 			: never;
 	};
 
+	export type RunRequirements = HttpClient;
+
 	export interface Base<
 		Engine extends PackageEngine.Any,
 		Id extends string,
@@ -492,7 +495,7 @@ export namespace Schema {
 			properties: {
 				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
 			};
-		}) => Effect.Effect<void | ExecOutput>;
+		}) => Effect.Effect<void | ExecOutput, never, RunRequirements>;
 	}
 
 	export interface Exec<
@@ -512,7 +515,7 @@ export namespace Schema {
 			properties: {
 				[K in keyof Properties]: Property.Infer<Properties[K], Engine>;
 			};
-		}) => Effect.Effect<void>;
+		}) => Effect.Effect<void, never, RunRequirements>;
 	}
 
 	export interface Pure<

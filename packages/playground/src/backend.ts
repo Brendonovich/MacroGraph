@@ -118,6 +118,10 @@ const EditorLive = Layer.scoped(
 		const editor = yield* ProjectEditor.make();
 
 		for (const [id, pkg] of Object.entries(Packages)) {
+			// const kebabId = id
+			// 	// .replace(/([a-z])([A-Z])/g, "$1-$2")
+			// 	// .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2")
+			// 	.toLowerCase();
 			yield* editor.loadPackage(Package.Id.make(id), pkg);
 		}
 

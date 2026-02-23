@@ -56,7 +56,7 @@ export default {
 					imports.push(`import ${iconImport} from "${iconUrl.pathname}"`);
 
 				packages.push(
-					`${folder.name}: ${JSON.stringify({
+					`"${folder.name}": ${JSON.stringify({
 						name: folder.name,
 						icon: hasIcon ? `$${iconImport}$` : undefined,
 					})},`
@@ -82,7 +82,7 @@ export default {
 
 				if (hasSettings)
 					packages.push(
-						`${folder}: () => import("@macrograph/base-packages/Settings?package=${folder}"),`,
+						`"${folder}": () => import("@macrograph/base-packages/Settings?package=${folder}"),`,
 					);
 			}
 
