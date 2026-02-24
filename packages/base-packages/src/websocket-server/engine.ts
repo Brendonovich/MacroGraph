@@ -40,17 +40,25 @@ export default EngineDef.toLayer((ctx) =>
 			port: Port,
 			displayName?: string,
 		) {
-			if (servers.has(port)) {
+			const existingServer = servers.get(port);
+			if (existingServer?.state === "running") {
 				return yield* new ServerStartError({
 					message: `Server already running on port ${port}`,
 				});
 			}
 
+			// Preserve existing display name if restarting a stopped server
+			const resolvedDisplayName =
+				displayName ??
+				Option.getOrUndefined(existingServer?.displayName ?? Option.none());
+
 			const server = yield* NodeSocketServer.makeWebSocket({ port });
 
 			const serverState: ServerState = {
 				port,
-				displayName: displayName ? Option.some(displayName) : Option.none(),
+				displayName: resolvedDisplayName
+					? Option.some(resolvedDisplayName)
+					: Option.none(),
 				clients: new Map(),
 				nextClientId: 1,
 				state: "running",
@@ -100,6 +108,7 @@ export default EngineDef.toLayer((ctx) =>
 		const stopServer = Effect.fnUntraced(function* (port: Port) {
 			const serverState = servers.get(port);
 			if (!serverState) return;
+			if (serverState.state !== "running") return;
 
 			// Close all client connections by sending empty data (triggers close)
 			for (const [clientId, socket] of serverState.clients) {
@@ -114,6 +123,18 @@ export default EngineDef.toLayer((ctx) =>
 			}
 
 			serverState.state = "stopped";
+			yield* ctx.dirtyState;
+			yield* saveState;
+		});
+
+		const removeServer = Effect.fnUntraced(function* (port: Port) {
+			const serverState = servers.get(port);
+			if (!serverState) return;
+			if (serverState.state === "running") {
+				// Stop first if running
+				yield* stopServer(port);
+			}
+
 			servers.delete(port);
 			yield* ctx.dirtyState;
 			yield* saveState;
@@ -151,13 +172,15 @@ export default EngineDef.toLayer((ctx) =>
 			resources: {
 				WebSocketServer: yield* LookupRef.make(
 					Effect.sync(() =>
-						[...servers.entries()].map(([port, server]) => {
-							const displayName = Option.getOrUndefined(server.displayName);
-							return {
-								id: String(port),
-								display: displayName ? `${displayName}` : `Port ${port}`,
-							};
-						}),
+						[...servers.entries()]
+							.filter(([, server]) => server.state === "running")
+							.map(([port, server]) => {
+								const displayName = Option.getOrUndefined(server.displayName);
+								return {
+									id: String(port),
+									display: displayName ? `${displayName}` : `Port ${port}`,
+								};
+							}),
 					),
 				),
 			},
@@ -180,6 +203,8 @@ export default EngineDef.toLayer((ctx) =>
 					),
 				StopServer: ({ port }: { port: Port }) =>
 					stopServer(port).pipe(Effect.catchAll(() => Effect.void)),
+				RemoveServer: ({ port }: { port: Port }) =>
+					removeServer(port).pipe(Effect.catchAll(() => Effect.void)),
 			},
 			runtimeRpcs: {
 				SendMessage: ({

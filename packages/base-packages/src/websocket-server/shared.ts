@@ -15,6 +15,7 @@ export const ClientRpcs = RpcGroup.make(
 		error: ServerStartError,
 	}),
 	Rpc.make("StopServer", { payload: S.Struct({ port: Port }) }),
+	Rpc.make("RemoveServer", { payload: S.Struct({ port: Port }) }),
 );
 
 export const RuntimeRpcs = RpcGroup.make(

@@ -47,14 +47,17 @@ export namespace TabLayout {
 		state: State<TTab>,
 		id: number,
 	) {
-		const selectedIndex = state.tabs.findIndex(
-			(t) => t.tabId === state.selectedTab,
-		);
-		if (selectedIndex === -1) return;
+		const removedIndex = state.tabs.findIndex((t) => t.tabId === id);
+		if (removedIndex === -1) return;
 
+		const isSelectedTab = id === state.selectedTab;
 		state.tabs = state.tabs.filter((t) => t.tabId !== id);
-		if (id === state.selectedTab) {
-			const nextId = state.tabs[selectedIndex]?.tabId ?? state.tabs[0]?.tabId;
+
+		if (isSelectedTab) {
+			// Select tab at same index, or last tab if removed tab was at the end
+			const nextId =
+				state.tabs[removedIndex]?.tabId ??
+				state.tabs[state.tabs.length - 1]?.tabId;
 			if (nextId !== undefined) state.selectedTab = nextId;
 		}
 	}

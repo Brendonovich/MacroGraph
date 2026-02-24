@@ -63,7 +63,7 @@ function AddWebSocketForm(
 		<div class="flex flex-col gap-3">
 			<div class="flex flex-row gap-3">
 				<InputField
-					label="URL"
+					label="Address"
 					value="ws://localhost:8080"
 					onChange={(e) =>
 						setAddConnection("url", e.target.value as WebSocketUrl)

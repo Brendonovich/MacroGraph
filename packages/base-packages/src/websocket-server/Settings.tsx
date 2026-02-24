@@ -60,22 +60,24 @@ function AddServerForm(
 	return (
 		<div class="flex flex-col gap-3">
 			<div class="flex flex-row gap-3 items-end">
-				<InputField
-					label="Port"
-					type="number"
-					min={0}
-					max={65535}
-					value={1890}
-					onChange={(e) => setAddServer("port", Number(e.target.value))}
-				/>
-				<InputField
-					label="Display Name (Optional)"
-					value=""
-					placeholder="My Server"
-					onChange={(e) => setAddServer("displayName", e.target.value)}
-				/>
-			</div>
-			<div class="flex flex-row justify-end">
+				<div class="w-1/4">
+					<InputField
+						label="Port"
+						type="number"
+						min={0}
+						max={65535}
+						value={1890}
+						onChange={(e) => setAddServer("port", Number(e.target.value))}
+					/>
+				</div>
+				<div class="w-3/4">
+					<InputField
+						label="Display Name (Optional)"
+						value=""
+						placeholder="My Server"
+						onChange={(e) => setAddServer("displayName", e.target.value)}
+					/>
+				</div>
 				<EffectButton
 					onClick={() =>
 						props.rpc.StartServer({
@@ -125,10 +127,23 @@ function ServerListItem(
 			</div>
 			<div class="flex-1 flex flex-row justify-end items-center gap-1">
 				<EffectButton
-					variant="textDanger"
-					onClick={() => props.rpc.StopServer({ port: server().port })}
+					variant="text"
+					onClick={() =>
+						server().state === "running"
+							? props.rpc.StopServer({ port: server().port })
+							: props.rpc.StartServer({
+									port: server().port,
+									displayName: server().displayName,
+								})
+					}
 				>
-					Stop
+					{server().state === "running" ? "Stop" : "Start"}
+				</EffectButton>
+				<EffectButton
+					variant="textDanger"
+					onClick={() => props.rpc.RemoveServer({ port: server().port })}
+				>
+					Remove
 				</EffectButton>
 			</div>
 		</li>

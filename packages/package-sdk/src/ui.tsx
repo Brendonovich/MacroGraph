@@ -22,6 +22,9 @@ import {
 } from "solid-js";
 import createPresence from "solid-presence";
 import "@total-typescript/ts-reset";
+import { focusRingClasses } from "@macrograph/ui";
+
+export { focusRingClasses };
 
 export type GlobalAppState = {
 	auth:

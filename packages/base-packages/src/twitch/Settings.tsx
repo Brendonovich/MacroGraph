@@ -1,5 +1,6 @@
 import {
 	EffectButton,
+	focusRingClasses,
 	LoadingBlock,
 	type SettingsProps,
 	useEffectRuntime,
@@ -66,7 +67,10 @@ export default function Settings(
 								<li class="flex flex-col w-full py-2 first:pt-0 last:pb-0">
 									<div class="flex flex-row w-full items-center relative">
 										<button
-											class="absolute inset-0"
+											class={cx(
+												"absolute -inset-2",
+												focusRingClasses("outline"),
+											)}
 											onClick={() => setExpanded((e) => !e)}
 										/>
 
