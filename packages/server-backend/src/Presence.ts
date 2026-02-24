@@ -1,4 +1,4 @@
-import { Effect, Option, Scope, Stream, SubscriptionRef } from "effect";
+import { Effect, Option, Stream, SubscriptionRef } from "effect";
 import { faker } from "@faker-js/faker/locale/en_AU";
 import type { Graph, Node } from "@macrograph/project-domain";
 import { type Position, Presence, Realtime } from "@macrograph/server-domain";
@@ -69,8 +69,7 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 
 					yield* Effect.log(`Registered presence client ${connection.id}`);
 
-					yield* Scope.addFinalizer(
-						yield* Scope.Scope,
+					yield* Effect.addFinalizer(() =>
 						SubscriptionRef.update(clients, (s) => {
 							delete s[connection.id];
 							return { ...s };
@@ -81,6 +80,7 @@ export class PresenceState extends Effect.Service<PresenceState>()(
 						),
 					);
 				}),
+				get: clients.get,
 				changes: clients.changes.pipe(
 					Stream.throttle({
 						cost: (c) => c.length,

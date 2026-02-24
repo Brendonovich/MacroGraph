@@ -516,9 +516,7 @@ const createEventStream = Effect.gen(function* () {
 	const runtime = yield* ProjectRuntime.ProjectRuntime;
 	const realtimeConnection = yield* Realtime.Connection;
 	const engineRegistry = yield* EngineRegistry.EngineRegistry;
-
 	const presence = yield* PresenceState;
-	yield* presence.registerToScope;
 
 	const initialResourceEvents = yield* Effect.forEach(
 		Array.from(engineRegistry.engines.entries()),
@@ -573,6 +571,8 @@ const createEventStream = Effect.gen(function* () {
 		],
 		{ concurrency: "unbounded" },
 	);
+
+	yield* presence.registerToScope;
 
 	return Stream.concat(initialStream, updatesStream);
 });
