@@ -32,7 +32,6 @@ export namespace PaneLayout {
 						}
 				} else {
 					const v = recurse(pane);
-					console.log({ v });
 					if (!v) continue;
 					paneLayout.panes[i] = { ...v, size: 1 / paneLayout.panes.length };
 					return;

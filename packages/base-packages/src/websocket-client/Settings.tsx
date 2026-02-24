@@ -1,0 +1,159 @@
+import {
+	EffectButton,
+	LoadingBlock,
+	type SettingsProps,
+} from "@macrograph/package-sdk/ui";
+import { cx } from "cva";
+import {
+	type ComponentProps,
+	createUniqueId,
+	For,
+	Suspense,
+	splitProps,
+} from "solid-js";
+import { createStore } from "solid-js/store";
+
+import { ClientRpcs, type ClientState } from "./shared";
+import type { WebSocketUrl } from "./types";
+
+const CONNECTION_INDICATOR = {
+	connected: { class: "bg-green-600", label: "Connected" },
+	disconnected: { class: "bg-red-600", label: "Disconnected" },
+	connecting: { class: "bg-yellow-600", label: "Connecting" },
+};
+
+export default function Settings(
+	props: SettingsProps<typeof ClientRpcs, typeof ClientState>,
+) {
+	return (
+		<div class="flex flex-col gap-4">
+			<AddWebSocketForm {...props} />
+			<div>
+				<span class="text-gray-11 font-medium text-xs">
+					WebSocket Connections
+				</span>
+				<Suspense fallback={<LoadingBlock />}>
+					<ul class="rounded divide-y divide-gray-6 gap-4">
+						<For
+							each={props.state?.connections ?? []}
+							fallback={
+								<div class="p-2 text-center text-gray-11 italic">
+									No Connections
+								</div>
+							}
+						>
+							{(conn) => <ConnectionListItem {...props} conn={conn} />}
+						</For>
+					</ul>
+				</Suspense>
+			</div>
+		</div>
+	);
+}
+
+function AddWebSocketForm(
+	props: SettingsProps<typeof ClientRpcs, typeof ClientState>,
+) {
+	const [addConnection, setAddConnection] = createStore({
+		url: "ws://localhost:8080" as WebSocketUrl,
+		name: undefined as undefined | string,
+	});
+
+	return (
+		<div class="flex flex-col gap-3">
+			<div class="flex flex-row gap-3">
+				<InputField
+					label="URL"
+					value="ws://localhost:8080"
+					onChange={(e) =>
+						setAddConnection("url", e.target.value as WebSocketUrl)
+					}
+				/>
+			</div>
+			<div class="flex flex-row gap-3 items-end">
+				<InputField
+					label="Name"
+					value=""
+					placeholder="Optional"
+					onChange={(e) =>
+						setAddConnection("name", e.target.value || undefined)
+					}
+				/>
+				<EffectButton
+					onClick={() =>
+						props.rpc.AddWebSocket({
+							url: addConnection.url,
+							name: addConnection.name,
+							connectOnStartup: true,
+						})
+					}
+				>
+					Add WebSocket
+				</EffectButton>
+			</div>
+		</div>
+	);
+}
+
+function ConnectionListItem(
+	props: SettingsProps<typeof ClientRpcs, typeof ClientState> & {
+		conn: (typeof ClientState.Type)["connections"][number];
+	},
+) {
+	const conn = () => props.conn;
+
+	return (
+		<li class="flex flex-row py-2 w-full">
+			<div class="flex flex-col gap-0.5">
+				<span class="font-medium">{conn().name ?? conn().url}</span>
+				<div class="flex flex-row items-center gap-2">
+					<div
+						class={cx(
+							"size-2 rounded-full",
+							CONNECTION_INDICATOR[conn().state].class,
+						)}
+					/>
+					<pre class="text-xs text-gray-11">{conn().url}</pre>
+				</div>
+			</div>
+			<div class="flex-1 flex flex-row justify-end items-center gap-1">
+				<EffectButton
+					variant="text"
+					onClick={() =>
+						conn().state === "connected"
+							? props.rpc.DisconnectWebSocket({ url: conn().url })
+							: props.rpc.ConnectWebSocket({ url: conn().url })
+					}
+				>
+					{props.conn.state === "connected" ? "Disconnect" : "Connect"}
+				</EffectButton>
+				<EffectButton
+					variant="textDanger"
+					onClick={() => props.rpc.RemoveWebSocket({ url: conn().url })}
+				>
+					Remove
+				</EffectButton>
+			</div>
+		</li>
+	);
+}
+
+function InputField(props: { label: string } & ComponentProps<"input">) {
+	const [labelProps, inputProps] = splitProps(props, ["label"]);
+	const id = createUniqueId();
+
+	return (
+		<div class="flex flex-col gap-1 flex-1 items-stretch">
+			<label for={id} class="font-medium text-xs text-gray-11">
+				{labelProps.label}
+			</label>
+			<input
+				id={id}
+				class="bg-white/85 dark:bg-black/25 w-full h-8 text-sm px-2 ring-1 ring-gray-6 focus:ring-yellow-5 focus:outline-none"
+				{...inputProps}
+			/>
+		</div>
+	);
+}
+
+export const Rpcs = ClientRpcs;

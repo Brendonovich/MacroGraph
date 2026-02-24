@@ -59,75 +59,74 @@ export class ProjectRequests extends Effect.Service<ProjectRequests>()(
 						const nodesIO = yield* NodesIOStore;
 						const editor = yield* ProjectEditor;
 
-						return {
-							project: yield* editor.project,
-							packages: yield* pipe(
-								yield* editor.packages,
-								Iterable.map(([id, pkg]) =>
-									Effect.gen(function* () {
-										const schemas = pipe(
-											pkg.schemas.entries(),
-											Iterable.map(
-												([id, schema]) =>
-													[
-														Schema.Id.make(id),
-														{
-															id: Schema.Id.make(id),
-															name: schema.name,
-															type: schema.type,
-															properties: Object.entries(
-																schema.properties ?? {},
-															)
-																.map(([id, property]) => ({
-																	id,
-																	name: property.name,
-																	...("resource" in property
-																		? { resource: property.resource.id }
-																		: { type: T.serialize(property.type) }),
-																}))
-																.filter(Boolean),
-														},
-													] as const,
-											),
-											(v) => new Map(v),
-										);
+						const project = yield* editor.project;
 
-										return new Package.Package({
-											id,
-											name: pkg.name,
-											schemas,
-											resources: Option.fromNullable(
-												pkg.engine?.resources,
-											).pipe(
-												Option.map((resources) =>
-													Record.fromEntries(
-														resources.map((r) => [r.id, { name: r.name_ }]),
-													),
+						const packages = yield* pipe(
+							yield* editor.packages,
+							Iterable.map(([id, pkg]) =>
+								Effect.gen(function* () {
+									const schemas = pipe(
+										pkg.schemas.entries(),
+										Iterable.map(([id, schema]) => {
+											return [
+												Schema.Id.make(id),
+												{
+													id: Schema.Id.make(id),
+													name: schema.name,
+													type: schema.type,
+													properties: Object.entries(schema.properties ?? {})
+														.map(([id, property]) => ({
+															id,
+															name: property.name,
+															...("resource" in property
+																? { resource: property.resource.id }
+																: { type: T.serialize(property.type) }),
+														}))
+														.filter(Boolean),
+												},
+											] as const;
+										}),
+										(v) => new Map(v),
+									);
+
+									return new Package.Package({
+										id,
+										name: pkg.name,
+										schemas,
+										resources: Option.fromNullable(pkg.engine?.resources).pipe(
+											Option.map((resources) =>
+												Record.fromEntries(
+													resources.map((r) => [r.id, { name: r.name_ }]),
 												),
-												Option.getOrElse(() => ({})),
 											),
-										});
-									}),
-								),
-								Effect.all,
-							),
-							nodesIO: yield* nodesIO.getAll.pipe(
-								Effect.map(
-									(v) =>
-										new Map(
-											Iterable.map(HashMap.entries(v), ([key, value]) => {
-												return [
-													key,
-													{
-														inputs: value.inputs.map((i) => i[0]),
-														outputs: value.outputs.map((o) => o[0]),
-													},
-												];
-											}),
+											Option.getOrElse(() => ({})),
 										),
-								),
+									});
+								}),
 							),
-						};
+							Effect.all,
+						);
+
+						const nodesIO_ = yield* nodesIO.getAll.pipe(
+							Effect.map(
+								(v) =>
+									new Map(
+										Iterable.map(HashMap.entries(v), ([key, value]) => {
+											return [
+												key,
+												{
+													inputs: value.inputs.map((i) => i[0]),
+													outputs: value.outputs.map((o) => o[0]),
+												},
+											];
+										}),
+									),
+							),
+						);
+
+						const p = { project, packages, nodesIO: nodesIO_ };
+
+						return p;
 					}),
 			).pipe(requestResolverServices);
 

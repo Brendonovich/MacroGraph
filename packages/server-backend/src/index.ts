@@ -183,6 +183,14 @@ const EditorLive = Layer.scoped(
 			Package.Id.make("http-client"),
 			Packages["http-client"],
 		);
+		yield* editor.loadPackage(
+			Package.Id.make("websocket-client"),
+			Packages["websocket-client"],
+		);
+		yield* editor.loadPackage(
+			Package.Id.make("websocket-server"),
+			Packages["websocket-server"],
+		);
 
 		if (Option.isSome(project)) yield* editor.loadProject(project.value);
 
@@ -309,18 +317,19 @@ export class Server extends Effect.Service<Server>()("Server", {
 			timeToLive: Duration.infinity,
 		});
 
-		const validateAuthJwt = (token: string) => Effect.gen(function* () {
-			const res = yield* Effect.promise(() =>
-				Jose.jwtVerify(token, realtimeSecretKey),
-			);
+		const validateAuthJwt = (token: string) =>
+			Effect.gen(function* () {
+				const res = yield* Effect.promise(() =>
+					Jose.jwtVerify(token, realtimeSecretKey),
+				);
 
-			const id = Realtime.ConnectionId.make(res.payload.id as number);
+				const id = Realtime.ConnectionId.make(res.payload.id as number);
 
-			const conn = realtimeConnections.get(id);
-			if (!conn) throw new Error("Connection not found");
+				const conn = realtimeConnections.get(id);
+				if (!conn) throw new Error("Connection not found");
 
-			return { conn, id }
-		})
+				return { conn, id };
+			});
 
 		// @effect-diagnostics-next-line returnEffectInGen:off
 		return HttpRouter.empty.pipe(
@@ -341,7 +350,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 						),
 					);
 
-					const { id } = yield* validateAuthJwt(searchParams.token)
+					const { id } = yield* validateAuthJwt(searchParams.token);
 
 					return yield* rpcsWebApp.pipe(
 						Effect.provide(Realtime.Connection.context({ id })),
@@ -448,7 +457,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 					const authToken = headers.authorization.split("Bearer ")[1];
 					if (!authToken) throw new Error("Authorization token not found");
 
-					const { id } = yield* validateAuthJwt(authToken)
+					const { id } = yield* validateAuthJwt(authToken);
 
 					const { package: pkgId } = yield* HttpRouter.schemaPathParams(
 						S.Struct({ package: Package.Id }),
