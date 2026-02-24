@@ -140,13 +140,13 @@ export type PureNodeEvaluator<E = never, R = never> = (opts: {
  * - Pure node outputs are cached for this step only.
  * - Each pure node is evaluated at most once per step.
  */
-export const makeExecStepInputResolver = <E, R>(opts: {
+export const makeExecStepInputResolver = <E1, E2, R1, R2>(opts: {
 	currentNodeId: Node.Id;
 	connectionIndex: ConnectionIndex;
-	isPureNode: (nodeId: Node.Id) => Effect.Effect<boolean, E, R>;
-	evaluatePureNode: PureNodeEvaluator<E, R>;
+	isPureNode: (nodeId: Node.Id) => Effect.Effect<boolean, E1, R1>;
+	evaluatePureNode: PureNodeEvaluator<E1 | E2, R1 | R2>;
 	execOutputs: OutputStore;
-	defaultValue: (i: DataInput<any>) => Effect.Effect<unknown, E, R>;
+	defaultValue: (i: DataInput<any>) => Effect.Effect<unknown, E1, R1>;
 }) => {
 	const pureOutputs = makeInMemoryOutputStore();
 	const pureStatus = new Map<string, "running" | "done">();
@@ -154,7 +154,7 @@ export const makeExecStepInputResolver = <E, R>(opts: {
 	const getInputFor = (
 		nodeId: Node.Id,
 		i: DataInput<any>,
-	): Effect.Effect<unknown, E, R> =>
+	): Effect.Effect<unknown, E1 | E2, R1 | R2> =>
 		Effect.gen(function* () {
 			const incoming = opts.connectionIndex.incoming(nodeId, String(i.id));
 			if (Option.isNone(incoming)) return yield* opts.defaultValue(i);
@@ -211,27 +211,25 @@ export const makeExecStepInputResolver = <E, R>(opts: {
  * - IO inputs are materialized before `run` is evaluated.
  * - NodeExecutionContext is provided for the duration of the run.
  */
-export const runNode = <A, E, R, P>(opts: {
+export const runNode = <A, E, P, R1, R2>(opts: {
 	nodeId: Node.Id;
 	shape: unknown;
 	properties: P;
-	getInput: (i: DataInput<any>) => Effect.Effect<unknown, E, R>;
+	getInput: (i: DataInput<any>) => Effect.Effect<unknown, E, R1>;
 	setOutput: (out: DataOutput<any>, v: unknown) => void;
 	run: (ctx: {
 		io: unknown;
 		properties: P;
-	}) => Effect.Effect<A, E, R | NodeExecutionContext>;
-}): Effect.Effect<A, E, R> =>
+	}) => Effect.Effect<A, E, R2 | NodeExecutionContext>;
+}): Effect.Effect<A, E, R1 | R2> =>
 	Effect.gen(function* () {
 		const io = yield* makeIOShape(opts.shape, opts.getInput, opts.setOutput);
 
-		return yield* opts
-			.run({ io, properties: opts.properties })
-			.pipe(
-				Effect.provideService(NodeExecutionContext, {
-					node: { id: opts.nodeId },
-				}),
-			);
+		return yield* opts.run({ io, properties: opts.properties }).pipe(
+			Effect.provideService(NodeExecutionContext, {
+				node: { id: opts.nodeId },
+			}),
+		);
 	}).pipe(
 		Effect.withSpan("runNode", { attributes: { "node-id": opts.nodeId } }),
 	);

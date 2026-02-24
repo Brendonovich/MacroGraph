@@ -1,4 +1,5 @@
-import { Effect, Iterable, pipe, Record } from "effect";
+import { Socket } from "@effect/platform";
+import { Effect, Scope } from "effect";
 import { LookupRef } from "@macrograph/package-sdk";
 
 import { EngineDef, EngineState } from "./index";
@@ -7,7 +8,7 @@ import { Event, WebSocketUrl } from "./types";
 
 type Connection = {
 	url: WebSocketUrl;
-	ws: WebSocket;
+	socket: Socket.Socket;
 	state: "disconnected" | "connecting" | "connected";
 	reconnectAttempts: number;
 	maxReconnectAttempts: number;
@@ -20,13 +21,13 @@ export default EngineDef.toLayer((ctx) =>
 		const saveState = Effect.gen(function* () {
 			if (!ctx.saveState) return;
 
-			yield* pipe(
-				connections.entries(),
-				Iterable.map(([key]) => [key, { connectOnStartup: true }] as const),
-				Record.fromEntries,
-				(conns) => new EngineState({ connections: conns }),
-				ctx.saveState,
-			);
+			const connectionsRecord: Record<string, { connectOnStartup: boolean }> =
+				{};
+			for (const [url] of connections) {
+				connectionsRecord[url] = { connectOnStartup: true };
+			}
+
+			yield* ctx.saveState(new EngineState({ connections: connectionsRecord }));
 		});
 
 		const emitMessage = (url: WebSocketUrl, data: string) => {
@@ -34,11 +35,24 @@ export default EngineDef.toLayer((ctx) =>
 		};
 
 		const createConnection = Effect.fnUntraced(function* (url: WebSocketUrl) {
-			const ws = new WebSocket(url);
+			// Create the WebSocket socket using Effect's fromWebSocket API
+			const socket = yield* Socket.fromWebSocket(
+				Effect.sync(() => new globalThis.WebSocket(url)),
+				{
+					openTimeout: 5000, // 5 second timeout
+				},
+			).pipe(
+				Effect.catchAll(
+					(error) =>
+						new ConnectionFailed({
+							message: `Failed to connect to ${url}: ${error}`,
+						}),
+				),
+			);
 
 			const connection: Connection = {
 				url,
-				ws,
+				socket,
 				state: "connecting",
 				reconnectAttempts: 0,
 				maxReconnectAttempts: 3,
@@ -47,38 +61,22 @@ export default EngineDef.toLayer((ctx) =>
 
 			yield* saveState;
 
-			const runConnectionEdit = <A>(e: Effect.Effect<A>) =>
-				pipe(e, Effect.andThen(ctx.dirtyState), Effect.runFork);
+			// Start listening for messages
+			Effect.forkDaemon(
+				Effect.gen(function* () {
+					yield* socket.run((data) =>
+						Effect.sync(() => {
+							const messageData = typeof data === "string" ? data : "";
+							emitMessage(url, messageData);
+						}),
+					);
+				}),
+			);
 
-			ws.onerror = () => {
-				Effect.sync(() => {
-					connection.state = "disconnected";
-				}).pipe(runConnectionEdit);
-			};
-
-			ws.onclose = () => {
-				Effect.sync(() => {
-					connection.state = "disconnected";
-					connection.reconnectAttempts++;
-					// Attempt reconnection if under max attempts
-					if (connection.reconnectAttempts < connection.maxReconnectAttempts) {
-						setTimeout(() => {
-							connectWebSocket(url).pipe(Effect.runFork);
-						}, 1000 * connection.reconnectAttempts);
-					}
-				}).pipe(runConnectionEdit);
-			};
-
-			ws.onopen = () => {
-				Effect.sync(() => {
-					connection.state = "connected";
-					connection.reconnectAttempts = 0;
-				}).pipe(runConnectionEdit);
-			};
-
-			ws.onmessage = (event) => {
-				emitMessage(url, event.data);
-			};
+			// Set connected state
+			connection.state = "connected";
+			connection.reconnectAttempts = 0;
+			yield* ctx.dirtyState;
 
 			return connection;
 		});
@@ -93,25 +91,27 @@ export default EngineDef.toLayer((ctx) =>
 			connection.state = "connecting";
 			yield* ctx.dirtyState;
 
-			// Close existing socket if in bad state
-			if (
-				connection.ws.readyState === WebSocket.OPEN ||
-				connection.ws.readyState === WebSocket.CONNECTING
-			) {
-				connection.ws.close();
-			}
+			// Create new connection - old socket will be cleaned up by Scope
+			const newConnection = yield* createConnection(url).pipe(
+				Effect.tapError((error) =>
+					Effect.gen(function* () {
+						// Set to disconnected on failure
+						const conn = connections.get(url);
+						if (conn) {
+							conn.state = "disconnected";
+							yield* ctx.dirtyState;
+						}
+					}),
+				),
+				Effect.catchAll(
+					(error) =>
+						new ConnectionFailed({
+							message: `Failed to connect to ${url}: ${error}`,
+						}),
+				),
+			);
 
-			// Create new connection
-			const newConnection = yield* createConnection(url);
-
-			// Wait a moment to see if connection succeeds
-			yield* Effect.sleep("100 millis");
-
-			if (newConnection.state !== "connected") {
-				return yield* new ConnectionFailed({
-					message: `Failed to connect to ${url}`,
-				});
-			}
+			return newConnection;
 		});
 
 		const disconnectWebSocket = Effect.fnUntraced(function* (
@@ -120,30 +120,26 @@ export default EngineDef.toLayer((ctx) =>
 			const connection = connections.get(url);
 			if (!connection) return;
 
-			connection.ws.close();
+			// Socket.fromWebSocket manages its own scope, so we just update state
 			connection.state = "disconnected";
 			yield* ctx.dirtyState;
 		});
 
 		// Initialize from saved state
 		if (ctx.initialState) {
-			yield* Effect.all(
-				pipe(
-					ctx.initialState.connections,
-					Record.map((value, urlStr) => {
-						const url = WebSocketUrl.make(urlStr);
-						return createConnection(url).pipe(
-							Effect.zipLeft(
-								value.connectOnStartup
-									? connectWebSocket(url).pipe(
-											Effect.catchAll(() => Effect.void),
-										)
-									: Effect.void,
-							),
-						);
-					}),
-				),
-			);
+			for (const [urlStr, value] of Object.entries(
+				ctx.initialState.connections,
+			)) {
+				const url = WebSocketUrl.make(urlStr);
+				if (value.connectOnStartup) {
+					yield* createConnection(url).pipe(
+						Effect.catchAll((error) => {
+							console.error(`Failed to connect to ${url}:`, error);
+							return Effect.void;
+						}),
+					);
+				}
+			}
 		}
 
 		return {
@@ -171,7 +167,12 @@ export default EngineDef.toLayer((ctx) =>
 							message: `WebSocket ${url} already exists`,
 						});
 					}
-					const connection = yield* createConnection(url);
+					const connection = yield* createConnection(url).pipe(
+						Effect.catchTag(
+							"ConnectionFailed",
+							(e) => new ConnectionFailed({ message: e.message }),
+						),
+					);
 					if (opts.connectOnStartup !== false) {
 						yield* connectWebSocket(url).pipe(
 							Effect.catchAll(() => Effect.void),
@@ -183,21 +184,27 @@ export default EngineDef.toLayer((ctx) =>
 					const connection = connections.get(url);
 					if (!connection) return;
 
-					connection.ws.close();
+					// Socket.fromWebSocket manages its own scope
 					connections.delete(url);
 					yield* ctx.dirtyState;
 					yield* saveState;
 				}),
-				ConnectWebSocket: ({ url }) => connectWebSocket(url),
+				ConnectWebSocket: ({ url }) =>
+					connectWebSocket(url).pipe(
+						Effect.catchTag(
+							"ConnectionFailed",
+							(e) => new ConnectionFailed({ message: e.message }),
+						),
+					),
 				DisconnectWebSocket: ({ url }) => disconnectWebSocket(url),
 			},
 			runtimeRpcs: {
 				SendMessage: ({ url, data }: { url: WebSocketUrl; data: string }) =>
-					Effect.sync(() => {
+					Effect.gen(function* () {
 						const connection = connections.get(url);
-						console.log({ connection, url, data });
 						if (connection?.state === "connected") {
-							connection.ws.send(data);
+							const writer = yield* connection.socket.writer;
+							yield* writer(data).pipe(Effect.ignore);
 						}
 					}),
 			},

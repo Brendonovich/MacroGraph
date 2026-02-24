@@ -23,7 +23,6 @@ import {
 import { PackageEngine, type Resource } from "@macrograph/package-sdk";
 import {
 	LookupRef,
-	type NodesIOStore,
 	type Package,
 	type Project,
 	ProjectEvent,
@@ -31,7 +30,6 @@ import {
 
 import { CloudApiClient } from "./CloudApi";
 import { CredentialsStore } from "./CredentialsStore";
-import type { EngineRegistry } from "./EngineRegistry";
 import { ProjectRuntime } from "./ProjectRuntime";
 
 export type EngineImplementationLayer = Layer.Layer<
@@ -109,17 +107,7 @@ export class EnginePersistence extends Context.Tag("EnginePersistence")<
 export namespace EngineInstanceClient {
 	export const makeLocal = (
 		args: EngineMakeArgs & { layer: EngineImplementationLayer },
-	): Effect.Effect<
-		EngineInstance.EngineInstance,
-		never,
-		| CredentialsStore
-		| CloudApiClient.CloudApiClient
-		| ProjectRuntime.ProjectRuntime
-		| NodesIOStore
-		| Scope.Scope
-		| EngineRegistry.EngineRegistry
-		| EnginePersistence
-	> =>
+	) =>
 		Effect.gen(function* () {
 			const credentials = yield* CredentialsStore;
 			const cloud = yield* CloudApiClient.CloudApiClient;

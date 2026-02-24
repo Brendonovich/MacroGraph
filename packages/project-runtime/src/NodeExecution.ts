@@ -1,3 +1,4 @@
+import type { HttpClient } from "@effect/platform";
 import { Effect, HashMap, Option } from "effect";
 import {
 	type DataInput,
@@ -138,17 +139,19 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 			if (schema.type === "event" || schema.type === "pure")
 				return yield* new Node.NotExecutable();
 
-			const stepResolver = makeExecStepInputResolver<
+			type E =
 				| Schema.NotFound
 				| Schema.InvalidPropertyValue
 				| Node.NotFound
-				| Package.NotFound,
+				| Package.NotFound;
+			type R =
 				| NodesIOStore
 				| ProjectRuntime.CurrentProject
 				| ProjectRuntime.ProjectRuntime
 				| ExecutionContext
 				| EngineRegistry.EngineRegistry
-			>({
+				| HttpClient.HttpClient;
+			const stepResolver = makeExecStepInputResolver<E, E, R, R>({
 				currentNodeId: nextNode.value.id,
 				connectionIndex,
 				isPureNode: (nodeId) =>
