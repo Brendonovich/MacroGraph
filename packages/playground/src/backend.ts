@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import * as Packages from "@macrograph/base-packages";
+import Packages from "@macrograph/base-packages";
 import {
 	Actor,
 	Credential,

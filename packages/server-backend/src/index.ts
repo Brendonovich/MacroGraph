@@ -25,7 +25,7 @@ import {
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
 import type * as RequestResolver from "effect/RequestResolver";
-import * as Packages from "@macrograph/base-packages";
+import Packages from "@macrograph/base-packages";
 import type { PackageEngine } from "@macrograph/package-sdk";
 import {
 	NodesIOStore,
@@ -245,7 +245,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 
 		const engineRegistry = yield* EngineRegistry.EngineRegistry;
 
-		for (const [_id, engineLayer] of Object.entries(packageEngines)) {
+		for (const [_id, engineLayer] of Object.entries(packageEngines.default)) {
 			const id = Package.Id.make(_id);
 			const layer: Layer.Layer<
 				PackageEngine.EngineImplConstructor<

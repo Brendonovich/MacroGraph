@@ -1,6 +1,15 @@
-export { default as "http-client" } from "./http-client";
-export { default as obs } from "./obs";
-export { default as twitch } from "./twitch";
-export { default as util } from "./util";
-export { default as "websocket-client" } from "./websocket-client";
-export { default as "websocket-server" } from "./websocket-server";
+import httpClient from "./http-client";
+import obs from "./obs";
+import twitch from "./twitch";
+import util from "./util";
+import websocketClient from "./websocket-client";
+import websocketServer from "./websocket-server";
+
+export default {
+	"http-client": httpClient,
+	obs,
+	twitch,
+	util,
+	"websocket-client": websocketClient,
+	"websocket-server": websocketServer,
+};

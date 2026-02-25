@@ -35,7 +35,7 @@ import {
 import type { Accessor } from "solid-js";
 import "@total-typescript/ts-reset";
 import { Effect, ManagedRuntime } from "effect";
-import * as Packages from "@macrograph/base-packages";
+import Packages from "@macrograph/base-packages";
 import { Package } from "@macrograph/project-domain";
 import { ProjectEditor } from "@macrograph/project-editor";
 import {
@@ -135,7 +135,9 @@ function Inner() {
 				const engineRegistry = yield* EngineRegistry.EngineRegistry;
 				const editor = yield* ProjectEditor.ProjectEditor;
 
-				for (const [_id, engineLayer] of Object.entries(packageEngines)) {
+				for (const [_id, engineLayer] of Object.entries(
+					packageEngines.default,
+				)) {
 					const id = Package.Id.make(_id);
 					engineRegistry.engines.set(
 						id,
