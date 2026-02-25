@@ -52,9 +52,7 @@ export default Package.define({ name: "WebSocket Client", engine: EngineDef })
 			"Fires when a message is received from a WebSocket connection.",
 		event: (data, { properties: { websocket } }) =>
 			Option.some(data).pipe(
-				Option.filter(
-					(data): data is Event.Any => data instanceof Event.WebSocketMessage,
-				),
+				Option.filter((data) => data._tag === "WebSocketMessage"),
 				Option.filter((data) => websocket.value === data.url),
 			),
 		io: (c) => ({ data: c.out.data("data", t.String, { name: "Data" }) }),

@@ -50,7 +50,7 @@ export class EditorState extends Effect.Service<EditorState>()("EditorState", {
 					type: "resource";
 					pkg: Package.Id;
 					resource: string;
-					value?: string;
+					value?: string | number;
 				}
 			>;
 		}>({ name: "New Project", graphs: {}, packages: {}, constants: {} });

@@ -203,7 +203,7 @@ export class ProjectActions extends Effect.Service<ProjectActions>()(
 						),
 				),
 				UpdateResourceConstant: withRequest<Request.UpdateResourceConstant>()(
-					(run, constantId: string, value?: string, name?: string) =>
+					(run, constantId: string, value?: string | number, name?: string) =>
 						run(
 							new Request.UpdateResourceConstant({
 								id: constantId,

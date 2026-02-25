@@ -148,7 +148,7 @@ export class UpdateResourceConstant extends S.TaggedRequest<UpdateResourceConsta
 	{
 		payload: {
 			id: S.String,
-			value: S.optional(S.String),
+			value: S.optional(S.Union(S.String, S.Number)),
 			name: S.optional(S.String),
 		},
 		success: ProjectEvent.ResourceConstantUpdated,

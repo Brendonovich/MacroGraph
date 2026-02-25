@@ -76,6 +76,7 @@ export const fireEventNode = Effect.fn("fireEventNode")(function* (
 			);
 			if (stored !== undefined) return Effect.succeed(stored);
 			if (i.type._tag === "String") return Effect.succeed("");
+			if (i.type._tag === "Option") return Effect.succeed(Option.none());
 			return Effect.die(`TODO: implement default value for ${i.type._tag}`);
 		};
 	const toExecOutput = (value: unknown) =>

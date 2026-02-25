@@ -120,8 +120,11 @@ function ServerListItem(
 						)}
 					/>
 					<span class="text-xs text-gray-11">
-						{SERVER_STATE_INDICATOR[server().state].label} (
-						{server().clientCount} clients)
+						{SERVER_STATE_INDICATOR[server().state].label}
+						{server().state === "running" &&
+							` (${server().clientCount} ${
+								server().clientCount === 1 ? "client" : "clients"
+							})`}
 					</span>
 				</div>
 			</div>

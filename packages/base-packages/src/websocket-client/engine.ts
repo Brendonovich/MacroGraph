@@ -1,5 +1,5 @@
 import { Socket } from "@effect/platform";
-import { Effect, Scope } from "effect";
+import { Deferred, Effect, Exit, Scope } from "effect";
 import { LookupRef } from "@macrograph/package-sdk";
 
 import { EngineDef, EngineState } from "./index";
@@ -8,14 +8,19 @@ import { Event, WebSocketUrl } from "./types";
 
 type Connection = {
 	url: WebSocketUrl;
-	socket: Socket.Socket;
-	state: "disconnected" | "connecting" | "connected";
 	reconnectAttempts: number;
 	maxReconnectAttempts: number;
-};
+} & (
+	| { state: "disconnected" | "connecting" }
+	| {
+			state: "connected";
+			writer: Effect.Effect.Success<Socket.Socket["writer"]>;
+	  }
+);
 
 export default EngineDef.toLayer((ctx) =>
 	Effect.gen(function* () {
+		const socketConstructor = yield* Socket.WebSocketConstructor;
 		const connections = new Map<WebSocketUrl, Connection>();
 
 		const saveState = Effect.gen(function* () {
@@ -35,13 +40,11 @@ export default EngineDef.toLayer((ctx) =>
 		};
 
 		const createConnection = Effect.fnUntraced(function* (url: WebSocketUrl) {
-			// Create the WebSocket socket using Effect's fromWebSocket API
-			const socket = yield* Socket.fromWebSocket(
-				Effect.sync(() => new globalThis.WebSocket(url)),
-				{
-					openTimeout: 5000, // 5 second timeout
-				},
-			).pipe(
+			// Create socket first - don't add to Map until everything is ready
+			const socket = yield* Socket.makeWebSocket(url, {
+				openTimeout: 5000, // 5 second timeout
+			}).pipe(
+				Effect.provideService(Socket.WebSocketConstructor, socketConstructor),
 				Effect.catchAll(
 					(error) =>
 						new ConnectionFailed({
@@ -50,32 +53,48 @@ export default EngineDef.toLayer((ctx) =>
 				),
 			);
 
+			const scope = yield* Scope.make();
+
+			// Now that everything is successful, create and add the connection
 			const connection: Connection = {
 				url,
-				socket,
-				state: "connecting",
+				state: "connecting", // Already connected at this point
 				reconnectAttempts: 0,
 				maxReconnectAttempts: 3,
 			};
 			connections.set(url, connection);
-
 			yield* saveState;
+			yield* ctx.dirtyState;
 
-			// Start listening for messages
-			Effect.forkDaemon(
-				Effect.gen(function* () {
-					yield* socket.run((data) =>
+			const open = yield* Deferred.make<void, ConnectionFailed>();
+
+			yield* socket
+				.runRaw(
+					(data) =>
 						Effect.sync(() => {
 							const messageData = typeof data === "string" ? data : "";
 							emitMessage(url, messageData);
 						}),
-					);
-				}),
-			);
+					{ onOpen: Deferred.done(open, Exit.succeed<void>(undefined)) },
+				)
+				.pipe(
+					Effect.catchTag("SocketError", (e) =>
+						Effect.gen(function* () {
+							connection.state = "disconnected";
+							yield* ctx.dirtyState;
 
-			// Set connected state
-			connection.state = "connected";
-			connection.reconnectAttempts = 0;
+							return yield* new ConnectionFailed({ message: e.toString() });
+						}).pipe(Effect.tapError((e) => Deferred.done(open, Exit.fail(e)))),
+					),
+					Scope.extend(scope),
+					Effect.forkDaemon,
+				);
+
+			const writer = yield* socket.writer.pipe(Scope.extend(scope));
+
+			yield* Deferred.await(open);
+
+			connections.set(url, { ...connection, state: "connected", writer });
 			yield* ctx.dirtyState;
 
 			return connection;
@@ -85,6 +104,7 @@ export default EngineDef.toLayer((ctx) =>
 			const connection = connections.get(url);
 			if (!connection) return;
 
+			// If already connected or connecting, don't try again
 			if (connection.state === "connected" || connection.state === "connecting")
 				return;
 
@@ -92,10 +112,11 @@ export default EngineDef.toLayer((ctx) =>
 			yield* ctx.dirtyState;
 
 			// Create new connection - old socket will be cleaned up by Scope
+			// If it fails, the connection stays in the map but we mark it disconnected
 			const newConnection = yield* createConnection(url).pipe(
-				Effect.tapError((error) =>
+				Effect.tapError(() =>
 					Effect.gen(function* () {
-						// Set to disconnected on failure
+						// Revert to disconnected state on failure
 						const conn = connections.get(url);
 						if (conn) {
 							conn.state = "disconnected";
@@ -120,7 +141,10 @@ export default EngineDef.toLayer((ctx) =>
 			const connection = connections.get(url);
 			if (!connection) return;
 
-			// Socket.fromWebSocket manages its own scope, so we just update state
+			if (connection.state === "connected")
+				yield* connection.writer(new Socket.CloseEvent()).pipe(Effect.ignore);
+
+			// Socket.makeWebSocket manages its own scope via Effect.scoped, so we just update state
 			connection.state = "disconnected";
 			yield* ctx.dirtyState;
 		});
@@ -167,7 +191,7 @@ export default EngineDef.toLayer((ctx) =>
 							message: `WebSocket ${url} already exists`,
 						});
 					}
-					const connection = yield* createConnection(url).pipe(
+					yield* createConnection(url).pipe(
 						Effect.catchTag(
 							"ConnectionFailed",
 							(e) => new ConnectionFailed({ message: e.message }),
@@ -184,7 +208,7 @@ export default EngineDef.toLayer((ctx) =>
 					const connection = connections.get(url);
 					if (!connection) return;
 
-					// Socket.fromWebSocket manages its own scope
+					// Socket.makeWebSocket manages its own scope via Effect.scoped
 					connections.delete(url);
 					yield* ctx.dirtyState;
 					yield* saveState;
@@ -203,7 +227,7 @@ export default EngineDef.toLayer((ctx) =>
 					Effect.gen(function* () {
 						const connection = connections.get(url);
 						if (connection?.state === "connected") {
-							const writer = yield* connection.socket.writer;
+							const writer = connection.writer;
 							yield* writer(data).pipe(Effect.ignore);
 						}
 					}),

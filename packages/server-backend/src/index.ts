@@ -19,11 +19,14 @@ import {
 	Record,
 	type Request,
 	Schema as S,
+	type Scope,
 	Stream,
+	Unify,
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
 import type * as RequestResolver from "effect/RequestResolver";
 import * as Packages from "@macrograph/base-packages";
+import type { PackageEngine } from "@macrograph/package-sdk";
 import {
 	NodesIOStore,
 	Package,
@@ -244,15 +247,22 @@ export class Server extends Effect.Service<Server>()("Server", {
 
 		for (const [_id, engineLayer] of Object.entries(packageEngines)) {
 			const id = Package.Id.make(_id);
-			engineRegistry.engines.set(
-				id,
-				yield* EngineInstanceClient.makeLocal({
-					pkgId: id,
-					engine: (Packages as any)[id].engine!,
-					layer: engineLayer as any,
-					getProject: editor.project,
-				}),
-			);
+			const layer: Layer.Layer<
+				PackageEngine.EngineImplConstructor<
+					PackageEngine.AnyEvent,
+					S.Schema.Any,
+					Scope.Scope
+				>,
+				Layer.Layer.Error<typeof engineLayer>,
+				Layer.Layer.Context<typeof engineLayer>
+			> = engineLayer as any;
+
+			const engine = yield* EngineInstanceClient.makeLocal({
+				pkgId: id,
+				engine: (Packages as any)[id].engine!,
+				getProject: editor.project,
+			}).pipe(Effect.provide(layer));
+			engineRegistry.engines.set(id, engine as any);
 		}
 
 		const nextRealtimeClient = (() => {

@@ -225,11 +225,13 @@ export const runNode = <A, E, P, R1, R2>(opts: {
 	Effect.gen(function* () {
 		const io = yield* makeIOShape(opts.shape, opts.getInput, opts.setOutput);
 
-		return yield* opts.run({ io, properties: opts.properties }).pipe(
-			Effect.provideService(NodeExecutionContext, {
-				node: { id: opts.nodeId },
-			}),
-		);
+		return yield* opts
+			.run({ io, properties: opts.properties })
+			.pipe(
+				Effect.provideService(NodeExecutionContext, {
+					node: { id: opts.nodeId },
+				}),
+			);
 	}).pipe(
 		Effect.withSpan("runNode", { attributes: { "node-id": opts.nodeId } }),
 	);

@@ -87,7 +87,11 @@ export class ResourceConstantCreated extends S.TaggedClass<ResourceConstantCreat
 
 export class ResourceConstantUpdated extends S.TaggedClass<ResourceConstantUpdated>()(
 	"ResourceConstantUpdated",
-	{ id: S.String, value: S.optional(S.String), name: S.optional(S.String) },
+	{
+		id: S.String,
+		value: S.optional(S.Union(S.String, S.Number)),
+		name: S.optional(S.String),
+	},
 ) {}
 
 export class ResourceConstantDeleted extends S.TaggedClass<ResourceConstantDeleted>()(

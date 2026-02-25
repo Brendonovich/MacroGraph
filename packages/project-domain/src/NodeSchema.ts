@@ -71,7 +71,10 @@ export type SchemaProperty<TResource extends Resource.Resource<any, any>> = {
 };
 
 export namespace Resource {
-	export const ResourceValue = S.Struct({ id: S.String, display: S.String });
+	export const ResourceValue = S.Struct({
+		id: S.Union(S.String, S.Number),
+		display: S.String,
+	});
 	export type ResourceValue = typeof ResourceValue.Type;
 
 	export class Handler<TId extends string, T> extends Data.Class<{

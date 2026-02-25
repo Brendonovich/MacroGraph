@@ -66,7 +66,7 @@ export function ConstantsSidebar() {
 						const constant = () => editorState.constants[constantId];
 
 						const updateValue = useMutation(() => ({
-							mutationFn: (value: string) =>
+							mutationFn: (value: string | number) =>
 								actions.UpdateResourceConstant(constantId, value),
 						}));
 
@@ -102,7 +102,7 @@ export function ConstantsSidebar() {
 										options().find((o) => o.id === data().constant.value) ??
 										null;
 
-									type Option = { id: string; display: string };
+									type Option = { id: string | number; display: string };
 									return (
 										<ContextMenu>
 											<ContextMenu.Trigger>

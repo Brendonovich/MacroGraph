@@ -1,6 +1,6 @@
 import type { Socket } from "@effect/platform";
 import { NodeSocketServer } from "@effect/platform-node";
-import { Effect, Option } from "effect";
+import { Effect, Exit, Option, Scope } from "effect";
 import { LookupRef } from "@macrograph/package-sdk";
 
 import { EngineDef, EngineState } from "./index";
@@ -12,6 +12,7 @@ type ServerState = {
 	displayName: Option.Option<string>;
 	clients: Map<ClientId, Socket.Socket>;
 	nextClientId: number;
+	scope: Option.Option<Scope.CloseableScope>;
 	state: "running" | "stopped" | "error";
 };
 
@@ -52,7 +53,15 @@ export default EngineDef.toLayer((ctx) =>
 				displayName ??
 				Option.getOrUndefined(existingServer?.displayName ?? Option.none());
 
-			const server = yield* NodeSocketServer.makeWebSocket({ port });
+			const scope = yield* Scope.make();
+
+			yield* Effect.log(`creating server ${port}`);
+			// Acquire the WebSocket server into the server's own scope
+			// so it stays alive until stopServer closes the scope
+			const server = yield* NodeSocketServer.makeWebSocket({ port }).pipe(
+				Scope.extend(scope),
+			);
+			yield* Effect.log(`created server ${port}`);
 
 			const serverState: ServerState = {
 				port,
@@ -61,6 +70,7 @@ export default EngineDef.toLayer((ctx) =>
 					: Option.none(),
 				clients: new Map(),
 				nextClientId: 1,
+				scope: Option.some(scope),
 				state: "running",
 			};
 			servers.set(port, serverState);
@@ -68,11 +78,14 @@ export default EngineDef.toLayer((ctx) =>
 			yield* saveState;
 			yield* ctx.dirtyState;
 
-			// Handle incoming connections - server.run blocks, so use runFork
-			Effect.gen(function* () {
-				yield* server.run((socket) =>
+			yield* Effect.log(`running server ${port}`);
+
+			// Handle incoming connections - server.run blocks, so use forkIn
+			yield* server
+				.run((socket) =>
 					Effect.gen(function* () {
 						const clientId = ClientId.make(serverState.nextClientId++);
+						yield* Effect.log(`Server ${port} client ${clientId} connected`);
 						serverState.clients.set(clientId, socket);
 
 						ctx.emitEvent(
@@ -101,8 +114,8 @@ export default EngineDef.toLayer((ctx) =>
 						);
 						yield* ctx.dirtyState;
 					}),
-				);
-			}).pipe(Effect.runFork);
+				)
+				.pipe(Effect.forkIn(scope));
 		});
 
 		const stopServer = Effect.fnUntraced(function* (port: Port) {
@@ -110,16 +123,8 @@ export default EngineDef.toLayer((ctx) =>
 			if (!serverState) return;
 			if (serverState.state !== "running") return;
 
-			// Close all client connections by sending empty data (triggers close)
-			for (const [clientId, socket] of serverState.clients) {
-				yield* Effect.scoped(
-					Effect.gen(function* () {
-						const writer = yield* socket.writer;
-						yield* writer(new Uint8Array());
-					}),
-				).pipe(Effect.ignore);
-				serverState.clients.delete(clientId);
-				ctx.emitEvent(new Event.ClientDisconnected({ port, client: clientId }));
+			if (Option.isSome(serverState.scope)) {
+				yield* Scope.close(serverState.scope.value, Exit.succeed(null));
 			}
 
 			serverState.state = "stopped";
@@ -177,7 +182,7 @@ export default EngineDef.toLayer((ctx) =>
 							.map(([port, server]) => {
 								const displayName = Option.getOrUndefined(server.displayName);
 								return {
-									id: String(port),
+									id: port,
 									display: displayName ? `${displayName}` : `Port ${port}`,
 								};
 							}),

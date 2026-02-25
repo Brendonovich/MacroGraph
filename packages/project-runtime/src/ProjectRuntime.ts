@@ -114,7 +114,6 @@ export namespace ProjectRuntime {
 					const s = yield* runtime.schema(node.schema).pipe(Effect.option);
 
 					if (Option.isSome(s) && s.value.type === "event") {
-						yield* Effect.log(`Firing event node ${graphId}:${nodeId}`);
 						tasks.push(
 							yield* fireEventNode(project, graphId, nodeId, event).pipe(
 								Effect.forkScoped,

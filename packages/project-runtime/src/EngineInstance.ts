@@ -17,7 +17,6 @@ import {
 	Queue,
 	Record,
 	Schema as S,
-	type Scope,
 	Stream,
 } from "effect";
 import { PackageEngine, type Resource } from "@macrograph/package-sdk";
@@ -32,15 +31,25 @@ import { CloudApiClient } from "./CloudApi";
 import { CredentialsStore } from "./CredentialsStore";
 import { ProjectRuntime } from "./ProjectRuntime";
 
-export type EngineImplementationLayer = Layer.Layer<
+export type EngineImplementationLayer<R> = Layer.Layer<
 	PackageEngine.EngineImpl,
 	never,
-	PackageEngine.CtxTag
+	R
 >;
 
-export type EngineMakeArgs = {
+export type EngineMakeArgs<
+	Events extends PackageEngine.AnyEvent,
+	ClientState extends S.Schema.Any,
+> = {
 	pkgId: Package.Id;
-	engine: PackageEngine.Any;
+	engine: PackageEngine.PackageEngine<
+		Rpc.Any,
+		Rpc.Any,
+		Events,
+		ClientState,
+		Resource.Tag<any, any>,
+		S.Schema.AnyNoContext
+	>;
 	getProject: Effect.Effect<Project.Project>;
 };
 
@@ -105,14 +114,22 @@ export class EnginePersistence extends Context.Tag("EnginePersistence")<
 }
 
 export namespace EngineInstanceClient {
-	export const makeLocal = (
-		args: EngineMakeArgs & { layer: EngineImplementationLayer },
+	export const makeLocal = <
+		Events extends PackageEngine.AnyEvent,
+		EngineState extends S.Schema.Any,
+	>(
+		args: EngineMakeArgs<Events, EngineState>,
 	) =>
 		Effect.gen(function* () {
 			const credentials = yield* CredentialsStore;
 			const cloud = yield* CloudApiClient.CloudApiClient;
 			const runtime = yield* ProjectRuntime.ProjectRuntime;
 			const persistence = yield* EnginePersistence;
+			const implConstructor = yield* PackageEngine.EngineImplConstructorTag<
+				Events,
+				EngineState,
+				never
+			>();
 
 			const credentialsRef = LookupRef.mapGet(credentials, (get) =>
 				get.pipe(Effect.catchAll(() => Effect.succeed([]))),
@@ -138,7 +155,7 @@ export namespace EngineInstanceClient {
 			let refreshState: Effect.Effect<void> = Effect.void;
 			let refreshResources: Effect.Effect<void> = Effect.void;
 
-			const ctxLayer = Layer.succeed(PackageEngine.CtxTag, {
+			const layerCtx: PackageEngine.LayerCtx<Events, EngineState> = {
 				emitEvent: (e) => events.unsafeOffer(e),
 				dirtyState: Effect.gen(function* () {
 					yield* runtime
@@ -183,12 +200,13 @@ export namespace EngineInstanceClient {
 						Effect.catchAll(() => Effect.void),
 					);
 				}),
-			});
+			};
 
-			const instance = yield* EngineInstance.make({
+			const impl = yield* implConstructor(layerCtx);
+
+			const instance = yield* EngineInstance.make<Events, EngineState>({
 				def: args.engine,
-				layer: args.layer,
-			}).pipe(Effect.provide(ctxLayer));
+			}).pipe(Effect.provideService(PackageEngine.EngineImpl, impl));
 
 			yield* credentials.changes.pipe(
 				Stream.runForEach(() => instance.state.refresh),
@@ -221,17 +239,17 @@ export namespace EngineInstanceClient {
 			return instance;
 		});
 
-	export const makeRemote = (args: EngineMakeArgs & { url: string }) =>
-		Effect.gen(function* () {
-			const client = yield* makeHttpClient(args.engine.clientRpcs, args.url);
-			const runtime = yield* makeHttpClient(args.engine.runtimeRpcs, args.url);
+	// export const makeRemote = (args: EngineMakeArgs & { url: string }) =>
+	// 	Effect.gen(function* () {
+	// 		const client = yield* makeHttpClient(args.engine.clientRpcs, args.url);
+	// 		const runtime = yield* makeHttpClient(args.engine.runtimeRpcs, args.url);
 
-			return {
-				client,
-				runtime,
-				state: Effect.dieMessage("Remote engine state is not available"),
-			} as unknown as EngineInstanceClient;
-		});
+	// 		return {
+	// 			client,
+	// 			runtime,
+	// 			state: Effect.dieMessage("Remote engine state is not available"),
+	// 		} as unknown as EngineInstanceClient;
+	// 	});
 }
 
 export namespace EngineInstance {
@@ -246,40 +264,37 @@ export namespace EngineInstance {
 		>;
 	}
 
-	export const make = ({
+	export const make = <
+		Events extends PackageEngine.AnyEvent,
+		EngineState extends S.Schema.Any,
+	>({
 		def,
-		layer,
 	}: {
 		def: PackageEngine.PackageEngine<
-			any,
-			any,
-			PackageEngine.AnyEvent,
-			S.Schema.Any,
+			Rpc.Any,
+			Rpc.Any,
+			Events,
+			EngineState,
 			Resource.Tag<any, any>,
 			S.Schema.AnyNoContext
 		>;
-		layer: EngineImplementationLayer;
-	}): Effect.Effect<
-		EngineInstance,
-		never,
-		Scope.Scope | PackageEngine.CtxTag
-	> =>
+	}) =>
 		Effect.gen(function* () {
-			const built = yield* PackageEngine.EngineImpl.pipe(Effect.provide(layer));
+			const impl = yield* PackageEngine.EngineImpl;
 
-			const client = def.clientRpcs.toLayer(built.clientRpcs);
+			const client = def.clientRpcs.toLayer(impl.clientRpcs);
 
 			const runtime = yield* RpcTest.makeClient(
 				def.runtimeRpcs as RpcGroup.RpcGroup<Rpc.Any>,
-			).pipe(Effect.provide(def.runtimeRpcs.toLayer(built.runtimeRpcs)));
+			).pipe(Effect.provide(def.runtimeRpcs.toLayer(impl.runtimeRpcs)));
 
 			yield* Effect.all(
-				Record.map(built.resources, (ref) => ref.get),
+				Record.map(impl.resources, (ref) => ref.get),
 				{ discard: true },
 			);
-			const resources = built.resources;
+			const resources = impl.resources;
 
-			const state = yield* LookupRef.make(built.clientState);
+			const state = yield* LookupRef.make(impl.clientState);
 
 			return { def, client, runtime, state, resources };
 		});

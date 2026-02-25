@@ -96,16 +96,20 @@ export default Package.define({ name: "WebSocket Server", engine: EngineDef })
 		description:
 			"Sends a message to a specific client (provide Client ID) or broadcasts to all clients (leave Client ID empty).",
 		io: (c) => ({
-			client: c.in.data("client", t.Int, { name: "Client ID" }),
+			client: c.in.data("client", t.Option(t.Int), { name: "Client ID" }),
 			data: c.in.data("data", t.String, { name: "Data" }),
 		}),
 		run: function* ({ io, properties: { server } }) {
 			const port = server.value;
 			const clientId = io.client;
 			// If clientId is 0, treat as broadcast (undefined)
-			const client = clientId === 0 ? undefined : ClientId.make(clientId);
+			const client = Option.map(io.client, ClientId.make);
 			const data = io.data;
 
-			yield* server.engine.SendMessage({ port, client, data });
+			yield* server.engine.SendMessage({
+				port,
+				client: Option.getOrUndefined(client),
+				data,
+			});
 		},
 	});
