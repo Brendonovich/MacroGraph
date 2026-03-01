@@ -21,7 +21,6 @@ import {
 	Schema as S,
 	type Scope,
 	Stream,
-	Unify,
 } from "effect";
 import { getCurrentFiber } from "effect/Fiber";
 import type * as RequestResolver from "effect/RequestResolver";
@@ -343,7 +342,10 @@ export class Server extends Effect.Service<Server>()("Server", {
 
 		// @effect-diagnostics-next-line returnEffectInGen:off
 		return HttpRouter.empty.pipe(
-			HttpRouter.get			("/health", Effect.succeed(HttpServerResponse.empty({ status: 200 }))),
+			HttpRouter.get(
+				"/health",
+				Effect.succeed(HttpServerResponse.empty({ status: 200 })),
+			),
 			HttpRouter.mountApp(
 				"/rpc",
 				Effect.gen(function* () {
