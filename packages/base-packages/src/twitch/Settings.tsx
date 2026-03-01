@@ -8,11 +8,7 @@ import {
 import { cx } from "cva";
 import { createSignal, For, Index, Show, Suspense } from "solid-js";
 
-import {
-	SUBSCRIPTION_CATEGORY_OPTIONS,
-	SUBSCRIPTION_TYPES,
-	type SubscriptionCategory,
-} from "./eventSub";
+import { SUBSCRIPTION_TYPES } from "./eventSub";
 import { ClientRpcs, type ClientState } from "./new-shared";
 
 const EVENTSUB_CONNECTION_INDICATOR = {
@@ -20,16 +16,6 @@ const EVENTSUB_CONNECTION_INDICATOR = {
 	disconnected: { class: "bg-red-600", label: "EventSub Disconnected" },
 	connecting: { class: "bg-yellow-600", label: "EventSub Connecting" },
 };
-
-interface CategoryOption {
-	value: SubscriptionCategory | "All";
-	label: string;
-}
-
-const CATEGORY_OPTIONS: CategoryOption[] = [
-	{ value: "All", label: "All Categories" },
-	...SUBSCRIPTION_CATEGORY_OPTIONS,
-];
 
 export default function Settings(
 	props: SettingsProps<typeof ClientRpcs, typeof ClientState>,
@@ -102,22 +88,36 @@ export default function Settings(
 										</div>
 
 										<div class="flex items-center gap-2">
-											<EffectButton
-												variant="text"
-												onClick={() =>
-													acc().eventSubSocket.state === "connected"
-														? props.rpc.DisconnectEventSub({
-																accountId: acc().id,
-															})
-														: props.rpc.ConnectEventSub({ accountId: acc().id })
-												}
-											>
-												<span>
-													{acc().eventSubSocket.state === "connected"
-														? "Disconnect"
-														: "Connect"}
-												</span>
-											</EffectButton>
+											<div class="relative group">
+												<EffectButton
+													variant="text"
+													disabled={
+														acc().eventSubSocket.state !== "connected" &&
+														enabledSubs().length === 0
+													}
+													onClick={() =>
+														acc().eventSubSocket.state === "connected"
+															? props.rpc.DisconnectEventSub({
+																	accountId: acc().id,
+																})
+															: props.rpc.ConnectEventSub({
+																	accountId: acc().id,
+																})
+													}
+													title={
+														acc().eventSubSocket.state !== "connected" &&
+														enabledSubs().length === 0
+															? "Select at least one subscription topic to connect"
+															: undefined
+													}
+												>
+													<span>
+														{acc().eventSubSocket.state === "connected"
+															? "Disconnect"
+															: "Connect"}
+													</span>
+												</EffectButton>
+											</div>
 										</div>
 									</div>
 
@@ -151,6 +151,12 @@ export default function Settings(
 																<input
 																	type="checkbox"
 																	checked={isEnabled()}
+																	disabled={
+																		isEnabled() &&
+																		acc().eventSubSocket.state ===
+																			"connected" &&
+																		enabledSubs().length === 1
+																	}
 																	onChange={(e) =>
 																		props.rpc
 																			.ToggleEventSubSubscription({
@@ -160,7 +166,13 @@ export default function Settings(
 																			})
 																			.pipe(runtime.runPromise)
 																	}
-																	class="size-4 rounded border border-gray-6 bg-gray-3 checked:bg-blue-600 checked:border-blue-600 cursor-pointer"
+																	title={
+																		acc().eventSubSocket.state ===
+																			"connected" && enabledSubs().length < 2
+																			? "Socket requires a least one subscription topic"
+																			: undefined
+																	}
+																	class="size-4 rounded border border-gray-6 bg-gray-3 checked:bg-blue-600 checked:border-blue-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 																/>
 															</label>
 														);
