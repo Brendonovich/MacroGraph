@@ -343,6 +343,7 @@ export class Server extends Effect.Service<Server>()("Server", {
 
 		// @effect-diagnostics-next-line returnEffectInGen:off
 		return HttpRouter.empty.pipe(
+			HttpRouter.get			("/health", Effect.succeed(HttpServerResponse.empty({ status: 200 }))),
 			HttpRouter.mountApp(
 				"/rpc",
 				Effect.gen(function* () {
