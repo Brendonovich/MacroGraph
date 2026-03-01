@@ -3,6 +3,9 @@ import { Schema as S } from "effect";
 export const Port = S.Number.pipe(S.brand("Port"));
 export type Port = typeof Port.Type;
 
+export const Host = S.String.pipe(S.brand("Host"));
+export type Host = typeof Host.Type;
+
 export const ServerId = S.String.pipe(S.brand("ServerId"));
 export type ServerId = typeof ServerId.Type;
 

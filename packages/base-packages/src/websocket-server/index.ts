@@ -10,6 +10,7 @@ export class EngineState extends S.Class<EngineState>("EngineState")({
 		key: S.String,
 		value: S.Struct({
 			autoStart: S.Boolean,
+			host: S.optional(S.String),
 			displayName: S.optional(S.String),
 		}),
 	}),

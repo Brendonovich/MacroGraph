@@ -156,12 +156,7 @@ export default EngineDef.toLayer((ctx) =>
 			)) {
 				const url = WebSocketUrl.make(urlStr);
 				if (value.connectOnStartup) {
-					yield* createConnection(url).pipe(
-						Effect.catchAll((error) => {
-							console.error(`Failed to connect to ${url}:`, error);
-							return Effect.void;
-						}),
-					);
+					yield* createConnection(url).pipe(Effect.ignore);
 				}
 			}
 		}

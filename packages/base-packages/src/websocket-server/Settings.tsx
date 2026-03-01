@@ -14,7 +14,7 @@ import {
 import { createStore } from "solid-js/store";
 
 import { ClientRpcs, type ClientState } from "./shared";
-import type { Port } from "./types";
+import type { Host, Port } from "./types";
 
 const SERVER_STATE_INDICATOR = {
 	running: { class: "bg-green-600", label: "Running" },
@@ -54,13 +54,14 @@ function AddServerForm(
 ) {
 	const [addServer, setAddServer] = createStore({
 		port: 1890,
+		host: "127.0.0.1",
 		displayName: "",
 	});
 
 	return (
 		<div class="flex flex-col gap-3">
 			<div class="flex flex-row gap-3 items-end">
-				<div class="w-1/4">
+				<div class="w-1/3">
 					<InputField
 						label="Port"
 						type="number"
@@ -70,7 +71,16 @@ function AddServerForm(
 						onChange={(e) => setAddServer("port", Number(e.target.value))}
 					/>
 				</div>
-				<div class="w-3/4">
+				<div class="w-2/3">
+					<InputField
+						label="Host (Optional)"
+						placeholder="127.0.0.1"
+						onChange={(e) => setAddServer("host", e.target.value)}
+					/>
+				</div>
+			</div>
+			<div class="flex flex-row gap-3 items-end">
+				<div class="flex-1">
 					<InputField
 						label="Display Name (Optional)"
 						value=""
@@ -82,6 +92,7 @@ function AddServerForm(
 					onClick={() =>
 						props.rpc.StartServer({
 							port: addServer.port as Port,
+							host: (addServer.host || "127.0.0.1") as Host,
 							displayName: addServer.displayName || undefined,
 						})
 					}
@@ -136,6 +147,7 @@ function ServerListItem(
 							? props.rpc.StopServer({ port: server().port })
 							: props.rpc.StartServer({
 									port: server().port,
+									host: server().host,
 									displayName: server().displayName,
 								})
 					}

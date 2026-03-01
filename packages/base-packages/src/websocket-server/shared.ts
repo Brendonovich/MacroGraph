@@ -2,7 +2,7 @@ import { Rpc, RpcGroup } from "@effect/rpc";
 import { Context, type Effect, Schema as S } from "effect";
 import { Resource } from "@macrograph/package-sdk";
 
-import { ClientId, Port, ServerId } from "./types";
+import { ClientId, Host, Port, ServerId } from "./types";
 
 export class ServerStartError extends S.TaggedError<ServerStartError>()(
 	"ServerStartError",
@@ -11,7 +11,11 @@ export class ServerStartError extends S.TaggedError<ServerStartError>()(
 
 export const ClientRpcs = RpcGroup.make(
 	Rpc.make("StartServer", {
-		payload: S.Struct({ port: Port, displayName: S.optional(S.String) }),
+		payload: S.Struct({
+			port: Port,
+			host: S.optional(Host),
+			displayName: S.optional(S.String),
+		}),
 		error: ServerStartError,
 	}),
 	Rpc.make("StopServer", { payload: S.Struct({ port: Port }) }),
@@ -54,6 +58,7 @@ export class ClientState extends S.Struct({
 		S.Struct({
 			id: ServerId,
 			port: Port,
+			host: Host,
 			displayName: S.optional(S.String),
 			clientCount: S.Number,
 			state: S.Union(

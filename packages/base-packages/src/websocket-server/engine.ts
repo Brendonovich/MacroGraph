@@ -5,10 +5,11 @@ import { LookupRef } from "@macrograph/package-sdk";
 
 import { EngineDef, EngineState } from "./index";
 import { ServerStartError } from "./shared";
-import { ClientId, Event, Port, ServerId } from "./types";
+import { ClientId, Event, Host, Port, ServerId } from "./types";
 
 type ServerState = {
 	port: Port;
+	host: Host;
 	displayName: Option.Option<string>;
 	clients: Map<ClientId, Socket.Socket>;
 	nextClientId: number;
@@ -25,11 +26,12 @@ export default EngineDef.toLayer((ctx) =>
 
 			const serversRecord: Record<
 				string,
-				{ autoStart: boolean; displayName?: string }
+				{ autoStart: boolean; host: string; displayName?: string }
 			> = {};
 			for (const [port, state] of servers) {
 				serversRecord[String(port)] = {
 					autoStart: state.state === "running",
+					host: state.host,
 					displayName: Option.getOrUndefined(state.displayName),
 				};
 			}
@@ -39,6 +41,7 @@ export default EngineDef.toLayer((ctx) =>
 
 		const startServer = Effect.fnUntraced(function* (
 			port: Port,
+			host?: Host,
 			displayName?: string,
 		) {
 			const existingServer = servers.get(port);
@@ -48,26 +51,28 @@ export default EngineDef.toLayer((ctx) =>
 				});
 			}
 
-			// Preserve existing display name if restarting a stopped server
+			// Preserve existing display name and host if restarting a stopped server
 			const resolvedDisplayName =
 				displayName ??
 				Option.getOrUndefined(existingServer?.displayName ?? Option.none());
+			const resolvedHost =
+				host ?? existingServer?.host ?? Host.make("127.0.0.1");
 
 			const scope = yield* Scope.make();
 
 			yield* Effect.log(`creating server ${port}`);
 			// Acquire the WebSocket server into the server's own scope
 			// so it stays alive until stopServer closes the scope
-			const server = yield* NodeSocketServer.makeWebSocket({ port }).pipe(
-				Scope.extend(scope),
-			);
+			const server = yield* NodeSocketServer.makeWebSocket({
+				port,
+				host: resolvedHost,
+			}).pipe(Scope.extend(scope));
 			yield* Effect.log(`created server ${port}`);
 
 			const serverState: ServerState = {
 				port,
-				displayName: resolvedDisplayName
-					? Option.some(resolvedDisplayName)
-					: Option.none(),
+				host: resolvedHost,
+				displayName: Option.fromNullable(resolvedDisplayName),
 				clients: new Map(),
 				nextClientId: 1,
 				scope: Option.some(scope),
@@ -80,7 +85,6 @@ export default EngineDef.toLayer((ctx) =>
 
 			yield* Effect.log(`running server ${port}`);
 
-			// Handle incoming connections - server.run blocks, so use forkIn
 			yield* server
 				.run((socket) =>
 					Effect.gen(function* () {
@@ -148,15 +152,20 @@ export default EngineDef.toLayer((ctx) =>
 		// Initialize from saved state
 		if (ctx.initialState) {
 			const initialState = ctx.initialState as {
-				servers?: Record<string, { autoStart: boolean; displayName?: string }>;
+				servers?: Record<
+					string,
+					{ autoStart: boolean; host?: string; displayName?: string }
+				>;
 			};
 			if (initialState.servers) {
 				for (const [portStr, value] of Object.entries(initialState.servers)) {
 					const port = Port.make(Number(portStr));
 					if (value.autoStart) {
-						yield* startServer(port, value.displayName).pipe(
-							Effect.catchAll(() => Effect.void),
-						);
+						yield* startServer(
+							port,
+							Host.make(value.host ?? "127.0.0.1"),
+							value.displayName,
+						).pipe(Effect.catchAll(() => Effect.void));
 					}
 				}
 			}
@@ -168,6 +177,7 @@ export default EngineDef.toLayer((ctx) =>
 					servers: [...servers.entries()].map(([port, server]) => ({
 						id: ServerId.make(String(port)),
 						port,
+						host: server.host,
 						displayName: Option.getOrUndefined(server.displayName),
 						clientCount: server.clients.size,
 						state: server.state,
@@ -192,12 +202,14 @@ export default EngineDef.toLayer((ctx) =>
 			clientRpcs: {
 				StartServer: ({
 					port,
+					host,
 					displayName,
 				}: {
 					port: Port;
+					host?: Host;
 					displayName?: string;
 				}) =>
-					startServer(port, displayName).pipe(
+					startServer(port, host, displayName).pipe(
 						Effect.catchTag(
 							"SocketServerError",
 							(e: any) => new ServerStartError({ message: e.message }),
