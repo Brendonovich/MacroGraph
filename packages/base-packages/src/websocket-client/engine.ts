@@ -1,5 +1,5 @@
 import { Socket } from "@effect/platform";
-import { Deferred, Effect, Exit, Scope } from "effect";
+import { Deferred, Effect, Exit, HashMap, Option, Ref, Scope } from "effect";
 import { LookupRef } from "@macrograph/package-sdk";
 
 import { EngineDef, EngineState } from "./index";
@@ -21,14 +21,16 @@ type Connection = {
 export default EngineDef.toLayer((ctx) =>
 	Effect.gen(function* () {
 		const socketConstructor = yield* Socket.WebSocketConstructor;
-		const connections = new Map<WebSocketUrl, Connection>();
+		const connectionsRef = yield* Ref.make(
+			HashMap.empty<WebSocketUrl, Connection>(),
+		);
 
 		const saveState = Effect.gen(function* () {
 			if (!ctx.saveState) return;
 
 			const connectionsRecord: Record<string, { connectOnStartup: boolean }> =
 				{};
-			for (const [url] of connections) {
+			for (const [url] of HashMap.entries(yield* connectionsRef)) {
 				connectionsRecord[url] = { connectOnStartup: true };
 			}
 
@@ -55,14 +57,14 @@ export default EngineDef.toLayer((ctx) =>
 
 			const scope = yield* Scope.make();
 
-			// Now that everything is successful, create and add the connection
-			const connection: Connection = {
+			const connection = {
 				url,
-				state: "connecting", // Already connected at this point
+				state: "connecting",
 				reconnectAttempts: 0,
 				maxReconnectAttempts: 3,
-			};
-			connections.set(url, connection);
+			} as Connection;
+
+			yield* Ref.update(connectionsRef, HashMap.set(url, connection));
 			yield* saveState;
 			yield* ctx.dirtyState;
 
@@ -80,7 +82,13 @@ export default EngineDef.toLayer((ctx) =>
 				.pipe(
 					Effect.catchTag("SocketError", (e) =>
 						Effect.gen(function* () {
-							connection.state = "disconnected";
+							yield* Ref.update(
+								connectionsRef,
+								HashMap.modify(url, (c) => ({
+									...c,
+									state: "disconnected" as const,
+								})),
+							);
 							yield* ctx.dirtyState;
 
 							return yield* new ConnectionFailed({ message: e.toString() });
@@ -94,21 +102,35 @@ export default EngineDef.toLayer((ctx) =>
 
 			yield* Deferred.await(open);
 
-			connections.set(url, { ...connection, state: "connected", writer });
+			yield* Ref.update(
+				connectionsRef,
+				HashMap.modify(url, (c) => ({
+					...c,
+					state: "connected" as const,
+					writer,
+				})),
+			);
 			yield* ctx.dirtyState;
 
 			return connection;
 		});
 
 		const connectWebSocket = Effect.fnUntraced(function* (url: WebSocketUrl) {
-			const connection = connections.get(url);
-			if (!connection) return;
+			const connections = yield* Ref.get(connectionsRef);
+			const connectionOption = HashMap.get(connections, url);
+			if (Option.isNone(connectionOption)) return;
+			const connection = connectionOption.value;
 
 			// If already connected or connecting, don't try again
 			if (connection.state === "connected" || connection.state === "connecting")
 				return;
 
-			connection.state = "connecting";
+			yield* Ref.update(connectionsRef, (map) =>
+				HashMap.set(map, url, {
+					...connection,
+					state: "connecting",
+				} as Connection),
+			);
 			yield* ctx.dirtyState;
 
 			// Create new connection - old socket will be cleaned up by Scope
@@ -117,9 +139,15 @@ export default EngineDef.toLayer((ctx) =>
 				Effect.tapError(() =>
 					Effect.gen(function* () {
 						// Revert to disconnected state on failure
-						const conn = connections.get(url);
-						if (conn) {
-							conn.state = "disconnected";
+						const connections = yield* Ref.get(connectionsRef);
+						const connOption = HashMap.get(connections, url);
+						if (Option.isSome(connOption)) {
+							yield* Ref.update(connectionsRef, (map) =>
+								HashMap.set(map, url, {
+									...connOption.value,
+									state: "disconnected",
+								} as Connection),
+							);
 							yield* ctx.dirtyState;
 						}
 					}),
@@ -138,14 +166,18 @@ export default EngineDef.toLayer((ctx) =>
 		const disconnectWebSocket = Effect.fnUntraced(function* (
 			url: WebSocketUrl,
 		) {
-			const connection = connections.get(url);
-			if (!connection) return;
+			const connections = yield* Ref.get(connectionsRef);
+			const connectionOption = HashMap.get(connections, url);
+			if (Option.isNone(connectionOption)) return;
+			const connection = connectionOption.value;
 
 			if (connection.state === "connected")
 				yield* connection.writer(new Socket.CloseEvent()).pipe(Effect.ignore);
 
-			// Socket.makeWebSocket manages its own scope via Effect.scoped, so we just update state
-			connection.state = "disconnected";
+			yield* Ref.update(
+				connectionsRef,
+				HashMap.modify(url, (c) => ({ ...c, state: "disconnected" as const })),
+			);
 			yield* ctx.dirtyState;
 		});
 
@@ -163,25 +195,33 @@ export default EngineDef.toLayer((ctx) =>
 
 		return {
 			clientState: Effect.gen(function* () {
+				const connections = yield* Ref.get(connectionsRef);
 				return {
-					connections: [...connections.entries()].map(([url, connection]) => ({
-						name: url,
-						url,
-						state: connection.state,
-					})),
+					connections: [...HashMap.entries(connections)].map(
+						([url, connection]) => ({
+							name: url,
+							url,
+							state: connection.state,
+						}),
+					),
 				};
 			}),
 			resources: {
 				WebSocket: yield* LookupRef.make(
-					Effect.sync(() =>
-						[...connections.keys()].map((url) => ({ id: url, display: url })),
-					),
+					Effect.gen(function* () {
+						const connections = yield* Ref.get(connectionsRef);
+						return [...HashMap.keys(connections)].map((url) => ({
+							id: url,
+							display: url,
+						}));
+					}),
 				),
 			},
 			clientRpcs: {
 				AddWebSocket: Effect.fnUntraced(function* (opts) {
 					const url = WebSocketUrl.make(opts.url);
-					if (connections.has(url)) {
+					const connections = yield* Ref.get(connectionsRef);
+					if (HashMap.has(connections, url)) {
 						return yield* new ConnectionFailed({
 							message: `WebSocket ${url} already exists`,
 						});
@@ -200,11 +240,12 @@ export default EngineDef.toLayer((ctx) =>
 					yield* ctx.dirtyState;
 				}),
 				RemoveWebSocket: Effect.fnUntraced(function* ({ url }) {
-					const connection = connections.get(url);
-					if (!connection) return;
+					const connections = yield* Ref.get(connectionsRef);
+					const connectionOption = HashMap.get(connections, url);
+					if (Option.isNone(connectionOption)) return;
 
 					// Socket.makeWebSocket manages its own scope via Effect.scoped
-					connections.delete(url);
+					yield* Ref.update(connectionsRef, HashMap.remove(url));
 					yield* ctx.dirtyState;
 					yield* saveState;
 				}),
@@ -220,9 +261,13 @@ export default EngineDef.toLayer((ctx) =>
 			runtimeRpcs: {
 				SendMessage: ({ url, data }: { url: WebSocketUrl; data: string }) =>
 					Effect.gen(function* () {
-						const connection = connections.get(url);
-						if (connection?.state === "connected") {
-							const writer = connection.writer;
+						const connections = yield* Ref.get(connectionsRef);
+						const connectionOption = HashMap.get(connections, url);
+						if (
+							Option.isSome(connectionOption) &&
+							connectionOption.value.state === "connected"
+						) {
+							const writer = connectionOption.value.writer;
 							yield* writer(data).pipe(Effect.ignore);
 						}
 					}),

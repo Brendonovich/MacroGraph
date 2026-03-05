@@ -6,14 +6,17 @@ import solid from "vite-plugin-solid";
 
 const serverEnvironmentEntry = "./src/prod-server.ts";
 
+const API_PORT = 5600 + Math.floor(Math.random() * 10);
+
 export default defineConfig({
+	define: { "import.meta.env.API_PORT": API_PORT.toString() },
 	server: {
 		allowedHosts: true,
 		proxy: {
 			"/api": {
 				ws: true,
 				changeOrigin: true,
-				target: "http://localhost:5678",
+				target: `http://localhost:${API_PORT}`,
 				rewrite: (path) => path.replace(/^\/api/, ""),
 			},
 		},

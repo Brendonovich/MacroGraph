@@ -32,7 +32,7 @@ const HMRAwareNodeHttpServerLayer = NodeHttpServer.layer(
 
 		return server;
 	},
-	{ port: 5678, host: "0.0.0.0" },
+	{ port: import.meta.env.API_PORT, host: "0.0.0.0" },
 );
 
 Layer.scopedDiscard(
