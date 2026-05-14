@@ -19,6 +19,13 @@ import type { Types } from "../types";
 
 export * from "./types";
 
+const V2 = [
+	"channel.follow",
+	"channel.hype_train.begin",
+	"channel.hype_train.progress",
+	"channel.hype_train.end"
+]
+
 export function createEventSub(core: Core, helixClient: Helix) {
 	const sockets = new ReactiveMap<string, WebSocket>();
 
@@ -42,7 +49,7 @@ export function createEventSub(core: Core, helixClient: Helix) {
 							helixClient.call("POST /eventsub/subscriptions", credential, {
 								body: JSON.stringify({
 									type,
-									version: type === "channel.follow" ? "2" : "1",
+									version: V2.includes(type) ? "2" : "1",
 									condition: {
 										broadcaster_user_id: userId,
 										moderator_user_id: userId,
@@ -1205,216 +1212,302 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 
 	const HypeTrainContributionTypeEnum = pkg.createEnum(
 		"Hype Train Contribution Type",
-		(e) => [e.variant("bits"), e.variant("subscription"), e.variant("other")],
+		(e) => [
+			e.variant("bits"),
+			e.variant("subscription"),
+			e.variant("other"),
+		],
 	);
-
-	const TopContribution = pkg.createStruct("Contribution", (s) => ({
+	
+	const HypeTrainTypeEnum = pkg.createEnum(
+		"Hype Train Type",
+		(e) => [
+			e.variant("regular"),
+			e.variant("treasure"),
+			e.variant("golden_kappa"),
+		],
+	);
+	
+	const Contribution = pkg.createStruct("Contribution", (s) => ({
 		user_id: s.field("User ID", t.string()),
 		user_login: s.field("User Login", t.string()),
 		user_name: s.field("User Name", t.string()),
 		type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
 		total: s.field("Total", t.int()),
 	}));
-
-	const LastContribute = pkg.createStruct("Contribution", (s) => ({
-		user_id: s.field("User ID", t.string()),
-		user_login: s.field("User Login", t.string()),
-		user_name: s.field("User Name", t.string()),
-		type: s.field("Type", t.enum(HypeTrainContributionTypeEnum)),
-		total: s.field("Total", t.int()),
-	}));
-
+	
+	const SharedTrainParticipant = pkg.createStruct(
+		"Shared Train Participant",
+		(s) => ({
+			broadcaster_user_id: s.field("Broadcaster User ID", t.string()),
+			broadcaster_user_login: s.field("Broadcaster User Login", t.string()),
+			broadcaster_user_name: s.field("Broadcaster User Name", t.string()),
+		}),
+	);
+	
 	createEventSubEventSchema({
 		name: "Channel Hype Train Begin",
 		event: "channel.hype_train.begin",
-		createIO: ({ io }) => {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				total: io.dataOutput({
-					id: "total",
-					name: "Total",
-					type: t.int(),
-				}),
-				progress: io.dataOutput({
-					id: "progress",
-					name: "Progress",
-					type: t.int(),
-				}),
-				goal: io.dataOutput({
-					id: "goal",
-					name: "Goal",
-					type: t.int(),
-				}),
-				topContributions: io.dataOutput({
-					id: "topContributions",
-					name: "Top Contributions",
-					type: t.list(t.struct(TopContribution)),
-				}),
-				lastContribution: io.dataOutput({
-					id: "lastContribution",
-					name: "Last Contribution",
-					type: t.struct(LastContribute),
-				}),
-				level: io.dataOutput({
-					id: "level",
-					name: "Level",
-					type: t.int(),
-				}),
-			};
-		},
+		createIO: ({ io }) => ({
+			exec: io.execOutput({ id: "exec" }),
+	
+			id: io.dataOutput({
+				id: "id",
+				name: "Hype Train ID",
+				type: t.string(),
+			}),
+	
+			broadcasterUserId: io.dataOutput({
+				id: "broadcasterUserId",
+				name: "Broadcaster User ID",
+				type: t.string(),
+			}),
+			broadcasterUserLogin: io.dataOutput({
+				id: "broadcasterUserLogin",
+				name: "Broadcaster User Login",
+				type: t.string(),
+			}),
+			broadcasterUserName: io.dataOutput({
+				id: "broadcasterUserName",
+				name: "Broadcaster User Name",
+				type: t.string(),
+			}),
+	
+			total: io.dataOutput({
+				id: "total",
+				name: "Total",
+				type: t.int(),
+			}),
+			progress: io.dataOutput({
+				id: "progress",
+				name: "Progress",
+				type: t.int(),
+			}),
+			goal: io.dataOutput({
+				id: "goal",
+				name: "Goal",
+				type: t.int(),
+			}),
+			level: io.dataOutput({
+				id: "level",
+				name: "Level",
+				type: t.int(),
+			}),
+	
+			allTimeHighLevel: io.dataOutput({
+				id: "allTimeHighLevel",
+				name: "All-Time High Level",
+				type: t.int(),
+			}),
+			allTimeHighTotal: io.dataOutput({
+				id: "allTimeHighTotal",
+				name: "All-Time High Total",
+				type: t.int(),
+			}),
+	
+			type: io.dataOutput({
+				id: "type",
+				name: "Hype Train Type",
+				type: t.enum(HypeTrainTypeEnum),
+			}),
+	
+			topContributions: io.dataOutput({
+				id: "topContributions",
+				name: "Top Contributions",
+				type: t.list(t.struct(Contribution)),
+			}),
+	
+			isSharedTrain: io.dataOutput({
+				id: "isSharedTrain",
+				name: "Is Shared Train",
+				type: t.bool(),
+			}),
+	
+			sharedTrainParticipants: io.dataOutput({
+				id: "sharedTrainParticipants",
+				name: "Shared Train Participants",
+				type: t.list(t.struct(SharedTrainParticipant)),
+			}),
+	
+			startedAt: io.dataOutput({
+				id: "startedAt",
+				name: "Started At",
+				type: t.string(),
+			}),
+			expiresAt: io.dataOutput({
+				id: "expiresAt",
+				name: "Expires At",
+				type: t.string(),
+			}),
+		}),
+	
 		run({ ctx, data, io }) {
-			const topContributions = data.top_contributions.map((contribution) =>
-				TopContribution.create({
-					user_id: contribution.user_id,
-					user_login: contribution.user_login,
-					user_name: contribution.user_name,
-					total: contribution.total,
-					type: HypeTrainContributionTypeEnum.variant(contribution.type),
-				}),
-			);
+			ctx.setOutput(io.id, data.id);
+	
+			ctx.setOutput(io.broadcasterUserId, data.broadcaster_user_id);
+			ctx.setOutput(io.broadcasterUserLogin, data.broadcaster_user_login);
+			ctx.setOutput(io.broadcasterUserName, data.broadcaster_user_name);
+	
 			ctx.setOutput(io.total, data.total);
 			ctx.setOutput(io.progress, data.progress);
 			ctx.setOutput(io.goal, data.goal);
 			ctx.setOutput(io.level, data.level);
-			ctx.setOutput(io.topContributions, topContributions);
+	
+			ctx.setOutput(io.allTimeHighLevel, data.all_time_high_level);
+			ctx.setOutput(io.allTimeHighTotal, data.all_time_high_total);
+	
+			ctx.setOutput(io.type, HypeTrainTypeEnum.variant(data.type));
+	
 			ctx.setOutput(
-				io.lastContribution,
-				LastContribute.create({
-					user_id: data.last_contribution.user_id,
-					user_login: data.last_contribution.user_login,
-					user_name: data.last_contribution.user_name,
-					total: data.last_contribution.total,
-					type: HypeTrainContributionTypeEnum.variant(
-						data.last_contribution.type,
-					),
-				}),
+				io.topContributions,
+				data.top_contributions.map((c) =>
+					Contribution.create({
+						user_id: c.user_id,
+						user_login: c.user_login,
+						user_name: c.user_name,
+						total: c.total,
+						type: HypeTrainContributionTypeEnum.variant(c.type),
+					}),
+				),
 			);
-			ctx.exec(io.exec);
-		},
-	});
-
-	createEventSubEventSchema({
-		name: "Channel Hype Train Progress",
-		event: "channel.hype_train.progress",
-		createIO: ({ io }) => {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				total: io.dataOutput({
-					id: "total",
-					name: "Total",
-					type: t.int(),
-				}),
-				progress: io.dataOutput({
-					id: "progress",
-					name: "Progress",
-					type: t.int(),
-				}),
-				goal: io.dataOutput({
-					id: "goal",
-					name: "Goal",
-					type: t.int(),
-				}),
-				topContributions: io.dataOutput({
-					id: "topContributions",
-					name: "Top Contributions",
-					type: t.list(t.struct(TopContribution)),
-				}),
-				lastContribution: io.dataOutput({
-					id: "lastContribution",
-					name: "Last Contribution",
-					type: t.struct(LastContribute),
-				}),
-				level: io.dataOutput({
-					id: "level",
-					name: "Level",
-					type: t.int(),
-				}),
-			};
-		},
-		run({ ctx, data, io }) {
-			const topContributions = data.top_contributions.map((contribution) =>
-				TopContribution.create({
-					user_id: contribution.user_id,
-					user_login: contribution.user_login,
-					user_name: contribution.user_name,
-					total: contribution.total,
-					type: HypeTrainContributionTypeEnum.variant(contribution.type),
-				}),
-			);
-
-			ctx.setOutput(io.total, data.total);
-			ctx.setOutput(io.progress, data.progress);
-			ctx.setOutput(io.goal, data.goal);
-			ctx.setOutput(io.level, data.level);
-			ctx.setOutput(io.topContributions, topContributions);
+	
+			ctx.setOutput(io.isSharedTrain, data.is_shared_train);
+	
 			ctx.setOutput(
-				io.lastContribution,
-				LastContribute.create({
-					user_id: data.last_contribution.user_id,
-					user_login: data.last_contribution.user_login,
-					user_name: data.last_contribution.user_name,
-					total: data.last_contribution.total,
-					type: HypeTrainContributionTypeEnum.variant(
-						data.last_contribution.type,
-					),
-				}),
+				io.sharedTrainParticipants,
+				(data.shared_train_participants ?? []).map((p) =>
+					SharedTrainParticipant.create({
+						broadcaster_user_id: p.broadcaster_user_id,
+						broadcaster_user_login: p.broadcaster_user_login,
+						broadcaster_user_name: p.broadcaster_user_name,
+					}),
+				),
 			);
+	
+			ctx.setOutput(io.startedAt, data.started_at);
+			ctx.setOutput(io.expiresAt, data.expires_at);
+	
 			ctx.exec(io.exec);
 		},
 	});
+	
 
-	createEventSubEventSchema({
-		name: "Channel Hype Train End",
-		event: "channel.hype_train.end",
-		createIO: ({ io }) => {
-			return {
-				exec: io.execOutput({
-					id: "exec",
-				}),
-				total: io.dataOutput({
-					id: "total",
-					name: "Total",
-					type: t.int(),
-				}),
-				level: io.dataOutput({
-					id: "level",
-					name: "Level",
-					type: t.int(),
-				}),
-				topContributions: io.dataOutput({
-					id: "topContributions",
-					name: "Top Contributions",
-					type: t.list(t.struct(TopContribution)),
-				}),
-				cooldownEndsAt: io.dataOutput({
-					id: "cooldownEndsAt",
-					name: "CooldownEndsAt",
-					type: t.string(),
-				}),
-			};
-		},
-		run({ ctx, data, io }) {
-			const topContributions = data.top_contributions.map((contribution) =>
-				TopContribution.create({
-					user_id: contribution.user_id,
-					user_login: contribution.user_login,
-					user_name: contribution.user_name,
-					total: contribution.total,
-					type: HypeTrainContributionTypeEnum.variant(contribution.type),
-				}),
-			);
+// Channel Hype Train Progress Node (v2)
+createEventSubEventSchema({
+	name: "Channel Hype Train Progress",
+	event: "channel.hype_train.progress",
+	createIO: ({ io }) => ({
+		exec: io.execOutput({ id: "exec" }),
+		id: io.dataOutput({ id: "id", name: "Hype Train ID", type: t.string() }),
+		broadcasterUserId: io.dataOutput({ id: "broadcasterUserId", name: "Broadcaster User ID", type: t.string() }),
+		broadcasterUserLogin: io.dataOutput({ id: "broadcasterUserLogin", name: "Broadcaster User Login", type: t.string() }),
+		broadcasterUserName: io.dataOutput({ id: "broadcasterUserName", name: "Broadcaster User Name", type: t.string() }),
+		total: io.dataOutput({ id: "total", name: "Total", type: t.int() }),
+		progress: io.dataOutput({ id: "progress", name: "Progress", type: t.int() }),
+		goal: io.dataOutput({ id: "goal", name: "Goal", type: t.int() }),
+		level: io.dataOutput({ id: "level", name: "Level", type: t.int() }),
+		startedAt: io.dataOutput({ id: "startedAt", name: "Started At", type: t.string() }),
+		expiresAt: io.dataOutput({ id: "expiresAt", name: "Expires At", type: t.string() }),
+		topContributions: io.dataOutput({ id: "topContributions", name: "Top Contributions", type: t.list(t.struct(Contribution)) }),
+		type: io.dataOutput({ id: "type", name: "Hype Train Type", type: t.enum(HypeTrainTypeEnum) }),
+		isSharedTrain: io.dataOutput({ id: "isSharedTrain", name: "Is Shared Train", type: t.bool() }),
+		sharedTrainParticipants: io.dataOutput({ id: "sharedTrainParticipants", name: "Shared Train Participants", type: t.list(t.struct(SharedTrainParticipant)) }),
+	}),
+	run({ ctx, data, io }) {
+		const topContributions = data.top_contributions.map((c) =>
+			Contribution.create({
+				user_id: c.user_id,
+				user_login: c.user_login,
+				user_name: c.user_name,
+				total: c.total,
+				type: HypeTrainContributionTypeEnum.variant(c.type),
+			}),
+		);
 
-			ctx.setOutput(io.total, data.total);
-			ctx.setOutput(io.level, data.level);
-			ctx.setOutput(io.topContributions, topContributions);
-			ctx.setOutput(io.cooldownEndsAt, data.cooldown_ends_at);
-			ctx.exec(io.exec);
-		},
-	});
+		ctx.setOutput(io.id, data.id);
+		ctx.setOutput(io.broadcasterUserId, data.broadcaster_user_id);
+		ctx.setOutput(io.broadcasterUserLogin, data.broadcaster_user_login);
+		ctx.setOutput(io.broadcasterUserName, data.broadcaster_user_name);
+		ctx.setOutput(io.total, data.total);
+		ctx.setOutput(io.progress, data.progress);
+		ctx.setOutput(io.goal, data.goal);
+		ctx.setOutput(io.level, data.level);
+		ctx.setOutput(io.startedAt, data.started_at);
+		ctx.setOutput(io.expiresAt, data.expires_at);
+		ctx.setOutput(io.topContributions, topContributions);
+		ctx.setOutput(io.type, HypeTrainTypeEnum.variant(data.type));
+		ctx.setOutput(io.isSharedTrain, data.is_shared_train);
+		ctx.setOutput(
+			io.sharedTrainParticipants,
+			(data.shared_train_participants ?? []).map((p) =>
+				SharedTrainParticipant.create({
+					broadcaster_user_id: p.broadcaster_user_id,
+					broadcaster_user_login: p.broadcaster_user_login,
+					broadcaster_user_name: p.broadcaster_user_name,
+				}),
+			),
+		);
+		ctx.exec(io.exec);
+	},
+});
+
+// Channel Hype Train End Node (v2)
+createEventSubEventSchema({
+	name: "Channel Hype Train End",
+	event: "channel.hype_train.end",
+	createIO: ({ io }) => ({
+		exec: io.execOutput({ id: "exec" }),
+		id: io.dataOutput({ id: "id", name: "Hype Train ID", type: t.string() }),
+		broadcasterUserId: io.dataOutput({ id: "broadcasterUserId", name: "Broadcaster User ID", type: t.string() }),
+		broadcasterUserLogin: io.dataOutput({ id: "broadcasterUserLogin", name: "Broadcaster User Login", type: t.string() }),
+		broadcasterUserName: io.dataOutput({ id: "broadcasterUserName", name: "Broadcaster User Name", type: t.string() }),
+		total: io.dataOutput({ id: "total", name: "Total", type: t.int() }),
+		level: io.dataOutput({ id: "level", name: "Level", type: t.int() }),
+		startedAt: io.dataOutput({ id: "startedAt", name: "Started At", type: t.string() }),
+		endedAt: io.dataOutput({ id: "endedAt", name: "Ended At", type: t.string() }),
+		cooldownEndsAt: io.dataOutput({ id: "cooldownEndsAt", name: "Cooldown Ends At", type: t.string() }),
+		topContributions: io.dataOutput({ id: "topContributions", name: "Top Contributions", type: t.list(t.struct(Contribution)) }),
+		type: io.dataOutput({ id: "type", name: "Hype Train Type", type: t.enum(HypeTrainTypeEnum) }),
+		isSharedTrain: io.dataOutput({ id: "isSharedTrain", name: "Is Shared Train", type: t.bool() }),
+		sharedTrainParticipants: io.dataOutput({ id: "sharedTrainParticipants", name: "Shared Train Participants", type: t.list(t.struct(SharedTrainParticipant)) }),
+	}),
+	run({ ctx, data, io }) {
+		const topContributions = data.top_contributions.map((c) =>
+			Contribution.create({
+				user_id: c.user_id,
+				user_login: c.user_login,
+				user_name: c.user_name,
+				total: c.total,
+				type: HypeTrainContributionTypeEnum.variant(c.type),
+			}),
+		);
+
+		ctx.setOutput(io.id, data.id);
+		ctx.setOutput(io.broadcasterUserId, data.broadcaster_user_id);
+		ctx.setOutput(io.broadcasterUserLogin, data.broadcaster_user_login);
+		ctx.setOutput(io.broadcasterUserName, data.broadcaster_user_name);
+		ctx.setOutput(io.total, data.total);
+		ctx.setOutput(io.level, data.level);
+		ctx.setOutput(io.startedAt, data.started_at);
+		ctx.setOutput(io.endedAt, data.ended_at);
+		ctx.setOutput(io.cooldownEndsAt, data.cooldown_ends_at);
+		ctx.setOutput(io.topContributions, topContributions);
+		ctx.setOutput(io.type, HypeTrainTypeEnum.variant(data.type));
+		ctx.setOutput(io.isSharedTrain, data.is_shared_train);
+		ctx.setOutput(
+			io.sharedTrainParticipants,
+			(data.shared_train_participants ?? []).map((p) =>
+				SharedTrainParticipant.create({
+					broadcaster_user_id: p.broadcaster_user_id,
+					broadcaster_user_login: p.broadcaster_user_login,
+					broadcaster_user_name: p.broadcaster_user_name,
+				}),
+			),
+		);
+		ctx.exec(io.exec);
+	},
+});
+
 
 	createEventSubEventSchema({
 		name: "Channel Updated",

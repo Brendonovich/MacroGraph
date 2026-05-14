@@ -504,36 +504,74 @@ export interface Events {
 		progress: number;
 		goal: number;
 		top_contributions: HypeTrainContributionData[];
-		last_contribution: HypeTrainContributionData;
 		started_at: string;
 		expires_at: string;
-	};
-	"channel.hype_train.progress": {
-		id: string;
+		all_time_high_level: number;
+		all_time_high_total: number;
+		type: "regular" | "treasure" | "golden_kappa";
+		is_shared_train: boolean;
+		shared_train_participants?: {
+			broadcaster_user_id: string;
+			broadcaster_user_login: string;
+			broadcaster_user_name: string;
+		}[];
+	}
+	
+"channel.hype_train.progress": {
+	id: string;
+	broadcaster_user_id: string;
+	broadcaster_user_login: string;
+	broadcaster_user_name: string;
+	level: number;
+	total: number;
+	progress: number;
+	goal: number;
+	top_contributions: {
+		user_id: string;
+		user_login: string;
+		user_name: string;
+		type: "bits" | "subscription" | "other";
+		total: number;
+		level: number;
+	}[];
+	started_at: string;
+	expires_at: string;
+	type: "regular" | "treasure" | "golden_kappa";
+	is_shared_train: boolean;
+	shared_train_participants?: {
 		broadcaster_user_id: string;
 		broadcaster_user_login: string;
 		broadcaster_user_name: string;
-		level: number;
+	}[];
+};
+
+"channel.hype_train.end": {
+	id: string;
+	broadcaster_user_id: string;
+	broadcaster_user_login: string;
+	broadcaster_user_name: string;
+	level: number;
+	total: number;
+	top_contributions: {
+		user_id: string;
+		user_login: string;
+		user_name: string;
+		type: "bits" | "subscription" | "other";
 		total: number;
-		progress: number;
-		goal: number;
-		top_contributions: HypeTrainContributionData[];
-		last_contribution: HypeTrainContributionData;
-		started_at: string;
-		expires_at: string;
-	};
-	"channel.hype_train.end": {
-		id: string;
+		level: number;
+	}[];
+	started_at: string;
+	ended_at: string;
+	cooldown_ends_at: string;
+	type: "regular" | "treasure" | "golden_kappa";
+	is_shared_train: boolean;
+	shared_train_participants?: {
 		broadcaster_user_id: string;
 		broadcaster_user_login: string;
 		broadcaster_user_name: string;
-		level: number;
-		total: number;
-		top_contributions: HypeTrainContributionData[];
-		started_at: string;
-		ended_at: string;
-		cooldown_ends_at: string;
-	};
+	}[];
+};
+
 	"channel.update": {
 		broadcaster_user_id: string;
 		broadcaster_user_login: string;

@@ -414,7 +414,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 					user_id: ctx.getInput(io.broadcasterId),
 				}),
 			});
-			const info = Maybe(data[0]);
+			const info = Maybe(data.data[0]);
 
 			ctx.setOutput(
 				io.info,
