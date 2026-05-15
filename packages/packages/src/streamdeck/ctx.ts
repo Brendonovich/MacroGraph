@@ -1,4 +1,5 @@
 import type { OnEvent, WsProvider } from "@macrograph/runtime";
+import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import * as v from "valibot";
@@ -75,7 +76,11 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
 					"Text" in msg &&
 					client === connectedClient()
 				) {
-					const parsed = v.parse(MESSAGE, JSON.parse(msg.Text));
+					const parsed = parseJsonWithContext(
+						"packages/streamdeck createCtx: WebSocket client message",
+						MESSAGE,
+						msg.Text,
+					);
 
 					onEvent({ name: parsed.event, data: parsed.payload });
 				}

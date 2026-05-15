@@ -59,7 +59,7 @@ export default ({
 										<Show when={account()?.()}>
 											{(account) => {
 												const eventSubSocket = () =>
-													eventSub.sockets.get(account().data.id);
+													eventSub.isLive(account().data.id);
 												const chatClient = () =>
 													chat.clients.get(account().data.id);
 
@@ -68,7 +68,11 @@ export default ({
 														<div class="space-x-2">
 															<Switch fallback="EventSub Connecting...">
 																<Match when={!eventSubSocket()}>
-																	<span>EventSub Disconnected</span>
+																	<span>
+																		{eventSub.isConnecting(account().data.id)
+																			? "EventSub Connecting..."
+																			: "EventSub Disconnected"}
+																	</span>
 																	<AsyncButton
 																		loadingChildren="Connecting..."
 																		onClick={() => {
@@ -87,12 +91,12 @@ export default ({
 																	<span>EventSub Connected</span>
 																	<Button
 																		onClick={() => {
-																			eventSub.disconnectSocket(
-																				account().data.id,
-																			);
 																			setPersisted(account().data.id, {
 																				eventsub: false,
 																			});
+																			eventSub.disconnectSocket(
+																				account().data.id,
+																			);
 																		}}
 																	>
 																		Disconnect

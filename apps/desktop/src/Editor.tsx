@@ -3,18 +3,19 @@ import {
   ConnectionsDialog,
   Interface,
   PlatformContext,
+  importInvocationLogFromProject,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { deserializeProject, serde } from "@macrograph/runtime-serde";
+import { deserializeProject, parseJsonWithContext, serde } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Show, createSignal, onMount } from "solid-js";
 import "tauri-plugin-midi";
-import * as v from "valibot";
 
 import { Button } from "@macrograph/ui";
 import "./app.css";
 import { core, wsProvider } from "./core";
+import { obsNativeBridge, outboundWsBridge } from "./nativeBridges";
 import { createPlatform } from "./platform";
 import { client } from "./rspc";
 
@@ -49,7 +50,7 @@ const platform = createPlatform({
   pkgs.localStorage.pkg,
   pkgs.logic.pkg,
   pkgs.map.pkg,
-  pkgs.obs.pkg,
+  () => pkgs.obs.pkg({ obsNative: obsNativeBridge }),
   // pkgs.patreon.pkg,
   // pkgs.spotify.pkg,
   () => pkgs.streamdeck.pkg(wsProvider),
@@ -61,7 +62,7 @@ const platform = createPlatform({
   pkgs.twitch.pkg,
   pkgs.utils.pkg,
   pkgs.openai.pkg,
-  pkgs.websocket.pkg,
+  () => pkgs.websocket.pkg({ outboundWs: outboundWsBridge }),
   pkgs.variables.pkg,
   pkgs.customEvents.pkg,
   pkgs.speakerbot.pkg,
@@ -81,19 +82,27 @@ export default function Editor() {
     const savedProjectRoot = localStorage.getItem("project-root");
 
     if (savedProject) {
-      const serializedProject = v.parse(
+      const serializedProject = parseJsonWithContext(
+        "apps/desktop Editor onMount: localStorage key `project` (inline project JSON)",
         serde.Project,
-        JSON.parse(savedProject),
+        savedProject,
       );
       core
         .load((c) => deserializeProject(c, serializedProject))
+        .then(() =>
+          importInvocationLogFromProject(
+            serializedProject.nodeInvocations,
+            projectUrl() ?? "default",
+          ),
+        )
         .finally(() => {
           setLoaded(true);
         });
     } else if (savedProjectRoot) {
-      const serializedProjectRoot = v.parse(
+      const serializedProjectRoot = parseJsonWithContext(
+        "apps/desktop Editor onMount: localStorage key `project-root`",
         serde.ProjectRoot,
-        JSON.parse(savedProjectRoot),
+        savedProjectRoot,
       );
 
       const graphs: serde.Graph[] = [];
@@ -101,7 +110,11 @@ export default function Editor() {
       for (const graphId of serializedProjectRoot.graphs) {
         const data = localStorage.getItem(`project-graph-${graphId}`);
         if (!data) throw new Error(`Graph ${graphId} not found`);
-        const graph = v.parse(serde.Graph, JSON.parse(data));
+        const graph = parseJsonWithContext(
+          `apps/desktop Editor onMount: localStorage key project-graph-${graphId}`,
+          serde.Graph,
+          data,
+        );
         graphs.push(graph);
       }
 
@@ -110,17 +123,26 @@ export default function Editor() {
       for (const variableId of serializedProjectRoot.variables) {
         const data = localStorage.getItem(`project-variable-${variableId}`);
         if (!data) throw new Error(`Variable ${variableId} not found`);
-        const variable = v.parse(serde.Variable, JSON.parse(data));
+        const variable = parseJsonWithContext(
+          `apps/desktop Editor onMount: localStorage key project-variable-${variableId}`,
+          serde.Variable,
+          data,
+        );
         variables.push(variable);
       }
 
+      const merged = {
+        ...serializedProjectRoot,
+        graphs,
+        variables,
+      };
       core
-        .load((c) =>
-          deserializeProject(c, {
-            ...serializedProjectRoot,
-            graphs,
-            variables,
-          }),
+        .load((c) => deserializeProject(c, merged))
+        .then(() =>
+          importInvocationLogFromProject(
+            merged.nodeInvocations,
+            projectUrl() ?? "default",
+          ),
         )
         .finally(() => {
           setLoaded(true);
@@ -133,7 +155,11 @@ export default function Editor() {
   return (
     <Show when={loaded() && core.project} keyed>
       <PlatformContext.Provider value={platform}>
-        <Interface core={core} environment="custom" />
+        <Interface
+          core={core}
+          environment="custom"
+          mosaicWorkspaceKey={projectUrl}
+        />
       </PlatformContext.Provider>
     </Show>
   );

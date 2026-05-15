@@ -1,6 +1,7 @@
 import type { CommentBox } from "../models";
 import type { Node } from "../models/Node";
 
+export * from "./nativeOutbound";
 export * from "./pins";
 
 export type XY = { x: number; y: number };

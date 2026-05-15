@@ -33,6 +33,7 @@ import {
 	deserializeGraph,
 	deserializeNode,
 	deserializeVariable,
+	parseWithContext,
 	serde,
 	serializeCommentBox,
 	serializeCustomEnum,
@@ -327,7 +328,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			async rewind(entry) {
 				const graph = await deserializeGraph(
 					core.project,
-					v.parse(serde.Graph, entry.data),
+					parseWithContext(
+						"actions history deleteGraph rewind (serde.Graph)",
+						serde.Graph,
+						entry.data,
+					),
 				);
 				core.project.graphs.set(graph.id, graph);
 
@@ -1317,7 +1322,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				if (!graph) return;
 
 				for (const nodeData of entry.nodes.reverse()) {
-					const node = deserializeNode(graph, v.parse(serde.Node, nodeData));
+					const node = deserializeNode(
+						graph,
+						parseWithContext(
+							"actions history deleteSelection rewind (serde.Node)",
+							serde.Node,
+							nodeData,
+						),
+					);
 					if (!node) continue;
 
 					graph.nodes.set(node.id, node);
@@ -1326,14 +1338,19 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				for (const boxData of entry.commentBoxes.reverse()) {
 					const box = deserializeCommentBox(
 						graph,
-						v.parse(serde.CommentBox, boxData),
+						parseWithContext(
+							"actions history deleteSelection rewind (serde.CommentBox)",
+							serde.CommentBox,
+							boxData,
+						),
 					);
 					if (!box) continue;
 
 					graph.commentBoxes.set(box.id, box);
 				}
 
-				const connections = v.parse(
+				const connections = parseWithContext(
+					"actions history deleteSelection rewind (Connection[])",
 					v.array(serde.Connection),
 					entry.connections,
 				);
@@ -1537,7 +1554,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				);
 				outConnections.splice(index, 1);
 
-				const prevConnections = v.parse(
+				const prevConnections = parseWithContext(
+					"actions history connectIO rewind (prev Connection[])",
 					v.array(serde.Connection),
 					entry.prevConnections,
 				);
@@ -1872,7 +1890,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const deferrer = createDeferrer();
 				const struct = deserializeCustomStruct(
 					core.project,
-					v.parse(serde.CustomStruct, entry.data),
+					parseWithContext(
+						"actions history deleteCustomStruct rewind (serde.CustomStruct)",
+						serde.CustomStruct,
+						entry.data,
+					),
 					deferrer,
 				);
 				deferrer.run();
@@ -2071,7 +2093,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
 				struct.fields[entry.fieldId] = deserializeField(
 					core.project,
-					v.parse(serde.CustomStructField, entry.data),
+					parseWithContext(
+						"actions history deleteCustomStructField rewind (serde.CustomStructField)",
+						serde.CustomStructField,
+						entry.data,
+					),
 				);
 			},
 		}),
@@ -2198,7 +2224,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const deferrer = createDeferrer();
 				const enm = deserializeCustomEnum(
 					core.project,
-					v.parse(serde.CustomEnum, entry.data),
+					parseWithContext(
+						"actions history deleteCustomEnum rewind (serde.CustomEnum)",
+						serde.CustomEnum,
+						entry.data,
+					),
 					deferrer,
 				);
 
@@ -2269,7 +2299,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
 				deserializeCustomEnumVariant(
 					enm,
-					v.parse(serde.CustomEnumVariant, entry.data),
+					parseWithContext(
+						"actions history deleteCustomEnumVariant rewind (serde.CustomEnumVariant)",
+						serde.CustomEnumVariant,
+						entry.data,
+					),
 				);
 			},
 		}),
@@ -2393,7 +2427,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
 				variant.fields[entry.fieldId] = deserializeField(
 					core.project,
-					v.parse(serde.Field, entry.data),
+					parseWithContext(
+						"actions history deleteCustomEnumVariantField rewind (serde.Field)",
+						serde.Field,
+						entry.data,
+					),
 				);
 			},
 		}),
@@ -2443,7 +2481,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			rewind(entry) {
 				const struct = deserializeCustomEvent(
 					core.project,
-					v.parse(serde.CustomEvent, entry.data),
+					parseWithContext(
+						"actions history deleteCustomEvent rewind (serde.CustomEvent)",
+						serde.CustomEvent,
+						entry.data,
+					),
 				);
 
 				core.project.customEvents.set(entry.eventId, struct);
@@ -2537,7 +2579,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				if (!event) return;
 
 				event.fields.push(
-					deserializeField(core.project, v.parse(serde.Field, entry.data)),
+					deserializeField(
+						core.project,
+						parseWithContext(
+							"actions history deleteCustomEventField rewind (serde.Field)",
+							serde.Field,
+							entry.data,
+						),
+					),
 				);
 			},
 		}),
@@ -2797,7 +2846,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			rewind(entry) {
 				if (entry.location === "project") {
 					const variable = deserializeVariable(
-						v.parse(serde.Variable, entry.data),
+						parseWithContext(
+							"actions history deleteVariable rewind — project (serde.Variable)",
+							serde.Variable,
+							entry.data,
+						),
 						core.project,
 					);
 
@@ -2807,7 +2860,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					if (!graph) return;
 
 					const variable = deserializeVariable(
-						v.parse(serde.Variable, entry.data),
+						parseWithContext(
+							"actions history deleteVariable rewind — graph (serde.Variable)",
+							serde.Variable,
+							entry.data,
+						),
 						graph,
 					);
 

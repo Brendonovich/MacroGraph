@@ -356,6 +356,67 @@ export function SchemaMenu(props: Props) {
 									}
 								}
 
+								if (p.name === "Variables" && !props.suggestion) {
+									const getGraph = p.schemas.get("Get Graph Variable");
+									const setGraph = p.schemas.get("Set Graph Variable");
+									const changedGraph = p.schemas.get("Graph Variable Changed");
+									const getProject = p.schemas.get("Get Project Variable");
+									const setProject = p.schemas.get("Set Project Variable");
+									const changedProject = p.schemas.get("Project Variable Changed");
+
+									for (const v of props.graphModel.variables) {
+										const n = v.name.toLowerCase();
+										const searchMatches = leftoverSearchTokens.every((t) =>
+											n.includes(t),
+										);
+										if (!searchMatches) continue;
+										if (getGraph)
+											ret.push({
+												schema: getGraph,
+												name: `Get ${v.name}`,
+												defaultProperties: { variable: v.id },
+											});
+										if (setGraph)
+											ret.push({
+												schema: setGraph,
+												name: `Set ${v.name}`,
+												defaultProperties: { variable: v.id },
+											});
+										if (changedGraph)
+											ret.push({
+												schema: changedGraph,
+												name: `${v.name} Changed`,
+												defaultProperties: { variable: v.id },
+											});
+									}
+
+									for (const v of props.graphModel.project.variables) {
+										const n = v.name.toLowerCase();
+										const searchMatches = leftoverSearchTokens.every((t) =>
+											n.includes(t),
+										);
+										if (!searchMatches) continue;
+										if (getProject)
+											ret.push({
+												schema: getProject,
+												name: `Get ${v.name} (project)`,
+												defaultProperties: { variable: v.id },
+											});
+										if (setProject)
+											ret.push({
+												schema: setProject,
+												name: `Set ${v.name} (project)`,
+												defaultProperties: { variable: v.id },
+											});
+										if (changedProject)
+											ret.push({
+												schema: changedProject,
+												name: `${v.name} Changed (project)`,
+												defaultProperties: { variable: v.id },
+											});
+									}
+								}
+
 								return ret;
 							});
 

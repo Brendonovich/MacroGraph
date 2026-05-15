@@ -17,6 +17,7 @@
 		"@macrograph/json": "workspace:^",
 		"@macrograph/option": "workspace:^",
 		"@macrograph/runtime": "workspace:*",
+		"@macrograph/runtime-serde": "workspace:*",
 		"@macrograph/typesystem": "workspace:*",
 		"@macrograph/ui": "workspace:*",
 		"@macrograph/utils": "workspace:^",

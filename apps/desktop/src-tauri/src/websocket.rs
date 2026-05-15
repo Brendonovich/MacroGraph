@@ -1,6 +1,6 @@
 use std::{
     collections::BTreeMap,
-    net::SocketAddr,
+    net::{Ipv4Addr, SocketAddr},
     ops::{Deref, DerefMut},
     sync::Arc,
 };
@@ -72,7 +72,9 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                 let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
                 let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
 
-                let addr = SocketAddr::from(([127, 0, 0, 1], port));
+                // `0.0.0.0` so other machines on the LAN can connect (e.g. MG client → MG server).
+                // Previously `127.0.0.1` only accepted local connections.
+                let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, port));
 
                 let (receiver_tx, mut receiver_rx) = mpsc::channel::<(u8, Message)>(16);
 

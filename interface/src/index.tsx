@@ -26,6 +26,7 @@ import {
 import { createMousePosition } from "@solid-primitives/mouse";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
+import type { Accessor } from "solid-js";
 import * as Solid from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { toast } from "solid-sonner";
@@ -42,6 +43,7 @@ import {
 	toGraphSpace,
 } from "./components/Graph/Context";
 import { GRID_SIZE, SHIFT_MULTIPLIER } from "./components/Graph/util";
+import { NodeSearchDialog } from "./components/NodeSearchDialog";
 import { SchemaMenu } from "./components/SchemaMenu";
 import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import {
@@ -58,12 +60,24 @@ import { PlatformContext, usePlatform } from "./platform";
 export * from "./platform";
 export * from "./ConnectionsDialog";
 export * from "./ConfigDialog";
+export {
+	exportInvocationLogForGraphs,
+	importInvocationLogFromProject,
+} from "./nodeInvocationLog";
 
 const queryClient = new QueryClient();
 
-export function Interface(props: { core: Core; environment: Environment }) {
+export function Interface(props: {
+	core: Core;
+	environment: Environment;
+	mosaicWorkspaceKey?: Accessor<string | null | undefined>;
+}) {
 	return (
-		<InterfaceContextProvider core={props.core} environment={props.environment}>
+		<InterfaceContextProvider
+			core={props.core}
+			environment={props.environment}
+			mosaicWorkspaceKey={props.mosaicWorkspaceKey}
+		>
 			<QueryClientProvider client={queryClient}>
 				<ProjectInterface />
 			</QueryClientProvider>
@@ -369,6 +383,8 @@ function ProjectInterface() {
 					</div>
 				</Solid.Show>
 			</div>
+
+			<NodeSearchDialog />
 
 			<Solid.Show
 				when={(() => {

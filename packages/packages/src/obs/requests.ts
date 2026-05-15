@@ -12,7 +12,7 @@ import type {
 } from "@macrograph/runtime";
 import { type InferEnum, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
-import type OBSWebSocket from "obs-websocket-js";
+import type { ObsSocketLike } from "./obsSocket";
 import type { EventTypes } from "obs-websocket-js";
 
 import type { Accessor } from "solid-js";
@@ -53,12 +53,12 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			properties?: TProperties;
 			run(
 				props: RunProps<TProperties, TIO> & {
-					obs: OBSWebSocket;
+					obs: ObsSocketLike;
 				},
 			): void | Promise<void>;
 			createIO: MergeFnProps<
 				CreateIOFn<TProperties, TIO>,
-				{ obs(): Option<OBSWebSocket> }
+				{ obs(): Option<ObsSocketLike> }
 			>;
 		},
 	) {
@@ -627,7 +627,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		},
 	});
 
-	function sceneListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
+	function sceneListSuggestionFactory(obs: Accessor<Option<ObsSocketLike>>) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
 				const resp = await obs.call("GetSceneList");
@@ -638,7 +638,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	}
 
 	function sceneCollectionListSuggestionFactory(
-		obs: Accessor<Option<OBSWebSocket>>,
+		obs: Accessor<Option<ObsSocketLike>>,
 	) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
@@ -649,7 +649,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		};
 	}
 
-	function inputListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
+	function inputListSuggestionFactory(obs: Accessor<Option<ObsSocketLike>>) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
 				const resp = await obs.call("GetInputList");
@@ -661,7 +661,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		};
 	}
 
-	function filterListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
+	function filterListSuggestionFactory(obs: Accessor<Option<ObsSocketLike>>) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
 				const resp = await obs.call("GetSourceFilterKindList", undefined);
@@ -671,7 +671,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		};
 	}
 
-	function sourceListSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
+	function sourceListSuggestionFactory(obs: Accessor<Option<ObsSocketLike>>) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
 				const [scenesRequest, inputsRequest] = await obs.callBatch([
@@ -698,7 +698,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 	function sourceFilterSuggestionFactory(
 		sourceName: DataInput<t.String>,
-		obs: Accessor<Option<OBSWebSocket>>,
+		obs: Accessor<Option<ObsSocketLike>>,
 	) {
 		return () =>
 			Maybe(sourceName.defaultValue)
@@ -719,7 +719,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 	function sceneSourceListSuggestionFactory(
 		sceneName: DataInput<t.String>,
-		obs: Accessor<Option<OBSWebSocket>>,
+		obs: Accessor<Option<ObsSocketLike>>,
 	) {
 		return () =>
 			Maybe(sceneName.defaultValue)
@@ -738,7 +738,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				.then((o) => o.unwrapOr([]));
 	}
 
-	function imageFormatListFactory(obs: Accessor<Option<OBSWebSocket>>) {
+	function imageFormatListFactory(obs: Accessor<Option<ObsSocketLike>>) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
 				const { supportedImageFormats } = await obs.call("GetVersion");
@@ -994,7 +994,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		},
 	});
 
-	function inputKindSuggestionFactory(obs: Accessor<Option<OBSWebSocket>>) {
+	function inputKindSuggestionFactory(obs: Accessor<Option<ObsSocketLike>>) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
 				const resp = await obs.call("GetInputKindList");

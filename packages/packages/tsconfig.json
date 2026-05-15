@@ -5,6 +5,7 @@
 	},
 	"references": [
 		{ "path": "../runtime" },
+		{ "path": "../runtime-serde" },
 		{ "path": "../json" },
 		{ "path": "../typesystem" },
 		{ "path": "../ui" }

@@ -5,7 +5,12 @@ import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 
 import { implicitConversions } from "../utils";
-import { DataInput, type DataOutput, type ScopeOutput } from "./IO";
+import {
+	DataInput,
+	DataOutput,
+	ScopeInput,
+	ScopeOutput,
+} from "./IO";
 import type { Node } from "./Node";
 import type { EventsMap, RunCtx } from "./NodeSchema";
 import type { Package } from "./Package";
@@ -167,6 +172,8 @@ export class Core {
 
 	private printListeners = new Set<(msg: PrintItem) => void>();
 
+	invocationReporter?: (report: NodeInvocationReport) => void;
+
 	print(msg: string, node: Node) {
 		for (const cb of this.printListeners) {
 			cb({
@@ -191,21 +198,88 @@ export interface PrintItem {
 	node: { name: string; id: number };
 }
 
+export type NodeInvocationReport = {
+	graphId: number;
+	graphName: string;
+	nodeId: number;
+	nodeName: string;
+	ok: boolean;
+	startedAt: number;
+	durationMs: number;
+	eventData?: unknown;
+	inputs: Record<string, unknown>;
+	outputs: Record<string, unknown>;
+	error?: { message: string; stack?: string };
+};
+
 export class ExecutionContext {
 	data = new Map<DataOutput<any> | ScopeOutput, any>();
+
+	private replayInputByPinId?: Record<string, unknown>;
+	private replaySnapshotNodeId?: number;
 
 	constructor(public root: Node) {}
 
 	run(data: any) {
-		NODE_EMIT.emit(this.root);
-
-		this.root.schema.run({
-			ctx: this.createCtx(this.root),
-			io: this.root.ioReturn,
-			data,
-			properties: this.root.schema.properties ?? {},
-			graph: this.root.graph,
+		void this.runAsync(data).catch((e) => {
+			console.error(e);
 		});
+	}
+
+	async runAsync(
+		data: any,
+		replaySnapshotInputs?: Record<string, unknown>,
+	) {
+		await this.runWithInvocationReporting(data, replaySnapshotInputs);
+	}
+
+	private async runWithInvocationReporting(
+		data: any,
+		replaySnapshotInputs?: Record<string, unknown>,
+	) {
+		const node = this.root;
+		NODE_EMIT.emit(node);
+
+		const replaySnap = replaySnapshotInputs;
+		const prevPins = this.replayInputByPinId;
+		const prevId = this.replaySnapshotNodeId;
+		if (replaySnap) {
+			this.replayInputByPinId = replaySnap;
+			this.replaySnapshotNodeId = node.id;
+		}
+
+		const startedAt = Date.now();
+		const t0 = performance.now();
+		let ok = true;
+		let err: unknown;
+
+		try {
+			await Promise.resolve(
+				node.schema.run({
+					ctx: this.createCtx(node),
+					io: node.ioReturn,
+					data,
+					properties: node.schema.properties ?? {},
+					graph: node.graph,
+				}),
+			);
+		} catch (e) {
+			ok = false;
+			err = e;
+			throw e;
+		} finally {
+			this.emitInvocationReport(node, {
+				startedAt,
+				durationMs: performance.now() - t0,
+				ok,
+				error: err,
+				eventData: data,
+			});
+			if (replaySnap) {
+				this.replayInputByPinId = prevPins;
+				this.replaySnapshotNodeId = prevId;
+			}
+		}
 	}
 
 	createCtx(node: Node): RunCtx {
@@ -226,6 +300,19 @@ export class ExecutionContext {
 				this.data.set(output, value);
 			},
 			getInput: (input) => {
+				if (
+					this.replaySnapshotNodeId === node.id &&
+					this.replayInputByPinId &&
+					(input instanceof DataInput || input instanceof ScopeInput) &&
+					Object.prototype.hasOwnProperty.call(
+						this.replayInputByPinId,
+						input.id,
+					)
+				) {
+					const snap = this.replayInputByPinId[input.id];
+					if (!isInvocationUnreadMarker(snap)) return snap as never;
+				}
+
 				return (
 					input.connection as Option<DataOutput<any> | ScopeOutput>
 				).mapOrElse(
@@ -271,7 +358,10 @@ export class ExecutionContext {
 		};
 	}
 
-	async execNode(node: Node) {
+	async execNode(
+		node: Node,
+		options?: { replaySnapshotInputs?: Record<string, unknown> },
+	) {
 		if (
 			"event" in node.schema ||
 			("type" in node.schema && node.schema.type === "event")
@@ -280,43 +370,192 @@ export class ExecutionContext {
 
 		NODE_EMIT.emit(node);
 
-		// calculate previous outputs
-		await Promise.allSettled(
-			node.state.inputs.map((i) => {
-				if (!(i instanceof DataInput)) return;
+		const replaySnap = options?.replaySnapshotInputs;
+		const prevPins = this.replayInputByPinId;
+		const prevId = this.replaySnapshotNodeId;
+		if (replaySnap) {
+			this.replayInputByPinId = replaySnap;
+			this.replaySnapshotNodeId = node.id;
+		}
 
-				i.connection.peekAsync(async (conn) => {
-					const connectedNode = conn.node;
-					const schema = connectedNode.schema;
+		try {
+			if (!replaySnap) {
+				// calculate previous outputs
+				await Promise.allSettled(
+					node.state.inputs.map((i) => {
+						if (!(i instanceof DataInput)) return;
 
-					if (
-						("variant" in schema && schema.variant === "Pure") ||
-						("type" in schema && schema.type === "pure")
-					) {
-						// Pure nodes recalculate each time
+						i.connection.peekAsync(async (conn) => {
+							const connectedNode = conn.node;
+							const schema = connectedNode.schema;
 
-						await this.execNode(connectedNode as any);
-					} else {
-						// Value should already be present for non-pure nodes
+							if (
+								("variant" in schema && schema.variant === "Pure") ||
+								("type" in schema && schema.type === "pure")
+							) {
+								// Pure nodes recalculate each time
 
-						const value = this.data.get(conn);
+								await this.execNode(connectedNode as any);
+							} else {
+								// Value should already be present for non-pure nodes
 
-						if (value === undefined)
-							throw new Error(
-								`Data for Pin ${conn.id}, Node ${conn.node.state.name} not found!`,
-							);
-					}
+								const value = this.data.get(conn);
+
+								if (value === undefined)
+									throw new Error(
+										`Data for Pin ${conn.id}, Node ${conn.node.state.name} not found!`,
+									);
+							}
+						});
+					}),
+				);
+			}
+
+			const startedAt = Date.now();
+			const t0 = performance.now();
+			let ok = true;
+			let err: unknown;
+
+			try {
+				await Promise.resolve(
+					node.schema.run({
+						ctx: this.createCtx(node),
+						io: node.ioReturn,
+						properties: node.schema.properties ?? {},
+						graph: node.graph,
+					}),
+				);
+			} catch (e) {
+				ok = false;
+				err = e;
+				throw e;
+			} finally {
+				this.emitInvocationReport(node, {
+					startedAt,
+					durationMs: performance.now() - t0,
+					ok,
+					error: err,
 				});
-			}),
-		);
-
-		await node.schema.run({
-			ctx: this.createCtx(node),
-			io: node.ioReturn,
-			properties: node.schema.properties ?? {},
-			graph: node.graph,
-		});
+			}
+		} finally {
+			if (replaySnap) {
+				this.replayInputByPinId = prevPins;
+				this.replaySnapshotNodeId = prevId;
+			}
+		}
 	}
+
+	private emitInvocationReport(
+		node: Node,
+		args: {
+			startedAt: number;
+			durationMs: number;
+			ok: boolean;
+			error?: unknown;
+			eventData?: unknown;
+		},
+	) {
+		const reporter = node.graph.project.core.invocationReporter;
+		if (!reporter) return;
+
+		try {
+			const ctx = this.createCtx(node);
+			const inputs = snapshotInvocationInputs(ctx, node);
+			const outputs = snapshotInvocationOutputs(this, node);
+
+			let error: NodeInvocationReport["error"];
+			if (!args.ok && args.error !== undefined) {
+				const e = args.error;
+				error =
+					e instanceof Error
+						? {
+								message: e.message,
+								stack: e.stack ?? "",
+							}
+						: { message: String(e) };
+			}
+
+			reporter({
+				graphId: node.graph.id,
+				graphName: node.graph.name,
+				nodeId: node.id,
+				nodeName: node.state.name,
+				ok: args.ok,
+				startedAt: args.startedAt,
+				durationMs: args.durationMs,
+				eventData: args.eventData,
+				inputs,
+				outputs,
+				error,
+			});
+		} catch (e) {
+			console.error("invocationReporter failed", e);
+		}
+	}
+}
+
+function isInvocationUnreadMarker(v: unknown): boolean {
+	return (
+		typeof v === "object" &&
+		v !== null &&
+		"__unread" in v &&
+		(v as { __unread?: unknown }).__unread === true
+	);
+}
+
+/**
+ * Re-run a node from a persisted invocation. For the target node only,
+ * `getInput` uses the snapshot (no live wire / pure prelude). Event nodes use
+ * stored `eventData` plus snapshot pin inputs. Downstream `exec` / `execScope`
+ * behave normally.
+ */
+export async function rerunNodeFromInvocationSnapshot(
+	node: Node,
+	snapshot: { inputs: Record<string, unknown>; eventData?: unknown },
+) {
+	const isEvent =
+		"event" in node.schema ||
+		("type" in node.schema && node.schema.type === "event");
+
+	const ctx = new ExecutionContext(node);
+
+	if (isEvent) {
+		await ctx.runAsync(snapshot.eventData ?? {}, snapshot.inputs);
+		return;
+	}
+
+	await ctx.execNode(node, { replaySnapshotInputs: snapshot.inputs });
+}
+
+function snapshotInvocationInputs(ctx: RunCtx, node: Node) {
+	const inputs: Record<string, unknown> = {};
+
+	for (const pin of node.state.inputs) {
+		if (pin instanceof DataInput || pin instanceof ScopeInput) {
+			try {
+				inputs[pin.id] = ctx.getInput(pin as never);
+			} catch (e) {
+				inputs[pin.id] = {
+					__unread: true,
+					error: e instanceof Error ? e.message : String(e),
+				};
+			}
+		}
+	}
+
+	return inputs;
+}
+
+function snapshotInvocationOutputs(ctx: ExecutionContext, node: Node) {
+	const outputs: Record<string, unknown> = {};
+
+	for (const pin of node.state.outputs) {
+		if (pin instanceof DataOutput || pin instanceof ScopeOutput) {
+			if (ctx.data.has(pin)) outputs[pin.id] = ctx.data.get(pin);
+		}
+	}
+
+	return outputs;
 }
 
 function applyImplicitConversion(value: any, input: DataInput<any>) {

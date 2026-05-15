@@ -13,6 +13,21 @@ import {
 
 import { Input } from "./Input";
 
+/** Sync with websocketClient WS Emit suggestions (label + sep + value). */
+const SUGGEST_LABEL_VALUE_SEP = "\x1e";
+
+function suggestionPickValue(raw: string): string {
+	const i = raw.indexOf(SUGGEST_LABEL_VALUE_SEP);
+	if (i === -1) return raw;
+	return raw.slice(i + SUGGEST_LABEL_VALUE_SEP.length);
+}
+
+function suggestionDisplayLabel(raw: string): string {
+	const i = raw.indexOf(SUGGEST_LABEL_VALUE_SEP);
+	if (i === -1) return raw;
+	return `${raw.slice(0, i)}: ${raw.slice(i + SUGGEST_LABEL_VALUE_SEP.length)}`;
+}
+
 interface Props {
 	value: string;
 	onChange(v: string): void;
@@ -107,15 +122,19 @@ export const TextInput = (props: Props) => {
 											<Popover.Content
 												class="w-52 max-h-48 overflow-y-auto ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 text-xs bg-neutral-700 rounded space-y-1 p-1"
 												onOpenAutoFocus={(e) => e.preventDefault()}
+												/** Keeps focus on the anchor so `onBlur` does not unmount the list before `click`/`onChange` runs. */
+												onMouseDown={(e) => e.preventDefault()}
 												onInteractOutside={() => setOpen()}
 											>
 												<Listbox
 													options={filteredOptions()}
-													onChange={(options) => {
-														const option = [...options][0];
-														if (!option) return;
+													onChange={(keys) => {
+														const key = [...keys][0];
+														if (key === undefined) return;
 
-														props.onChange(option);
+														const picked = suggestionPickValue(key);
+														setValue(picked);
+														props.onChange(picked);
 														setOpen();
 													}}
 													renderItem={(option) => (
@@ -125,7 +144,7 @@ export const TextInput = (props: Props) => {
 															class="p-1 py-0.5 block w-full text-left focus-visible:outline-none hover:bg-blue-600 rounded-[0.125rem]"
 														>
 															<Listbox.ItemLabel>
-																{option.rawValue}
+																{suggestionDisplayLabel(option.rawValue)}
 															</Listbox.ItemLabel>
 														</Listbox.Item>
 													)}

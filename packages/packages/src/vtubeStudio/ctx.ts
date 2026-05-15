@@ -1,4 +1,5 @@
 import { Maybe } from "@macrograph/option";
+import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import { ReactiveMap } from "@solid-primitives/map";
 import * as v from "valibot";
 import { ApiClient } from "vtubestudio";
@@ -93,7 +94,11 @@ export function createCtx() {
 	}
 
 	Maybe(localStorage.getItem(VTS_INSTANCES)).mapAsync(async (jstr) => {
-		const instances = v.parse(v.array(INSTANCE_SCHEMA), JSON.parse(jstr));
+		const instances = parseJsonWithContext(
+			"packages/vtubeStudio createCtx: localStorage key vtube-studio-instances",
+			v.array(INSTANCE_SCHEMA),
+			jstr,
+		);
 
 		for (const i of instances) {
 			addInstance(i.url, i.password);

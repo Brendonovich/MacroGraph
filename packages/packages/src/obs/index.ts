@@ -1,4 +1,5 @@
 import { Package } from "@macrograph/runtime";
+import type { ObsNativeBridge } from "@macrograph/runtime";
 import type { EventTypes } from "obs-websocket-js";
 
 import * as events from "./events";
@@ -10,8 +11,8 @@ import { createTypes } from "./types";
 
 export type Pkg = Package<EventTypes, Ctx>;
 
-export function pkg(): Pkg {
-	const ctx = createCtx();
+export function pkg(opts?: { obsNative?: ObsNativeBridge }): Pkg {
+	const ctx = createCtx(opts?.obsNative);
 
 	const pkg = new Package<EventTypes, Ctx>({
 		name: "OBS Websocket",

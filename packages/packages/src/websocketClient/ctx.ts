@@ -1,3 +1,4 @@
+import type { OutboundWsBridge } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 
@@ -18,10 +19,83 @@ type SocketState =
 	| { state: "connecting"; socket: WebSocket }
 	| { state: "connected"; socket: WebSocket };
 
-export function createCtx(callback: (data: any) => void) {
+function isOutboundText(
+	msg: unknown,
+): msg is { Text: string } | { text: string } {
+	return (
+		typeof msg === "object" &&
+		msg !== null &&
+		("Text" in msg || "text" in msg)
+	);
+}
+
+function outboundPayloadText(msg: unknown): string | null {
+	if (typeof msg === "string") return null;
+	if (!isOutboundText(msg)) return null;
+	return "Text" in msg
+		? (msg as { Text: string }).Text
+		: (msg as { text: string }).text;
+}
+
+function isOutboundOpen(msg: unknown): boolean {
+	return (
+		msg === "Open" ||
+		msg === "open" ||
+		(typeof msg === "object" &&
+			msg !== null &&
+			("Open" in msg || "open" in msg))
+	);
+}
+
+function isOutboundClosed(msg: unknown): boolean {
+	return (
+		msg === "Closed" ||
+		msg === "closed" ||
+		(typeof msg === "object" &&
+			msg !== null &&
+			("Closed" in msg || "closed" in msg))
+	);
+}
+
+function defaultNameFromUrl(url: string): string {
+	try {
+		return new URL(url).host || url;
+	} catch {
+		return url;
+	}
+}
+
+function parsePersisted(raw: string): { url: string; name: string }[] {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		return [];
+	}
+	if (!Array.isArray(parsed) || parsed.length === 0) return [];
+	if (typeof parsed[0] === "string") {
+		return (parsed as string[]).map((url) => ({
+			url,
+			name: defaultNameFromUrl(url),
+		}));
+	}
+	return (parsed as { url?: unknown; name?: unknown }[])
+		.filter(
+			(r): r is { url: string; name: string } =>
+				typeof r.url === "string" && typeof r.name === "string",
+		)
+		.map((r) => ({ url: r.url, name: r.name }));
+}
+
+export function createCtx(
+	outboundWs: OutboundWsBridge | undefined,
+	callback: (data: any) => void,
+) {
 	const websockets = new ReactiveMap<string, SocketState>();
+	const wsNames = new ReactiveMap<string, string>();
 	const failureCount = new Map<string, number>();
 	const reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+	const outboundUnsubs = new Map<string, () => void>();
 
 	function clearReconnectTimer(ip: string) {
 		const t = reconnectTimers.get(ip);
@@ -31,77 +105,167 @@ export function createCtx(callback: (data: any) => void) {
 		}
 	}
 
-	function addWebsocket(ip: string) {
-		clearReconnectTimer(ip);
+	function addWebsocket(url: string, displayName?: string) {
+		if (displayName !== undefined) {
+			const n = displayName.trim() || defaultNameFromUrl(url);
+			wsNames.set(url, n);
+		} else if (!wsNames.has(url)) {
+			wsNames.set(url, defaultNameFromUrl(url));
+		}
 
-		const ws = new WebSocket(ip);
+		clearReconnectTimer(url);
+		outboundUnsubs.get(url)?.();
+		outboundUnsubs.delete(url);
 
-		websockets.set(ip, { state: "connecting", socket: ws });
+		if (outboundWs) {
+			const stub = {
+				send: (data: string) => {
+					void outboundWs.send({ url, data });
+				},
+				close: () => {
+					void outboundWs.close(url);
+				},
+			} as WebSocket;
+
+			websockets.set(url, { state: "connecting", socket: stub });
+
+			void outboundWs
+				.open(url)
+				.then(() => {
+					const unsub = outboundWs.subscribeMessages(url, (msg) => {
+						if (isOutboundOpen(msg)) {
+							if (!websockets.has(url)) return;
+							failureCount.delete(url);
+							websockets.set(url, { state: "connected", socket: stub });
+							persistSockets();
+							return;
+						}
+						if (isOutboundClosed(msg)) {
+							if (!websockets.has(url)) return;
+							websockets.set(url, { state: "connecting", socket: stub });
+							persistSockets();
+							return;
+						}
+						const text = outboundPayloadText(msg);
+						if (text !== null) {
+							callback({ ip: url, data: text });
+						}
+					});
+					outboundUnsubs.set(url, unsub);
+					persistSockets();
+				})
+				.catch(() => {
+					websockets.delete(url);
+					persistSockets();
+				});
+
+			persistSockets();
+			return;
+		}
+
+		const ws = new WebSocket(url);
+
+		websockets.set(url, { state: "connecting", socket: ws });
 
 		ws.onopen = () => {
-			failureCount.delete(ip);
-			websockets.set(ip, {
+			failureCount.delete(url);
+			websockets.set(url, {
 				state: "connected",
 				socket: ws,
 			});
 		};
 
 		ws.onclose = () => {
-			if (!websockets.has(ip)) return;
+			if (!websockets.has(url)) return;
 
-			websockets.set(ip, { state: "disconnected", retried: false });
+			websockets.set(url, { state: "disconnected", retried: false });
 
-			const n = (failureCount.get(ip) ?? 0) + 1;
-			failureCount.set(ip, n);
+			const n = (failureCount.get(url) ?? 0) + 1;
+			failureCount.set(url, n);
 			const delay = reconnectDelayMs(n);
 			reconnectTimers.set(
-				ip,
+				url,
 				setTimeout(() => {
-					reconnectTimers.delete(ip);
-					if (!websockets.has(ip)) return;
-					addWebsocket(ip);
+					reconnectTimers.delete(url);
+					if (!websockets.has(url)) return;
+					addWebsocket(url);
 				}, delay),
 			);
 		};
 
 		ws.onmessage = (event) => {
-			callback({ ip, data: event.data });
+			callback({ ip: url, data: event.data });
 		};
 
 		persistSockets();
 	}
 
 	Maybe(localStorage.getItem(WS_IPS_LOCALSTORAGE))
-		.map((v) => JSON.parse(v) as string[])
-		.map((sockets) => {
-			for (const key of sockets) {
-				addWebsocket(key);
+		.map(parsePersisted)
+		.map((rows) => {
+			for (const { url, name } of rows) {
+				wsNames.set(url, name);
+				addWebsocket(url);
 			}
 		});
 
 	function persistSockets() {
-		localStorage.setItem(
-			WS_IPS_LOCALSTORAGE,
-			JSON.stringify(Array.from(websockets.keys())),
-		);
+		const rows = Array.from(websockets.keys()).map((url) => ({
+			url,
+			name: wsNames.get(url) ?? defaultNameFromUrl(url),
+		}));
+		localStorage.setItem(WS_IPS_LOCALSTORAGE, JSON.stringify(rows));
 	}
 
-	function removeWebsocket(ip: string) {
-		clearReconnectTimer(ip);
-		failureCount.delete(ip);
+	function removeWebsocket(url: string) {
+		clearReconnectTimer(url);
+		failureCount.delete(url);
+		outboundUnsubs.get(url)?.();
+		outboundUnsubs.delete(url);
+		wsNames.delete(url);
 
-		const ws = websockets.get(ip);
+		if (outboundWs) {
+			void outboundWs.close(url);
+		}
+
+		const ws = websockets.get(url);
 
 		if (ws?.state === "connecting" || ws?.state === "connected") {
 			ws.socket.close();
 		}
 
-		websockets.delete(ip);
+		websockets.delete(url);
 
 		persistSockets();
 	}
 
-	return { websockets, addWebsocket, removeWebsocket };
+	function setDisplayName(url: string, name: string) {
+		if (!websockets.has(url)) return;
+		const n = name.trim() || defaultNameFromUrl(url);
+		wsNames.set(url, n);
+		persistSockets();
+	}
+
+	/** Close old outbound socket and open the new URL (same display name). Returns false if the URL is invalid or already in use. */
+	function changeWebsocketUrl(oldUrl: string, newUrlRaw: string): boolean {
+		const newUrl = newUrlRaw.trim();
+		if (!websockets.has(oldUrl) || !newUrl) return false;
+		if (newUrl === oldUrl) return true;
+		if (websockets.has(newUrl)) return false;
+		const name = wsNames.get(oldUrl) ?? defaultNameFromUrl(oldUrl);
+		removeWebsocket(oldUrl);
+		addWebsocket(newUrl, name);
+		return true;
+	}
+
+	return {
+		websockets,
+		wsNames,
+		addWebsocket,
+		removeWebsocket,
+		setDisplayName,
+		changeWebsocketUrl,
+	};
 }
 
 export type Ctx = ReturnType<typeof createCtx>;

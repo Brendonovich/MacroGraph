@@ -1,4 +1,5 @@
 import { Maybe } from "@macrograph/option";
+import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import OBS, { EventSubscription } from "obs-websocket-js";
 import { createSignal } from "solid-js";
 import * as v from "valibot";
@@ -42,7 +43,11 @@ export function createWs() {
 	obs.on("ConnectionError", () => setState("disconnected"));
 
 	Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
-		const { url, password } = v.parse(AUTH_SCHEMA, JSON.parse(jstr));
+		const { url, password } = parseJsonWithContext(
+			"packages/obs createWs: localStorage key obsWs (OBS auth JSON)",
+			AUTH_SCHEMA,
+			jstr,
+		);
 
 		try {
 			await connect(url, password);

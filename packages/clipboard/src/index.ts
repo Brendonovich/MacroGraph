@@ -13,6 +13,7 @@ import {
 	getNodesInRect,
 } from "@macrograph/runtime";
 import {
+	parseJsonWithContext,
 	serde,
 	serializeCommentBox,
 	serializeGraph,
@@ -64,7 +65,11 @@ export function serializeClipboardItem(
 }
 
 export function deserializeClipboardItem(input: string) {
-	let item = v.parse(ClipboardItem, JSON.parse(atob(input)));
+	let item = parseJsonWithContext(
+		"@macrograph/clipboard deserializeClipboardItem (base64 JSON payload)",
+		ClipboardItem,
+		atob(input),
+	);
 
 	switch (item.type) {
 		case "node": {

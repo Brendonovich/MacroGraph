@@ -1,10 +1,9 @@
 import type { Graph } from "@macrograph/runtime";
-import { serde } from "@macrograph/runtime-serde";
-import * as v from "valibot";
-
 import {
 	deserializeNode,
 	deserializeVariable,
+	parseWithContext,
+	serde,
 	serializeNode,
 	serializeVariable,
 } from "@macrograph/runtime-serde";
@@ -99,7 +98,11 @@ export function Variables(props: { graph: Graph }) {
 
 										const newNode = deserializeNode(
 											graph,
-											v.parse(serde.Node, serialized),
+											parseWithContext(
+												"interface Sidebar Graph Variables: move graph variable to project (re-parse node)",
+												serde.Node,
+												serialized,
+											),
 										);
 										if (newNode) {
 											graph.nodes.set(serialized.id, newNode);

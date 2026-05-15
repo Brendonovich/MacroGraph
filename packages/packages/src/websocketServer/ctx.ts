@@ -24,6 +24,8 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
 		});
 
 	async function startServer(port: number) {
+		if (websockets.has(port)) return;
+
 		const server = await ws.startServer(port, ([client, msg]) => {
 			const websocketData = websockets.get(port);
 			if (!websocketData) return;

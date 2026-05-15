@@ -6,15 +6,19 @@ import type {
 	IORef,
 	Node,
 	Pin,
+	Project,
 	Size,
 	XY,
 } from "@macrograph/runtime";
-import { serializeProject } from "@macrograph/runtime-serde";
+import {
+	type NodeInvocationFileRow,
+	serializeProject,
+} from "@macrograph/runtime-serde";
 import { createContextProvider } from "@solid-primitives/context";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { leading, throttle } from "@solid-primitives/scheduled";
 import { makePersisted } from "@solid-primitives/storage";
-import { createMemo, createSignal, onCleanup } from "solid-js";
+import { createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
 
 import { historyActions } from "./actions";
@@ -24,6 +28,15 @@ import {
 	makeGraphState,
 } from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
+import {
+	appendInvocationReport,
+	exportInvocationLogForGraphs,
+	flushInvocationLogPending,
+	invocationRowKey,
+	loadInvocationsForNode,
+	migrateInvocationWorkspaceKeys,
+	type StoredNodeInvocation,
+} from "./nodeInvocationLog";
 
 export type Environment = "custom" | "browser";
 
@@ -32,7 +45,107 @@ export type GraphBounds = XY & {
 	height: number;
 };
 
-function createEditorState() {
+const MOSAIC_LS_PREFIX = "macrograph-editor-mosaic-";
+
+export type MosaicWorkspaceState = {
+	groups: Array<GraphTabListState>;
+	focusedIndex: number;
+};
+
+function mosaicLocalStorageKey(workspaceSegment: string) {
+	return `${MOSAIC_LS_PREFIX}${encodeURIComponent(workspaceSegment)}`;
+}
+
+function filterTabToProject(tab: GraphState, project: Project): GraphState | null {
+	const graph = project.graph(tab.id);
+	if (!graph) return null;
+
+	const selectedItemIds = (tab.selectedItemIds ?? []).filter((sid) => {
+		if (sid.type === "node") return graph.nodes.has(sid.id);
+		if (sid.type === "commentBox") return graph.commentBoxes.has(sid.id);
+		return false;
+	});
+
+	const translate = tab.translate ?? { x: 0, y: 0 };
+	const scale =
+		typeof tab.scale === "number" && Number.isFinite(tab.scale) && tab.scale > 0
+			? tab.scale
+			: 1;
+
+	return {
+		id: tab.id,
+		translate: { x: translate.x ?? 0, y: translate.y ?? 0 },
+		scale,
+		selectedItemIds,
+	};
+}
+
+function loadMosaicForWorkspace(
+	workspaceKey: string,
+	project: Project,
+): MosaicWorkspaceState {
+	const defaultState: MosaicWorkspaceState = {
+		groups: [{ tabs: [], selectedIndex: 0 }],
+		focusedIndex: 0,
+	};
+
+	if (typeof localStorage === "undefined") return structuredClone(defaultState);
+
+	let parsed: unknown;
+	try {
+		const raw = localStorage.getItem(mosaicLocalStorageKey(workspaceKey));
+		if (!raw) return structuredClone(defaultState);
+		parsed = JSON.parse(raw);
+	} catch {
+		return structuredClone(defaultState);
+	}
+
+	if (
+		typeof parsed !== "object" ||
+		parsed === null ||
+		!("groups" in parsed) ||
+		!("focusedIndex" in parsed)
+	) {
+		return structuredClone(defaultState);
+	}
+
+	const p = parsed as { groups: unknown; focusedIndex: unknown };
+	if (!Array.isArray(p.groups) || typeof p.focusedIndex !== "number") {
+		return structuredClone(defaultState);
+	}
+
+	const groups: Array<GraphTabListState> = p.groups.map((g) => {
+		if (typeof g !== "object" || g === null || !("tabs" in g)) {
+			return { tabs: [], selectedIndex: 0 };
+		}
+		const tabsRaw = (g as { tabs: unknown }).tabs;
+		const selectedIndexRaw = (g as { selectedIndex: unknown }).selectedIndex;
+		if (!Array.isArray(tabsRaw)) return { tabs: [], selectedIndex: 0 };
+
+		const tabs = tabsRaw
+			.filter((t): t is GraphState => typeof t === "object" && t !== null && "id" in t)
+			.map((t) => filterTabToProject(t as GraphState, project))
+			.filter((t): t is GraphState => t !== null);
+
+		const selectedIndex =
+			typeof selectedIndexRaw === "number" && selectedIndexRaw >= 0
+				? Math.min(selectedIndexRaw, Math.max(0, tabs.length - 1))
+				: 0;
+
+		return { tabs, selectedIndex: tabs.length ? selectedIndex : 0 };
+	});
+
+	if (!groups.length) return structuredClone(defaultState);
+
+	const focusedIndex = Math.min(
+		Math.max(0, p.focusedIndex),
+		groups.length - 1,
+	);
+
+	return { groups, focusedIndex };
+}
+
+function createEditorState(initialMosaic: MosaicWorkspaceState) {
 	const [hoveringPin, setHoveringPin] = createSignal<Pin | null>(null);
 	const [state, setState] = createStore<GraphMouseState>({
 		status: "idle",
@@ -84,16 +197,9 @@ function createEditorState() {
 	//   return null;
 	// });
 
-	const [mosaicState, setMosaicState] = createStore<{
-		groups: Array<GraphTabListState>;
-		focusedIndex: number;
-	}>({
-		groups: [
-			{ tabs: [], selectedIndex: 0 },
-			// { tabs: [], selectedIndex: 0 },
-		],
-		focusedIndex: 0,
-	});
+	const [mosaicState, setMosaicState] = createStore<MosaicWorkspaceState>(
+		structuredClone(initialMosaic),
+	);
 
 	return {
 		state,
@@ -114,42 +220,108 @@ function createEditorState() {
 export type EditorState = ReturnType<typeof createEditorState>;
 
 export const [InterfaceContextProvider, useInterfaceContext] =
-	createContextProvider((props: { core: Core; environment: Environment }) => {
-		const state = createEditorState();
+	createContextProvider(
+		(props: {
+			core: Core;
+			environment: Environment;
+			mosaicWorkspaceKey?: () => string | null | undefined;
+		}) => {
+		const workspaceKey = createMemo(() => {
+			const k = props.mosaicWorkspaceKey?.();
+			return k != null && k !== "" ? String(k) : "default";
+		});
+
+		let previousWorkspaceSegment = workspaceKey();
+
+		const initialKey = workspaceKey();
+		const initialMosaic = loadMosaicForWorkspace(initialKey, props.core.project);
+		const state = createEditorState(initialMosaic);
+		let loadedWorkspaceKey = initialKey;
 
 		const { mosaicState, setMosaicState } = state;
+
+		createEffect(
+			on(workspaceKey, (k) => {
+				setMosaicState(
+					reconcile(loadMosaicForWorkspace(k, props.core.project)),
+				);
+				loadedWorkspaceKey = k;
+			}),
+		);
+
+		const persistMosaicLayout = leading(
+			throttle,
+			() => {
+				const k = workspaceKey();
+				if (k !== loadedWorkspaceKey) return;
+				try {
+					const payload: MosaicWorkspaceState = {
+						groups: mosaicState.groups.map((g) => ({
+							tabs: g.tabs.map((t) => ({ ...t })),
+							selectedIndex: g.selectedIndex,
+						})),
+						focusedIndex: mosaicState.focusedIndex,
+					};
+					localStorage.setItem(
+						mosaicLocalStorageKey(k),
+						JSON.stringify(payload),
+					);
+				} catch {
+					/* quota / private mode */
+				}
+			},
+			100,
+		);
+
+		createEffect(() => {
+			const k = workspaceKey();
+			const _groups = JSON.stringify(mosaicState.groups);
+			const _focused = mosaicState.focusedIndex;
+			if (k !== loadedWorkspaceKey) return;
+			void _groups;
+			void _focused;
+			persistMosaicLayout();
+		});
 
 		const save = leading(
 			throttle,
 			() => {
-				if (props.core.project.disableSave) return;
+				void (async () => {
+					if (props.core.project.disableSave) return;
 
-				const serialized = serializeProject(props.core.project);
+					const serialized = serializeProject(props.core.project);
+					const wk = workspaceKey();
+					const nodeInvocations = await exportInvocationLogForGraphs(
+						props.core.project.graphOrder,
+						wk,
+					).catch((): NodeInvocationFileRow[] => []);
 
-				localStorage.setItem(
-					"project-root",
-					JSON.stringify({
-						...serialized,
-						graphs: serialized.graphs.map((g) => g.id),
-						variables: serialized.variables?.map((v) => v.id),
-					}),
-				);
-
-				for (const graph of serialized.graphs) {
 					localStorage.setItem(
-						`project-graph-${graph.id}`,
-						JSON.stringify(graph),
+						"project-root",
+						JSON.stringify({
+							...serialized,
+							graphs: serialized.graphs.map((g) => g.id),
+							variables: serialized.variables?.map((v) => v.id),
+							nodeInvocations,
+						}),
 					);
-				}
 
-				for (const variable of serialized.variables ?? []) {
-					localStorage.setItem(
-						`project-variable-${variable.id}`,
-						JSON.stringify(variable),
-					);
-				}
+					for (const graph of serialized.graphs) {
+						localStorage.setItem(
+							`project-graph-${graph.id}`,
+							JSON.stringify(graph),
+						);
+					}
 
-				localStorage.removeItem("project");
+					for (const variable of serialized.variables ?? []) {
+						localStorage.setItem(
+							`project-variable-${variable.id}`,
+							JSON.stringify(variable),
+						);
+					}
+
+					localStorage.removeItem("project");
+				})();
 			},
 			100,
 		);
@@ -165,6 +337,67 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			y: 0,
 			width: 0,
 			height: 0,
+		});
+
+		const [nodeInvocationLogByKey, setNodeInvocationLogByKey] = createStore<
+			Record<string, StoredNodeInvocation[]>
+		>({});
+		const invocationHydrated = new Set<string>();
+
+		createEffect(
+			on(workspaceKey, async (k) => {
+				const prev = previousWorkspaceSegment;
+				if (prev === k) return;
+				await flushInvocationLogPending();
+				if (prev === "default" && k !== "default") {
+					await migrateInvocationWorkspaceKeys("default", k).catch((e) =>
+						console.error("Invocation workspace migrate failed", e),
+					);
+				}
+				previousWorkspaceSegment = k;
+				setNodeInvocationLogByKey(reconcile({}));
+				invocationHydrated.clear();
+			}),
+		);
+
+		createEffect(() => {
+			props.core.invocationReporter = (report) => {
+				appendInvocationReport(
+					setNodeInvocationLogByKey,
+					() => workspaceKey(),
+					report,
+					(key) => nodeInvocationLogByKey[key],
+				);
+			};
+			onCleanup(() => {
+				props.core.invocationReporter = undefined;
+				void flushInvocationLogPending();
+			});
+		});
+
+		onMount(() => {
+			const wk = workspaceKey();
+			if (wk !== "default") {
+				void (async () => {
+					await flushInvocationLogPending();
+					await migrateInvocationWorkspaceKeys("default", wk).catch((e) =>
+						console.error("Invocation default→workspace migrate", e),
+					);
+					invocationHydrated.clear();
+				})();
+			}
+
+			const flush = () => void flushInvocationLogPending();
+			const onVisibility = () => {
+				if (document.visibilityState === "hidden") flush();
+			};
+			window.addEventListener("pagehide", flush);
+			document.addEventListener("visibilitychange", onVisibility);
+			return () => {
+				window.removeEventListener("pagehide", flush);
+				document.removeEventListener("visibilitychange", onVisibility);
+				void flushInvocationLogPending();
+			};
 		});
 
 		return {
@@ -191,7 +424,6 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 						produce((t) => {
 							t.selectedIndex = t.tabs.length;
 							t.tabs.push(makeGraphState(graph));
-							console.log(t);
 						}),
 					);
 				} else {
@@ -214,10 +446,24 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			},
 			graphBounds,
 			setGraphBounds,
-			mosaicState,
-			setMosaicState,
+			invocationWorkspaceKey: workspaceKey,
+			getNodeInvocationEntries(graphId: number, nodeId: number) {
+				const k = invocationRowKey(workspaceKey(), graphId, nodeId);
+				return nodeInvocationLogByKey[k] ?? [];
+			},
+			hydrateNodeInvocationLog(graphId: number, nodeId: number) {
+				return loadInvocationsForNode(
+					setNodeInvocationLogByKey,
+					() => workspaceKey(),
+					graphId,
+					nodeId,
+					invocationHydrated,
+				);
+			},
 		};
-	}, null!);
+	},
+	null!,
+);
 
 export type InterfaceContext = ReturnType<typeof useInterfaceContext>;
 

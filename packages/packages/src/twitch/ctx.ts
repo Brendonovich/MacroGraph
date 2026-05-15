@@ -31,7 +31,10 @@ export function createCtx(core: Core) {
 
 	const helixClient = createHelix(core);
 	const auth = createAuth(CLIENT_ID, core, helixClient, persisted);
-	const eventSub = createEventSub(core, helixClient);
+	const eventSub = createEventSub(core, helixClient, (userId) => {
+		const row = persisted[0][userId];
+		return row?.eventsub === true;
+	});
 	const chat = createChat();
 
 	const setup = createResource(async () => {

@@ -4,14 +4,35 @@ export type Procedures = {
     queries: 
         { key: "fs.list", input: string, result: Entry[] },
     mutations: 
+        { key: "obsNative.call", input: ObsCallArgs, result: any } | 
+        { key: "obsNative.callBatch", input: ObsBatchArgs, result: any[] } | 
+        { key: "obsNative.connect", input: ObsConnectArgs, result: null } | 
+        { key: "obsNative.disconnect", input: string, result: null } | 
+        { key: "outboundWs.close", input: string, result: null } | 
+        { key: "outboundWs.open", input: string, result: null } | 
+        { key: "outboundWs.send", input: OutboundSendArgs, result: null } | 
         { key: "shell.execute", input: string, result: null } | 
         { key: "websocket.send", input: { port: number; client: number | null; data: string }, result: null },
     subscriptions: 
         { key: "loginListen", input: never, result: string | null } | 
         { key: "oauth.authorize", input: string, result: any | null } | 
+        { key: "obsNative.events", input: string, result: ObsEventMsg } | 
+        { key: "outboundWs.messages", input: string, result: OutboundClientMsg } | 
         { key: "websocket.server", input: number, result: [number, Message] }
 };
 
-export type Message = { Text: string } | "Connected" | "Disconnected"
+export type ObsBatchArgs = { url: string; requests: any[] }
+
+export type OutboundClientMsg = "Open" | { Text: string } | "Closed"
+
+export type ObsEventMsg = { lifecycle?: string | null; event_type?: string | null; event_data?: any | null }
 
 export type Entry = { Dir: string } | { File: string }
+
+export type ObsConnectArgs = { url: string; password: string | null }
+
+export type OutboundSendArgs = { url: string; data: string }
+
+export type ObsCallArgs = { url: string; requestType: string; requestData: any | null }
+
+export type Message = { Text: string } | "Connected" | "Disconnected"

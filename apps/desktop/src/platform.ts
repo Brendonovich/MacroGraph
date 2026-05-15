@@ -1,7 +1,12 @@
 import type { Platform } from "@macrograph/interface";
+import {
+	exportInvocationLogForGraphs,
+	importInvocationLogFromProject,
+} from "@macrograph/interface";
 import type { Core } from "@macrograph/runtime";
 import {
 	deserializeProject,
+	parseJsonWithContext,
 	serde,
 	serializeProject,
 } from "@macrograph/runtime-serde";
@@ -9,7 +14,6 @@ import { ask, open, save } from "@tauri-apps/api/dialog";
 import { readText, writeText } from "@tauri-apps/api/clipboard";
 import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
 import type { Accessor, Setter } from "solid-js";
-import * as v from "valibot";
 
 export function createPlatform(props: {
 	projectUrl: Accessor<string | null>;
@@ -33,9 +37,23 @@ export function createPlatform(props: {
 				const name = url.split("/").pop()?.split(".")[0];
 				if (name) props.core.project.name = name;
 
+				const graphIds = props.core.project.graphOrder;
+				const wk = (props.projectUrl() ?? url) as string;
+				const nodeInvocations = await exportInvocationLogForGraphs(
+					graphIds,
+					wk,
+				).catch(() => []);
+
 				await writeTextFile(
 					url,
-					JSON.stringify(serializeProject(props.core.project), null, 4),
+					JSON.stringify(
+						{
+							...serializeProject(props.core.project),
+							nodeInvocations,
+						},
+						null,
+						4,
+					),
 				);
 
 				props.setProjectUrl(url);
@@ -53,11 +71,20 @@ export function createPlatform(props: {
 
 				const data = await readTextFile(url);
 
-				const serializedProject = v.parse(serde.Project, JSON.parse(data));
+				const serializedProject = parseJsonWithContext(
+					"apps/desktop platform.loadProject: project file from disk",
+					serde.Project,
+					data,
+				);
 
 				await props.core.load((core) =>
 					deserializeProject(core, serializedProject),
 				);
+
+				await importInvocationLogFromProject(
+					serializedProject.nodeInvocations,
+					url,
+				).catch((e: unknown) => console.error("import invocation log", e));
 
 				props.setProjectUrl(url);
 			},
@@ -69,7 +96,7 @@ export function createPlatform(props: {
 			async readText() {
 				return (await readText()) ?? "";
 			},
-			async writeText(text) {
+			async writeText(text: string) {
 				await writeText(text);
 			},
 		},

@@ -4,20 +4,23 @@ import {
 	ConnectionsDialog,
 	Interface,
 	PlatformContext,
+	exportInvocationLogForGraphs,
+	importInvocationLogFromProject,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { Core } from "@macrograph/runtime";
 import {
 	deserializeProject,
+	parseJsonWithContext,
 	serde,
 	serializeProject,
+	type NodeInvocationFileRow,
 } from "@macrograph/runtime-serde";
 import { AsyncButton, Button } from "@macrograph/ui";
 import { useAction, useSearchParams } from "@solidjs/router";
 import { initClient } from "@ts-rest/core";
 import { Show, createSignal, onMount } from "solid-js";
 import { toast } from "solid-sonner";
-import * as v from "valibot";
 
 import { fetchPlaygroundProject, savePlaygroundProject } from "~/api";
 import { clientEnv } from "~/env/client";
@@ -103,11 +106,18 @@ export default () => {
 		if (params.shared) {
 			fetchPlaygroundProject(params.shared)
 				.then((projectStr) => {
-					if (projectStr)
-						core.load((c) =>
-							deserializeProject(
-								c,
-								v.parse(serde.Project, JSON.parse(projectStr)),
+					if (!projectStr) return;
+					const parsed = parseJsonWithContext(
+						"apps/web playground Editor: shared project fetch",
+						serde.Project,
+						projectStr,
+					);
+					void core
+						.load((c) => deserializeProject(c, parsed))
+						.then(() =>
+							importInvocationLogFromProject(
+								parsed.nodeInvocations,
+								"default",
 							),
 						);
 				})
@@ -119,11 +129,15 @@ export default () => {
 
 			if (savedProject) {
 				try {
-					await core.load((c) =>
-						deserializeProject(
-							c,
-							v.parse(serde.Project, JSON.parse(savedProject)),
-						),
+					const parsed = parseJsonWithContext(
+						"apps/web playground Editor: localStorage key `project`",
+						serde.Project,
+						savedProject,
+					);
+					await core.load((c) => deserializeProject(c, parsed));
+					await importInvocationLogFromProject(
+						parsed.nodeInvocations,
+						"default",
 					);
 				} catch {}
 
@@ -170,9 +184,16 @@ export function ExportButton() {
 			size="icon"
 			variant="ghost"
 			title="Export Project"
-			onClick={() =>
-				saveJsonAsFile("project.json", serializeProject(core.project))
-			}
+			onClick={async () => {
+				const nodeInvocations = await exportInvocationLogForGraphs(
+					core.project.graphOrder,
+					"default",
+				).catch((): NodeInvocationFileRow[] => []);
+				saveJsonAsFile("project.json", {
+					...serializeProject(core.project),
+					nodeInvocations,
+				});
+			}}
 		>
 			<IconPhExport class="size-5" />
 		</Button>
@@ -188,8 +209,15 @@ export function ShareButton() {
 			variant="ghost"
 			title="Share Project"
 			onClick={async () => {
+				const nodeInvocations = await exportInvocationLogForGraphs(
+					core.project.graphOrder,
+					"default",
+				).catch((): NodeInvocationFileRow[] => []);
 				const id = await createProjectLink(
-					JSON.stringify(serializeProject(core.project)),
+					JSON.stringify({
+						...serializeProject(core.project),
+						nodeInvocations,
+					}),
 				);
 
 				writeToClipboard(
@@ -205,6 +233,10 @@ export function ShareButton() {
 			<IconIcRoundShare class="size-5" />
 		</AsyncButton>
 	);
+}
+
+function writeToClipboard(text: string) {
+	void navigator.clipboard.writeText(text);
 }
 
 // https://stackoverflow.com/a/65939108/5721736

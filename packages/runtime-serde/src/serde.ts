@@ -211,6 +211,14 @@ export const Resource = v.object({
 });
 export type Resource = v.InferOutput<typeof Resource>;
 
+/** Serialized invocation history embedded in project JSON / sharded project-root. */
+export const NodeInvocationFileRow = v.object({
+	graphId: v.number(),
+	nodeId: v.number(),
+	entries: v.array(v.any()),
+});
+export type NodeInvocationFileRow = v.InferOutput<typeof NodeInvocationFileRow>;
+
 export const Project = v.object({
 	name: v.optional(v.string()),
 	graphs: v.array(Graph),
@@ -223,6 +231,7 @@ export const Project = v.object({
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
 	variables: v.optional(v.array(Variable), []),
+	nodeInvocations: v.optional(v.array(NodeInvocationFileRow), []),
 });
 export type Project = v.InferOutput<typeof Project>;
 
@@ -237,6 +246,8 @@ export const ProjectRoot = v.object({
 	customEnums: v.optional(v.array(CustomEnum), []),
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
-	variables: v.optional(v.array(Variable), []),
+	/** Sharded save: IDs only; bodies live under `project-variable-${id}` in localStorage. */
+	variables: v.optional(v.array(IntID), []),
+	nodeInvocations: v.optional(v.array(NodeInvocationFileRow), []),
 });
 export type ProjectRoot = v.InferOutput<typeof ProjectRoot>;

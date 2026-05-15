@@ -1,5 +1,6 @@
 import { None, makePersistedOption } from "@macrograph/option";
 import type { OnEvent } from "@macrograph/runtime";
+import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import * as v from "valibot";
 
@@ -41,7 +42,11 @@ export function createCtx(onEvent: OnEvent<Event>) {
 					});
 
 					ws.addEventListener("message", (msg) => {
-						const { data } = v.parse(WebSocketResponse, JSON.parse(msg.data));
+						const { data } = parseJsonWithContext(
+							"packages/goxlr createCtx: WebSocket message (WebSocketResponse)",
+							WebSocketResponse,
+							msg.data as string,
+						);
 						if (data === "Ok") return;
 
 						if ("Status" in data) {
