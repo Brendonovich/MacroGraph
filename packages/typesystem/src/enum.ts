@@ -173,10 +173,14 @@ export class EnumType<TEnum extends EnumBase<any>> extends BaseType<
 	//   );
 	// }
 
-	getWildcards(): Wildcard[] {
+	getWildcards(visited?: Set<unknown>): Wildcard[] {
+		if (visited?.has(this.inner)) return [];
+		const nextVisited = visited ?? new Set();
+		nextVisited.add(this.inner);
+
 		return (this.inner.variants as EnumVariants).flatMap((v) =>
 			v.fields
-				? Object.values(v.fields).flatMap((d) => d.type.getWildcards())
+				? Object.values(v.fields).flatMap((d) => d.type.getWildcards(nextVisited))
 				: [],
 		);
 	}

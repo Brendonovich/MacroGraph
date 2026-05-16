@@ -117,9 +117,13 @@ export class StructType<
 	//   ) as any;
 	// }
 
-	getWildcards(): Wildcard[] {
+	getWildcards(visited?: Set<unknown>): Wildcard[] {
+		if (visited?.has(this.struct)) return [];
+		const nextVisited = visited ?? new Set();
+		nextVisited.add(this.struct);
+
 		return Object.values(this.struct.fields).flatMap((f) =>
-			f.type.getWildcards(),
+			f.type.getWildcards(nextVisited),
 		);
 	}
 

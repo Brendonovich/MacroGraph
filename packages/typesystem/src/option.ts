@@ -35,8 +35,8 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
 		return v.instance(Option<t.infer<T>>);
 	}
 
-	getWildcards(): Wildcard[] {
-		return this.inner.getWildcards();
+	getWildcards(visited?: Set<unknown>): Wildcard[] {
+		return this.inner.getWildcards(visited);
 	}
 
 	eq(other: t.Any): boolean {

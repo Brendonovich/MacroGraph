@@ -178,6 +178,10 @@ export class DataOutput<T extends BaseType> {
 							const { nodeId, ioId } = splitIORef(conn);
 
 							const node = graph.nodes.get(nodeId);
+							// Track when the target node builds its IO (inputs array
+							// populated), so this memo re-evaluates if the connection
+							// exists but the input wasn't ready yet.
+							node?.state.inputs.length;
 							const input = node?.input(ioId);
 
 							if (input instanceof DataInput) return input as DataInput<T>;

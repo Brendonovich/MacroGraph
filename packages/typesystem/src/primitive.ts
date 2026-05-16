@@ -13,7 +13,7 @@ export abstract class BasePrimitiveType<TOut> extends BaseType<TOut> {
 
 	connectWildcard(_right: WildcardType) {}
 
-	getWildcards(): Wildcard[] {
+	getWildcards(visited?: Set<unknown>): Wildcard[] {
 		return [];
 	}
 

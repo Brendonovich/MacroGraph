@@ -309,10 +309,10 @@ export class WildcardType extends BaseType<unknown> {
 	//     .unwrapOrElse(() => z.any());
 	// }
 
-	getWildcards(): Wildcard[] {
+	getWildcards(visited?: Set<unknown>): Wildcard[] {
 		return this.wildcard
 			.value()
-			.map((v) => v.getWildcards())
+			.map((v) => v.getWildcards(visited))
 			.unwrapOrElse(() => [this.wildcard]);
 	}
 
@@ -415,22 +415,14 @@ export function connectWildcards(a: t.Any, b: t.Any) {
 	createComputed(
 		on(valueConnection, (valueConnection) => {
 			valueConnection.peek(({ value, conn }) => {
-				// connects stuff like `Map<Wildcard>` and `Wildcard(Map<String>)` since
-				// a) `value` is the `Map<String>` from `Wildcard(Map<String>)` and
-				// b) cWIT will connect their `inner` values since they're both maps
+				// Skip if resolved value is a primitive type — connecting it as
+				// a direct source is redundant and triggers oscillation cycles.
+				if (typeof (value as any).variant === "function" && (value as any).variant() === "primitive")
+					return;
+
 				connectWildcardsInTypes(value, b);
-
-				const cleanup = () => disconnectWildcardsInTypes(value, b);
-
-				// needed for if `Wildcard(Map<String>)` loses its source.
-				// nested wildcard connections wouldn't disconnect with their parents without this
-				const parentListener = conn.addDisposeListener(cleanup);
-
-				// don't need a listener if we're re-running
-				onCleanup(() => {
-					parentListener();
-					cleanup();
-				});
+				const parentListener = conn.addDisposeListener(() => {});
+				onCleanup(() => parentListener());
 			});
 		}),
 	);

@@ -22,8 +22,8 @@ export class ListType<T extends BaseType> extends BaseType<t.infer<T>[]> {
 	//   return z.array(this.item.asZodType());
 	// }
 
-	getWildcards(): Wildcard[] {
-		return this.item.getWildcards();
+	getWildcards(visited?: Set<unknown>): Wildcard[] {
+		return this.item.getWildcards(visited);
 	}
 
 	eq(other: t.Any): boolean {

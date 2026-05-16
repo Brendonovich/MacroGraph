@@ -28,8 +28,8 @@ export class MapType<TValue extends BaseType<any>> extends BaseType<
 	//   return z.map(z.string(), this.value.asZodType());
 	// }
 
-	getWildcards(): Wildcard[] {
-		return this.value.getWildcards();
+	getWildcards(visited?: Set<unknown>): Wildcard[] {
+		return this.value.getWildcards(visited);
 	}
 
 	eq(other: t.Any): boolean {

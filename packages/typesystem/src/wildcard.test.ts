@@ -400,4 +400,37 @@ describe("issues", () => {
 	);
 });
 
+test("deserialization order: all wildcards resolve", () => {
+	const w5 = new Wildcard("");
+	const node5Output = t.list(t.wildcard(w5));
+
+	const w3 = new Wildcard("");
+	const node3TrueValue = t.wildcard(w3);
+	const node3Output = t.wildcard(w3);
+
+	const w2 = new Wildcard("");
+	const node2List = t.list(t.wildcard(w2));
+
+	const w1 = new Wildcard("");
+	const node1Output = t.wildcard(w1);
+	const node1Input = t.option(t.wildcard(w1));
+
+	const w0 = new Wildcard("");
+	const node0Input = t.wildcard(w0);
+	const node0Output = t.map(t.wildcard(w0));
+
+	// Connect in order matching deserialization
+	connectWildcardsInTypes(node0Output, t.map(t.string()));
+	connectWildcardsInTypes(node1Output, node0Input);
+	connectWildcardsInTypes(t.option(t.wildcard(w2)), node1Input);
+	connectWildcardsInTypes(node3Output, node2List);
+	connectWildcardsInTypes(node5Output, node3TrueValue);
+
+	expect(w0.value().isSome()).toBe(true);
+	expect(w1.value().isSome()).toBe(true);
+	expect(w2.value().isSome()).toBe(true);
+	expect(w3.value().isSome()).toBe(true);
+	expect(w5.value().isSome()).toBe(true);
+});
+
 
