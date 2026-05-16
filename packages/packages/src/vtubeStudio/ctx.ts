@@ -1,4 +1,5 @@
 import { Maybe } from "@macrograph/option";
+import { getRemoteShellMode } from "@macrograph/runtime";
 import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import { ReactiveMap } from "@solid-primitives/map";
 import * as v from "valibot";
@@ -22,6 +23,7 @@ export function createCtx() {
 	const instances = new ReactiveMap<string, Instance>();
 
 	function addInstance(url: string, password?: string | null) {
+		if (getRemoteShellMode()) return;
 		removeInstance(url);
 
 		const getInstance = () => instances.get(url);
@@ -94,6 +96,7 @@ export function createCtx() {
 	}
 
 	Maybe(localStorage.getItem(VTS_INSTANCES)).mapAsync(async (jstr) => {
+		if (getRemoteShellMode()) return;
 		const instances = parseJsonWithContext(
 			"packages/vtubeStudio createCtx: localStorage key vtube-studio-instances",
 			v.array(INSTANCE_SCHEMA),

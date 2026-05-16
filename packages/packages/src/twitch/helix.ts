@@ -1897,7 +1897,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 		async run({ ctx, io, account, credential }) {
 			const user = account.data.id;
 
-			const data = await fetch("https://id.twitch.tv/oauth2/validate", {
+			const data: any = await fetch("https://id.twitch.tv/oauth2/validate", {
 				method: "GET",
 				headers: {
 					Authorization: `Bearer ${credential.token.access_token}`,

@@ -1,4 +1,4 @@
-import type { Core } from "@macrograph/runtime";
+import { getRemoteShellMode, type Core } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createResource } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -38,6 +38,7 @@ export function createCtx(core: Core) {
 	const chat = createChat();
 
 	const setup = createResource(async () => {
+		if (getRemoteShellMode()) return;
 		await Promise.allSettled(Object.keys(persisted[0]).map(auth.enableAccount));
 
 		for (const [id, data] of Object.entries(persisted[0])) {

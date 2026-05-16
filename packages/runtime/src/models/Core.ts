@@ -1,5 +1,6 @@
 import type { contract, CREDENTIAL } from "@macrograph/api-contract";
-import { Maybe, type Option } from "@macrograph/option";
+import { Maybe, Some, type Option } from "@macrograph/option";
+import { deserializeValue } from "@macrograph/typesystem";
 import type { InitClientReturn } from "@ts-rest/core";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
@@ -18,12 +19,18 @@ import { Project } from "./Project";
 import type { Variable } from "./Variable";
 import { z } from "zod";
 
+import { getRemoteShellMode, setRemoteShellMode } from "../remoteShell";
+
 class NodeEmit {
 	listeners = new Map<Node, Set<(d: Node) => any>>();
+	anyListeners = new Set<(node: Node) => void>();
 
 	emit(node: Node) {
 		for (const listener of this.listeners.get(node) ?? []) {
 			listener(node);
+		}
+		for (const cb of this.anyListeners) {
+			cb(node);
 		}
 	}
 
@@ -37,6 +44,11 @@ class NodeEmit {
 			listeners?.delete(cb);
 			if (listeners?.size === 0) this.listeners.delete(node);
 		};
+	}
+
+	onAny(cb: (node: Node) => void) {
+		this.anyListeners.add(cb);
+		return () => this.anyListeners.delete(cb);
 	}
 }
 
@@ -81,6 +93,15 @@ export class Core {
 	oauth: OAuth;
 	api: InitClientReturn<typeof contract, any>;
 
+	/** True when running the remote web editor shell (no integration sockets). */
+	remoteShell = false;
+
+	/**
+	 * Sanitized credential rows mirrored from the desktop host (no real tokens).
+	 * When set, {@link getCredentials} / {@link getCredential} serve these instead of the API.
+	 */
+	private hostMirrorCredentialStubs?: Array<z.infer<typeof CREDENTIAL>>;
+
 	private credentials?: Array<z.infer<typeof CREDENTIAL>>;
 
 	private fetchCredentials = async () => {
@@ -91,6 +112,9 @@ export class Core {
 	};
 
 	getCredentials = async () => {
+		if (this.remoteShell) {
+			return this.hostMirrorCredentialStubs ?? [];
+		}
 		if (this.credentials) return this.credentials;
 
 		return await this.fetchCredentials();
@@ -98,8 +122,12 @@ export class Core {
 
 	getCredential = (provider: string, id: string | number) =>
 		this.getCredentials().then(async (creds) => {
-			const cred = creds.find((c) => c.provider === provider && c.id === id);
+			const cred = creds.find(
+				(c) => c.provider === provider && c.id === String(id),
+			);
 			if (!cred) return null;
+			if (this.remoteShell) return cred;
+
 			if (
 				cred.token.issuedAt + cred.token.expires_in * 1000 >
 				Date.now() - 1000 * 60 * 60 * 5
@@ -109,6 +137,11 @@ export class Core {
 			return await this.refreshCredential(provider, cred.id);
 		});
 	refreshCredential = async (provider: string, id: string) => {
+		if (this.remoteShell) {
+			throw new Error(
+				"Remote editor cannot refresh OAuth tokens; reconnect from the host app.",
+			);
+		}
 		const resp = await this.api.refreshCredential({
 			params: { providerId: provider, providerUserId: id },
 		});
@@ -125,12 +158,38 @@ export class Core {
 		fetch?: typeof fetch;
 		oauth?: OAuth;
 		api?: InitClientReturn<typeof contract, any>;
+		/** Remote web editor: load packages for UI but do not connect to integrations. */
+		remoteShell?: boolean;
 	}) {
 		this.fetch = args?.fetch ?? fetch;
 		this.oauth = args?.oauth!;
 		this.api = args?.api!;
+		this.remoteShell = args?.remoteShell ?? false;
+
+		setRemoteShellMode(this.remoteShell);
 
 		return createMutable(this);
+	}
+
+	/** Apply sanitized credential rows from the host (remote shell only). */
+	setRemoteHostMirrorCredentialSummaries(
+		rows: Array<{ provider: string; id: string; displayName: string | null }>,
+	) {
+		if (!this.remoteShell) return;
+
+		const now = Date.now();
+		this.hostMirrorCredentialStubs = rows.map((r) => ({
+			provider: r.provider,
+			id: r.id,
+			displayName: r.displayName,
+			token: {
+				access_token: "",
+				refresh_token: "",
+				expires_in: 86_400 * 365,
+				token_type: "bearer",
+				issuedAt: now,
+			},
+		}));
 	}
 
 	// async bc of #402, the project's reactivity needs to be entirely decoupled from the ui
@@ -214,6 +273,7 @@ export type NodeInvocationReport = {
 
 export class ExecutionContext {
 	data = new Map<DataOutput<any> | ScopeOutput, any>();
+	variableScope: Map<string, any> | null = null;
 
 	private replayInputByPinId?: Record<string, unknown>;
 	private replaySnapshotNodeId?: number;
@@ -230,6 +290,7 @@ export class ExecutionContext {
 		data: any,
 		replaySnapshotInputs?: Record<string, unknown>,
 	) {
+		if (getRemoteShellMode()) return;
 		await this.runWithInvocationReporting(data, replaySnapshotInputs);
 	}
 
@@ -283,6 +344,7 @@ export class ExecutionContext {
 	}
 
 	createCtx(node: Node): RunCtx {
+		const execCtx = this;
 		return {
 			exec: async (execOutput) => {
 				await execOutput
@@ -310,7 +372,12 @@ export class ExecutionContext {
 					)
 				) {
 					const snap = this.replayInputByPinId[input.id];
-					if (!isInvocationUnreadMarker(snap)) return snap as never;
+					if (!isInvocationUnreadMarker(snap)) {
+						if (input instanceof DataInput) {
+							return deserializeValue(snap, input.type) as never;
+						}
+						return snap as never;
+					}
 				}
 
 				return (
@@ -335,23 +402,29 @@ export class ExecutionContext {
 			},
 			getProperty: (p) => node.getProperty(p) as any,
 			getVariable(source, id) {
+				const scopeKey = `${source}:${id}`;
+				if (execCtx.variableScope?.has(scopeKey)) {
+					return Some({ value: execCtx.variableScope.get(scopeKey) } as any);
+				}
 				if (source === "graph") {
 					return Maybe(node.graph.variables.find((v) => v.id === id));
 				}
-
 				return Maybe(
 					node.graph.core.project.variables.find((v) => v.id === id),
 				);
 			},
 			setVariable: (source, id, value) => {
+				const scopeKey = `${source}:${id}`;
+				if (execCtx.variableScope) {
+					execCtx.variableScope.set(scopeKey, value);
+					return;
+				}
 				let variable: Variable | undefined;
-
 				if (source === "graph") {
 					variable = node.graph.variables.find((v) => v.id === id);
 				} else {
 					variable = node.graph.core.project.variables.find((v) => v.id === id);
 				}
-
 				if (!variable) return;
 				variable.value = value;
 			},
@@ -362,6 +435,7 @@ export class ExecutionContext {
 		node: Node,
 		options?: { replaySnapshotInputs?: Record<string, unknown> },
 	) {
+		if (getRemoteShellMode()) return;
 		if (
 			"event" in node.schema ||
 			("type" in node.schema && node.schema.type === "event")
@@ -513,6 +587,7 @@ export async function rerunNodeFromInvocationSnapshot(
 	node: Node,
 	snapshot: { inputs: Record<string, unknown>; eventData?: unknown },
 ) {
+	if (getRemoteShellMode()) return;
 	const isEvent =
 		"event" in node.schema ||
 		("type" in node.schema && node.schema.type === "event");

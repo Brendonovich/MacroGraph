@@ -1,5 +1,5 @@
 import { Maybe } from "@macrograph/option";
-import type { Package } from "@macrograph/runtime";
+import { getRemoteShellMode, type Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { createEventListener } from "@solid-primitives/event-listener";
@@ -15,6 +15,7 @@ export function createGateway([, setPersisted]: PersistedStore) {
 	const sockets = new ReactiveMap<string, WebSocket>();
 
 	const connectSocket = async (account: BotAccount) => {
+		if (getRemoteShellMode()) return;
 		const botId = account.data.id;
 		if (sockets.has(botId)) return;
 

@@ -29,6 +29,12 @@ import {
 } from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
 import {
+	isRemoteHistoryInboundApply,
+	registerRemoteHistoryActions,
+	type RemoteHistoryWireItem,
+	type WireGraphPositionsEphemeral,
+} from "./remoteHistorySync";
+import {
 	appendInvocationReport,
 	exportInvocationLogForGraphs,
 	flushInvocationLogPending,
@@ -119,7 +125,7 @@ function loadMosaicForWorkspace(
 			return { tabs: [], selectedIndex: 0 };
 		}
 		const tabsRaw = (g as { tabs: unknown }).tabs;
-		const selectedIndexRaw = (g as { selectedIndex: unknown }).selectedIndex;
+		const selectedIndexRaw = (g as unknown as { selectedIndex: unknown }).selectedIndex;
 		if (!Array.isArray(tabsRaw)) return { tabs: [], selectedIndex: 0 };
 
 		const tabs = tabsRaw
@@ -219,12 +225,22 @@ function createEditorState(initialMosaic: MosaicWorkspaceState) {
 
 export type EditorState = ReturnType<typeof createEditorState>;
 
+export type { RemoteCursor } from "./remoteHistorySync";
+
 export const [InterfaceContextProvider, useInterfaceContext] =
 	createContextProvider(
 		(props: {
 			core: Core;
 			environment: Environment;
 			mosaicWorkspaceKey?: () => string | null | undefined;
+			/** When set, committed editor actions (non-ephemeral) are forwarded for remote host sync. */
+			broadcastHistoryCommit?: (items: RemoteHistoryWireItem[]) => void;
+			/** Ephemeral node/box drag frames (same as local pointermove `setGraphItemPositions` with `ephemeral: true`). */
+			broadcastGraphPositionsLive?: (payload: WireGraphPositionsEphemeral) => void;
+			/** True while a graph item pointer-drag session is active (used to ignore echoed live frames). */
+			onGraphLivePointerSession?: (active: boolean) => void;
+			/** Broadcast local cursor position to remote clients. */
+			broadcastCursorPosition?: (payload: { graphId: number; position: { x: number; y: number } }) => void;
 		}) => {
 		const workspaceKey = createMemo(() => {
 			const k = props.mosaicWorkspaceKey?.();
@@ -239,6 +255,10 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		let loadedWorkspaceKey = initialKey;
 
 		const { mosaicState, setMosaicState } = state;
+
+		const histActions = historyActions(props.core, state);
+		/** Must be sync: remote WS handlers can run in the same microtask as `core.load` finishing, before `onMount`. */
+		registerRemoteHistoryActions(histActions);
 
 		createEffect(
 			on(workspaceKey, (k) => {
@@ -400,9 +420,27 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			};
 		});
 
+		onCleanup(() => {
+			registerRemoteHistoryActions(null);
+		});
+
 		return {
-			...createActionHistory(historyActions(props.core, state), save),
+			...createActionHistory(histActions, save, {
+				onCommit(items) {
+					if (isRemoteHistoryInboundApply()) return;
+					props.broadcastHistoryCommit?.(items);
+				},
+			}),
 			...state,
+			get broadcastGraphPositionsLive() {
+				return props.broadcastGraphPositionsLive;
+			},
+			get broadcastCursorPosition() {
+				return props.broadcastCursorPosition;
+			},
+			get onGraphLivePointerSession() {
+				return props.onGraphLivePointerSession;
+			},
 			get core() {
 				return props.core;
 			},

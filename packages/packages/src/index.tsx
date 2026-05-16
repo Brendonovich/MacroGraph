@@ -32,3 +32,13 @@ export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
 export * as variables from "./variables";
 export * as voicemod from "./voicemod";
+export * as functions from "./functions";
+
+export {
+	applyHostMirrorPayloadToCore,
+	collectHostMirrorPayload,
+	HOST_MIRROR_PAYLOAD,
+	HOST_MIRROR_PAYLOAD_SCHEMA,
+	parseHostMirrorPayload,
+	type HostMirrorPayload,
+} from "./hostMirror/wire";

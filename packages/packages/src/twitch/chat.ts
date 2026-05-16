@@ -1,5 +1,6 @@
 import { JSONEnum, jsToJSON } from "@macrograph/json";
 import { Maybe } from "@macrograph/option";
+import { getRemoteShellMode } from "@macrograph/runtime";
 import type {
 	CreateEventSchema,
 	Package,
@@ -90,6 +91,7 @@ export function createChat() {
 	}
 
 	async function connectClient(account: Account) {
+		if (getRemoteShellMode()) return;
 		if (!clients.has(account.data.id))
 			clients.set(account.data.id, await createClient(account));
 

@@ -62,6 +62,14 @@ export async function deserializeProject(
 		deferrer.run();
 
 		project.customEventIdCounter = data.customEventIdCounter;
+		project.functionIdCounter = data.functionIdCounter ?? 0;
+
+		project.functions = new ReactiveMap(
+			data.functions?.map((sfn) => {
+				const fn = deserializeFunction(project, sfn);
+				return [fn.id, fn] as [number, runtime.GraphFunction];
+			}) ?? [],
+		);
 
 		project.customEvents = new ReactiveMap(
 			data.customEvents
@@ -212,6 +220,28 @@ export function deserializeField(project: runtime.Project, field: serde.Field) {
 		deserializeType(field.type, project.getType.bind(project)),
 		field.name,
 	);
+}
+
+export function deserializeFunction(
+	project: runtime.Project,
+	data: serde.GraphFunction,
+): runtime.GraphFunction {
+	const fn = new runtime.GraphFunction({
+		project,
+		id: data.id,
+		name: data.name,
+		graphId: data.graphId,
+	});
+
+	fn.inputIdCounter = data.inputIdCounter ?? 0;
+	fn.outputIdCounter = data.outputIdCounter ?? 0;
+
+	batch(() => {
+		fn.inputs = (data.inputs ?? []).map((field) => deserializeField(project, field));
+		fn.outputs = (data.outputs ?? []).map((field) => deserializeField(project, field));
+	});
+
+	return fn;
 }
 
 export function deserializeCustomEvent(

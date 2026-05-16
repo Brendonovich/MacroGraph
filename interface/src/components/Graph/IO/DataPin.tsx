@@ -20,6 +20,26 @@ interface Props {
 export const DataPin = (props: Props) => {
 	const { ref, highlight, dim } = usePin(() => props.pin);
 
+	// Eagerly read the connections memo during the component function call,
+	// BEFORE effects fire. This forces the wildcard resolution chain
+	// (memo→mapArray→connectWildcardsInIO→connectWildcardsInTypes) to
+	// complete synchronously, so by the time the DOM effects read the
+	// wildcard value, it's already resolved.
+	if (props.pin instanceof DataInput) {
+		props.pin.connection.isSome();
+	} else {
+		props.pin.connections();
+	}
+
+	// Eagerly read nested wildcard values so the component's tracking
+	// scope captures the full resolution chain, not just the immediate
+	// wildcard's valueConnection. This ensures the component re-renders
+	// when any nested wildcard resolves.
+	if (props.pin.type instanceof WildcardType) {
+		const v = props.pin.type.wildcard.value();
+		v.peek((t) => t.getWildcards().forEach((w) => w.value()));
+	}
+
 	const connected = () =>
 		props.pin instanceof DataInput
 			? props.pin.connection.isSome()

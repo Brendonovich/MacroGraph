@@ -36,7 +36,7 @@ export class OptionType<T extends BaseType<any>> extends BaseType<
 	}
 
 	getWildcards(): Wildcard[] {
-		return this.getWildcards();
+		return this.inner.getWildcards();
 	}
 
 	eq(other: t.Any): boolean {

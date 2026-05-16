@@ -11,6 +11,8 @@ export type Procedures = {
         { key: "outboundWs.close", input: string, result: null } | 
         { key: "outboundWs.open", input: string, result: null } | 
         { key: "outboundWs.send", input: OutboundSendArgs, result: null } | 
+        { key: "remoteHost.send", input: { port: number; client: number | null; except_client?: number | null; data: string }, result: null } | 
+        { key: "remoteHost.setPassword", input: string | null, result: null } | 
         { key: "shell.execute", input: string, result: null } | 
         { key: "websocket.send", input: { port: number; client: number | null; data: string }, result: null },
     subscriptions: 
@@ -18,12 +20,15 @@ export type Procedures = {
         { key: "oauth.authorize", input: string, result: any | null } | 
         { key: "obsNative.events", input: string, result: ObsEventMsg } | 
         { key: "outboundWs.messages", input: string, result: OutboundClientMsg } | 
+        { key: "remoteHost.server", input: number, result: [number, RemoteServerMessage] } | 
         { key: "websocket.server", input: number, result: [number, Message] }
 };
 
 export type ObsBatchArgs = { url: string; requests: any[] }
 
 export type OutboundClientMsg = "Open" | { Text: string } | "Closed"
+
+export type RemoteServerMessage = { Text: string } | "Connected" | { ConnectedWithUser: { username: string } } | "Disconnected"
 
 export type ObsEventMsg = { lifecycle?: string | null; event_type?: string | null; event_data?: any | null }
 

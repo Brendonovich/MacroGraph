@@ -46,9 +46,20 @@ type HistoryItem<T extends HistoryActions, TKey extends keyof T> = {
 	entry: HistoryItemEntry<T[TKey]>;
 };
 
+export type ActionHistoryCommitItem<TActions extends HistoryActions> = {
+	type: Extract<keyof TActions, string>;
+	entry: unknown;
+};
+
+export type ActionHistoryCommitOptions<TActions extends HistoryActions> = {
+	/** Called after each committed history batch (non-ephemeral executes and batch roots). */
+	onCommit?: (items: Array<ActionHistoryCommitItem<TActions>>) => void;
+};
+
 export function createActionHistory<TActions extends HistoryActions>(
 	actions: TActions,
 	save: () => void,
+	opts?: ActionHistoryCommitOptions<TActions>,
 ) {
 	const [state, setState] = createStore<{
 		undo: Array<Array<HistoryItem<TActions, keyof TActions>>>;
@@ -65,6 +76,17 @@ export function createActionHistory<TActions extends HistoryActions>(
 	const [nextHistoryIndex, setNextHistoryIndex] = Solid.createSignal(0);
 
 	let queued: HistoryItem<TActions, keyof TActions>[] | undefined = undefined;
+
+	function emitCommit(
+		items: HistoryItem<TActions, keyof TActions>[],
+	) {
+		opts?.onCommit?.(
+			items.map((i) => ({
+				type: i.type as Extract<keyof TActions, string>,
+				entry: unwrap(i.entry as any) as unknown,
+			})),
+		);
+	}
 
 	function addHistoryItem<T extends keyof TActions>(
 		item: HistoryItem<TActions, T> | HistoryItem<TActions, T>[],
@@ -130,8 +152,10 @@ export function createActionHistory<TActions extends HistoryActions>(
 				if (queued !== undefined) {
 					queued.push({ type, entry });
 				} else {
-					addHistoryItem({ type, entry });
+					const item = { type, entry } as HistoryItem<TActions, K>;
+					addHistoryItem(item);
 					save();
+					emitCommit([item]);
 				}
 			}
 
@@ -145,8 +169,10 @@ export function createActionHistory<TActions extends HistoryActions>(
 		const result = fn();
 
 		if (isRootBatch) {
-			addHistoryItem(queued!);
+			const committed = queued!;
+			addHistoryItem(committed);
 			save();
+			emitCommit(committed);
 			queued = undefined;
 		}
 

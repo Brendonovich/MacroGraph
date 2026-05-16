@@ -1,4 +1,4 @@
-import { type Core, Package } from "@macrograph/runtime";
+import { type Core, getRemoteShellMode, Package } from "@macrograph/runtime";
 import { makePersisted } from "@solid-primitives/storage";
 import { createResource } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -58,6 +58,7 @@ function createCtx(core: Core) {
 	};
 
 	const setup = createResource(async () => {
+		if (getRemoteShellMode()) return;
 		await Promise.allSettled([setupUsers(), setupBots()]);
 	});
 

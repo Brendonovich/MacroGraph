@@ -1,0 +1,36 @@
+{
+	"name": "@macrograph/remote-editor",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"dev": "vite dev --port 37565"
+	},
+	"dependencies": {
+		"@iconify/json": "^2.2.196",
+		"@kobalte/core": "^0.13.7",
+		"@macrograph/interface": "workspace:*",
+		"@macrograph/packages": "workspace:*",
+		"@macrograph/runtime": "workspace:*",
+		"@macrograph/runtime-serde": "workspace:*",
+		"@macrograph/ui": "workspace:*",
+		"@solid-primitives/scheduled": "^1.4.3",
+		"@tanstack/solid-query": "^4.36.1",
+		"solid-js": "^1.9.5",
+		"solid-sonner": "^0.2.5"
+	},
+	"devDependencies": {
+		"@kobalte/tailwindcss": "^0.6.5",
+		"@macrograph/config": "workspace:*",
+		"@tailwindcss/forms": "^0.5.7",
+		"autoprefixer": "^10.4.19",
+		"postcss": "^8.4.38",
+		"tailwind-scrollbar": "^3.1.0",
+		"tailwindcss": "^3.4.3",
+		"typescript": "^5.5.3",
+		"unplugin-auto-import": "^0.17.5",
+		"unplugin-icons": "^0.18.5",
+		"vite": "^5.4.0",
+		"vite-plugin-solid": "^2.10.2"
+	}
+}

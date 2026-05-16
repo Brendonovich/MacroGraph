@@ -1,6 +1,7 @@
 import { Maybe } from "@macrograph/option";
-import type {
-	Core,
+import {
+	getRemoteShellMode,
+	type Core,
 	CreateEventSchema,
 	Package,
 	PropertyDef,
@@ -239,6 +240,7 @@ export function createEventSub(
 	}
 
 	async function connectSocket(userId: string): Promise<void> {
+		if (getRemoteShellMode()) return;
 		if (!isEventSubDesired(userId)) return;
 		const credential = await core.getCredential("twitch", userId);
 		if (!credential) return;

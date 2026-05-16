@@ -290,6 +290,7 @@ export type BaseNodeSchema<
 	}) => TIO;
 	package: Package<EventsMap>;
 	properties?: SchemaProperties<TProperties>;
+	internal?: boolean;
 };
 
 type BaseRunArgs<
@@ -348,6 +349,7 @@ export type SchemaBase<TProperties, TIO> = {
 	properties: SchemaProperties<TProperties>;
 	createIO: CreateIOFn<TProperties, TIO>;
 	package: Package;
+	internal?: boolean;
 };
 
 export type RunProps<TProperties, TIO> = {

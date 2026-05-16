@@ -1,4 +1,5 @@
 import { Maybe } from "@macrograph/option";
+import { getRemoteShellMode } from "@macrograph/runtime";
 import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import OBS, { EventSubscription } from "obs-websocket-js";
 import { createSignal } from "solid-js";
@@ -43,6 +44,7 @@ export function createWs() {
 	obs.on("ConnectionError", () => setState("disconnected"));
 
 	Maybe(localStorage.getItem(OBS_WS)).mapAsync(async (jstr) => {
+		if (getRemoteShellMode()) return;
 		const { url, password } = parseJsonWithContext(
 			"packages/obs createWs: localStorage key obsWs (OBS auth JSON)",
 			AUTH_SCHEMA,

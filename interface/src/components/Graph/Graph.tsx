@@ -30,6 +30,7 @@ import {
 } from "./Context";
 import { Node } from "./Node";
 import { GRID_SIZE } from "./util";
+import { getRemoteCursors, broadcastCursorPosition, getFollowUserId } from "../../remoteHistorySync";
 
 type PanState = "none" | "waiting" | "active";
 
@@ -63,6 +64,8 @@ export const Graph = (props: Props) => {
 		size: { width: 0, height: 0 },
 		bounds: { x: 0, y: 0 },
 	});
+
+	const cursorList = Solid.createMemo(() => getRemoteCursors());
 
 	createResizeObserver(ref, (bounds) => {
 		const value = {
@@ -395,6 +398,59 @@ export const Graph = (props: Props) => {
 		});
 	}
 
+	// Follow a user's cursor (auto-pan camera with smooth lerp, auto-switch graph)
+	const lastFollowGraphRef = { id: model().id };
+	Solid.createEffect(() => {
+		const followId = getFollowUserId();
+		if (!followId) return;
+
+		let rafId: number;
+		const loop = () => {
+			const cursors = getRemoteCursors();
+			const target = cursors.find((c) => c.id === followId && c.graphId === model().id);
+
+			if (target) {
+				lastFollowGraphRef.id = model().id;
+				const screenPos = toScreenSpace(target.position, state.bounds, props.state);
+				const centerX = state.size.width / 2;
+				const centerY = state.size.height / 2;
+
+				const targetTranslateX =
+					props.state.translate.x + (screenPos.x - centerX) / props.state.scale;
+				const targetTranslateY =
+					props.state.translate.y + (screenPos.y - centerY) / props.state.scale;
+
+				const lerpFactor = 0.08;
+				props.onTranslateChange({
+					x: props.state.translate.x + (targetTranslateX - props.state.translate.x) * lerpFactor,
+					y: props.state.translate.y + (targetTranslateY - props.state.translate.y) * lerpFactor,
+				});
+			} else {
+				const other = cursors.find((c) => c.id === followId && c.graphId !== model().id);
+				if (other && other.graphId !== lastFollowGraphRef.id) {
+					lastFollowGraphRef.id = other.graphId;
+					const graph = interfaceCtx.core.project.graphs.get(other.graphId);
+					if (graph) interfaceCtx.selectGraph(graph);
+				}
+			}
+
+			rafId = requestAnimationFrame(loop);
+		};
+
+		rafId = requestAnimationFrame(loop);
+
+		Solid.onCleanup(() => cancelAnimationFrame(rafId));
+	});
+
+	const cursorRaf = { current: 0 as unknown as ReturnType<typeof requestAnimationFrame> | null };
+	const sendCursor = (payload: { graphId: number; position: { x: number; y: number } }) => {
+		if (cursorRaf.current != null) cancelAnimationFrame(cursorRaf.current);
+		cursorRaf.current = requestAnimationFrame(() => {
+			cursorRaf.current = null;
+			broadcastCursorPosition(payload);
+		});
+	};
+
 	return (
 		<GraphContextProvider value={ctx}>
 			<div
@@ -409,6 +465,13 @@ export const Graph = (props: Props) => {
 					});
 
 					setRef(ref);
+				}}
+				onPointerMove={(e) => {
+					const graphSpace = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
+					sendCursor?.({ graphId: model().id, position: graphSpace });
+				}}
+				onPointerLeave={() => {
+					sendCursor?.({ graphId: model().id, position: { x: -99999, y: -99999 } });
 				}}
 				onPointerUp={(e) => {
 					if (e.pointerType === "touch") {
@@ -751,6 +814,25 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.Show>
+						{cursorList()
+							.filter((c) => c.graphId === model().id && c.position.x > -9999)
+							.map((cursor) => (
+								<div
+									class="absolute pointer-events-none z-50"
+									style={{
+										transform: `translate(${cursor.position.x}px, ${cursor.position.y}px)`,
+									}}
+								>
+									<div class="flex flex-col items-start">
+										<svg width="18" height="22" viewBox="0 0 18 22" class="drop-shadow-lg">
+											<polygon points="2,2 4,19 7,14 12,17 14,15 10,11 16,8" fill="#3b82f6" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+										</svg>
+										<span class="text-xs text-white bg-blue-500 px-1.5 py-0.5 rounded -mt-1 ml-4 font-medium whitespace-nowrap shadow">
+											{cursor.id === "host" ? "Host" : cursor.id.slice(0, 6)}
+										</span>
+									</div>
+								</div>
+							))}
 					</div>
 				</div>
 			</div>

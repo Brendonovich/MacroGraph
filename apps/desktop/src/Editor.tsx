@@ -1,9 +1,11 @@
 import {
-  ConfigDialog,
-  ConnectionsDialog,
-  Interface,
-  PlatformContext,
-  importInvocationLogFromProject,
+	ConfigDialog,
+	ConnectionsDialog,
+	Interface,
+	PlatformContext,
+	importInvocationLogFromProject,
+	setCursorBroadcastFn,
+	type WireGraphPositionsEphemeral,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { deserializeProject, parseJsonWithContext, serde } from "@macrograph/runtime-serde";
@@ -17,6 +19,14 @@ import "./app.css";
 import { core, wsProvider } from "./core";
 import { obsNativeBridge, outboundWsBridge } from "./nativeBridges";
 import { createPlatform } from "./platform";
+import { RemoteHostDialog } from "./RemoteHostDialog";
+import {
+	broadcastRemoteHostGraphPositionsLive,
+	broadcastRemoteHostHistoryActions,
+	broadcastRemoteHostCursorPosition,
+	installRemoteHostBridge,
+	setHostGraphLivePointerSession,
+} from "./remoteHostBridge";
 import { client } from "./rspc";
 
 const [projectUrl, setProjectUrl] = makePersisted(
@@ -72,12 +82,18 @@ const platform = createPlatform({
   pkgs.elevenlabs.pkg,
   pkgs.vtubeStudio.pkg,
   pkgs.voicemod.pkg,
+  pkgs.functions.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {
   const [loaded, setLoaded] = createSignal(false);
 
+  /** Must not run in render: mutable `core` can re-run this component on graph edits, which would
+   *  tear down `remoteHost.server` and reconnect every remote client (full `project` snapshot). */
   onMount(() => {
+    setCursorBroadcastFn(broadcastRemoteHostCursorPosition);
+    installRemoteHostBridge({ core, projectUrl });
+
     const savedProject = localStorage.getItem("project");
     const savedProjectRoot = localStorage.getItem("project-root");
 
@@ -159,6 +175,12 @@ export default function Editor() {
           core={core}
           environment="custom"
           mosaicWorkspaceKey={projectUrl}
+          broadcastHistoryCommit={broadcastRemoteHostHistoryActions}
+          broadcastGraphPositionsLive={(p: WireGraphPositionsEphemeral) =>
+            broadcastRemoteHostGraphPositionsLive(p, null)
+          }
+          onGraphLivePointerSession={setHostGraphLivePointerSession}
+          broadcastCursorPosition={broadcastRemoteHostCursorPosition}
         />
       </PlatformContext.Provider>
     </Show>
@@ -170,6 +192,7 @@ export function MenuItems() {
     <>
       <ConnectionsDialog core={core} />
       <ConfigDialog />
+      <RemoteHostDialog />
       <Button
         title="Save Project"
         size="icon"

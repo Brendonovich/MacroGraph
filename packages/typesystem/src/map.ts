@@ -29,7 +29,7 @@ export class MapType<TValue extends BaseType<any>> extends BaseType<
 	// }
 
 	getWildcards(): Wildcard[] {
-		return this.getWildcards();
+		return this.value.getWildcards();
 	}
 
 	eq(other: t.Any): boolean {

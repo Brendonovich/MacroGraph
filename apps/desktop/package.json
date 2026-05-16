@@ -3,7 +3,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vinxi dev",
-		"build": "vinxi build",
+		"build:remote": "pnpm --filter @macrograph/remote-editor build",
+		"build": "pnpm build:remote && vinxi build",
 		"start": "vinxi start",
 		"tauri": "tauri",
 		"typecheck": "tsc -b"
@@ -20,6 +21,7 @@
 		"@rspc/client": "0.0.0-main-6ed8cc98",
 		"@rspc/solid": "0.0.0-main-6ed8cc98",
 		"@rspc/tauri": "0.0.0-main-6ed8cc98",
+		"@solid-primitives/scheduled": "^1.4.3",
 		"@solid-primitives/storage": "^2.1.4",
 		"@solidjs/router": "^0.14.3",
 		"@solidjs/start": "1.1.3",

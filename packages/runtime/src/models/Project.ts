@@ -10,6 +10,7 @@ import { CustomEnum } from "./CustomEnum";
 import { CustomEvent } from "./CustomEvent";
 import { CustomStruct } from "./CustomStruct";
 import { Graph } from "./Graph";
+import { GraphFunction, type FunctionArgs } from "./Function";
 import type { ResourceType } from "./Package";
 import { Variable, type VariableArgs } from "./Variable";
 
@@ -38,6 +39,7 @@ export class Project {
 	customEvents = new ReactiveMap<number, CustomEvent>();
 	customStructs = new ReactiveMap<number, CustomStruct>();
 	customEnums = new ReactiveMap<number, CustomEnum>();
+	functions = new ReactiveMap<number, GraphFunction>();
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
 	name = "New Project";
@@ -48,6 +50,7 @@ export class Project {
 	graphIdCounter = 0;
 	customEventIdCounter = 0;
 	customTypeIdCounter = 0;
+	functionIdCounter = 0;
 	idCounter = 0;
 
 	constructor(args: ProjectArgs) {
@@ -166,6 +169,34 @@ export class Project {
 		this.customEnums.set(id, enm);
 
 		return enm;
+	}
+
+	createFunction(args?: { id?: number; name?: string }) {
+		const id = args?.id ?? this.functionIdCounter++;
+		const graphId = this.generateGraphId();
+		const name = args?.name ?? `Function ${id}`;
+		const graph = new Graph({
+			id: graphId,
+			name,
+			project: this,
+		});
+		this.graphs.set(graphId, graph);
+		this.graphOrder.push(graphId);
+		const fn = new GraphFunction({ id, name, graphId, project: this });
+		this.functions.set(id, fn);
+		return fn;
+	}
+
+	deleteFunction(id: number) {
+		const fn = this.functions.get(id);
+		if (!fn) return;
+		const graph = this.graphs.get(fn.graphId);
+		if (graph) {
+			this.graphOrder = this.graphOrder.filter((gid) => gid !== fn.graphId);
+			this.graphs.delete(fn.graphId);
+			graph.dispose();
+		}
+		this.functions.delete(id);
 	}
 
 	generateId() {

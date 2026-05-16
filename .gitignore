@@ -8,6 +8,7 @@ dist/
 netlify/
 .turbo/
 target
+apps/desktop/src-tauri/remote-public/
 
 # Environment
 .env

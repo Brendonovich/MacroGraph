@@ -455,6 +455,26 @@ export function connectWildcardsInTypes(a: t.Any, b: t.Any) {
 				b.wildcardConnections.add(a);
 			}
 		});
+
+		// After batch, memos have updated. If a wildcard got a new direct source
+		// and its value resolved, propagate to other direct source connections.
+		if (!(a instanceof t.Wildcard) && b instanceof t.Wildcard) {
+			b.wildcard.valueConnection().peek((conn) => {
+				const winning = conn.value();
+				for (const existing of b.directSourceConnections) {
+					if (existing !== winning)
+						connectWildcardsInTypes(winning, existing);
+				}
+			});
+		} else if (a instanceof t.Wildcard && !(b instanceof t.Wildcard)) {
+			a.wildcard.valueConnection().peek((conn) => {
+				const winning = conn.value();
+				for (const existing of a.directSourceConnections) {
+					if (existing !== winning)
+						connectWildcardsInTypes(winning, existing);
+				}
+			});
+		}
 	} else if (a instanceof t.Map && b instanceof t.Map)
 		connectWildcardsInTypes(a.value, b.value);
 	else if (a instanceof t.List && b instanceof t.List)

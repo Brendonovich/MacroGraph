@@ -1,6 +1,7 @@
-import type { OutboundWsBridge } from "@macrograph/runtime";
+import { getRemoteShellMode, type OutboundWsBridge } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
+import { createSignal } from "solid-js";
 
 const MAX_RECONNECT_MS = 30_000;
 const BASE_RECONNECT_MS = 1_000;
@@ -97,6 +98,10 @@ export function createCtx(
 	const reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
 	const outboundUnsubs = new Map<string, () => void>();
 
+	const [hostMirrorWs, setHostMirrorWs] = createSignal<
+		Array<{ url: string; name: string; state: string }>
+	>([]);
+
 	function clearReconnectTimer(ip: string) {
 		const t = reconnectTimers.get(ip);
 		if (t !== undefined) {
@@ -106,6 +111,7 @@ export function createCtx(
 	}
 
 	function addWebsocket(url: string, displayName?: string) {
+		if (getRemoteShellMode()) return;
 		if (displayName !== undefined) {
 			const n = displayName.trim() || defaultNameFromUrl(url);
 			wsNames.set(url, n);
@@ -203,6 +209,7 @@ export function createCtx(
 	Maybe(localStorage.getItem(WS_IPS_LOCALSTORAGE))
 		.map(parsePersisted)
 		.map((rows) => {
+			if (getRemoteShellMode()) return;
 			for (const { url, name } of rows) {
 				wsNames.set(url, name);
 				addWebsocket(url);
@@ -261,10 +268,39 @@ export function createCtx(
 	return {
 		websockets,
 		wsNames,
+		hostMirrorWs,
 		addWebsocket,
 		removeWebsocket,
 		setDisplayName,
 		changeWebsocketUrl,
+		collectHostMirror() {
+			return [...websockets.entries()].map(([url, sock]) => ({
+				url,
+				name: wsNames.get(url) ?? defaultNameFromUrl(url),
+				state: sock.state,
+			}));
+		},
+		applyHostMirror(data: unknown) {
+			if (!getRemoteShellMode()) return;
+			if (!Array.isArray(data)) {
+				setHostMirrorWs([]);
+				return;
+			}
+			setHostMirrorWs(
+				data.filter(
+					(r): r is { url: string; name: string; state: string } =>
+						typeof r === "object" &&
+						r !== null &&
+						typeof (r as { url?: unknown }).url === "string" &&
+						typeof (r as { name?: unknown }).name === "string" &&
+						typeof (r as { state?: unknown }).state === "string",
+				),
+			);
+		},
+		clearHostMirror() {
+			if (!getRemoteShellMode()) return;
+			setHostMirrorWs([]);
+		},
 	};
 }
 

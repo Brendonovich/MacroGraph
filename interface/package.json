@@ -5,6 +5,7 @@
 	"main": "./src/index.tsx",
 	"exports": {
 		".": "./src/index.tsx",
+		"./global.css": "./src/global.css",
 		"./tailwind.config.js": "./tailwind.config.js"
 	},
 	"dependencies": {

@@ -12,6 +12,7 @@ mod http;
 mod oauth;
 mod obs_native;
 mod outbound_client;
+mod remote_host;
 mod shell;
 mod websocket;
 
@@ -60,6 +61,7 @@ async fn main() {
 #[derive(Default)]
 pub struct CtxInner {
     ws: websocket::Ctx,
+    remote_host: remote_host::Ctx,
     obs_native: obs_native::Ctx,
     outbound_ws: outbound_client::Ctx,
 }
@@ -74,6 +76,7 @@ pub fn router() -> Router<Ctx> {
         .merge("fs.", fs::router())
         .merge("oauth.", oauth::router())
         .merge("websocket.", websocket::router())
+        .merge("remoteHost.", remote_host::router())
         .merge("obsNative.", obs_native::router())
         .merge("outboundWs.", outbound_client::router())
         .merge("shell.", shell::router())

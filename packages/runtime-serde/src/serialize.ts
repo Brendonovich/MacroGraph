@@ -30,6 +30,8 @@ export function serializeProject(
 			serializeCustomStruct,
 		),
 		customEnums: [...project.customEnums.values()].map(serializeCustomEnum),
+		functionIdCounter: project.functionIdCounter,
+		functions: [...project.functions.values()].map(serializeFunction),
 		counter: project.idCounter,
 		resources: [...project.resources].map(([type, entry]) =>
 			serializeResources(type, entry),
@@ -166,6 +168,20 @@ export function serializeCustomEnumVariant(
 			})
 			.filter(Boolean),
 		fieldIdCounter: v.fieldIdCounter,
+	};
+}
+
+export function serializeFunction(
+	fn: runtime.GraphFunction,
+): v.InferInput<typeof serde.GraphFunction> {
+	return {
+		id: fn.id,
+		name: fn.name,
+		graphId: fn.graphId,
+		inputs: fn.inputs.map(serializeField),
+		outputs: fn.outputs.map(serializeField),
+		inputIdCounter: fn.inputIdCounter,
+		outputIdCounter: fn.outputIdCounter,
 	};
 }
 

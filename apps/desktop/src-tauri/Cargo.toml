@@ -47,7 +47,7 @@ tauri-specta = { version = "1.0.2", features = ["typescript"] }
 axum = { version = "0.6.20", features = ["ws"] }
 base64 = "0.21.4"
 async-stream = "0.3.5"
-tower-http = { version = "0.4.4", features = ["cors"] }
+tower-http = { version = "0.4.4", features = ["cors", "fs"] }
 opener = "0.6.1"
 streamunordered = "0.5.5"
 

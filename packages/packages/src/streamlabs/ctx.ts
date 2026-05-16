@@ -1,5 +1,10 @@
 import { None, makePersistedOption } from "@macrograph/option";
-import type { Core, OAuthToken, OnEvent } from "@macrograph/runtime";
+import {
+	getRemoteShellMode,
+	type Core,
+	type OAuthToken,
+	type OnEvent,
+} from "@macrograph/runtime";
 import { type Socket, io } from "socket.io-client";
 import {
 	createEffect,
@@ -90,6 +95,10 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 		on(
 			() => token(),
 			(token) => {
+				if (getRemoteShellMode()) {
+					setState({ type: "disconnected" });
+					return;
+				}
 				token.mapOrElse(
 					() => {
 						setState({ type: "disconnected" });
@@ -138,8 +147,59 @@ export function createCtx(core: Core, onEvent: OnEvent<Events>) {
 		),
 	);
 
+	const [streamlabsMirror, setStreamlabsMirror] = createSignal<{
+		socketPhase: string;
+		hasSocketToken: boolean;
+		hasUserToken: boolean;
+		oauthDisplayName: string | null;
+	} | null>(null);
+
 	return {
 		core,
+		streamlabsMirror,
+		collectHostMirror() {
+			let oauthDisplayName: string | null = null;
+			try {
+				const u = user() as
+					| { streamlabs?: { display_name: string } }
+					| undefined;
+				oauthDisplayName = u?.streamlabs?.display_name ?? null;
+			} catch {
+				oauthDisplayName = null;
+			}
+			return {
+				socketPhase: state().type,
+				hasSocketToken: token().isSome(),
+				hasUserToken: userToken().isSome(),
+				oauthDisplayName,
+			};
+		},
+		applyHostMirror(data: unknown) {
+			if (!getRemoteShellMode()) return;
+			if (!data || typeof data !== "object") {
+				setStreamlabsMirror(null);
+				return;
+			}
+			const d = data as {
+				socketPhase?: string;
+				hasSocketToken?: boolean;
+				hasUserToken?: boolean;
+				oauthDisplayName?: string | null;
+			};
+			setStreamlabsMirror({
+				socketPhase: typeof d.socketPhase === "string" ? d.socketPhase : "disconnected",
+				hasSocketToken: Boolean(d.hasSocketToken),
+				hasUserToken: Boolean(d.hasUserToken),
+				oauthDisplayName:
+					typeof d.oauthDisplayName === "string" || d.oauthDisplayName === null
+						? d.oauthDisplayName
+						: null,
+			});
+		},
+		clearHostMirror() {
+			if (!getRemoteShellMode()) return;
+			setStreamlabsMirror(null);
+		},
 		auth: {
 			user,
 			state,

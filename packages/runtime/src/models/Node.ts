@@ -15,6 +15,7 @@ import {
 import { createMutable } from "solid-js/store";
 
 import type { XY } from "../utils";
+import { getRemoteShellMode } from "../remoteShell";
 import { ExecutionContext } from "./Core";
 import type { Graph } from "./Graph";
 import {
@@ -171,7 +172,7 @@ export class Node extends Disposable {
 				}
 			});
 
-			if ("type" in this.schema && this.schema.type === "event") {
+			if ("type" in this.schema && this.schema.type === "event" && !getRemoteShellMode()) {
 				const s = this.schema;
 
 				createEffect(() => {

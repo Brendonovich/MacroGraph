@@ -158,9 +158,33 @@ export function handleSelectableItemPointerDown(
 
 	let didDrag = false;
 
+	let positionsRafId: number | null = null;
+	let pendingLivePayload: { graphId: number; items: GraphItemPositionInput[] } | null =
+		null;
+
+	const flushPendingLivePositions = () => {
+		if (positionsRafId != null) {
+			cancelAnimationFrame(positionsRafId);
+			positionsRafId = null;
+		}
+		const pay = pendingLivePayload;
+		pendingLivePayload = null;
+		if (!pay?.items.length || !interfaceCtx.broadcastGraphPositionsLive) return;
+		interfaceCtx.broadcastGraphPositionsLive({
+			graphId: pay.graphId,
+			items: pay.items.map((i) => ({
+				itemId: i.itemId,
+				itemVariant: i.itemVariant,
+				position: { ...i.position },
+			})),
+		});
+	};
+
 	createRoot((dispose) => {
+		interfaceCtx.onGraphLivePointerSession?.(true);
 		createEventListenerMap(window, {
 			pointerup: (e) => {
+				flushPendingLivePositions();
 				dispose();
 
 				if (!didDrag) {
@@ -240,6 +264,8 @@ export function handleSelectableItemPointerDown(
 							prevSelection,
 						});
 				}
+
+				interfaceCtx.onGraphLivePointerSession?.(false);
 			},
 			pointermove: (e) => {
 				didDrag = true;
@@ -314,12 +340,36 @@ export function handleSelectableItemPointerDown(
 
 				didDrag = items.length > 0;
 
-				if (items.length > 0)
+				if (items.length > 0) {
 					interfaceCtx.execute(
 						"setGraphItemPositions",
 						{ graphId: graph.model().id, items },
 						{ ephemeral: true },
 					);
+					pendingLivePayload = {
+						graphId: graph.model().id,
+						items: items.map((i) => ({
+							...i,
+							position: { ...i.position },
+						})),
+					};
+					if (positionsRafId == null) {
+						positionsRafId = requestAnimationFrame(() => {
+							positionsRafId = null;
+							const pay = pendingLivePayload;
+							pendingLivePayload = null;
+							if (!pay?.items.length || !interfaceCtx.broadcastGraphPositionsLive) return;
+							interfaceCtx.broadcastGraphPositionsLive({
+								graphId: pay.graphId,
+								items: pay.items.map((i) => ({
+									itemId: i.itemId,
+									itemVariant: i.itemVariant,
+									position: { ...i.position },
+								})),
+							});
+						});
+					}
+				}
 			},
 		});
 	});

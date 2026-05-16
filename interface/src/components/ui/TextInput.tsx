@@ -123,7 +123,7 @@ export const TextInput = (props: Props) => {
 												class="w-52 max-h-48 overflow-y-auto ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 text-xs bg-neutral-700 rounded space-y-1 p-1"
 												onOpenAutoFocus={(e) => e.preventDefault()}
 												/** Keeps focus on the anchor so `onBlur` does not unmount the list before `click`/`onChange` runs. */
-												onMouseDown={(e) => e.preventDefault()}
+												onMouseDown={(e: MouseEvent) => e.preventDefault()}
 												onInteractOutside={() => setOpen()}
 											>
 												<Listbox

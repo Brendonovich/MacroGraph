@@ -45,6 +45,8 @@ export function Graphs(props: Props) {
 			.map((id) => {
 				const g = interfaceCtx.core.project.graphs.get(id);
 				if (!g) return;
+				const isFnGraph = [...interfaceCtx.core.project.functions].some(([, f]) => f.graphId === id);
+				if (isFnGraph) return;
 
 				return [tokeniseString(g.name), g] as const;
 			})

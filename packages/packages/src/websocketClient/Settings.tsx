@@ -1,4 +1,5 @@
 import { Button, Input } from "@macrograph/ui";
+import { getRemoteShellMode } from "@macrograph/runtime";
 import { createForm } from "@tanstack/solid-form";
 import { For, Match, Show, Switch, createSignal } from "solid-js";
 
@@ -6,14 +7,16 @@ import type { Ctx } from "./ctx";
 
 type EditCell = { keyUrl: string; field: "name" | "url" };
 
-export default ({
-	websockets,
-	wsNames,
-	addWebsocket,
-	removeWebsocket,
-	setDisplayName,
-	changeWebsocketUrl,
-}: Ctx) => {
+export default (ctx: Ctx) => {
+	const {
+		websockets,
+		wsNames,
+		hostMirrorWs,
+		addWebsocket,
+		removeWebsocket,
+		setDisplayName,
+		changeWebsocketUrl,
+	} = ctx;
 	const [editing, setEditing] = createSignal<EditCell | null>(null);
 	/** Escape unmounts the input and still fires `blur`; skip persisting that blur. */
 	let skipBlurCommit = false;
@@ -29,6 +32,31 @@ export default ({
 
 	return (
 		<>
+			<Show when={getRemoteShellMode() && hostMirrorWs().length > 0}>
+				<table class="mb-4 table-auto w-full">
+					<thead>
+						<tr>
+							<th class="pr-2 text-left">Name</th>
+							<th class="pr-2 text-left">URL</th>
+							<th class="pr-2 text-left">State (host)</th>
+						</tr>
+					</thead>
+					<tbody>
+						<For each={hostMirrorWs()}>
+							{(row) => (
+								<tr>
+									<td>{row.name}</td>
+									<td class="break-all">{row.url}</td>
+									<td>{row.state}</td>
+								</tr>
+							)}
+						</For>
+					</tbody>
+				</table>
+				<p class="text-sm text-neutral-500 mb-4">WebSocket clients run on the host.</p>
+			</Show>
+
+			<Show when={!getRemoteShellMode() || hostMirrorWs().length === 0}>
 			<Switch>
 				<Match when={websockets.size !== 0}>
 					<table class="mb-4 table-auto w-full">
@@ -64,9 +92,9 @@ export default ({
 												</span>
 											}
 										>
-											<Input
+			<Input
 												class="h-8 py-1"
-												defaultValue={wsNames.get(key) ?? key}
+												value={wsNames.get(key) ?? key}
 												ref={(el) => {
 													queueMicrotask(() => {
 														el.focus();
@@ -79,25 +107,14 @@ export default ({
 														return;
 													}
 													setDisplayName(key, e.currentTarget.value);
-													setEditing((ed) =>
-														ed?.keyUrl === key && ed.field === "name"
-															? null
-															: ed,
-													);
 												}}
 												onKeyDown={(e) => {
-													if (e.key === "Enter") {
-														e.preventDefault();
-														(e.currentTarget as HTMLInputElement).blur();
-													}
 													if (e.key === "Escape") {
-														e.preventDefault();
-														skipBlurCommit = true;
-														setEditing((ed) =>
-															ed?.keyUrl === key && ed.field === "name"
-																? null
-																: ed,
-														);
+														setEditing(null);
+													}
+													if (e.key === "Enter") {
+														setDisplayName(key, e.currentTarget.value);
+														setEditing(null);
 													}
 												}}
 											/>
@@ -123,7 +140,7 @@ export default ({
 										>
 											<Input
 												class="h-8 min-w-[12rem] py-1"
-												defaultValue={key}
+												value={key}
 												ref={(el) => {
 													queueMicrotask(() => {
 														el.focus();
@@ -234,6 +251,7 @@ export default ({
 					Add WebSocket
 				</Button>
 			</form>
+			</Show>
 		</>
 	);
 };

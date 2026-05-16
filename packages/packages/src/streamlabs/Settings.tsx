@@ -1,5 +1,6 @@
 import { None, Some } from "@macrograph/option";
 import { Button, Input } from "@macrograph/ui";
+import { getRemoteShellMode } from "@macrograph/runtime";
 import { Match, Show, Suspense, Switch, createSignal } from "solid-js";
 
 import { createForm } from "@tanstack/solid-form";
@@ -10,9 +11,25 @@ export default (ctx: Ctx) => {
 
 	return (
 		<div class="flex flex-col items-start space-y-2">
+			<Show when={getRemoteShellMode() && ctx.streamlabsMirror()}>
+				{(m) => (
+					<div class="text-sm text-neutral-300 space-y-1 mb-2">
+						<p>
+							Socket: {m().socketPhase} · API key on host:{" "}
+							{m().hasSocketToken ? "yes" : "no"}
+						</p>
+						<p>
+							OAuth on host: {m().hasUserToken ? "yes" : "no"}
+							{m().oauthDisplayName
+								? ` (${m().oauthDisplayName})`
+								: ""}
+						</p>
+					</div>
+				)}
+			</Show>
 			<span class="text-neutral-400 font-medium">Socket API</span>
 			<Switch fallback="Loading...">
-				<Match when={auth.state().type === "disconnected"}>
+				<Match when={!getRemoteShellMode() && auth.state().type === "disconnected"}>
 					{(_) => {
 						const form = createForm(() => ({
 							defaultValues: { socketToken: "" },
@@ -50,21 +67,32 @@ export default (ctx: Ctx) => {
 						);
 					}}
 				</Match>
-				<Match when={auth.state().type === "connected"}>
+				<Match when={!getRemoteShellMode() && auth.state().type === "connected"}>
 					<div class="flex flex-row items-center space-x-4">
 						<Button onClick={() => auth.setToken(None)}>Disconnect</Button>
 					</div>
 				</Match>
+				<Match when={getRemoteShellMode()}>
+					<span class="text-sm text-neutral-500">
+						Streamlabs socket runs on the host.
+					</span>
+				</Match>
 			</Switch>
 
-			<span class="text-neutral-400 font-medium">OAuth</span>
-			<Show when={auth.userToken().isSome()} fallback={<LogIn {...ctx} />}>
-				<Suspense fallback="Authenticating...">
-					<div class="flex flex-row items-center gap-2">
-						<p>Logged in as {auth.user()?.streamlabs.display_name}</p>
-						<Button onClick={() => auth.setUserToken(None)}>Log Out</Button>
-					</div>
-				</Suspense>
+			<Show when={!getRemoteShellMode()}>
+				<span class="text-neutral-400 font-medium">OAuth</span>
+				<Show when={auth.userToken().isSome()} fallback={<LogIn {...ctx} />}>
+					<Suspense fallback="Authenticating...">
+						<div class="flex flex-row items-center gap-2">
+							<p>Logged in as {auth.user()?.streamlabs.display_name}</p>
+							<Button onClick={() => auth.setUserToken(None)}>Log Out</Button>
+						</div>
+					</Suspense>
+				</Show>
+			</Show>
+			<Show when={getRemoteShellMode()}>
+				<span class="text-neutral-400 font-medium">OAuth</span>
+				<p class="text-sm text-neutral-500 mt-1">Managed on the host.</p>
 			</Show>
 		</div>
 	);

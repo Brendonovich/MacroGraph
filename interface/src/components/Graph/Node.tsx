@@ -258,6 +258,7 @@ export const Node = (props: Props) => {
 						active() === 1 && "opacity-50",
 						(() => {
 							const schema = node().schema;
+							if (schema.package.name === "Functions") return "bg-neutral-500";
 							return SchemaVariantColours[
 								"variant" in schema
 									? schema.variant
@@ -298,6 +299,22 @@ export const Node = (props: Props) => {
 									<ContextMenuItem onSelect={() => setEditingName(true)}>
 										Rename
 									</ContextMenuItem>
+									{node().schema.package.name === "Functions" && node().schema.name === "Execute Function" && (
+										<ContextMenuItem
+											onSelect={() => {
+												const fnId = node().state.properties.function;
+												if (fnId !== undefined) {
+													const fn = [...node().graph.project.functions].find(([id]) => id === (typeof fnId === 'number' ? fnId : Number(fnId)));
+													if (fn) {
+														const graph = node().graph.project.graphs.get(fn[1].graphId);
+														if (graph) interfaceCtx.selectGraph(graph);
+													}
+												}
+											}}
+										>
+											Open Function
+										</ContextMenuItem>
+									)}
 									<ContextMenuItem
 										onSelect={() => {
 											interfaceCtx.execute("setNodeFoldPins", {

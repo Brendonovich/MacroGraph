@@ -1,3 +1,4 @@
+import { getRemoteShellMode } from "@macrograph/runtime";
 import { None, Some, type Option } from "@macrograph/option";
 import { createSignal } from "solid-js";
 
@@ -42,9 +43,16 @@ export function createCtx() {
 	};
 
 	const connect = () => {
+		if (getRemoteShellMode()) return;
+		let connected = false;
 		for (const port of ports) {
+			if (connected) break;
 			const ws = new WebSocket(`ws://localhost:${port}/v1`);
+			ws.addEventListener("error", () => {
+				ws.close();
+			});
 			ws.addEventListener("open", (event) => {
+				connected = true;
 				setState(Some(ws));
 				ws.send(
 					JSON.stringify({
@@ -122,7 +130,39 @@ export function createCtx() {
 		}
 	};
 
-	connect();
+	if (!getRemoteShellMode()) connect();
 
-	return { state, setState, voices, setVoices, voiceChanger, hearVoice };
+	return {
+		state,
+		setState,
+		voices,
+		setVoices,
+		voiceChanger,
+		hearVoice,
+		collectHostMirror() {
+			return {
+				voiceEntries: [...voices().entries()] as [string, string][],
+				voiceChanger: voiceChanger(),
+				hearVoice: hearVoice(),
+				connected: state().isSome(),
+			};
+		},
+		applyHostMirror(data: unknown) {
+			if (!getRemoteShellMode() || !data || typeof data !== "object") return;
+			const d = data as {
+				voiceEntries?: [string, string][];
+				voiceChanger?: boolean;
+				hearVoice?: boolean;
+			};
+			setVoices(new Map(d.voiceEntries ?? []));
+			if (typeof d.voiceChanger === "boolean") setVoiceChanger(d.voiceChanger);
+			if (typeof d.hearVoice === "boolean") setHearVoice(d.hearVoice);
+		},
+		clearHostMirror() {
+			if (!getRemoteShellMode()) return;
+			setVoices(new Map());
+			setVoiceChanger(false);
+			setHearVoice(false);
+		},
+	};
 }

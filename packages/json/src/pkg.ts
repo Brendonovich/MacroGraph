@@ -3,7 +3,7 @@ import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 import { jsToJSON, jsonToJS, toJSON } from "./conversion";
-import { JSONEnum } from "./type";
+import { JSONEnum, type JSONValue } from "./type";
 
 export function pkg() {
 	const pkg = new Package({
@@ -32,7 +32,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const val = Maybe(toJSON(io.in.type, ctx.getInput(io.in)));
+			const val = Maybe(toJSON(io.in.type, ctx.getInput(io.in) as any));
 			ctx.setOutput(
 				io.out,
 				val.expect(
@@ -60,7 +60,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const json = ctx.getInput(io.in);
+			const json = ctx.getInput(io.in) as JSONValue;
 			ctx.setOutput(io.out, jsonToJS(json, io.w.value().unwrap()));
 		},
 	});
@@ -82,7 +82,10 @@ export function pkg() {
 		},
 		run({ ctx, io }) {
 			const value = jsToJSON(JSON.parse(ctx.getInput(io.in)));
-			ctx.setOutput(io.out, Maybe(value).expect("Failed to parse JSON!"));
+			ctx.setOutput(
+				io.out,
+				Maybe(value).expect("Failed to parse JSON!") as any,
+			);
 		},
 	});
 
@@ -109,7 +112,7 @@ export function pkg() {
 		},
 		run({ ctx, io, properties }) {
 			// TODO: remove jsonToJS from this
-			const value = jsonToJS(ctx.getInput(io.in));
+			const value = jsonToJS(ctx.getInput(io.in) as JSONValue);
 			let query = ctx.getProperty(properties.query);
 			let output: { [x: string]: any } | null = null;
 			if (query[0] === ".") {
@@ -125,7 +128,7 @@ export function pkg() {
 				}
 			}
 
-			ctx.setOutput(io.out, Maybe(jsToJSON(output)));
+			ctx.setOutput(io.out, Maybe(jsToJSON(output)) as any);
 		},
 	});
 
@@ -145,7 +148,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const input = ctx.getInput(io.in);
+			const input = ctx.getInput(io.in) as JSONValue;
 
 			ctx.setOutput(
 				io.out,
@@ -170,7 +173,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const input = ctx.getInput(io.in);
+			const input = ctx.getInput(io.in) as JSONValue;
 
 			ctx.setOutput(
 				io.out,
@@ -195,7 +198,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const input = ctx.getInput(io.in);
+			const input = ctx.getInput(io.in) as JSONValue;
 
 			ctx.setOutput(
 				io.out,
@@ -220,7 +223,7 @@ export function pkg() {
 			};
 		},
 		run({ ctx, io }) {
-			const input = ctx.getInput(io.in);
+			const input = ctx.getInput(io.in) as JSONValue;
 
 			ctx.setOutput(
 				io.out,

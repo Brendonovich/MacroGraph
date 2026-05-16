@@ -1,4 +1,4 @@
-import { Maybe, None, type Option } from "@macrograph/option";
+import { Maybe, None, Option, Some } from "@macrograph/option";
 import { ReactiveMap } from "@solid-primitives/map";
 
 import {
@@ -27,6 +27,21 @@ export function deserializeValue(rawValue: any, type: t.Any): any {
 	}
 	if (type instanceof t.Option) {
 		if (rawValue === None) return None;
+		if (rawValue instanceof Option) {
+			return rawValue.map((v) => deserializeValue(v, type.inner));
+		}
+		// JSON / IndexedDB loses Option's prototype; instances become `{ value: T }`.
+		if (
+			rawValue !== null &&
+			typeof rawValue === "object" &&
+			!Array.isArray(rawValue) &&
+			Object.keys(rawValue).length === 1 &&
+			Object.prototype.hasOwnProperty.call(rawValue, "value")
+		) {
+			const inner = (rawValue as { value: unknown }).value;
+			if (inner === null || inner === undefined) return None;
+			return Some(deserializeValue(inner, type.inner));
+		}
 		return Maybe(rawValue).map((v) => deserializeValue(v, type.inner));
 	}
 	if (type instanceof t.Enum) {

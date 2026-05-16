@@ -10,6 +10,7 @@ import type {
 	RunProps,
 	SchemaProperties,
 } from "@macrograph/runtime";
+import { getRemoteShellMode } from "@macrograph/runtime";
 import { type InferEnum, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import type { ObsSocketLike } from "./obsSocket";
@@ -17,6 +18,8 @@ import type { EventTypes } from "obs-websocket-js";
 
 import type { Accessor } from "solid-js";
 import { alignmentConversion } from "./events";
+import { getObsInstanceSourceUrl } from "./remoteInstanceUrl";
+import { createRemoteShellObsSocket } from "./remoteShellObsSocket";
 import { defaultProperties } from "./resource";
 import type { Types } from "./types";
 
@@ -67,17 +70,24 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			type: "exec",
 			properties: { ...s.properties, ...defaultProperties } as any,
 			createIO(props) {
-				const obs = props.ctx
-					.getProperty(
-						(props.properties as SchemaProperties<typeof defaultProperties>)
-							.instance,
-					)
-					.andThen((instance) => {
+				const instanceProp = (
+					props.properties as SchemaProperties<typeof defaultProperties>
+				).instance;
+
+				const obs = () => {
+					if (getRemoteShellMode()) {
+						return getObsInstanceSourceUrl(
+							props.io.node,
+							instanceProp,
+						).map((url) => createRemoteShellObsSocket(url));
+					}
+					return props.ctx.getProperty(instanceProp).andThen((instance) => {
 						if (instance.state !== "connected") return None;
 						return Some(instance.obs);
 					});
+				};
 
-				return s.createIO({ ...props, obs: () => obs });
+				return s.createIO({ ...props, obs });
 			},
 			run(props) {
 				const instance = props.ctx
@@ -631,7 +641,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
 				const resp = await obs.call("GetSceneList");
-				return resp.scenes.map((scene) => scene.sceneName);
+				return resp.scenes.map((scene: any) => scene.sceneName);
 			});
 			return o.unwrapOr([]);
 		};
@@ -1120,7 +1130,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 					: {},
 			);
 
-			const inputs = data.inputs.map((input) =>
+			const inputs = data.inputs.map((input: any) =>
 				types.InputInfo.create({
 					inputKind: input.inputKind as string,
 					inputName: input.inputName as string,
@@ -1154,7 +1164,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetSceneList");
 
-			const scene = data.scenes.map((input) =>
+			const scene = data.scenes.map((input: any) =>
 				types.Scene.create({
 					sceneIndex: input.sceneIndex as number,
 					sceneName: input.sceneName as string,
@@ -1633,7 +1643,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				propertyName: ctx.getInput(io.propertyName),
 			});
 
-			const propertyItems = data.propertyItems.map((data) =>
+			const propertyItems = data.propertyItems.map((data: any) =>
 				types.PropertyItem.create({
 					itemEnabled: data.itemEnabled as boolean,
 					itemName: data.itemName as string,
@@ -1713,7 +1723,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			);
 			ctx.setOutput(
 				io.transitions,
-				data.transitions.map((data) =>
+				data.transitions.map((data: any) =>
 					types.Transition.create({
 						transitionConfigurable: data.transitionConfigurable as boolean,
 						transitionFixed: data.transitionFixed as boolean,
@@ -1894,7 +1904,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sourceName: ctx.getInput(io.sourceName),
 			});
 
-			const filter = data.filters.map((data) =>
+			const filter = data.filters.map((data: any) =>
 				types.Filter.create({
 					filterEnabled: data.filterEnabled as boolean,
 					filterIndex: data.filterIndex as number,
@@ -2220,7 +2230,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 			});
 
-			const sceneItems = data.sceneItems.map((data) => {
+			const sceneItems = data.sceneItems.map((data: any) => {
 				const sceneItemTransformObj: SceneItemTransformInterface =
 					data.sceneItemTransform as any;
 

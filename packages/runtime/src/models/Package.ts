@@ -100,7 +100,7 @@ export class Package<
 				await schema.run({ ...args, io: args.io.custom });
 
 				if (schema.variant === "Exec" && args.io.default)
-					args.ctx.exec(args.io.default.out);
+					await args.ctx.exec(args.io.default.out);
 			},
 			package: this as any,
 		};
@@ -182,7 +182,7 @@ export class Package<
 				await schema.run({ ...(props as any), io: props.io.custom });
 
 				if (schema.type === "exec" && props.io.default)
-					props.ctx.exec(props.io.default.out);
+					await props.ctx.exec(props.io.default.out);
 			},
 			package: this as any,
 		};

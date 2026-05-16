@@ -89,6 +89,7 @@ export function SchemaMenu(props: Props) {
 
 			for (const schema of pkg.schemas.values()) {
 				if (!("type" in schema)) continue;
+				if ("internal" in schema && schema.internal) continue;
 				const renderedSchema = renderSchema(schema);
 
 				if (renderedSchema) {
@@ -253,6 +254,7 @@ export function SchemaMenu(props: Props) {
 								}[] = [];
 
 								for (const schema of p.schemas.values()) {
+									if ("internal" in schema && schema.internal) continue;
 									const lowercaseSchemaName = schema.name.toLowerCase();
 
 									const searchMatches = leftoverSearchTokens.every((t) =>

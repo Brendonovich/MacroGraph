@@ -1,6 +1,7 @@
 import {
 	type Node,
 	rerunNodeFromInvocationSnapshot,
+	remoteHostRpcRequest,
 } from "@macrograph/runtime";
 import type { ParentProps } from "solid-js";
 import { For, Show, createEffect, createMemo, createSignal, on } from "solid-js";
@@ -12,6 +13,7 @@ import {
 	MAX_NODE_INVOCATIONS,
 	type StoredNodeInvocation,
 } from "../../nodeInvocationLog";
+import { usePlatform } from "../../platform";
 
 function Field(props: ParentProps<{ name: string }>) {
 	return (
@@ -33,8 +35,15 @@ function JsonBlock(props: { label: string; value: unknown }) {
 	);
 }
 
+function formatInvocationErrorText(err: NonNullable<StoredNodeInvocation["error"]>) {
+	const stack = err.stack?.trim();
+	if (stack) return stack;
+	return err.message;
+}
+
 export function NodeInfo(props: { node: Node }) {
 	const ctx = useInterfaceContext();
+	const platform = usePlatform();
 	const [rerunningId, setRerunningId] = createSignal<string | null>(null);
 
 	const entries = createMemo(() =>
@@ -44,14 +53,35 @@ export function NodeInfo(props: { node: Node }) {
 	async function rerun(inv: StoredNodeInvocation) {
 		setRerunningId(inv.id);
 		try {
-			await rerunNodeFromInvocationSnapshot(props.node, {
-				inputs: inv.inputs,
-				eventData: inv.eventData,
-			});
+			if (props.node.graph.project.core.remoteShell) {
+				await remoteHostRpcRequest({
+					method: "rerunNode",
+					params: {
+						graphId: props.node.graph.id,
+						nodeId: props.node.id,
+						inputs: inv.inputs,
+						eventData: inv.eventData,
+					},
+				});
+			} else {
+				await rerunNodeFromInvocationSnapshot(props.node, {
+					inputs: inv.inputs,
+					eventData: inv.eventData,
+				});
+			}
 		} catch (e) {
 			toast.error(e instanceof Error ? e.message : String(e));
 		} finally {
 			setRerunningId(null);
+		}
+	}
+
+	async function copyInvocationError(err: NonNullable<StoredNodeInvocation["error"]>) {
+		try {
+			await platform.clipboard.writeText(formatInvocationErrorText(err));
+			toast.success("Error copied to clipboard");
+		} catch (e) {
+			toast.error(e instanceof Error ? e.message : String(e));
 		}
 	}
 
@@ -126,8 +156,20 @@ export function NodeInfo(props: { node: Node }) {
 									</div>
 									{inv.error ? (
 										<div class="mb-1.5 rounded-sm border border-neutral-800 bg-neutral-900/80 p-2 text-sm text-red-300">
-											<div class="font-medium text-red-200">
-												{inv.error.message}
+											<div class="mb-1 flex flex-row flex-wrap items-start justify-between gap-2">
+												<div class="min-w-0 flex-1 font-medium text-red-200">
+													{inv.error.message}
+												</div>
+												<button
+													type="button"
+													class="shrink-0 rounded-sm border border-neutral-600 bg-neutral-800/80 px-2 py-0.5 text-[13px] font-medium text-neutral-100 hover:bg-neutral-700"
+													onClick={() => {
+														const err = inv.error;
+														if (err) void copyInvocationError(err);
+													}}
+												>
+													Copy
+												</button>
 											</div>
 											{inv.error.stack ? (
 												<pre class="mt-1 max-h-32 overflow-y-auto whitespace-pre-wrap font-mono text-[12px] leading-snug text-red-300/85 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-600">

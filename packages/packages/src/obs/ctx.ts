@@ -1,8 +1,9 @@
-import type { ObsNativeBridge } from "@macrograph/runtime";
+import { getRemoteShellMode, type ObsNativeBridge } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/option";
 import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import { ReactiveMap } from "@solid-primitives/map";
 import OBS, { EventSubscription } from "obs-websocket-js";
+import { createSignal } from "solid-js";
 import * as v from "valibot";
 
 import { NativeObsClient } from "./nativeClient";
@@ -24,7 +25,12 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 	const instances = new ReactiveMap<string, InstanceState>();
 	const eventUnsubs = new Map<string, () => void>();
 
+	const [hostMirrorRows, setHostMirrorRows] = createSignal<
+		Array<{ url: string; state: string; hasPassword: boolean }>
+	>([]);
+
 	async function addInstance(ip: string, password?: string | null) {
+		if (getRemoteShellMode()) return;
 		await disconnectInstance(ip);
 
 		instances.set(ip, { state: "connecting", password: password ?? null });
@@ -132,6 +138,7 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 	}
 
 	Maybe(localStorage.getItem(OBS_INSTANCES)).mapAsync(async (jstr) => {
+		if (getRemoteShellMode()) return;
 		const instances = parseJsonWithContext(
 			"packages/obs createCtx: localStorage key obs-instances",
 			v.array(INSTANCE_SCHEMA),
@@ -157,10 +164,44 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 
 	return {
 		instances,
+		hostMirrorRows,
 		addInstance,
 		connectInstance,
 		disconnectInstance,
 		removeInstance,
+		collectHostMirror() {
+			return [...instances].map(([url, inst]) => ({
+				url,
+				state: inst.state,
+				hasPassword: inst.password != null && inst.password !== "",
+			}));
+		},
+		applyHostMirror(data: unknown) {
+			if (!getRemoteShellMode()) return;
+			if (!Array.isArray(data)) {
+				setHostMirrorRows([]);
+				return;
+			}
+			setHostMirrorRows(
+				data
+					.filter(
+						(r): r is { url: string; state: string; hasPassword?: boolean } =>
+							typeof r === "object" &&
+							r !== null &&
+							typeof (r as { url?: unknown }).url === "string" &&
+							typeof (r as { state?: unknown }).state === "string",
+					)
+					.map((r) => ({
+						url: r.url,
+						state: r.state,
+						hasPassword: Boolean(r.hasPassword),
+					})),
+			);
+		},
+		clearHostMirror() {
+			if (!getRemoteShellMode()) return;
+			setHostMirrorRows([]);
+		},
 	};
 }
 

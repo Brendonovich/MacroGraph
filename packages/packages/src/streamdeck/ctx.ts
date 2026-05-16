@@ -1,4 +1,4 @@
-import type { OnEvent, WsProvider } from "@macrograph/runtime";
+import { getRemoteShellMode, type OnEvent, type WsProvider } from "@macrograph/runtime";
 import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -57,6 +57,12 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
 		type: "Stopped",
 	});
 
+	const [hostMirrorStreamdeck, setHostMirrorStreamdeck] = createSignal<{
+		phase: "Stopped" | "Starting" | "Running";
+		port: number | null;
+		clientConnected: boolean;
+	} | null>(null);
+
 	async function startServer(port: number) {
 		try {
 			setState({ type: "Starting" });
@@ -101,8 +107,59 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent<Events>) {
 		}
 	}
 
-	if (localStorage.getItem(SDWS) !== null)
+	if (localStorage.getItem(SDWS) !== null && !getRemoteShellMode())
 		startServer(Number(localStorage.getItem(SDWS)));
 
-	return { state, startServer };
+	return {
+		state,
+		startServer,
+		hostMirrorStreamdeck,
+		collectHostMirror() {
+			const s = state;
+			if (s.type === "Running") {
+				return {
+					phase: "Running" as const,
+					port: s.port,
+					clientConnected: s.connected(),
+				};
+			}
+			if (s.type === "Starting") {
+				return {
+					phase: "Starting" as const,
+					port: null,
+					clientConnected: false,
+				};
+			}
+			return {
+				phase: "Stopped" as const,
+				port: null,
+				clientConnected: false,
+			};
+		},
+		applyHostMirror(data: unknown) {
+			if (!getRemoteShellMode()) return;
+			if (!data || typeof data !== "object") {
+				setHostMirrorStreamdeck(null);
+				return;
+			}
+			const d = data as {
+				phase?: string;
+				port?: number | null;
+				clientConnected?: boolean;
+			};
+			const phase =
+				d.phase === "Running" || d.phase === "Starting" || d.phase === "Stopped"
+					? d.phase
+					: "Stopped";
+			setHostMirrorStreamdeck({
+				phase,
+				port: typeof d.port === "number" ? d.port : null,
+				clientConnected: Boolean(d.clientConnected),
+			});
+		},
+		clearHostMirror() {
+			if (!getRemoteShellMode()) return;
+			setHostMirrorStreamdeck(null);
+		},
+	};
 }

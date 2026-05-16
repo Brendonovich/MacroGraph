@@ -1,5 +1,5 @@
 import { Maybe } from "@macrograph/option";
-import type { OnEvent, WsProvider } from "@macrograph/runtime";
+import { getRemoteShellMode, type OnEvent, type WsProvider } from "@macrograph/runtime";
 import { ReactiveMap } from "@solid-primitives/map";
 import { ReactiveSet } from "@solid-primitives/set";
 
@@ -18,12 +18,14 @@ export function createCtx(ws: WsProvider<unknown>, onEvent: OnEvent) {
 	Maybe(localStorage.getItem(WS_PORTS_LOCALSTORAGE))
 		.map((v) => JSON.parse(v) as number[])
 		.map((ports) => {
+			if (getRemoteShellMode()) return;
 			for (const port of ports) {
 				startServer(port);
 			}
 		});
 
 	async function startServer(port: number) {
+		if (getRemoteShellMode()) return;
 		if (websockets.has(port)) return;
 
 		const server = await ws.startServer(port, ([client, msg]) => {

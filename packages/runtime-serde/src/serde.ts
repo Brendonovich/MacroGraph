@@ -138,6 +138,17 @@ export const CustomEnum = v.object({
 });
 export type CustomEnum = v.InferOutput<typeof CustomEnum>;
 
+export const GraphFunction = v.object({
+	id: IntID,
+	name: v.string(),
+	graphId: IntID,
+	inputs: v.optional(v.array(Field), []),
+	outputs: v.optional(v.array(Field), []),
+	inputIdCounter: v.optional(v.number(), 0),
+	outputIdCounter: v.optional(v.number(), 0),
+});
+export type GraphFunction = v.InferOutput<typeof GraphFunction>;
+
 export const Connection = v.object({
 	from: v.object({
 		node: IntID,
@@ -228,6 +239,8 @@ export const Project = v.object({
 	customTypeIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customStructs: v.optional(v.array(CustomStruct), []),
 	customEnums: v.optional(v.array(CustomEnum), []),
+	functions: v.optional(v.array(GraphFunction), []),
+	functionIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
 	variables: v.optional(v.array(Variable), []),
@@ -244,6 +257,8 @@ export const ProjectRoot = v.object({
 	customTypeIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customStructs: v.optional(v.array(CustomStruct), []),
 	customEnums: v.optional(v.array(CustomEnum), []),
+	functions: v.optional(v.array(GraphFunction), []),
+	functionIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
 	/** Sharded save: IDs only; bodies live under `project-variable-${id}` in localStorage. */

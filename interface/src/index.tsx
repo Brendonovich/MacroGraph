@@ -64,6 +64,30 @@ export {
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
 } from "./nodeInvocationLog";
+export type { RemoteHistoryWireItem, WireGraphPositionsEphemeral, RemoteCursor } from "./remoteHistorySync";
+export {
+	applyRemoteHistoryItems,
+	applySetGraphItemPositionsPerform,
+	parseGraphPositionsEphemeralMessage,
+	parseCursorMessage,
+	parseNodeExecuteMessage,
+	runAsRemoteHistoryInbound,
+	stringifyGraphPositionsEphemeralWire,
+	stringifyCursorWire,
+	stringifyNodeExecuteWire,
+	stringifyRemoteHistoryWirePayload,
+	toWireJsonSerializable,
+	getRemoteCursors,
+	updateRemoteCursor,
+	removeRemoteCursor,
+	setCursorBroadcastFn,
+	getUserList,
+	setUserList,
+	getFollowUserId,
+	setFollowUserId,
+} from "./remoteHistorySync";
+
+import type { RemoteHistoryWireItem, WireGraphPositionsEphemeral } from "./remoteHistorySync";
 
 const queryClient = new QueryClient();
 
@@ -71,12 +95,20 @@ export function Interface(props: {
 	core: Core;
 	environment: Environment;
 	mosaicWorkspaceKey?: Accessor<string | null | undefined>;
+	broadcastHistoryCommit?: (items: RemoteHistoryWireItem[]) => void;
+	broadcastGraphPositionsLive?: (payload: WireGraphPositionsEphemeral) => void;
+	onGraphLivePointerSession?: (active: boolean) => void;
+	broadcastCursorPosition?: (payload: { graphId: number; position: { x: number; y: number } }) => void;
 }) {
 	return (
 		<InterfaceContextProvider
 			core={props.core}
 			environment={props.environment}
 			mosaicWorkspaceKey={props.mosaicWorkspaceKey}
+			broadcastHistoryCommit={props.broadcastHistoryCommit}
+			broadcastGraphPositionsLive={props.broadcastGraphPositionsLive}
+			onGraphLivePointerSession={props.onGraphLivePointerSession}
+			broadcastCursorPosition={props.broadcastCursorPosition}
 		>
 			<QueryClientProvider client={queryClient}>
 				<ProjectInterface />
