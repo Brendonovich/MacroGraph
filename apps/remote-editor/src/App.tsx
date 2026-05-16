@@ -9,13 +9,21 @@ import {
 	parseGraphPositionsEphemeralMessage,
 	parseCursorMessage,
 	parseNodeExecuteMessage,
+	parsePinDragMessage,
+	parseSelectionBoxMessage,
 	runAsRemoteHistoryInbound,
 	stringifyGraphPositionsEphemeralWire,
 	stringifyCursorWire,
 	stringifyRemoteHistoryWirePayload,
 	updateRemoteCursor,
 	removeRemoteCursor,
+	updateRemotePinDrag,
+	removeRemotePinDrag,
+	updateRemoteSelectionBox,
+	removeRemoteSelectionBox,
 	setCursorBroadcastFn,
+	setPinDragBroadcastFn,
+	setSelectionBoxBroadcastFn,
 	setUserList,
 	type RemoteHistoryWireItem,
 	type WireGraphPositionsEphemeral,
@@ -126,6 +134,7 @@ const remotePlatform: Platform = {
 	pkgs.openai.pkg,
 	() => pkgs.websocket.pkg({ outboundWs: outboundWsStub }),
 	pkgs.variables.pkg,
+	pkgs.queue.pkg,
 	pkgs.customEvents.pkg,
 	pkgs.speakerbot.pkg,
 	() => pkgs.websocketServer.pkg(wsProviderStub),
@@ -142,7 +151,7 @@ function wsUrl() {
 	return `${wsProto}//${host}/ws`;
 }
 
-type JoinPhase = "form" | "connecting" | "editor" | "reconnecting";
+type JoinPhase = "form" | "connecting" | "editor" | "reconnecting" | "failed";
 
 const rpcPending = new Map<
 	string,
@@ -181,6 +190,9 @@ export default function App() {
 	let ws: WebSocket | null = null;
 	let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 	let autoConnectAttempted = false;
+	let isReconnecting = false;
+	const reconnectState = { attempts: 0, startTime: 0, maxTime: 60_000 };
+	const [projectReady, setProjectReady] = createSignal(false);
 
 	const [graphLiveFromLocal, setGraphLiveFromLocal] = createSignal(false);
 
@@ -231,8 +243,22 @@ export default function App() {
 		sendWs(stringifyCursorWire({ id: cursorId, ...payload }));
 	};
 
+	const broadcastPinDragToHost = (drag: import("@macrograph/interface").RemotePinDrag) => {
+		if (joinPhase() !== "editor") return;
+		sendWs(JSON.stringify({ type: "pinDrag", ...drag }));
+	};
+
+	const broadcastSelectionBoxToHost = (box: import("@macrograph/interface").RemoteSelectionBox) => {
+		if (joinPhase() !== "editor") return;
+		sendWs(JSON.stringify({ type: "selectionBox", ...box }));
+	};
+
 	createEffect(() => {
-		if (joinPhase() === "editor") setCursorBroadcastFn(broadcastCursorToHost);
+		if (joinPhase() === "editor") {
+			setCursorBroadcastFn(broadcastCursorToHost);
+			setPinDragBroadcastFn(broadcastPinDragToHost);
+			setSelectionBoxBroadcastFn(broadcastSelectionBoxToHost);
+		}
 	});
 
 	onCleanup(() => {
@@ -245,6 +271,9 @@ export default function App() {
 		setJoinPhase("connecting");
 		setGraphLiveFromLocal(false);
 		ws?.close();
+		isReconnecting = false;
+		reconnectState.attempts = 0;
+		reconnectState.startTime = 0;
 
 		const socket = new WebSocket(wsUrl());
 		ws = socket;
@@ -257,7 +286,7 @@ export default function App() {
 				if (socket.readyState !== WebSocket.OPEN) {
 					return Promise.reject(new Error("WebSocket is not open."));
 				}
-				const id = crypto.randomUUID();
+				const id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 				return new Promise((resolve, reject) => {
 					const t = setTimeout(() => {
 						const entry = rpcPending.get(id);
@@ -355,6 +384,26 @@ export default function App() {
 				}
 				return;
 			}
+			if (body.type === "pinDrag") {
+				const drag = parsePinDragMessage(body);
+				if (drag) {
+					enqueueInbound(() => {
+						if (drag.position.x <= -99999) removeRemotePinDrag(drag.id);
+						else updateRemotePinDrag(drag);
+					});
+				}
+				return;
+			}
+			if (body.type === "selectionBox") {
+				const box = parseSelectionBoxMessage(body);
+				if (box) {
+					enqueueInbound(() => {
+						if (box.width <= 0 && box.height <= 0) removeRemoteSelectionBox(box.id);
+						else updateRemoteSelectionBox(box);
+					});
+				}
+				return;
+			}
 			if (body.type === "nodeExecute") {
 				enqueueInbound(() => {
 					const msg = parseNodeExecuteMessage(body);
@@ -380,71 +429,104 @@ export default function App() {
 				});
 				return;
 			}
-			if (body.type !== "project" || !("project" in body)) return;
-
-			const project = parseJsonWithContext(
-				"remote-editor: wire project",
-				serde.Project,
-				JSON.stringify(body.project),
-			);
-			enqueueInbound(async () => {
-				try {
-					await core.load((c) => deserializeProject(c, project));
-					await importInvocationLogFromProject(
-						(Array.isArray(body.nodeInvocations)
-							? body.nodeInvocations
-							: []) as NodeInvocationFileRow[],
-						"remote",
-					);
-					pkgs.applyHostMirrorPayloadToCore(core, body.hostMirror);
-				} finally {
+			if (body.type === "project" && "project" in body) {
+				const project = parseJsonWithContext(
+					"remote-editor: wire project",
+					serde.Project,
+					JSON.stringify(body.project),
+				);
+				enqueueInbound(async () => {
 					try {
-						sessionStorage.setItem(AUTH_STORAGE_KEY, passwordInput());
-						if (rememberMe()) {
-							localStorage.setItem(
-								REMEMBER_CREDS_KEY,
-								JSON.stringify({
-									username: usernameInput(),
-									password: passwordInput(),
-								}),
+						await core.load((c) => deserializeProject(c, project));
+						if (Array.isArray(body.nodeInvocations))
+							await importInvocationLogFromProject(
+								body.nodeInvocations as NodeInvocationFileRow[],
+								"remote",
 							);
+						if (body.hostMirror)
+							pkgs.applyHostMirrorPayloadToCore(core, body.hostMirror);
+					} finally {
+						try {
+							sessionStorage.setItem(AUTH_STORAGE_KEY, passwordInput());
+							if (rememberMe()) {
+								localStorage.setItem(
+									REMEMBER_CREDS_KEY,
+									JSON.stringify({
+										username: usernameInput(),
+										password: passwordInput(),
+									}),
+								);
+							}
+						} catch {
+							/* ignore */
 						}
-					} catch {
-						/* ignore */
+						setJoinPhase("editor");
+						setProjectReady(true);
+						reconnectState.startTime = 0;
+						reconnectState.attempts = 0;
+						/* Let Solid mount Interface + sync registerRemoteHistoryActions before later queued WS work. */
+						await new Promise<void>((r) => queueMicrotask(r));
 					}
-					setJoinPhase("editor");
-					/* Let Solid mount Interface + sync registerRemoteHistoryActions before later queued WS work. */
-					await new Promise<void>((r) => queueMicrotask(r));
-				}
-			});
+				});
+				return;
+			}
+
+			// Second message with metadata (invocations, host mirror) for snappier load.
+			if (body.type === "projectMetadata") {
+				enqueueInbound(async () => {
+					if (Array.isArray(body.nodeInvocations))
+						await importInvocationLogFromProject(
+							body.nodeInvocations as NodeInvocationFileRow[],
+							"remote",
+						);
+					if (body.hostMirror)
+						pkgs.applyHostMirrorPayloadToCore(core, body.hostMirror);
+					setProjectReady(true);
+				});
+				return;
+			}
 		});
 
 		const scheduleReconnect = () => {
-			if (!rememberMe()) return;
+			if (reconnectState.startTime === 0) reconnectState.startTime = Date.now();
+
+			const elapsed = Date.now() - reconnectState.startTime;
+			if (elapsed > reconnectState.maxTime) {
+				setJoinPhase("failed");
+				return;
+			}
+
+			const delay = Math.min(
+				1000 * Math.pow(2, reconnectState.attempts),
+				10_000,
+			);
+			reconnectState.attempts++;
+
+			setJoinPhase("reconnecting");
 			reconnectTimer = setTimeout(() => {
-				if (joinPhase() === "editor" || joinPhase() === "reconnecting") {
-					setJoinPhase("reconnecting");
-					startSession();
-				}
-			}, 3000);
+				startSession();
+				isReconnecting = true;
+			}, delay);
 		};
 
 		socket.addEventListener("close", () => {
 			clearRemoteRpc("Remote connection closed.");
-			if (joinPhase() === "connecting") {
+			if (joinPhase() === "connecting" && !isReconnecting) {
 				setAuthError((msg) => msg || "Connection closed before the host sent a project.");
 				setJoinPhase("form");
 			} else {
+				isReconnecting = false;
 				scheduleReconnect();
 			}
 		});
 
 		socket.addEventListener("error", () => {
 			clearRemoteRpc("WebSocket error.");
-			if (joinPhase() === "connecting") {
+			if (joinPhase() === "connecting" && !isReconnecting) {
 				setAuthError("Could not open WebSocket (wrong URL or host offline).");
 				setJoinPhase("form");
 			} else {
+				isReconnecting = false;
 				scheduleReconnect();
 			}
 		});
@@ -541,28 +623,57 @@ export default function App() {
 			<Show when={joinPhase() === "connecting" || joinPhase() === "reconnecting"}>
 				<div class="w-screen h-screen flex flex-col items-center justify-center text-neutral-300 gap-3">
 					<Show when={joinPhase() === "reconnecting"}>
+						<IconSvgSpinners90Ring class="size-10" />
 						<span>Connection lost. Reconnecting…</span>
+						<span class="text-xs text-neutral-500">
+							Retry {reconnectState.attempts}
+						</span>
 					</Show>
 					<Show when={joinPhase() === "connecting"}>
+						<IconSvgSpinners90Ring class="size-10" />
 						<span>Connecting…</span>
 					</Show>
-					<IconSvgSpinners90Ring class="size-10" />
+				</div>
+			</Show>
+
+			<Show when={joinPhase() === "failed"}>
+				<div class="w-screen h-screen flex flex-col items-center justify-center text-neutral-300 gap-4 p-6">
+					<span class="text-3xl">⚠</span>
+					<span class="text-lg font-medium">Connection lost</span>
+					<p class="text-sm text-neutral-500 max-w-sm text-center">
+						Could not reconnect to the host after 60 seconds. The host may
+						have gone offline or the network is unreachable.
+					</p>
+					<button
+						type="button"
+						class="rounded bg-white text-neutral-900 px-4 py-2 text-sm font-medium hover:bg-neutral-200"
+						onClick={() => setJoinPhase("form")}
+					>
+						Back to login
+					</button>
 				</div>
 			</Show>
 
 			<Show when={joinPhase() === "editor" && core.project}>
-				<PlatformContext.Provider value={remotePlatform}>
-					<Interface
-						core={core}
-						environment="browser"
-						broadcastHistoryCommit={broadcastHistoryToHost}
-						broadcastGraphPositionsLive={broadcastGraphPositionsToHost}
-						onGraphLivePointerSession={setGraphLiveFromLocal}
-						broadcastCursorPosition={broadcastCursorToHost}
-					/>
-					<ConnectionsDialog core={core} />
-					<ConfigDialog />
-				</PlatformContext.Provider>
+				<div class="relative w-screen h-screen">
+					<PlatformContext.Provider value={remotePlatform}>
+						<Interface
+							core={core}
+							environment="browser"
+							broadcastHistoryCommit={broadcastHistoryToHost}
+							broadcastGraphPositionsLive={broadcastGraphPositionsToHost}
+							onGraphLivePointerSession={setGraphLiveFromLocal}
+							broadcastCursorPosition={broadcastCursorToHost}
+						/>
+						<ConnectionsDialog core={core} />
+						<ConfigDialog />
+					</PlatformContext.Provider>
+					{projectReady() ? null : (
+						<div class="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/60">
+							<IconSvgSpinners90Ring class="size-10" />
+						</div>
+					)}
+				</div>
 			</Show>
 		</QueryClientProvider>
 	);

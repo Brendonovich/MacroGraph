@@ -4,6 +4,8 @@ import {
 	exportInvocationLogForGraphs,
 	parseGraphPositionsEphemeralMessage,
 	parseCursorMessage,
+	parsePinDragMessage,
+	parseSelectionBoxMessage,
 	runAsRemoteHistoryInbound,
 	stringifyGraphPositionsEphemeralWire,
 	stringifyCursorWire,
@@ -11,6 +13,10 @@ import {
 	stringifyRemoteHistoryWirePayload,
 	updateRemoteCursor,
 	removeRemoteCursor,
+	updateRemotePinDrag,
+	removeRemotePinDrag,
+	updateRemoteSelectionBox,
+	removeRemoteSelectionBox,
 	setUserList,
 	type RemoteHistoryWireItem,
 	type WireGraphPositionsEphemeral,
@@ -76,8 +82,9 @@ async function handleRemoteRpcRequest(opts: {
 	id: string;
 	method: string;
 	params: unknown;
+	workspaceKey: string;
 }) {
-	const { core, clientId, id, method, params } = opts;
+	const { core, clientId, id, method, params, workspaceKey } = opts;
 	const port = remoteHostSettings.port;
 
 	const reply = (payload: Record<string, unknown>) => {
@@ -127,6 +134,17 @@ async function handleRemoteRpcRequest(opts: {
 				eventData: p.eventData,
 			});
 			result = undefined;
+		} else if (method === "getNodeInvocations") {
+			const p = params as { graphId?: number; nodeId?: number };
+			if (typeof p.graphId !== "number" || typeof p.nodeId !== "number") {
+				throw new Error("Invalid getNodeInvocations params.");
+			}
+			const rows = await exportInvocationLogForGraphs(
+				[p.graphId],
+				workspaceKey,
+			).catch((): NodeInvocationFileRow[] => []);
+			const match = rows.find((r) => r.nodeId === p.nodeId);
+			result = { entries: match?.entries ?? [] };
 		} else {
 			throw new Error(`Unknown RPC method: ${method}`);
 		}
@@ -197,6 +215,26 @@ export function broadcastRemoteHostCursorPosition(payload: { graphId: number; po
 	]);
 }
 
+/** Broadcast host pin drag to all remote clients. */
+export function broadcastRemoteHostPinDrag(drag: import("@macrograph/interface").RemotePinDrag) {
+	if (!remoteHostSettings.enabled) return;
+	const port = remoteHostSettings.port;
+	void client.mutation([
+		"remoteHost.send",
+		{ port, client: null, data: JSON.stringify({ type: "pinDrag", ...drag, id: "host" }) },
+	]);
+}
+
+/** Broadcast host selection box to all remote clients. */
+export function broadcastRemoteHostSelectionBox(box: import("@macrograph/interface").RemoteSelectionBox) {
+	if (!remoteHostSettings.enabled) return;
+	const port = remoteHostSettings.port;
+	void client.mutation([
+		"remoteHost.send",
+		{ port, client: null, data: JSON.stringify({ type: "selectionBox", ...box, id: "host" }) },
+	]);
+}
+
 /** Broadcast committed editor actions from the host desktop to all remote clients. */
 export function broadcastRemoteHostHistoryActions(items: RemoteHistoryWireItem[]) {
 	if (!remoteHostSettings.enabled) return;
@@ -234,24 +272,33 @@ export function installRemoteHostBridge(opts: {
 		if (!enabled) return;
 
 		const sendSnapshot = (clientId: number | null) => {
+			// Send the project immediately so the remote client can start loading.
+			const project = serializeProject(opts.core.project);
+			void client.mutation([
+				"remoteHost.send",
+				{
+					port,
+					client: clientId,
+					data: JSON.stringify({ type: "project", project }),
+				},
+			]);
+			// Then collect async metadata (invocations, host mirror) and update.
 			void (async () => {
-				const nodeInvocations = await exportInvocationLogForGraphs(
-					opts.core.project.graphOrder,
-					opts.projectUrl() ?? "default",
-				).catch((): NodeInvocationFileRow[] => []);
-				const hostMirror = await collectHostMirrorPayload(opts.core);
-				const payload = JSON.stringify({
-					type: "project",
-					project: serializeProject(opts.core.project),
-					nodeInvocations,
-					hostMirror,
-				});
+				const [nodeInvocations, hostMirror] = await Promise.all([
+					exportInvocationLogForGraphs(
+						opts.core.project.graphOrder,
+						opts.projectUrl() ?? "default",
+					).catch((): NodeInvocationFileRow[] => []),
+					collectHostMirrorPayload(opts.core).catch(
+						(): HostMirrorPayload => ({ v: 2, credentials: [], twitchUsers: [], twitchPersisted: {}, slices: [] }),
+					),
+				]);
 				await client.mutation([
 					"remoteHost.send",
 					{
 						port,
 						client: clientId,
-						data: payload,
+						data: JSON.stringify({ type: "projectMetadata", project, nodeInvocations, hostMirror }),
 					},
 				]);
 			})();
@@ -302,13 +349,14 @@ export function installRemoteHostBridge(opts: {
 						typeof body.method === "string" &&
 						"params" in body
 					) {
-						void handleRemoteRpcRequest({
-							core: opts.core,
-							clientId,
-							id: body.id,
-							method: body.method,
-							params: body.params,
-						});
+					void handleRemoteRpcRequest({
+						core: opts.core,
+						clientId,
+						id: body.id,
+						method: body.method,
+						params: body.params,
+						workspaceKey: opts.projectUrl() ?? "default",
+					});
 					}
 					return;
 				}
@@ -373,6 +421,46 @@ export function installRemoteHostBridge(opts: {
 					if (cursorRelayRaf === null) {
 						cursorRelayRaf = requestAnimationFrame(flushCursorRelays);
 					}
+					return;
+				}
+
+				if (wireType === "pinDrag") {
+					const body = parsed as Record<string, unknown>;
+					const drag = parsePinDragMessage(body);
+					if (!drag) return;
+					const name = userNames.get(clientId) ?? `client-${clientId}`;
+					const relayDrag = { ...drag, id: name };
+					if (relayDrag.position.x <= -99999) removeRemotePinDrag(relayDrag.id);
+					else updateRemotePinDrag(relayDrag);
+					void client.mutation([
+						"remoteHost.send",
+						{
+							port,
+							client: null,
+							except_client: clientId,
+							data: JSON.stringify({ type: "pinDrag", ...relayDrag }),
+						},
+					]);
+					return;
+				}
+
+				if (wireType === "selectionBox") {
+					const body = parsed as Record<string, unknown>;
+					const box = parseSelectionBoxMessage(body);
+					if (!box) return;
+					const name = userNames.get(clientId) ?? `client-${clientId}`;
+					const relayBox = { ...box, id: name };
+					if (relayBox.width <= 0 && relayBox.height <= 0) removeRemoteSelectionBox(relayBox.id);
+					else updateRemoteSelectionBox(relayBox);
+					void client.mutation([
+						"remoteHost.send",
+						{
+							port,
+							client: null,
+							except_client: clientId,
+							data: JSON.stringify({ type: "selectionBox", ...relayBox }),
+						},
+					]);
 					return;
 				}
 

@@ -856,9 +856,6 @@ importers:
       tauri-plugin-kb-mouse:
         specifier: workspace:*
         version: link:../../crates/tauri-plugin-kb-mouse
-      tmi.js:
-        specifier: ^1.8.5
-        version: 1.8.5
       valibot:
         specifier: ^0.37.0
         version: 0.37.0(typescript@5.5.3)
@@ -881,9 +878,6 @@ importers:
       '@twurple/eventsub-base':
         specifier: ^7.1.0
         version: 7.1.0
-      '@types/tmi.js':
-        specifier: ^1.8.6
-        version: 1.8.6
       solid-js:
         specifier: ^1.9.5
         version: 1.9.5
@@ -954,9 +948,6 @@ importers:
       '@total-typescript/ts-reset':
         specifier: ^0.4.2
         version: 0.4.2
-      '@types/tmi.js':
-        specifier: ^1.8.6
-        version: 1.8.6
       safaridriver:
         specifier: ^0.0.5
         version: 0.0.5
@@ -5049,9 +5040,6 @@ packages:
 
   '@types/serve-static@1.15.7':
     resolution: {integrity: sha512-W8Ym+h8nhuRwaKPaDw34QUkwsGi6Rc4yYqvKFo5rm2FUEhCFbzVWrxXUxuKK8TASjWsysJY0nsmNCGhCOIsrOw==}
-
-  '@types/tmi.js@1.8.6':
-    resolution: {integrity: sha512-LVzNK7AxTMyh9qHLanAQR1o0I9XzfbIcXk85cx85igmCJHHO1Sm71sdhQ8Mj1WmRGzynPIoCXx6mVaFynWbsQw==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -9305,10 +9293,6 @@ packages:
   tinyspy@3.0.0:
     resolution: {integrity: sha512-q5nmENpTHgiPVd1cJDDc9cVoYN5x4vCvwT3FMilvKPKneCBZAxn2YWQjDF0UMcE9k0Cay1gBiDfTMU0g+mPMQA==}
     engines: {node: '>=14.0.0'}
-
-  tmi.js@1.8.5:
-    resolution: {integrity: sha512-A9qrydfe1e0VWM9MViVhhxVgvLpnk7pFShVUWePsSTtoi+A1X+Zjdoa7OJd7/YsgHXGj3GkNEvnWop/1WwZuew==}
-    engines: {node: '>=10.0.0'}
 
   to-fast-properties@2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
@@ -14348,8 +14332,6 @@ snapshots:
       '@types/http-errors': 2.0.4
       '@types/node': 20.14.11
       '@types/send': 0.17.4
-
-  '@types/tmi.js@1.8.6': {}
 
   '@types/unist@2.0.11': {}
 
@@ -19533,15 +19515,6 @@ snapshots:
   tinyspy@2.2.1: {}
 
   tinyspy@3.0.0: {}
-
-  tmi.js@1.8.5:
-    dependencies:
-      node-fetch: 2.7.0
-      ws: 8.16.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
 
   to-fast-properties@2.0.0: {}
 

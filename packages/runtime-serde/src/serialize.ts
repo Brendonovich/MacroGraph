@@ -37,6 +37,7 @@ export function serializeProject(
 			serializeResources(type, entry),
 		),
 		variables: project.variables.map(serializeVariable),
+		queues: project.queues.map(serializeQueue),
 	};
 }
 
@@ -201,6 +202,17 @@ export function serializeVariable(
 		name: v.name,
 		value: serializeValue(v.value, v.type),
 		type: v.type.serialize(),
+	};
+}
+
+export function serializeQueue(
+	q: runtime.Queue,
+): v.InferInput<typeof serde.Queue> {
+	return {
+		id: q.id,
+		name: q.name,
+		value: q.value.map((item) => serializeValue(item, q.itemType)),
+		type: q.itemType.serialize(),
 	};
 }
 

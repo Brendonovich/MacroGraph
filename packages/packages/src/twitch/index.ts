@@ -1,6 +1,5 @@
 import { type Core, Package } from "@macrograph/runtime";
 
-import * as chat from "./chat";
 import * as eventsub from "./eventSub";
 import * as helix from "./helix";
 
@@ -23,7 +22,6 @@ export function pkg(core: Core) {
 
 	helix.register(pkg, ctx.helixClient, types);
 	eventsub.register(pkg, ctx, types);
-	chat.register(pkg, ctx);
 
 	pkg.registerResourceType(TwitchAccount);
 	pkg.registerResourceType(TwitchChannel);

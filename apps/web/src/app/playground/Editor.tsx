@@ -92,6 +92,7 @@ const core = new Core({
 	pkgs.openai.pkg,
 	pkgs.speakerbot.pkg,
 	pkgs.variables.pkg,
+	pkgs.queue.pkg,
 	pkgs.customEvents.pkg,
 	pkgs.midi.pkg,
 	pkgs.vtubeStudio.pkg,

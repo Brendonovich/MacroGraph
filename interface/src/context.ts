@@ -29,8 +29,11 @@ import {
 } from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
 import {
+	getFollowUserId,
+	getRemoteCursors,
 	isRemoteHistoryInboundApply,
 	registerRemoteHistoryActions,
+	setOnCursorUpdate,
 	type RemoteHistoryWireItem,
 	type WireGraphPositionsEphemeral,
 } from "./remoteHistorySync";
@@ -322,6 +325,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 							...serialized,
 							graphs: serialized.graphs.map((g) => g.id),
 							variables: serialized.variables?.map((v) => v.id),
+							queues: serialized.queues?.map((q) => q.id),
 							nodeInvocations,
 						}),
 					);
@@ -337,6 +341,13 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 						localStorage.setItem(
 							`project-variable-${variable.id}`,
 							JSON.stringify(variable),
+						);
+					}
+
+					for (const queue of serialized.queues ?? []) {
+						localStorage.setItem(
+							`project-queue-${queue.id}`,
+							JSON.stringify(queue),
 						);
 					}
 
@@ -424,6 +435,71 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			registerRemoteHistoryActions(null);
 		});
 
+		// Follow a user's cursor: auto-switch to their graph even when no graph tab is open.
+		// (Camera panning within the current graph is handled per-Graph in Graph.tsx.)
+		const lastFollowedGraph = { id: -1 };
+		// Effect: opens the graph when follow is activated and cursors already exist.
+		createEffect(() => {
+			const followId = getFollowUserId();
+			if (!followId) {
+				lastFollowedGraph.id = -1;
+				return;
+			}
+
+			const cursors = getRemoteCursors();
+			const cursor = cursors.find((c) => c.id === followId);
+			if (!cursor || cursor.graphId === lastFollowedGraph.id) return;
+
+			const focusedGroup = mosaicState.groups[mosaicState.focusedIndex];
+			if (focusedGroup?.tabs.some((t) => t.id === cursor.graphId)) return;
+
+			const graph = props.core.project.graphs.get(cursor.graphId);
+			if (!graph) return;
+
+			lastFollowedGraph.id = cursor.graphId;
+			selectGraph(graph);
+		});
+		// Callback: opens the graph on each new cursor update while following.
+		setOnCursorUpdate((cursor) => {
+			const followId = getFollowUserId();
+			if (!followId || cursor.id !== followId) return;
+			if (cursor.graphId === lastFollowedGraph.id) return;
+
+			const focusedGroup = mosaicState.groups[mosaicState.focusedIndex];
+			if (focusedGroup?.tabs.some((t) => t.id === cursor.graphId)) return;
+
+			const graph = props.core.project.graphs.get(cursor.graphId);
+			if (!graph) return;
+
+			lastFollowedGraph.id = cursor.graphId;
+			selectGraph(graph);
+		});
+		onCleanup(() => setOnCursorUpdate(null));
+
+		function selectGraph(graph: Graph) {
+			const graphIndex = mosaicState.groups[
+				mosaicState.focusedIndex
+			]?.tabs.findIndex((tab) => tab.id === graph.id);
+
+			if (graphIndex === undefined || graphIndex < 0) {
+				setMosaicState(
+					"groups",
+					mosaicState.focusedIndex,
+					produce((t) => {
+						t.selectedIndex = t.tabs.length;
+						t.tabs.push(makeGraphState(graph));
+					}),
+				);
+			} else {
+				setMosaicState(
+					"groups",
+					mosaicState.focusedIndex,
+					"selectedIndex",
+					graphIndex,
+				);
+			}
+		}
+
 		return {
 			...createActionHistory(histActions, save, {
 				onCommit(items) {
@@ -445,43 +521,12 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				return props.core;
 			},
 			save,
-			itemSizes: new WeakMap<Node | CommentBox, Size>(),
+			itemSizes: new ReactiveWeakMap<Node | CommentBox, Size>(),
 			pinPositions: new ReactiveWeakMap<Pin, XY>(),
 			get environment() {
 				return props.environment;
 			},
-			selectGraph(graph: Graph) {
-				const graphIndex = mosaicState.groups[
-					mosaicState.focusedIndex
-				]?.tabs.findIndex((tab) => tab.id === graph.id);
-
-				if (graphIndex === undefined || graphIndex < 0) {
-					setMosaicState(
-						"groups",
-						mosaicState.focusedIndex,
-						produce((t) => {
-							t.selectedIndex = t.tabs.length;
-							t.tabs.push(makeGraphState(graph));
-						}),
-					);
-				} else {
-					setMosaicState(
-						"groups",
-						mosaicState.focusedIndex,
-						"selectedIndex",
-						graphIndex,
-					);
-				}
-
-				// const currentIndex = state.graphStates.findIndex(
-				//   (s) => s.id === graph.id,
-				// );
-
-				// if (currentIndex === -1) {
-				//   state.setGraphStates((s) => [...s, makeGraphState(graph)]);
-				//   state.setCurrentGraphId(graph.id);
-				// } else state.setCurrentGraphId(graph.id);
-			},
+			selectGraph,
 			graphBounds,
 			setGraphBounds,
 			invocationWorkspaceKey: workspaceKey,
@@ -497,6 +542,14 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 					nodeId,
 					invocationHydrated,
 				);
+			},
+			setNodeInvocationEntries(
+				graphId: number,
+				nodeId: number,
+				entries: StoredNodeInvocation[],
+			) {
+				const k = invocationRowKey(workspaceKey(), graphId, nodeId);
+				setNodeInvocationLogByKey(k, entries);
 			},
 		};
 	},

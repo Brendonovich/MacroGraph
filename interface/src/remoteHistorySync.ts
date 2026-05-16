@@ -199,13 +199,73 @@ export function getRemoteCursors(): RemoteCursor[] {
 export function updateRemoteCursor(cursor: RemoteCursor) {
 	cursorMap.set(cursor.id, cursor);
 	setCursorVersion((v) => v + 1);
+	onCursorUpdate?.(cursor);
 }
 
 export function removeRemoteCursor(id: string) {
 	if (cursorMap.delete(id)) setCursorVersion((v) => v + 1);
 }
 
-// Module-level cursor broadcast function registered by host/remote editors
+// Remote pin drag state — ephemeral wire preview shown on other clients.
+export type RemotePinDrag = {
+	id: string;
+	graphId: number;
+	pinNodeId: number;
+	pinId: string;
+	isOutput: boolean;
+	position: { x: number; y: number };
+};
+
+const pinDragMap = new Map<string, RemotePinDrag>();
+const [pinDragVersion, setPinDragVersion] = /*@once*/ createRoot(() => createSignal(0));
+
+export function getRemotePinDrags(): RemotePinDrag[] {
+	pinDragVersion();
+	return [...pinDragMap.values()];
+}
+
+export function updateRemotePinDrag(drag: RemotePinDrag) {
+	pinDragMap.set(drag.id, drag);
+	setPinDragVersion((v) => v + 1);
+}
+
+export function removeRemotePinDrag(id: string) {
+	if (pinDragMap.delete(id)) setPinDragVersion((v) => v + 1);
+}
+
+// Remote selection box state — drag-select rectangle shown on other clients.
+export type RemoteSelectionBox = {
+	id: string;
+	graphId: number;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+};
+
+const selectionBoxMap = new Map<string, RemoteSelectionBox>();
+const [selectionBoxVersion, setSelectionBoxVersion] = /*@once*/ createRoot(() => createSignal(0));
+
+export function getRemoteSelectionBoxes(): RemoteSelectionBox[] {
+	selectionBoxVersion();
+	return [...selectionBoxMap.values()];
+}
+
+export function updateRemoteSelectionBox(box: RemoteSelectionBox) {
+	selectionBoxMap.set(box.id, box);
+	setSelectionBoxVersion((v) => v + 1);
+}
+
+export function removeRemoteSelectionBox(id: string) {
+	if (selectionBoxMap.delete(id)) setSelectionBoxVersion((v) => v + 1);
+}
+
+let onCursorUpdate: ((cursor: RemoteCursor) => void) | null = null;
+export function setOnCursorUpdate(fn: typeof onCursorUpdate) {
+	onCursorUpdate = fn;
+}
+
+// Broadcast callbacks registered by host/remote editors
 let cursorBroadcastFn: ((pos: { graphId: number; position: { x: number; y: number } }) => void) | null = null;
 export function setCursorBroadcastFn(fn: typeof cursorBroadcastFn) {
 	cursorBroadcastFn = fn;
@@ -213,6 +273,24 @@ export function setCursorBroadcastFn(fn: typeof cursorBroadcastFn) {
 
 export function broadcastCursorPosition(pos: { graphId: number; position: { x: number; y: number } }) {
 	cursorBroadcastFn?.(pos);
+}
+
+let pinDragBroadcastFn: ((drag: RemotePinDrag) => void) | null = null;
+export function setPinDragBroadcastFn(fn: typeof pinDragBroadcastFn) {
+	pinDragBroadcastFn = fn;
+}
+
+export function broadcastPinDrag(drag: RemotePinDrag) {
+	pinDragBroadcastFn?.(drag);
+}
+
+let selectionBoxBroadcastFn: ((box: RemoteSelectionBox) => void) | null = null;
+export function setSelectionBoxBroadcastFn(fn: typeof selectionBoxBroadcastFn) {
+	selectionBoxBroadcastFn = fn;
+}
+
+export function broadcastSelectionBox(box: RemoteSelectionBox) {
+	selectionBoxBroadcastFn?.(box);
 }
 
 export function stringifyCursorWire(payload: WireCursorPosition): string {
@@ -273,4 +351,47 @@ export function parseGraphPositionsEphemeralMessage(
 		});
 	}
 	return { graphId, items };
+}
+
+export function stringifyPinDragWire(payload: RemotePinDrag): string {
+	return JSON.stringify(
+		toWireJsonSerializable({ type: "pinDrag", ...payload }),
+	);
+}
+
+export function parsePinDragMessage(
+	body: Record<string, unknown>,
+): RemotePinDrag | null {
+	if (body.type !== "pinDrag") return null;
+	const id = typeof body.id === "string" ? body.id : null;
+	if (!id) return null;
+	const graphId = parseWireNumber(body.graphId);
+	const pinNodeId = parseWireNumber(body.pinNodeId);
+	const pinId = typeof body.pinId === "string" ? body.pinId : null;
+	const isOutput = body.isOutput === true;
+	const position = parseWirePosition(body.position);
+	if (graphId == null || pinNodeId == null || !pinId || !position) return null;
+	return { id, graphId, pinNodeId, pinId, isOutput, position };
+}
+
+export function stringifySelectionBoxWire(payload: RemoteSelectionBox): string {
+	return JSON.stringify(
+		toWireJsonSerializable({ type: "selectionBox", ...payload }),
+	);
+}
+
+export function parseSelectionBoxMessage(
+	body: Record<string, unknown>,
+): RemoteSelectionBox | null {
+	if (body.type !== "selectionBox") return null;
+	const id = typeof body.id === "string" ? body.id : null;
+	if (!id) return null;
+	const graphId = parseWireNumber(body.graphId);
+	const x = parseWireNumber(body.x);
+	const y = parseWireNumber(body.y);
+	const width = parseWireNumber(body.width);
+	const height = parseWireNumber(body.height);
+	if (graphId == null || x == null || y == null || width == null || height == null)
+		return null;
+	return { id, graphId, x, y, width, height };
 }

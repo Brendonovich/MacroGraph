@@ -30,6 +30,7 @@ export * as utils from "./utils";
 export * as vtubeStudio from "./vtubeStudio";
 export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
+export * as queue from "./queue";
 export * as variables from "./variables";
 export * as voicemod from "./voicemod";
 export * as functions from "./functions";

@@ -136,7 +136,7 @@ export async function collectHostMirrorPayload(core: Core): Promise<HostMirrorPa
 		credentials,
 		twitchUsers,
 		twitchPersisted: Object.fromEntries(
-			Object.entries(persisted[0]).filter(
+			Object.entries(persisted?.[0] ?? {}).filter(
 				(e): e is [string, { eventsub?: boolean; chat?: boolean }] =>
 					e[1] != null && typeof e[1] === "object",
 			),
@@ -174,8 +174,8 @@ export function applyHostMirrorPayloadToCore(core: Core, raw: unknown) {
 	core.setRemoteHostMirrorCredentialSummaries(payload.credentials);
 
 	const pkg = twitchPkg(core);
-	if (pkg) {
-		const { auth, persisted } = pkg.ctx!;
+	if (pkg?.ctx) {
+		const { auth, persisted } = pkg.ctx;
 		const [, setPersisted] = persisted;
 
 		batch(() => {

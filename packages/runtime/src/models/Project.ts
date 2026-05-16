@@ -12,6 +12,7 @@ import { CustomStruct } from "./CustomStruct";
 import { Graph } from "./Graph";
 import { GraphFunction, type FunctionArgs } from "./Function";
 import type { ResourceType } from "./Package";
+import { Queue, type QueueArgs } from "./Queue";
 import { Variable, type VariableArgs } from "./Variable";
 
 export interface ProjectArgs {
@@ -42,6 +43,7 @@ export class Project {
 	functions = new ReactiveMap<number, GraphFunction>();
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
+	queues: Array<Queue> = [];
 	name = "New Project";
 	events = createEventBus<ProjectEvent>();
 
@@ -258,6 +260,29 @@ export class Project {
 		const variables = this.variables.splice(index, 1);
 		for (const v of variables) {
 			v.dispose();
+		}
+	}
+
+	createQueue(args: Omit<QueueArgs, "id" | "owner"> & { id?: number }) {
+		const id = args.id ?? this.generateId();
+
+		this.queues.push(new Queue({ ...args, id, owner: this }));
+
+		return id;
+	}
+
+	setQueueValue(id: number, value: any[]) {
+		const queue = this.queues.find((q) => q.id === id);
+		if (queue) queue.value = value;
+	}
+
+	removeQueue(id: number) {
+		const index = this.queues.findIndex((q) => q.id === id);
+		if (index === -1) return;
+
+		const queues = this.queues.splice(index, 1);
+		for (const q of queues) {
+			q.dispose();
 		}
 	}
 

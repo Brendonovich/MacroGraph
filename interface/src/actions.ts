@@ -12,6 +12,7 @@ import {
 	type InputPin,
 	type NodeSchema,
 	type OutputPin,
+	type Queue,
 	type ResourceType,
 	ScopeInput,
 	ScopeOutput,
@@ -33,6 +34,7 @@ import {
 	deserializeField,
 	deserializeGraph,
 	deserializeNode,
+	deserializeQueue,
 	deserializeVariable,
 	parseWithContext,
 	serde,
@@ -46,6 +48,7 @@ import {
 	serializeField,
 	serializeGraph,
 	serializeNode,
+	serializeQueue,
 	serializeVariable,
 } from "@macrograph/runtime-serde";
 import { type PrimitiveType, deserializeType, Field, t } from "@macrograph/typesystem";
@@ -3171,6 +3174,141 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
 					graph.variables.splice(entry.index, 0, variable);
 				}
+			},
+		}),
+		createQueue: historyAction({
+			prepare() {
+				return { id: core.project.generateId() };
+			},
+			perform(entry) {
+				core.project.createQueue({
+					id: entry.id,
+					name: `Queue ${core.project.queues.length + 1}`,
+					value: [],
+					itemType: t.string(),
+				});
+			},
+			rewind(entry) {
+				core.project.removeQueue(entry.id);
+			},
+		}),
+		setQueueName: historyAction({
+			prepare(input: { queueId: number; name: string }) {
+				const queue = core.project.queues.find(
+					(q) => q.id === input.queueId,
+				);
+				if (!queue) return;
+
+				return { ...input, prev: queue.name };
+			},
+			perform(entry) {
+				const queue = core.project.queues.find(
+					(q) => q.id === entry.queueId,
+				);
+				if (!queue) return;
+
+				queue.name = entry.name;
+			},
+			rewind(entry) {
+				const queue = core.project.queues.find(
+					(q) => q.id === entry.queueId,
+				);
+				if (!queue) return;
+
+				queue.name = entry.prev;
+			},
+		}),
+		setQueueValue: historyAction({
+			prepare(input: { queueId: number; value: any[] }) {
+				const queue = core.project.queues.find(
+					(q) => q.id === input.queueId,
+				);
+				if (!queue) return;
+
+				return { ...input, prev: [...queue.value] };
+			},
+			perform(entry) {
+				const queue = core.project.queues.find(
+					(q) => q.id === entry.queueId,
+				);
+				if (!queue) return;
+
+				queue.value = entry.value;
+			},
+			rewind(entry) {
+				const queue = core.project.queues.find(
+					(q) => q.id === entry.queueId,
+				);
+				if (!queue) return;
+
+				queue.value = entry.prev;
+			},
+		}),
+		setQueueItemType: historyAction({
+			prepare(input: { queueId: number; type: t.Any }) {
+				const queue = core.project.queues.find(
+					(q) => q.id === input.queueId,
+				);
+				if (!queue) return;
+
+				return {
+					...input,
+					type: input.type.serialize(),
+					prev: queue.itemType.serialize(),
+					prevValue: [...queue.value],
+				};
+			},
+			perform(entry) {
+				const queue = core.project.queues.find(
+					(q) => q.id === entry.queueId,
+				);
+				if (!queue) return;
+
+				const type = deserializeType(
+					entry.type,
+					core.project.getType.bind(core.project),
+				);
+				queue.itemType = type;
+				queue.value = [];
+			},
+			rewind(entry) {
+				const queue = core.project.queues.find(
+					(q) => q.id === entry.queueId,
+				);
+				if (!queue) return;
+
+				queue.itemType = deserializeType(
+					entry.prev,
+					core.project.getType.bind(core.project),
+				);
+				queue.value = entry.prevValue;
+			},
+		}),
+		deleteQueue: historyAction({
+			prepare(input: { queueId: number }) {
+				const index = core.project.queues.findIndex(
+					(q) => q.id === input.queueId,
+				);
+				if (index === -1) return;
+
+				const queue = core.project.queues[index]!;
+
+				return { ...input, index, data: serializeQueue(queue) };
+			},
+			perform(entry) {
+				core.project.removeQueue(entry.queueId);
+			},
+			rewind(entry) {
+				const queue = deserializeQueue(
+					parseWithContext(
+						"actions history deleteQueue rewind (serde.Queue)",
+						serde.Queue,
+						entry.data,
+					),
+					core.project,
+				);
+
+				core.project.queues.splice(entry.index, 0, queue);
 			},
 		}),
 		createResource: historyAction({

@@ -1,6 +1,8 @@
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
+const runningWhileLoops = new WeakMap();
+
 export function pkg() {
 	const pkg = new Package({
 		name: "Logic",
@@ -310,6 +312,72 @@ export function pkg() {
 			}
 
 			await ctx.exec(io.completed);
+		},
+	});
+
+	pkg.createSchema({
+		name: "While",
+		type: "base",
+		properties: {
+			preventConcurrent: {
+				name: "Prevent Concurrent Execution",
+				type: t.bool(),
+				default: true,
+			},
+		},
+		createIO({ io, ctx, properties }) {
+			const preventConcurrent =
+				ctx.getProperty(properties.preventConcurrent) ?? true;
+
+			const outputs: any = {
+				exec: io.execInput({
+					id: "exec",
+				}),
+				condition: io.dataInput({
+					id: "condition",
+					name: "Condition",
+					type: t.bool(),
+				}),
+				body: io.scopeOutput({
+					id: "body",
+					name: "Loop Body",
+					scope: (s) => {},
+				}),
+				completed: io.execOutput({
+					id: "completed",
+					name: "Completed",
+				}),
+			};
+
+			if (preventConcurrent) {
+				outputs.alreadyRunning = io.execOutput({
+					id: "alreadyRunning",
+					name: "Already Running",
+				});
+			}
+
+			return outputs;
+		},
+		async run({ ctx, io, properties }) {
+			const node = io.exec.node;
+
+			if (ctx.getProperty(properties.preventConcurrent)) {
+				if (runningWhileLoops.has(node)) {
+					if (io.alreadyRunning) await ctx.exec(io.alreadyRunning);
+					return;
+				}
+				runningWhileLoops.set(node, true);
+			}
+
+			try {
+				while (ctx.getInput(io.condition)) {
+					await ctx.execScope(io.body, {});
+				}
+
+				await ctx.exec(io.completed);
+			} finally {
+				if (runningWhileLoops.has(node)) runningWhileLoops.delete(node);
+			}
 		},
 	});
 

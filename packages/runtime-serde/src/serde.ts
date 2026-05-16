@@ -76,6 +76,14 @@ export const Variable = v.object({
 });
 export type Variable = v.InferOutput<typeof Variable>;
 
+export const Queue = v.object({
+	id: v.number(),
+	name: v.string(),
+	value: v.array(v.any()),
+	type: Type,
+});
+export type Queue = v.InferOutput<typeof Queue>;
+
 export const Field = v.object({
 	id: v.pipe(v.union([v.string(), v.number()]), v.transform(String)),
 	name: v.optional(v.string()),
@@ -182,7 +190,7 @@ export const Node = v.object({
 	properties: v.optional(
 		v.record(
 			v.string(),
-			v.union([v.string(), v.number(), v.object({ default: v.literal(true) })]),
+			v.union([v.string(), v.number(), v.boolean(), v.object({ default: v.literal(true) })]),
 		),
 		{},
 	),
@@ -244,6 +252,7 @@ export const Project = v.object({
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
 	variables: v.optional(v.array(Variable), []),
+	queues: v.optional(v.array(Queue), []),
 	nodeInvocations: v.optional(v.array(NodeInvocationFileRow), []),
 });
 export type Project = v.InferOutput<typeof Project>;
@@ -263,6 +272,8 @@ export const ProjectRoot = v.object({
 	resources: v.optional(v.array(Resource), []),
 	/** Sharded save: IDs only; bodies live under `project-variable-${id}` in localStorage. */
 	variables: v.optional(v.array(IntID), []),
+	/** Sharded save: IDs only; bodies live under `project-queue-${id}` in localStorage. */
+	queues: v.optional(v.array(IntID), []),
 	nodeInvocations: v.optional(v.array(NodeInvocationFileRow), []),
 });
 export type ProjectRoot = v.InferOutput<typeof ProjectRoot>;

@@ -12,6 +12,7 @@ import {
 	createEventListener,
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
+import { createMousePosition } from "@solid-primitives/mouse";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
 import * as Solid from "solid-js";
 import { createStore } from "solid-js/store";
@@ -30,12 +31,13 @@ import {
 } from "./Context";
 import { Node } from "./Node";
 import { GRID_SIZE } from "./util";
-import { getRemoteCursors, broadcastCursorPosition, getFollowUserId } from "../../remoteHistorySync";
+import { getRemoteCursors, broadcastCursorPosition, getFollowUserId, getRemotePinDrags, getRemoteSelectionBoxes, broadcastPinDrag, broadcastSelectionBox } from "../../remoteHistorySync";
 
 type PanState = "none" | "waiting" | "active";
 
 const MAX_ZOOM_IN = 2.5;
 const MAX_ZOOM_OUT = 5;
+const ZOOM_STEP = 1.05;
 
 interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphState;
@@ -66,6 +68,8 @@ export const Graph = (props: Props) => {
 	});
 
 	const cursorList = Solid.createMemo(() => getRemoteCursors());
+	const remotePinDragList = Solid.createMemo(() => getRemotePinDrags());
+	const remoteSelectionBoxList = Solid.createMemo(() => getRemoteSelectionBoxes());
 
 	createResizeObserver(ref, (bounds) => {
 		const value = {
@@ -98,7 +102,10 @@ export const Graph = (props: Props) => {
 
 		props.onScaleChange(
 			Math.min(
-				Math.max(1 / MAX_ZOOM_OUT, props.state.scale + delta / 20),
+				Math.max(
+					1 / MAX_ZOOM_OUT,
+					props.state.scale * Math.pow(ZOOM_STEP, delta),
+				),
 				MAX_ZOOM_IN,
 			),
 		);
@@ -354,6 +361,15 @@ export const Graph = (props: Props) => {
 				pointerup: (e) => {
 					dispose();
 
+					broadcastSelectionBox({
+						id: "",
+						graphId: model().id,
+						x: 0,
+						y: 0,
+						width: 0,
+						height: 0,
+					});
+
 					if (!didMove) {
 						if (prevSelection.length !== 0)
 							interfaceCtx.execute("setGraphSelection", {
@@ -393,6 +409,15 @@ export const Graph = (props: Props) => {
 						{ graphId: model().id, selection: items },
 						{ ephemeral: true },
 					);
+
+					broadcastSelectionBox({
+						id: "",
+						graphId: model().id,
+						x: rect.x,
+						y: rect.y,
+						width: rect.width,
+						height: rect.height,
+					});
 				},
 			});
 		});
@@ -450,6 +475,44 @@ export const Graph = (props: Props) => {
 			broadcastCursorPosition(payload);
 		});
 	};
+
+		// Broadcast pin drag state to remote clients (RAF-batched)
+	const mousePos = createMousePosition();
+	const pinDragRaf = { current: 0 as unknown as ReturnType<typeof requestAnimationFrame> | null };
+	Solid.createEffect(() => {
+		const st = interfaceCtx.state;
+		if (st.status !== "pinDragMode" || st.state.status !== "draggingPin") {
+			if (pinDragRaf.current) cancelAnimationFrame(pinDragRaf.current);
+			pinDragRaf.current = requestAnimationFrame(() => {
+				pinDragRaf.current = null;
+				broadcastPinDrag({
+					id: "",
+					graphId: model().id,
+					pinNodeId: 0,
+					pinId: "",
+					isOutput: false,
+					position: { x: -99999, y: -99999 },
+				});
+			});
+			return;
+		}
+
+		const pin = st.pin;
+		const graphSpace = ctx.toGraphSpace({ x: mousePos.x, y: mousePos.y });
+
+		if (pinDragRaf.current != null) cancelAnimationFrame(pinDragRaf.current);
+		pinDragRaf.current = requestAnimationFrame(() => {
+			pinDragRaf.current = null;
+			broadcastPinDrag({
+				id: "",
+				graphId: model().id,
+				pinNodeId: pin.node.id,
+				pinId: pin.id,
+				isOutput: pinIsOutput(pin),
+				position: graphSpace,
+			});
+		});
+	});
 
 	return (
 		<GraphContextProvider value={ctx}>
@@ -814,6 +877,18 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.Show>
+						{remoteSelectionBoxList()
+							.filter((b) => b.graphId === model().id && b.width > 0 && b.height > 0)
+							.map((box) => (
+								<div
+									class="absolute pointer-events-none z-40 bg-blue-500/10 border-blue-400 border border-dashed rounded"
+									style={{
+										transform: `translate(${box.x}px, ${box.y}px)`,
+										width: `${box.width}px`,
+										height: `${box.height}px`,
+									}}
+								/>
+							))}
 						{cursorList()
 							.filter((c) => c.graphId === model().id && c.position.x > -9999)
 							.map((cursor) => (

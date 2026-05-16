@@ -64,7 +64,7 @@ export {
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
 } from "./nodeInvocationLog";
-export type { RemoteHistoryWireItem, WireGraphPositionsEphemeral, RemoteCursor } from "./remoteHistorySync";
+export type { RemoteHistoryWireItem, WireGraphPositionsEphemeral, RemoteCursor, RemotePinDrag, RemoteSelectionBox } from "./remoteHistorySync";
 export {
 	applyRemoteHistoryItems,
 	applySetGraphItemPositionsPerform,
@@ -85,6 +85,18 @@ export {
 	setUserList,
 	getFollowUserId,
 	setFollowUserId,
+	getRemotePinDrags,
+	updateRemotePinDrag,
+	removeRemotePinDrag,
+	getRemoteSelectionBoxes,
+	updateRemoteSelectionBox,
+	removeRemoteSelectionBox,
+	parsePinDragMessage,
+	parseSelectionBoxMessage,
+	broadcastPinDrag,
+	broadcastSelectionBox,
+	setPinDragBroadcastFn,
+	setSelectionBoxBroadcastFn,
 } from "./remoteHistorySync";
 
 import type { RemoteHistoryWireItem, WireGraphPositionsEphemeral } from "./remoteHistorySync";

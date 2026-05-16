@@ -93,11 +93,25 @@ export function NodeInfo(props: { node: Node }) {
 					props.node.graph.id,
 					props.node.id,
 				] as const,
-			() => {
-				void ctx.hydrateNodeInvocationLog(
-					props.node.graph.id,
-					props.node.id,
-				);
+			([, graphId, nodeId]) => {
+				void ctx.hydrateNodeInvocationLog(graphId, nodeId);
+
+				if (props.node.graph.project.core.remoteShell) {
+					remoteHostRpcRequest({
+						method: "getNodeInvocations",
+						params: { graphId, nodeId },
+					})
+						.then((result) => {
+							ctx.setNodeInvocationEntries(
+								graphId,
+								nodeId,
+								(result as { entries: StoredNodeInvocation[] }).entries,
+							);
+						})
+						.catch((e) =>
+							console.error("Failed to fetch node invocations", e),
+						);
+				}
 			},
 		),
 	);

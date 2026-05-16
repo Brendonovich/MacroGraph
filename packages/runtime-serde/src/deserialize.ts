@@ -111,6 +111,8 @@ export async function deserializeProject(
 			deserializeVariable(v, project),
 		);
 
+		project.queues = data.queues.map((q) => deserializeQueue(q, project));
+
 		project.graphOrder = data.graphs.map((g) => g.id);
 	});
 
@@ -275,6 +277,21 @@ export function deserializeVariable(
 		name: data.name,
 		value: deserializeValue(data.value, type),
 		type,
+		owner,
+	});
+}
+
+export function deserializeQueue(
+	data: serde.Queue,
+	owner: runtime.Project,
+): runtime.Queue {
+	const type = deserializeType(data.type, owner.getType.bind(owner));
+
+	return new runtime.Queue({
+		id: data.id,
+		name: data.name,
+		value: data.value.map((item: any) => deserializeValue(item, type)),
+		itemType: type,
 		owner,
 	});
 }

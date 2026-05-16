@@ -5,6 +5,8 @@ import {
 	PlatformContext,
 	importInvocationLogFromProject,
 	setCursorBroadcastFn,
+	setPinDragBroadcastFn,
+	setSelectionBoxBroadcastFn,
 	type WireGraphPositionsEphemeral,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
@@ -24,6 +26,8 @@ import {
 	broadcastRemoteHostGraphPositionsLive,
 	broadcastRemoteHostHistoryActions,
 	broadcastRemoteHostCursorPosition,
+	broadcastRemoteHostPinDrag,
+	broadcastRemoteHostSelectionBox,
 	installRemoteHostBridge,
 	setHostGraphLivePointerSession,
 } from "./remoteHostBridge";
@@ -74,6 +78,7 @@ const platform = createPlatform({
   pkgs.openai.pkg,
   () => pkgs.websocket.pkg({ outboundWs: outboundWsBridge }),
   pkgs.variables.pkg,
+  pkgs.queue.pkg,
   pkgs.customEvents.pkg,
   pkgs.speakerbot.pkg,
   () => pkgs.websocketServer.pkg(wsProvider),
@@ -92,6 +97,8 @@ export default function Editor() {
    *  tear down `remoteHost.server` and reconnect every remote client (full `project` snapshot). */
   onMount(() => {
     setCursorBroadcastFn(broadcastRemoteHostCursorPosition);
+    setPinDragBroadcastFn(broadcastRemoteHostPinDrag);
+    setSelectionBoxBroadcastFn(broadcastRemoteHostSelectionBox);
     installRemoteHostBridge({ core, projectUrl });
 
     const savedProject = localStorage.getItem("project");
@@ -147,10 +154,24 @@ export default function Editor() {
         variables.push(variable);
       }
 
+      const queues: serde.Queue[] = [];
+
+      for (const queueId of serializedProjectRoot.queues ?? []) {
+        const data = localStorage.getItem(`project-queue-${queueId}`);
+        if (!data) throw new Error(`Queue ${queueId} not found`);
+        const queue = parseJsonWithContext(
+          `apps/desktop Editor onMount: localStorage key project-queue-${queueId}`,
+          serde.Queue,
+          data,
+        );
+        queues.push(queue);
+      }
+
       const merged = {
         ...serializedProjectRoot,
         graphs,
         variables,
+        queues,
       };
       core
         .load((c) => deserializeProject(c, merged))

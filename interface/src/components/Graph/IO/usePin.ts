@@ -270,6 +270,10 @@ export function usePin(pin: Accessor<Pin>) {
 		pin().node.state.foldPins;
 		pin().node.state.position.x;
 		pin().node.state.position.y;
+		pin().node.state.name;
+		for (const i of pin().node.state.inputs) i.name ?? i.id;
+		for (const o of pin().node.state.outputs) o.name ?? o.id;
+		interfaceCtx.itemSizes.get(pin().node);
 
 		const ref = getRef();
 		if (!ref) return;

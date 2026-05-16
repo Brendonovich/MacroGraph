@@ -419,6 +419,38 @@ export function SchemaMenu(props: Props) {
 									}
 								}
 
+								if (p.name === "Queue" && !props.suggestion) {
+									const addToQueue = p.schemas.get("Add to Queue");
+									const getQueueItem = p.schemas.get("Get Queue Item");
+									const queueLength = p.schemas.get("Queue Length");
+
+									for (const q of props.graphModel.project.queues) {
+										const n = q.name.toLowerCase();
+										const searchMatches = leftoverSearchTokens.every((t) =>
+											n.includes(t),
+										);
+										if (!searchMatches) continue;
+										if (addToQueue)
+											ret.push({
+												schema: addToQueue,
+												name: `Add to ${q.name}`,
+												defaultProperties: { queue: q.id, position: "End" },
+											});
+										if (getQueueItem)
+											ret.push({
+												schema: getQueueItem,
+												name: `Get from ${q.name}`,
+												defaultProperties: { queue: q.id },
+											});
+										if (queueLength)
+											ret.push({
+												schema: queueLength,
+												name: `${q.name} Length`,
+												defaultProperties: { queue: q.id },
+											});
+									}
+								}
+
 								return ret;
 							});
 

@@ -25,6 +25,8 @@ export function createAuth(
 	core: Core,
 	helixClient: Helix,
 	[, setPersisted]: PersistedStore,
+	onEnable?: (userId: string) => void,
+	onDisable?: (userId: string) => void,
 ) {
 	const accounts = new ReactiveMap<string, Accessor<Account | undefined>>();
 
@@ -55,6 +57,8 @@ export function createAuth(
 		);
 
 		setPersisted(userId, {});
+
+		onEnable?.(userId);
 	}
 
 	return {
@@ -65,6 +69,8 @@ export function createAuth(
 			accounts.delete(id);
 
 			setPersisted(id, undefined!);
+
+			onDisable?.(id);
 		},
 	};
 }

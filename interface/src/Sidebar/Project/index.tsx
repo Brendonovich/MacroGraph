@@ -4,6 +4,7 @@ import { CustomTypes } from "./CustomTypes";
 import { Functions } from "./Functions";
 import { Graphs } from "./Graphs";
 import { PrintOutput } from "./PrintOutput";
+import { Queues } from "./Queues";
 import { Resources } from "./Resources";
 import { Variables } from "./Variables";
 import { Viewers } from "./Viewers";
@@ -25,6 +26,7 @@ export function Sidebar(props: {
 			}} />
 			<PrintOutput />
 			<Variables project={props.project} />
+			<Queues project={props.project} />
 			<CustomTypes />
 			<Resources />
 			<Viewers />

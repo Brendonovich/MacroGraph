@@ -194,6 +194,11 @@ export class IOBuilder {
 			});
 		});
 
+		// Update scope with new outputs while preserving the same ScopeOutput connection
+		const builder = new ScopeBuilder();
+		args.scope(builder);
+		newOutput.scope = new Scope(builder);
+
 		newOutput.name = args.name;
 
 		this.outputs.push(newOutput);

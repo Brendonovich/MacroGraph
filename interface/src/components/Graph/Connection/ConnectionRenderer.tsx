@@ -15,6 +15,7 @@ import type { GraphBounds } from "../../../context";
 import { useInterfaceContext } from "../../../context";
 import { useGraphContext } from "../Context";
 import { colour } from "../util";
+import { getRemotePinDrags } from "../../../remoteHistorySync";
 
 export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 	const interfaceCtx = useInterfaceContext();
@@ -224,6 +225,24 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 							pinPos,
 						);
 				});
+		}
+
+		// Render remote pin drag wires (from other clients)
+		for (const drag of getRemotePinDrags()) {
+			if (drag.graphId !== graph.id) continue;
+			const node = graph.nodes.get(drag.pinNodeId);
+			if (!node) continue;
+			const pin = drag.isOutput ? node.output(drag.pinId) : node.input(drag.pinId);
+			if (!pin) continue;
+			const pinPos = Maybe(interfaceCtx.pinPositions.get(pin)).map(
+				(pos) => ({ x: pos.x, y: pos.y }),
+			);
+			pinPos.peek((pos) => {
+				if (drag.isOutput)
+					drawConnection(canvas, null, pos, drag.position, 0.35);
+				else
+					drawConnection(canvas, null, drag.position, pos, 0.35);
+			});
 		}
 	});
 
